@@ -42,6 +42,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import com.googlecode.wicket.kendo.ui.form.dropdown.DropDownList;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.FeatureEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
@@ -50,6 +51,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
@@ -66,12 +68,15 @@ public class SubjectObjectFeatureEditor extends FeatureEditor {
 
     private AnnotationActionHandler actionHandler;
     private IModel<AnnotatorState> stateModel;
-    private IModel<KBHandle> kBItems;
 
     @SuppressWarnings("unused")
     private LinkWithRoleModel roleModel;
 
+    AnnotationFeature linkedAnnotationFeature;
+
     private @SpringBean KnowledgeBaseService kbService;
+
+    private @SpringBean FeatureSupportRegistry fsRegistry;
 
     public SubjectObjectFeatureEditor(String aId, MarkupContainer aOwner,
                                       AnnotationActionHandler aHandler,
@@ -100,11 +105,11 @@ public class SubjectObjectFeatureEditor extends FeatureEditor {
         }
 
         content.add(new Label("role", roleModel.role));
-        content.add(createSubjectLabel());
+        content.add(createSubjectObjectLabel());
         content.add(focusComponent = createFieldComboBox());
     }
 
-    private Label createSubjectLabel() {
+    private Label createSubjectObjectLabel() {
         AnnotatorState state = stateModel.getObject();
         final Label label;
         label = new Label("label", LambdaModel.of(this::getSelectionSlotLabel));
@@ -140,16 +145,19 @@ public class SubjectObjectFeatureEditor extends FeatureEditor {
     }
 
     private DropDownList<KBHandle> createFieldComboBox() {
-        DropDownList<KBHandle> field = new DropDownList<>("value",
-            LambdaModel.of(this::getSelectedKBItem),
+        DropDownList<KBHandle> field = new DropDownList<KBHandle>("value",
+            LambdaModelAdapter.of(
+                this::getSelectedKBItem,
+                this::setSelectedKBItem)
+            ,
             LambdaModel.of(() -> {
-            AnnotationFeature feat = getModelObject().feature;
-            List<KBHandle> handles = new LinkedList<>();
-            for (KnowledgeBase kb : kbService.getKnowledgeBases(feat.getProject())) {
-                handles.addAll(kbService.listProperties(kb, true));
-            }
-            return new ArrayList<>(handles);
-        }), new ChoiceRenderer<>("uiLabel"));
+                AnnotationFeature feat = getModelObject().feature;
+                List<KBHandle> handles = new LinkedList<>();
+                for (KnowledgeBase kb : kbService.getKnowledgeBases(feat.getProject())) {
+                    handles.addAll(kbService.listProperties(kb, true));
+                }
+                return new ArrayList<>(handles);
+            }), new ChoiceRenderer<>("uiLabel"));
         field.setOutputMarkupId(true);
         field.setMarkupId(ID_PREFIX + getModelObject().feature.getId());
         return field;
@@ -182,26 +190,47 @@ public class SubjectObjectFeatureEditor extends FeatureEditor {
     }
 
     @Override
+    protected void onInitialize()
+    {
+        super.onInitialize();
+    }
+
+    @Override
     public Component getFocusComponent() {
         return focusComponent;
     }
 
     @Override
     public void onConfigure() {
-        if (this.getModelObject().value.getClass() == KBHandle.class) {
-            kBItems = LambdaModel.of(this::getSelectedKBItem);
+        List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) this.getModelObject().value;
+        if (links.size() == 0) {
+            String role = roleModel.role;
+            roleModel = new LinkWithRoleModel();
+            roleModel.role = role;
+            links.add(roleModel);
+            this.stateModel.getObject().setArmedSlot(SubjectObjectFeatureEditor.this
+                .getModelObject().feature, 0);
+        } else {
+            roleModel = links.get(0);
         }
-        else {
-            List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) this.getModelObject().value;
-            if (links.size() == 0) {
-                String role = roleModel.role;
-                roleModel = new LinkWithRoleModel();
-                roleModel.role = role;
-                links.add(roleModel);
-                this.stateModel.getObject().setArmedSlot(SubjectObjectFeatureEditor.this
-                    .getModelObject().feature, 0);
-            } else {
-                roleModel = links.get(0);
+        String linkedType = this.getModelObject().feature.getType();
+        AnnotationLayer linkedLayer = annotationService.getLayer(linkedType, this.stateModel
+            .getObject().getProject());
+        linkedAnnotationFeature = annotationService.getFeature("Predicate",
+            linkedLayer);
+    }
+
+    private void setSelectedKBItem(KBHandle value) {
+        if (roleModel.targetAddr != -1) {
+            try {
+                JCas jCas = actionHandler.getEditorCas().getCas().getJCas();
+                AnnotationFS selectedFS = WebAnnoCasUtil.selectByAddr(jCas, roleModel.targetAddr);
+                WebAnnoCasUtil.setFeature(selectedFS, linkedAnnotationFeature, value.getIdentifier());
+
+            } catch (CASException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
     }
@@ -209,11 +238,6 @@ public class SubjectObjectFeatureEditor extends FeatureEditor {
     private KBHandle getSelectedKBItem() {
         KBHandle selectedKBHandleItem = null;
         if (roleModel.targetAddr != -1) {
-            String linkedType = this.getModelObject().feature.getType();
-            AnnotationLayer linkedLayer = annotationService.getLayer(linkedType, this.stateModel
-                .getObject().getProject());
-            AnnotationFeature linkedAnnotationFeature = annotationService.getFeature("Predicate",
-                linkedLayer);
             try {
                 JCas jCas = actionHandler.getEditorCas().getCas().getJCas();
                 AnnotationFS selectedFS = WebAnnoCasUtil.selectByAddr(jCas, roleModel.targetAddr);
