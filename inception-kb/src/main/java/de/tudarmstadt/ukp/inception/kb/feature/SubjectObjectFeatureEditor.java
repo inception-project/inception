@@ -1,5 +1,5 @@
 /*
- * Copyright 2017
+ * Copyright 2018
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  *
@@ -38,6 +38,8 @@ import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.googlecode.wicket.kendo.ui.form.dropdown.DropDownList;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
@@ -59,6 +61,7 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 public class SubjectObjectFeatureEditor extends FeatureEditor {
 
     private static final long serialVersionUID = 4230722501745589589L;
+    private static final Logger logger = LoggerFactory.getLogger(SubjectObjectFeatureEditor.class);
     private @SpringBean AnnotationSchemaService annotationService;
     private WebMarkupContainer content;
 
@@ -75,8 +78,6 @@ public class SubjectObjectFeatureEditor extends FeatureEditor {
     AnnotationFeature linkedAnnotationFeature;
 
     private @SpringBean KnowledgeBaseService kbService;
-
-    private @SpringBean FeatureSupportRegistry fsRegistry;
 
     public SubjectObjectFeatureEditor(String aId, MarkupContainer aOwner,
                                       AnnotationActionHandler aHandler,
@@ -148,16 +149,9 @@ public class SubjectObjectFeatureEditor extends FeatureEditor {
         DropDownList<KBHandle> field = new DropDownList<KBHandle>("value",
             LambdaModelAdapter.of(
                 this::getSelectedKBItem,
-                this::setSelectedKBItem)
-            ,
-            LambdaModel.of(() -> {
-                AnnotationFeature feat = getModelObject().feature;
-                List<KBHandle> handles = new LinkedList<>();
-                for (KnowledgeBase kb : kbService.getKnowledgeBases(feat.getProject())) {
-                    handles.addAll(kbService.listProperties(kb, true));
-                }
-                return new ArrayList<>(handles);
-            }), new ChoiceRenderer<>("uiLabel"));
+                this::setSelectedKBItem
+            ),
+            LambdaModel.of(this::getKBConceptsAndInstances), new ChoiceRenderer<>("uiLabel"));
         field.setOutputMarkupId(true);
         field.setMarkupId(ID_PREFIX + getModelObject().feature.getId());
         return field;
@@ -216,7 +210,7 @@ public class SubjectObjectFeatureEditor extends FeatureEditor {
         String linkedType = this.getModelObject().feature.getType();
         AnnotationLayer linkedLayer = annotationService.getLayer(linkedType, this.stateModel
             .getObject().getProject());
-        linkedAnnotationFeature = annotationService.getFeature("Predicate",
+        linkedAnnotationFeature = annotationService.getFeature("KBItems",
             linkedLayer);
     }
 
@@ -225,12 +219,11 @@ public class SubjectObjectFeatureEditor extends FeatureEditor {
             try {
                 JCas jCas = actionHandler.getEditorCas().getCas().getJCas();
                 AnnotationFS selectedFS = WebAnnoCasUtil.selectByAddr(jCas, roleModel.targetAddr);
-                WebAnnoCasUtil.setFeature(selectedFS, linkedAnnotationFeature, value.getIdentifier());
-
-            } catch (CASException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
+                WebAnnoCasUtil.setFeature(selectedFS, linkedAnnotationFeature,
+                    value.getIdentifier());
+            } catch (CASException | IOException e) {
+                logger.error("Error: " + e.getMessage(), e);
+                error("Error: " + e.getMessage());
             }
         }
     }
@@ -245,21 +238,29 @@ public class SubjectObjectFeatureEditor extends FeatureEditor {
                     (linkedAnnotationFeature.getName());
                 String selectedKBItemIdentifier = selectedFS.getFeatureValueAsString(labelFeature);
                 if (selectedKBItemIdentifier != null) {
-                    List<KBHandle> handles = new ArrayList<>();
-                    for (KnowledgeBase kb : kbService.getKnowledgeBases(linkedAnnotationFeature
-                        .getProject())) {
-                        handles.addAll(kbService.listProperties(kb, true));
-                    }
+                    List<KBHandle> handles = getKBConceptsAndInstances();
                     selectedKBHandleItem = handles.stream().filter(x -> selectedKBItemIdentifier
                         .equals(x.getIdentifier())).findAny().orElse(null);
                 }
-            } catch (CASException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
+            } catch (CASException | IOException e) {
+                logger.error("Error: " + e.getMessage(), e);
+                error("Error: " + e.getMessage());
             }
         }
         return selectedKBHandleItem;
+    }
+
+    private List<KBHandle> getKBConceptsAndInstances() {
+        AnnotationFeature feat = getModelObject().feature;
+        List<KBHandle> handles = new LinkedList<>();
+        for (KnowledgeBase kb : kbService.getKnowledgeBases(feat.getProject())) {
+            handles.addAll(kbService.listConcepts(kb, false));
+            for (KBHandle concept: kbService.listConcepts(kb, false)) {
+                handles.addAll(kbService.listInstances(kb, concept.getIdentifier(),
+                    false));
+            }
+        }
+        return new ArrayList<>(handles);
     }
 
 }

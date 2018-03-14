@@ -46,10 +46,9 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 public class SubjectObjectFeatureSupport implements FeatureSupport {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    //private static final String SUBJECT_LINK = "de.tudarmstadt.ukp.dkpro.core.api.semantics
-    // .type.SemArgLink";
     private static final String SUBJECT_LINK = "webanno.custom.FactSubjectLink";
     private static final String OBJECT_LINK = "webanno.custom.FactObjectLink";
+    private static final String MODIFIER_LINK = "webanno.custom.FactModifierLink";
 
     @Override
     public List<FeatureType> getSupportedFeatureTypes(AnnotationLayer aAnnotationLayer) {
@@ -66,6 +65,8 @@ public class SubjectObjectFeatureSupport implements FeatureSupport {
                 case SUBJECT_LINK:
                     return true;
                 case OBJECT_LINK:
+                    return true;
+                case MODIFIER_LINK:
                     return true;
                 default:
                     return false;
@@ -100,6 +101,10 @@ public class SubjectObjectFeatureSupport implements FeatureSupport {
                 case OBJECT_LINK:
                     editor = new SubjectObjectFeatureEditor(aId, aOwner, aHandler,
                         aStateModel, aFeatureStateModel, "object");
+                    break;
+                case MODIFIER_LINK:
+                    editor = new ModifierFeatureEditor(aId, aOwner, aHandler, aStateModel,
+                        aFeatureStateModel);
                     break;
                 default:
                     throw unsupportedLinkModeException(featureState);

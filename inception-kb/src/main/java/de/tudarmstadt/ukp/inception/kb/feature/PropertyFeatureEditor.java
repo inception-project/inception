@@ -1,5 +1,5 @@
 /*
- * Copyright 2017
+ * Copyright 2018
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  *
@@ -60,7 +60,7 @@ public class PropertyFeatureEditor extends FeatureEditor {
             AnnotationFeature feat = getModelObject().feature;
             List<KBHandle> handles = new LinkedList<>();
             for (KnowledgeBase kb : kbService.getKnowledgeBases(feat.getProject())) {
-                handles.addAll(kbService.listProperties(kb, true));
+                handles.addAll(kbService.listProperties(kb, false));
             }
             return new ArrayList<>(handles);
         }), new ChoiceRenderer<>("uiLabel"));
