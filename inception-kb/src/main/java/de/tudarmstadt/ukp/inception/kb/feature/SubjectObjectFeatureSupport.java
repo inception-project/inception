@@ -102,10 +102,10 @@ public class SubjectObjectFeatureSupport implements FeatureSupport {
                     editor = new SubjectObjectFeatureEditor(aId, aOwner, aHandler,
                         aStateModel, aFeatureStateModel, "object");
                     break;
-                case MODIFIER_LINK:
-                    editor = new ModifierFeatureEditor(aId, aOwner, aHandler, aStateModel,
-                        aFeatureStateModel);
-                    break;
+//                case MODIFIER_LINK:
+//                    editor = new ModifierFeatureEditor(aId, aOwner, aHandler, aStateModel,
+//                        aFeatureStateModel);
+//                    break;
                 default:
                     throw unsupportedLinkModeException(featureState);
                 }
