@@ -20,7 +20,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Resource;
 
 import org.apache.commons.text.similarity.LevenshteinDistance;
-import org.apache.uima.UIMAException;
 import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.eclipse.rdf4j.model.IRI;
@@ -203,7 +202,7 @@ public class ConceptLinkingService
      * 
      */
     private List<Token> getMentionContext(Sentence sentence, List<String> mention,
-            int mentionContextSize)
+        int mentionContextSize)
     {
         List<Token> mentionSentence = new ArrayList<>();
         Collections.addAll(mentionSentence, (Token) JCasUtil.selectCovered(Token.class, sentence));
@@ -313,22 +312,15 @@ public class ConceptLinkingService
         return result;
     }
 
-    private static List<Entity> sortCandidates(List<Entity> candidates)
+    private List<Entity> sortCandidates(List<Entity> candidates)
     {
-        Collections.sort(candidates, new Comparator<Entity>()
-        {
-            @Override
-            public int compare(Entity e1, Entity e2)
-            {
-                return new org.apache.commons.lang.builder.CompareToBuilder()
-                        .append(-e1.getSignatureOverlapScore(), -e2.getSignatureOverlapScore())
-                        .append(e1.getLevContext() + e1.getLevMatchLabel(),
-                                e2.getLevContext() + e2.getLevMatchLabel())
-                        .append(-e1.getFrequency(), -e2.getFrequency())
-                        .append(-e1.getNumRelatedRelations(), -e2.getNumRelatedRelations())
-                        .append(e1.getIdRank(), e2.getIdRank()).toComparison();
-            }
-        });
+        candidates.sort((e1, e2) -> new org.apache.commons.lang.builder.CompareToBuilder()
+            .append(-e1.getSignatureOverlapScore(), -e2.getSignatureOverlapScore())
+            .append(e1.getLevContext() + e1.getLevMatchLabel(),
+                e2.getLevContext() + e2.getLevMatchLabel())
+            .append(-e1.getFrequency(), -e2.getFrequency())
+            .append(-e1.getNumRelatedRelations(), -e2.getNumRelatedRelations())
+            .append(e1.getIdRank(), e2.getIdRank()).toComparison());
         return candidates;
     }
 
@@ -398,16 +390,6 @@ public class ConceptLinkingService
 
     }
 
-    public int getCandidateQueryLimit()
-    {
-        return candidateQueryLimit;
-    }
-
-    public int getSignatureQueryLimit()
-    {
-        return signatureQueryLimit;
-    }
-
     @EventListener
     @Order(Ordered.HIGHEST_PRECEDENCE)
     public void onApplicationEvent(SessionDestroyedEvent event)
@@ -421,7 +403,7 @@ public class ConceptLinkingService
     }
     
     @EventListener
-    private void onDocumentOpen(DocumentOpenedEvent aEvent) throws Exception
+    public void onDocumentOpen(DocumentOpenedEvent aEvent)
     {
         User user = userRepository.get(aEvent.getUser());
         ConceptLinkingUserState state = getState(user.getUsername());
@@ -457,7 +439,7 @@ public class ConceptLinkingService
         }
     }
        
-    private static class ConceptLinkingUserState
+    private class ConceptLinkingUserState
     {
         private String language = "en";
         private JCas jCas;
