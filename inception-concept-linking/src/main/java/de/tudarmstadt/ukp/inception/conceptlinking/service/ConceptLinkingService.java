@@ -101,10 +101,9 @@ public class ConceptLinkingService
     private final Set<String> propertyBlacklist = Utils
             .loadPropertyBlacklist(WORKING_DIRECTORY + "resources/property_blacklist.txt");
     
-    private final Set<String> typeBlacklist = new HashSet<>(
-            Arrays.asList(new String[] { "commonsmedia", "external-id",
-                    "globe-coordinate", "math", "monolingualtext", "quantity", "string", "url",
-                    "wikibase-property" }));
+    private final Set<String> typeBlacklist = new HashSet<>(Arrays
+        .asList("commonsmedia", "external-id", "globe-coordinate", "math", "monolingualtext",
+            "quantity", "string", "url", "wikibase-property"));
     private final Map<String, Property> propertyWithLabels = 
             Utils.loadPropertyLabels(WORKING_DIRECTORY + "resources/properties_with_labels.txt");
     
@@ -176,11 +175,8 @@ public class ConceptLinkingService
                                          (label != null) ? label.toString() : "",
                                       (anylabel != null) ? anylabel.toString() : "");
                     
-                    if (!linkings.contains(newEntity)) {
                         linkings.add(newEntity);
                     }
-                    
-                }
             }
             catch (QueryEvaluationException e) {
                 throw new QueryEvaluationException(e);
@@ -217,7 +213,7 @@ public class ConceptLinkingService
         int start = 0, end = 0;
         int j = 0;
         boolean done = false;
-        while (done == false && j < mentionSentence.size()) {
+        while (!done && j < mentionSentence.size()) {
             for (int i = 0; i < mention.size(); i++) {
                 if (!mentionSentence.get(j).getCoveredText()
                         .contains(mention.get(i))) {
@@ -252,7 +248,6 @@ public class ConceptLinkingService
      *
      * @param mention
      * @param linkings
-     * @param taggedText:
      *            the current text as a list of tagged token
      * @return
      * @throws UIMAException
@@ -300,8 +295,8 @@ public class ConceptLinkingService
             }
             
             LevenshteinDistance lev = new LevenshteinDistance();
-            l.setLevMatchLabel(lev.apply(mention, anylabel).intValue());
-            l.setLevSentence(lev.apply(tokensToString(mentionContext), anylabel).intValue());
+            l.setLevMatchLabel(lev.apply(mention, anylabel));
+            l.setLevSentence(lev.apply(tokensToString(mentionContext), anylabel));
             l.setNumRelatedRelations(0);
 
             SemanticSignature sig = getSemanticSignature(aKB, wikidataId);
@@ -344,7 +339,7 @@ public class ConceptLinkingService
     {
         StringBuilder builder = new StringBuilder();
         for (Token t : sentence) {
-            builder.append(t.getCoveredText() + " ");
+            builder.append(t.getCoveredText()).append(" ");
         }
         return builder.toString();
     }
