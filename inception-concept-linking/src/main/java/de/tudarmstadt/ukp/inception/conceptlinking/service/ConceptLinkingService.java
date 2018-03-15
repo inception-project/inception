@@ -38,11 +38,9 @@ import org.springframework.security.core.session.SessionInformation;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
-import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -68,9 +66,7 @@ public class ConceptLinkingService
 {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    private @Resource DocumentService docService;
     private @Resource KnowledgeBaseService kbService;
-    private @Resource UserDao userRepository;
     private @Resource SessionRegistry sessionRegistry;
     
     private final static String WORKING_DIRECTORY 
