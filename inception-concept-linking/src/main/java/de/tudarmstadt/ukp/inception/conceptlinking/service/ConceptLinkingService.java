@@ -119,9 +119,7 @@ public class ConceptLinkingService
     /*
      * Retrieves the first sentence containing the mention as Tokens
      */
-    private synchronized Sentence getMentionSentence(JCas aJcas, String mention, 
-            int aBegin, String language)
-        throws UIMAException, IOException
+    private synchronized Sentence getMentionSentence(JCas aJcas, int aBegin)
     {
         return WebAnnoCasUtil.getSentence(aJcas, aBegin);
     }    
@@ -254,11 +252,10 @@ public class ConceptLinkingService
      * @throws UIMAException
      */
     private List<Entity> computeCandidateScores(KnowledgeBase aKB, String mention, 
-            Set<Entity> linkings, JCas aJCas, int aBegin, String aLanguage)
-        throws UIMAException, IOException
+            Set<Entity> linkings, JCas aJCas, int aBegin)
     {
         int mentionContextSize = 2;
-        Sentence mentionSentence = getMentionSentence(aJCas, mention, aBegin, aLanguage);
+        Sentence mentionSentence = getMentionSentence(aJCas, aBegin);
         if (mentionSentence == null) {
             throw new IllegalStateException();
         }
@@ -383,18 +380,15 @@ public class ConceptLinkingService
         String mention = aState.getSelection().getText();
         User user = aState.getUser();
 
-        try {        
-            ConceptLinkingUserState userState = getState(user.getUsername());
-            JCas jCas = aActionHandler.getEditorCas();
-            String language = userState.getLanguage();
+        ConceptLinkingUserState userState = getState(user.getUsername());
+        String language = userState.getLanguage();
 
-            try {
-                candidates = computeCandidateScores(aKB, mention,
-                        linkMention(aKB, mention, conceptIri, language), jCas, 
-                        aState.getSelection().getBegin(), language);
-            } catch (IOException | UIMAException e) {
-                logger.error("Could not compute candidate scores: ", e);
-            }
+        try {
+            JCas jCas = aActionHandler.getEditorCas();
+
+            candidates = computeCandidateScores(aKB, mention,
+                    linkMention(aKB, mention, conceptIri, language), jCas,
+                    aState.getSelection().getBegin());
         }
         catch (IOException e) {
             logger.error("Cannot get JCas", e);
