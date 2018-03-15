@@ -119,16 +119,11 @@ public class ConceptLinkingService
     /*
      * Retrieves the first sentence containing the mention as Tokens
      */
-    private synchronized List<Token> getMentionSentence(JCas aJcas, String mention, 
+    private synchronized Sentence getMentionSentence(JCas aJcas, String mention, 
             int aBegin, String language)
         throws UIMAException, IOException
     {
-        Sentence sent = WebAnnoCasUtil.getSentence(aJcas, aBegin);
-        List<Token> sentence = new ArrayList<>();
-        for (Token t : JCasUtil.selectCovered(Token.class, sent)) {
-            sentence.add(t);
-        }
-        return sentence;
+        return WebAnnoCasUtil.getSentence(aJcas, aBegin);
     }    
 
     // TODO lemmatization
@@ -212,11 +207,13 @@ public class ConceptLinkingService
      * the mention with <mentionContextSize> tokens before and <mentionContextSize> after the
      * mention
      * 
-     * TODO what happens if there are multiple mentions in a sentence?
      */
-    private List<Token> getMentionContext(List<Token> mentionSentence, List<String> mention,
+    private List<Token> getMentionContext(Sentence sentence, List<String> mention,
             int mentionContextSize)
     {
+        List<Token> mentionSentence = new ArrayList<>();
+        Collections.addAll(mentionSentence, (Token) JCasUtil.selectCovered(Token.class, sentence));
+
         int start = 0, end = 0;
         int j = 0;
         boolean done = false;
@@ -265,17 +262,17 @@ public class ConceptLinkingService
         throws UIMAException, IOException
     {
         int mentionContextSize = 2;
-        List<Token> mentionSentence = getMentionSentence(aJCas, mention, aBegin, aLanguage);
+        Sentence mentionSentence = getMentionSentence(aJCas, mention, aBegin, aLanguage);
         if (mentionSentence == null) {
             throw new IllegalStateException();
         }
         List<String> splitMention = Arrays.asList(mention.split(" "));
         List<Token> mentionContext = getMentionContext(mentionSentence, splitMention,
                 mentionContextSize);
-
+        
         // TODO and t['ner'] not in {"ORDINAL", "MONEY", "TIME", "PERCENTAGE"}} \
         Set<String> sentenceContentTokens = new HashSet<>();
-        for (Token t : mentionSentence) {
+        for (Token t : JCasUtil.selectCovered(Token.class, mentionSentence)) {
             if (t.getPosValue() != null) {
                 if ((t.getPosValue().startsWith("V")
                         || t.getPosValue().startsWith("N")
