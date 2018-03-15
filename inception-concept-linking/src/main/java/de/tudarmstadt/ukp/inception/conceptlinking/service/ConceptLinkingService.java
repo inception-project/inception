@@ -261,7 +261,7 @@ public class ConceptLinkingService
      * @throws UIMAException
      */
     private List<Entity> computeCandidateScores(KnowledgeBase aKB, String mention, 
-            Set<Entity> linkings, JCas aJCas, int aBegin)
+            Set<Entity> candidates, JCas aJCas, int aBegin)
     {
         int mentionContextSize = 5;
         Sentence mentionSentence = getMentionSentence(aJCas, aBegin);
@@ -288,39 +288,51 @@ public class ConceptLinkingService
         }
 
         double startLoop = System.currentTimeMillis();
-        
-        linkings.parallelStream().forEach( l -> {
-            String wikidataId = l.getIRI().replace("http://www.wikidata.org/entity/", "");
-            String altLabel = l.getAnyLabel().toLowerCase();
 
-            l.setIdRank(Math.log(Double.parseDouble(wikidataId.substring(1))));
+        candidates.parallelStream().forEach(l -> {
+            String wikidataId = l.getIRI().replace("http://www.wikidata.org/entity/", "");
 
             if (Objects.requireNonNull(entityFrequencyMap).get(wikidataId) != null) {
                 l.setFrequency(entityFrequencyMap.get(wikidataId));
-            } else {
+            }
+            else {
                 l.setFrequency(0);
             }
-
+        });
+        List<Entity> result = sortByFrequency(new ArrayList<>((candidates)));
+        if (result.size() > 100) {
+            result = result.subList(0, 100);
+        }
+        result.parallelStream().forEach( l -> {
+            String wikidataId = l.getIRI().replace("http://www.wikidata.org/entity/", "");
+            l.setIdRank(Math.log(Double.parseDouble(wikidataId.substring(1))));
+            String altLabel = l.getAltLabel().toLowerCase();
             LevenshteinDistance lev = new LevenshteinDistance();
             l.setLevMatchLabel(lev.apply(mention, altLabel));
             l.setLevContext(lev.apply(tokensToString(mentionContext), altLabel));
-            l.setNumRelatedRelations(0);
 
             SemanticSignature sig = getSemanticSignature(aKB, wikidataId);
             Set<String> relatedEntities = sig.getRelatedEntities();
             Set<String> signatureOverlap = new HashSet<>();
             for (String s : relatedEntities) {
-                // if(sentenceContentTokens.contains(s) || s.contains(sentenceContentTokens) {
                 if (sentenceContentTokens.contains(s)) {
                     signatureOverlap.add(s);
                 }
             }
             l.setSignatureOverlapScore(splitMention.size() + signatureOverlap.size());
-            l.setNumRelatedRelations(sig.getRelatedRelations().size());
+            l.setNumRelatedRelations(
+                (sig.getRelatedRelations() != null) ? sig.getRelatedRelations().size() : 0);
         });
-        List<Entity> result = sortCandidates(new ArrayList<>(linkings));
+        result = sortCandidates(new ArrayList<>(candidates));
         logger.debug(System.currentTimeMillis() - startLoop + "ms until end loop.");
         return result;
+    }
+
+    private List<Entity> sortByFrequency(List<Entity> candidates)
+    {
+        candidates.sort((e1, e2) -> new org.apache.commons.lang.builder.CompareToBuilder()
+            .append(-e1.getFrequency(), -e2.getFrequency()).toComparison());
+        return candidates;
     }
 
     private List<Entity> sortCandidates(List<Entity> candidates)

@@ -79,7 +79,7 @@ public class Entity
         return label;
     }
 
-    public String getAnyLabel()
+    public String getAltLabel()
     {
         return alternativeLabel;
     }
