@@ -1,7 +1,6 @@
 package de.tudarmstadt.ukp.inception.conceptlinking.service;
 
 import java.io.IOException;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -29,7 +28,6 @@ import org.eclipse.rdf4j.query.QueryLanguage;
 import org.eclipse.rdf4j.query.TupleQuery;
 import org.eclipse.rdf4j.query.TupleQueryResult;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
@@ -42,11 +40,8 @@ import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.DocumentOpenedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
@@ -423,24 +418,6 @@ public class ConceptLinkingService
             clearState(username);
         }
     }
-    
-    @EventListener
-    public void onDocumentOpen(DocumentOpenedEvent aEvent)
-    {
-        User user = userRepository.get(aEvent.getUser());
-        ConceptLinkingUserState state = getState(user.getUsername());
-        SourceDocument doc = aEvent.getDocument();
-        AnnotationDocument annoDoc = docService.createOrGetAnnotationDocument(doc, user);
-        JCas jCas;
-        try {
-            jCas = docService.readAnnotationCas(annoDoc);
-            state.setJCas(jCas);
-        }
-        catch (IOException e) {
-            logger.error("Cannot read annotation CAS.", e);
-        }
-    }
-    
     private ConceptLinkingUserState getState(String aUsername)
     {
         synchronized (states) {
@@ -464,8 +441,6 @@ public class ConceptLinkingService
     private class ConceptLinkingUserState
     {
         private String language = "en";
-        private JCas jCas;
-
         
         private String getLanguage()
         {
@@ -475,14 +450,6 @@ public class ConceptLinkingService
         private void setLanguage(String aLanguage)
         {
             language = aLanguage;
-        }
-
-        private JCas getJcas() {
-            return jCas;
-        }
-        
-        private void setJCas(JCas aJcas) {
-            jCas = aJcas;
         }
     }
 }
