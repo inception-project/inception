@@ -361,11 +361,13 @@ public class ConceptLinkingService
                     BindingSet sol = result.next();
                     String propertyString = sol.getValue("p").stringValue();
                     String labelString = sol.getValue("label").stringValue();
-                    Property property = propertyWithLabels.get(labelString);
-                    if (propertyBlacklist.contains(propertyString)
-                        || typeBlacklist.contains(property.getType())
-                        || property.getFreq() < frequencyThreshold) {
-                        continue;
+                    if (propertyWithLabels != null) {
+                        Property property = propertyWithLabels.get(labelString);
+                        if (propertyBlacklist != null && (propertyBlacklist.contains(propertyString)
+                            || (property != null && typeBlacklist.contains(property.getType())) || (
+                            property != null && property.getFreq() < frequencyThreshold))) {
+                            continue;
+                        }
                     }
                     relatedEntities.add(labelString);
                     relatedRelations.add(propertyString.substring(0, propertyString.length() - 2));
