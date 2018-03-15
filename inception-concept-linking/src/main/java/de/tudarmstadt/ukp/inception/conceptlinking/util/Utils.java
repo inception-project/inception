@@ -12,6 +12,9 @@ import org.apache.commons.io.FileUtils;
 
 import de.tudarmstadt.ukp.inception.conceptlinking.model.Property;
 
+/**
+ * Contains utility methods to process files needed for Concept Linking
+ */
 public class Utils
 {
 

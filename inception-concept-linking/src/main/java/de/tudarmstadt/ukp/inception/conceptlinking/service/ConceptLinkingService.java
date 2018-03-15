@@ -101,20 +101,24 @@ public class ConceptLinkingService
     }
 
     /*
-     * Retrieves the first sentence containing the mention as Tokens
+     * Retrieves the sentence containing the mention
      */
     private synchronized Sentence getMentionSentence(JCas aJcas, int aBegin)
     {
         return WebAnnoCasUtil.getSentence(aJcas, aBegin);
     }    
 
-    // TODO lemmatization
-    private Set<Entity> linkMention(KnowledgeBase aKB, String mention, IRI conceptIri, 
+    /*
+     * Generate a set of candidate entities from a Knowledge Base for a mention.
+     * It only contains entities which are instances of a pre-defined concept.
+     * TODO lemmatize the mention if no candidates could be generated
+     */
+    private Set<Entity> linkMention(KnowledgeBase aKB, String aMention, IRI aConceptIri,
             String aLanguage)
     {
         double startTime = System.currentTimeMillis();
         Set<Entity> candidates = new HashSet<>();
-        List<String> mentionArray = Arrays.asList(mention.split(" "));
+        List<String> mentionArray = Arrays.asList(aMention.split(" "));
 
         ListIterator<String> it = mentionArray.listIterator();
         String current;
@@ -142,9 +146,9 @@ public class ConceptLinkingService
             throw new IllegalStateException();
         }
 
-        String entityQueryString = 
-                QueryUtil.entityQuery(mentionArray, candidateQueryLimit, conceptIri, aLanguage);
         int candidateQueryLimit = 1000;
+        String entityQueryString =
+                QueryUtil.entityQuery(mentionArray, candidateQueryLimit, aConceptIri, aLanguage);
         
         try (RepositoryConnection conn = kbService.getConnection(aKB)) {
             TupleQuery query = conn.prepareTupleQuery(QueryLanguage.SPARQL, entityQueryString);
@@ -171,7 +175,7 @@ public class ConceptLinkingService
         }
 
         if (candidates.isEmpty()) {
-            String[] split = mention.split(" ");
+            String[] split = aMention.split(" ");
             if (split.length > 1) {
                 for (String s : split) {
                     candidates.addAll(linkMention(aKB, s, null, aLanguage));
@@ -182,18 +186,18 @@ public class ConceptLinkingService
         return candidates;
     }
 
-    /**
+    /*
      * Finds the position of a mention in a given sentence and returns the corresponding tokens of
      * the mention with <mentionContextSize> tokens before and <mentionContextSize> after the
      * mention
      *
      * FIXME there could also be multiple mentions in a sentence
      */
-    private List<Token> getMentionContext(Sentence sentence, List<String> mention,
+    private List<Token> getMentionContext(Sentence aSentence, List<String> aMention,
         int mentionContextSize)
     {
         List<Token> mentionSentence = new ArrayList<>();
-        Collections.addAll(mentionSentence, (Token) JCasUtil.selectCovered(Token.class, sentence));
+        Collections.addAll(mentionSentence, (Token) JCasUtil.selectCovered(Token.class, aSentence));
 
         int start = 0, end = 0;
         int j = 0;
@@ -203,17 +207,17 @@ public class ConceptLinkingService
         while (!done && j < mentionSentence.size()) {
 
             // Go to the position where the mention starts in the sentence
-            for (int i = 0; i < mention.size(); i++) {
+            for (int i = 0; i < aMention.size(); i++) {
 
                 // is the word done? i-th word of mention contained in j-th token of sentence?
                 if (!mentionSentence.get(j).getCoveredText()
-                    .contains(mention.get(i))) {
+                    .contains(aMention.get(i))) {
                     break;
                 }
 
                 // if this was the last word of mention, end loop
-                if (i == mention.size() - 1) {
-                    start = j - (mention.size() - 1) - mentionContextSize;
+                if (i == aMention.size() - 1) {
+                    start = j - (aMention.size() - 1) - mentionContextSize;
                     end = j + mentionContextSize + 1;
                     done = true;
                 } else {
@@ -237,15 +241,9 @@ public class ConceptLinkingService
         return mentionSentence.subList(start, end);
     }
 
-    /**
-     * The method should compute scores for each candidate linking for the given entity and sort the
-     * candidates so that the most probable candidate comes first.
-     *
-     * @param mention
-     * @param linkings
-     *            the current text as a list of tagged token
-     * @return
-     * @throws UIMAException
+    /*
+     * This method does the actual ranking of the candidate entity set.
+     * It returns the candidates by descending probability.
      */
     private List<Entity> computeCandidateScores(KnowledgeBase aKB, String mention, 
             Set<Entity> candidates, JCas aJCas, int aBegin)
@@ -315,6 +313,9 @@ public class ConceptLinkingService
         return result;
     }
 
+    /*
+     * Sort candidates by frequency in descending order.
+     */
     private List<Entity> sortByFrequency(List<Entity> candidates)
     {
         candidates.sort((e1, e2) -> new org.apache.commons.lang.builder.CompareToBuilder()
@@ -322,6 +323,14 @@ public class ConceptLinkingService
         return candidates;
     }
 
+    /*
+     * Sort candidates by multiple keys.
+     * A high signature overlap score is preferred.
+     * A low edit distance is preferred.
+     * A high entity frequency is preferred.
+     * A high number of related relations is preferred.
+     * A low wikidata ID rank is preferred.
+     */
     private List<Entity> sortCandidates(List<Entity> candidates)
     {
         candidates.sort((e1, e2) -> new org.apache.commons.lang.builder.CompareToBuilder()
@@ -334,21 +343,27 @@ public class ConceptLinkingService
         return candidates;
     }
 
-    private String tokensToString(List<Token> sentence)
+    /*
+     * Concatenates the covered text of a list of Tokens to a String.
+     */
+    private String tokensToString(List<Token> aSentence)
     {
         StringBuilder builder = new StringBuilder();
-        for (Token t : sentence) {
+        for (Token t : aSentence) {
             builder.append(t.getCoveredText()).append(" ");
         }
         return builder.toString();
     }
 
-    private SemanticSignature getSemanticSignature(KnowledgeBase aKB, String wikidataId)
+    /*
+     * Retrieves the semantic signature of an entity. See documentation of SemanticSignature class.
+     */
+    private SemanticSignature getSemanticSignature(KnowledgeBase aKB, String aWikidataId)
     {
         Set<String> relatedRelations = new HashSet<>();
         Set<String> relatedEntities = new HashSet<>();
-        String queryString = QueryUtil.semanticSignatureQuery(wikidataId, signatureQueryLimit);
         int signatureQueryLimit = 100;
+        String queryString = QueryUtil.semanticSignatureQuery(aWikidataId, signatureQueryLimit);
         try (RepositoryConnection conn = kbService.getConnection(aKB)) {
             TupleQuery query = conn.prepareTupleQuery(QueryLanguage.SPARQL, queryString);
             try (TupleQueryResult result = query.evaluate()) {
@@ -375,7 +390,19 @@ public class ConceptLinkingService
         return new SemanticSignature(relatedEntities, relatedRelations);
     }
 
-    public List<Entity> disambiguate (KnowledgeBase aKB, IRI conceptIri, 
+    /**
+     * Given a mention in the text, this method returns a list of ranked candidate entities
+     * generated from a Knowledge Base. It only contains entities which are instances of a
+     * pre-defined concept.
+     *
+     * @param aKB the KB used to generate candidates
+     * @param aConceptIri the concept of which instances should be generated as candidates
+     * @param aState AnnotatorState, used to get information about what surface form was marked
+     * @param aActionHandler contains JCas, used to extract information about mention sentence
+     *                       tokens
+     * @return ranked list of entities, starting with the most probable entity
+     */
+    public List<Entity> disambiguate (KnowledgeBase aKB, IRI aConceptIri,
             AnnotatorState aState, AnnotationActionHandler aActionHandler)
     {
         List<Entity> candidates = new ArrayList<>();
@@ -390,7 +417,7 @@ public class ConceptLinkingService
             JCas jCas = aActionHandler.getEditorCas();
 
             candidates = computeCandidateScores(aKB, mention,
-                    linkMention(aKB, mention, conceptIri, language), jCas,
+                    linkMention(aKB, mention, aConceptIri, language), jCas,
                     aState.getSelection().getBegin());
         }
         catch (IOException e) {
@@ -401,6 +428,9 @@ public class ConceptLinkingService
 
     }
 
+    /*
+     * Clear user state when session ends
+     */
     @EventListener
     @Order(Ordered.HIGHEST_PRECEDENCE)
     public void onApplicationEvent(SessionDestroyedEvent event)
@@ -412,6 +442,10 @@ public class ConceptLinkingService
             clearState(username);
         }
     }
+
+    /*
+     * Holds session-specific settings
+     */
     private ConceptLinkingUserState getState(String aUsername)
     {
         synchronized (states) {

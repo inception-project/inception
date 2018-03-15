@@ -2,6 +2,11 @@ package de.tudarmstadt.ukp.inception.conceptlinking.model;
 
 import java.util.Set;
 
+/**
+ * Captures the directly related entities and related relations of a given entity A.
+ * An entity B is considered related to A iff A has B as an attribute in property P,
+ * or if B has A as an attribute in property P.
+ */
 public class SemanticSignature
 {
 

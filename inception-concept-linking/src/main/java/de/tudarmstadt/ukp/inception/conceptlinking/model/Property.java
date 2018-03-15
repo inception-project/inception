@@ -1,5 +1,8 @@
 package de.tudarmstadt.ukp.inception.conceptlinking.model;
 
+/**
+ * Describes a relation or property between two entities
+ */
 public class Property
 {
     private String label;

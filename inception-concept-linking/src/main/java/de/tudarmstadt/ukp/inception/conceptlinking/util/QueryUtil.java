@@ -4,6 +4,9 @@ import java.util.List;
 
 import org.eclipse.rdf4j.model.IRI;
 
+/**
+ * Contains SPARQL query parts and query builder methods
+ */
 public class QueryUtil
 {
 
@@ -57,6 +60,14 @@ public class QueryUtil
     private static String SPARQL_RELATION_REVERSE = 
             "{GRAPH <http://wikidata.org/statements> { ?e2 ?p ?m . ?m ?rr ?e1 . %restriction% }}\n";
 
+    /**
+     *
+     * @param tokens the words spanned by the mention
+     * @param limit maximum number of results
+     * @param conceptIri the concept of which instances should be generated as candidates
+     * @param language the language in which the labels should be retrieved
+     * @return a query to retrieve candidate entities
+     */
     public static String entityQuery(List<String> tokens, int limit, IRI conceptIri, 
             String language)
     {
@@ -110,6 +121,12 @@ public class QueryUtil
         return query;
     }
 
+    /**
+     *
+     * @param wikidataId wikidataId
+     * @param limit maximum number of results
+     * @return a query to retrieve the semantic signature
+     */
     public static String semanticSignatureQuery(String wikidataId, int limit)
     {
         String query = SPARQL_PREFIX + "\n";
