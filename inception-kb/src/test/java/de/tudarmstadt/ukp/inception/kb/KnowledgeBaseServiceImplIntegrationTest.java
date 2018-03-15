@@ -41,6 +41,9 @@ import java.util.stream.Stream;
 import javax.persistence.EntityManager;
 
 import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Value;
+import org.eclipse.rdf4j.model.ValueFactory;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
@@ -75,6 +78,9 @@ public class KnowledgeBaseServiceImplIntegrationTest {
 
     private static final String PROJECT_NAME = "Test project";
     private static final String KB_NAME = "Test knowledge base";
+    
+    private static final ValueFactory VF = SimpleValueFactory.getInstance();
+    
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
     @Autowired
@@ -82,6 +88,7 @@ public class KnowledgeBaseServiceImplIntegrationTest {
     private KnowledgeBaseServiceImpl sut;
     private Project project;
     private KnowledgeBase kb;
+    
 
     @BeforeClass
     public static void setUpOnce() {
@@ -269,7 +276,7 @@ public class KnowledgeBaseServiceImplIntegrationTest {
             .containsExactlyInAnyOrder("Has Character");
         assertThat(kahmiValues)
             .as("Check that statements with wrong types have been imported")
-            .containsExactlyInAnyOrder(666);
+            .containsExactlyInAnyOrder(VF.createLiteral(666));
     }
 
     @Test
@@ -1014,7 +1021,9 @@ public class KnowledgeBaseServiceImplIntegrationTest {
         KBProperty property = buildProperty();
         KBHandle conceptHandle = sut.createConcept(kb, concept);
         KBHandle propertyHandle = sut.createProperty(kb, property);
-        KBStatement statement = buildStatement(conceptHandle, propertyHandle, "Test statement");
+        Value value = VF.createLiteral("Test statement");
+        
+        KBStatement statement = buildStatement(conceptHandle, propertyHandle, value);
 
         sut.upsertStatement(kb, statement);
 
@@ -1026,7 +1035,7 @@ public class KnowledgeBaseServiceImplIntegrationTest {
             .element(0)
             .hasFieldOrProperty("instance")
             .hasFieldOrProperty("property")
-            .hasFieldOrPropertyWithValue("value", "Test statement")
+            .hasFieldOrPropertyWithValue("value", value)
             .hasFieldOrPropertyWithValue("inferred", false);
     }
 
@@ -1037,10 +1046,13 @@ public class KnowledgeBaseServiceImplIntegrationTest {
         KBProperty property = buildProperty();
         KBHandle conceptHandle = sut.createConcept(kb, concept);
         KBHandle propertyHandle = sut.createProperty(kb, property);
-        KBStatement statement = buildStatement(conceptHandle, propertyHandle, "Test statement");
+        Value value = VF.createLiteral("Test statement");
+        
+        KBStatement statement = buildStatement(conceptHandle, propertyHandle, value);
         sut.upsertStatement(kb, statement);
 
-        statement.setValue("Altered test property");
+        Value alteredValue = VF.createLiteral("Altered test property");
+        statement.setValue(alteredValue);
         sut.upsertStatement(kb, statement);
 
         List<KBStatement> statements = sut.listStatements(kb, conceptHandle, false);
@@ -1051,7 +1063,7 @@ public class KnowledgeBaseServiceImplIntegrationTest {
             .element(0)
             .hasFieldOrProperty("instance")
             .hasFieldOrProperty("property")
-            .hasFieldOrPropertyWithValue("value", "Altered test property")
+            .hasFieldOrPropertyWithValue("value", alteredValue)
             .hasFieldOrPropertyWithValue("inferred", false);
     }
 
@@ -1062,7 +1074,8 @@ public class KnowledgeBaseServiceImplIntegrationTest {
         KBProperty property = buildProperty();
         KBHandle conceptHandle = sut.createConcept(kb, concept);
         KBHandle propertyHandle = sut.createProperty(kb, property);
-        KBStatement statement = buildStatement(conceptHandle, propertyHandle, "Test statement");
+        Value value = VF.createLiteral("Test statement");
+        KBStatement statement = buildStatement(conceptHandle, propertyHandle, value);
         setReadOnly(kb);
 
         int statementCountBeforeUpsert = sut.listStatements(kb, conceptHandle, false).size();
@@ -1081,7 +1094,8 @@ public class KnowledgeBaseServiceImplIntegrationTest {
         KBProperty property = buildProperty();
         KBHandle conceptHandle = sut.createConcept(kb, concept);
         KBHandle propertyHandle = sut.createProperty(kb, property);
-        KBStatement statement = buildStatement(conceptHandle, propertyHandle, "Test statement");
+        Value value = VF.createLiteral("Test statement");
+        KBStatement statement = buildStatement(conceptHandle, propertyHandle, value);
         sut.upsertStatement(kb, statement);
 
         sut.deleteStatement(kb, statement);
@@ -1099,7 +1113,8 @@ public class KnowledgeBaseServiceImplIntegrationTest {
         KBProperty property = buildProperty();
         KBHandle conceptHandle = sut.createConcept(kb, concept);
         KBHandle propertyHandle = sut.createProperty(kb, property);
-        KBStatement statement = buildStatement(conceptHandle, propertyHandle, "Test statement");
+        Value value = VF.createLiteral("Test statement");
+        KBStatement statement = buildStatement(conceptHandle, propertyHandle, value);
 
         assertThatCode(() -> {
             sut.deleteStatement(kb, statement);
@@ -1113,7 +1128,8 @@ public class KnowledgeBaseServiceImplIntegrationTest {
         KBProperty property = buildProperty();
         KBHandle conceptHandle = sut.createConcept(kb, concept);
         KBHandle propertyHandle = sut.createProperty(kb, property);
-        KBStatement statement = buildStatement(conceptHandle, propertyHandle, "Test statement");
+        Value value = VF.createLiteral("Test statement");
+        KBStatement statement = buildStatement(conceptHandle, propertyHandle, value);
         sut.upsertStatement(kb, statement);
         setReadOnly(kb);
 
@@ -1133,7 +1149,9 @@ public class KnowledgeBaseServiceImplIntegrationTest {
         KBProperty property = buildProperty();
         KBHandle conceptHandle = sut.createConcept(kb, concept);
         KBHandle propertyHandle = sut.createProperty(kb, property);
-        KBStatement statement = buildStatement(conceptHandle, propertyHandle, "Test statement");
+        Value value = VF.createLiteral("Test statement");
+        
+        KBStatement statement = buildStatement(conceptHandle, propertyHandle, value);
         sut.upsertStatement(kb, statement);
 
         List<KBStatement> statements = sut.listStatements(kb, conceptHandle, false);
@@ -1143,7 +1161,7 @@ public class KnowledgeBaseServiceImplIntegrationTest {
             .filteredOn(this::isNotAbstractNorClosedStatement)
             .hasSize(1)
             .element(0)
-            .hasFieldOrPropertyWithValue("value", "Test statement");
+            .hasFieldOrPropertyWithValue("value", value);
     }
 
     @Test
@@ -1303,7 +1321,7 @@ public class KnowledgeBaseServiceImplIntegrationTest {
         return instance;
     }
 
-    private KBStatement buildStatement(KBHandle conceptHandle, KBHandle propertyHandle, String value) {
+    private KBStatement buildStatement(KBHandle conceptHandle, KBHandle propertyHandle, Value value) {
         KBStatement statement = new KBStatement();
         statement.setInstance(conceptHandle);
         statement.setProperty(propertyHandle);
