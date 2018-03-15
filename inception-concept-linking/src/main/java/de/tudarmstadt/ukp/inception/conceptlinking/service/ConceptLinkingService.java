@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.ListIterator;
@@ -127,7 +126,7 @@ public class ConceptLinkingService
             String aLanguage)
     {
         double startTime = System.currentTimeMillis();
-        Set<Entity> linkings = new HashSet<>();
+        Set<Entity> candidates = new HashSet<>();
         List<String> mentionArray = Arrays.asList(mention.split(" "));
 
         ListIterator<String> it = mentionArray.listIterator();
@@ -172,7 +171,7 @@ public class ConceptLinkingService
                                          (label != null) ? label.stringValue() : "",
                                       (altLabel != null) ? altLabel.stringValue() : "");
 
-                    linkings.add(newEntity);
+                    candidates.add(newEntity);
                 }
             }
             catch (QueryEvaluationException e) {
@@ -183,16 +182,16 @@ public class ConceptLinkingService
             }
         }
 
-        if (linkings.isEmpty()) {
+        if (candidates.isEmpty()) {
             String[] split = mention.split(" ");
             if (split.length > 1) {
                 for (String s : split) {
-                    linkings.addAll(linkMention(aKB, s, null, aLanguage));
+                    candidates.addAll(linkMention(aKB, s, null, aLanguage));
                 }
             }
         }
         logger.debug(System.currentTimeMillis() - startTime + "ms for linkMention method.");
-        return linkings;
+        return candidates;
     }
 
     /**
