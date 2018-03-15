@@ -68,36 +68,35 @@ public class ConceptLinkingService
 
     private @Resource KnowledgeBaseService kbService;
     private @Resource SessionRegistry sessionRegistry;
-    
-    private final static String WORKING_DIRECTORY 
+
+    private final static String WORKING_DIRECTORY
         = "workspace/inception-application/inception-concept-linking/";
-    
-    private final String[] PUNCTUATION_VALUES 
-            = new String[] { "``", "''", "(", ")", ",", ".", ":", "--" };
 
-    private final Set<String> punctuations = new HashSet<>(
-            Arrays.asList(PUNCTUATION_VALUES));
+    private final String[] PUNCTUATION_VALUES
+        = new String[] { "``", "''", "(", ")", ",", ".", ":", "--" };
 
-    private final Set<String> stopwords 
-            = Utils.readFile(WORKING_DIRECTORY + "resources/stopwords-de.txt");
+    private final Set<String> punctuations = new HashSet<>(Arrays.asList(PUNCTUATION_VALUES));
+
+    private final Set<String> stopwords
+        = Utils.readFile(WORKING_DIRECTORY + "resources/stopwords-de.txt");
 
     private int candidateQueryLimit = 1000;
     private int signatureQueryLimit = 100;
     
     private final Map<String, Integer> entityFrequencyMap = Utils
-            .loadEntityFrequencyMap(WORKING_DIRECTORY + "resources/wikidata_entity_freqs.map");
+        .loadEntityFrequencyMap(WORKING_DIRECTORY + "resources/wikidata_entity_freqs.map");
 
     private final Set<String> propertyBlacklist = Utils
-            .loadPropertyBlacklist(WORKING_DIRECTORY + "resources/property_blacklist.txt");
-    
+        .loadPropertyBlacklist(WORKING_DIRECTORY + "resources/property_blacklist.txt");
+
     private final Set<String> typeBlacklist = new HashSet<>(Arrays
         .asList("commonsmedia", "external-id", "globe-coordinate", "math", "monolingualtext",
             "quantity", "string", "url", "wikibase-property"));
-    private final Map<String, Property> propertyWithLabels = 
-            Utils.loadPropertyLabels(WORKING_DIRECTORY + "resources/properties_with_labels.txt");
-    
+    private final Map<String, Property> propertyWithLabels = Utils
+        .loadPropertyLabels(WORKING_DIRECTORY + "resources/properties_with_labels.txt");
+
     private Map<String, ConceptLinkingUserState> states = new ConcurrentHashMap<>();
-    
+
     @Override
     public String getBeanName()
     {
