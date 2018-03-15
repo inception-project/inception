@@ -199,7 +199,8 @@ public class ConceptLinkingService
      * Finds the position of a mention in a given sentence and returns the corresponding tokens of
      * the mention with <mentionContextSize> tokens before and <mentionContextSize> after the
      * mention
-     * 
+     *
+     * FIXME there could also be multiple mentions in a sentence
      */
     private List<Token> getMentionContext(Sentence sentence, List<String> mention,
         int mentionContextSize)
@@ -210,21 +211,31 @@ public class ConceptLinkingService
         int start = 0, end = 0;
         int j = 0;
         boolean done = false;
+
+        // Loop until mention end was found or sentence ends
         while (!done && j < mentionSentence.size()) {
+
+            // Go to the position where the mention starts in the sentence
             for (int i = 0; i < mention.size(); i++) {
+
+                // is the word done? i-th word of mention contained in j-th token of sentence?
                 if (!mentionSentence.get(j).getCoveredText()
-                        .contains(mention.get(i))) {
+                    .contains(mention.get(i))) {
                     break;
                 }
-                j++;
+
+                // if this was the last word of mention, end loop
                 if (i == mention.size() - 1) {
                     start = j - (mention.size() - 1) - mentionContextSize;
                     end = j + mentionContextSize + 1;
                     done = true;
+                } else {
+                    j++;
                 }
             }
             j++;
         }
+
 
         if (start == end) {
             logger.warn("Mention not found in sentence!");
