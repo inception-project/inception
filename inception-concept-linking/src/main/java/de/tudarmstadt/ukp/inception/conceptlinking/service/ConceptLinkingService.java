@@ -10,6 +10,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -148,7 +149,7 @@ public class ConceptLinkingService
         while (it2.hasNext()) {
             current = it2.next();
             it2.set(current);
-            if (!stopwords.contains(current)) {
+            if (!Objects.requireNonNull(stopwords).contains(current)) {
                 onlyStopwords = false;
                 break;
             }
@@ -273,7 +274,7 @@ public class ConceptLinkingService
                         || t.getPosValue().startsWith("N")
                         || t.getPosValue().startsWith("J"))
                     && !splitMention.contains(t.getCoveredText())
-                    && (!stopwords.contains(t.getCoveredText())
+                    && (!Objects.requireNonNull(stopwords).contains(t.getCoveredText())
                         || !splitMention.contains(t.getCoveredText()))) {
                     sentenceContentTokens.add(t.getCoveredText());
                 }
@@ -288,7 +289,7 @@ public class ConceptLinkingService
 
             l.setIdRank(Math.log(Double.parseDouble(wikidataId.substring(1))));
 
-            if (entityFrequencyMap.get(wikidataId) != null) {
+            if (Objects.requireNonNull(entityFrequencyMap).get(wikidataId) != null) {
                 l.setFrequency(entityFrequencyMap.get(wikidataId));
             } else {
                 l.setFrequency(0);
@@ -356,13 +357,11 @@ public class ConceptLinkingService
                     BindingSet sol = result.next();
                     String propertyString = sol.getValue("p").stringValue();
                     String labelString = sol.getValue("label").stringValue();
-                    if (propertyWithLabels != null) {
-                        Property property = propertyWithLabels.get(labelString);
-                        if (propertyBlacklist != null && (propertyBlacklist.contains(propertyString)
-                            || (property != null && typeBlacklist.contains(property.getType())) || (
-                            property != null && property.getFreq() < frequencyThreshold))) {
-                            continue;
-                        }
+                    Property property = Objects.requireNonNull(propertyWithLabels).get(labelString);
+                    if (Objects.requireNonNull(propertyBlacklist).contains(propertyString) || (
+                        property != null && typeBlacklist.contains(property.getType())) || (
+                        property != null && property.getFreq() < frequencyThreshold)) {
+                        continue;
                     }
                     relatedEntities.add(labelString);
                     relatedRelations.add(propertyString);
