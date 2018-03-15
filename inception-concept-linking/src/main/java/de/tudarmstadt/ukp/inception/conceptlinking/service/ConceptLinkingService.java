@@ -105,7 +105,7 @@ public class ConceptLinkingService
     @Override
     public String getBeanName()
     {
-        return "conceptLinkingService";
+        return "ConceptLinkingService";
     }
 
     /*
