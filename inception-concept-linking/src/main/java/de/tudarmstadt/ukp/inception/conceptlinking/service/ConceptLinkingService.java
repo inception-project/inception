@@ -92,9 +92,8 @@ public class ConceptLinkingService
     private final Set<String> stopwords 
             = Utils.readFile(WORKING_DIRECTORY + "resources/stopwords-de.txt");
 
-    private int candidateQueryLimit = 200;
-    private int signatureQueryLimit = 10;
-    private int frequencyThreshold = 10;
+    private int candidateQueryLimit = 1000;
+    private int signatureQueryLimit = 100;
     
     private final Map<String, Integer> entityFrequencyMap = Utils
             .loadEntityFrequencyMap(WORKING_DIRECTORY + "resources/wikidata_entity_freqs.map");
@@ -254,7 +253,7 @@ public class ConceptLinkingService
     private List<Entity> computeCandidateScores(KnowledgeBase aKB, String mention, 
             Set<Entity> linkings, JCas aJCas, int aBegin)
     {
-        int mentionContextSize = 2;
+        int mentionContextSize = 5;
         Sentence mentionSentence = getMentionSentence(aJCas, aBegin);
         if (mentionSentence == null) {
             throw new IllegalStateException();
@@ -355,6 +354,7 @@ public class ConceptLinkingService
                     String propertyString = sol.getValue("p").stringValue();
                     String labelString = sol.getValue("label").stringValue();
                     Property property = Objects.requireNonNull(propertyWithLabels).get(labelString);
+                    int frequencyThreshold = 0;
                     if (Objects.requireNonNull(propertyBlacklist).contains(propertyString) || (
                         property != null && typeBlacklist.contains(property.getType())) || (
                         property != null && property.getFreq() < frequencyThreshold)) {
