@@ -169,14 +169,14 @@ public class ConceptLinkingService
                     BindingSet solution = entityResult.next();
                     Value e2 = solution.getValue("e2");
                     Value label = solution.getValue("label");
-                    Value anylabel = solution.getValue("anylabel");
+                    Value altLabel = solution.getValue("altLabel");
 
-                    Entity newEntity = new Entity((e2 != null) ? e2.toString() : "",
-                                         (label != null) ? label.toString() : "",
-                                      (anylabel != null) ? anylabel.toString() : "");
-                    
-                        linkings.add(newEntity);
-                    }
+                    Entity newEntity = new Entity((e2 != null) ? e2.stringValue() : "",
+                                         (label != null) ? label.stringValue() : "",
+                                      (altLabel != null) ? altLabel.stringValue() : "");
+
+                    linkings.add(newEntity);
+                }
             }
             catch (QueryEvaluationException e) {
                 throw new QueryEvaluationException(e);
@@ -284,19 +284,19 @@ public class ConceptLinkingService
         
         linkings.parallelStream().forEach( l -> {
             String wikidataId = l.getIRI().replace("http://www.wikidata.org/entity/", "");
-            String anylabel = l.getAnyLabel().toLowerCase();
+            String altLabel = l.getAnyLabel().toLowerCase();
 
             l.setIdRank(Math.log(Double.parseDouble(wikidataId.substring(1))));
-            
+
             if (entityFrequencyMap.get(wikidataId) != null) {
                 l.setFrequency(entityFrequencyMap.get(wikidataId));
             } else {
                 l.setFrequency(0);
             }
-            
+
             LevenshteinDistance lev = new LevenshteinDistance();
-            l.setLevMatchLabel(lev.apply(mention, anylabel));
-            l.setLevContext(lev.apply(tokensToString(mentionContext), anylabel));
+            l.setLevMatchLabel(lev.apply(mention, altLabel));
+            l.setLevContext(lev.apply(tokensToString(mentionContext), altLabel));
             l.setNumRelatedRelations(0);
 
             SemanticSignature sig = getSemanticSignature(aKB, wikidataId);

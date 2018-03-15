@@ -27,18 +27,18 @@ public class QueryUtil
             + "                  UNION\n"
             + "                  {VALUES ?labelpredicate {rdfs:label skos:altLabel}\n"
             + "                      GRAPH <http://wikidata.org/terms> {\n"
-            + "                          ?e2 ?labelpredicate ?anylabel. \n"
-            + "                          ?anylabel bif:contains '\"%entitylabel\"'@%language. \n"
+            + "                          ?e2 ?labelpredicate ?altLabel. \n"
+            + "                          ?altLabel bif:contains '\"%entitylabel\"'@%language. \n"
             + "                      }\n"
             + "                      ?e2 rdf:type <%conceptIri> \n"
-            + "                      FILTER ( lang(?anylabel) = \"%language\" )\n"
+            + "                      FILTER ( lang(?altLabel) = \"%language\" )\n"
             + "                  }\n"
             + "              }\n"
             + "    FILTER EXISTS { GRAPH <http://wikidata.org/statements> { ?e2 ?p ?v }}\n"
             + "    FILTER NOT EXISTS {\n"
             + "    VALUES ?topic {e:Q17442446 e:Q18616576 e:Q5707594 e:Q427626 e:Q16521 e:Q11173}\n"
             + "    GRAPH <http://wikidata.org/instances> {?e2 rdf:type ?topic}}\n"
-            + "    BIND (STRLEN(?anylabel) as ?len)";
+            + "    BIND (STRLEN(?altLabel) as ?len)";
     
     private static String SPARQL_CANONICAL_LABEL_ENTITY = "{\n"
             + "        GRAPH <http://wikidata.org/terms> { ?e2 rdfs:label ?label. }\n"
@@ -92,7 +92,7 @@ public class QueryUtil
         query += SPARQL_ENTITY_LABEL_INST;
         query += "} \n";
         query += SPARQL_LIMIT + limit;
-        String variables = "".concat("?e2 ").concat("?anylabel ").concat("?label");
+        String variables = "".concat("?e2 ").concat("?altLabel ").concat("?label");
         query = query.replace("%queryvariables%", variables);
         return query;
     }
