@@ -80,9 +80,6 @@ public class ConceptLinkingService
     private final Set<String> stopwords
         = Utils.readFile(WORKING_DIRECTORY + "resources/stopwords-de.txt");
 
-    private int candidateQueryLimit = 1000;
-    private int signatureQueryLimit = 100;
-    
     private final Map<String, Integer> entityFrequencyMap = Utils
         .loadEntityFrequencyMap(WORKING_DIRECTORY + "resources/wikidata_entity_freqs.map");
 
@@ -147,6 +144,7 @@ public class ConceptLinkingService
 
         String entityQueryString = 
                 QueryUtil.entityQuery(mentionArray, candidateQueryLimit, conceptIri, aLanguage);
+        int candidateQueryLimit = 1000;
         
         try (RepositoryConnection conn = kbService.getConnection(aKB)) {
             TupleQuery query = conn.prepareTupleQuery(QueryLanguage.SPARQL, entityQueryString);
@@ -350,6 +348,7 @@ public class ConceptLinkingService
         Set<String> relatedRelations = new HashSet<>();
         Set<String> relatedEntities = new HashSet<>();
         String queryString = QueryUtil.semanticSignatureQuery(wikidataId, signatureQueryLimit);
+        int signatureQueryLimit = 100;
         try (RepositoryConnection conn = kbService.getConnection(aKB)) {
             TupleQuery query = conn.prepareTupleQuery(QueryLanguage.SPARQL, queryString);
             try (TupleQueryResult result = query.evaluate()) {
