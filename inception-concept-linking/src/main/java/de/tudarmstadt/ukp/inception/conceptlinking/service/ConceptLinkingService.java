@@ -113,7 +113,7 @@ public class ConceptLinkingService
      * It only contains entities which are instances of a pre-defined concept.
      * TODO lemmatize the mention if no candidates could be generated
      */
-    private Set<Entity> linkMention(KnowledgeBase aKB, String aMention, IRI aConceptIri,
+    private Set<Entity> generateCandidates(KnowledgeBase aKB, String aMention, IRI aConceptIri,
             String aLanguage)
     {
         double startTime = System.currentTimeMillis();
@@ -147,8 +147,8 @@ public class ConceptLinkingService
         }
 
         int candidateQueryLimit = 1000;
-        String entityQueryString =
-                QueryUtil.entityQuery(mentionArray, candidateQueryLimit, aConceptIri, aLanguage);
+        String entityQueryString = QueryUtil
+            .generateCandidateQuery(mentionArray, candidateQueryLimit, aConceptIri, aLanguage);
         
         try (RepositoryConnection conn = kbService.getConnection(aKB)) {
             TupleQuery query = conn.prepareTupleQuery(QueryLanguage.SPARQL, entityQueryString);
@@ -178,11 +178,11 @@ public class ConceptLinkingService
             String[] split = aMention.split(" ");
             if (split.length > 1) {
                 for (String s : split) {
-                    candidates.addAll(linkMention(aKB, s, null, aLanguage));
+                    candidates.addAll(generateCandidates(aKB, s, null, aLanguage));
                 }
             }
         }
-        logger.debug(System.currentTimeMillis() - startTime + "ms for linkMention method.");
+        logger.debug(System.currentTimeMillis() - startTime + "ms for generateCandidates method.");
         return candidates;
     }
 
@@ -245,7 +245,7 @@ public class ConceptLinkingService
      * This method does the actual ranking of the candidate entity set.
      * It returns the candidates by descending probability.
      */
-    private List<Entity> computeCandidateScores(KnowledgeBase aKB, String mention, 
+    private List<Entity> rankCandidates(KnowledgeBase aKB, String mention,
             Set<Entity> candidates, JCas aJCas, int aBegin)
     {
         int mentionContextSize = 5;
@@ -363,7 +363,7 @@ public class ConceptLinkingService
         Set<String> relatedRelations = new HashSet<>();
         Set<String> relatedEntities = new HashSet<>();
         int signatureQueryLimit = 100;
-        String queryString = QueryUtil.semanticSignatureQuery(aWikidataId, signatureQueryLimit);
+        String queryString = QueryUtil.generateSemanticSignatureQuery(aWikidataId, signatureQueryLimit);
         try (RepositoryConnection conn = kbService.getConnection(aKB)) {
             TupleQuery query = conn.prepareTupleQuery(QueryLanguage.SPARQL, queryString);
             try (TupleQueryResult result = query.evaluate()) {
@@ -416,8 +416,8 @@ public class ConceptLinkingService
         try {
             JCas jCas = aActionHandler.getEditorCas();
 
-            candidates = computeCandidateScores(aKB, mention,
-                    linkMention(aKB, mention, aConceptIri, language), jCas,
+            candidates = rankCandidates(aKB, mention,
+                    generateCandidates(aKB, mention, aConceptIri, language), jCas,
                     aState.getSelection().getBegin());
         }
         catch (IOException e) {

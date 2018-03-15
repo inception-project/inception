@@ -68,7 +68,7 @@ public class QueryUtil
      * @param language the language in which the labels should be retrieved
      * @return a query to retrieve candidate entities
      */
-    public static String entityQuery(List<String> tokens, int limit, IRI conceptIri, 
+    public static String generateCandidateQuery(List<String> tokens, int limit, IRI conceptIri,
             String language)
     {
         String query = SPARQL_INFERENCE_CLAUSE;
@@ -127,7 +127,7 @@ public class QueryUtil
      * @param limit maximum number of results
      * @return a query to retrieve the semantic signature
      */
-    public static String semanticSignatureQuery(String wikidataId, int limit)
+    public static String generateSemanticSignatureQuery(String wikidataId, int limit)
     {
         String query = SPARQL_PREFIX + "\n";
         query += SPARQL_SELECT + "{\n";
