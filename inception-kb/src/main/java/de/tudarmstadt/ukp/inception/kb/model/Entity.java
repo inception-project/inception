@@ -2,35 +2,76 @@ package de.tudarmstadt.ukp.inception.kb.model;
 
 import java.util.Set;
 
-/*
+/**
  * Stores information about entities retrieved from a knowledge base 
  * Needed to compute a candidate ranking score
  */
 public class Entity
 {
 
-    private String e2;
-    private String anylabel;
+    /**
+     * The IRI of this entity
+     */
+    private String IRI;
+
+    /**
+     * The main label of this entity
+     */
     private String label;
-    private Set<String> signatureOverlap;
-    private int levMainLabel;
+
+    /**
+     * The alternative label of this particular entity
+     */
+    private String alternativeLabel;
+
+    /**
+     * edit distance between mention and candidate entity label
+     */
     private int levMatchLabel;
-    private int levSentence;
+
+    /**
+     * edit distance between mention + context and candidate entity label
+     */
+    private int levContext;
+
+    /**
+     * set of directly related entities (IRI Strings)
+     */
+    
+    private Set<String> signatureOverlap;
+    /**
+     * number of distinct relations to other entities
+     */
     private int numRelatedRelations;
+
+    /**
+     * number of related entities whose entity label occurs in <i>content tokens</i>
+     * <i>content tokens</i> consist of tokens in mention sentence annotated as nouns, verbs or
+     * adjectives
+     */
     private int signatureOverlapScore;
+
+    /**
+     * logarithm of the wikidata ID
+     * based on the asumption that lower IDs are more important
+     */
     private double idRank;
+
+    /**
+     * in-link count of wikipedia article of IRI
+     */
     private int frequency;
 
-    public Entity(String e2, String label, String anylabel)
+    public Entity(String IRI, String label, String alternativeLabel)
     {
-        this.e2 = e2;
+        this.IRI = IRI;
         this.label = label;
-        this.anylabel = anylabel;
+        this.alternativeLabel = alternativeLabel;
     }
 
-    public String getE2()
+    public String getIRI()
     {
-        return e2;
+        return IRI;
     }
 
     public String getLabel()
@@ -40,7 +81,7 @@ public class Entity
 
     public String getAnyLabel()
     {
-        return anylabel;
+        return alternativeLabel;
     }
 
     public Set<String> getSignatureOverlap()
@@ -53,16 +94,6 @@ public class Entity
         this.signatureOverlap = signatureOverlap;
     }
 
-    public int getLevMainLabel()
-    {
-        return levMainLabel;
-    }
-
-    public void setLevMainLabel(int levMainLabel)
-    {
-        this.levMainLabel = levMainLabel;
-    }
-
     public int getLevMatchLabel()
     {
         return levMatchLabel;
@@ -73,14 +104,14 @@ public class Entity
         this.levMatchLabel = levMatchLabel;
     }
 
-    public int getLevSentence()
+    public int getLevContext()
     {
-        return levSentence;
+        return levContext;
     }
 
-    public void setLevSentence(int levSentence)
+    public void setLevContext(int levContext)
     {
-        this.levSentence = levSentence;
+        this.levContext = levContext;
     }
 
     public void setNumRelatedRelations(int i)
@@ -122,34 +153,5 @@ public class Entity
     {
         return frequency;
     }
-
-    @Override
-    public int hashCode()
-    {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((e2 == null) ? 0 : e2.hashCode());
-        return result;
-    }
-
-    @Override
-    public boolean equals(Object obj)
-    {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        Entity other = (Entity) obj;
-        if (e2 == null) {
-            if (other.e2 != null)
-                return false;
-        }
-        else if (!e2.equals(other.e2))
-            return false;
-        return true;
-    }
-
     
 }

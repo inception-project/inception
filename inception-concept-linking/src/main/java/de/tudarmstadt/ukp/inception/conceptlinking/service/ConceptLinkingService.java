@@ -283,7 +283,7 @@ public class ConceptLinkingService
         double startLoop = System.currentTimeMillis();
         
         linkings.parallelStream().forEach( l -> {
-            String wikidataId = l.getE2().replace("http://www.wikidata.org/entity/", "");
+            String wikidataId = l.getIRI().replace("http://www.wikidata.org/entity/", "");
             String anylabel = l.getAnyLabel().toLowerCase();
 
             l.setIdRank(Math.log(Double.parseDouble(wikidataId.substring(1))));
@@ -296,7 +296,7 @@ public class ConceptLinkingService
             
             LevenshteinDistance lev = new LevenshteinDistance();
             l.setLevMatchLabel(lev.apply(mention, anylabel));
-            l.setLevSentence(lev.apply(tokensToString(mentionContext), anylabel));
+            l.setLevContext(lev.apply(tokensToString(mentionContext), anylabel));
             l.setNumRelatedRelations(0);
 
             SemanticSignature sig = getSemanticSignature(aKB, wikidataId);
@@ -325,8 +325,8 @@ public class ConceptLinkingService
             {
                 return new org.apache.commons.lang.builder.CompareToBuilder()
                         .append(-e1.getSignatureOverlapScore(), -e2.getSignatureOverlapScore())
-                        .append(e1.getLevSentence() + e1.getLevMatchLabel(),
-                                e2.getLevSentence() + e2.getLevMatchLabel())
+                        .append(e1.getLevContext() + e1.getLevMatchLabel(),
+                                e2.getLevContext() + e2.getLevMatchLabel())
                         .append(-e1.getFrequency(), -e2.getFrequency())
                         .append(-e1.getNumRelatedRelations(), -e2.getNumRelatedRelations())
                         .append(e1.getIdRank(), e2.getIdRank()).toComparison();

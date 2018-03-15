@@ -557,7 +557,7 @@ public class KnowledgeBaseServiceImpl
             List<KBHandle> handles = new ArrayList<>();
 
             for (Entity c: candidates) {
-                String id = c.getE2();
+                String id = c.getIRI();
                 String label = c.getLabel();
 
                 if (!id.contains(":") || (!aAll && startsWithAny(id, IMPLICIT_NAMESPACES))) {
