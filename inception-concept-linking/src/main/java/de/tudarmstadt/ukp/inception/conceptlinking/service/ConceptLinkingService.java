@@ -370,7 +370,7 @@ public class ConceptLinkingService
                         }
                     }
                     relatedEntities.add(labelString);
-                    relatedRelations.add(propertyString.substring(0, propertyString.length() - 2));
+                    relatedRelations.add(propertyString);
                 }
             }
             catch (Exception e) {
