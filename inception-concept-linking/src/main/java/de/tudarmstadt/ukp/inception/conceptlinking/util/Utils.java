@@ -18,15 +18,20 @@
 
 package de.tudarmstadt.ukp.inception.conceptlinking.util;
 
-import java.io.File;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.io.FileUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.core.io.Resource;
 
 import de.tudarmstadt.ukp.inception.conceptlinking.model.Property;
 
@@ -36,80 +41,68 @@ import de.tudarmstadt.ukp.inception.conceptlinking.model.Property;
 public class Utils
 {
 
-    public static Set<String> readFile(String location)
-    {
-        try {
-            File f = new File(location);
-            List<String> lines = FileUtils.readLines(f, "UTF-8");
-            return new HashSet<>(lines);
+    private final static Logger log = LoggerFactory.getLogger(Utils.class);
 
+    private static List<String> readLines(Resource r)
+    {
+        List<String> lines = new ArrayList<>();
+        String l;
+        try {
+            InputStream is = r.getInputStream();
+            BufferedReader br = new BufferedReader(new InputStreamReader(is));
+            while ((l = br.readLine()) != null) {
+                lines.add(l);
+            }
+            br.close();
+        } catch (IOException e) {
+            log.error("Could not read file " + r.getFilename(), e);
         }
-        catch (IOException e) {
-            e.printStackTrace();
-        }
-        return null;
+        return lines;
     }
 
-    public static Map<String, Property> loadPropertyLabels(String location)
+    public static Set<String> readFile(Resource r)
+    {
+        List<String> lines = readLines(r);
+        return new HashSet<>(lines);
+    }
+
+    public static Map<String, Property> loadPropertyLabels(Resource r)
     {
         Map<String, Property> property2LabelMap = new HashMap<String, Property>();
-        try {
-            File f = new File(location);
-            List<String> lines = FileUtils.readLines(f, "UTF-8");
-            for (String line: lines) {
-                if (!line.startsWith("#")) {
-                    String[] col = line.split("\t");
-                    Property label = new Property(col[1], col[3], col[4], col[5]);
-                    property2LabelMap.put(col[0].trim(), label);
-                }
+        List<String> lines = readLines(r);
+        for (String line: lines) {
+            if (!line.startsWith("#")) {
+                String[] col = line.split("\t");
+                Property label = new Property(col[1], col[3], col[4], col[5]);
+                property2LabelMap.put(col[0].trim(), label);
             }
-            return property2LabelMap;
         }
-        catch (IOException e) {
-            e.printStackTrace();
-        }
-        return null;
+        return property2LabelMap;
     }
 
-    public static Map<String, Integer> loadEntityFrequencyMap(String filename)
+    public static Map<String, Integer> loadEntityFrequencyMap(Resource r)
     {
         Map<String, Integer> entityFreqMap = new HashMap<String, Integer>();
-        try {
-            File f = new File(filename);
-            List<String> lines = FileUtils.readLines(f, "UTF-8");
-            for (String line: lines) {
-                if (!line.startsWith("#")) {
-                    String[] col = line.split("\t");
-                    entityFreqMap.put(col[0], Integer.parseInt(col[1]));
-                }
+        List<String> lines = readLines(r);
+        for (String line : lines) {
+            if (!line.startsWith("#")) {
+                String[] col = line.split("\t");
+                entityFreqMap.put(col[0], Integer.parseInt(col[1]));
             }
-            return entityFreqMap;
         }
-        catch (IOException e) {
-            e.printStackTrace();
-        }
-        return null;
+        return entityFreqMap;
     }
     
-    public static Set<String> loadPropertyBlacklist(String filename)
+    public static Set<String> loadPropertyBlacklist(Resource r)
     {
         Set<String> propertyBlacklist = new HashSet<>();
-        try {
-            File f = new File(filename);
-            List<String> lines = FileUtils.readLines(f, "UTF-8");
-            for (String line: lines) {
-                if (!line.startsWith("#")) {
-                    String[] col = line.split("\t");
-                    propertyBlacklist.add(col[0]);
-                }
+        List<String> lines = readLines(r);
+        for (String line: lines) {
+            if (!line.startsWith("#")) {
+                String[] col = line.split("\t");
+                propertyBlacklist.add(col[0]);
             }
-            return propertyBlacklist;
         }
-        catch (IOException e) {
-            e.printStackTrace();
-        }
-        return null;
+        return propertyBlacklist;
     }
-
-    
 }

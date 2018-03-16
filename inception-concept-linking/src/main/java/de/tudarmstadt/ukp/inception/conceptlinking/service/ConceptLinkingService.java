@@ -32,6 +32,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.concurrent.ConcurrentHashMap;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 
 import org.apache.commons.text.similarity.LevenshteinDistance;
@@ -50,6 +51,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.security.core.session.SessionDestroyedEvent;
 import org.springframework.security.core.session.SessionInformation;
 import org.springframework.security.core.session.SessionRegistry;
@@ -86,30 +88,46 @@ public class ConceptLinkingService
     private @Resource KnowledgeBaseService kbService;
     private @Resource SessionRegistry sessionRegistry;
 
-    private final static String WORKING_DIRECTORY
-        = "workspace/inception-application/inception-concept-linking/";
-
     private final String[] PUNCTUATION_VALUES
         = new String[] { "``", "''", "(", ")", ",", ".", ":", "--" };
 
     private final Set<String> punctuations = new HashSet<>(Arrays.asList(PUNCTUATION_VALUES));
 
-    private final Set<String> stopwords
-        = Utils.readFile(WORKING_DIRECTORY + "resources/stopwords-de.txt");
+    private Set<String> stopwords;
 
-    private final Map<String, Integer> entityFrequencyMap = Utils
-        .loadEntityFrequencyMap(WORKING_DIRECTORY + "resources/wikidata_entity_freqs.map");
+    private Map<String, Integer> entityFrequencyMap;
 
-    private final Set<String> propertyBlacklist = Utils
-        .loadPropertyBlacklist(WORKING_DIRECTORY + "resources/property_blacklist.txt");
+    private Set<String> propertyBlacklist;
 
-    private final Set<String> typeBlacklist = new HashSet<>(Arrays
+    private Set<String> typeBlacklist = new HashSet<>(Arrays
         .asList("commonsmedia", "external-id", "globe-coordinate", "math", "monolingualtext",
             "quantity", "string", "url", "wikibase-property"));
-    private final Map<String, Property> propertyWithLabels = Utils
-        .loadPropertyLabels(WORKING_DIRECTORY + "resources/properties_with_labels.txt");
+
+    private Map<String, Property> propertyWithLabels;
 
     private Map<String, ConceptLinkingUserState> states = new ConcurrentHashMap<>();
+
+    @PostConstruct
+    public void init()
+    {
+        DefaultResourceLoader loader = new DefaultResourceLoader();
+
+        org.springframework.core.io.Resource stopwordsResource = loader
+            .getResource("classpath:stopwords-de.txt");
+        stopwords = Utils.readFile(stopwordsResource);
+
+        org.springframework.core.io.Resource entityFrequencyMapResource = loader
+            .getResource("classpath:wikidata_entity_freqs.map");
+        entityFrequencyMap = Utils.loadEntityFrequencyMap(entityFrequencyMapResource);
+
+        org.springframework.core.io.Resource propertyBlacklistResource = loader
+            .getResource("classpath:property_blacklist.txt");
+        propertyBlacklist = Utils.loadPropertyBlacklist(propertyBlacklistResource);
+
+        org.springframework.core.io.Resource propertyWithLabelsResource = loader
+            .getResource("classpath:properties_with_labels.txt");
+        propertyWithLabels = Utils.loadPropertyLabels(propertyWithLabelsResource);
+    }
 
     @Override
     public String getBeanName()
