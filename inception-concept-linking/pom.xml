@@ -24,7 +24,6 @@
     <version>0.3.0-SNAPSHOT</version>
   </parent>
   <artifactId>inception-concept-linking</artifactId>
-  <version>0.2.2-SNAPSHOT</version>
   <name>Entity Linking Evaluation</name>
   <description>A program to test the entity linking approach by Daniil Sorokin on the GerNED dataset.</description>
   
