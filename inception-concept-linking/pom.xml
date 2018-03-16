@@ -23,100 +23,11 @@
     <artifactId>inception-app</artifactId>
     <version>0.3.0-SNAPSHOT</version>
   </parent>
-  <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-  <artifactId>inception-app</artifactId>
-  <version>0.3.0-SNAPSHOT</version>
-  <packaging>pom</packaging>
-  <name>INCEpTION</name>
-  <properties>
-    <webanno.version>3.4.0-SNAPSHOT</webanno.version>
-    <dkpro.version>1.9.1-SNAPSHOT</dkpro.version>
-    <spring.version>5.0.4.RELEASE </spring.version>
-    <spring.boot.version>1.5.10.RELEASE</spring.boot.version>
-    <wicket.version>7.10.0</wicket.version>
-    <wicket-jquery-ui.version>7.10.1</wicket-jquery-ui.version>
-    <lucene.version>7.1.0</lucene.version>
-    <solr.version>7.1.0</solr.version>
-    <dkpro.lab.version>0.14.0</dkpro.lab.version>
-    <dl4j.version>0.9.1</dl4j.version>
-    <rdf4j.version>2.2.4</rdf4j.version>
-  </properties>
-  <modules>
-    <module>inception-build</module>
-    <module>inception-app-webapp</module>
-    <module>inception-app-ui-search</module>
-    <module>inception-search-core</module>
-    <!-- >module>inception-search-mimir</module -->
-    <module>inception-search-mtas</module>
-    <module>inception-kb</module>
-    <module>inception-ui-core</module>
-    <module>inception-ui-kb</module>
-    <module>inception-ui-dashboard</module>
-    <module>inception-html-editor</module>
-    <module>inception-pdf-editor</module>
-    <module>inception-recommendation</module>
-    <module>inception-concept-linking</module>
-    <module>inception-active-learning</module>
-    <module>inception-imls-core</module>
-    <!-- module>inception-imls-mira</module -->
-    <module>inception-imls-opennlp</module>
-    <module>inception-imls-stringmatch</module>
-    <module>inception-imls-dl4j</module>
-    <module>inception-log</module>
-    <module>inception-support</module>
-    <!-- Documentation -->
-    <module>inception-doc</module>
-  </modules>
-  <repositories>
-    <!-- For RELEASEes of Miralium -->
-    <!--  
-    <repository>
-      <id>ukp-central</id>
-      <url>https://scruffy.ukp.informatik.tu-darmstadt.de/artifactory/list/external-grid/</url>
-      <releases>
-        <enabled>true</enabled>
-      </releases>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-    </repository>
-    -->
-    <!-- For RELEASEes of WebAnno / DKPro Core-->
-    <repository>
-      <id>ukp-oss-releases</id>
-      <url>http://zoidberg.ukp.informatik.tu-darmstadt.de/artifactory/public-releases</url>
-      <releases>
-        <enabled>true</enabled>
-      </releases>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-    </repository>
-    <!-- For SNAPSHOTs of WebAnno / DKPro Core -->
-    <repository>
-      <id>ukp-oss-snapshots</id>
-      <url>http://zoidberg.ukp.informatik.tu-darmstadt.de/artifactory/public-snapshots</url>
-      <releases>
-        <enabled>false</enabled>
-      </releases>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-    </repository>
-  </repositories>
-  <scm>
-    <connection>scm:git:git.ukp.informatik.tu-darmstadt.de:inception/inception-application.git</connection>
-    <developerConnection>scm:git:git@git.ukp.informatik.tu-darmstadt.de:inception/inception-application.git</developerConnection>
-    <url>https://git.ukp.informatik.tu-darmstadt.de/inception/inception-application</url>
-    <tag>HEAD</tag>
-  </scm>
-  <distributionManagement>
-    <repository>
-      <id>ukp-central</id>
-      <name>ukp-central-releases</name>
-      <url>https://scruffy.ukp.informatik.tu-darmstadt.de/artifactory/dkpro-local</url>
-    </repository>
-  </distributionManagement>
+  <artifactId>inception-concept-linking</artifactId>
+  <version>0.2.2-SNAPSHOT</version>
+  <name>Entity Linking Evaluation</name>
+  <description>A program to test the entity linking approach by Daniil Sorokin on the GerNED dataset.</description>
+  
   <dependencies>
     <!-- The logging subsystem used by WebAnno -->
     <dependency>
