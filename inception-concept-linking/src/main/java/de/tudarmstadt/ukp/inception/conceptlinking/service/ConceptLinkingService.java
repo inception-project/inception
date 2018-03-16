@@ -21,7 +21,6 @@ package de.tudarmstadt.ukp.inception.conceptlinking.service;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.ListIterator;
@@ -215,7 +214,7 @@ public class ConceptLinkingService
         int mentionContextSize)
     {
         List<Token> mentionSentence = new ArrayList<>();
-        Collections.addAll(mentionSentence, (Token) JCasUtil.selectCovered(Token.class, aSentence));
+        mentionSentence.addAll(JCasUtil.selectCovered(Token.class, aSentence));
 
         int start = 0, end = 0;
         int j = 0;
