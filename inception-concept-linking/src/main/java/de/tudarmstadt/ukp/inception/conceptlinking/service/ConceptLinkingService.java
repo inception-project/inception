@@ -152,7 +152,7 @@ public class ConceptLinkingService
         while (it2.hasNext()) {
             current = it2.next();
             it2.set(current);
-            if (!Objects.requireNonNull(stopwords).contains(current)) {
+            if (!stopwords.contains(current)) {
                 onlyStopwords = false;
                 break;
             }
