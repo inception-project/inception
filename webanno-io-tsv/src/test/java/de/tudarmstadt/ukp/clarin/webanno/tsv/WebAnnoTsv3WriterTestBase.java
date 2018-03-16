@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.tsv;
 
-import static java.lang.Math.max;
-import static java.lang.Math.min;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngineDescription;
 import static org.apache.uima.fit.util.FSUtil.setFeature;
@@ -136,11 +134,11 @@ public abstract class WebAnnoTsv3WriterTestBase
         dep1.setGovernor(t1);
         dep1.setDependent(t2);
         // WebAnno legacy conventions
-        dep1.setBegin(min(dep1.getDependent().getBegin(), dep1.getGovernor().getBegin()));
-        dep1.setEnd(max(dep1.getDependent().getEnd(), dep1.getGovernor().getEnd()));
+        // dep1.setBegin(min(dep1.getDependent().getBegin(), dep1.getGovernor().getBegin()));
+        // dep1.setEnd(max(dep1.getDependent().getEnd(), dep1.getGovernor().getEnd()));
         // DKPro Core conventions
-        // dep1.setBegin(dep1.getDependent().getBegin());
-        // dep1.setEnd(dep1.getDependent().getEnd());
+        dep1.setBegin(dep1.getDependent().getBegin());
+        dep1.setEnd(dep1.getDependent().getEnd());
         dep1.addToIndexes();
         
         writeAndAssertEquals(jcas, 
@@ -647,11 +645,11 @@ public abstract class WebAnnoTsv3WriterTestBase
         
         // One at the beginning
         // WebAnno legacy conventions
-        AnnotationFS fs1 = cas.createAnnotation(relationType, 
-                min(dep.getBegin(), gov.getBegin()),
-                max(dep.getEnd(), gov.getEnd()));
+        // AnnotationFS fs1 = cas.createAnnotation(relationType, 
+        //         min(dep.getBegin(), gov.getBegin()),
+        //         max(dep.getEnd(), gov.getEnd()));
         // DKPro Core conventions
-        // AnnotationFS fs1 = cas.createAnnotation(relationType, dep.getBegin(), dep.getEnd());
+        AnnotationFS fs1 = cas.createAnnotation(relationType, dep.getBegin(), dep.getEnd());
         FSUtil.setFeature(fs1, "Governor", gov);
         FSUtil.setFeature(fs1, "Dependent", dep);
         cas.addFsToIndexes(fs1);
@@ -680,11 +678,11 @@ public abstract class WebAnnoTsv3WriterTestBase
         
         // One at the beginning
         // WebAnno legacy conventions
-        AnnotationFS fs1 = cas.createAnnotation(relationType, 
-                min(dep.getBegin(), gov.getBegin()),
-                max(dep.getEnd(), gov.getEnd()));
+        // AnnotationFS fs1 = cas.createAnnotation(relationType, 
+        //        min(dep.getBegin(), gov.getBegin()),
+        //        max(dep.getEnd(), gov.getEnd()));
         // DKPro Core conventions
-        // AnnotationFS fs1 = cas.createAnnotation(relationType, dep.getBegin(), dep.getEnd());
+        AnnotationFS fs1 = cas.createAnnotation(relationType, dep.getBegin(), dep.getEnd());
         FSUtil.setFeature(fs1, "Governor", gov);
         FSUtil.setFeature(fs1, "Dependent", dep);
         cas.addFsToIndexes(fs1);
@@ -717,11 +715,11 @@ public abstract class WebAnnoTsv3WriterTestBase
         
         // One at the beginning
         // WebAnno legacy conventions
-        AnnotationFS fs1 = cas.createAnnotation(relationType, 
-                min(dep.getBegin(), gov.getBegin()),
-                max(dep.getEnd(), gov.getEnd()));
+        // AnnotationFS fs1 = cas.createAnnotation(relationType, 
+        //         min(dep.getBegin(), gov.getBegin()),
+        //         max(dep.getEnd(), gov.getEnd()));
         // DKPro Core conventions
-        // AnnotationFS fs1 = cas.createAnnotation(relationType, dep.getBegin(), dep.getEnd());
+        AnnotationFS fs1 = cas.createAnnotation(relationType, dep.getBegin(), dep.getEnd());
         FSUtil.setFeature(fs1, "Governor", gov);
         FSUtil.setFeature(fs1, "Dependent", dep);
         cas.addFsToIndexes(fs1);
@@ -753,11 +751,11 @@ public abstract class WebAnnoTsv3WriterTestBase
         
         // One at the beginning
         // WebAnno legacy conventions
-        AnnotationFS fs1 = cas.createAnnotation(relationType, 
-                min(dep.getBegin(), gov.getBegin()),
-                max(dep.getEnd(), gov.getEnd()));
+        // AnnotationFS fs1 = cas.createAnnotation(relationType, 
+        //         min(dep.getBegin(), gov.getBegin()),
+        //         max(dep.getEnd(), gov.getEnd()));
         // DKPro Core conventions
-        // AnnotationFS fs1 = cas.createAnnotation(relationType, dep.getBegin(), dep.getEnd());
+        AnnotationFS fs1 = cas.createAnnotation(relationType, dep.getBegin(), dep.getEnd());
         FSUtil.setFeature(fs1, "Governor", gov);
         FSUtil.setFeature(fs1, "Dependent", dep);
         cas.addFsToIndexes(fs1);
@@ -789,11 +787,11 @@ public abstract class WebAnnoTsv3WriterTestBase
         
         // One at the beginning
         // WebAnno legacy conventions
-        AnnotationFS fs1 = cas.createAnnotation(relationType, 
-                min(dep.getBegin(), gov.getBegin()),
-                max(dep.getEnd(), gov.getEnd()));
+        // AnnotationFS fs1 = cas.createAnnotation(relationType, 
+        //         min(dep.getBegin(), gov.getBegin()),
+        //         max(dep.getEnd(), gov.getEnd()));
         // DKPro Core conventions
-        // AnnotationFS fs1 = cas.createAnnotation(relationType, dep.getBegin(), dep.getEnd());
+        AnnotationFS fs1 = cas.createAnnotation(relationType, dep.getBegin(), dep.getEnd());
         FSUtil.setFeature(fs1, "Governor", gov);
         FSUtil.setFeature(fs1, "Dependent", dep);
         cas.addFsToIndexes(fs1);
@@ -825,11 +823,11 @@ public abstract class WebAnnoTsv3WriterTestBase
         
         // One at the beginning
         // WebAnno legacy conventions
-        AnnotationFS fs1 = cas.createAnnotation(relationType, 
-                min(dep.getBegin(), gov.getBegin()),
-                max(dep.getEnd(), gov.getEnd()));
+        // AnnotationFS fs1 = cas.createAnnotation(relationType, 
+        //         min(dep.getBegin(), gov.getBegin()),
+        //         max(dep.getEnd(), gov.getEnd()));
         // DKPro Core conventions
-        // AnnotationFS fs1 = cas.createAnnotation(relationType, dep.getBegin(), dep.getEnd());
+        AnnotationFS fs1 = cas.createAnnotation(relationType, dep.getBegin(), dep.getEnd());
         FSUtil.setFeature(fs1, "Governor", gov);
         FSUtil.setFeature(fs1, "Dependent", dep);
         cas.addFsToIndexes(fs1);
@@ -859,11 +857,11 @@ public abstract class WebAnnoTsv3WriterTestBase
         
         // One at the beginning
         // WebAnno legacy conventions
-        AnnotationFS fs1 = cas.createAnnotation(relationType, 
-                min(dep.getBegin(), gov.getBegin()),
-                max(dep.getEnd(), gov.getEnd()));
+        // AnnotationFS fs1 = cas.createAnnotation(relationType, 
+        //         min(dep.getBegin(), gov.getBegin()),
+        //         max(dep.getEnd(), gov.getEnd()));
         // DKPro Core conventions
-        // AnnotationFS fs1 = cas.createAnnotation(relationType, dep.getBegin(), dep.getEnd());
+        AnnotationFS fs1 = cas.createAnnotation(relationType, dep.getBegin(), dep.getEnd());
         FSUtil.setFeature(fs1, "Governor", gov);
         FSUtil.setFeature(fs1, "Dependent", dep);
         cas.addFsToIndexes(fs1);
@@ -895,11 +893,11 @@ public abstract class WebAnnoTsv3WriterTestBase
         
         // One at the beginning
         // WebAnno legacy conventions
-        AnnotationFS fs1 = cas.createAnnotation(relationType, 
-                min(dep.getBegin(), gov.getBegin()),
-                max(dep.getEnd(), gov.getEnd()));
+        // AnnotationFS fs1 = cas.createAnnotation(relationType, 
+        //         min(dep.getBegin(), gov.getBegin()),
+        //         max(dep.getEnd(), gov.getEnd()));
         // DKPro Core conventions
-        // AnnotationFS fs1 = cas.createAnnotation(relationType, dep.getBegin(), dep.getEnd());
+        AnnotationFS fs1 = cas.createAnnotation(relationType, dep.getBegin(), dep.getEnd());
         FSUtil.setFeature(fs1, "Governor", gov);
         FSUtil.setFeature(fs1, "Dependent", dep);
         cas.addFsToIndexes(fs1);
@@ -931,11 +929,11 @@ public abstract class WebAnnoTsv3WriterTestBase
         
         // One at the beginning
         // WebAnno legacy conventions
-        AnnotationFS fs1 = cas.createAnnotation(relationType, 
-                min(dep.getBegin(), gov.getBegin()),
-                max(dep.getEnd(), gov.getEnd()));
+        // AnnotationFS fs1 = cas.createAnnotation(relationType, 
+        //         min(dep.getBegin(), gov.getBegin()),
+        //         max(dep.getEnd(), gov.getEnd()));
         // DKPro Core conventions
-        // AnnotationFS fs1 = cas.createAnnotation(relationType, dep.getBegin(), dep.getEnd());
+        AnnotationFS fs1 = cas.createAnnotation(relationType, dep.getBegin(), dep.getEnd());
         FSUtil.setFeature(fs1, "Governor", gov);
         FSUtil.setFeature(fs1, "Dependent", dep);
         FSUtil.setFeature(fs1, "value", "nsubj");
@@ -969,11 +967,11 @@ public abstract class WebAnnoTsv3WriterTestBase
         Type relationType = cas.getTypeSystem().getType("webanno.custom.ComplexRelation");
         
         // WebAnno legacy conventions
-        AnnotationFS fs1 = cas.createAnnotation(relationType, 
-                min(dep.getBegin(), gov.getBegin()),
-                max(dep.getEnd(), gov.getEnd()));
+        // AnnotationFS fs1 = cas.createAnnotation(relationType, 
+        //         min(dep.getBegin(), gov.getBegin()),
+        //         max(dep.getEnd(), gov.getEnd()));
         // DKPro Core conventions
-        // AnnotationFS fs1 = cas.createAnnotation(relationType, dep.getBegin(), dep.getEnd());
+        AnnotationFS fs1 = cas.createAnnotation(relationType, dep.getBegin(), dep.getEnd());
         FSUtil.setFeature(fs1, "Governor", gov);
         FSUtil.setFeature(fs1, "Dependent", dep);
         FSUtil.setFeature(fs1, "value", "nsubj");
@@ -982,11 +980,11 @@ public abstract class WebAnnoTsv3WriterTestBase
         cas.addFsToIndexes(fs1);
 
         // WebAnno legacy conventions
-        AnnotationFS fs2 = cas.createAnnotation(relationType, 
-                min(dep.getBegin(), gov.getBegin()),
-                max(dep.getEnd(), gov.getEnd()));
+        // AnnotationFS fs2 = cas.createAnnotation(relationType, 
+        //         min(dep.getBegin(), gov.getBegin()),
+        //         max(dep.getEnd(), gov.getEnd()));
         // DKPro Core conventions
-        // AnnotationFS fs2 = cas.createAnnotation(relationType, dep.getBegin(), dep.getEnd());
+        AnnotationFS fs2 = cas.createAnnotation(relationType, dep.getBegin(), dep.getEnd());
         FSUtil.setFeature(fs2, "Governor", gov);
         FSUtil.setFeature(fs2, "Dependent", dep);
         FSUtil.setFeature(fs2, "value", "obj");
@@ -1017,11 +1015,11 @@ public abstract class WebAnnoTsv3WriterTestBase
         
         // One at the beginning
         // WebAnno legacy conventions
-        AnnotationFS fs1 = cas.createAnnotation(relationType, 
-                min(dep.getBegin(), gov.getBegin()),
-                max(dep.getEnd(), gov.getEnd()));
+        // AnnotationFS fs1 = cas.createAnnotation(relationType, 
+        //         min(dep.getBegin(), gov.getBegin()),
+        //         max(dep.getEnd(), gov.getEnd()));
         // DKPro Core conventions
-        // AnnotationFS fs1 = cas.createAnnotation(relationType, dep.getBegin(), dep.getEnd());
+        AnnotationFS fs1 = cas.createAnnotation(relationType, dep.getBegin(), dep.getEnd());
         FSUtil.setFeature(fs1, "Governor", gov);
         FSUtil.setFeature(fs1, "Dependent", dep);
         cas.addFsToIndexes(fs1);
@@ -1046,11 +1044,11 @@ public abstract class WebAnnoTsv3WriterTestBase
         
         // One at the beginning
         // WebAnno legacy conventions
-        AnnotationFS fs1 = cas.createAnnotation(relationType, 
-                min(dep.getBegin(), gov.getBegin()),
-                max(dep.getEnd(), gov.getEnd()));
+        // AnnotationFS fs1 = cas.createAnnotation(relationType, 
+        //         min(dep.getBegin(), gov.getBegin()),
+        //         max(dep.getEnd(), gov.getEnd()));
         // DKPro Core conventions
-        // AnnotationFS fs1 = cas.createAnnotation(relationType, dep.getBegin(), dep.getEnd());
+        AnnotationFS fs1 = cas.createAnnotation(relationType, dep.getBegin(), dep.getEnd());
         FSUtil.setFeature(fs1, "Governor", gov);
         FSUtil.setFeature(fs1, "Dependent", dep);
         FSUtil.setFeature(fs1, "value", "nsubj");
@@ -1075,11 +1073,11 @@ public abstract class WebAnnoTsv3WriterTestBase
         
         // One at the beginning
         // WebAnno legacy conventions
-        AnnotationFS fs1 = cas.createAnnotation(relationType, 
-                min(dep.getBegin(), gov.getBegin()),
-                max(dep.getEnd(), gov.getEnd()));
+        // AnnotationFS fs1 = cas.createAnnotation(relationType, 
+        //      min(dep.getBegin(), gov.getBegin()),
+        //      max(dep.getEnd(), gov.getEnd()));
         // DKPro Core conventions
-        // AnnotationFS fs1 = cas.createAnnotation(relationType, dep.getBegin(), dep.getEnd());
+        AnnotationFS fs1 = cas.createAnnotation(relationType, dep.getBegin(), dep.getEnd());
         FSUtil.setFeature(fs1, "Governor", gov);
         FSUtil.setFeature(fs1, "Dependent", dep);
         FSUtil.setFeature(fs1, "value", "nsubj");

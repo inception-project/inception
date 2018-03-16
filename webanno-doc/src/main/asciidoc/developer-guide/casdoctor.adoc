@@ -129,6 +129,17 @@ Related repairs:: <<repair_RemoveZeroSizeTokensAndSentencesRepair>>
 
 Zero-sized tokens and sentences are not valid in WebAnno and can cause undefined behavior.
 
+[[check_RelationOffsetsCheck]]
+==== Relation Offsets Check
+
+[horizontal]
+ID:: `RelationOffsetsCheck`
+Related repairs:: <<repair_RelationOffsetsRepair>>
+
+Checks that the offsets of relations match the target of the relation. This mirrors the DKPro
+Core convention that the offsets of a dependency relation must match the offsets of the 
+dependent.
+
 [[sect_repairs]]
 === Repairs
 
@@ -171,6 +182,15 @@ indexed in the CAS. Such annotations are then added back to the CAS indexes.
 
 This is a safe repair action as it does not delete anything.
 
+[[repair_RelationOffsetsRepair]]
+==== Repair Relation Offsets
+
+[horizontal]
+ID:: `RelationOffsetsRepair`
+
+Fixes that the offsets of relations match the target of the relation. This mirrors the DKPro
+Core convention that the offsets of a dependency relation must match the offsets of the 
+dependent.
 
 [[repair_RemoveDanglingChainLinksRepair]]
 ==== Remove Dangling Chain Links

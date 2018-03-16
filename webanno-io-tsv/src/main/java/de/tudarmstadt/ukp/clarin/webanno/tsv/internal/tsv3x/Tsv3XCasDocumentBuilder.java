@@ -122,10 +122,10 @@ public class Tsv3XCasDocumentBuilder
                 int begin = annotation.getBegin();
                 int end = annotation.getEnd();
                 
-                // WebAnno legacy - for relations, the relevant coordinates are those of the
-                // dependent.
-                // If/when we are using proper DKPro Core conventions that the offsets of the
-                // relation must match the offsets of the dependent, we do not need this anymore.
+                // According to DKPro Core conventions, the offsets of relations must match
+                // those of the target (i.e. the offsets of a Dependency relation must match
+                // those of the dependent). Thus, we obtain the offsets from the target, just
+                // to be sure.
                 if (RELATION.equals(layerType)) {
                     AnnotationFS targetFS = getFeature(annotation, FEAT_REL_TARGET,
                             AnnotationFS.class);
