@@ -246,7 +246,7 @@ public class ConceptLinkingService
 
 
         if (start == end) {
-            logger.warn("Mention not found in sentence!");
+            logger.error("Mention not found in sentence!");
             return mentionSentence;
         }
         if (start < 0) {
