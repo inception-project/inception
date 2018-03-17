@@ -223,6 +223,25 @@ public class AnnotationSchemaServiceImpl
 
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
+    public boolean existsLayer(String aName, Project aProject)
+    {
+        try {
+            entityManager
+                    .createQuery(
+                            "FROM AnnotationLayer WHERE name = :name AND project = :project",
+                            AnnotationLayer.class)
+                    .setParameter("name", aName)
+                    .setParameter("project", aProject)
+                    .getSingleResult();
+            return true;
+        }
+        catch (NoResultException e) {
+            return false;
+        }
+    }
+
+    @Override
+    @Transactional(noRollbackFor = NoResultException.class)
     public boolean existsLayer(String aName, String aType, Project aProject)
     {
         try {

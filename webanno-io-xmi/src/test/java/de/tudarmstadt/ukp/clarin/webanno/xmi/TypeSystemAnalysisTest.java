@@ -25,12 +25,14 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.xmi.TypeSystemAnalysis;
+import de.tudarmstadt.ukp.dkpro.core.testing.DkproTestContext;
 
 public class TypeSystemAnalysisTest
 {
@@ -126,10 +128,6 @@ public class TypeSystemAnalysisTest
         relationTargetLayer.setAllowStacking(true);
         relationTargetLayer.setCrossSentence(true);
 
-        AnnotationFeature sourceFeature = new AnnotationFeature(
-                WebAnnoConst.FEAT_REL_SOURCE, "webanno.custom.RelationTarget");
-        AnnotationFeature targetFeature = new AnnotationFeature(
-                WebAnnoConst.FEAT_REL_TARGET, "webanno.custom.RelationTarget");
         AnnotationFeature stringFeature = new AnnotationFeature(
                 "stringFeature", CAS.TYPE_NAME_STRING);
         AnnotationFeature intFeature = new AnnotationFeature(
@@ -144,9 +142,8 @@ public class TypeSystemAnalysisTest
             .containsExactlyInAnyOrder(relationLayer, relationTargetLayer)
             .usingFieldByFieldElementComparator();
         softly.assertThat(analysis.getFeatures(relationLayer.getName()))
-            .containsExactlyInAnyOrder(sourceFeature, targetFeature, stringFeature, intFeature, 
-                    booleanFeature, floatFeature)
-            .usingFieldByFieldElementComparator();
+                .containsExactlyInAnyOrder(stringFeature, intFeature, booleanFeature, floatFeature)
+                .usingFieldByFieldElementComparator();
         softly.assertAll();
     }
     
@@ -189,8 +186,167 @@ public class TypeSystemAnalysisTest
         
         SoftAssertions softly = new SoftAssertions();
         softly.assertThat(analysis.getLayers())
-            .hasSize(28);
+            .extracting(l -> l.getName() + ":" + l.getType())
+            .hasSize(27)
+            .containsExactlyInAnyOrder(
+                    "de.tudarmstadt.ukp.dkpro.core.api.coref.type.Coreference:chain",
+                    "de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.morph.Morpheme:span",
+                    "de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.morph.MorphologicalFeatures:span",
+                    "de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS:span",
+                    "de.tudarmstadt.ukp.dkpro.core.api.metadata.type.MetaDataStringField:span",
+                    "de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity:span",
+                    "de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Div:span",
+                    "de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma:span",
+                    "de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.LexicalPhrase:span",
+                    "de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.NGram:span",
+                    "de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Stem:span",
+                    "de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.StopWord:span",
+                    "de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.SurfaceForm:span",
+                    "de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.TokenForm:span",
+                    "de.tudarmstadt.ukp.dkpro.core.api.semantics.type.SemArg:span",
+                    "de.tudarmstadt.ukp.dkpro.core.api.semantics.type.SemPred:span",
+                    "de.tudarmstadt.ukp.dkpro.core.api.semantics.type.SemanticArgument:span",
+                    "de.tudarmstadt.ukp.dkpro.core.api.semantics.type.SemanticField:span",
+                    "de.tudarmstadt.ukp.dkpro.core.api.semantics.type.WordSense:span",
+                    "de.tudarmstadt.ukp.dkpro.core.api.syntax.type.PennTree:span",
+                    "de.tudarmstadt.ukp.dkpro.core.api.syntax.type.Tag:span",
+                    "de.tudarmstadt.ukp.dkpro.core.api.syntax.type.chunk.Chunk:span",
+                    "de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency:relation",
+                    "de.tudarmstadt.ukp.dkpro.core.api.transform.type.SofaChangeAnnotation:span",
+                    "webanno.custom.Chain:chain",
+                    "webanno.custom.Relation:relation",
+                    "webanno.custom.SlotSpan:span");
         softly.assertAll();
     }
-}
+    
+    @Test
+    public void testCTakes40() throws Exception
+    {
+        TypeSystemDescription tsd = createTypeSystemDescription(
+                "3rd-party-tsd/ctakes-type-system-4_0");
+        TypeSystemAnalysis analysis = TypeSystemAnalysis.of(tsd);
+        
+        SoftAssertions softly = new SoftAssertions();
+        softly.assertThat(analysis.getLayers())
+            .extracting(l -> l.getName() + ":" + l.getType())
+            .hasSize(8)
+            .containsExactlyInAnyOrder(
+                    "org.apache.ctakes.typesystem.type.textspan.Segment:span",
+                    "org.apache.ctakes.typesystem.type.textspan.Sentence:span",
+                    "org.apache.ctakes.typesystem.type.syntax.Chunk:span",
+                    "org.apache.ctakes.typesystem.type.textspan.LookupWindowAnnotation:span",
+                    "org.apache.ctakes.typesystem.type.temporary.assertion.AssertionCuePhraseAnnotation:span",
+                    "org.apache.ctakes.typesystem.type.textspan.Paragraph:span",
+                    "org.apache.ctakes.typesystem.type.textspan.ListEntry:span",
+                    "org.apache.ctakes.typesystem.type.textspan.LookupWindowAnnotation:span");
+        softly.assertAll();
+    }
+    
+    @Test
+    public void testCcpTypeSystem() throws Exception
+    {
+        TypeSystemDescription tsd = createTypeSystemDescription(
+                "3rd-party-tsd/CcpTypeSystem");
+        TypeSystemAnalysis analysis = TypeSystemAnalysis.of(tsd);
+        
+        SoftAssertions softly = new SoftAssertions();
+        softly.assertThat(analysis.getLayers())
+            .hasSize(0);
+        softly.assertAll();
+    }
+    
+    @Test
+    public void testTtcTermSuite() throws Exception
+    {
+        TypeSystemDescription tsd = createTypeSystemDescription(
+                "3rd-party-tsd/ttc-term-suite");
+        TypeSystemAnalysis analysis = TypeSystemAnalysis.of(tsd);
+        
+        SoftAssertions softly = new SoftAssertions();
+        softly.assertThat(analysis.getLayers())
+            .extracting(l -> l.getName() + ":" + l.getType())
+            .hasSize(4)
+            .containsExactlyInAnyOrder(
+                    "eu.project.ttc.types.WordAnnotation:span",
+                    "eu.project.ttc.types.TermComponentAnnotation:span",
+                    "eu.project.ttc.types.TranslationCandidateAnnotation:span",
+                    "eu.project.ttc.types.FormAnnotation:span");
+        softly.assertAll();
+    }
+    
+    @Test
+    public void testCreta() throws Exception
+    {
+        TypeSystemDescription tsd = createTypeSystemDescription(
+                "3rd-party-tsd/creta-typesystem");
+        TypeSystemAnalysis analysis = TypeSystemAnalysis.of(tsd);
+        
+        SoftAssertions softly = new SoftAssertions();
+        softly.assertThat(analysis.getLayers())
+            .extracting(l -> l.getName() + ":" + l.getType())
+            .hasSize(58)
+            .containsExactlyInAnyOrder(
+                    "de.tudarmstadt.ukp.dkpro.core.api.coref.type.Coreference:chain",
+                    "de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.morph.Morpheme:span",
+                    "de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.morph.MorphologicalFeatures:span",
+                    "de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS:span",
+                    "de.tudarmstadt.ukp.dkpro.core.api.metadata.type.MetaDataStringField:span",
+                    "de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity:span",
+                    "de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Div:span",
+                    "de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma:span",
+                    "de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.NGram:span",
+                    "de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Stem:span",
+                    "de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.StopWord:span",
+                    "de.tudarmstadt.ukp.dkpro.core.api.semantics.type.SemanticArgument:span",
+                    "de.tudarmstadt.ukp.dkpro.core.api.semantics.type.SemanticField:span",
+                    "de.tudarmstadt.ukp.dkpro.core.api.semantics.type.WordSense:span",
+                    "de.tudarmstadt.ukp.dkpro.core.api.syntax.type.PennTree:span",
+                    "de.tudarmstadt.ukp.dkpro.core.api.syntax.type.Tag:span",
+                    "de.tudarmstadt.ukp.dkpro.core.api.syntax.type.chunk.Chunk:span",
+                    "de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency:relation",
+                    "de.uni_potsdam.acl.type.Chunk:span",
+                    "de.uni_potsdam.acl.type.ClusteredEventMention:span",
+                    "de.uni_potsdam.acl.type.Mention:span",
+                    "de.uni_potsdam.acl.type.Negation:span",
+                    "de.uni_potsdam.acl.type.Sentiment:span",
+                    "de.unihd.dbs.uima.types.heideltime.Dct:span",
+                    "de.unihd.dbs.uima.types.heideltime.Sentence:span",
+                    "de.unihd.dbs.uima.types.heideltime.SourceDocInfo:span",
+                    "de.unihd.dbs.uima.types.heideltime.Timex3:span",
+                    "de.unihd.dbs.uima.types.heideltime.Timex3Interval:span",
+                    "de.unihd.dbs.uima.types.heideltime.Token:span",
+                    "de.unistuttgart.ims.creta.api.Entity:span",
+                    "de.unistuttgart.ims.creta.api.ExampleType:span",
+                    "de.unistuttgart.ims.creta.api.Format:span",
+                    "de.unistuttgart.ims.creta.api.Line:span",
+                    "de.unistuttgart.ims.creta.api.Quotation:span",
+                    "de.unistuttgart.ims.creta.api.Stage:span",
+                    "de.unistuttgart.ims.creta.api.Utterance:span",
+                    "de.unistuttgart.ims.type.Agenda:span",
+                    "de.unistuttgart.ims.type.Chunk:span",
+                    "de.unistuttgart.ims.type.HumanAnnotation:span",
+                    "de.unistuttgart.ims.type.Keyword:span",
+                    "de.unistuttgart.ims.type.Link:span",
+                    "de.unistuttgart.ims.type.Markable:span",
+                    "de.unistuttgart.ims.type.NE:span",
+                    "de.unistuttgart.ims.type.Paragraph:span",
+                    "de.unistuttgart.ims.type.Quotation:span",
+                    "de.unistuttgart.ims.type.Section:span",
+                    "de.unistuttgart.ims.type.Sentence:span",
+                    "de.unistuttgart.ims.type.Speaker:span",
+                    "de.unistuttgart.ims.type.Token:span",
+                    "de.unistuttgart.ims.uimautil.WordListDescription:span",
+                    "org.cleartk.ne.type.Ace2005Document:span",
+                    "org.cleartk.ne.type.Chunk:span",
+                    "org.cleartk.score.type.ScoredAnnotation:span",
+                    "org.cleartk.srl.type.Chunk:span",
+                    "org.cleartk.timeml.type.Anchor:span",
+                    "org.cleartk.timeml.type.Event:span",
+                    "org.cleartk.token.type.Subtoken:span",
+                    "org.cleartk.token.type.Token:span");
+        softly.assertAll();
+    }
 
+    @Rule
+    public DkproTestContext testContext = new DkproTestContext();
+}
