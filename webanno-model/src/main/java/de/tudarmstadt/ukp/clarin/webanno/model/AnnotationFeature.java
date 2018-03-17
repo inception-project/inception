@@ -32,6 +32,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.Type;
@@ -114,6 +115,20 @@ public class AnnotationFeature
     
     @Column(name = "link_type_target_feature_name")
     private String linkTypeTargetFeatureName;
+    
+    public AnnotationFeature()
+    {
+        // Nothing to do
+    }
+    
+    // Visible for testing
+    public AnnotationFeature(String aName, String aType)
+    {
+        name = aName;
+        uiName = aName;
+        type = aType;
+    }
+    
     
     public Long getId()
     {
@@ -397,6 +412,14 @@ public class AnnotationFeature
     public boolean isVirtualFeature()
     {
         return getType().contains(":");
+    }
+    
+    @Override
+    public String toString()
+    {
+        return new ToStringBuilder(this)
+                .append("name", name)
+                .build();
     }
 
     @Override
