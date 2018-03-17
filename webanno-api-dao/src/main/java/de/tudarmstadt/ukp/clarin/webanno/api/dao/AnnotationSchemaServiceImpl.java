@@ -575,7 +575,7 @@ public class AnnotationSchemaServiceImpl
             else if (type.getType().equals(CHAIN_TYPE) && !type.isBuiltIn()) {
                 TypeSystemDescription tsdchains = new TypeSystemDescription_impl();
                 TypeDescription tdChains = tsdchains.addType(type.getName() + "Chain", "",
-                        CAS.TYPE_NAME_ANNOTATION);
+                        CAS.TYPE_NAME_ANNOTATION_BASE);
                 tdChains.addFeature("first", "", type.getName() + "Link");
                 types.add(tsdchains);
 
