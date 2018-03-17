@@ -46,6 +46,10 @@
       <artifactId>commons-collections4</artifactId>
     </dependency>
     <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+    </dependency>
+    <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
       <artifactId>webanno-api</artifactId>
     </dependency>
@@ -115,6 +119,10 @@
                 - cannot set it to scope provided. Need to tell Maven to ignore it here.
               -->
               <usedDependency>de.tudarmstadt.ukp.dkpro.core:de.tudarmstadt.ukp.dkpro.core.api.parameter-asl</usedDependency>
+              <!-- Logging - used via reflection / optional -->
+              <usedDependency>org.slf4j:log4j-over-slf4j</usedDependency>
+              <usedDependency>org.apache.logging.log4j:log4j-slf4j-impl</usedDependency>
+              <usedDependency>org.apache.logging.log4j:log4j-core</usedDependency>
             </usedDependencies>
           </configuration>
         </plugin>
