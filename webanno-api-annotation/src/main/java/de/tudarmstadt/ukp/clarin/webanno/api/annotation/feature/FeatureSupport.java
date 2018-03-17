@@ -20,36 +20,92 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.setFeature;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
-import org.apache.uima.cas.ArrayFS;
-import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
-import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
+import org.apache.uima.resource.metadata.TypeDescription;
+import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.model.IModel;
+import org.springframework.beans.factory.BeanNameAware;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.FeatureEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
 public interface FeatureSupport
+    extends BeanNameAware
 {
-    List<FeatureType> getSupportedFeatureTypes(AnnotationLayer aAnnotationLayer);
-
+    String getId();
+    
+    /**
+     * Checks whether the given feature is provided by the current feature support.
+     * 
+     * @param aFeature
+     *            a feature definition.
+     * @return whether the given feature is provided by the current feature support.
+     */
     boolean accepts(AnnotationFeature aFeature);
 
+    /**
+     * Get a list of feature types provided by this feature support. These are added to the list of
+     * feature types a user can choose from when creating a new feature through the layer settings
+     * user interface. The feature types returned here consist of a human-readable name as well as
+     * an internal feature type name.
+     * 
+     * @param aAnnotationLayer
+     *            an annotation layer definition.
+     * @return a list of the supported features.
+     */
+    List<FeatureType> getSupportedFeatureTypes(AnnotationLayer aAnnotationLayer);
+
+    /**
+     * Generate a UIMA feature definition for the given feature into the provided type definition.
+     * 
+     * @param aTSD
+     *            the target type system description.
+     * @param aTD
+     *            the target type description.
+     * @param aFeature
+     *            the feature definition.
+     */
+    void generateFeature(TypeSystemDescription aTSD, TypeDescription aTD,
+            AnnotationFeature aFeature);
+
+    /**
+     * Checks whether tagsets are supported on the given feature which must be provided by the
+     * current feature support (i.e. {@link #accepts(AnnotationFeature)} must have returned
+     * {@code true} on this feature.
+     * 
+     * @param aFeature
+     *            a feature definition.
+     * @return whether tagsets are supported on the given feature.
+     */
+    default boolean isTagsetSupported(AnnotationFeature aFeature)
+    {
+        return false;
+    }
+    
+    /**
+     * Called when the user selects a feature in the feature detail form. It allows the feature
+     * support to fill in settings which are not configurable through the UI, e.g. link feature
+     * details.
+     * 
+     * @param aFeature
+     *            a feature definition.
+     */
+    default void configureFeature(AnnotationFeature aFeature)
+    {
+        // Nothing to do
+    }
+    
     FeatureEditor createEditor(String aId, MarkupContainer aOwner, AnnotationActionHandler aHandler,
             IModel<AnnotatorState> aStateModel, IModel<FeatureState> aFeatureStateModel);
 
@@ -83,79 +139,8 @@ public interface FeatureSupport
         setFeature(fs, aFeature, aValue);
     }
     
-    default public <T> T getFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
-    {
-        Feature feature = aFS.getType().getFeatureByBaseName(aFeature.getName());
+    <T> T getFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS);
 
-        switch (aFeature.getMultiValueMode()) {
-        case NONE: {
-            final String effectiveType;
-            if (aFeature.isVirtualFeature()) {
-                effectiveType = CAS.TYPE_NAME_STRING;
-            }
-            else {
-                effectiveType = aFeature.getType();
-            }
-            
-            // Sanity check
-            if (!Objects.equals(effectiveType, feature.getRange().getName())) {
-                throw new IllegalArgumentException("Actual feature type ["
-                        + feature.getRange().getName() + "]does not match expected feature type ["
-                        + effectiveType + "].");
-            }
-
-            // switch (aFeature.getType()) {
-            // case CAS.TYPE_NAME_STRING:
-            // return (T) aFS.getStringValue(feature);
-            // case CAS.TYPE_NAME_BOOLEAN:
-            // return (T) (Boolean) aFS.getBooleanValue(feature);
-            // case CAS.TYPE_NAME_FLOAT:
-            // return (T) (Float) aFS.getFloatValue(feature);
-            // case CAS.TYPE_NAME_INTEGER:
-            // return (T) (Integer) aFS.getIntValue(feature);
-            // default:
-            // throw new IllegalArgumentException("Cannot get value of feature ["
-            // + aFeature.getName() + "] with type [" + feature.getRange().getName() + "]");
-            // }
-            return WebAnnoCasUtil.getFeature(aFS, aFeature.getName());
-        }
-        case ARRAY: {
-            switch (aFeature.getLinkMode()) {
-            case WITH_ROLE: {
-                // Get type and features - we need them later in the loop
-                Feature linkFeature = aFS.getType().getFeatureByBaseName(aFeature.getName());
-                Type linkType = aFS.getCAS().getTypeSystem().getType(aFeature.getLinkTypeName());
-                Feature roleFeat = linkType.getFeatureByBaseName(aFeature
-                        .getLinkTypeRoleFeatureName());
-                Feature targetFeat = linkType.getFeatureByBaseName(aFeature
-                        .getLinkTypeTargetFeatureName());
-
-                List<LinkWithRoleModel> links = new ArrayList<>();
-                ArrayFS array = (ArrayFS) aFS.getFeatureValue(linkFeature);
-                if (array != null) {
-                    for (FeatureStructure link : array.toArray()) {
-                        LinkWithRoleModel m = new LinkWithRoleModel();
-                        m.role = link.getStringValue(roleFeat);
-                        m.targetAddr = WebAnnoCasUtil.getAddr(link.getFeatureValue(targetFeat));
-                        m.label = ((AnnotationFS) link.getFeatureValue(targetFeat))
-                                .getCoveredText();
-                        links.add(m);
-                    }
-                }
-                return (T) links;
-            }
-            default:
-                throw new IllegalArgumentException("Cannot get value of feature ["
-                        + aFeature.getName() + "] with link mode [" + aFeature.getMultiValueMode()
-                        + "]");
-            }
-        }
-        default:
-            throw new IllegalArgumentException("Unsupported multi-value mode ["
-                    + aFeature.getMultiValueMode() + "] on feature [" + aFeature.getName() + "]");
-        }
-    }
-    
     default IllegalArgumentException unsupportedFeatureTypeException(FeatureState aFeatureState)
     {
         return new IllegalArgumentException("Unsupported type [" + aFeatureState.feature.getType()

@@ -61,6 +61,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ArcAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ChainAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -561,90 +562,51 @@ public class AnnotationSchemaServiceImpl
     }
 
     @Override
-    public List<TypeSystemDescription> getProjectTypes(Project aProject)
+    public TypeSystemDescription getProjectTypes(Project aProject)
     {
         // Create a new type system from scratch
-        List<TypeSystemDescription> types = new ArrayList<>();
+        TypeSystemDescription tsd = new TypeSystemDescription_impl();
         for (AnnotationLayer type : listAnnotationLayer(aProject)) {
             if (type.getType().equals(SPAN_TYPE) && !type.isBuiltIn()) {
-                TypeSystemDescription tsd = new TypeSystemDescription_impl();
                 TypeDescription td = tsd.addType(type.getName(), "", CAS.TYPE_NAME_ANNOTATION);
-                List<AnnotationFeature> features = listAnnotationFeature(type);
-                for (AnnotationFeature feature : features) {
-                    generateFeature(tsd, td, feature);
-                }
-
-                types.add(tsd);
+                
+                generateFeatures(tsd, td, type);
             }
             else if (type.getType().equals(RELATION_TYPE) && !type.isBuiltIn()) {
-                TypeSystemDescription tsd = new TypeSystemDescription_impl();
                 TypeDescription td = tsd.addType(type.getName(), "", CAS.TYPE_NAME_ANNOTATION);
                 AnnotationLayer attachType = type.getAttachType();
 
                 td.addFeature(WebAnnoConst.FEAT_REL_TARGET, "", attachType.getName());
                 td.addFeature(WebAnnoConst.FEAT_REL_SOURCE, "", attachType.getName());
 
-                List<AnnotationFeature> features = listAnnotationFeature(type);
-                for (AnnotationFeature feature : features) {
-                    generateFeature(tsd, td, feature);
-                }
-
-                types.add(tsd);
+                generateFeatures(tsd, td, type);
             }
             else if (type.getType().equals(CHAIN_TYPE) && !type.isBuiltIn()) {
-                TypeSystemDescription tsdchains = new TypeSystemDescription_impl();
-                TypeDescription tdChains = tsdchains.addType(type.getName() + "Chain", "",
+                TypeDescription tdChains = tsd.addType(type.getName() + "Chain", "",
                         CAS.TYPE_NAME_ANNOTATION_BASE);
                 tdChains.addFeature("first", "", type.getName() + "Link");
-                types.add(tsdchains);
-
-                TypeSystemDescription tsdLink = new TypeSystemDescription_impl();
-                TypeDescription tdLink = tsdLink.addType(type.getName() + "Link", "",
+                
+                // Custom features on chain layers are currently not supported
+                // generateFeatures(tsd, tdChains, type);
+                
+                TypeDescription tdLink = tsd.addType(type.getName() + "Link", "",
                         CAS.TYPE_NAME_ANNOTATION);
                 tdLink.addFeature("next", "", type.getName() + "Link");
                 tdLink.addFeature("referenceType", "", CAS.TYPE_NAME_STRING);
                 tdLink.addFeature("referenceRelation", "", CAS.TYPE_NAME_STRING);
-                types.add(tsdLink);
             }
         }
 
-        return types;
+        return tsd;
     }
     
-    private void generateFeature(TypeSystemDescription aTSD, TypeDescription aTD,
-            AnnotationFeature aFeature)
+    private void generateFeatures(TypeSystemDescription aTSD, TypeDescription aTD,
+            AnnotationLayer aLayer)
     {
-        switch (aFeature.getMultiValueMode()) {
-        case NONE:
-            if (aFeature.isVirtualFeature()) {
-                aTD.addFeature(aFeature.getName(), "", CAS.TYPE_NAME_STRING);
-            }
-            else {
-                aTD.addFeature(aFeature.getName(), "", aFeature.getType());
-            }
-            break;
-        case ARRAY: {
-            switch (aFeature.getLinkMode()) {
-            case WITH_ROLE: {
-                // Link type
-                TypeDescription linkTD = aTSD.addType(aFeature.getLinkTypeName(), "",
-                        CAS.TYPE_NAME_TOP);
-                linkTD.addFeature(aFeature.getLinkTypeRoleFeatureName(), "", CAS.TYPE_NAME_STRING);
-                linkTD.addFeature(aFeature.getLinkTypeTargetFeatureName(), "", aFeature.getType());
-                // Link feature
-                aTD.addFeature(aFeature.getName(), "", CAS.TYPE_NAME_FS_ARRAY, linkTD.getName(),
-                        false);
-                break;
-            }
-            default:
-                throw new IllegalArgumentException("Unsupported link mode ["
-                        + aFeature.getLinkMode() + "] on feature [" + aFeature.getName() + "]");
-            }
-            break;
-        }
-        default:
-            throw new IllegalArgumentException("Unsupported multi-value mode ["
-                    + aFeature.getMultiValueMode() + "] on feature [" + aFeature.getName() + "]");
+        List<AnnotationFeature> features = listAnnotationFeature(aLayer);
+        for (AnnotationFeature feature : features) {
+            FeatureSupport fs = featureSupportRegistry.getFeatureSupport(feature);
+            fs.generateFeature(aTSD, aTD, feature);
         }
     }
 
@@ -661,9 +623,9 @@ public class AnnotationSchemaServiceImpl
     {
         TypeSystemDescription builtInTypes = TypeSystemDescriptionFactory
                 .createTypeSystemDescription();
-        List<TypeSystemDescription> projectTypes = getProjectTypes(aSourceDocument.getProject());
-        projectTypes.add(builtInTypes);
-        TypeSystemDescription allTypes = CasCreationUtils.mergeTypeSystems(projectTypes);
+        TypeSystemDescription projectTypes = getProjectTypes(aSourceDocument.getProject());
+        TypeSystemDescription allTypes = CasCreationUtils
+                .mergeTypeSystems(asList(projectTypes, builtInTypes));
 
         // Prepare template for new CAS
         CAS newCas = JCasFactory.createJCas(allTypes).getCas();

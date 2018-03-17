@@ -45,7 +45,6 @@ import javax.persistence.NoResultException;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.commons.lang3.text.WordUtils;
 import org.apache.uima.UIMAFramework;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.resource.ResourceInitializationException;
@@ -87,6 +86,7 @@ import org.slf4j.LoggerFactory;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureType;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.LayerConfigurationChangedEvent;
@@ -94,8 +94,6 @@ import de.tudarmstadt.ukp.clarin.webanno.export.ImportUtil;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
-import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -1008,16 +1006,17 @@ public class ProjectLayersPanel
                 private static final long serialVersionUID = 9029205407108101183L;
 
                 {
+                    IModel<FeatureType> model = LambdaModelAdapter.of(() -> {
+                        return featureSupportRegistry.getAllTypes(layerDetailForm.getModelObject())
+                                .stream()
+                                .filter(r -> r.getName()
+                                        .equals(featureDetailForm.getModelObject().getType()))
+                                .findFirst().orElse(null);
+                    }, (v) -> FeatureDetailForm.this.getModelObject().setType(v.getName()));
                     setRequired(true);
                     setNullValid(false);
                     setChoiceRenderer(new ChoiceRenderer<>("uiName"));
-                    setModel(LambdaModelAdapter.of(
-                        () -> {
-                            AnnotationFeature feat = FeatureDetailForm.this.getModelObject();
-                            return feat.getType() != null ? new FeatureType(feat.getType())
-                                    : null;
-                        },
-                        (v) -> FeatureDetailForm.this.getModelObject().setType(v.getName())));
+                    setModel(model);
                     setChoices(LambdaModel.of(() -> featureSupportRegistry
                             .getAllTypes(layerDetailForm.getModelObject())));
                 }
@@ -1054,12 +1053,15 @@ public class ProjectLayersPanel
                 @Override
                 protected void onConfigure()
                 {
-                    AnnotationFeature feature = FeatureDetailForm.this.getModelObject();
-                    // Only display tagset choice for link features with role and string features
-                    // Since we currently set the LinkRole only when saving, we have to rely on the
-                    // feature type here.
-                    setEnabled(CAS.TYPE_NAME_STRING.equals(feature.getType())
-                            || !PRIMITIVE_TYPES.contains(feature.getType()));
+                    FeatureType type = featureType.getModelObject();
+                    if (type != null) {
+                        FeatureSupport fs = featureSupportRegistry
+                                .getFeatureSupport(type.getFeatureSupportId());
+                        setEnabled(fs.isTagsetSupported(FeatureDetailForm.this.getModelObject()));
+                    }
+                    else {
+                        setEnabled(false);
+                    }
                 }
             });
 
@@ -1145,23 +1147,17 @@ public class ProjectLayersPanel
 
     private void saveFeature(AnnotationFeature aFeature)
     {
-        // Set properties of link features since these are currently not configurable in the UI
-        if (!PRIMITIVE_TYPES.contains(aFeature.getType()) && !aFeature.isVirtualFeature()) {
-            aFeature.setMode(MultiValueMode.ARRAY);
-            aFeature.setLinkMode(LinkMode.WITH_ROLE);
-            aFeature.setLinkTypeRoleFeatureName("role");
-            aFeature.setLinkTypeTargetFeatureName("target");
-            aFeature.setLinkTypeName(aFeature.getLayer().getName()
-                    + WordUtils.capitalize(aFeature.getName()) + "Link");
-        }
+        FeatureSupport fs = featureSupportRegistry.getFeatureSupport(
+                featureDetailForm.featureType.getModelObject().getFeatureSupportId());
+        
+        // Let the feature support finalize the configuration of the feature
+        fs.configureFeature(aFeature);
 
-        // If the feature is not a string feature or a link-with-role feature, force the tagset
-        // to null.
-        if (!(CAS.TYPE_NAME_STRING.equals(aFeature.getType()) || !PRIMITIVE_TYPES.contains(aFeature
-                .getType()))) {
+        // Force the tagset to null if the features do not support tagsets
+        if (!fs.isTagsetSupported(aFeature)) {
             aFeature.setTagset(null);
         }
-
+        
         annotationService.createFeature(aFeature);
         featureDetailForm.setVisible(false);
     }

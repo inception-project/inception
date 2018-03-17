@@ -400,7 +400,7 @@ public interface AnnotationSchemaService
             String[] aTagDescription, Project aProject)
                 throws IOException;
     
-    List<TypeSystemDescription> getProjectTypes(Project aProject);
+    TypeSystemDescription getProjectTypes(Project aProject);
     
     void upgradeCas(CAS aCurCas, AnnotationDocument annotationDocument)
             throws UIMAException, IOException;
