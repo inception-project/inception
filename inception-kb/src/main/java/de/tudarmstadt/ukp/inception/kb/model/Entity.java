@@ -22,7 +22,7 @@ import java.util.Set;
 
 /**
  * Stores information about entities retrieved from a knowledge base 
- * Needed to compute a candidate ranking score
+ * Needed to rank candidates
  */
 public class Entity
 {
