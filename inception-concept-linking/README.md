@@ -1,1 +1,0 @@
-This project needs the GerNED project to work!
