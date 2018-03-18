@@ -55,6 +55,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
+import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 public class SubjectObjectFeatureEditor extends FeatureEditor {
@@ -224,6 +225,10 @@ public class SubjectObjectFeatureEditor extends FeatureEditor {
                 logger.error("Error: " + e.getMessage(), e);
                 error("Error: " + e.getMessage());
             }
+            if (roleModel.role.equals("subject")) {
+                setStatementInKB(value);
+
+            }
         }
     }
 
@@ -260,6 +265,48 @@ public class SubjectObjectFeatureEditor extends FeatureEditor {
             }
         }
         return new ArrayList<>(handles);
+    }
+
+    private KnowledgeBase getKBForKBHandle(KBHandle kbHandle) {
+        AnnotationFeature feat = getModelObject().feature;
+        for (KnowledgeBase kb: kbService.getKnowledgeBases(feat.getProject())) {
+            if (kbService.listConcepts(kb, false).contains(kbHandle)) {
+                return kb;
+            }
+            for (KBHandle concept: kbService.listConcepts(kb, false)) {
+                if (kbService.listInstances(kb, concept.getIdentifier(), false).contains
+                    (kbHandle)) {
+                    return kb;
+                }
+            }
+
+        }
+        return null;
+    }
+
+    private void setStatementInKB(KBHandle value) {
+        AnnotationLayer factLayer = annotationService.getLayer(
+            "webanno.custom.Fact", this.stateModel.getObject().getProject());
+        AnnotationFeature predicateFeature = annotationService.getFeature(
+            "KBPredicate", factLayer);
+        KBHandle KBpredicate = (KBHandle) this.stateModel.getObject().getFeatureState
+            (predicateFeature).value;
+        if (KBpredicate != null) {
+            KBStatement statement = new KBStatement();
+            statement.setInstance(value);
+            statement.setProperty(KBpredicate);
+            AnnotationFeature objectFeature = annotationService.getFeature("Object",
+                factLayer);
+            List<LinkWithRoleModel> objectList = (List<LinkWithRoleModel>) this.stateModel.
+                getObject().getFeatureState(objectFeature).value;
+            String objectLabel = objectList.get(0).label;
+            String object = objectLabel.equals("<Click to activate>") || objectLabel.equals
+                ("<Select to fill>") ? " " : objectLabel;
+            statement.setValue(object);
+            KnowledgeBase kb = getKBForKBHandle(value);
+            //TODO check predicate KB equals to Subject KB
+            kbService.upsertStatement(kb, statement);
+        }
     }
 
 }
