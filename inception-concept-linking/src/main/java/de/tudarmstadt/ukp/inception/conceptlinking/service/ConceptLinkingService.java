@@ -387,7 +387,7 @@ public class ConceptLinkingService
         for (Token t : aSentence) {
             builder.append(t.getCoveredText()).append(" ");
         }
-        return builder.toString();
+        return builder.substring(0, builder.length() - 1);
     }
 
     /*
