@@ -231,8 +231,8 @@ public class ConceptLinkingService
     private List<Token> getMentionContext(Sentence aSentence, List<String> aMention,
         int mentionContextSize)
     {
-        List<Token> mentionSentence = new ArrayList<>();
-        mentionSentence.addAll(JCasUtil.selectCovered(Token.class, aSentence));
+        List<Token> mentionSentence = new ArrayList<>(
+            JCasUtil.selectCovered(Token.class, aSentence));
 
         int start = 0, end = 0;
         int j = 0;
