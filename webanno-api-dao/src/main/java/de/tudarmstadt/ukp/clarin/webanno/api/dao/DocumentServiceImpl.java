@@ -320,35 +320,34 @@ public class DocumentServiceImpl
     @Transactional(noRollbackFor = NoResultException.class)
     public boolean existsFinishedAnnotation(SourceDocument aDocument)
     {
-        List<AnnotationDocument> annotationDocuments = entityManager
-                .createQuery("FROM AnnotationDocument WHERE document = :document",
-                        AnnotationDocument.class).setParameter("document", aDocument)
-                .getResultList();
-        for (AnnotationDocument annotationDocument : annotationDocuments) {
-            if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
-                return true;
-            }
-        }
+        String query = 
+                "SELECT COUNT(*) " +
+                "FROM AnnotationDocument " + 
+                "WHERE document = :document AND state = :state";
+        
+        long count = entityManager.createQuery(query, Long.class)
+            .setParameter("document", aDocument)
+            .setParameter("state", AnnotationDocumentState.FINISHED)
+            .getSingleResult();
 
-        return false;
+        return count > 0;
     }
 
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
     public boolean existsFinishedAnnotation(Project aProject)
     {
-        for (SourceDocument document : listSourceDocuments(aProject)) {
-            List<AnnotationDocument> annotationDocuments = entityManager
-                    .createQuery("FROM AnnotationDocument WHERE document = :document",
-                            AnnotationDocument.class).setParameter("document", document)
-                    .getResultList();
-            for (AnnotationDocument annotationDocument : annotationDocuments) {
-                if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
-                    return true;
-                }
-            }
-        }
-        return false;
+        String query = 
+                "SELECT COUNT(*) " +
+                "FROM AnnotationDocument " + 
+                "WHERE document.project = :project AND state = :state";
+        
+        long count = entityManager.createQuery(query, Long.class)
+            .setParameter("project", aProject)
+            .setParameter("state", AnnotationDocumentState.FINISHED)
+            .getSingleResult();
+
+        return count > 0;
     }
 
     @Override
