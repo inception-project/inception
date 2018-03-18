@@ -100,9 +100,6 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
     private final IModel<Project> projectModel;
     private final DynamicWizardModel wizardModel;
     private final CompoundPropertyModel<EnrichedKnowledgeBase> wizardDataModel;
-
-    private List<String> modelingLanguageChoices = Arrays.asList(new String[] {
-            "RDFS", "OWL"});
     
     public KnowledgeBaseCreationWizard(String id, IModel<Project> aProjectModel) {
         super(id);
