@@ -45,13 +45,13 @@ public class JSONUtil
             Object aObject, File aFile)
         throws IOException
     {
-        FileUtils.writeStringToFile(aFile, toPrettyJsonString(jsonConverter, aObject));
+        FileUtils.writeStringToFile(aFile, toPrettyJsonString(jsonConverter, aObject), "UTF-8");
     }
 
     public static void generatePrettyJson(Object aObject, File aFile)
         throws IOException
     {
-        FileUtils.writeStringToFile(aFile, toPrettyJsonString(aObject));
+        FileUtils.writeStringToFile(aFile, toPrettyJsonString(aObject), "UTF-8");
     }
 
     public static String toPrettyJsonString(MappingJackson2HttpMessageConverter jsonConverter,
