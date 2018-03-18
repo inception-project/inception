@@ -31,6 +31,11 @@ public class LambdaAjaxFormComponentUpdatingBehavior
     private AjaxCallback action;
     private AjaxExceptionHandler exceptionHandler;
 
+    public LambdaAjaxFormComponentUpdatingBehavior(String aId)
+    {
+        this(aId, null, null);
+    }
+
     public LambdaAjaxFormComponentUpdatingBehavior(String aId, AjaxCallback aAction)
     {
         this(aId, aAction, null);
@@ -48,7 +53,9 @@ public class LambdaAjaxFormComponentUpdatingBehavior
     public void onUpdate(AjaxRequestTarget aTarget)
     {
         try {
-            action.accept(aTarget);
+            if (action != null) {
+                action.accept(aTarget);
+            }
         }
         catch (Exception e) {
             if (exceptionHandler != null) {

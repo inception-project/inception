@@ -216,8 +216,6 @@ public class AgreementPage
 
         private DropDownChoice<LinkCompareBehavior> linkCompareBehaviorDropDown;
 
-        private DropDownChoice<AgreementReportExportFormat> exportFormat;
-
         private AjaxButton exportAll;
 
         private CheckBox excludeIncomplete;
@@ -229,12 +227,24 @@ public class AgreementPage
             setOutputMarkupId(true);
             setOutputMarkupPlaceholderTag(true);
 
+            WebMarkupContainer agreementResults = new WebMarkupContainer("agreementResults") {
+                private static final long serialVersionUID = -2465552557800612807L;
+
+                @Override
+                protected void onConfigure()
+                {
+                    super.onConfigure();
+                    setVisible(featureList.getModelObject() != null);
+                }
+            };
+            add(agreementResults);
+            
             PopoverConfig config = new PopoverConfig().withPlacement(Placement.left)
                     .withHtml(true);
             WebMarkupContainer legend = new WebMarkupContainer("legend");
             legend.add(new PopoverBehavior(new ResourceModel("legend"), 
                     new StringResourceModel("legend.content", legend), config));
-            add(legend);
+            agreementResults.add(legend);
             
             add(measureDropDown = new DropDownChoice<>("measure",
                     asList(ConcreteAgreementMeasure.values()),
@@ -263,9 +273,10 @@ public class AgreementPage
             linkCompareBehaviorDropDown.setOutputMarkupPlaceholderTag(true);
             addUpdateAgreementTableBehavior(linkCompareBehaviorDropDown);
 
-            add(exportFormat = new DropDownChoice<>("exportFormat",
+            agreementResults.add(new DropDownChoice<AgreementReportExportFormat>("exportFormat",
                     asList(AgreementReportExportFormat.values()),
-                    new EnumChoiceRenderer<>(AgreementPage.this)));
+                    new EnumChoiceRenderer<>(AgreementPage.this))
+                            .add(new LambdaAjaxFormComponentUpdatingBehavior("change")));
 
             add(excludeIncomplete = new CheckBox("excludeIncomplete")
             {
@@ -330,7 +341,7 @@ public class AgreementPage
             });
             addUpdateAgreementTableBehavior(featureList);
 
-            add(agreementTable2 = new AgreementTable("agreementTable", getModel(),
+            agreementResults.add(agreementTable2 = new AgreementTable("agreementTable", getModel(),
                     new LoadableDetachableModel<PairwiseAnnotationResult>()
                     {
                         private static final long serialVersionUID = 1L;
@@ -431,21 +442,13 @@ public class AgreementPage
                 }
 
                 @Override
-                protected void onConfigure()
-                {
-                    super.onConfigure();
-
-                    setVisible(featureList.getModelObject() != null);
-                }
-
-                @Override
                 protected void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
                 {
                     download.initiate(aTarget, "agreement"
                             + AgreementForm.this.getModelObject().exportFormat.getExtension());
                 }
             };
-            add(exportAll);
+            agreementResults.add(exportAll);
         }
 
         @Override
