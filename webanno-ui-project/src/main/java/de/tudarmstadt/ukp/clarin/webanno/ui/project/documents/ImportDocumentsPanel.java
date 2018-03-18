@@ -71,7 +71,12 @@ public class ImportDocumentsPanel extends Panel
         format = Model.of();
         List<String> readableFormats = listReadableFormats();
         if (!readableFormats.isEmpty()) {
-            format.setObject(readableFormats.get(0));
+            if (readableFormats.contains("Plain text")) {
+                format.setObject("Plain text");
+            }
+            else {
+                format.setObject(readableFormats.get(0));
+            }
         }
         
         form.add(fileUpload = new FileUploadField("documents"));
