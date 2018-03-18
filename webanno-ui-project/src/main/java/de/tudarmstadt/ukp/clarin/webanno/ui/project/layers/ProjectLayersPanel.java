@@ -28,7 +28,8 @@ import static org.apache.commons.collections.CollectionUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import java.io.BufferedInputStream;
-import java.io.File;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
@@ -55,6 +56,7 @@ import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.ajax.form.OnChangeAjaxBehavior;
+import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.extensions.markup.html.form.select.Select;
 import org.apache.wicket.extensions.markup.html.form.select.SelectOption;
 import org.apache.wicket.feedback.IFeedback;
@@ -65,21 +67,24 @@ import org.apache.wicket.markup.html.form.Button;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
+import org.apache.wicket.markup.html.form.EnumChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.ListChoice;
 import org.apache.wicket.markup.html.form.TextArea;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.form.upload.FileUpload;
 import org.apache.wicket.markup.html.form.upload.FileUploadField;
-import org.apache.wicket.markup.html.link.DownloadLink;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.StringResourceModel;
+import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.apache.wicket.util.resource.IResourceStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -101,9 +106,12 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.EntityModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxDownloadLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.InputStreamResourceStream;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
 import de.tudarmstadt.ukp.clarin.webanno.xmi.TypeSystemAnalysis;
@@ -343,8 +351,7 @@ public class ProjectLayersPanel
                     }
                 }
                 catch (Exception e) {
-                    error("Error importing layers: "
-                            + ExceptionUtils.getRootCauseMessage(e));
+                    error("Error importing layers: " + ExceptionUtils.getRootCauseMessage(e));
                     aTarget.addChildren(getPage(), IFeedback.class);
                     LOG.error("Error importing layers", e);
                 }
@@ -488,6 +495,10 @@ public class ProjectLayersPanel
         public AnnotationFeature feature;
     }
 
+    private static enum LayerExportMode {
+        JSON, UIMA
+    }
+    
     private class LayerDetailForm
         extends Form<AnnotationLayer>
     {
@@ -503,6 +514,8 @@ public class ProjectLayersPanel
         private CheckBox showTextInHover;
         private CheckBox multipleTokens;
         private CheckBox linkedListBehavior;
+        
+        private LayerExportMode exportMode = LayerExportMode.JSON;
 
         public LayerDetailForm(String id)
         {
@@ -862,48 +875,16 @@ public class ProjectLayersPanel
                 }
             });
 
-            add(new DownloadLink("export", new LoadableDetachableModel<File>()
-            {
-                private static final long serialVersionUID = 840863954694163375L;
-
-                @Override
-                protected File load()
-                {
-                    File exportFile = null;
-                    try {
-                        exportFile = File.createTempFile("exportedLayer", ".json");
-                    }
-                    catch (IOException e1) {
-                        error("Unable to create temporary File!!");
-                        return null;
-                    }
-                    if (isNull(ProjectLayersPanel.this.getModelObject().getId())) {
-                        error("Project not yet created. Please save project details first!");
-                        return null;
-                    }
-                    AnnotationLayer layer = layerDetailForm.getModelObject();
-
-                    de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationLayer exLayer = 
-                            ImportUtil.exportLayerDetails(null, null, layer, annotationService);
-                    if (layer.getAttachType() != null) {
-                        AnnotationLayer attachLayer = layer.getAttachType();
-                        de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationLayer 
-                                exAttachLayer = ImportUtil.exportLayerDetails(
-                                        null, null, attachLayer, annotationService);
-                        exLayer.setAttachType(exAttachLayer);
-                    }
-
-                    try {
-                        JSONUtil.generatePrettyJson(exLayer, exportFile);
-                    }
-                    catch (IOException e) {
-                        error("File Path not found or No permision to save the file!");
-                    }
-                    info("TagSets successfully exported to :" + exportFile.getAbsolutePath());
-
-                    return exportFile;
-                }
-            }).setDeleteAfterDownload(true).setOutputMarkupId(true));
+            add(new DropDownChoice<LayerExportMode>("exportMode",
+                    new PropertyModel<LayerExportMode>(this, "exportMode"),
+                    asList(LayerExportMode.values()),
+                    new EnumChoiceRenderer<>(this))
+                    .add(new LambdaAjaxFormComponentUpdatingBehavior("change")));
+            
+            add(new AjaxDownloadLink("export", 
+                    LambdaModel.of(this::getExportLayerFileName).autoDetaching(),
+                    LambdaModel.of(this::exportLayer)));
+            
             add(new Button("cancel", new StringResourceModel("label")) {
                 private static final long serialVersionUID = 1L;
                 
@@ -927,6 +908,86 @@ public class ProjectLayersPanel
                 }
             });
 
+        }
+        
+        private String getExportLayerFileName()
+        {
+            switch (exportMode) {
+            case JSON:
+                return "layer.json";
+            case UIMA:
+                return "typesytem.xml";
+            default:
+                throw new IllegalStateException("Unknown mode: [" + exportMode + "]");
+            }
+        }
+
+        private IResourceStream exportLayer()
+        {
+            switch (exportMode) {
+            case JSON:
+                return exportLayerJson();
+            case UIMA:
+                return exportUimaTypeSystem();
+            default:
+                throw new IllegalStateException("Unknown mode: [" + exportMode + "]");
+            }
+        }
+
+        private IResourceStream exportUimaTypeSystem()
+        {
+            try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
+                TypeSystemDescription tsd = annotationService
+                        .getProjectTypes(ProjectLayersPanel.this.getModelObject());
+                tsd.toXML(bos);
+                return new InputStreamResourceStream(new ByteArrayInputStream(bos.toByteArray()));
+            }
+            catch (Exception e) {
+                error("Unable to generate the UIMA type system file: "
+                        + ExceptionUtils.getRootCauseMessage(e));
+                LOG.error("Unable to generate the UIMA type system file", e);
+                IPartialPageRequestHandler handler = RequestCycle.get()
+                        .find(IPartialPageRequestHandler.class);
+                if (handler != null) {
+                    handler.addChildren(getPage(), IFeedback.class);
+                }
+                return null;
+            }
+        }
+        
+        private IResourceStream exportLayerJson()
+        {
+            try {
+                AnnotationLayer layer = layerDetailForm.getModelObject();
+
+                de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationLayer exLayer = 
+                        ImportUtil.exportLayerDetails(null, null, layer, annotationService);
+
+                // If the layer is attached to another layer, then we also have to export
+                // that, otherwise we would be missing it during re-import.
+                if (layer.getAttachType() != null) {
+                    AnnotationLayer attachLayer = layer.getAttachType();
+                    de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationLayer 
+                            exAttachLayer = ImportUtil.exportLayerDetails(
+                                    null, null, attachLayer, annotationService);
+                    exLayer.setAttachType(exAttachLayer);
+                }
+                
+                return new InputStreamResourceStream(new ByteArrayInputStream(
+                        JSONUtil.toPrettyJsonString(exLayer).getBytes("UTF-8")));
+                
+            }
+            catch (Exception e) {
+                error("Unable to generate the JSON file: "
+                        + ExceptionUtils.getRootCauseMessage(e));
+                LOG.error("Unable to generate the JSON file", e);
+                IPartialPageRequestHandler handler = RequestCycle.get()
+                        .find(IPartialPageRequestHandler.class);
+                if (handler != null) {
+                    handler.addChildren(getPage(), IFeedback.class);
+                }
+                return null;
+            }
         }
     }
 

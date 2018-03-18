@@ -54,6 +54,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
+import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 
 public class TypeSystemAnalysis
 {
@@ -250,6 +251,7 @@ public class TypeSystemAnalysis
         if (isSlotFeature(aTS, aFeat)) {
             feat.setType(aFeat.getRange().getComponentType().getFeatureByBaseName("target")
                     .getRange().getName());
+            feat.setMode(MultiValueMode.ARRAY);
             feat.setLinkMode(LinkMode.WITH_ROLE);
             feat.setLinkTypeName(aFeat.getRange().getName());
             // FIXME Instead of hard-coding the feature names here, try to auto-detect them by
