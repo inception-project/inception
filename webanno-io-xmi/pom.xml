@@ -112,6 +112,12 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-dependency-plugin</artifactId>
           <configuration>
+            <ignoredUsedUndeclaredDependencies>
+              <!--
+                - Maven wrongly detects this as being used.
+              -->
+              <ignoredUsedUndeclaredDependency>de.tudarmstadt.ukp.dkpro.core:de.tudarmstadt.ukp.dkpro.core.api.segmentation-asl</ignoredUsedUndeclaredDependency>
+            </ignoredUsedUndeclaredDependencies>
             <usedDependencies>
               <!--
                 - Maven doesn't detect the parameters module to be used, be we actually
