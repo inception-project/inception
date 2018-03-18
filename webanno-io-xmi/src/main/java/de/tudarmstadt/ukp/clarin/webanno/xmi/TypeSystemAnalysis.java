@@ -253,7 +253,8 @@ public class TypeSystemAnalysis
                     .getRange().getName());
             feat.setMode(MultiValueMode.ARRAY);
             feat.setLinkMode(LinkMode.WITH_ROLE);
-            feat.setLinkTypeName(aFeat.getRange().getName());
+            // Need to strip the "[]" marking the type as multi-valued off the type name 
+            feat.setLinkTypeName(removeEnd(aFeat.getRange().getName(), "[]"));
             // FIXME Instead of hard-coding the feature names here, try to auto-detect them by
             // looking for a String feature and a feature whose type is subsumed by Annotation
             feat.setLinkTypeRoleFeatureName("role");
