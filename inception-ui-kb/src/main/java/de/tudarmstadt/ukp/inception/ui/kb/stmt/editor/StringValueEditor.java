@@ -30,6 +30,7 @@ import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 
+// TODO broken state, don't use
 public class StringValueEditor extends ValueEditor<Literal> {
 
     private static final long serialVersionUID = 6935837930064826698L;
@@ -41,7 +42,7 @@ public class StringValueEditor extends ValueEditor<Literal> {
     private Component focusComponent;
 
     public StringValueEditor(String id, IModel<Literal> model) {
-        super(id);
+        super(id, model);
         
         this.model = model;
         value = Model.of();

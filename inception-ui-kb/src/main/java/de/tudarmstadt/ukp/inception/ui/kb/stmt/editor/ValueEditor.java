@@ -18,17 +18,21 @@
 package de.tudarmstadt.ukp.inception.ui.kb.stmt.editor;
 
 import org.apache.wicket.markup.html.form.FormComponentPanel;
+import org.apache.wicket.model.IModel;
 import org.eclipse.rdf4j.model.Value;
 
 import de.tudarmstadt.ukp.inception.ui.kb.stmt.Focusable;
 
 public abstract class ValueEditor<T extends Value> extends FormComponentPanel<T>
         implements Focusable {
+    
+    protected IModel<T> valueModel;
 
     private static final long serialVersionUID = 6386684203515199433L;
 
-    public ValueEditor(String id) {
-        super(id);
+    public ValueEditor(String id, IModel<T> model) {
+        super(id, model);
+        this.valueModel = model;
     }
 
 }

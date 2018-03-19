@@ -17,20 +17,27 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.stmt.editor;
 
-import org.apache.wicket.markup.html.form.FormComponentPanel;
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.model.IModel;
+import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Value;
 
-public abstract class ValuePresenter<T extends Value> extends FormComponentPanel<T> {
+public interface DatatypeSupport {
 
-    private static final long serialVersionUID = 2638088900301690805L;
+    public boolean isSupported(IRI datatype);
 
-    public ValuePresenter(String id) {
-        super(id);
-    }
+    /**
+     * Returns a {@link ValueEditor} instance given a datatype IRI (most likely the range of a
+     * property or the datatype of a statement).
+     * 
+     * @param datatype
+     *            the IRI of the datatype
+     * @param id
+     *            Wicket markup id received by the editor instances
+     * 
+     * @return a {@link ValueEditor} instance
+     */
+    public ValueEditor<?> createEditor(IRI datatype, String id, IModel<Value> model);
     
-    public ValuePresenter(String id, IModel<T> model) {
-        super(id, model);
-    }
-
+    public WebMarkupContainer createPresenter(IRI datatype, String id, IModel<Value> model);
 }

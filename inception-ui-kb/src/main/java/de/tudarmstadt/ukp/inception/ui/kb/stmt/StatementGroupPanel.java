@@ -186,6 +186,8 @@ public class StatementGroupPanel extends EventListeningPanel {
             propertyLink.add(new Label("property", groupModel.bind("property.uiLabel")));
             form.add(propertyLink);
 
+            // TODO what about handling type intersection when multiple range statements are
+            // present?
             // obtain IRI of property range, if existent
             Optional<KBProperty> property = kbService.readProperty(groupModel.getObject().getKb(),
                     groupModel.getObject().getProperty().getIdentifier());
@@ -196,7 +198,8 @@ public class StatementGroupPanel extends EventListeningPanel {
                 propertyIRI = null;
             } else {
                 // otherwise, obtain the IRI
-                URI uri = property.get().getRange();
+                // TODO we're getting String here, but according to W3, it should be rdfs:Class
+                URI uri = property.get().getRange();    
                 ValueFactory factory = SimpleValueFactory.getInstance();
                 propertyIRI = factory.createIRI(uri.toString());
             }            

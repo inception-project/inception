@@ -19,13 +19,15 @@ package de.tudarmstadt.ukp.inception.ui.kb.stmt.editor;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.cyberborean.rdfbeans.datatype.DatatypeMapper;
 import org.cyberborean.rdfbeans.datatype.DefaultDatatypeMapper;
 import org.eclipse.rdf4j.model.Literal;
 
-public class LiteralValuePresenter extends ValuePresenter<Literal> {
+//TODO broken state, don't use for serious purposes
+public class LiteralValuePresenter extends Panel {
 
     private static final long serialVersionUID = -6774637988828817203L;
     

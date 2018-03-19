@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.ui.kb.stmt.editor;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.event.Broadcast;
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.Fragment;
 import org.apache.wicket.markup.html.panel.Panel;
@@ -28,6 +29,7 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.eclipse.rdf4j.model.IRI;
+
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
@@ -45,7 +47,7 @@ public class StatementEditor extends Panel {
 
     private @SpringBean KnowledgeBaseService kbService;
     
-    private ValueEditorFactory editorFactory = new ValueEditorFactory();
+    private static final DatatypeSupport DATATYPE_SUPPORT = new MetaDatatypeSupport();
 
     private IModel<KnowledgeBase> kbModel;
     private IModel<KBStatement> statement;
@@ -150,7 +152,8 @@ public class StatementEditor extends Panel {
 
             CompoundPropertyModel<KBStatement> model = new CompoundPropertyModel<>(
                     aStatement);
-            ValuePresenter<?> presenter = editorFactory.getValuePresenter(propertyIri.getObject(),
+
+            WebMarkupContainer presenter = DATATYPE_SUPPORT.createPresenter(propertyIri.getObject(),
                     "value", model.bind("value"));
             add(presenter);
             
@@ -170,7 +173,7 @@ public class StatementEditor extends Panel {
     private class EditMode extends Fragment implements Focusable {
         private static final long serialVersionUID = 2489925553729209190L;
 
-        private Component initialFocusComponent;
+        private ValueEditor<?> editor;
 
         /**
          * Creates a new fragement for editing a statement.<br>
@@ -197,16 +200,9 @@ public class StatementEditor extends Panel {
             Form<KBStatement> form = new Form<>("form", model);
                        
             // use the IRI to obtain the appropriate value editor
-            ValueEditor<?> editor = editorFactory.getValueEditor(propertyIri.getObject(),
+            editor = DATATYPE_SUPPORT.createEditor(propertyIri.getObject(),
                     "value", model.bind("value"));
-            initialFocusComponent = editor.getFocusComponent();
             form.add(editor);
-
-            // FIXME Selection of the data type should only be possible if it is not
-            // restricted to a single type in the property definition - take into account
-            // inheritance?
-            //form.add(new TextField<>("datatype"));
-
             form.add(new LambdaAjaxButton<>("save", StatementEditor.this::actionSave));
             form.add(new LambdaAjaxLink("cancel", t -> {
                 if (isNewStatement) {
@@ -222,7 +218,7 @@ public class StatementEditor extends Panel {
 
         @Override
         public Component getFocusComponent() {
-            return initialFocusComponent;
+            return editor.getFocusComponent();
         }
     }
 }

@@ -19,13 +19,14 @@ package de.tudarmstadt.ukp.inception.ui.kb.stmt.editor;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.eclipse.rdf4j.model.IRI;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 
-public class IRIValuePresenter<T extends IRI> extends ValuePresenter<T> {
+public class IRIValuePresenter<T extends IRI> extends Panel {
 
     private static final long serialVersionUID = -2127902473859929221L;
     
@@ -36,15 +37,14 @@ public class IRIValuePresenter<T extends IRI> extends ValuePresenter<T> {
         
         stringModel = Model.of();
         
-        LambdaAjaxLink link = new LambdaAjaxLink("link",
-                this::actionIRILinkClicked);
+        LambdaAjaxLink link = new LambdaAjaxLink("link", this::actionIRILinkClicked);
         link.add(new Label("label", stringModel));
         add(link);
     }
     
     @Override
     protected void onBeforeRender() {
-        Object object = getModelObject();
+        Object object = getDefaultModelObject();
         
         // if the model provides what it promises
         if (object instanceof IRI) {
@@ -57,6 +57,6 @@ public class IRIValuePresenter<T extends IRI> extends ValuePresenter<T> {
     }
     
     private void actionIRILinkClicked(AjaxRequestTarget target) {
-//        send(getPage(), Broadcast.BREADTH, null));
+        // TODO need to know what the IRI refers to - concept, property, both???
     }
 }

@@ -20,7 +20,11 @@
 <html xmlns:wicket="http://wicket.apache.org">
 <body>
 <wicket:panel>
-  <a wicket:id="link"><wicket:container wicket:id="label"></wicket:container></a>
+  <div wicket:id="editorWrapper">
+    <textarea wicket:id="value" rows="1" class="form-control hfill" wicket:message="placeholder:statement.value.placeholder"></textarea>
+    <input type="text" wicket:id="datatype" class="form-control" size="6" wicket:message="placeholder:statement.datatype.placeholder"></input>
+  </div>  
+  <span wicket:id="label"></span>
 </wicket:panel>
 </body>
 </html>
