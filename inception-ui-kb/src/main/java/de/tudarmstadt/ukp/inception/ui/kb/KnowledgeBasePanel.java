@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -82,10 +83,10 @@ public class KnowledgeBasePanel
         setOutputMarkupId(true);
 
         kbModel = aKbModel;
-
+        
         // add the selector for the knowledge bases
         DropDownChoice<KnowledgeBase> ddc = new DropDownChoice<KnowledgeBase>("knowledgebases",
-                LambdaModel.of(() -> kbService.getKnowledgeBases(aProjectModel.getObject()))) {
+                LambdaModel.of(() -> kbService.getKnowledgeBases(aProjectModel.getObject(), true))) {
 
             private static final long serialVersionUID = -2635546743813402116L;
 
@@ -132,6 +133,23 @@ public class KnowledgeBasePanel
         detailContainer.add(details);
     }
 
+    private List<KnowledgeBase> getEnabledKBs(Project aProject){
+    	ArrayList<KnowledgeBase> enabledKBs =  new ArrayList<KnowledgeBase>();
+    	
+    	//Check for all KnowledgeBases if the are enabled
+    	for(KnowledgeBase kb : kbService.getKnowledgeBases(aProject)) {
+    		if(kb.isEnabled()) {
+    			enabledKBs.add(kb);
+    			System.out.println(kb.getName() + "is enabled");
+    		}
+    		else{
+    			System.out.println(kb.getName() + "is not enabled");
+    		}
+    	}
+    	
+    	return enabledKBs;
+    }
+    
     /**
      * Acts upon statement changes. If the changed statement does <strong>not</strong> involve an
      * RDFS or OWL property, the no action is taken. If the changed statement renames the selected

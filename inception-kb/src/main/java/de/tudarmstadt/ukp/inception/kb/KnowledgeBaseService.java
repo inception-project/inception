@@ -84,7 +84,15 @@ public interface KnowledgeBaseService
     void removeKnowledgeBase(KnowledgeBase kb);
 
     List<KnowledgeBase> getKnowledgeBases(Project aProject);
-
+    
+    /**
+     * get knowledge bases from a given project 
+     * @param aProject the project that contains the knowledge bases
+     * @param onlyEnabled whether it should return only enabled knowledge bases
+     * @return all or just enabled KBs depending on the parameters
+     */
+    List<KnowledgeBase> getKnowledgeBases(Project aProject,boolean onlyEnabled);
+    
     // TODO refactor so that rdf4j dependencies are not leaked here anymore
     RepositoryInfo getKnowledgeBaseInfo(KnowledgeBase kb);
 

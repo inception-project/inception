@@ -97,6 +97,13 @@ public class KnowledgeBase
     @Column(nullable = false)
     private boolean readOnly;
 
+    /**
+	 * Whether the kb is available in the UI (outside of the project settings).
+     */
+    @Column(nullable = false)
+    private boolean enabled = true;
+    
+    
     public String getRepositoryId()
     {
         return repositoryId;
@@ -175,8 +182,16 @@ public class KnowledgeBase
     public void setReadOnly(boolean isReadOnly) {
         readOnly = isReadOnly;
     }
+    
+	public boolean isEnabled() {
+		return enabled;
+	}
 
-    /**
+	public void setEnabled(boolean isEnabled) {
+		enabled = isEnabled;
+	}
+
+	/**
      * @return {@code true} if this knowledge base has a repository id, i.e. it is conceptually
      *         linked to a {@link Project} and is managed by an RDF4J repository.
      */

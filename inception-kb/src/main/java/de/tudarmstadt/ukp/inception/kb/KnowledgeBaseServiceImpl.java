@@ -166,10 +166,29 @@ public class KnowledgeBaseServiceImpl
     @Override
     public List<KnowledgeBase> getKnowledgeBases(Project aProject)
     {
-        Query query = entityManager.createNamedQuery("KnowledgeBase.getByProject");
-        query.setParameter("project", aProject);
-        return (List<KnowledgeBase>) query.getResultList();
+        return getKnowledgeBases(aProject, false);
     }
+    
+    @SuppressWarnings("unchecked")
+    @Transactional
+    @Override
+    public List<KnowledgeBase> getKnowledgeBases(Project aProject,boolean onlyEnabled)
+    {
+    	if(!onlyEnabled) {
+    		Query query = entityManager.createNamedQuery("KnowledgeBase.getByProject");
+            query.setParameter("project", aProject);
+            return (List<KnowledgeBase>) query.getResultList();
+    	}
+    	else {
+    		Query query = entityManager.createQuery(
+    				"from KnowledgeBase kb where kb.project = :project and kb.enabled = true");
+            query.setParameter("project", aProject);
+            return (List<KnowledgeBase>) query.getResultList();
+    	}
+        
+    }
+    
+    
 
     @Transactional
     @Override

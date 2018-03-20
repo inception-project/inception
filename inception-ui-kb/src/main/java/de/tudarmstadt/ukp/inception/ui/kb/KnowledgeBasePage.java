@@ -113,7 +113,7 @@ public class KnowledgeBasePage
     protected void commonInit(Project aProject) {
         IModel<Project> projectModel = new LambdaModel<>(() -> aProject);
        
-        List<KnowledgeBase> knowledgeBases = kbService.getKnowledgeBases(projectModel.getObject());
+        List<KnowledgeBase> knowledgeBases = kbService.getKnowledgeBases(projectModel.getObject(),true);
         if (knowledgeBases.isEmpty()) {
             abort();
         }        
