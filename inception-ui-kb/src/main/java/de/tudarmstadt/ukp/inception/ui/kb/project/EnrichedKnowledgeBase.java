@@ -92,13 +92,14 @@ public class EnrichedKnowledgeBase implements Serializable {
         typeIri = aTypeUri;
     }
 
-	public boolean isEnabled() {
-		return enabled;
-	}
+    public boolean isEnabled()
+    {
+        return enabled;
+    }
 
-	public void setEnabled(boolean enabled) {
-		this.enabled = enabled;
-	}
-    
-    
+    public void setEnabled(boolean enabled)
+    {
+        this.enabled = enabled;
+    }
+
 }

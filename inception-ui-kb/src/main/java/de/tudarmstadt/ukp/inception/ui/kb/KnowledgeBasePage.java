@@ -113,10 +113,11 @@ public class KnowledgeBasePage
     protected void commonInit(Project aProject) {
         IModel<Project> projectModel = new LambdaModel<>(() -> aProject);
        
-        List<KnowledgeBase> knowledgeBases = kbService.getKnowledgeBases(projectModel.getObject(),true);
+        List<KnowledgeBase> knowledgeBases = kbService
+                .getEnabledKnowledgeBases(projectModel.getObject());
         if (knowledgeBases.isEmpty()) {
             abort();
-        }        
+        }       
         
         // add the main content panel
         IModel<KnowledgeBase> kbModel = Model.of(knowledgeBases.get(0));

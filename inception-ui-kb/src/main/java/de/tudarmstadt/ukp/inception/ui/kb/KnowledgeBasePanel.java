@@ -86,7 +86,8 @@ public class KnowledgeBasePanel
         
         // add the selector for the knowledge bases
         DropDownChoice<KnowledgeBase> ddc = new DropDownChoice<KnowledgeBase>("knowledgebases",
-                LambdaModel.of(() -> kbService.getKnowledgeBases(aProjectModel.getObject(), true))) {
+                LambdaModel.of(() -> kbService.getEnabledKnowledgeBases(aProjectModel.getObject())))
+        {
 
             private static final long serialVersionUID = -2635546743813402116L;
 

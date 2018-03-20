@@ -47,7 +47,9 @@ import de.tudarmstadt.ukp.inception.kb.RepositoryType;
     @NamedQuery(name = "KnowledgeBase.getByProject",
     query = "from KnowledgeBase kb where kb.project = :project"),
     @NamedQuery(name = "KnowledgeBase.getByName",
-        query = "from KnowledgeBase kb where kb.project = :project and kb.name = :name ")
+        query = "from KnowledgeBase kb where kb.project = :project and kb.name = :name "),
+    @NamedQuery(name = "KnowledgeBase.getByProjectWhereEnabledTrue",
+    query = "from KnowledgeBase kb where kb.project = :project and kb.enabled = true") 
 })
 public class KnowledgeBase
     implements Serializable
@@ -98,7 +100,7 @@ public class KnowledgeBase
     private boolean readOnly;
 
     /**
-	 * Whether the kb is available in the UI (outside of the project settings).
+     * Whether the kb is available in the UI (outside of the project settings).
      */
     @Column(nullable = false)
     private boolean enabled = true;
@@ -179,17 +181,20 @@ public class KnowledgeBase
         return readOnly;
     }
 
-    public void setReadOnly(boolean isReadOnly) {
+    public void setReadOnly(boolean isReadOnly)
+    {
         readOnly = isReadOnly;
     }
-    
-	public boolean isEnabled() {
-		return enabled;
-	}
 
-	public void setEnabled(boolean isEnabled) {
-		enabled = isEnabled;
-	}
+    public boolean isEnabled()
+    {
+        return enabled;
+    }
+
+    public void setEnabled(boolean isEnabled)
+    {
+        enabled = isEnabled;
+    }
 
 	/**
      * @return {@code true} if this knowledge base has a repository id, i.e. it is conceptually
