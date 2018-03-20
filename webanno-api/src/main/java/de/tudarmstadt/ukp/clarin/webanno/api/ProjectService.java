@@ -265,11 +265,19 @@ public interface ProjectService
         throws IOException;
 
     /**
-     * List project accessible by current user
+     * List projects accessible by current user
      *
      * @return list of projects accessible by the user.
      */
     List<Project> listAccessibleProjects(User aUser);
+
+    /**
+     * List projects manageable by current user
+     *
+     * @return list of projects manageable by the user.
+     */
+    List<Project> listManageableProjects(User aUser);
+
 
     /**
      * Export the associated project log for this {@link Project} while copying a project
