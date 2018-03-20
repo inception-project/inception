@@ -23,7 +23,6 @@ import java.util.*;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CASException;
-import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.Component;
@@ -306,6 +305,7 @@ public class ModifierFeatureEditor
         return field;
     }
 
+
     private void removeAutomaticallyAddedUnusedEntries()
     {
         // Remove unused (but auto-added) tags.
@@ -541,9 +541,8 @@ public class ModifierFeatureEditor
                 JCas jCas = actionHandler.getEditorCas().getCas().getJCas();
                 AnnotationFS selectedFS = WebAnnoCasUtil.selectByAddr(jCas, aItem.getModelObject
                     ().targetAddr);
-                Feature labelFeature = selectedFS.getType().getFeatureByBaseName
-                    (linkedAnnotationFeature.getName());
-                String selectedKBItemIdentifier = selectedFS.getFeatureValueAsString(labelFeature);
+                String selectedKBItemIdentifier = WebAnnoCasUtil.getFeature(selectedFS,
+                    linkedAnnotationFeature.getName());
                 if (selectedKBItemIdentifier != null) {
                     List<KBHandle> handles = getKBConceptsAndInstances();
                     selectedKBHandleItem = handles.stream().filter(x -> selectedKBItemIdentifier

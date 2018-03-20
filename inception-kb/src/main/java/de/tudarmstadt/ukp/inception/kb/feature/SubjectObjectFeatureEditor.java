@@ -238,9 +238,8 @@ public class SubjectObjectFeatureEditor extends FeatureEditor {
             try {
                 JCas jCas = actionHandler.getEditorCas().getCas().getJCas();
                 AnnotationFS selectedFS = WebAnnoCasUtil.selectByAddr(jCas, roleModel.targetAddr);
-                Feature labelFeature = selectedFS.getType().getFeatureByBaseName
-                    (linkedAnnotationFeature.getName());
-                String selectedKBItemIdentifier = selectedFS.getFeatureValueAsString(labelFeature);
+                String selectedKBItemIdentifier = WebAnnoCasUtil.getFeature(selectedFS,
+                    linkedAnnotationFeature.getName());
                 if (selectedKBItemIdentifier != null) {
                     List<KBHandle> handles = getKBConceptsAndInstances();
                     selectedKBHandleItem = handles.stream().filter(x -> selectedKBItemIdentifier
@@ -270,6 +269,9 @@ public class SubjectObjectFeatureEditor extends FeatureEditor {
     private KnowledgeBase getKBForKBHandle(KBHandle kbHandle) {
         AnnotationFeature feat = getModelObject().feature;
         for (KnowledgeBase kb: kbService.getKnowledgeBases(feat.getProject())) {
+            if (kbService.listProperties(kb, false).contains(kbHandle)) {
+                return kb;
+            }
             if (kbService.listConcepts(kb, false).contains(kbHandle)) {
                 return kb;
             }
@@ -289,23 +291,45 @@ public class SubjectObjectFeatureEditor extends FeatureEditor {
             "webanno.custom.Fact", this.stateModel.getObject().getProject());
         AnnotationFeature predicateFeature = annotationService.getFeature(
             "KBPredicate", factLayer);
-        KBHandle KBpredicate = (KBHandle) this.stateModel.getObject().getFeatureState
+        KBHandle predicateHandle = (KBHandle) this.stateModel.getObject().getFeatureState
             (predicateFeature).value;
-        if (KBpredicate != null) {
+        if (predicateHandle != null) {
             KBStatement statement = new KBStatement();
             statement.setInstance(value);
-            statement.setProperty(KBpredicate);
+            statement.setProperty(predicateHandle);
             AnnotationFeature objectFeature = annotationService.getFeature("Object",
                 factLayer);
             List<LinkWithRoleModel> objectList = (List<LinkWithRoleModel>) this.stateModel.
                 getObject().getFeatureState(objectFeature).value;
-            String objectLabel = objectList.get(0).label;
-            String object = objectLabel.equals("<Click to activate>") || objectLabel.equals
-                ("<Select to fill>") ? " " : objectLabel;
+//            String objectLabel = objectList.get(0).label;
+//            String object = objectLabel.equals("<Click to activate>") || objectLabel.equals
+//                ("<Select to fill>") ? " " : objectLabel;
+            int targetAddress = objectList.get(0).targetAddr;
+            String object = "";
+            if (targetAddress != -1) {
+                try {
+                    JCas jCas = actionHandler.getEditorCas().getCas().getJCas();
+                    AnnotationFS selectedFS = WebAnnoCasUtil.selectByAddr(jCas, targetAddress);
+                    String selectedKBItemIdentifier = WebAnnoCasUtil.getFeature(selectedFS,
+                        linkedAnnotationFeature.getName());
+                    if (selectedKBItemIdentifier != null) {
+                        List<KBHandle> handles = getKBConceptsAndInstances();
+                        object = handles.stream().filter(x -> selectedKBItemIdentifier
+                            .equals(x.getIdentifier())).findAny().orElse(null).getUiLabel();
+                    }
+                } catch (CASException | IOException e) {
+                    logger.error("Error: " + e.getMessage(), e);
+                    error("Error: " + e.getMessage());
+                }
+            }
             statement.setValue(object);
-            KnowledgeBase kb = getKBForKBHandle(value);
-            //TODO check predicate KB equals to Subject KB
-            kbService.upsertStatement(kb, statement);
+            KnowledgeBase subjectKB = getKBForKBHandle(value);
+            KnowledgeBase predicateKB = getKBForKBHandle(predicateHandle);
+            if (subjectKB.equals(predicateKB)) {
+                kbService.upsertStatement(subjectKB, statement);
+            } else {
+                logger.error("Subject and predicate are from different knowledge bases.");
+            }
         }
     }
 

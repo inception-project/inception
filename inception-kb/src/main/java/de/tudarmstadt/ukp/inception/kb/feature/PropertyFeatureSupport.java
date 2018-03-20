@@ -141,7 +141,8 @@ public class PropertyFeatureSupport implements FeatureSupport {
         switch (featureState.feature.getMultiValueMode()) {
         case NONE:
             if (featureState.feature.getType().startsWith("Property")) {
-                editor = new PropertyFeatureEditor(aId, aOwner, aFeatureStateModel);
+                editor = new PropertyFeatureEditor(aId, aOwner, aHandler, aStateModel,
+                    aFeatureStateModel);
             } else {
                 throw unsupportedMultiValueModeException(featureState);
             }
