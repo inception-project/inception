@@ -198,8 +198,7 @@ public class StatementGroupPanel extends EventListeningPanel {
                 propertyIRI = null;
             } else {
                 // otherwise, obtain the IRI
-                // TODO we're getting String here, but according to W3, it should be rdfs:Class
-                URI uri = property.get().getRange();    
+                URI uri = property.get().getRange();
                 ValueFactory factory = SimpleValueFactory.getInstance();
                 propertyIRI = factory.createIRI(uri.toString());
             }            

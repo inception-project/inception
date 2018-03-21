@@ -17,42 +17,39 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.stmt.editor;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.model.IModel;
 import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.model.Value;
+import org.eclipse.rdf4j.rio.datatypes.XMLSchemaDatatypeHandler;
+
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 
 public class XmlSchemaDatatypeSupport implements DatatypeSupport {
     
-    private static final Set<IRI> SUPPORTED_DATATYPES;
-    
-    static {
-        SUPPORTED_DATATYPES = new HashSet<>();
-//        SUPPORTED_DATATYPES.add(XMLSchema.STRING);
-    }
-
-    public XmlSchemaDatatypeSupport() {
-        // TODO Auto-generated constructor stub
-    }
+    private static final XMLSchemaDatatypeHandler HANDLER = new XMLSchemaDatatypeHandler();
 
     @Override
     public boolean isSupported(IRI datatype) {
-        return SUPPORTED_DATATYPES.contains(datatype);
+        return HANDLER.isRecognizedDatatype(datatype);
+    }
+    
+    @Override
+    public boolean isValid(IRI datatype, Value value) {
+        return HANDLER.verifyDatatype(value.stringValue(), datatype);
     }
 
     @Override
     public ValueEditor<?> createEditor(IRI datatype, String id, IModel<Value> model) {
-        // TODO Auto-generated method stub
-        return null;
+        return new FallbackEditorPresenter(id, model, true);
     }
 
     @Override
     public WebMarkupContainer createPresenter(IRI datatype, String id, IModel<Value> model) {
-        // TODO Auto-generated method stub
-        return null;
+        IModel<Literal> literalModel = new LambdaModelAdapter<Literal>(
+                () -> (Literal) model.getObject(), (lit) -> model.setObject(lit));
+        return new LiteralValuePresenter(id, literalModel);
     }
 
 }

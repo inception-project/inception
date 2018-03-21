@@ -19,6 +19,8 @@ package de.tudarmstadt.ukp.inception.ui.kb.stmt.editor;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.model.IModel;
@@ -46,30 +48,44 @@ public class MetaDatatypeSupport implements DatatypeSupport {
     public boolean isSupported(IRI datatype) {
         return true;
     }
+    
+    /**
+     * @return {@code true}
+     */
+    @Override
+    public boolean isValid(IRI datatype, Value value) {
+        return true;
+    }
 
     @Override
     public ValueEditor<?> createEditor(IRI datatype, String id, IModel<Value> model) {
-        if (datatype == null) {
-            return new FallbackEditorPresenter(id, model, true);
-        }
-        for (DatatypeSupport sup : supports) {
-            if (sup.isSupported(datatype)) {
-                return sup.createEditor(datatype, id, model);
-            }
-        }
-        return new FallbackEditorPresenter(id, model, true);
+        return consultSupports(datatype, model, (sup) -> sup.createEditor(datatype, id, model),
+                () -> new InvalidStatementValueEditorPresenter(id),
+                () -> new FallbackEditorPresenter(id, model, true));
     }
 
     @Override
     public WebMarkupContainer createPresenter(IRI datatype, String id, IModel<Value> model) {
+        // TODO check another time what W3 recommend for uninterpretable statements
+        return consultSupports(datatype, model, (sup) -> sup.createPresenter(datatype, id, model),
+                () -> new InvalidStatementValueEditorPresenter(id),
+                () -> new FallbackEditorPresenter(id, model, false));
+    }
+
+    private <T> T consultSupports(IRI datatype, IModel<Value> model,
+            Function<DatatypeSupport, T> supplyIfValid, Supplier<T> supplyIfInvalid,
+            Supplier<T> supplyFallback) {
         if (datatype == null) {
-            return new FallbackEditorPresenter(id, model, false);
+            return supplyFallback.get();
         }
         for (DatatypeSupport sup : supports) {
             if (sup.isSupported(datatype)) {
-                return sup.createPresenter(datatype, id, model);
+                if (sup.isValid(datatype, model.getObject())) {
+                    return supplyIfValid.apply(sup);
+                }
+                return supplyIfInvalid.get();
             }
         }
-        return new FallbackEditorPresenter(id, model, false);
+        return supplyFallback.get();
     }
 }
