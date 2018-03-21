@@ -47,8 +47,7 @@ public class StatementEditor extends Panel {
 
     private @SpringBean KnowledgeBaseService kbService;
     
-    private static final DatatypeSupport DATATYPE_SUPPORT = new MetaDatatypeSupport();
-
+    private IModel<DatatypeSupport> datatypeSupport;
     private IModel<KnowledgeBase> kbModel;
     private IModel<KBStatement> statement;
     private IModel<IRI> propertyIri;
@@ -59,6 +58,9 @@ public class StatementEditor extends Panel {
         super(aId, aStatement);
 
         setOutputMarkupId(true);
+        
+        // TODO avoid frequent reinstantiation - instance could be kept same across all stmt eds.
+        datatypeSupport = Model.of(new MetaDatatypeSupport(aKbModel.getObject()));
 
         kbModel = aKbModel;
         statement = aStatement;
@@ -153,8 +155,8 @@ public class StatementEditor extends Panel {
             CompoundPropertyModel<KBStatement> model = new CompoundPropertyModel<>(
                     aStatement);
 
-            WebMarkupContainer presenter = DATATYPE_SUPPORT.createPresenter(propertyIri.getObject(),
-                    "value", model.bind("value"));
+            WebMarkupContainer presenter = datatypeSupport.getObject()
+                    .createPresenter(propertyIri.getObject(), "value", model.bind("value"));
             add(presenter);
             
             LambdaAjaxLink editLink = new LambdaAjaxLink("edit", StatementEditor.this::actionEdit)
@@ -200,7 +202,7 @@ public class StatementEditor extends Panel {
             Form<KBStatement> form = new Form<>("form", model);
                        
             // use the IRI to obtain the appropriate value editor
-            editor = DATATYPE_SUPPORT.createEditor(propertyIri.getObject(),
+            editor = datatypeSupport.getObject().createEditor(propertyIri.getObject(),
                     "value", model.bind("value"));
             form.add(editor);
             form.add(new LambdaAjaxButton<>("save", StatementEditor.this::actionSave));

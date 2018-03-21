@@ -20,26 +20,29 @@ package de.tudarmstadt.ukp.inception.ui.kb.stmt.editor;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.model.IModel;
 import org.eclipse.rdf4j.model.IRI;
-import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.model.Value;
-import org.eclipse.rdf4j.rio.datatypes.XMLSchemaDatatypeHandler;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 
-public class XmlSchemaDatatypeSupport implements DatatypeSupport {
+public class ClassDatatypeSupport implements DatatypeSupport {
     
-    private static final long serialVersionUID = 9145664306248907542L;
+    private static final long serialVersionUID = -5260014734312217472L;
     
-    private static final XMLSchemaDatatypeHandler HANDLER = new XMLSchemaDatatypeHandler();
+    private IRI classIRI;    
+    
+    public ClassDatatypeSupport(IRI classIRI) {
+        this.classIRI = classIRI;
+    }    
 
     @Override
     public boolean isSupported(IRI datatype) {
-        return HANDLER.isRecognizedDatatype(datatype);
+        return classIRI.equals(datatype);
     }
-    
+
     @Override
     public boolean isValid(IRI datatype, Value value) {
-        return HANDLER.verifyDatatype(value.stringValue(), datatype);
+        // FIXME sloppy!
+        return isSupported(datatype);
     }
 
     @Override
@@ -49,9 +52,9 @@ public class XmlSchemaDatatypeSupport implements DatatypeSupport {
 
     @Override
     public WebMarkupContainer createPresenter(IRI datatype, String id, IModel<Value> model) {
-        IModel<Literal> literalModel = new LambdaModelAdapter<Literal>(
-                () -> (Literal) model.getObject(), (lit) -> model.setObject(lit));
-        return new LiteralValuePresenter(id, literalModel);
+        IModel<IRI> iriModel = new LambdaModelAdapter<IRI>(
+                () -> (IRI) model.getObject(), (iri) -> model.setObject(iri));
+        return new IRIValuePresenter<IRI>(id, iriModel);
     }
 
 }

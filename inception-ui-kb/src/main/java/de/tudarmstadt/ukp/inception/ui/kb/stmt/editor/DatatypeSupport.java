@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.stmt.editor;
 
+import java.io.Serializable;
+
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.model.IModel;
 import org.eclipse.rdf4j.model.IRI;
@@ -26,7 +28,7 @@ import org.eclipse.rdf4j.model.Value;
  * A {@link DatatypeSupport} reports if it supports a given datatype (string, int, etc., identified
  * by IRIs). It provides Wicket components for presenting and editing values of supported datatypes.
  */
-public interface DatatypeSupport {
+public interface DatatypeSupport extends Serializable {
 
     // TODO could rely on DatatypeHandlerRegistry from org.eclipse.rdf4j.rio
 

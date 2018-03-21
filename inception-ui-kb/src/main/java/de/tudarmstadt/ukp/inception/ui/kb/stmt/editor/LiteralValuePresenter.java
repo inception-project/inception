@@ -26,7 +26,6 @@ import org.cyberborean.rdfbeans.datatype.DatatypeMapper;
 import org.cyberborean.rdfbeans.datatype.DefaultDatatypeMapper;
 import org.eclipse.rdf4j.model.Literal;
 
-//TODO broken state, don't use for serious purposes
 public class LiteralValuePresenter extends Panel {
 
     private static final long serialVersionUID = -6774637988828817203L;
@@ -58,22 +57,12 @@ public class LiteralValuePresenter extends Panel {
     
     @Override
     protected void onBeforeRender() {
-        Object object = this.model.getObject();
+        Literal literal = this.model.getObject();
         
-        // if the model provides what it promises
-        if (object instanceof Literal) {
-            Literal literal = this.model.getObject();
-            
-            DatatypeMapper mapper = new DefaultDatatypeMapper();        
-            value.setObject(mapper.getJavaObject(literal).toString());
-            language.setObject(literal.getLanguage().orElse(null));
-        } else {
-            value.setObject(null);
-            language.setObject(null);
-            
-            // TODO "wrong statement" notice
-        }  
+        DatatypeMapper mapper = new DefaultDatatypeMapper();        
+        value.setObject(mapper.getJavaObject(literal).toString());
+        language.setObject(literal.getLanguage().orElse(null));
+        
         super.onBeforeRender();
     }
-
 }

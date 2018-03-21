@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.ui.kb.stmt.editor;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.event.Broadcast;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
@@ -25,16 +26,20 @@ import org.apache.wicket.model.Model;
 import org.eclipse.rdf4j.model.IRI;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
+import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxConceptSelectionEvent;
 
 public class IRIValuePresenter<T extends IRI> extends Panel {
 
     private static final long serialVersionUID = -2127902473859929221L;
     
     private IModel<String> stringModel;
+    private IModel<T> iriModel;
 
     public IRIValuePresenter(String id, IModel<T> model) {
         super(id, model);
         
+        iriModel = model;
         stringModel = Model.of();
         
         LambdaAjaxLink link = new LambdaAjaxLink("link", this::actionIRILinkClicked);
@@ -58,5 +63,8 @@ public class IRIValuePresenter<T extends IRI> extends Panel {
     
     private void actionIRILinkClicked(AjaxRequestTarget target) {
         // TODO need to know what the IRI refers to - concept, property, both???
+        T selectedIRI = iriModel.getObject();
+        KBHandle selectedConcept = new KBHandle(selectedIRI.stringValue());
+        send(getPage(), Broadcast.BREADTH, new AjaxConceptSelectionEvent(target, selectedConcept));
     }
 }

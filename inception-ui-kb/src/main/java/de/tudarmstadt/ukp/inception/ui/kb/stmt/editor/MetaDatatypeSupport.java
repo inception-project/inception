@@ -26,6 +26,10 @@ import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.model.IModel;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Value;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 /**
  * Aggregates several {@link DatatypeSupport}s.<br>
@@ -33,12 +37,17 @@ import org.eclipse.rdf4j.model.Value;
  * {@link InstanceDatatypeSupport}s. As a last resort, {@link FallbackEditorPresenter} is used.
  */
 public class MetaDatatypeSupport implements DatatypeSupport {
+    
+    private static final long serialVersionUID = -6786456814387451088L;
 
-    private static final List<DatatypeSupport> supports;
+    private static final Logger LOGGER = LoggerFactory.getLogger(MetaDatatypeSupport.class);
 
-    static {
+    private final List<DatatypeSupport> supports;
+    
+    public MetaDatatypeSupport(KnowledgeBase kb) {
         supports = new ArrayList<>();
         supports.add(new XmlSchemaDatatypeSupport());
+        supports.add(new ClassDatatypeSupport(kb.getClassIri()));
     }
     
     /**
@@ -76,6 +85,7 @@ public class MetaDatatypeSupport implements DatatypeSupport {
             Function<DatatypeSupport, T> supplyIfValid, Supplier<T> supplyIfInvalid,
             Supplier<T> supplyFallback) {
         if (datatype == null) {
+            LOGGER.warn("Null datatype for " + model.getObject().toString());
             return supplyFallback.get();
         }
         for (DatatypeSupport sup : supports) {
@@ -86,6 +96,7 @@ public class MetaDatatypeSupport implements DatatypeSupport {
                 return supplyIfInvalid.get();
             }
         }
+        LOGGER.warn("Unsupported datatype " + datatype.toString() + " for " + model.getObject().toString());
         return supplyFallback.get();
     }
 }
