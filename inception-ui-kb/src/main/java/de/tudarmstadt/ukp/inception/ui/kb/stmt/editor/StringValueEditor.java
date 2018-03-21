@@ -30,7 +30,6 @@ import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 
-// TODO broken state, don't use
 public class StringValueEditor extends ValueEditor<Literal> {
 
     private static final long serialVersionUID = 6935837930064826698L;
@@ -71,22 +70,12 @@ public class StringValueEditor extends ValueEditor<Literal> {
     
     @Override
     protected void onBeforeRender() {
-        // TODO STRAIGHT COPY PASTE FROM PRESENTER
-        Object object = this.model.getObject();
+        Literal literal = this.model.getObject();
         
-        // if the model provides what it promises
-        if (object instanceof Literal) {
-            Literal literal = this.model.getObject();
-            
-            DatatypeMapper mapper = new DefaultDatatypeMapper();        
-            value.setObject(mapper.getJavaObject(literal).toString());
-            language.setObject(literal.getLanguage().orElse(null));
-        } else {
-            value.setObject(null);
-            language.setObject(null);
-            
-            // TODO "wrong statement" notice
-        }  
+        DatatypeMapper mapper = new DefaultDatatypeMapper();        
+        value.setObject(mapper.getJavaObject(literal).toString());
+        language.setObject(literal.getLanguage().orElse(null));
+        
         super.onBeforeRender();
     }
 

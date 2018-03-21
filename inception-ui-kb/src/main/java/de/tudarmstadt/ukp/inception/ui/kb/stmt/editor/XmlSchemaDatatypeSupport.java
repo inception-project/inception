@@ -22,6 +22,7 @@ import org.apache.wicket.model.IModel;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.model.Value;
+import org.eclipse.rdf4j.model.vocabulary.XMLSchema;
 import org.eclipse.rdf4j.rio.datatypes.XMLSchemaDatatypeHandler;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
@@ -44,11 +45,19 @@ public class XmlSchemaDatatypeSupport implements DatatypeSupport {
 
     @Override
     public ValueEditor<?> createEditor(IRI datatype, String id, IModel<Value> model) {
-        return new FallbackEditorPresenter(id, model, true);
+        IModel<Literal> literalModel = new LambdaModelAdapter<Literal>(
+                () -> (Literal) model.getObject(), (lit) -> model.setObject(lit));
+        
+        if (XMLSchema.STRING.equals(datatype)) {
+            return new StringValueEditor(id, literalModel);
+        } else {
+            // TODO for the lack of better editors
+            return new FallbackEditorPresenter(id, model, true);
+        }
     }
 
     @Override
-    public WebMarkupContainer createPresenter(IRI datatype, String id, IModel<Value> model) {
+    public WebMarkupContainer createPresenter(IRI datatype, String id, IModel<Value> model) {       
         IModel<Literal> literalModel = new LambdaModelAdapter<Literal>(
                 () -> (Literal) model.getObject(), (lit) -> model.setObject(lit));
         return new LiteralValuePresenter(id, literalModel);
