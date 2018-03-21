@@ -7,7 +7,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.kb.feature;
+package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.setFeature;
@@ -23,13 +23,17 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.stream.Stream;
 import javax.annotation.Resource;
 
+import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
+import org.apache.uima.resource.metadata.TypeDescription;
+import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.model.IModel;
 import org.slf4j.Logger;
@@ -42,6 +46,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureType;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.FeatureEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
@@ -57,11 +62,25 @@ public class PropertyFeatureSupport
     @Resource private KnowledgeBaseService kbService;
     private static final String PREDICATE_KEY = "Property: Predicate";
 
+    private String featureSupportId;
+
+    @Override
+    public String getId()
+    {
+        return featureSupportId;
+    }
+
+    @Override
+    public void setBeanName(String aBeanName)
+    {
+        featureSupportId = aBeanName;
+    }
+
     @Override
     public List<FeatureType> getSupportedFeatureTypes(AnnotationLayer aAnnotationLayer)
     {
         List<FeatureType> types = new ArrayList<>();
-        types.add(new FeatureType(PREDICATE_KEY, PREDICATE_KEY));
+        types.add(new FeatureType(PREDICATE_KEY, PREDICATE_KEY, featureSupportId));
         return types;
     }
 
@@ -116,9 +135,19 @@ public class PropertyFeatureSupport
     }
 
     @Override
-    public KBHandle getFeatureValue(AnnotationFeature aFeature, FeatureStructure aFs)
+    public KBHandle getFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
     {
-        String value = (String) FeatureSupport.super.getFeatureValue(aFeature, aFs);
+        Feature feature = aFS.getType().getFeatureByBaseName(aFeature.getName());
+        final String effectiveType = CAS.TYPE_NAME_STRING;
+
+        // Sanity check
+        if (!Objects.equals(effectiveType, feature.getRange().getName())) {
+            throw new IllegalArgumentException("Actual feature type ["
+                + feature.getRange().getName() + "] does not match expected feature type ["
+                + effectiveType + "].");
+        }
+
+        String value = (String) WebAnnoCasUtil.getFeature(aFS, aFeature.getName());
         if (value != null) {
             KBProperty prop = kbService.getKnowledgeBases(aFeature.getProject()).stream()
                 .map(k -> kbService.readProperty(k, value))
@@ -154,6 +183,13 @@ public class PropertyFeatureSupport
         }
 
         return editor;
+    }
+
+    @Override
+    public void generateFeature(TypeSystemDescription aTSD, TypeDescription aTD,
+        AnnotationFeature aFeature)
+    {
+        aTD.addFeature(aFeature.getName(), "", CAS.TYPE_NAME_STRING);
     }
 
 }
