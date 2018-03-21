@@ -32,13 +32,14 @@
             <div class="form-group form-horizontal">
               <label class="col-sm-3 control-label">Layer</label>
               <div class="col-sm-9">
-                <select class="form-control"  wicket:id="selectLayer"></select>
+                <select class="form-control" wicket:id="selectLayer"></select>
                 <span class="form-control" wicket:id="showSelectedLayer"></span>
               </div>
             </div>
           </div>
           <div class="panel-footer text-right">
-            <input wicket:id="layerSelectionButton" type="submit" class="btn btn-primary" value="Start"/>
+            <input wicket:id="layerSelectionButton" type="submit" class="btn btn-primary"
+              value="Start"/>
           </div>
         </form>
 
@@ -54,8 +55,11 @@
             <div class="form-group">
               <label class="col-sm-3 control-label">Text</label>
               <div class="col-sm-9" style="position: relative; height: 5em;">
-                <div class="form-control" style="overflow-y: auto; width: unset; word-wrap: break-word; height: 5em; position: absolute; top: 0; left: 15px; right: 15px;" readonly>
-                  <a wicket:id="recommendationCoveredTextLink"><wicket:container wicket:id="recommendedToken"/></a>
+                <div class="form-control"
+                  style="overflow-y: auto; width: unset; word-wrap: break-word; height: 5em; position: absolute; top: 0; left: 15px; right: 15px;"
+                  readonly>
+                  <a wicket:id="recommendationCoveredTextLink"><wicket:container
+                    wicket:id="recommendedToken"/></a>
                 </div>
               </div>
             </div>
@@ -79,13 +83,14 @@
             </div>
           </div>
           <div class="panel-footer text-right">
-            <input type="submit" class="btn btn-success" wicket:id="acceptButton" value="Accept" />
-            <input type="submit" class="btn btn-danger" wicket:id="rejectButton" value="Reject" />
-            <input type="submit" class="btn btn-warning" wicket:id="skipButton" value="Skip" />
+            <input type="submit" class="btn btn-success" wicket:id="acceptButton" value="Accept"/>
+            <input type="submit" class="btn btn-danger" wicket:id="rejectButton" value="Reject"/>
+            <input type="submit" class="btn btn-warning" wicket:id="skipButton" value="Skip"/>
           </div>
         </form>
 
-        <form class="panel panel-default panel-flex panel-small flex-content" wicket:id="learningHistoryForm">
+        <form class="panel panel-default panel-flex panel-small flex-content"
+          wicket:id="learningHistoryForm">
           <div class="panel-heading">
             <h3 class="panel-title">Learning History</h3>
           </div>
