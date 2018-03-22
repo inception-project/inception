@@ -103,7 +103,7 @@ public class KnowledgeBase
      * Whether the kb is available in the UI (outside of the project settings).
      */
     @Column(nullable = false)
-    private boolean enabled = true;
+    private boolean enabled;
     
     
     public String getRepositoryId()

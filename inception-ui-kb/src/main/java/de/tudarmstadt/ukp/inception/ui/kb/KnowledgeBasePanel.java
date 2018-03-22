@@ -133,23 +133,6 @@ public class KnowledgeBasePanel
         details = new EmptyPanel(DETAILS_MARKUP_ID);
         detailContainer.add(details);
     }
-
-    private List<KnowledgeBase> getEnabledKBs(Project aProject){
-    	ArrayList<KnowledgeBase> enabledKBs =  new ArrayList<KnowledgeBase>();
-    	
-    	//Check for all KnowledgeBases if the are enabled
-    	for(KnowledgeBase kb : kbService.getKnowledgeBases(aProject)) {
-    		if(kb.isEnabled()) {
-    			enabledKBs.add(kb);
-    			System.out.println(kb.getName() + "is enabled");
-    		}
-    		else{
-    			System.out.println(kb.getName() + "is not enabled");
-    		}
-    	}
-    	
-    	return enabledKBs;
-    }
     
     /**
      * Acts upon statement changes. If the changed statement does <strong>not</strong> involve an

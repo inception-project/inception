@@ -97,9 +97,9 @@ public class EnrichedKnowledgeBase implements Serializable {
         return enabled;
     }
 
-    public void setEnabled(boolean enabled)
+    public void setEnabled(boolean isEnabled)
     {
-        this.enabled = enabled;
+        this.enabled = isEnabled;
     }
 
 }
