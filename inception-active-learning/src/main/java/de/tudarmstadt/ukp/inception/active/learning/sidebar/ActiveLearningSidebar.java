@@ -136,6 +136,7 @@ public class ActiveLearningSidebar
         mainContainer.setOutputMarkupId(true);
         mainContainer.add(createLayerSelection());
         mainContainer.add(createNoRecommendationLabel());
+        mainContainer.add(createLearnFromSkippedRecommendationForm());
         mainContainer.add(createRecommendationOperationForm());
         mainContainer.add(createLearningHistory());
         add(mainContainer);
