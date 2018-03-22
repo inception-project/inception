@@ -21,6 +21,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -71,7 +72,7 @@ public class ActiveLearningRecommender
     }
 
     public RecommendationDifference generateRecommendationWithLowestDifference(
-        DocumentService documentService)
+        DocumentService documentService, Date learnSkippedRecommendationTime)
     {
         this.documentService = documentService;
 
@@ -92,7 +93,7 @@ public class ActiveLearningRecommender
         }
 
         // remove rejected recommendations
-        removeRejectedOrSkippedAnnotations(true);
+        removeRejectedOrSkippedAnnotations(true, learnSkippedRecommendationTime);
 
         return calculateDifferencesAndReturnLowestDifference ();
     }
@@ -100,7 +101,7 @@ public class ActiveLearningRecommender
     public boolean hasRecommendationWhichIsSkipped()
     {
         getRecommendationFromRecommendationModel();
-        removeRejectedOrSkippedAnnotations(false);
+        removeRejectedOrSkippedAnnotations(false, null);
         if (listOfRecommendationsForEachToken.size() > 0) {
             return true;
         }
@@ -185,36 +186,45 @@ public class ActiveLearningRecommender
         return flag;
     }
 
-    private void removeRejectedOrSkippedAnnotations(boolean filterSkippedRecommendation)
+    private void removeRejectedOrSkippedAnnotations(boolean filterSkippedRecommendation,
+        Date learnSkippedRecommendationTime)
     {
         List<LearningRecord> records = learningRecordService.getAllRecordsByDocumentAndUserAndLayer
             (annotatorState.getDocument(), annotatorState.getUser().getUsername(), selectedLayer);
         for (List<AnnotationObject> recommendations: listOfRecommendationsForEachToken) {
             recommendations.removeIf(recommendation -> doesContainRejectedOrSkippedRecord(records,
-                recommendation, filterSkippedRecommendation));
+                recommendation, filterSkippedRecommendation, learnSkippedRecommendationTime));
         }
         listOfRecommendationsForEachToken.removeIf(recommendationsList ->
             recommendationsList.size() == 0);
     }
 
     private boolean doesContainRejectedOrSkippedRecord(List<LearningRecord> records,
-        AnnotationObject aRecommendation, boolean filterSkippedRecommendation)
+        AnnotationObject aRecommendation, boolean filterSkippedRecommendation,
+        Date learnSkippedRecommendationTime)
     {
         boolean flag = false;
         for (LearningRecord record: records) {
-            if ((record.getUserAction().equals("rejected") || (record.getUserAction().equals
-                ("skipped") && filterSkippedRecommendation)) && record
-                .getSourceDocument()
-                .getName()
-                .equals(aRecommendation.getDocumentName()) && record.getOffsetTokenBegin() ==
-                aRecommendation.getOffset().getBeginToken() && record.getOffsetTokenEnd() ==
-                aRecommendation.getOffset().getEndToken() && record.getAnnotation().equals
-                (aRecommendation.getAnnotation())) {
+            if ((record.getUserAction().equals("rejected") || (
+                record.getUserAction().equals("skipped") && filterSkippedRecommendation)
+                && needFilterByTime(learnSkippedRecommendationTime, record)) && record
+                .getSourceDocument().getName().equals(aRecommendation.getDocumentName())
+                && record.getOffsetTokenBegin() == aRecommendation.getOffset().getBeginToken()
+                && record.getOffsetTokenEnd() == aRecommendation.getOffset().getEndToken() && record
+                .getAnnotation().equals(aRecommendation.getAnnotation())) {
                 flag = true;
                 break;
             }
         }
         return flag;
+    }
+
+    private boolean needFilterByTime (Date learnSkippedTime, LearningRecord record) {
+        if (learnSkippedTime != null && learnSkippedTime.compareTo(record.getActionDate()) == 1) {
+            return false;
+        }
+        else
+            return true;
     }
 
     private RecommendationDifference calculateDifferencesAndReturnLowestDifference()

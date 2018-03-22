@@ -91,15 +91,6 @@ public class LearningRecordServiceImpl implements LearningRecordService, Initial
             user).executeUpdate();
     }
 
-    @Transactional
-    @Override
-    public void deleteSkippedRecordByDocumentAndUser(SourceDocument document, String user) {
-        String sql = "DELETE FROM LearningRecord l where l.sourceDocument = :document and l.user " +
-            "= :user and l.userAction = :userAction";
-        entityManager.createQuery(sql).setParameter("document", document).setParameter("user",
-            user).setParameter("userAction", "skipped").executeUpdate();
-    }
-
     @Override
     @Transactional
     public void create(LearningRecord learningRecord) {
