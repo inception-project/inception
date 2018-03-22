@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.active.learning.sidebar;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -119,6 +120,7 @@ public class ActiveLearningSidebar
     private String vMarkerType = "";
     private VID highlightVID;
     private LearningRecord selectedRecord;
+    private Date learnSkippedRecommendation;
 
     public ActiveLearningSidebar(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, JCasProvider aJCasProvider,

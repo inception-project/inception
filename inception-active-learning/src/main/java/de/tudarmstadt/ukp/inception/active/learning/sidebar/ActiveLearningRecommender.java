@@ -92,7 +92,7 @@ public class ActiveLearningRecommender
         }
 
         // remove rejected recommendations
-        removeRejectedOrSkippedAnnotations();
+        removeRejectedOrSkippedAnnotations(true);
 
         return calculateDifferencesAndReturnLowestDifference ();
     }
@@ -100,6 +100,7 @@ public class ActiveLearningRecommender
     public boolean hasRecommendationWhichIsSkipped()
     {
         getRecommendationFromRecommendationModel();
+        removeRejectedOrSkippedAnnotations(false);
         if (listOfRecommendationsForEachToken.size() > 0) {
             return true;
         }
@@ -184,25 +185,27 @@ public class ActiveLearningRecommender
         return flag;
     }
 
-    private void removeRejectedOrSkippedAnnotations()
+    private void removeRejectedOrSkippedAnnotations(boolean filterSkippedRecommendation)
     {
         List<LearningRecord> records = learningRecordService.getAllRecordsByDocumentAndUserAndLayer
             (annotatorState.getDocument(), annotatorState.getUser().getUsername(), selectedLayer);
         for (List<AnnotationObject> recommendations: listOfRecommendationsForEachToken) {
             recommendations.removeIf(recommendation -> doesContainRejectedOrSkippedRecord(records,
-                recommendation));
+                recommendation, filterSkippedRecommendation));
         }
         listOfRecommendationsForEachToken.removeIf(recommendationsList ->
             recommendationsList.size() == 0);
     }
 
     private boolean doesContainRejectedOrSkippedRecord(List<LearningRecord> records,
-        AnnotationObject aRecommendation)
+        AnnotationObject aRecommendation, boolean filterSkippedRecommendation)
     {
         boolean flag = false;
         for (LearningRecord record: records) {
-            if ((record.getUserAction().equals("rejected") || record.getUserAction().equals
-                ("skipped")) && record.getSourceDocument().getName()
+            if ((record.getUserAction().equals("rejected") || (record.getUserAction().equals
+                ("skipped") && filterSkippedRecommendation)) && record
+                .getSourceDocument()
+                .getName()
                 .equals(aRecommendation.getDocumentName()) && record.getOffsetTokenBegin() ==
                 aRecommendation.getOffset().getBeginToken() && record.getOffsetTokenEnd() ==
                 aRecommendation.getOffset().getEndToken() && record.getAnnotation().equals
@@ -226,7 +229,6 @@ public class ActiveLearningRecommender
             createDifferencesSortedAscendingly(listOfRecommendationsPerTokenPerClassifier);
         if (recommendationDifferences.size() > 0) {
             RecommendationDifference lowestDifference = recommendationDifferences.get(0);
-            logger.info("the lowest difference is: ", lowestDifference.getDifference());
             return lowestDifference;
         }
         else
