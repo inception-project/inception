@@ -67,6 +67,7 @@ import de.tudarmstadt.ukp.inception.app.session.SessionMetaData;
 import de.tudarmstadt.ukp.inception.recommendation.event.AjaxRecommendationAcceptedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.AjaxRecommendationRejectedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.AnnotationObject;
+import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.Offset;
 import de.tudarmstadt.ukp.inception.recommendation.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.model.LearningRecordChangeLocation;
 import de.tudarmstadt.ukp.inception.recommendation.model.Predictions;
@@ -482,16 +483,14 @@ public class ActiveLearningSidebar
             @Override
             protected void populateItem(ListItem<LearningRecord> item)
             {
-//                LambdaAjaxLink jumpToAnnotationFromTokenTextLink = new LambdaAjaxLink(
-//                    "jumpToAnnotation", t -> actionShowSelectedDocument(t,
-//                    item.getModelObject().getSourceDocument(),
-//                    item.getModelObject().getOffsetCharacterBegin())
-//                );
-//
-//                jumpToAnnotationFromTokenTextLink.add(new Label("record",
-//                    item.getModelObject().getTokenText()));
+                LambdaAjaxLink jumpToAnnotationFromTokenTextLink = new LambdaAjaxLink(
+                    "jumpToAnnotation",
+                    t -> jumpAndHighlightFromLearningHistory(t, item.getModelObject()));
 
-                //item.add(jumpToAnnotationFromTokenTextLink);
+                jumpToAnnotationFromTokenTextLink.add(new Label("record",
+                    item.getModelObject().getTokenText()));
+
+                item.add(jumpToAnnotationFromTokenTextLink);
                 item.add(new Label("record", item.getModelObject().getTokenText()));
                 item.add(new Label("recommendedAnnotation",
                     item.getModelObject().getAnnotation()));
@@ -503,6 +502,33 @@ public class ActiveLearningSidebar
         learningRecords = LambdaModel.of(this::listLearningRecords);
         learningHistory.setModel(learningRecords);
         return learningHistory;
+    }
+
+    private void jumpAndHighlightFromLearningHistory(AjaxRequestTarget aTarget,
+        LearningRecord record)
+        throws IOException
+    {
+        actionShowSelectedDocument(aTarget, record.getSourceDocument(),
+            record.getOffsetCharacterBegin());
+
+        if (record.getUserAction().equals("rejected")) {
+            error("No suggestion could be highlighted.");
+        }
+        else {
+            predictionModel = recommendationService
+                .getPredictions(annotatorState.getUser(), annotatorState.getProject());
+
+            Offset recordOffset = new Offset(record.getOffsetCharacterBegin(),
+                record.getOffsetCharacterEnd(), record.getOffsetTokenBegin(),
+                record.getOffsetTokenEnd());
+
+            if (predictionModel != null) {
+                AnnotationObject aoForVID = predictionModel
+                    .getPrediction(recordOffset, record.getAnnotation());
+                highlightVID = new VID(RECOMMENDATION_EDITOR_EXTENSION, selectedLayer.getId(),
+                    (int) aoForVID.getRecommenderId(), aoForVID.getId(), VID.NONE, VID.NONE);
+            }
+        }
     }
 
 
