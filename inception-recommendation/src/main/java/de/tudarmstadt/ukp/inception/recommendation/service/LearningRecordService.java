@@ -39,6 +39,8 @@ public interface LearningRecordService {
 
     public void deleteRecordByDocumentAndUser(SourceDocument document, String user);
 
+    public void deleteSkippedRecordByDocumentAndUser(SourceDocument document, String user);
+
     LearningRecord getRecordById(long recordId);
 
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
