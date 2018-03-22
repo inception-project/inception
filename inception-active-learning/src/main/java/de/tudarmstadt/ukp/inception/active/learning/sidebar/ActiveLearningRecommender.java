@@ -71,7 +71,7 @@ public class ActiveLearningRecommender
     }
 
     public RecommendationDifference generateRecommendationWithLowestDifference(
-        DocumentService documentService, boolean needSkippedRecommendation)
+        DocumentService documentService)
     {
         this.documentService = documentService;
 
@@ -92,9 +92,19 @@ public class ActiveLearningRecommender
         }
 
         // remove rejected recommendations
-        removeRejectedOrSkippedAnnotations(needSkippedRecommendation);
+        removeRejectedOrSkippedAnnotations();
 
         return calculateDifferencesAndReturnLowestDifference ();
+    }
+
+    public boolean hasRecommendationWhichIsSkipped()
+    {
+        getRecommendationFromRecommendationModel();
+        if (listOfRecommendationsForEachToken.size() > 0) {
+            return true;
+        }
+        else
+            return false;
     }
 
     public void getRecommendationFromRecommendationModel()
@@ -174,41 +184,32 @@ public class ActiveLearningRecommender
         return flag;
     }
 
-    private void removeRejectedOrSkippedAnnotations(boolean needSkippedRecommendation)
+    private void removeRejectedOrSkippedAnnotations()
     {
         List<LearningRecord> records = learningRecordService.getAllRecordsByDocumentAndUserAndLayer
             (annotatorState.getDocument(), annotatorState.getUser().getUsername(), selectedLayer);
         for (List<AnnotationObject> recommendations: listOfRecommendationsForEachToken) {
             recommendations.removeIf(recommendation -> doesContainRejectedOrSkippedRecord(records,
-                recommendation, needSkippedRecommendation));
+                recommendation));
         }
         listOfRecommendationsForEachToken.removeIf(recommendationsList ->
             recommendationsList.size() == 0);
     }
 
     private boolean doesContainRejectedOrSkippedRecord(List<LearningRecord> records,
-        AnnotationObject aRecommendation, boolean needSkippedRecommendation)
+        AnnotationObject aRecommendation)
     {
         boolean flag = false;
-        for (LearningRecord record : records) {
-            if (recordIsSkippedOrRejected(record, needSkippedRecommendation) &&
-                record.getSourceDocument().getName().equals(aRecommendation.getDocumentName())
-                && record.getOffsetTokenBegin() == aRecommendation.getOffset().getBeginToken()
-                && record.getOffsetTokenEnd() == aRecommendation.getOffset().getEndToken() && record
-                .getAnnotation().equals(aRecommendation.getAnnotation())) {
+        for (LearningRecord record: records) {
+            if ((record.getUserAction().equals("rejected") || record.getUserAction().equals
+                ("skipped")) && record.getSourceDocument().getName()
+                .equals(aRecommendation.getDocumentName()) && record.getOffsetTokenBegin() ==
+                aRecommendation.getOffset().getBeginToken() && record.getOffsetTokenEnd() ==
+                aRecommendation.getOffset().getEndToken() && record.getAnnotation().equals
+                (aRecommendation.getAnnotation())) {
                 flag = true;
                 break;
             }
-        }
-        return flag;
-    }
-
-    private boolean recordIsSkippedOrRejected (LearningRecord record,
-        boolean needSkippedRecommendation)
-    {
-        boolean flag = record.getUserAction().equals("rejected");
-        if (!needSkippedRecommendation) {
-            flag = flag || record.getUserAction().equals("skipped");
         }
         return flag;
     }
