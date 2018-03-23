@@ -514,12 +514,10 @@ public class ActiveLearningSidebar
             record.getOffsetCharacterBegin());
 
         if (record.getUserAction().equals("rejected")) {
-            highlightMarker = new VTextMarker(VMarker.FOCUS,
-                record.getOffsetCharacterBegin() - annotatorState.getWindowBeginOffset(),
-                record.getOffsetCharacterEnd() - annotatorState.getWindowBeginOffset());
-            error("No annotation could be highlighted.");
+            highlightTextAndDisplayMessage(record);
         }
-        else if (activeLearningRecommender.checkRecommendationExisit(documentService, record)){
+        // if the suggestion still exists, highlight that suggestion
+        else if (activeLearningRecommender.checkRecommendationExist(documentService, record)) {
             predictionModel = recommendationService
                 .getPredictions(annotatorState.getUser(), annotatorState.getProject());
 
@@ -535,6 +533,18 @@ public class ActiveLearningSidebar
                 highlightMarker = new VAnnotationMarker(VMarker.FOCUS, highlightVID);
             }
         }
+        // if the suggestion doesn't exit -> if that suggestion is accepted and annotated
+        // else
+        else if (record.getUserAction().equals("skipped")) {
+            highlightTextAndDisplayMessage(record);
+        }
+    }
+
+    private void highlightTextAndDisplayMessage(LearningRecord record) {
+        highlightMarker = new VTextMarker(VMarker.FOCUS,
+            record.getOffsetCharacterBegin() - annotatorState.getWindowBeginOffset(),
+            record.getOffsetCharacterEnd() - annotatorState.getWindowBeginOffset());
+        error("No annotation could be highlighted.");
     }
 
 

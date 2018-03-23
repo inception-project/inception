@@ -434,6 +434,25 @@ public class ActiveLearningRecommender
     {
         this.documentService = documentService;
         getRecommendationFromRecommendationModel();
+        return containSuggestion(record);
+    }
+
+    public boolean containSuggestion(LearningRecord record) {
+        for (List<AnnotationObject> listOfAO: listOfRecommendationsForEachToken) {
+            if (listOfAO.stream().anyMatch(ao -> recordCompareToRecommendation(ao, record))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean recordCompareToRecommendation(AnnotationObject aRecommendation,
+        LearningRecord aRecord)
+    {
+        return aRecommendation.getAnnotation().equals(aRecord.getAnnotation())
+            && aRecommendation.getDocumentName().equals(aRecord.getSourceDocument().getName())
+            && aRecommendation.getOffset().getBeginCharacter() == aRecord.getOffsetCharacterBegin()
+            && aRecommendation.getOffset().getEndCharacter() == aRecord.getOffsetCharacterEnd();
     }
 
 }
