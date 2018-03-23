@@ -21,6 +21,9 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.uima.cas.Type;
+import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.Session;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -53,6 +56,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAn
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VAnnotationMarker;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VMarker;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VTextMarker;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -516,7 +520,7 @@ public class ActiveLearningSidebar
         if (record.getUserAction().equals("rejected")) {
             highlightTextAndDisplayMessage(record);
         }
-        // if the suggestion still exists, highlight that suggestion
+        // if the suggestion still exists, highlight that suggestion.
         else if (activeLearningRecommender.checkRecommendationExist(documentService, record)) {
             predictionModel = recommendationService
                 .getPredictions(annotatorState.getUser(), annotatorState.getProject());
@@ -533,11 +537,33 @@ public class ActiveLearningSidebar
                 highlightMarker = new VAnnotationMarker(VMarker.FOCUS, highlightVID);
             }
         }
-        // if the suggestion doesn't exit -> if that suggestion is accepted and annotated
-        // else
-        else if (record.getUserAction().equals("skipped")) {
+        // if the suggestion doesn't exit -> if that suggestion is accepted and annotated,
+        // highlight the annotation.
+        // else, highlight the text.
+        else if (!isAnnotatedInCas(record)) {
             highlightTextAndDisplayMessage(record);
         }
+    }
+
+    private boolean isAnnotatedInCas(LearningRecord aRecord)
+        throws IOException
+    {
+        JCas aJcas = this.getJCasProvider().get();
+        Type type = CasUtil.getType(aJcas.getCas(), selectedLayer.getName());
+        AnnotationFS annotationFS = WebAnnoCasUtil
+            .selectSingleFsAt(aJcas, type, aRecord.getOffsetCharacterBegin(),
+                aRecord.getOffsetCharacterEnd());
+        for (AnnotationFeature annotationFeature : annotationService
+            .listAnnotationFeature(selectedLayer)) {
+            String annotatedValue = WebAnnoCasUtil
+                .getFeature(annotationFS, annotationFeature.getName());
+            if (annotatedValue.equals(aRecord.getAnnotation())) {
+                VID highlightVID = new VID(WebAnnoCasUtil.getAddr(annotationFS));
+                highlightMarker = new VAnnotationMarker(VMarker.FOCUS, highlightVID);
+                return true;
+            }
+        }
+        return false;
     }
 
     private void highlightTextAndDisplayMessage(LearningRecord record) {
