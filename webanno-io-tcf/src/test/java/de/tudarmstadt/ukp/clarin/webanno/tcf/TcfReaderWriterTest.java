@@ -17,25 +17,27 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.tcf;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngineDescription;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReaderDescription;
 import static org.apache.uima.fit.pipeline.SimplePipeline.runPipeline;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.contentOf;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.collection.CollectionReaderDescription;
 import org.apache.uima.fit.component.CasDumpWriter;
 import org.custommonkey.xmlunit.XMLAssert;
-import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.xml.sax.InputSource;
 
+import de.tudarmstadt.ukp.dkpro.core.testing.DkproTestContext;
 import eu.clarin.weblicht.wlfxb.io.WLDObjector;
 import eu.clarin.weblicht.wlfxb.tc.api.TextCorpus;
 import eu.clarin.weblicht.wlfxb.tc.api.TextCorpusLayer;
@@ -129,13 +131,11 @@ public class TcfReaderWriterTest
 
         runPipeline(reader, writer);
 
-        assertTrue(FileUtils.contentEqualsIgnoreEOL(new File("src/test/resources/wlfxb.xml"),
-                new File("target/test-output/roundtrip/wlfxb.xml"), "UTF-8"));
+        String expected = contentOf(new File("src/test/resources/wlfxb.xml"), UTF_8);
+        String actual = contentOf(new File("target/test-output/roundtrip/wlfxb.xml"), UTF_8);
+        assertThat(expected).isXmlEqualTo(actual);
     }
 
-    @Before
-    public void setupLogging()
-    {
-        System.setProperty("org.apache.uima.logger.class", "org.apache.uima.util.impl.Log4jLogger_impl");
-    }
+    @Rule
+    public DkproTestContext testContext = new DkproTestContext();
 }

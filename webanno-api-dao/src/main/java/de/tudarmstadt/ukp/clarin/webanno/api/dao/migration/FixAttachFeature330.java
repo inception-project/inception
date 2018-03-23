@@ -20,13 +20,12 @@ package de.tudarmstadt.ukp.clarin.webanno.api.dao.migration;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 
-import javax.annotation.Resource;
-
 import org.apache.uima.jcas.cas.TOP;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.SmartLifecycle;
-import org.springframework.orm.jpa.JpaTransactionManager;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
@@ -59,11 +58,9 @@ public class FixAttachFeature330
 
     private boolean running = false;
 
-    @Resource(name = "transactionManager")
-    private JpaTransactionManager txManager;
-    
-    private @Resource ProjectService projectService;
-    private @Resource AnnotationSchemaService annotationSchemaService;
+    private @Autowired PlatformTransactionManager txManager;
+    private @Autowired ProjectService projectService;
+    private @Autowired AnnotationSchemaService annotationSchemaService;
 
     @Override
     public boolean isRunning()

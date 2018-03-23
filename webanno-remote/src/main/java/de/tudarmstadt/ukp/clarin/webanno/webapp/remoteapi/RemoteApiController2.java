@@ -45,7 +45,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import javax.annotation.Resource;
 import javax.persistence.NoResultException;
 
 import org.apache.commons.io.FileUtils;
@@ -69,6 +68,7 @@ import org.apache.uima.jcas.JCas;
 import org.apache.wicket.model.Model;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
@@ -161,14 +161,14 @@ public class RemoteApiController2
     
     private final Logger LOG = LoggerFactory.getLogger(getClass());
 
-    private @Resource DocumentService documentService;
-    private @Resource CurationDocumentService curationService;
-    private @Resource ProjectService projectService;
-    private @Resource ImportExportService importExportService;
-    private @Resource AnnotationSchemaService annotationService;
-    private @Resource UserDao userRepository;
-    private @Resource ImportService importService;
-    private @Resource ExportService exportService;
+    private @Autowired DocumentService documentService;
+    private @Autowired CurationDocumentService curationService;
+    private @Autowired ProjectService projectService;
+    private @Autowired ImportExportService importExportService;
+    private @Autowired AnnotationSchemaService annotationService;
+    private @Autowired UserDao userRepository;
+    private @Autowired ImportService importService;
+    private @Autowired ExportService exportService;
 
     @ExceptionHandler(value = RemoteApiException.class)
     public ResponseEntity<RResponse<Void>> handleException(RemoteApiException aException)

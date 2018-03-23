@@ -23,10 +23,9 @@ import static org.apache.uima.fit.util.FSUtil.getFeature;
 
 import java.util.List;
 
-import javax.annotation.Resource;
-
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
@@ -43,7 +42,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 public class RelationOffsetsCheck
     implements Check
 {
-    private @Resource AnnotationSchemaService annotationService;
+    private @Autowired AnnotationSchemaService annotationService;
 
     @Override
     public boolean check(Project aProject, CAS aCas, List<LogMessage> aMessages)

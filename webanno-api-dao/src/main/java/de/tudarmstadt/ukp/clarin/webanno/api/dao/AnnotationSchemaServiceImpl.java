@@ -29,7 +29,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import javax.annotation.Resource;
+
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
@@ -50,6 +50,7 @@ import org.apache.uima.util.CasCreationUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
@@ -88,8 +89,8 @@ public class AnnotationSchemaServiceImpl
     @PersistenceContext
     private EntityManager entityManager;
     
-    private @Resource FeatureSupportRegistry featureSupportRegistry;
-    private @Resource ApplicationEventPublisher applicationEventPublisher;
+    private @Autowired FeatureSupportRegistry featureSupportRegistry;
+    private @Autowired ApplicationEventPublisher applicationEventPublisher;
 
     public AnnotationSchemaServiceImpl()
     {

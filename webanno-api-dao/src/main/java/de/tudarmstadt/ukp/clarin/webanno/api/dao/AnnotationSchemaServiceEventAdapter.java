@@ -17,8 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 
-import javax.annotation.Resource;
-
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
@@ -32,7 +31,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 @Component
 public class AnnotationSchemaServiceEventAdapter
 {
-    private @Resource AnnotationSchemaService service;
+    private @Autowired AnnotationSchemaService service;
     
     @EventListener
     public void beforeProjectRemove(BeforeProjectRemovedEvent aEvent)

@@ -31,7 +31,6 @@ import org.junit.Test;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.xmi.TypeSystemAnalysis;
 import de.tudarmstadt.ukp.dkpro.core.testing.DkproTestContext;
 
 public class TypeSystemAnalysisTest

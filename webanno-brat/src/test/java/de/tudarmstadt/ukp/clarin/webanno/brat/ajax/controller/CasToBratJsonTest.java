@@ -27,8 +27,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.annotation.Resource;
-
 import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.factory.CollectionReaderFactory;
@@ -37,11 +35,13 @@ import org.apache.uima.jcas.JCas;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -58,6 +58,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.AnnotationSchemaServiceImpl;
+import de.tudarmstadt.ukp.clarin.webanno.brat.ajax.controller.CasToBratJsonTest.TestContext;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratRenderer;
@@ -75,13 +76,13 @@ import mockit.Mock;
 import mockit.MockUp;
 
 @RunWith(SpringRunner.class)
-//@SpringBootTest
+@ContextConfiguration(classes = TestContext.class)
 public class CasToBratJsonTest
 {
-    private @Resource Project project;
-    private @Resource AnnotationSchemaService annotationSchemaService;
-    private @Resource FeatureSupportRegistryImpl featureSupportRegistry;
-    private @Resource PreRenderer preRenderer;
+    private @Autowired Project project;
+    private @Autowired AnnotationSchemaService annotationSchemaService;
+    private @Autowired FeatureSupportRegistryImpl featureSupportRegistry;
+    private @Autowired PreRenderer preRenderer;
     
     @BeforeClass
     public static void setupClass()
@@ -223,21 +224,22 @@ public class CasToBratJsonTest
     @ComponentScan({
         "de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature", 
         "de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering"})
-    public static class TestContext {
-        private @Resource Project project;
-        private @Resource AnnotationSchemaService annotationSchemaService;
-        private @Resource FeatureSupportRegistryImpl featureSupportRegistry;
-        private @Resource ApplicationEventPublisher applicationEventPublisher;
-        
+    public static class TestContext
+    {
+        private @Autowired Project project;
+        private @Autowired AnnotationSchemaService annotationSchemaService;
+        private @Autowired FeatureSupportRegistryImpl featureSupportRegistry;
+        private @Autowired ApplicationEventPublisher applicationEventPublisher;
+
         private AnnotationLayer tokenLayer;
         private AnnotationFeature tokenPosFeature;
         private AnnotationLayer posLayer;
         private AnnotationFeature posFeature;
-        
+
         {
             tokenLayer = new AnnotationLayer(Token.class.getName(), "Token", SPAN_TYPE, null, true);
             tokenLayer.setId(1l);
-            
+
             tokenPosFeature = new AnnotationFeature();
             tokenPosFeature.setId(1l);
             tokenPosFeature.setName("pos");
@@ -247,12 +249,12 @@ public class CasToBratJsonTest
             tokenPosFeature.setLayer(tokenLayer);
             tokenPosFeature.setProject(project);
             tokenPosFeature.setVisible(true);
-            
+
             posLayer = new AnnotationLayer(POS.class.getName(), "POS", SPAN_TYPE, project, true);
             posLayer.setId(2l);
             posLayer.setAttachType(tokenLayer);
             posLayer.setAttachFeature(tokenPosFeature);
-            
+
             posFeature = new AnnotationFeature();
             posFeature.setId(2l);
             posFeature.setName("PosValue");
@@ -263,15 +265,16 @@ public class CasToBratJsonTest
             posFeature.setProject(project);
             posFeature.setVisible(true);
         }
-        
+
         @Bean
         public Project project()
         {
             return new Project();
         }
-        
+
         @Bean
-        public AnnotationSchemaService annotationSchemaService() {
+        public AnnotationSchemaService annotationSchemaService()
+        {
             return new MockUp<AnnotationSchemaService>()
             {
                 @Mock
@@ -279,7 +282,7 @@ public class CasToBratJsonTest
                 {
                     return asList(posLayer);
                 }
-                
+
                 @Mock
                 List<AnnotationFeature> listAnnotationFeature(AnnotationLayer type)
                 {
@@ -288,7 +291,7 @@ public class CasToBratJsonTest
                     }
                     throw new IllegalStateException("Unknown layer type: " + type.getName());
                 }
-                
+
                 @Mock
                 TypeAdapter getAdapter(AnnotationLayer aLayer)
                 {
