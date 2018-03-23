@@ -87,6 +87,8 @@ public class ActiveLearningSidebar
     private static final long serialVersionUID = -5312616540773904224L;
     private static final Logger logger = LoggerFactory.getLogger(ActiveLearningSidebar.class);
     private static final String RECOMMENDATION_EDITOR_EXTENSION = "recommendationEditorExtension";
+    private static final String ANNOTATION_MARKER = "VAnnotationMarker";
+    private static final String TEXT_MARKER = "VTextMarker";
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean RecommendationService recommendationService;
     private @SpringBean LearningRecordService learningRecordService;
@@ -112,7 +114,9 @@ public class ActiveLearningSidebar
     private AnnotationPage annotationPage;
     private IModel<List<LearningRecord>> learningRecords;
     private Predictions predictionModel;
-    private VMarker highlightMarker;
+    private String vMarkerType = "";
+    private VID highlightVID;
+    private LearningRecord selectedRecord;
 
     public ActiveLearningSidebar(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, JCasProvider aJCasProvider,
@@ -282,10 +286,10 @@ public class ActiveLearningSidebar
             AnnotationObject aoForVID = predictionModel.getPrediction(currentRecommendation
                     .getOffset(),
                 currentRecommendation.getAnnotation());
-            VID highlightVID = new VID(RECOMMENDATION_EDITOR_EXTENSION, selectedLayer.getId(),
+            highlightVID = new VID(RECOMMENDATION_EDITOR_EXTENSION, selectedLayer.getId(),
                 (int) aoForVID.getRecommenderId(), aoForVID.getId(),
                 VID.NONE, VID.NONE);
-            highlightMarker = new VAnnotationMarker(VMarker.FOCUS, highlightVID);
+            vMarkerType = ANNOTATION_MARKER;
         }
     }
 
@@ -532,9 +536,9 @@ public class ActiveLearningSidebar
             if (predictionModel != null) {
                 AnnotationObject aoForVID = predictionModel
                     .getPrediction(recordOffset, record.getAnnotation());
-                VID highlightVID = new VID(RECOMMENDATION_EDITOR_EXTENSION, selectedLayer.getId(),
+                highlightVID = new VID(RECOMMENDATION_EDITOR_EXTENSION, selectedLayer.getId(),
                     (int) aoForVID.getRecommenderId(), aoForVID.getId(), VID.NONE, VID.NONE);
-                highlightMarker = new VAnnotationMarker(VMarker.FOCUS, highlightVID);
+                vMarkerType = ANNOTATION_MARKER;
             }
         }
         // if the suggestion doesn't exit -> if that suggestion is accepted and annotated,
@@ -558,8 +562,8 @@ public class ActiveLearningSidebar
             String annotatedValue = WebAnnoCasUtil
                 .getFeature(annotationFS, annotationFeature.getName());
             if (annotatedValue.equals(aRecord.getAnnotation())) {
-                VID highlightVID = new VID(WebAnnoCasUtil.getAddr(annotationFS));
-                highlightMarker = new VAnnotationMarker(VMarker.FOCUS, highlightVID);
+                highlightVID = new VID(WebAnnoCasUtil.getAddr(annotationFS));
+                vMarkerType = ANNOTATION_MARKER;
                 return true;
             }
         }
@@ -567,9 +571,8 @@ public class ActiveLearningSidebar
     }
 
     private void highlightTextAndDisplayMessage(LearningRecord record) {
-        highlightMarker = new VTextMarker(VMarker.FOCUS,
-            record.getOffsetCharacterBegin() - annotatorState.getWindowBeginOffset(),
-            record.getOffsetCharacterEnd() - annotatorState.getWindowBeginOffset());
+        selectedRecord = record;
+        vMarkerType = TEXT_MARKER;
         error("No annotation could be highlighted.");
     }
 
@@ -649,8 +652,16 @@ public class ActiveLearningSidebar
 
     @OnEvent
     public void onRenderAnnotations(RenderAnnotationsEvent aEvent) {
-        if (highlightMarker != null) {
-            aEvent.getVDocument().add(highlightMarker);
+        if (vMarkerType.equals(ANNOTATION_MARKER)) {
+            if (highlightVID != null) {
+                aEvent.getVDocument().add(new VAnnotationMarker(VMarker.FOCUS, highlightVID));
+            }
+        }
+        else if (vMarkerType.equals(TEXT_MARKER)) {
+            if (selectedRecord != null)
+            aEvent.getVDocument().add(new VTextMarker(VMarker.FOCUS, selectedRecord
+                .getOffsetCharacterBegin() - annotatorState.getWindowBeginOffset(),
+                selectedRecord.getOffsetCharacterEnd() - annotatorState.getWindowBeginOffset()));
         }
     }
 }
