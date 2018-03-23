@@ -25,7 +25,6 @@ import java.util.List;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.Session;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -62,6 +61,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
@@ -298,7 +298,7 @@ public class ActiveLearningSidebar
             AnnotationObject aoForVID = predictionModel.getPrediction(currentRecommendation
                     .getOffset(),
                 currentRecommendation.getAnnotation());
-            highlightVID = new VID(RECOMMENDATION_EDITOR_EXTENSION, selectedLayer.getId(),
+            VID highlightVID = new VID(RECOMMENDATION_EDITOR_EXTENSION, selectedLayer.getId(),
                 (int) aoForVID.getRecommenderId(), aoForVID.getId(),
                 VID.NONE, VID.NONE);
             vMarkerType = ANNOTATION_MARKER;
@@ -583,7 +583,7 @@ public class ActiveLearningSidebar
             if (predictionModel != null) {
                 AnnotationObject aoForVID = predictionModel
                     .getPrediction(recordOffset, record.getAnnotation());
-                highlightVID = new VID(RECOMMENDATION_EDITOR_EXTENSION, selectedLayer.getId(),
+                VID highlightVID = new VID(RECOMMENDATION_EDITOR_EXTENSION, selectedLayer.getId(),
                     (int) aoForVID.getRecommenderId(), aoForVID.getId(), VID.NONE, VID.NONE);
                 vMarkerType = ANNOTATION_MARKER;
             }

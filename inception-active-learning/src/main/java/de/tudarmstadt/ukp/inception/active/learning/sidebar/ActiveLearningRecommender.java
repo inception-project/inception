@@ -105,8 +105,9 @@ public class ActiveLearningRecommender
         if (listOfRecommendationsForEachToken.size() > 0) {
             return true;
         }
-        else
+        else {
             return false;
+        }
     }
 
     public void getRecommendationFromRecommendationModel()
@@ -223,8 +224,9 @@ public class ActiveLearningRecommender
         if (learnSkippedTime != null && learnSkippedTime.compareTo(record.getActionDate()) == 1) {
             return false;
         }
-        else
+        else {
             return true;
+        }
     }
 
     private RecommendationDifference calculateDifferencesAndReturnLowestDifference()
@@ -241,8 +243,9 @@ public class ActiveLearningRecommender
             RecommendationDifference lowestDifference = recommendationDifferences.get(0);
             return lowestDifference;
         }
-        else
+        else {
             return null;
+        }
     }
 
     private List<List<AnnotationObject>> createRecommendationListsPerTokenPerClassifier()
@@ -279,10 +282,12 @@ public class ActiveLearningRecommender
                 numberOfOpenNLPClassifier++;
             }
         }
-        if (numberOfOpenNLPClassifier >= 1 && numberOfStringMatchingClassifer >= 1)
+        if (numberOfOpenNLPClassifier >= 1 && numberOfStringMatchingClassifer >= 1) {
             return true;
-        else
+        }
+        else {
             return false;
+        }
     }
 
     private void splitRecommendationsWithRegardToClassifier(
@@ -402,8 +407,9 @@ public class ActiveLearningRecommender
         if (recommendations.size() > 0) {
             return recommendations.get(0);
         }
-        else
+        else {
             return null;
+        }
     }
 
     private void getFlattenedRecommendationsFromRecommendationModel(JCas aJcas)
@@ -476,5 +482,4 @@ public class ActiveLearningRecommender
             && aRecommendation.getOffset().getBeginCharacter() == aRecord.getOffsetCharacterBegin()
             && aRecommendation.getOffset().getEndCharacter() == aRecord.getOffsetCharacterEnd();
     }
-
 }
