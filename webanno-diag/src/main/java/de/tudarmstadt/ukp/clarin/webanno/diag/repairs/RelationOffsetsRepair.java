@@ -28,6 +28,7 @@ import java.util.List;
 import javax.annotation.Resource;
 
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
@@ -58,7 +59,17 @@ public class RelationOffsetsRepair
                 continue;
             }
 
-            for (AnnotationFS rel : select(aCas, getType(aCas, layer.getName()))) {
+            Type type;
+            try {
+                type = getType(aCas, layer.getName());
+            }
+            catch (IllegalArgumentException e) {
+                // If the type does not exist, the CAS has not been upgraded. In this case, we
+                // can skip checking the layer because there will be no annotations anyway.
+                continue;
+            }
+            
+            for (AnnotationFS rel : select(aCas, type)) {
                 AnnotationFS target = getFeature(rel, WebAnnoConst.FEAT_REL_TARGET,
                         AnnotationFS.class);
                 if ((rel.getBegin() != target.getBegin()) || (rel.getEnd() != target.getEnd())) {
