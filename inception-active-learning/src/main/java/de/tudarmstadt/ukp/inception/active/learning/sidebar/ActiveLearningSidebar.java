@@ -650,18 +650,26 @@ public class ActiveLearningSidebar
     }
 
 
-    @OnEvent
-    public void onRenderAnnotations(RenderAnnotationsEvent aEvent) {
+    @OnEvent public void onRenderAnnotations(RenderAnnotationsEvent aEvent)
+    {
         if (vMarkerType.equals(ANNOTATION_MARKER)) {
             if (highlightVID != null) {
                 aEvent.getVDocument().add(new VAnnotationMarker(VMarker.FOCUS, highlightVID));
             }
         }
         else if (vMarkerType.equals(TEXT_MARKER)) {
-            if (selectedRecord != null)
-            aEvent.getVDocument().add(new VTextMarker(VMarker.FOCUS, selectedRecord
-                .getOffsetCharacterBegin() - annotatorState.getWindowBeginOffset(),
-                selectedRecord.getOffsetCharacterEnd() - annotatorState.getWindowBeginOffset()));
+            if (selectedRecord != null) {
+                if (annotatorState.getWindowBeginOffset() <= selectedRecord
+                    .getOffsetCharacterBegin()
+                    && selectedRecord.getOffsetCharacterEnd() <= annotatorState
+                    .getWindowEndOffset()) {
+                    aEvent.getVDocument().add(new VTextMarker(VMarker.FOCUS,
+                        selectedRecord.getOffsetCharacterBegin() - annotatorState
+                            .getWindowBeginOffset(),
+                        selectedRecord.getOffsetCharacterEnd() - annotatorState
+                            .getWindowBeginOffset()));
+                }
+            }
         }
     }
 }
