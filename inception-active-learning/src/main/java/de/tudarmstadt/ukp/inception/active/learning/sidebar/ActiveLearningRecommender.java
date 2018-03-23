@@ -430,4 +430,10 @@ public class ActiveLearningRecommender
         return recommendations.get(0);
     }
 
+    public boolean checkRecommendationExist(DocumentService documentService, LearningRecord record)
+    {
+        this.documentService = documentService;
+        getRecommendationFromRecommendationModel();
+    }
+
 }

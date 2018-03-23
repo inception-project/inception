@@ -52,6 +52,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAnnotationsEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VAnnotationMarker;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VMarker;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VTextMarker;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -107,7 +108,7 @@ public class ActiveLearningSidebar
     private AnnotationPage annotationPage;
     private IModel<List<LearningRecord>> learningRecords;
     private Predictions predictionModel;
-    private VID highlightVID;
+    private VMarker highlightMarker;
 
     public ActiveLearningSidebar(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, JCasProvider aJCasProvider,
@@ -277,9 +278,10 @@ public class ActiveLearningSidebar
             AnnotationObject aoForVID = predictionModel.getPrediction(currentRecommendation
                     .getOffset(),
                 currentRecommendation.getAnnotation());
-            highlightVID = new VID(RECOMMENDATION_EDITOR_EXTENSION, selectedLayer.getId(),
+            VID highlightVID = new VID(RECOMMENDATION_EDITOR_EXTENSION, selectedLayer.getId(),
                 (int) aoForVID.getRecommenderId(), aoForVID.getId(),
                 VID.NONE, VID.NONE);
+            highlightMarker = new VAnnotationMarker(VMarker.FOCUS, highlightVID);
         }
     }
 
@@ -512,9 +514,12 @@ public class ActiveLearningSidebar
             record.getOffsetCharacterBegin());
 
         if (record.getUserAction().equals("rejected")) {
-            error("No suggestion could be highlighted.");
+            highlightMarker = new VTextMarker(VMarker.FOCUS,
+                record.getOffsetCharacterBegin() - annotatorState.getWindowBeginOffset(),
+                record.getOffsetCharacterEnd() - annotatorState.getWindowBeginOffset());
+            error("No annotation could be highlighted.");
         }
-        else {
+        else if (activeLearningRecommender.checkRecommendationExisit(documentService, record)){
             predictionModel = recommendationService
                 .getPredictions(annotatorState.getUser(), annotatorState.getProject());
 
@@ -525,8 +530,9 @@ public class ActiveLearningSidebar
             if (predictionModel != null) {
                 AnnotationObject aoForVID = predictionModel
                     .getPrediction(recordOffset, record.getAnnotation());
-                highlightVID = new VID(RECOMMENDATION_EDITOR_EXTENSION, selectedLayer.getId(),
+                VID highlightVID = new VID(RECOMMENDATION_EDITOR_EXTENSION, selectedLayer.getId(),
                     (int) aoForVID.getRecommenderId(), aoForVID.getId(), VID.NONE, VID.NONE);
+                highlightMarker = new VAnnotationMarker(VMarker.FOCUS, highlightVID);
             }
         }
     }
@@ -607,8 +613,8 @@ public class ActiveLearningSidebar
 
     @OnEvent
     public void onRenderAnnotations(RenderAnnotationsEvent aEvent) {
-        if (highlightVID != null) {
-            aEvent.getVDocument().add(new VAnnotationMarker(VMarker.FOCUS, highlightVID));
+        if (highlightMarker != null) {
+            aEvent.getVDocument().add(highlightMarker);
         }
     }
 }
