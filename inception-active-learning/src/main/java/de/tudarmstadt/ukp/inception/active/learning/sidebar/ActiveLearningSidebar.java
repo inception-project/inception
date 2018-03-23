@@ -298,7 +298,7 @@ public class ActiveLearningSidebar
             AnnotationObject aoForVID = predictionModel.getPrediction(currentRecommendation
                     .getOffset(),
                 currentRecommendation.getAnnotation());
-            VID highlightVID = new VID(RECOMMENDATION_EDITOR_EXTENSION, selectedLayer.getId(),
+            highlightVID = new VID(RECOMMENDATION_EDITOR_EXTENSION, selectedLayer.getId(),
                 (int) aoForVID.getRecommenderId(), aoForVID.getId(),
                 VID.NONE, VID.NONE);
             vMarkerType = ANNOTATION_MARKER;
@@ -583,7 +583,7 @@ public class ActiveLearningSidebar
             if (predictionModel != null) {
                 AnnotationObject aoForVID = predictionModel
                     .getPrediction(recordOffset, record.getAnnotation());
-                VID highlightVID = new VID(RECOMMENDATION_EDITOR_EXTENSION, selectedLayer.getId(),
+                highlightVID = new VID(RECOMMENDATION_EDITOR_EXTENSION, selectedLayer.getId(),
                     (int) aoForVID.getRecommenderId(), aoForVID.getId(), VID.NONE, VID.NONE);
                 vMarkerType = ANNOTATION_MARKER;
             }
