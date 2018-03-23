@@ -662,11 +662,33 @@ public class ProjectServiceImpl
         List<Project> allowedProject = new ArrayList<>();
         List<Project> allProjects = listProjects();
 
+        // if global admin, list all projects
+        if (SecurityUtil.isSuperAdmin(this, user)) {
+            return allProjects;
+        }
+
+        // else only list projects where she is admin / user / curator
+        for (Project project : allProjects) {
+            if (SecurityUtil.isProjectAdmin(project, this, user)
+                    || SecurityUtil.isAnnotator(project, this, user)
+                    || SecurityUtil.isCurator(project, this, user)) {
+                allowedProject.add(project);
+            }
+        }
+        return allowedProject;
+    }
+
+    @Override
+    public List<Project> listManageableProjects(User user)
+    {
+        List<Project> allowedProject = new ArrayList<>();
+        List<Project> allProjects = listProjects();
+
         // if global admin, show all projects
         if (SecurityUtil.isSuperAdmin(this, user)) {
             return allProjects;
         }
-        
+
         // else only projects she is admin of
         for (Project project : allProjects) {
             if (SecurityUtil.isProjectAdmin(project, this, user)) {

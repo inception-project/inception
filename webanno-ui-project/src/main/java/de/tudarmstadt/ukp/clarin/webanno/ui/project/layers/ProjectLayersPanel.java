@@ -27,7 +27,9 @@ import static java.util.Objects.isNull;
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import java.io.File;
+import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
@@ -39,17 +41,25 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.persistence.NoResultException;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.commons.lang3.text.WordUtils;
+import org.apache.uima.UIMAFramework;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.resource.ResourceInitializationException;
+import org.apache.uima.resource.metadata.TypeSystemDescription;
+import org.apache.uima.util.InvalidXMLException;
+import org.apache.uima.util.XMLInputSource;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.ajax.form.OnChangeAjaxBehavior;
+import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.extensions.markup.html.form.select.Select;
 import org.apache.wicket.extensions.markup.html.form.select.SelectOption;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.ComponentTag;
 import org.apache.wicket.markup.MarkupStream;
 import org.apache.wicket.markup.html.basic.Label;
@@ -57,25 +67,31 @@ import org.apache.wicket.markup.html.form.Button;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
+import org.apache.wicket.markup.html.form.EnumChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.ListChoice;
 import org.apache.wicket.markup.html.form.TextArea;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.form.upload.FileUpload;
 import org.apache.wicket.markup.html.form.upload.FileUploadField;
-import org.apache.wicket.markup.html.link.DownloadLink;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.StringResourceModel;
+import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.apache.wicket.util.resource.IResourceStream;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureType;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.LayerConfigurationChangedEvent;
@@ -83,19 +99,23 @@ import de.tudarmstadt.ukp.clarin.webanno.export.ImportUtil;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
-import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.EntityModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxDownloadLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.InputStreamResourceStream;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
+import de.tudarmstadt.ukp.clarin.webanno.xmi.TypeSystemAnalysis;
+import de.tudarmstadt.ukp.clarin.webanno.xmi.TypeSystemAnalysis.RelationDetails;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.SurfaceForm;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
@@ -106,6 +126,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 public class ProjectLayersPanel
     extends ProjectSettingsPanelBase
 {
+    private static final Logger LOG = LoggerFactory.getLogger(ProjectLayersPanel.class);
     private static final long serialVersionUID = -7870526462864489252L;
     
     private @SpringBean AnnotationSchemaService annotationService;
@@ -128,11 +149,11 @@ public class ProjectLayersPanel
             CAS.TYPE_NAME_INTEGER, CAS.TYPE_NAME_FLOAT, CAS.TYPE_NAME_BOOLEAN);
 
     private String layerType = WebAnnoConst.SPAN_TYPE;
-    private FileUploadField fileUpload;
 
     public ProjectLayersPanel(String id, final IModel<Project> aProjectModel)
     {
         super(id, aProjectModel);
+        setOutputMarkupId(true);
         
         layerSelectionForm = new LayerSelectionForm("layerSelectionForm");
 
@@ -290,114 +311,178 @@ public class ProjectLayersPanel
     {
         private static final long serialVersionUID = -7777616763931128598L;
 
+        private FileUploadField fileUpload;
+
         @SuppressWarnings({ "unchecked", "rawtypes" })
         public ImportLayerForm(String id)
         {
             super(id);
             add(fileUpload = new FileUploadField("content", new Model()));
-            add(new Button("import", new StringResourceModel("label"))
-            {
-                private static final long serialVersionUID = 1L;
+            add(new LambdaAjaxButton("import", this::actionImport));
+        }
+        
+        private void actionImport(AjaxRequestTarget aTarget, Form<String> aForm)
+        {
+            List<FileUpload> uploadedFiles = fileUpload.getFileUploads();
+            Project project = ProjectLayersPanel.this.getModelObject();
 
-                @Override
-                public void onSubmit()
-                {
-                    List<FileUpload> uploadedFiles = fileUpload.getFileUploads();
-                    Project project = ProjectLayersPanel.this.getModelObject();
-                    User user = userRepository.getCurrentUser();
-
-                    if (isEmpty(uploadedFiles)) {
-                        error("Please choose file with layer details before uploading");
-                        return;
-                    }
-                    else if (isNull(project.getId())) {
-                        error("Project not yet created, please save project details!");
-                        return;
-                    }
-                    for (FileUpload tagFile : uploadedFiles) {
-                        InputStream tagInputStream;
-                        try {
-                            tagInputStream = tagFile.getInputStream();
-                            String text = IOUtils.toString(tagInputStream, "UTF-8");
-
-                            de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationLayer exLayer =
-                                    JSONUtil.getJsonConverter().getObjectMapper().readValue(
-                                        text,
-                                        de.tudarmstadt.ukp.clarin.webanno.export.model
-                                                .AnnotationLayer.class);
-
-                            AnnotationLayer attachLayer = null;
-                            if (exLayer.getAttachType() != null) {
-                                de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationLayer
-                                        exAttachLayer = exLayer.getAttachType();
-                                createLayer(exAttachLayer, user, null);
-                                attachLayer = annotationService.getLayer(exAttachLayer.getName(),
-                                        project);
-                            }
-                            createLayer(exLayer, user, attachLayer);
-                            layerDetailForm.setModelObject(annotationService.getLayer(
-                                    exLayer.getName(), project));
-                            layerDetailForm.setVisible(true);
-                            featureSelectionForm.setVisible(true);
-
-                        }
-                        catch (IOException e) {
-                            error("Error Importing TagSet "
-                                    + ExceptionUtils.getRootCauseMessage(e));
-                        }
-                    }
-                    featureDetailForm.setVisible(false);
-                }
-
-                private void createLayer(
-                        de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationLayer aExLayer,
-                        User aUser, AnnotationLayer aAttachLayer)
-                    throws IOException
-                {
-                    Project project = ProjectLayersPanel.this.getModelObject();
-                    AnnotationLayer layer;
-                    if (annotationService.existsLayer(aExLayer.getName(), aExLayer.getType(),
-                            project)) {
-                        layer = annotationService.getLayer(aExLayer.getName(), project);
-                        ImportUtil.setLayer(annotationService, layer, aExLayer, project, aUser);
+            if (isEmpty(uploadedFiles)) {
+                error("Please choose file with layer details before uploading");
+                return;
+            }
+            else if (isNull(project.getId())) {
+                error("Project not yet created, please save project details!");
+                return;
+            }
+            for (FileUpload uploadedFile : uploadedFiles) {
+                try (BufferedInputStream bis = IOUtils.buffer(uploadedFile.getInputStream())) {
+                    byte[] buf = new byte[5];
+                    bis.mark(buf.length + 1);
+                    bis.read(buf, 0, buf.length);
+                    bis.reset();
+                    
+                    // If the file starts with an XML preamble, then we assume it is an UIMA
+                    // type system file.
+                    if (Arrays.equals(buf, new byte[] {'<', '?', 'x', 'm', 'l'})) {
+                        importUimaTypeSystemFile(bis);
                     }
                     else {
-                        layer = new AnnotationLayer();
-                        ImportUtil.setLayer(annotationService, layer, aExLayer, project, aUser);
-                    }
-                    layer.setAttachType(aAttachLayer);
-                    for (de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationFeature
-                            exfeature : aExLayer.getFeatures()) {
-
-                        ExportedTagSet exTagset = exfeature.getTagSet();
-                        TagSet tagSet = null;
-                        if (exTagset != null
-                                && annotationService.existsTagSet(exTagset.getName(), project)) {
-                            tagSet = annotationService.getTagSet(exTagset.getName(), project);
-                            ImportUtil.createTagSet(tagSet, exTagset, project, aUser,
-                                    annotationService);
-                        }
-                        else if (exTagset != null) {
-                            tagSet = new TagSet();
-                            ImportUtil.createTagSet(tagSet, exTagset, project, aUser,
-                                    annotationService);
-                        }
-                        if (annotationService.existsFeature(exfeature.getName(), layer)) {
-                            AnnotationFeature feature = annotationService.getFeature(
-                                    exfeature.getName(), layer);
-                            feature.setTagset(tagSet);
-                            ImportUtil.setFeature(annotationService, feature, exfeature, project,
-                                    aUser);
-                            continue;
-                        }
-                        AnnotationFeature feature = new AnnotationFeature();
-                        feature.setLayer(layer);
-                        feature.setTagset(tagSet);
-                        ImportUtil
-                                .setFeature(annotationService, feature, exfeature, project, aUser);
+                        importLayerFile(bis);
                     }
                 }
-            });
+                catch (Exception e) {
+                    error("Error importing layers: " + ExceptionUtils.getRootCauseMessage(e));
+                    aTarget.addChildren(getPage(), IFeedback.class);
+                    LOG.error("Error importing layers", e);
+                }
+            }
+            featureDetailForm.setVisible(false);
+            aTarget.add(ProjectLayersPanel.this);
+        }
+        
+        private void importUimaTypeSystemFile(InputStream aIS)
+            throws IOException, InvalidXMLException, ResourceInitializationException
+        {
+            Project project = ProjectLayersPanel.this.getModelObject();
+            TypeSystemDescription tsd = UIMAFramework.getXMLParser()
+                    .parseTypeSystemDescription(new XMLInputSource(aIS, null));
+            TypeSystemAnalysis analysis = TypeSystemAnalysis.of(tsd);
+            for (AnnotationLayer l : analysis.getLayers()) {
+                if (!annotationService.existsLayer(l.getName(), project)) {
+                    l.setProject(project);
+                    
+                    // Need to set the attach type
+                    if (WebAnnoConst.RELATION_TYPE.equals(l.getType())) {
+                        RelationDetails relDetails = analysis.getRelationDetails(l.getName());
+                        
+                        AnnotationLayer attachLayer;
+                        try {
+                            // First check if this type is already in the project
+                            attachLayer = annotationService.getLayer(relDetails.getAttachLayer(),
+                                    project);
+                        }
+                        catch (NoResultException e) {
+                            // If it does not exist in the project yet, then we create it
+                            attachLayer = analysis.getLayer(relDetails.getAttachLayer());
+                            attachLayer.setProject(project);
+                            annotationService.createLayer(attachLayer);
+                        }
+                        
+                        l.setAttachType(attachLayer);
+                    }
+                    
+                    annotationService.createLayer(l);
+                }
+                
+                // Import the features for the layer except if the layer is a built-in layer.
+                // We must not touch the built-in layers because WebAnno may rely on their
+                // structure. This is a conservative measure for now any may be relaxed in the
+                // future.
+                AnnotationLayer persistedLayer = annotationService.getLayer(l.getName(), project);
+                if (!persistedLayer.isBuiltIn()) {
+                    for (AnnotationFeature f : analysis.getFeatures(l.getName())) {
+                        if (!annotationService.existsFeature(f.getName(), persistedLayer)) {
+                            f.setProject(project);
+                            f.setLayer(persistedLayer);
+                            annotationService.createFeature(f);
+                        }
+                    }
+                }
+            }
+        }
+        
+        private void importLayerFile(InputStream aIS) throws IOException
+        {
+            User user = userRepository.getCurrentUser();
+            Project project = ProjectLayersPanel.this.getModelObject();
+            
+            String text = IOUtils.toString(aIS, "UTF-8");
+
+            de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationLayer exLayer =
+                    JSONUtil.getJsonConverter().getObjectMapper().readValue(
+                        text,
+                        de.tudarmstadt.ukp.clarin.webanno.export.model
+                                .AnnotationLayer.class);
+
+            AnnotationLayer attachLayer = null;
+            if (exLayer.getAttachType() != null) {
+                de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationLayer
+                        exAttachLayer = exLayer.getAttachType();
+                createLayer(exAttachLayer, user, null);
+                attachLayer = annotationService.getLayer(exAttachLayer.getName(),
+                        project);
+            }
+            createLayer(exLayer, user, attachLayer);
+            layerDetailForm.setModelObject(annotationService.getLayer(
+                    exLayer.getName(), project));
+            layerDetailForm.setVisible(true);
+            featureSelectionForm.setVisible(true);
+        }
+        
+        private void createLayer(
+                de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationLayer aExLayer, User aUser,
+                AnnotationLayer aAttachLayer)
+            throws IOException
+        {
+            Project project = ProjectLayersPanel.this.getModelObject();
+            AnnotationLayer layer;
+            if (annotationService.existsLayer(aExLayer.getName(), aExLayer.getType(), project)) {
+                layer = annotationService.getLayer(aExLayer.getName(), project);
+                ImportUtil.setLayer(annotationService, layer, aExLayer, project, aUser);
+            }
+            else {
+                layer = new AnnotationLayer();
+                ImportUtil.setLayer(annotationService, layer, aExLayer, project, aUser);
+            }
+            layer.setAttachType(aAttachLayer);
+            for (de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationFeature exfeature : 
+                    aExLayer.getFeatures()) {
+    
+                ExportedTagSet exTagset = exfeature.getTagSet();
+                TagSet tagSet = null;
+                if (
+                        exTagset != null && 
+                        annotationService.existsTagSet(exTagset.getName(), project)
+                ) {
+                    tagSet = annotationService.getTagSet(exTagset.getName(), project);
+                    ImportUtil.createTagSet(tagSet, exTagset, project, aUser, annotationService);
+                }
+                else if (exTagset != null) {
+                    tagSet = new TagSet();
+                    ImportUtil.createTagSet(tagSet, exTagset, project, aUser, annotationService);
+                }
+                if (annotationService.existsFeature(exfeature.getName(), layer)) {
+                    AnnotationFeature feature = annotationService.getFeature(exfeature.getName(),
+                            layer);
+                    feature.setTagset(tagSet);
+                    ImportUtil.setFeature(annotationService, feature, exfeature, project, aUser);
+                    continue;
+                }
+                AnnotationFeature feature = new AnnotationFeature();
+                feature.setLayer(layer);
+                feature.setTagset(tagSet);
+                ImportUtil.setFeature(annotationService, feature, exfeature, project, aUser);
+            }
         }
     }
 
@@ -410,6 +495,10 @@ public class ProjectLayersPanel
         public AnnotationFeature feature;
     }
 
+    private static enum LayerExportMode {
+        JSON, UIMA
+    }
+    
     private class LayerDetailForm
         extends Form<AnnotationLayer>
     {
@@ -425,6 +514,8 @@ public class ProjectLayersPanel
         private CheckBox showTextInHover;
         private CheckBox multipleTokens;
         private CheckBox linkedListBehavior;
+        
+        private LayerExportMode exportMode = LayerExportMode.JSON;
 
         public LayerDetailForm(String id)
         {
@@ -784,48 +875,16 @@ public class ProjectLayersPanel
                 }
             });
 
-            add(new DownloadLink("export", new LoadableDetachableModel<File>()
-            {
-                private static final long serialVersionUID = 840863954694163375L;
-
-                @Override
-                protected File load()
-                {
-                    File exportFile = null;
-                    try {
-                        exportFile = File.createTempFile("exportedLayer", ".json");
-                    }
-                    catch (IOException e1) {
-                        error("Unable to create temporary File!!");
-                        return null;
-                    }
-                    if (isNull(ProjectLayersPanel.this.getModelObject().getId())) {
-                        error("Project not yet created. Please save project details first!");
-                        return null;
-                    }
-                    AnnotationLayer layer = layerDetailForm.getModelObject();
-
-                    de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationLayer exLayer = 
-                            ImportUtil.exportLayerDetails(null, null, layer, annotationService);
-                    if (layer.getAttachType() != null) {
-                        AnnotationLayer attachLayer = layer.getAttachType();
-                        de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationLayer 
-                                exAttachLayer = ImportUtil.exportLayerDetails(
-                                        null, null, attachLayer, annotationService);
-                        exLayer.setAttachType(exAttachLayer);
-                    }
-
-                    try {
-                        JSONUtil.generatePrettyJson(exLayer, exportFile);
-                    }
-                    catch (IOException e) {
-                        error("File Path not found or No permision to save the file!");
-                    }
-                    info("TagSets successfully exported to :" + exportFile.getAbsolutePath());
-
-                    return exportFile;
-                }
-            }).setDeleteAfterDownload(true).setOutputMarkupId(true));
+            add(new DropDownChoice<LayerExportMode>("exportMode",
+                    new PropertyModel<LayerExportMode>(this, "exportMode"),
+                    asList(LayerExportMode.values()),
+                    new EnumChoiceRenderer<>(this))
+                    .add(new LambdaAjaxFormComponentUpdatingBehavior("change")));
+            
+            add(new AjaxDownloadLink("export", 
+                    LambdaModel.of(this::getExportLayerFileName).autoDetaching(),
+                    LambdaModel.of(this::exportLayer)));
+            
             add(new Button("cancel", new StringResourceModel("label")) {
                 private static final long serialVersionUID = 1L;
                 
@@ -849,6 +908,86 @@ public class ProjectLayersPanel
                 }
             });
 
+        }
+        
+        private String getExportLayerFileName()
+        {
+            switch (exportMode) {
+            case JSON:
+                return "layer.json";
+            case UIMA:
+                return "typesytem.xml";
+            default:
+                throw new IllegalStateException("Unknown mode: [" + exportMode + "]");
+            }
+        }
+
+        private IResourceStream exportLayer()
+        {
+            switch (exportMode) {
+            case JSON:
+                return exportLayerJson();
+            case UIMA:
+                return exportUimaTypeSystem();
+            default:
+                throw new IllegalStateException("Unknown mode: [" + exportMode + "]");
+            }
+        }
+
+        private IResourceStream exportUimaTypeSystem()
+        {
+            try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
+                TypeSystemDescription tsd = annotationService
+                        .getProjectTypes(ProjectLayersPanel.this.getModelObject());
+                tsd.toXML(bos);
+                return new InputStreamResourceStream(new ByteArrayInputStream(bos.toByteArray()));
+            }
+            catch (Exception e) {
+                error("Unable to generate the UIMA type system file: "
+                        + ExceptionUtils.getRootCauseMessage(e));
+                LOG.error("Unable to generate the UIMA type system file", e);
+                IPartialPageRequestHandler handler = RequestCycle.get()
+                        .find(IPartialPageRequestHandler.class);
+                if (handler != null) {
+                    handler.addChildren(getPage(), IFeedback.class);
+                }
+                return null;
+            }
+        }
+        
+        private IResourceStream exportLayerJson()
+        {
+            try {
+                AnnotationLayer layer = layerDetailForm.getModelObject();
+
+                de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationLayer exLayer = 
+                        ImportUtil.exportLayerDetails(null, null, layer, annotationService);
+
+                // If the layer is attached to another layer, then we also have to export
+                // that, otherwise we would be missing it during re-import.
+                if (layer.getAttachType() != null) {
+                    AnnotationLayer attachLayer = layer.getAttachType();
+                    de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationLayer 
+                            exAttachLayer = ImportUtil.exportLayerDetails(
+                                    null, null, attachLayer, annotationService);
+                    exLayer.setAttachType(exAttachLayer);
+                }
+                
+                return new InputStreamResourceStream(new ByteArrayInputStream(
+                        JSONUtil.toPrettyJsonString(exLayer).getBytes("UTF-8")));
+                
+            }
+            catch (Exception e) {
+                error("Unable to generate the JSON file: "
+                        + ExceptionUtils.getRootCauseMessage(e));
+                LOG.error("Unable to generate the JSON file", e);
+                IPartialPageRequestHandler handler = RequestCycle.get()
+                        .find(IPartialPageRequestHandler.class);
+                if (handler != null) {
+                    handler.addChildren(getPage(), IFeedback.class);
+                }
+                return null;
+            }
         }
     }
 
@@ -928,16 +1067,17 @@ public class ProjectLayersPanel
                 private static final long serialVersionUID = 9029205407108101183L;
 
                 {
+                    IModel<FeatureType> model = LambdaModelAdapter.of(() -> {
+                        return featureSupportRegistry.getAllTypes(layerDetailForm.getModelObject())
+                                .stream()
+                                .filter(r -> r.getName()
+                                        .equals(featureDetailForm.getModelObject().getType()))
+                                .findFirst().orElse(null);
+                    }, (v) -> FeatureDetailForm.this.getModelObject().setType(v.getName()));
                     setRequired(true);
                     setNullValid(false);
                     setChoiceRenderer(new ChoiceRenderer<>("uiName"));
-                    setModel(LambdaModelAdapter.of(
-                        () -> {
-                            AnnotationFeature feat = FeatureDetailForm.this.getModelObject();
-                            return feat.getType() != null ? new FeatureType(feat.getType())
-                                    : null;
-                        },
-                        (v) -> FeatureDetailForm.this.getModelObject().setType(v.getName())));
+                    setModel(model);
                     setChoices(LambdaModel.of(() -> featureSupportRegistry
                             .getAllTypes(layerDetailForm.getModelObject())));
                 }
@@ -974,12 +1114,15 @@ public class ProjectLayersPanel
                 @Override
                 protected void onConfigure()
                 {
-                    AnnotationFeature feature = FeatureDetailForm.this.getModelObject();
-                    // Only display tagset choice for link features with role and string features
-                    // Since we currently set the LinkRole only when saving, we have to rely on the
-                    // feature type here.
-                    setEnabled(CAS.TYPE_NAME_STRING.equals(feature.getType())
-                            || !PRIMITIVE_TYPES.contains(feature.getType()));
+                    FeatureType type = featureType.getModelObject();
+                    if (type != null) {
+                        FeatureSupport fs = featureSupportRegistry
+                                .getFeatureSupport(type.getFeatureSupportId());
+                        setEnabled(fs.isTagsetSupported(FeatureDetailForm.this.getModelObject()));
+                    }
+                    else {
+                        setEnabled(false);
+                    }
                 }
             });
 
@@ -1065,23 +1208,17 @@ public class ProjectLayersPanel
 
     private void saveFeature(AnnotationFeature aFeature)
     {
-        // Set properties of link features since these are currently not configurable in the UI
-        if (!PRIMITIVE_TYPES.contains(aFeature.getType()) && !aFeature.isVirtualFeature()) {
-            aFeature.setMode(MultiValueMode.ARRAY);
-            aFeature.setLinkMode(LinkMode.WITH_ROLE);
-            aFeature.setLinkTypeRoleFeatureName("role");
-            aFeature.setLinkTypeTargetFeatureName("target");
-            aFeature.setLinkTypeName(aFeature.getLayer().getName()
-                    + WordUtils.capitalize(aFeature.getName()) + "Link");
-        }
+        FeatureSupport fs = featureSupportRegistry.getFeatureSupport(
+                featureDetailForm.featureType.getModelObject().getFeatureSupportId());
+        
+        // Let the feature support finalize the configuration of the feature
+        fs.configureFeature(aFeature);
 
-        // If the feature is not a string feature or a link-with-role feature, force the tagset
-        // to null.
-        if (!(CAS.TYPE_NAME_STRING.equals(aFeature.getType()) || !PRIMITIVE_TYPES.contains(aFeature
-                .getType()))) {
+        // Force the tagset to null if the features do not support tagsets
+        if (!fs.isTagsetSupported(aFeature)) {
             aFeature.setTagset(null);
         }
-
+        
         annotationService.createFeature(aFeature);
         featureDetailForm.setVisible(false);
     }

@@ -31,7 +31,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
-import org.springframework.core.OrderComparator;
+import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
@@ -68,7 +68,7 @@ public class AnnotationEditorExtensionRegistryImpl
 
         if (extensionsProxy != null) {
             exts.addAll(extensionsProxy);
-            OrderComparator.sort(exts);
+            AnnotationAwareOrderComparator.sort(exts);
         
             for (AnnotationEditorExtension fs : exts) {
                 log.info("Found annotation editor extension: {}",

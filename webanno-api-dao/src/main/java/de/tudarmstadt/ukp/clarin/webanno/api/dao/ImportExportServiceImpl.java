@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.DOCUMENT_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.SOURCE_FOLDER;
+import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngineDescription;
 import static org.apache.uima.fit.pipeline.SimplePipeline.runPipeline;
@@ -297,7 +298,7 @@ public class ImportExportServiceImpl
     @Override
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public JCas importCasFromFile(File aFile, Project aProject, String aFormat)
-        throws UIMAException, IOException, ClassNotFoundException
+        throws UIMAException, IOException
     {
         Class readerClass = getReadableFormats().get(aFormat);
         if (readerClass == null) {
@@ -307,9 +308,9 @@ public class ImportExportServiceImpl
         // Prepare a CAS with the project type system
         TypeSystemDescription builtInTypes = TypeSystemDescriptionFactory
                 .createTypeSystemDescription();
-        List<TypeSystemDescription> projectTypes = annotationService.getProjectTypes(aProject);
-        projectTypes.add(builtInTypes);
-        TypeSystemDescription allTypes = CasCreationUtils.mergeTypeSystems(projectTypes);
+        TypeSystemDescription projectTypes = annotationService.getProjectTypes(aProject);
+        TypeSystemDescription allTypes = CasCreationUtils
+                .mergeTypeSystems(asList(projectTypes, builtInTypes));
         CAS cas = JCasFactory.createJCas(allTypes).getCas();
 
         // Convert the source document to CAS

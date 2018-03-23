@@ -76,7 +76,7 @@ Both conditions and restrictions are composed of a *path* and a *value*. The lat
 <path>="<value>"
 ----
 
-A *condition* is a way of defining whether a particular situation in WebAnno is based on annotation layers and features in it.
+A *condition* is a way of defining whether a particular situation in {product-name} is based on annotation layers and features in it.
 
 A *condition set* consists of one or more conditions. They are connected with logical AND as follows. 
 

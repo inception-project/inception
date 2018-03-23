@@ -86,9 +86,9 @@ C:/Program Files/Java/jdk1.8.0_144/jre/bin/server/jvm.dll
 * You should check that Text file encoding is UTF-8  in *Preferences -> General -> Workspace* of 
   your Eclipse install.
 
-=== Importing WebAnno into the Workspace
+=== Importing {product-name} into the Workspace
 
-Checkout out the WebAnno git repository with your favorite git client. If you use the command-line
+Checkout out the {product-name} git repository with your favorite git client. If you use the command-line
 client, use the command
 
 [source,text]
@@ -97,7 +97,7 @@ $ git clone https://github.com/webanno/webanno.git
 ----
 
 In Eclipse, go to *File -> Import*, choose *Existing Maven projects*, and select the folder to which
-you have cloned WebAnno. Eclipse should automatically detect all modules.
+you have cloned {product-name}. Eclipse should automatically detect all modules.
 
 === Eclipse Tomcat Integration
 
@@ -128,10 +128,10 @@ click on *Add and remove...*:
 
 // http://webanno.googlecode.com/svn/wiki/images/AddAndRemoveServerFinal.png
 
-WebAnno should now be configured to start with Tomcat.
+{product-name} should now be configured to start with Tomcat.
 
 In the *Servers* view, double-click on the Tomcat instance you have configured. Activate the
-checkbox *Serve modules without publishing*. Go to the *Modules* tab, select the WebAnno module
+checkbox *Serve modules without publishing*. Go to the *Modules* tab, select the {product-name} module
 and disable auto-reloading. After these changes, you will have to manually restart the Tomcat
 server in order for changes to Java class files to take effect. However, as a benefit, changes to
 HTML, CSS or JavaScript files take effect immediately and you just have to refresh the browser to
@@ -141,11 +141,11 @@ see the changes.
 
 * Install *Checkstyle Eclipse plugin* from here: `http://eclipse-cs.sourceforge.net`
 * Install the *Checkstyle configuration plugin for M2Eclipse* from here: `http://m2e-code-quality.github.com/m2e-code-quality/site/latest/`
-* Select all WebAnno projects, right click and do a *Maven -> Update project*
+* Select all {product-name} projects, right click and do a *Maven -> Update project*
 
-NOTE: Should the steps mentioned above not have been sufficient, close all the WebAnno projects
+NOTE: Should the steps mentioned above not have been sufficient, close all the {product-name} projects
       in Eclipse, then remove them form the workspace (not from the disk), delete any `.checkstyle` files
-      in the WebAnno modules, and then re-import them into Eclipse again using *Import->Existing Maven
+      in the {product-name} modules, and then re-import them into Eclipse again using *Import->Existing Maven
       projects*. During the project import, the Checkstyle configuration plugin for M2Eclipse should
       properly set up the `.checkstyle` files and activate checkstyle. 
 

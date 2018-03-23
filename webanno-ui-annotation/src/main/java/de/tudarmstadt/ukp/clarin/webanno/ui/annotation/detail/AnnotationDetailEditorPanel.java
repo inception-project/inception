@@ -111,6 +111,7 @@ public class AnnotationDetailEditorPanel
         super(id, aModel);
         setOutputMarkupId(true);
         setOutputMarkupPlaceholderTag(true);
+        setMarkupId("annotationDetailEditorPanel");
         add(createAnnotationFeatureForm());
     }
 

@@ -14,11 +14,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-WebAnno Developer Guide
+{product.name} Developer Guide
 =======================
-:Author: The WebAnno Team
+:Author: The {product.name} Team
 
-This document targets developers working on WebAnno.
+This document targets developers working on {product.name}.
 
 include::{include-dir}setup.adoc[]
 

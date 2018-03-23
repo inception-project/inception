@@ -122,6 +122,17 @@ public interface AnnotationSchemaService
     boolean existsTagSet(Project project);
 
     /**
+     * Check if an {@link AnnotationLayer} exists with this name in the given {@link Project}.
+     * 
+     * @param name
+     *            the layer name.
+     * @param project
+     *            the project.
+     * @return if the layer exists.
+     */
+    boolean existsLayer(String name, Project project);
+
+    /**
      * check if an {@link AnnotationLayer} exists with this name and type in this {@link Project}
      * 
      * @param name
@@ -389,7 +400,7 @@ public interface AnnotationSchemaService
             String[] aTagDescription, Project aProject)
                 throws IOException;
     
-    List<TypeSystemDescription> getProjectTypes(Project aProject);
+    TypeSystemDescription getProjectTypes(Project aProject);
     
     void upgradeCas(CAS aCurCas, AnnotationDocument annotationDocument)
             throws UIMAException, IOException;

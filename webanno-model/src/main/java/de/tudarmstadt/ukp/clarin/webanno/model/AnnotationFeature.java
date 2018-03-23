@@ -32,6 +32,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.Type;
@@ -114,6 +115,20 @@ public class AnnotationFeature
     
     @Column(name = "link_type_target_feature_name")
     private String linkTypeTargetFeatureName;
+    
+    public AnnotationFeature()
+    {
+        // Nothing to do
+    }
+    
+    // Visible for testing
+    public AnnotationFeature(String aName, String aType)
+    {
+        name = aName;
+        uiName = aName;
+        type = aType;
+    }
+    
     
     public Long getId()
     {
@@ -393,10 +408,21 @@ public class AnnotationFeature
     /**
      * Returns {@code true} if this is not a plain UIMA feature type but a "virtual" feature that
      * must be mapped to a plain UIMA type (usually to String).
+     * 
+     * @deprecated This method should no longer be used. There is no direct replacement.
      */
+    @Deprecated
     public boolean isVirtualFeature()
     {
         return getType().contains(":");
+    }
+    
+    @Override
+    public String toString()
+    {
+        return new ToStringBuilder(this)
+                .append("name", name)
+                .build();
     }
 
     @Override

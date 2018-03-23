@@ -86,7 +86,7 @@ image::annotation_pos_span.jpg[align="center"]
 
 === Creating annotations
 
-To create annotations in WebAnno, you have mainly two options:
+To create annotations, you have mainly two options:
 
 * select a span of text to create a span annotation
 * click on an existing span annotation and drag an arc to another span annotation
@@ -205,7 +205,7 @@ To abort the creation of an annotation, hold *CTRL* when you release the mouse b
 
 ==== Primitive Features
 
-WebAnno supports primitive features that can be of the type string, boolean, integer, and float.
+Supported primitive features types are string, boolean, integer, and float.
 Boolean features are displayed as a checkbox that can either be marked or unmarked. Integer and 
 float features are displayed using a number field. String features are displayed using a text field
 or - in case they have a tagset - using a combobox.
@@ -248,7 +248,7 @@ actions box. In particular on small screens, increasing this can be useful. The 
 configured to take between 10% and 50% of the screen.
 
 The *Number of sentences* controls how many sentences are visible in the annotation area. The more
-sentences are visible, the slower WebAnno will react.
+sentences are visible, the slower the user interface will react.
 
 The *Auto-scroll* setting controls if the annotation view is centered on the sentence in which the
 last annotation was made. This can be useful to avoid manual navigation.
@@ -264,6 +264,6 @@ Annotations are always immediately persistent in the backend database. Thus, it 
 
 image::annotation_export.jpg[align="center"]
 
-Choose your preferred format. Please take note of the facts that the plain text format does not contain any annotations and that the files in the binary format need to be unpacked before further usage. For further information on the formats provided in WebAnno, please consult the corresponding chapter <<sect_formats>>.
+Choose your preferred format. Please take note of the facts that the plain text format does not contain any annotations and that the files in the binary format need to be unpacked before further usage. For further information the supported formats, please consult the corresponding chapter <<sect_formats>>.
 
 The document will be saved to your local disk, and can be re-imported via adding the document to a project by a project administrator. Please export your data periodically, at least when finishing a document or not continuing annotations for an extended period of time. 

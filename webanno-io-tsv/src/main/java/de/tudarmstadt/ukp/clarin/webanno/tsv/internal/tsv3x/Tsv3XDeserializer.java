@@ -324,7 +324,8 @@ public class Tsv3XDeserializer
             column = new TsvColumn(aIndex, aUimaType, aLayerType, aColDecl, PRIMITIVE);
         }
         else {
-            throw new IOException("Unrecognizable column declaration: [" + aColDecl + "]");
+            throw new IOException("Type [" + aUimaType.getName()
+                    + "] does not contain a feature called [" + aColDecl + "]");
         }
         // PLACEHOLDER - empty column declaration, i.e. only a separator after type name
         // This is not handled here, but rather in the calling method.

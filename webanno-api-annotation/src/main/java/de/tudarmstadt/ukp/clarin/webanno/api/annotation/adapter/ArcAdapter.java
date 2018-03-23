@@ -217,22 +217,14 @@ public class ArcAdapter
         }
 
         
-        // if span A has (start,end)= (20, 26) and B has (start,end)= (30, 36)
-        // arc drawn from A to B, dependency will have (start, end) = (20, 36)
-        // arc drawn from B to A, still dependency will have (start, end) = (20, 36)
-        AnnotationFS newAnnotation;
-        if (dependentFs.getEnd() <= governorFs.getEnd()) {
-            newAnnotation = aJCas.getCas().createAnnotation(type, dependentFs.getBegin(),
-                    governorFs.getEnd());
-        }
-        else {
-            newAnnotation = aJCas.getCas().createAnnotation(type, governorFs.getBegin(),
-                    dependentFs.getEnd());
-        }
-
+        // Set the relation offsets in DKPro Core style - the relation recieves the offsets from
+        // the dependent
         // If origin and target spans are multiple tokens, dependentFS.getBegin will be the
         // the begin position of the first token and dependentFS.getEnd will be the End
         // position of the last token.
+        AnnotationFS newAnnotation = aJCas.getCas().createAnnotation(type,
+                dependentFs.getBegin(), dependentFs.getEnd());
+
         newAnnotation.setFeatureValue(dependentFeature, dependentFs);
         newAnnotation.setFeatureValue(governorFeature, governorFs);
         aJCas.addFsToIndexes(newAnnotation);

@@ -70,6 +70,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterAnnotationUpdateEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentCreatedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentResetEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AnnotationStateChangeEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeDocumentRemovedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.DocumentStateChangedEvent;
@@ -319,35 +320,34 @@ public class DocumentServiceImpl
     @Transactional(noRollbackFor = NoResultException.class)
     public boolean existsFinishedAnnotation(SourceDocument aDocument)
     {
-        List<AnnotationDocument> annotationDocuments = entityManager
-                .createQuery("FROM AnnotationDocument WHERE document = :document",
-                        AnnotationDocument.class).setParameter("document", aDocument)
-                .getResultList();
-        for (AnnotationDocument annotationDocument : annotationDocuments) {
-            if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
-                return true;
-            }
-        }
+        String query = 
+                "SELECT COUNT(*) " +
+                "FROM AnnotationDocument " + 
+                "WHERE document = :document AND state = :state";
+        
+        long count = entityManager.createQuery(query, Long.class)
+            .setParameter("document", aDocument)
+            .setParameter("state", AnnotationDocumentState.FINISHED)
+            .getSingleResult();
 
-        return false;
+        return count > 0;
     }
 
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
     public boolean existsFinishedAnnotation(Project aProject)
     {
-        for (SourceDocument document : listSourceDocuments(aProject)) {
-            List<AnnotationDocument> annotationDocuments = entityManager
-                    .createQuery("FROM AnnotationDocument WHERE document = :document",
-                            AnnotationDocument.class).setParameter("document", document)
-                    .getResultList();
-            for (AnnotationDocument annotationDocument : annotationDocuments) {
-                if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
-                    return true;
-                }
-            }
-        }
-        return false;
+        String query = 
+                "SELECT COUNT(*) " +
+                "FROM AnnotationDocument " + 
+                "WHERE document.project = :project AND state = :state";
+        
+        long count = entityManager.createQuery(query, Long.class)
+            .setParameter("project", aProject)
+            .setParameter("state", AnnotationDocumentState.FINISHED)
+            .getSingleResult();
+
+        return count > 0;
     }
 
     @Override
@@ -500,14 +500,14 @@ public class DocumentServiceImpl
 
     @Override
     public JCas createInitialCas(SourceDocument aDocument)
-        throws UIMAException, IOException, ClassNotFoundException
+        throws UIMAException, IOException
     {
         return createInitialCas(aDocument, true);
     }
 
     @Override
     public JCas createInitialCas(SourceDocument aDocument, boolean aAnalyzeRepairAndSave)
-        throws UIMAException, IOException, ClassNotFoundException
+        throws UIMAException, IOException
     {
         // Normally, the initial CAS should be created on document import, but after
         // adding this feature, the existing projects do not yet have initial CASes, so
@@ -549,7 +549,7 @@ public class DocumentServiceImpl
 
     @Override
     public JCas createOrReadInitialCas(SourceDocument aDocument)
-        throws IOException, UIMAException, ClassNotFoundException
+        throws IOException, UIMAException
     {
         if (existsInitialCas(aDocument)) {
             return readInitialCas(aDocument);
@@ -664,6 +664,16 @@ public class DocumentServiceImpl
         writeAnnotationCas(aJcas, annotationDocument, aUpdateTimestamp);
     }
 
+    @Override
+    public void resetAnnotationCas(SourceDocument aDocument, User aUser)
+        throws UIMAException, IOException
+    {
+        AnnotationDocument adoc = getAnnotationDocument(aDocument, aUser);
+        JCas jcas = createOrReadInitialCas(aDocument);
+        writeAnnotationCas(jcas, aDocument, aUser, false);
+        applicationEventPublisher.publishEvent(new AfterDocumentResetEvent(this, adoc, jcas));
+    }
+    
     /**
      * Return true if there exist at least one annotation document FINISHED for annotation for this
      * {@link SourceDocument}

@@ -15,7 +15,8 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <parent>
     <groupId>org.dkpro</groupId>
@@ -30,6 +31,7 @@
   <name>WebAnno</name>
   <url>https://webanno.github.io/</url>
   <inceptionYear>2012</inceptionYear>
+  <description>WebAnno is a general purpose web-based annotation tool for a wide range of linguistic annotations including various layers of morphological, syntactical, and semantic annotations.Additionaly, custom annotation layers can be defined, allowing WebAnno to be used also for non-linguistic annotation tasks.</description>
   <licenses>
     <license>
       <name>Apache License Version 2.0</name>
@@ -57,15 +59,15 @@
     <jackson.version>2.9.4</jackson.version>
     <uima.version>3.0.0</uima.version>
     <uimafit.version>3.0.0-SNAPSHOT</uimafit.version>
-    <spring.version>5.0.3.RELEASE </spring.version>
+    <spring.version>5.0.4.RELEASE </spring.version>
     <spring.boot.version>1.5.10.RELEASE</spring.boot.version>
     <spring.security.version>4.2.4.RELEASE</spring.security.version>
     <slf4j.version>1.7.25</slf4j.version>
     <log4j.version>2.7</log4j.version>
     <jboss.logging.version>3.3.1.Final</jboss.logging.version>
     <wicket.version>7.10.0</wicket.version>
-    <wicketstuff.version>7.9.0</wicketstuff.version>
-    <wicket-jquery-ui.version>7.9.2</wicket-jquery-ui.version>
+    <wicketstuff.version>${wicket.version}</wicketstuff.version>
+    <wicket-jquery-ui.version>7.10.1</wicket-jquery-ui.version>
     <wicket-bootstrap.version>0.10.16</wicket-bootstrap.version>
     <wicket-webjars.version>0.5.6</wicket-webjars.version>    
     <wicket-spring-boot.version>1.0.10</wicket-spring-boot.version>
@@ -397,6 +399,11 @@
         <version>${wicketstuff.version}</version>
       </dependency>
       <dependency>
+        <groupId>org.wicketstuff</groupId>
+        <artifactId>wicketstuff-annotationeventdispatcher</artifactId>
+        <version>${wicketstuff.version}</version>
+      </dependency>
+      <dependency>
         <groupId>de.agilecoders.wicket</groupId>
         <artifactId>wicket-bootstrap-core</artifactId>
         <version>${wicket-bootstrap.version}</version>
@@ -450,6 +457,11 @@
         <groupId>commons-io</groupId>
         <artifactId>commons-io</artifactId>
         <version>2.5</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-collections4</artifactId>
+        <version>4.1</version>
       </dependency>
       <dependency>
         <groupId>org.apache.commons</groupId>
@@ -923,6 +935,11 @@
               <groupId>org.asciidoctor</groupId>
               <artifactId>asciidoctorj-pdf</artifactId>
               <version>1.5.0-alpha.16</version>
+            </dependency>
+            <dependency>
+              <groupId>org.jruby</groupId>
+              <artifactId>jruby-complete</artifactId>
+              <version>9.1.16.0</version>
             </dependency>
           </dependencies>
         </plugin>
