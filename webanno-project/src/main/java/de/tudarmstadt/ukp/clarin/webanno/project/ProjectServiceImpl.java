@@ -42,7 +42,6 @@ import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-import javax.annotation.Resource;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
@@ -54,6 +53,7 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.PropertyAccessorFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.ApplicationEventPublisher;
@@ -85,13 +85,9 @@ public class ProjectServiceImpl
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    @PersistenceContext
-    private EntityManager entityManager;
-    
-    @Resource(name = "userRepository")
-    private UserDao userRepository;
-
-    private @Resource ApplicationEventPublisher applicationEventPublisher;
+    private @PersistenceContext EntityManager entityManager;
+    private @Autowired UserDao userRepository;
+    private @Autowired ApplicationEventPublisher applicationEventPublisher;
 
     @Value(value = "${repository.path}")
     private File dir;

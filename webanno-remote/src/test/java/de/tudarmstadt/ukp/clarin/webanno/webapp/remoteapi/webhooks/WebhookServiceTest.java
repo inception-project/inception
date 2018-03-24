@@ -28,10 +28,9 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_UTF8_VALUE;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.annotation.Resource;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.security.SecurityAutoConfiguration;
 import org.springframework.boot.context.embedded.EmbeddedWebApplicationContext;
@@ -67,11 +66,11 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.json.ProjectS
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 public class WebhookServiceTest
 {
-    private @Resource EmbeddedWebApplicationContext server;
+    private @Autowired EmbeddedWebApplicationContext server;
     private @LocalServerPort int port;
-    private @Resource ApplicationEventPublisher applicationEventPublisher;
-    private @Resource WebhooksConfiguration webhooksConfiguration;
-    private @Resource TestService testService;
+    private @Autowired ApplicationEventPublisher applicationEventPublisher;
+    private @Autowired WebhooksConfiguration webhooksConfiguration;
+    private @Autowired TestService testService;
 
     @Test
     public void test()

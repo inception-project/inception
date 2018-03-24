@@ -25,6 +25,9 @@
   <artifactId>webanno-brat</artifactId>
   <name>WebAnno - UI - Annotation (brat)</name>
   <packaging>jar</packaging>
+  <properties>
+    <maven.surefire.argLine>-Djdk.attach.allowAttachSelf</maven.surefire.argLine>
+  </properties>
   <dependencies>
     <dependency>
       <groupId>org.apache.commons</groupId>
@@ -158,7 +161,12 @@
     </dependency>
     
     <!-- JUNIT DEPENDENCY FOR TESTING -->
-
+    <dependency>
+      <groupId>org.jmockit</groupId>
+      <artifactId>jmockit</artifactId>
+      <version>1.38</version>
+      <scope>test</scope>
+    </dependency>
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
@@ -175,9 +183,8 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.jmockit</groupId>
-      <artifactId>jmockit</artifactId>
-      <version>1.31</version>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-test</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -203,6 +210,26 @@
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>log4j-over-slf4j</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>javax.xml.bind</groupId>
+      <artifactId>jaxb-api</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.sun.xml.bind</groupId>
+      <artifactId>jaxb-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.sun.xml.bind</groupId>
+      <artifactId>jaxb-impl</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>javax.activation</groupId>
+      <artifactId>javax.activation-api</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>

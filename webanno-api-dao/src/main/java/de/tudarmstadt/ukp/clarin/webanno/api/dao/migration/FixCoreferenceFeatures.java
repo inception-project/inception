@@ -22,7 +22,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.COREFERENCE_TYP
 
 import java.util.Arrays;
 
-import javax.annotation.Resource;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
@@ -30,8 +29,9 @@ import javax.persistence.Query;
 import org.apache.uima.cas.CAS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.SmartLifecycle;
-import org.springframework.orm.jpa.JpaTransactionManager;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
@@ -48,11 +48,8 @@ public class FixCoreferenceFeatures
 
     private boolean running = false;
 
-    @PersistenceContext
-    private EntityManager entityManager;
-    
-    @Resource(name = "transactionManager")
-    private JpaTransactionManager txManager;
+    private @PersistenceContext EntityManager entityManager;
+    private @Autowired PlatformTransactionManager txManager;
 
     @Override
     public boolean isRunning()

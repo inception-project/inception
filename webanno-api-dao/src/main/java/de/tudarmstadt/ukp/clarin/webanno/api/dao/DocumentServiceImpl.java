@@ -39,7 +39,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
 
-import javax.annotation.Resource;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
@@ -56,6 +55,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
@@ -97,11 +97,11 @@ public class DocumentServiceImpl
     @PersistenceContext
     private EntityManager entityManager;
 
-    private @Resource UserDao userRepository;
-    private @Resource CasStorageService casStorageService;
-    private @Resource ImportExportService importExportService;
-    private @Resource ProjectService projectService;
-    private @Resource ApplicationEventPublisher applicationEventPublisher;
+    private @Autowired UserDao userRepository;
+    private @Autowired CasStorageService casStorageService;
+    private @Autowired ImportExportService importExportService;
+    private @Autowired ProjectService projectService;
+    private @Autowired ApplicationEventPublisher applicationEventPublisher;
     
     @Value(value = "${repository.path}")
     private File dir;

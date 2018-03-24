@@ -32,13 +32,12 @@ import java.io.File;
 import java.util.Collections;
 import java.util.Properties;
 
-import javax.annotation.Resource;
-
 import org.junit.Before;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -92,8 +91,8 @@ import de.tudarmstadt.ukp.dkpro.core.io.text.TextWriter;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class RemoteApiController2Test
 {
-    private @Resource WebApplicationContext context;
-    private @Resource UserDao userRepository;
+    private @Autowired WebApplicationContext context;
+    private @Autowired UserDao userRepository;
     
     private MockMvc mvc;
 

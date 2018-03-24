@@ -25,11 +25,10 @@ import static org.apache.uima.fit.util.FSUtil.setFeature;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.annotation.Resource;
-
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
@@ -48,7 +47,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 public class RelationOffsetsRepair
     implements Repair
 {
-    private @Resource AnnotationSchemaService annotationService;
+    private @Autowired AnnotationSchemaService annotationService;
 
     @Override
     public void repair(Project aProject, CAS aCas, List<LogMessage> aMessages)

@@ -25,6 +25,9 @@
   <artifactId>webanno-ui-curation</artifactId>
   <name>WebAnno - UI - Curation</name>
   <packaging>jar</packaging>
+  <properties>
+    <maven.surefire.argLine>-Djdk.attach.allowAttachSelf</maven.surefire.argLine>
+  </properties>
   <dependencies>
     <dependency>
       <groupId>org.apache.commons</groupId>

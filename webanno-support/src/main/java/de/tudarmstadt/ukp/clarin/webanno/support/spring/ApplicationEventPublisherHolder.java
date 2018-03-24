@@ -17,8 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.support.spring;
 
-import javax.annotation.Resource;
-
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
@@ -29,7 +28,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class ApplicationEventPublisherHolder
 {
-    private @Resource ApplicationEventPublisher applicationEventPublisher;
+    private @Autowired ApplicationEventPublisher applicationEventPublisher;
 
     public ApplicationEventPublisher get()
     {

@@ -24,8 +24,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Optional;
 
-import javax.annotation.Resource;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.uima.UIMAException;
 import org.slf4j.Logger;
@@ -49,11 +47,11 @@ public class ExportServiceImpl implements ExportService
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
     
-    private @Resource AnnotationSchemaService annotationService;
-    private @Resource DocumentService documentService;
-    private @Resource ProjectService projectService;
-    private @Resource UserDao userRepository;
-    private @Resource ImportExportService importExportService;
+    private @Autowired AnnotationSchemaService annotationService;
+    private @Autowired DocumentService documentService;
+    private @Autowired ProjectService projectService;
+    private @Autowired UserDao userRepository;
+    private @Autowired ImportExportService importExportService;
     private @Autowired(required = false) ConstraintsService constraintsService;
     private @Autowired(required = false) AutomationService automationService;
     

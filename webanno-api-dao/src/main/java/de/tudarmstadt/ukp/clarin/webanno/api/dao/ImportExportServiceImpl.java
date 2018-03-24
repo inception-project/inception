@@ -40,8 +40,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
-import javax.annotation.Resource;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.uima.UIMAException;
 import org.apache.uima.analysis_component.JCasAnnotator_ImplBase;
@@ -62,6 +60,8 @@ import org.apache.uima.util.CasCreationUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -96,11 +96,9 @@ public class ImportExportServiceImpl
     @Value(value = "${repository.path}")
     private File dir;
     
-    private @Resource CasStorageService casStorageService;
-    private @Resource AnnotationSchemaService annotationService;
-    
-    @Resource(name = "formats")
-    private Properties readWriteFileFormats;
+    private @Autowired CasStorageService casStorageService;
+    private @Autowired AnnotationSchemaService annotationService;
+    private @Autowired @Qualifier("formats") Properties readWriteFileFormats;
 
     public ImportExportServiceImpl()
     {

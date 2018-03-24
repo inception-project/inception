@@ -241,6 +241,11 @@
         <property>
           <name>!m2e.version</name>
         </property>
+        <!-- 
+         - Build PDFs currently does not work with Java 10 because of a problem parsing the
+         - version string: https://github.com/jruby/jruby-openssl/issues/157
+         -->
+        <jdk>[,10)</jdk>
       </activation>
       <build>
         <pluginManagement>
@@ -301,7 +306,6 @@
                 </execution>
               </executions>
             </plugin>
-
           </plugins>
         </pluginManagement>
       </build>

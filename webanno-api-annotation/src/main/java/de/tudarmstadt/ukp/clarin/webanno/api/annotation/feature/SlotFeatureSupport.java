@@ -20,8 +20,6 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.annotation.Resource;
-
 import org.apache.commons.lang3.text.WordUtils;
 import org.apache.uima.cas.ArrayFS;
 import org.apache.uima.cas.CAS;
@@ -33,6 +31,7 @@ import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.model.IModel;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
@@ -55,7 +54,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 public class SlotFeatureSupport
     implements FeatureSupport
 {
-    private @Resource AnnotationSchemaService annotationService;
+    private @Autowired AnnotationSchemaService annotationService;
 
     private String featureSupportId;
     
