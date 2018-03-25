@@ -557,14 +557,16 @@ public class ActiveLearningSidebar
         AnnotationFS annotationFS = WebAnnoCasUtil
             .selectSingleFsAt(aJcas, type, aRecord.getOffsetCharacterBegin(),
                 aRecord.getOffsetCharacterEnd());
-        for (AnnotationFeature annotationFeature : annotationService
-            .listAnnotationFeature(selectedLayer)) {
-            String annotatedValue = WebAnnoCasUtil
-                .getFeature(annotationFS, annotationFeature.getName());
-            if (annotatedValue.equals(aRecord.getAnnotation())) {
-                highlightVID = new VID(WebAnnoCasUtil.getAddr(annotationFS));
-                vMarkerType = ANNOTATION_MARKER;
-                return true;
+        if (annotationFS != null) {
+            for (AnnotationFeature annotationFeature : annotationService
+                .listAnnotationFeature(selectedLayer)) {
+                String annotatedValue = WebAnnoCasUtil
+                    .getFeature(annotationFS, annotationFeature.getName());
+                if (annotatedValue.equals(aRecord.getAnnotation())) {
+                    highlightVID = new VID(WebAnnoCasUtil.getAddr(annotationFS));
+                    vMarkerType = ANNOTATION_MARKER;
+                    return true;
+                }
             }
         }
         return false;
