@@ -565,7 +565,9 @@ public class KnowledgeBaseServiceImpl
                 }
 
                 KBHandle handle = new KBHandle(id, label);
-                handles.add(handle);
+                if (!handles.contains(handle)) {
+                    handles.add(handle);
+                }
             }
 
             return handles;
