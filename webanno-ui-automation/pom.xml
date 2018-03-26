@@ -208,7 +208,7 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-dependency-plugin</artifactId>
           <configuration>
-            <usedDependencies>
+            <usedDependencies combine.children="append">
               <!--
                 - Trove and cplex are mira dependencies, but mira does not have a good POM, so we
                 - have to include in this pom and exclude them from dependency checking.
