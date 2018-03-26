@@ -130,6 +130,28 @@ public class AnnotationFeature
     }
     
     
+    public AnnotationFeature(Project aProject, AnnotationLayer aLayer, String aName, String aUiName,
+            String aType)
+    {
+        project = aProject;
+        layer = aLayer;
+        name = aName;
+        uiName = aUiName;
+        type = aType;
+    }
+
+    public AnnotationFeature(Project aProject, AnnotationLayer aLayer, String aName, String aUiName,
+            String aType, String aDescription, TagSet aTagSet)
+    {
+        project = aProject;
+        layer = aLayer;
+        name = aName;
+        uiName = aUiName;
+        type = aType;
+        description = aDescription;
+        tagset = aTagSet;
+    }
+
     public Long getId()
     {
         return id;

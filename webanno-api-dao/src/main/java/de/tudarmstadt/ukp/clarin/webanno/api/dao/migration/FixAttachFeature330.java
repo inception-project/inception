@@ -20,6 +20,8 @@ package de.tudarmstadt.ukp.clarin.webanno.api.dao.migration;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 
+import javax.persistence.NoResultException;
+
 import org.apache.uima.jcas.cas.TOP;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -111,20 +113,28 @@ public class FixAttachFeature330
             status = txManager.getTransaction(def);
 
             for (Project project : projectService.listProjects()) {
-                AnnotationLayer tokenLayer = annotationSchemaService.getLayer(
-                        Token.class.getName(), project);
-                
-                // Set attach-feature of Dependency layer to Token.pos if necessary
-                fix(project, Dependency.class, RELATION_TYPE, tokenLayer, "pos");
-
-                // Set attach-feature of POS layer to Token.pos if necessary
-                fix(project, POS.class, SPAN_TYPE, tokenLayer, "pos");
-
-                // Set attach-feature of Lemma layer to Token.lemma if necessary
-                fix(project, Lemma.class, SPAN_TYPE, tokenLayer, "lemma");
-
-                // Set attach-feature of MorphologicalFeatures layer to Token.morph if necessary
-                fix(project, MorphologicalFeatures.class, SPAN_TYPE, tokenLayer, "morph");
+                try {
+                    AnnotationLayer tokenLayer = annotationSchemaService.getLayer(
+                            Token.class.getName(), project);
+                    
+                    // Set attach-feature of Dependency layer to Token.pos if necessary
+                    fix(project, Dependency.class, RELATION_TYPE, tokenLayer, "pos");
+    
+                    // Set attach-feature of POS layer to Token.pos if necessary
+                    fix(project, POS.class, SPAN_TYPE, tokenLayer, "pos");
+    
+                    // Set attach-feature of Lemma layer to Token.lemma if necessary
+                    fix(project, Lemma.class, SPAN_TYPE, tokenLayer, "lemma");
+    
+                    // Set attach-feature of MorphologicalFeatures layer to Token.morph if necessary
+                    fix(project, MorphologicalFeatures.class, SPAN_TYPE, tokenLayer, "morph");
+                }
+                catch (NoResultException e) {
+                    // This only happens if a project is not fully set up. Every project
+                    // should have a Token layer. However, it is not the responsibility of this
+                    // migration to enforce this, so we just ignore it.
+                    log.warn("Project {} does not seem to include a Token layer!", project);
+                }
             }
             
             txManager.commit(status);

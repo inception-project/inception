@@ -329,7 +329,7 @@ public class RemoteApiController2
         Project project = new Project();
         project.setName(aName);
         projectService.createProject(project);
-        annotationService.initializeTypesForProject(project);
+        annotationService.initializeProject(project);
         
         // Create permission for the project creator
         String owner = aCreator.isPresent() ? aCreator.get() : user.getUsername();

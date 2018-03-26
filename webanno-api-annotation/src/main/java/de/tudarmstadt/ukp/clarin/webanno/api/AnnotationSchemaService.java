@@ -230,38 +230,6 @@ public interface AnnotationSchemaService
     boolean existsType(String name, String type);
 
     /**
-     * This method only exists to support importing projects previous to WebAnno version 2.0.
-     * Initialize the project with default {@link AnnotationLayer}, {@link TagSet}s, and {@link Tag}
-     * s. This is done per Project. For older projects, this method is used to import old tagsets
-     * and convert to the new scheme.
-     * 
-     * @param project
-     *            the project.
-     * @param postags
-     *            the pos tags.
-     * @param posTagDescriptions
-     *            the pos-tag descriptions.
-     * @param depTags
-     *            the dep tags.
-     * @param depTagDescriptions
-     *            the dep-tag descriptions.
-     * @param neTags
-     *            the ne tags.
-     * @param neTagDescriptions
-     *            the ne-tag descriptions.
-     * @param corefTypeTags
-     *            the coref tags.
-     * @param corefRelTags
-     *            the relation tags.
-     * @throws IOException
-     *             if an I/O error occurs.
-     */
-    void initializeTypesForProjectV0(Project project, String[] postags, String[] posTagDescriptions,
-            String[] depTags, String[] depTagDescriptions, String[] neTags,
-            String[] neTagDescriptions, String[] corefTypeTags, String[] corefRelTags)
-        throws IOException;
-
-    /**
      * Initialize the project with default {@link AnnotationLayer}, {@link TagSet}s, and {@link Tag}
      * s. This is done per Project.
      * 
@@ -270,7 +238,7 @@ public interface AnnotationSchemaService
      * @throws IOException
      *             if an I/O error occurs.
      */ 
-    void initializeTypesForProject(Project aProject)
+    void initializeProject(Project aProject)
             throws IOException;
     
     /**

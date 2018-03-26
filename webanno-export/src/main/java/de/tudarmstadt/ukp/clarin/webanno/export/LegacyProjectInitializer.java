@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api.dao;
+package de.tudarmstadt.ukp.clarin.webanno.export;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
@@ -25,106 +25,36 @@ import java.io.IOException;
 import java.util.List;
 
 import org.apache.uima.cas.CAS;
-import org.springframework.core.io.ClassPathResource;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
-import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
-import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.morph.MorphologicalFeatures;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.SurfaceForm;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.dkpro.core.api.semantics.type.SemArg;
-import de.tudarmstadt.ukp.dkpro.core.api.semantics.type.SemArgLink;
-import de.tudarmstadt.ukp.dkpro.core.api.semantics.type.SemPred;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.chunk.Chunk;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.DependencyFlavor;
-import de.tudarmstadt.ukp.dkpro.core.api.transform.type.SofaChangeAnnotation;
 
 /**
  * This class is meant to be used only by {@link AnnotationSchemaServiceImpl} and within a
  * transaction set up by that class via
- * {@link AnnotationSchemaServiceImpl#initializeTypesForProject(Project)} or
- * {@link AnnotationSchemaServiceImpl#initializeTypesForProject(Project)}.
+ * {@link AnnotationSchemaServiceImpl#initializeProject(Project)} or
+ * {@link AnnotationSchemaServiceImpl#initializeProject(Project)}.
  */
-class ProjectInitializer
+class LegacyProjectInitializer
 {
     private AnnotationSchemaService annotationSchemaService;
     
-    public ProjectInitializer(AnnotationSchemaService aAnnotationSchemaService)
+    public LegacyProjectInitializer(AnnotationSchemaService aAnnotationSchemaService)
     {
         annotationSchemaService = aAnnotationSchemaService;
     }
     
-    public void initialize(Project aProject)
-            throws IOException
-    {
-        // Default layers with default tagsets
-        createTokenLayer(aProject);
-
-        TagSet posTagSet = JsonImportUtil.importTagSetFromJson(aProject,
-                new ClassPathResource("/tagsets/mul-pos-ud.json").getInputStream(),
-                annotationSchemaService);
-        createPOSLayer(aProject, posTagSet);
-
-        TagSet depTagSet = JsonImportUtil.importTagSetFromJson(aProject,
-                new ClassPathResource("/tagsets/mul-dep-ud.json").getInputStream(),
-                annotationSchemaService);
-        createDepLayer(aProject, depTagSet);
-
-        TagSet nerTagSet = JsonImportUtil.importTagSetFromJson(aProject,
-                new ClassPathResource("/tagsets/de-ne-webanno.json").getInputStream(),
-                annotationSchemaService);
-        createNeLayer(aProject, nerTagSet);
-
-        TagSet corefTypeTagSet = JsonImportUtil.importTagSetFromJson(aProject,
-                new ClassPathResource("/tagsets/de-coref-type-bart.json").getInputStream(),
-                annotationSchemaService);
-        TagSet corefRelTagSet = JsonImportUtil.importTagSetFromJson(aProject,
-                new ClassPathResource("/tagsets/de-coref-rel-tuebadz.json").getInputStream(),
-                annotationSchemaService);
-        createCorefLayer(aProject, corefTypeTagSet, corefRelTagSet);
-
-        createLemmaLayer(aProject);
-        
-        createOrthoGraphyLayer(aProject);
-
-        createChunkLayer(aProject);
-
-        createSurfaceFormLayer(aProject);
-        
-        createSemArgLayer(aProject);
-        
-        createSemPredLayer(aProject);
-        
-        createMorphologicalFeaturesLayer(aProject);
-
-        // Extra tagsets
-        JsonImportUtil.importTagSetFromJson(aProject,
-                new ClassPathResource("/tagsets/de-pos-stts.json").getInputStream(),
-                annotationSchemaService);
-        JsonImportUtil.importTagSetFromJson(aProject,
-                new ClassPathResource("/tagsets/de-dep-tiger.json").getInputStream(),
-                annotationSchemaService);
-        JsonImportUtil.importTagSetFromJson(aProject,
-                new ClassPathResource("/tagsets/en-dep-sd.json").getInputStream(),
-                annotationSchemaService);
-        JsonImportUtil.importTagSetFromJson(aProject,
-                new ClassPathResource("/tagsets/en-pos-ptb-tt.json").getInputStream(),
-                annotationSchemaService);
-        JsonImportUtil.importTagSetFromJson(aProject,
-                new ClassPathResource("/tagsets/mul-pos-upos.json").getInputStream(),
-                annotationSchemaService);
-    }
-
     /**
      * This method only exists to support importing projects previous to WebAnno version 2.0.
      * Initialize the project with default {@link AnnotationLayer}, {@link TagSet}s, and {@link Tag}
@@ -152,7 +82,7 @@ class ProjectInitializer
      * @throws IOException
      *             if an I/O error occurs.
      */
-    public void initializeV0(Project aProject, String[] aPostags, String[] aPosTagDescriptions,
+    public void initialize(Project aProject, String[] aPostags, String[] aPosTagDescriptions,
             String[] aDepTags, String[] aDepTagDescriptions, String[] aNeTags,
             String[] aNeTagDescriptions, String[] aCorefTypeTags, String[] aCorefRelTags)
         throws IOException
@@ -281,9 +211,10 @@ class ProjectInitializer
     {
         AnnotationLayer tokenLayer = annotationSchemaService.getLayer(Token.class.getName(),
                 aProject);
-        AnnotationFeature tokenLemmaFeature = createFeature("lemma", "lemma", aProject, tokenLayer,
-                Lemma.class.getName());
-        tokenLemmaFeature.setVisible(true);
+        
+        AnnotationFeature tokenLemmaFeature = new AnnotationFeature(aProject, tokenLayer, "lemma",
+                "lemma", Lemma.class.getName());
+        annotationSchemaService.createFeature(tokenLemmaFeature);
 
         AnnotationLayer lemmaLayer = new AnnotationLayer(Lemma.class.getName(), "Lemma", SPAN_TYPE,
                 aProject, true);
@@ -301,71 +232,7 @@ class ProjectInitializer
         annotationSchemaService.createFeature(lemmaFeature);
     }
     
-    private void createOrthoGraphyLayer(Project aProject) throws IOException {
-        AnnotationLayer orthography = new AnnotationLayer(SofaChangeAnnotation.class.getName(),
-                "Orthography Correction", SPAN_TYPE, aProject, true);
 
-        orthography.setAllowStacking(false);
-        orthography.setMultipleTokens(false);
-        orthography.setLockToTokenOffset(true);
-        annotationSchemaService.createLayer(orthography);
-
-        AnnotationFeature correction = new AnnotationFeature();
-        correction.setDescription("Correct this token using the specified operation.");
-        correction.setName("value");
-        correction.setType(CAS.TYPE_NAME_STRING);
-        correction.setProject(aProject);
-        correction.setUiName("Correction");
-        correction.setLayer(orthography);
-        annotationSchemaService.createFeature(correction);
-
-        TagSet operationTagset = annotationSchemaService.createTagSet(
-                "operation to be done with specified in tokenIDs token/tokens in order to correct",
-                "Operation", "en",
-                new String[] { "replace", "insert_before", "insert_after", "delete" },
-                new String[] { "replace", "insert before", "insert after", "delete" },
-                aProject);
-
-        AnnotationFeature operation = new AnnotationFeature();
-        operation.setDescription("An operation taken to change this token.");
-        operation.setName("operation");
-        operation.setType(CAS.TYPE_NAME_STRING);
-        operation.setProject(aProject);
-        operation.setUiName("Operation");
-        operation.setLayer(orthography);
-        operation.setVisible(false);
-        operation.setTagset(operationTagset);
-
-        annotationSchemaService.createFeature(operation);
-
-    }
-
-    private void createMorphologicalFeaturesLayer(Project aProject)
-            throws IOException
-    {
-        AnnotationLayer tokenLayer = annotationSchemaService.getLayer(Token.class.getName(),
-                aProject);
-        AnnotationFeature tokenMorphFeature = createFeature("morph", "morph", aProject, tokenLayer,
-                Lemma.class.getName());
-        tokenMorphFeature.setVisible(true);
-
-        AnnotationLayer morphLayer = new AnnotationLayer(MorphologicalFeatures.class.getName(),
-                "Morphological features", SPAN_TYPE, aProject, true);
-        morphLayer.setAttachType(tokenLayer);
-        morphLayer.setAttachFeature(tokenMorphFeature);
-        annotationSchemaService.createLayer(morphLayer);
-
-        AnnotationFeature valueFeature = new AnnotationFeature();
-        valueFeature.setDescription("Morphological features");
-        valueFeature.setName("value");
-        valueFeature.setType(CAS.TYPE_NAME_STRING);
-        valueFeature.setProject(aProject);
-        valueFeature.setUiName("Features");
-        valueFeature.setLayer(morphLayer);
-        valueFeature.setIncludeInHover(true);
-        valueFeature.setVisible(false);
-        annotationSchemaService.createFeature(valueFeature);
-    }
     private AnnotationLayer createCorefLayer(Project aProject, TagSet aCorefTypeTags,
             TagSet aCorefRelTags)
         throws IOException
@@ -378,34 +245,28 @@ class ProjectInitializer
         base.setMultipleTokens(true);
         base.setLockToTokenOffset(false);
         annotationSchemaService.createLayer(base);
-
-        AnnotationFeature corefTypeFeature = createFeature("referenceType", "referenceType",
-                "Coreference type", CAS.TYPE_NAME_STRING, aCorefTypeTags, aProject);
-        corefTypeFeature.setLayer(base);
-        corefTypeFeature.setVisible(true);
-
-        AnnotationFeature corefRelFeature = createFeature("referenceRelation", "referenceRelation",
-                "Coreference relation", CAS.TYPE_NAME_STRING, aCorefRelTags, aProject);
-        corefRelFeature.setLayer(base);
-        corefRelFeature.setVisible(true);
+        
+        annotationSchemaService.createFeature(new AnnotationFeature(aProject, base, "referenceType",
+                "referenceType", CAS.TYPE_NAME_STRING, "Coreference type", aCorefTypeTags));
+        annotationSchemaService.createFeature(
+                new AnnotationFeature(aProject, base, "referenceRelation", "referenceRelation",
+                        CAS.TYPE_NAME_STRING, "Coreference relation", aCorefRelTags));
 
         return base;
     }
 
-    private void createNeLayer(Project aProject, TagSet aTagset)
+    private void createNeLayer(Project aProject, TagSet aTagSet)
         throws IOException
     {
-        AnnotationFeature neFeature = createFeature("value", "value", "Named entity type",
-                CAS.TYPE_NAME_STRING, aTagset, aProject);
-
         AnnotationLayer neLayer = new AnnotationLayer(NamedEntity.class.getName(), "Named entity",
                 SPAN_TYPE, aProject, true);
         neLayer.setAllowStacking(true);
         neLayer.setMultipleTokens(true);
         neLayer.setLockToTokenOffset(false);
         annotationSchemaService.createLayer(neLayer);
-
-        neFeature.setLayer(neLayer);
+        
+        annotationSchemaService.createFeature(new AnnotationFeature(aProject, neLayer, "value",
+                "value", CAS.TYPE_NAME_STRING, "Named entity type", aTagSet));
     }
 
     private void createChunkLayer(Project aProject)
@@ -426,27 +287,6 @@ class ProjectInitializer
         chunkValueFeature.setUiName("Tag");
         chunkValueFeature.setLayer(chunkLayer);
         annotationSchemaService.createFeature(chunkValueFeature);
-    }
-
-    private void createSurfaceFormLayer(Project aProject)
-        throws IOException
-    {
-        AnnotationLayer surfaceFormLayer = new AnnotationLayer(SurfaceForm.class.getName(),
-                "Surface form", SPAN_TYPE, aProject, true);
-        surfaceFormLayer.setAllowStacking(false);
-        // The surface form must be locked to tokens for CoNLL-U writer to work properly
-        surfaceFormLayer.setLockToTokenOffset(false);
-        surfaceFormLayer.setMultipleTokens(true);
-        annotationSchemaService.createLayer(surfaceFormLayer);
-
-        AnnotationFeature surfaceFormValueFeature = new AnnotationFeature();
-        surfaceFormValueFeature.setDescription("Original surface text");
-        surfaceFormValueFeature.setName("value");
-        surfaceFormValueFeature.setType(CAS.TYPE_NAME_STRING);
-        surfaceFormValueFeature.setProject(aProject);
-        surfaceFormValueFeature.setUiName("Form");
-        surfaceFormValueFeature.setLayer(surfaceFormLayer);
-        annotationSchemaService.createFeature(surfaceFormValueFeature);
     }
 
     private void createDepLayer(Project aProject, TagSet aTagset)
@@ -470,18 +310,17 @@ class ProjectInitializer
         depLayer.setAttachFeature(tokenPosFeature);
 
         annotationSchemaService.createLayer(depLayer);
+        annotationSchemaService
+                .createFeature(new AnnotationFeature(aProject, depLayer, "DependencyType",
+                        "Relation", CAS.TYPE_NAME_STRING, "Dependency relation", aTagset));
 
-        AnnotationFeature featRel = createFeature("DependencyType", "Relation",
-                "Dependency relation", CAS.TYPE_NAME_STRING, aTagset, aProject);
-        featRel.setLayer(depLayer);
-        
         String[] flavors = { DependencyFlavor.BASIC, DependencyFlavor.ENHANCED };
         String[] flavorDesc = { DependencyFlavor.BASIC, DependencyFlavor.ENHANCED };
         TagSet flavorsTagset = annotationSchemaService.createTagSet("Dependency flavors",
                 "Dependency flavors", "mul", flavors, flavorDesc, aProject);
-        AnnotationFeature featFlavor = createFeature("flavor", "Flavor",
-                "Dependency relation", CAS.TYPE_NAME_STRING, flavorsTagset, aProject);
-        featFlavor.setLayer(depLayer);
+        
+        annotationSchemaService.createFeature(new AnnotationFeature(aProject, depLayer, "flavor",
+                "Flavor", CAS.TYPE_NAME_STRING, "Dependency relation", flavorsTagset));
     }
 
     private void createPOSLayer(Project aProject, TagSet aPosTagset)
@@ -492,66 +331,19 @@ class ProjectInitializer
         
         AnnotationLayer posLayer = new AnnotationLayer(POS.class.getName(), "POS", SPAN_TYPE,
                 aProject, true);
-        AnnotationFeature tokenPosFeature = createFeature("pos", "pos", aProject, tokenLayer,
-                POS.class.getName());
-        tokenPosFeature.setVisible(true);
+        
+        AnnotationFeature tokenPosFeature = new AnnotationFeature(aProject, tokenLayer, "pos",
+                "pos", POS.class.getName());
+        annotationSchemaService.createFeature(tokenPosFeature);
+        
         posLayer.setAttachType(tokenLayer);
         posLayer.setAttachFeature(tokenPosFeature);
         annotationSchemaService.createLayer(posLayer);
 
-        AnnotationFeature posFeature = createFeature("PosValue", "PosValue", "Part-of-speech tag",
-                CAS.TYPE_NAME_STRING, aPosTagset, aProject);
-        posFeature.setLayer(posLayer);
+        annotationSchemaService.createFeature(new AnnotationFeature(aProject, posLayer, "PosValue",
+                "PosValue", CAS.TYPE_NAME_STRING, "Part-of-speech tag", aPosTagset));
     }
     
-    private AnnotationLayer createSemPredLayer(Project aProject)
-            throws IOException
-    {
-        AnnotationLayer semPredLayer = new AnnotationLayer(SemPred.class.getName(), "SemPred",
-                SPAN_TYPE, aProject, true);
-        semPredLayer.setAllowStacking(true);
-        semPredLayer.setCrossSentence(false);
-        semPredLayer.setLockToTokenOffset(false);
-        semPredLayer.setMultipleTokens(true);
-        
-        AnnotationFeature semPredCategoryFeature = createFeature("category", "category",
-                "Category of the semantic predicate, e.g. the frame identifier.",
-                CAS.TYPE_NAME_STRING, null, aProject);
-        semPredCategoryFeature.setLayer(semPredLayer);
-        
-        AnnotationFeature semPredArgumentsFeature = new AnnotationFeature();
-        semPredArgumentsFeature.setName("arguments");
-        semPredArgumentsFeature.setUiName("arguments");
-        semPredArgumentsFeature.setDescription("Arguments of the semantic predicate");
-        semPredArgumentsFeature.setType(SemArg.class.getName());
-        semPredArgumentsFeature.setProject(aProject);
-        semPredArgumentsFeature.setTagset(null);
-        semPredArgumentsFeature.setMode(MultiValueMode.ARRAY);
-        semPredArgumentsFeature.setLinkMode(LinkMode.WITH_ROLE);
-        semPredArgumentsFeature.setLinkTypeName(SemArgLink.class.getName());
-        semPredArgumentsFeature.setLinkTypeRoleFeatureName("role");
-        semPredArgumentsFeature.setLinkTypeTargetFeatureName("target");
-        semPredArgumentsFeature.setLayer(semPredLayer);
-        annotationSchemaService.createFeature(semPredArgumentsFeature);
-        
-        annotationSchemaService.createLayer(semPredLayer);
-        return semPredLayer;
-    }
-
-    private AnnotationLayer createSemArgLayer(Project aProject)
-            throws IOException
-    {
-        AnnotationLayer semArgLayer = new AnnotationLayer(SemArg.class.getName(), "SemArg",
-                SPAN_TYPE, aProject, true);
-        semArgLayer.setAllowStacking(true);
-        semArgLayer.setCrossSentence(false);
-        semArgLayer.setLockToTokenOffset(false);
-        semArgLayer.setMultipleTokens(true);
-        
-        annotationSchemaService.createLayer(semArgLayer);
-        return semArgLayer;
-    }
-
     private AnnotationLayer createTokenLayer(Project aProject)
         throws IOException
     {
@@ -560,36 +352,5 @@ class ProjectInitializer
 
         annotationSchemaService.createLayer(tokenLayer);
         return tokenLayer;
-    }
-    
-    private AnnotationFeature createFeature(String aName, String aUiname, Project aProject,
-            AnnotationLayer aLayer, String aType)
-    {
-        AnnotationFeature feature = new AnnotationFeature();
-        feature.setName(aName);
-        feature.setEnabled(true);
-        feature.setType(aType);
-        feature.setUiName(aUiname);
-        feature.setLayer(aLayer);
-        feature.setProject(aProject);
-
-        annotationSchemaService.createFeature(feature);
-        return feature;
-    }
-    
-    private AnnotationFeature createFeature(String aName, String aUiName, String aDescription,
-            String aType, TagSet aTagSet, Project aProject)
-        throws IOException
-    {
-        AnnotationFeature feature = new AnnotationFeature();
-        feature.setDescription(aDescription);
-        feature.setName(aName);
-        feature.setType(aType);
-        feature.setProject(aProject);
-        feature.setUiName(aUiName);
-        feature.setTagset(aTagSet);        
-        annotationSchemaService.createFeature(feature);
-        
-        return feature;
     }
 }

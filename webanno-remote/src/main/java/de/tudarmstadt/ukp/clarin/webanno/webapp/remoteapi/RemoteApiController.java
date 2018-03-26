@@ -166,7 +166,7 @@ public class RemoteApiController
         Project project = new Project();
         project.setName(aName);
         projectRepository.createProject(project);
-        annotationService.initializeTypesForProject(project);
+        annotationService.initializeProject(project);
         
         // Create permission for the project creator
         projectRepository.createProjectPermission(
