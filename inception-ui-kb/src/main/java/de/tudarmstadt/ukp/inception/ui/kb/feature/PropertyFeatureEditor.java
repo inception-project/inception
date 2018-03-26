@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.wicket.Component;
@@ -58,18 +57,17 @@ public class PropertyFeatureEditor extends FeatureEditor {
     {
         DropDownList<KBHandle> field = new DropDownList<>("value", LambdaModel.of(() -> {
             AnnotationFeature feat = getModelObject().feature;
-            List<KBHandle> handles = new LinkedList<>();
+            List<KBHandle> handles = new ArrayList<>();
             for (KnowledgeBase kb : kbService.getKnowledgeBases(feat.getProject())) {
                 handles.addAll(kbService.listProperties(kb, false));
             }
-            return new ArrayList<>(handles);
+            return handles;
         }), new ChoiceRenderer<>("uiLabel"));
         field.setOutputMarkupId(true);
         field.setMarkupId(ID_PREFIX + getModelObject().feature.getId());
         return field;
     }
 
-    @Override
     protected void onInitialize()
     {
         super.onInitialize();
