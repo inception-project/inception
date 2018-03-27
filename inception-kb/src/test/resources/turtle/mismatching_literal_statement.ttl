@@ -1,0 +1,22 @@
+@base <http://mbugert.de/pets> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<#cat> rdfs:type rdfs:Class ;
+   	rdfs:label "Cat" .
+
+<#character> rdf:type rdfs:Class ;
+    rdfs:label "Character" .
+
+<#malicious> rdf:type <#character> ;
+    rdfs:label "malicious" .
+
+<#has-character> rdf:type rdfs:Property ;
+    rdfs:domain <#cat> ;
+    rdfs:range <#character> ;
+    rdfs:label "Has Character" .
+
+<#kahmi> rdf:type <#cat> ;
+    rdfs:label "Kahmi" ;
+    <#has-character> "666"^^xsd:int .

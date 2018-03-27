@@ -1,0 +1,64 @@
+/*
+ * Copyright 2017
+ * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+ * Technische Universität Darmstadt
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package de.tudarmstadt.ukp.inception.search.index.mtas;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.search.index.Index;
+import de.tudarmstadt.ukp.inception.search.index.IndexFactoryImplBase;
+
+@Component("mtasDocumentIndexFactory")
+public class MtasDocumentIndexFactory
+    extends IndexFactoryImplBase
+{
+    private final Logger log = LoggerFactory.getLogger(getClass());
+    
+    @Override
+    public String getDisplayName()
+    {
+        return "mtasDocumentIndexFactory";
+    }
+
+    @Override
+    public Index getNewIndex(Project aProject, AnnotationSchemaService aAnnotationSchemaService,
+            DocumentService aDocumentService, ProjectService aProjectService, String aDir)
+    {
+        Index indexBase = null;
+        try {
+            indexBase = new MtasDocumentIndex(aProject, aAnnotationSchemaService, aDocumentService,
+                    aProjectService, aDir);
+        }
+        catch (Exception e) {
+            log.error("Unable to get index", e);
+        }
+        return indexBase;
+    }
+
+    @Override
+    public int getOrder()
+    {
+        return 0;
+    }
+
+}
