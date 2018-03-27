@@ -249,7 +249,7 @@ public class CasUtil
     /*
      * Only for ClassificationTool Unit tests
      */
-     @Deprecated
+    @Deprecated
     private static <A extends Annotation> List<AnnotationObject> getTokenAnnotations(
             List<A> annotations, List<TokenObject> sentence, Function<A, String> applyFunction,
             String documentURI, String documentName, String feature)
