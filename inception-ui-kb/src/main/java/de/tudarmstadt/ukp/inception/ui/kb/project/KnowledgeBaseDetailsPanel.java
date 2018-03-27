@@ -381,10 +381,20 @@ public class KnowledgeBaseDetailsPanel extends Panel {
         @Override
         protected void setUpCommonComponents(WebMarkupContainer wmc) {
             // Schema configuration
-            wmc.add(new TextField<String>("classIri"));
-            wmc.add(new TextField<String>("subclassIri"));
-            wmc.add(new TextField<String>("typeIri"));
-            wmc.add(new CheckBox("enabled"));
+            addDisabledUrlField(wmc, "classIri");
+            addDisabledUrlField(wmc, "subclassIri");
+            addDisabledUrlField(wmc, "typeIri");
+            wmc.add(new CheckBox("enabled")
+            {
+
+                private static final long serialVersionUID = -2101263555896964046L;
+
+                @Override
+                protected void onConfigure()
+                {
+                    setEnabled(false);
+                }
+            });
         }
 
         @Override
@@ -421,7 +431,23 @@ public class KnowledgeBaseDetailsPanel extends Panel {
 
         @Override
         protected void setUpRemoteKnowledgeBaseComponents(WebMarkupContainer wmc) {
-            wmc.add(new TextField<>("url"));
+            addDisabledUrlField(wmc, "url");
+        }
+
+        private void addDisabledUrlField(WebMarkupContainer wmc, String id)
+        {
+            TextField<String> textField = new RequiredTextField<String>(id)
+            {
+
+                private static final long serialVersionUID = -7733443305863666055L;
+
+                @Override
+                protected void onConfigure()
+                {
+                    setEnabled(false);
+                }
+            };
+            wmc.add(textField);
         }
     }
 
