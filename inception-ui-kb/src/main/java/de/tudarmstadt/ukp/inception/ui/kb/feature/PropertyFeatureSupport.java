@@ -59,6 +59,7 @@ public class PropertyFeatureSupport
 {
     private static final Logger LOG = LoggerFactory.getLogger(PropertyFeatureSupport.class);
     private static final String PREDICATE_KEY = "Property: Predicate";
+    private static final String FACT_PREDICATE_PREFIX = "fact-predicate:";
 
     @Resource private KnowledgeBaseService kbService;
 
@@ -80,7 +81,8 @@ public class PropertyFeatureSupport
     public List<FeatureType> getSupportedFeatureTypes(AnnotationLayer aAnnotationLayer)
     {
         List<FeatureType> types = new ArrayList<>();
-        types.add(new FeatureType(PREDICATE_KEY, PREDICATE_KEY, featureSupportId));
+        types.add(new FeatureType(FACT_PREDICATE_PREFIX + aAnnotationLayer.getName(), PREDICATE_KEY,
+            featureSupportId));
         return types;
     }
 
@@ -89,12 +91,7 @@ public class PropertyFeatureSupport
     {
         switch (aFeature.getMultiValueMode()) {
         case NONE:
-            switch (aFeature.getType()) {
-            case PREDICATE_KEY:
-                return true;
-            default:
-                return false;
-            }
+            return aFeature.getType().startsWith(FACT_PREDICATE_PREFIX);
         case ARRAY: // fallthrough
         default:
             return false;
@@ -170,7 +167,7 @@ public class PropertyFeatureSupport
 
         switch (featureState.feature.getMultiValueMode()) {
         case NONE:
-            if (featureState.feature.getType().startsWith("Property")) {
+            if (featureState.feature.getType().startsWith(FACT_PREDICATE_PREFIX)) {
                 editor = new PropertyFeatureEditor(aId, aOwner, aFeatureStateModel);
             }
             else {
