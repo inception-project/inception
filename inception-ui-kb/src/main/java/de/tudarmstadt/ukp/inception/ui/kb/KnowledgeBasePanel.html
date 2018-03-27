@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<!--
+ - Copyright 2017
+ - Ubiquitous Knowledge Processing (UKP) Lab
+ - Technische Universität Darmstadt
+ - 
+ - Licensed under the Apache License, Version 2.0 (the "License");
+ - you may not use this file except in compliance with the License.
+ - You may obtain a copy of the License at
+ -  
+ - http://www.apache.org/licenses/LICENSE-2.0
+ - 
+ - Unless required by applicable law or agreed to in writing, software
+ - distributed under the License is distributed on an "AS IS" BASIS,
+ - WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ - See the License for the specific language governing permissions and
+ - limitations under the License.
+-->
+
+<html xmlns:wicket="http://wicket.apache.org">
+<body>
+  <wicket:panel>
+    <div class="flex-v-container flex-sidebar">
+      <!-- knowledge base selector -->
+      <div wicket:enclosure="knowledgebases" class="flex-v-container">
+        <div class="form-group">
+          <select wicket:id="knowledgebases" class="form-control input-lg"></select>
+        </div>
+      </div>
+      <div class="flex-content flex-v-container flex-65" wicket:id="concepts"></div>
+      <div class="flex-content flex-v-container flex-no-gutter" wicket:id="properties"></div>
+    </div>
+    <div wicket:id="details" class="flex-content flex-h-container"></div>
+  </wicket:panel>
+</body>
+</html>

@@ -1,0 +1,20 @@
+# This is the list of people who have contributed code to the INCEpTION Application repository.
+#
+# This list is to be used in favor over author attributions in individual files,
+# e.g. via @author tags.
+#
+# Code integrated from third parties by others than their original authors may not have any
+# @author tags removed and respective names must not be added to this file. Integration of
+# third party code should be avoided.
+#
+# After the name, one or more mail addresses may be specified in pointy brackets and one or more
+# GitHub IDs may be specified in square brackets.
+
+# Please keep the list sorted.
+
+Beto Boullosa
+Michael Bugert
+Peter Jiang
+Richard Eckart de Castilho <richard.eckart@gmail.com> [reckart]
+Torsten Dietl
+Wei Ding

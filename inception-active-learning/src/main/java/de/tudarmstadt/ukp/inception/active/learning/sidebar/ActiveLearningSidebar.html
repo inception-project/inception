@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<!--
+#Copyright 2017
+#Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+#Technische Universität Darmstadt
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+# 
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+-->
+<html xmlns:wicket="http://wicket.apache.org">
+<wicket:panel>
+	<div
+		class="flex-content flex-v-container flex-gutter flex-only-internal-gutter">
+
+		<div wicket:id="mainContainer"
+			class="panel panel-default panel-flex flex-content">
+			<div class="panel-heading">
+				<h3 class="panel-title">Active Learning</h3>
+			</div>
+			<div class="panel-body flex-v-container">
+				<form wicket:id="layerSelectionForm">
+					<label class="col-sm-4 control-label">Layer</label>
+					<div class="col-sm-8">
+						<select wicket:id="selectLayer" class="col-sm-12"></select>
+					</div>
+					<div class="col-sm-8">
+						<span wicket:id="showSelectedLayer"></span>
+					</div>
+					<div class="col-sm-8" style="margin-top: 10px">
+						<input wicket:id="layerSelectionButton" type="submit"
+							class="btn btn-primary" value="Start" />
+					</div>
+				</form>
+				<div style="margin-top: 20px">
+					<form wicket:id="recommendationForm">
+						<label class="col-sm-12" wicket:id="recommendationTitle"></label>
+                        <a wicket:id="recommendationCoveredTextLink">
+                            <span class="col-sm-6" wicket:id="recommendedToken"></span></a>
+                        <span class="col-sm-6" wicket:id="recommendedPredition"></span><span
+                        class="col-sm-6" wicket:id="confidence"></span><span
+                        class="col-sm-6" wicket:id="recommendedConfidence"></span><span
+                        class="col-sm-6" wicket:id="difference"></span><span
+                        class="col-sm-6" wicket:id="recommendedDifference"></span>
+						<div class="col-sm-4" style="margin-top: 10px">
+							<input type="submit" class="btn btn-success"
+								wicket:id="acceptButton" value="Accept" />
+						</div>
+                        <div class="col-sm-4" style="margin-top: 10px">
+                            <input type="submit" class="btn btn-danger"
+                                   wicket:id="rejectButton" value="Reject" />
+                        </div>
+						<div class="col-sm-4" style="margin-top: 10px">
+							<input type="submit" class="btn btn-warning"
+                                   wicket:id="skipButton" value="Skip" />
+						</div>
+					</form>
+				</div>
+				<!-- 				<div style="margin-top: 20px">
+					<label>Learning Curve</label> <img wicket:id="curveImage"
+						width="160" />
+				</div> -->
+				<div style="margin-top: 20px">
+                    <!--<div class="scrolling flex-content flex-v-container">-->
+					<form wicket:id="learningHistoryForm">
+						<label class="col-sm-12" wicket:id="learningHistoryTitle"></label>
+                        <div style="width:198px; height:150px; overflow:auto;">
+                            <table class="col-sm-12" style="margin-left: 10px">
+                               <tr wicket:id="historyListview">
+                                    <td><span wicket:id="recommendedText"></span></td>
+                                    <td><span wicket:id="recommendedAnnotation"></span></td>
+                                    <td><span wicket:id="userAction"></span></td>
+                                </tr>
+                            </table>
+                        </div>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+</wicket:panel>
+</html>

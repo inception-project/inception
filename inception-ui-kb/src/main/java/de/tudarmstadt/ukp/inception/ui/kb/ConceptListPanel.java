@@ -1,0 +1,130 @@
+/*
+ * Copyright 2017
+ * Ubiquitous Knowledge Processing (UKP) Lab
+ * Technische Universität Darmstadt
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package de.tudarmstadt.ukp.inception.ui.kb;
+
+import java.io.Serializable;
+import java.util.Collections;
+import java.util.List;
+
+import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.event.Broadcast;
+import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.form.CheckBox;
+import org.apache.wicket.markup.html.form.ChoiceRenderer;
+import org.apache.wicket.markup.html.form.Form;
+import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.model.CompoundPropertyModel;
+import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.Model;
+import org.apache.wicket.model.ResourceModel;
+import org.apache.wicket.spring.injection.annot.SpringBean;
+
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormSubmittingBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.OverviewListChoice;
+import de.tudarmstadt.ukp.inception.kb.KnowledgeBase;
+import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
+import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
+import de.tudarmstadt.ukp.inception.kb.graph.RdfUtils;
+import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxConceptSelectionEvent;
+import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxNewConceptEvent;
+
+public class ConceptListPanel extends Panel {
+    private static final long serialVersionUID = -4032884234215283745L;
+    
+    private static final int LIST_MAX_ROWS = 30;
+
+    private @SpringBean KnowledgeBaseService kbService;
+
+    private IModel<KBHandle> selectedConcept;
+    private IModel<KnowledgeBase> kbModel;
+    private IModel<Preferences> preferences;
+
+    public ConceptListPanel(String aId, IModel<KnowledgeBase> aKbModel,
+            IModel<KBHandle> selectedConceptModel) {
+        super(aId, selectedConceptModel);
+
+        setOutputMarkupId(true);
+
+        selectedConcept = selectedConceptModel;
+        kbModel = aKbModel;
+        preferences = Model.of(new Preferences());
+
+        OverviewListChoice<KBHandle> overviewList = new OverviewListChoice<>("concepts");
+        overviewList.setChoiceRenderer(new ChoiceRenderer<>("uiLabel"));
+        overviewList.setModel(selectedConceptModel);
+        overviewList.setChoices(LambdaModel.of(this::getConcepts));
+        overviewList.add(new LambdaAjaxFormComponentUpdatingBehavior("change",
+                this::actionSelectionChanged));
+        overviewList.setMaxRows(LIST_MAX_ROWS);
+        add(overviewList);
+
+        add(new Label("count", LambdaModel.of(() -> overviewList.getChoices().size())));
+
+        LambdaAjaxLink addLink = new LambdaAjaxLink("add", target -> send(getPage(),
+                Broadcast.BREADTH, new AjaxNewConceptEvent(target)));
+        addLink.add(new Label("label", new ResourceModel("concept.list.add")));
+        add(addLink);
+
+        Form<Preferences> form = new Form<>("form", CompoundPropertyModel.of(preferences));
+        form.add(new CheckBox("showAllConcepts").add(
+                new LambdaAjaxFormSubmittingBehavior("change", this::actionPreferenceChanged)));
+        add(form);
+    }
+    
+    private void actionSelectionChanged(AjaxRequestTarget aTarget) {
+        // if the selection changes, publish an event denoting the change
+        AjaxConceptSelectionEvent e = new AjaxConceptSelectionEvent(aTarget,
+                selectedConcept.getObject());
+        send(getPage(), Broadcast.BREADTH, e);
+    }
+    
+    /**
+     * If the user disabled "show all" but a concept from an implicit namespace was selected, the
+     * concept selection is cancelled. In any other case this component is merely updated via AJAX.
+     * 
+     * @param aTarget
+     */
+    private void actionPreferenceChanged(AjaxRequestTarget aTarget) {
+        if (!preferences.getObject().showAllConcepts && selectedConcept.getObject() != null
+                && RdfUtils.isFromImplicitNamespace(selectedConcept.getObject())) {
+            send(getPage(), Broadcast.BREADTH, new AjaxConceptSelectionEvent(aTarget, null));
+        } else {
+            aTarget.add(this);
+        }
+    }
+
+    private List<KBHandle> getConcepts() {
+        if (isVisibleInHierarchy()) {
+            Preferences prefs = preferences.getObject();
+            List<KBHandle> statements = kbService.listConcepts(kbModel.getObject(),
+                    prefs.showAllConcepts);
+            return statements;
+        } else {
+            return Collections.emptyList();
+        }
+    }
+
+    static class Preferences implements Serializable {
+        private static final long serialVersionUID = 8310379405075949753L;
+
+        boolean showAllConcepts;
+    }
+}

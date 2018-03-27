@@ -1,0 +1,74 @@
+<!--
+  Copyright 2017
+  Ubiquitous Knowledge Processing (UKP) Lab
+  Technische Universität Darmstadt
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<beans xmlns="http://www.springframework.org/schema/beans"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:tx="http://www.springframework.org/schema/tx"
+  xmlns:context="http://www.springframework.org/schema/context"
+  xmlns:util="http://www.springframework.org/schema/util"
+  xsi:schemaLocation="
+    http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.2.xsd
+    http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.2.xsd 
+    http://www.springframework.org/schema/util  http://www.springframework.org/schema/util/spring-util-4.2.xsd">
+
+    <!-- Scan components and Java configuration -->
+    <context:component-scan base-package="de.tudarmstadt.ukp.clarin.webanno" />
+    <context:component-scan base-package="de.tudarmstadt.ukp.inception" />
+
+  <bean id="formats"
+    class="org.springframework.beans.factory.config.PropertiesFactoryBean">
+    <property name="ignoreResourceNotFound">
+      <value>true</value>
+    </property>
+    <property name="locations">
+      <list>
+        <value>classpath:META-INF/formats.properties</value>
+        <value>file:#{systemProperties['inception.home'] ?: systemProperties['user.home'].concat('/.inception') }/formats.properties</value>
+      </list>
+    </property>
+  </bean> 
+  
+  <bean
+    class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+    <property name="ignoreUnresolvablePlaceholders" value="true" />
+    <property name="ignoreResourceNotFound" value="true" />
+    <property name="properties">
+      <props>
+      <prop key="data.path">#{systemProperties['inception.home'] ?: systemProperties['user.home'].concat('/.inception') }</prop>
+      <prop key="repository.path">#{systemProperties['inception.home'] ?: systemProperties['user.home'].concat('/.inception') }/repository/</prop>
+      </props>
+    </property>
+    <property name="locations">
+      <list>
+        <!-- <value>classpath:META-INF/settings.properties</value> -->
+        <value>file:#{systemProperties['inception.home'] ?: systemProperties['user.home'].concat('/.inception') }/settings.properties</value>
+      </list>
+    </property>
+  </bean>
+
+    <!-- Poor man's database migration -->
+    <bean id="fixCoreferenceMigration"
+        class="de.tudarmstadt.ukp.clarin.webanno.api.dao.migration.FixCoreferenceFeatures"
+        lazy-init="false"></bean>
+
+  <beans profile="auto-mode-builtin">
+    <import resource="security-context.xml"/>
+  </beans>
+  
+  <beans profile="auto-mode-preauth">
+    <import resource="preAuthSecurity-context.xml"/>
+  </beans>  
+</beans>
