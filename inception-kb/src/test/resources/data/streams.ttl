@@ -1,0 +1,84 @@
+@prefix stream:    <http://mrklie.com/schemas/streams#> .
+@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
+
+stream:input a rdfs:Class ;
+  rdfs:label "InputStream" .
+
+stream:bytearrayinput a rdfs:Class ;
+  rdfs:subClassOf stream:input ;
+  rdfs:label "ByteArrayInputStream" .
+
+stream:fileinput a rdfs:Class ;
+  rdfs:subClassOf stream:input ;
+  rdfs:label "FileInputStream" .
+
+stream:filterinput a rdfs:Class ;
+  rdfs:subClassOf stream:input ;
+  rdfs:label "FilterInputStream" .
+
+stream:bufferedinput a rdfs:Class ;
+  rdfs:subClassOf stream:filterinput ;
+  rdfs:label "BufferedInputStream" .
+
+stream:datainput a rdfs:Class ;
+  rdfs:subClassOf stream:filterinput ;
+  rdfs:label "DataInputStream" .
+
+stream:linenumberinput a rdfs:Class ;
+  rdfs:subClassOf stream:filterinput ;
+  rdfs:label "LineNumberInputStream" .
+
+stream:pushbackinput a rdfs:Class ;
+  rdfs:subClassOf stream:filterinput ;
+  rdfs:label "PushbackInputStream" .
+
+stream:objectinput a rdfs:Class ;
+  rdfs:subClassOf stream:input ;
+  rdfs:label "ObjectInputStream" .
+
+stream:pipedinput a rdfs:Class ;
+  rdfs:subClassOf stream:input ;
+  rdfs:label "PipedInputStream" .
+
+stream:sequenceinput a rdfs:Class ;
+  rdfs:subClassOf stream:input ;
+  rdfs:label "SequenceInputStream" .
+
+stream:stringbufferinput a rdfs:Class ;
+  rdfs:subClassOf stream:input ;
+  rdfs:label "StringBufferInputStream" .
+
+stream:output a rdfs:Class ;
+  rdfs:label "OutputStream" .
+
+stream:bytearrayoutput a rdfs:Class ;
+  rdfs:subClassOf stream:output ;
+  rdfs:label "ByteArrayOutputStream" .
+
+stream:fileoutput a rdfs:Class ;
+  rdfs:subClassOf stream:output ;
+  rdfs:label "FileOutputStream" .
+
+stream:filteroutput a rdfs:Class ;
+  rdfs:subClassOf stream:output ;
+  rdfs:label "FilterOutputStream" .
+
+stream:bufferedoutput a rdfs:Class ;
+  rdfs:subClassOf stream:fileoutput ;
+  rdfs:label "BufferedOutputStream" .
+
+stream:dataoutput a rdfs:Class ;
+  rdfs:subClassOf stream:fileoutput ;
+  rdfs:label "DataOutputStream" .
+
+stream:print a rdfs:Class ;
+  rdfs:subClassOf stream:fileoutput ;
+  rdfs:label "PrintStream" .
+
+stream:objectoutput a rdfs:Class ;
+  rdfs:subClassOf stream:output ;
+  rdfs:label "ObjectOutputStream" .
+
+stream:pipedoutput a rdfs:Class ;
+  rdfs:subClassOf stream:output ;
+  rdfs:label "PipedOutputStream" .

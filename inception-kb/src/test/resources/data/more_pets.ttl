@@ -1,0 +1,31 @@
+@base <http://mbugert.de/pets> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<#animal> rdf:type rdfs:Class ;
+	rdfs:label "Animal" .
+
+<#classis> rdf:type rdfs:Class ;
+	rdfs:label "Biological class" .
+
+<#mammalia> rdf:type <#classis> ;
+	rdfs:label "Mammalia" .
+
+<#reptilia> rdf:type <#classis> ;
+	rdfs:label "Reptilia" .
+
+<#has-class> rdf:type rdfs:Property ;
+	rdfs:domain <#animal> ;
+	rdfs:range <#classis> ;
+	rdfs:label "Has biological class" .
+
+<#manatee> rdf:type rdfs:Class ;
+	rdfs:subClassOf <#animal> ;
+	rdfs:label "Manatee" ;
+    <#has-class> <#mammalia> .
+
+<#turtle> rdf:type rdfs:Class ;
+	rdfs:subClassOf <#animal> ;
+    rdfs:label "Turtle" ;
+    <#has-class> <#reptilia> .

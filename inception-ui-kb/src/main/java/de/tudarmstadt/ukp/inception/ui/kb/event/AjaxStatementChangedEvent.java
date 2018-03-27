@@ -1,0 +1,77 @@
+/*
+ * Copyright 2017
+ * Ubiquitous Knowledge Processing (UKP) Lab
+ * Technische Universität Darmstadt
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package de.tudarmstadt.ukp.inception.ui.kb.event;
+
+import org.apache.wicket.Component;
+import org.apache.wicket.ajax.AjaxRequestTarget;
+
+import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
+
+/**
+ * An {@code AjaxStatementChangedEvent} serves as an event object sent around whenever a statement
+ * is saved/deleted.
+ */
+public class AjaxStatementChangedEvent extends AjaxEvent {
+
+    /**
+     * Statement editor component of the changed statement.
+     */
+    private Component component;
+    
+    /**
+     * The statement which was changed.
+     */
+    private KBStatement statement;
+
+    /**
+     * Whether the statement should be deleted.
+     */
+    private boolean deleted;
+
+    public AjaxStatementChangedEvent(AjaxRequestTarget target, KBStatement statement) {
+        this(target, statement, null, false);
+    }
+
+    public AjaxStatementChangedEvent(AjaxRequestTarget target, KBStatement statement,
+            Component component, boolean deleted) {
+        super(target);
+        this.statement = statement;
+        this.component = component;
+        this.deleted = deleted;
+    }
+    
+    public KBStatement getStatement() {
+        return statement;
+    }
+
+    /**
+     * Returns the statement editor component of the changed statement.
+     */
+    public Component getComponent() {
+        return component;
+    }
+
+    /**
+     * {@code True} if the statement being changed was deleted. If {@code false}, there were only
+     * value updates in the statement.
+     */
+    public boolean isDeleted() {
+        return deleted;
+    }
+
+}

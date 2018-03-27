@@ -1,0 +1,69 @@
+#!/bin/sh
+
+# Licensed under the Apache License, Version 2.0: http://www.apache.org/licenses/LICENSE-2.0
+
+# kFreeBSD do not accept scripts as interpreters, using #!/bin/sh and sourcing.
+if [ true != "$INIT_D_SCRIPT_SOURCED" ] ; then
+    set "$0" "$@"; INIT_D_SCRIPT_SOURCED=true . /lib/init/init-d-script
+fi
+### BEGIN INIT INFO
+# Provides:          webanno
+# Required-Start:    $remote_fs $syslog
+# Required-Stop:     $remote_fs $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: WebAnno init script
+# Description:       This file should be placed in /etc/init.d. It
+#                    allows starting/stopping WebAnno using the 
+#                    "service" command and ensures that WebAnno starts
+#                    when the system is booted.
+### END INIT INFO
+
+# Author: Richard Eckart de Castilho
+
+NAME="WebAnno"
+DAEMON=none
+WEBANNO_HOME="/srv/webanno"
+WEBANNO_PORT="18080"
+WEBANNO_USER="www-data"
+CATALINA_BASE="/opt/webanno"
+AUTHBIND=""
+JAVA_OPTS="-Djava.awt.headless=true -Xmx750m -XX:+UseConcMarkSweepGC -Dwebanno.home=$WEBANNO_HOME"
+
+setup_authbind() {
+  # log_action_msg "Setting up authbind configuration for $DESC on port $WEBANNO_PORT"
+  touch /etc/authbind/byport/$WEBANNO_PORT
+  chmod 500 /etc/authbind/byport/$WEBANNO_PORT
+  chown $WEBANNO_USER /etc/authbind/byport/$WEBANNO_PORT
+  AUTHBIND="authbind --deep"
+}
+
+tomcat_pid() {
+  echo `ps -fe | grep -- "-Dcatalina.base=$CATALINA_BASE" | grep -v grep | tr -s " "|cut -d" " -f2`
+}
+
+do_start_cmd_override() {
+  if [ $WEBANNO_PORT -lt 1024 ]
+  then
+    setup_authbind
+  fi
+
+  su - www-data -s "/bin/bash" -c "JAVA_OPTS=\"$JAVA_OPTS\" $AUTHBIND $CATALINA_BASE/bin/startup.sh" > /dev/null 2>&1
+}
+
+do_stop_cmd_override() {
+  su - www-data -s "/bin/bash" -c "$CATALINA_BASE/bin/shutdown.sh" > /dev/null 2>&1
+}
+
+do_status() {
+  local pid
+  pid=$(tomcat_pid)
+  if [ -n "$pid" ]
+  then
+    log_action_msg "Status $DESC: running"
+    return 0
+  else
+    log_action_msg "Status $DESC: stopped"
+    return 1
+  fi
+}
