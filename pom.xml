@@ -59,7 +59,7 @@
     <module>inception-recommendation</module>
     <module>inception-active-learning</module>
     <module>inception-imls-core</module>
-    <module>inception-imls-mira</module>
+    <!-- module>inception-imls-mira</module -->
     <module>inception-imls-opennlp</module>
     <module>inception-imls-stringmatch</module>
     <module>inception-imls-dl4j</module>
@@ -70,6 +70,7 @@
   </modules>
   <repositories>
     <!-- For RELEASEes of Miralium -->
+    <!--  
     <repository>
       <id>ukp-central</id>
       <url>https://scruffy.ukp.informatik.tu-darmstadt.de/artifactory/list/external-grid/</url>
@@ -80,6 +81,7 @@
         <enabled>false</enabled>
       </snapshots>
     </repository>
+    -->
     <!-- For RELEASEes of WebAnno -->
     <repository>
       <id>ukp-oss-releases</id>
