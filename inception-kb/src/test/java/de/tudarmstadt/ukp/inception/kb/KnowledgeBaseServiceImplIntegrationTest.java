@@ -168,7 +168,7 @@ public class KnowledgeBaseServiceImplIntegrationTest {
         kb.setSubclassIri(OWL.NOTHING);
         kb.setTypeIri(OWL.THING);
         kb.setReadOnly(true);
-        kb.setEnabled(true);
+        kb.setEnabled(false);
         sut.updateKnowledgeBase(kb, sut.getNativeConfig());
 
         KnowledgeBase savedKb = testEntityManager.find(KnowledgeBase.class, kb.getRepositoryId());
@@ -180,7 +180,7 @@ public class KnowledgeBaseServiceImplIntegrationTest {
             .hasFieldOrPropertyWithValue("typeIri", OWL.THING)
             .hasFieldOrPropertyWithValue("name", "New name")
             .hasFieldOrPropertyWithValue("readOnly", true)
-            .hasFieldOrPropertyWithValue("enabled", true);
+            .hasFieldOrPropertyWithValue("enabled", false);
     }
 
     @Test
@@ -1230,6 +1230,34 @@ public class KnowledgeBaseServiceImplIntegrationTest {
         assertThat(childConcepts)
             .as("Check that all immediate child concepts have been found")
             .containsExactlyInAnyOrder(expectedLabels);
+    }
+    
+    @Test
+    public void getEnabledKnowledgeBases_WithOneEnabledOneDisabled_ReturnsOnlyEnabledKB()
+    {
+        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
+
+        KnowledgeBase kb2 = buildKnowledgeBase(project, "TestKB2");
+        kb2.setEnabled(false);
+        sut.registerKnowledgeBase(kb2, sut.getNativeConfig());
+
+        List<KnowledgeBase> enabledKBs = sut.getEnabledKnowledgeBases(project);
+
+        assertThat(enabledKBs).as("Check that only the enabled KB (kb) is in this list")
+                .contains(kb).hasSize(1);
+
+    }
+
+    @Test
+    public void getEnabledKnowledgeBases_WithoutEnabledKnowledgeBases_ShouldReturnEmptyList()
+    {
+        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
+        kb.setEnabled(false);
+        sut.updateKnowledgeBase(kb, sut.getNativeConfig());
+
+        List<KnowledgeBase> knowledgeBases = sut.getEnabledKnowledgeBases(project);
+
+        assertThat(knowledgeBases).as("Check that the list is empty").isEmpty();
     }
 
     // Helper

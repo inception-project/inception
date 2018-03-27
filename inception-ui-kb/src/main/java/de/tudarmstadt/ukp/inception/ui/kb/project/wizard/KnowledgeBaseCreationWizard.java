@@ -397,9 +397,6 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
                         // update the list panel and close the dialog - this must be done in
                         // onAfterSubmit, otherwise it cancels out the call to onFinish()
 
-                        // also set enabled to true per default
-                        wizardDataModel.getObject().getKb().setEnabled(true);
-
                         IWizardStep step = wizardModel.getActiveStep();
                         if (step.isComplete()) {
                             AjaxRequestTarget target = RequestCycle.get()
