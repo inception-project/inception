@@ -25,7 +25,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxEventBehavior;
@@ -50,19 +49,21 @@ import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.validation.IValidator;
 import org.apache.wicket.validation.ValidationError;
-import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.vocabulary.OWL;
+import org.eclipse.rdf4j.model.vocabulary.RDF;
+import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.googlecode.wicket.kendo.ui.form.combobox.ComboBox;
-
 import de.agilecoders.wicket.core.markup.html.bootstrap.button.Buttons;
 import de.agilecoders.wicket.core.markup.html.bootstrap.form.radio.BootstrapRadioGroup;
+import de.agilecoders.wicket.core.markup.html.bootstrap.form.radio.BootstrapRadioGroup.ISelectionChangeHandler;
 import de.agilecoders.wicket.core.markup.html.bootstrap.form.radio.EnumRadioChoiceRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
@@ -345,23 +346,114 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
             super(previousStep, "", "", aModel);
             model = aModel;
             completed = true;
+            
+            //Add Textfields
+            TextField<String> c1 = buildTextField("classIri",model,"classIri");
+            add(c1);
+            TextField<String> c2 = buildTextField("subclassIri",model,"subclassIri");
+            add(c2);
+            TextField<String> c3 = buildTextField("typeIri",model,"typeIri");
+            add(c3);
+            
+            //Model for SchemaSelection in BootstrapRadioGroup
+            IModel<IriSchemaType> selectedSchema = new Model<IriSchemaType>();
+            
+            //RadioGroup to select the iriSchema type
+            BootstrapRadioGroup<IriSchemaType> iriSchemaChoice = new BootstrapRadioGroup<>(
+                    "iriSchema", selectedSchema, Arrays.asList(IriSchemaType.values()),
+                    new EnumRadioChoiceRenderer<>(Buttons.Type.Default, this));
+            
+            //OnChange update the model with corresponding iris
+            iriSchemaChoice.setChangeHandler(new ISelectionChangeHandler<IriSchemaType>() {
+                private static final long serialVersionUID = 1L;
 
-            add(buildComboBox("classIri", model, IriConstants.CLASS_IRIS));
-            add(buildComboBox("subclassIri", model, IriConstants.SUBCLASS_IRIS));
-            add(buildComboBox("typeIri", model, IriConstants.TYPE_IRIS));
+                @Override
+                public void onSelectionChanged(AjaxRequestTarget target, IriSchemaType bean)
+                {
+                    /*EnrichedKnowledgeBase ekb= model.getObject();
+                    ekb.setClassIri(getClassIriAsString(selectedSchema.getObject()));
+                    ekb.setSubclassIri(getSubclassIriAsString(selectedSchema.getObject()));
+                    ekb.setTypeIri(getTypeIriAsString(selectedSchema.getObject()));
+                    model.setObject(ekb);*/
+                    c1.setModelObject(bean.classirir);
+                    if (selectedSchema.getObject() == IriSchemaType.DEFAULT) {
+                        c1.setEnabled(true);
+                        c2.setEnabled(true);
+                        c3.setEnabled(true);
+                    }
+                    else {
+                        c1.setEnabled(false);
+                        c2.setEnabled(false);
+                        c3.setEnabled(false);
+                    }
+                    target.add(c1);
+                    target.add(c2);
+                    target.add(c3);
+                    
+                }
+            });
+            add(iriSchemaChoice);
+       
         }
 
-        private ComboBox<String> buildComboBox(String name,
-                                               CompoundPropertyModel<EnrichedKnowledgeBase> model,
-                                               List<IRI> iris) {
-            List<String> choices = iris.stream()
-                .map(IRI::stringValue)
-                .collect(Collectors.toList());
-            ComboBox<String> comboBox = new ComboBox<>(name, model.bind(name), choices);
-            comboBox.setRequired(true);
-            comboBox.add(EnrichedKnowledgeBaseUtils.URL_VALIDATOR);
-            comboBox.setDefaultModelObject(choices.get(0));
-            return comboBox;
+        private TextField<String> buildTextField(String name,
+                CompoundPropertyModel<EnrichedKnowledgeBase> model, String property)
+        {
+            TextField<String> textField = new TextField<>(name, model.bind(property));
+            textField.setOutputMarkupId(true);
+            textField.add(EnrichedKnowledgeBaseUtils.URL_VALIDATOR);
+            IriSchemaType defaultType = Arrays.asList(IriSchemaType.values()).get(0);
+            textField.setDefaultModelObject(defaultType);
+            textField.setEnabled(false);
+            return textField;
+        }
+        
+        private String getClassIriAsString(IriSchemaType type)
+        {
+            switch (type) {
+            case RDF:
+                return RDFS.CLASS.stringValue();
+            case WIKIDATA:
+                return IriConstants.WIKIDATA_CLASS.stringValue();
+            case OWL:
+                return OWL.CLASS.stringValue();
+            case DEFAULT:
+                return "";
+            default:
+                return "";
+            }
+        }
+        
+        private String getSubclassIriAsString(IriSchemaType type)
+        {
+            switch (type) {
+            case RDF:
+                return RDFS.SUBCLASSOF.stringValue();
+            case WIKIDATA:
+                return IriConstants.WIKIDATA_SUBCLASS.stringValue();
+            case OWL:
+                return "";
+            case DEFAULT:
+                return "";
+            default:
+                return "";
+            }
+        }
+        
+        private String getTypeIriAsString(IriSchemaType type)
+        {
+            switch (type) {
+            case RDF:
+                return RDF.TYPE.stringValue();
+            case WIKIDATA:
+                return IriConstants.WIKIDATA_TYPE.stringValue();
+            case OWL:
+                return "";
+            case DEFAULT:
+                return "";
+            default:
+                return "";
+            }
         }
 
         @Override
@@ -443,6 +535,9 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
         };
         return buttonBar;
     }
-
-
+    
+    public enum IriSchemaType
+    {
+        RDF, WIKIDATA, OWL, DEFAULT;
+    }
 }
