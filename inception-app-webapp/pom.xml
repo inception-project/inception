@@ -62,10 +62,12 @@
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-imls-dl4j</artifactId>
     </dependency>
+    <!--  
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-imls-mira</artifactId>
     </dependency>
+    -->
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-imls-opennlp</artifactId>
@@ -460,7 +462,7 @@
               <!-- INCEpTION backend modules - used via Spring -->
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-recommendation</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-dl4j</usedDependency>
-              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-mira</usedDependency>
+              <!-- usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-mira</usedDependency -->
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-opennlp</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-stringmatch</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-kb</usedDependency>
