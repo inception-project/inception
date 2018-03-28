@@ -50,7 +50,6 @@ public class PropertyFeatureEditor
     private IModel<AnnotatorState> stateModel;
     private AnnotationActionHandler actionHandler;
     private Project project;
-    private KBStatement statement;
     private @SpringBean AnnotationSchemaService annotationService;
 
     private @SpringBean KnowledgeBaseService kbService;
@@ -98,6 +97,7 @@ public class PropertyFeatureEditor
 
     private void setStatementInKB(KBHandle predicate)
     {
+        KBHandle oldPredicate = (KBHandle) getModelObject().value;
         getModelObject().value = predicate;
         if (stateModel.getObject().getFeatureStates().size() <= 1) {
             return;
@@ -105,8 +105,8 @@ public class PropertyFeatureEditor
 
         KBHandle subject = getHandle("Subject");
         KBHandle object = getHandle("Object");
-        // No subject or object set, so do not update the statement
-        if (subject == null || object == null) {
+        // No subject set, so do not set or update the statement
+        if (subject == null) {
             return;
         }
 
@@ -115,12 +115,19 @@ public class PropertyFeatureEditor
             return;
         }
 
-        String value = object.getUiLabel();
-        statement = factService.updateStatement(subject, predicate, value, statement, project);
+        String objectValue = object == null ? "" : object.getUiLabel();
+        KBStatement oldStatement = null;
+        if (oldPredicate != null) {
+            oldStatement = factService.getOldStatement(subject, oldPredicate, objectValue, project);
+        }
+
+        factService.updateStatement(subject, predicate, objectValue, oldStatement, project);
     }
 
-    private KBHandle getHandle(String name) {
-        return factService.getLinkedSubjectObjectKBHandle(name, actionHandler, stateModel.getObject());
+    private KBHandle getHandle(String name)
+    {
+        return factService
+            .getLinkedSubjectObjectKBHandle(name, actionHandler, stateModel.getObject());
     }
 }
 

@@ -48,6 +48,9 @@ public interface FactLinkingService
 
     boolean checkSameKnowledgeBase(KBHandle handleA, KBHandle handleB, Project aProject);
 
-    KBStatement updateStatement(KBHandle subject, KBHandle predicate, String object,
-                                KBStatement oldStatement, Project aProject);
+    void updateStatement(KBHandle subject, KBHandle predicate, String object,
+        KBStatement oldStatement, Project aProject);
+
+    KBStatement getOldStatement(KBHandle subject, KBHandle predicate, String oldValue,
+        Project aProject);
 }

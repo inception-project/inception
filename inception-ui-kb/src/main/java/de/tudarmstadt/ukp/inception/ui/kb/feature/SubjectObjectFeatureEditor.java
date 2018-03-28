@@ -74,7 +74,6 @@ public class SubjectObjectFeatureEditor
     private AnnotationActionHandler actionHandler;
     private IModel<AnnotatorState> stateModel;
     private Project project;
-    private KBStatement statement;
 
     @SuppressWarnings("unused") private LinkWithRoleModel roleModel;
 
@@ -229,8 +228,10 @@ public class SubjectObjectFeatureEditor
     {
         if (roleLabelIsFilled()) {
             if (roleModel.role.equals("subject")) {
+                KBHandle oldValue = factService.getLinkedSubjectObjectKBHandle("Subject",
+                    actionHandler, stateModel.getObject());
                 setFeatureValueInCas(value);
-                setStatementInKBWhenSubjectUpdate(value);
+                setStatementInKBWhenSubjectUpdate(value, oldValue);
             }
             else if (roleModel.role.equals("object")) {
                 KBHandle oldValue = factService.getLinkedSubjectObjectKBHandle("Object",
@@ -280,26 +281,33 @@ public class SubjectObjectFeatureEditor
     }
 
 
-    private void setStatementInKBWhenSubjectUpdate(KBHandle value) {
+    private void setStatementInKBWhenSubjectUpdate(KBHandle value, KBHandle oldValue) {
         KBHandle predicateHandle = factService.getPredicateKBHandle(stateModel.getObject());
+
         if (predicateHandle != null) {
-            KBHandle objectHandle = factService.getLinkedSubjectObjectKBHandle("Object",
-                actionHandler, stateModel.getObject());
-            String objectValue = "";
-            if (objectHandle != null) {
-                objectValue = objectHandle.getUiLabel();
-            }
-            if (factService.checkSameKnowledgeBase(value, predicateHandle, project)) {
-                statement = factService.updateStatement(value, predicateHandle, objectValue, statement, project);
-            } else {
+
+            if (!factService.checkSameKnowledgeBase(value, predicateHandle, project)) {
                 logger.error("Subject and predicate are from different knowledge bases.");
+                return;
             }
+
+            KBHandle objectHandle = factService
+                .getLinkedSubjectObjectKBHandle("Object", actionHandler, stateModel.getObject());
+            String objectValue = objectHandle == null ? "" : objectHandle.getUiLabel();
+
+            KBStatement oldStatement = null;
+            if (oldValue != null) {
+                oldStatement = factService
+                    .getOldStatement(oldValue, predicateHandle, objectValue, project);
+            }
+            factService.updateStatement(value, predicateHandle, objectValue, oldStatement, project);
         }
     }
 
     private void setStatementInKBWhenObjectUpdate(KBHandle value, KBHandle oldValue) {
         KBHandle predicateHandle = factService.getPredicateKBHandle(stateModel.getObject());
-        KBHandle subjectHandle = factService.getLinkedSubjectObjectKBHandle("Subject", actionHandler, stateModel.getObject());
+        KBHandle subjectHandle = factService
+            .getLinkedSubjectObjectKBHandle("Subject", actionHandler, stateModel.getObject());
 
         if (predicateHandle == null || subjectHandle == null) {
             return;
@@ -310,10 +318,17 @@ public class SubjectObjectFeatureEditor
         }
 
         if (!factService.checkSameKnowledgeBase(subjectHandle, predicateHandle, project)) {
+            logger.error("Subject and predicate are from different knowledge bases.");
             return;
         }
 
-        statement = factService.updateStatement(subjectHandle, predicateHandle, value.getUiLabel(), statement, project);
+        String oldValueString = oldValue == null ? "" : oldValue.getUiLabel();
+        KBStatement oldStatement = factService
+            .getOldStatement(subjectHandle, predicateHandle, oldValueString, project);
+
+        factService
+            .updateStatement(subjectHandle, predicateHandle, value.getUiLabel(), oldStatement,
+                project);
     }
 
 }

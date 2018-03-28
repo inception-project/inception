@@ -149,7 +149,7 @@ public class FactLinkingServiceImpl implements FactLinkingService
         return kbA.equals(kbB);
     }
 
-    public KBStatement updateStatement(KBHandle subject, KBHandle predicate, String object,
+    public void updateStatement(KBHandle subject, KBHandle predicate, String object,
                                        KBStatement oldStatement, Project aProject)
     {
         KnowledgeBase kb = getKBByKBHandle(subject, aProject);
@@ -164,19 +164,16 @@ public class FactLinkingServiceImpl implements FactLinkingService
         statement.setProperty(predicate);
         statement.setValue(object);
         kbService.upsertStatement(kb, statement);
-        return statement;
     }
 
-    public void updateStatementObject(KBHandle subject, KBHandle predicate, String oldValue,
-        String newValue, Project aProject)
+    public KBStatement getOldStatement(KBHandle subject, KBHandle predicate, String oldValue,
+        Project aProject)
     {
         KnowledgeBase kb = getKBByKBHandle(subject, aProject);
-        List<KBStatement> statements = kbService.listStatements(kb, subject,
-            false);
-        KBStatement statement = statements.stream().filter(
-            s -> s.getProperty().equals(predicate) && s.getValue()
-                .equals(oldValue)).findAny().orElseThrow(NoSuchElementException::new);
-        statement.setValue(newValue);
-        kbService.upsertStatement(kb, statement);
+        List<KBStatement> statements = kbService.listStatements(kb, subject, false);
+        KBStatement oldStatement = statements.stream()
+            .filter(s -> s.getProperty().equals(predicate) && s.getValue().equals(oldValue))
+            .findAny().orElseThrow(NoSuchElementException::new);
+        return oldStatement;
     }
 }
