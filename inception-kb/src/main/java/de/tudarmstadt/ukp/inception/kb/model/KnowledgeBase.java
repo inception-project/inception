@@ -196,7 +196,7 @@ public class KnowledgeBase
         enabled = isEnabled;
     }
 
-	/**
+    /**
      * @return {@code true} if this knowledge base has a repository id, i.e. it is conceptually
      *         linked to a {@link Project} and is managed by an RDF4J repository.
      */
