@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.NoSuchElementException;
 import javax.annotation.Resource;
 
 import org.apache.uima.cas.CASException;
@@ -156,6 +157,19 @@ public class FactLinkingServiceImpl implements FactLinkingService
         statement.setProperty(predicate);
         statement.setValue(object);
         KnowledgeBase kb = getKBByKBHandle(subject, aProject);
+        kbService.upsertStatement(kb, statement);
+    }
+
+    public void updateStatementObject(KBHandle subject, KBHandle predicate, String oldValue,
+        String newValue, Project aProject)
+    {
+        KnowledgeBase kb = getKBByKBHandle(subject, aProject);
+        List<KBStatement> statements = kbService.listStatements(kb, subject,
+            false);
+        KBStatement statement = statements.stream().filter(
+            s -> s.getProperty().equals(predicate) && s.getValue()
+                .equals(oldValue)).findAny().orElseThrow(NoSuchElementException::new);
+        statement.setValue(newValue);
         kbService.upsertStatement(kb, statement);
     }
 }

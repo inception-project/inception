@@ -49,4 +49,7 @@ public interface FactLinkingService
 
     void setStatementInKB(KBHandle subject, KBHandle predicate, String object, Project
         aProject);
+
+    void updateStatementObject(KBHandle subject, KBHandle predicate, String oldValue,
+        String newValue, Project aProject);
 }

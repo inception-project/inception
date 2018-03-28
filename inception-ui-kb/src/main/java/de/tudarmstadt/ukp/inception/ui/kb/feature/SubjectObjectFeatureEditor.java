@@ -225,22 +225,29 @@ public class SubjectObjectFeatureEditor
     private void setSelectedKBItem(KBHandle value)
     {
         if (roleLabelIsFilled()) {
-            try {
-                JCas jCas = actionHandler.getEditorCas().getCas().getJCas();
-                AnnotationFS selectedFS = WebAnnoCasUtil.selectByAddr(jCas, roleModel.targetAddr);
-                WebAnnoCasUtil
-                    .setFeature(selectedFS, linkedAnnotationFeature, value.getIdentifier());
-            }
-            catch (CASException | IOException e) {
-                logger.error("Error: " + e.getMessage(), e);
-                error("Error: " + e.getMessage());
-            }
             if (roleModel.role.equals("subject")) {
+                setFeatureValueInCas(value);
                 setStatementInKBWhenSubjectUpdate(value);
             }
             else if (roleModel.role.equals("object")) {
-                setStatementInKBWhenObjectUpdate(value);
+                KBHandle oldValue = factService.getLinkedSubjectObjectKBHandle("Object",
+                    actionHandler, stateModel.getObject());
+                setFeatureValueInCas(value);
+                setStatementInKBWhenObjectUpdate(value, oldValue);
             }
+        }
+    }
+
+    private void setFeatureValueInCas(KBHandle value) {
+        try {
+            JCas jCas = actionHandler.getEditorCas().getCas().getJCas();
+            AnnotationFS selectedFS = WebAnnoCasUtil.selectByAddr(jCas, roleModel.targetAddr);
+            WebAnnoCasUtil
+                .setFeature(selectedFS, linkedAnnotationFeature, value.getIdentifier());
+        }
+        catch (CASException | IOException e) {
+            logger.error("Error: " + e.getMessage(), e);
+            error("Error: " + e.getMessage());
         }
     }
 
@@ -287,7 +294,7 @@ public class SubjectObjectFeatureEditor
         }
     }
 
-    private void setStatementInKBWhenObjectUpdate(KBHandle value) {
+    private void setStatementInKBWhenObjectUpdate(KBHandle value, KBHandle oldValue) {
         KBHandle predicateHandle = factService.getPredicateKBHandle(stateModel.getObject());
         if (predicateHandle != null) {
             if (stateModel.getObject().getFeatureStates().size() > 1) {
@@ -297,9 +304,10 @@ public class SubjectObjectFeatureEditor
                 if (subjectHandle != null) {
                     if (factService
                         .checkSameKnowledgeBase(subjectHandle, predicateHandle, project)) {
+                        String oldValueString = oldValue == null ? "" : oldValue.getUiLabel();
                         factService
-                            .setStatementInKB(subjectHandle, predicateHandle, value.getUiLabel(),
-                                project);
+                            .updateStatementObject(subjectHandle, predicateHandle, oldValueString,
+                                value.getUiLabel(), project);
                     }
                 }
             }

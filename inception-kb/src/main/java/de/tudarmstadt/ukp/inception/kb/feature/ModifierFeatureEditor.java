@@ -95,6 +95,7 @@ public class ModifierFeatureEditor
     private AnnotationActionHandler actionHandler;
     private IModel<AnnotatorState> stateModel;
     private Project project;
+    private LambdaModelAdapter modifierModel;
 
     // Wicket component is bound to this property
     @SuppressWarnings("unused")
@@ -301,10 +302,11 @@ public class ModifierFeatureEditor
             .getLayer(linkedType, this.stateModel.getObject().getProject());
         AnnotationFeature linkedAnnotationFeature = annotationService
             .getFeature("KBItems", linkedLayer);
-        DropDownList<KBHandle> field = new DropDownList<KBHandle>("value", LambdaModelAdapter
-            .of(() -> this.getSelectedKBItem(aItem), (v) -> {
-                this.setSelectedKBItem(v, aItem, linkedAnnotationFeature);
-            }), LambdaModel.of(() -> factService.getKBConceptsAndInstances(project)),
+        modifierModel = new LambdaModelAdapter(() -> this.getSelectedKBItem(aItem),  (v) -> {
+            this.setSelectedKBItem((KBHandle) v, aItem, linkedAnnotationFeature);
+        });
+        DropDownList<KBHandle> field = new DropDownList<KBHandle>("value", modifierModel
+            , LambdaModel.of(() -> factService.getKBConceptsAndInstances(project)),
             new ChoiceRenderer<>("uiLabel"));
         field.add(new LambdaAjaxFormComponentUpdatingBehavior("change"));
         field.setOutputMarkupId(true);
@@ -526,6 +528,7 @@ public class ModifierFeatureEditor
                 WebAnnoCasUtil.setFeature(selectedFS, linkedAnnotationFeature,
                     value.getIdentifier());
                 LOG.info("change the value");
+                modifierModel.detach();
             } catch (CASException | IOException e) {
                 LOG.error("Error: " + e.getMessage(), e);
                 error("Error: " + e.getMessage());
