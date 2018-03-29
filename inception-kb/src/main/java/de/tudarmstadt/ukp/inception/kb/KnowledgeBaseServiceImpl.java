@@ -288,10 +288,8 @@ public class KnowledgeBaseServiceImpl
         return read(kb, (conn) -> {
             ValueFactory vf = conn.getValueFactory();
 
-            try {
-                RepositoryResult<Statement> stmts = RdfUtils.getStatements(conn,
-                        vf.createIRI(aIdentifier), kb.getTypeIri(), kb.getClassIri(), true);
-
+            try (RepositoryResult<Statement> stmts = RdfUtils.getStatements(conn,
+                    vf.createIRI(aIdentifier), kb.getTypeIri(), kb.getClassIri(), true)) {
                 if (stmts.hasNext()) {
                     Statement conceptStmt = stmts.next();
                     KBConcept kbConcept = KBConcept.read(conn, conceptStmt);
@@ -353,9 +351,8 @@ public class KnowledgeBaseServiceImpl
     {
         return read(kb, (conn) -> {
             ValueFactory vf = conn.getValueFactory();
-            try {
-                RepositoryResult<Statement> stmts = RdfUtils.getStatements(conn,
-                        vf.createIRI(aIdentifier), kb.getTypeIri(), RDF.PROPERTY, true);
+            try (RepositoryResult<Statement> stmts = RdfUtils.getStatements(conn,
+                    vf.createIRI(aIdentifier), kb.getTypeIri(), RDF.PROPERTY, true)) {
                 if (stmts.hasNext()) {
                     Statement propStmt = stmts.next();
                     KBProperty kbProp = KBProperty.read(conn, propStmt);
@@ -438,15 +435,16 @@ public class KnowledgeBaseServiceImpl
             }
 
             // Read the instance
-            RepositoryResult<Statement> instanceStmts = RdfUtils.getStatements(conn,
+            try (RepositoryResult<Statement> instanceStmts = RdfUtils.getStatements(conn,
                     vf.createIRI(aIdentifier), kb.getTypeIri(), vf.createIRI(conceptIdentifier),
-                    true);
-            if (instanceStmts.hasNext()) {
-                Statement kbStmt = instanceStmts.next();
-                KBInstance kbInst = KBInstance.read(conn, kbStmt);
-                return Optional.of(kbInst);
-            } else {
-                return Optional.empty();
+                    true)) {
+                if (instanceStmts.hasNext()) {
+                    Statement kbStmt = instanceStmts.next();
+                    KBInstance kbInst = KBInstance.read(conn, kbStmt);
+                    return Optional.of(kbInst);
+                } else {
+                    return Optional.empty();
+                }
             }
         } catch (QueryEvaluationException e) {
             log.warn("Reading concept for instance failed.", e);
