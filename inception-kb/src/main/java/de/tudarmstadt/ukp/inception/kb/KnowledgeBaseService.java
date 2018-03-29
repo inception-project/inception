@@ -260,4 +260,7 @@ public interface KnowledgeBaseService
     List<KBHandle> listRootConcepts(KnowledgeBase kb, boolean aAll);
 
     List<KBHandle> listChildConcepts(KnowledgeBase kb, String parentIdentifier, boolean aAll);
+
+    KBStatement getExistingStatement(KnowledgeBase kb, KBHandle aInstance, KBHandle aProperty,
+        String aObject);
 }

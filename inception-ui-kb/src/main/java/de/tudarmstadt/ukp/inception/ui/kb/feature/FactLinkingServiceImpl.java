@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.NoSuchElementException;
 import javax.annotation.Resource;
 
 import org.apache.uima.cas.CASException;
@@ -54,6 +53,7 @@ public class FactLinkingServiceImpl implements FactLinkingService
     private static final String FACT_LAYER = "webanno.custom.Fact";
     private final Logger log = LoggerFactory.getLogger(getClass());
 
+    @Override
     public KnowledgeBase getKBByKBHandle(KBHandle kbHandle, Project aProject)
     {
         for (KnowledgeBase kb : kbService.getKnowledgeBases(aProject)) {
@@ -74,6 +74,7 @@ public class FactLinkingServiceImpl implements FactLinkingService
         return null;
     }
 
+    @Override
     public List<KBHandle> getKBConceptsAndInstances(Project aProject)
     {
         List<KBHandle> handles = new LinkedList<>();
@@ -86,6 +87,7 @@ public class FactLinkingServiceImpl implements FactLinkingService
         return new ArrayList<>(handles);
     }
 
+    @Override
     public List<KBHandle> getAllPredicatesFromKB(Project aProject)
     {
         List<KBHandle> handles = new ArrayList<>();
@@ -95,6 +97,7 @@ public class FactLinkingServiceImpl implements FactLinkingService
         return handles;
     }
 
+    @Override
     public KBHandle getPredicateKBHandle(AnnotatorState aState)
     {
         AnnotationLayer factLayer = annotationService.getLayer(
@@ -106,6 +109,7 @@ public class FactLinkingServiceImpl implements FactLinkingService
         return predicateHandle;
     }
 
+    @Override
     public KBHandle getLinkedSubjectObjectKBHandle(String featureName, AnnotationActionHandler
         actionHandler, AnnotatorState aState)
     {
@@ -128,6 +132,7 @@ public class FactLinkingServiceImpl implements FactLinkingService
         return kbHandle;
     }
 
+    @Override
     public KBHandle getKBHandleFromCasByAddr(JCas aJcas, int targetAddr, Project aProject)
     {
         KBHandle kbHandle = null;
@@ -142,6 +147,7 @@ public class FactLinkingServiceImpl implements FactLinkingService
         return kbHandle;
     }
 
+    @Override
     public boolean checkSameKnowledgeBase(KBHandle handleA, KBHandle handleB, Project aProject)
     {
         KnowledgeBase kbA = getKBByKBHandle(handleA, aProject);
@@ -149,6 +155,7 @@ public class FactLinkingServiceImpl implements FactLinkingService
         return kbA.equals(kbB);
     }
 
+    @Override
     public void updateStatement(KBHandle subject, KBHandle predicate, String object,
                                        KBStatement oldStatement, Project aProject)
     {
@@ -166,14 +173,12 @@ public class FactLinkingServiceImpl implements FactLinkingService
         kbService.upsertStatement(kb, statement);
     }
 
+    @Override
     public KBStatement getOldStatement(KBHandle subject, KBHandle predicate, String oldValue,
         Project aProject)
     {
         KnowledgeBase kb = getKBByKBHandle(subject, aProject);
-        List<KBStatement> statements = kbService.listStatements(kb, subject, false);
-        KBStatement oldStatement = statements.stream()
-            .filter(s -> s.getProperty().equals(predicate) && s.getValue().equals(oldValue))
-            .findAny().orElseThrow(NoSuchElementException::new);
+        KBStatement oldStatement = kbService.getExistingStatement(kb, subject, predicate, oldValue);
         return oldStatement;
     }
 }
