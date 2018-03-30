@@ -82,10 +82,11 @@ public class KnowledgeBasePanel
         setOutputMarkupId(true);
 
         kbModel = aKbModel;
-
+        
         // add the selector for the knowledge bases
         DropDownChoice<KnowledgeBase> ddc = new DropDownChoice<KnowledgeBase>("knowledgebases",
-                LambdaModel.of(() -> kbService.getKnowledgeBases(aProjectModel.getObject()))) {
+                LambdaModel.of(() -> kbService.getEnabledKnowledgeBases(aProjectModel.getObject())))
+        {
 
             private static final long serialVersionUID = -2635546743813402116L;
 
@@ -131,7 +132,7 @@ public class KnowledgeBasePanel
         details = new EmptyPanel(DETAILS_MARKUP_ID);
         detailContainer.add(details);
     }
-
+    
     /**
      * Acts upon statement changes. If the changed statement does <strong>not</strong> involve an
      * RDFS or OWL property, the no action is taken. If the changed statement renames the selected

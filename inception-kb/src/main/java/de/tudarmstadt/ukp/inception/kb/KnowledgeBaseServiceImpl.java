@@ -171,6 +171,16 @@ public class KnowledgeBaseServiceImpl
         return (List<KnowledgeBase>) query.getResultList();
     }
 
+    @SuppressWarnings("unchecked")
+    @Transactional
+    @Override
+    public List<KnowledgeBase> getEnabledKnowledgeBases(Project aProject)
+    {
+        Query query = entityManager.createNamedQuery("KnowledgeBase.getByProjectWhereEnabledTrue");
+        query.setParameter("project", aProject);
+        return (List<KnowledgeBase>) query.getResultList();
+    }
+
     @Transactional
     @Override
     public void removeKnowledgeBase(KnowledgeBase kb)
