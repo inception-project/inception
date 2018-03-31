@@ -41,17 +41,16 @@ public class QueryUtil
     private static String SPARQL_ENTITY_LABEL =
               "             {\n"
             + "                  {GRAPH <http://wikidata.org/statements> { \n"
-            + "                      ?e2 e:P1549s/e:P1549v \"%demonym\"@%language\n"
+            + "                      ?e2 e:P1549s/e:P1549v \"%demonym\"\n"
             + "                      }\n"
             + "                  }\n"
             + "                  UNION\n"
             + "                  {VALUES ?labelpredicate {rdfs:label skos:altLabel}\n"
             + "                      GRAPH <http://wikidata.org/terms> {\n"
             + "                          ?e2 ?labelpredicate ?altLabel. \n"
-            + "                          ?altLabel bif:contains '\"%entitylabel\"'@%language. \n"
+            + "                          ?altLabel bif:contains '\"%entitylabel\"'. \n"
             + "                      }\n"
             + "                      ?e2 rdf:type <%conceptIri> \n"
-            + "                      FILTER ( lang(?altLabel) = \"%language\" )\n"
             + "                  }\n"
             + "              }\n"
             + "    FILTER EXISTS { GRAPH <http://wikidata.org/statements> { ?e2 ?p ?v }}\n"
@@ -100,7 +99,7 @@ public class QueryUtil
         else {
             SPARQL_ENTITY_LABEL_INST = SPARQL_ENTITY_LABEL_INST.replace(
                     "{GRAPH <http://wikidata.org/statements> { \n"
-             + "                      ?e2 e:P1549s/e:P1549v \"%demonym\"@" + language + "\n"
+             + "                      ?e2 e:P1549s/e:P1549v \"%demonym\"\n"
              + "                      }\n"
              + "                  }\n"
              + "                  UNION\n",
