@@ -76,7 +76,7 @@ public class SlotFeatureSupport
         List<FeatureType> types = new ArrayList<>();
         
         // Slot features are only supported on span layers
-        if (aAnnotationLayer.getType().equals(WebAnnoConst.SPAN_TYPE)) {
+        if (WebAnnoConst.SPAN_TYPE.equals(aAnnotationLayer.getType())) {
             // Add layers of type SPAN available in the project
             for (AnnotationLayer spanLayer : annotationService
                     .listAnnotationLayer(aAnnotationLayer.getProject())) {
@@ -88,7 +88,7 @@ public class SlotFeatureSupport
                     continue;
                 }
 
-                if (spanLayer.getType().equals(WebAnnoConst.SPAN_TYPE)) {
+                if (WebAnnoConst.SPAN_TYPE.equals(spanLayer.getType())) {
                     types.add(new FeatureType(spanLayer.getName(), 
                             "Link: " + spanLayer.getUiName(), featureSupportId));
                 }
@@ -112,7 +112,7 @@ public class SlotFeatureSupport
             default:
                 return false;
             }
-        case NONE: // fallthrough
+        case NONE: // fall-through
         default:
             return false;
         }
@@ -123,24 +123,24 @@ public class SlotFeatureSupport
             AnnotationActionHandler aHandler, final IModel<AnnotatorState> aStateModel,
             final IModel<FeatureState> aFeatureStateModel)
     {
-        FeatureState featureState = aFeatureStateModel.getObject();
+        AnnotationFeature feature = aFeatureStateModel.getObject().feature;
         final FeatureEditor editor;
         
-        switch (featureState.feature.getMultiValueMode()) {
+        switch (feature.getMultiValueMode()) {
         case ARRAY:
-            switch (featureState.feature.getLinkMode()) {
+            switch (feature.getLinkMode()) {
             case WITH_ROLE:
                 editor = new LinkFeatureEditor(aId, aOwner, aHandler, aStateModel,
                         aFeatureStateModel);
                 break;
             default:
-                throw unsupportedFeatureTypeException(featureState);
+                throw unsupportedFeatureTypeException(feature);
             }
             break;
         case NONE:
-            throw unsupportedLinkModeException(featureState);
+            throw unsupportedLinkModeException(feature);
         default:
-            throw unsupportedMultiValueModeException(featureState);
+            throw unsupportedMultiValueModeException(feature);
         }
         
         return editor;

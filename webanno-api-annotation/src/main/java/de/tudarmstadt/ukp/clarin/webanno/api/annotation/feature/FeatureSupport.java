@@ -29,6 +29,8 @@ import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.wicket.MarkupContainer;
+import org.apache.wicket.markup.html.panel.EmptyPanel;
+import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.springframework.beans.factory.BeanNameAware;
 
@@ -106,6 +108,26 @@ public interface FeatureSupport
         // Nothing to do
     }
     
+    /**
+     * Returns a Wicket component to configure the specific traits of this feature type. Note that
+     * every {@link FeatureSupport} has to return a <b>different class</b> here. So it is not
+     * possible to simple return a Wicket {@link Panel} here, but it must be a subclass of
+     * {@link Panel} used exclusively by the current {@link FeatureSupport}. If this is not done,
+     * then the traits editor in the UI will not be correctly updated when switching between feature
+     * types!
+     * 
+     * @param aId
+     *            a markup ID.
+     * @param aFeatureModel
+     *            a model holding the annotation feature for which the traits editor should be
+     *            created.
+     * @return the traits editor component .
+     */
+    default Panel createTraitsEditor(String aId, IModel<AnnotationFeature> aFeatureModel)
+    {
+        return new EmptyPanel(aId);
+    }
+    
     FeatureEditor createEditor(String aId, MarkupContainer aOwner, AnnotationActionHandler aHandler,
             IModel<AnnotatorState> aStateModel, IModel<FeatureState> aFeatureStateModel);
 
@@ -141,23 +163,49 @@ public interface FeatureSupport
     
     <T> T getFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS);
 
-    default IllegalArgumentException unsupportedFeatureTypeException(FeatureState aFeatureState)
+    default IllegalArgumentException unsupportedFeatureTypeException(AnnotationFeature aFeature)
     {
-        return new IllegalArgumentException("Unsupported type [" + aFeatureState.feature.getType()
-                + "] on feature [" + aFeatureState.feature.getName() + "]");
+        return new IllegalArgumentException("Unsupported type [" + aFeature.getType()
+                + "] on feature [" + aFeature.getName() + "]");
     }
 
-    default IllegalArgumentException unsupportedLinkModeException(FeatureState aFeatureState)
+    default IllegalArgumentException unsupportedLinkModeException(AnnotationFeature aFeature)
     {
-        return new IllegalArgumentException(
-                "Unsupported link mode [" + aFeatureState.feature.getLinkMode() + "] on feature ["
-                        + aFeatureState.feature.getName() + "]");
+        return new IllegalArgumentException("Unsupported link mode [" + aFeature.getLinkMode()
+                + "] on feature [" + aFeature.getName() + "]");
+    }
+
+    default IllegalArgumentException unsupportedMultiValueModeException(
+            AnnotationFeature aFeature)
+    {
+        return new IllegalArgumentException("Unsupported multi-value mode ["
+                + aFeature.getMultiValueMode() + "] on feature [" + aFeature.getName() + "]");
     }
     
+    /**
+     * @deprecated Use {@link #unsupportedFeatureTypeException(AnnotationFeature)} instead.
+     */
+    @Deprecated
+    default IllegalArgumentException unsupportedFeatureTypeException(FeatureState aFeatureState)
+    {
+        return unsupportedFeatureTypeException(aFeatureState.feature);
+    }
+
+    /**
+     * @deprecated Use {@link #unsupportedLinkModeException(AnnotationFeature)} instead.
+     */
+    @Deprecated
+    default IllegalArgumentException unsupportedLinkModeException(FeatureState aFeatureState)
+    {
+        return unsupportedLinkModeException(aFeatureState.feature);
+    }
+    
+    /**
+     * @deprecated Use {@link #unsupportedMultiValueModeException(AnnotationFeature)} instead.
+     */
+    @Deprecated
     default IllegalArgumentException unsupportedMultiValueModeException(FeatureState aFeatureState)
     {
-        return new IllegalArgumentException(
-                "Unsupported multi-value mode [" + aFeatureState.feature.getMultiValueMode()
-                        + "] on feature [" + aFeatureState.feature.getName() + "]");
+        return unsupportedMultiValueModeException(aFeatureState.feature);
     }
 }

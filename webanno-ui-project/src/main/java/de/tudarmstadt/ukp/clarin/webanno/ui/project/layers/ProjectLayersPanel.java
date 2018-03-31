@@ -53,6 +53,7 @@ import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.util.InvalidXMLException;
 import org.apache.uima.util.XMLInputSource;
 import org.apache.wicket.AttributeModifier;
+import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.ajax.form.OnChangeAjaxBehavior;
@@ -62,6 +63,7 @@ import org.apache.wicket.extensions.markup.html.form.select.SelectOption;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.ComponentTag;
 import org.apache.wicket.markup.MarkupStream;
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Button;
 import org.apache.wicket.markup.html.form.CheckBox;
@@ -76,6 +78,7 @@ import org.apache.wicket.markup.html.form.upload.FileUpload;
 import org.apache.wicket.markup.html.form.upload.FileUploadField;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
+import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
@@ -145,9 +148,6 @@ public class ProjectLayersPanel
     private final ImportLayerForm importLayerForm;
     private Select<AnnotationLayer> layerSelection;
 
-    private final static List<String> PRIMITIVE_TYPES = asList(CAS.TYPE_NAME_STRING,
-            CAS.TYPE_NAME_INTEGER, CAS.TYPE_NAME_FLOAT, CAS.TYPE_NAME_BOOLEAN);
-
     private String layerType = WebAnnoConst.SPAN_TYPE;
 
     public ProjectLayersPanel(String id, final IModel<Project> aProjectModel)
@@ -177,7 +177,7 @@ public class ProjectLayersPanel
         importLayerForm = new ImportLayerForm("importLayerForm");
         add(importLayerForm);
     }
-
+    
     @Override
     protected void onModelChanged()
     {
@@ -187,8 +187,7 @@ public class ProjectLayersPanel
         layerDetailForm.setModelObject(new AnnotationLayer());
         layerDetailForm.setVisible(false);
         featureSelectionForm.setVisible(false);
-        featureDetailForm.setModelObject(new AnnotationFeature());
-        featureDetailForm.setVisible(false);
+        featureDetailForm.setModelObject(null);
     }
     
     private class LayerSelectionForm
@@ -904,7 +903,7 @@ public class ProjectLayersPanel
 //                    layerDetailForm.setModelObject(null);
                     layerDetailForm.setVisible(false);
                     featureSelectionForm.setVisible(false);
-                    featureDetailForm.setVisible(false);
+                    featureDetailForm.setModelObject(null);
                 }
             });
 
@@ -1000,15 +999,16 @@ public class ProjectLayersPanel
     private class FeatureDetailForm
         extends Form<AnnotationFeature>
     {
+        private static final String MID_TRAITS_CONTAINER = "traitsContainer";
+        private static final String MID_TRAITS = "traits";
         private static final long serialVersionUID = -1L;
-        DropDownChoice<TagSet> tagSet;
-        DropDownChoice<FeatureType> featureType;
-        CheckBox required;
+        private DropDownChoice<FeatureType> featureType;
+        private CheckBox required;
+        private WebMarkupContainer traitsContainer;
 
         public FeatureDetailForm(String id)
         {
-            super(id, new CompoundPropertyModel<>(
-                new EntityModel<>(new AnnotationFeature())));
+            super(id, CompoundPropertyModel.of(new Model<AnnotationFeature>()));
 
             add(new Label("name")
             {
@@ -1095,37 +1095,42 @@ public class ProjectLayersPanel
                 @Override
                 protected void onUpdate(AjaxRequestTarget aTarget)
                 {
-                    aTarget.add(tagSet);
                     aTarget.add(required);
+                    aTarget.add(traitsContainer);
                 }
             });
-            add(tagSet = new DropDownChoice<TagSet>("tagset")
+            add(traitsContainer = new WebMarkupContainer(MID_TRAITS_CONTAINER)
             {
-                private static final long serialVersionUID = -6705445053442011120L;
-                {
-                    setOutputMarkupPlaceholderTag(true);
-                    setOutputMarkupId(true);
-                    setChoiceRenderer(new ChoiceRenderer<>("name"));
-                    setNullValid(true);
-                    setChoices(LambdaModel.of(() -> annotationService
-                            .listTagSets(ProjectLayersPanel.this.getModelObject())));
-                }
+                private static final long serialVersionUID = 4341597838379296220L;
 
                 @Override
                 protected void onConfigure()
                 {
-                    FeatureType type = featureType.getModelObject();
-                    if (type != null) {
-                        FeatureSupport fs = featureSupportRegistry
-                                .getFeatureSupport(type.getFeatureSupportId());
-                        setEnabled(fs.isTagsetSupported(FeatureDetailForm.this.getModelObject()));
+                    super.onConfigure();
+
+                    // If the traits editor required by the current feature type is different
+                    // from the one being displayed, then replace it with the required editor.
+                    // If no feature is being edited, use an empty panel.
+                    Component newTraits;
+                    if (layerDetailForm.getModelObject() != null
+                            && featureType.getModelObject() != null) {
+                        FeatureSupport fs = featureSupportRegistry.getFeatureSupport(
+                                featureType.getModelObject().getFeatureSupportId());
+                        newTraits = fs.createTraitsEditor(MID_TRAITS, featureDetailForm.getModel());
                     }
                     else {
-                        setEnabled(false);
+                        newTraits = new EmptyPanel(MID_TRAITS);
+                    }
+
+                    Component currentTraits = traitsContainer.get(MID_TRAITS);
+                    if (currentTraits == null
+                            || !currentTraits.getClass().equals(newTraits.getClass())) {
+                        traitsContainer.addOrReplace(newTraits);
                     }
                 }
             });
-
+            traitsContainer.setOutputMarkupId(true);
+            
             add(new Button("save", new StringResourceModel("label"))
             {
                 private static final long serialVersionUID = 1L;
@@ -1138,15 +1143,18 @@ public class ProjectLayersPanel
                     name = name.replaceAll("\\W", "");
                     // Check if feature name is not from the restricted names list
                     if (WebAnnoConst.RESTRICTED_FEATURE_NAMES.contains(name)) {
-                        error("'" + feature.getUiName().toLowerCase() + " (" + name + ")"
-                                + "' is a restricted keyword for a feature name. Please use a different name for the feature.");
+                        error("'" + feature.getUiName().toLowerCase() + " (" + name + ")'"
+                                + " is a reserved feature name. Please use a different name "
+                                + "for the feature.");
                         return;
                     }
-                    if (layerDetailForm.getModelObject().getType().equals(RELATION_TYPE)
+                    if (RELATION_TYPE.equals(layerDetailForm.getModelObject().getType())
                             && (name.equals(WebAnnoConst.FEAT_REL_SOURCE)
                                     || name.equals(WebAnnoConst.FEAT_REL_TARGET)
                                     || name.equals(FIRST) || name.equals(NEXT))) {
-                        error("layer " + name + " is not allowed as a feature name");
+                        error("'" + feature.getUiName().toLowerCase() + " (" + name + ")'"
+                                + " is a reserved feature name on relation layers. . Please "
+                                + "use a different name for the feature.");
                         return;
                     }
                     // Checking if feature name doesn't start with a number or underscore
@@ -1168,7 +1176,7 @@ public class ProjectLayersPanel
                         }
 
                         if (annotationService.existsFeature(name, feature.getLayer())) {
-                            error("this feature already exists!");
+                            error("This feature already exists!");
                             return;
                         }
                         feature.setName(name);
@@ -1177,12 +1185,9 @@ public class ProjectLayersPanel
                     // Trigger LayerConfigurationChangedEvent
                     applicationEventPublisherHolder.get().publishEvent(
                             new LayerConfigurationChangedEvent(this, feature.getProject()));
-
-                    if (tagSet.getModelObject() != null) {
-                        FeatureDetailForm.this.getModelObject().setTagset(tagSet.getModelObject());
-                    }
                 }
             });
+            
             add(new Button("cancel", new StringResourceModel("label")) {
                 private static final long serialVersionUID = 1L;
                 
@@ -1198,11 +1203,26 @@ public class ProjectLayersPanel
                     // cancel selection of feature list
                     featureSelectionForm.feature.setModelObject(null);
                     
-                    featureDetailForm.setModelObject(new AnnotationFeature());
+                    featureDetailForm.setModelObject(null);
                     FeatureDetailForm.this.setVisible(false);
                 }
             });
-
+        }
+        
+        @Override
+        protected void onModelChanged()
+        {
+            super.onModelChanged();
+            // Since feature type uses a lambda model, it needs to be notified explicitly.
+            featureType.modelChanged();
+        }
+        
+        @Override
+        protected void onConfigure()
+        {
+            super.onConfigure();
+            
+            setVisible(getModelObject() != null);
         }
     }
 
@@ -1214,13 +1234,9 @@ public class ProjectLayersPanel
         // Let the feature support finalize the configuration of the feature
         fs.configureFeature(aFeature);
 
-        // Force the tagset to null if the features do not support tagsets
-        if (!fs.isTagsetSupported(aFeature)) {
-            aFeature.setTagset(null);
-        }
-        
         annotationService.createFeature(aFeature);
-        featureDetailForm.setVisible(false);
+        
+        featureDetailForm.setModelObject(null);
     }
 
     public class FeatureSelectionForm
@@ -1286,8 +1302,10 @@ public class ProjectLayersPanel
                     // cancel selection of feature list
                     feature.setModelObject(null);
                     
-                    featureDetailForm.setDefaultModelObject(new AnnotationFeature());
-                    featureDetailForm.setVisible(true);
+                    AnnotationFeature newFeature = new AnnotationFeature();
+                    newFeature.setLayer(layerDetailForm.getModelObject());
+                    newFeature.setProject(ProjectLayersPanel.this.getModelObject());
+                    featureDetailForm.setDefaultModelObject(newFeature);
                 }
 
                 @Override
