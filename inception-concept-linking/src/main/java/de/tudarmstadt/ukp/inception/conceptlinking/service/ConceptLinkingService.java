@@ -217,7 +217,8 @@ public class ConceptLinkingService
                 }
             }
         }
-        logger.debug(System.currentTimeMillis() - startTime + "ms for generateCandidates method.");
+        logger.debug(System.currentTimeMillis() - startTime + "ms to retrieve candidates from "
+            + "KB.");
         return candidates;
     }
 
@@ -283,6 +284,8 @@ public class ConceptLinkingService
     private List<Entity> rankCandidates(KnowledgeBase aKB, String mention,
             Set<Entity> candidates, JCas aJCas, int aBegin)
     {
+        double startTime = System.currentTimeMillis();
+
         int mentionContextSize = 5;
         Sentence mentionSentence = getMentionSentence(aJCas, aBegin);
         if (mentionSentence == null) {
@@ -306,8 +309,6 @@ public class ConceptLinkingService
                 }
             }
         }
-
-        double startLoop = System.currentTimeMillis();
 
         candidates.parallelStream().forEach(l -> {
             String wikidataId = l.getIRI().replace("http://www.wikidata.org/entity/", "");
@@ -344,7 +345,7 @@ public class ConceptLinkingService
                 (sig.getRelatedRelations() != null) ? sig.getRelatedRelations().size() : 0);
         });
         result = sortCandidates(new ArrayList<>(candidates));
-        logger.debug(System.currentTimeMillis() - startLoop + "ms until end loop.");
+        logger.debug(System.currentTimeMillis() - startTime + "ms for candidate ranking.");
         return result;
     }
 
