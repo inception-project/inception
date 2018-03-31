@@ -83,6 +83,17 @@ public class JSONUtil
         return out.toString();
     }
 
+    public static <T> T fromJsonString(Class<T> aClass, String aJSON)
+        throws IOException
+    {
+        if (aJSON == null) {
+            return null;
+        }
+        else {
+            return getJsonConverter().getObjectMapper().readValue(aJSON, aClass);
+        }
+    }
+
     public static String toPrettyJsonString(Object aObject)
         throws IOException
     {

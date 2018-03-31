@@ -89,13 +89,21 @@ public class FeatureSupportRegistryImpl
         // the supports by feature. Since the set of annotation features is relatively stable,
         // this should not be a memory leak - even if we don't remove entries if annotation
         // features would be deleted from the DB.
-        FeatureSupport support = supportCache.get(aFeature.getId());
+        FeatureSupport support = null;
+        
+        if (aFeature.getId() != null) {
+            support = supportCache.get(aFeature.getId());
+        }
         
         if (support == null) {
             for (FeatureSupport s : getFeatureSupports()) {
                 if (s.accepts(aFeature)) {
                     support = s;
-                    supportCache.put(aFeature.getId(), s);
+                    if (aFeature.getId() != null) {
+                        // Store feature in the cache, but only when it has an ID, i.e. it has
+                        // actually been saved.
+                        supportCache.put(aFeature.getId(), s);
+                    }
                     break;
                 }
             }

@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.setFeature;
 
+import java.io.IOException;
 import java.util.List;
 
 import org.apache.uima.cas.Feature;
@@ -42,7 +43,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
-public interface FeatureSupport
+public interface FeatureSupport<T>
     extends BeanNameAware
 {
     String getId();
@@ -126,6 +127,17 @@ public interface FeatureSupport
     default Panel createTraitsEditor(String aId, IModel<AnnotationFeature> aFeatureModel)
     {
         return new EmptyPanel(aId);
+    }
+    
+    default T readTraits(AnnotationFeature aFeature) throws IOException
+    {
+        return null;
+    }
+
+    default void writeTraits(AnnotationFeature aFeature, T aTraits)
+        throws IOException
+    {
+        aFeature.setTraits(null);
     }
     
     FeatureEditor createEditor(String aId, MarkupContainer aOwner, AnnotationActionHandler aHandler,

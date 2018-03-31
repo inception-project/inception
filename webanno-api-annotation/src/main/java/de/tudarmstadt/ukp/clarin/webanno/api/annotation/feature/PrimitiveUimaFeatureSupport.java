@@ -30,7 +30,6 @@ import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.wicket.MarkupContainer;
-import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.springframework.beans.factory.InitializingBean;
@@ -50,7 +49,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
 @Component
 public class PrimitiveUimaFeatureSupport
-    implements FeatureSupport, InitializingBean
+    implements FeatureSupport<Void>, InitializingBean
 {
     private List<FeatureType> primitiveTypes;
 
@@ -105,9 +104,9 @@ public class PrimitiveUimaFeatureSupport
     }
     
     @Override
-    public Panel createTraitsEditor(String aId,  IModel<AnnotationFeature> aFeature)
+    public Panel createTraitsEditor(String aId,  IModel<AnnotationFeature> aFeatureModel)
     {
-        AnnotationFeature feature = aFeature.getObject();
+        AnnotationFeature feature = aFeatureModel.getObject();
         
         Panel editor;
         switch (feature.getMultiValueMode()) {
@@ -116,12 +115,11 @@ public class PrimitiveUimaFeatureSupport
             case CAS.TYPE_NAME_INTEGER:
             case CAS.TYPE_NAME_FLOAT:
             case CAS.TYPE_NAME_BOOLEAN:
-                editor = new EmptyPanel(aId);
+                editor = FeatureSupport.super.createTraitsEditor(aId, aFeatureModel);
                 break;
-            case CAS.TYPE_NAME_STRING: {
-                editor = new UimaStringTraitsEditor(aId, aFeature);
+            case CAS.TYPE_NAME_STRING:
+                editor = new UimaStringTraitsEditor(aId, aFeatureModel);
                 break;
-            }
             default:
                 throw unsupportedFeatureTypeException(feature);
             }

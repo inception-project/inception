@@ -116,6 +116,10 @@ public class AnnotationFeature
     @Column(name = "link_type_target_feature_name")
     private String linkTypeTargetFeatureName;
     
+    @Lob
+    @Column(length = 64000)
+    private String traits;
+    
     public AnnotationFeature()
     {
         // Nothing to do
@@ -439,6 +443,16 @@ public class AnnotationFeature
         return getType().contains(":");
     }
     
+    public String getTraits()
+    {
+        return traits;
+    }
+
+    public void setTraits(String aTraits)
+    {
+        traits = aTraits;
+    }
+
     @Override
     public String toString()
     {

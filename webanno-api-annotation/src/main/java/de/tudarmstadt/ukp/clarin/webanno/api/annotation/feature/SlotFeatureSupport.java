@@ -52,7 +52,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 @Component
 public class SlotFeatureSupport
-    implements FeatureSupport
+    implements FeatureSupport<Void>
 {
     private @Autowired AnnotationSchemaService annotationService;
 

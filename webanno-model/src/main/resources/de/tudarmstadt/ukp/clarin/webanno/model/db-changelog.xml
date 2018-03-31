@@ -1054,4 +1054,17 @@
       </column>
     </addColumn>
   </changeSet>  
+  
+  <changeSet author="WebAnno Team" id="20180331-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="annotation_feature" columnName="traits"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="annotation_feature">
+      <column name="traits" type="LONGTEXT">
+        <constraints nullable="true" />
+      </column>
+    </addColumn>
+  </changeSet>  
 </databaseChangeLog>

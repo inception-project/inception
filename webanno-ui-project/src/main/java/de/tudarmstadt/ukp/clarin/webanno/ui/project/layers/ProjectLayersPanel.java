@@ -1010,6 +1010,9 @@ public class ProjectLayersPanel
         {
             super(id, CompoundPropertyModel.of(new Model<AnnotationFeature>()));
 
+            add(traitsContainer = new WebMarkupContainer(MID_TRAITS_CONTAINER));
+            traitsContainer.setOutputMarkupId(true);
+            
             add(new Label("name")
             {
                 private static final long serialVersionUID = 1L;
@@ -1087,6 +1090,24 @@ public class ProjectLayersPanel
                 {
                     setEnabled(isNull(FeatureDetailForm.this.getModelObject().getId()));
                 }
+                
+                @Override
+                protected void onModelChanged()
+                {
+                    // If the feature type has changed, we need to set up a new traits editor
+                    Component newTraits;
+                    if (FeatureDetailForm.this.getModelObject() != null
+                            && getModelObject() != null) {
+                        FeatureSupport<?> fs = featureSupportRegistry
+                                .getFeatureSupport(getModelObject().getFeatureSupportId());
+                        newTraits = fs.createTraitsEditor(MID_TRAITS, featureDetailForm.getModel());
+                    }
+                    else {
+                        newTraits = new EmptyPanel(MID_TRAITS);
+                    }
+                    
+                    traitsContainer.addOrReplace(newTraits);
+                }
             });
             featureType.add(new AjaxFormComponentUpdatingBehavior("change")
             {
@@ -1099,45 +1120,18 @@ public class ProjectLayersPanel
                     aTarget.add(traitsContainer);
                 }
             });
-            add(traitsContainer = new WebMarkupContainer(MID_TRAITS_CONTAINER)
-            {
-                private static final long serialVersionUID = 4341597838379296220L;
-
-                @Override
-                protected void onConfigure()
-                {
-                    super.onConfigure();
-
-                    // If the traits editor required by the current feature type is different
-                    // from the one being displayed, then replace it with the required editor.
-                    // If no feature is being edited, use an empty panel.
-                    Component newTraits;
-                    if (layerDetailForm.getModelObject() != null
-                            && featureType.getModelObject() != null) {
-                        FeatureSupport fs = featureSupportRegistry.getFeatureSupport(
-                                featureType.getModelObject().getFeatureSupportId());
-                        newTraits = fs.createTraitsEditor(MID_TRAITS, featureDetailForm.getModel());
-                    }
-                    else {
-                        newTraits = new EmptyPanel(MID_TRAITS);
-                    }
-
-                    Component currentTraits = traitsContainer.get(MID_TRAITS);
-                    if (currentTraits == null
-                            || !currentTraits.getClass().equals(newTraits.getClass())) {
-                        traitsContainer.addOrReplace(newTraits);
-                    }
-                }
-            });
-            traitsContainer.setOutputMarkupId(true);
             
             add(new Button("save", new StringResourceModel("label"))
             {
                 private static final long serialVersionUID = 1L;
 
                 @Override
-                public void onSubmit()
+                public void onAfterSubmit()
                 {
+                    // Processing the data in onAfterSubmit so the traits panel can use the
+                    // override onSubmit in its nested form and store the traits before
+                    // we clear the currently selected feature.
+                    
                     AnnotationFeature feature = FeatureDetailForm.this.getModelObject();
                     String name = feature.getUiName();
                     name = name.replaceAll("\\W", "");
@@ -1162,7 +1156,8 @@ public class ProjectLayersPanel
                     if (StringUtils.isNumeric(name.substring(0, 1))
                             || name.substring(0, 1).equals("_")
                             || !StringUtils.isAlphanumeric(name.replace("_", ""))) {
-                        error("Feature names must start with a letter and consist only of letters, digits, or underscores.");
+                        error("Feature names must start with a letter and consist only of "
+                                + "letters, digits, or underscores.");
                         return;
                     }
                     if (isNull(feature.getId())) {
@@ -1180,8 +1175,23 @@ public class ProjectLayersPanel
                             return;
                         }
                         feature.setName(name);
-                        saveFeature(feature);
+                        
+                        FeatureSupport fs = featureSupportRegistry
+                                .getFeatureSupport(featureDetailForm.featureType.getModelObject()
+                                        .getFeatureSupportId());
+                        
+                        // Let the feature support finalize the configuration of the feature
+                        fs.configureFeature(feature);
+                        
                     }
+
+                    // Save feature
+                    annotationService.createFeature(feature);
+
+                    // Clear currently selected feature / feature details
+                    featureSelectionForm.getModelObject().feature = null;
+                    featureDetailForm.setModelObject(null);
+                    
                     // Trigger LayerConfigurationChangedEvent
                     applicationEventPublisherHolder.get().publishEvent(
                             new LayerConfigurationChangedEvent(this, feature.getProject()));
@@ -1194,7 +1204,6 @@ public class ProjectLayersPanel
                 {
                     // Avoid saving data
                     setDefaultFormProcessing(false);
-                    setVisible(true);
                 }
                 
                 @Override
@@ -1202,9 +1211,7 @@ public class ProjectLayersPanel
                 {
                     // cancel selection of feature list
                     featureSelectionForm.feature.setModelObject(null);
-                    
                     featureDetailForm.setModelObject(null);
-                    FeatureDetailForm.this.setVisible(false);
                 }
             });
         }
@@ -1213,6 +1220,7 @@ public class ProjectLayersPanel
         protected void onModelChanged()
         {
             super.onModelChanged();
+            
             // Since feature type uses a lambda model, it needs to be notified explicitly.
             featureType.modelChanged();
         }
@@ -1224,19 +1232,6 @@ public class ProjectLayersPanel
             
             setVisible(getModelObject() != null);
         }
-    }
-
-    private void saveFeature(AnnotationFeature aFeature)
-    {
-        FeatureSupport fs = featureSupportRegistry.getFeatureSupport(
-                featureDetailForm.featureType.getModelObject().getFeatureSupportId());
-        
-        // Let the feature support finalize the configuration of the feature
-        fs.configureFeature(aFeature);
-
-        annotationService.createFeature(aFeature);
-        
-        featureDetailForm.setModelObject(null);
     }
 
     public class FeatureSelectionForm
@@ -1274,8 +1269,6 @@ public class ProjectLayersPanel
                 {
                     if (aNewSelection != null) {
                         featureDetailForm.setModelObject(aNewSelection);
-                        featureDetailForm.setVisible(true);
-
                     }
                 }
 
