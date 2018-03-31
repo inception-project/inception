@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.ui.kb.feature;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.setFeature;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -35,6 +36,7 @@ import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.wicket.MarkupContainer;
+import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,6 +53,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
@@ -58,15 +61,15 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 @Component
 public class ConceptFeatureSupport
-    implements FeatureSupport
+    implements FeatureSupport<ConceptFeatureTraits>
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     public static final String PREFIX = "kb:";
 
-    @Autowired
-    private KnowledgeBaseService kbService;
-
+    private @Autowired KnowledgeBaseService kbService;
+    //private @PersistenceContext EntityManager entityManager;
+    
     private String featureSupportId;
     
     @Override
@@ -103,7 +106,7 @@ public class ConceptFeatureSupport
         switch (aFeature.getMultiValueMode()) {
         case NONE:
             return aFeature.getType().startsWith("kb:");
-        case ARRAY: // fallthrough
+        case ARRAY: // fall-through
         default:
             return false;
         }
@@ -174,28 +177,47 @@ public class ConceptFeatureSupport
     }
 
     @Override
-    public FeatureEditor createEditor(String aId, MarkupContainer aOwner,
-        AnnotationActionHandler aHandler, final IModel<AnnotatorState> aStateModel,
-        final IModel<FeatureState> aFeatureStateModel)
+    public Panel createTraitsEditor(String aId, IModel<AnnotationFeature> aFeatureModel)
     {
-        FeatureState featureState = aFeatureStateModel.getObject();
-        final FeatureEditor editor;
+        return new ConceptFeatureTraitsEditor(aId, aFeatureModel);
+    }
+    
+    @Override
+    public FeatureEditor createEditor(String aId, MarkupContainer aOwner,
+            AnnotationActionHandler aHandler, IModel<AnnotatorState> aStateModel,
+            IModel<FeatureState> aFeatureStateModel)
+    {
+        AnnotationFeature feature = aFeatureStateModel.getObject().feature;
+        FeatureEditor editor;
 
-        switch (featureState.feature.getMultiValueMode()) {
+        switch (feature.getMultiValueMode()) {
         case NONE:
-            if (featureState.feature.getType().startsWith("kb:")) {
+            if (feature.getType().startsWith("kb:")) {
                 editor = new ConceptFeatureEditor(aId, aOwner, aFeatureStateModel);
             }
             else {
-                throw unsupportedMultiValueModeException(featureState);
+                throw unsupportedMultiValueModeException(feature);
             }
             break;
-        case ARRAY: // fallthrough
+        case ARRAY: // fall-through
         default:
-            throw unsupportedMultiValueModeException(featureState);
+            throw unsupportedMultiValueModeException(feature);
         }
 
         return editor;
+    }
+    
+    @Override
+    public ConceptFeatureTraits readTraits(AnnotationFeature aFeature) throws IOException
+    {
+        return JSONUtil.fromJsonString(ConceptFeatureTraits.class, aFeature.getTraits());
+    }
+
+    @Override
+    public void writeTraits(AnnotationFeature aFeature, ConceptFeatureTraits aTraits)
+        throws IOException
+    {
+        aFeature.setTraits(JSONUtil.toJsonString(aTraits));
     }
     
     @Override
