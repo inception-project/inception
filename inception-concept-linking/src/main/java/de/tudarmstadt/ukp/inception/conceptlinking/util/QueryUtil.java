@@ -113,7 +113,7 @@ public class QueryUtil
         } 
         else {
             SPARQL_ENTITY_LABEL_INST = SPARQL_ENTITY_LABEL_INST
-                    .replace("?e2 rdf:type \"%conceptIri\" \n", "");
+                    .replace("?e2 rdf:type <%conceptIri>", "");
         }
         SPARQL_ENTITY_LABEL_INST = SPARQL_ENTITY_LABEL_INST.replace("%language", language);
         

@@ -67,6 +67,8 @@ public class ConceptFeatureSupport
         Project project = aAnnotationLayer.getProject();
 
         List<FeatureType> types = new LinkedList<>();
+        types.add(new FeatureType(PREFIX ,"Concept: " + "!<ANY CONCEPT>", featureSupportId));
+
         for (KnowledgeBase kb : kbService.getKnowledgeBases(project)) {
             for (KBHandle concept : kbService.listConcepts(kb, false)) {
                 types.add(new FeatureType(PREFIX + concept.getIdentifier(),

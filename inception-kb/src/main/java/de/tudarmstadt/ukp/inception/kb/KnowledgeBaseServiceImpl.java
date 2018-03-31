@@ -537,12 +537,21 @@ public class KnowledgeBaseServiceImpl
     }
 
     @Override
-    public List<KBHandle> listInstances(KnowledgeBase kb, String aConceptIri, boolean aAll, 
-            AnnotatorState aState, AnnotationActionHandler aActionHandler) {
-        IRI conceptIri = SimpleValueFactory.getInstance().createIRI(aConceptIri);
+    public List<KBHandle> listInstances(KnowledgeBase kb, String aConceptIri,
+        boolean aAll, AnnotatorState aState, AnnotationActionHandler aActionHandler)
+    {
         if (kb.canSupportConceptLinking()) {
-            return listLinkingInstances(kb, conceptIri, false, aAll, aState, aActionHandler);
-        } else {
+            if (aConceptIri != null) {
+                IRI conceptIri = SimpleValueFactory.getInstance().createIRI(aConceptIri);
+                return listLinkingInstances(kb, conceptIri, false, aAll, aState, aActionHandler);
+            }
+            // List instances of all concepts
+            else {
+                return listLinkingInstances(kb, null, false, aAll, aState, aActionHandler);
+            }
+        }
+        else {
+            IRI conceptIri = SimpleValueFactory.getInstance().createIRI(aConceptIri);
             return list(kb, conceptIri, false, aAll);
         }
     }

@@ -70,10 +70,16 @@ public class ConceptFeatureEditor
             // retrieve handles from all knowledge bases
             List<KBHandle> handles = new LinkedList<>();
             for (KnowledgeBase kb : kbService.getKnowledgeBases(feat.getProject())) {
-                KBConcept concept = kbService.readConcept(kb, identifier);
-                if (concept != null) {
-                    handles.addAll(kbService.listInstances(kb, concept.getIdentifier(), true, 
-                            aState, aActionHandler));
+                if (!identifier.isEmpty()) {
+                    KBConcept concept = kbService.readConcept(kb, identifier);
+                    if (concept != null) {
+                        handles.addAll(kbService.listInstances(kb, concept.getIdentifier(), true, 
+                                aState, aActionHandler));
+                }
+                // List instances of all concepts
+                else {
+                    handles.addAll(kbService.listInstances(kb, null, true, aState,
+                        aActionHandler));
                 }
             }
             return new ArrayList<>(handles);
