@@ -21,6 +21,9 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.uima.cas.Type;
+import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.Session;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -52,6 +55,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAnnotationsEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VAnnotationMarker;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VMarker;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VTextMarker;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -67,6 +72,7 @@ import de.tudarmstadt.ukp.inception.app.session.SessionMetaData;
 import de.tudarmstadt.ukp.inception.recommendation.event.AjaxRecommendationAcceptedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.AjaxRecommendationRejectedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.AnnotationObject;
+import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.Offset;
 import de.tudarmstadt.ukp.inception.recommendation.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.model.LearningRecordChangeLocation;
 import de.tudarmstadt.ukp.inception.recommendation.model.Predictions;
@@ -81,6 +87,8 @@ public class ActiveLearningSidebar
     private static final long serialVersionUID = -5312616540773904224L;
     private static final Logger logger = LoggerFactory.getLogger(ActiveLearningSidebar.class);
     private static final String RECOMMENDATION_EDITOR_EXTENSION = "recommendationEditorExtension";
+    private static final String ANNOTATION_MARKER = "VAnnotationMarker";
+    private static final String TEXT_MARKER = "VTextMarker";
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean RecommendationService recommendationService;
     private @SpringBean LearningRecordService learningRecordService;
@@ -106,7 +114,9 @@ public class ActiveLearningSidebar
     private AnnotationPage annotationPage;
     private IModel<List<LearningRecord>> learningRecords;
     private Predictions predictionModel;
+    private String vMarkerType = "";
     private VID highlightVID;
+    private LearningRecord selectedRecord;
 
     public ActiveLearningSidebar(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, JCasProvider aJCasProvider,
@@ -279,6 +289,7 @@ public class ActiveLearningSidebar
             highlightVID = new VID(RECOMMENDATION_EDITOR_EXTENSION, selectedLayer.getId(),
                 (int) aoForVID.getRecommenderId(), aoForVID.getId(),
                 VID.NONE, VID.NONE);
+            vMarkerType = ANNOTATION_MARKER;
         }
     }
 
@@ -482,16 +493,14 @@ public class ActiveLearningSidebar
             @Override
             protected void populateItem(ListItem<LearningRecord> item)
             {
-//                LambdaAjaxLink jumpToAnnotationFromTokenTextLink = new LambdaAjaxLink(
-//                    "jumpToAnnotation", t -> actionShowSelectedDocument(t,
-//                    item.getModelObject().getSourceDocument(),
-//                    item.getModelObject().getOffsetCharacterBegin())
-//                );
-//
-//                jumpToAnnotationFromTokenTextLink.add(new Label("record",
-//                    item.getModelObject().getTokenText()));
+                LambdaAjaxLink jumpToAnnotationFromTokenTextLink = new LambdaAjaxLink(
+                    "jumpToAnnotation",
+                    t -> jumpAndHighlightFromLearningHistory(t, item.getModelObject()));
 
-                //item.add(jumpToAnnotationFromTokenTextLink);
+                jumpToAnnotationFromTokenTextLink.add(new Label("record",
+                    item.getModelObject().getTokenText()));
+
+                item.add(jumpToAnnotationFromTokenTextLink);
                 item.add(new Label("record", item.getModelObject().getTokenText()));
                 item.add(new Label("recommendedAnnotation",
                     item.getModelObject().getAnnotation()));
@@ -503,6 +512,70 @@ public class ActiveLearningSidebar
         learningRecords = LambdaModel.of(this::listLearningRecords);
         learningHistory.setModel(learningRecords);
         return learningHistory;
+    }
+
+    private void jumpAndHighlightFromLearningHistory(AjaxRequestTarget aTarget,
+        LearningRecord record)
+        throws IOException
+    {
+        actionShowSelectedDocument(aTarget, record.getSourceDocument(),
+            record.getOffsetCharacterBegin());
+
+        if (record.getUserAction().equals("rejected")) {
+            highlightTextAndDisplayMessage(record);
+        }
+        // if the suggestion still exists, highlight that suggestion.
+        else if (activeLearningRecommender.checkRecommendationExist(documentService, record)) {
+            predictionModel = recommendationService
+                .getPredictions(annotatorState.getUser(), annotatorState.getProject());
+
+            Offset recordOffset = new Offset(record.getOffsetCharacterBegin(),
+                record.getOffsetCharacterEnd(), record.getOffsetTokenBegin(),
+                record.getOffsetTokenEnd());
+
+            if (predictionModel != null) {
+                AnnotationObject aoForVID = predictionModel
+                    .getPrediction(recordOffset, record.getAnnotation());
+                highlightVID = new VID(RECOMMENDATION_EDITOR_EXTENSION, selectedLayer.getId(),
+                    (int) aoForVID.getRecommenderId(), aoForVID.getId(), VID.NONE, VID.NONE);
+                vMarkerType = ANNOTATION_MARKER;
+            }
+        }
+        // if the suggestion doesn't exit -> if that suggestion is accepted and annotated,
+        // highlight the annotation.
+        // else, highlight the text.
+        else if (!isAnnotatedInCas(record)) {
+            highlightTextAndDisplayMessage(record);
+        }
+    }
+
+    private boolean isAnnotatedInCas(LearningRecord aRecord)
+        throws IOException
+    {
+        JCas aJcas = this.getJCasProvider().get();
+        Type type = CasUtil.getType(aJcas.getCas(), selectedLayer.getName());
+        AnnotationFS annotationFS = WebAnnoCasUtil
+            .selectSingleFsAt(aJcas, type, aRecord.getOffsetCharacterBegin(),
+                aRecord.getOffsetCharacterEnd());
+        if (annotationFS != null) {
+            for (AnnotationFeature annotationFeature : annotationService
+                .listAnnotationFeature(selectedLayer)) {
+                String annotatedValue = WebAnnoCasUtil
+                    .getFeature(annotationFS, annotationFeature.getName());
+                if (annotatedValue.equals(aRecord.getAnnotation())) {
+                    highlightVID = new VID(WebAnnoCasUtil.getAddr(annotationFS));
+                    vMarkerType = ANNOTATION_MARKER;
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private void highlightTextAndDisplayMessage(LearningRecord record) {
+        selectedRecord = record;
+        vMarkerType = TEXT_MARKER;
+        error("No annotation could be highlighted.");
     }
 
 
@@ -579,10 +652,26 @@ public class ActiveLearningSidebar
     }
 
 
-    @OnEvent
-    public void onRenderAnnotations(RenderAnnotationsEvent aEvent) {
-        if (highlightVID != null) {
-            aEvent.getVDocument().add(new VAnnotationMarker(VMarker.FOCUS, highlightVID));
+    @OnEvent public void onRenderAnnotations(RenderAnnotationsEvent aEvent)
+    {
+        if (vMarkerType.equals(ANNOTATION_MARKER)) {
+            if (highlightVID != null) {
+                aEvent.getVDocument().add(new VAnnotationMarker(VMarker.FOCUS, highlightVID));
+            }
+        }
+        else if (vMarkerType.equals(TEXT_MARKER)) {
+            if (selectedRecord != null) {
+                if (annotatorState.getWindowBeginOffset() <= selectedRecord
+                    .getOffsetCharacterBegin()
+                    && selectedRecord.getOffsetCharacterEnd() <= annotatorState
+                    .getWindowEndOffset()) {
+                    aEvent.getVDocument().add(new VTextMarker(VMarker.FOCUS,
+                        selectedRecord.getOffsetCharacterBegin() - annotatorState
+                            .getWindowBeginOffset(),
+                        selectedRecord.getOffsetCharacterEnd() - annotatorState
+                            .getWindowBeginOffset()));
+                }
+            }
         }
     }
 }
