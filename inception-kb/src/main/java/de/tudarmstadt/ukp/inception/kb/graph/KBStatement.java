@@ -173,7 +173,8 @@ public class KBStatement implements Serializable
     {
         Statement stmt = toStatement(conn);
         if (!inferred) {
-
+            originalStatements.clear();
+            originalStatements.add(stmt);
         }
         conn.add(stmt);
     }
