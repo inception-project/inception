@@ -72,8 +72,7 @@ public interface KnowledgeBaseService
      */
     boolean isEmpty(KnowledgeBase kb);
     
-    void registerKnowledgeBase(KnowledgeBase kb, RepositoryImplConfig cfg, 
-            boolean canSupportConceptLinkingaB, String modelingLanguage);
+    void registerKnowledgeBase(KnowledgeBase kb, RepositoryImplConfig cfg, String modelingLanguage);
 
     boolean knowledgeBaseExists(Project project, String kbName);
 

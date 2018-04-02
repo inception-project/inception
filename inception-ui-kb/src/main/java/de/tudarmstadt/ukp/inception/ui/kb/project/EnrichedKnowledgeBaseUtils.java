@@ -53,13 +53,12 @@ public class EnrichedKnowledgeBaseUtils
         switch (kb.getType()) {
         case LOCAL:
             cfg = kbService.getNativeConfig();
-            kbService.registerKnowledgeBase(kb, cfg, false, ekb.getModelingLanguage());
+            kbService.registerKnowledgeBase(kb, cfg, ekb.getModelingLanguage());
             importFiles(ekb, kbService);
             break;
         case REMOTE:
             cfg = kbService.getRemoteConfig(ekb.getUrl());
-            kbService.registerKnowledgeBase(kb, cfg, ekb.canSupportConceptLinking(), 
-                    ekb.getModelingLanguage());
+            kbService.registerKnowledgeBase(kb, cfg, ekb.getModelingLanguage());
             break;
         default:
             throw new IllegalStateException();
