@@ -34,6 +34,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 
@@ -150,6 +151,13 @@ public class KnowledgeBaseServiceImpl
         query.setParameter("project", project);
         query.setParameter("name", kbName);
         return !query.getResultList().isEmpty();
+    }
+
+    @Transactional(noRollbackFor = NoResultException.class)
+    @Override
+    public Optional<KnowledgeBase> getKnowledgeBaseById(Project aProject, String aId)
+    {
+        return Optional.ofNullable(entityManager.find(KnowledgeBase.class, aId));
     }
 
     @Transactional
@@ -313,7 +321,20 @@ public class KnowledgeBaseServiceImpl
             }
         });
     }
-
+    
+    @Override
+    public Optional<KBConcept> readConcept(Project aProject, String aIdentifier)
+    {
+        for (KnowledgeBase kb : getKnowledgeBases(aProject)) {
+            Optional<KBConcept> concept = readConcept(kb, aIdentifier);
+            if (concept.isPresent()) {
+                return concept;
+            }
+        }
+        
+        return Optional.empty();
+    }
+    
     @Override
     public void updateConcept(KnowledgeBase kb, KBConcept aConcept)
     {
@@ -460,6 +481,19 @@ public class KnowledgeBaseServiceImpl
             log.warn("Reading concept for instance failed.", e);
             return Optional.empty();
         }
+    }
+    
+    @Override
+    public Optional<KBInstance> readInstance(Project aProject, String aIdentifier)
+    {
+        for (KnowledgeBase kb : getKnowledgeBases(aProject)) {
+            Optional<KBInstance> instance = readInstance(kb, aIdentifier);
+            if (instance.isPresent()) {
+                return instance;
+            }
+        }
+        
+        return Optional.empty();
     }
 
     @Override

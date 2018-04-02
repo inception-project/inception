@@ -69,6 +69,11 @@ public class KBHandle
     {
         name = aName;
     }
+    
+    public static KBHandle of(KBObject aObject)
+    {
+        return new KBHandle(aObject.getIdentifier(), aObject.getUiLabel());
+    }
 
     @Override
     public boolean equals(Object o) {

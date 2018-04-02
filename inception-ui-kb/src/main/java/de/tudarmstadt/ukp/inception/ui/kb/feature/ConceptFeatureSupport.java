@@ -19,13 +19,13 @@ package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.setFeature;
+import static java.util.Arrays.asList;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
+import java.io.IOException;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
-import java.util.stream.Stream;
+import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
@@ -35,6 +35,7 @@ import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.wicket.MarkupContainer;
+import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,23 +51,26 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
-import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
+/**
+ * Extension providing knowledge-base-related features for annotations.
+ */
 @Component
 public class ConceptFeatureSupport
-    implements FeatureSupport
+    implements FeatureSupport<ConceptFeatureTraits>
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     public static final String PREFIX = "kb:";
+    public static final String ANY_CONCEPT = PREFIX + "<ANY>";
 
-    @Autowired
-    private KnowledgeBaseService kbService;
-
+    private @Autowired KnowledgeBaseService kbService;
+    //private @PersistenceContext EntityManager entityManager;
+    
     private String featureSupportId;
     
     @Override
@@ -80,21 +84,25 @@ public class ConceptFeatureSupport
     {
         featureSupportId = aBeanName;
     }
+    
+    @Override
+    public Optional<FeatureType> getFeatureType(AnnotationFeature aFeature)
+    {
+        if (aFeature.getType().startsWith(PREFIX)) {
+            return Optional.of(new FeatureType(aFeature.getType(),
+                    aFeature.getType().substring(PREFIX.length()), featureSupportId));
+        }
+        else {
+            return Optional.empty();
+        }
+    }
 
     @Override
     public List<FeatureType> getSupportedFeatureTypes(AnnotationLayer aAnnotationLayer)
     {
-        Project project = aAnnotationLayer.getProject();
-
-        List<FeatureType> types = new LinkedList<>();
-        for (KnowledgeBase kb : kbService.getKnowledgeBases(project)) {
-            for (KBHandle concept : kbService.listConcepts(kb, false)) {
-                types.add(new FeatureType(PREFIX + concept.getIdentifier(),
-                    "Concept: " + concept.getUiLabel(), featureSupportId));
-            }
-        }
-
-        return new ArrayList<>(types);
+        // We just start with no specific scope at all (ANY) and let the user refine this via
+        // the traits editor
+        return asList(new FeatureType(ANY_CONCEPT, "Concept", featureSupportId));
     }
 
     @Override
@@ -102,8 +110,8 @@ public class ConceptFeatureSupport
     {
         switch (aFeature.getMultiValueMode()) {
         case NONE:
-            return aFeature.getType().startsWith("kb:");
-        case ARRAY: // fallthrough
+            return aFeature.getType().startsWith(PREFIX);
+        case ARRAY: // fall-through
         default:
             return false;
         }
@@ -116,18 +124,29 @@ public class ConceptFeatureSupport
         try {
             String value = aFs.getFeatureValueAsString(aLabelFeature);
             String renderValue = null;
+
+            // FIXME Since this might be called very often during rendering, it *might* be
+            // worth to set up an LRU cache instead of relying on the performance of the
+            // underlying KB store.
             if (value != null) {
-                // FIXME Since this might be called very often during rendering, it *might* be
-                // worth to set up an LRU cache instead of relying on the performance of the
-                // underlying KB store.
-                renderValue = kbService.getKnowledgeBases(aFeature.getProject())
-                    .stream()
-                    .map(k -> kbService.readInstance(k, value))
-                    .flatMap(o -> o.map(Stream::of).orElseGet(Stream::empty))
-                    .map(KBInstance::getUiLabel)
-                    .findAny()
-                    .orElseThrow(NoSuchElementException::new);
+                ConceptFeatureTraits t = readTraits(aFeature);
+
+                // Use the concept from a particular knowledge base
+                Optional<KBInstance> instance;
+                if (t.getRepositoryId() != null) {
+                    instance = kbService
+                            .getKnowledgeBaseById(aFeature.getProject(), t.getRepositoryId())
+                            .flatMap(kb -> kbService.readInstance(kb, value));
+                }
+                // Use the concept from any knowledge base (leave KB unselected)
+                else {
+                    instance = kbService.readInstance(aFeature.getProject(), value);
+                }
+
+                renderValue = instance.map(KBInstance::getUiLabel)
+                        .orElseThrow(NoSuchElementException::new);
             }
+            
             return renderValue;
         }
         catch (Exception e) {
@@ -160,13 +179,21 @@ public class ConceptFeatureSupport
         String value = (String) WebAnnoCasUtil.getFeature(aFS, aFeature.getName());
         
         if (value != null) {
-            KBInstance inst = kbService.getKnowledgeBases(aFeature.getProject())
-                .stream()
-                .map(k -> kbService.readInstance(k, value))
-                .flatMap(o -> o.map(Stream::of).orElseGet(Stream::empty))
-                .findAny()
-                .orElseThrow(() -> new NoSuchElementException());
-            return new KBHandle(inst.getIdentifier(), inst.getName());
+            ConceptFeatureTraits t = readTraits(aFeature);
+
+            // Use the concept from a particular knowledge base
+            Optional<KBInstance> instance;
+            if (t.getRepositoryId() != null) {
+                instance = kbService
+                        .getKnowledgeBaseById(aFeature.getProject(), t.getRepositoryId())
+                        .flatMap(kb -> kbService.readInstance(kb, value));
+            }
+            // Use the concept from any knowledge base (leave KB unselected)
+            else {
+                instance = kbService.readInstance(aFeature.getProject(), value);
+            }
+
+            return instance.map(i -> KBHandle.of(i)).orElseThrow(NoSuchElementException::new);
         }
         else {
             return null;
@@ -174,28 +201,78 @@ public class ConceptFeatureSupport
     }
 
     @Override
-    public FeatureEditor createEditor(String aId, MarkupContainer aOwner,
-        AnnotationActionHandler aHandler, final IModel<AnnotatorState> aStateModel,
-        final IModel<FeatureState> aFeatureStateModel)
+    public Panel createTraitsEditor(String aId, IModel<AnnotationFeature> aFeatureModel)
     {
-        FeatureState featureState = aFeatureStateModel.getObject();
-        final FeatureEditor editor;
+        return new ConceptFeatureTraitsEditor(aId, this, aFeatureModel);
+    }
+    
+    @Override
+    public FeatureEditor createEditor(String aId, MarkupContainer aOwner,
+            AnnotationActionHandler aHandler, IModel<AnnotatorState> aStateModel,
+            IModel<FeatureState> aFeatureStateModel)
+    {
+        AnnotationFeature feature = aFeatureStateModel.getObject().feature;
+        FeatureEditor editor;
 
-        switch (featureState.feature.getMultiValueMode()) {
+        switch (feature.getMultiValueMode()) {
         case NONE:
-            if (featureState.feature.getType().startsWith("kb:")) {
+            if (feature.getType().startsWith("kb:")) {
                 editor = new ConceptFeatureEditor(aId, aOwner, aFeatureStateModel);
             }
             else {
-                throw unsupportedMultiValueModeException(featureState);
+                throw unsupportedMultiValueModeException(feature);
             }
             break;
-        case ARRAY: // fallthrough
+        case ARRAY: // fall-through
         default:
-            throw unsupportedMultiValueModeException(featureState);
+            throw unsupportedMultiValueModeException(feature);
         }
 
         return editor;
+    }
+    
+    @Override
+    public ConceptFeatureTraits readTraits(AnnotationFeature aFeature)
+    {
+        ConceptFeatureTraits traits = null;
+        try {
+            traits = JSONUtil.fromJsonString(ConceptFeatureTraits.class,
+                    aFeature.getTraits());
+        }
+        catch (IOException e) {
+            log.error("Unable to read traits", e);
+        }
+        
+        if (traits == null) {
+            traits = new ConceptFeatureTraits();
+        }
+        
+        // If there is no scope set in the trait, see if once can be extracted from the legacy
+        // location which is the feature type.
+        if (traits.getScope() == null && !ANY_CONCEPT.equals(aFeature.getType())) {
+            traits.setScope(aFeature.getType().substring(PREFIX.length()));
+        }
+        
+        return traits;
+    }
+    
+    @Override
+    public void writeTraits(AnnotationFeature aFeature, ConceptFeatureTraits aTraits)
+    {
+        // Update the feature type with the scope
+        if (aTraits.getScope() != null) {
+            aFeature.setType(PREFIX + aTraits.getScope());
+        }
+        else {
+            aFeature.setType(ANY_CONCEPT);
+        }
+        
+        try {
+            aFeature.setTraits(JSONUtil.toJsonString(aTraits));
+        }
+        catch (IOException e) {
+            log.error("Unable to write traits", e);
+        }
     }
     
     @Override
