@@ -88,8 +88,13 @@ public class ConceptFeatureSupport
     @Override
     public Optional<FeatureType> getFeatureType(AnnotationFeature aFeature)
     {
-        return Optional.of(new FeatureType(aFeature.getType(),
-                aFeature.getType().substring(PREFIX.length()), featureSupportId));
+        if (aFeature.getType().startsWith(PREFIX)) {
+            return Optional.of(new FeatureType(aFeature.getType(),
+                    aFeature.getType().substring(PREFIX.length()), featureSupportId));
+        }
+        else {
+            return Optional.empty();
+        }
     }
 
     @Override
