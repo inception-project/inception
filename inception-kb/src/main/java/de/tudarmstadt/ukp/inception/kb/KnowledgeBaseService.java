@@ -75,6 +75,8 @@ public interface KnowledgeBaseService
 
     boolean knowledgeBaseExists(Project project, String kbName);
 
+    Optional<KnowledgeBase> getKnowledgeBaseById(Project project, String aId);
+    
     /**
      * Update the configuration of a knowledge base.
      * The given knowledge base must have been added before.
@@ -109,7 +111,27 @@ public interface KnowledgeBaseService
      */
     KBHandle createConcept(KnowledgeBase kb, KBConcept aType);
 
+    /**
+     * Read the concept with the given identifier from the given knowledge base.
+     * 
+     * @param kb
+     *            a knowledge base.
+     * @param aIdentifier
+     *            a concept identifier.
+     * @return the concept.
+     */
     Optional<KBConcept> readConcept(KnowledgeBase kb, String aIdentifier);
+
+    /**
+     * Find the specified concept form the first KB in the project which provides it.
+     * 
+     * @param aProject
+     *            a project.
+     * @param aIdentifier
+     *            a concept identifier.
+     * @return the concept.
+     */
+    Optional<KBConcept> readConcept(Project aProject, String aIdentifier);
 
     /**
      * Updates an existing concept in the given knowledge base. Does nothing if 
@@ -158,14 +180,37 @@ public interface KnowledgeBaseService
     List<KBHandle> listProperties(KnowledgeBase kb, boolean aAll);
 
     /**
-     * Creates a new instance in the given knowledge base. Does nothing
-     * if the knowledge base is read only.
-     * @param kb The knowledge base to which the new instance will be added
-     * @param aInstance The instance to add
+     * Creates a new instance in the given knowledge base. Does nothing if the knowledge base is
+     * read only.
+     * 
+     * @param kb
+     *            The knowledge base to which the new instance will be added
+     * @param aInstance
+     *            The instance to add
      */
     KBHandle createInstance(KnowledgeBase kb, KBInstance aInstance);
 
+    /**
+     * Read the instance with the given identifier from the given knowledge base.
+     * 
+     * @param kb
+     *            a knowledge base.
+     * @param aIdentifier
+     *            an instance identifier.
+     * @return the concept.
+     */
     Optional<KBInstance> readInstance(KnowledgeBase kb, String aIdentifier);
+
+    /**
+     * Find the specified instance form the first KB in the project which provides it.
+     * 
+     * @param aProject
+     *            a project.
+     * @param aIdentifier
+     *            an instance identifier.
+     * @return the concept.
+     */
+    Optional<KBInstance> readInstance(Project aProject, String aIdentifier);
 
     /**
      * Updates an existing instance in the given knowledge base. Does nothing

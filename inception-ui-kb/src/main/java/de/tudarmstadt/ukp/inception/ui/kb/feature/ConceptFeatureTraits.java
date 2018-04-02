@@ -19,11 +19,15 @@ package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
 import java.io.Serializable;
 
+/**
+ * Traits for knowledge-base-related features.
+ */
 public class ConceptFeatureTraits
     implements Serializable
 {
     private static final long serialVersionUID = 6303541487449965932L;
 
+    private String repositoryId;
     private String scope;
 
     public ConceptFeatureTraits()
@@ -31,6 +35,16 @@ public class ConceptFeatureTraits
         // Nothing to do
     }
     
+    public String getRepositoryId()
+    {
+        return repositoryId;
+    }
+
+    public void setRepositoryId(String aKnowledgeBaseId)
+    {
+        repositoryId = aKnowledgeBaseId;
+    }
+
     public String getScope()
     {
         return scope;
