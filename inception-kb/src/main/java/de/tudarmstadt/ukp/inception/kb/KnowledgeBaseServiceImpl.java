@@ -140,13 +140,13 @@ public class KnowledgeBaseServiceImpl
 
     @Transactional
     @Override
-    public void registerKnowledgeBase(KnowledgeBase kb, RepositoryImplConfig cfg, 
-            boolean canSupportConceptLinking, String aModelingLanguage) {
+    public void registerKnowledgeBase(KnowledgeBase kb, RepositoryImplConfig cfg,
+            String aModelingLanguage)
+    {
         // obtain unique repository id
         String baseName = "pid-" + Long.toString(kb.getProject().getId()) + "-kbid-";
         String repositoryId = repoManager.getNewRepositoryID(baseName);
         kb.setRepositoryId(repositoryId);
-        kb.setSupportConceptLinking(canSupportConceptLinking);
         kb.setModelingLanguage(aModelingLanguage);
 
         repoManager.addRepositoryConfig(new RepositoryConfig(repositoryId, cfg));
