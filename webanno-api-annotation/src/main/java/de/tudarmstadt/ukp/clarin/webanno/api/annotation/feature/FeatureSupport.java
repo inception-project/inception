@@ -154,7 +154,7 @@ public interface FeatureSupport<T>
     /**
      * Read the traits for the given {@link AnnotationFeature}. If traits are supported, then this
      * method must be overwritten. A typical implementation would read the traits from a JSON string
-     * stored in {@link AnnotationFeature#getTraits()}, but it would also possible to load the
+     * stored in {@link AnnotationFeature#getTraits}, but it would also possible to load the
      * traits from a database table.
      * 
      * @param aFeature
@@ -169,7 +169,7 @@ public interface FeatureSupport<T>
     /**
      * Write the traits for the given {@link AnnotationFeature}. If traits are supported, then this
      * method must be overwritten. A typical implementation would write the traits from to JSON
-     * string stored in {@link AnnotationFeature#setTraits()}, but it would also possible to store
+     * string stored in {@link AnnotationFeature#setTraits}, but it would also possible to store
      * the traits from a database table.
      * 
      * @param aFeature
