@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.kb.feature;
 
+import static org.apache.commons.lang3.StringUtils.startsWithAny;
+
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -28,6 +30,8 @@ import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 
 import com.googlecode.wicket.kendo.ui.form.dropdown.DropDownList;
 
@@ -40,6 +44,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
+import de.tudarmstadt.ukp.inception.kb.model.Entity;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 public class ConceptFeatureEditor
@@ -102,5 +107,52 @@ public class ConceptFeatureEditor
     public Component getFocusComponent()
     {
         return focusComponent;
+    }
+    
+    private List<KBHandle> listInstances(KnowledgeBase kb, String aConceptIri,
+        boolean aAll, AnnotatorState aState, AnnotationActionHandler aActionHandler)
+    {
+        if (kb.canSupportConceptLinking()) {
+            if (aConceptIri != null) {
+                return kbService.listInstances(kb, aConceptIri, aAll);
+            }
+            // List instances of all concepts
+            else {
+                return listLinkingInstances(kb, null, false, aAll, aState, aActionHandler);
+            }
+        }
+        else {
+            IRI conceptIri = SimpleValueFactory.getInstance().createIRI(aConceptIri);
+            return kbService.list(kb, conceptIri, false, aAll);
+        }
+    }
+    
+    private List<KBHandle> listLinkingInstances(KnowledgeBase kb, IRI conceptIri,
+            boolean aIncludeInferred, boolean aAll, AnnotatorState aState, 
+            AnnotationActionHandler aActionHandler)
+    {
+        List<KBHandle> resultList = kbService.read(kb, (conn) -> {
+            List<Entity> candidates = extensionRegistry.fireDisambiguate(kb, conceptIri, aState, 
+                    aActionHandler);
+            List<KBHandle> handles = new ArrayList<>();
+
+            for (Entity c: candidates) {
+                String id = c.getIRI();
+                String label = c.getLabel();
+
+                if (!id.contains(":") || (!aAll && startsWithAny(id, IMPLICIT_NAMESPACES))) {
+                    continue;
+                }
+
+                KBHandle handle = new KBHandle(id, label);
+                if (!handles.contains(handle)) {
+                    handles.add(handle);
+                }
+            }
+
+            return handles;
+        });
+
+        return resultList;
     }
 }

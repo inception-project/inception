@@ -80,8 +80,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
@@ -90,7 +88,6 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.graph.RdfUtils;
-import de.tudarmstadt.ukp.inception.kb.model.Entity;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 @Component(KnowledgeBaseService.SERVICE_NAME)
@@ -539,55 +536,12 @@ public class KnowledgeBaseServiceImpl
     }
 
     @Override
-    public List<KBHandle> listInstances(KnowledgeBase kb, String aConceptIri,
-        boolean aAll, AnnotatorState aState, AnnotationActionHandler aActionHandler)
+    public List<KBHandle> listInstances(KnowledgeBase kb, String aConceptIri, boolean aAll)
     {
-        if (kb.canSupportConceptLinking()) {
-            if (aConceptIri != null) {
-                IRI conceptIri = SimpleValueFactory.getInstance().createIRI(aConceptIri);
-                return listLinkingInstances(kb, conceptIri, false, aAll, aState, aActionHandler);
-            }
-            // List instances of all concepts
-            else {
-                return listLinkingInstances(kb, null, false, aAll, aState, aActionHandler);
-            }
-        }
-        else {
-            IRI conceptIri = SimpleValueFactory.getInstance().createIRI(aConceptIri);
-            return list(kb, conceptIri, false, aAll);
-        }
-    }
+        IRI conceptIri = SimpleValueFactory.getInstance().createIRI(aConceptIri);
+        return list(kb, conceptIri, false, aAll);
+    }    
     
-    private List<KBHandle> listLinkingInstances(KnowledgeBase kb, IRI conceptIri,
-            boolean aIncludeInferred, boolean aAll, AnnotatorState aState, 
-            AnnotationActionHandler aActionHandler)
-    {
-        List<KBHandle> resultList = read(kb, (conn) -> {
-            List<Entity> candidates = extensionRegistry.fireDisambiguate(kb, conceptIri, aState, 
-                    aActionHandler);
-            List<KBHandle> handles = new ArrayList<>();
-
-            for (Entity c: candidates) {
-                String id = c.getIRI();
-                String label = c.getLabel();
-
-                if (!id.contains(":") || (!aAll && startsWithAny(id, IMPLICIT_NAMESPACES))) {
-                    continue;
-                }
-
-                KBHandle handle = new KBHandle(id, label);
-                if (!handles.contains(handle)) {
-                    handles.add(handle);
-                }
-            }
-
-            return handles;
-        });
-
-        return resultList;
-    }
-
-
     @Override
     public void upsertStatement(KnowledgeBase kb, KBStatement aStatement)
     {
