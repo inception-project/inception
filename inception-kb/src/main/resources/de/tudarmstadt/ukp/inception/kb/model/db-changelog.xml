@@ -38,21 +38,16 @@
     </addColumn> 
   </changeSet>
   
-  <changeSet author="INCEpTION Team" id="20180204-2"> 
-    <addColumn tableName="knowledgebase">
-      <column name="modelingLanguage" type="VARCHAR(20)"/> 
-    </addColumn> 
-  </changeSet>
-  
-  <changeSet author="INCEpTION Team" id="20180204-2-2"> 
-    <modifyDataType tableName="knowledgebase"
-              columnName="modelingLanguage" 
-              newDataType="VARBINARY(20)"/>
-  </changeSet>
-  <changeSet author="INCEpTION Team" id="20180204-2-3"> 
-    <modifyDataType tableName="knowledgebase"
-            columnName="modelingLanguage" 
-            newDataType="VARCHAR(20)"/>
+  <changeSet author="INCEpTION Team" id="20180204-2-4">
+    <preConditions onFail="MARK_RAN">
+      <columnExists tableName="knowledgebase" columnName="modelingLanguage"/>
+    </preConditions>
+    <comment>
+      We had a brief period where a "modelingLanguage" was maintained in the KB, but it was
+      replaced by the various "Iri" columns. This change set just cleans up the DB by removing
+      the "modelingLanguage" column if it still exists.
+    </comment> 
+    <dropColumn tableName="knowledgebase" columnName="modelingLanguage"/>
   </changeSet>
 
   <changeSet author="INCEpTION Team" id="20180214-1">
