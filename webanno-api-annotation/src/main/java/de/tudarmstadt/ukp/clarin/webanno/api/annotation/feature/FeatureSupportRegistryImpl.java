@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.commons.lang3.ClassUtils;
 import org.slf4j.Logger;
@@ -67,7 +68,7 @@ public class FeatureSupportRegistryImpl
             fsp.addAll(featureSupportsProxy);
             AnnotationAwareOrderComparator.sort(fsp);
         
-            for (FeatureSupport fs : fsp) {
+            for (FeatureSupport<?> fs : fsp) {
                 log.info("Found feature support: {}",
                         ClassUtils.getAbbreviatedName(fs.getClass(), 20));
             }
@@ -96,7 +97,7 @@ public class FeatureSupportRegistryImpl
         }
         
         if (support == null) {
-            for (FeatureSupport s : getFeatureSupports()) {
+            for (FeatureSupport<?> s : getFeatureSupports()) {
                 if (s.accepts(aFeature)) {
                     support = s;
                     if (aFeature.getId() != null) {
@@ -121,5 +122,26 @@ public class FeatureSupportRegistryImpl
     {
         return getFeatureSupports().stream().filter(fs -> fs.getId().equals(aId)).findFirst()
                 .orElse(null);
+    }
+    
+    @Override
+    public FeatureType getFeatureType(AnnotationFeature aFeature)
+    {
+        if (aFeature.getType() == null) {
+            return null;
+        }
+        
+        // Figure out which feature support provides the given type.
+        // If we can find a suitable feature support, then use it to resolve the type to a
+        // FeaatureType
+        FeatureType featureType = null;
+        for (FeatureSupport<?> s : getFeatureSupports()) {
+            Optional<FeatureType> ft = s.getFeatureType(aFeature);
+            if (ft.isPresent()) {
+                featureType = ft.get();
+                break;
+            }
+        }
+        return featureType;
     }
 }

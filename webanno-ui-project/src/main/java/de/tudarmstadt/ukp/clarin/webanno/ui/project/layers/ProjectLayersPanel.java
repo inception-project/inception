@@ -1071,11 +1071,8 @@ public class ProjectLayersPanel
 
                 {
                     IModel<FeatureType> model = LambdaModelAdapter.of(() -> {
-                        return featureSupportRegistry.getAllTypes(layerDetailForm.getModelObject())
-                                .stream()
-                                .filter(r -> r.getName()
-                                        .equals(featureDetailForm.getModelObject().getType()))
-                                .findFirst().orElse(null);
+                        return featureSupportRegistry
+                                .getFeatureType(featureDetailForm.getModelObject());
                     }, (v) -> FeatureDetailForm.this.getModelObject().setType(v.getName()));
                     setRequired(true);
                     setNullValid(false);
@@ -1100,7 +1097,8 @@ public class ProjectLayersPanel
                             && getModelObject() != null) {
                         FeatureSupport<?> fs = featureSupportRegistry
                                 .getFeatureSupport(getModelObject().getFeatureSupportId());
-                        newTraits = fs.createTraitsEditor(MID_TRAITS, featureDetailForm.getModel());
+                        newTraits = fs.createTraitsEditor(MID_TRAITS,
+                                FeatureDetailForm.this.getModel());
                     }
                     else {
                         newTraits = new EmptyPanel(MID_TRAITS);

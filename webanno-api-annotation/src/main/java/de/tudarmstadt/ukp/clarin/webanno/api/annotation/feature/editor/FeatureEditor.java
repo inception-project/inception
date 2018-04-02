@@ -33,6 +33,17 @@ public abstract class FeatureEditor
     
     private MarkupContainer owner;
     
+    /**
+     * @param aId
+     *            the component ID.
+     * @param aOwner
+     *            an enclosing component which may contain other feature editors. If actions are
+     *            performed which may affect other feature editors, e.g because of constraints
+     *            rules, then these need to be re-rendered. This is done by requesting a
+     *            re-rendering of the enclosing component.
+     * @param aModel
+     *            provides access to the state of the feature being edited.
+     */
     public FeatureEditor(String aId, MarkupContainer aOwner, IModel<FeatureState> aModel)
     {
         super(aId, aModel);

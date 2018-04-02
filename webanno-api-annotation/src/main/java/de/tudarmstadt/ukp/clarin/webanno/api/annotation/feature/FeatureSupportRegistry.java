@@ -47,7 +47,9 @@ public interface FeatureSupportRegistry
      * Get the feature support providing the given feature. This method must only be called on
      * completely configured and saved features, not on unsafed features.
      */
-    FeatureSupport getFeatureSupport(AnnotationFeature aFeature);
+    <T> FeatureSupport<T> getFeatureSupport(AnnotationFeature aFeature);
     
-    FeatureSupport getFeatureSupport(String aFeatureSupportId);
+    <T> FeatureSupport<T> getFeatureSupport(String aFeatureSupportId);
+
+    FeatureType getFeatureType(AnnotationFeature aFeature);
 }

@@ -129,7 +129,8 @@ public abstract class TypeAdapter_ImplBase
     @Override
     public <T> T getFeatureValue(AnnotationFeature aFeature, FeatureStructure aFs)
     {
-        return featureSupportRegistry.getFeatureSupport(aFeature).getFeatureValue(aFeature, aFs);
+        return (T) featureSupportRegistry.getFeatureSupport(aFeature).getFeatureValue(aFeature,
+                aFs);
     }
     
     public void publishEvent(ApplicationEvent aEvent)

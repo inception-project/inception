@@ -20,8 +20,8 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.setFeature;
 
-import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
@@ -43,6 +43,11 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
+/**
+ * Extension point for new types of annotation features. 
+ * 
+ * @param <T> the traits type. If no traits are supported, this should be {@link Void}.
+ */
 public interface FeatureSupport<T>
     extends BeanNameAware
 {
@@ -56,6 +61,23 @@ public interface FeatureSupport<T>
      * @return whether the given feature is provided by the current feature support.
      */
     boolean accepts(AnnotationFeature aFeature);
+    
+    /**
+     * Get the feature type for the given annotation feature. If the current feature support does
+     * not provide any feature type for the given feature, an empty value is returned. As we
+     * usually use {@link FeatureType} objects in feature type selection lists, this method is
+     * helpful in obtaining the selected value of such a list from the {@link AnnotationFeature}
+     * object being edited.
+     * 
+     * @param aAnnotationFeature
+     *            an annotation feature.
+     * @return the corresponding feature type.
+     */
+    default Optional<FeatureType> getFeatureType(AnnotationFeature aAnnotationFeature)
+    {
+        return getSupportedFeatureTypes(aAnnotationFeature.getLayer()).stream()
+                .filter(t -> t.getName().equals(aAnnotationFeature.getType())).findFirst();
+    }
 
     /**
      * Get a list of feature types provided by this feature support. These are added to the list of
@@ -129,17 +151,56 @@ public interface FeatureSupport<T>
         return new EmptyPanel(aId);
     }
     
-    default T readTraits(AnnotationFeature aFeature) throws IOException
+    /**
+     * Read the traits for the given {@link AnnotationFeature}. If traits are supported, then this
+     * method must be overwritten. A typical implementation would read the traits from a JSON string
+     * stored in {@link AnnotationFeature#getTraits()}, but it would also possible to load the
+     * traits from a database table.
+     * 
+     * @param aFeature
+     *            the feature whose traits should be obtained.
+     * @return the traits.
+     */
+    default T readTraits(AnnotationFeature aFeature)
     {
         return null;
     }
 
+    /**
+     * Write the traits for the given {@link AnnotationFeature}. If traits are supported, then this
+     * method must be overwritten. A typical implementation would write the traits from to JSON
+     * string stored in {@link AnnotationFeature#setTraits()}, but it would also possible to store
+     * the traits from a database table.
+     * 
+     * @param aFeature
+     *            the feature whose traits should be written.
+     * @param aTraits
+     *            the traits.
+     */
     default void writeTraits(AnnotationFeature aFeature, T aTraits)
-        throws IOException
     {
         aFeature.setTraits(null);
     }
     
+    /**
+     * Create a feature value editor for use in the annotation detail editor pane and similar
+     * locations.
+     * 
+     * @param aId
+     *            the component id.
+     * @param aOwner
+     *            an enclosing component which may contain other feature editors. If actions are
+     *            performed which may affect other feature editors, e.g because of constraints
+     *            rules, then these need to be re-rendered. This is done by requesting a
+     *            re-rendering of the enclosing component.
+     * @param aHandler
+     *            to allow the editor to perform typical annotation actions.
+     * @param aStateModel
+     *            provides access to the state of the annotation editor.
+     * @param aFeatureStateModel
+     *            provides access to the state of the feature being edited.
+     * @return an editor component.
+     */
     FeatureEditor createEditor(String aId, MarkupContainer aOwner, AnnotationActionHandler aHandler,
             IModel<AnnotatorState> aStateModel, IModel<FeatureState> aFeatureStateModel);
 
@@ -173,7 +234,7 @@ public interface FeatureSupport<T>
         setFeature(fs, aFeature, aValue);
     }
     
-    <T> T getFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS);
+    <V> V getFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS);
 
     default IllegalArgumentException unsupportedFeatureTypeException(AnnotationFeature aFeature)
     {
