@@ -107,15 +107,17 @@ public class KnowledgeBaseServiceImpl
     private File dataDir;
 
     @Autowired
-    public KnowledgeBaseServiceImpl(@org.springframework.beans.factory.annotation.Value("${data.path}") File dataDir)
+    public KnowledgeBaseServiceImpl(
+            @org.springframework.beans.factory.annotation.Value("${data.path}") File dataDir)
     {
         String url = Paths.get(dataDir.getAbsolutePath(), "kb").toUri().toString();
         repoManager = RepositoryProvider.getRepositoryManager(url);
         log.info("Knowledge base repository path: " + url);
     }
 
-    public KnowledgeBaseServiceImpl(@org.springframework.beans.factory.annotation.Value("${data.path}") File dataDir,
-        EntityManager entityManager)
+    public KnowledgeBaseServiceImpl(
+            @org.springframework.beans.factory.annotation.Value("${data.path}") File dataDir,
+            EntityManager entityManager)
     {
         this(dataDir);
         this.entityManager = entityManager;
@@ -660,9 +662,8 @@ public class KnowledgeBaseServiceImpl
         return listStatements(kb, handle, aAll);
     }
 
-    @Override
-private List<Statement> listStatements(KnowledgeBase kb, String aInstanceIdentifier,
-                                           boolean aIncludeInferred)
+    private List<Statement> listStatements(KnowledgeBase kb, String aInstanceIdentifier,
+            boolean aIncludeInferred)
     {
         return read(kb, (conn) -> {
             ValueFactory vf = conn.getValueFactory();

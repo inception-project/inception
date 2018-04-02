@@ -27,9 +27,6 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.PostConstruct;
@@ -63,13 +60,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.dkpro.core.corenlp.CoreNlpPosTagger;
-import de.tudarmstadt.ukp.dkpro.core.corenlp.CoreNlpSegmenter;
-import de.tudarmstadt.ukp.dkpro.core.performance.Stopwatch;
-import de.tudarmstadt.ukp.dkpro.core.stanfordnlp.StanfordPosTagger;
-import de.tudarmstadt.ukp.dkpro.core.stanfordnlp.StanfordSegmenter;
-import edu.stanford.nlp.util.StringUtils;
-import de.tudarmstadt.ukp.inception.conceptlinking.model.Entity;
 import de.tudarmstadt.ukp.inception.conceptlinking.model.Property;
 import de.tudarmstadt.ukp.inception.conceptlinking.model.SemanticSignature;
 import de.tudarmstadt.ukp.inception.conceptlinking.util.QueryUtil;
@@ -439,8 +429,9 @@ public class ConceptLinkingService
      *                       tokens
      * @return ranked list of entities, starting with the most probable entity
      */
-    public List<Entity> disambiguate (KnowledgeBase aKB, IRI aConceptIri,
-            AnnotatorState aState, AnnotationActionHandler aActionHandler)
+    @Override
+    public List<Entity> disambiguate(KnowledgeBase aKB, IRI aConceptIri, AnnotatorState aState,
+            AnnotationActionHandler aActionHandler)
     {
         List<Entity> candidates = new ArrayList<>();
         
@@ -464,7 +455,6 @@ public class ConceptLinkingService
         return candidates;
 
     }
-
     /*
      * Clear user state when session ends
      */

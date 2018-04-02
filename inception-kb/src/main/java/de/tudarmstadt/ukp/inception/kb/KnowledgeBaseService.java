@@ -77,8 +77,6 @@ public interface KnowledgeBaseService
     void registerKnowledgeBase(KnowledgeBase kb, RepositoryImplConfig cfg, 
             boolean canSupportConceptLinkingaB, String modelingLanguage);
 
-    void registerKnowledgeBase(KnowledgeBase kb, RepositoryImplConfig cfg);
-
     boolean knowledgeBaseExists(Project project, String kbName);
 
     Optional<KnowledgeBase> getKnowledgeBaseById(Project project, String aId);
