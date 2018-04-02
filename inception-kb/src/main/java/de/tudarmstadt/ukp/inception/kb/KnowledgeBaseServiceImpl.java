@@ -374,7 +374,7 @@ public class KnowledgeBaseServiceImpl
     @Override
     public List<KBHandle> listConcepts(KnowledgeBase kb, boolean aAll)
     {
-        if (kb.canSupportConceptLinking()) {
+        if (kb.isSupportConceptLinking()) {
             return listLinkingConcepts(kb, true, aAll);
         } else {
             return list(kb, RDFS.CLASS, true, aAll);

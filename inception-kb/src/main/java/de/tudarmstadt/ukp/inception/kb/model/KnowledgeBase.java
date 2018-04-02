@@ -214,7 +214,7 @@ public class KnowledgeBase
         supportConceptLinking = aSupportConceptLinking;
     }
     
-    public boolean canSupportConceptLinking() {
+    public boolean isSupportConceptLinking() {
         return supportConceptLinking;
     }
     

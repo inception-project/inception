@@ -38,8 +38,8 @@ public class EnrichedKnowledgeBase implements Serializable {
     private String typeIri;
     private boolean enabled = true;
     private List<File> files;
-    protected boolean supportConceptLinking;
     protected String modelingLanguage;
+    private boolean supportConceptLinking;
     
     public KnowledgeBase getKb() {
         return kb;
@@ -104,7 +104,7 @@ public class EnrichedKnowledgeBase implements Serializable {
         enabled = isEnabled;
     }
 
-    public boolean canSupportConceptLinking()
+    public boolean isSupportConceptLinking()
     {
         return supportConceptLinking;
     }
