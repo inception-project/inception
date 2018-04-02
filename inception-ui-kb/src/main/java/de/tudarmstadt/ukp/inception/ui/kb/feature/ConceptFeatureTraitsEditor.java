@@ -31,6 +31,7 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
@@ -55,10 +56,11 @@ public class ConceptFeatureTraitsEditor
 
     private static final long serialVersionUID = 2129000875921279514L;
     
+    private @SpringBean FeatureSupportRegistry featureSupportRegistry;
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean KnowledgeBaseService kbService;
 
-    private  ConceptFeatureSupport featureSupport;
+    private String featureSupportId;
     private IModel<AnnotationFeature> feature;
     private IModel<Traits> traits;
     
@@ -67,7 +69,10 @@ public class ConceptFeatureTraitsEditor
     {
         super(aId, aFeatureModel);
         
-        featureSupport = aFS;
+        // We cannot retain a reference to the actual ConceptFeatureSupport instance because that
+        // is not serializable, but we can retain its ID and look it up again from the registry
+        // when required.
+        featureSupportId = aFS.getId();
         feature = aFeatureModel;
         traits = Model.of(readTraits());
 
@@ -111,7 +116,7 @@ public class ConceptFeatureTraitsEditor
 
         Project project = feature.getObject().getProject();
 
-        ConceptFeatureTraits t = featureSupport.readTraits(feature.getObject());
+        ConceptFeatureTraits t = getFeatureSupport().readTraits(feature.getObject());
 
         // Use the concept from a particular knowledge base
         if (t.getRepositoryId() != null) {
@@ -146,7 +151,7 @@ public class ConceptFeatureTraitsEditor
         }
         t.setScope(traits.getObject().scope.getIdentifier());
 
-        featureSupport.writeTraits(feature.getObject(), t);
+        getFeatureSupport().writeTraits(feature.getObject(), t);
     }
     
     private List<KnowledgeBase> listKnowledgeBases()
@@ -169,6 +174,11 @@ public class ConceptFeatureTraitsEditor
 
             return allConcepts;
         }
+    }
+    
+    private ConceptFeatureSupport getFeatureSupport()
+    {
+        return featureSupportRegistry.getFeatureSupport(featureSupportId);
     }
     
     /**
