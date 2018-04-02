@@ -110,8 +110,6 @@ public class KnowledgeBase
             nullable = false) 
     private boolean supportConceptLinking = false;
     
-    private String modelingLanguage;
-    
     public String getRepositoryId() {
         return repositoryId;
     }
@@ -218,16 +216,6 @@ public class KnowledgeBase
         return supportConceptLinking;
     }
     
-    public String getModelingLanguage()
-    {
-        return modelingLanguage;
-    }
-
-    public void setModelingLanguage(String aModelingLanguage)
-    {
-        modelingLanguage = aModelingLanguage;
-    }
-
     @Override
     public String toString()
     {

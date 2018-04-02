@@ -112,7 +112,7 @@ public class ConceptFeatureEditor
     private List<KBHandle> listInstances(KnowledgeBase kb, String aConceptIri,
         boolean aAll, AnnotatorState aState, AnnotationActionHandler aActionHandler)
     {
-        if (kb.canSupportConceptLinking()) {
+        if (kb.isSupportConceptLinking()) {
             if (aConceptIri != null) {
                 return kbService.listInstances(kb, aConceptIri, aAll);
             }

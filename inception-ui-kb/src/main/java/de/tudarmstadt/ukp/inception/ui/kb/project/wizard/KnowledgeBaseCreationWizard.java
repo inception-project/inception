@@ -130,12 +130,6 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
 
             add(nameField("name", "kb.name"));
             add(repositoryTypeRadioButtons("type", "kb.type"));
-
-            DropDownChoice<String> modelingLanguage = new DropDownChoice<String>(
-                    "modelingLanguage",
-                    new PropertyModel<String>(model, "modelingLanguage"),
-                    modelingLanguageChoices);
-            add(modelingLanguage);
         }
 
         @Override

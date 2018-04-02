@@ -996,8 +996,7 @@ public class KnowledgeBaseServiceImplIntegrationTest {
         instance.setType(URI.create(concept.getIdentifier()));
         KBHandle instanceHandle = sut.createInstance(kb, instance);
 
-        List<KBHandle> instances = 
-                sut.listInstances(kb, conceptHandle.getIdentifier(), false, null, null);
+        List<KBHandle> instances = sut.listInstances(kb, conceptHandle.getIdentifier(), false);
 
         assertThat(instances)
             .as("Check that instances contain the one, saved item")
