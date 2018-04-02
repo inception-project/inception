@@ -30,8 +30,6 @@ import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.model.IModel;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -53,10 +51,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 @Order(Ordered.HIGHEST_PRECEDENCE)
 @Component
 public class SubjectObjectFeatureSupport
-    implements FeatureSupport
+    implements FeatureSupport<Void>
 {
-    private final Logger logger = LoggerFactory.getLogger(getClass());
-
     private static final String SUBJECT_LINK = "webanno.custom.FactSubjectLink";
     private static final String OBJECT_LINK = "webanno.custom.FactObjectLink";
     private static final String MODIFIER_LINK = "webanno.custom.FactModifierLink";
@@ -91,8 +87,8 @@ public class SubjectObjectFeatureSupport
             switch (annotationFeature.getLinkMode()) {
             case WITH_ROLE:
                 switch (annotationFeature.getLinkTypeName()) {
-                case SUBJECT_LINK: // fallthrough
-                case OBJECT_LINK: // fallthrough
+                case SUBJECT_LINK: // fall-through
+                case OBJECT_LINK: // fall-through
                 case MODIFIER_LINK:
                     return true;
                 default:
@@ -101,7 +97,7 @@ public class SubjectObjectFeatureSupport
             default:
                 return false;
             }
-        case NONE: // fallthrough
+        case NONE: // fall-through
         default:
             return false;
         }
@@ -134,17 +130,17 @@ public class SubjectObjectFeatureSupport
 //                        aFeatureStateModel);
 //                    break;
                 default:
-                    throw unsupportedLinkModeException(featureState);
+                    throw unsupportedLinkModeException(featureState.feature);
                 }
                 break;
             default:
-                throw unsupportedMultiValueModeException(featureState);
+                throw unsupportedMultiValueModeException(featureState.feature);
             }
             break;
         case NONE:
-            throw unsupportedFeatureTypeException(featureState);
+            throw unsupportedFeatureTypeException(featureState.feature);
         default:
-            throw unsupportedMultiValueModeException(featureState);
+            throw unsupportedMultiValueModeException(featureState.feature);
         }
         return editor;
     }
@@ -158,6 +154,7 @@ public class SubjectObjectFeatureSupport
             CAS.TYPE_NAME_TOP);
         linkTD.addFeature(aFeature.getLinkTypeRoleFeatureName(), "", CAS.TYPE_NAME_STRING);
         linkTD.addFeature(aFeature.getLinkTypeTargetFeatureName(), "", aFeature.getType());
+        
         // Link feature
         aTD.addFeature(aFeature.getName(), "", CAS.TYPE_NAME_FS_ARRAY, linkTD.getName(),
             false);
