@@ -1174,7 +1174,7 @@ public class ProjectLayersPanel
                         }
                         feature.setName(name);
                         
-                        FeatureSupport fs = featureSupportRegistry
+                        FeatureSupport<?> fs = featureSupportRegistry
                                 .getFeatureSupport(featureDetailForm.featureType.getModelObject()
                                         .getFeatureSupportId());
                         

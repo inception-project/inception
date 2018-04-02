@@ -49,7 +49,7 @@ public interface FeatureSupportRegistry
      */
     <T> FeatureSupport<T> getFeatureSupport(AnnotationFeature aFeature);
     
-    <T> FeatureSupport<T> getFeatureSupport(String aFeatureSupportId);
+    <T extends FeatureSupport<?>> T getFeatureSupport(String aFeatureSupportId);
 
     FeatureType getFeatureType(AnnotationFeature aFeature);
 }
