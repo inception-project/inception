@@ -28,7 +28,7 @@ public class LambdaModelAdapter<T>
 
     private final SerializableSupplier<T> supplier;
     private final SerializableConsumer<T> consumer;
-
+    
     public LambdaModelAdapter(SerializableSupplier<T> aSupplier, SerializableConsumer<T> aConsumer)
     {
         supplier = aSupplier;
@@ -38,13 +38,20 @@ public class LambdaModelAdapter<T>
     @Override
     public T getObject()
     {
-        return supplier.get();
+        if (supplier != null) {
+            return supplier.get();
+        }
+        else {
+            return null;
+        }
     }
 
     @Override
     public void setObject(T aObject)
     {
-        consumer.accept(aObject);
+        if (consumer != null) {
+            consumer.accept(aObject);
+        }
     }
 
     public static <T extends Serializable> LambdaModelAdapter<T> of(
@@ -57,5 +64,27 @@ public class LambdaModelAdapter<T>
     public void detach()
     {
         // Nothing to do
+    }
+    
+    public static class Builder<T> {
+        private SerializableSupplier<T> supplier;
+        private SerializableConsumer<T> consumer;
+        
+        public Builder<T> getting(SerializableSupplier<T> aSupplier)
+        {
+            supplier = aSupplier;
+            return this;
+        }
+        
+        public Builder<T> setting(SerializableConsumer<T> aConsumer)
+        {
+            consumer = aConsumer;
+            return this;
+        }
+        
+        public LambdaModelAdapter<T> build()
+        {
+            return new LambdaModelAdapter<T>(supplier, consumer);
+        }
     }
 }
