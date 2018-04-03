@@ -36,8 +36,7 @@ public class QueryUtil
             + "        PREFIX schema: <http://schema.org/>\n";
 
     private static String SPARQL_SELECT = "SELECT DISTINCT %queryvariables% \n WHERE\n";
-    
-    // TODO add language parameter 
+
     private static String SPARQL_ENTITY_LABEL =
               "             {\n"
             + "                  {GRAPH <http://wikidata.org/statements> { \n"
@@ -61,7 +60,7 @@ public class QueryUtil
     
     private static String SPARQL_CANONICAL_LABEL_ENTITY = "{\n"
             + "        GRAPH <http://wikidata.org/terms> { ?e2 rdfs:label ?label. }\n"
-            + "        FILTER ( lang(?label) = \"%language\" )\n"
+            + "        FILTER ( lang(?label) = \"en\" )\n"
             + "   }\n";
 
     private static String SPARQL_LIMIT = " \n LIMIT ";
@@ -81,11 +80,9 @@ public class QueryUtil
      * @param tokens the words spanned by the mention
      * @param limit maximum number of results
      * @param conceptIri the concept of which instances should be generated as candidates
-     * @param language the language in which the labels should be retrieved
      * @return a query to retrieve candidate entities
      */
-    public static String generateCandidateQuery(List<String> tokens, int limit, IRI conceptIri,
-            String language)
+    public static String generateCandidateQuery(List<String> tokens, int limit, IRI conceptIri)
     {
         String query = SPARQL_INFERENCE_CLAUSE;
         query += SPARQL_PREFIX + "\n";
@@ -114,26 +111,12 @@ public class QueryUtil
             SPARQL_ENTITY_LABEL_INST = SPARQL_ENTITY_LABEL_INST
                     .replace("?e2 rdf:type <%conceptIri>", "");
         }
-        SPARQL_ENTITY_LABEL_INST = SPARQL_ENTITY_LABEL_INST.replace("%language", language);
         
         query += SPARQL_ENTITY_LABEL_INST;
         query += "} \n";
         query += SPARQL_LIMIT + limit;
         String variables = "".concat("?e2 ").concat("?altLabel ").concat("?label");
         query = query.replace("%queryvariables%", variables);
-        return query;
-    }
-
-    public static String mapWikipediaUrlToWikidataUrlQuery(String wikipediaURL, String language)
-    {
-        String wikipediaId = wikipediaURL.replace("http://" + language + ".wikipedia.org/wiki/",
-                "https://" + language + ".wikipedia.org/wiki/");
-        String query = SPARQL_PREFIX + "\n";
-        query += SPARQL_SELECT + "{\n";
-        query += SPARQL_MAP_WIKIPEDIA_ID.replace("%otherkbid%", wikipediaId);
-        query += "\n}";
-        query = query.replace("%queryvariables%", "?e2");
-        query += SPARQL_LIMIT + 10;
         return query;
     }
 
@@ -153,7 +136,7 @@ public class QueryUtil
         semanticSignatureInst = semanticSignatureInst
                 .replace(" ?p ?m . ?m ?rd ", " ?rd ?m . ?m ?p ");
         query += semanticSignatureInst;
-        query += SPARQL_CANONICAL_LABEL_ENTITY.replace("?e2", "?e1").replace("%language", "en");
+        query += SPARQL_CANONICAL_LABEL_ENTITY.replace("?e2", "?e1");
         query += "\n}";
         query = query.replace("%queryvariables%", "?label ?p ?e1");
         query = query.replace("%restriction%", "");

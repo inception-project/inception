@@ -19,11 +19,13 @@ package de.tudarmstadt.ukp.inception.kb.feature;
 
 import static org.apache.commons.lang3.StringUtils.startsWithAny;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 
+import org.apache.uima.jcas.JCas;
 import org.apache.wicket.Component;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
@@ -36,7 +38,7 @@ import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 
 import com.googlecode.wicket.kendo.ui.form.dropdown.DropDownList;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.JCasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.FeatureEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
@@ -58,18 +60,18 @@ public class ConceptFeatureEditor
     private @SpringBean KnowledgeBaseService kbService;
     
     public ConceptFeatureEditor(String aId, MarkupContainer aItem, IModel<FeatureState> aModel, 
-            IModel<AnnotatorState> aStateModel, AnnotationActionHandler aActionHandler)
+            IModel<AnnotatorState> aStateModel, JCasProvider aJcasProvider)
     {
         super(aId, aItem, new CompoundPropertyModel<>(aModel));
         // Checks whether hide un-constraint feature is enabled or not
         add(new Label("feature", getModelObject().feature.getUiName()));
-        add(focusComponent = createFieldComboBox(aStateModel.getObject(), aActionHandler));
+        add(focusComponent = createFieldComboBox(aStateModel.getObject(), aJcasProvider));
     }
 
     private DropDownList<KBHandle> createFieldComboBox(AnnotatorState aState, 
-            AnnotationActionHandler aActionHandler)
+            JCasProvider aJcasProvider)
     {
-        DropDownList<KBHandle> field = new DropDownList<>("value", LambdaModel.of(() -> {
+        DropDownList<KBHandle> field = new DropDownList<KBHandle>("value", LambdaModel.of(() -> {
             AnnotationFeature feat = getModelObject().feature;    
             String identifier = feat.getType().substring("kb:".length());
 
@@ -79,13 +81,14 @@ public class ConceptFeatureEditor
                 if (!identifier.isEmpty()) {
                     Optional<KBConcept> concept = kbService.readConcept(kb, identifier);
                     if (concept.isPresent()) {
-                        handles.addAll(listInstances(kb, concept.get().getIdentifier(), true, 
-                                aState, aActionHandler));
+                        handles.addAll(listInstances(kb, concept.get().getIdentifier(), true, aState,
+                            aJcasProvider));
+                    }
                 }
                 // List instances of all concepts
                 else {
                     handles.addAll(listInstances(kb, null, true, aState,
-                        aActionHandler));
+                        aJcasProvider));
                 }
             }
             return new ArrayList<>(handles);
@@ -111,7 +114,7 @@ public class ConceptFeatureEditor
     }
     
     private List<KBHandle> listInstances(KnowledgeBase kb, String aConceptIri,
-        boolean aAll, AnnotatorState aState, AnnotationActionHandler aActionHandler)
+        boolean aAll, AnnotatorState aState, JCasProvider jCasProvider)
     {
         if (kb.isSupportConceptLinking()) {
             if (aConceptIri != null) {
@@ -119,7 +122,7 @@ public class ConceptFeatureEditor
             }
             // List instances of all concepts
             else {
-                return listLinkingInstances(kb, null, false, aAll, aState, aActionHandler);
+                return listLinkingInstances(kb, null, false, aAll, aState, jCasProvider);
             }
         }
         else {
@@ -130,11 +133,12 @@ public class ConceptFeatureEditor
     
     private List<KBHandle> listLinkingInstances(KnowledgeBase kb, IRI conceptIri,
             boolean aIncludeInferred, boolean aAll, AnnotatorState aState, 
-            AnnotationActionHandler aActionHandler)
+            JCasProvider aJcasProvider)
     {
         List<KBHandle> resultList = kbService.read(kb, (conn) -> {
-            List<Entity> candidates = extensionRegistry.fireDisambiguate(kb, conceptIri, aState, 
-                    aActionHandler);
+            List<Entity> candidates = extensionRegistry
+                .fireDisambiguate(kb, conceptIri, aState.getSelection().getText(),
+                    aState.getSelection().getBegin(), aJcasProvider);
             List<KBHandle> handles = new ArrayList<>();
 
             for (Entity c: candidates) {

@@ -22,8 +22,7 @@ import java.util.List;
 
 import org.eclipse.rdf4j.model.IRI;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.JCasProvider;
 import de.tudarmstadt.ukp.inception.kb.model.Entity;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
@@ -42,12 +41,11 @@ public interface KnowledgeBaseExtension
      *
      * @param aKB the KB used to generate candidates
      * @param aConceptIri the concept of which instances should be generated as candidates
-     * @param aState AnnotatorState, used to get information about what surface form was marked
-     * @param aActionHandler contains JCas, used to extract information about mention sentence
+     * @param aMentionBeginOffset the offset where the mention begins in the text
+     * @param aJcasProvider contains JCas, used to extract information about mention sentence
      *                       tokens
      * @return ranked list of entities, starting with the most probable entity
      */
-    List<Entity> disambiguate(KnowledgeBase aKB, IRI aConceptIri, AnnotatorState aState, 
-            AnnotationActionHandler aActionHandler);
-
+    List<Entity> disambiguate(KnowledgeBase aKB, IRI aConceptIri, String
+        aMention, int aMentionBeginOffset, JCasProvider aJcasProvider);
 }

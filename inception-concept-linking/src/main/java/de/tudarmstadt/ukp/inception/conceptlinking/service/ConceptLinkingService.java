@@ -54,10 +54,8 @@ import org.springframework.security.core.session.SessionInformation;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.JCasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.conceptlinking.model.Property;
@@ -138,8 +136,7 @@ public class ConceptLinkingService
      * It only contains entities which are instances of a pre-defined concept.
      * TODO lemmatize the mention if no candidates could be generated
      */
-    private Set<Entity> generateCandidates(KnowledgeBase aKB, String aMention, IRI aConceptIri,
-            String aLanguage)
+    private Set<Entity> generateCandidates(KnowledgeBase aKB, String aMention, IRI aConceptIri)
     {
         double startTime = System.currentTimeMillis();
         Set<Entity> candidates = new HashSet<>();
@@ -173,7 +170,7 @@ public class ConceptLinkingService
 
         int candidateQueryLimit = 1000;
         String entityQueryString = QueryUtil
-            .generateCandidateQuery(mentionArray, candidateQueryLimit, aConceptIri, aLanguage);
+            .generateCandidateQuery(mentionArray, candidateQueryLimit, aConceptIri);
         
         try (RepositoryConnection conn = kbService.getConnection(aKB)) {
             TupleQuery query = conn.prepareTupleQuery(QueryLanguage.SPARQL, entityQueryString);
@@ -203,7 +200,7 @@ public class ConceptLinkingService
             String[] split = aMention.split(" ");
             if (split.length > 1) {
                 for (String s : split) {
-                    candidates.addAll(generateCandidates(aKB, s, null, aLanguage));
+                    candidates.addAll(generateCandidates(aKB, s, null));
                 }
             }
         }
@@ -424,29 +421,25 @@ public class ConceptLinkingService
      *
      * @param aKB the KB used to generate candidates
      * @param aConceptIri the concept of which instances should be generated as candidates
-     * @param aState AnnotatorState, used to get information about what surface form was marked
-     * @param aActionHandler contains JCas, used to extract information about mention sentence
+     * @param aMention AnnotatorState, used to get information about what surface form was
+     *                     marked
+     * @param aMentionBeginOffset the offset where the mention begins in the text
+     * @param aJcasProvider contains JCas, used to extract information about mention sentence
      *                       tokens
      * @return ranked list of entities, starting with the most probable entity
      */
     @Override
-    public List<Entity> disambiguate(KnowledgeBase aKB, IRI aConceptIri, AnnotatorState aState,
-            AnnotationActionHandler aActionHandler)
+    public List<Entity> disambiguate(KnowledgeBase aKB, IRI aConceptIri, String
+        aMention, int aMentionBeginOffset, JCasProvider aJcasProvider)
     {
         List<Entity> candidates = new ArrayList<>();
-        
-        String mention = aState.getSelection().getText();
-        User user = aState.getUser();
-
-        ConceptLinkingUserState userState = getState(user.getUsername());
-        String language = userState.getLanguage();
 
         try {
-            JCas jCas = aActionHandler.getEditorCas();
+            JCas jCas = aJcasProvider.get();
 
-            candidates = rankCandidates(aKB, mention,
-                    generateCandidates(aKB, mention, aConceptIri, language), jCas,
-                    aState.getSelection().getBegin());
+            candidates = rankCandidates(aKB, aMention,
+                    generateCandidates(aKB, aMention, aConceptIri), jCas,
+                    aMentionBeginOffset);
         }
         catch (IOException e) {
             logger.error("Cannot get JCas", e);
@@ -495,16 +488,6 @@ public class ConceptLinkingService
        
     private class ConceptLinkingUserState
     {
-        private String language = "en";
-        
-        private String getLanguage()
-        {
-            return language;
-        }
 
-        private void setLanguage(String aLanguage)
-        {
-            language = aLanguage;
-        }
     }
 }
