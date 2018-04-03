@@ -22,6 +22,7 @@ import static org.apache.commons.lang3.StringUtils.startsWithAny;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.wicket.Component;
 import org.apache.wicket.MarkupContainer;
@@ -70,20 +71,20 @@ public class ConceptFeatureEditor
     {
         DropDownList<KBHandle> field = new DropDownList<>("value", LambdaModel.of(() -> {
             AnnotationFeature feat = getModelObject().feature;    
-            String identifier = feat.getType().substring(ConceptFeatureSupport.PREFIX.length());
+            String identifier = feat.getType().substring("kb:".length());
 
             // retrieve handles from all knowledge bases
             List<KBHandle> handles = new LinkedList<>();
             for (KnowledgeBase kb : kbService.getKnowledgeBases(feat.getProject())) {
                 if (!identifier.isEmpty()) {
-                    KBConcept concept = kbService.readConcept(kb, identifier);
-                    if (concept != null) {
-                        handles.addAll(kbService.listInstances(kb, concept.getIdentifier(), true, 
+                    Optional<KBConcept> concept = kbService.readConcept(kb, identifier);
+                    if (concept.isPresent()) {
+                        handles.addAll(listInstances(kb, concept.get().getIdentifier(), true, 
                                 aState, aActionHandler));
                 }
                 // List instances of all concepts
                 else {
-                    handles.addAll(kbService.listInstances(kb, null, true, aState,
+                    handles.addAll(listInstances(kb, null, true, aState,
                         aActionHandler));
                 }
             }
