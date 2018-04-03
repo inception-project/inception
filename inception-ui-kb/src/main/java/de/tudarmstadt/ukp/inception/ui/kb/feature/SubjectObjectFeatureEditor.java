@@ -178,11 +178,11 @@ public class SubjectObjectFeatureEditor
 
         if (roleLabelSlotIsSelected()) {
             state.clearArmedSlot();
-            aTarget.add(content);
+            aTarget.add(getOwner());
         }
         else {
             state.setArmedSlot(getModelObject().feature, 0);
-            aTarget.add(content);
+            aTarget.add(getOwner());
         }
     }
 
