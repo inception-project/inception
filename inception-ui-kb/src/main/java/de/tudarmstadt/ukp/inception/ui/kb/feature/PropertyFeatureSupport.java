@@ -58,8 +58,8 @@ public class PropertyFeatureSupport
     implements FeatureSupport<Void>
 {
     private static final Logger LOG = LoggerFactory.getLogger(PropertyFeatureSupport.class);
-    private static final String PREDICATE_KEY = "Property: Predicate";
-    private static final String FACT_PREDICATE_PREFIX = "fact-predicate:";
+    private static final String PREDICATE_KEY = "KB: Property";
+    private static final String FACT_PREDICATE_PREFIX = "kb-property:";
 
     @Resource private KnowledgeBaseService kbService;
 
