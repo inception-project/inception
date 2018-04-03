@@ -103,7 +103,6 @@ public class SubjectObjectFeatureEditor
             roleModel = links.get(0);
         }
 
-        content.add(new Label("role", roleModel.role));
         content.add(createSubjectObjectLabel());
         content.add(focusComponent = createFieldComboBox());
     }
