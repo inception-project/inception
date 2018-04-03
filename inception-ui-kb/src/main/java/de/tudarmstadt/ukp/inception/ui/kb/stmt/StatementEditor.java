@@ -19,15 +19,22 @@ package de.tudarmstadt.ukp.inception.ui.kb.stmt;
 
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
+import de.tudarmstadt.ukp.inception.kb.graph.KBModifier;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.event.Broadcast;
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.TextArea;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.panel.Fragment;
 import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.markup.repeater.Item;
+import org.apache.wicket.markup.repeater.RefreshingView;
+import org.apache.wicket.markup.repeater.ReuseIfModelsEqualStrategy;
+import org.apache.wicket.markup.repeater.util.ModelIteratorAdapter;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
@@ -42,6 +49,8 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxStatementChangedEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.util.WriteProtectionBehavior;
+
+import java.util.Iterator;
 
 public class StatementEditor extends Panel {
 
@@ -97,6 +106,10 @@ public class StatementEditor extends Panel {
         aTarget.add(this);
     }
 
+    private void actionAddStatement(AjaxRequestTarget aTarget) {
+
+    }
+
     private void actionCancelExistingStatement(AjaxRequestTarget aTarget) {
         content = content.replaceWith(new ViewMode(CONTENT_MARKUP_ID, statement));
         aTarget.add(this);
@@ -146,6 +159,8 @@ public class StatementEditor extends Panel {
     private class ViewMode extends Fragment {
         private static final long serialVersionUID = 2375450134740203778L;
 
+        private WebMarkupContainer modifierListWrapper;
+
         public ViewMode(String aId, IModel<KBStatement> aStatement) {
             super(aId, "viewMode", StatementEditor.this, aStatement);
 
@@ -167,12 +182,53 @@ public class StatementEditor extends Panel {
                     .onConfigure((_this) -> _this.setVisible(!statement.getObject().isInferred()));
             editLink.add(new WriteProtectionBehavior(kbModel));
             add(editLink);
+
+            LambdaAjaxLink addModifierLink = new LambdaAjaxLink("addModifier", StatementEditor
+                .this::actionEdit).onConfigure((_this) -> _this.setVisible(!statement.getObject()
+                .isInferred()));
+            addModifierLink.add(new WriteProtectionBehavior(kbModel));
+            add(addModifierLink);
             
             LambdaAjaxLink makeExplicitLink = new LambdaAjaxLink("makeExplicit",
                     StatementEditor.this::actionMakeExplicit).onConfigure(
                         (_this) -> _this.setVisible(statement.getObject().isInferred()));
             makeExplicitLink.add(new WriteProtectionBehavior(kbModel));
             add(makeExplicitLink);
+
+            RefreshingView<KBModifier> modifierList = new RefreshingView<KBModifier>
+                ("modifierList")
+            {
+                private static final long serialVersionUID = -8342276415072873329L;
+
+                @Override
+                protected Iterator<IModel<KBModifier>> getItemModels()
+                {
+                    return new ModelIteratorAdapter<KBModifier>(
+                        statement.getObject().getModifiers()
+                    )
+                    {
+                        @Override
+                        protected IModel<KBModifier> model(KBModifier object)
+                        {
+                            return LambdaModel.of(() -> object);
+                        }
+                    };
+                }
+
+                @Override protected void populateItem(Item<KBModifier> aItem)
+                {
+                    ModifierEditor editor = new ModifierEditor("modifier", kbModel, aItem
+                        .getModel());
+                    aItem.add(editor);
+                    aItem.setOutputMarkupId(true);
+                }
+            };
+            modifierList.setItemReuseStrategy(new ReuseIfModelsEqualStrategy());
+
+            modifierListWrapper = new WebMarkupContainer("modifierListWrapper");
+            modifierListWrapper.setOutputMarkupId(true);
+            modifierListWrapper.add(modifierList);
+            add(modifierListWrapper);
         }
     }
 
