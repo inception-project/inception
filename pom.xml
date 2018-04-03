@@ -102,7 +102,33 @@
         <enabled>true</enabled>
       </snapshots>
     </repository>
+    <!-- For SNAPSHOTs from OpenMinTeD -->
+    <repository>
+      <id>omtd-snapshots</id>
+      <layout>default</layout>
+      <url>https://repo.openminted.eu/content/repositories/snapshots</url>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
   </repositories>
+  <pluginRepositories>
+    <!-- For SNAPSHOTs from OpenMinTeD -->
+    <pluginRepository>
+      <id>omtd-snapshots</id>
+      <layout>default</layout>
+      <url>https://repo.openminted.eu/content/repositories/snapshots</url>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </pluginRepository>
+  </pluginRepositories>
   <scm>
     <connection>scm:git:git.ukp.informatik.tu-darmstadt.de:inception/inception-application.git</connection>
     <developerConnection>scm:git:git@git.ukp.informatik.tu-darmstadt.de:inception/inception-application.git</developerConnection>
