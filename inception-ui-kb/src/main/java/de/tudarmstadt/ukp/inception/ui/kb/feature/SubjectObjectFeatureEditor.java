@@ -60,23 +60,18 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 public class SubjectObjectFeatureEditor
     extends FeatureEditor
 {
-
     private static final long serialVersionUID = 4230722501745589589L;
-    private static final Logger logger = LoggerFactory.getLogger(SubjectObjectFeatureEditor.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SubjectObjectFeatureEditor.class);
+
     private @SpringBean AnnotationSchemaService annotationService;
+    private @SpringBean KnowledgeBaseService kbService;
+
     private WebMarkupContainer content;
-
-    @SuppressWarnings("rawtypes") private Component focusComponent;
-    private boolean hideUnconstraintFeature;
-
+    private Component focusComponent;
     private AnnotationActionHandler actionHandler;
     private IModel<AnnotatorState> stateModel;
-
-    @SuppressWarnings("unused") private LinkWithRoleModel roleModel;
-
-    AnnotationFeature linkedAnnotationFeature;
-
-    private @SpringBean KnowledgeBaseService kbService;
+    private LinkWithRoleModel roleModel;
+    private AnnotationFeature linkedAnnotationFeature;
 
     public SubjectObjectFeatureEditor(String aId, MarkupContainer aOwner,
         AnnotationActionHandler aHandler, final IModel<AnnotatorState> aStateModel,
@@ -86,8 +81,6 @@ public class SubjectObjectFeatureEditor
 
         stateModel = aStateModel;
         actionHandler = aHandler;
-
-        hideUnconstraintFeature = getModelObject().feature.isHideUnconstraintFeature();
 
         add(new Label("feature", getModelObject().feature.getUiName()));
         content = new WebMarkupContainer("content");
@@ -109,7 +102,6 @@ public class SubjectObjectFeatureEditor
 
     private Label createSubjectObjectLabel()
     {
-        AnnotatorState state = stateModel.getObject();
         Label label;
         label = new Label("label", LambdaModel.of(this::getSelectionSlotLabel));
         label.add(new AjaxEventBehavior("click")
@@ -229,7 +221,7 @@ public class SubjectObjectFeatureEditor
                     .setFeature(selectedFS, linkedAnnotationFeature, value.getIdentifier());
             }
             catch (CASException | IOException e) {
-                logger.error("Error: " + e.getMessage(), e);
+                LOG.error("Error: " + e.getMessage(), e);
                 error("Error: " + e.getMessage());
             }
         }
@@ -253,7 +245,7 @@ public class SubjectObjectFeatureEditor
                 }
             }
             catch (CASException | IOException e) {
-                logger.error("Error: " + e.getMessage(), e);
+                LOG.error("Error: " + e.getMessage(), e);
                 error("Error: " + e.getMessage());
             }
         }
@@ -272,5 +264,4 @@ public class SubjectObjectFeatureEditor
         }
         return handles;
     }
-
 }
