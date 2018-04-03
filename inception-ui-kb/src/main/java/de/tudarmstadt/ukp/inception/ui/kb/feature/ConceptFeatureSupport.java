@@ -66,7 +66,8 @@ public class ConceptFeatureSupport
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     public static final String PREFIX = "kb:";
-    public static final String ANY_CONCEPT = PREFIX + "<ANY>";
+    public static final String ANY_CONCEPT = "<ANY>";
+    public static final String TYPE_ANY_CONCEPT = PREFIX + ANY_CONCEPT;
 
     private @Autowired KnowledgeBaseService kbService;
     //private @PersistenceContext EntityManager entityManager;
@@ -102,7 +103,7 @@ public class ConceptFeatureSupport
     {
         // We just start with no specific scope at all (ANY) and let the user refine this via
         // the traits editor
-        return asList(new FeatureType(ANY_CONCEPT, "Concept", featureSupportId));
+        return asList(new FeatureType(TYPE_ANY_CONCEPT, "Concept", featureSupportId));
     }
 
     @Override
@@ -249,7 +250,7 @@ public class ConceptFeatureSupport
         
         // If there is no scope set in the trait, see if once can be extracted from the legacy
         // location which is the feature type.
-        if (traits.getScope() == null && !ANY_CONCEPT.equals(aFeature.getType())) {
+        if (traits.getScope() == null && !TYPE_ANY_CONCEPT.equals(aFeature.getType())) {
             traits.setScope(aFeature.getType().substring(PREFIX.length()));
         }
         
@@ -264,7 +265,7 @@ public class ConceptFeatureSupport
             aFeature.setType(PREFIX + aTraits.getScope());
         }
         else {
-            aFeature.setType(ANY_CONCEPT);
+            aFeature.setType(TYPE_ANY_CONCEPT);
         }
         
         try {
