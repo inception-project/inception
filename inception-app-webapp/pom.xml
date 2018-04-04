@@ -64,6 +64,10 @@
           <groupId>ch.qos.logback</groupId>
           <artifactId>logback-classic</artifactId>
         </exclusion>
+        <exclusion>
+          <groupId>org.languagetool</groupId>
+          <artifactId>language-ja</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
     
