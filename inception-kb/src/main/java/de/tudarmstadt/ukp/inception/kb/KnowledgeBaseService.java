@@ -23,6 +23,7 @@ import java.io.OutputStream;
 import java.util.List;
 import java.util.Optional;
 
+import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
@@ -263,4 +264,14 @@ public interface KnowledgeBaseService
     List<KBHandle> listChildConcepts(KnowledgeBase kb, String parentIdentifier, boolean aAll);
     
     RepositoryConnection getConnection(KnowledgeBase kb);
+
+    interface ReadAction<T>
+    {
+        T accept(RepositoryConnection aConnection);
+    }
+
+    <T> T read(KnowledgeBase kb, ReadAction<T> aAction);
+
+    List<KBHandle> list(KnowledgeBase kb, IRI aType, boolean aIncludeInferred, boolean
+        aAll);
 }

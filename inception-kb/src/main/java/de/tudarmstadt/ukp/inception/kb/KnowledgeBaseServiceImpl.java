@@ -681,14 +681,14 @@ public class KnowledgeBaseServiceImpl
         return result;
     }
 
-    private <T> T read(KnowledgeBase kb, ReadAction<T> aAction)
+    public <T> T read(KnowledgeBase kb, ReadAction<T> aAction)
     {
         try (RepositoryConnection conn = getConnection(kb)) {
             return aAction.accept(conn);
         }
     }
 
-    private List<KBHandle> list(KnowledgeBase kb, IRI aType, boolean aIncludeInferred, boolean aAll)
+    public List<KBHandle> list(KnowledgeBase kb, IRI aType, boolean aIncludeInferred, boolean aAll)
     {
         List<KBHandle> resultList = read(kb, (conn) -> {
             String QUERY = String.join("\n"
@@ -860,10 +860,5 @@ public class KnowledgeBaseServiceImpl
     private interface UpdateAction
     {
         KBHandle accept(RepositoryConnection aConnection);
-    }
-
-    private interface ReadAction<T>
-    {
-        T accept(RepositoryConnection aConnection);
     }
 }
