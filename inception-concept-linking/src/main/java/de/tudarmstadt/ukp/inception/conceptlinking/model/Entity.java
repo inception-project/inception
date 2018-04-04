@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package de.tudarmstadt.ukp.inception.kb.model;
+package de.tudarmstadt.ukp.inception.conceptlinking.model;
 
 import java.util.Set;
 
