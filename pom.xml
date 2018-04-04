@@ -74,6 +74,7 @@
     <dkpro.version>1.7.0</dkpro.version>
     <springfox.version>2.7.0</springfox.version>
     <batik.version>1.9.1</batik.version>
+    <json.version>20180130</json.version>
   </properties>
   <repositories>
     <repository>
@@ -362,6 +363,11 @@
         <version>3.4.0-SNAPSHOT</version>
       </dependency>
       <dependency>
+        <groupId>org.json</groupId>
+        <artifactId>json</artifactId>
+        <version>${json.version}</version>
+      </dependency>
+      <dependency>
         <groupId>com.googlecode.wicket-jquery-ui</groupId>
         <artifactId>wicket-jquery-ui</artifactId>
         <version>${wicket-jquery-ui.version}</version>
@@ -385,6 +391,11 @@
         <groupId>com.googlecode.wicket-jquery-ui</groupId>
         <artifactId>wicket-kendo-ui-theme-bootstrap</artifactId>
         <version>${wicket-jquery-ui.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.wicketstuff</groupId>
+        <artifactId>wicketstuff-select2</artifactId>
+        <version>${wicketstuff.version}</version>
       </dependency>
       <dependency>
         <groupId>org.wicketstuff</groupId>

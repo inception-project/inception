@@ -38,8 +38,10 @@ import org.springframework.stereotype.Component;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.BooleanFeatureEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.FeatureEditor;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.InputFieldTextFeatureEditor;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.KendoAutoCompleteTextFeatureEditor;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.KendoComboboxTextFeatureEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.NumberFeatureEditor;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.TextFeatureEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.UimaStringTraitsEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
@@ -156,7 +158,19 @@ public class PrimitiveUimaFeatureSupport
                 break;
             }
             case CAS.TYPE_NAME_STRING: {
-                editor = new TextFeatureEditor(aId, aOwner, aFeatureStateModel);
+                if (feature.getTagset() == null) {
+                    // If there is no tagset, use a simple input field
+                    editor = new InputFieldTextFeatureEditor(aId, aOwner, aFeatureStateModel);
+                }
+                else if (aFeatureStateModel.getObject().tagset.size() < 75) {
+                    // For smaller tagsets, use a combobox
+                    editor = new KendoComboboxTextFeatureEditor(aId, aOwner, aFeatureStateModel);
+                }
+                else {
+                    // For larger ones, use an auto-complete field
+                    editor = new KendoAutoCompleteTextFeatureEditor(aId, aOwner,
+                            aFeatureStateModel);
+                }
                 break;
             }
             default:
