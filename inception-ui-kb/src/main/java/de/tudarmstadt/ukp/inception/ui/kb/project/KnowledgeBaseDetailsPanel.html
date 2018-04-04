@@ -96,7 +96,7 @@
           <wicket:message key="kb.remote.url" />
         </label>
         <div class="col-sm-10">
-          <input wicket:id="url" type="text" class="form-control" disabled="disabled" />
+          <input wicket:id="url" type="text" class="form-control" />
         </div>
       </div>
     </wicket:container>
@@ -111,7 +111,7 @@
               <wicket:message key="kb.iri.classIri" />
             </span>
             <div class="col-sm-10">
-              <input type="text" wicket:id="classIri" class="form-control" disabled="disabled" />
+              <input type="text" wicket:id="classIri" class="form-control" />
             </div>
           </div>
           <div class="form-group row">
@@ -119,7 +119,7 @@
               <wicket:message key="kb.iri.subclassIri" />
             </span>
             <div class="col-sm-10">
-              <input type="text" wicket:id="subclassIri" class="form-control" disabled="disabled" />
+              <input type="text" wicket:id="subclassIri" class="form-control" />
             </div>
           </div>
           <div class="form-group row">
@@ -127,11 +127,20 @@
               <wicket:message key="kb.iri.typeIri" />
             </span>
             <div class="col-sm-10">
-              <input type="text" wicket:id="typeIri" class="form-control" disabled="disabled" />
+              <input type="text" wicket:id="typeIri" class="form-control" />
             </div>            
-          </div> 
-        </div>
+          </div>
+        </div>        
       </div>
+      <div class="form-group">
+        <div class="col-sm-offset-4 col-sm-8">
+          <div class="checkbox">
+            <label wicket:for="enabled">
+              <input wicket:id="enabled" type="checkbox" /> <wicket:label key="enabled" />
+            </label>
+          </div>
+        </div>              
+      </div> 
     </wicket:container>
   </wicket:fragment>
   
@@ -218,9 +227,18 @@
             <div class="col-sm-10">
               <input type="text" wicket:id="typeIri" class="form-control" />
             </div>            
-          </div> 
+          </div>        
         </div>
       </div>
+      <div class="form-group">
+        <div class="col-sm-offset-4 col-sm-8">
+          <div class="checkbox">
+            <label wicket:for="enabled">
+              <input wicket:id="enabled" type="checkbox" /> <wicket:label key="enabled" />
+            </label>
+          </div>
+        </div>              
+      </div>  
     </wicket:container>
   </wicket:fragment>
 </body>

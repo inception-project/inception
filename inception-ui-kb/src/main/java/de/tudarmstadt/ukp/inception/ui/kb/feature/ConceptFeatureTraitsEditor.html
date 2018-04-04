@@ -1,5 +1,5 @@
 <!--
-#Copyright 2017
+#Copyright 2018
 #Ubiquitous Knowledge Processing (UKP) Lab
 #Technische Universität Darmstadt
 #
@@ -18,13 +18,23 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
   xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 <wicket:panel>
-  <div class="form-group" wicket:enclosure="value">
-    <label wicket:for="value" class="col-sm-3 control-label">
-      <wicket:container wicket:id="feature"/>
-    </label>
-    <div class="col-sm-9">
-      <select style="width: 100%;" wicket:id="value"></select>
+  <form wicket:id="form">
+    <div class="form-group" wicket:enclosure="knowledgeBase">
+      <label wicket:for="knowledgeBase" class="col-sm-4 control-label">
+        <wicket:label key="knowledgeBase"/>
+      </label>
+      <div class="col-sm-8">
+        <select wicket:id="knowledgeBase" class="form-control"></select>
+      </div>
     </div>
-  </div>
+    <div class="form-group" wicket:enclosure="scope">
+      <label wicket:for="scope" class="col-sm-4 control-label">
+        <wicket:label key="scope"/>
+      </label>
+      <div class="col-sm-8">
+        <select wicket:id="scope" class="form-control"></select>
+      </div>
+    </div>
+  </form>
 </wicket:panel>
 </html>

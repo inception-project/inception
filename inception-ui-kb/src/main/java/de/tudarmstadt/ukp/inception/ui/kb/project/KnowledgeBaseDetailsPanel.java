@@ -29,6 +29,7 @@ import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.ajax.markup.html.form.AjaxButton;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.RequiredTextField;
 import org.apache.wicket.markup.html.form.TextField;
@@ -125,10 +126,11 @@ public class KnowledgeBaseDetailsPanel extends Panel {
             String url = ((SPARQLRepositoryConfig) cfg).getQueryEndpointUrl();
             ekb.setUrl(url);
         }
-
+        
         ekb.setClassIri(kb.getClassIri().stringValue());
         ekb.setSubclassIri(kb.getSubclassIri().stringValue());
         ekb.setTypeIri(kb.getTypeIri().stringValue());
+        ekb.setEnabled(kb.isEnabled());
 
         // wrap the given knowledge base model, then set it as the default model
         ekbModel = new CompoundPropertyModel<>(Model.of(ekb));
@@ -247,7 +249,7 @@ public class KnowledgeBaseDetailsPanel extends Panel {
 
     private void actionSave(AjaxRequestTarget aTarget, Form<EnrichedKnowledgeBase> aForm) {
         EnrichedKnowledgeBase ekb = ekbModel.getObject();
-
+        
         // if dealing with a remote repository and a non-empty URL, get a new RepositoryImplConfig
         // for the new URL; otherwise keep using the existing config
         RepositoryImplConfig cfg;
@@ -379,9 +381,20 @@ public class KnowledgeBaseDetailsPanel extends Panel {
         @Override
         protected void setUpCommonComponents(WebMarkupContainer wmc) {
             // Schema configuration
-            wmc.add(new TextField<String>("classIri"));
-            wmc.add(new TextField<String>("subclassIri"));
-            wmc.add(new TextField<String>("typeIri"));
+            addDisabledUrlField(wmc, "classIri");
+            addDisabledUrlField(wmc, "subclassIri");
+            addDisabledUrlField(wmc, "typeIri");
+            wmc.add(new CheckBox("enabled")
+            {
+
+                private static final long serialVersionUID = -2101263555896964046L;
+
+                @Override
+                protected void onConfigure()
+                {
+                    setEnabled(false);
+                }
+            });
         }
 
         @Override
@@ -418,7 +431,23 @@ public class KnowledgeBaseDetailsPanel extends Panel {
 
         @Override
         protected void setUpRemoteKnowledgeBaseComponents(WebMarkupContainer wmc) {
-            wmc.add(new TextField<>("url"));
+            addDisabledUrlField(wmc, "url");
+        }
+
+        private void addDisabledUrlField(WebMarkupContainer wmc, String id)
+        {
+            TextField<String> textField = new RequiredTextField<String>(id)
+            {
+
+                private static final long serialVersionUID = -7733443305863666055L;
+
+                @Override
+                protected void onConfigure()
+                {
+                    setEnabled(false);
+                }
+            };
+            wmc.add(textField);
         }
     }
 
@@ -446,6 +475,7 @@ public class KnowledgeBaseDetailsPanel extends Panel {
             addUrlField(wmc, "classIri");
             addUrlField(wmc, "subclassIri");
             addUrlField(wmc, "typeIri");
+            wmc.add(new CheckBox("enabled"));
         }
 
         @Override

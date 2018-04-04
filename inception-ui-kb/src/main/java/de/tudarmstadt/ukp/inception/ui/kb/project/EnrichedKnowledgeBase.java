@@ -36,6 +36,7 @@ public class EnrichedKnowledgeBase implements Serializable {
     private String classIri;
     private String subclassIri;
     private String typeIri;
+    private boolean enabled = true;
     private List<File> files;
 
     public KnowledgeBase getKb() {
@@ -90,4 +91,15 @@ public class EnrichedKnowledgeBase implements Serializable {
     {
         typeIri = aTypeUri;
     }
+
+    public boolean isEnabled()
+    {
+        return enabled;
+    }
+
+    public void setEnabled(boolean isEnabled)
+    {
+        enabled = isEnabled;
+    }
+
 }

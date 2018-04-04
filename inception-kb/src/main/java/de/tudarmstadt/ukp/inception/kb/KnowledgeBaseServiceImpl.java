@@ -34,6 +34,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 
@@ -152,6 +153,13 @@ public class KnowledgeBaseServiceImpl
         return !query.getResultList().isEmpty();
     }
 
+    @Transactional(noRollbackFor = NoResultException.class)
+    @Override
+    public Optional<KnowledgeBase> getKnowledgeBaseById(Project aProject, String aId)
+    {
+        return Optional.ofNullable(entityManager.find(KnowledgeBase.class, aId));
+    }
+
     @Transactional
     @Override
     public void updateKnowledgeBase(KnowledgeBase kb, RepositoryImplConfig cfg)
@@ -167,6 +175,16 @@ public class KnowledgeBaseServiceImpl
     public List<KnowledgeBase> getKnowledgeBases(Project aProject)
     {
         Query query = entityManager.createNamedQuery("KnowledgeBase.getByProject");
+        query.setParameter("project", aProject);
+        return (List<KnowledgeBase>) query.getResultList();
+    }
+
+    @SuppressWarnings("unchecked")
+    @Transactional
+    @Override
+    public List<KnowledgeBase> getEnabledKnowledgeBases(Project aProject)
+    {
+        Query query = entityManager.createNamedQuery("KnowledgeBase.getByProjectWhereEnabledTrue");
         query.setParameter("project", aProject);
         return (List<KnowledgeBase>) query.getResultList();
     }
@@ -288,10 +306,8 @@ public class KnowledgeBaseServiceImpl
         return read(kb, (conn) -> {
             ValueFactory vf = conn.getValueFactory();
 
-            try {
-                RepositoryResult<Statement> stmts = RdfUtils.getStatements(conn,
-                        vf.createIRI(aIdentifier), kb.getTypeIri(), kb.getClassIri(), true);
-
+            try (RepositoryResult<Statement> stmts = RdfUtils.getStatements(conn,
+                    vf.createIRI(aIdentifier), kb.getTypeIri(), kb.getClassIri(), true)) {
                 if (stmts.hasNext()) {
                     Statement conceptStmt = stmts.next();
                     KBConcept kbConcept = KBConcept.read(conn, conceptStmt);
@@ -305,7 +321,20 @@ public class KnowledgeBaseServiceImpl
             }
         });
     }
-
+    
+    @Override
+    public Optional<KBConcept> readConcept(Project aProject, String aIdentifier)
+    {
+        for (KnowledgeBase kb : getKnowledgeBases(aProject)) {
+            Optional<KBConcept> concept = readConcept(kb, aIdentifier);
+            if (concept.isPresent()) {
+                return concept;
+            }
+        }
+        
+        return Optional.empty();
+    }
+    
     @Override
     public void updateConcept(KnowledgeBase kb, KBConcept aConcept)
     {
@@ -353,9 +382,8 @@ public class KnowledgeBaseServiceImpl
     {
         return read(kb, (conn) -> {
             ValueFactory vf = conn.getValueFactory();
-            try {
-                RepositoryResult<Statement> stmts = RdfUtils.getStatements(conn,
-                        vf.createIRI(aIdentifier), kb.getTypeIri(), RDF.PROPERTY, true);
+            try (RepositoryResult<Statement> stmts = RdfUtils.getStatements(conn,
+                    vf.createIRI(aIdentifier), kb.getTypeIri(), RDF.PROPERTY, true)) {
                 if (stmts.hasNext()) {
                     Statement propStmt = stmts.next();
                     KBProperty kbProp = KBProperty.read(conn, propStmt);
@@ -438,20 +466,34 @@ public class KnowledgeBaseServiceImpl
             }
 
             // Read the instance
-            RepositoryResult<Statement> instanceStmts = RdfUtils.getStatements(conn,
+            try (RepositoryResult<Statement> instanceStmts = RdfUtils.getStatements(conn,
                     vf.createIRI(aIdentifier), kb.getTypeIri(), vf.createIRI(conceptIdentifier),
-                    true);
-            if (instanceStmts.hasNext()) {
-                Statement kbStmt = instanceStmts.next();
-                KBInstance kbInst = KBInstance.read(conn, kbStmt);
-                return Optional.of(kbInst);
-            } else {
-                return Optional.empty();
+                    true)) {
+                if (instanceStmts.hasNext()) {
+                    Statement kbStmt = instanceStmts.next();
+                    KBInstance kbInst = KBInstance.read(conn, kbStmt);
+                    return Optional.of(kbInst);
+                } else {
+                    return Optional.empty();
+                }
             }
         } catch (QueryEvaluationException e) {
             log.warn("Reading concept for instance failed.", e);
             return Optional.empty();
         }
+    }
+    
+    @Override
+    public Optional<KBInstance> readInstance(Project aProject, String aIdentifier)
+    {
+        for (KnowledgeBase kb : getKnowledgeBases(aProject)) {
+            Optional<KBInstance> instance = readInstance(kb, aIdentifier);
+            if (instance.isPresent()) {
+                return instance;
+            }
+        }
+        
+        return Optional.empty();
     }
 
     @Override

@@ -45,8 +45,7 @@
       </column>
     </addColumn>
   </changeSet>
-
-
+ 
   <changeSet author="INCEpTION Team" id="20180215-1">
     <preConditions onFail="MARK_RAN">
       <not>
@@ -114,6 +113,20 @@
     <addUniqueConstraint tableName="knowledgebase"
                          columnNames="project, name"
                          constraintName="UQ_KNOWLEDGEBASE_PROJECT_NAME"/>
+  </changeSet>
+  
+  <changeSet author="INCEpTION Team" id="20180312-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="knowledgebase" columnName="enabled" />
+      </not>
+    </preConditions>
+
+    <addColumn tableName="knowledgebase">
+      <column name="enabled" type="BOOLEAN" defaultValueBoolean="true">
+        <constraints nullable="false" />
+      </column>
+    </addColumn>
   </changeSet>
 
   <!-- Change foreign key constraint to allow cascade deletion/update of learning 

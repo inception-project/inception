@@ -30,7 +30,7 @@
   <name>INCEpTION</name>
   <properties>
     <webanno.version>3.4.0-SNAPSHOT</webanno.version>
-    <dkpro.version>1.9.0</dkpro.version>
+    <dkpro.version>1.9.1-SNAPSHOT</dkpro.version>
     <spring.version>5.0.4.RELEASE </spring.version>
     <spring.boot.version>1.5.10.RELEASE</spring.boot.version>
     <wicket.version>7.10.0</wicket.version>
@@ -57,7 +57,7 @@
     <module>inception-recommendation</module>
     <module>inception-active-learning</module>
     <module>inception-imls-core</module>
-    <module>inception-imls-mira</module>
+    <!-- module>inception-imls-mira</module -->
     <module>inception-imls-opennlp</module>
     <module>inception-imls-stringmatch</module>
     <module>inception-imls-dl4j</module>
@@ -68,6 +68,7 @@
   </modules>
   <repositories>
     <!-- For RELEASEes of Miralium -->
+    <!--  
     <repository>
       <id>ukp-central</id>
       <url>https://scruffy.ukp.informatik.tu-darmstadt.de/artifactory/list/external-grid/</url>
@@ -78,7 +79,8 @@
         <enabled>false</enabled>
       </snapshots>
     </repository>
-    <!-- For RELEASEes of WebAnno -->
+    -->
+    <!-- For RELEASEes of WebAnno / DKPro Core-->
     <repository>
       <id>ukp-oss-releases</id>
       <url>http://zoidberg.ukp.informatik.tu-darmstadt.de/artifactory/public-releases</url>
@@ -89,7 +91,7 @@
         <enabled>false</enabled>
       </snapshots>
     </repository>
-    <!-- For SNAPSHOTs of WebAnno -->
+    <!-- For SNAPSHOTs of WebAnno / DKPro Core -->
     <repository>
       <id>ukp-oss-snapshots</id>
       <url>http://zoidberg.ukp.informatik.tu-darmstadt.de/artifactory/public-snapshots</url>

@@ -81,6 +81,7 @@ public class EnrichedKnowledgeBaseUtils
         kb.setClassIri(factory.createIRI(ekb.getClassIri()));
         kb.setSubclassIri(factory.createIRI(ekb.getSubclassIri()));
         kb.setTypeIri(factory.createIRI(ekb.getTypeIri()));
+        kb.setEnabled(ekb.isEnabled());
     }
 
     private static final void importFiles(EnrichedKnowledgeBase ekb,
