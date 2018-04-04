@@ -32,17 +32,17 @@
       onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="project" />
   </changeSet>
   
-  <changeSet author="INCEpTION Team" id="20180204">
+  <changeSet author="INCEpTION Team" id="20180204-1">
     <preConditions onFail="MARK_RAN">
       <not>
         <columnExists tableName="knowledgebase" columnName="supportConceptLinking"/>
       </not>
     </preConditions>
     <addColumn tableName="knowledgebase">
-      <column name="supportConceptLinking" type="BOOLEAN"/>
+      <column name="supportConceptLinking" type="BOOLEAN" defaultValueBoolean="false">
+        <constraints nullable="false" />
+      </column>
     </addColumn>
-    <addNotNullConstraint tableName="knowledgebase" columnName="supportConceptLinking"
-                          columnDataType="BOOLEAN" defaultNullValue="false"/>
   </changeSet>
   
   <changeSet author="INCEpTION Team" id="20180204-2-4">
