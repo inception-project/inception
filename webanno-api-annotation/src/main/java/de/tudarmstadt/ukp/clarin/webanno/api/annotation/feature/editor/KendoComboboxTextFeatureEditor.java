@@ -40,20 +40,20 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 /**
  * String feature editor using a Kendo ComboBox field.
  * 
- * <h5>PROs</h5>
+ * <b>PROs</b>
  * <ul>
  * <li>Dropdown box is always available</li>
  * <li>Description tooltips already work.</li>
- * <li>Re-focussing after safe does not work out of the box, but is coverd by 
+ * <li>Re-focussing after safe does not work out of the box, but is covered by 
  *     wicket-jquery-focus-patch.js</li>
  * </ul>
  * 
- * <h5>CONs</h5>
+ * <b>CONs</b>
  * <ul>
  * <li>No server-side filtering, thus not good for mid-sized or larger tagsets.</li>
  * </ul>
  * 
- * <h5>TODOs</h5>
+ * <b>TODOs</b>
  * <ul>
  * <li>...?</li>
  * </ul>

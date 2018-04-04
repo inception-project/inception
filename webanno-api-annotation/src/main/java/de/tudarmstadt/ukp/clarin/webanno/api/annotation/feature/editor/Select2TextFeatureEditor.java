@@ -38,12 +38,12 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 /**
  * String feature editor using Select2.
  * 
- * <h5>PROs</h5>
+ * <b>PROs</b>
  * <ul>
  * <li>Does nicely support paging/infinite scrolling!</li>
  * </ul>
  * 
- * <h5>CONs</h5>
+ * <b>CONs</b>
  * <ul>
  * <li>Clicking "x" to clear the selection leaves a popup hanging around
  *     Cf. https://github.com/select2/select2/issues/3320</li>
@@ -52,7 +52,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
  *     Means tabbing through it doesn't work well/at all.</li>
  * </ul>
  * 
- * <h5>TODOs</h5>
+ * <b>TODOs</b>
  * <ul>
  * <li>Does not support description tooltips yet. Should be doable though.</li>
  * </ul>

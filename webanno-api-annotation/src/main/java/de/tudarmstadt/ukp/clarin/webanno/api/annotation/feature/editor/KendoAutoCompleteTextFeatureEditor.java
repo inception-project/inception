@@ -46,7 +46,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
  * <li>Can be auto-focussed when an annotation is selected.</li>
  * <li>Description tooltips already work.</li>
  * <li>Server-side filtering</li>
- * <li>Re-focussing after safe does not work out of the box, but is coverd by 
+ * <li>Re-focussing after safe does not work out of the box, but is covered by 
  *     wicket-jquery-focus-patch.js</li>
  * </ul>
  * 
@@ -54,7 +54,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
  * <ul>
  * <li>Clicking into the input field does not directly open the suggestion list. Keyboard input
  *     is required for the list to open.</li>
- *       
  * </ul>
  * 
  * <h5>TODOs</h5>
