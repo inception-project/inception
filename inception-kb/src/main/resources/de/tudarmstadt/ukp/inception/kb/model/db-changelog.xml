@@ -33,6 +33,11 @@
   </changeSet>
   
   <changeSet author="INCEpTION Team" id="20180204">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="knowledgebase" columnName="supportConceptLinking"/>
+      </not>
+    </preConditions>
     <addColumn tableName="knowledgebase">
       <column name="supportConceptLinking" type="BOOLEAN"/>
     </addColumn>
