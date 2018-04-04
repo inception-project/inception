@@ -41,7 +41,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 /**
  * String feature editor using a Kendo AutoComplete field.
  * 
- * <h5>PROs</h5>
+ * <b>PROs</b>
  * <ul>
  * <li>Can be auto-focussed when an annotation is selected.</li>
  * <li>Description tooltips already work.</li>
@@ -50,13 +50,13 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
  *     wicket-jquery-focus-patch.js</li>
  * </ul>
  * 
- * <h5>CONs</h5>
+ * <b>CONs</b>
  * <ul>
  * <li>Clicking into the input field does not directly open the suggestion list. Keyboard input
  *     is required for the list to open.</li>
  * </ul>
  * 
- * <h5>TODOs</h5>
+ * <b>TODOs</b>
  * <ul>
  * <li>...?</li>
  * </ul>
