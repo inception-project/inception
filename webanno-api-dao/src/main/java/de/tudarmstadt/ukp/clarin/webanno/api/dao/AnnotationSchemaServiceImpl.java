@@ -183,7 +183,6 @@ public class AnnotationSchemaServiceImpl
     @Override
     @Transactional
     public void createLayer(AnnotationLayer aLayer)
-        throws IOException
     {
         if (isNull(aLayer.getId())) {
             entityManager.persist(aLayer);

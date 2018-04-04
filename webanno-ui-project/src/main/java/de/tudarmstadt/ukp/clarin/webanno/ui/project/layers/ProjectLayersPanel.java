@@ -106,10 +106,11 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.EntityModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
@@ -162,8 +163,6 @@ public class ProjectLayersPanel
         featureSelectionForm.setOutputMarkupPlaceholderTag(true);
 
         layerDetailForm = new LayerDetailForm("layerDetailForm");
-        layerDetailForm.setVisible(false);
-        layerDetailForm.setOutputMarkupPlaceholderTag(true);
 
         featureDetailForm = new FeatureDetailForm("featureDetailForm");
         featureDetailForm.setVisible(false);
@@ -183,10 +182,12 @@ public class ProjectLayersPanel
     {
         super.onModelChanged();
         layerSelectionForm.getModelObject().layerSelection = null;
+        
+        layerDetailForm.setModelObject(null);
+
         featureSelectionForm.getModelObject().feature = null;
-        layerDetailForm.setModelObject(new AnnotationLayer());
-        layerDetailForm.setVisible(false);
         featureSelectionForm.setVisible(false);
+
         featureDetailForm.setModelObject(null);
     }
     
@@ -206,16 +207,12 @@ public class ProjectLayersPanel
                 @Override
                 public void onSubmit()
                 {
-                    if (isNull(ProjectLayersPanel.this.getModelObject().getId())) {
-                        error("Project not yet created. Please save project details first!");
-                    }
-                    else {
-                        LayerSelectionForm.this.getModelObject().layerSelection = null;
-                        layerDetailForm.setModelObject(new AnnotationLayer());
-                        layerDetailForm.setVisible(true);
-                        featureSelectionForm.setVisible(false);
-                        featureDetailForm.setVisible(false);
-                    }
+                    LayerSelectionForm.this.getModelObject().layerSelection = null;
+                    
+                    layerDetailForm.setModelObject(new AnnotationLayer());
+                    featureDetailForm.setModelObject(null);
+                    
+                    featureSelectionForm.setVisible(false);
                 }
             });
 
@@ -286,20 +283,19 @@ public class ProjectLayersPanel
                 protected void onUpdate(AjaxRequestTarget aTarget)
                 {
                     layerDetailForm.setModelObject(getModelObject().layerSelection);
-                    layerDetailForm.setVisible(true);
 
                     LayerSelectionForm.this.setVisible(true);
+                    
                     featureSelectionForm.clearInput();
                     featureSelectionForm.setVisible(true);
-                    layerDetailForm.setVisible(true);
-                    featureDetailForm.setVisible(false);
+                    
+                    featureDetailForm.setModelObject(null);
 
                     layerType = getModelObject().layerSelection.getType();
 
                     aTarget.add(layerDetailForm);
                     aTarget.add(featureSelectionForm);
                     aTarget.add(featureDetailForm);
-
                 }
             });
         }
@@ -434,7 +430,6 @@ public class ProjectLayersPanel
             createLayer(exLayer, user, attachLayer);
             layerDetailForm.setModelObject(annotationService.getLayer(
                     exLayer.getName(), project));
-            layerDetailForm.setVisible(true);
             featureSelectionForm.setVisible(true);
         }
         
@@ -518,9 +513,10 @@ public class ProjectLayersPanel
 
         public LayerDetailForm(String id)
         {
-            super(id, new CompoundPropertyModel<>(new EntityModel<>(
-                    new AnnotationLayer())));
+            super(id, CompoundPropertyModel.of(Model.of()));
 
+            setOutputMarkupPlaceholderTag(true);
+            
             add(new TextField<String>("uiName").setRequired(true));
             add(new TextArea<String>("description").setOutputMarkupPlaceholderTag(true));
 
@@ -732,32 +728,23 @@ public class ProjectLayersPanel
                 }
             });
 
-            add(multipleTokens = new CheckBox("multipleTokens")
-            {
-                private static final long serialVersionUID = 1319818165277559402L;
-
-                {
-                    setOutputMarkupPlaceholderTag(true);
-                }
-
-                @Override
-                protected void onConfigure()
-                {
-                    super.onConfigure();
-                    AnnotationLayer layer = LayerDetailForm.this.getModelObject();
-                    // Makes no sense for relations
-                    setVisible(!isBlank(layer.getType()) && !RELATION_TYPE.equals(layer.getType()));
-                    setEnabled(
-                            // Surface form must be locked to token boundaries for CONLL-U writer
-                            // to work.
-                            !SurfaceForm.class.getName().equals(layer.getName()) &&
-                            // Not configurable for chains
-                            !CHAIN_TYPE.equals(layer.getType()) 
-                            // Not configurable for layers that attach to tokens (currently that
-                            // is the only layer on which we use the attach feature)
-                            && layer.getAttachFeature() == null);
-                }
-            });
+            add(multipleTokens = (CheckBox) new CheckBox("multipleTokens")
+                    .add(LambdaBehavior.onConfigure(_this -> {
+                        AnnotationLayer layer = LayerDetailForm.this.getModelObject();
+                        // Makes no sense for relations
+                        _this.setVisible(!isBlank(layer.getType()) && 
+                                !RELATION_TYPE.equals(layer.getType()));
+                        _this.setEnabled(
+                                // Surface form must be locked to token boundaries for CONLL-U
+                                // writer to work.
+                                !SurfaceForm.class.getName().equals(layer.getName()) &&
+                                // Not configurable for chains
+                                !CHAIN_TYPE.equals(layer.getType()) 
+                                // Not configurable for layers that attach to tokens (currently 
+                                // that is the only layer on which we use the attach feature)
+                                && layer.getAttachFeature() == null);
+                    }))
+                    . setOutputMarkupPlaceholderTag(true));
 
             add(linkedListBehavior = new CheckBox("linkedListBehavior")
             {
@@ -792,121 +779,104 @@ public class ProjectLayersPanel
                     "placeholder",
                     "alert($PARAM.PID + ' ' + $PARAM.PNAME + ' ' + $PARAM.DOCID + ' ' + "
                     + "$PARAM.DOCNAME + ' ' + $PARAM.fieldname);")));
-            
-            // -- 
-
-            add(new Button("save", new StringResourceModel("label"))
-            {
-                private static final long serialVersionUID = 1L;
-
-                @Override
-                public void onSubmit()
-                {
-                    AnnotationLayer layer = LayerDetailForm.this.getModelObject();
-
-                    if (layer.isLockToTokenOffset() && layer.isMultipleTokens()) {
-                        layer.setLockToTokenOffset(false);
-                    }
-
-                    final Project project = ProjectLayersPanel.this.getModelObject();
-                    if (isNull(layer.getId())) {
-                        String layerName = StringUtils
-                                .capitalize(LayerDetailForm.this.getModelObject().getUiName());
-                        
-                        layerName = layerName.replaceAll("\\W", "");
-                        if (layerName.isEmpty() || !isAscii(layerName)) {
-                            error("Non ASCII characters can not be used as layer name!");
-                            return;
-                        }
-                        if (annotationService.existsLayer(TYPE_PREFIX + layerName, layer.getType(),
-                                project)) {
-                            error("A layer with the name [" + TYPE_PREFIX + layerName
-                                    + "] already exists in this project.");
-                            return;
-                        }
-                        if (layer.getType().equals(RELATION_TYPE)
-                                && layer.getAttachType() == null) {
-                            error("A relation layer needs an attach type!");
-                            return;
-                        }
-
-                        if ((TYPE_PREFIX + layerName).endsWith(".")) {
-                            error("Layer names cannot end in '.'.");
-                            return;
-                        }
-
-                        layer.setProject(project);
-                        try {
-                            layer.setName(TYPE_PREFIX + layerName);
-                            annotationService.createLayer(layer);
-                            if (layer.getType().equals(WebAnnoConst.CHAIN_TYPE)) {
-                                AnnotationFeature relationFeature = new AnnotationFeature();
-                                relationFeature.setType(CAS.TYPE_NAME_STRING);
-                                relationFeature.setName(COREFERENCE_RELATION_FEATURE);
-                                relationFeature.setLayer(layer);
-                                relationFeature.setEnabled(true);
-                                relationFeature.setUiName("Reference Relation");
-                                relationFeature.setProject(project);
-
-                                annotationService.createFeature(relationFeature);
-
-                                AnnotationFeature typeFeature = new AnnotationFeature();
-                                typeFeature.setType(CAS.TYPE_NAME_STRING);
-                                typeFeature.setName(COREFERENCE_TYPE_FEATURE);
-                                typeFeature.setLayer(layer);
-                                typeFeature.setEnabled(true);
-                                typeFeature.setUiName("Reference Type");
-                                typeFeature.setProject(project);
-
-                                annotationService.createFeature(typeFeature);
-                            }
-                        }
-                        catch (IOException e) {
-                            error("unable to create Logger file while creating this layer" + ":"
-                                    + ExceptionUtils.getRootCauseMessage(e));
-                        }
-                        featureSelectionForm.setVisible(true);
-                    }
-                    
-                    // Trigger LayerConfigurationChangedEvent
-                    applicationEventPublisherHolder.get()
-                            .publishEvent(new LayerConfigurationChangedEvent(this, project));
-                }
-            });
 
             add(new DropDownChoice<LayerExportMode>("exportMode",
                     new PropertyModel<LayerExportMode>(this, "exportMode"),
                     asList(LayerExportMode.values()),
                     new EnumChoiceRenderer<>(this))
                     .add(new LambdaAjaxFormComponentUpdatingBehavior("change")));
-            
+
             add(new AjaxDownloadLink("export", 
                     LambdaModel.of(this::getExportLayerFileName).autoDetaching(),
                     LambdaModel.of(this::exportLayer)));
-            
-            add(new Button("cancel", new StringResourceModel("label")) {
-                private static final long serialVersionUID = 1L;
-                
-                {
-                    // Avoid saving data
-                    setDefaultFormProcessing(false);
-                    setVisible(true);
-                }
-                
-                @Override
-                public void onSubmit()
-                {
-//                    layerDetailForm.setModelObject(new AnnotationLayer());
-//                    layerSelectionForm.setModelObject(new SelectionModel());
-//                    featureSelectionForm.setModelObject(new SelectionModel());
-//                    featureDetailForm.setModelObject(new AnnotationFeature());
-//                    layerDetailForm.setModelObject(null);
-                    layerDetailForm.setVisible(false);
-                    featureSelectionForm.setVisible(false);
-                    featureDetailForm.setModelObject(null);
-                }
-            });
 
+            add(new LambdaAjaxButton<>("save", this::actionSave));
+            add(new LambdaAjaxLink("cancel", this::actionCancel));
+        }
+        
+        private void actionSave(AjaxRequestTarget aTarget, Form<?> aForm)
+        {
+            aTarget.add(ProjectLayersPanel.this);
+            aTarget.addChildren(getPage(), IFeedback.class);
+
+            AnnotationLayer layer = LayerDetailForm.this.getModelObject();
+
+            if (layer.isLockToTokenOffset() && layer.isMultipleTokens()) {
+                layer.setLockToTokenOffset(false);
+            }
+
+            final Project project = ProjectLayersPanel.this.getModelObject();
+            if (isNull(layer.getId())) {
+                String layerName = StringUtils
+                        .capitalize(LayerDetailForm.this.getModelObject().getUiName());
+                
+                layerName = layerName.replaceAll("\\W", "");
+                if (layerName.isEmpty() || !isAscii(layerName)) {
+                    error("Non ASCII characters can not be used as layer name!");
+                    return;
+                }
+                if (annotationService.existsLayer(TYPE_PREFIX + layerName, layer.getType(),
+                        project)) {
+                    error("A layer with the name [" + TYPE_PREFIX + layerName
+                            + "] already exists in this project.");
+                    return;
+                }
+                if (layer.getType().equals(RELATION_TYPE)
+                        && layer.getAttachType() == null) {
+                    error("A relation layer needs an attach type!");
+                    return;
+                }
+
+                if ((TYPE_PREFIX + layerName).endsWith(".")) {
+                    error("Layer names cannot end in '.'.");
+                    return;
+                }
+
+                layer.setProject(project);
+                layer.setName(TYPE_PREFIX + layerName);
+                if (layer.getType().equals(WebAnnoConst.CHAIN_TYPE)) {
+                    AnnotationFeature relationFeature = new AnnotationFeature();
+                    relationFeature.setType(CAS.TYPE_NAME_STRING);
+                    relationFeature.setName(COREFERENCE_RELATION_FEATURE);
+                    relationFeature.setLayer(layer);
+                    relationFeature.setEnabled(true);
+                    relationFeature.setUiName("Reference Relation");
+                    relationFeature.setProject(project);
+
+                    annotationService.createFeature(relationFeature);
+
+                    AnnotationFeature typeFeature = new AnnotationFeature();
+                    typeFeature.setType(CAS.TYPE_NAME_STRING);
+                    typeFeature.setName(COREFERENCE_TYPE_FEATURE);
+                    typeFeature.setLayer(layer);
+                    typeFeature.setEnabled(true);
+                    typeFeature.setUiName("Reference Type");
+                    typeFeature.setProject(project);
+
+                    annotationService.createFeature(typeFeature);
+                }
+
+                annotationService.createLayer(layer);
+
+                featureSelectionForm.setVisible(true);
+            }
+            
+            // Trigger LayerConfigurationChangedEvent
+            applicationEventPublisherHolder.get()
+                    .publishEvent(new LayerConfigurationChangedEvent(this, project));
+        }
+        
+        private void actionCancel(AjaxRequestTarget aTarget)
+        {
+            aTarget.add(ProjectLayersPanel.this);
+            aTarget.addChildren(getPage(), IFeedback.class);
+            
+            layerSelectionForm.getModelObject().layerSelection = null;
+            
+            layerDetailForm.setModelObject(null);
+            
+            featureSelectionForm.setVisible(false);
+            featureDetailForm.setModelObject(null);
         }
         
         private String getExportLayerFileName()
@@ -988,6 +958,14 @@ public class ProjectLayersPanel
                 return null;
             }
         }
+        
+        @Override
+        protected void onConfigure()
+        {
+            super.onConfigure();
+            
+            setVisible(getModelObject() != null);
+        }
     }
 
     public static boolean isAscii(String v)
@@ -1008,7 +986,7 @@ public class ProjectLayersPanel
 
         public FeatureDetailForm(String id)
         {
-            super(id, CompoundPropertyModel.of(new Model<AnnotationFeature>()));
+            super(id, CompoundPropertyModel.of(Model.of()));
 
             add(traitsContainer = new WebMarkupContainer(MID_TRAITS_CONTAINER));
             traitsContainer.setOutputMarkupId(true);

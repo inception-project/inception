@@ -70,12 +70,9 @@ public interface AnnotationSchemaService
      *
      * @param type
      *            the type.
-     * @throws IOException
-     *             if an I/O error occurs.
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
-    void createLayer(AnnotationLayer type)
-        throws IOException;
+    void createLayer(AnnotationLayer type);
 
     void createFeature(AnnotationFeature feature);
 
