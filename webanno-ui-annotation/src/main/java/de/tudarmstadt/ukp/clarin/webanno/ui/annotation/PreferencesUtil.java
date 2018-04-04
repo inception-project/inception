@@ -35,11 +35,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.SettingsService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy.ColoringStrategyType;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotationPreference;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.brat.config.BratProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -73,7 +73,7 @@ public class PreferencesUtil
      * @throws BeansException hum?
      * @throws IOException hum?
      */
-    public static void loadPreferences(String aUsername, SettingsService aSettingsService,
+    public static void loadPreferences(String aUsername, BratProperties aDefaultPreferences,
             ProjectService aRepositoryService, AnnotationSchemaService aAnnotationService,
             AnnotatorState aBModel, Mode aMode)
         throws BeansException, IOException
@@ -148,7 +148,9 @@ public class PreferencesUtil
                     .collect(Collectors.toList()); 
             aBModel.setAnnotationLayers(enabledLayers);
             
-            preference.setWindowSize(aSettingsService.getNumberOfSentences());
+            preference.setWindowSize(aDefaultPreferences.getPageSize());
+            preference.setScrollPage(aDefaultPreferences.isAutoScroll());
+            
             // add default coloring strategy
             Map<Long, ColoringStrategyType> colorPerLayer = new HashMap<>();
             for (AnnotationLayer layer : aBModel.getAnnotationLayers()) {

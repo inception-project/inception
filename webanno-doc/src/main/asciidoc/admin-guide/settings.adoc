@@ -99,9 +99,19 @@
 | 0
 | 2592000 _(60 * 60 * 24 * 30 = 30 days)_
 
-| ui.brat.sentences.number
+| ui.brat.autoScroll
+| Whether to scroll the annotation being edited into the center of the page
+| true
+| 
+
+| ui.brat.pageSize
 | The number of sentences to display per page
 | 5
+| 
+
+| ui.brat.singleClickSelection
+| Whether to select annotations with a single click
+| false
 | 
 
 | style.logo

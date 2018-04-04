@@ -25,6 +25,8 @@ import org.springframework.stereotype.Component;
 public class BratProperties
 {
     private boolean singleClickSelection = false;
+    private int pageSize = 5;
+    private boolean autoScroll = true;
 
     public boolean isSingleClickSelection()
     {
@@ -34,5 +36,25 @@ public class BratProperties
     public void setSingleClickSelection(boolean aSingleClickSelection)
     {
         singleClickSelection = aSingleClickSelection;
+    }
+
+    public int getPageSize()
+    {
+        return pageSize;
+    }
+
+    public void setPageSize(int aPageSize)
+    {
+        pageSize = aPageSize;
+    }
+
+    public boolean isAutoScroll()
+    {
+        return autoScroll;
+    }
+
+    public void setAutoScroll(boolean aAutoScroll)
+    {
+        autoScroll = aAutoScroll;
     }
 }
