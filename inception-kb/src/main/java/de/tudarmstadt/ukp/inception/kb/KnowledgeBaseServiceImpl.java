@@ -33,7 +33,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import javax.annotation.Resource;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
@@ -96,7 +95,6 @@ public class KnowledgeBaseServiceImpl
 
     private @PersistenceContext EntityManager entityManager;
     private final RepositoryManager repoManager;
-    private @Resource KnowledgeBaseExtensionRegistry extensionRegistry;
 
     @org.springframework.beans.factory.annotation.Value(value = "${data.path}/kb")
     private File dataDir;
