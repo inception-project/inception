@@ -18,14 +18,12 @@
 
 package de.tudarmstadt.ukp.inception.conceptlinking.service;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -54,7 +52,6 @@ import org.springframework.security.core.session.SessionInformation;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.JCasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -62,14 +59,13 @@ import de.tudarmstadt.ukp.inception.conceptlinking.model.Property;
 import de.tudarmstadt.ukp.inception.conceptlinking.model.SemanticSignature;
 import de.tudarmstadt.ukp.inception.conceptlinking.util.QueryUtil;
 import de.tudarmstadt.ukp.inception.conceptlinking.util.Utils;
-import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseExtension;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
+import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.model.Entity;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 @Component
 public class ConceptLinkingService
-    implements KnowledgeBaseExtension
 {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -117,7 +113,6 @@ public class ConceptLinkingService
         propertyWithLabels = Utils.loadPropertyLabels(propertyWithLabelsResource);
     }
 
-    @Override
     public String getBeanName()
     {
         return "ConceptLinkingService";
@@ -153,14 +148,18 @@ public class ConceptLinkingService
         }
 
         boolean onlyStopwords = true;
-        ListIterator<String> it2 = mentionArray.listIterator();
-        while (it2.hasNext()) {
-            current = it2.next();
-            it2.set(current);
-            if (!stopwords.contains(current)) {
-                onlyStopwords = false;
-                break;
+        if (stopwords != null) {
+            ListIterator<String> it2 = mentionArray.listIterator();
+            while (it2.hasNext()) {
+                current = it2.next();
+                it2.set(current);
+                if (!stopwords.contains(current)) {
+                    onlyStopwords = false;
+                    break;
+                }
             }
+        } else {
+            onlyStopwords = false;
         }
 
         if (mentionArray.isEmpty() || onlyStopwords) {
@@ -286,12 +285,12 @@ public class ConceptLinkingService
         Set<String> sentenceContentTokens = new HashSet<>();
         for (Token t : JCasUtil.selectCovered(Token.class, mentionSentence)) {
             if (t.getPosValue() != null) {
-                if ((t.getPosValue().startsWith("V")
-                        || t.getPosValue().startsWith("N")
-                        || t.getPosValue().startsWith("J"))
-                    && !splitMention.contains(t.getCoveredText())
-                    && (!Objects.requireNonNull(stopwords).contains(t.getCoveredText())
-                        || !splitMention.contains(t.getCoveredText()))) {
+                boolean isNounOrVerbOrAdjective = t.getPosValue().startsWith("V")
+                    || t.getPosValue().startsWith("N") || t.getPosValue().startsWith("J");
+                boolean isNotPartOfMention = !splitMention.contains(t.getCoveredText());
+                boolean isNotStopword = (stopwords == null) || (stopwords != null &&
+                    !stopwords.contains(t.getCoveredText()));
+                if (isNounOrVerbOrAdjective && isNotPartOfMention && isNotStopword) {
                     sentenceContentTokens.add(t.getCoveredText());
                 }
             }
@@ -300,7 +299,7 @@ public class ConceptLinkingService
         candidates.parallelStream().forEach(l -> {
             String wikidataId = l.getIRI().replace("http://www.wikidata.org/entity/", "");
 
-            if (Objects.requireNonNull(entityFrequencyMap).get(wikidataId) != null) {
+            if (entityFrequencyMap != null && entityFrequencyMap.get(wikidataId) != null) {
                 l.setFrequency(entityFrequencyMap.get(wikidataId));
             }
             else {
@@ -395,12 +394,18 @@ public class ConceptLinkingService
                     BindingSet sol = result.next();
                     String propertyString = sol.getValue("p").stringValue();
                     String labelString = sol.getValue("label").stringValue();
-                    Property property = Objects.requireNonNull(propertyWithLabels).get(labelString);
-                    int frequencyThreshold = 0;
-                    if (Objects.requireNonNull(propertyBlacklist).contains(propertyString) || (
-                        property != null && typeBlacklist.contains(property.getType())) || (
-                        property != null && property.getFreq() < frequencyThreshold)) {
-                        continue;
+                    if (propertyWithLabels != null) {
+                        Property property = propertyWithLabels.get(labelString);
+                        int frequencyThreshold = 0;
+                        boolean isBlacklisted =
+                            (propertyBlacklist != null && propertyBlacklist.contains(propertyString)
+                            || (property != null && (typeBlacklist != null
+                                && typeBlacklist.contains(property.getType()))));
+                        boolean isUnfrequent = property != null
+                            && property.getFreq() < frequencyThreshold;
+                        if (isBlacklisted || isUnfrequent) {
+                            continue;
+                        }
                     }
                     relatedEntities.add(labelString);
                     relatedRelations.add(propertyString);
@@ -424,29 +429,34 @@ public class ConceptLinkingService
      * @param aMention AnnotatorState, used to get information about what surface form was
      *                     marked
      * @param aMentionBeginOffset the offset where the mention begins in the text
-     * @param aJcasProvider contains JCas, used to extract information about mention sentence
+     * @param aJcas used to extract information about mention sentence
      *                       tokens
      * @return ranked list of entities, starting with the most probable entity
      */
-    @Override
-    public List<Entity> disambiguate(KnowledgeBase aKB, IRI aConceptIri, String
-        aMention, int aMentionBeginOffset, JCasProvider aJcasProvider)
+    public List<KBHandle> disambiguate(KnowledgeBase aKB, IRI aConceptIri, String
+        aMention, int aMentionBeginOffset, JCas aJcas)
     {
-        List<Entity> candidates = new ArrayList<>();
-
-        try {
-            JCas jCas = aJcasProvider.get();
-
-            candidates = rankCandidates(aKB, aMention,
-                    generateCandidates(aKB, aMention, aConceptIri), jCas,
+        List<Entity> candidates = rankCandidates(aKB, aMention,
+                    generateCandidates(aKB, aMention, aConceptIri), aJcas,
                     aMentionBeginOffset);
-        }
-        catch (IOException e) {
-            logger.error("Cannot get JCas", e);
+
+        List<KBHandle> handles = new ArrayList<>();
+
+        for (Entity c: candidates) {
+            String id = c.getIRI();
+            String label = c.getLabel();
+
+            if (!id.contains(":")) {
+                continue;
+            }
+
+            KBHandle handle = new KBHandle(id, label);
+            if (!handles.contains(handle)) {
+                handles.add(handle);
+            }
         }
 
-        return candidates;
-
+        return handles;
     }
     /*
      * Clear user state when session ends

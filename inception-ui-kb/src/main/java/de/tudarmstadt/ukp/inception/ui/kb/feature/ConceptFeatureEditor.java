@@ -17,11 +17,13 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.uima.jcas.JCas;
 import org.apache.wicket.Component;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
@@ -31,17 +33,24 @@ import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.googlecode.wicket.kendo.ui.form.dropdown.DropDownList;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.FeatureEditor;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaChoiceRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
+import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
@@ -52,6 +61,8 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 public class ConceptFeatureEditor
     extends FeatureEditor
 {
+    private final Logger log = LoggerFactory.getLogger(getClass());
+
     private static final String MID_FEATURE = "feature";
     private static final String MID_VALUE = "value";
 
@@ -61,18 +72,28 @@ public class ConceptFeatureEditor
 
     private @SpringBean KnowledgeBaseService kbService;
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
+    private @SpringBean ConceptLinkingService clService;
 
-    public ConceptFeatureEditor(String aId, MarkupContainer aItem, IModel<FeatureState> aModel)
+    public ConceptFeatureEditor(String aId, MarkupContainer aItem, IModel<FeatureState> aModel,
+         IModel<AnnotatorState> aStateModel, AnnotationActionHandler aHandler)
     {
         super(aId, aItem, new CompoundPropertyModel<>(aModel));
         add(new Label(MID_FEATURE, getModelObject().feature.getUiName()));
-        add(focusComponent = createFieldComboBox());
+        JCas jCas;
+        try {
+            jCas = aHandler.getEditorCas();
+            add(focusComponent = createFieldComboBox(aStateModel.getObject(), jCas));
+        } catch (IOException e) {
+            log.error("Could not get JCas from ActionHandler. ", e);
+        }
+
     }
 
-    private DropDownList<KBHandle> createFieldComboBox()
+    private DropDownList<KBHandle> createFieldComboBox(AnnotatorState aState,
+        JCas aJCas)
     {
-        DropDownList<KBHandle> field = new DropDownList<>(MID_VALUE,
-                LambdaModel.of(this::listInstances),
+        DropDownList<KBHandle> field = new DropDownList<KBHandle>(MID_VALUE,
+                LambdaModel.of(() -> listInstances(aState, aJCas)),
                 new LambdaChoiceRenderer<>(KBHandle::getUiLabel));
 
         // Ensure that markup IDs of feature editor focus components remain constant across
@@ -82,7 +103,7 @@ public class ConceptFeatureEditor
         return field;
     }
     
-    private List<KBHandle> listInstances()
+    private List<KBHandle> listInstances(AnnotatorState aState, JCas aJCas)
     {
         AnnotationFeature feat = getModelObject().feature;
         
@@ -104,7 +125,20 @@ public class ConceptFeatureEditor
             else {
                 // If no specific KB is selected, collect instances from all KBs
                 for (KnowledgeBase kb : kbService.getKnowledgeBases(project)) {
-                    handles.addAll(kbService.listInstances(kb, traits.getScope(), false));
+                    if (kb.isSupportConceptLinking()) {
+                        if (traits.getScope() != null) {
+                            IRI conceptIri = SimpleValueFactory.getInstance()
+                                .createIRI(traits.getScope());
+                            return listLinkingInstances(kb, conceptIri, aState, aJCas);
+                        }
+                        // List instances of all concepts
+                        else {
+                            return listLinkingInstances(kb, null, aState, aJCas);
+                        }
+                    }
+                    else {
+                        handles.addAll(kbService.listInstances(kb, traits.getScope(), false));
+                    }
                 }
             }
         }
@@ -130,5 +164,13 @@ public class ConceptFeatureEditor
     public Component getFocusComponent()
     {
         return focusComponent;
+    }
+
+    private List<KBHandle> listLinkingInstances(KnowledgeBase kb, IRI conceptIri,
+        AnnotatorState aState, JCas aJCas)
+    {
+        return kbService.read(kb, (conn) ->
+            clService.disambiguate(kb, conceptIri, aState.getSelection().getText(),
+            aState.getSelection().getBegin(), aJCas));
     }
 }
