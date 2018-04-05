@@ -15,7 +15,9 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>org.dkpro</groupId>
@@ -27,6 +29,32 @@
   <version>0.2.2-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>INCEpTION - Application</name>
+  <description>Towards an Infrastructure for the Distributed Exploration and Annotation of Large Corpora and Knowledge Bases</description>
+  <url>https://inception-project.github.io</url>
+  <inceptionYear>2018</inceptionYear>
+  <licenses>
+    <license>
+      <name>Apache License Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  <issueManagement>
+    <url>https://github.com/inception-project/inception/issues</url>
+    <system>GitHub Issues</system>
+  </issueManagement>
+  <scm>
+    <connection>scm:git:git://github.com/inception-project/inception</connection>
+    <developerConnection>scm:git:git@github.com:inception-project/inception.git</developerConnection>
+    <url>https://github.com/inception-project/inception</url>
+    <tag>HEAD</tag>
+  </scm>
+  <distributionManagement>
+    <repository>
+      <id>ukp-oss</id>
+      <url>https://zoidberg.ukp.informatik.tu-darmstadt.de/artifactory/public-ukp-releases-local</url>
+    </repository>
+  </distributionManagement>
   <prerequisites>
     <maven>3.0.5</maven>
   </prerequisites>
@@ -105,19 +133,6 @@
       </snapshots>
     </repository>
   </repositories>
-  <scm>
-    <connection>scm:git:git.ukp.informatik.tu-darmstadt.de:inception/inception-application.git</connection>
-    <developerConnection>scm:git:git@git.ukp.informatik.tu-darmstadt.de:inception/inception-application.git</developerConnection>
-    <url>https://git.ukp.informatik.tu-darmstadt.de/inception/inception-application</url>
-    <tag>HEAD</tag>
-  </scm>
-  <distributionManagement>
-    <repository>
-      <id>ukp-central</id>
-      <name>ukp-central-releases</name>
-      <url>https://scruffy.ukp.informatik.tu-darmstadt.de/artifactory/dkpro-local</url>
-    </repository>
-  </distributionManagement>
   <dependencyManagement>
     <dependencies>
       <!-- INCEpTION -->
