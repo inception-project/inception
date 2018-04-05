@@ -22,6 +22,7 @@ import java.io.Serializable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
@@ -41,8 +42,8 @@ public class Authority
     private static final long serialVersionUID = -1490540239189868920L;
 
     @Id
-    @GeneratedValue
-    private long id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @Column(nullable = false)
     @JoinColumn(name = "authority")
@@ -52,12 +53,12 @@ public class Authority
     @JoinColumn(name = "username")
     private User username;
 
-    public long getId()
+    public Long getId()
     {
         return id;
     }
 
-    public void setId(long aId)
+    public void setId(Long aId)
     {
         id = aId;
     }
@@ -81,6 +82,4 @@ public class Authority
     {
         this.username = username;
     }
-
-
 }

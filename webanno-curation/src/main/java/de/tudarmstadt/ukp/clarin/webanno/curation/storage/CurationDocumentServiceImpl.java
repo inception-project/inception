@@ -25,7 +25,6 @@ import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
 
-import javax.annotation.Resource;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
@@ -36,6 +35,7 @@ import org.apache.uima.jcas.JCas;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -54,8 +54,8 @@ public class CurationDocumentServiceImpl
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private @Resource CasStorageService casStorageService;
-    private @Resource AnnotationSchemaService annotationService;
+    private @Autowired CasStorageService casStorageService;
+    private @Autowired AnnotationSchemaService annotationService;
 
     @PersistenceContext
     private EntityManager entityManager;

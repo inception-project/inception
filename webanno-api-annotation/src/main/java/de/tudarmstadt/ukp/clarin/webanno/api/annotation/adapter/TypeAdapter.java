@@ -25,6 +25,7 @@ import org.apache.uima.cas.Type;
 import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -102,7 +103,7 @@ public interface TypeAdapter
      * @param aVid
      *            the VID of the object to be deleted.
      */
-    void delete(JCas aJCas, VID aVid);
+    void delete(AnnotatorState aState, JCas aJCas, VID aVid);
 
     /**
      * @return the layer for which this adapter has been created.
@@ -119,16 +120,17 @@ public interface TypeAdapter
     /**
      * Set the value of the given feature.
      * 
-     * @param aFeature
-     *            the feature.
      * @param aJcas
      *            the JCas.
      * @param aAddress
      *            the annotation ID.
+     * @param aFeature
+     *            the feature.
      * @param aValue
      *            the value.
      */
-    void setFeatureValue(AnnotationFeature aFeature, JCas aJcas, int aAddress, Object aValue);
+    void setFeatureValue(AnnotatorState aState, JCas aJcas, int aAddress,
+            AnnotationFeature aFeature, Object aValue);
 
     /**
      * Get the value of the given feature.

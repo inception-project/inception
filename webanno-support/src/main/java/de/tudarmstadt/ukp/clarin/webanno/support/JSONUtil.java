@@ -45,13 +45,13 @@ public class JSONUtil
             Object aObject, File aFile)
         throws IOException
     {
-        FileUtils.writeStringToFile(aFile, toPrettyJsonString(jsonConverter, aObject));
+        FileUtils.writeStringToFile(aFile, toPrettyJsonString(jsonConverter, aObject), "UTF-8");
     }
 
     public static void generatePrettyJson(Object aObject, File aFile)
         throws IOException
     {
-        FileUtils.writeStringToFile(aFile, toPrettyJsonString(aObject));
+        FileUtils.writeStringToFile(aFile, toPrettyJsonString(aObject), "UTF-8");
     }
 
     public static String toPrettyJsonString(MappingJackson2HttpMessageConverter jsonConverter,
@@ -81,6 +81,17 @@ public class JSONUtil
 
         jsonGenerator.writeObject(aObject);
         return out.toString();
+    }
+
+    public static <T> T fromJsonString(Class<T> aClass, String aJSON)
+        throws IOException
+    {
+        if (aJSON == null) {
+            return null;
+        }
+        else {
+            return getJsonConverter().getObjectMapper().readValue(aJSON, aClass);
+        }
     }
 
     public static String toPrettyJsonString(Object aObject)

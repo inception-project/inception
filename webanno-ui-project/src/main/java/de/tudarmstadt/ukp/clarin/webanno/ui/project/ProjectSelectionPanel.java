@@ -65,6 +65,6 @@ class ProjectSelectionPanel
 
     private List<Project> listProjects()
     {
-        return projectService.listAccessibleProjects(userRepository.getCurrentUser());
+        return projectService.listManageableProjects(userRepository.getCurrentUser());
     }
 }

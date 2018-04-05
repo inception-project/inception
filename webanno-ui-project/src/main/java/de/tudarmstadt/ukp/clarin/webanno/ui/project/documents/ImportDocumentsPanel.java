@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.project.documents;
 
+import static java.util.Objects.isNull;
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
 
 import java.io.InputStream;
@@ -71,7 +72,12 @@ public class ImportDocumentsPanel extends Panel
         format = Model.of();
         List<String> readableFormats = listReadableFormats();
         if (!readableFormats.isEmpty()) {
-            format.setObject(readableFormats.get(0));
+            if (readableFormats.contains("Plain text")) {
+                format.setObject("Plain text");
+            }
+            else {
+                format.setObject(readableFormats.get(0));
+            }
         }
         
         form.add(fileUpload = new FileUploadField("documents"));
@@ -99,8 +105,8 @@ public class ImportDocumentsPanel extends Panel
             error("No document is selected to upload, please select a document first");
             return;
         }
-        if (project.getId() == 0) {
-            error("Project not yet created, please save project Details!");
+        if (isNull(project.getId())) {
+            error("Project not yet created, please save project details!");
             return;
         }
 

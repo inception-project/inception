@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.project.detail;
 
+import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import java.io.IOException;
@@ -111,7 +113,7 @@ public class ProjectDetailPanel
         form.add(new LambdaAjaxLink("cancel", this::actionCancel));
         form.add(new LambdaAjaxLink("delete", this::actionDelete).onConfigure((_this) -> 
             _this.setEnabled(projectModel.getObject() != null && 
-                    projectModel.getObject().getId() > 0 )));
+                    projectModel.getObject().getId() != null )));
 
         IModel<String> projectNameModel = PropertyModel.of(projectModel, "name");
         add(deleteProjectDialog = new ChallengeResponseDialog("deleteProjectDialog",
@@ -144,8 +146,8 @@ public class ProjectDetailPanel
             protected void onConfigure()
             {
                 super.onConfigure();
-                setEnabled(
-                        projectModel.getObject() != null && projectModel.getObject().getId() == 0);
+                setEnabled(nonNull(projectModel.getObject())
+                        && isNull(projectModel.getObject().getId()));
             }
         };
 
@@ -161,7 +163,7 @@ public class ProjectDetailPanel
         // aTarget.addChildren(getPage(), IFeedback.class);
         
         Project project = aForm.getModelObject();
-        if (project.getId() == 0) {
+        if (isNull(project.getId())) {
             try {
                 String username = SecurityContextHolder.getContext().getAuthentication().getName();
                 projectService.createProject(project);
@@ -173,7 +175,7 @@ public class ProjectDetailPanel
                 projectService.createProjectPermission(
                         new ProjectPermission(project, username, PermissionLevel.USER));
 
-                annotationService.initializeTypesForProject(project);
+                annotationService.initializeProject(project);
             }
             catch (IOException e) {
                 error("Project repository path not found " + ":"

@@ -1089,6 +1089,11 @@ var Visualizer = (function($, window, undefined) {
                 labelIdx++;
               }
             }
+            
+// WEBANNO EXTENSION BEGIN - #709 - Optimize render data size for annotations without labels
+              fragment.labelText = "(" + fragment.labelText + ")";
+// WEBANNO EXTENSION END - #709 - Optimize render data size for annotations without labels
+            
 // WEBANNO EXTENSION BEGIN - #820 - Allow setting label/color individually
             if (fragment.span.labelText) {
             	fragment.labelText = fragment.span.labelText;
@@ -1509,12 +1514,21 @@ var Visualizer = (function($, window, undefined) {
           var labels = Util.getArcLabels(spanTypes, data.spans[arc.origin].type, arc.type, relationTypesHash);
           if (!labels.length) labels = [arc.type];
 // WEBANNO EXTENSION BEGIN - #820 - Allow setting label/color individually
-          if (arc.eventDescId && data.eventDescs[arc.eventDescId]) {
-            if (data.eventDescs[arc.eventDescId].labelText) {
-              labels = [data.eventDescs[arc.eventDescId].labelText];
+          if (arc.eventDescId && data.eventDescs[arc.eventDescId] && 
+              data.eventDescs[arc.eventDescId].labelText) {
+            labels = [data.eventDescs[arc.eventDescId].labelText];
+          }
+// WEBANNO EXTENSION END - #820 - Allow setting label/color individually
+// WEBANNO EXTENSION BEGIN - #709 - Optimize render data size for annotations without labels
+          else {
+            // Make sure we have measurements for the bracketed labels that we use later.
+            var plainLabels = labels;
+            labels = [];
+            for (var i = 0; i < plainLabels.length; i++) {
+              labels[i] = '(' + plainLabels[i] + ')';
             }
           }
-// WEBANNO EXTENSION END
+// WEBANNO EXTENSION END - #709 - Optimize render data size for annotations without labels
           $.each(labels, function(labelNo, label) {
             arcTexts[label] = true;
           });
@@ -2748,6 +2762,10 @@ Util.profileStart('arcs');
                   labelIdx++;
                 }
               }
+              
+// WEBANNO EXTENSION BEGIN - #709 - Optimize render data size for annotations without labels
+              labelText = "(" + labelText + ")";
+// WEBANNO EXTENSION END - #709 - Optimize render data size for annotations without labels
 
 // WEBANNO EXTENSION BEGIN - #820 - Allow setting label/color individually
               if (arc.eventDescId && data.eventDescs[arc.eventDescId]) {
@@ -3595,7 +3613,12 @@ Util.profileStart('chunkFinish');
           var textHighlight = svg.rect(highlightGroup,
               textRowDesc[1] - 2, textRowDesc[0].textY - sizes.fragments.height,
               textRowDesc[2] - textRowDesc[1] + 4, sizes.fragments.height + 4,
+// WEBANNO EXTENSION BEGIN - #876 - Add ability to highlight text in brat view
+/*          
               { fill: 'yellow' } // TODO: put into css file, as default - turn into class
+*/
+              { fill: 'skyblue', 'class': 'animated flash' }
+// WEBANNO EXTENSION END - #876 - Add ability to highlight text in brat view
           );
           // NOTE: changing highlightTextSequence here will give
           // different-colored highlights
@@ -3823,6 +3846,27 @@ Util.profileReport();
           }, 0);
         }
       };
+      
+// BEGIN WEBANNO EXTENSION - #790 - Differential updates for brat view 
+      var renderDataPatch = function(patchData) {
+        Util.profileEnd('invoke getDocument');
+        sourceData = jsonpatch.applyPatch(sourceData, patchData).newDocument;
+        dispatcher.post('startedRendering', [coll, doc, args]);
+        dispatcher.post('spin');
+        setTimeout(function() {
+            try {
+              renderDataReal(sourceData);
+            } catch (e) {
+              // We are sure not to be drawing anymore, reset the state
+              drawing = false;
+              // TODO: Hook printout into dispatch elsewhere?
+              console.warn('Rendering terminated due to: ' + e, e.stack);
+              dispatcher.post('renderError: Fatal', [sourceData, e]);
+            }
+            dispatcher.post('unspin');
+        }, 0);
+      }
+// END WEBANNO EXTENSION - #790 - Differential updates for brat view 
 
       var renderDocument = function() {
         Util.profileStart('invoke getDocument');
@@ -4318,6 +4362,9 @@ Util.profileStart('before render');
           on('collectionChanged', collectionChanged).
           on('collectionLoaded', collectionLoaded).
           on('renderData', renderData).
+// BEGIN WEBANNO EXTENSION - #790 - Differential updates for brat view 
+          on('renderDataPatch', renderDataPatch).
+// END WEBANNO EXTENSION - #790 - Differential updates for brat view 
           on('triggerRender', triggerRender).
           on('requestRenderData', requestRenderData).
           on('isReloadOkay', isReloadOkay).

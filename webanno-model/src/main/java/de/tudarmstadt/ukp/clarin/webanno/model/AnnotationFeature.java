@@ -20,8 +20,11 @@ package de.tudarmstadt.ukp.clarin.webanno.model;
 import java.io.Serializable;
 
 import javax.persistence.Column;
+import javax.persistence.ConstraintMode;
 import javax.persistence.Entity;
+import javax.persistence.ForeignKey;
 import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.Lob;
@@ -29,7 +32,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
-import org.hibernate.annotations.ForeignKey;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.Type;
@@ -51,15 +54,15 @@ public class AnnotationFeature
     private static final long serialVersionUID = 8496087166198616020L;
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
-    private long id;
+    private Long id;
 
     private String type;
 
     @ManyToOne
-    @ForeignKey(name = "none")
-    @JoinColumn(name = "annotation_type")
+    @JoinColumn(name = "annotation_type", 
+        foreignKey = @ForeignKey(name = "none", value = ConstraintMode.NO_CONSTRAINT))
     private AnnotationLayer layer;
 
     @ManyToOne
@@ -67,8 +70,8 @@ public class AnnotationFeature
     private Project project;
 
     @ManyToOne
-    @ForeignKey(name = "none")
-    @JoinColumn(name = "tag_set")
+    @JoinColumn(name = "tag_set", 
+        foreignKey = @ForeignKey(name = "none", value = ConstraintMode.NO_CONSTRAINT))
     @NotFound(action = NotFoundAction.IGNORE)
     private TagSet tagset;
 
@@ -86,10 +89,12 @@ public class AnnotationFeature
 
     private boolean visible = true;
     
+    @Column(name = "includeInHover")
     private boolean includeInHover = false;
     
     private boolean remember;
     
+    @Column(name = "hideUnconstraintFeature")
     private boolean hideUnconstraintFeature;
     
     private boolean required;
@@ -111,12 +116,52 @@ public class AnnotationFeature
     @Column(name = "link_type_target_feature_name")
     private String linkTypeTargetFeatureName;
     
-    public long getId()
+    @Lob
+    @Column(length = 64000)
+    private String traits;
+    
+    public AnnotationFeature()
+    {
+        // Nothing to do
+    }
+    
+    // Visible for testing
+    public AnnotationFeature(String aName, String aType)
+    {
+        name = aName;
+        uiName = aName;
+        type = aType;
+    }
+    
+    
+    public AnnotationFeature(Project aProject, AnnotationLayer aLayer, String aName, String aUiName,
+            String aType)
+    {
+        project = aProject;
+        layer = aLayer;
+        name = aName;
+        uiName = aUiName;
+        type = aType;
+    }
+
+    public AnnotationFeature(Project aProject, AnnotationLayer aLayer, String aName, String aUiName,
+            String aType, String aDescription, TagSet aTagSet)
+    {
+        project = aProject;
+        layer = aLayer;
+        name = aName;
+        uiName = aUiName;
+        type = aType;
+        description = aDescription;
+        tagset = aTagSet;
+    }
+
+    public Long getId()
     {
         return id;
     }
 
-    public void setId(long id)
+    public void setId(Long id)
     {
         this.id = id;
     }
@@ -389,10 +434,31 @@ public class AnnotationFeature
     /**
      * Returns {@code true} if this is not a plain UIMA feature type but a "virtual" feature that
      * must be mapped to a plain UIMA type (usually to String).
+     * 
+     * @deprecated This method should no longer be used. There is no direct replacement.
      */
+    @Deprecated
     public boolean isVirtualFeature()
     {
         return getType().contains(":");
+    }
+    
+    public String getTraits()
+    {
+        return traits;
+    }
+
+    public void setTraits(String aTraits)
+    {
+        traits = aTraits;
+    }
+
+    @Override
+    public String toString()
+    {
+        return new ToStringBuilder(this)
+                .append("name", name)
+                .build();
     }
 
     @Override

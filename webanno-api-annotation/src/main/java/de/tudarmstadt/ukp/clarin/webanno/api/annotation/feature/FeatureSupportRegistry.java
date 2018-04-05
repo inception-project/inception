@@ -27,6 +27,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
 public interface FeatureSupportRegistry
 {
+    String SERVICE_NAME = "featureSupportRegistry";
+    
     default List<FeatureType> getAllTypes(AnnotationLayer aLayer)
     {
         List<FeatureType> types = new ArrayList<>();
@@ -41,5 +43,13 @@ public interface FeatureSupportRegistry
 
     List<FeatureSupport> getFeatureSupports();
 
-    FeatureSupport getFeatureSupport(AnnotationFeature aFeature);
+    /**
+     * Get the feature support providing the given feature. This method must only be called on
+     * completely configured and saved features, not on unsafed features.
+     */
+    <T> FeatureSupport<T> getFeatureSupport(AnnotationFeature aFeature);
+    
+    <T extends FeatureSupport<?>> T getFeatureSupport(String aFeatureSupportId);
+
+    FeatureType getFeatureType(AnnotationFeature aFeature);
 }

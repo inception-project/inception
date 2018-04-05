@@ -218,11 +218,11 @@ public class ImportUtil
             }
         }
         
-        aAnnotationService.initializeTypesForProjectV0(aProject, posTags.toArray(new String[0]),
-                posTagDescriptions.toArray(new String[0]), depTags.toArray(new String[0]),
-                depTagDescriptions.toArray(new String[0]), neTags.toArray(new String[0]),
-                neTagDescriptions.toArray(new String[0]), corefTypeTags.toArray(new String[0]),
-                corefRelTags.toArray(new String[0]));
+        new LegacyProjectInitializer(aAnnotationService).initialize(aProject,
+                posTags.toArray(new String[0]), posTagDescriptions.toArray(new String[0]),
+                depTags.toArray(new String[0]), depTagDescriptions.toArray(new String[0]),
+                neTags.toArray(new String[0]), neTagDescriptions.toArray(new String[0]),
+                corefTypeTags.toArray(new String[0]), corefRelTags.toArray(new String[0]));
     }
 
     private static Map<String, AnnotationFeature> createV1Layer(

@@ -19,6 +19,8 @@ package de.tudarmstadt.ukp.clarin.webanno.support.lambda;
 
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
+import org.apache.wicket.request.cycle.AbstractRequestCycleListener;
+import org.apache.wicket.request.cycle.RequestCycle;
 
 public class LambdaModel<T>
     extends LoadableDetachableModel<T>
@@ -26,6 +28,7 @@ public class LambdaModel<T>
     private static final long serialVersionUID = -1455152622735082623L;
 
     private final SerializableSupplier<T> supplier;
+    private boolean autoDetach;
 
     public LambdaModel(SerializableSupplier<T> aSupplier)
     {
@@ -42,6 +45,26 @@ public class LambdaModel<T>
         }
         else {
             return (T) value;
+        }
+    }
+    
+    public LambdaModel<T> autoDetaching()
+    {
+        autoDetach = true;
+        return this;
+    }
+    
+    @Override
+    protected void onAttach()
+    {
+        if (autoDetach) {
+            RequestCycle.get().getListeners().add(new AbstractRequestCycleListener() {
+                @Override
+                public void onDetach(RequestCycle aCycle)
+                {
+                    LambdaModel.this.detach();
+                }
+            });
         }
     }
 

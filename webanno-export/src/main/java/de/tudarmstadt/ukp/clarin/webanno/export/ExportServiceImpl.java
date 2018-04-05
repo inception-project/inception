@@ -18,12 +18,11 @@
 package de.tudarmstadt.ukp.clarin.webanno.export;
 
 import static de.tudarmstadt.ukp.clarin.webanno.export.ImportUtil.EXPORTED_PROJECT;
+import static java.util.Objects.isNull;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Optional;
-
-import javax.annotation.Resource;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.uima.UIMAException;
@@ -48,11 +47,11 @@ public class ExportServiceImpl implements ExportService
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
     
-    private @Resource AnnotationSchemaService annotationService;
-    private @Resource DocumentService documentService;
-    private @Resource ProjectService projectService;
-    private @Resource UserDao userRepository;
-    private @Resource ImportExportService importExportService;
+    private @Autowired AnnotationSchemaService annotationService;
+    private @Autowired DocumentService documentService;
+    private @Autowired ProjectService projectService;
+    private @Autowired UserDao userRepository;
+    private @Autowired ImportExportService importExportService;
     private @Autowired(required = false) ConstraintsService constraintsService;
     private @Autowired(required = false) AutomationService automationService;
     
@@ -72,12 +71,11 @@ public class ExportServiceImpl implements ExportService
         
         try {
             // all metadata and project settings data from the database as JSON file
-            File projectSettings = null;
-            projectSettings = File.createTempFile(EXPORTED_PROJECT, ".json");
+            File projectSettings = File.createTempFile(EXPORTED_PROJECT, ".json");
     
             Project project = aRequest.project.getObject();
             
-            if (project.getId() == 0) {
+            if (isNull(project.getId())) {
                 throw new ProjectExportException(
                         "Project not yet created. Please save project details first!");
             }

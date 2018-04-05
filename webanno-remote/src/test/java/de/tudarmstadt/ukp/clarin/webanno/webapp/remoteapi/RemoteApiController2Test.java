@@ -20,8 +20,8 @@ package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.fileUpload;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -29,15 +29,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.io.File;
+import java.util.Collections;
 import java.util.Properties;
-
-import javax.annotation.Resource;
 
 import org.junit.Before;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -91,8 +91,8 @@ import de.tudarmstadt.ukp.dkpro.core.io.text.TextWriter;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class RemoteApiController2Test
 {
-    private @Resource WebApplicationContext context;
-    private @Resource UserDao userRepository;
+    private @Autowired WebApplicationContext context;
+    private @Autowired UserDao userRepository;
     
     private MockMvc mvc;
 
@@ -157,7 +157,7 @@ public class RemoteApiController2Test
             .andExpect(content().contentType("application/json;charset=UTF-8"))
             .andExpect(jsonPath("$.messages").isEmpty());
         
-        mvc.perform(fileUpload("/api/v2/projects/1/documents")
+        mvc.perform(multipart("/api/v2/projects/1/documents")
                 .file("content", "This is a test.".getBytes("UTF-8"))
                 .with(csrf().asHeader())
                 .with(user("admin").roles("ADMIN"))
@@ -188,7 +188,7 @@ public class RemoteApiController2Test
             .andExpect(content().contentType("application/json;charset=UTF-8"))
             .andExpect(jsonPath("$.messages").isEmpty());
         
-        mvc.perform(fileUpload("/api/v2/projects/1/documents/1/annotations/admin")
+        mvc.perform(multipart("/api/v2/projects/1/documents/1/annotations/admin")
                 .file("content", "This is a test.".getBytes("UTF-8"))
                 .with(csrf().asHeader())
                 .with(user("admin").roles("ADMIN"))
@@ -222,7 +222,7 @@ public class RemoteApiController2Test
             .andExpect(jsonPath("$.body[0].name").value("test.txt"))
             .andExpect(jsonPath("$.body[0].state").value("NEW"));
         
-        mvc.perform(fileUpload("/api/v2/projects/1/documents/1/curation")
+        mvc.perform(multipart("/api/v2/projects/1/documents/1/curation")
                 .file("content", "This is a test.".getBytes("UTF-8"))
                 .with(csrf().asHeader())
                 .with(user("admin").roles("ADMIN"))
@@ -301,7 +301,7 @@ public class RemoteApiController2Test
         @Bean
         public FeatureSupportRegistry featureSupportRegistry()
         {
-            return new FeatureSupportRegistryImpl();
+            return new FeatureSupportRegistryImpl(Collections.emptyList());
         }
         
         @Bean

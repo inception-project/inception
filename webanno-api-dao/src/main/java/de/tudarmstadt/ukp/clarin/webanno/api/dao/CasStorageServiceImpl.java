@@ -125,9 +125,9 @@ public class CasStorageServiceImpl
     {
         File annotationFolder = getAnnotationFolder(aDocument);
         File targetPath = getAnnotationFolder(aDocument);
-        writeCas(aDocument.getProject(), aDocument.getName(), aDocument.getId(), aJcas, aUserName,
-                annotationFolder, targetPath);
-        
+        realWriteCas(aDocument.getProject(), aDocument.getName(), aDocument.getId(), aJcas,
+                aUserName, annotationFolder, targetPath);
+
         // Update the CAS in the cache
         if (isCacheEnabled()) {
             JCasCacheKey key = JCasCacheKey.of(aDocument, aUserName);
@@ -141,7 +141,7 @@ public class CasStorageServiceImpl
         }
     }
     
-    private void writeCas(Project aProject, String aDocumentName, long aDocumentId, JCas aJcas,
+    private void realWriteCas(Project aProject, String aDocumentName, long aDocumentId, JCas aJcas,
             String aUserName, File aAnnotationFolder, File aTargetPath)
         throws IOException
     {
@@ -340,12 +340,6 @@ public class CasStorageServiceImpl
     public JCas readCas(SourceDocument aDocument, String aUsername, boolean aAnalyzeAndRepair)
         throws IOException
     {
-        log.debug("Reading annotation document [{}] ({}) for user [{}] in project [{}] ({})",
-                aDocument.getName(), aDocument.getId(), aUsername, aDocument.getProject().getName(),
-                aDocument.getProject().getId());
-
-        // DebugUtils.smallStack();
-
         synchronized (lock) {
             JCas jcas = null;
             
@@ -361,49 +355,62 @@ public class CasStorageServiceImpl
             
             // If the CAS is not in the cache, load it from disk
             if (jcas == null) {
-                File annotationFolder = getAnnotationFolder(aDocument);
-    
-                String file = aUsername + ".ser";
-    
-                try {
-                    File serializedCasFile = new File(annotationFolder, file);
-                    if (!serializedCasFile.exists()) {
-                        throw new FileNotFoundException("Annotation document of user [" + aUsername
-                                + "] for source document [" + aDocument.getName() + "] ("
-                                + aDocument.getId() + ") not found in project["
-                                + aDocument.getProject().getName() + "] ("
-                                + aDocument.getProject().getId() + ")");
-                    }
-    
-                    CAS cas = CasCreationUtils.createCas((TypeSystemDescription) null, null, null);
-                    CasPersistenceUtils.readSerializedCas(cas.getJCas(), serializedCasFile);
-    
-                    if (aAnalyzeAndRepair) {
-                        analyzeAndRepair(aDocument, aUsername, cas);
-                    }
-    
-                    jcas = cas.getJCas();
-                }
-                catch (UIMAException e) {
-                    throw new DataRetrievalFailureException("Unable to parse annotation", e);
-                }
-                
-                // Update the cache
-                if (isCacheEnabled()) {
-                    JCasCacheEntry entry = new JCasCacheEntry();
-                    entry.jcas = jcas;
-                    entry.reads++;
-                    getCache().put(JCasCacheKey.of(aDocument, aUsername), entry);
-                    log.debug("Loaded CAS [{},{}] from disk and stored in cache", aDocument.getId(),
-                            aUsername);
-                }
-                else {
-                    log.debug("Loaded CAS [{},{}] from disk", aDocument.getId(), aUsername);
-                }
+                jcas = realReadCas(aDocument, aUsername, aAnalyzeAndRepair);
             }
             
             return jcas;
         }
+    }
+    
+    private JCas realReadCas(SourceDocument aDocument, String aUsername, boolean aAnalyzeAndRepair)
+        throws IOException
+    {
+        log.debug("Reading annotation document [{}] ({}) for user [{}] in project [{}] ({})",
+                aDocument.getName(), aDocument.getId(), aUsername, aDocument.getProject().getName(),
+                aDocument.getProject().getId());
+        
+        File annotationFolder = getAnnotationFolder(aDocument);
+        
+        String file = aUsername + ".ser";
+
+        JCas jcas;
+        try {
+            CAS cas = CasCreationUtils.createCas((TypeSystemDescription) null, null, null);
+            File serializedCasFile = new File(annotationFolder, file);
+            if (!serializedCasFile.exists()) {
+                throw new FileNotFoundException("Annotation document of user [" + aUsername
+                        + "] for source document [" + aDocument.getName() + "] ("
+                        + aDocument.getId() + ") not found in project["
+                        + aDocument.getProject().getName() + "] ("
+                        + aDocument.getProject().getId() + ")");
+            }
+            
+            CasPersistenceUtils.readSerializedCas(cas, serializedCasFile);
+
+            if (aAnalyzeAndRepair) {
+                analyzeAndRepair(aDocument, aUsername, cas);
+            }
+
+            jcas = cas.getJCas();
+        }
+        catch (UIMAException e) {
+            throw new DataRetrievalFailureException("Unable to parse annotation", e);
+        }
+        
+        // Update the cache
+        if (isCacheEnabled()) {
+            JCasCacheEntry entry = new JCasCacheEntry();
+            entry.jcas = jcas;
+            entry.reads++;
+            getCache().put(JCasCacheKey.of(aDocument, aUsername), entry);
+            log.debug("Loaded CAS [{},{}] from disk and stored in cache", aDocument.getId(),
+                    aUsername);
+        }
+        else {
+            log.debug("Loaded CAS [{},{}] from disk", aDocument.getId(), aUsername);
+        }
+        
+        return jcas;
     }
     
     @Override

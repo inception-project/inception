@@ -23,6 +23,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.SOURCE_FOLDER
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.MIRA;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.MIRA_TEMPLATE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.TRAIN;
+import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
 import static org.apache.commons.io.IOUtils.copyLarge;
 
 import java.io.File;
@@ -32,8 +34,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
-import javax.annotation.Resource;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
@@ -50,6 +52,7 @@ import org.apache.uima.util.CasCreationUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -70,17 +73,12 @@ public class MiraAutomationServiceImpl
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
     
-    @Resource(name = "automationCasStorageService")
-    private AutomationCasStorageService automationCasStorageService;
-    
     @Value(value = "${repository.path}")
     private File dir;
 
-    @Resource(name = "casDoctor")
-    private CasDoctor casDoctor;
-    
-    @Resource(name = "importExportService")
-    private ImportExportService importExportService;
+    private @Autowired AutomationCasStorageService automationCasStorageService;
+    private @Autowired CasDoctor casDoctor;
+    private @Autowired ImportExportService importExportService;
     
     @PersistenceContext
     private EntityManager entityManager;
@@ -111,8 +109,8 @@ public class MiraAutomationServiceImpl
                 "FROM MiraTemplate ORDER BY trainFeature ASC ", MiraTemplate.class).getResultList();
         List<MiraTemplate> templatesInThisProject = new ArrayList<>();
         for (MiraTemplate miraTemplate : allTenplates) {
-            if (miraTemplate.getTrainFeature() != null
-                    && miraTemplate.getTrainFeature().getProject().getId() == aProject.getId()) {
+            if (nonNull(miraTemplate.getTrainFeature()) && Objects.equals(
+                    miraTemplate.getTrainFeature().getProject().getId(), aProject.getId())) {
                 templatesInThisProject.add(miraTemplate);
             }
         }
@@ -228,7 +226,7 @@ public class MiraAutomationServiceImpl
     @Transactional
     public void createTemplate(MiraTemplate aTemplate)
     {
-        if (aTemplate.getId() == 0) {
+        if (isNull(aTemplate.getId())) {
             entityManager.persist(aTemplate);
         }
         else {
@@ -403,7 +401,7 @@ public class MiraAutomationServiceImpl
     public void createTrainingDocument(TrainingDocument aDocument)
         throws IOException
     {
-        if (aDocument.getId() == 0) {
+        if (isNull(aDocument.getId())) {
             entityManager.persist(aDocument);
         }
         else {

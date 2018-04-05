@@ -30,6 +30,7 @@ import java.util.Map;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
+import org.apache.uima.cas.CAS;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -56,11 +57,11 @@ import de.tudarmstadt.ukp.clarin.webanno.api.CorrectionDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil;
-import de.tudarmstadt.ukp.clarin.webanno.api.SettingsService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.brat.config.BratProperties;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -84,8 +85,6 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.AnnotationPreferen
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.ExportDocumentDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.GuidelinesDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.OpenDocumentDialog;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemCondition;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.CurationPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.CurationContainer;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.SuggestionBuilder;
@@ -99,7 +98,6 @@ import wicket.contrib.input.events.key.KeyType;
  * between user annotations for a specific document. The interface provides a tool for merging these
  * annotations and storing them as a new annotation.
  */
-@MenuItem(icon = "images/data_table.png", label = "Curation", prio = 200)
 @MountPath("/curation.html")
 public class CurationPage
     extends AnnotationPageBase
@@ -114,7 +112,7 @@ public class CurationPage
     private @SpringBean CurationDocumentService curationDocumentService;
     private @SpringBean ProjectService projectService;
     private @SpringBean ConstraintsService constraintsService;
-    private @SpringBean SettingsService settingsService;
+    private @SpringBean BratProperties defaultPreferences;
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean UserDao userRepository;
 
@@ -192,8 +190,7 @@ public class CurationPage
                 if (state.getDocument() != null) {
                     try {
                         documentService.createSourceDocument(state.getDocument());
-                        documentService.upgradeCasAndSave(state.getDocument(), state.getMode(),
-                                username);
+                        upgradeCasAndSave(state.getDocument(), username);
 
                         actionLoadDocument(aTarget);
                         curationPanel.editor.loadFeatureEditorModels(aTarget);
@@ -548,6 +545,25 @@ public class CurationPage
         aTarget.add(getFeedbackPanel());
     }
 
+    public void upgradeCasAndSave(SourceDocument aDocument, String aUsername)
+        throws IOException
+    {
+        User user = userRepository.get(aUsername);
+        if (documentService.existsAnnotationDocument(aDocument, user)) {
+            AnnotationDocument annotationDocument = documentService.getAnnotationDocument(aDocument,
+                    user);
+            try {
+                CAS cas = documentService.readAnnotationCas(annotationDocument).getCas();
+                annotationService.upgradeCas(cas, annotationDocument);
+                documentService.writeAnnotationCas(cas.getJCas(), annotationDocument, false);
+            }
+            catch (Exception e) {
+                // no need to catch, it is acceptable that no curation document
+                // exists to be upgraded while there are annotation documents
+            }
+        }
+    }
+
     /**
      * Open a document or to a different document. This method should be used only the first time
      * that a document is accessed. It reset the annotator state and upgrades the CAS.
@@ -573,7 +589,7 @@ public class CurationPage
             }
     
             // Load user preferences
-            PreferencesUtil.loadPreferences(username, settingsService, projectService,
+            PreferencesUtil.loadPreferences(username, defaultPreferences, projectService,
                     annotationService, state, state.getMode());            
             
             // Re-render whole page as sidebar size preference may have changed
@@ -599,7 +615,7 @@ public class CurationPage
             // upgrade CASes for each user, what if new type is added once the user finished
             // annotation
             for (AnnotationDocument ad : finishedAnnotationDocuments) {
-                documentService.upgradeCasAndSave(ad.getDocument(), state.getMode(), ad.getUser());
+                upgradeCasAndSave(ad.getDocument(), ad.getUser());
             }
             Map<String, JCas> jCases = cb.listJcasesforCuration(finishedAnnotationDocuments,
                     randomAnnotationDocument, state.getMode());
@@ -658,16 +674,5 @@ public class CurationPage
         catch (Exception e) {
             handleException(aTarget, e);
         }
-    }
-    
-    /**
-     * Only project admins and curators can see this page
-     */
-    @MenuItemCondition
-    public static boolean menuItemCondition(ProjectService aRepo, UserDao aUserRepo)
-    {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = aUserRepo.get(username);
-        return SecurityUtil.curationEnabeled(aRepo, user);
     }
 }

@@ -29,7 +29,6 @@ import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-import javax.annotation.Resource;
 import javax.persistence.NoResultException;
 import javax.servlet.http.HttpServletResponse;
 
@@ -40,6 +39,7 @@ import org.apache.wicket.ajax.json.JSONArray;
 import org.apache.wicket.ajax.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -95,11 +95,11 @@ public class RemoteApiController
 
     private final Logger LOG = LoggerFactory.getLogger(getClass());
 
-    private @Resource ProjectService projectRepository;
-    private @Resource DocumentService documentRepository;
-    private @Resource ImportExportService importExportService;
-    private @Resource AnnotationSchemaService annotationService;
-    private @Resource UserDao userRepository;
+    private @Autowired ProjectService projectRepository;
+    private @Autowired DocumentService documentRepository;
+    private @Autowired ImportExportService importExportService;
+    private @Autowired AnnotationSchemaService annotationService;
+    private @Autowired UserDao userRepository;
 
     /**
      * Create a new project.
@@ -166,7 +166,7 @@ public class RemoteApiController
         Project project = new Project();
         project.setName(aName);
         projectRepository.createProject(project);
-        annotationService.initializeTypesForProject(project);
+        annotationService.initializeProject(project);
         
         // Create permission for the project creator
         projectRepository.createProjectPermission(

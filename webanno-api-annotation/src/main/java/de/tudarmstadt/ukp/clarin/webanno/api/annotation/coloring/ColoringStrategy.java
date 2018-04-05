@@ -138,7 +138,7 @@ public abstract class ColoringStrategy
         if (aLayer.isReadonly() && rt != ReadonlyColoringBehaviour.NORMAL) {
             t = rt.t;
         }
-        if (t == ColoringStrategyType.LEGACY) {
+        if (t == null || t == ColoringStrategyType.LEGACY) {
             t = getBestInitialStrategy(aService, aLayer, aPreferences);
         }
         return getStrategy(aService, aLayer, t, aColorQueues);

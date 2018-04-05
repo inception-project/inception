@@ -24,7 +24,6 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.annotation.Resource;
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
@@ -41,6 +40,7 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -61,9 +61,7 @@ public class User
 {
     private static final long serialVersionUID = -5668208834434334005L;
 
-    @Resource(name = "passwordEncoder")
-    @Transient
-    private transient PasswordEncoder passwordEncoder;
+    private @Autowired @Transient transient PasswordEncoder passwordEncoder;
 
     @Id
     private String username;

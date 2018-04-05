@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.DOCUMENT_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.SOURCE_FOLDER;
+import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngineDescription;
 import static org.apache.uima.fit.pipeline.SimplePipeline.runPipeline;
@@ -38,8 +39,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-
-import javax.annotation.Resource;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.uima.UIMAException;
@@ -61,13 +60,14 @@ import org.apache.uima.util.CasCreationUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -96,12 +96,9 @@ public class ImportExportServiceImpl
     @Value(value = "${repository.path}")
     private File dir;
     
-    private @Resource CasStorageService casStorageService;
-    private @Resource AnnotationSchemaService annotationService;
-    private @Resource DocumentService documentService;
-    
-    @Resource(name = "formats")
-    private Properties readWriteFileFormats;
+    private @Autowired CasStorageService casStorageService;
+    private @Autowired AnnotationSchemaService annotationService;
+    private @Autowired @Qualifier("formats") Properties readWriteFileFormats;
 
     public ImportExportServiceImpl()
     {
@@ -153,7 +150,7 @@ public class ImportExportServiceImpl
         }
 
         CAS cas = CasCreationUtils.createCas((TypeSystemDescription) null, null, null);
-        CasPersistenceUtils.readSerializedCas(cas.getJCas(), serializedCasFile);
+        CasPersistenceUtils.readSerializedCas(cas, serializedCasFile);
 
         // Update type system the CAS
         annotationService.upgradeCas(cas, aDocument, aUser);
@@ -299,7 +296,7 @@ public class ImportExportServiceImpl
     @Override
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public JCas importCasFromFile(File aFile, Project aProject, String aFormat)
-        throws UIMAException, IOException, ClassNotFoundException
+        throws UIMAException, IOException
     {
         Class readerClass = getReadableFormats().get(aFormat);
         if (readerClass == null) {
@@ -309,9 +306,9 @@ public class ImportExportServiceImpl
         // Prepare a CAS with the project type system
         TypeSystemDescription builtInTypes = TypeSystemDescriptionFactory
                 .createTypeSystemDescription();
-        List<TypeSystemDescription> projectTypes = annotationService.getProjectTypes(aProject);
-        projectTypes.add(builtInTypes);
-        TypeSystemDescription allTypes = CasCreationUtils.mergeTypeSystems(projectTypes);
+        TypeSystemDescription projectTypes = annotationService.getProjectTypes(aProject);
+        TypeSystemDescription allTypes = CasCreationUtils
+                .mergeTypeSystems(asList(projectTypes, builtInTypes));
         CAS cas = JCasFactory.createJCas(allTypes).getCas();
 
         // Convert the source document to CAS

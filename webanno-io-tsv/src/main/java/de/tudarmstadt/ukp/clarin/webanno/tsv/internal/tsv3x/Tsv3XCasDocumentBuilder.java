@@ -26,6 +26,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model.LayerTy
 import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model.TsvSchema.CHAIN_FIRST_FEAT;
 import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model.TsvSchema.CHAIN_NEXT_FEAT;
 import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model.TsvSchema.FEAT_REL_SOURCE;
+import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model.TsvSchema.FEAT_REL_TARGET;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static org.apache.uima.fit.util.FSUtil.getFeature;
@@ -117,27 +118,41 @@ public class Tsv3XCasDocumentBuilder
             for (AnnotationFS annotation : CasUtil.select(aJCas.getCas(), type)) {
                 doc.activateType(annotation.getType());
                 
-                TsvToken beginToken = tokenBeginIndex.floorEntry(annotation.getBegin()).getValue();
-                TsvToken endToken = tokenEndIndex.ceilingEntry(annotation.getEnd()).getValue();
+                // Get the relevant begin and end offsets for the current annotation
+                int begin = annotation.getBegin();
+                int end = annotation.getEnd();
+                
+                // According to DKPro Core conventions, the offsets of relations must match
+                // those of the target (i.e. the offsets of a Dependency relation must match
+                // those of the dependent). Thus, we obtain the offsets from the target, just
+                // to be sure.
+                if (RELATION.equals(layerType)) {
+                    AnnotationFS targetFS = getFeature(annotation, FEAT_REL_TARGET,
+                            AnnotationFS.class);
+                    begin = targetFS.getBegin();
+                    end = targetFS.getEnd();
+                }
+                
+                TsvToken beginToken = tokenBeginIndex.floorEntry(begin).getValue();
+                TsvToken endToken = tokenEndIndex.ceilingEntry(end).getValue();
                 
                 // For zero-width annotations, the begin token must match the end token.
                 // Zero-width annotations between two directly adjacent tokens are always
                 // considered to be at the end of the first token rather than at the beginning
                 // of the second token, so we trust the tokenEndIndex here and override the
                 // value obtained from the tokenBeginIndex.
-                if (annotation.getBegin() == annotation.getEnd()) {
+                if (begin == end) {
                     beginToken = endToken;
                 }
                 
                 boolean singleToken = beginToken == endToken;
-                boolean zeroWitdh = annotation.getBegin() == annotation.getEnd();
+                boolean zeroWitdh = begin == end;
                 boolean multiTokenCapable = SPAN.equals(layerType) || CHAIN.equals(layerType);
                 
                 // Annotation exactly matches token boundaries - it doesn't really matter if the
                 // begin and end tokens are the same; we don't have to create sub-token units
                 // in either case.
-                if (beginToken.getBegin() == annotation.getBegin()
-                        && endToken.getEnd() == annotation.getEnd()) {
+                if (beginToken.getBegin() == begin && endToken.getEnd() == end) {
                     doc.mapFS2Unit(annotation, beginToken);
                     beginToken.addUimaAnnotation(annotation, addDisambiguationIdIfStacked);
                     
@@ -146,17 +161,16 @@ public class Tsv3XCasDocumentBuilder
                     }
                 }
                 else if (zeroWitdh) {
-                    TsvSubToken t = beginToken.createSubToken(annotation.getBegin(),
-                            min(beginToken.getEnd(), annotation.getEnd()));
+                    TsvSubToken t = beginToken.createSubToken(begin, min(beginToken.getEnd(), end));
                     doc.mapFS2Unit(annotation, t);
                     t.addUimaAnnotation(annotation, addDisambiguationIdIfStacked);
                 } else {
                     // Annotation covers only suffix of the begin token - we need to create a 
                     // suffix sub-token unit on the begin token. The new sub-token defines the ID of
                     // the annotation.
-                    if (beginToken.getBegin() < annotation.getBegin()) {
-                        TsvSubToken t = beginToken.createSubToken(annotation.getBegin(),
-                                min(beginToken.getEnd(), annotation.getEnd()));
+                    if (beginToken.getBegin() < begin) {
+                        TsvSubToken t = beginToken.createSubToken(begin,
+                                min(beginToken.getEnd(), end));
                         doc.mapFS2Unit(annotation, t);
                         t.addUimaAnnotation(annotation, addDisambiguationIdIfStacked);
                     }
@@ -170,10 +184,9 @@ public class Tsv3XCasDocumentBuilder
                     // prefix sub-token unit on the end token. If the current annotation is limited
                     // only to the sub-token unit, then it defines the ID. This is determined by
                     // checking if if singleToke is true.
-                    if (endToken.getEnd() > annotation.getEnd()) {
-                        TsvSubToken t = endToken.createSubToken(
-                                max(endToken.getBegin(), annotation.getBegin()),
-                                annotation.getEnd());
+                    if (endToken.getEnd() > end) {
+                        TsvSubToken t = endToken.createSubToken(max(endToken.getBegin(), begin),
+                                end);
                         t.addUimaAnnotation(annotation, addDisambiguationIdIfStacked);
                         
                         if (!singleToken) {

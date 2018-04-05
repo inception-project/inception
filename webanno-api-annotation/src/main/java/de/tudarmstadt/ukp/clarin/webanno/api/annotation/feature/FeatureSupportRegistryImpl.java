@@ -18,62 +18,69 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
+import org.apache.commons.lang3.ClassUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.config.BeanPostProcessor;
-import org.springframework.core.OrderComparator;
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.context.event.EventListener;
+import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 
 @Component
-@Order(Ordered.HIGHEST_PRECEDENCE)
 public class FeatureSupportRegistryImpl
-    implements FeatureSupportRegistry, BeanPostProcessor
+    implements FeatureSupportRegistry
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private final Map<String, FeatureSupport> beans = new HashMap<>();
-    private final List<FeatureSupport> sortedBeans = new ArrayList<>();
+    private final List<FeatureSupport> featureSupportsProxy;
+    
+    private List<FeatureSupport> featureSupports;
+    
     private final Map<Long, FeatureSupport> supportCache = new HashMap<>();
-    private boolean sorted = false;
 
-    @Override
-    public Object postProcessAfterInitialization(Object aBean, String aBeanName)
-        throws BeansException
+    public FeatureSupportRegistryImpl(
+            @Lazy @Autowired(required = false) List<FeatureSupport> aFeatureSupports)
     {
-        // Collect annotation editor extensions
-        if (aBean instanceof FeatureSupport) {
-            beans.put(aBeanName, (FeatureSupport) aBean);
-            log.debug("Found feature support: {}", aBeanName);
+        featureSupportsProxy = aFeatureSupports;
+    }
+    
+    @EventListener
+    public void onContextRefreshedEvent(ContextRefreshedEvent aEvent)
+    {
+        init();
+    }
+    
+    public void init()
+    {
+        List<FeatureSupport> fsp = new ArrayList<>();
+
+        if (featureSupportsProxy != null) {
+            fsp.addAll(featureSupportsProxy);
+            AnnotationAwareOrderComparator.sort(fsp);
+        
+            for (FeatureSupport<?> fs : fsp) {
+                log.info("Found feature support: {}",
+                        ClassUtils.getAbbreviatedName(fs.getClass(), 20));
+            }
         }
         
-        return aBean;
+        featureSupports = Collections.unmodifiableList(fsp);
     }
-
-    @Override
-    public Object postProcessBeforeInitialization(Object aBean, String aBeanName)
-        throws BeansException
-    {
-        return aBean;
-    }
-
+    
     @Override
     public List<FeatureSupport> getFeatureSupports()
     {
-        if (!sorted) {
-            sortedBeans.addAll(beans.values());
-            OrderComparator.sort(sortedBeans);
-            sorted = true;
-        }
-        return sortedBeans;
+        return featureSupports;
     }
     
     @Override
@@ -83,13 +90,21 @@ public class FeatureSupportRegistryImpl
         // the supports by feature. Since the set of annotation features is relatively stable,
         // this should not be a memory leak - even if we don't remove entries if annotation
         // features would be deleted from the DB.
-        FeatureSupport support = supportCache.get(aFeature.getId());
+        FeatureSupport support = null;
+        
+        if (aFeature.getId() != null) {
+            support = supportCache.get(aFeature.getId());
+        }
         
         if (support == null) {
-            for (FeatureSupport s : getFeatureSupports()) {
+            for (FeatureSupport<?> s : getFeatureSupports()) {
                 if (s.accepts(aFeature)) {
                     support = s;
-                    supportCache.put(aFeature.getId(), s);
+                    if (aFeature.getId() != null) {
+                        // Store feature in the cache, but only when it has an ID, i.e. it has
+                        // actually been saved.
+                        supportCache.put(aFeature.getId(), s);
+                    }
                     break;
                 }
             }
@@ -100,5 +115,33 @@ public class FeatureSupportRegistryImpl
         }
         
         return support;
+    }
+    
+    @Override
+    public FeatureSupport getFeatureSupport(String aId)
+    {
+        return getFeatureSupports().stream().filter(fs -> fs.getId().equals(aId)).findFirst()
+                .orElse(null);
+    }
+    
+    @Override
+    public FeatureType getFeatureType(AnnotationFeature aFeature)
+    {
+        if (aFeature.getType() == null) {
+            return null;
+        }
+        
+        // Figure out which feature support provides the given type.
+        // If we can find a suitable feature support, then use it to resolve the type to a
+        // FeaatureType
+        FeatureType featureType = null;
+        for (FeatureSupport<?> s : getFeatureSupports()) {
+            Optional<FeatureType> ft = s.getFeatureType(aFeature);
+            if (ft.isPresent()) {
+                featureType = ft.get();
+                break;
+            }
+        }
+        return featureType;
     }
 }

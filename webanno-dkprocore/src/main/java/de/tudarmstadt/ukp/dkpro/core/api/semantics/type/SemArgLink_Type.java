@@ -20,12 +20,12 @@
 /* First created by JCasGen Wed Nov 15 10:30:01 CET 2017 */
 package de.tudarmstadt.ukp.dkpro.core.api.semantics.type;
 
-import org.apache.uima.jcas.JCas;
-import org.apache.uima.jcas.JCasRegistry;
-import org.apache.uima.cas.impl.TypeImpl;
+import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.impl.FeatureImpl;
-import org.apache.uima.cas.Feature;
+import org.apache.uima.cas.impl.TypeImpl;
+import org.apache.uima.jcas.JCas;
+import org.apache.uima.jcas.JCasRegistry;
 import org.apache.uima.jcas.cas.TOP_Type;
 
 /** The SemArgLink type is used to attach SemPred annotations to their respective SemArg annotations while giving each link a role.

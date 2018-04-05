@@ -32,8 +32,6 @@ import org.apache.uima.collection.CollectionReaderDescription;
 import org.junit.Rule;
 import org.junit.Test;
 
-import de.tudarmstadt.ukp.clarin.webanno.conll.ConllUReader;
-import de.tudarmstadt.ukp.clarin.webanno.conll.ConllUWriter;
 import de.tudarmstadt.ukp.dkpro.core.testing.DkproTestContext;
 
 public class ConllUReaderWriterTest

@@ -20,10 +20,9 @@
 /* First created by JCasGen Wed Nov 15 10:30:01 CET 2017 */
 package de.tudarmstadt.ukp.dkpro.core.api.semantics.type;
 
-import org.apache.uima.jcas.JCas; 
+import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.JCasRegistry;
 import org.apache.uima.jcas.cas.TOP_Type;
-
 import org.apache.uima.jcas.tcas.Annotation;
 
 

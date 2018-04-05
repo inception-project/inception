@@ -29,16 +29,16 @@ public class DatabaseInfoService
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    @Value(value = "${database.dialect}")
+    @Value(value = "${spring.jpa.properties.hibernate.dialect}")
     private String databaseDialect;
 
-    @Value(value = "${database.driver}")
+    @Value(value = "${spring.datasource.driver-class-name}")
     private String databaseDriver;
 
-    @Value(value = "${database.url}")
+    @Value(value = "${spring.datasource.url}")
     private String databaseUrl;
 
-    @Value(value = "${database.username}")
+    @Value(value = "${spring.datasource.username}")
     private String databaseUsername;
 
     @Override

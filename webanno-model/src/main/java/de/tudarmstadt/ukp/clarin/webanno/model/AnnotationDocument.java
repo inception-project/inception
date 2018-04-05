@@ -23,6 +23,7 @@ import java.util.Date;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
@@ -46,12 +47,11 @@ import org.hibernate.annotations.Type;
 public class AnnotationDocument
     implements Serializable
 {
-
     private static final long serialVersionUID = 8496087166198616020L;
 
     @Id
-    @GeneratedValue
-    private long id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @Column(nullable = false)
     private String name;
@@ -73,6 +73,7 @@ public class AnnotationDocument
     @Temporal(TemporalType.TIMESTAMP)
     private Date timestamp;
 
+    @Column(name = "sentenceAccessed")
     private int sentenceAccessed = 0;
 
     @Temporal(TemporalType.TIMESTAMP)
@@ -93,12 +94,12 @@ public class AnnotationDocument
         document = aDocument;
     }
 
-    public long getId()
+    public Long getId()
     {
         return id;
     }
 
-    public void setId(long aId)
+    public void setId(Long aId)
     {
         id = aId;
     }

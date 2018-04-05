@@ -116,7 +116,7 @@ public interface ImportExportService
      *             if an I/O error occurs.
      */
     JCas importCasFromFile(File aFile, Project aProject, String aFormat)
-        throws UIMAException, IOException, ClassNotFoundException;
+        throws UIMAException, IOException;
 
     File exportCasToFile(CAS cas, SourceDocument aDocument, String aFileName,
             Class aWriter, boolean aStripExtension)

@@ -1,0 +1,126 @@
+// Copyright 2015
+// Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+// Technische Universität Darmstadt
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+= {product-name} User Guide
+The {product-name} Team
+
+== Introduction
+
+This guide summarizes the functionality of {product-name} from the user's perspective.
+
+NOTE: It is assumed that you plan to test the {product-name} standalone version or an already existing server installation of {product-name}. For information on how to set up {product-name} for a group of users on a server, please refer to the <<admin-guide.adoc#,Administrator Guide>>.
+
+All materials, including this guide, are available via the link:{product-website-url}[{product-name} homepage].
+
+<<<
+
+include::common/systemrequirements.adoc[]
+
+<<<
+== Workflow
+
+The following image shows an exemplary workflow of an annotation project with {product-name}.
+
+image::progress_workflow.jpg[align="center"]
+
+First, the projects need to be set up. In more detail, this means that users are to be added, 
+guidelines need to be provided, documents have to be uploaded, tagsets need to be defined and uploaded,
+etc. The process of setting up and administrating a project are explicitly described in <<sect_projects>>.
+
+After the setup of a project, the users who were assigned with the task of annotation annotate the
+documents according to the guidelines. The task of annotation is further explained in <<sect_annotation>>.
+The work of the annotators is managed and controlled by monitoring. Here, the person in charge has
+to assign the workload. For example, in order to prevent redundant annotation, documents which are
+already annotated by several other annotators and need not be annotated by another person, can be
+blocked for others. The person in charge is also able to follow the progress of individual
+annotators. All these tasks are demonstrated in <<sect_monitoring>> in more detail. The person in charge should not only control the quantity, but also the quality of annotation by looking closer into the
+annotations of individual annotators. This can be done by logging in with the credentials of the
+annotators.
+
+After at least two annotators have finished the annotation of the same document by clicking on *Done*, the
+curator can start his work. The curator compares the annotations and corrects them if needed. This
+task is further explained in <<sect_curation>>. 
+
+The document merged by the curator can be exported as soon as the curator clicked on *Done* for the
+document. The extraction of curated documents is also explained in <<sect_projects>>.
+
+////
+<<<
+==  Tutorials
+
+For tutorials on the different functionalities of {product-name}, please see [https://code.google.com/p/webanno/wiki/Tutorials Tutorials]. 
+Soon also video-tutorials will be available.
+////
+
+<<<
+
+include::{include-dir}installation.adoc[]
+
+<<<
+
+include::{include-dir}upgrade.adoc[]
+
+<<<
+
+include::{include-dir}login.adoc[]
+
+<<<
+
+include::{include-dir}menu.adoc[]
+
+<<<
+
+include::{include-dir}annotation.adoc[]
+
+<<<
+
+include::{include-dir}curation.adoc[]
+
+<<<
+
+include::{include-dir}correction.adoc[]
+
+<<<
+
+include::{include-dir}automation.adoc[]
+
+<<<
+
+include::{include-dir}monitoring.adoc[]
+
+<<<
+
+include::{include-dir}projects.adoc[]
+
+<<<
+
+include::{include-dir}constraints.adoc[]
+
+<<<
+
+include::{include-dir}users.adoc[]
+
+<<<
+
+include::{include-dir}formats.adoc[]
+
+<<<
+
+include::{include-dir}webannotsv.adoc[]
+
+<<<
+
+include::{include-dir}troubleshooting.adoc[]

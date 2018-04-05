@@ -24,8 +24,6 @@ import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-import javax.annotation.Resource;
-
 import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
@@ -45,11 +43,11 @@ import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 public class ImportServiceImpl
     implements ImportService
 {
-    private @Resource AnnotationSchemaService annotationService;
-    private @Resource DocumentService documentService;
-    private @Resource ProjectService projectService;
-    private @Resource UserDao userRepository;
-    private @Resource ApplicationEventPublisher applicationEventPublisher;
+    private @Autowired AnnotationSchemaService annotationService;
+    private @Autowired DocumentService documentService;
+    private @Autowired ProjectService projectService;
+    private @Autowired UserDao userRepository;
+    private @Autowired ApplicationEventPublisher applicationEventPublisher;
     private @Autowired(required = false) AutomationService automationService;
     
     @Override

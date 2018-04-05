@@ -21,6 +21,7 @@ import java.io.Serializable;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
@@ -43,8 +44,8 @@ public class ProjectPermission
     private static final long serialVersionUID = -1490540239189868920L;
 
     @Id
-    @GeneratedValue
-    private long id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @Type(type = "de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevelType")
     private PermissionLevel level;
@@ -67,12 +68,12 @@ public class ProjectPermission
         level = aLevel;
     }
 
-    public long getId()
+    public Long getId()
     {
         return id;
     }
 
-    public void setId(long aId)
+    public void setId(Long aId)
     {
         id = aId;
     }
@@ -106,5 +107,4 @@ public class ProjectPermission
     {
         project = aProject;
     }
-
 }

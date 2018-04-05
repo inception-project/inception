@@ -20,8 +20,12 @@ package de.tudarmstadt.ukp.clarin.webanno.automation.model;
 import java.io.Serializable;
 import java.util.Date;
 
+import javax.persistence.Column;
+import javax.persistence.ConstraintMode;
 import javax.persistence.Entity;
+import javax.persistence.ForeignKey;
 import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
@@ -29,7 +33,6 @@ import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
-import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.Type;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Status;
@@ -37,8 +40,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Status;
 /**
  * Different Automation statistics such as number of training documents, state of the automation
  * such as, generating Train Document, generating classifier....
- *
- *
  */
 @Entity
 @Table(name = "auto_stat")
@@ -48,90 +49,111 @@ public class AutomationStatus
     private static final long serialVersionUID = -4018754250597200168L;
 
     @Id
-    @GeneratedValue
-    private long id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @ManyToOne
-    @ForeignKey(name = "none")
-    @JoinColumn(name = "template")
-    MiraTemplate template;
+    @JoinColumn(name = "template", 
+        foreignKey = @ForeignKey(name = "none", value = ConstraintMode.NO_CONSTRAINT))
+    private MiraTemplate template;
 
     @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "startime")
     private Date startime;
 
     @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "endTime")
     private Date endTime;
 
-    int trainDocs;
+    @Column(name = "trainDocs")
+    private int trainDocs;
 
-    int annoDocs;
-    int totalDocs;
+    @Column(name = "annoDocs")
+    private int annoDocs;
+
+    @Column(name = "totalDocs")
+    private int totalDocs;
+
     @Type(type = "de.tudarmstadt.ukp.clarin.webanno.model.StatusType")
     private Status status = Status.NOT_STARTED;
-    public long getId()
+
+    public Long getId()
     {
         return id;
     }
-    public void setId(long id)
+
+    public void setId(Long id)
     {
         this.id = id;
     }
+
     public MiraTemplate getTemplate()
     {
         return template;
     }
+
     public void setTemplate(MiraTemplate template)
     {
         this.template = template;
     }
+
     public Date getStartime()
     {
         return startime;
     }
+
     public void setStartime(Date startime)
     {
         this.startime = startime;
     }
+
     public Date getEndTime()
     {
         return endTime;
     }
+
     public void setEndTime(Date endTime)
     {
         this.endTime = endTime;
     }
+
     public int getTrainDocs()
     {
         return trainDocs;
     }
+
     public void setTrainDocs(int trainDocs)
     {
         this.trainDocs = trainDocs;
     }
+
     public int getAnnoDocs()
     {
         return annoDocs;
     }
+
     public void setAnnoDocs(int annoDocs)
     {
         this.annoDocs = annoDocs;
     }
+
     public Status getStatus()
     {
         return status;
     }
+
     public void setStatus(Status status)
     {
         this.status = status;
     }
+
     public int getTotalDocs()
     {
         return totalDocs;
     }
+
     public void setTotalDocs(int totalDocs)
     {
         this.totalDocs = totalDocs;
     }
-
-
 }

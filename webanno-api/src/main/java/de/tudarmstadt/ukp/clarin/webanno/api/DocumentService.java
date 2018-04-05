@@ -26,7 +26,6 @@ import java.util.Map;
 import javax.persistence.NoResultException;
 
 import org.apache.uima.UIMAException;
-import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.CASException;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.ResourceInitializationException;
@@ -35,7 +34,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition;
-import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
@@ -53,27 +51,6 @@ public interface DocumentService
      * @return the directory.
      */
     File getDir();
-
-    /**
-     * Load the CAS for the specified source document and user, upgrade it, and save it again.
-     * Depending on the mode parameter, the automation/correction and curation CASes are also
-     * upgraded.
-     *
-     * @param aDocument
-     *            the source document.
-     * @param aMode
-     *            the mode.
-     * @param username
-     *            the username.
-     * @throws IOException
-     *             if an I/O error occurs.
-     * @deprecated Read CAS e.g. using {@link #readAnnotationCas(SourceDocument, User)} then use 
-     *             {@link #upgradeCas(CAS, AnnotationDocument)} and then write the CAS e.g. using
-     *             {@link #writeAnnotationCas(JCas, SourceDocument, User, boolean)}
-     */
-    @Deprecated
-    void upgradeCasAndSave(SourceDocument aDocument, Mode aMode, String username)
-        throws IOException;
 
     // --------------------------------------------------------------------------------------------
     // Methods related to SourceDocuments
@@ -248,6 +225,23 @@ public interface DocumentService
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
     void writeAnnotationCas(JCas jCas, SourceDocument document, User user, boolean aUpdateTimestamp)
         throws IOException;
+
+    /**
+     * Resets the annotation document to its initial state by overwriting it with the initial
+     * CAS.
+     *
+     * @param aDocument
+     *            the source document.
+     * @param aUser
+     *            The User who perform this operation
+     * @throws UIMAException
+     *             if a data error occurs.
+     * @throws IOException
+     *             if an I/O error occurs.
+     */
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
+    void resetAnnotationCas(SourceDocument aDocument, User aUser)
+            throws UIMAException, IOException;
 
     /**
      * A Method that checks if there is already an annotation document created for the source
@@ -444,9 +438,6 @@ public interface DocumentService
      *            the {@link AnnotationDocument} to be removed
      */
     void removeAnnotationDocument(AnnotationDocument annotationDocument);
-
-    void upgradeCas(CAS aCurCas, AnnotationDocument annotationDocument)
-        throws UIMAException, IOException;
 
     /**
      * If any of the users finished one annotation document

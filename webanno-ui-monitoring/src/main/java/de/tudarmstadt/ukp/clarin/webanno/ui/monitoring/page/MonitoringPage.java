@@ -30,6 +30,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.NEW;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.CURATION_FINISHED_TO_CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.CURATION_IN_PROGRESS_TO_CURATION_FINISHED;
+import static java.util.Objects.isNull;
 
 import java.awt.Color;
 import java.io.IOException;
@@ -106,8 +107,6 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.EntityModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.jfreechart.SvgChart;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemCondition;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support.EmbeddableImage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support.TableDataProvider;
@@ -115,7 +114,6 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support.TableDataProvider
 /**
  * A Page To display different monitoring and statistics measurements tabularly and graphically.
  */
-@MenuItem(icon = "images/attribution.png", label = "Monitoring", prio = 300)
 @MountPath("/monitoring.html")
 public class MonitoringPage
     extends ApplicationPageBase
@@ -140,7 +138,7 @@ public class MonitoringPage
     public static final String LAST_ACCESS_ROW = "last access";
 
     private @SpringBean AnnotationSchemaService annotationService;
-    private @SpringBean AutomationService automationService;
+    private @SpringBean(required = false) AutomationService automationService;
     private @SpringBean DocumentService documentService;
     private @SpringBean ProjectService projectService;
     private @SpringBean UserDao userRepository;
@@ -200,6 +198,7 @@ public class MonitoringPage
 
         trainingResultForm = new TrainingResultForm("trainingResultForm");
         trainingResultForm.setVisible(false);
+        trainingResultForm.setVisibilityAllowed(automationService != null);
         add(trainingResultForm);
 
         annotatorsProgressImage = new SvgChart("annotator",
@@ -568,6 +567,7 @@ public class MonitoringPage
     {
         trainingResultForm.remove();
         trainingResultForm = new TrainingResultForm("trainingResultForm");
+        trainingResultForm.setVisibilityAllowed(automationService != null);
         add(trainingResultForm);
         trainingResultForm
                 .setVisible(WebAnnoConst.PROJECT_TYPE_AUTOMATION.equals(aProject.getMode()));
@@ -1076,7 +1076,7 @@ public class MonitoringPage
                 return aValue;
             }
             // Initialization of the appliaction, no project selected
-            else if (project.getId() == 0) {
+            else if (isNull(project.getId())) {
                 return "";
             }
             // It is document column, get the status from the database
@@ -1101,15 +1101,5 @@ public class MonitoringPage
             documentService.transitionAnnotationDocumentState(annotationDocument,
                     aAnnotationDocumentStateTransition);
         }
-    }
-    
-    /**
-     * Only admins and project managers can see this page
-     */
-    @MenuItemCondition
-    public static boolean menuItemCondition(ProjectService aRepo, UserDao aUserRepo)
-    {
-        User user = aUserRepo.getCurrentUser();
-        return SecurityUtil.monitoringEnabeled(aRepo, user);
     }
 }

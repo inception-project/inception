@@ -49,6 +49,7 @@ import org.wicketstuff.annotation.scan.AnnotatedMountScanner;
 import com.giffing.wicket.spring.boot.starter.app.WicketBootSecuredWebApplication;
 import com.github.sommeri.less4j.LessCompiler.Configuration;
 import com.googlecode.wicket.jquery.ui.settings.JQueryUILibrarySettings;
+
 import de.agilecoders.wicket.core.Bootstrap;
 import de.agilecoders.wicket.core.settings.IBootstrapSettings;
 import de.agilecoders.wicket.less.BootstrapLess;

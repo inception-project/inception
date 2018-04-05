@@ -21,11 +21,10 @@ import java.util.Enumeration;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-import javax.annotation.Resource;
-
 import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
@@ -40,7 +39,7 @@ public class ConstraintsServiceEventAdapter
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
     
-    private @Resource ConstraintsService service;
+    private @Autowired ConstraintsService service;
     
     @EventListener
     public void beforeProjectRemove(BeforeProjectRemovedEvent aEvent)

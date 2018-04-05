@@ -83,23 +83,26 @@ public class AjaxDownloadLink
             @Override
             public void onRequest()
             {
-                String name = filename != null ? filename.getObject() : null;
-                
-                // If no filename has been set explicitly, try to get it from the resource
                 IResourceStream is = AjaxDownloadLink.this.getModelObject();
-                if (name == null) {
-                    if (is instanceof FileResourceStream) {
-                        name = ((FileResourceStream) is).getFile().getName();
-                    }
-                    else if (is instanceof FileSystemResourceStream) {
-                        name = ((FileSystemResourceStream) is).getPath().getFileName().toString();
-                    }
-                }
                 
-                ResourceStreamRequestHandler handler = new ResourceStreamRequestHandler(
-                        AjaxDownloadLink.this.getModelObject(), name);
-                handler.setContentDisposition(ContentDisposition.ATTACHMENT);
-                getComponent().getRequestCycle().scheduleRequestHandlerAfterCurrent(handler);
+                if (is != null) {
+                    // If no filename has been set explicitly, try to get it from the resource
+                    String name = filename != null ? filename.getObject() : null;
+                    if (name == null) {
+                        if (is instanceof FileResourceStream) {
+                            name = ((FileResourceStream) is).getFile().getName();
+                        }
+                        else if (is instanceof FileSystemResourceStream) {
+                            name = ((FileSystemResourceStream) is).getPath().getFileName()
+                                    .toString();
+                        }
+                    }
+                    
+                    ResourceStreamRequestHandler handler = new ResourceStreamRequestHandler(
+                            AjaxDownloadLink.this.getModelObject(), name);
+                    handler.setContentDisposition(ContentDisposition.ATTACHMENT);
+                    getComponent().getRequestCycle().scheduleRequestHandlerAfterCurrent(handler);
+                }
             }
         };
         add(downloadBehavior);

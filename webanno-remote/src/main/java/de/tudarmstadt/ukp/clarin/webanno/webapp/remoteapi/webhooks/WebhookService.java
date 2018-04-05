@@ -28,7 +28,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
 import javax.net.ssl.SSLContext;
 
 import org.apache.commons.codec.digest.DigestUtils;
@@ -38,6 +37,7 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.ssl.TrustStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.http.HttpEntity;
@@ -79,8 +79,8 @@ public class WebhookService
         EVENT_TOPICS = Collections.unmodifiableMap(names);
     }
     
-    private @Resource WebhooksConfiguration configuration;
-    private @Resource RestTemplateBuilder restTemplateBuilder;
+    private @Autowired WebhooksConfiguration configuration;
+    private @Autowired RestTemplateBuilder restTemplateBuilder;
     
     @PostConstruct
     public void init()

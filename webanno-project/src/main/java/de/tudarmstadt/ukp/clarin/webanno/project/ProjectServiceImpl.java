@@ -42,7 +42,6 @@ import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-import javax.annotation.Resource;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
@@ -54,6 +53,7 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.PropertyAccessorFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.ApplicationEventPublisher;
@@ -85,13 +85,9 @@ public class ProjectServiceImpl
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    @PersistenceContext
-    private EntityManager entityManager;
-    
-    @Resource(name = "userRepository")
-    private UserDao userRepository;
-
-    private @Resource ApplicationEventPublisher applicationEventPublisher;
+    private @PersistenceContext EntityManager entityManager;
+    private @Autowired UserDao userRepository;
+    private @Autowired ApplicationEventPublisher applicationEventPublisher;
 
     @Value(value = "${repository.path}")
     private File dir;
@@ -113,7 +109,7 @@ public class ProjectServiceImpl
     public void createProject(Project aProject)
         throws IOException
     {
-        if (aProject.getId() != 0) {
+        if (aProject.getId() != null) {
             throw new IllegalArgumentException("Project has already been created before.");
         }
         
@@ -662,11 +658,33 @@ public class ProjectServiceImpl
         List<Project> allowedProject = new ArrayList<>();
         List<Project> allProjects = listProjects();
 
+        // if global admin, list all projects
+        if (SecurityUtil.isSuperAdmin(this, user)) {
+            return allProjects;
+        }
+
+        // else only list projects where she is admin / user / curator
+        for (Project project : allProjects) {
+            if (SecurityUtil.isProjectAdmin(project, this, user)
+                    || SecurityUtil.isAnnotator(project, this, user)
+                    || SecurityUtil.isCurator(project, this, user)) {
+                allowedProject.add(project);
+            }
+        }
+        return allowedProject;
+    }
+
+    @Override
+    public List<Project> listManageableProjects(User user)
+    {
+        List<Project> allowedProject = new ArrayList<>();
+        List<Project> allProjects = listProjects();
+
         // if global admin, show all projects
         if (SecurityUtil.isSuperAdmin(this, user)) {
             return allProjects;
         }
-        
+
         // else only projects she is admin of
         for (Project project : allProjects) {
             if (SecurityUtil.isProjectAdmin(project, this, user)) {

@@ -32,17 +32,12 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.wicketstuff.annotation.mount.MountPath;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
-import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapAjaxTabbedPanel;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ModelChangedVisitor;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemCondition;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelRegistryService;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelRegistryService.ProjectSettingsPanelDecl;
@@ -59,7 +54,6 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.project.users.ProjectUsersPanel;
  * {@link Tag} details to a Project as well as updating them The {@link ProjectUsersPanel} is used
  * to update {@link User} to a Project
  */
-@MenuItem(icon = "images/setting_tools.png", label = "Projects", prio = 400)
 @MountPath("/projectsetting.html")
 public class ProjectPage
     extends ApplicationPageBase
@@ -152,21 +146,12 @@ public class ProjectPage
                 public boolean isVisible()
                 {
                     return selectedProject.getObject() != null
-                            && selectedProject.getObject().getId() != 0
+                            && selectedProject.getObject().getId() != null
                             && psp.condition.applies(selectedProject.getObject());
                 }
             };
             tabs.add(tab);
         }
         return tabs;
-    }
-
-    /*
-     * Only admins and project managers can see this page
-     */
-    @MenuItemCondition
-    public static boolean menuItemCondition(ProjectService aRepo, UserDao aUserRepo)
-    {
-        return SecurityUtil.projectSettingsEnabeled(aRepo, aUserRepo.getCurrentUser());
     }
 }

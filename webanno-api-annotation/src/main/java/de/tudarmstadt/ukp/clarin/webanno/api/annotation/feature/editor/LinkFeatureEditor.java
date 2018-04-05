@@ -190,7 +190,8 @@ public class LinkFeatureEditor
                     // Ensure proper order of the initializing JS header items: first combo box
                     // behavior (in super.onInitialize()), then tooltip.
                     Options options = new Options(DescriptionTooltipBehavior.makeTooltipOptions());
-                    options.set("content", TextFeatureEditor.FUNCTION_FOR_TOOLTIP);
+                    options.set("content",
+                            ClassicKendoComboboxTextFeatureEditor.FUNCTION_FOR_TOOLTIP);
                     add(new TooltipBehavior("#" + field.getMarkupId() + "_listbox *[title]",
                             options)
                     {
