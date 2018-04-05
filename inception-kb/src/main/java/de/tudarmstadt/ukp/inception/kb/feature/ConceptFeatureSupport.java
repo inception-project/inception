@@ -59,7 +59,7 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 @Component
 public class ConceptFeatureSupport
-    implements FeatureSupport
+    implements FeatureSupport<Void>
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
