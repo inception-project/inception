@@ -24,7 +24,7 @@ import java.util.Set;
  * Stores information about entities retrieved from a knowledge base 
  * Needed to rank candidates
  */
-public class Entity
+public class CandidateEntity
 {
 
     /**
@@ -80,7 +80,7 @@ public class Entity
      */
     private int frequency;
 
-    public Entity(String IRI, String label, String alternativeLabel)
+    public CandidateEntity(String IRI, String label, String alternativeLabel)
     {
         this.IRI = IRI;
         this.label = label;

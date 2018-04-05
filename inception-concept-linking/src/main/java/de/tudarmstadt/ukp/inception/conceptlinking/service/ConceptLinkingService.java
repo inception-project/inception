@@ -55,7 +55,7 @@ import org.springframework.stereotype.Component;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.inception.conceptlinking.model.Entity;
+import de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity;
 import de.tudarmstadt.ukp.inception.conceptlinking.model.Property;
 import de.tudarmstadt.ukp.inception.conceptlinking.model.SemanticSignature;
 import de.tudarmstadt.ukp.inception.conceptlinking.util.QueryUtil;
@@ -131,10 +131,10 @@ public class ConceptLinkingService
      * It only contains entities which are instances of a pre-defined concept.
      * TODO lemmatize the mention if no candidates could be generated
      */
-    private Set<Entity> generateCandidates(KnowledgeBase aKB, String aMention, IRI aConceptIri)
+    private Set<CandidateEntity> generateCandidates(KnowledgeBase aKB, String aMention, IRI aConceptIri)
     {
         double startTime = System.currentTimeMillis();
-        Set<Entity> candidates = new HashSet<>();
+        Set<CandidateEntity> candidates = new HashSet<>();
         List<String> mentionArray = Arrays.asList(aMention.split(" "));
 
         ListIterator<String> it = mentionArray.listIterator();
@@ -180,7 +180,7 @@ public class ConceptLinkingService
                     Value label = solution.getValue("label");
                     Value altLabel = solution.getValue("altLabel");
 
-                    Entity newEntity = new Entity((e2 != null) ? e2.stringValue() : "",
+                    CandidateEntity newEntity = new CandidateEntity((e2 != null) ? e2.stringValue() : "",
                                          (label != null) ? label.stringValue() : "",
                                       (altLabel != null) ? altLabel.stringValue() : "");
 
@@ -267,8 +267,8 @@ public class ConceptLinkingService
      * This method does the actual ranking of the candidate entity set.
      * It returns the candidates by descending probability.
      */
-    private List<Entity> rankCandidates(KnowledgeBase aKB, String mention,
-            Set<Entity> candidates, JCas aJCas, int aBegin)
+    private List<CandidateEntity> rankCandidates(KnowledgeBase aKB, String mention,
+            Set<CandidateEntity> candidates, JCas aJCas, int aBegin)
     {
         double startTime = System.currentTimeMillis();
 
@@ -306,7 +306,7 @@ public class ConceptLinkingService
                 l.setFrequency(0);
             }
         });
-        List<Entity> result = sortByFrequency(new ArrayList<>((candidates)));
+        List<CandidateEntity> result = sortByFrequency(new ArrayList<>((candidates)));
         if (result.size() > 100) {
             result = result.subList(0, 100);
         }
@@ -338,7 +338,7 @@ public class ConceptLinkingService
     /*
      * Sort candidates by frequency in descending order.
      */
-    private List<Entity> sortByFrequency(List<Entity> candidates)
+    private List<CandidateEntity> sortByFrequency(List<CandidateEntity> candidates)
     {
         candidates.sort((e1, e2) -> new org.apache.commons.lang.builder.CompareToBuilder()
             .append(-e1.getFrequency(), -e2.getFrequency()).toComparison());
@@ -353,7 +353,7 @@ public class ConceptLinkingService
      * A high number of related relations is preferred.
      * A low wikidata ID rank is preferred.
      */
-    private List<Entity> sortCandidates(List<Entity> candidates)
+    private List<CandidateEntity> sortCandidates(List<CandidateEntity> candidates)
     {
         candidates.sort((e1, e2) -> new org.apache.commons.lang.builder.CompareToBuilder()
             .append(-e1.getSignatureOverlapScore(), -e2.getSignatureOverlapScore())
@@ -436,13 +436,13 @@ public class ConceptLinkingService
     public List<KBHandle> disambiguate(KnowledgeBase aKB, IRI aConceptIri, String
         aMention, int aMentionBeginOffset, JCas aJcas)
     {
-        List<Entity> candidates = rankCandidates(aKB, aMention,
+        List<CandidateEntity> candidates = rankCandidates(aKB, aMention,
                     generateCandidates(aKB, aMention, aConceptIri), aJcas,
                     aMentionBeginOffset);
 
         List<KBHandle> handles = new ArrayList<>();
 
-        for (Entity c: candidates) {
+        for (CandidateEntity c: candidates) {
             String id = c.getIRI();
             String label = c.getLabel();
 
