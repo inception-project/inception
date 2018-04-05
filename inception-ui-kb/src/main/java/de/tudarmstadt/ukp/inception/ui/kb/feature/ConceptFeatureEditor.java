@@ -35,7 +35,6 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.eclipse.rdf4j.model.IRI;
-import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -126,15 +125,7 @@ public class ConceptFeatureEditor
                 // If no specific KB is selected, collect instances from all KBs
                 for (KnowledgeBase kb : kbService.getKnowledgeBases(project)) {
                     if (kb.isSupportConceptLinking()) {
-                        if (traits.getScope() != null) {
-                            IRI conceptIri = SimpleValueFactory.getInstance()
-                                .createIRI(traits.getScope());
-                            return listLinkingInstances(kb, conceptIri, aState, aJCas);
-                        }
-                        // List instances of all concepts
-                        else {
-                            return listLinkingInstances(kb, null, aState, aJCas);
-                        }
+                        return listLinkingInstances(kb, null, aState, () -> getEditorCas(aHandler));
                     }
                     else {
                         handles.addAll(kbService.listInstances(kb, traits.getScope(), false));
