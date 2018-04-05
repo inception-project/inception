@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -41,6 +42,7 @@ import org.slf4j.LoggerFactory;
 import com.googlecode.wicket.kendo.ui.form.dropdown.DropDownList;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.JCasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.FeatureEditor;
@@ -79,22 +81,15 @@ public class ConceptFeatureEditor
     {
         super(aId, aItem, new CompoundPropertyModel<>(aModel));
         add(new Label(MID_FEATURE, getModelObject().feature.getUiName()));
-        JCas jCas;
-        try {
-            jCas = aHandler.getEditorCas();
-            add(focusComponent = createFieldComboBox(aStateModel.getObject(), jCas));
-        } catch (IOException e) {
-            log.error("Could not get JCas from ActionHandler. ", e);
-        }
-
+        add(focusComponent = createFieldComboBox(aStateModel.getObject(), aHandler));
     }
 
     private DropDownList<KBHandle> createFieldComboBox(AnnotatorState aState,
-        JCas aJCas)
+        AnnotationActionHandler aHandler)
     {
         DropDownList<KBHandle> field = new DropDownList<KBHandle>(MID_VALUE,
-                LambdaModel.of(() -> listInstances(aState, aJCas)),
-                new LambdaChoiceRenderer<>(KBHandle::getUiLabel));
+            LambdaModel.of(() -> listInstances(aState, aHandler)),
+            new LambdaChoiceRenderer<>(KBHandle::getUiLabel));
 
         // Ensure that markup IDs of feature editor focus components remain constant across
         // refreshes of the feature editor panel. This is required to restore the focus.
@@ -102,8 +97,13 @@ public class ConceptFeatureEditor
         field.setMarkupId(ID_PREFIX + getModelObject().feature.getId());
         return field;
     }
-    
-    private List<KBHandle> listInstances(AnnotatorState aState, JCas aJCas)
+
+    private JCas getEditorCas(AnnotationActionHandler aHandler) throws IOException
+    {
+        return aHandler.getEditorCas();
+    }
+
+    private List<KBHandle> listInstances(AnnotatorState aState, AnnotationActionHandler aHandler)
     {
         AnnotationFeature feat = getModelObject().feature;
         
@@ -167,10 +167,17 @@ public class ConceptFeatureEditor
     }
 
     private List<KBHandle> listLinkingInstances(KnowledgeBase kb, IRI conceptIri,
-        AnnotatorState aState, JCas aJCas)
+        AnnotatorState aState, JCasProvider aJCas)
     {
-        return kbService.read(kb, (conn) ->
-            clService.disambiguate(kb, conceptIri, aState.getSelection().getText(),
-            aState.getSelection().getBegin(), aJCas));
+        return kbService.read(kb, (conn) -> {
+            try {
+                return clService.disambiguate(kb, conceptIri, aState.getSelection().getText(),
+                    aState.getSelection().getBegin(), aJCas.get());
+            }
+            catch (IOException e) {
+                e.printStackTrace();
+                return Collections.emptyList();
+            }
+        });
     }
 }
