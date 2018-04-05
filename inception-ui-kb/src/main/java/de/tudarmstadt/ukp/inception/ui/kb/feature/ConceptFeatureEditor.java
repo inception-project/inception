@@ -118,14 +118,15 @@ public class ConceptFeatureEditor
                 Optional<KnowledgeBase> kb = kbService.getKnowledgeBaseById(project,
                         traits.getRepositoryId());
                 if (kb.isPresent()) {
-                    handles = kbService.listInstances(kb.get(), traits.getScope(), false);
+                    return kbService.listInstances(kb.get(), traits.getScope(), false);
                 }
             }
             else {
                 // If no specific KB is selected, collect instances from all KBs
                 for (KnowledgeBase kb : kbService.getKnowledgeBases(project)) {
                     if (kb.isSupportConceptLinking()) {
-                        return listLinkingInstances(kb, null, aState, () -> getEditorCas(aHandler));
+                        handles.addAll(listLinkingInstances(kb, null, aState, () ->
+                            getEditorCas(aHandler)));
                     }
                     else {
                         handles.addAll(kbService.listInstances(kb, traits.getScope(), false));
