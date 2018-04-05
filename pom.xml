@@ -29,8 +29,8 @@
   <packaging>pom</packaging>
   <name>INCEpTION</name>
   <properties>
-    <webanno.version>3.4.0-SNAPSHOT</webanno.version>
-    <dkpro.version>1.9.1-SNAPSHOT</dkpro.version>
+    <webanno.version>3.4.0-beta-1</webanno.version>
+    <dkpro.version>1.9.1</dkpro.version>
     <spring.version>5.0.4.RELEASE </spring.version>
     <spring.boot.version>1.5.10.RELEASE</spring.boot.version>
     <wicket.version>7.10.0</wicket.version>
