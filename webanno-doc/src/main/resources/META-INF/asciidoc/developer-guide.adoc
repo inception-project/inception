@@ -14,9 +14,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-{product.name} Developer Guide
-=======================
-:Author: The {product.name} Team
+= {product.name} Developer Guide
+The {product.name} Team
 
 This document targets developers working on {product.name}.
 

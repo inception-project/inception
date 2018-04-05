@@ -7,6 +7,6 @@
 target
 /db/
 /repository/
-webanno-doc/src/main/resources
+webanno-doc/src/main/resources/public
 .checkstyle
 log4j2-dev.xml
