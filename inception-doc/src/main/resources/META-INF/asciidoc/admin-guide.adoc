@@ -14,12 +14,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-[[sect_login]]
-== Logging in
+= {product.name} Administrator Guide
+The {product.name} Team
 
-Upon opening the application in the browser, the login screen opens. Please enter your
-credentials to  proceed.
+include::common/systemrequirements.adoc[]
 
-NOTE: When {product-name} is started for the first time, a default user called *admin* with the password *admin* is automatically created. Be sure to change the passwort for this user after logging in (see <<sect_users>>). 
+<<<
 
-image::version3_login.png[align="center"]
+include::{include-dir}installation.adoc[]
+
+<<<
+
+include::{include-dir}database.adoc[]
+
+<<<
+
+include::{include-dir}upgrade.adoc[]
+
+<<<
+
+include::{include-dir}systemproperties.adoc[]
+
+<<<
+
+include::{include-dir}settings.adoc[]
