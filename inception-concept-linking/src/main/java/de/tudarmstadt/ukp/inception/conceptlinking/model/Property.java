@@ -25,7 +25,7 @@ public class Property
 {
     private String label;
     private String[] altlabel;
-    private double freq;
+    private int freq;
     private String type;
         
     public Property(String label, String altlabel, String type, String freq)
@@ -34,7 +34,7 @@ public class Property
         this.label = label.trim().toLowerCase();
         this.altlabel = altlabel.trim().toLowerCase().split(", ");
         this.type = type;
-        this.freq = Double.parseDouble(freq.trim().replace(",",""));
+        this.freq = Integer.parseInt(freq.trim().replace(",",""));
     }
     
     public String getLabel()
@@ -57,7 +57,7 @@ public class Property
         this.altlabel = altlabel;
     }
 
-    public double getFreq()
+    public int getFreq()
     {
         return freq;
     }
