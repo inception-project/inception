@@ -19,8 +19,8 @@ package de.tudarmstadt.ukp.inception.kb.feature;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 import org.apache.uima.cas.CASException;
 import org.apache.uima.cas.Feature;
@@ -58,31 +58,31 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
-public class SubjectObjectFeatureEditor extends FeatureEditor {
+public class SubjectObjectFeatureEditor
+    extends FeatureEditor
+{
 
     private static final long serialVersionUID = 4230722501745589589L;
     private static final Logger logger = LoggerFactory.getLogger(SubjectObjectFeatureEditor.class);
     private @SpringBean AnnotationSchemaService annotationService;
     private WebMarkupContainer content;
 
-    @SuppressWarnings("rawtypes")
-    private Component focusComponent;
+    @SuppressWarnings("rawtypes") private Component focusComponent;
     private boolean hideUnconstraintFeature;
 
     private AnnotationActionHandler actionHandler;
     private IModel<AnnotatorState> stateModel;
 
-    @SuppressWarnings("unused")
-    private LinkWithRoleModel roleModel;
+    @SuppressWarnings("unused") private LinkWithRoleModel roleModel;
 
     AnnotationFeature linkedAnnotationFeature;
 
     private @SpringBean KnowledgeBaseService kbService;
 
     public SubjectObjectFeatureEditor(String aId, MarkupContainer aOwner,
-                                      AnnotationActionHandler aHandler,
-                                      final IModel<AnnotatorState> aStateModel,
-                                      final IModel<FeatureState> aFeatureStateModel, String role) {
+        AnnotationActionHandler aHandler, final IModel<AnnotatorState> aStateModel,
+        final IModel<FeatureState> aFeatureStateModel, String role)
+    {
         super(aId, aOwner, CompoundPropertyModel.of(aFeatureStateModel));
 
         stateModel = aStateModel;
@@ -94,7 +94,6 @@ public class SubjectObjectFeatureEditor extends FeatureEditor {
         content = new WebMarkupContainer("content");
         content.setOutputMarkupId(true);
         add(content);
-
 
         List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) SubjectObjectFeatureEditor.this
             .getModelObject().value;
@@ -110,9 +109,10 @@ public class SubjectObjectFeatureEditor extends FeatureEditor {
         content.add(focusComponent = createFieldComboBox());
     }
 
-    private Label createSubjectObjectLabel() {
+    private Label createSubjectObjectLabel()
+    {
         AnnotatorState state = stateModel.getObject();
-        final Label label;
+        Label label;
         label = new Label("label", LambdaModel.of(this::getSelectionSlotLabel));
         label.add(new AjaxEventBehavior("click")
         {
@@ -128,10 +128,9 @@ public class SubjectObjectFeatureEditor extends FeatureEditor {
         {
             private static final long serialVersionUID = 1L;
 
-            @Override
-            public String getObject()
+            @Override public String getObject()
             {
-                if (state.isArmedSlot(getModelObject().feature, 0)) {
+                if (roleLabelSlotIsSelected()) {
                     return "; background: orange";
                 }
                 else {
@@ -139,18 +138,16 @@ public class SubjectObjectFeatureEditor extends FeatureEditor {
                 }
             }
         }));
-        if (!state.isArmedSlot(getModelObject().feature, 0)) {
+        if (!roleLabelSlotIsSelected()) {
             label.setDefaultModelObject(roleModel.label);
         }
         return label;
     }
 
-    private DropDownList<KBHandle> createFieldComboBox() {
+    private DropDownList<KBHandle> createFieldComboBox()
+    {
         DropDownList<KBHandle> field = new DropDownList<KBHandle>("value",
-            LambdaModelAdapter.of(
-                this::getSelectedKBItem,
-                this::setSelectedKBItem
-            ),
+            LambdaModelAdapter.of(this::getSelectedKBItem, this::setSelectedKBItem),
             LambdaModel.of(this::getKBConceptsAndInstances), new ChoiceRenderer<>("uiLabel"));
         field.setOutputMarkupId(true);
         field.setMarkupId(ID_PREFIX + getModelObject().feature.getId());
@@ -159,8 +156,7 @@ public class SubjectObjectFeatureEditor extends FeatureEditor {
 
     private String getSelectionSlotLabel()
     {
-        if (roleModel.targetAddr == -1
-            && stateModel.getObject().isArmedSlot(getModelObject().feature, 0)) {
+        if (!roleLabelIsFilled() && roleLabelSlotIsSelected()) {
             return "<Select to fill>";
         }
         else {
@@ -168,12 +164,21 @@ public class SubjectObjectFeatureEditor extends FeatureEditor {
         }
     }
 
+    private boolean roleLabelIsFilled()
+    {
+        return roleModel.targetAddr != -1;
+    }
+
+    private boolean roleLabelSlotIsSelected()
+    {
+        return stateModel.getObject().isArmedSlot(getModelObject().feature, 0);
+    }
 
     private void actionToggleArmedState(AjaxRequestTarget aTarget)
     {
-        AnnotatorState state = SubjectObjectFeatureEditor.this.stateModel.getObject();
+        AnnotatorState state = stateModel.getObject();
 
-        if (state.isArmedSlot(getModelObject().feature, 0)) {
+        if (roleLabelSlotIsSelected()) {
             state.clearArmedSlot();
             aTarget.add(content);
         }
@@ -190,38 +195,42 @@ public class SubjectObjectFeatureEditor extends FeatureEditor {
     }
 
     @Override
-    public Component getFocusComponent() {
+    public Component getFocusComponent()
+    {
         return focusComponent;
     }
 
     @Override
-    public void onConfigure() {
+    public void onConfigure()
+    {
         List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) this.getModelObject().value;
         if (links.size() == 0) {
             String role = roleModel.role;
             roleModel = new LinkWithRoleModel();
             roleModel.role = role;
             links.add(roleModel);
-            this.stateModel.getObject().setArmedSlot(SubjectObjectFeatureEditor.this
-                .getModelObject().feature, 0);
-        } else {
+            this.stateModel.getObject()
+                .setArmedSlot(SubjectObjectFeatureEditor.this.getModelObject().feature, 0);
+        }
+        else {
             roleModel = links.get(0);
         }
         String linkedType = this.getModelObject().feature.getType();
-        AnnotationLayer linkedLayer = annotationService.getLayer(linkedType, this.stateModel
-            .getObject().getProject());
-        linkedAnnotationFeature = annotationService.getFeature("KBItems",
-            linkedLayer);
+        AnnotationLayer linkedLayer = annotationService
+            .getLayer(linkedType, this.stateModel.getObject().getProject());
+        linkedAnnotationFeature = annotationService.getFeature("KBItems", linkedLayer);
     }
 
-    private void setSelectedKBItem(KBHandle value) {
-        if (roleModel.targetAddr != -1) {
+    private void setSelectedKBItem(KBHandle value)
+    {
+        if (roleLabelIsFilled()) {
             try {
                 JCas jCas = actionHandler.getEditorCas().getCas().getJCas();
                 AnnotationFS selectedFS = WebAnnoCasUtil.selectByAddr(jCas, roleModel.targetAddr);
-                WebAnnoCasUtil.setFeature(selectedFS, linkedAnnotationFeature,
-                    value.getIdentifier());
-            } catch (CASException | IOException e) {
+                WebAnnoCasUtil
+                    .setFeature(selectedFS, linkedAnnotationFeature, value.getIdentifier());
+            }
+            catch (CASException | IOException e) {
                 logger.error("Error: " + e.getMessage(), e);
                 error("Error: " + e.getMessage());
             }
@@ -232,20 +241,24 @@ public class SubjectObjectFeatureEditor extends FeatureEditor {
         }
     }
 
-    private KBHandle getSelectedKBItem() {
+    private KBHandle getSelectedKBItem()
+    {
         KBHandle selectedKBHandleItem = null;
-        if (roleModel.targetAddr != -1) {
+        if (roleLabelIsFilled()) {
             try {
                 JCas jCas = actionHandler.getEditorCas().getCas().getJCas();
                 AnnotationFS selectedFS = WebAnnoCasUtil.selectByAddr(jCas, roleModel.targetAddr);
                 String selectedKBItemIdentifier = WebAnnoCasUtil.getFeature(selectedFS,
                     linkedAnnotationFeature.getName());
+
                 if (selectedKBItemIdentifier != null) {
                     List<KBHandle> handles = getKBConceptsAndInstances();
-                    selectedKBHandleItem = handles.stream().filter(x -> selectedKBItemIdentifier
-                        .equals(x.getIdentifier())).findAny().orElse(null);
+                    selectedKBHandleItem = handles.stream()
+                        .filter(x -> selectedKBItemIdentifier.equals(x.getIdentifier())).findAny()
+                        .orElseThrow(NoSuchElementException::new);
                 }
-            } catch (CASException | IOException e) {
+            }
+            catch (CASException | IOException e) {
                 logger.error("Error: " + e.getMessage(), e);
                 error("Error: " + e.getMessage());
             }
@@ -253,17 +266,17 @@ public class SubjectObjectFeatureEditor extends FeatureEditor {
         return selectedKBHandleItem;
     }
 
-    private List<KBHandle> getKBConceptsAndInstances() {
+    private List<KBHandle> getKBConceptsAndInstances()
+    {
         AnnotationFeature feat = getModelObject().feature;
-        List<KBHandle> handles = new LinkedList<>();
+        List<KBHandle> handles = new ArrayList<>();
         for (KnowledgeBase kb : kbService.getKnowledgeBases(feat.getProject())) {
             handles.addAll(kbService.listConcepts(kb, false));
-            for (KBHandle concept: kbService.listConcepts(kb, false)) {
-                handles.addAll(kbService.listInstances(kb, concept.getIdentifier(),
-                    false));
+            for (KBHandle concept : kbService.listConcepts(kb, false)) {
+                handles.addAll(kbService.listInstances(kb, concept.getIdentifier(), false));
             }
         }
-        return new ArrayList<>(handles);
+        return handles;
     }
 
     private KnowledgeBase getKBForKBHandle(KBHandle kbHandle) {
