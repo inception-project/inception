@@ -19,8 +19,6 @@ package de.tudarmstadt.ukp.inception.conceptlinking.util;
 
 import java.util.List;
 
-import org.eclipse.rdf4j.model.IRI;
-
 /**
  * Contains SPARQL query parts and query builder methods
  */
@@ -79,10 +77,9 @@ public class QueryUtil
      *
      * @param tokens the words spanned by the mention
      * @param limit maximum number of results
-     * @param conceptIri the concept of which instances should be generated as candidates
      * @return a query to retrieve candidate entities
      */
-    public static String generateCandidateQuery(List<String> tokens, int limit, IRI conceptIri)
+    public static String generateCandidateQuery(List<String> tokens, int limit)
     {
         String query = SPARQL_INFERENCE_CLAUSE;
         query += SPARQL_PREFIX + "\n";
@@ -102,16 +99,10 @@ public class QueryUtil
              + "                  UNION\n",
             "");
         }
-        
-        if (conceptIri != null) {
-            SPARQL_ENTITY_LABEL_INST = SPARQL_ENTITY_LABEL_INST
-                    .replace("%conceptIri", conceptIri.stringValue());
-        } 
-        else {
-            SPARQL_ENTITY_LABEL_INST = SPARQL_ENTITY_LABEL_INST
-                    .replace("?e2 rdf:type <%conceptIri>", "");
-        }
-        
+
+        SPARQL_ENTITY_LABEL_INST = SPARQL_ENTITY_LABEL_INST
+                .replace("?e2 rdf:type <%conceptIri>", "");
+
         query += SPARQL_ENTITY_LABEL_INST;
         query += "} \n";
         query += SPARQL_LIMIT + limit;

@@ -36,7 +36,6 @@ import org.apache.commons.lang3.builder.CompareToBuilder;
 import org.apache.commons.text.similarity.LevenshteinDistance;
 import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
-import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Value;
 import org.eclipse.rdf4j.query.BindingSet;
 import org.eclipse.rdf4j.query.QueryEvaluationException;
@@ -55,8 +54,8 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity;
 import de.tudarmstadt.ukp.inception.conceptlinking.model.Property;
 import de.tudarmstadt.ukp.inception.conceptlinking.model.SemanticSignature;
-import de.tudarmstadt.ukp.inception.conceptlinking.util.QueryUtil;
 import de.tudarmstadt.ukp.inception.conceptlinking.util.FileUtils;
+import de.tudarmstadt.ukp.inception.conceptlinking.util.QueryUtil;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
@@ -125,7 +124,7 @@ public class ConceptLinkingService
      * It only contains entities which are instances of a pre-defined concept.
      * TODO lemmatize the mention if no candidates could be generated
      */
-    private Set<CandidateEntity> generateCandidates(KnowledgeBase aKB, String aMention, IRI aConceptIri)
+    private Set<CandidateEntity> generateCandidates(KnowledgeBase aKB, String aMention)
     {
         double startTime = System.currentTimeMillis();
         Set<CandidateEntity> candidates = new HashSet<>();
@@ -147,7 +146,7 @@ public class ConceptLinkingService
 
         int candidateQueryLimit = 1000;
         String entityQueryString = QueryUtil
-            .generateCandidateQuery(mentionArray, candidateQueryLimit, aConceptIri);
+            .generateCandidateQuery(mentionArray, candidateQueryLimit);
         
         try (RepositoryConnection conn = kbService.getConnection(aKB)) {
             TupleQuery query = conn.prepareTupleQuery(QueryLanguage.SPARQL, entityQueryString);
@@ -177,7 +176,7 @@ public class ConceptLinkingService
             String[] split = aMention.split(" ");
             if (split.length > 1) {
                 for (String s : split) {
-                    candidates.addAll(generateCandidates(aKB, s, null));
+                    candidates.addAll(generateCandidates(aKB, s));
                 }
             }
         }
@@ -402,7 +401,6 @@ public class ConceptLinkingService
      * pre-defined concept.
      *
      * @param aKB the KB used to generate candidates
-     * @param aConceptIri the concept of which instances should be generated as candidates
      * @param aMention AnnotatorState, used to get information about what surface form was
      *                     marked
      * @param aMentionBeginOffset the offset where the mention begins in the text
@@ -410,11 +408,11 @@ public class ConceptLinkingService
      *                       tokens
      * @return ranked list of entities, starting with the most probable entity
      */
-    public List<KBHandle> disambiguate(KnowledgeBase aKB, IRI aConceptIri, String
+    public List<KBHandle> disambiguate(KnowledgeBase aKB, String
         aMention, int aMentionBeginOffset, JCas aJcas)
     {
         List<CandidateEntity> candidates = rankCandidates(aKB, aMention,
-                    generateCandidates(aKB, aMention, aConceptIri), aJcas,
+                    generateCandidates(aKB, aMention), aJcas,
                     aMentionBeginOffset);
 
         List<KBHandle> handles = new ArrayList<>();
