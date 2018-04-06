@@ -21,6 +21,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CASException;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
@@ -40,9 +42,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.googlecode.wicket.kendo.ui.form.dropdown.DropDownList;
-
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.FeatureEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
@@ -51,6 +53,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
@@ -62,22 +65,19 @@ public class SubjectObjectFeatureEditor
 {
 
     private static final long serialVersionUID = 4230722501745589589L;
-    private static final Logger logger = LoggerFactory.getLogger(SubjectObjectFeatureEditor.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SubjectObjectFeatureEditor.class);
+
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean KnowledgeBaseService kbService;
     private @SpringBean FactLinkingService factService;
+
     private WebMarkupContainer content;
-
-    @SuppressWarnings("rawtypes") private Component focusComponent;
-    private boolean hideUnconstraintFeature;
-
+    private Component focusComponent;
     private AnnotationActionHandler actionHandler;
     private IModel<AnnotatorState> stateModel;
     private Project project;
-
-    @SuppressWarnings("unused") private LinkWithRoleModel roleModel;
-
-    AnnotationFeature linkedAnnotationFeature;
+    private LinkWithRoleModel roleModel;
+    private AnnotationFeature linkedAnnotationFeature;
 
     public SubjectObjectFeatureEditor(String aId, MarkupContainer aOwner,
         AnnotationActionHandler aHandler, final IModel<AnnotatorState> aStateModel,
@@ -88,8 +88,6 @@ public class SubjectObjectFeatureEditor
         stateModel = aStateModel;
         actionHandler = aHandler;
         project = this.getModelObject().feature.getProject();
-
-        hideUnconstraintFeature = getModelObject().feature.isHideUnconstraintFeature();
 
         add(new Label("feature", getModelObject().feature.getUiName()));
         content = new WebMarkupContainer("content");
@@ -105,14 +103,13 @@ public class SubjectObjectFeatureEditor
             roleModel = links.get(0);
         }
 
-        content.add(new Label("role", roleModel.role));
         content.add(createSubjectObjectLabel());
+        content.add(createRemoveLabelIcon());
         content.add(focusComponent = createFieldComboBox());
     }
 
     private Label createSubjectObjectLabel()
     {
-        AnnotatorState state = stateModel.getObject();
         Label label;
         label = new Label("label", LambdaModel.of(this::getSelectionSlotLabel));
         label.add(new AjaxEventBehavior("click")
@@ -145,6 +142,32 @@ public class SubjectObjectFeatureEditor
         return label;
     }
 
+    private LambdaAjaxLink createRemoveLabelIcon()
+    {
+        return new LambdaAjaxLink("removeLabel", this::removeSelectedLabel);
+    }
+
+    private void removeSelectedLabel(AjaxRequestTarget aTarget)
+    {
+        List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) this.getModelObject().value;
+        AnnotatorState state = this.stateModel.getObject();
+
+        String role = roleModel.role;
+        roleModel = new LinkWithRoleModel();
+        roleModel.role = role;
+        links.set(0, roleModel);
+
+        // Auto-commit if working on existing annotation
+        if (state.getSelection().getAnnotation().isSet()) {
+            try {
+                actionHandler.actionCreateOrUpdate(aTarget, actionHandler.getEditorCas());
+            }
+            catch (Exception e) {
+                handleException(this, aTarget, e);
+            }
+        }
+    }
+
     private DropDownList<KBHandle> createFieldComboBox()
     {
         DropDownList<KBHandle> field = new DropDownList<KBHandle>("value",
@@ -169,6 +192,7 @@ public class SubjectObjectFeatureEditor
 
     private boolean roleLabelIsFilled()
     {
+
         return roleModel.targetAddr != -1;
     }
 
@@ -250,7 +274,7 @@ public class SubjectObjectFeatureEditor
                 .setFeature(selectedFS, linkedAnnotationFeature, value.getIdentifier());
         }
         catch (CASException | IOException e) {
-            logger.error("Error: " + e.getMessage(), e);
+            LOG.error("Error: " + e.getMessage(), e);
             error("Error: " + e.getMessage());
         }
     }
@@ -273,7 +297,7 @@ public class SubjectObjectFeatureEditor
                 }
             }
             catch (CASException | IOException e) {
-                logger.error("Error: " + e.getMessage(), e);
+                LOG.error("Error: " + e.getMessage(), e);
                 error("Error: " + e.getMessage());
             }
         }
@@ -287,7 +311,7 @@ public class SubjectObjectFeatureEditor
         if (predicateHandle != null) {
 
             if (!factService.checkSameKnowledgeBase(value, predicateHandle, project)) {
-                logger.error("Subject and predicate are from different knowledge bases.");
+                LOG.error("Subject and predicate are from different knowledge bases.");
                 return;
             }
 
@@ -318,7 +342,7 @@ public class SubjectObjectFeatureEditor
         }
 
         if (!factService.checkSameKnowledgeBase(subjectHandle, predicateHandle, project)) {
-            logger.error("Subject and predicate are from different knowledge bases.");
+            LOG.error("Subject and predicate are from different knowledge bases.");
             return;
         }
 
@@ -331,4 +355,28 @@ public class SubjectObjectFeatureEditor
                 project);
     }
 
+    public static void handleException(Component aComponent, AjaxRequestTarget aTarget,
+        Exception aException)
+    {
+        try {
+            throw aException;
+        }
+        catch (AnnotationException e) {
+            if (aTarget != null) {
+                aTarget.prependJavaScript("alert('Error: " + e.getMessage() + "')");
+            }
+            else {
+                aComponent.error("Error: " + e.getMessage());
+            }
+            LOG.error("Error: " + ExceptionUtils.getRootCauseMessage(e), e);
+        }
+        catch (UIMAException e) {
+            aComponent.error("Error: " + ExceptionUtils.getRootCauseMessage(e));
+            LOG.error("Error: " + ExceptionUtils.getRootCauseMessage(e), e);
+        }
+        catch (Exception e) {
+            aComponent.error("Error: " + e.getMessage());
+            LOG.error("Error: " + e.getMessage(), e);
+        }
+    }
 }

@@ -55,11 +55,11 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 
 @Component
 public class PropertyFeatureSupport
-    implements FeatureSupport
+    implements FeatureSupport<Void>
 {
     private static final Logger LOG = LoggerFactory.getLogger(PropertyFeatureSupport.class);
-    private static final String PREDICATE_KEY = "Property: Predicate";
-    private static final String FACT_PREDICATE_PREFIX = "fact-predicate:";
+    private static final String PREDICATE_KEY = "KB: Property";
+    private static final String FACT_PREDICATE_PREFIX = "kb-property:";
 
     @Resource private KnowledgeBaseService kbService;
 
@@ -92,7 +92,7 @@ public class PropertyFeatureSupport
         switch (aFeature.getMultiValueMode()) {
         case NONE:
             return aFeature.getType().startsWith(FACT_PREDICATE_PREFIX);
-        case ARRAY: // fallthrough
+        case ARRAY: // fall-through
         default:
             return false;
         }
@@ -159,8 +159,8 @@ public class PropertyFeatureSupport
 
     @Override
     public FeatureEditor createEditor(String aId, MarkupContainer aOwner,
-        AnnotationActionHandler aHandler, final IModel<AnnotatorState> aStateModel,
-        final IModel<FeatureState> aFeatureStateModel)
+            AnnotationActionHandler aHandler, IModel<AnnotatorState> aStateModel,
+            IModel<FeatureState> aFeatureStateModel)
     {
         FeatureState featureState = aFeatureStateModel.getObject();
         final FeatureEditor editor;
@@ -170,13 +170,14 @@ public class PropertyFeatureSupport
             if (featureState.feature.getType().startsWith(FACT_PREDICATE_PREFIX)) {
                 editor = new PropertyFeatureEditor(aId, aOwner, aHandler, aStateModel,
                     aFeatureStateModel);
-            } else {
-                throw unsupportedMultiValueModeException(featureState);
+            }
+            else {
+                throw unsupportedMultiValueModeException(featureState.feature);
             }
             break;
-        case ARRAY: // fallthrough
+        case ARRAY: // fall-through
         default:
-            throw unsupportedMultiValueModeException(featureState);
+            throw unsupportedMultiValueModeException(featureState.feature);
         }
 
         return editor;
