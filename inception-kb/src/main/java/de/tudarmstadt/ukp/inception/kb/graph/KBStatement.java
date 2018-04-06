@@ -166,14 +166,16 @@ public class KBStatement implements Serializable
             object = mapper.getRDFValue(value, vf);
         }
 
+
         return vf.createStatement(subject, predicate, object);
     }
 
     public void write(RepositoryConnection conn)
     {
-        originalStatements.clear();
         Statement stmt = toStatement(conn);
-        originalStatements.add(stmt);
+        if (!inferred) {
+
+        }
         conn.add(stmt);
     }
 

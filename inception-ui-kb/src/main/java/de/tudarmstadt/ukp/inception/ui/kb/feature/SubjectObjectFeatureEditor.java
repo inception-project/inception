@@ -40,6 +40,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.googlecode.wicket.kendo.ui.form.dropdown.DropDownList;
+
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.FeatureEditor;
@@ -54,6 +55,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
+import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 
 public class SubjectObjectFeatureEditor
     extends FeatureEditor
@@ -72,6 +74,7 @@ public class SubjectObjectFeatureEditor
     private AnnotationActionHandler actionHandler;
     private IModel<AnnotatorState> stateModel;
     private Project project;
+    private KBStatement statement;
 
     @SuppressWarnings("unused") private LinkWithRoleModel roleModel;
 
@@ -287,7 +290,7 @@ public class SubjectObjectFeatureEditor
                 objectValue = objectHandle.getUiLabel();
             }
             if (factService.checkSameKnowledgeBase(value, predicateHandle, project)) {
-                factService.setStatementInKB(value, predicateHandle, objectValue, project);
+                statement = factService.updateStatement(value, predicateHandle, objectValue, statement, project);
             } else {
                 logger.error("Subject and predicate are from different knowledge bases.");
             }
@@ -296,22 +299,21 @@ public class SubjectObjectFeatureEditor
 
     private void setStatementInKBWhenObjectUpdate(KBHandle value, KBHandle oldValue) {
         KBHandle predicateHandle = factService.getPredicateKBHandle(stateModel.getObject());
-        if (predicateHandle != null) {
-            if (stateModel.getObject().getFeatureStates().size() > 1) {
-                KBHandle subjectHandle = factService
-                    .getLinkedSubjectObjectKBHandle("Subject", actionHandler,
-                        stateModel.getObject());
-                if (subjectHandle != null) {
-                    if (factService
-                        .checkSameKnowledgeBase(subjectHandle, predicateHandle, project)) {
-                        String oldValueString = oldValue == null ? "" : oldValue.getUiLabel();
-                        factService
-                            .updateStatementObject(subjectHandle, predicateHandle, oldValueString,
-                                value.getUiLabel(), project);
-                    }
-                }
-            }
+        KBHandle subjectHandle = factService.getLinkedSubjectObjectKBHandle("Subject", actionHandler, stateModel.getObject());
+
+        if (predicateHandle == null || subjectHandle == null) {
+            return;
         }
+
+        if (stateModel.getObject().getFeatureStates().size() <= 1) {
+            return;
+        }
+
+        if (!factService.checkSameKnowledgeBase(subjectHandle, predicateHandle, project)) {
+            return;
+        }
+
+        statement = factService.updateStatement(subjectHandle, predicateHandle, value.getUiLabel(), statement, project);
     }
 
 }

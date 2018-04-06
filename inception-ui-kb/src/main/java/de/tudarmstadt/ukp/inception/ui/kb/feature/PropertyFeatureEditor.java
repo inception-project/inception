@@ -39,6 +39,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
+import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 
 public class PropertyFeatureEditor
     extends FeatureEditor
@@ -49,6 +50,7 @@ public class PropertyFeatureEditor
     private IModel<AnnotatorState> stateModel;
     private AnnotationActionHandler actionHandler;
     private Project project;
+    private KBStatement statement;
     private @SpringBean AnnotationSchemaService annotationService;
 
     private @SpringBean KnowledgeBaseService kbService;
@@ -94,29 +96,31 @@ public class PropertyFeatureEditor
         return focusComponent;
     }
 
-    private void setStatementInKB(KBHandle predicateHandle)
+    private void setStatementInKB(KBHandle predicate)
     {
-        this.getModelObject().value = predicateHandle;
-        if (stateModel.getObject().getFeatureStates().size() > 1) {
-            KBHandle subjectHandle = factService
-                .getLinkedSubjectObjectKBHandle("Subject", actionHandler, stateModel.getObject());
-            if (subjectHandle != null) {
-                if (factService.checkSameKnowledgeBase(subjectHandle, predicateHandle, project)) {
-                    String objectValue = "";
-                    KBHandle objectHandle = factService
-                        .getLinkedSubjectObjectKBHandle("Object", actionHandler,
-                            stateModel.getObject());
-                    if (objectHandle != null) {
-                        objectValue = objectHandle.getUiLabel();
-                    }
-                    factService
-                        .setStatementInKB(subjectHandle, predicateHandle, objectValue, project);
-                }
-                else {
-                    logger.error("Subject and predicate are from different knowledge bases.");
-                }
-            }
+        getModelObject().value = predicate;
+        if (stateModel.getObject().getFeatureStates().size() <= 1) {
+            return;
         }
+
+        KBHandle subject = getHandle("Subject");
+        KBHandle object = getHandle("Object");
+        // No subject or object set, so do not update the statement
+        if (subject == null || object == null) {
+            return;
+        }
+
+        if (!factService.checkSameKnowledgeBase(subject, predicate, project)) {
+            logger.error("Subject and predicate are from different knowledge bases.");
+            return;
+        }
+
+        String value = object.getUiLabel();
+        statement = factService.updateStatement(subject, predicate, value, statement, project);
+    }
+
+    private KBHandle getHandle(String name) {
+        return factService.getLinkedSubjectObjectKBHandle(name, actionHandler, stateModel.getObject());
     }
 }
 

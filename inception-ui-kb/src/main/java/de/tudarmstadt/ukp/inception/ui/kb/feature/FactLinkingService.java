@@ -26,6 +26,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionH
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
+import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 public interface FactLinkingService
@@ -47,9 +48,6 @@ public interface FactLinkingService
 
     boolean checkSameKnowledgeBase(KBHandle handleA, KBHandle handleB, Project aProject);
 
-    void setStatementInKB(KBHandle subject, KBHandle predicate, String object, Project
-        aProject);
-
-    void updateStatementObject(KBHandle subject, KBHandle predicate, String oldValue,
-        String newValue, Project aProject);
+    KBStatement updateStatement(KBHandle subject, KBHandle predicate, String object,
+                                KBStatement oldStatement, Project aProject);
 }

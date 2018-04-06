@@ -149,15 +149,22 @@ public class FactLinkingServiceImpl implements FactLinkingService
         return kbA.equals(kbB);
     }
 
-    public void setStatementInKB(KBHandle subject, KBHandle predicate, String object, Project
-        aProject)
+    public KBStatement updateStatement(KBHandle subject, KBHandle predicate, String object,
+                                       KBStatement oldStatement, Project aProject)
     {
+        KnowledgeBase kb = getKBByKBHandle(subject, aProject);
+
+        // Update old statement by deleting it and creating a new one
+        if (oldStatement != null) {
+            kbService.deleteStatement(kb, oldStatement);
+        }
+
         KBStatement statement = new KBStatement();
         statement.setInstance(subject);
         statement.setProperty(predicate);
         statement.setValue(object);
-        KnowledgeBase kb = getKBByKBHandle(subject, aProject);
         kbService.upsertStatement(kb, statement);
+        return statement;
     }
 
     public void updateStatementObject(KBHandle subject, KBHandle predicate, String oldValue,
