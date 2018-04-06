@@ -14,15 +14,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-{product.name} Administrator Guide
-===========================
-:Author: The {product.name} Team
+= {product.name} Developer Guide
+The {product.name} Team
 
-include::common/systemrequirements.adoc[]
+This document targets developers working on {product.name}.
+
+include::{include-dir}setup.adoc[]
 
 <<<
 
-include::{include-dir}installation.adoc[]
+include::{include-dir}casdoctor.adoc[]
 
 <<<
 
@@ -30,12 +31,4 @@ include::{include-dir}database.adoc[]
 
 <<<
 
-include::{include-dir}upgrade.adoc[]
-
-<<<
-
 include::{include-dir}systemproperties.adoc[]
-
-<<<
-
-include::{include-dir}settings.adoc[]
