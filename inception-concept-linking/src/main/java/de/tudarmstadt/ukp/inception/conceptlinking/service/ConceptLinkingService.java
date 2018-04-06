@@ -56,7 +56,7 @@ import de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity;
 import de.tudarmstadt.ukp.inception.conceptlinking.model.Property;
 import de.tudarmstadt.ukp.inception.conceptlinking.model.SemanticSignature;
 import de.tudarmstadt.ukp.inception.conceptlinking.util.QueryUtil;
-import de.tudarmstadt.ukp.inception.conceptlinking.util.Utils;
+import de.tudarmstadt.ukp.inception.conceptlinking.util.FileUtils;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
@@ -92,19 +92,19 @@ public class ConceptLinkingService
 
         org.springframework.core.io.Resource stopwordsResource = loader
             .getResource("classpath:stopwords-de.txt");
-        stopwords = Utils.readFile(stopwordsResource);
+        stopwords = FileUtils.loadStopwordFile(stopwordsResource);
 
         org.springframework.core.io.Resource entityFrequencyMapResource = loader
             .getResource("classpath:wikidata_entity_freqs.map");
-        entityFrequencyMap = Utils.loadEntityFrequencyMap(entityFrequencyMapResource);
+        entityFrequencyMap = FileUtils.loadEntityFrequencyMap(entityFrequencyMapResource);
 
         org.springframework.core.io.Resource propertyBlacklistResource = loader
             .getResource("classpath:property_blacklist.txt");
-        propertyBlacklist = Utils.loadPropertyBlacklist(propertyBlacklistResource);
+        propertyBlacklist = FileUtils.loadPropertyBlacklist(propertyBlacklistResource);
 
         org.springframework.core.io.Resource propertyWithLabelsResource = loader
             .getResource("classpath:properties_with_labels.txt");
-        propertyWithLabels = Utils.loadPropertyLabels(propertyWithLabelsResource);
+        propertyWithLabels = FileUtils.loadPropertyLabels(propertyWithLabelsResource);
     }
 
     public String getBeanName()

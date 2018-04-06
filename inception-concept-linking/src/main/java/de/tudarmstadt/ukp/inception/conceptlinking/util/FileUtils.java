@@ -38,10 +38,10 @@ import de.tudarmstadt.ukp.inception.conceptlinking.model.Property;
 /**
  * Contains utility methods to process files needed for Concept Linking
  */
-public class Utils
+public class FileUtils
 {
 
-    private final static Logger log = LoggerFactory.getLogger(Utils.class);
+    private final static Logger log = LoggerFactory.getLogger(FileUtils.class);
 
     private static List<String> readLines(Resource r)
     {
@@ -60,7 +60,7 @@ public class Utils
         return lines;
     }
 
-    public static Set<String> readFile(Resource r)
+    public static Set<String> loadStopwordFile(Resource r)
     {
         List<String> lines = readLines(r);
         return new HashSet<>(lines);
