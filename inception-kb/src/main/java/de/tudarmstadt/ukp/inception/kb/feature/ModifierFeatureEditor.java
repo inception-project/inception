@@ -7,7 +7,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,10 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.kb.feature;
+package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
@@ -60,12 +63,13 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.PossibleValue;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
-import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 public class ModifierFeatureEditor
     extends FeatureEditor
@@ -77,6 +81,7 @@ public class ModifierFeatureEditor
     private @SpringBean AnnotationSchemaService annotationService;
 
     private @SpringBean KnowledgeBaseService kbService;
+    private @SpringBean FactLinkingService factService;
 
     private WebMarkupContainer content;
 
@@ -89,6 +94,7 @@ public class ModifierFeatureEditor
 
     private AnnotationActionHandler actionHandler;
     private IModel<AnnotatorState> stateModel;
+    private Project project;
 
     // Wicket component is bound to this property
     @SuppressWarnings("unused")
@@ -105,6 +111,7 @@ public class ModifierFeatureEditor
 
         stateModel = aStateModel;
         actionHandler = aHandler;
+        project = stateModel.getObject().getProject();
 
         // Checks whether hide un-constraint feature is enabled or not
         hideUnconstraintFeature = getModelObject().feature.isHideUnconstraintFeature();
@@ -290,16 +297,16 @@ public class ModifierFeatureEditor
     private DropDownList<KBHandle> createMentionKBLinkDropDown(Item<LinkWithRoleModel> aItem)
     {
         String linkedType = this.getModelObject().feature.getType();
-        AnnotationLayer linkedLayer = annotationService.getLayer(linkedType, this.stateModel
-            .getObject().getProject());
-        AnnotationFeature linkedAnnotationFeature = annotationService.getFeature("KBItems",
-            linkedLayer);
-        DropDownList<KBHandle> field = new DropDownList<KBHandle>("value",
-            LambdaModelAdapter.of(
-                () -> this.getSelectedKBItem(aItem, linkedAnnotationFeature),
-                (v) -> { this.setSelectedKBItem(v, aItem, linkedAnnotationFeature); }
-            ),
-            LambdaModel.of(this::getKBConceptsAndInstances), new ChoiceRenderer<>("uiLabel"));
+        AnnotationLayer linkedLayer = annotationService
+            .getLayer(linkedType, this.stateModel.getObject().getProject());
+        AnnotationFeature linkedAnnotationFeature = annotationService
+            .getFeature("KBItems", linkedLayer);
+        DropDownList<KBHandle> field = new DropDownList<KBHandle>("value", LambdaModelAdapter
+            .of(() -> this.getSelectedKBItem(aItem), (v) -> {
+                this.setSelectedKBItem(v, aItem, linkedAnnotationFeature);
+            }), LambdaModel.of(() -> factService.getKBConceptsAndInstances(project)),
+            new ChoiceRenderer<>("uiLabel"));
+        field.add(new LambdaAjaxFormComponentUpdatingBehavior("change"));
         field.setOutputMarkupId(true);
         field.setMarkupId(ID_PREFIX + getModelObject().feature.getId());
         return field;
@@ -502,19 +509,11 @@ public class ModifierFeatureEditor
     {
         DropDownChoice<KBHandle> field = new DropDownChoice<KBHandle>("newRole",
             new PropertyModel<KBHandle>(this, "selectedRole"),
-            getPredicatesFromKB(), new ChoiceRenderer<>("uiLabel"));
+            factService.getAllPredicatesFromKB(project), new ChoiceRenderer<>
+            ("uiLabel"));
         field.setOutputMarkupId(true);
         field.setMarkupId(ID_PREFIX + getModelObject().feature.getId());
         return field;
-    }
-
-    private List<KBHandle> getPredicatesFromKB() {
-        AnnotationFeature feat = getModelObject().feature;
-        List<KBHandle> handles = new LinkedList<>();
-        for (KnowledgeBase kb : kbService.getKnowledgeBases(feat.getProject())) {
-            handles.addAll(kbService.listProperties(kb, false));
-        }
-        return new ArrayList<>(handles);
     }
 
     private void setSelectedKBItem(KBHandle value, Item<LinkWithRoleModel> aItem,
@@ -526,6 +525,7 @@ public class ModifierFeatureEditor
                     aItem.getModelObject().targetAddr);
                 WebAnnoCasUtil.setFeature(selectedFS, linkedAnnotationFeature,
                     value.getIdentifier());
+                LOG.info("change the value");
             } catch (CASException | IOException e) {
                 LOG.error("Error: " + e.getMessage(), e);
                 error("Error: " + e.getMessage());
@@ -533,39 +533,19 @@ public class ModifierFeatureEditor
         }
     }
 
-    private KBHandle getSelectedKBItem(Item<LinkWithRoleModel> aItem, AnnotationFeature
-        linkedAnnotationFeature) {
+    private KBHandle getSelectedKBItem(Item<LinkWithRoleModel> aItem) {
         KBHandle selectedKBHandleItem = null;
         if (aItem.getModelObject().targetAddr != -1) {
             try {
                 JCas jCas = actionHandler.getEditorCas().getCas().getJCas();
-                AnnotationFS selectedFS = WebAnnoCasUtil.selectByAddr(jCas, aItem.getModelObject
-                    ().targetAddr);
-                String selectedKBItemIdentifier = WebAnnoCasUtil.getFeature(selectedFS,
-                    linkedAnnotationFeature.getName());
-                if (selectedKBItemIdentifier != null) {
-                    List<KBHandle> handles = getKBConceptsAndInstances();
-                    selectedKBHandleItem = handles.stream().filter(x -> selectedKBItemIdentifier
-                        .equals(x.getIdentifier())).findAny().orElse(null);
-                }
+                int targetAddr = aItem.getModelObject().targetAddr;
+                selectedKBHandleItem = factService.getKBHandleFromCasByAddr(jCas, targetAddr,
+                    project);
             } catch (CASException | IOException e) {
                 LOG.error("Error: " + e.getMessage(), e);
                 error("Error: " + e.getMessage());
             }
         }
         return selectedKBHandleItem;
-    }
-
-    private List<KBHandle> getKBConceptsAndInstances() {
-        AnnotationFeature feat = getModelObject().feature;
-        List<KBHandle> handles = new LinkedList<>();
-        for (KnowledgeBase kb : kbService.getKnowledgeBases(feat.getProject())) {
-            handles.addAll(kbService.listConcepts(kb, false));
-            for (KBHandle concept: kbService.listConcepts(kb, false)) {
-                handles.addAll(kbService.listInstances(kb, concept.getIdentifier(),
-                    false));
-            }
-        }
-        return new ArrayList<>(handles);
     }
 }

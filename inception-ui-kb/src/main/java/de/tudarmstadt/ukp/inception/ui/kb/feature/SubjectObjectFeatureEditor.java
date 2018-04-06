@@ -18,12 +18,10 @@
 package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 
 import org.apache.uima.cas.CASException;
-import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.Component;
@@ -51,12 +49,11 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
-import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
-import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 public class SubjectObjectFeatureEditor
     extends FeatureEditor
@@ -65,6 +62,8 @@ public class SubjectObjectFeatureEditor
     private static final long serialVersionUID = 4230722501745589589L;
     private static final Logger logger = LoggerFactory.getLogger(SubjectObjectFeatureEditor.class);
     private @SpringBean AnnotationSchemaService annotationService;
+    private @SpringBean KnowledgeBaseService kbService;
+    private @SpringBean FactLinkingService factService;
     private WebMarkupContainer content;
 
     @SuppressWarnings("rawtypes") private Component focusComponent;
@@ -72,12 +71,11 @@ public class SubjectObjectFeatureEditor
 
     private AnnotationActionHandler actionHandler;
     private IModel<AnnotatorState> stateModel;
+    private Project project;
 
     @SuppressWarnings("unused") private LinkWithRoleModel roleModel;
 
     AnnotationFeature linkedAnnotationFeature;
-
-    private @SpringBean KnowledgeBaseService kbService;
 
     public SubjectObjectFeatureEditor(String aId, MarkupContainer aOwner,
         AnnotationActionHandler aHandler, final IModel<AnnotatorState> aStateModel,
@@ -87,6 +85,7 @@ public class SubjectObjectFeatureEditor
 
         stateModel = aStateModel;
         actionHandler = aHandler;
+        project = this.getModelObject().feature.getProject();
 
         hideUnconstraintFeature = getModelObject().feature.isHideUnconstraintFeature();
 
@@ -148,7 +147,9 @@ public class SubjectObjectFeatureEditor
     {
         DropDownList<KBHandle> field = new DropDownList<KBHandle>("value",
             LambdaModelAdapter.of(this::getSelectedKBItem, this::setSelectedKBItem),
-            LambdaModel.of(this::getKBConceptsAndInstances), new ChoiceRenderer<>("uiLabel"));
+            LambdaModel.of(() -> factService.getKBConceptsAndInstances(project)), new
+            ChoiceRenderer<>
+            ("uiLabel"));
         field.setOutputMarkupId(true);
         field.setMarkupId(ID_PREFIX + getModelObject().feature.getId());
         return field;
@@ -235,8 +236,10 @@ public class SubjectObjectFeatureEditor
                 error("Error: " + e.getMessage());
             }
             if (roleModel.role.equals("subject")) {
-                setStatementInKB(value);
-
+                setStatementInKBWhenSubjectUpdate(value);
+            }
+            else if (roleModel.role.equals("object")) {
+                setStatementInKBWhenObjectUpdate(value);
             }
         }
     }
@@ -252,7 +255,7 @@ public class SubjectObjectFeatureEditor
                     linkedAnnotationFeature.getName());
 
                 if (selectedKBItemIdentifier != null) {
-                    List<KBHandle> handles = getKBConceptsAndInstances();
+                    List<KBHandle> handles = factService.getKBConceptsAndInstances(project);
                     selectedKBHandleItem = handles.stream()
                         .filter(x -> selectedKBItemIdentifier.equals(x.getIdentifier())).findAny()
                         .orElseThrow(NoSuchElementException::new);
@@ -266,82 +269,39 @@ public class SubjectObjectFeatureEditor
         return selectedKBHandleItem;
     }
 
-    private List<KBHandle> getKBConceptsAndInstances()
-    {
-        AnnotationFeature feat = getModelObject().feature;
-        List<KBHandle> handles = new ArrayList<>();
-        for (KnowledgeBase kb : kbService.getKnowledgeBases(feat.getProject())) {
-            handles.addAll(kbService.listConcepts(kb, false));
-            for (KBHandle concept : kbService.listConcepts(kb, false)) {
-                handles.addAll(kbService.listInstances(kb, concept.getIdentifier(), false));
-            }
-        }
-        return handles;
-    }
 
-    private KnowledgeBase getKBForKBHandle(KBHandle kbHandle) {
-        AnnotationFeature feat = getModelObject().feature;
-        for (KnowledgeBase kb: kbService.getKnowledgeBases(feat.getProject())) {
-            if (kbService.listProperties(kb, false).contains(kbHandle)) {
-                return kb;
-            }
-            if (kbService.listConcepts(kb, false).contains(kbHandle)) {
-                return kb;
-            }
-            for (KBHandle concept: kbService.listConcepts(kb, false)) {
-                if (kbService.listInstances(kb, concept.getIdentifier(), false).contains
-                    (kbHandle)) {
-                    return kb;
-                }
-            }
-
-        }
-        return null;
-    }
-
-    private void setStatementInKB(KBHandle value) {
-        AnnotationLayer factLayer = annotationService.getLayer(
-            "webanno.custom.Fact", this.stateModel.getObject().getProject());
-        AnnotationFeature predicateFeature = annotationService.getFeature(
-            "KBPredicate", factLayer);
-        KBHandle predicateHandle = (KBHandle) this.stateModel.getObject().getFeatureState
-            (predicateFeature).value;
+    private void setStatementInKBWhenSubjectUpdate(KBHandle value) {
+        KBHandle predicateHandle = factService.getPredicateKBHandle(stateModel.getObject());
         if (predicateHandle != null) {
-            KBStatement statement = new KBStatement();
-            statement.setInstance(value);
-            statement.setProperty(predicateHandle);
-            AnnotationFeature objectFeature = annotationService.getFeature("Object",
-                factLayer);
-            List<LinkWithRoleModel> objectList = (List<LinkWithRoleModel>) this.stateModel.
-                getObject().getFeatureState(objectFeature).value;
-//            String objectLabel = objectList.get(0).label;
-//            String object = objectLabel.equals("<Click to activate>") || objectLabel.equals
-//                ("<Select to fill>") ? " " : objectLabel;
-            int targetAddress = objectList.get(0).targetAddr;
-            String object = "";
-            if (targetAddress != -1) {
-                try {
-                    JCas jCas = actionHandler.getEditorCas().getCas().getJCas();
-                    AnnotationFS selectedFS = WebAnnoCasUtil.selectByAddr(jCas, targetAddress);
-                    String selectedKBItemIdentifier = WebAnnoCasUtil.getFeature(selectedFS,
-                        linkedAnnotationFeature.getName());
-                    if (selectedKBItemIdentifier != null) {
-                        List<KBHandle> handles = getKBConceptsAndInstances();
-                        object = handles.stream().filter(x -> selectedKBItemIdentifier
-                            .equals(x.getIdentifier())).findAny().orElse(null).getUiLabel();
-                    }
-                } catch (CASException | IOException e) {
-                    logger.error("Error: " + e.getMessage(), e);
-                    error("Error: " + e.getMessage());
-                }
+            KBHandle objectHandle = factService.getLinkedSubjectObjectKBHandle("Object",
+                actionHandler, stateModel.getObject());
+            String objectValue = "";
+            if (objectHandle != null) {
+                objectValue = objectHandle.getUiLabel();
             }
-            statement.setValue(object);
-            KnowledgeBase subjectKB = getKBForKBHandle(value);
-            KnowledgeBase predicateKB = getKBForKBHandle(predicateHandle);
-            if (subjectKB.equals(predicateKB)) {
-                kbService.upsertStatement(subjectKB, statement);
+            if (factService.checkSameKnowledgeBase(value, predicateHandle, project)) {
+                factService.setStatementInKB(value, predicateHandle, objectValue, project);
             } else {
                 logger.error("Subject and predicate are from different knowledge bases.");
+            }
+        }
+    }
+
+    private void setStatementInKBWhenObjectUpdate(KBHandle value) {
+        KBHandle predicateHandle = factService.getPredicateKBHandle(stateModel.getObject());
+        if (predicateHandle != null) {
+            if (stateModel.getObject().getFeatureStates().size() > 1) {
+                KBHandle subjectHandle = factService
+                    .getLinkedSubjectObjectKBHandle("Subject", actionHandler,
+                        stateModel.getObject());
+                if (subjectHandle != null) {
+                    if (factService
+                        .checkSameKnowledgeBase(subjectHandle, predicateHandle, project)) {
+                        factService
+                            .setStatementInKB(subjectHandle, predicateHandle, value.getUiLabel(),
+                                project);
+                    }
+                }
             }
         }
     }
