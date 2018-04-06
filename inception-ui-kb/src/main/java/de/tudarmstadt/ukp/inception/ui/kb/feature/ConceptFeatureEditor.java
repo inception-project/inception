@@ -166,7 +166,8 @@ public class ConceptFeatureEditor
                     aState.getSelection().getBegin(), aJCas.get());
             }
             catch (IOException e) {
-                e.printStackTrace();
+                log.error("An error occurred while retrieving entity candidates.", e);
+                error(e);
                 return Collections.emptyList();
             }
         });

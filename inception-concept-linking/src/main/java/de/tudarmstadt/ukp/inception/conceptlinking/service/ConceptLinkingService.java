@@ -21,6 +21,7 @@ package de.tudarmstadt.ukp.inception.conceptlinking.service;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -210,7 +211,6 @@ public class ConceptLinkingService
 
         int start = 0, end = 0;
         int j = 0;
-        boolean done = false;
 
         // Loop until mention end was found or sentence ends
         done: while (j < mentionSentence.size()) {
@@ -326,8 +326,9 @@ public class ConceptLinkingService
      */
     private List<CandidateEntity> sortByFrequency(List<CandidateEntity> candidates)
     {
-        candidates.sort((e1, e2) -> new CompareToBuilder()
-            .append(e2.getFrequency(), e1.getFrequency()).toComparison());
+        candidates.sort((e1, e2) ->
+            Comparator.comparingInt(CandidateEntity::getFrequency)
+                .reversed().compare(e1, e2));
         return candidates;
     }
 
@@ -420,26 +421,14 @@ public class ConceptLinkingService
     public List<KBHandle> disambiguate(KnowledgeBase aKB, String
         aMention, int aMentionBeginOffset, JCas aJcas)
     {
-        List<CandidateEntity> candidates = rankCandidates(aKB, aMention,
-                    generateCandidates(aKB, aMention), aJcas,
-                    aMentionBeginOffset);
+        Set<CandidateEntity> candidates = generateCandidates(aKB, aMention);
+        List<CandidateEntity> rankedCandidates = rankCandidates(aKB, aMention, candidates, aJcas,
+            aMentionBeginOffset);
 
-        List<KBHandle> handles = new ArrayList<>();
-
-        for (CandidateEntity c: candidates) {
-            String id = c.getIRI();
-            String label = c.getLabel();
-
-            if (!id.contains(":")) {
-                continue;
-            }
-
-            KBHandle handle = new KBHandle(id, label);
-            if (!handles.contains(handle)) {
-                handles.add(handle);
-            }
-        }
-
-        return handles;
+        return rankedCandidates.stream()
+            .map(c -> new KBHandle(c.getIRI(), c.getLabel()))
+            .distinct()
+            .filter(h -> !h.getIdentifier().contains(":"))
+            .collect(Collectors.toList());
     }
 }
