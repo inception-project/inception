@@ -127,7 +127,7 @@ public class ConceptLinkingService
      */
     private Set<CandidateEntity> generateCandidates(KnowledgeBase aKB, String aMention)
     {
-        double startTime = System.currentTimeMillis();
+        long startTime = System.currentTimeMillis();
         Set<CandidateEntity> candidates = new HashSet<>();
         List<String> mentionArray = Arrays.asList(aMention.split(" "));
 
@@ -248,7 +248,7 @@ public class ConceptLinkingService
     private List<CandidateEntity> rankCandidates(KnowledgeBase aKB, String mention,
             Set<CandidateEntity> candidates, JCas aJCas, int aBegin)
     {
-        double startTime = System.currentTimeMillis();
+        long startTime = System.currentTimeMillis();
 
         int mentionContextSize = 5;
         Sentence mentionSentence = getMentionSentence(aJCas, aBegin);
