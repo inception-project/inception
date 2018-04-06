@@ -148,7 +148,7 @@ public class KBStatement implements Serializable
         return originalStatements;
     }
 
-    public void addModifer(KBModifier aModifier) { modifiers.add(aModifier); };
+    public void addModifer(KBModifier aModifier) { modifiers.add(aModifier); }
 
     public List<KBModifier> getModifiers() { return  modifiers; }
 

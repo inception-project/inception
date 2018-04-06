@@ -1,25 +1,49 @@
+/*
+ * Copyright 2017
+ * Ubiquitous Knowledge Processing (UKP) Lab
+ * Technische Universität Darmstadt
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package de.tudarmstadt.ukp.inception.ui.kb.stmt;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.inception.kb.graph.KBModifier;
-import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
-import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import org.apache.wicket.Component;
+import org.apache.wicket.ajax.AjaxRequestTarget;
+
+import org.apache.wicket.markup.html.form.ChoiceRenderer;
+import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
-import org.apache.wicket.markup.html.form.TextArea;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.panel.Fragment;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.request.cycle.RequestCycle;
+import org.apache.wicket.spring.injection.annot.SpringBean;
+
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
+import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
+import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
+import de.tudarmstadt.ukp.inception.kb.graph.KBModifier;
+import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 public class ModifierEditor extends Panel
 {
     private static final long serialVersionUID = -4152363403483032196L;
 
     private static final String CONTENT_MARKUP_ID = "content";
+
+    private @SpringBean KnowledgeBaseService kbService;
 
     private IModel<KnowledgeBase> kbModel;
     private IModel<KBModifier> modifier;
@@ -34,10 +58,16 @@ public class ModifierEditor extends Panel
         kbModel = aKbModel;
         modifier = aModifier;
 
-        boolean isNewModifier = (modifier.getObject().getKbProperty()==null);
-        if(isNewModifier) {
+        boolean isNewModifier = true; //(modifier.getObject().getKbProperty()==null);
+        if (isNewModifier) {
             EditMode editMode = new EditMode(CONTENT_MARKUP_ID, modifier, true);
+            AjaxRequestTarget target = RequestCycle.get().find(AjaxRequestTarget.class);
+            if (target != null) {
+                target.focusComponent(editMode.getFocusComponent());
+            }
+            content = editMode;
         }
+        add(content);
     }
 
     private class EditMode extends Fragment
@@ -67,41 +97,28 @@ public class ModifierEditor extends Panel
         public EditMode(String aId, IModel<KBModifier> aModifier, boolean isNewModifier) {
             super(aId, "editMode", ModifierEditor.this, aModifier);
 
-            Form<KBModifier> form = new Form<>("form", CompoundPropertyModel.of(aModifier));
+            IModel<KBModifier> compoundModel = CompoundPropertyModel.of(aModifier);
 
-            // text area for the statement value should receive focus
-            Component valueTextArea = new TextArea<String>("value").add(
-                new LambdaAjaxFormComponentUpdatingBehavior("change", t -> t.add(getParent())));
-            initialFocusComponent = valueTextArea;
-            form.add(valueTextArea);
+            Form<KBModifier> form = new Form<>("form", compoundModel);
+            DropDownChoice<KBHandle> type = new DropDownChoice<>("kbProperty");
+            type.setChoiceRenderer(new ChoiceRenderer<>("uiLabel"));
+            type.setChoices(kbService.listProperties(kbModel.getObject(), false));
+            type.setRequired(true);
+            type.setOutputMarkupId(true);
+            form.add(type);
+            initialFocusComponent = type;
 
-            // FIXME This field should only be visible if the selected datatype is
-            // langString
-            form.add(new TextField<>("language"));
+            form.add(new TextField<>("value"));
 
-            // FIXME Selection of the data type should only be possible if it is not
-            // restricted to a single type in the property definition - take into account
-            // inheritance?
-            //form.add(new TextField<>("datatype"));
+            form.add(new LambdaAjaxButton<>("create", this::actionTest));
+            form.add(new LambdaAjaxButton<>("cancel", this::actionTest));
 
-            // We do not allow the user to change the property
-
-            // FIXME should offer different editors depending on the data type
-            // in particular when the datatype is a concept type, then
-            // it should be possible to select an instance of that concept using some
-            // auto-completing dropdown box
-
-//            form.add(new LambdaAjaxButton<>("save", ModifierEditor.this::actionSave));
-//            form.add(new LambdaAjaxLink("cancel", t -> {
-//                if (isNewModifier) {
-//                    ModifierEditor.this.actionCancelNewStatement(t);
-//                } else {
-//                    ModifierEditor.this.actionCancelExistingStatement(t);
-//                }
-//            }));
-//            form.add(new LambdaAjaxLink("delete", ModifierEditor.this::actionDelete)
-//                .setVisibilityAllowed(!isNewStatement));
             add(form);
+        }
+
+        private void actionTest(AjaxRequestTarget ajaxRequestTarget, Form<KBModifier> aForm)
+        {
+            KBModifier modifier = aForm.getModelObject();
         }
 
         @Override
@@ -109,6 +126,5 @@ public class ModifierEditor extends Panel
             return initialFocusComponent;
         }
     }
-
 
 }

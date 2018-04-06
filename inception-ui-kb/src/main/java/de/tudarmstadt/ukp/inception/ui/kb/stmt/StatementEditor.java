@@ -19,8 +19,8 @@ package de.tudarmstadt.ukp.inception.ui.kb.stmt;
 
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
-import de.tudarmstadt.ukp.inception.kb.graph.KBModifier;
+import java.util.Iterator;
+
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.event.Broadcast;
@@ -44,13 +44,15 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
+import de.tudarmstadt.ukp.inception.kb.graph.KBModifier;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxStatementChangedEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.util.WriteProtectionBehavior;
 
-import java.util.Iterator;
+
 
 public class StatementEditor extends Panel {
 
@@ -106,8 +108,11 @@ public class StatementEditor extends Panel {
         aTarget.add(this);
     }
 
-    private void actionAddStatement(AjaxRequestTarget aTarget) {
-
+    private void actionAddModifier(AjaxRequestTarget aTarget, KBStatement statement) {
+        KBModifier modifierPorto = new KBModifier();
+        modifierPorto.setKbStatement(statement);
+        statement.getModifiers().add(modifierPorto);
+        aTarget.add(this);
     }
 
     private void actionCancelExistingStatement(AjaxRequestTarget aTarget) {
@@ -183,8 +188,11 @@ public class StatementEditor extends Panel {
             editLink.add(new WriteProtectionBehavior(kbModel));
             add(editLink);
 
-            LambdaAjaxLink addModifierLink = new LambdaAjaxLink("addModifier", StatementEditor
-                .this::actionEdit).onConfigure((_this) -> _this.setVisible(!statement.getObject()
+            LambdaAjaxLink addModifierLink = new LambdaAjaxLink("addModifier", t ->
+                actionAddModifier(t, aStatement.getObject())).onConfigure((_this) ->
+                _this.setVisible
+                (!statement
+                .getObject()
                 .isInferred()));
             addModifierLink.add(new WriteProtectionBehavior(kbModel));
             add(addModifierLink);
@@ -195,8 +203,7 @@ public class StatementEditor extends Panel {
             makeExplicitLink.add(new WriteProtectionBehavior(kbModel));
             add(makeExplicitLink);
 
-            RefreshingView<KBModifier> modifierList = new RefreshingView<KBModifier>
-                ("modifierList")
+            RefreshingView<KBModifier> modifierList = new RefreshingView<KBModifier>("modifierList")
             {
                 private static final long serialVersionUID = -8342276415072873329L;
 
@@ -204,21 +211,20 @@ public class StatementEditor extends Panel {
                 protected Iterator<IModel<KBModifier>> getItemModels()
                 {
                     return new ModelIteratorAdapter<KBModifier>(
-                        statement.getObject().getModifiers()
-                    )
+                        statement.getObject().getModifiers())
                     {
-                        @Override
-                        protected IModel<KBModifier> model(KBModifier object)
+                        @Override protected IModel<KBModifier> model(KBModifier object)
                         {
                             return LambdaModel.of(() -> object);
                         }
                     };
                 }
 
-                @Override protected void populateItem(Item<KBModifier> aItem)
+                @Override
+                protected void populateItem(Item<KBModifier> aItem)
                 {
-                    ModifierEditor editor = new ModifierEditor("modifier", kbModel, aItem
-                        .getModel());
+                    ModifierEditor editor = new ModifierEditor("modifier", kbModel,
+                        aItem.getModel());
                     aItem.add(editor);
                     aItem.setOutputMarkupId(true);
                 }
