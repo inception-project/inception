@@ -106,8 +106,7 @@ public class KnowledgeBase
     private boolean enabled = true;
     
     
-    @Column(name = "supportConceptLinking", columnDefinition = "BIT(0,1) default 0", 
-            nullable = false) 
+    @Column(name = "supportConceptLinking", nullable = false)
     private boolean supportConceptLinking = false;
     
     public String getRepositoryId() {
