@@ -57,10 +57,10 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 public class PropertyFeatureSupport
     implements FeatureSupport
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private static final Logger LOG = LoggerFactory.getLogger(PropertyFeatureSupport.class);
+    private static final String PREDICATE_KEY = "Property: Predicate";
 
     @Resource private KnowledgeBaseService kbService;
-    private static final String PREDICATE_KEY = "Property: Predicate";
 
     private String featureSupportId;
 
@@ -120,7 +120,7 @@ public class PropertyFeatureSupport
             return renderValue;
         }
         catch (Exception e) {
-            log.error("Unable to render feature value", e);
+            LOG.error("Unable to render feature value", e);
             return "ERROR";
         }
     }
