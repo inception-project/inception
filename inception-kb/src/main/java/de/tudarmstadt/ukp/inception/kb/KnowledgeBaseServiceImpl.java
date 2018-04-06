@@ -361,11 +361,7 @@ public class KnowledgeBaseServiceImpl
     @Override
     public List<KBHandle> listConcepts(KnowledgeBase kb, boolean aAll)
     {
-        if (kb.isSupportConceptLinking()) {
-            return listLinkingConcepts(kb, true, aAll);
-        } else {
-            return list(kb, RDFS.CLASS, true, aAll);
-        }
+        return list(kb, kb.getClassIri(), true, aAll);
     }
 
     @Override
@@ -773,56 +769,6 @@ public class KnowledgeBaseServiceImpl
         });
 
         resultList.sort(Comparator.comparing(KBObject::getUiLabel));
-        return resultList;
-    }
-    
-    // TODO make language configurable 
-    private List<KBHandle> listLinkingConcepts(KnowledgeBase kb, boolean aIncludeInferred,
-            boolean aAll)
-    {
-        List<KBHandle> resultList = read(kb, (conn) -> {
-            String QUERY = "SELECT DISTINCT ?any ?l WHERE { \n" 
-                    + "  ?s ?pTYPE ?any . \n"
-                    + "  OPTIONAL { \n" 
-                    + "    ?any ?pLABEL ?l . \n"
-                    + "    FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"" 
-                    + "en" 
-                    + "\")) \n" 
-                    + "  } \n"
-                    + "} \n" + "LIMIT 10000";
-            
-            TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
-            tupleQuery.setBinding("pTYPE", RDFS.SUBCLASSOF);
-            tupleQuery.setBinding("pLABEL", RDFS.LABEL);
-            tupleQuery.setIncludeInferred(aIncludeInferred);
-            log.info("waiting for query...");
-            
-            List<KBHandle> handles = new ArrayList<>();
-            try (TupleQueryResult result = tupleQuery.evaluate()) {
-                while (result.hasNext()) {
-                    BindingSet bindings = result.next();
-                    String id = bindings.getBinding("any").getValue().stringValue();
-                    Binding label = bindings.getBinding("l");
-
-                    if (!id.contains(":") || (!aAll && startsWithAny(id, IMPLICIT_NAMESPACES))) {
-                        continue;
-                    }
-
-                    KBHandle handle = new KBHandle(id);
-                    if (label != null) {
-                        handle.setName(label.getValue().stringValue());
-                    }
-
-                    handles.add(handle);
-                }
-            } catch (QueryEvaluationException | RepositoryException e) {
-                log.error("Error: ", e);
-            }
-            return handles;
-        });
-
-        resultList.sort(Comparator.comparing(KBObject::getUiLabel));
-
         return resultList;
     }
 
