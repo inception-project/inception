@@ -55,13 +55,12 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 
 @Component
 public class PropertyFeatureSupport
-    implements FeatureSupport<Void>
+    implements FeatureSupport
 {
-    private static final Logger LOG = LoggerFactory.getLogger(PropertyFeatureSupport.class);
-    private static final String PREDICATE_KEY = "KB: Property";
-    private static final String FACT_PREDICATE_PREFIX = "kb-property:";
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     @Resource private KnowledgeBaseService kbService;
+    private static final String PREDICATE_KEY = "Property: Predicate";
 
     private String featureSupportId;
 
@@ -81,8 +80,7 @@ public class PropertyFeatureSupport
     public List<FeatureType> getSupportedFeatureTypes(AnnotationLayer aAnnotationLayer)
     {
         List<FeatureType> types = new ArrayList<>();
-        types.add(new FeatureType(FACT_PREDICATE_PREFIX + aAnnotationLayer.getName(), PREDICATE_KEY,
-            featureSupportId));
+        types.add(new FeatureType(PREDICATE_KEY, PREDICATE_KEY, featureSupportId));
         return types;
     }
 
@@ -91,8 +89,13 @@ public class PropertyFeatureSupport
     {
         switch (aFeature.getMultiValueMode()) {
         case NONE:
-            return aFeature.getType().startsWith(FACT_PREDICATE_PREFIX);
-        case ARRAY: // fall-through
+            switch (aFeature.getType()) {
+            case PREDICATE_KEY:
+                return true;
+            default:
+                return false;
+            }
+        case ARRAY: // fallthrough
         default:
             return false;
         }
@@ -117,7 +120,7 @@ public class PropertyFeatureSupport
             return renderValue;
         }
         catch (Exception e) {
-            LOG.error("Unable to render feature value", e);
+            log.error("Unable to render feature value", e);
             return "ERROR";
         }
     }
@@ -159,24 +162,24 @@ public class PropertyFeatureSupport
 
     @Override
     public FeatureEditor createEditor(String aId, MarkupContainer aOwner,
-            AnnotationActionHandler aHandler, IModel<AnnotatorState> aStateModel,
-            IModel<FeatureState> aFeatureStateModel)
+        AnnotationActionHandler aHandler, final IModel<AnnotatorState> aStateModel,
+        final IModel<FeatureState> aFeatureStateModel)
     {
         FeatureState featureState = aFeatureStateModel.getObject();
         final FeatureEditor editor;
 
         switch (featureState.feature.getMultiValueMode()) {
         case NONE:
-            if (featureState.feature.getType().startsWith(FACT_PREDICATE_PREFIX)) {
-                editor = new PropertyFeatureEditor(aId, aOwner, aFeatureStateModel);
-            }
-            else {
-                throw unsupportedMultiValueModeException(featureState.feature);
+            if (featureState.feature.getType().startsWith("Property")) {
+                editor = new PropertyFeatureEditor(aId, aOwner, aHandler, aStateModel,
+                    aFeatureStateModel);
+            } else {
+                throw unsupportedMultiValueModeException(featureState);
             }
             break;
-        case ARRAY: // fall-through
+        case ARRAY: // fallthrough
         default:
-            throw unsupportedMultiValueModeException(featureState.feature);
+            throw unsupportedMultiValueModeException(featureState);
         }
 
         return editor;

@@ -16,13 +16,22 @@
  - See the License for the specific language governing permissions and
  - limitations under the License.
 -->
-
 <html xmlns="http://www.w3.org/1999/xhtml"
-    xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+  xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 <wicket:panel>
-    <td>
+  <div class="panel panel-default panel-small">
+    <div class="panel-heading">
+      <h3 class="panel-title">
         <span wicket:id="feature"></span>
-    </td>
-    <td><select style="width: 100%;" wicket:id="value"></select></td>
+      </h3>
+    </div>
+    <div class="panel-body">
+      <div class="form-group" wicket:enclosure="value">
+        <div class="col-sm-12">
+          <select style="width: 100%;" wicket:id="value"></select>
+        </div>
+      </div>
+    </div>
+  </div>
 </wicket:panel>
 </html>
