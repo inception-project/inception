@@ -85,6 +85,15 @@ public class ConceptLinkingService
 
     private Map<String, Property> propertyWithLabels;
 
+    private static final int MENTION_CONTEXT_SIZE = 5;
+    private static final int CANDIDATE_QUERY_LIMIT = 1000;
+    private static final int FREQUENCY_THRESHOLD = 100;
+    private static final int SIGNATURE_QUERY_LIMIT = 100;
+    private static final String WIKIDATA_PREFIX = "http://www.wikidata.org/entity/";
+    private static final String POS_VERB_PREFIX = "V";
+    private static final String POS_NOUN_PREFIX = "V";
+    private static final String POS_ADJECTIVE_PREFIX = "V";
+
     @PostConstruct
     public void init()
     {
@@ -145,9 +154,9 @@ public class ConceptLinkingService
             throw new IllegalStateException("Mention is empty!");
         }
 
-        int candidateQueryLimit = 1000;
+
         String entityQueryString = QueryUtil
-            .generateCandidateQuery(mentionArray, candidateQueryLimit);
+            .generateCandidateQuery(mentionArray, CANDIDATE_QUERY_LIMIT);
         
         try (RepositoryConnection conn = kbService.getConnection(aKB)) {
             TupleQuery query = conn.prepareTupleQuery(QueryLanguage.SPARQL, entityQueryString);
@@ -250,20 +259,20 @@ public class ConceptLinkingService
     {
         long startTime = System.currentTimeMillis();
 
-        int mentionContextSize = 5;
         Sentence mentionSentence = getMentionSentence(aJCas, aBegin);
         Validate.notNull(mentionSentence, "Mention sentence could not be determined.");
 
         List<String> splitMention = Arrays.asList(mention.split(" "));
         List<Token> mentionContext = getMentionContext(mentionSentence, splitMention,
-                mentionContextSize);
+            MENTION_CONTEXT_SIZE);
         
         // TODO and t['ner'] not in {"ORDINAL", "MONEY", "TIME", "PERCENTAGE"}} \
         Set<String> sentenceContentTokens = new HashSet<>();
         for (Token t : JCasUtil.selectCovered(Token.class, mentionSentence)) {
             if (t.getPosValue() != null) {
-                boolean isNounOrVerbOrAdjective = t.getPosValue().startsWith("V")
-                    || t.getPosValue().startsWith("N") || t.getPosValue().startsWith("J");
+                boolean isNounOrVerbOrAdjective = t.getPosValue().startsWith(POS_VERB_PREFIX)
+                        || t.getPosValue().startsWith(POS_NOUN_PREFIX)
+                        || t.getPosValue().startsWith(POS_ADJECTIVE_PREFIX);
                 boolean isNotPartOfMention = !splitMention.contains(t.getCoveredText());
                 boolean isNotStopword = (stopwords == null) || (stopwords != null &&
                     !stopwords.contains(t.getCoveredText()));
@@ -274,7 +283,7 @@ public class ConceptLinkingService
         }
 
         candidates.parallelStream().forEach(l -> {
-            String wikidataId = l.getIRI().replace("http://www.wikidata.org/entity/", "");
+            String wikidataId = l.getIRI().replace(WIKIDATA_PREFIX, "");
 
             if (entityFrequencyMap != null && entityFrequencyMap.get(wikidataId) != null) {
                 l.setFrequency(entityFrequencyMap.get(wikidataId));
@@ -284,11 +293,11 @@ public class ConceptLinkingService
             }
         });
         List<CandidateEntity> result = sortByFrequency(new ArrayList<>((candidates)));
-        if (result.size() > 100) {
-            result = result.subList(0, 100);
+        if (result.size() > FREQUENCY_THRESHOLD) {
+            result = result.subList(0, FREQUENCY_THRESHOLD);
         }
         result.parallelStream().forEach( l -> {
-            String wikidataId = l.getIRI().replace("http://www.wikidata.org/entity/", "");
+            String wikidataId = l.getIRI().replace(WIKIDATA_PREFIX, "");
             l.setIdRank(Math.log(Double.parseDouble(wikidataId.substring(1))));
             String altLabel = l.getAltLabel().toLowerCase(Locale.ENGLISH);
             LevenshteinDistance lev = new LevenshteinDistance();
@@ -361,9 +370,8 @@ public class ConceptLinkingService
     {
         Set<String> relatedRelations = new HashSet<>();
         Set<String> relatedEntities = new HashSet<>();
-        int signatureQueryLimit = 100;
         String queryString
-            = QueryUtil.generateSemanticSignatureQuery(aWikidataId, signatureQueryLimit);
+            = QueryUtil.generateSemanticSignatureQuery(aWikidataId, SIGNATURE_QUERY_LIMIT);
         try (RepositoryConnection conn = kbService.getConnection(aKB)) {
             TupleQuery query = conn.prepareTupleQuery(QueryLanguage.SPARQL, queryString);
             try (TupleQueryResult result = query.evaluate()) {
