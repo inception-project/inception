@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringJoiner;
@@ -289,7 +290,7 @@ public class ConceptLinkingService
         result.parallelStream().forEach( l -> {
             String wikidataId = l.getIRI().replace("http://www.wikidata.org/entity/", "");
             l.setIdRank(Math.log(Double.parseDouble(wikidataId.substring(1))));
-            String altLabel = l.getAltLabel().toLowerCase();
+            String altLabel = l.getAltLabel().toLowerCase(Locale.ENGLISH);
             LevenshteinDistance lev = new LevenshteinDistance();
             l.setLevMatchLabel(lev.apply(mention, altLabel));
             l.setLevContext(lev.apply(tokensToString(mentionContext), altLabel));

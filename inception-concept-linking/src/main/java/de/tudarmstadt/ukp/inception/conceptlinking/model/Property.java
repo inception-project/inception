@@ -18,6 +18,8 @@
 
 package de.tudarmstadt.ukp.inception.conceptlinking.model;
 
+import java.util.Locale;
+
 /**
  * Describes a relation or property between two entities#
  * Source: https://www.wikidata.org/wiki/Wikidata:Database_reports/List_of_properties/all
@@ -32,8 +34,8 @@ public class Property
     public Property(String label, String altlabel, String type, String freq)
     {
         super();
-        this.label = label.trim().toLowerCase();
-        this.altlabel = altlabel.trim().toLowerCase().split(", ");
+        this.label = label.trim().toLowerCase(Locale.ENGLISH);
+        this.altlabel = altlabel.trim().toLowerCase(Locale.ENGLISH).split(", ");
         this.type = type;
         this.freq = Integer.parseInt(freq.trim().replace(",",""));
     }
