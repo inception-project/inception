@@ -69,7 +69,7 @@
     <solr.version>7.1.0</solr.version>
     <dkpro.lab.version>0.14.0</dkpro.lab.version>
     <dl4j.version>0.9.1</dl4j.version>
-    <rdf4j.version>2.3.0</rdf4j.version>
+    <rdf4j.version>2.2.4</rdf4j.version>
   </properties>
   <modules>
     <module>inception-build</module>
