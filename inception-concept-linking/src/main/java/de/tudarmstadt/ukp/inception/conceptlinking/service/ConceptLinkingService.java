@@ -20,15 +20,19 @@ package de.tudarmstadt.ukp.inception.conceptlinking.service;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 
+import org.apache.commons.lang3.Validate;
+import org.apache.commons.lang3.builder.CompareToBuilder;
 import org.apache.commons.text.similarity.LevenshteinDistance;
 import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
@@ -127,34 +131,18 @@ public class ConceptLinkingService
         Set<CandidateEntity> candidates = new HashSet<>();
         List<String> mentionArray = Arrays.asList(aMention.split(" "));
 
-        ListIterator<String> it = mentionArray.listIterator();
-        String current;
-        while (it.hasNext()) {
-            current = it.next();
-            it.set(current);
-            if (punctuations.contains(current)) {
-                it.remove();
-            }
-        }
+        mentionArray = mentionArray.stream().filter(m -> !punctuations.contains(m))
+            .collect(Collectors.toList());
 
-        boolean onlyStopwords = true;
         if (stopwords != null) {
-            ListIterator<String> it2 = mentionArray.listIterator();
-            while (it2.hasNext()) {
-                current = it2.next();
-                it2.set(current);
-                if (!stopwords.contains(current)) {
-                    onlyStopwords = false;
-                    break;
-                }
+            if (mentionArray.stream().allMatch(m -> stopwords.contains(m))) {
+                logger.error("Mention consists of stopwords only - returning.");
+                return Collections.emptySet();
             }
-        } else {
-            onlyStopwords = false;
         }
 
-        if (mentionArray.isEmpty() || onlyStopwords) {
-            logger.error("Mention array is empty or consists of stopwords only - returning.");
-            throw new IllegalStateException();
+        if (mentionArray.isEmpty()) {
+            throw new IllegalStateException("Mention is empty!");
         }
 
         int candidateQueryLimit = 1000;
@@ -193,8 +181,8 @@ public class ConceptLinkingService
                 }
             }
         }
-        logger.debug(System.currentTimeMillis() - startTime + "ms to retrieve candidates from "
-            + "KB.");
+        logger.debug("It took [{}] ms to retrieve candidates from KB",
+            System.currentTimeMillis() - startTime);
         return candidates;
     }
 
@@ -216,7 +204,7 @@ public class ConceptLinkingService
         boolean done = false;
 
         // Loop until mention end was found or sentence ends
-        while (!done && j < mentionSentence.size()) {
+        done: while (j < mentionSentence.size()) {
 
             // Go to the position where the mention starts in the sentence
             for (int i = 0; i < aMention.size(); i++) {
@@ -231,7 +219,7 @@ public class ConceptLinkingService
                 if (i == aMention.size() - 1) {
                     start = j - (aMention.size() - 1) - mentionContextSize;
                     end = j + mentionContextSize + 1;
-                    done = true;
+                    break done;
                 } else {
                     j++;
                 }
@@ -264,9 +252,8 @@ public class ConceptLinkingService
 
         int mentionContextSize = 5;
         Sentence mentionSentence = getMentionSentence(aJCas, aBegin);
-        if (mentionSentence == null) {
-            throw new IllegalStateException();
-        }
+        Validate.notNull(mentionSentence, "Mention sentence could not be determined.");
+
         List<String> splitMention = Arrays.asList(mention.split(" "));
         List<Token> mentionContext = getMentionContext(mentionSentence, splitMention,
                 mentionContextSize);
@@ -330,8 +317,8 @@ public class ConceptLinkingService
      */
     private List<CandidateEntity> sortByFrequency(List<CandidateEntity> candidates)
     {
-        candidates.sort((e1, e2) -> new org.apache.commons.lang.builder.CompareToBuilder()
-            .append(-e1.getFrequency(), -e2.getFrequency()).toComparison());
+        candidates.sort((e1, e2) -> new CompareToBuilder()
+            .append(e2.getFrequency(), e1.getFrequency()).toComparison());
         return candidates;
     }
 
@@ -345,12 +332,12 @@ public class ConceptLinkingService
      */
     private List<CandidateEntity> sortCandidates(List<CandidateEntity> candidates)
     {
-        candidates.sort((e1, e2) -> new org.apache.commons.lang.builder.CompareToBuilder()
-            .append(-e1.getSignatureOverlapScore(), -e2.getSignatureOverlapScore())
+        candidates.sort((e1, e2) -> new CompareToBuilder()
+            .append(e2.getSignatureOverlapScore(), e1.getSignatureOverlapScore())
             .append(e1.getLevContext() + e1.getLevMatchLabel(),
                 e2.getLevContext() + e2.getLevMatchLabel())
-            .append(-e1.getFrequency(), -e2.getFrequency())
-            .append(-e1.getNumRelatedRelations(), -e2.getNumRelatedRelations())
+            .append(e2.getFrequency(), e1.getFrequency())
+            .append(e2.getNumRelatedRelations(), e1.getNumRelatedRelations())
             .append(e1.getIdRank(), e2.getIdRank()).toComparison());
         return candidates;
     }
@@ -360,11 +347,11 @@ public class ConceptLinkingService
      */
     private String tokensToString(List<Token> aSentence)
     {
-        StringBuilder builder = new StringBuilder();
+        StringJoiner joiner = new StringJoiner(" ");
         for (Token t : aSentence) {
-            builder.append(t.getCoveredText()).append(" ");
+            joiner.add(t.getCoveredText());
         }
-        return builder.substring(0, builder.length() - 1);
+        return joiner.toString().substring(0, joiner.length() - 1);
     }
 
     /*
