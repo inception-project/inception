@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -43,13 +42,7 @@ import org.eclipse.rdf4j.query.TupleQueryResult;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.event.EventListener;
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
 import org.springframework.core.io.DefaultResourceLoader;
-import org.springframework.security.core.session.SessionDestroyedEvent;
-import org.springframework.security.core.session.SessionInformation;
-import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
@@ -70,7 +63,6 @@ public class ConceptLinkingService
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private @Resource KnowledgeBaseService kbService;
-    private @Resource SessionRegistry sessionRegistry;
 
     private final String[] PUNCTUATION_VALUES
         = new String[] { "``", "''", "(", ")", ",", ".", ":", "--" };
@@ -88,8 +80,6 @@ public class ConceptLinkingService
             "quantity", "string", "url", "wikibase-property"));
 
     private Map<String, Property> propertyWithLabels;
-
-    private Map<String, ConceptLinkingUserState> states = new ConcurrentHashMap<>();
 
     @PostConstruct
     public void init()
@@ -457,47 +447,5 @@ public class ConceptLinkingService
         }
 
         return handles;
-    }
-    /*
-     * Clear user state when session ends
-     */
-    @EventListener
-    @Order(Ordered.HIGHEST_PRECEDENCE)
-    public void onApplicationEvent(SessionDestroyedEvent event)
-    {
-        SessionInformation info = sessionRegistry.getSessionInformation(event.getId());
-        // Could be an anonymous session without information.
-        if (info != null) {
-            String username = (String) info.getPrincipal();
-            clearState(username);
-        }
-    }
-
-    /*
-     * Holds session-specific settings
-     */
-    private ConceptLinkingUserState getState(String aUsername)
-    {
-        synchronized (states) {
-            ConceptLinkingUserState state;
-            state = states.get(aUsername);
-            if (state == null) {
-                state = new ConceptLinkingUserState();
-                states.put(aUsername, state);
-            }
-            return state;
-        }
-    }
-    
-    private void clearState(String aUsername)
-    {
-        synchronized (states) {
-            states.remove(aUsername);
-        }
-    }
-       
-    private class ConceptLinkingUserState
-    {
-
     }
 }
