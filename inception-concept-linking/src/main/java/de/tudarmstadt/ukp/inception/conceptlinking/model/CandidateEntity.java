@@ -28,7 +28,7 @@ public class CandidateEntity
 {
 
     /**
-     * The IRI of this entity
+     * The IRI String of this entity
      */
     private String IRI;
 
@@ -38,7 +38,7 @@ public class CandidateEntity
     private String label;
 
     /**
-     * The alternative label of this particular entity
+     * An alternative label (alias) of this entity
      */
     private String alternativeLabel;
 
@@ -53,10 +53,10 @@ public class CandidateEntity
     private int levContext;
 
     /**
-     * set of directly related entities (IRI Strings)
+     * set of directly related entities as IRI Strings
      */
-    
     private Set<String> signatureOverlap;
+
     /**
      * number of distinct relations to other entities
      */
@@ -64,14 +64,13 @@ public class CandidateEntity
 
     /**
      * number of related entities whose entity label occurs in <i>content tokens</i>
-     * <i>content tokens</i> consist of tokens in mention sentence annotated as nouns, verbs or
+     * <i>Content tokens</i> consist of tokens in mention sentence annotated as nouns, verbs or
      * adjectives
      */
     private int signatureOverlapScore;
 
     /**
-     * logarithm of the wikidata ID
-     * based on the asumption that lower IDs are more important
+     * logarithm of the wikidata ID - based on the assumption that lower IDs are more important
      */
     private double idRank;
 
@@ -87,86 +86,142 @@ public class CandidateEntity
         this.alternativeLabel = alternativeLabel;
     }
 
+    /**
+     * @return The IRI String of this entity
+     */
     public String getIRI()
     {
         return IRI;
     }
 
+    /**
+     * @return The main label of this entity
+     */
     public String getLabel()
     {
         return label;
     }
 
+    /**
+     * @return An alternative label (alias) of this entity
+     */
     public String getAltLabel()
     {
         return alternativeLabel;
     }
 
+    /**
+     * @return set of directly related entities as IRI Strings
+     */
     public Set<String> getSignatureOverlap()
     {
         return signatureOverlap;
     }
 
+    /**
+     * @param signatureOverlap set of directly related entities as IRI Strings
+     */
     public void setSignatureOverlap(Set<String> signatureOverlap)
     {
         this.signatureOverlap = signatureOverlap;
     }
 
+    /**
+     * @return edit distance between mention and candidate entity label
+     */
     public int getLevMatchLabel()
     {
         return levMatchLabel;
     }
 
+    /**
+     * @param levMatchLabel edit distance between mention and candidate entity label
+     */
     public void setLevMatchLabel(int levMatchLabel)
     {
         this.levMatchLabel = levMatchLabel;
     }
 
+    /**
+     * @return edit distance between mention + context and candidate entity label
+     */
     public int getLevContext()
     {
         return levContext;
     }
 
+    /**
+     * @param levContext edit distance between mention + context and candidate entity label
+     */
     public void setLevContext(int levContext)
     {
         this.levContext = levContext;
     }
 
-    public void setNumRelatedRelations(int i)
+    /**
+     * @param numRelatedRelations number of distinct relations to other entities
+     */
+    public void setNumRelatedRelations(int numRelatedRelations)
     {
-        this.numRelatedRelations = i;
+        this.numRelatedRelations = numRelatedRelations;
     }
 
+    /**
+     * @return number of distinct relations to other entities
+     */
     public int getNumRelatedRelations()
     {
         return numRelatedRelations;
     }
 
+    /**
+     * @param aScore number of related entities whose entity label occurs in <i>content tokens</i>.
+     * <i>Content tokens</i> consist of tokens in mention sentence annotated as nouns, verbs or
+     * adjectives
+     */
     public void setSignatureOverlapScore(int aScore)
     {
         this.signatureOverlapScore = aScore;
     }
 
+    /**
+     * @return number of related entities whose entity label occurs in <i>content tokens</i>.
+     * <i>Content tokens</i> consist of tokens in mention sentence annotated as nouns, verbs or
+     * adjectives
+     */
     public int getSignatureOverlapScore()
     {
         return signatureOverlapScore;
     }
 
+    /**
+     * @param idRank logarithm of the wikidata ID - based on the assumption that lower IDs are more important
+     */
     public void setIdRank(double idRank)
     {
         this.idRank = idRank;
     }
 
+    /**
+     * @return logarithm of the wikidata ID - based on the assumption that lower IDs are more
+     * important
+     */
     public double getIdRank()
     {
         return idRank;
     }
 
+    /**
+     * @param frequency in-link count of wikipedia article of IRI
+     */
     public void setFrequency(int frequency)
     {
         this.frequency = frequency;
     }
-    
+
+    /**
+     * @return in-link count of wikipedia article of IRI
+     */
     public int getFrequency()
     {
         return frequency;

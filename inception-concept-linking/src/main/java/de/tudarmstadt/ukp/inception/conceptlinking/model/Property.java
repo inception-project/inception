@@ -19,7 +19,8 @@
 package de.tudarmstadt.ukp.inception.conceptlinking.model;
 
 /**
- * Describes a relation or property between two entities
+ * Describes a relation or property between two entities#
+ * Source: https://www.wikidata.org/wiki/Wikidata:Database_reports/List_of_properties/all
  */
 public class Property
 {
@@ -36,42 +37,66 @@ public class Property
         this.type = type;
         this.freq = Integer.parseInt(freq.trim().replace(",",""));
     }
-    
+
+    /**
+     * @return The main label of this property
+     */
     public String getLabel()
     {
         return label;
     }
-    
+
+    /**
+     * @param label The main label of this property
+     */
     public void setLabel(String label)
     {
         this.label = label;
     }
-    
+
+    /**
+     * @return Array of aliases for this property
+     */
     public String[] getAltlabel()
     {
         return altlabel;
     }
 
+    /**
+     * @param altlabel aliases for this property
+     */
     public void setAltlabel(String[] altlabel)
     {
         this.altlabel = altlabel;
     }
 
+    /**
+     * @return Frequency of usage
+     */
     public int getFreq()
     {
         return freq;
     }
-    
+
+    /**
+     * @param freq Frequency of usage
+     */
     public void setFreq(int freq)
     {
         this.freq = freq;
     }
-    
+
+    /**
+     * @return Wikidata data type, i.e. wikibase-item
+     */
     public String getType()
     {
         return type;
     }
-    
+
+    /**
+     * @param type Wikidata data type, i.e. wikibase-item
+     */
     public void setType(String type)
     {
         this.type = type;
