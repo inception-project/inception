@@ -34,7 +34,6 @@ import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.eclipse.rdf4j.model.IRI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -125,7 +124,7 @@ public class ConceptFeatureEditor
                 // If no specific KB is selected, collect instances from all KBs
                 for (KnowledgeBase kb : kbService.getKnowledgeBases(project)) {
                     if (kb.isSupportConceptLinking()) {
-                        handles.addAll(listLinkingInstances(kb, null, aState, () ->
+                        handles.addAll(listLinkingInstances(kb, aState, () ->
                             getEditorCas(aHandler)));
                     }
                     else {
@@ -158,12 +157,12 @@ public class ConceptFeatureEditor
         return focusComponent;
     }
 
-    private List<KBHandle> listLinkingInstances(KnowledgeBase kb, IRI conceptIri,
+    private List<KBHandle> listLinkingInstances(KnowledgeBase kb,
         AnnotatorState aState, JCasProvider aJCas)
     {
         return kbService.read(kb, (conn) -> {
             try {
-                return clService.disambiguate(kb, conceptIri, aState.getSelection().getText(),
+                return clService.disambiguate(kb, aState.getSelection().getText(),
                     aState.getSelection().getBegin(), aJCas.get());
             }
             catch (IOException e) {
