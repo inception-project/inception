@@ -154,12 +154,9 @@ public class ConceptLinkingService
             return Collections.emptySet();
         }
 
-
-        String entityQueryString = QueryUtil
-            .generateCandidateQuery(mentionArray, CANDIDATE_QUERY_LIMIT);
-        
         try (RepositoryConnection conn = kbService.getConnection(aKB)) {
-            TupleQuery query = conn.prepareTupleQuery(QueryLanguage.SPARQL, entityQueryString);
+            TupleQuery query = QueryUtil
+                .generateCandidateQuery(conn, mentionArray, CANDIDATE_QUERY_LIMIT);
             try (TupleQueryResult entityResult = query.evaluate()) {
                 while (entityResult.hasNext()) {
                     BindingSet solution = entityResult.next();
@@ -363,10 +360,9 @@ public class ConceptLinkingService
     {
         Set<String> relatedRelations = new HashSet<>();
         Set<String> relatedEntities = new HashSet<>();
-        String queryString
-            = QueryUtil.generateSemanticSignatureQuery(aWikidataId, SIGNATURE_QUERY_LIMIT);
         try (RepositoryConnection conn = kbService.getConnection(aKB)) {
-            TupleQuery query = conn.prepareTupleQuery(QueryLanguage.SPARQL, queryString);
+            TupleQuery query = QueryUtil
+                .generateSemanticSignatureQuery(conn, aWikidataId, SIGNATURE_QUERY_LIMIT);
             try (TupleQueryResult result = query.evaluate()) {
                 while (result.hasNext()) {
                     BindingSet sol = result.next();
