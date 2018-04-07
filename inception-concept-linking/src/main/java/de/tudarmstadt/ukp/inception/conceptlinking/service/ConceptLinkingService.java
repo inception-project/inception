@@ -40,8 +40,6 @@ import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.eclipse.rdf4j.model.Value;
 import org.eclipse.rdf4j.query.BindingSet;
-import org.eclipse.rdf4j.query.QueryEvaluationException;
-import org.eclipse.rdf4j.query.QueryLanguage;
 import org.eclipse.rdf4j.query.TupleQuery;
 import org.eclipse.rdf4j.query.TupleQueryResult;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
@@ -152,7 +150,8 @@ public class ConceptLinkingService
         }
 
         if (mentionArray.isEmpty()) {
-            throw new IllegalStateException("Mention is empty!");
+            logger.error("Mention is empty!");
+            return Collections.emptySet();
         }
 
 
@@ -175,12 +174,6 @@ public class ConceptLinkingService
                     candidates.add(newEntity);
                 }
             }
-            catch (QueryEvaluationException e) {
-                throw new QueryEvaluationException(e);
-            }
-            catch (NullPointerException e) {
-                throw new NullPointerException();
-            }
         }
 
         if (candidates.isEmpty()) {
@@ -201,7 +194,6 @@ public class ConceptLinkingService
      * the mention with <mentionContextSize> tokens before and <mentionContextSize> after the
      * mention
      *
-     * FIXME there could also be multiple mentions in a sentence
      */
     private List<Token> getMentionContext(Sentence aSentence, List<String> aMention,
         int mentionContextSize)
@@ -265,8 +257,7 @@ public class ConceptLinkingService
         List<String> splitMention = Arrays.asList(mention.split(" "));
         List<Token> mentionContext = getMentionContext(mentionSentence, splitMention,
             MENTION_CONTEXT_SIZE);
-        
-        // TODO and t['ner'] not in {"ORDINAL", "MONEY", "TIME", "PERCENTAGE"}} \
+
         Set<String> sentenceContentTokens = new HashSet<>();
         for (Token t : JCasUtil.selectCovered(Token.class, mentionSentence)) {
             if (t.getPosValue() != null) {
@@ -317,7 +308,8 @@ public class ConceptLinkingService
                 (sig.getRelatedRelations() != null) ? sig.getRelatedRelations().size() : 0);
         });
         result = sortCandidates(new ArrayList<>(candidates));
-        logger.debug(System.currentTimeMillis() - startTime + "ms for candidate ranking.");
+        logger.debug("It took [{}] ms to rank candidates",
+            System.currentTimeMillis() - startTime);
         return result;
     }
 
