@@ -81,7 +81,7 @@ public class QueryUtil
             "  }",
             "  BIND (STRLEN(?altLabel) as ?len)",
             "  {",
-            "    GRAPH " + STATEMENTS + " { ?e2 rdfs:label ?label. }",
+            "    GRAPH " + TERMS + " { ?e2 rdfs:label ?label. }",
             "    FILTER ( lang(?label) = \"en\" )",
             "  }",
             "}",
