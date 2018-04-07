@@ -103,10 +103,13 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
     private final IModel<Project> projectModel;
     private final DynamicWizardModel wizardModel;
     private final CompoundPropertyModel<EnrichedKnowledgeBase> wizardDataModel;
+    private IModel<IriSchemaType> selection;
 
     public KnowledgeBaseCreationWizard(String id, IModel<Project> aProjectModel) {
         super(id);
 
+        selection = new Model<IriSchemaType>();
+        
         uploadedFiles = new HashMap<>();
 
         projectModel = aProjectModel;
@@ -347,115 +350,79 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
             model = aModel;
             completed = true;
             
-            //Add Textfields
-            TextField<String> c1 = buildTextField("classIri",model,"classIri");
-            add(c1);
-            TextField<String> c2 = buildTextField("subclassIri",model,"subclassIri");
-            add(c2);
-            TextField<String> c3 = buildTextField("typeIri",model,"typeIri");
-            add(c3);
-            
-            //Model for SchemaSelection in BootstrapRadioGroup
-            IModel<IriSchemaType> selectedSchema = new Model<IriSchemaType>();
-            
-            //RadioGroup to select the iriSchema type
+            // RadioGroup to select the IriSchemaType
             BootstrapRadioGroup<IriSchemaType> iriSchemaChoice = new BootstrapRadioGroup<>(
-                    "iriSchema", selectedSchema, Arrays.asList(IriSchemaType.values()),
+                    "iriSchema", selection, Arrays.asList(IriSchemaType.values()),
                     new EnumRadioChoiceRenderer<>(Buttons.Type.Default, this));
+            iriSchemaChoice.setOutputMarkupId(true);
+
             
-            //OnChange update the model with corresponding iris
-            iriSchemaChoice.setChangeHandler(new ISelectionChangeHandler<IriSchemaType>() {
-                private static final long serialVersionUID = 1L;
+            // Add text fields for classIri, subclassIri and typeIri
+            RequiredTextField<String> t1 = buildTextFieldWithBehavior("classIri", model, "classIri",
+                    newChangeBGroupToCustomBehavior(iriSchemaChoice));
+            add(t1);
+            
+            RequiredTextField<String> t2 = buildTextFieldWithBehavior("subclassIri", model,
+                    "subclassIri", newChangeBGroupToCustomBehavior(iriSchemaChoice));
+            add(t2);
+            
+            RequiredTextField<String> t3 = buildTextFieldWithBehavior("typeIri", model, "typeIri",
+                    newChangeBGroupToCustomBehavior(iriSchemaChoice));
+            add(t3);
+
+            // OnChange update the model with corresponding iris
+            iriSchemaChoice.setChangeHandler(new ISelectionChangeHandler<IriSchemaType>()
+            {
+                private static final long serialVersionUID = 1653808650286121732L;
 
                 @Override
                 public void onSelectionChanged(AjaxRequestTarget target, IriSchemaType bean)
                 {
-                    /*EnrichedKnowledgeBase ekb= model.getObject();
-                    ekb.setClassIri(getClassIriAsString(selectedSchema.getObject()));
-                    ekb.setSubclassIri(getSubclassIriAsString(selectedSchema.getObject()));
-                    ekb.setTypeIri(getTypeIriAsString(selectedSchema.getObject()));
-                    model.setObject(ekb);*/
-                    c1.setModelObject(bean.classirir);
-                    if (selectedSchema.getObject() == IriSchemaType.DEFAULT) {
-                        c1.setEnabled(true);
-                        c2.setEnabled(true);
-                        c3.setEnabled(true);
-                    }
-                    else {
-                        c1.setEnabled(false);
-                        c2.setEnabled(false);
-                        c3.setEnabled(false);
-                    }
-                    target.add(c1);
-                    target.add(c2);
-                    target.add(c3);
-                    
+                    t1.setModelObject(bean.getClassIriString());
+                    t2.setModelObject(bean.getSubclassIriString());
+                    t3.setModelObject(bean.getTypeIriString());
+                    target.add(t1);
+                    target.add(t2);
+                    target.add(t3);
+                    target.add(iriSchemaChoice);
                 }
             });
+
             add(iriSchemaChoice);
-       
+
         }
 
-        private TextField<String> buildTextField(String name,
-                CompoundPropertyModel<EnrichedKnowledgeBase> model, String property)
+        private RequiredTextField<String> buildTextFieldWithBehavior(String id,
+                CompoundPropertyModel<EnrichedKnowledgeBase> model, String property,
+                AjaxEventBehavior behavior)
         {
-            TextField<String> textField = new TextField<>(name, model.bind(property));
+            RequiredTextField<String> textField = new RequiredTextField<>(id, model.bind(property));
             textField.setOutputMarkupId(true);
             textField.add(EnrichedKnowledgeBaseUtils.URL_VALIDATOR);
-            IriSchemaType defaultType = Arrays.asList(IriSchemaType.values()).get(0);
-            textField.setDefaultModelObject(defaultType);
-            textField.setEnabled(false);
+            textField.add(behavior);
             return textField;
         }
-        
-        private String getClassIriAsString(IriSchemaType type)
-        {
-            switch (type) {
-            case RDF:
-                return RDFS.CLASS.stringValue();
-            case WIKIDATA:
-                return IriConstants.WIKIDATA_CLASS.stringValue();
-            case OWL:
-                return OWL.CLASS.stringValue();
-            case DEFAULT:
-                return "";
-            default:
-                return "";
-            }
-        }
-        
-        private String getSubclassIriAsString(IriSchemaType type)
-        {
-            switch (type) {
-            case RDF:
-                return RDFS.SUBCLASSOF.stringValue();
-            case WIKIDATA:
-                return IriConstants.WIKIDATA_SUBCLASS.stringValue();
-            case OWL:
-                return "";
-            case DEFAULT:
-                return "";
-            default:
-                return "";
-            }
-        }
-        
-        private String getTypeIriAsString(IriSchemaType type)
-        {
-            switch (type) {
-            case RDF:
-                return RDF.TYPE.stringValue();
-            case WIKIDATA:
-                return IriConstants.WIKIDATA_TYPE.stringValue();
-            case OWL:
-                return "";
-            case DEFAULT:
-                return "";
-            default:
-                return "";
-            }
-        }
 
+        // returns a behavior for changing the iriSchema selection to CUSTOM
+        // and render corresponding button group on a "click" event
+        private AjaxEventBehavior newChangeBGroupToCustomBehavior(
+                BootstrapRadioGroup<IriSchemaType> buttonGroup)
+        {
+            return new AjaxEventBehavior("click")
+            {
+
+                private static final long serialVersionUID = -6372746431274670007L;
+
+                @Override
+                protected void onEvent(final AjaxRequestTarget target)
+                {
+                    // switch to custom when textfield is clicked
+                    selection.setObject(IriSchemaType.CUSTOMSCHEMA);
+                    target.add(buttonGroup);
+                }
+            };
+        }
+        
         @Override
         public void applyState()
         {
@@ -538,6 +505,43 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
     
     public enum IriSchemaType
     {
-        RDF, WIKIDATA, OWL, DEFAULT;
+        RDFSCHEMA(RDFS.CLASS.stringValue(), RDFS.SUBCLASSOF.stringValue(),
+                    RDF.TYPE.stringValue()),
+        
+        WIKIDATASCHEMA(IriConstants.WIKIDATA_CLASS.stringValue(),
+                        IriConstants.WIKIDATA_SUBCLASS.stringValue(),
+                        IriConstants.WIKIDATA_TYPE.stringValue()),
+        
+        OWLSCHEMA(OWL.CLASS.stringValue(), RDFS.SUBCLASSOF.stringValue(),
+                    RDF.TYPE.stringValue()),
+        
+        CUSTOMSCHEMA("", "", "");
+
+        private final String classIriString;
+        private final String subclassIriString;
+        private final String typeIriString;
+
+        private IriSchemaType(String aClassIriString, String aSubclassIriString,
+                String aTypeIriString)
+        {
+            classIriString = aClassIriString;
+            subclassIriString = aSubclassIriString;
+            typeIriString = aTypeIriString;
+        }
+
+        public String getClassIriString()
+        {
+            return classIriString;
+        }
+
+        public String getSubclassIriString()
+        {
+            return subclassIriString;
+        }
+
+        public String getTypeIriString()
+        {
+            return typeIriString;
+        }
     }
 }
