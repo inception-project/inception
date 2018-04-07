@@ -420,7 +420,7 @@ public class ConceptLinkingService
         return rankedCandidates.stream()
             .map(c -> new KBHandle(c.getIRI(), c.getLabel()))
             .distinct()
-            .filter(h -> !h.getIdentifier().contains(":"))
+            .filter(h -> h.getIdentifier().contains(":"))
             .collect(Collectors.toList());
     }
 }
