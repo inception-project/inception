@@ -22,22 +22,24 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.Component;
 import org.apache.wicket.MarkupContainer;
+import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.Model;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.googlecode.wicket.jquery.core.renderer.TextRenderer;
 import com.googlecode.wicket.kendo.ui.form.autocomplete.AutoCompleteTextField;
 import com.googlecode.wicket.kendo.ui.form.dropdown.DropDownList;
 
@@ -98,17 +100,23 @@ public class ConceptFeatureEditor
         return field;
     }
 
-    private AutoCompleteTextField<String> createAutoCompleteTextField(AnnotatorState
+    private AutoCompleteTextField<KBHandle> createAutoCompleteTextField(AnnotatorState
         aState, AnnotationActionHandler aHandler)
     {
-        AutoCompleteTextField<String> field = new AutoCompleteTextField<String>
-            (MID_VALUE) {
+        AutoCompleteTextField<KBHandle> field = new AutoCompleteTextField<KBHandle>(MID_VALUE,
+            new Model<KBHandle>(), new TextRenderer<KBHandle>("name"), KBHandle.class)
+        {
             @Override
-            protected List<String> getChoices(String input)
+            protected List<KBHandle> getChoices(String input)
             {
-                return listInstances(aState, aHandler, input).stream()
-                    .map(KBHandle::getUiLabel)
-                    .collect(Collectors.toList());
+                return listInstances(aState, aHandler, input);
+            }
+            @Override
+            protected void onSelected(AjaxRequestTarget target)
+            {
+                KBHandle handle = this.getModelObject();
+                info(handle.getName());
+                log.debug(handle.getName());
             }
         };
 
