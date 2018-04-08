@@ -27,13 +27,11 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.Component;
 import org.apache.wicket.MarkupContainer;
-import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.Model;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
@@ -104,19 +102,14 @@ public class ConceptFeatureEditor
         aState, AnnotationActionHandler aHandler)
     {
         AutoCompleteTextField<KBHandle> field = new AutoCompleteTextField<KBHandle>(MID_VALUE,
-            new Model<KBHandle>(), new TextRenderer<KBHandle>("name"), KBHandle.class)
+                new TextRenderer<KBHandle>("uiLabel"))
         {
+            private static final long serialVersionUID = -1955006051950156603L;
+            
             @Override
             protected List<KBHandle> getChoices(String input)
             {
                 return listInstances(aState, aHandler, input);
-            }
-            @Override
-            protected void onSelected(AjaxRequestTarget target)
-            {
-                KBHandle handle = this.getModelObject();
-                info(handle.getName());
-                log.debug(handle.getName());
             }
         };
 
