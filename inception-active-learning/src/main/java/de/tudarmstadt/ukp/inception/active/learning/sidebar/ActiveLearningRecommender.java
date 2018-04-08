@@ -25,6 +25,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import org.apache.uima.cas.Type;
@@ -41,6 +42,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.AnnotationObject;
 import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.Offset;
 import de.tudarmstadt.ukp.inception.recommendation.model.LearningRecord;
+import de.tudarmstadt.ukp.inception.recommendation.model.LearningRecordUserAction;
 import de.tudarmstadt.ukp.inception.recommendation.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.service.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.service.RecommendationService;
@@ -71,10 +73,10 @@ public class ActiveLearningRecommender
         this.learningRecordService = recordService;
     }
 
-    public RecommendationDifference generateRecommendationWithLowestDifference(
-        DocumentService documentService, Date learnSkippedRecommendationTime)
+    public Optional<RecommendationDifference> generateRecommendationWithLowestDifference(
+        DocumentService aDocumentService, Date learnSkippedRecommendationTime)
     {
-        this.documentService = documentService;
+        this.documentService = aDocumentService;
 
         getRecommendationFromRecommendationModel();
 
@@ -82,7 +84,7 @@ public class ActiveLearningRecommender
         listOfRecommendationsForEachToken.forEach(
             recommendationList -> removeRecommendationsWithNullAnnotation(recommendationList));
         listOfRecommendationsForEachToken.removeIf(recommendationList
-            -> recommendationList.size() == 0);
+            -> recommendationList.isEmpty());
 
         // remove duplicate recommendations
         for (int i = 0; i < listOfRecommendationsForEachToken.size(); i++)
@@ -102,12 +104,7 @@ public class ActiveLearningRecommender
     {
         getRecommendationFromRecommendationModel();
         removeRejectedOrSkippedAnnotations(false, null);
-        if (listOfRecommendationsForEachToken.size() > 0) {
-            return true;
-        }
-        else {
-            return false;
-        }
+        return !listOfRecommendationsForEachToken.isEmpty();
     }
 
     public void getRecommendationFromRecommendationModel()
@@ -148,7 +145,7 @@ public class ActiveLearningRecommender
         List<AnnotationObject> recommendationsList)
     {
         if (recommendationsList != null) {
-            if (recommendationsList.size() > 0) {
+            if (!recommendationsList.isEmpty()) {
                 recommendationsList.removeIf(recommendation -> recommendation.getAnnotation() ==
                     null);
             }
@@ -175,16 +172,14 @@ public class ActiveLearningRecommender
         String classifier = recommendationItem.getClassifier();
         String annotation = recommendationItem.getAnnotation();
         String documentName = recommendationItem.getDocumentName();
-        Boolean flag = false;
         for (AnnotationObject existedRecommendation : cleanRecommendationList) {
             if (existedRecommendation.getClassifier().equals(classifier)
                 && existedRecommendation.getAnnotation().equals(annotation) &&
                 existedRecommendation.getDocumentName().equals(documentName)) {
-                flag = true;
-                break;
+                return true;
             }
         }
-        return flag;
+        return false;
     }
 
     private void removeRejectedOrSkippedAnnotations(boolean filterSkippedRecommendation,
@@ -197,39 +192,52 @@ public class ActiveLearningRecommender
                 recommendation, filterSkippedRecommendation, learnSkippedRecommendationTime));
         }
         listOfRecommendationsForEachToken.removeIf(recommendationsList ->
-            recommendationsList.size() == 0);
+            recommendationsList.isEmpty());
     }
 
     private boolean doesContainRejectedOrSkippedRecord(List<LearningRecord> records,
         AnnotationObject aRecommendation, boolean filterSkippedRecommendation,
         Date learnSkippedRecommendationTime)
     {
-        boolean flag = false;
-        for (LearningRecord record: records) {
-            if ((record.getUserAction().equals("rejected") || (
-                record.getUserAction().equals("skipped") && filterSkippedRecommendation)
-                && needFilterByTime(learnSkippedRecommendationTime, record)) && record
-                .getSourceDocument().getName().equals(aRecommendation.getDocumentName())
-                && record.getOffsetTokenBegin() == aRecommendation.getOffset().getBeginToken()
-                && record.getOffsetTokenEnd() == aRecommendation.getOffset().getEndToken() && record
-                .getAnnotation().equals(aRecommendation.getAnnotation())) {
-                flag = true;
-                break;
+        for (LearningRecord record : records) {
+            if ((record.getUserAction().equals(LearningRecordUserAction.REJECTED)
+                || filterSkippedRecord(record, filterSkippedRecommendation) && needFilterByTime(
+                learnSkippedRecommendationTime, record)) && hasSameTokenAndSuggestion(
+                aRecommendation, record)) {
+                return true;
             }
         }
-        return flag;
+        return false;
     }
 
-    private boolean needFilterByTime (Date learnSkippedTime, LearningRecord record) {
-        if (learnSkippedTime != null && learnSkippedTime.compareTo(record.getActionDate()) == 1) {
-            return false;
-        }
-        else {
-            return true;
-        }
+    private boolean filterSkippedRecord(LearningRecord record, boolean filterSkippedRecommendation)
+    {
+        return record.getUserAction().equals(LearningRecordUserAction.SKIPPED)
+            && filterSkippedRecommendation;
     }
 
-    private RecommendationDifference calculateDifferencesAndReturnLowestDifference()
+    private boolean hasSameTokenAndSuggestion(AnnotationObject aRecommendation,
+        LearningRecord aRecord)
+    {
+        return aRecord.getSourceDocument().getName().equals(aRecommendation.getDocumentName())
+            && aRecord.getOffsetTokenBegin() == aRecommendation.getOffset().getBeginToken()
+            && aRecord.getOffsetTokenEnd() == aRecommendation.getOffset().getEndToken() && aRecord
+            .getAnnotation().equals(aRecommendation.getAnnotation());
+    }
+
+    /**
+     * If learnSkippedTime is null, this record needs to be filtered.
+     * If the record written time is after the learnSkippedTime, this record needs to be filtered.
+     * @param learnSkippedTime
+     * @param record
+     * @return
+     */
+    private boolean needFilterByTime(Date learnSkippedTime, LearningRecord record)
+    {
+        return learnSkippedTime == null || learnSkippedTime.compareTo(record.getActionDate()) <= 0;
+    }
+
+    private Optional<RecommendationDifference> calculateDifferencesAndReturnLowestDifference()
     {
         // create list of recommendationsList, each recommendationsList contains all
         // recommendations from one classifer for one token
@@ -239,13 +247,7 @@ public class ActiveLearningRecommender
         // get a list of differences, sorted ascendingly
         List<RecommendationDifference> recommendationDifferences =
             createDifferencesSortedAscendingly(listOfRecommendationsPerTokenPerClassifier);
-        if (recommendationDifferences.size() > 0) {
-            RecommendationDifference lowestDifference = recommendationDifferences.get(0);
-            return lowestDifference;
-        }
-        else {
-            return null;
-        }
+        return recommendationDifferences.stream().findFirst();
     }
 
     private List<List<AnnotationObject>> createRecommendationListsPerTokenPerClassifier()
@@ -282,12 +284,7 @@ public class ActiveLearningRecommender
                 numberOfOpenNLPClassifier++;
             }
         }
-        if (numberOfOpenNLPClassifier >= 1 && numberOfStringMatchingClassifer >= 1) {
-            return true;
-        }
-        else {
-            return false;
-        }
+        return numberOfOpenNLPClassifier >= 1 && numberOfStringMatchingClassifer >= 1;
     }
 
     private void splitRecommendationsWithRegardToClassifier(
@@ -380,36 +377,33 @@ public class ActiveLearningRecommender
         });
     }
 
-    public RecommendationDifference skipOrRejectRecommendationAndGetNextWithRegardToDifferences(
-        AnnotationObject currentRecommendation) {
+    public Optional<RecommendationDifference>
+        skipOrRejectRecommendationAndGetNextWithRegardToDifferences(
+        AnnotationObject currentRecommendation)
+    {
         Offset offsetOfCurrentRecommendation = currentRecommendation.getOffset();
         String annotationOfCurrentRecommendation = currentRecommendation.getAnnotation();
         String documentName = currentRecommendation.getDocumentName();
 
         for (List<AnnotationObject> recommendationList : listOfRecommendationsForEachToken) {
-            recommendationList.removeIf(recommendation ->
-                recommendation.getOffset().equals(offsetOfCurrentRecommendation) &&
-                    recommendation.getAnnotation().equals(annotationOfCurrentRecommendation) &&
-                    recommendation.getDocumentName().equals(documentName));
+            recommendationList.removeIf(
+                recommendation -> recommendation.getOffset().equals(offsetOfCurrentRecommendation)
+                    && recommendation.getAnnotation().equals(annotationOfCurrentRecommendation)
+                    && recommendation.getDocumentName().equals(documentName));
         }
 
-        listOfRecommendationsForEachToken.removeIf(recommendations -> recommendations.size() == 0);
+        listOfRecommendationsForEachToken.removeIf(recommendations -> recommendations.isEmpty());
 
         return calculateDifferencesAndReturnLowestDifference();
     }
 
-    public AnnotationObject generateRecommendationWithLowestConfidence(JCas aJcas)
+    public Optional<AnnotationObject> generateRecommendationWithLowestConfidence(JCas aJcas)
     {
         getFlattenedRecommendationsFromRecommendationModel(aJcas);
         removeRecommendationsWithNullAnnotation(recommendations);
         removeAlreadyExistingAnnotationsFromFlattenList(aJcas);
         recommendations = sortRecommendationsAscendingByConfidenceScore(recommendations);
-        if (recommendations.size() > 0) {
-            return recommendations.get(0);
-        }
-        else {
-            return null;
-        }
+        return recommendations.stream().findFirst();
     }
 
     private void getFlattenedRecommendationsFromRecommendationModel(JCas aJcas)
@@ -450,12 +444,6 @@ public class ActiveLearningRecommender
             existingAnnotationsSpanBegin.add(fs.getBegin());
         }
         return existingAnnotationsSpanBegin;
-    }
-
-    public AnnotationObject rejectRecommendationAndGetNextWithRegardToConfidence()
-    {
-        recommendations.remove(0);
-        return recommendations.get(0);
     }
 
     public boolean checkRecommendationExist(DocumentService documentService, LearningRecord record)

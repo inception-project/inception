@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
@@ -77,6 +78,7 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.Annotat
 import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.Offset;
 import de.tudarmstadt.ukp.inception.recommendation.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.model.LearningRecordChangeLocation;
+import de.tudarmstadt.ukp.inception.recommendation.model.LearningRecordUserAction;
 import de.tudarmstadt.ukp.inception.recommendation.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.service.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.service.RecommendationService;
@@ -109,7 +111,7 @@ public class ActiveLearningSidebar
     private static final String MAIN_CONTAINER = "mainContainer";
     private ActiveLearningRecommender activeLearningRecommender;
     private AnnotationObject currentRecommendation;
-    private RecommendationDifference currentDifference;
+    private Optional<RecommendationDifference> currentDifference;
     private String recommendationCoveredText;
     private String recommendationAnnotation;
     private double recommendationConfidence;
@@ -247,9 +249,9 @@ public class ActiveLearningSidebar
     private void showAndHighlightRecommendationAndJumpToRecommendationLocation (AjaxRequestTarget
                                                                                     target)
     {
-        if (currentDifference != null) {
+        if (currentDifference.isPresent()) {
             hasUnseenRecommendation = true;
-            currentRecommendation = currentDifference.getRecommendation1();
+            currentRecommendation = currentDifference.get().getRecommendation1();
             setShowingRecommendation();
             jumpToRecommendationLocation(target);
             highlightRecommendation();
@@ -270,8 +272,8 @@ public class ActiveLearningSidebar
         recommendationCoveredText = currentRecommendation.getCoveredText();
         recommendationAnnotation = currentRecommendation.getAnnotation();
         recommendationConfidence = currentRecommendation.getConfidence();
-        recommendationDifference = currentDifference.getDifference();
-        writeLearningRecordInDatabase("shown");
+        recommendationDifference = currentDifference.get().getDifference();
+        writeLearningRecordInDatabase(LearningRecordUserAction.SHOWN);
         applicationEventPublisherHolder.get().publishEvent(
             new ActiveLearningRecommendationEvent(this, documentService.
                 getSourceDocument(project, currentRecommendation.getDocumentName()),
@@ -407,7 +409,7 @@ public class ActiveLearningSidebar
             @Override
             protected void onSubmit(AjaxRequestTarget target, Form<?> form)
             {
-                writeLearningRecordInDatabase("accepted");
+                writeLearningRecordInDatabase(LearningRecordUserAction.ACCEPTED);
 
                 try {
                     acceptRecommendationInAnnotationPage(target);
@@ -428,7 +430,7 @@ public class ActiveLearningSidebar
         return acceptRecommendationButton;
     }
 
-    private void writeLearningRecordInDatabase(String userAction)
+    private void writeLearningRecordInDatabase(LearningRecordUserAction userAction)
     {
         LearningRecord record = new LearningRecord();
         record.setUser(annotatorState.getUser().getUsername());
@@ -477,7 +479,7 @@ public class ActiveLearningSidebar
             @Override
             public void onSubmit(AjaxRequestTarget target, Form<?> form)
             {
-                writeLearningRecordInDatabase("skipped");
+                writeLearningRecordInDatabase(LearningRecordUserAction.SKIPPED);
                 annotationPage.actionRefreshDocument(target);
                 currentDifference = activeLearningRecommender
                     .generateRecommendationWithLowestDifference
@@ -499,7 +501,7 @@ public class ActiveLearningSidebar
             @Override
             public void onSubmit(AjaxRequestTarget target, Form<?> form)
             {
-                writeLearningRecordInDatabase("rejected");
+                writeLearningRecordInDatabase(LearningRecordUserAction.REJECTED);
                 annotationPage.actionRefreshDocument(target);
                 currentDifference = activeLearningRecommender
                     .generateRecommendationWithLowestDifference
@@ -568,7 +570,7 @@ public class ActiveLearningSidebar
         actionShowSelectedDocument(aTarget, record.getSourceDocument(),
             record.getOffsetCharacterBegin());
 
-        if (record.getUserAction().equals("rejected")) {
+        if (record.getUserAction().equals(LearningRecordUserAction.REJECTED)) {
             highlightTextAndDisplayMessage(record);
         }
         // if the suggestion still exists, highlight that suggestion.
@@ -674,7 +676,7 @@ public class ActiveLearningSidebar
         record.setUser(state.getUser().getUsername());
         record.setSourceDocument(state.getDocument());
         record.setTokenText(acceptedRecommendation.getCoveredText());
-        record.setUserAction("accepted");
+        record.setUserAction(LearningRecordUserAction.ACCEPTED);
         record.setOffsetTokenBegin(acceptedRecommendation.getOffset().getBeginToken());
         record.setOffsetTokenEnd(acceptedRecommendation.getOffset().getEndToken());
         record.setOffsetCharacterBegin(
@@ -689,7 +691,7 @@ public class ActiveLearningSidebar
             ().equals(this.project)) {
             if (acceptedRecommendation.getOffset().equals(currentRecommendation.getOffset())) {
                 if (!acceptedRecommendation.equals(currentRecommendation)) {
-                    writeLearningRecordInDatabase("rejected");
+                    writeLearningRecordInDatabase(LearningRecordUserAction.REJECTED);
                 }
                 currentDifference = activeLearningRecommender
                     .generateRecommendationWithLowestDifference
