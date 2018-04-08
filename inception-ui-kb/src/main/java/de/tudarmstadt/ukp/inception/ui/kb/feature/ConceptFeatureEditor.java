@@ -88,7 +88,7 @@ public class ConceptFeatureEditor
         AnnotationActionHandler aHandler)
     {
         DropDownList<KBHandle> field = new DropDownList<KBHandle>(MID_VALUE,
-            LambdaModel.of(() -> listInstances(aState, aHandler)),
+            LambdaModel.of(() -> listInstances(aState, aHandler, "")),
             new LambdaChoiceRenderer<>(KBHandle::getUiLabel));
 
         // Ensure that markup IDs of feature editor focus components remain constant across
@@ -102,7 +102,7 @@ public class ConceptFeatureEditor
         aState, AnnotationActionHandler aHandler)
     {
         AutoCompleteTextField<String> field = new AutoCompleteTextField<String>
-            (MID_VALUE, new Model<String>()) {
+            (MID_VALUE) {
             @Override
             protected List<String> getChoices(String input)
             {
@@ -124,7 +124,8 @@ public class ConceptFeatureEditor
         return aHandler.getEditorCas();
     }
 
-    private List<KBHandle> listInstances(AnnotatorState aState, AnnotationActionHandler aHandler)
+    private List<KBHandle> listInstances(AnnotatorState aState, AnnotationActionHandler aHandler,
+        String aTypedString)
     {
         AnnotationFeature feat = getModelObject().feature;
         
@@ -142,7 +143,7 @@ public class ConceptFeatureEditor
                 if (kb.isPresent()) {
                     if (kb.get().isSupportConceptLinking()) {
                         handles.addAll(listLinkingInstances(kb.get(), aState, () -> getEditorCas
-                            (aHandler)));
+                            (aHandler), aTypedString));
                     }
                     else {
                         if (traits.getScope() != null) {
@@ -162,7 +163,8 @@ public class ConceptFeatureEditor
                 for (KnowledgeBase kb : kbService.getKnowledgeBases(project)) {
                     if (kb.isSupportConceptLinking()) {
                         handles
-                            .addAll(listLinkingInstances(kb, aState, () -> getEditorCas(aHandler)));
+                            .addAll(listLinkingInstances(kb, aState, () -> getEditorCas(aHandler),
+                                aTypedString));
                     }
                     else {
                         if (traits.getScope() != null) {
@@ -203,11 +205,11 @@ public class ConceptFeatureEditor
     }
 
     private List<KBHandle> listLinkingInstances(KnowledgeBase kb,
-        AnnotatorState aState, JCasProvider aJCas)
+        AnnotatorState aState, JCasProvider aJCas, String aTypedString)
     {
         return kbService.read(kb, (conn) -> {
             try {
-                return clService.disambiguate(kb, aState.getSelection().getText(),
+                return clService.disambiguate(kb, aTypedString, aState.getSelection().getText(),
                     aState.getSelection().getBegin(), aJCas.get());
             }
             catch (IOException e) {
