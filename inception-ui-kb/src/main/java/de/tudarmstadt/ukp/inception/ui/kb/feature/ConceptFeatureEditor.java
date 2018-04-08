@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.jcas.JCas;
@@ -37,6 +38,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.googlecode.wicket.kendo.ui.form.autocomplete.AutoCompleteTextField;
 import com.googlecode.wicket.kendo.ui.form.dropdown.DropDownList;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
@@ -79,7 +81,7 @@ public class ConceptFeatureEditor
     {
         super(aId, aItem, new CompoundPropertyModel<>(aModel));
         add(new Label(MID_FEATURE, getModelObject().feature.getUiName()));
-        add(focusComponent = createFieldComboBox(aStateModel.getObject(), aHandler));
+        add(focusComponent = createAutoCompleteTextField(aStateModel.getObject(), aHandler));
     }
 
     private DropDownList<KBHandle> createFieldComboBox(AnnotatorState aState,
@@ -88,6 +90,27 @@ public class ConceptFeatureEditor
         DropDownList<KBHandle> field = new DropDownList<KBHandle>(MID_VALUE,
             LambdaModel.of(() -> listInstances(aState, aHandler)),
             new LambdaChoiceRenderer<>(KBHandle::getUiLabel));
+
+        // Ensure that markup IDs of feature editor focus components remain constant across
+        // refreshes of the feature editor panel. This is required to restore the focus.
+        field.setOutputMarkupId(true);
+        field.setMarkupId(ID_PREFIX + getModelObject().feature.getId());
+        return field;
+    }
+
+    private AutoCompleteTextField<String> createAutoCompleteTextField(AnnotatorState
+        aState, AnnotationActionHandler aHandler)
+    {
+        AutoCompleteTextField<String> field = new AutoCompleteTextField<String>
+            (MID_VALUE, new Model<String>()) {
+            @Override
+            protected List<String> getChoices(String input)
+            {
+                return listInstances(aState, aHandler, input).stream()
+                    .map(KBHandle::getUiLabel)
+                    .collect(Collectors.toList());
+            }
+        };
 
         // Ensure that markup IDs of feature editor focus components remain constant across
         // refreshes of the feature editor panel. This is required to restore the focus.
