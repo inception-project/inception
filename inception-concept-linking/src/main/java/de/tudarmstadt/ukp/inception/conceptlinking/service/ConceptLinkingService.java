@@ -33,6 +33,7 @@ import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.builder.CompareToBuilder;
 import org.apache.commons.text.similarity.LevenshteinDistance;
@@ -136,6 +137,11 @@ public class ConceptLinkingService
     private Set<CandidateEntity> generateCandidates(KnowledgeBase aKB, String aMention)
     {
         long startTime = System.currentTimeMillis();
+
+        if (aMention == null || aMention.isEmpty()) {
+            return Collections.emptySet();
+        }
+
         Set<CandidateEntity> candidates = new HashSet<>();
         List<String> mentionArray = Arrays.asList(aMention.split(" "));
 
@@ -399,6 +405,7 @@ public class ConceptLinkingService
      * pre-defined concept.
      *
      * @param aKB the KB used to generate candidates
+     * @param aTypedString What the user has typed so far in the text field
      * @param aMention AnnotatorState, used to get information about what surface form was
      *                     marked
      * @param aMentionBeginOffset the offset where the mention begins in the text
@@ -406,10 +413,13 @@ public class ConceptLinkingService
      *                       tokens
      * @return ranked list of entities, starting with the most probable entity
      */
-    public List<KBHandle> disambiguate(KnowledgeBase aKB, String
+    public List<KBHandle> disambiguate(KnowledgeBase aKB, String aTypedString, String
         aMention, int aMentionBeginOffset, JCas aJcas)
     {
-        Set<CandidateEntity> candidates = generateCandidates(aKB, aMention);
+        Set<CandidateEntity> candidates
+            = new HashSet<>(CollectionUtils.union(generateCandidates(aKB, aMention),
+                    generateCandidates(aKB, aTypedString)));
+
         List<CandidateEntity> rankedCandidates = rankCandidates(aKB, aMention, candidates, aJcas,
             aMentionBeginOffset);
 
