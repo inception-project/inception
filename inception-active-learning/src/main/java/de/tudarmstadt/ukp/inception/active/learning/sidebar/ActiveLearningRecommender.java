@@ -40,7 +40,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.AnnotationObject;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.Offset;
 import de.tudarmstadt.ukp.inception.recommendation.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.model.LearningRecordUserAction;
 import de.tudarmstadt.ukp.inception.recommendation.model.Predictions;
@@ -73,7 +72,7 @@ public class ActiveLearningRecommender
         this.learningRecordService = recordService;
     }
 
-    public Optional<RecommendationDifference> generateRecommendationWithLowestDifference(
+    public RecommendationDifference generateRecommendationWithLowestDifference(
         DocumentService aDocumentService, Date learnSkippedRecommendationTime)
     {
         this.documentService = aDocumentService;
@@ -97,7 +96,7 @@ public class ActiveLearningRecommender
         // remove rejected recommendations
         removeRejectedOrSkippedAnnotations(true, learnSkippedRecommendationTime);
 
-        return calculateDifferencesAndReturnLowestDifference ();
+        return calculateDifferencesAndReturnLowestDifference();
     }
 
     public boolean hasRecommendationWhichIsSkipped()
@@ -237,7 +236,7 @@ public class ActiveLearningRecommender
         return learnSkippedTime == null || learnSkippedTime.compareTo(record.getActionDate()) <= 0;
     }
 
-    private Optional<RecommendationDifference> calculateDifferencesAndReturnLowestDifference()
+    private RecommendationDifference calculateDifferencesAndReturnLowestDifference()
     {
         // create list of recommendationsList, each recommendationsList contains all
         // recommendations from one classifer for one token
@@ -246,8 +245,16 @@ public class ActiveLearningRecommender
 
         // get a list of differences, sorted ascendingly
         List<RecommendationDifference> recommendationDifferences =
-            createDifferencesSortedAscendingly(listOfRecommendationsPerTokenPerClassifier);
-        return recommendationDifferences.stream().findFirst();
+            createDifferencesSortedAscendingly(
+            listOfRecommendationsPerTokenPerClassifier);
+        Optional<RecommendationDifference> recommendationDifference = recommendationDifferences
+            .stream().findFirst();
+        if (recommendationDifference.isPresent()) {
+            return recommendationDifference.get();
+        }
+        else {
+            return null;
+        }
     }
 
     private List<List<AnnotationObject>> createRecommendationListsPerTokenPerClassifier()
@@ -375,26 +382,6 @@ public class ActiveLearningRecommender
                 return Double.compare(rd1.getDifference(), rd2.getDifference());
             }
         });
-    }
-
-    public Optional<RecommendationDifference>
-        skipOrRejectRecommendationAndGetNextWithRegardToDifferences(
-        AnnotationObject currentRecommendation)
-    {
-        Offset offsetOfCurrentRecommendation = currentRecommendation.getOffset();
-        String annotationOfCurrentRecommendation = currentRecommendation.getAnnotation();
-        String documentName = currentRecommendation.getDocumentName();
-
-        for (List<AnnotationObject> recommendationList : listOfRecommendationsForEachToken) {
-            recommendationList.removeIf(
-                recommendation -> recommendation.getOffset().equals(offsetOfCurrentRecommendation)
-                    && recommendation.getAnnotation().equals(annotationOfCurrentRecommendation)
-                    && recommendation.getDocumentName().equals(documentName));
-        }
-
-        listOfRecommendationsForEachToken.removeIf(recommendations -> recommendations.isEmpty());
-
-        return calculateDifferencesAndReturnLowestDifference();
     }
 
     public Optional<AnnotationObject> generateRecommendationWithLowestConfidence(JCas aJcas)

@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Optional;
 
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
@@ -112,7 +111,7 @@ public class ActiveLearningSidebar
     private static final String MAIN_CONTAINER = "mainContainer";
     private ActiveLearningRecommender activeLearningRecommender;
     private AnnotationObject currentRecommendation;
-    private Optional<RecommendationDifference> currentDifference;
+    private RecommendationDifference currentDifference;
     private String recommendationCoveredText;
     private String recommendationAnnotation;
     private double recommendationConfidence;
@@ -244,9 +243,9 @@ public class ActiveLearningSidebar
     private void showAndHighlightRecommendationAndJumpToRecommendationLocation (AjaxRequestTarget
                                                                                     target)
     {
-        if (currentDifference.isPresent()) {
+        if (currentDifference != null) {
             hasUnseenRecommendation = true;
-            currentRecommendation = currentDifference.get().getRecommendation1();
+            currentRecommendation = currentDifference.getRecommendation1();
             setShowingRecommendation();
             jumpToRecommendationLocation(target);
             highlightRecommendation();
@@ -267,7 +266,7 @@ public class ActiveLearningSidebar
         recommendationCoveredText = currentRecommendation.getCoveredText();
         recommendationAnnotation = currentRecommendation.getAnnotation();
         recommendationConfidence = currentRecommendation.getConfidence();
-        recommendationDifference = currentDifference.get().getDifference();
+        recommendationDifference = currentDifference.getDifference();
         writeLearningRecordInDatabase(LearningRecordUserAction.SHOWN);
         applicationEventPublisherHolder.get().publishEvent(
             new ActiveLearningRecommendationEvent(this, documentService.
