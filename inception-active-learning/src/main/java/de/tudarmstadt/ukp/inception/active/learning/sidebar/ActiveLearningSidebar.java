@@ -64,6 +64,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
@@ -181,13 +182,10 @@ public class ActiveLearningSidebar
                 new ChoiceRenderer<>("uiName"))
         {
             private static final long serialVersionUID = 4656742112202628590L;
-
-            @Override
-            public boolean isVisible()
-            {
-                return !startLearning;
-            }
         };
+        layerSelectionDropDownChoice.add(LambdaBehavior.onConfigure(component -> component
+            .setVisible(!startLearning)));
+        layerSelectionDropDownChoice.setOutputMarkupPlaceholderTag(true);
         return layerSelectionDropDownChoice;
     }
 
@@ -196,13 +194,10 @@ public class ActiveLearningSidebar
         Label selectedLayerLabel = new Label("showSelectedLayer", selectedLayerContent)
         {
             private static final long serialVersionUID = -4341859569165590267L;
-
-            @Override
-            public boolean isVisible()
-            {
-                return startLearning;
-            }
         };
+        selectedLayerLabel.add(LambdaBehavior.onConfigure(component -> component.setVisible
+            (startLearning)));
+        selectedLayerLabel.setOutputMarkupPlaceholderTag(true);
         return selectedLayerLabel;
     }
 
@@ -309,17 +304,11 @@ public class ActiveLearningSidebar
 
     private Label createNoRecommendationLabel()
     {
-        Label noRecommendation = new Label("noRecommendationLabel", "There are no further" +
-            " suggestions.")
-        {
-            private static final long serialVersionUID = -4803396750094360587L;
-
-            @Override
-            public boolean isVisible()
-            {
-                return startLearning && !hasUnseenRecommendation && !hasSkippedRecommendation;
-            }
-        };
+        Label noRecommendation = new Label("noRecommendationLabel",
+            "There are no further suggestions.");
+        noRecommendation.add(LambdaBehavior.onConfigure(component -> component
+            .setVisible(startLearning && !hasUnseenRecommendation && !hasSkippedRecommendation)));
+        noRecommendation.setOutputMarkupPlaceholderTag(true);
         return noRecommendation;
     }
 
@@ -328,13 +317,10 @@ public class ActiveLearningSidebar
         Form<?> learnFromSkippedRecommendationForm = new Form<Void>("learnFromSkippedRecommendationForm")
         {
             private static final long serialVersionUID = -4803396750094360587L;
-
-            @Override
-            public boolean isVisible()
-            {
-                return startLearning && !hasUnseenRecommendation && hasSkippedRecommendation;
-            }
         };
+        learnFromSkippedRecommendationForm.add(LambdaBehavior.onConfigure(component -> component
+            .setVisible(startLearning && !hasUnseenRecommendation && hasSkippedRecommendation)));
+        learnFromSkippedRecommendationForm.setOutputMarkupPlaceholderTag(true);
         learnFromSkippedRecommendationForm.add(new Label("onlySkippedRecommendationLabel", "There "
             + "are only skipped suggestions. Do you want to learn these again?"));
         learnFromSkippedRecommendationForm.add(new LambdaAjaxButton<>("learnSkippedOnes",
@@ -359,13 +345,10 @@ public class ActiveLearningSidebar
         Form<?> recommendationForm = new Form<Void>("recommendationForm")
         {
             private static final long serialVersionUID = -5278670036137074736L;
-
-            @Override
-            public boolean isVisible()
-            {
-                return startLearning && hasUnseenRecommendation;
-            }
         };
+        recommendationForm.add(LambdaBehavior.onConfigure(component -> component.setVisible
+            (startLearning && hasUnseenRecommendation)));
+        recommendationForm.setOutputMarkupPlaceholderTag(true);
 
         recommendationForm.add(createRecommendationCoveredTextLink());
         recommendationForm.add(new Label("recommendedPredition",
@@ -517,16 +500,11 @@ public class ActiveLearningSidebar
     {
         Form<?> learningHistoryForm = new Form<Void>("learningHistoryForm")
         {
-
             private static final long serialVersionUID = -961690443085882064L;
-
-            @Override
-            public boolean isVisible()
-            {
-                return startLearning;
-            }
         };
-
+        learningHistoryForm.add(LambdaBehavior.onConfigure(component -> component
+            .setVisible(startLearning)));
+        learningHistoryForm.setOutputMarkupPlaceholderTag(true);
         learningHistoryForm.setOutputMarkupId(true);
 
         learningHistoryForm.add(createLearningHistoryListView());
