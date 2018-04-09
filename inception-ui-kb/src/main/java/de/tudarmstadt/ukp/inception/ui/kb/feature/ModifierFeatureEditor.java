@@ -47,6 +47,7 @@ import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
+import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -95,7 +96,7 @@ public class ModifierFeatureEditor
     private AnnotationActionHandler actionHandler;
     private IModel<AnnotatorState> stateModel;
     private Project project;
-    private LambdaModelAdapter modifierModel;
+    private LambdaModelAdapter<KBHandle> modifierModel;
 
     // Wicket component is bound to this property
     @SuppressWarnings("unused")
@@ -302,16 +303,15 @@ public class ModifierFeatureEditor
             .getLayer(linkedType, this.stateModel.getObject().getProject());
         AnnotationFeature linkedAnnotationFeature = annotationService
             .getFeature("KBItems", linkedLayer);
-        modifierModel = new LambdaModelAdapter(() -> this.getSelectedKBItem(aItem),  (v) -> {
+        modifierModel = new LambdaModelAdapter<>(() -> this.getSelectedKBItem(aItem),  (v) -> {
             this.setSelectedKBItem((KBHandle) v, aItem, linkedAnnotationFeature);
         });
-        DropDownList<KBHandle> field = new DropDownList<KBHandle>("value", modifierModel
+        DropDownList<KBHandle> f = new DropDownList<KBHandle>("value", modifierModel
             , LambdaModel.of(() -> factService.getKBConceptsAndInstances(project)),
             new ChoiceRenderer<>("uiLabel"));
-        field.add(new LambdaAjaxFormComponentUpdatingBehavior("change"));
-        field.setOutputMarkupId(true);
-        field.setMarkupId(ID_PREFIX + getModelObject().feature.getId());
-        return field;
+        f.add(new LambdaAjaxFormComponentUpdatingBehavior("change"));
+        f.setOutputMarkupId(true);
+        return f;
     }
 
 
@@ -522,14 +522,22 @@ public class ModifierFeatureEditor
                                    AnnotationFeature linkedAnnotationFeature) {
         if (aItem.getModelObject().targetAddr != -1) {
             try {
-                JCas jCas = actionHandler.getEditorCas().getCas().getJCas();
+                JCas jCas = actionHandler.getEditorCas();
                 AnnotationFS selectedFS = WebAnnoCasUtil.selectByAddr(jCas,
                     aItem.getModelObject().targetAddr);
                 WebAnnoCasUtil.setFeature(selectedFS, linkedAnnotationFeature,
                     value.getIdentifier());
                 LOG.info("change the value");
                 modifierModel.detach();
-            } catch (CASException | IOException e) {
+                
+                // Save the CAS. This must be done explicitly here since the KBItem dropdown
+                // is not the focus-component of this editor. In fact, there could be multiple
+                // KBItem dropdowns in this feature editor since we can have multilpe modifiers.
+                // For focus-components, the AnnotationFeatureForm already handles adding the
+                // saving behavior.
+                actionHandler.actionCreateOrUpdate(RequestCycle.get().find(AjaxRequestTarget.class),
+                        jCas);
+            } catch (Exception e) {
                 LOG.error("Error: " + e.getMessage(), e);
                 error("Error: " + e.getMessage());
             }
