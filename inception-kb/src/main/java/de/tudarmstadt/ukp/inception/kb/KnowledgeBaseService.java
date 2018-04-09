@@ -27,6 +27,7 @@ import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.eclipse.rdf4j.model.vocabulary.XMLSchema;
+import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.repository.config.RepositoryImplConfig;
 import org.eclipse.rdf4j.repository.manager.RepositoryInfo;
 import org.eclipse.rdf4j.rio.RDFFormat;
@@ -102,6 +103,10 @@ public interface KnowledgeBaseService
     RepositoryImplConfig getRemoteConfig(String url);
 
     RepositoryImplConfig getKnowledgeBaseConfig(KnowledgeBase kb);
+
+    RepositoryConnection getConnection(KnowledgeBase kb);
+
+    void registerImplicitNamespace(String aImplicitNameSpace);
 
     /**
      * Creates a new concept in the given knowledge base. Does nothing 
@@ -236,6 +241,16 @@ public interface KnowledgeBaseService
      * @return All instances of the given concept
      */
     List<KBHandle> listInstances(KnowledgeBase kb, String aConceptIri, boolean aAll);
+
+    // Statements
+
+    /**
+     * Initializes the internal representation of a KBStatement specifically
+     * for the given knowledge base. Call this before upserting it
+     * @param kb The knowledge base the statement will be use in
+     * @param aStatement The statement itself
+     */
+    void initStatement(KnowledgeBase kb, KBStatement aStatement);
 
     /**
      * Inserts a new statement. If the statement has an original statement, that one is deleted

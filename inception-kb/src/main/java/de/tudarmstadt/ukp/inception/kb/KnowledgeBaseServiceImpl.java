@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.kb;
 
-import static org.apache.commons.lang3.StringUtils.startsWithAny;
-
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -26,12 +24,13 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
@@ -41,7 +40,6 @@ import javax.persistence.Query;
 import org.apache.commons.compress.compressors.CompressorException;
 import org.apache.commons.compress.compressors.CompressorStreamFactory;
 import org.apache.commons.lang3.StringUtils;
-import org.eclipse.rdf4j.model.BNode;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.ValueFactory;
@@ -87,6 +85,9 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.graph.RdfUtils;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
+import de.tudarmstadt.ukp.inception.kb.reification.NoReification;
+import de.tudarmstadt.ukp.inception.kb.reification.ReificationStrategy;
+import de.tudarmstadt.ukp.inception.kb.reification.WikiDataReification;
 
 @Component(KnowledgeBaseService.SERVICE_NAME)
 public class KnowledgeBaseServiceImpl
@@ -96,6 +97,7 @@ public class KnowledgeBaseServiceImpl
 
     private @PersistenceContext EntityManager entityManager;
     private final RepositoryManager repoManager;
+    private final Set<String> implicitNamespaces;
 
     @Autowired
     public KnowledgeBaseServiceImpl(@Value("${data.path}") File dataDir)
@@ -103,6 +105,7 @@ public class KnowledgeBaseServiceImpl
         String url = Paths.get(dataDir.getAbsolutePath(), "kb").toUri().toString();
         repoManager = RepositoryProvider.getRepositoryManager(url);
         log.info("Knowledge base repository path: " + url);
+        implicitNamespaces = new HashSet<>(Arrays.asList(IMPLICIT_NAMESPACES));
     }
 
     public KnowledgeBaseServiceImpl(@Value("${data.path}") File dataDir,
@@ -226,7 +229,14 @@ public class KnowledgeBaseServiceImpl
         return repoManager.getRepositoryConfig(kb.getRepositoryId()).getRepositoryImplConfig();
     }
 
-    private RepositoryConnection getConnection(KnowledgeBase kb)
+    @Override
+    public void registerImplicitNamespace(String aImplicitNameSpace)
+    {
+        implicitNamespaces.add(aImplicitNameSpace);
+    }
+
+    @Override
+    public RepositoryConnection getConnection(KnowledgeBase kb)
     {
         assertRegistration(kb);
         return repoManager.getRepository(kb.getRepositoryId()).getConnection();
@@ -237,6 +247,11 @@ public class KnowledgeBaseServiceImpl
     public void importData(KnowledgeBase kb, String aFilename, InputStream aIS)
         throws RDFParseException, RepositoryException, IOException
     {
+        if (kb.isReadOnly()) {
+            log.warn("Knowledge base [{}] is read only, will not import!", kb.getName());
+            return;
+        }
+
         InputStream is = new BufferedInputStream(aIS);
         try {
             // Stream is expected to be closed by caller of importData
@@ -454,7 +469,7 @@ public class KnowledgeBaseServiceImpl
             while (conceptStmts.hasNext() && conceptIdentifier == null) {
                 Statement stmt = conceptStmts.next();
                 String id = stmt.getObject().stringValue();
-                if (!startsWithAny(id, IMPLICIT_NAMESPACES) && id.contains(":")) {
+                if (!hasImplicitNamespace(id) && id.contains(":")) {
                     conceptIdentifier = stmt.getObject().stringValue();
                 }
             }
@@ -523,6 +538,15 @@ public class KnowledgeBaseServiceImpl
         return list(kb, conceptIri, false, aAll);
     }
 
+    // Statements
+
+    @Override
+    public void initStatement(KnowledgeBase kb, KBStatement aStatement)
+    {
+        List<Statement> statements = getReificationStrategy(kb).reify(kb, aStatement);
+        aStatement.setOriginalStatements(statements);
+    }
+
     @Override
     public void upsertStatement(KnowledgeBase kb, KBStatement aStatement)
     {
@@ -530,7 +554,10 @@ public class KnowledgeBaseServiceImpl
             if (!aStatement.isInferred()) {
                 conn.remove(aStatement.getOriginalStatements());
             }
-            aStatement.write(conn);
+            List<Statement> statements = getReificationStrategy(kb).reify(kb, aStatement);
+            conn.add(statements);
+            aStatement.setOriginalStatements(statements);
+
             return null;
         });
     }
@@ -539,8 +566,8 @@ public class KnowledgeBaseServiceImpl
     public void deleteStatement(KnowledgeBase kb, KBStatement aStatement)
     {
         update(kb, (conn) -> {
-            Statement statement = aStatement.toStatement(conn);
-            conn.remove(statement);
+            conn.remove(aStatement.getOriginalStatements());
+            aStatement.setOriginalStatements(Collections.emptyList());
             return null;
         });
     }
@@ -548,46 +575,7 @@ public class KnowledgeBaseServiceImpl
     @Override
     public List<KBStatement> listStatements(KnowledgeBase kb, KBHandle aInstance, boolean aAll)
     {
-        Map<String, KBHandle> props = new HashMap<>();
-        for (KBHandle prop : listProperties(kb, aAll)) {
-            props.put(prop.getIdentifier(), prop);
-        }
-
-        List<Statement> explicitStmts = listStatements(kb, aInstance.getIdentifier(), false);
-        List<Statement> allStmts = listStatements(kb, aInstance.getIdentifier(), true);
-
-        List<KBStatement> statements = new ArrayList<>();
-        for (Statement stmt : allStmts) {
-            // Can this really happen?
-            if (stmt.getObject() == null) {
-                log.warn("Property with null value detected.");
-                continue;
-            }
-
-            if (stmt.getObject() instanceof BNode) {
-                log.warn("Properties with blank node values are not supported");
-                continue;
-            }
-
-            KBHandle prop = props.get(stmt.getPredicate().stringValue());
-            if (prop == null) {
-                // This happens in particular for built-in properties such as
-                // RDF / RDFS / OWL properties
-                if (aAll) {
-                    prop = new KBHandle();
-                    prop.setIdentifier(stmt.getPredicate().stringValue());
-                }
-                else {
-                    continue;
-                }
-            }
-
-            KBStatement kbStmt = KBStatement.read(aInstance, prop, stmt);
-            kbStmt.setInferred(!explicitStmts.contains(stmt));
-            statements.add(kbStmt);
-        }
-
-        return statements;
+        return getReificationStrategy(kb).listStatements(kb, aInstance, aAll);
     }
 
     @Override
@@ -595,39 +583,6 @@ public class KnowledgeBaseServiceImpl
     {
         KBHandle handle = new KBHandle(aInstance.getIdentifier(), aInstance.getName());
         return listStatements(kb, handle, aAll);
-    }
-
-    private List<Statement> listStatements(KnowledgeBase kb, String aInstanceIdentifier,
-                                           boolean aIncludeInferred)
-    {
-        return read(kb, (conn) -> {
-            ValueFactory vf = conn.getValueFactory();
-            String QUERY = "SELECT * WHERE { ?s ?p ?o . }";
-            TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
-            tupleQuery.setBinding("s", vf.createIRI(aInstanceIdentifier));
-            tupleQuery.setIncludeInferred(aIncludeInferred);
-
-            TupleQueryResult result;
-            try {
-                result = tupleQuery.evaluate();
-            } catch (QueryEvaluationException e) {
-                log.warn("Listing statements failed.", e);
-                return Collections.emptyList();
-            }
-
-            List<Statement> statements = new ArrayList<>();
-            IRI subject = vf.createIRI(aInstanceIdentifier);
-            while (result.hasNext()) {
-                BindingSet bindings = result.next();
-                Binding pred = bindings.getBinding("p");
-                Binding obj = bindings.getBinding("o");
-
-                IRI predicate = vf.createIRI(pred.getValue().stringValue());
-                Statement stmt = vf.createStatement(subject, predicate, obj.getValue());
-                statements.add(stmt);
-            }
-            return statements;
-        });
     }
 
     private void delete(KnowledgeBase kb, String aIdentifier)
@@ -785,7 +740,7 @@ public class KnowledgeBaseServiceImpl
             String id = bindings.getBinding("s").getValue().stringValue();
             Binding label = bindings.getBinding("l");
 
-            if (!id.contains(":") || (!aAll && startsWithAny(id, IMPLICIT_NAMESPACES))) {
+            if (!id.contains(":") || (!aAll && hasImplicitNamespace(id))) {
                 continue;
             }
 
@@ -799,12 +754,34 @@ public class KnowledgeBaseServiceImpl
         return handles;
     }
 
+    private ReificationStrategy getReificationStrategy(KnowledgeBase kb)
+    {
+        switch (kb.getReification()) {
+        case WIKIDATA:
+            return new WikiDataReification(this);
+        case NONE: // Fallthrough
+        default:
+            return new NoReification(this);
+        }
+    }
+
+    private boolean hasImplicitNamespace(String s)
+    {
+        for (String ns : implicitNamespaces) {
+            if (s.startsWith(ns)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private interface UpdateAction
     {
         KBHandle accept(RepositoryConnection aConnection);
     }
 
-    private interface ReadAction<T>
+
+    interface ReadAction<T>
     {
         T accept(RepositoryConnection aConnection);
     }

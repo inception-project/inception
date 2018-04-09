@@ -255,9 +255,12 @@ public class StatementGroupPanel extends EventListeningPanel {
 
         private void actionAddValue(AjaxRequestTarget target) {
             // add a new prototype statement using this group's instance and its current property
-            KBStatement statementProto = new KBStatement();
-            statementProto.setInstance(groupModel.getObject().getInstance());
-            statementProto.setProperty(groupModel.getObject().getProperty());
+            KBStatement statementProto = new KBStatement(
+                groupModel.getObject().getInstance(),
+                groupModel.getObject().getProperty(),
+                null
+            );
+
             groupModel.getObject().getStatements().add(statementProto);
 
             target.add(statementListWrapper);

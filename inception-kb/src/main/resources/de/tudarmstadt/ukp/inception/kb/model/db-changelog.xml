@@ -155,4 +155,20 @@
       onUpdate="CASCADE" referencedColumnNames="id" referencedTableName="project" />
   </changeSet>
 
+  <changeSet author="INCEpTION Team" id="20180409-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="knowledgebase" columnName="reification"/>
+      </not>
+    </preConditions>
+
+    <addColumn tableName="knowledgebase">
+      <column name="reification"
+              type="VARCHAR(255)"
+              defaultValue="NONE">
+          <constraints nullable="false" />
+      </column>
+    </addColumn>
+  </changeSet>
+
 </databaseChangeLog>
