@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.jcas.JCas;
@@ -39,7 +40,6 @@ import org.slf4j.LoggerFactory;
 
 import com.googlecode.wicket.jquery.core.renderer.TextRenderer;
 import com.googlecode.wicket.kendo.ui.form.autocomplete.AutoCompleteTextField;
-import com.googlecode.wicket.kendo.ui.form.dropdown.DropDownList;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.JCasProvider;
@@ -50,8 +50,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaChoiceRenderer;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
@@ -82,20 +80,6 @@ public class ConceptFeatureEditor
         super(aId, aItem, new CompoundPropertyModel<>(aModel));
         add(new Label(MID_FEATURE, getModelObject().feature.getUiName()));
         add(focusComponent = createAutoCompleteTextField(aStateModel.getObject(), aHandler));
-    }
-
-    private DropDownList<KBHandle> createFieldComboBox(AnnotatorState aState,
-        AnnotationActionHandler aHandler)
-    {
-        DropDownList<KBHandle> field = new DropDownList<KBHandle>(MID_VALUE,
-            LambdaModel.of(() -> listInstances(aState, aHandler, "")),
-            new LambdaChoiceRenderer<>(KBHandle::getUiLabel));
-
-        // Ensure that markup IDs of feature editor focus components remain constant across
-        // refreshes of the feature editor panel. This is required to restore the focus.
-        field.setOutputMarkupId(true);
-        field.setMarkupId(ID_PREFIX + getModelObject().feature.getId());
-        return field;
     }
 
     private AutoCompleteTextField<KBHandle> createAutoCompleteTextField(AnnotatorState
@@ -147,8 +131,9 @@ public class ConceptFeatureEditor
                             (aHandler), aTypedString));
                     }
                     else {
-                        return kbService.listInstances(kb.get(), traits.getScope(), false);
-
+                        return kbService.listInstances(kb.get(), traits.getScope(), false)
+                            .stream().filter(inst -> inst.getUiLabel().contains(aTypedString))
+                            .collect(Collectors.toList());
                     }
                 }
             }
@@ -161,7 +146,9 @@ public class ConceptFeatureEditor
                                 aTypedString));
                     }
                     else {
-                        handles.addAll(kbService.listInstances(kb, traits.getScope(), false));
+                        handles.addAll(kbService.listInstances(kb, traits.getScope(), false)
+                            .stream().filter(inst -> inst.getUiLabel().contains(aTypedString))
+                            .collect(Collectors.toList()));
                     }
                 }
             }
