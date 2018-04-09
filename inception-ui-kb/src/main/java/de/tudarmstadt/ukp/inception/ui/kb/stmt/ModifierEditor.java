@@ -20,6 +20,8 @@ package de.tudarmstadt.ukp.inception.ui.kb.stmt;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 
+import org.apache.wicket.event.Broadcast;
+import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
@@ -32,10 +34,12 @@ import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBModifier;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
+import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxModifierChangedEvent;
 
 public class ModifierEditor extends Panel
 {
@@ -60,7 +64,7 @@ public class ModifierEditor extends Panel
 
         boolean isNewModifier = true; //(modifier.getObject().getKbProperty()==null);
         if (isNewModifier) {
-            EditMode editMode = new EditMode(CONTENT_MARKUP_ID, modifier, true);
+            EditMode editMode = new EditMode(CONTENT_MARKUP_ID, modifier, isNewModifier);
             AjaxRequestTarget target = RequestCycle.get().find(AjaxRequestTarget.class);
             if (target != null) {
                 target.focusComponent(editMode.getFocusComponent());
@@ -76,14 +80,15 @@ public class ModifierEditor extends Panel
         private Component initialFocusComponent;
 
         /**
-         * Creates a new fragement for editing a statement.<br>
+         * Creates a new fragement for editing a modifier.<br>
          * The editor has two slightly different behaviors, depending on the value of
-         * {@code isNewStatement}:
+         * {@code isNewModifier}:
          * <ul>
-         * <li>{@code !isNewStatement}: Save button commits changes, cancel button discards unsaved
-         * changes, delete button removes the statement from the KB.</li>
-         * <li>{@code isNewStatement}: Save button commits changes (creates a new statement in the
-         * KB), cancel button removes the statement from the UI, delete button is not visible.</li>
+         * <li>{@code !isNewModifier}: Save button commits changes, cancel button discards unsaved
+         * changes, delete button removes the modifier from the statement.</li>
+         * <li>{@code isNewModifier}: Save button commits changes (creates a new modifier in the
+         * statement), cancel button removes the modifier from the UI, delete button is not visible
+         * .</li>
          * </ul>
          *
          * @param aId
@@ -94,7 +99,8 @@ public class ModifierEditor extends Panel
          *            whether the modifier being edited is new, meaning it has no corresponding
          *            modifier in the KB backend
          */
-        public EditMode(String aId, IModel<KBModifier> aModifier, boolean isNewModifier) {
+        public EditMode(String aId, IModel<KBModifier> aModifier, boolean isNewModifier)
+        {
             super(aId, "editMode", ModifierEditor.this, aModifier);
 
             IModel<KBModifier> compoundModel = CompoundPropertyModel.of(aModifier);
@@ -110,21 +116,60 @@ public class ModifierEditor extends Panel
 
             form.add(new TextField<>("value"));
 
-            form.add(new LambdaAjaxButton<>("create", this::actionTest));
-            form.add(new LambdaAjaxButton<>("cancel", this::actionTest));
+            form.add(new LambdaAjaxButton<>("create", ModifierEditor.this::actionTest));
+            form.add(new LambdaAjaxLink("cancel", ModifierEditor.this::actionCancelNewModifier));
+            form.add(new LambdaAjaxLink("delete", ModifierEditor.this::actionLinkTest)
+                .setVisibilityAllowed(!isNewModifier));
 
             add(form);
         }
 
-        private void actionTest(AjaxRequestTarget ajaxRequestTarget, Form<KBModifier> aForm)
-        {
-            KBModifier modifier = aForm.getModelObject();
-        }
+
 
         @Override
         public Component getFocusComponent() {
             return initialFocusComponent;
         }
+    }
+
+    private class ViewMode
+        extends Fragment
+    {
+        private static final long serialVersionUID = 6771056914040868827L;
+
+        public ViewMode(String aId, IModel<KBModifier> aModifier)
+        {
+            super(aId, "viewMode", ModifierEditor.this, aModifier);
+            CompoundPropertyModel<KBModifier> compoundModel = new CompoundPropertyModel<>(
+                aModifier);
+            add(new Label("property", aModifier.getObject().getKbProperty().getUiLabel()));
+            add(new Label("value", compoundModel.bind("value")));
+
+            LambdaAjaxLink editLink = new LambdaAjaxLink("edit", ModifierEditor
+                .this::actionLinkTest);
+            add(editLink);
+        }
+    }
+
+    private void actionTest(AjaxRequestTarget ajaxRequestTarget, Form<KBModifier> aForm)
+    {
+        KBModifier modifier = aForm.getModelObject();
+    }
+
+    private void actionLinkTest(AjaxRequestTarget ajaxRequestTarget)
+    {
+
+    }
+
+    private void actionCancelNewModifier(AjaxRequestTarget aTarget) {
+        // send a delete event to trigger the deletion in the UI
+        AjaxModifierChangedEvent deleteEvent = new AjaxModifierChangedEvent(aTarget,
+            modifier.getObject(), this, true);
+        send(getPage(), Broadcast.BREADTH, deleteEvent);
+    }
+
+    private void actionCancelExistingModifier(AjaxRequestTarget aTarget) {
+
     }
 
 }

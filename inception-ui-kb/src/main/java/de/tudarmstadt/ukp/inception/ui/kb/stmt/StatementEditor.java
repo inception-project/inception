@@ -30,7 +30,6 @@ import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.TextArea;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.panel.Fragment;
-import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.markup.repeater.RefreshingView;
 import org.apache.wicket.markup.repeater.ReuseIfModelsEqualStrategy;
@@ -49,12 +48,15 @@ import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBModifier;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
+import de.tudarmstadt.ukp.inception.ui.kb.EventListeningPanel;
+import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxModifierChangedEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxStatementChangedEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.util.WriteProtectionBehavior;
 
 
 
-public class StatementEditor extends Panel {
+public class StatementEditor extends EventListeningPanel
+{
 
     private static final long serialVersionUID = 7643837763550205L;
 
@@ -188,12 +190,9 @@ public class StatementEditor extends Panel {
             editLink.add(new WriteProtectionBehavior(kbModel));
             add(editLink);
 
-            LambdaAjaxLink addModifierLink = new LambdaAjaxLink("addModifier", t ->
-                actionAddModifier(t, aStatement.getObject())).onConfigure((_this) ->
-                _this.setVisible
-                (!statement
-                .getObject()
-                .isInferred()));
+            LambdaAjaxLink addModifierLink = new LambdaAjaxLink("addModifier",
+                t -> actionAddModifier(t, aStatement.getObject()))
+                .onConfigure((_this) -> _this.setVisible(!statement.getObject().isInferred()));
             addModifierLink.add(new WriteProtectionBehavior(kbModel));
             add(addModifierLink);
             
@@ -235,7 +234,21 @@ public class StatementEditor extends Panel {
             modifierListWrapper.setOutputMarkupId(true);
             modifierListWrapper.add(modifierList);
             add(modifierListWrapper);
+
+            eventHandler.addCallback(AjaxModifierChangedEvent.class, this::actionModifierChanged);
         }
+
+        private void actionModifierChanged(AjaxRequestTarget target, AjaxModifierChangedEvent event)
+        {
+            boolean isEventForThisStatement = event.getModifier().getKbStatement()
+                .equals(statement.getObject());
+            if (isEventForThisStatement) {
+                event.getModifier().getKbStatement().getModifiers().remove(event.getModifier());
+                statement.setObject(event.getModifier().getKbStatement());
+                target.add(modifierListWrapper);
+            }
+        }
+
     }
 
     private class EditMode extends Fragment implements Focusable {

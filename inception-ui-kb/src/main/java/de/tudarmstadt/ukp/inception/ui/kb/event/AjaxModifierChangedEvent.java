@@ -17,24 +17,31 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.event;
 
+import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 
 import de.tudarmstadt.ukp.inception.kb.graph.KBModifier;
 
 public class AjaxModifierChangedEvent extends AjaxEvent
 {
+    private Component component;
     private KBModifier modifier;
     private boolean deleted;
 
-    public AjaxModifierChangedEvent(AjaxRequestTarget target, KBModifier aModifier, boolean
-        deleted)
+    public AjaxModifierChangedEvent(AjaxRequestTarget target, KBModifier aModifier,
+        Component aComponent, boolean deleted)
     {
         super(target);
         this.modifier = aModifier;
+        this.component = aComponent;
         this.deleted = deleted;
     }
 
     public KBModifier getModifier() { return modifier; }
+
+    public Component getComponent() {
+        return component;
+    }
 
     public boolean isDeleted() { return deleted; }
 }
