@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.active.learning.sidebar;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -60,7 +61,9 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
@@ -75,6 +78,7 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.Annotat
 import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.Offset;
 import de.tudarmstadt.ukp.inception.recommendation.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.model.LearningRecordChangeLocation;
+import de.tudarmstadt.ukp.inception.recommendation.model.LearningRecordUserAction;
 import de.tudarmstadt.ukp.inception.recommendation.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.service.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.service.RecommendationService;
@@ -101,7 +105,8 @@ public class ActiveLearningSidebar
     private Project project;
     private String layerSelectionButtonValue;
     private boolean startLearning = false;
-    private boolean existRecommendation = false;
+    private boolean hasUnseenRecommendation = false;
+    private boolean hasSkippedRecommendation = false;
     private final WebMarkupContainer mainContainer;
     private static final String MAIN_CONTAINER = "mainContainer";
     private ActiveLearningRecommender activeLearningRecommender;
@@ -117,6 +122,7 @@ public class ActiveLearningSidebar
     private String vMarkerType = "";
     private VID highlightVID;
     private LearningRecord selectedRecord;
+    private Date learnSkippedRecommendationTime;
 
     public ActiveLearningSidebar(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, JCasProvider aJCasProvider,
@@ -134,6 +140,7 @@ public class ActiveLearningSidebar
         mainContainer.setOutputMarkupId(true);
         mainContainer.add(createLayerSelection());
         mainContainer.add(createNoRecommendationLabel());
+        mainContainer.add(createLearnFromSkippedRecommendationForm());
         mainContainer.add(createRecommendationOperationForm());
         mainContainer.add(createLearningHistory());
         add(mainContainer);
@@ -174,13 +181,10 @@ public class ActiveLearningSidebar
                 new ChoiceRenderer<>("uiName"))
         {
             private static final long serialVersionUID = 4656742112202628590L;
-
-            @Override
-            public boolean isVisible()
-            {
-                return !startLearning;
-            }
         };
+        layerSelectionDropDownChoice.add(LambdaBehavior.onConfigure(component -> component
+            .setVisible(!startLearning)));
+        layerSelectionDropDownChoice.setOutputMarkupPlaceholderTag(true);
         return layerSelectionDropDownChoice;
     }
 
@@ -189,13 +193,10 @@ public class ActiveLearningSidebar
         Label selectedLayerLabel = new Label("showSelectedLayer", selectedLayerContent)
         {
             private static final long serialVersionUID = -4341859569165590267L;
-
-            @Override
-            public boolean isVisible()
-            {
-                return startLearning;
-            }
         };
+        selectedLayerLabel.add(LambdaBehavior.onConfigure(component -> component.setVisible
+            (startLearning)));
+        selectedLayerLabel.setOutputMarkupPlaceholderTag(true);
         return selectedLayerLabel;
     }
 
@@ -216,14 +217,15 @@ public class ActiveLearningSidebar
                 annotatorState.setSelectedAnnotationLayer(selectedLayer);
 
                 if (startLearning) {
-                    applicationEventPublisherHolder.get().publishEvent(new
-                        ActiveLearningSessionStartedEvent(this, project,
-                        annotatorState.getUser().getUsername()));
-                    activeLearningRecommender = new ActiveLearningRecommender(
-                        recommendationService, annotatorState, selectedLayer,
-                        annotationService, learningRecordService);
+                    learnSkippedRecommendationTime = null;
+                    applicationEventPublisherHolder.get().publishEvent(
+                        new ActiveLearningSessionStartedEvent(this, project,
+                            annotatorState.getUser().getUsername()));
+                    activeLearningRecommender = new ActiveLearningRecommender(recommendationService,
+                        annotatorState, selectedLayer, annotationService, learningRecordService);
                     currentDifference = activeLearningRecommender
-                        .generateRecommendationWithLowestDifference(documentService);
+                        .generateRecommendationWithLowestDifference
+                            (documentService, learnSkippedRecommendationTime);
                     showAndHighlightRecommendationAndJumpToRecommendationLocation(target);
                 }
 
@@ -242,14 +244,20 @@ public class ActiveLearningSidebar
                                                                                     target)
     {
         if (currentDifference != null) {
-            existRecommendation = true;
+            hasUnseenRecommendation = true;
             currentRecommendation = currentDifference.getRecommendation1();
             setShowingRecommendation();
             jumpToRecommendationLocation(target);
             highlightRecommendation();
         }
+        else if (learnSkippedRecommendationTime == null) {
+            hasUnseenRecommendation = false;
+            hasSkippedRecommendation = activeLearningRecommender
+                    .hasRecommendationWhichIsSkipped();
+        }
         else {
-            existRecommendation = false;
+            hasUnseenRecommendation = false;
+            hasSkippedRecommendation = false;
         }
     }
 
@@ -259,7 +267,7 @@ public class ActiveLearningSidebar
         recommendationAnnotation = currentRecommendation.getAnnotation();
         recommendationConfidence = currentRecommendation.getConfidence();
         recommendationDifference = currentDifference.getDifference();
-        writeLearningRecordInDatabase("shown");
+        writeLearningRecordInDatabase(LearningRecordUserAction.SHOWN);
         applicationEventPublisherHolder.get().publishEvent(
             new ActiveLearningRecommendationEvent(this, documentService.
                 getSourceDocument(project, currentRecommendation.getDocumentName()),
@@ -293,19 +301,42 @@ public class ActiveLearningSidebar
         }
     }
 
-    private Label createNoRecommendationLabel() {
-        Label noRecommendation = new Label("noRecommendationLabel", "There are no further" +
-            " suggestions.")
+    private Label createNoRecommendationLabel()
+    {
+        Label noRecommendation = new Label("noRecommendationLabel",
+            "There are no further suggestions.");
+        noRecommendation.add(LambdaBehavior.onConfigure(component -> component
+            .setVisible(startLearning && !hasUnseenRecommendation && !hasSkippedRecommendation)));
+        noRecommendation.setOutputMarkupPlaceholderTag(true);
+        return noRecommendation;
+    }
+
+    private Form<?> createLearnFromSkippedRecommendationForm()
+    {
+        Form<?> learnFromSkippedRecommendationForm = new Form<Void>("learnFromSkippedRecommendationForm")
         {
             private static final long serialVersionUID = -4803396750094360587L;
-
-            @Override
-            public boolean isVisible()
-            {
-                return startLearning && !existRecommendation;
-            }
         };
-        return noRecommendation;
+        learnFromSkippedRecommendationForm.add(LambdaBehavior.onConfigure(component -> component
+            .setVisible(startLearning && !hasUnseenRecommendation && hasSkippedRecommendation)));
+        learnFromSkippedRecommendationForm.setOutputMarkupPlaceholderTag(true);
+        learnFromSkippedRecommendationForm.add(new Label("onlySkippedRecommendationLabel", "There "
+            + "are only skipped suggestions. Do you want to learn these again?"));
+        learnFromSkippedRecommendationForm.add(new LambdaAjaxButton<>("learnSkippedOnes",
+            this::learnSkippedRecommendations));
+        return learnFromSkippedRecommendationForm;
+    }
+
+
+    private void learnSkippedRecommendations(AjaxRequestTarget aTarget, Form<Void> aForm)
+    {
+        learnSkippedRecommendationTime = new Date();
+        currentDifference = activeLearningRecommender
+            .generateRecommendationWithLowestDifference(documentService,
+                learnSkippedRecommendationTime);
+
+        showAndHighlightRecommendationAndJumpToRecommendationLocation(aTarget);
+        aTarget.add(mainContainer);
     }
 
     private Form<?> createRecommendationOperationForm()
@@ -313,13 +344,10 @@ public class ActiveLearningSidebar
         Form<?> recommendationForm = new Form<Void>("recommendationForm")
         {
             private static final long serialVersionUID = -5278670036137074736L;
-
-            @Override
-            public boolean isVisible()
-            {
-                return startLearning && existRecommendation;
-            }
         };
+        recommendationForm.add(LambdaBehavior.onConfigure(component -> component.setVisible
+            (startLearning && hasUnseenRecommendation)));
+        recommendationForm.setOutputMarkupPlaceholderTag(true);
 
         recommendationForm.add(createRecommendationCoveredTextLink());
         recommendationForm.add(new Label("recommendedPredition",
@@ -363,7 +391,7 @@ public class ActiveLearningSidebar
             @Override
             protected void onSubmit(AjaxRequestTarget target, Form<?> form)
             {
-                writeLearningRecordInDatabase("accepted");
+                writeLearningRecordInDatabase(LearningRecordUserAction.ACCEPTED);
 
                 try {
                     acceptRecommendationInAnnotationPage(target);
@@ -374,7 +402,8 @@ public class ActiveLearningSidebar
                     target.addChildren(getPage(), IFeedback.class);
                 }
                 currentDifference = activeLearningRecommender
-                    .generateRecommendationWithLowestDifference(documentService);
+                    .generateRecommendationWithLowestDifference
+                        (documentService, learnSkippedRecommendationTime);
 
                 showAndHighlightRecommendationAndJumpToRecommendationLocation(target);
                 target.add(mainContainer);
@@ -383,7 +412,7 @@ public class ActiveLearningSidebar
         return acceptRecommendationButton;
     }
 
-    private void writeLearningRecordInDatabase(String userAction)
+    private void writeLearningRecordInDatabase(LearningRecordUserAction userAction)
     {
         LearningRecord record = new LearningRecord();
         record.setUser(annotatorState.getUser().getUsername());
@@ -432,10 +461,11 @@ public class ActiveLearningSidebar
             @Override
             public void onSubmit(AjaxRequestTarget target, Form<?> form)
             {
-                writeLearningRecordInDatabase("skipped");
+                writeLearningRecordInDatabase(LearningRecordUserAction.SKIPPED);
                 annotationPage.actionRefreshDocument(target);
                 currentDifference = activeLearningRecommender
-                    .generateRecommendationWithLowestDifference(documentService);
+                    .generateRecommendationWithLowestDifference
+                        (documentService, learnSkippedRecommendationTime);
                 showAndHighlightRecommendationAndJumpToRecommendationLocation(target);
                 target.add(mainContainer);
             }
@@ -453,10 +483,11 @@ public class ActiveLearningSidebar
             @Override
             public void onSubmit(AjaxRequestTarget target, Form<?> form)
             {
-                writeLearningRecordInDatabase("rejected");
+                writeLearningRecordInDatabase(LearningRecordUserAction.REJECTED);
                 annotationPage.actionRefreshDocument(target);
                 currentDifference = activeLearningRecommender
-                    .generateRecommendationWithLowestDifference(documentService);
+                    .generateRecommendationWithLowestDifference
+                        (documentService, learnSkippedRecommendationTime);
                 showAndHighlightRecommendationAndJumpToRecommendationLocation(target);
                 target.add(mainContainer);
             }
@@ -468,16 +499,11 @@ public class ActiveLearningSidebar
     {
         Form<?> learningHistoryForm = new Form<Void>("learningHistoryForm")
         {
-
             private static final long serialVersionUID = -961690443085882064L;
-
-            @Override
-            public boolean isVisible()
-            {
-                return startLearning;
-            }
         };
-
+        learningHistoryForm.add(LambdaBehavior.onConfigure(component -> component
+            .setVisible(startLearning)));
+        learningHistoryForm.setOutputMarkupPlaceholderTag(true);
         learningHistoryForm.setOutputMarkupId(true);
 
         learningHistoryForm.add(createLearningHistoryListView());
@@ -521,7 +547,7 @@ public class ActiveLearningSidebar
         actionShowSelectedDocument(aTarget, record.getSourceDocument(),
             record.getOffsetCharacterBegin());
 
-        if (record.getUserAction().equals("rejected")) {
+        if (record.getUserAction().equals(LearningRecordUserAction.REJECTED)) {
             highlightTextAndDisplayMessage(record);
         }
         // if the suggestion still exists, highlight that suggestion.
@@ -605,7 +631,8 @@ public class ActiveLearningSidebar
                 aEvent.getVid().getLayerId() == selectedLayer.getId() &&
                 predictionModel.getPredictionByVID(aEvent.getVid()).equals(currentRecommendation)) {
                 currentDifference = activeLearningRecommender
-                    .generateRecommendationWithLowestDifference(documentService);
+                    .generateRecommendationWithLowestDifference
+                        (documentService, learnSkippedRecommendationTime);
                 showAndHighlightRecommendationAndJumpToRecommendationLocation(aEvent.getTarget())
                 ;
             }
@@ -626,7 +653,7 @@ public class ActiveLearningSidebar
         record.setUser(state.getUser().getUsername());
         record.setSourceDocument(state.getDocument());
         record.setTokenText(acceptedRecommendation.getCoveredText());
-        record.setUserAction("accepted");
+        record.setUserAction(LearningRecordUserAction.ACCEPTED);
         record.setOffsetTokenBegin(acceptedRecommendation.getOffset().getBeginToken());
         record.setOffsetTokenEnd(acceptedRecommendation.getOffset().getEndToken());
         record.setOffsetCharacterBegin(
@@ -641,10 +668,11 @@ public class ActiveLearningSidebar
             ().equals(this.project)) {
             if (acceptedRecommendation.getOffset().equals(currentRecommendation.getOffset())) {
                 if (!acceptedRecommendation.equals(currentRecommendation)) {
-                    writeLearningRecordInDatabase("rejected");
+                    writeLearningRecordInDatabase(LearningRecordUserAction.REJECTED);
                 }
                 currentDifference = activeLearningRecommender
-                    .generateRecommendationWithLowestDifference(documentService);
+                    .generateRecommendationWithLowestDifference
+                        (documentService, learnSkippedRecommendationTime);
                 showAndHighlightRecommendationAndJumpToRecommendationLocation(aEvent.getTarget());
             }
             aEvent.getTarget().add(mainContainer);

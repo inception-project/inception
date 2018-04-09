@@ -60,7 +60,9 @@ public class LearningRecord
     private int offsetCharacterEnd;
     private String tokenText;
     private String annotation;
-    private String userAction;
+    @Type(type = "de.tudarmstadt.ukp.inception.recommendation.model" +
+        ".LearningRecordUserActionType")
+    private LearningRecordUserAction userAction;
     private String user;
     @Type(type = "de.tudarmstadt.ukp.inception.recommendation.model" +
         ".LearningRecordChangeLocationType")
@@ -138,11 +140,11 @@ public class LearningRecord
         this.annotation = annotation;
     }
 
-    public String getUserAction() {
+    public LearningRecordUserAction getUserAction() {
         return userAction;
     }
 
-    public void setUserAction(String userAction) {
+    public void setUserAction(LearningRecordUserAction userAction) {
         this.userAction = userAction;
     }
 
@@ -171,7 +173,7 @@ public class LearningRecord
     }
 
     @Temporal(TemporalType.TIMESTAMP)
-    @Column(nullable = true)
+    @Column(nullable = false)
     private Date actionDate = new Date();
 
     @Override
