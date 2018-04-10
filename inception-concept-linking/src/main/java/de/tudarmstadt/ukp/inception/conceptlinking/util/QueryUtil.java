@@ -44,7 +44,8 @@ public class QueryUtil
     private static final String TERMS = "<http://wikidata.org/terms>";
 
     /**
-     * instance of this page are about some Wikimedia-only content and should not refer to external World entities
+     * instance of this page are about some Wikimedia-only content and should not refer to external
+     * World entities
      */
     private static final String WIKIMEDIA_INTERNAL = "e:Q17442446";
 
@@ -104,9 +105,8 @@ public class QueryUtil
     public static TupleQuery generateSemanticSignatureQuery(RepositoryConnection conn, String
         wikidataId, int limit)
     {
-
         ValueFactory vf = SimpleValueFactory.getInstance();
-        Literal id = vf.createLiteral("e:"+wikidataId);
+        Literal id = vf.createLiteral("e:" + wikidataId);
 
         String query = String.join("\n",
             SPARQL_PREFIX,

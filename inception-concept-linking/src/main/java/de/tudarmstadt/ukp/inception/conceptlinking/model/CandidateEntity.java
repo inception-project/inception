@@ -195,7 +195,9 @@ public class CandidateEntity
     }
 
     /**
-     * @param idRank logarithm of the wikidata ID - based on the assumption that lower IDs are more important
+     * @param idRank
+     *            logarithm of the wikidata ID - based on the assumption that lower IDs are more
+     *            important
      */
     public void setIdRank(double idRank)
     {
