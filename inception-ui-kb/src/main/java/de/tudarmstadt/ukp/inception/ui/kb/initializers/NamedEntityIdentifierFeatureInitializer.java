@@ -15,39 +15,38 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.app.initializers;
+package de.tudarmstadt.ukp.inception.ui.kb.initializers;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static java.util.Arrays.asList;
 
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.uima.cas.CAS;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.JsonImportUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.initializers.LayerInitializer;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.initializers.NamedEntityLayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.initializers.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.initializers.TokenLayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.inception.ui.kb.feature.ConceptFeatureSupport;
 
+/**
+ * Adds the {@code identifier} feature provided since DKPro Core 1.9.0 as a concept feature.  
+ */
 @Component
-public class NamedEntityLayerInitializer
+public class NamedEntityIdentifierFeatureInitializer
     implements LayerInitializer
 {
     private final AnnotationSchemaService annotationSchemaService;
 
     @Autowired
-    public NamedEntityLayerInitializer(AnnotationSchemaService aAnnotationSchemaService)
+    public NamedEntityIdentifierFeatureInitializer(AnnotationSchemaService aAnnotationSchemaService)
     {
         annotationSchemaService = aAnnotationSchemaService;
     }
@@ -56,25 +55,15 @@ public class NamedEntityLayerInitializer
     public List<Class<? extends ProjectInitializer>> getDependencies()
     {
         // Because locks to token boundaries
-        return asList(TokenLayerInitializer.class);
+        return asList(TokenLayerInitializer.class, NamedEntityLayerInitializer.class);
     }
 
     @Override
     public void configure(Project aProject) throws IOException
     {
-        TagSet nerTagSet = JsonImportUtil.importTagSetFromJson(aProject,
-                new ClassPathResource("/tagsets/de-ne-webanno.json").getInputStream(),
-                annotationSchemaService);
+        AnnotationLayer neLayer = annotationSchemaService.getLayer(NamedEntity.class.getName(),
+                aProject);
 
-        AnnotationLayer neLayer = new AnnotationLayer(NamedEntity.class.getName(), "Named entity",
-                SPAN_TYPE, aProject, true);
-        neLayer.setAllowStacking(true);
-        neLayer.setMultipleTokens(true);
-        neLayer.setLockToTokenOffset(false);
-        annotationSchemaService.createLayer(neLayer);
-
-        annotationSchemaService.createFeature(new AnnotationFeature(aProject, neLayer, "value",
-                "value", CAS.TYPE_NAME_STRING, "Named entity type", nerTagSet));
         annotationSchemaService.createFeature(new AnnotationFeature(aProject, neLayer, "identifier",
                 "identifier", ConceptFeatureSupport.TYPE_ANY_CONCEPT, "Linked entity", null));
     }
