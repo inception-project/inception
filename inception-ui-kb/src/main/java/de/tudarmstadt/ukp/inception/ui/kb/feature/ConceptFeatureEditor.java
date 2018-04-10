@@ -129,6 +129,7 @@ public class ConceptFeatureEditor
                             for (KBHandle concept : kbService.listConcepts(kb.get(), false)) {
                                 handles.addAll(kbService.listInstances(kb.get(), 
                                     concept.getIdentifier(), false));
+                            }
                         }
                     }
                 }
@@ -149,6 +150,7 @@ public class ConceptFeatureEditor
                                 handles.addAll(
                                     kbService.listInstances(kb, concept.getIdentifier(), false));
                             }
+                        }
                     }
                 }
             }
