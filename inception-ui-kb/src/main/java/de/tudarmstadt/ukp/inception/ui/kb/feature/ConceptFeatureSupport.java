@@ -217,7 +217,8 @@ public class ConceptFeatureSupport
         switch (feature.getMultiValueMode()) {
         case NONE:
             if (feature.getType().startsWith("kb:")) {
-                editor = new ConceptFeatureEditor(aId, aOwner, aFeatureStateModel);
+                editor = new ConceptFeatureEditor(aId, aOwner, aFeatureStateModel, aStateModel,
+                    aHandler);
             }
             else {
                 throw unsupportedMultiValueModeException(feature);
@@ -230,7 +231,7 @@ public class ConceptFeatureSupport
 
         return editor;
     }
-    
+
     @Override
     public ConceptFeatureTraits readTraits(AnnotationFeature aFeature)
     {
