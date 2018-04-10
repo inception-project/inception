@@ -48,6 +48,7 @@ import de.tudarmstadt.ukp.inception.recommendation.event.RecommendationRejectedE
 import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.AnnotationObject;
 import de.tudarmstadt.ukp.inception.recommendation.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.model.LearningRecordChangeLocation;
+import de.tudarmstadt.ukp.inception.recommendation.model.LearningRecordUserAction;
 import de.tudarmstadt.ukp.inception.recommendation.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.render.RecommendationRenderer;
@@ -142,7 +143,7 @@ public class RecommendationEditorExtension
         LearningRecord record = new LearningRecord();
         record.setUser(aState.getUser().getUsername());
         record.setSourceDocument(aState.getDocument());
-        record.setUserAction("rejected");
+        record.setUserAction(LearningRecordUserAction.REJECTED);
         record.setOffsetCharacterBegin(prediction.getOffset().getBeginCharacter());
         record.setOffsetCharacterEnd(prediction.getOffset().getEndCharacter());
         record.setOffsetTokenBegin(prediction.getOffset().getBeginToken());

@@ -92,7 +92,7 @@ public class ConceptFeatureTraitsEditor
                 new DropDownChoice<>(MID_SCOPE, 
                         LambdaModel.of(this::listConcepts),
                         new LambdaChoiceRenderer<>(KBHandle::getUiLabel))
-                .setRequired(true)
+                .setNullValid(true)
                 .setOutputMarkupPlaceholderTag(true));
 
         form.add(
@@ -148,8 +148,12 @@ public class ConceptFeatureTraitsEditor
         ConceptFeatureTraits t = new ConceptFeatureTraits();
         if (traits.getObject().knowledgeBase != null) {
             t.setRepositoryId(traits.getObject().knowledgeBase.getRepositoryId());
+        
         }
-        t.setScope(traits.getObject().scope.getIdentifier());
+        
+        if (traits.getObject().scope != null) {
+            t.setScope(traits.getObject().scope.getIdentifier());
+        }
 
         getFeatureSupport().writeTraits(feature.getObject(), t);
     }

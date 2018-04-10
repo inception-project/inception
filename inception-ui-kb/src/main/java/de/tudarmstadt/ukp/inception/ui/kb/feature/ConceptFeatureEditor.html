@@ -18,9 +18,13 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
   xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 <wicket:panel>
-  <td>
-      <span wicket:id="feature"></span>
-  </td>
-  <td><select style="width: 100%;" wicket:id="value"></select></td>
+  <div class="form-group" wicket:enclosure="value">
+    <label wicket:for="value" class="col-sm-3 control-label">
+      <wicket:container wicket:id="feature"/>
+    </label>
+    <div class="col-sm-9">
+      <select style="width: 100%;" wicket:id="value"></select>
+    </div>
+  </div>
 </wicket:panel>
 </html>

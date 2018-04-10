@@ -122,8 +122,14 @@ public class ConceptFeatureEditor
                             (aHandler)));
                     }
                     else {
-                        return kbService.listInstances(kb.get(), traits.getScope(), false);
-
+                        if (traits.getScope() != null) {
+                            handles = kbService.listInstances(kb.get(), traits.getScope(), false);
+                        }
+                        else {
+                            for (KBHandle concept : kbService.listConcepts(kb.get(), false)) {
+                                handles.addAll(kbService.listInstances(kb.get(), 
+                                    concept.getIdentifier(), false));
+                        }
                     }
                 }
             }
@@ -135,7 +141,14 @@ public class ConceptFeatureEditor
                             .addAll(listLinkingInstances(kb, aState, () -> getEditorCas(aHandler)));
                     }
                     else {
-                        handles.addAll(kbService.listInstances(kb, traits.getScope(), false));
+                        if (traits.getScope() != null) {
+                            handles.addAll(kbService.listInstances(kb, traits.getScope(), false));
+                        }
+                        else {
+                            for (KBHandle concept : kbService.listConcepts(kb, false)) {
+                                handles.addAll(
+                                    kbService.listInstances(kb, concept.getIdentifier(), false));
+                            }
                     }
                 }
             }
