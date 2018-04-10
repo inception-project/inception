@@ -53,7 +53,7 @@ public class KBStatement implements Serializable
 
     private List<Statement> originalStatements = new ArrayList<>();
 
-    private List<KBModifier> modifiers = new ArrayList<>();
+    private List<KBQualifier> qualifiers = new ArrayList<>();
 
     public KBStatement()
     {
@@ -148,9 +148,9 @@ public class KBStatement implements Serializable
         return originalStatements;
     }
 
-    public void addModifer(KBModifier aModifier) { modifiers.add(aModifier); }
+    public void addModifer(KBQualifier aModifier) { qualifiers.add(aModifier); }
 
-    public List<KBModifier> getModifiers() { return  modifiers; }
+    public List<KBQualifier> getQualifiers() { return qualifiers; }
 
     public Statement toStatement(RepositoryConnection conn)
     {
@@ -192,7 +192,7 @@ public class KBStatement implements Serializable
             .append("language", language)
             .append("inferred", inferred)
             .append("originalStatements", originalStatements)
-            .append("modifiers", modifiers)
+            .append("qualifiers", qualifiers)
             .toString();
     }
 }

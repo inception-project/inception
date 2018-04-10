@@ -19,7 +19,8 @@ package de.tudarmstadt.ukp.inception.kb.graph;
 
 import java.io.Serializable;
 
-public class KBModifier implements Serializable
+public class KBQualifier
+    implements Serializable
 {
     private static final long serialVersionUID = 4648563545691138244L;
 
@@ -28,6 +29,18 @@ public class KBModifier implements Serializable
     private KBHandle kbProperty;
 
     private Object value;
+
+    public KBQualifier(KBStatement kbStatement, KBHandle kbProperty, Object value)
+    {
+        this.kbStatement = kbStatement;
+        this.kbProperty = kbProperty;
+        this.value = value;
+    }
+
+    public KBQualifier(KBStatement kbStatement)
+    {
+        this.kbStatement = kbStatement;
+    }
 
     public KBStatement getKbStatement()
     {

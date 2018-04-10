@@ -45,11 +45,11 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentU
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
-import de.tudarmstadt.ukp.inception.kb.graph.KBModifier;
+import de.tudarmstadt.ukp.inception.kb.graph.KBQualifier;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.ui.kb.EventListeningPanel;
-import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxModifierChangedEvent;
+import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxQualifierChangedEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxStatementChangedEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.util.WriteProtectionBehavior;
 
@@ -110,10 +110,9 @@ public class StatementEditor extends EventListeningPanel
         aTarget.add(this);
     }
 
-    private void actionAddModifier(AjaxRequestTarget aTarget, KBStatement statement) {
-        KBModifier modifierPorto = new KBModifier();
-        modifierPorto.setKbStatement(statement);
-        statement.getModifiers().add(modifierPorto);
+    private void actionAddQualifier(AjaxRequestTarget aTarget, KBStatement statement) {
+        KBQualifier qualifierPorto = new KBQualifier(statement);
+        statement.getQualifiers().add(qualifierPorto);
         aTarget.add(this);
     }
 
@@ -166,7 +165,7 @@ public class StatementEditor extends EventListeningPanel
     private class ViewMode extends Fragment {
         private static final long serialVersionUID = 2375450134740203778L;
 
-        private WebMarkupContainer modifierListWrapper;
+        private WebMarkupContainer qualifierListWrapper;
 
         public ViewMode(String aId, IModel<KBStatement> aStatement) {
             super(aId, "viewMode", StatementEditor.this, aStatement);
@@ -190,11 +189,11 @@ public class StatementEditor extends EventListeningPanel
             editLink.add(new WriteProtectionBehavior(kbModel));
             add(editLink);
 
-            LambdaAjaxLink addModifierLink = new LambdaAjaxLink("addModifier",
-                t -> actionAddModifier(t, aStatement.getObject()))
+            LambdaAjaxLink addQualifierLink = new LambdaAjaxLink("addQualifier",
+                t -> actionAddQualifier(t, aStatement.getObject()))
                 .onConfigure((_this) -> _this.setVisible(!statement.getObject().isInferred()));
-            addModifierLink.add(new WriteProtectionBehavior(kbModel));
-            add(addModifierLink);
+            addQualifierLink.add(new WriteProtectionBehavior(kbModel));
+            add(addQualifierLink);
             
             LambdaAjaxLink makeExplicitLink = new LambdaAjaxLink("makeExplicit",
                     StatementEditor.this::actionMakeExplicit).onConfigure(
@@ -202,17 +201,17 @@ public class StatementEditor extends EventListeningPanel
             makeExplicitLink.add(new WriteProtectionBehavior(kbModel));
             add(makeExplicitLink);
 
-            RefreshingView<KBModifier> modifierList = new RefreshingView<KBModifier>("modifierList")
+            RefreshingView<KBQualifier> qualifierList = new RefreshingView<KBQualifier>("qualifierList")
             {
                 private static final long serialVersionUID = -8342276415072873329L;
 
                 @Override
-                protected Iterator<IModel<KBModifier>> getItemModels()
+                protected Iterator<IModel<KBQualifier>> getItemModels()
                 {
-                    return new ModelIteratorAdapter<KBModifier>(
-                        statement.getObject().getModifiers())
+                    return new ModelIteratorAdapter<KBQualifier>(
+                        statement.getObject().getQualifiers())
                     {
-                        @Override protected IModel<KBModifier> model(KBModifier object)
+                        @Override protected IModel<KBQualifier> model(KBQualifier object)
                         {
                             return LambdaModel.of(() -> object);
                         }
@@ -220,32 +219,32 @@ public class StatementEditor extends EventListeningPanel
                 }
 
                 @Override
-                protected void populateItem(Item<KBModifier> aItem)
+                protected void populateItem(Item<KBQualifier> aItem)
                 {
-                    ModifierEditor editor = new ModifierEditor("modifier", kbModel,
+                    QualifierEditor editor = new QualifierEditor("qualifier", kbModel,
                         aItem.getModel());
                     aItem.add(editor);
                     aItem.setOutputMarkupId(true);
                 }
             };
-            modifierList.setItemReuseStrategy(new ReuseIfModelsEqualStrategy());
+            qualifierList.setItemReuseStrategy(new ReuseIfModelsEqualStrategy());
 
-            modifierListWrapper = new WebMarkupContainer("modifierListWrapper");
-            modifierListWrapper.setOutputMarkupId(true);
-            modifierListWrapper.add(modifierList);
-            add(modifierListWrapper);
+            qualifierListWrapper = new WebMarkupContainer("qualifierListWrapper");
+            qualifierListWrapper.setOutputMarkupId(true);
+            qualifierListWrapper.add(qualifierList);
+            add(qualifierListWrapper);
 
-            eventHandler.addCallback(AjaxModifierChangedEvent.class, this::actionModifierChanged);
+            eventHandler.addCallback(AjaxQualifierChangedEvent.class, this::actionQualifierChanged);
         }
 
-        private void actionModifierChanged(AjaxRequestTarget target, AjaxModifierChangedEvent event)
+        private void actionQualifierChanged(AjaxRequestTarget target, AjaxQualifierChangedEvent event)
         {
-            boolean isEventForThisStatement = event.getModifier().getKbStatement()
+            boolean isEventForThisStatement = event.getQualifier().getKbStatement()
                 .equals(statement.getObject());
             if (isEventForThisStatement) {
-                event.getModifier().getKbStatement().getModifiers().remove(event.getModifier());
-                statement.setObject(event.getModifier().getKbStatement());
-                target.add(modifierListWrapper);
+                event.getQualifier().getKbStatement().getQualifiers().remove(event.getQualifier());
+                statement.setObject(event.getQualifier().getKbStatement());
+                target.add(qualifierListWrapper);
             }
         }
 

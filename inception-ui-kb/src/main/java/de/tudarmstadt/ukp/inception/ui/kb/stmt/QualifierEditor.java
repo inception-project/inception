@@ -37,11 +37,12 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
-import de.tudarmstadt.ukp.inception.kb.graph.KBModifier;
+import de.tudarmstadt.ukp.inception.kb.graph.KBQualifier;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
-import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxModifierChangedEvent;
+import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxQualifierChangedEvent;
 
-public class ModifierEditor extends Panel
+public class QualifierEditor
+    extends Panel
 {
     private static final long serialVersionUID = -4152363403483032196L;
 
@@ -50,21 +51,21 @@ public class ModifierEditor extends Panel
     private @SpringBean KnowledgeBaseService kbService;
 
     private IModel<KnowledgeBase> kbModel;
-    private IModel<KBModifier> modifier;
+    private IModel<KBQualifier> qualifier;
     private Component content;
 
-    public ModifierEditor(String id, IModel<KnowledgeBase> aKbModel,
-        IModel<KBModifier> aModifier)
+    public QualifierEditor(String id, IModel<KnowledgeBase> aKbModel,
+        IModel<KBQualifier> aQualifier)
     {
-        super(id, aModifier);
+        super(id, aQualifier);
         setOutputMarkupId(true);
 
         kbModel = aKbModel;
-        modifier = aModifier;
+        qualifier = aQualifier;
 
-        boolean isNewModifier = true; //(modifier.getObject().getKbProperty()==null);
-        if (isNewModifier) {
-            EditMode editMode = new EditMode(CONTENT_MARKUP_ID, modifier, isNewModifier);
+        boolean isNewQualifier = true; //(qualifier.getObject().getKbProperty()==null);
+        if (isNewQualifier) {
+            EditMode editMode = new EditMode(CONTENT_MARKUP_ID, qualifier, isNewQualifier);
             AjaxRequestTarget target = RequestCycle.get().find(AjaxRequestTarget.class);
             if (target != null) {
                 target.focusComponent(editMode.getFocusComponent());
@@ -80,32 +81,32 @@ public class ModifierEditor extends Panel
         private Component initialFocusComponent;
 
         /**
-         * Creates a new fragement for editing a modifier.<br>
+         * Creates a new fragement for editing a qualifier.<br>
          * The editor has two slightly different behaviors, depending on the value of
          * {@code isNewModifier}:
          * <ul>
          * <li>{@code !isNewModifier}: Save button commits changes, cancel button discards unsaved
-         * changes, delete button removes the modifier from the statement.</li>
-         * <li>{@code isNewModifier}: Save button commits changes (creates a new modifier in the
-         * statement), cancel button removes the modifier from the UI, delete button is not visible
+         * changes, delete button removes the qualifier from the statement.</li>
+         * <li>{@code isNewModifier}: Save button commits changes (creates a new qualifier in the
+         * statement), cancel button removes the qualifier from the UI, delete button is not visible
          * .</li>
          * </ul>
          *
          * @param aId
          *            markup ID
-         * @param aModifier
-         *            modifier model
+         * @param aQualifier
+         *            qualifier model
          * @param isNewModifier
-         *            whether the modifier being edited is new, meaning it has no corresponding
-         *            modifier in the KB backend
+         *            whether the qualifier being edited is new, meaning it has no corresponding
+         *            qualifier in the KB backend
          */
-        public EditMode(String aId, IModel<KBModifier> aModifier, boolean isNewModifier)
+        public EditMode(String aId, IModel<KBQualifier> aQualifier, boolean isNewModifier)
         {
-            super(aId, "editMode", ModifierEditor.this, aModifier);
+            super(aId, "editMode", QualifierEditor.this, aQualifier);
 
-            IModel<KBModifier> compoundModel = CompoundPropertyModel.of(aModifier);
+            IModel<KBQualifier> compoundModel = CompoundPropertyModel.of(aQualifier);
 
-            Form<KBModifier> form = new Form<>("form", compoundModel);
+            Form<KBQualifier> form = new Form<>("form", compoundModel);
             DropDownChoice<KBHandle> type = new DropDownChoice<>("kbProperty");
             type.setChoiceRenderer(new ChoiceRenderer<>("uiLabel"));
             type.setChoices(kbService.listProperties(kbModel.getObject(), false));
@@ -116,9 +117,9 @@ public class ModifierEditor extends Panel
 
             form.add(new TextField<>("value"));
 
-            form.add(new LambdaAjaxButton<>("create", ModifierEditor.this::actionTest));
-            form.add(new LambdaAjaxLink("cancel", ModifierEditor.this::actionCancelNewModifier));
-            form.add(new LambdaAjaxLink("delete", ModifierEditor.this::actionLinkTest)
+            form.add(new LambdaAjaxButton<>("create", QualifierEditor.this::actionTest));
+            form.add(new LambdaAjaxLink("cancel", QualifierEditor.this::actionCancelNewQualifier));
+            form.add(new LambdaAjaxLink("delete", QualifierEditor.this::actionLinkTest)
                 .setVisibilityAllowed(!isNewModifier));
 
             add(form);
@@ -137,23 +138,23 @@ public class ModifierEditor extends Panel
     {
         private static final long serialVersionUID = 6771056914040868827L;
 
-        public ViewMode(String aId, IModel<KBModifier> aModifier)
+        public ViewMode(String aId, IModel<KBQualifier> aModifier)
         {
-            super(aId, "viewMode", ModifierEditor.this, aModifier);
-            CompoundPropertyModel<KBModifier> compoundModel = new CompoundPropertyModel<>(
+            super(aId, "viewMode", QualifierEditor.this, aModifier);
+            CompoundPropertyModel<KBQualifier> compoundModel = new CompoundPropertyModel<>(
                 aModifier);
             add(new Label("property", aModifier.getObject().getKbProperty().getUiLabel()));
             add(new Label("value", compoundModel.bind("value")));
 
-            LambdaAjaxLink editLink = new LambdaAjaxLink("edit", ModifierEditor
+            LambdaAjaxLink editLink = new LambdaAjaxLink("edit", QualifierEditor
                 .this::actionLinkTest);
             add(editLink);
         }
     }
 
-    private void actionTest(AjaxRequestTarget ajaxRequestTarget, Form<KBModifier> aForm)
+    private void actionTest(AjaxRequestTarget ajaxRequestTarget, Form<KBQualifier> aForm)
     {
-        KBModifier modifier = aForm.getModelObject();
+        KBQualifier qualifier = aForm.getModelObject();
     }
 
     private void actionLinkTest(AjaxRequestTarget ajaxRequestTarget)
@@ -161,14 +162,14 @@ public class ModifierEditor extends Panel
 
     }
 
-    private void actionCancelNewModifier(AjaxRequestTarget aTarget) {
+    private void actionCancelNewQualifier(AjaxRequestTarget aTarget) {
         // send a delete event to trigger the deletion in the UI
-        AjaxModifierChangedEvent deleteEvent = new AjaxModifierChangedEvent(aTarget,
-            modifier.getObject(), this, true);
+        AjaxQualifierChangedEvent deleteEvent = new AjaxQualifierChangedEvent(aTarget,
+            qualifier.getObject(), this, true);
         send(getPage(), Broadcast.BREADTH, deleteEvent);
     }
 
-    private void actionCancelExistingModifier(AjaxRequestTarget aTarget) {
+    private void actionCancelExistingQualifier(AjaxRequestTarget aTarget) {
 
     }
 

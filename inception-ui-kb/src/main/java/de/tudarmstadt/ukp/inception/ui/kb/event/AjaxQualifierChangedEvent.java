@@ -20,24 +20,25 @@ package de.tudarmstadt.ukp.inception.ui.kb.event;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 
-import de.tudarmstadt.ukp.inception.kb.graph.KBModifier;
+import de.tudarmstadt.ukp.inception.kb.graph.KBQualifier;
 
-public class AjaxModifierChangedEvent extends AjaxEvent
+public class AjaxQualifierChangedEvent
+    extends AjaxEvent
 {
     private Component component;
-    private KBModifier modifier;
+    private KBQualifier qualifier;
     private boolean deleted;
 
-    public AjaxModifierChangedEvent(AjaxRequestTarget target, KBModifier aModifier,
+    public AjaxQualifierChangedEvent(AjaxRequestTarget target, KBQualifier aModifier,
         Component aComponent, boolean deleted)
     {
         super(target);
-        this.modifier = aModifier;
+        this.qualifier = aModifier;
         this.component = aComponent;
         this.deleted = deleted;
     }
 
-    public KBModifier getModifier() { return modifier; }
+    public KBQualifier getQualifier() { return qualifier; }
 
     public Component getComponent() {
         return component;
