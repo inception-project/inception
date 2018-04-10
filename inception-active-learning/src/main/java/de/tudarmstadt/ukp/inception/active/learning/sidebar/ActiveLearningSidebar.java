@@ -87,9 +87,9 @@ public class ActiveLearningSidebar
     extends
     AnnotationSidebar_ImplBase
 {
-
     private static final long serialVersionUID = -5312616540773904224L;
     private static final Logger logger = LoggerFactory.getLogger(ActiveLearningSidebar.class);
+    
     private static final String RECOMMENDATION_EDITOR_EXTENSION = "recommendationEditorExtension";
     private static final String ANNOTATION_MARKER = "VAnnotationMarker";
     private static final String TEXT_MARKER = "VTextMarker";
@@ -520,16 +520,13 @@ public class ActiveLearningSidebar
             protected void populateItem(ListItem<LearningRecord> item)
             {
                 LambdaAjaxLink jumpToAnnotationFromTokenTextLink = new LambdaAjaxLink(
-                    "jumpToAnnotation",
-                    t -> jumpAndHighlightFromLearningHistory(t, item.getModelObject()));
-
-                jumpToAnnotationFromTokenTextLink.add(new Label("record",
-                    item.getModelObject().getTokenText()));
-
+                        "jumpToAnnotation", t -> jumpAndHighlightFromLearningHistory(t, 
+                                item.getModelObject()));
+                jumpToAnnotationFromTokenTextLink
+                        .setBody(LambdaModel.of(item.getModelObject()::getTokenText));
                 item.add(jumpToAnnotationFromTokenTextLink);
-                item.add(new Label("record", item.getModelObject().getTokenText()));
-                item.add(new Label("recommendedAnnotation",
-                    item.getModelObject().getAnnotation()));
+                
+                item.add(new Label("recommendedAnnotation", item.getModelObject().getAnnotation()));
                 item.add(new Label("userAction", item.getModelObject().getUserAction()));
                 item.add(new LambdaAjaxLink("removeRecord",
                     t -> deleteRecordAndUpdateHistoryAndRedrawnMainPage(t, item.getModelObject())));
