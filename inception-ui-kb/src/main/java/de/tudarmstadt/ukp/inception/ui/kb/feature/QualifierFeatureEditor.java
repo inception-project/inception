@@ -18,10 +18,8 @@
 package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
 import java.io.IOException;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
@@ -60,49 +58,34 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
-import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.PossibleValue;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 
-public class ModifierFeatureEditor
+public class QualifierFeatureEditor
     extends FeatureEditor
 {
-    private static final Logger LOG = LoggerFactory.getLogger(ModifierFeatureEditor.class);
-
     private static final long serialVersionUID = 7469241620229001983L;
+    private static final Logger LOG = LoggerFactory.getLogger(QualifierFeatureEditor.class);
 
     private @SpringBean AnnotationSchemaService annotationService;
-
     private @SpringBean KnowledgeBaseService kbService;
     private @SpringBean FactLinkingService factService;
 
     private WebMarkupContainer content;
-
-    // // For showing the status of Constraints rules kicking in.
-    // private RulesIndicator indicator = new RulesIndicator();
-
-    @SuppressWarnings("rawtypes")
-    private Component field;
-    private boolean hideUnconstraintFeature;
-
+    private Component focusComponent;
     private AnnotationActionHandler actionHandler;
     private IModel<AnnotatorState> stateModel;
     private Project project;
-    private LambdaModelAdapter modifierModel;
-
-    // Wicket component is bound to this property
-    @SuppressWarnings("unused")
+    private LambdaModelAdapter qualifierModel;
     private KBHandle selectedRole;
 
-    @SuppressWarnings("unchecked")
-    public ModifierFeatureEditor(String aId, MarkupContainer aOwner,
+    public QualifierFeatureEditor(String aId, MarkupContainer aOwner,
                                  AnnotationActionHandler aHandler,
                                  final IModel<AnnotatorState> aStateModel,
                                  final IModel<FeatureState>
@@ -113,9 +96,6 @@ public class ModifierFeatureEditor
         stateModel = aStateModel;
         actionHandler = aHandler;
         project = stateModel.getObject().getProject();
-
-        // Checks whether hide un-constraint feature is enabled or not
-        hideUnconstraintFeature = getModelObject().feature.isHideUnconstraintFeature();
 
         add(new Label("feature", getModelObject().feature.getUiName()));
 
@@ -134,7 +114,7 @@ public class ModifierFeatureEditor
             protected Iterator<IModel<LinkWithRoleModel>> getItemModels()
             {
                 return new ModelIteratorAdapter<LinkWithRoleModel>(
-                    (List<LinkWithRoleModel>) ModifierFeatureEditor.this.getModelObject().value)
+                    (List<LinkWithRoleModel>) QualifierFeatureEditor.this.getModelObject().value)
                 {
                     @Override
                     protected IModel<LinkWithRoleModel> model(LinkWithRoleModel aObject)
@@ -191,41 +171,7 @@ public class ModifierFeatureEditor
             }
         });
 
-        content.add(field = createSelectRoleDropdownChoice());
-
-        // Shows whether constraints are triggered or not
-        // also shows state of constraints use.
-        Component constraintsInUseIndicator = new WebMarkupContainer("linkIndicator")
-        {
-            private static final long serialVersionUID = 4346767114287766710L;
-
-            @Override
-            public boolean isVisible()
-            {
-                return getModelObject().indicator.isAffected();
-            }
-        }.add(new AttributeAppender("class", new Model<String>()
-        {
-            private static final long serialVersionUID = -7683195283137223296L;
-
-            @Override
-            public String getObject()
-            {
-                // adds symbol to indicator
-                return getModelObject().indicator.getStatusSymbol();
-            }
-        })).add(new AttributeAppender("style", new Model<String>()
-        {
-            private static final long serialVersionUID = -5255873539738210137L;
-
-            @Override
-            public String getObject()
-            {
-                // adds color to indicator
-                return "; color: " + getModelObject().indicator.getStatusColor();
-            }
-        }));
-        add(constraintsInUseIndicator);
+        content.add(focusComponent = createSelectRoleDropdownChoice());
 
         // Add a new empty slot with the specified role
         content.add(new AjaxButton("add")
@@ -235,8 +181,8 @@ public class ModifierFeatureEditor
             @Override
             protected void onConfigure()
             {
-                AnnotatorState state = ModifierFeatureEditor.this.stateModel.getObject();
-                setVisible(!(state.isSlotArmed() && ModifierFeatureEditor.this.getModelObject()
+                AnnotatorState state = QualifierFeatureEditor.this.stateModel.getObject();
+                setVisible(!(state.isSlotArmed() && QualifierFeatureEditor.this.getModelObject()
                     .feature.equals(state.getArmedFeature())));
                 // setEnabled(!(model.isSlotArmed()
                 // && aModel.feature.equals(model.getArmedFeature())));
@@ -258,8 +204,8 @@ public class ModifierFeatureEditor
             @Override
             protected void onConfigure()
             {
-                AnnotatorState state = ModifierFeatureEditor.this.stateModel.getObject();
-                setVisible(state.isSlotArmed() && ModifierFeatureEditor.this.getModelObject()
+                AnnotatorState state = QualifierFeatureEditor.this.stateModel.getObject();
+                setVisible(state.isSlotArmed() && QualifierFeatureEditor.this.getModelObject()
                     .feature.equals(state.getArmedFeature()));
                 // setEnabled(model.isSlotArmed()
                 // && aModel.feature.equals(model.getArmedFeature()));
@@ -280,8 +226,8 @@ public class ModifierFeatureEditor
             @Override
             protected void onConfigure()
             {
-                AnnotatorState state = ModifierFeatureEditor.this.stateModel.getObject();
-                setVisible(state.isSlotArmed() && ModifierFeatureEditor.this.getModelObject()
+                AnnotatorState state = QualifierFeatureEditor.this.stateModel.getObject();
+                setVisible(state.isSlotArmed() && QualifierFeatureEditor.this.getModelObject()
                     .feature.equals(state.getArmedFeature()));
                 // setEnabled(model.isSlotArmed()
                 // && aModel.feature.equals(model.getArmedFeature()));
@@ -302,10 +248,10 @@ public class ModifierFeatureEditor
             .getLayer(linkedType, this.stateModel.getObject().getProject());
         AnnotationFeature linkedAnnotationFeature = annotationService
             .getFeature("KBItems", linkedLayer);
-        modifierModel = new LambdaModelAdapter(() -> this.getSelectedKBItem(aItem),  (v) -> {
+        qualifierModel = new LambdaModelAdapter(() -> this.getSelectedKBItem(aItem),  (v) -> {
             this.setSelectedKBItem((KBHandle) v, aItem, linkedAnnotationFeature);
         });
-        DropDownList<KBHandle> field = new DropDownList<KBHandle>("value", modifierModel
+        DropDownList<KBHandle> field = new DropDownList<KBHandle>("value", qualifierModel
             , LambdaModel.of(() -> factService.getKBConceptsAndInstances(project)),
             new ChoiceRenderer<>("uiLabel"));
         field.add(new LambdaAjaxFormComponentUpdatingBehavior("change"));
@@ -314,81 +260,16 @@ public class ModifierFeatureEditor
         return field;
     }
 
-
-    private void removeAutomaticallyAddedUnusedEntries()
-    {
-        // Remove unused (but auto-added) tags.
-        @SuppressWarnings("unchecked")
-        List<LinkWithRoleModel> list = (List<LinkWithRoleModel>) ModifierFeatureEditor.this
-            .getModelObject().value;
-
-        // remove it
-        list.removeIf(link -> link.autoCreated && link.targetAddr == -1);
-    }
-
-    private void autoAddImportantTags(List<Tag> aTagset, List<PossibleValue> aPossibleValues)
-    {
-        if (aTagset == null || aTagset.isEmpty() || aPossibleValues == null
-            || aPossibleValues.isEmpty()) {
-            return;
-        }
-
-        // Construct a quick index for tags
-        Set<String> tagset = new HashSet<>();
-        for (Tag t : aTagset) {
-            tagset.add(t.getName());
-        }
-
-        // Get links list and build role index
-        @SuppressWarnings("unchecked")
-        List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) getModelObject().value;
-        Set<String> roles = new HashSet<>();
-        for (LinkWithRoleModel l : links) {
-            roles.add(l.role);
-        }
-
-        // Loop over values to see which of the tags are important and add them.
-        for (PossibleValue value : aPossibleValues) {
-            if (!value.isImportant() || !tagset.contains(value.getValue())) {
-                continue;
-            }
-
-            // Check if there is already a slot with the given name
-            if (roles.contains(value.getValue())) {
-                continue;
-            }
-
-            // Add empty slot in UI with that name.
-            LinkWithRoleModel m = new LinkWithRoleModel();
-            m.role = value.getValue();
-            // Marking so that can be ignored later.
-            m.autoCreated = true;
-            links.add(m);
-            // NOT arming the slot here!
-        }
-    }
-
     @Override
     public Component getFocusComponent()
     {
-        return field;
+        return focusComponent;
     }
 
-    /**
-     * Hides feature if "Hide un-constraint feature" is enabled and constraint rules are applied and
-     * feature doesn't match any constraint rule
-     */
     @Override
     public void onConfigure()
     {
-        // Update entries for important tags.
-        removeAutomaticallyAddedUnusedEntries();
-        FeatureState featureState = getModelObject();
-        autoAddImportantTags(featureState.tagset, featureState.possibleValues);
 
-        // if enabled and constraints rule execution returns anything other than green
-        setVisible(!hideUnconstraintFeature || (getModelObject().indicator.isAffected()
-            && getModelObject().indicator.getStatusColor().equals("green")));
     }
 
     private void actionAdd(AjaxRequestTarget aTarget)
@@ -398,15 +279,14 @@ public class ModifierFeatureEditor
             aTarget.addChildren(getPage(), IFeedback.class);
         }
         else {
-            @SuppressWarnings("unchecked")
-            List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) ModifierFeatureEditor.this
+            List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) QualifierFeatureEditor.this
                 .getModelObject().value;
-            AnnotatorState state = ModifierFeatureEditor.this.stateModel.getObject();
+            AnnotatorState state = QualifierFeatureEditor.this.stateModel.getObject();
 
             LinkWithRoleModel m = new LinkWithRoleModel();
             m.role = selectedRole.getUiLabel();
             links.add(m);
-            state.setArmedSlot(ModifierFeatureEditor.this.getModelObject().feature,
+            state.setArmedSlot(QualifierFeatureEditor.this.getModelObject().feature,
                 links.size() - 1);
 
             // Need to re-render the whole form because a slot in another
@@ -417,10 +297,9 @@ public class ModifierFeatureEditor
 
     private void actionSet(AjaxRequestTarget aTarget)
     {
-        @SuppressWarnings("unchecked")
-        List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) ModifierFeatureEditor.this
+        List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) QualifierFeatureEditor.this
             .getModelObject().value;
-        AnnotatorState state = ModifierFeatureEditor.this.stateModel.getObject();
+        AnnotatorState state = QualifierFeatureEditor.this.stateModel.getObject();
 
         // Update the slot
         LinkWithRoleModel m = links.get(state.getArmedSlot());
@@ -445,10 +324,9 @@ public class ModifierFeatureEditor
 
     private void actionDel(AjaxRequestTarget aTarget)
     {
-        @SuppressWarnings("unchecked")
-        List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) ModifierFeatureEditor.this
+        List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) QualifierFeatureEditor.this
             .getModelObject().value;
-        AnnotatorState state = ModifierFeatureEditor.this.stateModel.getObject();
+        AnnotatorState state = QualifierFeatureEditor.this.stateModel.getObject();
 
         links.remove(state.getArmedSlot());
         state.clearArmedSlot();
@@ -468,7 +346,7 @@ public class ModifierFeatureEditor
 
     private void actionToggleArmedState(AjaxRequestTarget aTarget, Item<LinkWithRoleModel> aItem)
     {
-        AnnotatorState state = ModifierFeatureEditor.this.stateModel.getObject();
+        AnnotatorState state = QualifierFeatureEditor.this.stateModel.getObject();
 
         if (state.isArmedSlot(getModelObject().feature, aItem.getIndex())) {
             state.clearArmedSlot();
@@ -528,7 +406,7 @@ public class ModifierFeatureEditor
                 WebAnnoCasUtil.setFeature(selectedFS, linkedAnnotationFeature,
                     value.getIdentifier());
                 LOG.info("change the value");
-                modifierModel.detach();
+                qualifierModel.detach();
             } catch (CASException | IOException e) {
                 LOG.error("Error: " + e.getMessage(), e);
                 error("Error: " + e.getMessage());

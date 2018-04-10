@@ -22,17 +22,16 @@
     <div class="panel-heading">
       <h3 class="panel-title">
         <span wicket:id="feature"></span>
-        <span wicket:id="linkIndicator" class="" style=""></span>
       </h3>
     </div>
     <div class="panel-body">
       <div wicket:id="content">
         <div wicket:id="slots">
           <div class="form-group">
-            <label class="col-sm-6 control-label">
+            <label class="col-sm-4">
               <span wicket:id="role"></span>
             </label>
-            <div class="col-sm-6">
+            <div class="col-sm-8">
               <span wicket:id="label" class="form-control text-nowrap feature-editor-slot-label"></span>
             </div>
               <div class="col-sm-12">
@@ -45,9 +44,9 @@
             <select wicket:id="newRole" style="width: 100%;"></select>
           </div>
           <div class="text-nowrap" style="display: table-cell; padding-left: 15px;">
-            <button wicket:id="add" class="btn btn-xs">Add</button>
-            <button wicket:id="del" class="btn btn-xs">Del</button>
-            <button wicket:id="set" class="btn btn-xs">Set</button>
+            <button wicket:id="add" type = "submit" class="btn btn-xs">Add</button>
+            <button wicket:id="del" type = "button" class="btn btn-xs">Del</button>
+            <button wicket:id="set" type = "submit" class="btn btn-xs">Set</button>
           </div>
         </div>
       </div>

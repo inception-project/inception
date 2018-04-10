@@ -77,14 +77,14 @@ public class FactLinkingServiceImpl implements FactLinkingService
     @Override
     public List<KBHandle> getKBConceptsAndInstances(Project aProject)
     {
-        List<KBHandle> handles = new LinkedList<>();
+        List<KBHandle> handles = new ArrayList<>();
         for (KnowledgeBase kb : kbService.getKnowledgeBases(aProject)) {
             handles.addAll(kbService.listConcepts(kb, false));
             for (KBHandle concept : kbService.listConcepts(kb, false)) {
                 handles.addAll(kbService.listInstances(kb, concept.getIdentifier(), false));
             }
         }
-        return new ArrayList<>(handles);
+        return handles;
     }
 
     @Override
@@ -139,7 +139,7 @@ public class FactLinkingServiceImpl implements FactLinkingService
         AnnotationFS selectedFS = WebAnnoCasUtil.selectByAddr(aJcas, targetAddr);
         String kbHandleIdentifier = WebAnnoCasUtil.getFeature(selectedFS, "KBItems");
         if (kbHandleIdentifier != null) {
-            List<KBHandle> handles = this.getKBConceptsAndInstances(aProject);
+            List<KBHandle> handles = getKBConceptsAndInstances(aProject);
             kbHandle = handles.stream()
                 .filter(x -> kbHandleIdentifier.equals(x.getIdentifier())).findAny()
                 .orElse(null);
