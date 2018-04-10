@@ -60,7 +60,7 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 @SpringBootTest(classes = SpringConfig.class)
 @Transactional
 @DataJpaTest
-public class KnowledgeBaseServiceImportExportTest {
+public class KnowledgeBaseServiceImplImportExportIntegrationTest {
 
     private static final String PROJECT_NAME = "Test project";
     private static final String KB_NAME = "Test knowledge base";

@@ -37,8 +37,6 @@ import java.util.stream.Stream;
 import javax.persistence.EntityManager;
 
 import org.eclipse.rdf4j.model.IRI;
-import org.eclipse.rdf4j.model.ValueFactory;
-import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
@@ -67,6 +65,7 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.reification.Reification;
+import de.tudarmstadt.ukp.inception.kb.util.TestFixtures;
 
 @RunWith(Parameterized.class)
 @SpringBootTest(classes = SpringConfig.class)
@@ -94,6 +93,8 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     private KnowledgeBase kb;
     private Reification reification;
 
+    private TestFixtures testFixtures;
+
     public KnowledgeBaseServiceImplIntegrationTest(Reification aReification) {
         reification = aReification;
     }
@@ -113,6 +114,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     @Before
     public void setUp() throws Exception {
         EntityManager entityManager = testEntityManager.getEntityManager();
+        testFixtures = new TestFixtures(testEntityManager);
         sut = new KnowledgeBaseServiceImpl(temporaryFolder.getRoot(), entityManager);
         project = createProject(PROJECT_NAME);
         kb = buildKnowledgeBase(project, KB_NAME);
@@ -1176,52 +1178,29 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     // Helper
 
     private Project createProject(String name) {
-        Project project = new Project();
-        project.setName(name);
-        return testEntityManager.persist(project);
+        return testFixtures.createProject(name);
     }
 
     private KnowledgeBase buildKnowledgeBase(Project project, String name) {
-        KnowledgeBase kb = new KnowledgeBase();
-        kb.setName(name);
-        kb.setProject(project);
-        kb.setType(RepositoryType.LOCAL);
-        kb.setClassIri(RDFS.CLASS);
-        kb.setSubclassIri(RDFS.SUBCLASSOF);
-        kb.setTypeIri(RDF.TYPE);
-        kb.setReification(reification);
-        return kb;
+        return testFixtures.buildKnowledgeBase(project, name, reification);
     }
 
     private KBConcept buildConcept() {
-        KBConcept concept = new KBConcept();
-        concept.setName("Concept name");
-        concept.setDescription("Concept description");
-        return concept;
+        return testFixtures.buildConcept();
     }
 
     private KBProperty buildProperty() {
-        KBProperty property = new KBProperty();
-        property.setDescription("Property description");
-        property.setDomain(URI.create("https://test.schema.com/#domain"));
-        property.setName("Property name");
-        property.setRange(URI.create("https://test.schema.com/#range"));
-        return property;
+        return testFixtures.buildProperty();
     }
 
     private KBInstance buildInstance() {
-        KBInstance instance = new KBInstance();
-        instance.setName("Instance name");
-        instance.setDescription("Instance description");
-        instance.setType(URI.create("https://test.schema.com/#type"));
-        return instance;
+        return testFixtures.buildInstance();
     }
 
     private KBStatement buildStatement(KnowledgeBase knowledgeBase, KBHandle conceptHandle, KBHandle propertyHandle, String value) {
-        ValueFactory vf = SimpleValueFactory.getInstance();
-        KBStatement statement = new KBStatement(conceptHandle, propertyHandle, vf.createLiteral(value));
-        sut.initStatement(kb, statement);
-        return statement;
+        KBStatement stmt = testFixtures.buildStatement(conceptHandle, propertyHandle, value);
+        sut.initStatement(knowledgeBase, stmt);
+        return stmt;
     }
 
     private boolean isNotAbstractNorClosedStatement(KBStatement statement) {
