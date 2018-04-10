@@ -29,6 +29,9 @@
       <context:exclude-filter 
         expression="de.tudarmstadt.ukp.clarin.webanno.automation.service.AutomationService" 
         type="assignable" />
+      <context:exclude-filter 
+        expression="de.tudarmstadt.ukp.clarin.webanno.api.dao.initializers.NamedEntityLayerInitializer" 
+        type="assignable" />
     </context:component-scan>
     <context:component-scan base-package="de.tudarmstadt.ukp.inception" />
 

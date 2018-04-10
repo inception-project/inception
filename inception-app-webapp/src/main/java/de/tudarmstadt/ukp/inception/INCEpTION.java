@@ -41,6 +41,7 @@ import org.springframework.context.annotation.ImportResource;
 import org.springframework.context.annotation.Primary;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.initializers.NamedEntityLayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.automation.service.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.standalone.LoadingSplashScreen;
@@ -53,9 +54,10 @@ import de.tudarmstadt.ukp.inception.app.config.InceptionBanner;
  */
 @SpringBootApplication
 @ComponentScan(excludeFilters = {
+        @Filter(type = FilterType.ASSIGNABLE_TYPE, classes = { 
+                AutomationService.class, NamedEntityLayerInitializer.class }),
         @Filter(type = FilterType.CUSTOM, classes = TypeExcludeFilter.class),
-        @Filter(type = FilterType.CUSTOM, classes = AutoConfigurationExcludeFilter.class),
-        @Filter(type = FilterType.ASSIGNABLE_TYPE, classes = AutomationService.class)})
+        @Filter(type = FilterType.CUSTOM, classes = AutoConfigurationExcludeFilter.class)})
 @EntityScan(basePackages = {
         // Include WebAnno entity packages separately so we can skip the automation entities!
         "de.tudarmstadt.ukp.clarin.webanno.model",
