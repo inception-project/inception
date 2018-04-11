@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import javax.annotation.Resource;
 
