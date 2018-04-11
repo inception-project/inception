@@ -32,10 +32,7 @@ import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -49,7 +46,6 @@ import de.tudarmstadt.ukp.inception.recommendation.service.RecommendationService
 public class ActiveLearningRecommender
     implements Serializable
 {
-    private static final Logger logger = LoggerFactory.getLogger(ActiveLearningSidebar.class);
     private static final long serialVersionUID = -2308436775710912029L;
 
     private RecommendationService recommendationService;
@@ -57,18 +53,16 @@ public class ActiveLearningRecommender
     private List<List<AnnotationObject>> listOfRecommendationsForEachToken;
     private AnnotatorState annotatorState;
     private AnnotationLayer selectedLayer;
-    private AnnotationSchemaService annotationService;
     private LearningRecordService learningRecordService;
     private DocumentService documentService;
 
     public ActiveLearningRecommender(RecommendationService recommendationService,
             AnnotatorState annotatorState, AnnotationLayer selectedLayer,
-            AnnotationSchemaService annotationService, LearningRecordService recordService)
+            LearningRecordService recordService)
     {
         this.recommendationService = recommendationService;
         this.annotatorState = annotatorState;
         this.selectedLayer = selectedLayer;
-        this.annotationService = annotationService;
         this.learningRecordService = recordService;
     }
 

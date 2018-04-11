@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.active.learning.sidebar;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -27,7 +26,6 @@ import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
-import org.apache.wicket.Session;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.form.AjaxButton;
 import org.apache.wicket.feedback.IFeedback;
@@ -59,7 +57,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VTextMar
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
@@ -71,7 +68,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar
 import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningRecommendationEvent;
 import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningSessionCompletedEvent;
 import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningSessionStartedEvent;
-import de.tudarmstadt.ukp.inception.app.session.SessionMetaData;
+import de.tudarmstadt.ukp.inception.recommendation.RecommendationEditorExtension;
 import de.tudarmstadt.ukp.inception.recommendation.event.AjaxRecommendationAcceptedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.AjaxRecommendationRejectedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.AnnotationObject;
@@ -90,6 +87,7 @@ public class ActiveLearningSidebar
     
     private static final Logger LOG = LoggerFactory.getLogger(ActiveLearningSidebar.class);
     
+    // Wicket component IDs used in the HTML file
     private static final String CID_MAIN_CONTAINER = "mainContainer";
     private static final String CID_HISTORY_LISTVIEW = "historyListview";
     private static final String CID_LEARNING_HISTORY_FORM = "learningHistoryForm";
@@ -106,15 +104,13 @@ public class ActiveLearningSidebar
     private static final String CID_LEARN_FROM_SKIPPED_RECOMMENDATION_FORM = "learnFromSkippedRecommendationForm";
     private static final String CID_NO_RECOMMENDATION_LABEL = "noRecommendationLabel";
     private static final String CID_LAYER_SELECTION_BUTTON = "layerSelectionButton";
-    private static final String CID_SHOW_SELECTED_LAYER = "showSelectedLayer";
     private static final String CID_SELECT_LAYER = "selectLayer";
-    private static final String CID_LAYER_SELECTION_FORM = "layerSelectionForm";
+    private static final String CID_SESSION_CONTROL_FORM = "sessionControlForm";
     private static final String CID_REMOVE_RECORD = "removeRecord";
     private static final String CID_USER_ACTION = "userAction";
     private static final String CID_RECOMMENDED_ANNOTATION = "recommendedAnnotation";
     private static final String CID_JUMP_TO_ANNOTATION = "jumpToAnnotation";
     
-    private static final String RECOMMENDATION_EDITOR_EXTENSION = "recommendationEditorExtension";
     private static final String ANNOTATION_MARKER = "VAnnotationMarker";
     private static final String TEXT_MARKER = "VTextMarker";
     
@@ -126,12 +122,13 @@ public class ActiveLearningSidebar
 
     private IModel<AnnotationLayer> selectedLayer;
     private IModel<List<LearningRecord>> learningRecords;
-    
-    private Project project;
-    private boolean startLearning = false;
+
+    private final WebMarkupContainer mainContainer;
+
+    private boolean sessionActive = false;
     private boolean hasUnseenRecommendation = false;
     private boolean hasSkippedRecommendation = false;
-    private final WebMarkupContainer mainContainer;
+    
     private ActiveLearningRecommender activeLearningRecommender;
     private AnnotationObject currentRecommendation;
     private RecommendationDifference currentDifference;
@@ -151,11 +148,9 @@ public class ActiveLearningSidebar
         selectedLayer = Model.of(this.getModelObject().getDefaultAnnotationLayer());
         annotationPage = aAnnotationPage;
         
-        project = Model.of(Session.get().getMetaData(SessionMetaData.CURRENT_PROJECT)).getObject();
-        
         mainContainer = new WebMarkupContainer(CID_MAIN_CONTAINER);
         mainContainer.setOutputMarkupId(true);
-        mainContainer.add(createLayerSelection());
+        mainContainer.add(createSessionControlForm());
         mainContainer.add(createNoRecommendationLabel());
         mainContainer.add(createLearnFromSkippedRecommendationForm());
         mainContainer.add(createRecommendationOperationForm());
@@ -163,95 +158,72 @@ public class ActiveLearningSidebar
         add(mainContainer);
     }
 
-    private Form<?> createLayerSelection()
+    private Form<?> createSessionControlForm()
     {
-        Form<?> layerSelectionForm = new Form<Void>(CID_LAYER_SELECTION_FORM);
+        Form<?> form = new Form<Void>(CID_SESSION_CONTROL_FORM);
         
-        layerSelectionForm.add(createLayerSelectionDropDownChoice());
-        layerSelectionForm.add(createSelectedLayerLabel());
-        layerSelectionForm.add(createLayerSelectionAndLearningStartTerminateButton());
+        DropDownChoice<AnnotationLayer> layersDropdown = new DropDownChoice<>(CID_SELECT_LAYER);
+        layersDropdown.setModel(selectedLayer);
+        layersDropdown.setChoices(LambdaModel.of(this::getLayerChoices));
+        layersDropdown.setChoiceRenderer(new LambdaChoiceRenderer<>(AnnotationLayer::getUiName));
+        layersDropdown.add(LambdaBehavior.onConfigure(it -> it.setEnabled(!sessionActive)));
+        layersDropdown.setOutputMarkupId(true);
+        form.add(layersDropdown);
+        
+        LambdaAjaxButton<Void> startStopButton = new LambdaAjaxButton<Void>(
+                CID_LAYER_SELECTION_BUTTON, this::actionStartStopTraining);
+        startStopButton.setModel(LambdaModel.of(() -> sessionActive ? "Terminate" : "Start"));
+        form.add(startStopButton);
 
-        return layerSelectionForm;
+        return form;
     }
 
     private List<AnnotationLayer> getLayerChoices()
     {
-        if (project != null && project.getId() != null) {
-            return annotationService.listAnnotationLayer(project);
+        return annotationService.listAnnotationLayer(getModelObject().getProject());
+    }
+    
+    protected void actionStartStopTraining(AjaxRequestTarget target, Form<?> form)
+    {
+        target.add(mainContainer);
+        
+        AnnotatorState annotatorState = getModelObject();
+        annotatorState.setSelectedAnnotationLayer(selectedLayer.getObject());
+
+        if (!sessionActive) {
+            // Start new session
+            sessionActive = true;
+            learnSkippedRecommendationTime = null;
+            
+            activeLearningRecommender = new ActiveLearningRecommender(recommendationService,
+                    annotatorState, selectedLayer.getObject(), learningRecordService);
+            
+            currentDifference = activeLearningRecommender
+                    .generateRecommendationWithLowestDifference(documentService,
+                            learnSkippedRecommendationTime);
+            
+            showAndHighlightRecommendationAndJumpToRecommendationLocation(target);
+            
+            applicationEventPublisherHolder.get().publishEvent(
+                    new ActiveLearningSessionStartedEvent(this, annotatorState.getProject(),
+                        annotatorState.getUser().getUsername()));
         }
         else {
-            return Collections.emptyList();
+            // Stop current session
+            sessionActive = false;
+            applicationEventPublisherHolder.get()
+                    .publishEvent(new ActiveLearningSessionCompletedEvent(this,
+                            annotatorState.getProject(), annotatorState.getUser().getUsername()));
         }
     }
-
-    private DropDownChoice<AnnotationLayer> createLayerSelectionDropDownChoice()
-    {
-        DropDownChoice<AnnotationLayer> dropdown = new DropDownChoice<>(CID_SELECT_LAYER);
-        dropdown.setModel(selectedLayer);
-        dropdown.setChoices(LambdaModel.of(this::getLayerChoices));
-        dropdown.setChoiceRenderer(new LambdaChoiceRenderer<>(AnnotationLayer::getUiName));
-        dropdown.add(LambdaBehavior.onConfigure(component -> component.setVisible(!startLearning)));
-        dropdown.setOutputMarkupPlaceholderTag(true);
-        return dropdown;
-    }
-
-    private Label createSelectedLayerLabel()
-    {
-        Label selectedLayerLabel = new Label(CID_SHOW_SELECTED_LAYER, LambdaModel.of(() -> 
-                selectedLayer.getObject() != null ? selectedLayer.getObject().getUiName() : null));
-        selectedLayerLabel
-                .add(LambdaBehavior.onConfigure(component -> component.setVisible(startLearning)));
-        selectedLayerLabel.setOutputMarkupPlaceholderTag(true);
-        return selectedLayerLabel;
-    }
-
-    private AjaxButton createLayerSelectionAndLearningStartTerminateButton()
-    {
-        IModel<String> buttonModel = LambdaModel.of(() -> startLearning ? "Terminate" : "Start");
-        
-        AjaxButton layerSelectionAndLearningStartTerminateButton = new AjaxButton(
-                CID_LAYER_SELECTION_BUTTON, buttonModel)
-        {
-            private static final long serialVersionUID = -2488664683153797206L;
-
-            @Override
-            protected void onSubmit(AjaxRequestTarget target, Form<?> form)
-            {
-                AnnotatorState annotatorState = ActiveLearningSidebar.this.getModelObject();
-                
-                startLearning = !startLearning;
-                annotatorState.setSelectedAnnotationLayer(selectedLayer.getObject());
-
-                if (startLearning) {
-                    learnSkippedRecommendationTime = null;
-                    applicationEventPublisherHolder.get().publishEvent(
-                        new ActiveLearningSessionStartedEvent(this, project,
-                            annotatorState.getUser().getUsername()));
-                    activeLearningRecommender = new ActiveLearningRecommender(recommendationService,
-                            annotatorState, selectedLayer.getObject(), annotationService,
-                            learningRecordService);
-                    currentDifference = activeLearningRecommender
-                        .generateRecommendationWithLowestDifference
-                            (documentService, learnSkippedRecommendationTime);
-                    showAndHighlightRecommendationAndJumpToRecommendationLocation(target);
-                }
-                else {
-                    applicationEventPublisherHolder.get()
-                            .publishEvent(new ActiveLearningSessionCompletedEvent(this, project,
-                                    annotatorState.getUser().getUsername()));
-                }
-                target.add(mainContainer);
-            }
-        };
-        return layerSelectionAndLearningStartTerminateButton;
-    }
-
-    private void showAndHighlightRecommendationAndJumpToRecommendationLocation (AjaxRequestTarget
-                                                                                    target)
+    
+    private void showAndHighlightRecommendationAndJumpToRecommendationLocation(
+            AjaxRequestTarget target)
     {
         if (currentDifference != null) {
             hasUnseenRecommendation = true;
             currentRecommendation = currentDifference.getRecommendation1();
+            
             setShowingRecommendation();
             jumpToRecommendationLocation(target);
             highlightRecommendation();
@@ -269,11 +241,12 @@ public class ActiveLearningSidebar
 
     private void setShowingRecommendation()
     {
-        AnnotatorState annotatorState = ActiveLearningSidebar.this.getModelObject();
+        AnnotatorState annotatorState = getModelObject();
         writeLearningRecordInDatabase(LearningRecordUserAction.SHOWN);
-        applicationEventPublisherHolder.get()
-                .publishEvent(new ActiveLearningRecommendationEvent(this,
-                        documentService.getSourceDocument(project,
+        
+        applicationEventPublisherHolder.get().publishEvent(
+                new ActiveLearningRecommendationEvent(this,
+                        documentService.getSourceDocument(annotatorState.getProject(),
                                 currentRecommendation.getDocumentName()),
                         currentRecommendation, annotatorState.getUser().getUsername(),
                         selectedLayer.getObject()));
@@ -282,9 +255,10 @@ public class ActiveLearningSidebar
     private void jumpToRecommendationLocation(AjaxRequestTarget target)
     {
         try {
-            actionShowSelectedDocument(target, documentService.getSourceDocument
-                    (project, currentRecommendation.getDocumentName()),
-                currentRecommendation.getOffset().getBeginCharacter());
+            actionShowSelectedDocument(target,
+                    documentService.getSourceDocument(getModelObject().getProject(),
+                            currentRecommendation.getDocumentName()),
+                    currentRecommendation.getOffset().getBeginCharacter());
         } catch (IOException e) {
             LOG.error("Error: " + e.getMessage(), e);
             error("Error: " + e.getMessage());
@@ -300,7 +274,7 @@ public class ActiveLearningSidebar
         if (predictionModel != null) {
             AnnotationObject aoForVID = predictionModel.getPrediction(
                     currentRecommendation.getOffset(), currentRecommendation.getAnnotation());
-            highlightVID = new VID(RECOMMENDATION_EDITOR_EXTENSION,
+            highlightVID = new VID(RecommendationEditorExtension.BEAN_NAME,
                     selectedLayer.getObject().getId(), (int) aoForVID.getRecommenderId(),
                     aoForVID.getId(), VID.NONE, VID.NONE);
             vMarkerType = ANNOTATION_MARKER;
@@ -312,7 +286,7 @@ public class ActiveLearningSidebar
         Label noRecommendation = new Label(CID_NO_RECOMMENDATION_LABEL,
             "There are no further suggestions.");
         noRecommendation.add(LambdaBehavior.onConfigure(component -> component
-            .setVisible(startLearning && !hasUnseenRecommendation && !hasSkippedRecommendation)));
+            .setVisible(sessionActive && !hasUnseenRecommendation && !hasSkippedRecommendation)));
         noRecommendation.setOutputMarkupPlaceholderTag(true);
         return noRecommendation;
     }
@@ -322,7 +296,7 @@ public class ActiveLearningSidebar
         Form<?> learnFromSkippedRecommendationForm = new Form<Void>(
                 CID_LEARN_FROM_SKIPPED_RECOMMENDATION_FORM);
         learnFromSkippedRecommendationForm.add(LambdaBehavior.onConfigure(component -> component
-            .setVisible(startLearning && !hasUnseenRecommendation && hasSkippedRecommendation)));
+            .setVisible(sessionActive && !hasUnseenRecommendation && hasSkippedRecommendation)));
         learnFromSkippedRecommendationForm.setOutputMarkupPlaceholderTag(true);
         learnFromSkippedRecommendationForm.add(new Label(CID_ONLY_SKIPPED_RECOMMENDATION_LABEL, "There "
             + "are only skipped suggestions. Do you want to learn these again?"));
@@ -347,7 +321,7 @@ public class ActiveLearningSidebar
     {
         Form<?> recommendationForm = new Form<Void>(CID_RECOMMENDATION_FORM);
         recommendationForm.add(LambdaBehavior.onConfigure(component -> component.setVisible
-            (startLearning && hasUnseenRecommendation)));
+            (sessionActive && hasUnseenRecommendation)));
         recommendationForm.setOutputMarkupPlaceholderTag(true);
         
         recommendationForm.add(createRecommendationCoveredTextLink());
@@ -374,9 +348,11 @@ public class ActiveLearningSidebar
     }
 
     private void jumpToRecommendationLocationAndHighlightRecommendation(AjaxRequestTarget aTarget)
-        throws IOException {
-        actionShowSelectedDocument(aTarget, documentService.getSourceDocument
-                    (project, currentRecommendation.getDocumentName()),
+        throws IOException
+    {
+        actionShowSelectedDocument(aTarget,
+                documentService.getSourceDocument(getModelObject().getProject(),
+                        currentRecommendation.getDocumentName()),
                 currentRecommendation.getOffset().getBeginCharacter());
         highlightRecommendation();
     }
@@ -504,7 +480,7 @@ public class ActiveLearningSidebar
             private static final long serialVersionUID = -961690443085882064L;
         };
         learningHistoryForm.add(LambdaBehavior.onConfigure(component -> component
-            .setVisible(startLearning)));
+            .setVisible(sessionActive)));
         learningHistoryForm.setOutputMarkupPlaceholderTag(true);
         learningHistoryForm.setOutputMarkupId(true);
 
@@ -564,7 +540,7 @@ public class ActiveLearningSidebar
             if (predictionModel != null) {
                 AnnotationObject aoForVID = predictionModel
                     .getPrediction(recordOffset, record.getAnnotation());
-                highlightVID = new VID(RECOMMENDATION_EDITOR_EXTENSION,
+                highlightVID = new VID(RecommendationEditorExtension.BEAN_NAME,
                         selectedLayer.getObject().getId(), (int) aoForVID.getRecommenderId(),
                         aoForVID.getId(), VID.NONE, VID.NONE);
                 vMarkerType = ANNOTATION_MARKER;
@@ -601,7 +577,8 @@ public class ActiveLearningSidebar
         return false;
     }
 
-    private void highlightTextAndDisplayMessage(LearningRecord record) {
+    private void highlightTextAndDisplayMessage(LearningRecord record)
+    {
         selectedRecord = record;
         vMarkerType = TEXT_MARKER;
         error("No annotation could be highlighted.");
@@ -627,13 +604,14 @@ public class ActiveLearningSidebar
     @OnEvent
     public void onRecommendationRejectEvent(AjaxRecommendationRejectedEvent aEvent)
     {
-        AnnotatorState annotatorState = ActiveLearningSidebar.this.getModelObject();
+        AnnotatorState annotatorState = getModelObject();
+        AnnotatorState eventState = aEvent.getAnnotatorState();
+        
         predictionModel = recommendationService.getPredictions(annotatorState.getUser(),
-            annotatorState.getProject());
-        AnnotatorState state = aEvent.getAnnotatorState();
-        if (startLearning && state.getUser().equals(annotatorState.getUser()) && state.getProject
-            ().equals(this.project)) {
-            if (state.getDocument().equals(annotatorState.getDocument())
+                annotatorState.getProject());
+        if (sessionActive && eventState.getUser().equals(annotatorState.getUser())
+                && eventState.getProject().equals(annotatorState.getProject())) {
+            if (eventState.getDocument().equals(annotatorState.getDocument())
                     && aEvent.getVid().getLayerId() == selectedLayer.getObject().getId()
                     && predictionModel.getPredictionByVID(aEvent.getVid())
                             .equals(currentRecommendation)) {
@@ -652,27 +630,26 @@ public class ActiveLearningSidebar
         AnnotatorState annotatorState = ActiveLearningSidebar.this.getModelObject();
         predictionModel = recommendationService.getPredictions(annotatorState.getUser(),
             annotatorState.getProject());
-        AnnotatorState state = aEvent.getAnnotatorState();
-        AnnotationObject acceptedRecommendation =
-            predictionModel.getPredictionByVID(aEvent.getVid());
+        AnnotatorState eventState = aEvent.getAnnotatorState();
+        AnnotationObject acceptedRecommendation = predictionModel
+                .getPredictionByVID(aEvent.getVid());
 
         LearningRecord record = new LearningRecord();
-        record.setUser(state.getUser().getUsername());
-        record.setSourceDocument(state.getDocument());
+        record.setUser(eventState.getUser().getUsername());
+        record.setSourceDocument(eventState.getDocument());
         record.setTokenText(acceptedRecommendation.getCoveredText());
         record.setUserAction(LearningRecordUserAction.ACCEPTED);
         record.setOffsetTokenBegin(acceptedRecommendation.getOffset().getBeginToken());
         record.setOffsetTokenEnd(acceptedRecommendation.getOffset().getEndToken());
-        record.setOffsetCharacterBegin(
-            acceptedRecommendation.getOffset().getBeginCharacter());
+        record.setOffsetCharacterBegin(acceptedRecommendation.getOffset().getBeginCharacter());
         record.setOffsetCharacterEnd(acceptedRecommendation.getOffset().getEndCharacter());
         record.setAnnotation(acceptedRecommendation.getAnnotation());
         record.setLayer(annotationService.getLayer(aEvent.getVid().getLayerId()));
         record.setChangeLocation(LearningRecordChangeLocation.MAIN_EDITOR);
         learningRecordService.create(record);
 
-        if (startLearning && state.getUser().equals(annotatorState.getUser()) && state.getProject
-            ().equals(this.project)) {
+        if (sessionActive && eventState.getUser().equals(annotatorState.getUser())
+                && eventState.getProject().equals(annotatorState.getProject())) {
             if (acceptedRecommendation.getOffset().equals(currentRecommendation.getOffset())) {
                 if (!acceptedRecommendation.equals(currentRecommendation)) {
                     writeLearningRecordInDatabase(LearningRecordUserAction.REJECTED);
@@ -686,8 +663,8 @@ public class ActiveLearningSidebar
         }
     }
 
-
-    @OnEvent public void onRenderAnnotations(RenderAnnotationsEvent aEvent)
+    @OnEvent
+    public void onRenderAnnotations(RenderAnnotationsEvent aEvent)
     {
         if (vMarkerType.equals(ANNOTATION_MARKER)) {
             if (highlightVID != null) {
