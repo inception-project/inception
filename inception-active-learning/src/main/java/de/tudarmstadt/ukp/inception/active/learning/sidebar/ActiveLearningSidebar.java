@@ -213,14 +213,10 @@ public class ActiveLearningSidebar
             sessionActive = true;
             learnSkippedRecommendationTime = null;
             
-            activeLearningRecommender = new ActiveLearningRecommender(recommendationService,
-                    annotatorState, selectedLayer.getObject(), learningRecordService);
+            activeLearningRecommender = new ActiveLearningRecommender(annotatorState,
+                    selectedLayer.getObject());
             
-            currentDifference = activeLearningRecommender
-                    .generateRecommendationWithLowestDifference(documentService,
-                            learnSkippedRecommendationTime);
-            
-            showAndHighlightRecommendationAndJumpToRecommendationLocation(target);
+            moveToNextRecommendation(target);
             
             applicationEventPublisherHolder.get().publishEvent(
                     new ActiveLearningSessionStartedEvent(this, annotatorState.getProject(),
@@ -257,8 +253,8 @@ public class ActiveLearningSidebar
         }
         else if (learnSkippedRecommendationTime == null) {
             hasUnseenRecommendation = false;
-            hasSkippedRecommendation = activeLearningRecommender
-                    .hasRecommendationWhichIsSkipped();
+            hasSkippedRecommendation = activeLearningRecommender.hasRecommendationWhichIsSkipped(
+                    learningRecordService, documentService, recommendationService);
         }
         else {
             hasUnseenRecommendation = false;
@@ -339,10 +335,9 @@ public class ActiveLearningSidebar
         throws IOException
     {
         learnSkippedRecommendationTime = new Date();
-        currentDifference = activeLearningRecommender.generateRecommendationWithLowestDifference(
-                documentService, learnSkippedRecommendationTime);
-
-        showAndHighlightRecommendationAndJumpToRecommendationLocation(aTarget);
+        
+        moveToNextRecommendation(aTarget);
+        
         aTarget.add(mainContainer);
     }
 
@@ -479,8 +474,10 @@ public class ActiveLearningSidebar
     private void moveToNextRecommendation(AjaxRequestTarget aTarget)
     {
         annotationPage.actionRefreshDocument(aTarget);
-        currentDifference = activeLearningRecommender.generateRecommendationWithLowestDifference(
-                documentService, learnSkippedRecommendationTime);
+        currentDifference = activeLearningRecommender
+                .generateRecommendationWithLowestDifference(learningRecordService,
+                        recommendationService, documentService,
+                        learnSkippedRecommendationTime);
         showAndHighlightRecommendationAndJumpToRecommendationLocation(aTarget);
     }
 
@@ -538,7 +535,8 @@ public class ActiveLearningSidebar
             highlightTextAndDisplayMessage(aTarget, record);
         }
         // if the suggestion still exists, highlight that suggestion.
-        else if (activeLearningRecommender.checkRecommendationExist(documentService, record)) {
+        else if (activeLearningRecommender.checkRecommendationExist(documentService,
+                recommendationService, record)) {
             highlightRecommendation(aTarget, record.getOffsetCharacterBegin(),
                     record.getOffsetCharacterEnd(), record.getTokenText(), record.getAnnotation());
         }
@@ -613,10 +611,8 @@ public class ActiveLearningSidebar
                     && aEvent.getVid().getLayerId() == selectedLayer.getObject().getId()
                     && predictionModel.getPredictionByVID(aEvent.getVid())
                             .equals(currentRecommendation)) {
-                currentDifference = activeLearningRecommender
-                        .generateRecommendationWithLowestDifference(documentService,
-                                learnSkippedRecommendationTime);
-                showAndHighlightRecommendationAndJumpToRecommendationLocation(aEvent.getTarget());
+                
+                moveToNextRecommendation(aEvent.getTarget());
             }
             aEvent.getTarget().add(mainContainer);
         }
@@ -646,16 +642,15 @@ public class ActiveLearningSidebar
         record.setChangeLocation(LearningRecordChangeLocation.MAIN_EDITOR);
         learningRecordService.create(record);
 
-        if (sessionActive && eventState.getUser().equals(annotatorState.getUser())
+        if (sessionActive && currentRecommendation != null
+                && eventState.getUser().equals(annotatorState.getUser())
                 && eventState.getProject().equals(annotatorState.getProject())) {
             if (acceptedRecommendation.getOffset().equals(currentRecommendation.getOffset())) {
                 if (!acceptedRecommendation.equals(currentRecommendation)) {
                     writeLearningRecordInDatabase(LearningRecordUserAction.REJECTED);
                 }
-                currentDifference = activeLearningRecommender
-                    .generateRecommendationWithLowestDifference
-                        (documentService, learnSkippedRecommendationTime);
-                showAndHighlightRecommendationAndJumpToRecommendationLocation(aEvent.getTarget());
+                
+                moveToNextRecommendation(aEvent.getTarget());
             }
             aEvent.getTarget().add(mainContainer);
         }

@@ -53,11 +53,9 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.Annotat
 public class Predictions
     implements Serializable
 {
-    /**
-     * 
-     */
     private static final long serialVersionUID = -1598768729246662885L;
     private Map<ExtendedId, AnnotationObject> predictions = new ConcurrentHashMap<>();
+    
     private final Project project;
     private final User user;
     
@@ -106,8 +104,9 @@ public class Predictions
             try {
                 jcas = aDocumentService.readAnnotationCas(doc);
                 // TODO #176 use the document Id once it it available in the CAS
-                predictions.put(doc.getName(), getPredictions(doc.getName(), aLayer, 0,
-                        jcas.getDocumentText().length() - 1, jcas));
+                List<List<AnnotationObject>> p = getPredictions(doc.getName(), aLayer, 0,
+                        jcas.getDocumentText().length() - 1, jcas);
+                predictions.put(doc.getName(), p);
             } catch (IOException e) {
                 logger.info("Cannot read JCas: ", e);
             }   
