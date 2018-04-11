@@ -24,9 +24,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.uima.cas.Type;
@@ -34,15 +32,13 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.inception.active.learning.ActiveLearningService;
 import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.AnnotationObject;
 import de.tudarmstadt.ukp.inception.recommendation.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.model.LearningRecordUserAction;
-import de.tudarmstadt.ukp.inception.recommendation.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.service.LearningRecordService;
-import de.tudarmstadt.ukp.inception.recommendation.service.RecommendationService;
 
 public class ActiveLearningRecommender
     implements Serializable
@@ -61,11 +57,11 @@ public class ActiveLearningRecommender
     }
 
     public RecommendationDifference generateRecommendationWithLowestDifference(
-            LearningRecordService aRecordService, RecommendationService aRecommendationService,
-            DocumentService aDocumentService, Date learnSkippedRecommendationTime)
+            LearningRecordService aRecordService, ActiveLearningService aActiveLearningService,
+            Date learnSkippedRecommendationTime)
     {
-        listOfRecommendationsForEachToken = getRecommendationFromRecommendationModel(
-                aDocumentService, aRecommendationService, annotatorState, selectedLayer);
+        listOfRecommendationsForEachToken = aActiveLearningService
+                .getRecommendationFromRecommendationModel(annotatorState, selectedLayer);
 
         // remove recommendations with Null Annotation
         listOfRecommendationsForEachToken.forEach(recommendationList -> 
@@ -85,54 +81,12 @@ public class ActiveLearningRecommender
     }
 
     public boolean hasRecommendationWhichIsSkipped(LearningRecordService aRecordService,
-            DocumentService aDocumentService, RecommendationService aRecommendationService)
+            ActiveLearningService aActiveLearningService)
     {
-        listOfRecommendationsForEachToken = getRecommendationFromRecommendationModel(
-                aDocumentService, aRecommendationService, annotatorState, selectedLayer);
+        listOfRecommendationsForEachToken = aActiveLearningService
+                .getRecommendationFromRecommendationModel(annotatorState, selectedLayer);
         removeRejectedOrSkippedAnnotations(aRecordService, false, null);
         return !listOfRecommendationsForEachToken.isEmpty();
-    }
-
-    private List<List<AnnotationObject>> getRecommendationFromRecommendationModel(
-            DocumentService aDocumentService, RecommendationService aRecommendationService,
-            AnnotatorState aState, AnnotationLayer aLayer)
-    {
-        Predictions model = aRecommendationService.getPredictions(aState.getUser(),
-                aState.getProject());
-        
-        if (model == null) {
-            return new ArrayList<>();
-        }
-
-        // getRecommendationsForThisDocument(model);
-        return getRecommendationsForWholeProject(aDocumentService, model, aLayer);
-    }
-
-    private List<List<AnnotationObject>> getRecommendationsForThisDocument(Predictions model,
-            JCas aJcas, AnnotationLayer aLayer)
-    {
-        int windowBegin = 0;
-        int windowEnd = aJcas.getDocumentText().length() - 1;
-        // TODO #176 use the document Id once it it available in the CAS
-        return model.getPredictions(annotatorState.getDocument().getName(), aLayer, windowBegin,
-                windowEnd, aJcas);
-    }
-
-    private static List<List<AnnotationObject>> getRecommendationsForWholeProject(
-            DocumentService aDocumentService, Predictions model, AnnotationLayer aLayer)
-    {
-        List<List<AnnotationObject>> result = new ArrayList<>();
-
-        Map<String, List<List<AnnotationObject>>> recommendationsMap = model
-                .getPredictionsForWholeProject(aLayer, aDocumentService);
-
-        Set<String> documentNameSet = recommendationsMap.keySet();
-
-        for (String documentName : documentNameSet) {
-            result.addAll(recommendationsMap.get(documentName));
-        }
-
-        return result;
     }
 
     private static void removeRecommendationsWithNullAnnotation(
@@ -363,28 +317,15 @@ public class ActiveLearningRecommender
     }
 
     public Optional<AnnotationObject> generateRecommendationWithLowestConfidence(
-            RecommendationService aRecommendationService, JCas aJcas)
+            ActiveLearningService aActiveLearningService, JCas aJcas)
     {
-        recommendations = getFlattenedRecommendationsFromRecommendationModel(aRecommendationService,
+        recommendations = aActiveLearningService.getFlattenedRecommendationsFromRecommendationModel(
                 aJcas, annotatorState, selectedLayer);
         removeRecommendationsWithNullAnnotation(recommendations);
         removeExistingAnnotations(aJcas, selectedLayer, recommendations);
         Collections.sort(recommendations,
                 Comparator.comparingDouble(AnnotationObject::getConfidence));
         return recommendations.stream().findFirst();
-    }
-
-    private static List<AnnotationObject> getFlattenedRecommendationsFromRecommendationModel(
-            RecommendationService aRecommendationService, JCas aJcas, AnnotatorState aState,
-            AnnotationLayer aSelectedLayer)
-    {
-        int windowBegin = 0;
-        int windowEnd = aJcas.getDocumentText().length() - 1;
-        Predictions model = aRecommendationService.getPredictions(aState.getUser(),
-                aState.getProject());
-        // TODO #176 use the document Id once it it available in the CAS
-        return model.getFlattenedPredictions(aState.getDocument().getName(), aSelectedLayer,
-                windowBegin, windowEnd, aJcas);
     }
 
     private static void removeExistingAnnotations(JCas aJcas,
@@ -418,11 +359,11 @@ public class ActiveLearningRecommender
         return existingAnnotationsSpanBegin;
     }
 
-    public boolean checkRecommendationExist(DocumentService aDocumentService,
-            RecommendationService aRecommendationService, LearningRecord aRecord)
+    public boolean checkRecommendationExist(ActiveLearningService aActiveLearningService,
+            LearningRecord aRecord)
     {
-        listOfRecommendationsForEachToken = getRecommendationFromRecommendationModel(
-                aDocumentService, aRecommendationService, annotatorState, selectedLayer);
+        listOfRecommendationsForEachToken = aActiveLearningService
+                .getRecommendationFromRecommendationModel(annotatorState, selectedLayer);
         return containSuggestion(listOfRecommendationsForEachToken, aRecord);
     }
 

@@ -65,6 +65,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
+import de.tudarmstadt.ukp.inception.active.learning.ActiveLearningService;
 import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningRecommendationEvent;
 import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningSessionCompletedEvent;
 import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningSessionStartedEvent;
@@ -113,6 +114,7 @@ public class ActiveLearningSidebar
     private static final String ANNOTATION_MARKER = "VAnnotationMarker";
     private static final String TEXT_MARKER = "VTextMarker";
     
+    private @SpringBean ActiveLearningService activeLearningService;
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean RecommendationService recommendationService;
     private @SpringBean LearningRecordService learningRecordService;
@@ -254,7 +256,7 @@ public class ActiveLearningSidebar
         else if (learnSkippedRecommendationTime == null) {
             hasUnseenRecommendation = false;
             hasSkippedRecommendation = activeLearningRecommender.hasRecommendationWhichIsSkipped(
-                    learningRecordService, documentService, recommendationService);
+                    learningRecordService, activeLearningService);
         }
         else {
             hasUnseenRecommendation = false;
@@ -476,8 +478,7 @@ public class ActiveLearningSidebar
         annotationPage.actionRefreshDocument(aTarget);
         currentDifference = activeLearningRecommender
                 .generateRecommendationWithLowestDifference(learningRecordService,
-                        recommendationService, documentService,
-                        learnSkippedRecommendationTime);
+                        activeLearningService, learnSkippedRecommendationTime);
         showAndHighlightRecommendationAndJumpToRecommendationLocation(aTarget);
     }
 
@@ -535,8 +536,8 @@ public class ActiveLearningSidebar
             highlightTextAndDisplayMessage(aTarget, record);
         }
         // if the suggestion still exists, highlight that suggestion.
-        else if (activeLearningRecommender.checkRecommendationExist(documentService,
-                recommendationService, record)) {
+        else if (activeLearningRecommender.checkRecommendationExist(activeLearningService,
+                record)) {
             highlightRecommendation(aTarget, record.getOffsetCharacterBegin(),
                     record.getOffsetCharacterEnd(), record.getTokenText(), record.getAnnotation());
         }
