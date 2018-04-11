@@ -100,7 +100,7 @@ public class ActiveLearningRecommender
         return !listOfRecommendationsForEachToken.isEmpty();
     }
 
-    public void getRecommendationFromRecommendationModel()
+    private void getRecommendationFromRecommendationModel()
     {
         Predictions model = recommendationService.getPredictions(annotatorState.getUser(),
                 annotatorState.getProject());
@@ -119,12 +119,11 @@ public class ActiveLearningRecommender
     }
 
     private void getRecommendationsForWholeProject(Predictions model) {
-        listOfRecommendationsForEachToken = new ArrayList();
+        listOfRecommendationsForEachToken = new ArrayList<>();
 
         if (model != null) {
             Map<String, List<List<AnnotationObject>>> recommendationsMap = model
                 .getPredictionsForWholeProject(selectedLayer, documentService);
-
 
             Set<String> documentNameSet = recommendationsMap.keySet();
 
@@ -427,11 +426,12 @@ public class ActiveLearningRecommender
         return existingAnnotationsSpanBegin;
     }
 
-    public boolean checkRecommendationExist(DocumentService documentService, LearningRecord record)
+    public boolean checkRecommendationExist(DocumentService aDocumentService,
+            LearningRecord aRecord)
     {
-        this.documentService = documentService;
+        documentService = aDocumentService;
         getRecommendationFromRecommendationModel();
-        return containSuggestion(record);
+        return containSuggestion(aRecord);
     }
 
     public boolean containSuggestion(LearningRecord record) {

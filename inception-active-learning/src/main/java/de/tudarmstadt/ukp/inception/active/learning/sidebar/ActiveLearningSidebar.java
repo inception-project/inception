@@ -27,7 +27,6 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.ajax.markup.html.form.AjaxButton;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
@@ -38,6 +37,7 @@ import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.apache.wicket.util.string.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
@@ -72,7 +72,6 @@ import de.tudarmstadt.ukp.inception.recommendation.RecommendationEditorExtension
 import de.tudarmstadt.ukp.inception.recommendation.event.AjaxRecommendationAcceptedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.AjaxRecommendationRejectedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.AnnotationObject;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.Offset;
 import de.tudarmstadt.ukp.inception.recommendation.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.model.LearningRecordChangeLocation;
 import de.tudarmstadt.ukp.inception.recommendation.model.LearningRecordUserAction;
@@ -183,7 +182,8 @@ public class ActiveLearningSidebar
         return annotationService.listAnnotationLayer(getModelObject().getProject());
     }
     
-    protected void actionStartStopTraining(AjaxRequestTarget target, Form<?> form)
+    private void actionStartStopTraining(AjaxRequestTarget target, Form<?> form)
+        throws IOException
     {
         target.add(mainContainer);
         
@@ -218,15 +218,24 @@ public class ActiveLearningSidebar
     }
     
     private void showAndHighlightRecommendationAndJumpToRecommendationLocation(
-            AjaxRequestTarget target)
+            AjaxRequestTarget aTarget)
     {
         if (currentDifference != null) {
             hasUnseenRecommendation = true;
             currentRecommendation = currentDifference.getRecommendation1();
-            
+ 
+            try {
+                actionShowSelectedDocument(aTarget, getModelObject().getDocument(),
+                        currentRecommendation.getOffset().getBeginCharacter());
+            }
+            catch (IOException e) {
+                LOG.error("Unable to switch to document : {} ", e.getMessage(), e);
+                error("Unable to switch to document : " + e.getMessage());
+                aTarget.addChildren(getPage(), IFeedback.class);
+            }
+
             setShowingRecommendation();
-            jumpToRecommendationLocation(target);
-            highlightRecommendation();
+            highlightCurrentRecommendation(aTarget);
         }
         else if (learnSkippedRecommendationTime == null) {
             hasUnseenRecommendation = false;
@@ -252,32 +261,34 @@ public class ActiveLearningSidebar
                         selectedLayer.getObject()));
     }
 
-    private void jumpToRecommendationLocation(AjaxRequestTarget target)
+    private void highlightCurrentRecommendation(AjaxRequestTarget aTarget)
     {
-        try {
-            actionShowSelectedDocument(target,
-                    documentService.getSourceDocument(getModelObject().getProject(),
-                            currentRecommendation.getDocumentName()),
-                    currentRecommendation.getOffset().getBeginCharacter());
-        } catch (IOException e) {
-            LOG.error("Error: " + e.getMessage(), e);
-            error("Error: " + e.getMessage());
-            target.addChildren(getPage(), IFeedback.class);
-        }
+        highlightRecommendation(aTarget, currentRecommendation.getOffset().getBeginCharacter(),
+                currentRecommendation.getOffset().getEndCharacter(),
+                currentRecommendation.getCoveredText(), currentRecommendation.getAnnotation());
     }
-
-    private void highlightRecommendation()
+    
+    private void highlightRecommendation(AjaxRequestTarget aTarget, int aBegin, int aEnd,
+            String aText, String aRecommendation)
     {
         AnnotatorState annotatorState = ActiveLearningSidebar.this.getModelObject();
         predictionModel = recommendationService.getPredictions(annotatorState.getUser(),
                 annotatorState.getProject());
         if (predictionModel != null) {
-            AnnotationObject aoForVID = predictionModel.getPrediction(
-                    currentRecommendation.getOffset(), currentRecommendation.getAnnotation());
-            highlightVID = new VID(RecommendationEditorExtension.BEAN_NAME,
-                    selectedLayer.getObject().getId(), (int) aoForVID.getRecommenderId(),
-                    aoForVID.getId(), VID.NONE, VID.NONE);
-            vMarkerType = ANNOTATION_MARKER;
+            Optional<AnnotationObject> aoForVID = predictionModel.getPrediction(aBegin, aEnd,
+                    aRecommendation);
+            if (aoForVID.isPresent()) {
+                highlightVID = new VID(RecommendationEditorExtension.BEAN_NAME,
+                        selectedLayer.getObject().getId(), (int) aoForVID.get().getRecommenderId(),
+                        aoForVID.get().getId(), VID.NONE, VID.NONE);
+                vMarkerType = ANNOTATION_MARKER;
+            }
+            else {
+                error("Recommendation [" + aText + "] as [" + aRecommendation
+                        + "] no longer exists");
+                aTarget.addChildren(getPage(), IFeedback.class);
+                
+            }
         }
     }
 
@@ -307,11 +318,11 @@ public class ActiveLearningSidebar
 
 
     private void learnSkippedRecommendations(AjaxRequestTarget aTarget, Form<Void> aForm)
+        throws IOException
     {
         learnSkippedRecommendationTime = new Date();
-        currentDifference = activeLearningRecommender
-            .generateRecommendationWithLowestDifference(documentService,
-                learnSkippedRecommendationTime);
+        currentDifference = activeLearningRecommender.generateRecommendationWithLowestDifference(
+                documentService, learnSkippedRecommendationTime);
 
         showAndHighlightRecommendationAndJumpToRecommendationLocation(aTarget);
         aTarget.add(mainContainer);
@@ -331,9 +342,10 @@ public class ActiveLearningSidebar
                 currentRecommendation != null ? currentRecommendation.getConfidence() : 0.0)));
         recommendationForm.add(new Label(CID_RECOMMENDED_DIFFERENCE, LambdaModel.of(() -> 
                 currentDifference != null ? currentDifference.getDifference() : 0.0)));
-        recommendationForm.add(createAcceptRecommendationButton());
-        recommendationForm.add(createSkipRecommendationButton());
-        recommendationForm.add(createRejectRecommendationButton());
+        
+        recommendationForm.add(new LambdaAjaxLink(CID_ACCEPT_BUTTON, this::actionAccept));
+        recommendationForm.add(new LambdaAjaxLink(CID_SKIP_BUTTON, this::actionSkip));
+        recommendationForm.add(new LambdaAjaxLink(CID_REJECT_BUTTON, this::actionReject));
         
         return recommendationForm;
     }
@@ -342,49 +354,43 @@ public class ActiveLearningSidebar
     {
         LambdaAjaxLink link = new LambdaAjaxLink(CID_RECOMMENDATION_COVERED_TEXT_LINK,
                 this::jumpToRecommendationLocationAndHighlightRecommendation);
-        link.setBody(LambdaModel.of(() -> Optional.ofNullable(currentRecommendation)
-                .map(it -> it.getCoveredText()).orElse("")));
+//        link.setBody(LambdaModel.of(() -> Optional.ofNullable(currentRecommendation)
+//                .map(it -> it.getCoveredText()).orElse("")));
+        
+        link.setEscapeModelStrings(false);
+        link.setBody(LambdaModel.of(() -> {
+            if (currentRecommendation == null) {
+                return "";
+            }
+            else {
+                try {
+                    JCas jcas = getJCasProvider().get();
+                    String text = jcas.getDocumentText();
+                    int begin = currentRecommendation.getOffset().getBeginCharacter();
+                    int end = currentRecommendation.getOffset().getEndCharacter();
+                    int windowBegin = Math.max(begin - 25, 0);
+                    int windowEnd = Math.min(end + 25, text.length());
+                    
+                    return 
+                            Strings.escapeMarkup(text.substring(windowBegin, begin)) +
+                            "<b>" + Strings.escapeMarkup(text.substring(begin, end)) + "</b>" +
+                            Strings.escapeMarkup(text.substring(end, windowEnd));
+                            
+                }
+                catch (Exception e) {
+                    return "ERROR";
+                }
+            }
+        }));
         return link;
     }
 
     private void jumpToRecommendationLocationAndHighlightRecommendation(AjaxRequestTarget aTarget)
         throws IOException
     {
-        actionShowSelectedDocument(aTarget,
-                documentService.getSourceDocument(getModelObject().getProject(),
-                        currentRecommendation.getDocumentName()),
+        actionShowSelectedDocument(aTarget, getModelObject().getDocument(),
                 currentRecommendation.getOffset().getBeginCharacter());
-        highlightRecommendation();
-    }
-
-    private AjaxButton createAcceptRecommendationButton()
-    {
-        AjaxButton acceptRecommendationButton = new AjaxButton(CID_ACCEPT_BUTTON)
-        {
-            private static final long serialVersionUID = 558230909116668597L;
-
-            @Override
-            protected void onSubmit(AjaxRequestTarget target, Form<?> form)
-            {
-                writeLearningRecordInDatabase(LearningRecordUserAction.ACCEPTED);
-
-                try {
-                    acceptRecommendationInAnnotationPage(target);
-                }
-                catch (AnnotationException | IOException e) {
-                    LOG.error("Error: " + e.getMessage(), e);
-                    error("Error: " + e.getMessage());
-                    target.addChildren(getPage(), IFeedback.class);
-                }
-                currentDifference = activeLearningRecommender
-                    .generateRecommendationWithLowestDifference
-                        (documentService, learnSkippedRecommendationTime);
-
-                showAndHighlightRecommendationAndJumpToRecommendationLocation(target);
-                target.add(mainContainer);
-            }
-        };
-        return acceptRecommendationButton;
+        highlightCurrentRecommendation(aTarget);
     }
 
     private void writeLearningRecordInDatabase(LearningRecordUserAction userAction)
@@ -407,70 +413,57 @@ public class ActiveLearningSidebar
         learningRecordService.create(record);
     }
 
-    private void acceptRecommendationInAnnotationPage(AjaxRequestTarget aTarget)
-        throws AnnotationException, IOException
+    private void actionAccept(AjaxRequestTarget aTarget) throws AnnotationException, IOException
     {
+        aTarget.add(mainContainer);
+        writeLearningRecordInDatabase(LearningRecordUserAction.ACCEPTED);
+        
+        // Create annotation from recommendation
         AnnotatorState annotatorState = ActiveLearningSidebar.this.getModelObject();
         JCas jCas = this.getJCasProvider().get();
-
         SpanAdapter adapter = (SpanAdapter) annotationService.getAdapter(selectedLayer.getObject());
         AnnotationObject acceptedRecommendation = currentRecommendation;
-        int tokenBegin = acceptedRecommendation.getOffset().getBeginCharacter();
-        int tokenEnd = acceptedRecommendation.getOffset().getEndCharacter();
-        int id = adapter.add(annotatorState, jCas, tokenBegin, tokenEnd);
+        int begin = acceptedRecommendation.getOffset().getBeginCharacter();
+        int end = acceptedRecommendation.getOffset().getEndCharacter();
+        int id = adapter.add(annotatorState, jCas, begin, end);
         for (AnnotationFeature feature : annotationService
                 .listAnnotationFeature(selectedLayer.getObject())) {
             adapter.setFeatureValue(annotatorState, jCas, id, feature,
                     acceptedRecommendation.getAnnotation());
         }
+        
+        // Open accepted recommendation in the annotation detail editor panel
         VID vid = new VID(id);
-        annotatorState.getSelection().selectSpan(vid, jCas, tokenBegin, tokenEnd);
+        annotatorState.getSelection().selectSpan(vid, jCas, begin, end);
         AnnotationActionHandler aActionHandler = this.getActionHandler();
         aActionHandler.actionSelect(aTarget, jCas);
+        
+        // Save CAS
         aActionHandler.actionCreateOrUpdate(aTarget, jCas);
+        
+        moveToNextRecommendation(aTarget);
     }
 
-    private AjaxButton createSkipRecommendationButton()
+    private void actionSkip(AjaxRequestTarget aTarget) throws IOException
     {
-        AjaxButton skipRecommendationButton = new AjaxButton(CID_SKIP_BUTTON) {
-
-            private static final long serialVersionUID = 402196878010685583L;
-
-            @Override
-            public void onSubmit(AjaxRequestTarget target, Form<?> form)
-            {
-                writeLearningRecordInDatabase(LearningRecordUserAction.SKIPPED);
-                annotationPage.actionRefreshDocument(target);
-                currentDifference = activeLearningRecommender
-                    .generateRecommendationWithLowestDifference
-                        (documentService, learnSkippedRecommendationTime);
-                showAndHighlightRecommendationAndJumpToRecommendationLocation(target);
-                target.add(mainContainer);
-            }
-        };
-
-        return skipRecommendationButton;
+        aTarget.add(mainContainer);
+        writeLearningRecordInDatabase(LearningRecordUserAction.SKIPPED);
+        moveToNextRecommendation(aTarget);
     }
 
-    private AjaxButton createRejectRecommendationButton()
+    private void actionReject(AjaxRequestTarget aTarget) throws IOException
     {
-        AjaxButton rejectRecommendationButton = new AjaxButton(CID_REJECT_BUTTON)
-        {
-            private static final long serialVersionUID = 763990795394269L;
-
-            @Override
-            public void onSubmit(AjaxRequestTarget target, Form<?> form)
-            {
-                writeLearningRecordInDatabase(LearningRecordUserAction.REJECTED);
-                annotationPage.actionRefreshDocument(target);
-                currentDifference = activeLearningRecommender
-                    .generateRecommendationWithLowestDifference
-                        (documentService, learnSkippedRecommendationTime);
-                showAndHighlightRecommendationAndJumpToRecommendationLocation(target);
-                target.add(mainContainer);
-            }
-        };
-        return rejectRecommendationButton;
+        aTarget.add(mainContainer);
+        writeLearningRecordInDatabase(LearningRecordUserAction.REJECTED);
+        moveToNextRecommendation(aTarget);
+    }
+    
+    private void moveToNextRecommendation(AjaxRequestTarget aTarget)
+    {
+        annotationPage.actionRefreshDocument(aTarget);
+        currentDifference = activeLearningRecommender.generateRecommendationWithLowestDifference(
+                documentService, learnSkippedRecommendationTime);
+        showAndHighlightRecommendationAndJumpToRecommendationLocation(aTarget);
     }
 
     private Form<?> createLearningHistory()
@@ -498,18 +491,17 @@ public class ActiveLearningSidebar
             @Override
             protected void populateItem(ListItem<LearningRecord> item)
             {
-                LambdaAjaxLink jumpToAnnotationFromTokenTextLink = new LambdaAjaxLink(
-                        CID_JUMP_TO_ANNOTATION, t -> jumpAndHighlightFromLearningHistory(t, 
-                                item.getModelObject()));
-                jumpToAnnotationFromTokenTextLink
-                        .setBody(LambdaModel.of(item.getModelObject()::getTokenText));
-                item.add(jumpToAnnotationFromTokenTextLink);
+                LearningRecord rec = item.getModelObject();
                 
-                item.add(new Label(CID_RECOMMENDED_ANNOTATION,
-                        item.getModelObject().getAnnotation()));
-                item.add(new Label(CID_USER_ACTION, item.getModelObject().getUserAction()));
+                LambdaAjaxLink textLink = new LambdaAjaxLink(CID_JUMP_TO_ANNOTATION,t -> 
+                        jumpAndHighlightFromLearningHistory(t, item.getModelObject()));
+                textLink.setBody(LambdaModel.of(rec::getTokenText));
+                item.add(textLink);
+                
+                item.add(new Label(CID_RECOMMENDED_ANNOTATION, rec.getAnnotation()));
+                item.add(new Label(CID_USER_ACTION, rec.getUserAction()));
                 item.add(new LambdaAjaxLink(CID_REMOVE_RECORD, t -> 
-                        deleteRecordAndUpdateHistoryAndRedrawnMainPage(t, item.getModelObject())));
+                        actionRemoveHistoryItem(t, rec)));
             }
         };
         learningRecords = LambdaModel.of(this::listLearningRecords);
@@ -518,39 +510,25 @@ public class ActiveLearningSidebar
     }
 
     private void jumpAndHighlightFromLearningHistory(AjaxRequestTarget aTarget,
-        LearningRecord record)
+            LearningRecord record)
         throws IOException
     {
         actionShowSelectedDocument(aTarget, record.getSourceDocument(),
             record.getOffsetCharacterBegin());
 
         if (record.getUserAction().equals(LearningRecordUserAction.REJECTED)) {
-            highlightTextAndDisplayMessage(record);
+            highlightTextAndDisplayMessage(aTarget, record);
         }
         // if the suggestion still exists, highlight that suggestion.
         else if (activeLearningRecommender.checkRecommendationExist(documentService, record)) {
-            AnnotatorState annotatorState = ActiveLearningSidebar.this.getModelObject();
-            predictionModel = recommendationService
-                .getPredictions(annotatorState.getUser(), annotatorState.getProject());
-
-            Offset recordOffset = new Offset(record.getOffsetCharacterBegin(),
-                record.getOffsetCharacterEnd(), record.getOffsetTokenBegin(),
-                record.getOffsetTokenEnd());
-
-            if (predictionModel != null) {
-                AnnotationObject aoForVID = predictionModel
-                    .getPrediction(recordOffset, record.getAnnotation());
-                highlightVID = new VID(RecommendationEditorExtension.BEAN_NAME,
-                        selectedLayer.getObject().getId(), (int) aoForVID.getRecommenderId(),
-                        aoForVID.getId(), VID.NONE, VID.NONE);
-                vMarkerType = ANNOTATION_MARKER;
-            }
+            highlightRecommendation(aTarget, record.getOffsetCharacterBegin(),
+                    record.getOffsetCharacterEnd(), record.getTokenText(), record.getAnnotation());
         }
         // if the suggestion doesn't exit -> if that suggestion is accepted and annotated,
         // highlight the annotation.
         // else, highlight the text.
         else if (!isAnnotatedInCas(record)) {
-            highlightTextAndDisplayMessage(record);
+            highlightTextAndDisplayMessage(aTarget, record);
         }
     }
 
@@ -577,11 +555,12 @@ public class ActiveLearningSidebar
         return false;
     }
 
-    private void highlightTextAndDisplayMessage(LearningRecord record)
+    private void highlightTextAndDisplayMessage(AjaxRequestTarget aTarget, LearningRecord aRecord)
     {
-        selectedRecord = record;
+        selectedRecord = aRecord;
         vMarkerType = TEXT_MARKER;
         error("No annotation could be highlighted.");
+        aTarget.addChildren(getPage(), IFeedback.class);
     }
 
     private List<LearningRecord> listLearningRecords()
@@ -592,13 +571,13 @@ public class ActiveLearningSidebar
                 selectedLayer.getObject());
     }
 
-    private void deleteRecordAndUpdateHistoryAndRedrawnMainPage(AjaxRequestTarget aTarget,
+    private void actionRemoveHistoryItem(AjaxRequestTarget aTarget,
             LearningRecord aRecord)
     {
-        learningRecordService.delete(aRecord);
-        learningRecords.detach();
         aTarget.add(mainContainer);
         annotationPage.actionRefreshDocument(aTarget);
+        learningRecordService.delete(aRecord);
+        learningRecords.detach();
     }
 
     @OnEvent
@@ -609,6 +588,7 @@ public class ActiveLearningSidebar
         
         predictionModel = recommendationService.getPredictions(annotatorState.getUser(),
                 annotatorState.getProject());
+        
         if (sessionActive && eventState.getUser().equals(annotatorState.getUser())
                 && eventState.getProject().equals(annotatorState.getProject())) {
             if (eventState.getDocument().equals(annotatorState.getDocument())

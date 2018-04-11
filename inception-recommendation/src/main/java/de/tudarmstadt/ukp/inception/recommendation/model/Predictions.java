@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -41,7 +42,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.AnnotationObject;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.Offset;
 
 /**
  * Stores references to the recommendationService, the currently used JCas and the annotatorState.
@@ -199,12 +199,13 @@ public class Predictions
     /**
      * Returns the prediction used to generate the VID
      */
-    public AnnotationObject getPrediction(Offset aOffset, String aLabel) 
+    public Optional<AnnotationObject> getPrediction(int aBegin, int aEnd, String aLabel) 
     {
         return predictions.values().stream()
-                .filter(f -> f.getOffset().equals(aOffset))
+                .filter(f -> f.getOffset().getBeginCharacter() == aBegin
+                        && f.getOffset().getEndCharacter() == aEnd)
                 .filter(f -> f.getAnnotation().equals(aLabel))
-                .max((p1, p2) -> Integer.compare(p1.getId(), p2.getId())).get();
+                .max((p1, p2) -> Integer.compare(p1.getId(), p2.getId()));
     }
     
     /**

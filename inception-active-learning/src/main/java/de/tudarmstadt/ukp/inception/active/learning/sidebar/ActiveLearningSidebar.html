@@ -42,12 +42,12 @@
           </div>
         </form>
 
-        <div class="panel panel-default panel-small">
-          <span class="col-sm-12" wicket:id="noRecommendationLabel"> no Recommendation</span>
+        <div class="panel panel-default panel-small" wicket:enclosure="noRecommendationLabel">
+          <span class="col-sm-12" wicket:id="noRecommendationLabel">no Recommendation</span>
         </div>
 
         <form class="panel panel-default panel-small" wicket:id="learnFromSkippedRecommendationForm">
-          <span class="col-sm-12" wicket:id="onlySkippedRecommendationLabel"> learnSkippedOnes</span>
+          <span class="col-sm-12" wicket:id="onlySkippedRecommendationLabel">learnSkippedOnes</span>
           <div class="panel-footer text-right">
             <input type="submit" class="btn btn-success" wicket:id="learnSkippedOnes" value="Yes"/>
           </div>
@@ -61,7 +61,7 @@
               <label class="col-sm-3 control-label">Text</label>
               <div class="col-sm-9" style="position: relative; height: 5em;">
                 <div class="form-control"
-                  style="overflow-y: auto; width: unset; word-wrap: break-word; height: 5em; position: absolute; top: 0; left: 15px; right: 15px;"
+                  style="overflow-y: auto; width: unset; word-wrap: break-word; height: 5em; position: absolute; top: 0; left: 10px; right: 10px;"
                   readonly>
                   <a wicket:id="recommendationCoveredTextLink"></a>
                 </div>
@@ -74,22 +74,22 @@
               </div>
             </div>
             <div class="form-group">
-              <label class="col-sm-3 control-label">Confidence</label>
+              <label class="col-sm-3 control-label">Score</label>
               <div class="col-sm-9">
                 <span class="form-control" wicket:id="recommendedConfidence"></span>
               </div>
             </div>
             <div class="form-group">
-              <label class="col-sm-3 control-label">Difference</label>
+              <label class="col-sm-3 control-label">Delta</label>
               <div class="col-sm-9">
                 <span class="form-control" wicket:id="recommendedDifference"></span>
               </div>
             </div>
           </div>
           <div class="panel-footer text-right">
-            <input type="submit" class="btn btn-success" wicket:id="acceptButton" value="Accept"/>
-            <input type="submit" class="btn btn-danger" wicket:id="rejectButton" value="Reject"/>
-            <input type="submit" class="btn btn-warning" wicket:id="skipButton" value="Skip"/>
+            <input type="button" class="btn btn-success" wicket:id="acceptButton" value="Accept"/>
+            <input type="button" class="btn btn-danger" wicket:id="rejectButton" value="Reject"/>
+            <input type="button" class="btn btn-warning" wicket:id="skipButton" value="Skip"/>
           </div>
         </form>
 
