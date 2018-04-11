@@ -31,6 +31,31 @@
       constraintName="FK_4pfd2vykcbrnyvg6v71rhtimf" deferrable="false" initiallyDeferred="false"
       onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="project" />
   </changeSet>
+  
+  <changeSet author="INCEpTION Team" id="20180204-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="knowledgebase" columnName="supportConceptLinking"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="knowledgebase">
+      <column name="supportConceptLinking" type="BOOLEAN" defaultValueBoolean="false">
+        <constraints nullable="false" />
+      </column>
+    </addColumn>
+  </changeSet>
+  
+  <changeSet author="INCEpTION Team" id="20180204-2-4">
+    <preConditions onFail="MARK_RAN">
+      <columnExists tableName="knowledgebase" columnName="modelingLanguage"/>
+    </preConditions>
+    <comment>
+      We had a brief period where a "modelingLanguage" was maintained in the KB, but it was
+      replaced by the various "Iri" columns. This change set just cleans up the DB by removing
+      the "modelingLanguage" column if it still exists.
+    </comment> 
+    <dropColumn tableName="knowledgebase" columnName="modelingLanguage"/>
+  </changeSet>
 
   <changeSet author="INCEpTION Team" id="20180214-1">
     <preConditions onFail="MARK_RAN">
@@ -154,5 +179,4 @@
       deferrable="false" initiallyDeferred="false" onDelete="CASCADE"
       onUpdate="CASCADE" referencedColumnNames="id" referencedTableName="project" />
   </changeSet>
-
 </databaseChangeLog>

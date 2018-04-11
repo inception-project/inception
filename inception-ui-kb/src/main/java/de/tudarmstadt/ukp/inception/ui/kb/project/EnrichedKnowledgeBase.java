@@ -38,7 +38,8 @@ public class EnrichedKnowledgeBase implements Serializable {
     private String typeIri;
     private boolean enabled = true;
     private List<File> files;
-
+    private boolean supportConceptLinking;
+    
     public KnowledgeBase getKb() {
         return kb;
     }
@@ -102,4 +103,13 @@ public class EnrichedKnowledgeBase implements Serializable {
         enabled = isEnabled;
     }
 
+    public boolean isSupportConceptLinking()
+    {
+        return supportConceptLinking;
+    }
+
+    public void setSupportConceptLinking(boolean aSupportConceptLinking)
+    {
+        supportConceptLinking = aSupportConceptLinking;
+    }
 }

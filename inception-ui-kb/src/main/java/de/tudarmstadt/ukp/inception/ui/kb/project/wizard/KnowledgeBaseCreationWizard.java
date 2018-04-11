@@ -39,6 +39,7 @@ import org.apache.wicket.extensions.wizard.dynamic.DynamicWizardModel;
 import org.apache.wicket.extensions.wizard.dynamic.DynamicWizardStep;
 import org.apache.wicket.extensions.wizard.dynamic.IDynamicWizardStep;
 import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.RadioGroup;
 import org.apache.wicket.markup.html.form.RequiredTextField;
 import org.apache.wicket.markup.html.form.TextField;
@@ -48,6 +49,7 @@ import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.validation.IValidator;
@@ -98,7 +100,7 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
     private final IModel<Project> projectModel;
     private final DynamicWizardModel wizardModel;
     private final CompoundPropertyModel<EnrichedKnowledgeBase> wizardDataModel;
-
+    
     public KnowledgeBaseCreationWizard(String id, IModel<Project> aProjectModel) {
         super(id);
 
@@ -291,7 +293,9 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
                     link.add(new Label("suggestionLabel", item.getModelObject()));
                     item.add(link);
                 }
-            });            
+            });
+            add(new CheckBox("supportConceptLinking",
+                    new PropertyModel<Boolean>(model, "supportConceptLinking")));
         }
         
         @Override

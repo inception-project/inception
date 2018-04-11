@@ -23,10 +23,12 @@ import java.io.OutputStream;
 import java.util.List;
 import java.util.Optional;
 
+import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.eclipse.rdf4j.model.vocabulary.XMLSchema;
+import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.repository.config.RepositoryImplConfig;
 import org.eclipse.rdf4j.repository.manager.RepositoryInfo;
 import org.eclipse.rdf4j.rio.RDFFormat;
@@ -70,7 +72,7 @@ public interface KnowledgeBaseService
      * @param kb a {@link KnowledgeBase}
      */
     boolean isEmpty(KnowledgeBase kb);
-
+    
     void registerKnowledgeBase(KnowledgeBase kb, RepositoryImplConfig cfg);
 
     boolean knowledgeBaseExists(Project project, String kbName);
@@ -260,4 +262,16 @@ public interface KnowledgeBaseService
     List<KBHandle> listRootConcepts(KnowledgeBase kb, boolean aAll);
 
     List<KBHandle> listChildConcepts(KnowledgeBase kb, String parentIdentifier, boolean aAll);
+    
+    RepositoryConnection getConnection(KnowledgeBase kb);
+
+    interface ReadAction<T>
+    {
+        T accept(RepositoryConnection aConnection);
+    }
+
+    <T> T read(KnowledgeBase kb, ReadAction<T> aAction);
+
+    List<KBHandle> list(KnowledgeBase kb, IRI aType, boolean aIncludeInferred, boolean
+        aAll);
 }
