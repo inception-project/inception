@@ -62,7 +62,7 @@ import de.tudarmstadt.ukp.inception.recommendation.scheduling.RecommendationSche
 public class RecommendationServiceImpl
     implements RecommendationService
 {
-    private Logger log = LoggerFactory.getLogger(getClass());
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     private @PersistenceContext EntityManager entityManager;
     
@@ -89,12 +89,17 @@ public class RecommendationServiceImpl
         Predictions predictions;
         synchronized (state) {
             predictions = state.getIncomingPredictions(aProject);
-            if (predictions == null) {
-                predictions = new Predictions(aProject, aUser); 
-                state.putIncomingPredictions(aProject, predictions);
-            }
         }
         return predictions;
+    }
+    
+    @Override
+    public void putIncomingPredictions(User aUser, Project aProject, Predictions aPredictions)
+    {
+        RecommendationUserState state = getState(aUser.getUsername());
+        synchronized (state) {
+            state.putIncomingPredictions(aProject, aPredictions);
+        }
     }
     
     @Override
@@ -157,6 +162,19 @@ public class RecommendationServiceImpl
                 .setParameter("project", aProject).getResultList();
         return settings;
     }
+    
+    @Override
+    public List<AnnotationLayer> listLayersWithEnabledRecommenders(Project aProject)
+    {
+        String query = 
+                "SELECT DISTINCT r.layer " +
+                "FROM Recommender r " +
+                "WHERE r.project = :project AND r.enabled = :enabled " +
+                "ORDER BY r.layer.name ASC";
+
+        return entityManager.createQuery(query, AnnotationLayer.class)
+                .setParameter("project", aProject).setParameter("enabled", true).getResultList();
+    }
 
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
@@ -198,11 +216,7 @@ public class RecommendationServiceImpl
     private void triggerTrainingAndClassification(String aUser, Project aProject)
     {
         User user = userRepository.get(aUser);
-        Predictions model = getIncomingPredictions(user, aProject);
-        if (model == null) {
-            return;
-        }
-        scheduler.enqueueTask(user, aProject, model);
+        scheduler.enqueueTask(user, aProject);
     }
     
     @EventListener

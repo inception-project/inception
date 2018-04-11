@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.scheduling.tasks;
 
-import static org.apache.commons.lang3.Validate.notNull;
-
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
@@ -39,7 +37,6 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.core.classificationtool.
 import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.AnnotationObject;
 import de.tudarmstadt.ukp.inception.recommendation.imls.core.loader.AnnotationObjectLoader;
 import de.tudarmstadt.ukp.inception.recommendation.imls.core.trainer.Trainer;
-import de.tudarmstadt.ukp.inception.recommendation.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.scheduling.RecommendationScheduler;
 import de.tudarmstadt.ukp.inception.recommendation.service.RecommendationService;
@@ -52,20 +49,14 @@ public class TrainingTask
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private final Predictions predictions;
-    
     private @Autowired AnnotationSchemaService annoService;
     private @Autowired DocumentService documentService;
     private @Autowired RecommendationService recommendationService;
     private @Autowired RecommendationScheduler recommendationScheduler;
 
-    public TrainingTask(User aUser, Project aProject, Predictions aPredictions)
+    public TrainingTask(User aUser, Project aProject)
     {
         super(aProject, aUser);
-        
-        notNull(aPredictions);
-        
-        predictions = aPredictions;
     }
     
     @Override
@@ -97,8 +88,7 @@ public class TrainingTask
 
                 log.info("[{}][{}]: Extracting training data...", user.getUsername(),
                         recommender.getName());
-                List<List<AnnotationObject>> trainingData = getTrainingData(classificationTool,
-                        predictions);
+                List<List<AnnotationObject>> trainingData = getTrainingData(classificationTool);
 
                 if (trainingData == null || trainingData.isEmpty()) {
                     log.info("[{}][{}]: No training data.", user.getUsername(),
@@ -115,11 +105,10 @@ public class TrainingTask
             }
         }
         
-        recommendationScheduler.enqueue(new PredictionTask(user, getProject(), predictions));
+        recommendationScheduler.enqueue(new PredictionTask(user, getProject()));
     }
 
-    private List<List<AnnotationObject>> getTrainingData(ClassificationTool<?> tool,
-            Predictions model)
+    private List<List<AnnotationObject>> getTrainingData(ClassificationTool<?> tool)
     {
         List<List<AnnotationObject>> result = new LinkedList<>();
 
@@ -128,7 +117,7 @@ public class TrainingTask
             return result;
         }
 
-        Project p = model.getProject();
+        Project p = getProject();
         List<SourceDocument> docs = documentService.listSourceDocuments(p);
 
         for (SourceDocument doc : docs) {

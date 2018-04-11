@@ -24,137 +24,83 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.inception.active.learning.ActiveLearningService;
 import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.AnnotationObject;
 import de.tudarmstadt.ukp.inception.recommendation.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.model.LearningRecordUserAction;
-import de.tudarmstadt.ukp.inception.recommendation.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.service.LearningRecordService;
-import de.tudarmstadt.ukp.inception.recommendation.service.RecommendationService;
 
 public class ActiveLearningRecommender
     implements Serializable
 {
-    private static final Logger logger = LoggerFactory.getLogger(ActiveLearningSidebar.class);
     private static final long serialVersionUID = -2308436775710912029L;
 
-    private RecommendationService recommendationService;
     private List<AnnotationObject> recommendations;
     private List<List<AnnotationObject>> listOfRecommendationsForEachToken;
     private AnnotatorState annotatorState;
     private AnnotationLayer selectedLayer;
-    private AnnotationSchemaService annotationService;
-    private LearningRecordService learningRecordService;
-    private DocumentService documentService;
-
-    public ActiveLearningRecommender(RecommendationService recommendationService,
-            AnnotatorState annotatorState, AnnotationLayer selectedLayer,
-            AnnotationSchemaService annotationService, LearningRecordService recordService)
+    
+    public ActiveLearningRecommender(AnnotatorState aState, AnnotationLayer aLayer)
     {
-        this.recommendationService = recommendationService;
-        this.annotatorState = annotatorState;
-        this.selectedLayer = selectedLayer;
-        this.annotationService = annotationService;
-        this.learningRecordService = recordService;
+        annotatorState = aState;
+        selectedLayer = aLayer;
     }
 
     public RecommendationDifference generateRecommendationWithLowestDifference(
-        DocumentService aDocumentService, Date learnSkippedRecommendationTime)
+            LearningRecordService aRecordService, ActiveLearningService aActiveLearningService,
+            Date learnSkippedRecommendationTime)
     {
-        this.documentService = aDocumentService;
-
-        getRecommendationFromRecommendationModel();
+        listOfRecommendationsForEachToken = aActiveLearningService
+                .getRecommendationFromRecommendationModel(annotatorState, selectedLayer);
 
         // remove recommendations with Null Annotation
-        listOfRecommendationsForEachToken.forEach(
-            recommendationList -> removeRecommendationsWithNullAnnotation(recommendationList));
-        listOfRecommendationsForEachToken.removeIf(recommendationList
-            -> recommendationList.isEmpty());
+        listOfRecommendationsForEachToken.forEach(recommendationList -> 
+                removeRecommendationsWithNullAnnotation(recommendationList));
+        listOfRecommendationsForEachToken.removeIf(recommendationList -> 
+                recommendationList.isEmpty());
 
         // remove duplicate recommendations
-        for (int i = 0; i < listOfRecommendationsForEachToken.size(); i++)
-        {
-            List<AnnotationObject> recommendationList = listOfRecommendationsForEachToken.get(i);
-            listOfRecommendationsForEachToken.set(i,
-                removeDuplicateRecommendations(recommendationList));
-        }
-
+        listOfRecommendationsForEachToken = listOfRecommendationsForEachToken.stream()
+                .map(it -> removeDuplicateRecommendations(it))
+                .collect(Collectors.toList());
+        
         // remove rejected recommendations
-        removeRejectedOrSkippedAnnotations(true, learnSkippedRecommendationTime);
+        removeRejectedOrSkippedAnnotations(aRecordService, true, learnSkippedRecommendationTime);
 
-        return calculateDifferencesAndReturnLowestDifference();
+        return calculateDifferencesAndReturnLowestDifference(listOfRecommendationsForEachToken);
     }
 
-    public boolean hasRecommendationWhichIsSkipped()
+    public boolean hasRecommendationWhichIsSkipped(LearningRecordService aRecordService,
+            ActiveLearningService aActiveLearningService)
     {
-        getRecommendationFromRecommendationModel();
-        removeRejectedOrSkippedAnnotations(false, null);
+        listOfRecommendationsForEachToken = aActiveLearningService
+                .getRecommendationFromRecommendationModel(annotatorState, selectedLayer);
+        removeRejectedOrSkippedAnnotations(aRecordService, false, null);
         return !listOfRecommendationsForEachToken.isEmpty();
     }
 
-    public void getRecommendationFromRecommendationModel()
-    {
-        Predictions model = recommendationService.getPredictions(annotatorState.getUser(),
-                annotatorState.getProject());
-
-        //getRecommendationsForThisDocument(model);
-        getRecommendationsForWholeProject(model);
-    }
-
-    // TODO #176 use the document Id once it it available in the CAS
-    private void getRecommendationsForThisDocument(Predictions model, JCas aJcas) {
-        int windowBegin = 0;
-        int windowEnd = aJcas.getDocumentText().length() - 1;
-        listOfRecommendationsForEachToken = model
-            .getPredictions(annotatorState.getDocument().getName(), selectedLayer,
-                windowBegin, windowEnd, aJcas);
-    }
-
-    private void getRecommendationsForWholeProject(Predictions model) {
-        listOfRecommendationsForEachToken = new ArrayList();
-
-        if (model != null) {
-            Map<String, List<List<AnnotationObject>>> recommendationsMap = model
-                .getPredictionsForWholeProject(selectedLayer, documentService);
-
-
-            Set<String> documentNameSet = recommendationsMap.keySet();
-
-            for (String documentName : documentNameSet) {
-                listOfRecommendationsForEachToken.addAll(recommendationsMap.get(documentName));
-            }
-        }
-    }
-
-    private void removeRecommendationsWithNullAnnotation(
+    private static void removeRecommendationsWithNullAnnotation(
         List<AnnotationObject> recommendationsList)
     {
         if (recommendationsList != null) {
-            if (!recommendationsList.isEmpty()) {
-                recommendationsList.removeIf(recommendation -> recommendation.getAnnotation() ==
-                    null);
-            }
+            recommendationsList.removeIf(recommendation -> recommendation.getAnnotation() == null);
         }
     }
 
-    private List<AnnotationObject> removeDuplicateRecommendations(
+    private static List<AnnotationObject> removeDuplicateRecommendations(
         List<AnnotationObject> unmodifiedRecommendationList)
     {
-        ArrayList<AnnotationObject> cleanRecommendationList = new ArrayList<>();
+        List<AnnotationObject> cleanRecommendationList = new ArrayList<>();
 
         unmodifiedRecommendationList.forEach(recommendationItem -> {
             if (!isAlreadyInCleanList(cleanRecommendationList, recommendationItem)) {
@@ -165,28 +111,31 @@ public class ActiveLearningRecommender
         return cleanRecommendationList;
     }
 
-    private boolean isAlreadyInCleanList(List<AnnotationObject> cleanRecommendationList,
-                                         AnnotationObject recommendationItem)
+    private static boolean isAlreadyInCleanList(List<AnnotationObject> cleanRecommendationList,
+            AnnotationObject recommendationItem)
     {
         String classifier = recommendationItem.getClassifier();
         String annotation = recommendationItem.getAnnotation();
         String documentName = recommendationItem.getDocumentName();
+        
         for (AnnotationObject existedRecommendation : cleanRecommendationList) {
-            if (existedRecommendation.getClassifier().equals(classifier)
-                && existedRecommendation.getAnnotation().equals(annotation) &&
-                existedRecommendation.getDocumentName().equals(documentName)) {
+            if (
+                    existedRecommendation.getClassifier().equals(classifier) && 
+                    existedRecommendation.getAnnotation().equals(annotation) &&
+                    existedRecommendation.getDocumentName().equals(documentName)
+            ) {
                 return true;
             }
         }
         return false;
     }
 
-    private void removeRejectedOrSkippedAnnotations(boolean filterSkippedRecommendation,
-        Date learnSkippedRecommendationTime)
+    private void removeRejectedOrSkippedAnnotations(LearningRecordService aRecordService,
+            boolean filterSkippedRecommendation, Date learnSkippedRecommendationTime)
     {
-        List<LearningRecord> records = learningRecordService.getAllRecordsByDocumentAndUserAndLayer
+        List<LearningRecord> records = aRecordService.getAllRecordsByDocumentAndUserAndLayer
             (annotatorState.getDocument(), annotatorState.getUser().getUsername(), selectedLayer);
-        for (List<AnnotationObject> recommendations: listOfRecommendationsForEachToken) {
+        for (List<AnnotationObject> recommendations : listOfRecommendationsForEachToken) {
             recommendations.removeIf(recommendation -> doesContainRejectedOrSkippedRecord(records,
                 recommendation, filterSkippedRecommendation, learnSkippedRecommendationTime));
         }
@@ -194,7 +143,7 @@ public class ActiveLearningRecommender
             recommendationsList.isEmpty());
     }
 
-    private boolean doesContainRejectedOrSkippedRecord(List<LearningRecord> records,
+    private static boolean doesContainRejectedOrSkippedRecord(List<LearningRecord> records,
         AnnotationObject aRecommendation, boolean filterSkippedRecommendation,
         Date learnSkippedRecommendationTime)
     {
@@ -209,19 +158,20 @@ public class ActiveLearningRecommender
         return false;
     }
 
-    private boolean filterSkippedRecord(LearningRecord record, boolean filterSkippedRecommendation)
+    private static boolean filterSkippedRecord(LearningRecord record,
+            boolean filterSkippedRecommendation)
     {
         return record.getUserAction().equals(LearningRecordUserAction.SKIPPED)
-            && filterSkippedRecommendation;
+                && filterSkippedRecommendation;
     }
 
-    private boolean hasSameTokenAndSuggestion(AnnotationObject aRecommendation,
-        LearningRecord aRecord)
+    private static boolean hasSameTokenAndSuggestion(AnnotationObject aRecommendation,
+            LearningRecord aRecord)
     {
-        return aRecord.getSourceDocument().getName().equals(aRecommendation.getDocumentName())
-            && aRecord.getOffsetTokenBegin() == aRecommendation.getOffset().getBeginToken()
-            && aRecord.getOffsetTokenEnd() == aRecommendation.getOffset().getEndToken() && aRecord
-            .getAnnotation().equals(aRecommendation.getAnnotation());
+        return aRecord.getSourceDocument().getName().equals(aRecommendation.getDocumentName()) && 
+                aRecord.getOffsetTokenBegin() == aRecommendation.getOffset().getBeginToken() && 
+                aRecord.getOffsetTokenEnd() == aRecommendation.getOffset().getEndToken() && 
+                aRecord.getAnnotation().equals(aRecommendation.getAnnotation());
     }
 
     /**
@@ -231,17 +181,18 @@ public class ActiveLearningRecommender
      * @param record
      * @return
      */
-    private boolean needFilterByTime(Date learnSkippedTime, LearningRecord record)
+    private static boolean needFilterByTime(Date learnSkippedTime, LearningRecord record)
     {
         return learnSkippedTime == null || learnSkippedTime.compareTo(record.getActionDate()) <= 0;
     }
 
-    private RecommendationDifference calculateDifferencesAndReturnLowestDifference()
+    private static RecommendationDifference calculateDifferencesAndReturnLowestDifference(
+            List<List<AnnotationObject>> aListOfRecommendationsForEachToken)
     {
         // create list of recommendationsList, each recommendationsList contains all
         // recommendations from one classifer for one token
         List<List<AnnotationObject>> listOfRecommendationsPerTokenPerClassifier =
-            createRecommendationListsPerTokenPerClassifier();
+            createRecommendationListsPerTokenPerClassifier(aListOfRecommendationsForEachToken);
 
         // get a list of differences, sorted ascendingly
         List<RecommendationDifference> recommendationDifferences =
@@ -257,12 +208,13 @@ public class ActiveLearningRecommender
         }
     }
 
-    private List<List<AnnotationObject>> createRecommendationListsPerTokenPerClassifier()
+    private static List<List<AnnotationObject>> createRecommendationListsPerTokenPerClassifier(
+            List<List<AnnotationObject>> aListOfRecommendationsForEachToken)
     {
         List<List<AnnotationObject>> listOfRecommendationsPerTokenPerClassifier = new ArrayList<>();
-        for (int i = 0; i < listOfRecommendationsForEachToken.size(); i++) {
+        for (int i = 0; i < aListOfRecommendationsForEachToken.size(); i++) {
             List<AnnotationObject> recommendationsPerToken =
-                listOfRecommendationsForEachToken.get(i);
+                    aListOfRecommendationsForEachToken.get(i);
             if (recommendationsPerToken.size() == 1) {
                 listOfRecommendationsPerTokenPerClassifier.add(recommendationsPerToken);
             }
@@ -279,7 +231,8 @@ public class ActiveLearningRecommender
         return listOfRecommendationsPerTokenPerClassifier;
     }
 
-    private boolean fromMoreThanOneClassifier(List<AnnotationObject> recommendationListPerToken)
+    private static boolean fromMoreThanOneClassifier(
+            List<AnnotationObject> recommendationListPerToken)
     {
         int numberOfStringMatchingClassifer = 0;
         int numberOfOpenNLPClassifier = 0;
@@ -294,9 +247,9 @@ public class ActiveLearningRecommender
         return numberOfOpenNLPClassifier >= 1 && numberOfStringMatchingClassifer >= 1;
     }
 
-    private void splitRecommendationsWithRegardToClassifier(
-        List<List<AnnotationObject>> listOfRecommendationsPerTokenPerClassifier,
-        List<AnnotationObject> recommendationsPerToken)
+    private static void splitRecommendationsWithRegardToClassifier(
+            List<List<AnnotationObject>> listOfRecommendationsPerTokenPerClassifier,
+            List<AnnotationObject> recommendationsPerToken)
     {
         List<AnnotationObject> stringMatchingClassifierAnnotationObject = new ArrayList<>();
         for (AnnotationObject recommendation : recommendationsPerToken) {
@@ -310,8 +263,8 @@ public class ActiveLearningRecommender
         listOfRecommendationsPerTokenPerClassifier.add(stringMatchingClassifierAnnotationObject);
     }
 
-    private List<RecommendationDifference> createDifferencesSortedAscendingly(
-        List<List<AnnotationObject>> listOfRecommendationsPerTokenPerClassifier)
+    private static List<RecommendationDifference> createDifferencesSortedAscendingly(
+            List<List<AnnotationObject>> listOfRecommendationsPerTokenPerClassifier)
     {
         List<RecommendationDifference> recommendationDifferences = new ArrayList<>();
         for (List<AnnotationObject> recommendationsList :
@@ -324,7 +277,7 @@ public class ActiveLearningRecommender
         return recommendationDifferences;
     }
 
-    private RecommendationDifference getSmallestDifferencePerTokenPerClassifier(
+    private static RecommendationDifference getSmallestDifferencePerTokenPerClassifier(
         List<AnnotationObject> recommendationsList)
     {
         if (recommendationsList.size() == 1) {
@@ -333,32 +286,17 @@ public class ActiveLearningRecommender
             return new RecommendationDifference(confidenceDifference, recommendation);
         }
         else {
-            List<AnnotationObject> sortedRecommendationsList =
-                sortRecommendationsAscendingByConfidenceScore(recommendationsList);
-            Collections.reverse(sortedRecommendationsList);
+            Collections.sort(recommendationsList,
+                    Comparator.comparingDouble(AnnotationObject::getConfidence).reversed());
             List<RecommendationDifference> differencesAmongOneClassifierPerToken =
-                generateDifferencesPerTokenPerClassifier(sortedRecommendationsList);
+                generateDifferencesPerTokenPerClassifier(recommendationsList);
             sortDifferencesAscending(differencesAmongOneClassifierPerToken);
             return differencesAmongOneClassifierPerToken.get(0);
         }
     }
 
-    private List<AnnotationObject> sortRecommendationsAscendingByConfidenceScore(
-        List<AnnotationObject> recommendationsList)
-    {
-        Collections.sort(recommendationsList, new Comparator<AnnotationObject>()
-        {
-            @Override
-            public int compare(AnnotationObject ao1, AnnotationObject ao2)
-            {
-                return Double.compare(ao1.getConfidence(), ao2.getConfidence());
-            }
-        });
-        return recommendationsList;
-    }
-
-    private List<RecommendationDifference> generateDifferencesPerTokenPerClassifier(
-        List<AnnotationObject> sortedRecommendationsList)
+    private static List<RecommendationDifference> generateDifferencesPerTokenPerClassifier(
+            List<AnnotationObject> sortedRecommendationsList)
     {
         List<RecommendationDifference> differencesAmongOneClassifierPerToken = new ArrayList<>();
         for (int i = 0; i < sortedRecommendationsList.size() - 1; i++) {
@@ -371,61 +309,49 @@ public class ActiveLearningRecommender
         return differencesAmongOneClassifierPerToken;
     }
 
-    private void sortDifferencesAscending(
+    private static void sortDifferencesAscending(
         List<RecommendationDifference> differences)
     {
-        Collections.sort(differences, new Comparator<RecommendationDifference>()
-        {
-            @Override
-            public int compare(RecommendationDifference rd1, RecommendationDifference rd2)
-            {
-                return Double.compare(rd1.getDifference(), rd2.getDifference());
-            }
-        });
+        Collections.sort(differences, (rd1, rd2) -> 
+                Double.compare(rd1.getDifference(), rd2.getDifference()));
     }
 
-    public Optional<AnnotationObject> generateRecommendationWithLowestConfidence(JCas aJcas)
+    public Optional<AnnotationObject> generateRecommendationWithLowestConfidence(
+            ActiveLearningService aActiveLearningService, JCas aJcas)
     {
-        getFlattenedRecommendationsFromRecommendationModel(aJcas);
+        recommendations = aActiveLearningService.getFlattenedRecommendationsFromRecommendationModel(
+                aJcas, annotatorState, selectedLayer);
         removeRecommendationsWithNullAnnotation(recommendations);
-        removeAlreadyExistingAnnotationsFromFlattenList(aJcas);
-        recommendations = sortRecommendationsAscendingByConfidenceScore(recommendations);
+        removeExistingAnnotations(aJcas, selectedLayer, recommendations);
+        Collections.sort(recommendations,
+                Comparator.comparingDouble(AnnotationObject::getConfidence));
         return recommendations.stream().findFirst();
     }
 
-    private void getFlattenedRecommendationsFromRecommendationModel(JCas aJcas)
+    private static void removeExistingAnnotations(JCas aJcas,
+            AnnotationLayer aLayer, List<AnnotationObject> aRecommendations)
+    {
+        Iterator<AnnotationFS> existingAnnotations = getAlreadyExistingAnnotations(aJcas, aLayer);
+        List<Integer> existingAnnotationsSpanBegin = mapToBeginOffsets(existingAnnotations);
+        aRecommendations.removeIf(recommendation -> existingAnnotationsSpanBegin
+                .contains(recommendation.getOffset().getBeginCharacter()));
+    }
+
+    private static Iterator<AnnotationFS> getAlreadyExistingAnnotations(JCas aJcas,
+            AnnotationLayer aLayer)
     {
         int windowBegin = 0;
         int windowEnd = aJcas.getDocumentText().length() - 1;
-        Predictions model = recommendationService.getPredictions(annotatorState.getUser(),
-                annotatorState.getProject());
-        // TODO #176 use the document Id once it it available in the CAS
-        recommendations = model.getFlattenedPredictions(annotatorState.getDocument()
-            .getName(), selectedLayer, windowBegin, windowEnd, aJcas);
-    }
-
-    private void removeAlreadyExistingAnnotationsFromFlattenList(JCas aJcas)
-    {
-        Iterator existingAnnotations = getAlreadyExistingAnnotations(aJcas);
-        ArrayList<Integer> existingAnnotationsSpanBegin = storeExistingAnnotationsSpanBegin(
-            existingAnnotations);
-        recommendations.removeIf(recommendation -> existingAnnotationsSpanBegin
-            .contains(recommendation.getOffset().getBeginCharacter()));
-    }
-
-    private Iterator getAlreadyExistingAnnotations(JCas aJcas)
-    {
-        int windowBegin = 0;
-        int windowEnd = aJcas.getDocumentText().length() - 1;
-        Type type = CasUtil.getType(aJcas.getCas(), selectedLayer.getName());
-        Iterator existingAnnotations = CasUtil
-            .selectCovered(aJcas.getCas(), type, windowBegin, windowEnd).iterator();
+        Type type = CasUtil.getType(aJcas.getCas(), aLayer.getName());
+        Iterator<AnnotationFS> existingAnnotations = CasUtil
+                .selectCovered(aJcas.getCas(), type, windowBegin, windowEnd).iterator();
         return existingAnnotations;
     }
 
-    private ArrayList<Integer> storeExistingAnnotationsSpanBegin(Iterator existingAnnotations)
+    private static List<Integer> mapToBeginOffsets(
+            Iterator<AnnotationFS> existingAnnotations)
     {
-        ArrayList<Integer> existingAnnotationsSpanBegin = new ArrayList<>();
+        List<Integer> existingAnnotationsSpanBegin = new ArrayList<>();
         while (existingAnnotations.hasNext()) {
             AnnotationFS fs = (AnnotationFS) existingAnnotations.next();
             existingAnnotationsSpanBegin.add(fs.getBegin());
@@ -433,15 +359,18 @@ public class ActiveLearningRecommender
         return existingAnnotationsSpanBegin;
     }
 
-    public boolean checkRecommendationExist(DocumentService documentService, LearningRecord record)
+    public boolean checkRecommendationExist(ActiveLearningService aActiveLearningService,
+            LearningRecord aRecord)
     {
-        this.documentService = documentService;
-        getRecommendationFromRecommendationModel();
-        return containSuggestion(record);
+        listOfRecommendationsForEachToken = aActiveLearningService
+                .getRecommendationFromRecommendationModel(annotatorState, selectedLayer);
+        return containSuggestion(listOfRecommendationsForEachToken, aRecord);
     }
 
-    public boolean containSuggestion(LearningRecord record) {
-        for (List<AnnotationObject> listOfAO: listOfRecommendationsForEachToken) {
+    private boolean containSuggestion(
+            List<List<AnnotationObject>> aListOfRecommendationsForEachToken, LearningRecord record)
+    {
+        for (List<AnnotationObject> listOfAO : aListOfRecommendationsForEachToken) {
             if (listOfAO.stream().anyMatch(ao -> recordCompareToRecommendation(ao, record))) {
                 return true;
             }

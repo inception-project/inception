@@ -23,6 +23,8 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.event.Broadcast;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
@@ -62,6 +64,8 @@ public class RecommendationEditorExtension
     implements AnnotationEditorExtension
 {
     public static final String BEAN_NAME = "recommendationEditorExtension";
+    
+    private final Logger log = LoggerFactory.getLogger(getClass());
     
     private @Autowired AnnotationSchemaService annotationService;
     private @Autowired RecommendationService recommendationService;
