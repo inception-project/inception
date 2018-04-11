@@ -84,13 +84,36 @@ import de.tudarmstadt.ukp.inception.recommendation.service.LearningRecordService
 import de.tudarmstadt.ukp.inception.recommendation.service.RecommendationService;
 
 public class ActiveLearningSidebar
-    extends
-    AnnotationSidebar_ImplBase
+    extends AnnotationSidebar_ImplBase
 {
     private static final long serialVersionUID = -5312616540773904224L;
-    private static final Logger logger = LoggerFactory.getLogger(ActiveLearningSidebar.class);
     
-    private static final String MAIN_CONTAINER = "mainContainer";
+    private static final Logger LOG = LoggerFactory.getLogger(ActiveLearningSidebar.class);
+    
+    private static final String CID_MAIN_CONTAINER = "mainContainer";
+    private static final String CID_HISTORY_LISTVIEW = "historyListview";
+    private static final String CID_LEARNING_HISTORY_FORM = "learningHistoryForm";
+    private static final String CID_REJECT_BUTTON = "rejectButton";
+    private static final String CID_SKIP_BUTTON = "skipButton";
+    private static final String CID_ACCEPT_BUTTON = "acceptButton";
+    private static final String CID_RECOMMENDATION_COVERED_TEXT_LINK = "recommendationCoveredTextLink";
+    private static final String CID_RECOMMENDED_DIFFERENCE = "recommendedDifference";
+    private static final String CID_RECOMMENDED_CONFIDENCE = "recommendedConfidence";
+    private static final String CID_RECOMMENDED_PREDITION = "recommendedPredition";
+    private static final String CID_RECOMMENDATION_FORM = "recommendationForm";
+    private static final String CID_LEARN_SKIPPED_ONES = "learnSkippedOnes";
+    private static final String CID_ONLY_SKIPPED_RECOMMENDATION_LABEL = "onlySkippedRecommendationLabel";
+    private static final String CID_LEARN_FROM_SKIPPED_RECOMMENDATION_FORM = "learnFromSkippedRecommendationForm";
+    private static final String CID_NO_RECOMMENDATION_LABEL = "noRecommendationLabel";
+    private static final String CID_LAYER_SELECTION_BUTTON = "layerSelectionButton";
+    private static final String CID_SHOW_SELECTED_LAYER = "showSelectedLayer";
+    private static final String CID_SELECT_LAYER = "selectLayer";
+    private static final String CID_LAYER_SELECTION_FORM = "layerSelectionForm";
+    private static final String CID_REMOVE_RECORD = "removeRecord";
+    private static final String CID_USER_ACTION = "userAction";
+    private static final String CID_RECOMMENDED_ANNOTATION = "recommendedAnnotation";
+    private static final String CID_JUMP_TO_ANNOTATION = "jumpToAnnotation";
+    
     private static final String RECOMMENDATION_EDITOR_EXTENSION = "recommendationEditorExtension";
     private static final String ANNOTATION_MARKER = "VAnnotationMarker";
     private static final String TEXT_MARKER = "VTextMarker";
@@ -101,7 +124,7 @@ public class ActiveLearningSidebar
     private @SpringBean DocumentService documentService;
     private @SpringBean ApplicationEventPublisherHolder applicationEventPublisherHolder;
 
-    private Model<AnnotationLayer> selectedLayer;
+    private IModel<AnnotationLayer> selectedLayer;
     private IModel<List<LearningRecord>> learningRecords;
     
     private Project project;
@@ -130,7 +153,7 @@ public class ActiveLearningSidebar
         
         project = Model.of(Session.get().getMetaData(SessionMetaData.CURRENT_PROJECT)).getObject();
         
-        mainContainer = new WebMarkupContainer(MAIN_CONTAINER);
+        mainContainer = new WebMarkupContainer(CID_MAIN_CONTAINER);
         mainContainer.setOutputMarkupId(true);
         mainContainer.add(createLayerSelection());
         mainContainer.add(createNoRecommendationLabel());
@@ -142,7 +165,7 @@ public class ActiveLearningSidebar
 
     private Form<?> createLayerSelection()
     {
-        Form<?> layerSelectionForm = new Form<Void>("layerSelectionForm");
+        Form<?> layerSelectionForm = new Form<Void>(CID_LAYER_SELECTION_FORM);
         
         layerSelectionForm.add(createLayerSelectionDropDownChoice());
         layerSelectionForm.add(createSelectedLayerLabel());
@@ -163,7 +186,7 @@ public class ActiveLearningSidebar
 
     private DropDownChoice<AnnotationLayer> createLayerSelectionDropDownChoice()
     {
-        DropDownChoice<AnnotationLayer> dropdown = new DropDownChoice<>("selectLayer");
+        DropDownChoice<AnnotationLayer> dropdown = new DropDownChoice<>(CID_SELECT_LAYER);
         dropdown.setModel(selectedLayer);
         dropdown.setChoices(LambdaModel.of(this::getLayerChoices));
         dropdown.setChoiceRenderer(new LambdaChoiceRenderer<>(AnnotationLayer::getUiName));
@@ -174,7 +197,7 @@ public class ActiveLearningSidebar
 
     private Label createSelectedLayerLabel()
     {
-        Label selectedLayerLabel = new Label("showSelectedLayer", LambdaModel.of(() -> 
+        Label selectedLayerLabel = new Label(CID_SHOW_SELECTED_LAYER, LambdaModel.of(() -> 
                 selectedLayer.getObject() != null ? selectedLayer.getObject().getUiName() : null));
         selectedLayerLabel
                 .add(LambdaBehavior.onConfigure(component -> component.setVisible(startLearning)));
@@ -187,7 +210,7 @@ public class ActiveLearningSidebar
         IModel<String> buttonModel = LambdaModel.of(() -> startLearning ? "Terminate" : "Start");
         
         AjaxButton layerSelectionAndLearningStartTerminateButton = new AjaxButton(
-                "layerSelectionButton", buttonModel)
+                CID_LAYER_SELECTION_BUTTON, buttonModel)
         {
             private static final long serialVersionUID = -2488664683153797206L;
 
@@ -263,7 +286,7 @@ public class ActiveLearningSidebar
                     (project, currentRecommendation.getDocumentName()),
                 currentRecommendation.getOffset().getBeginCharacter());
         } catch (IOException e) {
-            logger.error("Error: " + e.getMessage(), e);
+            LOG.error("Error: " + e.getMessage(), e);
             error("Error: " + e.getMessage());
             target.addChildren(getPage(), IFeedback.class);
         }
@@ -286,7 +309,7 @@ public class ActiveLearningSidebar
 
     private Label createNoRecommendationLabel()
     {
-        Label noRecommendation = new Label("noRecommendationLabel",
+        Label noRecommendation = new Label(CID_NO_RECOMMENDATION_LABEL,
             "There are no further suggestions.");
         noRecommendation.add(LambdaBehavior.onConfigure(component -> component
             .setVisible(startLearning && !hasUnseenRecommendation && !hasSkippedRecommendation)));
@@ -296,16 +319,14 @@ public class ActiveLearningSidebar
 
     private Form<?> createLearnFromSkippedRecommendationForm()
     {
-        Form<?> learnFromSkippedRecommendationForm = new Form<Void>("learnFromSkippedRecommendationForm")
-        {
-            private static final long serialVersionUID = -4803396750094360587L;
-        };
+        Form<?> learnFromSkippedRecommendationForm = new Form<Void>(
+                CID_LEARN_FROM_SKIPPED_RECOMMENDATION_FORM);
         learnFromSkippedRecommendationForm.add(LambdaBehavior.onConfigure(component -> component
             .setVisible(startLearning && !hasUnseenRecommendation && hasSkippedRecommendation)));
         learnFromSkippedRecommendationForm.setOutputMarkupPlaceholderTag(true);
-        learnFromSkippedRecommendationForm.add(new Label("onlySkippedRecommendationLabel", "There "
+        learnFromSkippedRecommendationForm.add(new Label(CID_ONLY_SKIPPED_RECOMMENDATION_LABEL, "There "
             + "are only skipped suggestions. Do you want to learn these again?"));
-        learnFromSkippedRecommendationForm.add(new LambdaAjaxButton<>("learnSkippedOnes",
+        learnFromSkippedRecommendationForm.add(new LambdaAjaxButton<>(CID_LEARN_SKIPPED_ONES,
             this::learnSkippedRecommendations));
         return learnFromSkippedRecommendationForm;
     }
@@ -324,17 +345,17 @@ public class ActiveLearningSidebar
 
     private Form<?> createRecommendationOperationForm()
     {
-        Form<?> recommendationForm = new Form<Void>("recommendationForm");
+        Form<?> recommendationForm = new Form<Void>(CID_RECOMMENDATION_FORM);
         recommendationForm.add(LambdaBehavior.onConfigure(component -> component.setVisible
             (startLearning && hasUnseenRecommendation)));
         recommendationForm.setOutputMarkupPlaceholderTag(true);
         
         recommendationForm.add(createRecommendationCoveredTextLink());
-        recommendationForm.add(new Label("recommendedPredition", LambdaModel.of(() -> 
+        recommendationForm.add(new Label(CID_RECOMMENDED_PREDITION, LambdaModel.of(() -> 
                 currentRecommendation != null ? currentRecommendation.getAnnotation() : null)));
-        recommendationForm.add(new Label("recommendedConfidence", LambdaModel.of(() -> 
+        recommendationForm.add(new Label(CID_RECOMMENDED_CONFIDENCE, LambdaModel.of(() -> 
                 currentRecommendation != null ? currentRecommendation.getConfidence() : 0.0)));
-        recommendationForm.add(new Label("recommendedDifference", LambdaModel.of(() -> 
+        recommendationForm.add(new Label(CID_RECOMMENDED_DIFFERENCE, LambdaModel.of(() -> 
                 currentDifference != null ? currentDifference.getDifference() : 0.0)));
         recommendationForm.add(createAcceptRecommendationButton());
         recommendationForm.add(createSkipRecommendationButton());
@@ -345,7 +366,7 @@ public class ActiveLearningSidebar
 
     private LambdaAjaxLink createRecommendationCoveredTextLink()
     {
-        LambdaAjaxLink link = new LambdaAjaxLink("recommendationCoveredTextLink",
+        LambdaAjaxLink link = new LambdaAjaxLink(CID_RECOMMENDATION_COVERED_TEXT_LINK,
                 this::jumpToRecommendationLocationAndHighlightRecommendation);
         link.setBody(LambdaModel.of(() -> Optional.ofNullable(currentRecommendation)
                 .map(it -> it.getCoveredText()).orElse("")));
@@ -362,9 +383,8 @@ public class ActiveLearningSidebar
 
     private AjaxButton createAcceptRecommendationButton()
     {
-        AjaxButton acceptRecommendationButton = new AjaxButton("acceptButton")
+        AjaxButton acceptRecommendationButton = new AjaxButton(CID_ACCEPT_BUTTON)
         {
-
             private static final long serialVersionUID = 558230909116668597L;
 
             @Override
@@ -376,7 +396,7 @@ public class ActiveLearningSidebar
                     acceptRecommendationInAnnotationPage(target);
                 }
                 catch (AnnotationException | IOException e) {
-                    logger.error("Error: " + e.getMessage(), e);
+                    LOG.error("Error: " + e.getMessage(), e);
                     error("Error: " + e.getMessage());
                     target.addChildren(getPage(), IFeedback.class);
                 }
@@ -436,7 +456,7 @@ public class ActiveLearningSidebar
 
     private AjaxButton createSkipRecommendationButton()
     {
-        AjaxButton skipRecommendationButton = new AjaxButton("skipButton") {
+        AjaxButton skipRecommendationButton = new AjaxButton(CID_SKIP_BUTTON) {
 
             private static final long serialVersionUID = 402196878010685583L;
 
@@ -458,7 +478,7 @@ public class ActiveLearningSidebar
 
     private AjaxButton createRejectRecommendationButton()
     {
-        AjaxButton rejectRecommendationButton = new AjaxButton("rejectButton")
+        AjaxButton rejectRecommendationButton = new AjaxButton(CID_REJECT_BUTTON)
         {
             private static final long serialVersionUID = 763990795394269L;
 
@@ -479,7 +499,7 @@ public class ActiveLearningSidebar
 
     private Form<?> createLearningHistory()
     {
-        Form<?> learningHistoryForm = new Form<Void>("learningHistoryForm")
+        Form<?> learningHistoryForm = new Form<Void>(CID_LEARNING_HISTORY_FORM)
         {
             private static final long serialVersionUID = -961690443085882064L;
         };
@@ -494,7 +514,8 @@ public class ActiveLearningSidebar
 
     private ListView<LearningRecord> createLearningHistoryListView()
     {
-        ListView<LearningRecord> learningHistory = new ListView<LearningRecord>("historyListview")
+        ListView<LearningRecord> learningHistory = new ListView<LearningRecord>(
+                CID_HISTORY_LISTVIEW)
         {
             private static final long serialVersionUID = 5594228545985423567L;
 
@@ -502,16 +523,17 @@ public class ActiveLearningSidebar
             protected void populateItem(ListItem<LearningRecord> item)
             {
                 LambdaAjaxLink jumpToAnnotationFromTokenTextLink = new LambdaAjaxLink(
-                        "jumpToAnnotation", t -> jumpAndHighlightFromLearningHistory(t, 
+                        CID_JUMP_TO_ANNOTATION, t -> jumpAndHighlightFromLearningHistory(t, 
                                 item.getModelObject()));
                 jumpToAnnotationFromTokenTextLink
                         .setBody(LambdaModel.of(item.getModelObject()::getTokenText));
                 item.add(jumpToAnnotationFromTokenTextLink);
                 
-                item.add(new Label("recommendedAnnotation", item.getModelObject().getAnnotation()));
-                item.add(new Label("userAction", item.getModelObject().getUserAction()));
-                item.add(new LambdaAjaxLink("removeRecord",
-                    t -> deleteRecordAndUpdateHistoryAndRedrawnMainPage(t, item.getModelObject())));
+                item.add(new Label(CID_RECOMMENDED_ANNOTATION,
+                        item.getModelObject().getAnnotation()));
+                item.add(new Label(CID_USER_ACTION, item.getModelObject().getUserAction()));
+                item.add(new LambdaAjaxLink(CID_REMOVE_RECORD, t -> 
+                        deleteRecordAndUpdateHistoryAndRedrawnMainPage(t, item.getModelObject())));
             }
         };
         learningRecords = LambdaModel.of(this::listLearningRecords);
@@ -594,7 +616,8 @@ public class ActiveLearningSidebar
     }
 
     private void deleteRecordAndUpdateHistoryAndRedrawnMainPage(AjaxRequestTarget aTarget,
-                                                                LearningRecord aRecord) {
+            LearningRecord aRecord)
+    {
         learningRecordService.delete(aRecord);
         learningRecords.detach();
         aTarget.add(mainContainer);
