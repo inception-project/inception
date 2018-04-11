@@ -45,6 +45,11 @@ public interface RecommendationService
     List<Recommender> listRecommenders(Project aProject);
 
     List<Recommender> listRecommenders(AnnotationLayer aLayer);
+    
+    /**
+     * Returns all annotation layers in the given project which have any enabled recommenders.
+     */
+    List<AnnotationLayer> listLayersWithEnabledRecommenders(Project aProject);
 
     /**
      * @deprecated Use {@link ClassificationToolRegistry#getTools}

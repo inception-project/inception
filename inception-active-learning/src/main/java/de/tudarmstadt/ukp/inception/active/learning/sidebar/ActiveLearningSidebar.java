@@ -144,7 +144,6 @@ public class ActiveLearningSidebar
     {
         super(aId, aModel, aActionHandler, aJCasProvider, aAnnotationPage);
 
-        selectedLayer = Model.of(this.getModelObject().getDefaultAnnotationLayer());
         annotationPage = aAnnotationPage;
         
         mainContainer = new WebMarkupContainer(CID_MAIN_CONTAINER);
@@ -159,17 +158,35 @@ public class ActiveLearningSidebar
 
     private Form<?> createSessionControlForm()
     {
+        // Use the currently selected layer from the annotation detail editor panel as the
+        // default choice in the active learning mode.
+        List<AnnotationLayer> layersWithRecommenders = listLayersWithRecommenders();
+        if (layersWithRecommenders.contains(getModelObject().getDefaultAnnotationLayer())) {
+            selectedLayer = Model.of(getModelObject().getDefaultAnnotationLayer());
+        }
+        // If the currently selected layer has no recommenders, use the first one which has
+        else if (!layersWithRecommenders.isEmpty()) {
+            selectedLayer = Model.of(layersWithRecommenders.get(0));
+        }
+        // If there are no layers with recommenders, then choose nothing.
+        else {
+            // FIXME: in this case, we might display a nice message saying that none of the layers
+            // have any recommenders configured.
+            selectedLayer = Model.of();
+        }
+        
         Form<?> form = new Form<Void>(CID_SESSION_CONTROL_FORM);
         
         DropDownChoice<AnnotationLayer> layersDropdown = new DropDownChoice<>(CID_SELECT_LAYER);
         layersDropdown.setModel(selectedLayer);
-        layersDropdown.setChoices(LambdaModel.of(this::getLayerChoices));
+        layersDropdown.setChoices(LambdaModel.of(this::listLayersWithRecommenders));
         layersDropdown.setChoiceRenderer(new LambdaChoiceRenderer<>(AnnotationLayer::getUiName));
         layersDropdown.add(LambdaBehavior.onConfigure(it -> it.setEnabled(!sessionActive)));
         layersDropdown.setOutputMarkupId(true);
+        layersDropdown.setRequired(true);
         form.add(layersDropdown);
         
-        LambdaAjaxButton<Void> startStopButton = new LambdaAjaxButton<Void>(
+        LambdaAjaxButton<Void> startStopButton = new LambdaAjaxButton<>(
                 CID_LAYER_SELECTION_BUTTON, this::actionStartStopTraining);
         startStopButton.setModel(LambdaModel.of(() -> sessionActive ? "Terminate" : "Start"));
         form.add(startStopButton);
@@ -177,9 +194,10 @@ public class ActiveLearningSidebar
         return form;
     }
 
-    private List<AnnotationLayer> getLayerChoices()
+    private List<AnnotationLayer> listLayersWithRecommenders()
     {
-        return annotationService.listAnnotationLayer(getModelObject().getProject());
+        return recommendationService
+                .listLayersWithEnabledRecommenders(getModelObject().getProject());
     }
     
     private void actionStartStopTraining(AjaxRequestTarget target, Form<?> form)

@@ -62,7 +62,7 @@ import de.tudarmstadt.ukp.inception.recommendation.scheduling.RecommendationSche
 public class RecommendationServiceImpl
     implements RecommendationService
 {
-    private Logger log = LoggerFactory.getLogger(getClass());
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     private @PersistenceContext EntityManager entityManager;
     
@@ -156,6 +156,19 @@ public class RecommendationServiceImpl
                         Recommender.class)
                 .setParameter("project", aProject).getResultList();
         return settings;
+    }
+    
+    @Override
+    public List<AnnotationLayer> listLayersWithEnabledRecommenders(Project aProject)
+    {
+        String query = 
+                "SELECT DISTINCT r.layer " +
+                "FROM Recommender r " +
+                "WHERE r.project = :project AND r.enabled = :enabled " +
+                "ORDER BY r.layer.name ASC";
+
+        return entityManager.createQuery(query, AnnotationLayer.class)
+                .setParameter("project", aProject).setParameter("enabled", true).getResultList();
     }
 
     @Override
