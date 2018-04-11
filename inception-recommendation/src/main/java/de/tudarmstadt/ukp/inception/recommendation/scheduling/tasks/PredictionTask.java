@@ -63,7 +63,9 @@ public class PredictionTask
     public void run()
     {
         User user = getUser();
-        
+
+        Predictions model = new Predictions(getProject(), getUser()); 
+
         for (AnnotationLayer layer : annoService.listAnnotationLayer(getProject())) {
             if (!layer.isEnabled()) {
                 continue;
@@ -113,13 +115,13 @@ public class PredictionTask
                 List<AnnotationObject> predictions = classifier.predict(tokens, layer);
                 predictions.forEach(token -> token.setRecommenderId(ct.getId()));
                 
-                Predictions model = new Predictions(getProject(), getUser()); 
                 model.putPredictions(layer.getId(), predictions);
-                recommendationService.putIncomingPredictions(getUser(), getProject(), model);
                 
                 log.info("[{}][{}]: Prediction complete ({} ms)", user.getUsername(),
                         recommender.getName(), (System.currentTimeMillis() - startTime));
             }
         }
+        
+        recommendationService.putIncomingPredictions(getUser(), getProject(), model);
     }
 }
