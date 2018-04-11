@@ -76,5 +76,7 @@ public interface RecommendationService
 
     Predictions getIncomingPredictions(User aUser, Project aProject);
     
+    void putIncomingPredictions(User aUser, Project aProject, Predictions aPredictions);
+    
     void switchPredictions(User aUser, Project aProject);
 }

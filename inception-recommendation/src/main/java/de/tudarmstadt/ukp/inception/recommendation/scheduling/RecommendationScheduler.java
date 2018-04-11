@@ -30,15 +30,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.inception.recommendation.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.scheduling.tasks.SelectionTask;
 import de.tudarmstadt.ukp.inception.recommendation.scheduling.tasks.Task;
 import de.tudarmstadt.ukp.inception.recommendation.scheduling.tasks.TrainingTask;
-import de.tudarmstadt.ukp.inception.recommendation.service.RecommendationService;
 
 /**
  * Used to run the selection, training and prediction task concurrently.
@@ -49,10 +45,6 @@ public class RecommendationScheduler
     private Logger log = LoggerFactory.getLogger(getClass());
     
     private @Autowired ApplicationContext applicationContext;
-    
-    private @Autowired RecommendationService recService;
-    private @Autowired DocumentService docService;
-    private @Autowired AnnotationSchemaService annoService;
     
     private Thread consumer;
     private BlockingQueue<Task> queue = new ArrayBlockingQueue<Task>(100);
@@ -74,7 +66,7 @@ public class RecommendationScheduler
         consumer.interrupt();
     }
     
-    public void enqueueTask(User user, Project project, Predictions model)
+    public void enqueueTask(User user, Project project)
     {   
         // Add Selection Task
         if (counter % 2 == 0) {
@@ -82,7 +74,7 @@ public class RecommendationScheduler
         }
         
         // Add Training (which in turn will later enqueue the prediction Task)
-        enqueue(new TrainingTask(user, project, model));
+        enqueue(new TrainingTask(user, project));
         
         counter++;
     }
