@@ -54,6 +54,7 @@ public class Predictions
     implements Serializable
 {
     private static final long serialVersionUID = -1598768729246662885L;
+    
     private Map<ExtendedId, AnnotationObject> predictions = new ConcurrentHashMap<>();
     
     private final Project project;
@@ -61,13 +62,10 @@ public class Predictions
     
     private Logger logger = LoggerFactory.getLogger(getClass());
     
-    public Predictions(Project aProject, User aUser, 
-            Map<ExtendedId, AnnotationObject> aPredictions)
+    public Predictions(Project aProject, User aUser, Map<ExtendedId, AnnotationObject> aPredictions)
     {
         if (aProject == null) {
-            throw new IllegalArgumentException(
-                    "The Project is necessary! "
-                            + "It cannot be null.");
+            throw new IllegalArgumentException("The Project is necessary! It cannot be null.");
         }
         
         project = aProject;
@@ -198,7 +196,7 @@ public class Predictions
     /**
      * Returns the prediction used to generate the VID
      */
-    public Optional<AnnotationObject> getPrediction(int aBegin, int aEnd, String aLabel) 
+    public Optional<AnnotationObject> getPrediction(int aBegin, int aEnd, String aLabel)
     {
         return predictions.values().stream()
                 .filter(f -> f.getOffset().getBeginCharacter() == aBegin
