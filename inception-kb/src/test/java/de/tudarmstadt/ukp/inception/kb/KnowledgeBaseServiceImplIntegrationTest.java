@@ -985,6 +985,8 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
             .isEqualTo(statementCountAfterUpsert);
     }
 
+    //TODO: add deleteSatement with qualifiers
+
     @Test
     public void deleteStatement_WithExistingStatement_ShouldDeleteStatement() {
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());

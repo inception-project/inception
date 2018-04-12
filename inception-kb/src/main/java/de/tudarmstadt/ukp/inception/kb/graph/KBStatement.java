@@ -37,6 +37,7 @@ public class KBStatement implements Serializable
 {
     private static final long serialVersionUID = 6117845741665780184L;
 
+    private String statementId;
     // Subject
     private KBHandle instance;
 
@@ -52,6 +53,8 @@ public class KBStatement implements Serializable
     private boolean inferred;
 
     private List<Statement> originalStatements;
+
+    private List<KBQualifier> qualifiers = new ArrayList<>();
 
     /**
      * Call {@link KnowledgeBaseService#initStatement(KnowledgeBase, KBStatement)}
@@ -93,6 +96,10 @@ public class KBStatement implements Serializable
         this.property = other.property;
         this.value = other.value;
     }
+
+    public String getStatementId() { return statementId; }
+
+    public void setStatementId(String aStatementId) { statementId = aStatementId; }
 
     public KBHandle getInstance()
     {
@@ -146,6 +153,12 @@ public class KBStatement implements Serializable
     public void setOriginalStatements(List<Statement> statements) {
         originalStatements = statements;
     }
+
+    public void addQualifier(KBQualifier aQualifier) { qualifiers.add(aQualifier); }
+
+    public List<KBQualifier> getQualifiers() { return qualifiers; }
+
+    public void setQualifiers(List<KBQualifier> qualifierList) { qualifiers = qualifierList; }
 
     @Override
     public String toString()

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import de.tudarmstadt.ukp.inception.kb.graph.KBQualifier;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.model.Statement;
@@ -44,7 +45,7 @@ public class WikiDataReification
 {
     private static final String NAMPESPACE_ROOT = "https://github.com/inception-project";
     private static final String PREDICATE_NAMESPACE = NAMPESPACE_ROOT + "/predicate#";
-    private static final String QUALIFIER_NAMESPACE = NAMPESPACE_ROOT + "/qualifier#";
+    //private static final String QUALIFIER_NAMESPACE = NAMPESPACE_ROOT + "/qualifier#";
 
     private final Logger log = LoggerFactory.getLogger(getClass());
     private final KnowledgeBaseService kbService;
@@ -58,7 +59,6 @@ public class WikiDataReification
 
         kbService = aKbService;
         kbService.registerImplicitNamespace(PREDICATE_NAMESPACE);
-        kbService.registerImplicitNamespace(QUALIFIER_NAMESPACE);
     }
 
     @Override
@@ -79,12 +79,24 @@ public class WikiDataReification
         statements.add(root);           // S    P   id
         statements.add(valueStatement); // id   p_s V
 
+       // if (!aStatement.getQualifiers().isEmpty()) {
+            for (KBQualifier aQualifier : aStatement.getQualifiers()) {
+                KBHandle qualifierProperty = aQualifier.getKbProperty();
+                IRI qualifierPredicate = vf.createIRI(qualifierProperty.getIdentifier());
+                Value qualifierValue = valueMapper.mapQualifierValue(aQualifier.getValue(), vf);
+                Statement qualifierStatement = vf
+                    .createStatement(id, qualifierPredicate, qualifierValue);
+                statements.add(qualifierStatement); //id P V
+            }
+       // }
+
         System.out.println(statements);
 
         return statements;
     }
 
     @Override
+    //TODO: this method may also need to be changed
     public List<KBStatement> listStatements(KnowledgeBase kb, KBHandle aInstance, boolean aAll) {
         String QUERY = String.join("\n"
                      , "SELECT DISTINCT ?p ?o ?id ?ps WHERE {"
@@ -144,5 +156,266 @@ public class WikiDataReification
         }
     }
 
+    @Override
+    public KBStatement readStatement(KnowledgeBase kb, KBStatement aStatement)
+    {
+        String statementId = getStatementId(kb, aStatement);
+        aStatement.setStatementId(statementId);
+        return aStatement;
+    }
+
+    private String getStatementId(KnowledgeBase kb, KBStatement aStatement)
+    {
+        String QUERY = String.join("\n"
+            , "SELECT DISTINCT ?s ?p ?o ?ps WHERE {"
+            , "  ?s  ?p  ?id ."
+            , "  ?id ?ps ?o ."
+            , "  FILTER(STRSTARTS(STR(?ps), STR(?ps_ns)))"
+            , "}"
+            , "LIMIT 10");
+
+        IRI instance = vf.createIRI(aStatement.getInstance().getIdentifier());
+        IRI property = vf.createIRI(aStatement.getProperty().getIdentifier());
+        Value object = valueMapper.mapStatementValue(aStatement, vf);
+        try (RepositoryConnection conn = kbService.getConnection(kb)) {
+            TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
+            tupleQuery.setBinding("s", instance);
+            tupleQuery.setBinding("p", property);
+            tupleQuery.setBinding("o", object);
+            tupleQuery.setBinding("ps_ns", vf.createIRI(PREDICATE_NAMESPACE));
+
+            tupleQuery.setIncludeInferred(false);
+            TupleQueryResult result;
+
+            try {
+                result = tupleQuery.evaluate();
+            }
+            catch (QueryEvaluationException e) {
+                log.warn("No such statement in knowledge base", e);
+                return null;
+            }
+
+            while (result.hasNext()) {
+                BindingSet bindings = result.next();
+                Binding id = bindings.getBinding("id");
+                String aStatementId = id.getValue().stringValue();
+                return aStatementId;
+            }
+
+            return null;
+        }
+    }
+
+    private List<Statement> getStatementsById(KnowledgeBase kb, String aStatementId)
+    {
+        String QUERY = String.join("\n"
+            , "SELECT DISTINCT ?s ?p ?ps ?o WHERE {"
+            , "  ?s  ?p  ?id ."
+            , "  ?id ?ps ?o ."
+            , "  FILTER(STRSTARTS(STR(?ps), STR(?ps_ns)))"
+            , "}"
+            , "LIMIT 10");
+        Resource id = vf.createBNode(aStatementId);
+        try (RepositoryConnection conn = kbService.getConnection(kb)) {
+            TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
+            tupleQuery.setBinding("id", id);
+            tupleQuery.setBinding("ps_ns", vf.createIRI(PREDICATE_NAMESPACE));
+
+            tupleQuery.setIncludeInferred(false);
+            TupleQueryResult result;
+
+            try {
+                result = tupleQuery.evaluate();
+            }
+            catch (QueryEvaluationException e) {
+                log.warn("No such statementId in knowledge base", e);
+                return null;
+            }
+
+            List<Statement> statements = new ArrayList<>();
+            while (result.hasNext()) {
+                BindingSet bindings = result.next();
+                Binding s = bindings.getBinding("s");
+                Binding p = bindings.getBinding("p");
+                Binding o = bindings.getBinding("o");
+                Binding ps = bindings.getBinding("ps");
+
+                IRI instance = vf.createIRI(s.getValue().stringValue());
+                IRI predicate = vf.createIRI(p.getValue().stringValue());
+                Statement root = vf.createStatement(instance, predicate, id);
+
+                IRI valuePredicate = vf.createIRI(ps.getValue().stringValue());
+                Value object = o.getValue();
+                Statement valueStatement = vf.createStatement(id, valuePredicate, object);
+                statements.add(root);
+                statements.add(valueStatement);
+            }
+            return statements;
+        }
+    }
+
+    private List<Statement> getQualifiersById(KnowledgeBase kb, String aStatementId)
+    {
+        String QUERY = String.join("\n"
+            , "SELECT DISTINCT ?o WHERE {"
+            , "  ?id ?p ?o ."
+            , "  FILTER(STRSTARTS(STR(?ps), STR(?ps_ns)))"
+            , "}"
+            , "LIMIT 10000");
+        Resource id = vf.createBNode(aStatementId);
+        try (RepositoryConnection conn = kbService.getConnection(kb)) {
+            TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
+            tupleQuery.setBinding("id", id);
+
+            tupleQuery.setIncludeInferred(false);
+            TupleQueryResult result;
+
+            try {
+                result = tupleQuery.evaluate();
+            }
+            catch (QueryEvaluationException e) {
+                log.warn("No such statementId in knowledge base", e);
+                return null;
+            }
+
+            List<Statement> statements = new ArrayList<>();
+            while (result.hasNext()) {
+                BindingSet bindings = result.next();
+                Binding p = bindings.getBinding("p");
+                Binding o = bindings.getBinding("o");
+
+                if (!p.getValue().stringValue().contains(PREDICATE_NAMESPACE)) {
+                    IRI predicate = vf.createIRI(p.getValue().stringValue());
+                    Value object = o.getValue();
+                    Statement qualifierStatement = vf.createStatement(id, predicate, object);
+                    statements.add(qualifierStatement);
+                }
+            }
+            return statements;
+        }
+
+    }
+
+    @Override
+    public void deleteStatement(KnowledgeBase kb, KBStatement aStatement) {
+        String statementId = aStatement.getStatementId();
+        if (statementId != null) {
+            update(kb, (conn) -> {
+                conn.remove(getStatementsById(kb, statementId));
+                conn.remove(getQualifiersById(kb, statementId));
+                //TODO: do we need the following two?
+                aStatement.setOriginalStatements(Collections.emptyList());
+                aStatement.setQualifiers(Collections.emptyList());
+                return null;
+            });
+        }
+    }
+
+    @Override
+    //TODO: just update the main part of statement
+    public void upsertStatement(KnowledgeBase kb, KBStatement aStatement)
+    {
+        update(kb, (conn) -> {
+            //KBStatement statement = readStatement(kb, aStatement);
+            KBStatement statement = aStatement;
+            String statementId = statement.getStatementId();
+            if (statementId != null) {
+                conn.remove(getStatementsById(kb, statement.getStatementId()));
+            }
+            else {
+                statementId = vf.createBNode().stringValue();
+            }
+            IRI subject = vf.createIRI(statement.getInstance().getIdentifier());
+            IRI predicate = vf.createIRI(statement.getInstance().getIdentifier());
+            Resource id = vf.createBNode(statementId);
+
+            Statement root = vf.createStatement(subject, predicate, id);
+            IRI valuePredicate = vf.createIRI(PREDICATE_NAMESPACE, predicate.getLocalName());
+            Value value = valueMapper.mapStatementValue(statement, vf);
+            Statement valueStatement = vf.createStatement(id, valuePredicate, value);
+
+            conn.add(root);
+            conn.add(valueStatement);
+            aStatement.setStatementId(statementId);
+
+            List<Statement> statements = new ArrayList<>();
+            statements.add(root);
+            statements.add(valueStatement);
+            aStatement.setOriginalStatements(statements);
+            return null;
+        });
+    }
+
+    public void addQualifier(KnowledgeBase kb, KBStatement aStatement, KBHandle
+        predicateQualifier, Object valueQualifier)
+    {
+        update(kb, (conn) -> {
+           Resource id = vf.createBNode(aStatement.getStatementId());
+           IRI predicate = vf.createIRI(predicateQualifier.getIdentifier());
+           Value value = valueMapper.mapQualifierValue(valueQualifier, vf);
+           Statement qualifierStatement = vf.createStatement(id, predicate, value);
+           conn.add(qualifierStatement);
+           return null;
+        });
+    }
+
+    public void deleteQualifier(KnowledgeBase kb, KBStatement aStatement, KBHandle
+        predicateQualifier, Object valueQualifier)
+    {
+        update(kb, (conn) -> {
+            Resource id = vf.createBNode(aStatement.getStatementId());
+            IRI predicate = vf.createIRI(predicateQualifier.getIdentifier());
+            Value value = valueMapper.mapQualifierValue(valueQualifier, vf);
+            Statement qualifierStatement = vf.createStatement(id, predicate, value);
+            conn.remove(qualifierStatement);
+            return null;
+        });
+    }
+
+    public List<KBQualifier> listQualifiers(KnowledgeBase kb, KBStatement aStatement)
+    {
+        String statementId = aStatement.getStatementId();
+        List<Statement> qualifierStatements = getQualifiersById(kb, statementId);
+        List<KBQualifier> qualifiers = new ArrayList<>();
+        for(Statement qualifierStatement : qualifierStatements) {
+            KBHandle property = new KBHandle();
+            //TODO: check the value
+            property.setIdentifier(qualifierStatement.getPredicate().stringValue());
+            Value value = qualifierStatement.getObject();
+            KBQualifier qualifier = new KBQualifier(aStatement, property, value);
+            qualifiers.add(qualifier);
+        }
+        return qualifiers;
+    }
+
+    private KBHandle update(KnowledgeBase kb, UpdateAction aAction)
+    {
+        if (kb.isReadOnly()) {
+            log.warn("Knowledge base [{}] is read only, will not alter!", kb.getName());
+            return null;
+        }
+
+        KBHandle result = null;
+        try (RepositoryConnection conn = kbService.getConnection(kb)) {
+            boolean error = true;
+            try {
+                conn.begin();
+                result = aAction.accept(conn);
+                conn.commit();
+                error = false;
+            }
+            finally {
+                if (error) {
+                    conn.rollback();
+                }
+            }
+        }
+        return result;
+    }
+
+    private interface UpdateAction
+    {
+        KBHandle accept(RepositoryConnection aConnection);
+    }
 
 }

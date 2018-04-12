@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseServiceImpl;
+import de.tudarmstadt.ukp.inception.kb.graph.KBQualifier;
 import org.eclipse.rdf4j.model.BNode;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Statement;
@@ -143,4 +145,89 @@ public class NoReification implements ReificationStrategy {
             return statements;
         }
     }
+
+    @Override
+    public KBStatement readStatement(KnowledgeBase kb, KBStatement aStatement)
+    {
+        aStatement.setOriginalStatements(reify(kb, aStatement));
+        return aStatement;
+    }
+
+    @Override
+    //TODO: is it necessary to reset originalStatements of KBStatement?
+    public void deleteStatement(KnowledgeBase kb, KBStatement aStatement)
+    {
+        update(kb, (conn) -> {
+            conn.remove(aStatement.getOriginalStatements());
+            aStatement.setOriginalStatements(Collections.emptyList());
+            return null;
+        });
+    }
+
+    @Override
+    public void upsertStatement(KnowledgeBase kb, KBStatement aStatement)
+    {
+        update(kb, (conn) -> {
+            if (!aStatement.isInferred()) {
+                conn.remove(aStatement.getOriginalStatements());
+            }
+            List<Statement> statements = reify(kb, aStatement);
+            conn.add(statements);
+            aStatement.setOriginalStatements(statements);
+
+            return null;
+        });
+    }
+
+    @Override
+    public void addQualifier(KnowledgeBase kb, KBStatement aStatement, KBHandle predicateQualifier,
+        Object valueQualifier)
+    {
+        log.error("Qualifiers are not supported.");
+    }
+
+    @Override
+    public void deleteQualifier(KnowledgeBase kb, KBStatement aStatement, KBHandle predicateQualifer,
+        Object valueQualifier)
+    {
+        log.error("Qualifiers are not supported.");
+    }
+
+    @Override
+    public List<KBQualifier> listQualifiers(KnowledgeBase kb, KBStatement aStatement)
+    {
+        log.error("Qualifiers are not supported.");
+        return null;
+    }
+
+    private KBHandle update(KnowledgeBase kb, UpdateAction aAction)
+    {
+        if (kb.isReadOnly()) {
+            log.warn("Knowledge base [{}] is read only, will not alter!", kb.getName());
+            return null;
+        }
+
+        KBHandle result = null;
+        try (RepositoryConnection conn = kbService.getConnection(kb)) {
+            boolean error = true;
+            try {
+                conn.begin();
+                result = aAction.accept(conn);
+                conn.commit();
+                error = false;
+            }
+            finally {
+                if (error) {
+                    conn.rollback();
+                }
+            }
+        }
+        return result;
+    }
+
+    private interface UpdateAction
+    {
+        KBHandle accept(RepositoryConnection aConnection);
+    }
+
 }

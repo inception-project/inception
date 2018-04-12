@@ -37,6 +37,7 @@ import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 
+import de.tudarmstadt.ukp.inception.kb.graph.*;
 import org.apache.commons.compress.compressors.CompressorException;
 import org.apache.commons.compress.compressors.CompressorStreamFactory;
 import org.apache.commons.lang3.StringUtils;
@@ -77,13 +78,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
-import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
-import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
-import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
-import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
-import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
-import de.tudarmstadt.ukp.inception.kb.graph.RdfUtils;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.reification.NoReification;
 import de.tudarmstadt.ukp.inception.kb.reification.ReificationStrategy;
@@ -550,26 +544,13 @@ public class KnowledgeBaseServiceImpl
     @Override
     public void upsertStatement(KnowledgeBase kb, KBStatement aStatement)
     {
-        update(kb, (conn) -> {
-            if (!aStatement.isInferred()) {
-                conn.remove(aStatement.getOriginalStatements());
-            }
-            List<Statement> statements = getReificationStrategy(kb).reify(kb, aStatement);
-            conn.add(statements);
-            aStatement.setOriginalStatements(statements);
-
-            return null;
-        });
+        getReificationStrategy(kb).upsertStatement(kb, aStatement);
     }
 
     @Override
     public void deleteStatement(KnowledgeBase kb, KBStatement aStatement)
     {
-        update(kb, (conn) -> {
-            conn.remove(aStatement.getOriginalStatements());
-            aStatement.setOriginalStatements(Collections.emptyList());
-            return null;
-        });
+        getReificationStrategy(kb).deleteStatement(kb, aStatement);
     }
 
     @Override
@@ -784,5 +765,32 @@ public class KnowledgeBaseServiceImpl
     interface ReadAction<T>
     {
         T accept(RepositoryConnection aConnection);
+    }
+
+    @Override
+    public KBStatement readStatement(KnowledgeBase kb, KBStatement aStatement)
+    {
+        return getReificationStrategy(kb).readStatement(kb, aStatement);
+    }
+
+    @Override
+    public void addQualifier(KnowledgeBase kb, KBStatement aStatement,
+        KBHandle predicateQualifier, Object valueQualifier)
+    {
+        getReificationStrategy(kb).addQualifier(kb, aStatement, predicateQualifier, valueQualifier);
+    }
+
+    @Override
+    public void deleteQualifier(KnowledgeBase kb, KBStatement aStatement,
+        KBHandle predicateQualifer, Object valueQualifier)
+    {
+        getReificationStrategy(kb)
+            .deleteQualifier(kb, aStatement, predicateQualifer, valueQualifier);
+    }
+
+    @Override
+    public List<KBQualifier> listQualifiers(KnowledgeBase kb, KBStatement aStatement)
+    {
+        return getReificationStrategy(kb).listQualifiers(kb, aStatement);
     }
 }

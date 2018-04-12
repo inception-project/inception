@@ -33,4 +33,18 @@ public class InceptionValueMapper {
             return mapper.getRDFValue(value, vf);
         }
     }
+
+    public Value mapQualifierValue(Object value, ValueFactory vf)
+    {
+        if (value instanceof IRI) {
+            return (IRI) value;
+        }
+        else if (value instanceof String && URIUtil.isValidURIReference((String) value)) {
+            return vf.createIRI((String) value);
+        }
+        else {
+            DatatypeMapper mapper = new DefaultDatatypeMapper();
+            return mapper.getRDFValue(value, vf);
+        }
+    }
 }
