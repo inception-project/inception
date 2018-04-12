@@ -26,27 +26,27 @@
 
 | auth.mode
 | Authentication mode
-| database
+| database
 | preauth
 
 | auth.preauth.header.principal
 | Principal header
-| remote_user
+| remote_user
 | _some other header_
 
 | auth.preauth.newuser.roles
 | Default roles for new users (comma separated)
-| _<none>_
+| _<none>_
 | ROLE_PROJECT_CREATOR
 
 | auth.user._<username>_.roles
 | Extra roles for user (comma separated)
-| _<none>_
+| _<none>_
 | ROLE_ADMIN
 
 | database.dialect
 | Database dialect
-| org.hibernate.dialect.HSQLDialect
+| org.hibernate.dialect.HSQLDialect
 | org.hibernate.dialect.MySQL5InnoDBDialect
 
 | database.driver
@@ -61,12 +61,12 @@
 
 | database.username
 | Database username
-| sa
+| sa
 | user
 
 | database.password
 | Database password
-| _unset_
+| _unset_
 | pass
 
 | database.initial-pool-size
@@ -155,7 +155,7 @@ The following environment variables can be used:
 
 | `WEBANNO_DB_DIALECT`
 | Database dialect
-| org.hibernate.dialect.HSQLDialect
+| org.hibernate.dialect.HSQLDialect
 | org.hibernate.dialect.MySQL5InnoDBDialect
 
 | `WEBANNO_DB_DRIVER`
@@ -170,12 +170,12 @@ The following environment variables can be used:
 
 | `WEBANNO_DB_USERNAME`
 | Database username
-| sa
+| sa
 | user
 
 | `WEBANNO_DB_PASSWORD`
 | Database password
-| _unset_
+| _unset_
 | pass
 |===
 
