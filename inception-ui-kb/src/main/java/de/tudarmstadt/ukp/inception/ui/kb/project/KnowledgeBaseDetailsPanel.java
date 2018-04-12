@@ -131,6 +131,7 @@ public class KnowledgeBaseDetailsPanel extends Panel {
         ekb.setSubclassIri(kb.getSubclassIri().stringValue());
         ekb.setTypeIri(kb.getTypeIri().stringValue());
         ekb.setEnabled(kb.isEnabled());
+        ekb.setSupportConceptLinking(kb.isSupportConceptLinking());
 
         // wrap the given knowledge base model, then set it as the default model
         ekbModel = new CompoundPropertyModel<>(Model.of(ekb));
@@ -395,6 +396,16 @@ public class KnowledgeBaseDetailsPanel extends Panel {
                     setEnabled(false);
                 }
             });
+            wmc.add(new CheckBox("supportConceptLinking"){
+
+                private static final long serialVersionUID = -2101263555896964046L;
+
+                @Override
+                protected void onConfigure()
+                {
+                    setEnabled(false);
+                }
+            });
         }
 
         @Override
@@ -476,6 +487,7 @@ public class KnowledgeBaseDetailsPanel extends Panel {
             addUrlField(wmc, "subclassIri");
             addUrlField(wmc, "typeIri");
             wmc.add(new CheckBox("enabled"));
+            wmc.add(new CheckBox("supportConceptLinking"));
         }
 
         @Override
