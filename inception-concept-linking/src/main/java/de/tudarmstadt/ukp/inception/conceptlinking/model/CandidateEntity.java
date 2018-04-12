@@ -226,5 +226,44 @@ public class CandidateEntity
     {
         return frequency;
     }
-    
+
+    /**
+     * Weights learned by RankLib
+     * @return
+     */
+    public double getCoordinateAscentScore()
+    {
+        final double ID_RANK_WEIGHT = -0.7575276861703767;
+        final double ENTITY_FREQ_WEIGHT = 0.06811294352264444;
+        final double LEV_MATCH_LABEL_WEIGHT = -0.11561875830516183;
+        final double LEV_CONTEXT_WEIGHT = -0.021483371226337238;
+        final double SIGNATURE_OVERLAP_SCORE_WEIGHT = 0.005528688443233935;
+        final double NUM_RELATED_RELATIONS_WEIGHT = 0.031728552332245745;
+
+        return ID_RANK_WEIGHT * getIdRank()
+            + ENTITY_FREQ_WEIGHT * getFrequency()
+            + LEV_MATCH_LABEL_WEIGHT * getLevMatchLabel()
+            + LEV_CONTEXT_WEIGHT * getLevContext()
+            + SIGNATURE_OVERLAP_SCORE_WEIGHT * getSignatureOverlapScore()
+            + NUM_RELATED_RELATIONS_WEIGHT * getNumRelatedRelations();
+    }
+
+    public double getLinearRegressionScore()
+    {
+        final double BIAS = -0.022042922120240806;
+        final double ID_RANK_WEIGHT = -0.022042922120240806;
+        final double ENTITY_FREQ_WEIGHT = 2.3104427918317867E-5;
+        final double LEV_MATCH_LABEL_WEIGHT = -6.414981822969735E-4;
+        final double LEV_CONTEXT_WEIGHT = 1.2166468608500678E-4;
+        final double SIGNATURE_OVERLAP_SCORE_WEIGHT = 0.04861988688865763;
+        final double NUM_RELATED_RELATIONS_WEIGHT = 0.2847175878087973;
+
+        return BIAS
+            + ID_RANK_WEIGHT * getIdRank()
+            + ENTITY_FREQ_WEIGHT * getFrequency()
+            + LEV_MATCH_LABEL_WEIGHT * getLevMatchLabel()
+            + LEV_CONTEXT_WEIGHT * getLevContext()
+            + SIGNATURE_OVERLAP_SCORE_WEIGHT * getSignatureOverlapScore()
+            + NUM_RELATED_RELATIONS_WEIGHT * getNumRelatedRelations();
+    }
 }

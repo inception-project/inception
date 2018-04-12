@@ -286,10 +286,7 @@ public class ConceptLinkingService
                 l.setFrequency(0);
             }
         });
-        List<CandidateEntity> result = sortByFrequency(new ArrayList<>((candidates)));
-        if (result.size() > FREQUENCY_THRESHOLD) {
-            result = result.subList(0, FREQUENCY_THRESHOLD);
-        }
+        List<CandidateEntity> result = new ArrayList<>((candidates));
         result.parallelStream().forEach( l -> {
             String wikidataId = l.getIRI().replace(WIKIDATA_PREFIX, "");
             l.setIdRank(Math.log(Double.parseDouble(wikidataId.substring(1))));
@@ -310,7 +307,7 @@ public class ConceptLinkingService
             l.setNumRelatedRelations(
                 (sig.getRelatedRelations() != null) ? sig.getRelatedRelations().size() : 0);
         });
-        result = sortCandidates(new ArrayList<>(candidates));
+        result = sortCandidatesByWeights(new ArrayList<>(candidates));
         logger.debug("It took [{}] ms to rank candidates",
             System.currentTimeMillis() - startTime);
         return result;
@@ -344,6 +341,14 @@ public class ConceptLinkingService
             .append(e2.getFrequency(), e1.getFrequency())
             .append(e2.getNumRelatedRelations(), e1.getNumRelatedRelations())
             .append(e1.getIdRank(), e2.getIdRank()).toComparison());
+        return candidates;
+    }
+
+    private List<CandidateEntity> sortCandidatesByWeights (List<CandidateEntity> candidates)
+    {
+        candidates.sort((e1,e2) ->
+            Comparator.comparingDouble(CandidateEntity::getCoordinateAscentScore)
+                .reversed().compare(e1, e2));
         return candidates;
     }
 
