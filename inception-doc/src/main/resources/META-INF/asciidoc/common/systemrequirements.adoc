@@ -30,7 +30,7 @@
 | version 8 or higher
 |===
 
-.Requirements run a WebAnno server
+.Requirements run the server version
 [cols="2*"]
 |===
 | Java Runtime Environment

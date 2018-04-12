@@ -57,14 +57,6 @@ task is further explained in <<sect_curation>>.
 The document merged by the curator can be exported as soon as the curator clicked on *Done* for the
 document. The extraction of curated documents is also explained in <<sect_projects>>.
 
-////
-<<<
-==  Tutorials
-
-For tutorials on the different functionalities of {product-name}, please see [https://code.google.com/p/webanno/wiki/Tutorials Tutorials]. 
-Soon also video-tutorials will be available.
-////
-
 <<<
 
 include::{include-dir}installation.adoc[]
