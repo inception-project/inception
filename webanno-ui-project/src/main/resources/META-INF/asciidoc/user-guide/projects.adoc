@@ -112,7 +112,7 @@ WebAnno comes with a set of built-in layers that allow you to start annotating i
 .Built-in layers
 [cols="1,2,2v", options="header"]
 |====
-| Layer | Type | Enforced behaviors
+| Layer | Type | Enforced behaviors
 
 | Chunk
 | Span

@@ -3369,7 +3369,7 @@ Util.profileStart('chunkFinish');
             sentenceText = svg.createText();
           }
 */
-          if (!rowTextGroup || prevChunk.row != chunk.row) {
+          if (!rowTextGroup || prevChunk.row != chunk.row) {
             if (rowTextGroup) {
               horizontalSpacer(svg, rowTextGroup, 0, prevChunk.row.textY, 1, {
                 'data-chunk-id': prevChunk.index,
@@ -4419,7 +4419,7 @@ Util.profileStart('before render');
 // WEBANNO EXTENSION BEGIN - RTL - Need to find scrollable ancestor
 // https://stackoverflow.com/a/35940276/2511197
     function findClosestHorizontalScrollable(node) {
-      if (node === null || node.is('html')) {
+      if (node === null || node.is('html')) {
         return null;
       }
 
