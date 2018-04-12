@@ -59,6 +59,7 @@ import de.agilecoders.wicket.core.markup.html.bootstrap.form.radio.BootstrapRadi
 import de.agilecoders.wicket.core.markup.html.bootstrap.form.radio.EnumRadioChoiceRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxDownloadLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.TempFileResource;
@@ -386,26 +387,9 @@ public class KnowledgeBaseDetailsPanel extends Panel {
             addDisabledUrlField(wmc, "subclassIri");
             addDisabledUrlField(wmc, "typeIri");
             wmc.add(new CheckBox("enabled")
-            {
-
-                private static final long serialVersionUID = -2101263555896964046L;
-
-                @Override
-                protected void onConfigure()
-                {
-                    setEnabled(false);
-                }
-            });
-            wmc.add(new CheckBox("supportConceptLinking"){
-
-                private static final long serialVersionUID = -2101263555896964046L;
-
-                @Override
-                protected void onConfigure()
-                {
-                    setEnabled(false);
-                }
-            });
+                .add(LambdaBehavior.onConfigure(it -> it.setEnabled(false))));
+            wmc.add(new CheckBox("supportConceptLinking")
+                .add(LambdaBehavior.onConfigure(it -> it.setEnabled(false))));
         }
 
         @Override
