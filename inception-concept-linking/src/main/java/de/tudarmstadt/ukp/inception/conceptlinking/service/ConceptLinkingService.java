@@ -296,7 +296,7 @@ public class ConceptLinkingService
     {
         candidates.sort((e1, e2) ->
             Comparator.comparingInt(CandidateEntity::getFrequency)
-                .reversed().compare(e1, e2));
+                .compare(e1, e2));
         return candidates;
     }
 
