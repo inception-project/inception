@@ -54,7 +54,7 @@ public class KBStatement implements Serializable
 
     private List<Statement> originalStatements;
 
-    private List<KBQualifier> qualifiers = new ArrayList<>();
+    private List<KBQualifier> qualifiers;
 
     /**
      * Call {@link KnowledgeBaseService#initStatement(KnowledgeBase, KBStatement)}
@@ -85,6 +85,8 @@ public class KBStatement implements Serializable
         }
 
         originalStatements = new ArrayList<>();
+
+        qualifiers = new ArrayList<>();
     }
 
     public KBStatement(KBStatement other)

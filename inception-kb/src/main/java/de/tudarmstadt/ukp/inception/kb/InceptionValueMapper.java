@@ -1,5 +1,6 @@
 package de.tudarmstadt.ukp.inception.kb;
 
+import de.tudarmstadt.ukp.inception.kb.graph.KBQualifier;
 import org.apache.commons.lang3.Validate;
 import org.cyberborean.rdfbeans.datatype.DatatypeMapper;
 import org.cyberborean.rdfbeans.datatype.DefaultDatatypeMapper;
@@ -34,13 +35,21 @@ public class InceptionValueMapper {
         }
     }
 
-    public Value mapQualifierValue(Object value, ValueFactory vf)
+    public Value mapQualifierValue(KBQualifier aQualifier, ValueFactory vf)
     {
+        Validate.notNull(aQualifier, "Qualifier cannot be null");
+
+        Object value = aQualifier.getValue();
+        String language = aQualifier.getLanguage();
+
         if (value instanceof IRI) {
             return (IRI) value;
         }
         else if (value instanceof String && URIUtil.isValidURIReference((String) value)) {
             return vf.createIRI((String) value);
+        }
+        else if (language != null) {
+            return vf.createLiteral((String) value, language);
         }
         else {
             DatatypeMapper mapper = new DefaultDatatypeMapper();

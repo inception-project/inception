@@ -774,18 +774,15 @@ public class KnowledgeBaseServiceImpl
     }
 
     @Override
-    public void addQualifier(KnowledgeBase kb, KBStatement aStatement,
-        KBHandle predicateQualifier, Object valueQualifier)
+    public void addQualifier(KnowledgeBase kb, KBQualifier newQualifier)
     {
-        getReificationStrategy(kb).addQualifier(kb, aStatement, predicateQualifier, valueQualifier);
+        getReificationStrategy(kb).addQualifier(kb, newQualifier);
     }
 
     @Override
-    public void deleteQualifier(KnowledgeBase kb, KBStatement aStatement,
-        KBHandle predicateQualifer, Object valueQualifier)
+    public void deleteQualifier(KnowledgeBase kb, KBQualifier oldQualifier)
     {
-        getReificationStrategy(kb)
-            .deleteQualifier(kb, aStatement, predicateQualifer, valueQualifier);
+        getReificationStrategy(kb).deleteQualifier(kb, oldQualifier);
     }
 
     @Override

@@ -274,11 +274,9 @@ public interface KnowledgeBaseService
 
     KBStatement readStatement(KnowledgeBase kb, KBStatement aStatement);
 
-    void addQualifier(KnowledgeBase kb, KBStatement aStatement, KBHandle predicateQualifier,
-        Object valueQualifier);
+    void addQualifier(KnowledgeBase kb, KBQualifier newQualifier);
 
-    void deleteQualifier(KnowledgeBase kb, KBStatement aStatement, KBHandle predicateQualifer,
-        Object valueQualifier);
+    void deleteQualifier(KnowledgeBase kb, KBQualifier oldQualifier);
 
     List<KBQualifier> listQualifiers(KnowledgeBase kb, KBStatement aStatement);
 }

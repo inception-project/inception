@@ -45,7 +45,6 @@ public class WikiDataReification
 {
     private static final String NAMPESPACE_ROOT = "https://github.com/inception-project";
     private static final String PREDICATE_NAMESPACE = NAMPESPACE_ROOT + "/predicate#";
-    //private static final String QUALIFIER_NAMESPACE = NAMPESPACE_ROOT + "/qualifier#";
 
     private final Logger log = LoggerFactory.getLogger(getClass());
     private final KnowledgeBaseService kbService;
@@ -79,16 +78,14 @@ public class WikiDataReification
         statements.add(root);           // S    P   id
         statements.add(valueStatement); // id   p_s V
 
-       // if (!aStatement.getQualifiers().isEmpty()) {
-            for (KBQualifier aQualifier : aStatement.getQualifiers()) {
-                KBHandle qualifierProperty = aQualifier.getKbProperty();
-                IRI qualifierPredicate = vf.createIRI(qualifierProperty.getIdentifier());
-                Value qualifierValue = valueMapper.mapQualifierValue(aQualifier.getValue(), vf);
-                Statement qualifierStatement = vf
-                    .createStatement(id, qualifierPredicate, qualifierValue);
-                statements.add(qualifierStatement); //id P V
-            }
-       // }
+        for (KBQualifier aQualifier : aStatement.getQualifiers()) {
+            KBHandle qualifierProperty = aQualifier.getKbProperty();
+            IRI qualifierPredicate = vf.createIRI(qualifierProperty.getIdentifier());
+            Value qualifierValue = valueMapper.mapQualifierValue(aQualifier, vf);
+            Statement qualifierStatement = vf
+                .createStatement(id, qualifierPredicate, qualifierValue);
+            statements.add(qualifierStatement); //id P V
+        }
 
         System.out.println(statements);
 
@@ -316,7 +313,6 @@ public class WikiDataReification
     public void upsertStatement(KnowledgeBase kb, KBStatement aStatement)
     {
         update(kb, (conn) -> {
-            //KBStatement statement = readStatement(kb, aStatement);
             KBStatement statement = aStatement;
             String statementId = statement.getStatementId();
             if (statementId != null) {
@@ -346,26 +342,24 @@ public class WikiDataReification
         });
     }
 
-    public void addQualifier(KnowledgeBase kb, KBStatement aStatement, KBHandle
-        predicateQualifier, Object valueQualifier)
+    public void addQualifier(KnowledgeBase kb, KBQualifier newQualifier)
     {
         update(kb, (conn) -> {
-           Resource id = vf.createBNode(aStatement.getStatementId());
-           IRI predicate = vf.createIRI(predicateQualifier.getIdentifier());
-           Value value = valueMapper.mapQualifierValue(valueQualifier, vf);
+           Resource id = vf.createBNode(newQualifier.getKbStatement().getStatementId());
+           IRI predicate = vf.createIRI(newQualifier.getKbProperty().getIdentifier());
+           Value value = valueMapper.mapQualifierValue(newQualifier, vf);
            Statement qualifierStatement = vf.createStatement(id, predicate, value);
            conn.add(qualifierStatement);
            return null;
         });
     }
 
-    public void deleteQualifier(KnowledgeBase kb, KBStatement aStatement, KBHandle
-        predicateQualifier, Object valueQualifier)
+    public void deleteQualifier(KnowledgeBase kb, KBQualifier oldQualifier)
     {
         update(kb, (conn) -> {
-            Resource id = vf.createBNode(aStatement.getStatementId());
-            IRI predicate = vf.createIRI(predicateQualifier.getIdentifier());
-            Value value = valueMapper.mapQualifierValue(valueQualifier, vf);
+            Resource id = vf.createBNode(oldQualifier.getKbStatement().getStatementId());
+            IRI predicate = vf.createIRI(oldQualifier.getKbProperty().getIdentifier());
+            Value value = valueMapper.mapQualifierValue(oldQualifier, vf);
             Statement qualifierStatement = vf.createStatement(id, predicate, value);
             conn.remove(qualifierStatement);
             return null;

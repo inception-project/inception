@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseServiceImpl;
 import de.tudarmstadt.ukp.inception.kb.graph.KBQualifier;
 import org.eclipse.rdf4j.model.BNode;
 import org.eclipse.rdf4j.model.IRI;
@@ -180,15 +179,13 @@ public class NoReification implements ReificationStrategy {
     }
 
     @Override
-    public void addQualifier(KnowledgeBase kb, KBStatement aStatement, KBHandle predicateQualifier,
-        Object valueQualifier)
+    public void addQualifier(KnowledgeBase kb, KBQualifier newQualifier)
     {
         log.error("Qualifiers are not supported.");
     }
 
     @Override
-    public void deleteQualifier(KnowledgeBase kb, KBStatement aStatement, KBHandle predicateQualifer,
-        Object valueQualifier)
+    public void deleteQualifier(KnowledgeBase kb, KBQualifier oldQualifier)
     {
         log.error("Qualifiers are not supported.");
     }
