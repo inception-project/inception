@@ -132,7 +132,6 @@ public class ConceptLinkingService
     /*
      * Generate a set of candidate entities from a Knowledge Base for a mention.
      * It only contains entities which are instances of a pre-defined concept.
-     * TODO lemmatize the mention if no candidates could be generated
      */
     private Set<CandidateEntity> generateCandidates(KnowledgeBase aKB, String aMention)
     {
