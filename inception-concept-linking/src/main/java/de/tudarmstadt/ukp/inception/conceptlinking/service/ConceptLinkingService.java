@@ -33,7 +33,6 @@ import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.builder.CompareToBuilder;
 import org.apache.commons.text.similarity.LevenshteinDistance;
@@ -149,7 +148,7 @@ public class ConceptLinkingService
 
         if (stopwords != null) {
             if (mentionArray.stream().allMatch(m -> stopwords.contains(m))) {
-                logger.error("Mention consists of stopwords only - returning.");
+                logger.error("Mention [{}] consists of stopwords only - returning.", aMention);
                 return Collections.emptySet();
             }
         }
@@ -186,8 +185,8 @@ public class ConceptLinkingService
                 }
             }
         }
-        logger.debug("It took [{}] ms to retrieve candidates from KB",
-            System.currentTimeMillis() - startTime);
+        logger.debug("It took [{}] ms to retrieve candidates from KB for mention [{}]",
+            System.currentTimeMillis() - startTime, aMention);
         return candidates;
     }
 
