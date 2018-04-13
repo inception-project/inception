@@ -297,17 +297,6 @@ public class ConceptLinkingService
             l.setLevMatchLabel(lev.apply(mention, altLabel));
             l.setLevContext(lev.apply(tokensToString(mentionContext), altLabel));
 
-            SemanticSignature sig = getSemanticSignature(aKB, wikidataId);
-            Set<String> relatedEntities = sig.getRelatedEntities();
-            Set<String> signatureOverlap = new HashSet<>();
-            for (String s : relatedEntities) {
-                if (sentenceContentTokens.contains(s)) {
-                    signatureOverlap.add(s);
-                }
-            }
-            l.setSignatureOverlapScore(splitMention.size() + signatureOverlap.size());
-            l.setNumRelatedRelations(
-                (sig.getRelatedRelations() != null) ? sig.getRelatedRelations().size() : 0);
         });
         result = sortCandidates(new ArrayList<>(candidates));
         logger.debug("It took [{}] ms to rank candidates",
