@@ -260,7 +260,9 @@ public class ConceptLinkingService
         List<Token> mentionContext = getMentionContext(mentionSentence, splitMention,
             MENTION_CONTEXT_SIZE);
 
-        candidates.parallelStream().forEach(l -> {
+
+        List<CandidateEntity> result = new ArrayList<>((candidates));
+        result.parallelStream().forEach(l -> {
             String wikidataId = l.getIRI().replace(WIKIDATA_PREFIX, "");
 
             if (entityFrequencyMap != null && entityFrequencyMap.get(wikidataId) != null) {
@@ -269,13 +271,7 @@ public class ConceptLinkingService
             else {
                 l.setFrequency(0);
             }
-        });
-        List<CandidateEntity> result = sortByFrequency(new ArrayList<>((candidates)));
-        if (result.size() > FREQUENCY_THRESHOLD) {
-            result = result.subList(0, FREQUENCY_THRESHOLD);
-        }
-        result.parallelStream().forEach( l -> {
-            String wikidataId = l.getIRI().replace(WIKIDATA_PREFIX, "");
+            
             l.setIdRank(Math.log(Double.parseDouble(wikidataId.substring(1))));
             String altLabel = l.getAltLabel().toLowerCase(Locale.ENGLISH);
             LevenshteinDistance lev = new LevenshteinDistance();
