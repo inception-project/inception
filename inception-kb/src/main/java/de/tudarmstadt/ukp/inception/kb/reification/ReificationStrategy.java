@@ -12,7 +12,6 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 public interface ReificationStrategy {
     List<Statement> reify(KnowledgeBase kb, KBStatement aStatement);
     List<KBStatement> listStatements(KnowledgeBase kb, KBHandle aInstance, boolean aAll);
-    KBStatement readStatement(KnowledgeBase kb, KBStatement aStatement);
     void deleteStatement(KnowledgeBase kb, KBStatement aStatement);
     void upsertStatement(KnowledgeBase kb, KBStatement aStatement);
     void addQualifier(KnowledgeBase kb, KBQualifier newQualifier);

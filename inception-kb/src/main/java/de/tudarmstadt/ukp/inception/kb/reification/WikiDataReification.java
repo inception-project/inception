@@ -153,14 +153,6 @@ public class WikiDataReification
         }
     }
 
-    @Override
-    public KBStatement readStatement(KnowledgeBase kb, KBStatement aStatement)
-    {
-        String statementId = getStatementId(kb, aStatement);
-        aStatement.setStatementId(statementId);
-        return aStatement;
-    }
-
     private String getStatementId(KnowledgeBase kb, KBStatement aStatement)
     {
         String QUERY = String.join("\n"

@@ -272,8 +272,6 @@ public interface KnowledgeBaseService
 
     List<KBHandle> listChildConcepts(KnowledgeBase kb, String parentIdentifier, boolean aAll);
 
-    KBStatement readStatement(KnowledgeBase kb, KBStatement aStatement);
-
     void addQualifier(KnowledgeBase kb, KBQualifier newQualifier);
 
     void deleteQualifier(KnowledgeBase kb, KBQualifier oldQualifier);

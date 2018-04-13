@@ -146,14 +146,6 @@ public class NoReification implements ReificationStrategy {
     }
 
     @Override
-    public KBStatement readStatement(KnowledgeBase kb, KBStatement aStatement)
-    {
-        aStatement.setOriginalStatements(reify(kb, aStatement));
-        return aStatement;
-    }
-
-    @Override
-    //TODO: is it necessary to reset originalStatements of KBStatement?
     public void deleteStatement(KnowledgeBase kb, KBStatement aStatement)
     {
         update(kb, (conn) -> {

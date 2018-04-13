@@ -768,12 +768,6 @@ public class KnowledgeBaseServiceImpl
     }
 
     @Override
-    public KBStatement readStatement(KnowledgeBase kb, KBStatement aStatement)
-    {
-        return getReificationStrategy(kb).readStatement(kb, aStatement);
-    }
-
-    @Override
     public void addQualifier(KnowledgeBase kb, KBQualifier newQualifier)
     {
         getReificationStrategy(kb).addQualifier(kb, newQualifier);
