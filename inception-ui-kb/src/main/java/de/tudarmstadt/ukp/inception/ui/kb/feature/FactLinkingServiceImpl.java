@@ -28,7 +28,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
@@ -39,30 +38,8 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 public class FactLinkingServiceImpl implements FactLinkingService
 {
     @Resource private KnowledgeBaseService kbService;
-    @Resource private AnnotationSchemaService annotationService;
 
     private final Logger LOG = LoggerFactory.getLogger(getClass());
-
-    @Override
-    public KnowledgeBase getKBByKBHandle(KBHandle kbHandle, Project aProject)
-    {
-        for (KnowledgeBase kb : kbService.getKnowledgeBases(aProject)) {
-            if (kbService.listProperties(kb, false).contains(kbHandle)) {
-                return kb;
-            }
-            if (kbService.listConcepts(kb, false).contains(kbHandle)) {
-                return kb;
-            }
-            for (KBHandle concept : kbService.listConcepts(kb, false)) {
-                if (kbService.listInstances(kb, concept.getIdentifier(), false)
-                    .contains(kbHandle)) {
-                    return kb;
-                }
-            }
-
-        }
-        return null;
-    }
 
     @Override
     public List<KBHandle> getKBConceptsAndInstances(Project aProject)

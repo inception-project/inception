@@ -15,23 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
-import java.util.List;
-
-import org.apache.uima.jcas.JCas;
-
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
-
-public interface FactLinkingService
+public final class FactLinkingConstants
 {
-    String SERVICE_NAME = "factLinkingService";
+    public static final String SUBJECT_LINK = "webanno.custom.FactSubjectLink";
+    public static final String OBJECT_LINK = "webanno.custom.FactObjectLink";
+    public static final String QUALIFIER_LINK = "webanno.custom.FactQualifierLink";
 
-    List<KBHandle> getKBConceptsAndInstances(Project aProject);
+    public static final String SUBJECT_ROLE = "subject";
+    public static final String OBJECT_ROLE = "object";
 
-    List<KBHandle> getAllPredicatesFromKB(Project aProject);
-
-    KBHandle getKBHandleFromCasByAddr(JCas aJcas, int targetAddr, Project aProject);
+    public static final String FACT_LAYER = "webanno.custom.Fact";
 }

@@ -17,6 +17,12 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
+import static de.tudarmstadt.ukp.inception.ui.kb.feature.FactLinkingConstants.OBJECT_LINK;
+import static de.tudarmstadt.ukp.inception.ui.kb.feature.FactLinkingConstants.OBJECT_ROLE;
+import static de.tudarmstadt.ukp.inception.ui.kb.feature.FactLinkingConstants.QUALIFIER_LINK;
+import static de.tudarmstadt.ukp.inception.ui.kb.feature.FactLinkingConstants.SUBJECT_LINK;
+import static de.tudarmstadt.ukp.inception.ui.kb.feature.FactLinkingConstants.SUBJECT_ROLE;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -53,12 +59,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 public class SubjectObjectFeatureSupport
     implements FeatureSupport<Void>
 {
-    private static final String SUBJECT_LINK = "webanno.custom.FactSubjectLink";
-    private static final String OBJECT_LINK = "webanno.custom.FactObjectLink";
-    private static final String QUALIFIER_LINK = "webanno.custom.FactModifierLink";
-    private static final String SUBJECT_ROLE = "subject";
-    private static final String OBJECT_ROLE = "object";
-
     private String featureSupportId;
 
     @Override
