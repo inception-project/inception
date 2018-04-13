@@ -75,7 +75,7 @@ To delete a document from the project, you have to click on it and then click on
 [[sect_projects_layers]]
 === Layers 
 
-In WebAnno, all annotations belong to an annotation *layer*. Each layer has a structural *type* that defines if it is a *span*, a *relation*, or a *chain*. It also defines how the annotations behave and what kind of features it carries.
+All annotations belong to an annotation *layer*. Each layer has a structural *type* that defines if it is a *span*, a *relation*, or a *chain*. It also defines how the annotations behave and what kind of features it carries.
 
 ==== Creating a custom layer
 
@@ -107,7 +107,7 @@ Now you have created your first custom layer.
 
 ==== Built-in layers
 
-WebAnno comes with a set of built-in layers that allow you to start annotating immediately. Also, many import/export formats only work with these layers as their semantics are known to WebAnno. For this reason, the ability to customize the behaviors of built-in layers is limited and it is not possible to extend them with custom features.
+{product-name} comes with a set of built-in layers that allow you to start annotating immediately. Also, many import/export formats only work with these layers as their semantics are known. For this reason, the ability to customize the behaviors of built-in layers is limited and it is not possible to extend them with custom features.
 
 .Built-in layers
 [cols="1,2,2v", options="header"]
@@ -186,7 +186,7 @@ image::layer1.jpg[align="center"]
 | Whether the layer is enabled or not. Layers can currently not be deleted, but they can be disabled.
 |====
 
-NOTE: When a layer is first created, only ASCII characters are allowed for the layer name because WebAnno derives an internal UIMA type name from the initial layer name. After the layer has been created, the name can be changed arbitrarily. The internal UIMA type name will not be updated. The internal UIMA name is
+NOTE: When a layer is first created, only ASCII characters are allowed for the layer name because the internal UIMA type name is derived from the initial layer name. After the layer has been created, the name can be changed arbitrarily. The internal UIMA type name will not be updated. The internal UIMA name is
 e.g. used when exporting data or in constraint rules.
 
 image::layer2.jpg[align="center"]
@@ -212,7 +212,7 @@ _(Relations)_
 | Determines which span layer a relation attaches to. Relations can only be created between annotations of this span layer.
 |====
 
-The layer type defines the structure of the layer. WebAnno supports three different types.
+The layer type defines the structure of the layer. Three different types are supported: spans, relations, and chains.
 
 .Layer types
 [cols="1,2,3", options="header"]
@@ -279,7 +279,7 @@ image::layer3.jpg[align="center"]
 
 In this section, features and their properties can be configured. 
 
-NOTE: When a feature is first created, only ASCII characters are allowed for the feature name because WebAnno derives an internal UIMA name from the initial layer name. After the feature has been created, the name can be changed arbitrarily. The internal UIMA feature name will not be updated. The internal UIMA name is
+NOTE: When a feature is first created, only ASCII characters are allowed for the feature name because the internal UIMA name is derived from the initial layer name. After the feature has been created, the name can be changed arbitrarily. The internal UIMA feature name will not be updated. The internal UIMA name is
 e.g. used when exporting data or in constraint rules.
 
 .Feature properties
@@ -312,10 +312,10 @@ of the same type in a row.
 
 | Tagset
 _(String)_
-| The tagset controlling the possible values for a string feture.
+| The tagset controlling the possible values for a string feature.
 |====
 
-WebAnno supports the following feature types.
+The following feature types are supported.
 
 .Feature types
 [cols="1v,2", options="header"]
@@ -367,7 +367,7 @@ To export a tagset, choose the format of the export at the bottom of the frame a
 
 === Constraints
 
-To import a constraints file, go to *Project* and click on the particular project name. On the left side of the screen, a tab bar opens. Choose *Constraints*. You can now choose a constraint file by clicking on *Choose Files*. Then, click on *Import*. Upon import, WebAnno checks if the constraints file is well formed. If they conform to the rules of writing constraints, the constraints are applied. 
+To import a constraints file, go to *Project* and click on the particular project name. On the left side of the screen, a tab bar opens. Choose *Constraints*. You can now choose a constraint file by clicking on *Choose Files*. Then, click on *Import*. Upon import, the application checks if the constraints file is well formed. If they conform to the rules of writing constraints, the constraints are applied. 
 
 === Guidelines
 
@@ -396,21 +396,18 @@ NOTE: Generated users are disabled and have no password. They must be explicitly
 
 image::project_export.jpg[align="center"]
 
-WebAnno offers two modes of exporting projects:
+Two modes of exporting projects are supported:
 
-   * *Export the whole project* for the purpose of creating a backup, of migrating it to a new WebAnno version, of migrating to a different WebAnno instance, or simply in order to reimport it as a duplicate copy.
+   * *Export the whole project* for the purpose of creating a backup, of migrating it to a new {product-name} version, of migrating to a different {product-name} instance, or simply in order to re-import it as a duplicate copy.
    * *Export curated documents* for the purpose of getting an easy access to the final annotation results. If you do not have any curated documents in your project, this export option is not offered.
 
 The format of the exported annotations is selected using the *Format* drop-down field. When *AUTO*
-is selected, the file format corresponds to the format of the source document. If WebAnno has not
-write support for the source format, the file is exported in the WebAnno TSV format instead.
-
-IMPORTANT: Do not leave the export page after initiating an export before the progress bar is 
-           complete or your WebAnno instance can become locked until it is restarted!
+is selected, the file format corresponds to the format of the source document. If there is no
+write support for the source format, the file is exported in the WebAnno TSV3 format instead.
 
 NOTE: Some browsers automatically extract ZIP files into a folder after the download. Zipping this
-      folder and trying to re-import it into WebAnno will generally not work because the process
-      introduces an additional folder within the archive and WebAnno is unable to handle that. The
+      folder and trying to re-import it into the application will generally not work because the process
+      introduces an additional folder level within the archive. The
       best option is to disable the automatic extraction in your browser. E.g. in Safari, go to
       *Preferences* -> *General* and disable the setting *Open "safe" files after downloading*.
 
@@ -442,4 +439,4 @@ When exporting a whole project, the structure of the exported ZIP file is as fol
 NOTE: The files under `annotation` and `curation` are provided for convenience only. They are 
       ignored upon import.
 
-Currently, WebAnno does not allow the user to choose a specific format for bulk-exporting annotations. However, link:https://groups.google.com/forum/#!msg/webanno-user/X3ShaFPXQT0/PnBzpPdXrIgJ[this mailing list post] describes how link:https://code.google.com/p/dkpro-core-asl/[DKPro Core] can be used to transform the UIMA CAS formats into alternative formats.   
+Currently, it is not possible to choose a specific format for bulk-exporting annotations. However, link:https://groups.google.com/forum/#!msg/webanno-user/X3ShaFPXQT0/PnBzpPdXrIgJ[this mailing list post] describes how link:https://code.google.com/p/dkpro-core-asl/[DKPro Core] can be used to transform the UIMA CAS formats into alternative formats.   
