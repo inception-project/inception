@@ -99,10 +99,10 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         reification = aReification;
     }
 
-    @Parameterized.Parameters(name="Reification = {0}")
-    public static Collection<Object[]> data() {
-        return Arrays.stream(Reification.values())
-            .map(r -> new Object[] { r })
+    @Parameterized.Parameters(name = "Reification = {0}")
+    public static Collection<Object[]> data()
+    {
+        return Arrays.stream(Reification.values()).map(r -> new Object[] { r })
             .collect(Collectors.toList());
     }
 
@@ -985,8 +985,6 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
             .isEqualTo(statementCountAfterUpsert);
     }
 
-    //TODO: add deleteSatement with qualifiers
-
     @Test
     public void deleteStatement_WithExistingStatement_ShouldDeleteStatement() {
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
@@ -1199,7 +1197,9 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         return testFixtures.buildInstance();
     }
 
-    private KBStatement buildStatement(KnowledgeBase knowledgeBase, KBHandle conceptHandle, KBHandle propertyHandle, String value) {
+    private KBStatement buildStatement(KnowledgeBase knowledgeBase, KBHandle conceptHandle,
+        KBHandle propertyHandle, String value)
+    {
         KBStatement stmt = testFixtures.buildStatement(conceptHandle, propertyHandle, value);
         sut.initStatement(knowledgeBase, stmt);
         return stmt;

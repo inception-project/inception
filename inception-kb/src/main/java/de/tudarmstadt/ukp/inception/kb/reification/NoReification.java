@@ -1,3 +1,20 @@
+/*
+ * Copyright 2018
+ * Ubiquitous Knowledge Processing (UKP) Lab
+ * Technische Universität Darmstadt
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package de.tudarmstadt.ukp.inception.kb.reification;
 
 import java.util.ArrayList;
@@ -6,7 +23,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import de.tudarmstadt.ukp.inception.kb.graph.KBQualifier;
 import org.eclipse.rdf4j.model.BNode;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Statement;
@@ -26,6 +42,7 @@ import org.slf4j.LoggerFactory;
 import de.tudarmstadt.ukp.inception.kb.InceptionValueMapper;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
+import de.tudarmstadt.ukp.inception.kb.graph.KBQualifier;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
@@ -58,13 +75,15 @@ public class NoReification implements ReificationStrategy {
     }
 
     @Override
-    public List<KBStatement> listStatements(KnowledgeBase kb, KBHandle aInstance, boolean aAll) {
+    public List<KBStatement> listStatements(KnowledgeBase kb, KBHandle aInstance, boolean aAll)
+    {
         Map<String, KBHandle> props = new HashMap<>();
         for (KBHandle prop : kbService.listProperties(kb, aAll)) {
             props.put(prop.getIdentifier(), prop);
         }
 
-        List<Statement> explicitStmts = listStatementsForInstance(kb, aInstance.getIdentifier(), false);
+        List<Statement> explicitStmts = listStatementsForInstance(kb, aInstance.getIdentifier(),
+            false);
         List<Statement> allStmts = listStatementsForInstance(kb, aInstance.getIdentifier(), true);
 
         List<KBStatement> result = new ArrayList<>();
@@ -111,11 +130,10 @@ public class NoReification implements ReificationStrategy {
     /**
      * Returns all statements for which the given instance identifier is the subject
      */
-    private List<Statement> listStatementsForInstance(KnowledgeBase kb,
-                                                      String aInstanceIdentifier,
-                                                      boolean aIncludeInferred)
+    private List<Statement> listStatementsForInstance(KnowledgeBase kb, String aInstanceIdentifier,
+        boolean aIncludeInferred)
     {
-        try(RepositoryConnection conn = kbService.getConnection(kb)) {
+        try (RepositoryConnection conn = kbService.getConnection(kb)) {
             ValueFactory vf = conn.getValueFactory();
             String QUERY = "SELECT * WHERE { ?s ?p ?o . }";
             TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
@@ -125,7 +143,8 @@ public class NoReification implements ReificationStrategy {
             TupleQueryResult result;
             try {
                 result = tupleQuery.evaluate();
-            } catch (QueryEvaluationException e) {
+            }
+            catch (QueryEvaluationException e) {
                 log.warn("Listing statements failed.", e);
                 return Collections.emptyList();
             }

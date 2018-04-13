@@ -17,13 +17,13 @@
  */
 package de.tudarmstadt.ukp.inception.kb.graph;
 
+import java.io.Serializable;
+
 import org.cyberborean.rdfbeans.datatype.DatatypeMapper;
 import org.cyberborean.rdfbeans.datatype.DefaultDatatypeMapper;
 import org.eclipse.rdf4j.model.BNode;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Literal;
-
-import java.io.Serializable;
 
 public class KBQualifier
     implements Serializable

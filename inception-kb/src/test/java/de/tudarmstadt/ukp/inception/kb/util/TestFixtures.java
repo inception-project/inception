@@ -1,3 +1,20 @@
+/*
+ * Copyright 2018
+ * Ubiquitous Knowledge Processing (UKP) Lab
+ * Technische Universität Darmstadt
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package de.tudarmstadt.ukp.inception.kb.util;
 
 import java.net.URI;
@@ -14,6 +31,7 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
+import de.tudarmstadt.ukp.inception.kb.graph.KBQualifier;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.reification.Reification;
@@ -73,5 +91,13 @@ public class TestFixtures
         ValueFactory vf = SimpleValueFactory.getInstance();
         KBStatement statement = new KBStatement(conceptHandle, propertyHandle, vf.createLiteral(value));
         return statement;
+    }
+
+    public KBQualifier buildQualifier(KBStatement kbStatement, KBHandle propertyHandle, String
+        value) {
+        ValueFactory vf = SimpleValueFactory.getInstance();
+        KBQualifier qualifier = new KBQualifier(kbStatement, propertyHandle, vf.createLiteral
+            (value));
+        return qualifier;
     }
 }
