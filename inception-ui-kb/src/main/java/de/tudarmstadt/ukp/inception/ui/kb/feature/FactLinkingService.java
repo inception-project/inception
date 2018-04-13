@@ -22,11 +22,8 @@ import java.util.List;
 
 import org.apache.uima.jcas.JCas;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
-import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 public interface FactLinkingService
@@ -39,18 +36,5 @@ public interface FactLinkingService
 
     List<KBHandle> getAllPredicatesFromKB(Project aProject);
 
-    KBHandle getPredicateKBHandle(AnnotatorState aState);
-
-    KBHandle getLinkedSubjectObjectKBHandle(String featureName, AnnotationActionHandler
-        actionHandler, AnnotatorState aState);
-
     KBHandle getKBHandleFromCasByAddr(JCas aJcas, int targetAddr, Project aProject);
-
-    boolean checkSameKnowledgeBase(KBHandle handleA, KBHandle handleB, Project aProject);
-
-    void updateStatement(KBHandle subject, KBHandle predicate, String object,
-        KBStatement oldStatement, Project aProject);
-
-    KBStatement getOldStatement(KBHandle subject, KBHandle predicate, String oldValue,
-        Project aProject);
 }

@@ -58,7 +58,6 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
-import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 
 public class SubjectObjectFeatureEditor
     extends FeatureEditor
@@ -251,18 +250,7 @@ public class SubjectObjectFeatureEditor
     private void setSelectedKBItem(KBHandle value)
     {
         if (roleLabelIsFilled()) {
-            if (roleModel.role.equals("subject")) {
-                KBHandle oldValue = factService.getLinkedSubjectObjectKBHandle("Subject",
-                    actionHandler, stateModel.getObject());
-                setFeatureValueInCas(value);
-                setStatementInKBWhenSubjectUpdate(value, oldValue);
-            }
-            else if (roleModel.role.equals("object")) {
-                KBHandle oldValue = factService.getLinkedSubjectObjectKBHandle("Object",
-                    actionHandler, stateModel.getObject());
-                setFeatureValueInCas(value);
-                setStatementInKBWhenObjectUpdate(value, oldValue);
-            }
+            setFeatureValueInCas(value);
         }
     }
 
@@ -302,57 +290,6 @@ public class SubjectObjectFeatureEditor
             }
         }
         return selectedKBHandleItem;
-    }
-
-
-    private void setStatementInKBWhenSubjectUpdate(KBHandle value, KBHandle oldValue) {
-        KBHandle predicateHandle = factService.getPredicateKBHandle(stateModel.getObject());
-
-        if (predicateHandle != null) {
-
-            if (!factService.checkSameKnowledgeBase(value, predicateHandle, project)) {
-                LOG.error("Subject and predicate are from different knowledge bases.");
-                return;
-            }
-
-            KBHandle objectHandle = factService
-                .getLinkedSubjectObjectKBHandle("Object", actionHandler, stateModel.getObject());
-            String objectValue = objectHandle == null ? "" : objectHandle.getUiLabel();
-
-            KBStatement oldStatement = null;
-            if (oldValue != null) {
-                oldStatement = factService
-                    .getOldStatement(oldValue, predicateHandle, objectValue, project);
-            }
-            factService.updateStatement(value, predicateHandle, objectValue, oldStatement, project);
-        }
-    }
-
-    private void setStatementInKBWhenObjectUpdate(KBHandle value, KBHandle oldValue) {
-        KBHandle predicateHandle = factService.getPredicateKBHandle(stateModel.getObject());
-        KBHandle subjectHandle = factService
-            .getLinkedSubjectObjectKBHandle("Subject", actionHandler, stateModel.getObject());
-
-        if (predicateHandle == null || subjectHandle == null) {
-            return;
-        }
-
-        if (stateModel.getObject().getFeatureStates().size() <= 1) {
-            return;
-        }
-
-        if (!factService.checkSameKnowledgeBase(subjectHandle, predicateHandle, project)) {
-            LOG.error("Subject and predicate are from different knowledge bases.");
-            return;
-        }
-
-        String oldValueString = oldValue == null ? "" : oldValue.getUiLabel();
-        KBStatement oldStatement = factService
-            .getOldStatement(subjectHandle, predicateHandle, oldValueString, project);
-
-        factService
-            .updateStatement(subjectHandle, predicateHandle, value.getUiLabel(), oldStatement,
-                project);
     }
 
     public static void handleException(Component aComponent, AjaxRequestTarget aTarget,

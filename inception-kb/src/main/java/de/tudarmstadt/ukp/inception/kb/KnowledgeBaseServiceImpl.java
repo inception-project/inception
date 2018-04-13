@@ -41,8 +41,6 @@ import javax.persistence.Query;
 import org.apache.commons.compress.compressors.CompressorException;
 import org.apache.commons.compress.compressors.CompressorStreamFactory;
 import org.apache.commons.lang3.StringUtils;
-import org.cyberborean.rdfbeans.datatype.DatatypeMapper;
-import org.cyberborean.rdfbeans.datatype.DefaultDatatypeMapper;
 import org.eclipse.rdf4j.model.BNode;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Statement;
@@ -800,48 +798,6 @@ public class KnowledgeBaseServiceImpl
         }
         return handles;
     }
-
-    @Override
-    public KBStatement getExistingStatement(KnowledgeBase kb, KBHandle aInstance,
-        KBHandle aProperty, String aObject)
-    {
-        if (existThisStatement(kb, aInstance, aProperty, aObject)) {
-            KBStatement kbStatement = new KBStatement();
-            kbStatement.setInstance(aInstance);
-            kbStatement.setProperty(aProperty);
-            kbStatement.setValue(aObject);
-            return kbStatement;
-        }
-
-        return null;
-    }
-
-    public boolean existThisStatement(KnowledgeBase kb, KBHandle aInstance, KBHandle aProperty,
-        String aObject) {
-        return read(kb, (conn) -> {
-            ValueFactory vf = conn.getValueFactory();
-            String QUERY = "SELECT * WHERE { ?s ?p ?o . }";
-            TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
-            tupleQuery.setBinding("s", vf.createIRI(aInstance.getIdentifier()));
-            tupleQuery.setBinding("p", vf.createIRI(aProperty.getIdentifier()));
-            DatatypeMapper mapper = new DefaultDatatypeMapper();
-            tupleQuery.setBinding("o", mapper.getRDFValue(aObject, vf));
-
-            TupleQueryResult result;
-            try {
-                result = tupleQuery.evaluate();
-            }
-            catch (QueryEvaluationException e) {
-                log.warn("Listing statements failed.", e);
-                return false;
-            }
-            if (result.hasNext()) {
-                return true;
-            }
-            return false;
-        });
-    }
-
 
     private interface UpdateAction
     {
