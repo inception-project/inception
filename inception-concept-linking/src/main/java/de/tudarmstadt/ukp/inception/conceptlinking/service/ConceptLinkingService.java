@@ -91,8 +91,8 @@ public class ConceptLinkingService
     private static final int SIGNATURE_QUERY_LIMIT = 100;
     private static final String WIKIDATA_PREFIX = "http://www.wikidata.org/entity/";
     private static final String POS_VERB_PREFIX = "V";
-    private static final String POS_NOUN_PREFIX = "V";
-    private static final String POS_ADJECTIVE_PREFIX = "V";
+    private static final String POS_NOUN_PREFIX = "N";
+    private static final String POS_ADJECTIVE_PREFIX = "J";
 
     @PostConstruct
     public void init()
