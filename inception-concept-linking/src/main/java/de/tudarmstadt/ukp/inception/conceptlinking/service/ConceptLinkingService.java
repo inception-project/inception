@@ -389,10 +389,18 @@ public class ConceptLinkingService
     public List<KBHandle> disambiguate(KnowledgeBase aKB, String aTypedString, String
         aMention, int aMentionBeginOffset, JCas aJcas)
     {
-        Set<CandidateEntity> candidates
-            = new HashSet<>(CollectionUtils.union(generateCandidates(aKB, aMention),
-                    generateCandidates(aKB, aTypedString)));
+        long startTime = System.currentTimeMillis();
 
+        List<String> list = new ArrayList<>();
+        Set<CandidateEntity> candidates = new HashSet<>();
+
+        list.add(aMention);
+        list.add(aTypedString);
+        list.stream().parallel()
+            .forEach(string -> candidates.addAll(generateCandidates(aKB, string)));
+
+        logger.debug("It took [{}] ms to retrieve candidates from KB [{}]", System
+            .currentTimeMillis() - startTime);
         List<CandidateEntity> rankedCandidates = rankCandidates(aKB, aMention, candidates, aJcas,
             aMentionBeginOffset);
 
