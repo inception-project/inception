@@ -260,21 +260,6 @@ public class ConceptLinkingService
         List<Token> mentionContext = getMentionContext(mentionSentence, splitMention,
             MENTION_CONTEXT_SIZE);
 
-        Set<String> sentenceContentTokens = new HashSet<>();
-        for (Token t : JCasUtil.selectCovered(Token.class, mentionSentence)) {
-            if (t.getPosValue() != null) {
-                boolean isNounOrVerbOrAdjective = t.getPosValue().startsWith(POS_VERB_PREFIX)
-                        || t.getPosValue().startsWith(POS_NOUN_PREFIX)
-                        || t.getPosValue().startsWith(POS_ADJECTIVE_PREFIX);
-                boolean isNotPartOfMention = !splitMention.contains(t.getCoveredText());
-                boolean isNotStopword = (stopwords == null) || (stopwords != null &&
-                    !stopwords.contains(t.getCoveredText()));
-                if (isNounOrVerbOrAdjective && isNotPartOfMention && isNotStopword) {
-                    sentenceContentTokens.add(t.getCoveredText());
-                }
-            }
-        }
-
         candidates.parallelStream().forEach(l -> {
             String wikidataId = l.getIRI().replace(WIKIDATA_PREFIX, "");
 
