@@ -86,7 +86,7 @@ public class ConceptLinkingService
     private Map<String, Property> propertyWithLabels;
 
     private static final int MENTION_CONTEXT_SIZE = 5;
-    private static final int CANDIDATE_QUERY_LIMIT = 1000;
+    private static final int CANDIDATE_QUERY_LIMIT = 10000;
     private static final int FREQUENCY_THRESHOLD = 100;
     private static final int SIGNATURE_QUERY_LIMIT = 100;
     private static final String WIKIDATA_PREFIX = "http://www.wikidata.org/entity/";
