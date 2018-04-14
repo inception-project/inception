@@ -17,13 +17,13 @@
 [[sect_upgrade]]
 == Upgrade
 
-This section describes how to upgrade the standalone version of WebAnno using an embedded database. For further information on how to upgrade WebAnno, in particular the WAR version when using a MySQL database or older versions of WebAnno, please refer to the <<admin-guide.adoc#,Administrator Guide>>.
+This section describes how to upgrade the standalone version of INCEpTION using an embedded database. For further information on how to upgrade INCEpTION, in particular the WAR version when using a MySQL database or older versions of INCEpTION, please refer to the <<admin-guide.adoc#,Administrator Guide>>.
 
 === Make a backup
 
-Before any upgrade, make a copy of your WebAnno home folder.
+Before any upgrade, make a copy of your INCEpTION home folder.
 
-IMPORTANT: If WebAnno is configured to use an external database, e.g. MySQL, make a 
+IMPORTANT: If INCEpTION is configured to use an external database, e.g. MySQL, make a 
             backup of this database as well. See the <<admin-guide.adoc#,Administrator Guide>> 
             for further information.
 
