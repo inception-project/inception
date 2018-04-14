@@ -20,12 +20,12 @@ package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
 import java.util.ArrayList;
 import java.util.List;
-import javax.annotation.Resource;
 
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
@@ -37,7 +37,7 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 @Component(FactLinkingService.SERVICE_NAME)
 public class FactLinkingServiceImpl implements FactLinkingService
 {
-    @Resource private KnowledgeBaseService kbService;
+    @Autowired private KnowledgeBaseService kbService;
 
     private final Logger LOG = LoggerFactory.getLogger(getClass());
 

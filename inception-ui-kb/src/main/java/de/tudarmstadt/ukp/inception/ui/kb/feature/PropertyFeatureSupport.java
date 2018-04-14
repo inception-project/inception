@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.stream.Stream;
-import javax.annotation.Resource;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
@@ -38,6 +37,7 @@ import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.model.IModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
@@ -61,7 +61,7 @@ public class PropertyFeatureSupport
     private static final String PREDICATE_KEY = "KB: Property";
     private static final String FACT_PREDICATE_PREFIX = "kb-property:";
 
-    @Resource private KnowledgeBaseService kbService;
+    @Autowired private KnowledgeBaseService kbService;
 
     private String featureSupportId;
 
