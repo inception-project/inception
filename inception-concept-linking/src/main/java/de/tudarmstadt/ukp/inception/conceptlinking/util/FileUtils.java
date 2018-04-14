@@ -49,7 +49,7 @@ public class FileUtils
         String l;
         try {
             InputStream is = r.getInputStream();
-            BufferedReader br = new BufferedReader(new InputStreamReader(is));
+            BufferedReader br = new BufferedReader(new InputStreamReader(is, "utf8"));
             while ((l = br.readLine()) != null) {
                 lines.add(l);
             }
