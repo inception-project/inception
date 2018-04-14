@@ -167,7 +167,7 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest {
 
             int qualifierCountAfterDeletion = sut.listQualifiers(kb, statement).size();
             assertThat(qualifierCountBeforeDeletion)
-                .as("Check that statement was not deleted")
+                .as("Check that statement was not added")
                 .isEqualTo(qualifierCountAfterDeletion);
         }
     }
@@ -278,6 +278,104 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest {
 
             assertThat(qualifiers)
                 .isEmpty();
+        }
+    }
+
+    @Test
+    public void upsertQualifier_withUnsavedQualifier_shouldCreateQualifier()
+    {
+        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
+        if (kb.getReification().equals(Reification.WIKIDATA)) {
+            KBConcept concept = testFixtures.buildConcept();
+            KBProperty property = testFixtures.buildProperty();
+            KBHandle conceptHandle = sut.createConcept(kb, concept);
+            KBHandle propertyHandle = sut.createProperty(kb, property);
+            KBStatement statement = testFixtures.buildStatement(conceptHandle,
+                propertyHandle, "Test statement");
+            sut.initStatement(kb, statement);
+            sut.upsertStatement(kb, statement);
+            KBQualifier qualifier = testFixtures.buildQualifier(statement, propertyHandle, "Test "
+                + "qualifier");
+            sut.upsertQualifier(kb, qualifier);
+            assertThat(qualifier.getKbStatement().getQualifiers())
+                .as("Check that KBStatement has updated correctly")
+                .hasSize(1)
+                .element(0)
+                .hasFieldOrProperty("kbProperty")
+                .hasFieldOrPropertyWithValue("value", "Test qualifier");
+
+            List<KBStatement> statements = sut.listStatements(kb, conceptHandle, false);
+            assertThat(statements.get(0).getQualifiers())
+                .as("Check that Knowledge Base has updated correctly")
+                .hasSize(1)
+                .element(0)
+                .hasFieldOrProperty("kbProperty")
+                .hasFieldOrPropertyWithValue("value", "Test qualifier");
+        }
+    }
+
+    @Test
+    public void upsertQualifier_withExistingQualifier_shouldUpdateQualifier()
+    {
+        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
+        if (kb.getReification().equals(Reification.WIKIDATA)) {
+            KBConcept concept = testFixtures.buildConcept();
+            KBProperty property = testFixtures.buildProperty();
+            KBHandle conceptHandle = sut.createConcept(kb, concept);
+            KBHandle propertyHandle = sut.createProperty(kb, property);
+            KBStatement statement = testFixtures.buildStatement(conceptHandle,
+                propertyHandle, "Test statement");
+            sut.initStatement(kb, statement);
+            sut.upsertStatement(kb, statement);
+            KBQualifier qualifier = testFixtures.buildQualifier(statement, propertyHandle, "Test "
+                + "qualifier");
+            sut.upsertQualifier(kb, qualifier);
+
+            qualifier.setValue("changed Qualifier");
+            sut.upsertQualifier(kb, qualifier);
+            assertThat(qualifier.getKbStatement().getQualifiers())
+                .as("Check that KBStatement has updated correctly")
+                .hasSize(1)
+                .element(0)
+                .hasFieldOrProperty("kbProperty")
+                .hasFieldOrPropertyWithValue("value", "changed Qualifier");
+
+            List<KBStatement> statements = sut.listStatements(kb, conceptHandle, false);
+            assertThat(statements.get(0).getQualifiers())
+                .as("Check that Knowledge Base has updated correctly")
+                .hasSize(1)
+                .element(0)
+                .hasFieldOrProperty("kbProperty")
+                .hasFieldOrPropertyWithValue("value", "changed Qualifier");
+        }
+    }
+
+    @Test
+    public void upsertQualifier_withReadOnlyKnowledgeBase_shouldDoNothing()
+    {
+        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
+        if (kb.getReification().equals(Reification.WIKIDATA)) {
+            KBConcept concept = testFixtures.buildConcept();
+            KBProperty property = testFixtures.buildProperty();
+            KBHandle conceptHandle = sut.createConcept(kb, concept);
+            KBHandle propertyHandle = sut.createProperty(kb, property);
+            KBStatement statement = testFixtures.buildStatement(conceptHandle,
+                propertyHandle, "Test statement");
+            sut.initStatement(kb, statement);
+            sut.upsertStatement(kb, statement);
+
+            kb.setReadOnly(true);
+            sut.updateKnowledgeBase(kb, sut.getKnowledgeBaseConfig(kb));
+
+            int qualifierCountBeforeDeletion = sut.listQualifiers(kb, statement).size();
+            KBQualifier qualifier = testFixtures.buildQualifier(statement, propertyHandle, "Test "
+                + "qualifier");
+            sut.upsertQualifier(kb, qualifier);
+
+            int qualifierCountAfterDeletion = sut.listQualifiers(kb, statement).size();
+            assertThat(qualifierCountBeforeDeletion)
+                .as("Check that statement was not updated")
+                .isEqualTo(qualifierCountAfterDeletion);
         }
     }
 

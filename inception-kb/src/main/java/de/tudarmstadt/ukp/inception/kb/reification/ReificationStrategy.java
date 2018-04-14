@@ -33,5 +33,6 @@ public interface ReificationStrategy {
     void upsertStatement(KnowledgeBase kb, KBStatement aStatement);
     void addQualifier(KnowledgeBase kb, KBQualifier newQualifier);
     void deleteQualifier(KnowledgeBase kb, KBQualifier oldQualifier);
+    void upsertQualifier(KnowledgeBase kb, KBQualifier aQualifier);
     List<KBQualifier> listQualifiers(KnowledgeBase kb, KBStatement aStatement);
 }

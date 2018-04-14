@@ -18,12 +18,15 @@
 package de.tudarmstadt.ukp.inception.kb.graph;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.cyberborean.rdfbeans.datatype.DatatypeMapper;
 import org.cyberborean.rdfbeans.datatype.DefaultDatatypeMapper;
 import org.eclipse.rdf4j.model.BNode;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Literal;
+import org.eclipse.rdf4j.model.Statement;
 
 public class KBQualifier
     implements Serializable
@@ -37,6 +40,8 @@ public class KBQualifier
     private KBHandle kbProperty;
 
     private Object value;
+
+    private List<Statement> originalStatements;
 
     public KBQualifier(KBStatement kbStatement, KBHandle kbProperty, Object aValue)
     {
@@ -58,6 +63,7 @@ public class KBQualifier
         else {
             throw new IllegalStateException("Unknown object type: " + aValue.getClass());
         }
+        originalStatements = new ArrayList<>();
     }
 
     public KBQualifier(KBStatement kbStatement)
@@ -102,4 +108,15 @@ public class KBQualifier
     public void setLanguage(String aLanguage) {
         language = language;
     }
+
+    public List<Statement> getOriginalStatements()
+    {
+        return originalStatements;
+    }
+
+    public void setOriginalStatements(List<Statement> originalStatements)
+    {
+        this.originalStatements = originalStatements;
+    }
+
 }

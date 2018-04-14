@@ -281,5 +281,7 @@ public interface KnowledgeBaseService
 
     void deleteQualifier(KnowledgeBase kb, KBQualifier oldQualifier);
 
+    void upsertQualifier(KnowledgeBase kb, KBQualifier aQualifier);
+
     List<KBQualifier> listQualifiers(KnowledgeBase kb, KBStatement aStatement);
 }

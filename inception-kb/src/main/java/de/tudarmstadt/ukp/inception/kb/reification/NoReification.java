@@ -202,6 +202,12 @@ public class NoReification implements ReificationStrategy {
     }
 
     @Override
+    public void upsertQualifier(KnowledgeBase kb, KBQualifier aQualifier)
+    {
+        log.error("Qualifiers are not supported.");
+    }
+
+    @Override
     public List<KBQualifier> listQualifiers(KnowledgeBase kb, KBStatement aStatement)
     {
         log.error("Qualifiers are not supported.");

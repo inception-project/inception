@@ -787,6 +787,12 @@ public class KnowledgeBaseServiceImpl
     }
 
     @Override
+    public void upsertQualifier(KnowledgeBase kb, KBQualifier aQualifier)
+    {
+        getReificationStrategy(kb).upsertQualifier(kb, aQualifier);
+    }
+
+    @Override
     public List<KBQualifier> listQualifiers(KnowledgeBase kb, KBStatement aStatement)
     {
         return getReificationStrategy(kb).listQualifiers(kb, aStatement);
