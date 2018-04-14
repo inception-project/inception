@@ -45,8 +45,8 @@ public class XmlSchemaDatatypeSupport implements DatatypeSupport {
 
     @Override
     public ValueEditor<?> createEditor(IRI datatype, String id, IModel<Value> model) {
-        IModel<Literal> literalModel = new LambdaModelAdapter<Literal>(
-                () -> (Literal) model.getObject(), (lit) -> model.setObject(lit));
+        IModel<Literal> literalModel = new LambdaModelAdapter<Literal>(() -> 
+                (Literal) model.getObject(), (lit) -> model.setObject(lit));
         
         if (XMLSchema.STRING.equals(datatype)) {
             return new StringValueEditor(id, literalModel);
@@ -58,8 +58,8 @@ public class XmlSchemaDatatypeSupport implements DatatypeSupport {
 
     @Override
     public WebMarkupContainer createPresenter(IRI datatype, String id, IModel<Value> model) {       
-        IModel<Literal> literalModel = new LambdaModelAdapter<Literal>(
-                () -> (Literal) model.getObject(), (lit) -> model.setObject(lit));
+        IModel<Literal> literalModel = new LambdaModelAdapter<Literal>(() -> 
+                (Literal) model.getObject(), (lit) -> model.setObject(lit));
         return new LiteralValuePresenter(id, literalModel);
     }
 

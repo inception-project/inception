@@ -96,7 +96,8 @@ public class MetaDatatypeSupport implements DatatypeSupport {
                 return supplyIfInvalid.get();
             }
         }
-        LOGGER.warn("Unsupported datatype " + datatype.toString() + " for " + model.getObject().toString());
+        LOGGER.warn("Unsupported datatype " + datatype.toString() + " for "
+                + model.getObject().toString());
         return supplyFallback.get();
     }
 }
