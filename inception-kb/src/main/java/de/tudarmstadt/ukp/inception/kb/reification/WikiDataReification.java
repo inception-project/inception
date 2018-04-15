@@ -359,11 +359,7 @@ public class WikiDataReification
         }
         else {
             update(kb, (conn) -> {
-                Resource id = vf.createBNode(oldQualifier.getKbStatement().getStatementId());
-                IRI predicate = vf.createIRI(oldQualifier.getKbProperty().getIdentifier());
-                Value value = valueMapper.mapQualifierValue(oldQualifier, vf);
-                Statement qualifierStatement = vf.createStatement(id, predicate, value);
-                conn.remove(qualifierStatement);
+                conn.remove(oldQualifier.getOriginalStatements());
 
                 oldQualifier.getKbStatement().getQualifiers().remove(oldQualifier);
                 oldQualifier.setOriginalStatements(Collections.emptyList());
