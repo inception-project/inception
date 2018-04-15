@@ -34,6 +34,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.ProjectImportEvent;
 import de.tudarmstadt.ukp.clarin.webanno.automation.service.AutomationService;
+import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -68,9 +69,8 @@ public class ImportServiceImpl
 
         // Load the project model from the JSON file
         String text = IOUtils.toString(projectInputStream, "UTF-8");
-        de.tudarmstadt.ukp.clarin.webanno.export.model.Project importedProjectSetting = JSONUtil
-                .getJsonConverter().getObjectMapper()
-                .readValue(text, de.tudarmstadt.ukp.clarin.webanno.export.model.Project.class);
+        ExportedProject importedProjectSetting = JSONUtil.getJsonConverter().getObjectMapper()
+                .readValue(text, ExportedProject.class);
 
         // Import the project itself
         importedProject = ImportUtil.createProject(importedProjectSetting, projectService);

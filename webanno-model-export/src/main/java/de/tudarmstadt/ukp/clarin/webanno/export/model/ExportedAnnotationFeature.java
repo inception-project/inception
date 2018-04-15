@@ -28,10 +28,10 @@ import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
  * exported.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class AnnotationFeature
+public class ExportedAnnotationFeature
 {
     @JsonProperty("name")
-    String name;
+    private String name;
 
     @JsonProperty("tag_set")
     private ExportedTagSet tagSet;
@@ -274,7 +274,7 @@ public class AnnotationFeature
         if (getClass() != obj.getClass()) {
             return false;
         }
-        AnnotationFeature other = (AnnotationFeature) obj;
+        ExportedAnnotationFeature other = (ExportedAnnotationFeature) obj;
         if (name == null) {
             if (other.name != null) {
                 return false;

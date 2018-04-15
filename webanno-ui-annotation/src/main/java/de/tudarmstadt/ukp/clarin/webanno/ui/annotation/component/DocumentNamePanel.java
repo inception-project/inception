@@ -23,13 +23,13 @@ import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.export.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.export.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
+import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedSourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 
 /**
  * A {@link Panel} which contains a {@link Label} to display document name as concatenations of
- * {@link Project#getName()} and {@link SourceDocument#getName()}
+ * {@link ExportedProject#getName()} and {@link ExportedSourceDocument#getName()}
  */
 public class DocumentNamePanel
     extends Panel

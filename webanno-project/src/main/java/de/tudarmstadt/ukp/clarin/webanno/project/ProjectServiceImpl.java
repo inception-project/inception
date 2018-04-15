@@ -68,6 +68,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectType;
 import de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterProjectCreatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeProjectRemovedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
@@ -697,7 +698,7 @@ public class ProjectServiceImpl
     @Override
     @Transactional
     public void onProjectImport(ZipFile aZip,
-            de.tudarmstadt.ukp.clarin.webanno.export.model.Project aExportedProject,
+            de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject aExportedProject,
             Project aProject)
         throws Exception
     {
@@ -803,7 +804,7 @@ public class ProjectServiceImpl
 
     /**
      * Create {@link ProjectPermission} from the exported
-     * {@link de.tudarmstadt.ukp.clarin.webanno.export.model.ProjectPermission}
+     * {@link de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProjectPermission}
      * 
      * @param aImportedProjectSetting
      *            the imported project.
@@ -813,12 +814,12 @@ public class ProjectServiceImpl
      *             if an I/O error occurs.
      */
     private void createProjectPermission(
-            de.tudarmstadt.ukp.clarin.webanno.export.model.Project aImportedProjectSetting,
+            de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject aImportedProjectSetting,
             Project aImportedProject)
         throws IOException
     {
-        for (de.tudarmstadt.ukp.clarin.webanno.export.model.ProjectPermission importedPermission :
-            aImportedProjectSetting.getProjectPermissions()) {
+        for (ExportedProjectPermission importedPermission : aImportedProjectSetting
+                .getProjectPermissions()) {
             ProjectPermission permission = new ProjectPermission();
             permission.setLevel(importedPermission.getLevel());
             permission.setProject(aImportedProject);

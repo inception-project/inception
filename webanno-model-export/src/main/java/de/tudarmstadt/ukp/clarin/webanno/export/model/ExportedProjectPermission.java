@@ -27,12 +27,13 @@ import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
  * Project permissions information to be exported/imported
  */
 @JsonPropertyOrder(value = { "level", "user" })
-public class ProjectPermission
+public class ExportedProjectPermission
 {
     @JsonProperty("level")
-    PermissionLevel level;
+    private PermissionLevel level;
+    
     @JsonProperty("user")
-    String user;
+    private String user;
 
     public PermissionLevel getLevel()
     {

@@ -423,7 +423,7 @@ public interface ProjectService
     // --------------------------------------------------------------------------------------------
 
     void onProjectImport(ZipFile zip,
-            de.tudarmstadt.ukp.clarin.webanno.export.model.Project aExportedProject,
+            de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject aExportedProject,
             Project aProject)
         throws Exception;
     

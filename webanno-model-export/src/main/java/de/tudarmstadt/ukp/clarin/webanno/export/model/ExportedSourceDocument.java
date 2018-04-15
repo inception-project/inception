@@ -19,8 +19,6 @@ package de.tudarmstadt.ukp.clarin.webanno.export.model;
 
 import java.util.Date;
 
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
@@ -28,28 +26,23 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.TrainDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 
 /**
- * Source document information to be exported/imported.
+ * Source document information to be exported/imported
  */
 @JsonPropertyOrder(value = { "name", "format", "state" })
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class TrainingDocument
+public class ExportedSourceDocument
 {
     @JsonProperty("name")
-    String name;
+    private String name;
 
     @JsonProperty("format")
-    String format;
-    @ManyToOne
-
-    @JoinColumn(name = "project")
-    Project project;
+    private String format;
 
     @JsonProperty("state")
-    TrainDocumentState state;
+    private SourceDocumentState state;
 
     @JsonProperty("timestamp")
     @Temporal(TemporalType.TIMESTAMP)
@@ -58,12 +51,14 @@ public class TrainingDocument
     @JsonProperty("sentence_accessed")
     private int sentenceAccessed = 0;
 
-    @JsonProperty("processed")
-    private boolean processed = false;
+    @JsonProperty("created")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date created;
 
-    @JsonProperty("feature")
-    AnnotationFeature feature;
-
+    @JsonProperty("updated")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date updated;
+    
     public String getName()
     {
         return name;
@@ -84,12 +79,12 @@ public class TrainingDocument
         this.format = format;
     }
 
-    public TrainDocumentState getState()
+    public SourceDocumentState getState()
     {
         return state;
     }
 
-    public void setState(TrainDocumentState state)
+    public void setState(SourceDocumentState state)
     {
         this.state = state;
     }
@@ -114,33 +109,23 @@ public class TrainingDocument
         this.sentenceAccessed = sentenceAccessed;
     }
 
-    public boolean isProcessed()
+    public Date getCreated()
     {
-        return processed;
+        return created;
     }
 
-    public void setProcessed(boolean processed)
+    public void setCreated(Date aCreated)
     {
-        this.processed = processed;
+        created = aCreated;
     }
 
-    public AnnotationFeature getFeature()
+    public Date getUpdated()
     {
-        return feature;
+        return updated;
     }
 
-    public void setFeature(AnnotationFeature feature)
+    public void setUpdated(Date aUpdated)
     {
-        this.feature = feature;
-    }
-
-    public Project getProject()
-    {
-        return project;
-    }
-
-    public void setProject(Project project)
-    {
-        this.project = project;
+        updated = aUpdated;
     }
 }

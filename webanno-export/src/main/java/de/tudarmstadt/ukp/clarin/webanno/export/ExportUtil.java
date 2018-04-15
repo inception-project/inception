@@ -47,11 +47,16 @@ import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.automation.model.MiraTemplate;
 import de.tudarmstadt.ukp.clarin.webanno.automation.service.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
-import de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedAnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedAnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedAnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedMiraTemplate;
+import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
+import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProjectPermission;
+import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedSourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTag;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTagSet;
-import de.tudarmstadt.ukp.clarin.webanno.export.model.ProjectPermission;
-import de.tudarmstadt.ukp.clarin.webanno.export.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTrainingDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -89,14 +94,13 @@ public class ExportUtil
         // TODO Auto-generated constructor stub
     }
 
-    public static de.tudarmstadt.ukp.clarin.webanno.export.model.Project exportProjectSettings(
+    public static ExportedProject exportProjectSettings(
             AnnotationSchemaService annotationService,
             Optional<AutomationService> automationService, DocumentService documentService,
             ProjectService projectService, Project aProject, File aProjectSettings,
             File aExportTempDir)
     {
-        de.tudarmstadt.ukp.clarin.webanno.export.model.Project exProjekt =
-                new de.tudarmstadt.ukp.clarin.webanno.export.model.Project();
+        ExportedProject exProjekt = new ExportedProject();
         exProjekt.setDescription(aProject.getDescription());
         exProjekt.setName(aProject.getName());
         // In older versions of WebAnno, the mode was an enum which was serialized as upper-case
@@ -108,15 +112,12 @@ public class ExportUtil
         exProjekt.setCreated(aProject.getCreated());
         exProjekt.setUpdated(aProject.getUpdated());
 
-        List<de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationLayer> exLayers = 
-                new ArrayList<>();
+        List<ExportedAnnotationLayer> exLayers = new ArrayList<>();
         // Store map of layer and its equivalent exLayer so that the attach type is attached later
-        Map<AnnotationLayer, de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationLayer> 
-                layerToExLayers = new HashMap<>();
+        Map<AnnotationLayer, ExportedAnnotationLayer> layerToExLayers = new HashMap<>();
         // Store map of feature and its equivalent exFeature so that the attach feature is attached
         // later
-        Map<AnnotationFeature, de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationFeature>
-                featureToExFeatures = new HashMap<>();
+        Map<AnnotationFeature, ExportedAnnotationFeature> featureToExFeatures = new HashMap<>();
         for (AnnotationLayer layer : annotationService.listAnnotationLayer(aProject)) {
             exLayers.add(ImportUtil.exportLayerDetails(layerToExLayers, featureToExFeatures,
                     layer, annotationService));
@@ -156,8 +157,8 @@ public class ExportUtil
 
         exProjekt.setTagSets(extTagSets);
       
-        List<SourceDocument> sourceDocuments = new ArrayList<>();
-        List<AnnotationDocument> annotationDocuments = new ArrayList<>();
+        List<ExportedSourceDocument> sourceDocuments = new ArrayList<>();
+        List<ExportedAnnotationDocument> annotationDocuments = new ArrayList<>();
 
   
         // add source documents to a project
@@ -165,7 +166,7 @@ public class ExportUtil
                 .listSourceDocuments(aProject);
         for (de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument : documents) {
 
-            SourceDocument exDocument = new SourceDocument();
+            ExportedSourceDocument exDocument = new ExportedSourceDocument();
             exDocument.setFormat(sourceDocument.getFormat());
             exDocument.setName(sourceDocument.getName());
             exDocument.setState(sourceDocument.getState());
@@ -177,7 +178,8 @@ public class ExportUtil
             // add annotation document to Project
             for (de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument annotationDocument : 
                     documentService.listAnnotationDocuments(sourceDocument)) {
-                AnnotationDocument annotationDocumentToExport = new AnnotationDocument();
+                ExportedAnnotationDocument annotationDocumentToExport = 
+                        new ExportedAnnotationDocument();
                 annotationDocumentToExport.setName(annotationDocument.getName());
                 annotationDocumentToExport.setState(annotationDocument.getState());
                 annotationDocumentToExport.setUser(annotationDocument.getUser());
@@ -196,21 +198,17 @@ public class ExportUtil
         exProjekt.setAnnotationDocuments(annotationDocuments);
         
         if (automationService.isPresent()) {
-            List<de.tudarmstadt.ukp.clarin.webanno.export.model.TrainingDocument> trainDocuments = 
-                    new ArrayList<>();
+            List<ExportedTrainingDocument> trainDocuments = new ArrayList<>();
             List<TrainingDocument> trainingDocuments = automationService.get()
                     .listTrainingDocuments(aProject);
             
-            Map<String, de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationFeature> fm =
-                    new HashMap<>();
-            for (de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationFeature f : 
-                    featureToExFeatures.values()) {
+            Map<String, ExportedAnnotationFeature> fm = new HashMap<>();
+            for (ExportedAnnotationFeature f : featureToExFeatures.values()) {
                 fm.put(f.getName(), f);
             }
             for (TrainingDocument trainingDocument : trainingDocuments) {
     
-                de.tudarmstadt.ukp.clarin.webanno.export.model.TrainingDocument exDocument = 
-                        new de.tudarmstadt.ukp.clarin.webanno.export.model.TrainingDocument();
+                ExportedTrainingDocument exDocument = new ExportedTrainingDocument();
                 exDocument.setFormat(trainingDocument.getFormat());
                 exDocument.setName(trainingDocument.getName());
                 exDocument.setState(trainingDocument.getState());
@@ -220,7 +218,6 @@ public class ExportUtil
                     exDocument.setFeature(fm.get(trainingDocument.getFeature().getName()));
                 }
                 trainDocuments.add(exDocument);
-    
             }
             
             exProjekt.setTrainingDocuments(trainDocuments);
@@ -229,13 +226,13 @@ public class ExportUtil
             exProjekt.setTrainingDocuments(new ArrayList<>());
         }
 
-        List<ProjectPermission> projectPermissions = new ArrayList<>();
+        List<ExportedProjectPermission> projectPermissions = new ArrayList<>();
 
         // add project permissions to the project
         for (User user : projectService.listProjectUsersWithPermissions(aProject)) {
             for (de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission permission : 
                     projectService.listProjectPermissionLevel(user, aProject)) {
-                ProjectPermission permissionToExport = new ProjectPermission();
+                ExportedProjectPermission permissionToExport = new ExportedProjectPermission();
                 permissionToExport.setLevel(permission.getLevel());
                 permissionToExport.setUser(user.getUsername());
                 projectPermissions.add(permissionToExport);
@@ -246,11 +243,11 @@ public class ExportUtil
 
         // export automation Mira template
         if (automationService.isPresent()) {
-            List<de.tudarmstadt.ukp.clarin.webanno.export.model.MiraTemplate> exTemplates =
+            List<ExportedMiraTemplate> exTemplates =
                     new ArrayList<>();
             for (MiraTemplate template : automationService.get().listMiraTemplates(aProject)) {
-                de.tudarmstadt.ukp.clarin.webanno.export.model.MiraTemplate exTemplate =
-                        new de.tudarmstadt.ukp.clarin.webanno.export.model.MiraTemplate();
+                ExportedMiraTemplate exTemplate =
+                        new ExportedMiraTemplate();
                 exTemplate.setAnnotateAndPredict(template.isAnnotateAndRepeat());
                 exTemplate.setAutomationStarted(template.isAutomationStarted());
                 exTemplate.setCurrentLayer(template.isCurrentLayer());
@@ -258,7 +255,7 @@ public class ExportUtil
                 exTemplate.setTrainFeature(featureToExFeatures.get(template.getTrainFeature()));
     
                 if (template.getOtherFeatures().size() > 0) {
-                    Set<de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationFeature>
+                    Set<ExportedAnnotationFeature>
                             exOtherFeatures = new HashSet<>();
                     for (AnnotationFeature feature : template.getOtherFeatures()) {
                         exOtherFeatures.add(featureToExFeatures.get(feature));

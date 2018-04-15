@@ -80,7 +80,7 @@ public class ExportServiceImpl implements ExportService
                         "Project not yet created. Please save project details first!");
             }
     
-            de.tudarmstadt.ukp.clarin.webanno.export.model.Project exProjekt = ExportUtil
+            de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject exProjekt = ExportUtil
                     .exportProjectSettings(annotationService,
                             Optional.ofNullable(automationService), documentService, projectService,
                             project, projectSettings, exportTempDir);

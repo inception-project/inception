@@ -29,11 +29,11 @@ public class ProjectImportEvent
     private static final long serialVersionUID = 5604222911753768415L;
 
     private final ZipFile zip;
-    private final de.tudarmstadt.ukp.clarin.webanno.export.model.Project exportedProject;
+    private final de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject exportedProject;
     private final Project project;
 
     public ProjectImportEvent(Object aSource, ZipFile aZip,
-            de.tudarmstadt.ukp.clarin.webanno.export.model.Project aExportedProject,
+            de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject aExportedProject,
             Project aProject)
     {
         super(aSource);
@@ -52,7 +52,7 @@ public class ProjectImportEvent
         return zip;
     }
 
-    public de.tudarmstadt.ukp.clarin.webanno.export.model.Project getExportedProject()
+    public de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject getExportedProject()
     {
         return exportedProject;
     }

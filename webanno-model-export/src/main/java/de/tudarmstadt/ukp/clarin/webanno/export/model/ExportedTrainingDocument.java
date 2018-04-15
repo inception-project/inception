@@ -19,6 +19,8 @@ package de.tudarmstadt.ukp.clarin.webanno.export.model;
 
 import java.util.Date;
 
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
@@ -26,39 +28,42 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.TrainDocumentState;
 
 /**
- * Annotation document information to be exported/imported
- *
+ * Source document information to be exported/imported.
  */
-@JsonPropertyOrder(value = { "name", "user", "state", "timestamp" })
+@JsonPropertyOrder(value = { "name", "format", "state" })
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class AnnotationDocument
+public class ExportedTrainingDocument
 {
     @JsonProperty("name")
-    String name;
+    private String name;
+
+    @JsonProperty("format")
+    private String format;
     
-    @JsonProperty("user")
-    String user;
-    
+    @ManyToOne
+    @JoinColumn(name = "project")
+    private Project project;
+
     @JsonProperty("state")
-    AnnotationDocumentState state;
-    
+    private TrainDocumentState state;
+
     @JsonProperty("timestamp")
+    @Temporal(TemporalType.TIMESTAMP)
     private Date timestamp;
 
     @JsonProperty("sentence_accessed")
     private int sentenceAccessed = 0;
 
-    @JsonProperty("created")
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date created;
+    @JsonProperty("processed")
+    private boolean processed = false;
 
-    @JsonProperty("updated")
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date updated;
-    
+    @JsonProperty("feature")
+    private ExportedAnnotationFeature feature;
+
     public String getName()
     {
         return name;
@@ -69,22 +74,22 @@ public class AnnotationDocument
         this.name = name;
     }
 
-    public String getUser()
+    public String getFormat()
     {
-        return user;
+        return format;
     }
 
-    public void setUser(String user)
+    public void setFormat(String format)
     {
-        this.user = user;
+        this.format = format;
     }
 
-    public AnnotationDocumentState getState()
+    public TrainDocumentState getState()
     {
         return state;
     }
 
-    public void setState(AnnotationDocumentState state)
+    public void setState(TrainDocumentState state)
     {
         this.state = state;
     }
@@ -109,23 +114,33 @@ public class AnnotationDocument
         this.sentenceAccessed = sentenceAccessed;
     }
 
-    public Date getCreated()
+    public boolean isProcessed()
     {
-        return created;
+        return processed;
     }
 
-    public void setCreated(Date aCreated)
+    public void setProcessed(boolean processed)
     {
-        created = aCreated;
+        this.processed = processed;
     }
 
-    public Date getUpdated()
+    public ExportedAnnotationFeature getFeature()
     {
-        return updated;
+        return feature;
     }
 
-    public void setUpdated(Date aUpdated)
+    public void setFeature(ExportedAnnotationFeature feature)
     {
-        updated = aUpdated;
+        this.feature = feature;
+    }
+
+    public Project getProject()
+    {
+        return project;
+    }
+
+    public void setProject(Project project)
+    {
+        this.project = project;
     }
 }

@@ -35,7 +35,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection;
  */
 @JsonPropertyOrder(value = { "name", "description", "mode", "version" })
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class Project
+public class ExportedProject
 {
     @JsonProperty(value = "name", required = true)
     private String name;
@@ -47,25 +47,25 @@ public class Project
     private String mode;
 
     @JsonProperty("source_documents")
-    private List<SourceDocument> sourceDocuments;
+    private List<ExportedSourceDocument> sourceDocuments;
 
     @JsonProperty("training_documents")
-    private List<TrainingDocument> trainingDocuments;
+    private List<ExportedTrainingDocument> trainingDocuments;
 
     @JsonProperty("annotation_documents")
-    private List<AnnotationDocument> annotationDocuments;
+    private List<ExportedAnnotationDocument> annotationDocuments;
 
     @JsonProperty("project_permissions")
-    private List<ProjectPermission> projectPermissions;
+    private List<ExportedProjectPermission> projectPermissions;
 
     @JsonProperty("tag_sets")
     private List<ExportedTagSet> tagSets = new ArrayList<>();
 
     @JsonProperty("layers")
-    private List<AnnotationLayer> layers;
+    private List<ExportedAnnotationLayer> layers;
 
     @JsonProperty("mira_templates")
-    private List<MiraTemplate> miraTemplates = new ArrayList<>();
+    private List<ExportedMiraTemplate> miraTemplates = new ArrayList<>();
 
     @JsonProperty("version")
     private int version;
@@ -104,42 +104,42 @@ public class Project
         this.description = description;
     }
 
-    public List<SourceDocument> getSourceDocuments()
+    public List<ExportedSourceDocument> getSourceDocuments()
     {
         return sourceDocuments;
     }
 
-    public void setSourceDocuments(List<SourceDocument> sourceDocuments)
+    public void setSourceDocuments(List<ExportedSourceDocument> sourceDocuments)
     {
         this.sourceDocuments = sourceDocuments;
     }
 
-    public List<TrainingDocument> getTrainingDocuments()
+    public List<ExportedTrainingDocument> getTrainingDocuments()
     {
         return trainingDocuments;
     }
 
-    public void setTrainingDocuments(List<TrainingDocument> trainingDocuments)
+    public void setTrainingDocuments(List<ExportedTrainingDocument> trainingDocuments)
     {
         this.trainingDocuments = trainingDocuments;
     }
 
-    public List<AnnotationDocument> getAnnotationDocuments()
+    public List<ExportedAnnotationDocument> getAnnotationDocuments()
     {
         return annotationDocuments;
     }
 
-    public void setAnnotationDocuments(List<AnnotationDocument> annotationDocuments)
+    public void setAnnotationDocuments(List<ExportedAnnotationDocument> annotationDocuments)
     {
         this.annotationDocuments = annotationDocuments;
     }
 
-    public List<ProjectPermission> getProjectPermissions()
+    public List<ExportedProjectPermission> getProjectPermissions()
     {
         return projectPermissions;
     }
 
-    public void setProjectPermissions(List<ProjectPermission> projectPermissions)
+    public void setProjectPermissions(List<ExportedProjectPermission> projectPermissions)
     {
         this.projectPermissions = projectPermissions;
     }
@@ -174,7 +174,7 @@ public class Project
         this.version = version;
     }
 
-    public List<AnnotationLayer> getLayers()
+    public List<ExportedAnnotationLayer> getLayers()
     {
         return layers;
     }
@@ -189,17 +189,17 @@ public class Project
         this.disableExport = disableExport;
     }
 
-    public void setLayers(List<AnnotationLayer> layers)
+    public void setLayers(List<ExportedAnnotationLayer> layers)
     {
         this.layers = layers;
     }
 
-    public List<MiraTemplate> getMiraTemplates()
+    public List<ExportedMiraTemplate> getMiraTemplates()
     {
         return miraTemplates;
     }
 
-    public void setMiraTemplates(List<MiraTemplate> miraTemplates)
+    public void setMiraTemplates(List<ExportedMiraTemplate> miraTemplates)
     {
         this.miraTemplates = miraTemplates;
     }

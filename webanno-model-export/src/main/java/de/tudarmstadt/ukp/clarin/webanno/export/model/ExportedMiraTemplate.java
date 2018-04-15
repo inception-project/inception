@@ -27,7 +27,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * All required contents of a MiraTemplate to be exported.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class MiraTemplate
+public class ExportedMiraTemplate
 {
     @JsonProperty("automation_started")
     private boolean automationStarted = false;
@@ -36,10 +36,10 @@ public class MiraTemplate
     private boolean predictInThisPage;
 
     @JsonProperty("train_feature")
-    private AnnotationFeature trainFeature;
+    private ExportedAnnotationFeature trainFeature;
 
     @JsonProperty("other_features")
-    private Set<AnnotationFeature> otherFeatures = new HashSet<>();
+    private Set<ExportedAnnotationFeature> otherFeatures = new HashSet<>();
 
     @JsonProperty("current_layer")
     private boolean currentLayer = false;
@@ -70,22 +70,22 @@ public class MiraTemplate
         this.predictInThisPage = predictInThisPage;
     }
 
-    public AnnotationFeature getTrainFeature()
+    public ExportedAnnotationFeature getTrainFeature()
     {
         return trainFeature;
     }
 
-    public void setTrainFeature(AnnotationFeature trainFeature)
+    public void setTrainFeature(ExportedAnnotationFeature trainFeature)
     {
         this.trainFeature = trainFeature;
     }
 
-    public Set<AnnotationFeature> getOtherFeatures()
+    public Set<ExportedAnnotationFeature> getOtherFeatures()
     {
         return otherFeatures;
     }
 
-    public void setOtherFeatures(Set<AnnotationFeature> otherFeatures)
+    public void setOtherFeatures(Set<ExportedAnnotationFeature> otherFeatures)
     {
         this.otherFeatures = otherFeatures;
     }

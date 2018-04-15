@@ -99,6 +99,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRe
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureType;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.LayerConfigurationChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.export.ImportUtil;
+import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedAnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedAnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -413,15 +415,12 @@ public class ProjectLayersPanel
             
             String text = IOUtils.toString(aIS, "UTF-8");
 
-            de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationLayer exLayer =
-                    JSONUtil.getJsonConverter().getObjectMapper().readValue(
-                        text,
-                        de.tudarmstadt.ukp.clarin.webanno.export.model
-                                .AnnotationLayer.class);
+            ExportedAnnotationLayer exLayer = JSONUtil.getJsonConverter().getObjectMapper()
+                    .readValue(text, ExportedAnnotationLayer.class);
 
             AnnotationLayer attachLayer = null;
             if (exLayer.getAttachType() != null) {
-                de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationLayer
+                ExportedAnnotationLayer
                         exAttachLayer = exLayer.getAttachType();
                 createLayer(exAttachLayer, user, null);
                 attachLayer = annotationService.getLayer(exAttachLayer.getName(),
@@ -433,8 +432,7 @@ public class ProjectLayersPanel
             featureSelectionForm.setVisible(true);
         }
         
-        private void createLayer(
-                de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationLayer aExLayer, User aUser,
+        private void createLayer(ExportedAnnotationLayer aExLayer, User aUser,
                 AnnotationLayer aAttachLayer)
             throws IOException
         {
@@ -449,8 +447,7 @@ public class ProjectLayersPanel
                 ImportUtil.setLayer(annotationService, layer, aExLayer, project, aUser);
             }
             layer.setAttachType(aAttachLayer);
-            for (de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationFeature exfeature : 
-                    aExLayer.getFeatures()) {
+            for (ExportedAnnotationFeature exfeature : aExLayer.getFeatures()) {
     
                 ExportedTagSet exTagset = exfeature.getTagSet();
                 TagSet tagSet = null;
@@ -929,14 +926,14 @@ public class ProjectLayersPanel
             try {
                 AnnotationLayer layer = layerDetailForm.getModelObject();
 
-                de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationLayer exLayer = 
+                ExportedAnnotationLayer exLayer = 
                         ImportUtil.exportLayerDetails(null, null, layer, annotationService);
 
                 // If the layer is attached to another layer, then we also have to export
                 // that, otherwise we would be missing it during re-import.
                 if (layer.getAttachType() != null) {
                     AnnotationLayer attachLayer = layer.getAttachType();
-                    de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationLayer 
+                    ExportedAnnotationLayer 
                             exAttachLayer = ImportUtil.exportLayerDetails(
                                     null, null, attachLayer, annotationService);
                     exLayer.setAttachType(exAttachLayer);
