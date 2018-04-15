@@ -49,7 +49,9 @@ import de.tudarmstadt.ukp.clarin.webanno.automation.service.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedAnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedAnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedAnnotationFeatureReference;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedAnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedAnnotationLayerReference;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedMiraTemplate;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProjectPermission;
@@ -89,11 +91,7 @@ public class ExportUtil
             + ImportUtil.CURATION_AS_SERIALISED_CAS + "/";
     private static final String CURATION_FOLDER = "/curation/";
 
-    public ExportUtil()
-    {
-        // TODO Auto-generated constructor stub
-    }
-
+    @Deprecated
     public static ExportedProject exportProjectSettings(
             AnnotationSchemaService annotationService,
             Optional<AutomationService> automationService, DocumentService documentService,
@@ -128,11 +126,11 @@ public class ExportUtil
         for (AnnotationLayer layer : layerToExLayers.keySet()) {
             if (layer.getAttachType() != null) {
                 layerToExLayers.get(layer).setAttachType(
-                        layerToExLayers.get(layer.getAttachType()));
+                        new ExportedAnnotationLayerReference(layer.getAttachType().getName()));
             }
             if (layer.getAttachFeature() != null) {
                 layerToExLayers.get(layer).setAttachFeature(
-                        featureToExFeatures.get(layer.getAttachFeature()));
+                        new ExportedAnnotationFeatureReference(layer.getAttachFeature().getName()));
             }
         }
         exProjekt.setLayers(exLayers);
@@ -207,7 +205,6 @@ public class ExportUtil
                 fm.put(f.getName(), f);
             }
             for (TrainingDocument trainingDocument : trainingDocuments) {
-    
                 ExportedTrainingDocument exDocument = new ExportedTrainingDocument();
                 exDocument.setFormat(trainingDocument.getFormat());
                 exDocument.setName(trainingDocument.getName());
@@ -215,7 +212,8 @@ public class ExportUtil
                 exDocument.setTimestamp(trainingDocument.getTimestamp());
                 exDocument.setSentenceAccessed(trainingDocument.getSentenceAccessed());
                 if (trainingDocument.getFeature() != null) {
-                    exDocument.setFeature(fm.get(trainingDocument.getFeature().getName()));
+                    exDocument.setFeature(new ExportedAnnotationFeatureReference(
+                            trainingDocument.getFeature().getName()));
                 }
                 trainDocuments.add(exDocument);
             }
@@ -252,13 +250,14 @@ public class ExportUtil
                 exTemplate.setAutomationStarted(template.isAutomationStarted());
                 exTemplate.setCurrentLayer(template.isCurrentLayer());
                 exTemplate.setResult(template.getResult());
-                exTemplate.setTrainFeature(featureToExFeatures.get(template.getTrainFeature()));
+                exTemplate.setTrainFeature(new ExportedAnnotationFeatureReference(
+                        template.getTrainFeature().getName()));
     
                 if (template.getOtherFeatures().size() > 0) {
-                    Set<ExportedAnnotationFeature>
-                            exOtherFeatures = new HashSet<>();
+                    Set<ExportedAnnotationFeatureReference> exOtherFeatures = new HashSet<>();
                     for (AnnotationFeature feature : template.getOtherFeatures()) {
-                        exOtherFeatures.add(featureToExFeatures.get(feature));
+                        exOtherFeatures
+                                .add(new ExportedAnnotationFeatureReference(feature.getName()));
                     }
                     exTemplate.setOtherFeatures(exOtherFeatures);
                 }
@@ -277,6 +276,7 @@ public class ExportUtil
     /**
      * Copy source documents from the file system of this project to the export folder
      */
+    @Deprecated
     public static void exportSourceDocuments(DocumentService documentService,
             ProjectExportRequest model, Project aProject, File aCopyDir)
         throws IOException, ProjectExportException
@@ -312,10 +312,11 @@ public class ExportUtil
             }
         }
     }
+    
     /**
      * Export {@link TrainingDocument}
      */
-    
+    @Deprecated
     public static void exportTrainingDocuments(AutomationService automationService,
             ProjectExportRequest model, Project aProject, File aCopyDir)
         throws IOException, ProjectExportException
@@ -354,6 +355,7 @@ public class ExportUtil
      * Copy annotation document as Serialized CAS from the file system of this project to the
      * export folder.
      */
+    @Deprecated
     public static void exportAnnotationDocuments(DocumentService documentService,
             ImportExportService importExportService, UserDao userRepository,
             ProjectExportRequest aModel, File aCopyDir)
@@ -500,6 +502,7 @@ public class ExportUtil
     /**
      * Copy Project logs from the file system of this project to the export folder
      */
+    @Deprecated
     public static void exportProjectLog(ProjectService projectService, Project aProject,
             File aCopyDir)
         throws IOException
@@ -514,6 +517,7 @@ public class ExportUtil
     /**
      * Copy Project guidelines from the file system of this project to the export folder
      */
+    @Deprecated
     public static void exportGuideLine(ProjectService projectService, Project aProject,
             File aCopyDir)
         throws IOException
@@ -531,6 +535,7 @@ public class ExportUtil
     /**
      * Copy Project guidelines from the file system of this project to the export folder
      */
+    @Deprecated
     public static void exportProjectMetaInf(ProjectService projectService, Project aProject,
             File aCopyDir)
         throws IOException
@@ -546,6 +551,7 @@ public class ExportUtil
     /**
      * Copy Project Constraints from file system of this project to export folder
      */
+    @Deprecated
     public static void exportProjectConstraints(ConstraintsService constraintsService,
             Project project, File exportTempDir)
         throws IOException
@@ -555,13 +561,10 @@ public class ExportUtil
         String fileName;
         for (ConstraintSet set : constraintsService.listConstraintSets(project)) {
             fileName = set.getName();
-         /*
-          * Copying with file's original name to save ConstraintSet's name
-          */
+            // Copying with file's original name to save ConstraintSet's name
             FileUtils.copyFile(constraintsService.exportConstraintAsFile(set),
                     new File(constraintsDir, fileName));
         }
-
     }
     
     /**
@@ -570,6 +573,7 @@ public class ExportUtil
      * @param aCopyDir
      *            The folder where curated documents are copied to be exported as Zip File
      */
+    @Deprecated
     public static void exportCuratedDocuments(DocumentService documentService,
             ImportExportService importExportService, ProjectExportRequest aModel, File aCopyDir,
             boolean aIncludeInProgress)

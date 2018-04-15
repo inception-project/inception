@@ -48,6 +48,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.dao.JsonImportUtil;
 import de.tudarmstadt.ukp.clarin.webanno.automation.service.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedAnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedAnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedAnnotationFeatureReference;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedAnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedMiraTemplate;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
@@ -150,21 +151,26 @@ public class ImportUtil
     /**
      * Create a {@link TagSet} for the imported project,
      * 
-     * @param aProjecct a project. 
-     * @param aImportedProjectSetting the settings. 
-     * @param aRepository the repository service.
-     * @param aAnnotationService the annotation service.
+     * @param aProjecct
+     *            a project.
+     * @param aImportedProjectSetting
+     *            the settings.
+     * @param aRepository
+     *            the repository service.
+     * @param aAnnotationService
+     *            the annotation service.
      * @return hum?
-     * @throws IOException if an I/O error occurs.
+     * @throws IOException
+     *             if an I/O error occurs.
      */
+    @Deprecated
     public static Map<String, AnnotationFeature> createLayer(Project aProjecct,
             ExportedProject aImportedProjectSetting, UserDao aRepository,
             AnnotationSchemaService aAnnotationService)
         throws IOException
     {
         User user = aRepository.getCurrentUser();
-        List<ExportedTagSet> importedTagSets =
-                aImportedProjectSetting.getTagSets();
+        List<ExportedTagSet> importedTagSets = aImportedProjectSetting.getTagSets();
         if (aImportedProjectSetting.getVersion() == 0) {
             // this is projects prior to version 2.0
             createV0TagSet(aProjecct, importedTagSets, aAnnotationService, user);
@@ -176,6 +182,7 @@ public class ImportUtil
     /**
      * Import tagsets from projects prior to WebAnno 2.0.
      */
+    @Deprecated
     private static void createV0TagSet(Project aProject,
             List<ExportedTagSet> importedTagSets,
             AnnotationSchemaService aAnnotationService, User user)
@@ -229,6 +236,7 @@ public class ImportUtil
                 corefTypeTags.toArray(new String[0]), corefRelTags.toArray(new String[0]));
     }
 
+    @Deprecated
     private static Map<String, AnnotationFeature> createV1Layer(
             Project aProject,
             ExportedProject aImportedProjectSetting,
@@ -304,6 +312,7 @@ public class ImportUtil
         return featuresMap;
     }
 
+    @Deprecated
     public static void createTagSet(TagSet aTagSet,
             ExportedTagSet aExTagSet, Project aProject,
             User aUser, AnnotationSchemaService aAnnotationService)
@@ -329,6 +338,7 @@ public class ImportUtil
         }
     }
 
+    @Deprecated
     public static void setLayer(AnnotationSchemaService aAnnotationService, AnnotationLayer aLayer,
             ExportedAnnotationLayer aExLayer,
             Project aProject, User aUser)
@@ -350,6 +360,7 @@ public class ImportUtil
         aAnnotationService.createLayer(aLayer);
     }
 
+    @Deprecated
     public static void setFeature(AnnotationSchemaService aAnnotationService,
             AnnotationFeature aFeature,
             ExportedAnnotationFeature aExFeature,
@@ -390,6 +401,7 @@ public class ImportUtil
      * @return the project.
      * @throws IOException if an I/O error occurs.
      */
+    @Deprecated
     public static Project createProject(
             ExportedProject aProject,
             ProjectService aRepository)
@@ -425,6 +437,7 @@ public class ImportUtil
      * Get a project name to be used when importing. Use the prefix, copy_of_...+ i to avoid
      * conflicts
      */
+    @Deprecated
     private static String copyProjectName(ProjectService aRepository, String aProjectName)
     {
         String projectName = "copy_of_" + aProjectName;
@@ -448,6 +461,7 @@ public class ImportUtil
      * @param aRepository the repository service.
      * @throws IOException if an I/O error occurs.
      */
+    @Deprecated
     public static void createSourceDocument(
             ExportedProject aImportedProjectSetting,
             Project aImportedProject, DocumentService aRepository)
@@ -469,7 +483,7 @@ public class ImportUtil
         }
     }
 
-    
+    @Deprecated
     public static void createTrainingDocument(
             ExportedProject aImportedProjectSetting,
             Project aImportedProject, AutomationService aRepository, 
@@ -497,6 +511,8 @@ public class ImportUtil
             aRepository.createTrainingDocument(trainingDocument);
         }
     }
+    
+    @Deprecated
     public static void createMiraTemplate(
             ExportedProject aImportedProjectSetting,
             AutomationService aRepository,
@@ -512,7 +528,7 @@ public class ImportUtil
             template.setTrainFeature(aFeatureMaps.get(exTemplate.getTrainFeature().getName()));
             Set<AnnotationFeature> otherFeatures = new HashSet<>();
             if (exTemplate.getOtherFeatures() != null) {
-                for (ExportedAnnotationFeature other : exTemplate.getOtherFeatures()) {
+                for (ExportedAnnotationFeatureReference other : exTemplate.getOtherFeatures()) {
                     otherFeatures.add(aFeatureMaps.get(other.getName()));
                 }
                 template.setOtherFeatures(otherFeatures);
@@ -530,6 +546,7 @@ public class ImportUtil
      * @param aRepository the repository service.
      * @throws IOException if an I/O error occurs.
      */
+    @Deprecated
     public static void createAnnotationDocument(
             ExportedProject aImportedProjectSetting,
             Project aImportedProject, DocumentService aRepository)
@@ -582,6 +599,7 @@ public class ImportUtil
      * @param aRepository the repository service.
      * @throws IOException if an I/O error occurs.
      */
+    @Deprecated
     @SuppressWarnings("rawtypes")
     public static void createSourceDocumentContent(ZipFile zip, Project aProject,
             DocumentService aRepository)
@@ -610,6 +628,7 @@ public class ImportUtil
         }
     }
     
+    @Deprecated
     public static void createTrainingDocumentContent(ZipFile zip, Project aProject,
             AutomationService aRepository)
         throws IOException
@@ -644,6 +663,7 @@ public class ImportUtil
      * @param aRepository the repository service.
      * @throws IOException if an I/O error occurs.
      */
+    @Deprecated
     @SuppressWarnings("rawtypes")
     public static void createAnnotationDocumentContent(ZipFile zip, Project aProject,
             DocumentService aRepository)
@@ -687,6 +707,7 @@ public class ImportUtil
      * @param aRepository the repository service.
      * @throws IOException if an I/O error occurs.
      */
+    @Deprecated
     @SuppressWarnings("rawtypes")
     public static void createCurationDocumentContent(ZipFile zip, Project aProject,
             DocumentService aRepository)
@@ -722,13 +743,13 @@ public class ImportUtil
         }
     }
 
+    @Deprecated
     public static ExportedAnnotationLayer exportLayerDetails(
             Map<AnnotationLayer, ExportedAnnotationLayer> aLayerToExLayer,
             Map<AnnotationFeature, ExportedAnnotationFeature> aFeatureToExFeature,
             AnnotationLayer aLayer, AnnotationSchemaService aAnnotationService)
     {
-        ExportedAnnotationLayer exLayer = 
-                new ExportedAnnotationLayer();
+        ExportedAnnotationLayer exLayer = new ExportedAnnotationLayer();
         exLayer.setAllowStacking(aLayer.isAllowStacking());
         exLayer.setBuiltIn(aLayer.isBuiltIn());
         exLayer.setReadonly(aLayer.isReadonly());
@@ -747,11 +768,9 @@ public class ImportUtil
             aLayerToExLayer.put(aLayer, exLayer);
         }
 
-        List<ExportedAnnotationFeature> exFeatures = 
-                new ArrayList<>();
+        List<ExportedAnnotationFeature> exFeatures = new ArrayList<>();
         for (AnnotationFeature feature : aAnnotationService.listAnnotationFeature(aLayer)) {
-            ExportedAnnotationFeature exFeature = 
-                    new ExportedAnnotationFeature();
+            ExportedAnnotationFeature exFeature = new ExportedAnnotationFeature();
             exFeature.setDescription(feature.getDescription());
             exFeature.setEnabled(feature.isEnabled());
             exFeature.setRemember(feature.isRemember());
@@ -770,18 +789,15 @@ public class ImportUtil
             
             if (feature.getTagset() != null) {
                 TagSet tagSet = feature.getTagset();
-                ExportedTagSet exTagSet = 
-                        new ExportedTagSet();
+                ExportedTagSet exTagSet = new ExportedTagSet();
                 exTagSet.setDescription(tagSet.getDescription());
                 exTagSet.setLanguage(tagSet.getLanguage());
                 exTagSet.setName(tagSet.getName());
                 exTagSet.setCreateTag(tagSet.isCreateTag());
 
-                List<ExportedTag> exportedTags = 
-                        new ArrayList<>();
+                List<ExportedTag> exportedTags = new ArrayList<>();
                 for (Tag tag : aAnnotationService.listTags(tagSet)) {
-                    ExportedTag exTag = 
-                            new ExportedTag();
+                    ExportedTag exTag = new ExportedTag();
                     exTag.setDescription(tag.getDescription());
                     exTag.setName(tag.getName());
                     exportedTags.add(exTag);
@@ -798,7 +814,7 @@ public class ImportUtil
         return exLayer;
     }
 
-    private static String normalizeEntryName(ZipEntry aEntry)
+    public static String normalizeEntryName(ZipEntry aEntry)
     {
         // Strip leading "/" that we had in ZIP files prior to 2.0.8 (bug #985)
         String entryName = aEntry.toString();

@@ -104,6 +104,7 @@ public class ImportServiceImpl
         }
         // Import source document content
         ImportUtil.createSourceDocumentContent(zip, importedProject, documentService);
+        
         // Import training document content
         if (automationService != null) {
             ImportUtil.createTrainingDocumentContent(zip, importedProject, automationService);
@@ -117,6 +118,7 @@ public class ImportServiceImpl
         // Import annotation document content
         ImportUtil.createAnnotationDocument(importedProjectSetting, importedProject,
                 documentService);
+        
         // Import annotation document content
         ImportUtil.createAnnotationDocumentContent(zip, importedProject, documentService);
 

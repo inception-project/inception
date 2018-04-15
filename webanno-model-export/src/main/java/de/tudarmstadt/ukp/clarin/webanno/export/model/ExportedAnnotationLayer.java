@@ -53,10 +53,10 @@ public class ExportedAnnotationLayer
     private boolean readonly = false;
 
     @JsonProperty("attach_type")
-    private ExportedAnnotationLayer attachType;
+    private ExportedAnnotationLayerReference attachType;
 
     @JsonProperty("attach_feature")
-    private ExportedAnnotationFeature attachFeature;
+    private ExportedAnnotationFeatureReference attachFeature;
 
     @JsonProperty("lock_to_token_offset")
     private boolean lockToTokenOffset = true;
@@ -66,19 +66,19 @@ public class ExportedAnnotationLayer
 
     @JsonProperty("cross_sentence")
     private boolean crossSentence;
-    
+
     @JsonProperty("show_hover")
     private boolean showTextInHover = true;
 
     @JsonProperty("multiple_tokens")
     private boolean multipleTokens;
-    
+
     @JsonProperty("project_name")
     private String projectName;
 
     @JsonProperty("linked_list_behavior")
     private boolean linkedListBehavior;
-    
+
     @JsonProperty("on_click_javascript_action")
     private String onClickJavascriptAction;
 
@@ -152,12 +152,12 @@ public class ExportedAnnotationLayer
         this.builtIn = builtIn;
     }
 
-    public ExportedAnnotationLayer getAttachType()
+    public ExportedAnnotationLayerReference getAttachType()
     {
         return attachType;
     }
 
-    public void setAttachType(ExportedAnnotationLayer attachType)
+    public void setAttachType(ExportedAnnotationLayerReference attachType)
     {
         this.attachType = attachType;
     }
@@ -212,12 +212,12 @@ public class ExportedAnnotationLayer
         this.multipleTokens = multipleTokens;
     }
 
-    public ExportedAnnotationFeature getAttachFeature()
+    public ExportedAnnotationFeatureReference getAttachFeature()
     {
         return attachFeature;
     }
 
-    public void setAttachFeature(ExportedAnnotationFeature attachFeature)
+    public void setAttachFeature(ExportedAnnotationFeatureReference attachFeature)
     {
         this.attachFeature = attachFeature;
     }
@@ -251,7 +251,7 @@ public class ExportedAnnotationLayer
     {
         readonly = aReadonly;
     }
-    
+
     public String getOnClickJavascriptAction()
     {
         return onClickJavascriptAction;

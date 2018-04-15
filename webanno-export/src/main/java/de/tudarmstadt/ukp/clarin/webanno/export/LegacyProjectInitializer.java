@@ -46,7 +46,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.DependencyFlavor
  * {@link AnnotationSchemaServiceImpl#initializeProject(Project)} or
  * {@link AnnotationSchemaServiceImpl#initializeProject(Project)}.
  */
-class LegacyProjectInitializer
+public class LegacyProjectInitializer
 {
     private AnnotationSchemaService annotationSchemaService;
     

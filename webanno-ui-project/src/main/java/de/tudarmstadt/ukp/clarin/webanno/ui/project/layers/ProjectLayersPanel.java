@@ -101,6 +101,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.event.LayerConfigurationChangedEven
 import de.tudarmstadt.ukp.clarin.webanno.export.ImportUtil;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedAnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedAnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedAnnotationLayerReference;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -134,7 +135,7 @@ public class ProjectLayersPanel
 {
     private static final Logger LOG = LoggerFactory.getLogger(ProjectLayersPanel.class);
     private static final long serialVersionUID = -7870526462864489252L;
-    
+
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean ProjectService repository;
     private @SpringBean UserDao userRepository;
@@ -157,7 +158,7 @@ public class ProjectLayersPanel
     {
         super(id, aProjectModel);
         setOutputMarkupId(true);
-        
+
         layerSelectionForm = new LayerSelectionForm("layerSelectionForm");
 
         featureSelectionForm = new FeatureSelectionForm("featureSelectionForm");
@@ -178,13 +179,13 @@ public class ProjectLayersPanel
         importLayerForm = new ImportLayerForm("importLayerForm");
         add(importLayerForm);
     }
-    
+
     @Override
     protected void onModelChanged()
     {
         super.onModelChanged();
         layerSelectionForm.getModelObject().layerSelection = null;
-        
+
         layerDetailForm.setModelObject(null);
 
         featureSelectionForm.getModelObject().feature = null;
@@ -192,7 +193,7 @@ public class ProjectLayersPanel
 
         featureDetailForm.setModelObject(null);
     }
-    
+
     private class LayerSelectionForm
         extends Form<SelectionModel>
     {
@@ -210,10 +211,10 @@ public class ProjectLayersPanel
                 public void onSubmit()
                 {
                     LayerSelectionForm.this.getModelObject().layerSelection = null;
-                    
+
                     layerDetailForm.setModelObject(new AnnotationLayer());
                     featureDetailForm.setModelObject(null);
-                    
+
                     featureSelectionForm.setVisible(false);
                 }
             });
@@ -234,8 +235,8 @@ public class ProjectLayersPanel
                             if (project.getId() != null) {
                                 List<AnnotationLayer> _layers = annotationService
                                         .listAnnotationLayer(project);
-                                AnnotationLayer tokenLayer = annotationService.getLayer(
-                                        Token.class.getName(), project);
+                                AnnotationLayer tokenLayer = annotationService
+                                        .getLayer(Token.class.getName(), project);
                                 _layers.remove(tokenLayer);
                                 for (AnnotationLayer layer : _layers) {
                                     if (layer.isBuiltIn() && layer.isEnabled()) {
@@ -259,8 +260,8 @@ public class ProjectLayersPanel
                 @Override
                 protected void populateItem(final ListItem<AnnotationLayer> item)
                 {
-                    item.add(new SelectOption<AnnotationLayer>("layer", new Model<>(
-                            item.getModelObject()))
+                    item.add(new SelectOption<AnnotationLayer>("layer",
+                            new Model<>(item.getModelObject()))
                     {
                         private static final long serialVersionUID = 3095089418860168215L;
 
@@ -268,11 +269,11 @@ public class ProjectLayersPanel
                         public void onComponentTagBody(MarkupStream markupStream,
                                 ComponentTag openTag)
                         {
-                            replaceComponentTagBody(markupStream, openTag, item.getModelObject()
-                                    .getUiName());
+                            replaceComponentTagBody(markupStream, openTag,
+                                    item.getModelObject().getUiName());
                         }
-                    }.add(new AttributeModifier("style", "color:"
-                            + colors.get(item.getModelObject()) + ";")));
+                    }.add(new AttributeModifier("style",
+                            "color:" + colors.get(item.getModelObject()) + ";")));
                 }
             };
             add(layerSelection.add(layers));
@@ -287,10 +288,10 @@ public class ProjectLayersPanel
                     layerDetailForm.setModelObject(getModelObject().layerSelection);
 
                     LayerSelectionForm.this.setVisible(true);
-                    
+
                     featureSelectionForm.clearInput();
                     featureSelectionForm.setVisible(true);
-                    
+
                     featureDetailForm.setModelObject(null);
 
                     layerType = getModelObject().layerSelection.getType();
@@ -317,7 +318,7 @@ public class ProjectLayersPanel
             add(fileUpload = new FileUploadField("content", new Model()));
             add(new LambdaAjaxButton("import", this::actionImport));
         }
-        
+
         private void actionImport(AjaxRequestTarget aTarget, Form<String> aForm)
         {
             List<FileUpload> uploadedFiles = fileUpload.getFileUploads();
@@ -337,10 +338,10 @@ public class ProjectLayersPanel
                     bis.mark(buf.length + 1);
                     bis.read(buf, 0, buf.length);
                     bis.reset();
-                    
+
                     // If the file starts with an XML preamble, then we assume it is an UIMA
                     // type system file.
-                    if (Arrays.equals(buf, new byte[] {'<', '?', 'x', 'm', 'l'})) {
+                    if (Arrays.equals(buf, new byte[] { '<', '?', 'x', 'm', 'l' })) {
                         importUimaTypeSystemFile(bis);
                     }
                     else {
@@ -356,7 +357,7 @@ public class ProjectLayersPanel
             featureDetailForm.setVisible(false);
             aTarget.add(ProjectLayersPanel.this);
         }
-        
+
         private void importUimaTypeSystemFile(InputStream aIS)
             throws IOException, InvalidXMLException, ResourceInitializationException
         {
@@ -367,11 +368,11 @@ public class ProjectLayersPanel
             for (AnnotationLayer l : analysis.getLayers()) {
                 if (!annotationService.existsLayer(l.getName(), project)) {
                     l.setProject(project);
-                    
+
                     // Need to set the attach type
                     if (WebAnnoConst.RELATION_TYPE.equals(l.getType())) {
                         RelationDetails relDetails = analysis.getRelationDetails(l.getName());
-                        
+
                         AnnotationLayer attachLayer;
                         try {
                             // First check if this type is already in the project
@@ -384,13 +385,13 @@ public class ProjectLayersPanel
                             attachLayer.setProject(project);
                             annotationService.createLayer(attachLayer);
                         }
-                        
+
                         l.setAttachType(attachLayer);
                     }
-                    
+
                     annotationService.createLayer(l);
                 }
-                
+
                 // Import the features for the layer except if the layer is a built-in layer.
                 // We must not touch the built-in layers because WebAnno may rely on their
                 // structure. This is a conservative measure for now any may be relaxed in the
@@ -407,7 +408,7 @@ public class ProjectLayersPanel
                 }
             }
         }
-        
+
         private void importLayerFile(InputStream aIS) throws IOException
         {
             User user = userRepository.getCurrentUser();
@@ -415,29 +416,44 @@ public class ProjectLayersPanel
             
             String text = IOUtils.toString(aIS, "UTF-8");
 
-            ExportedAnnotationLayer exLayer = JSONUtil.getJsonConverter().getObjectMapper()
-                    .readValue(text, ExportedAnnotationLayer.class);
-
-            AnnotationLayer attachLayer = null;
-            if (exLayer.getAttachType() != null) {
-                ExportedAnnotationLayer
-                        exAttachLayer = exLayer.getAttachType();
-                createLayer(exAttachLayer, user, null);
-                attachLayer = annotationService.getLayer(exAttachLayer.getName(),
-                        project);
+            ExportedAnnotationLayer[] exLayers = JSONUtil.getJsonConverter().getObjectMapper()
+                    .readValue(text, ExportedAnnotationLayer[].class);
+            
+            // First import the layers but without setting the attach-layers/features
+            Map<String, ExportedAnnotationLayer> exLayersMap = new HashMap<>();
+            Map<String, AnnotationLayer> layersMap = new HashMap<>();
+            for (ExportedAnnotationLayer exLayer : exLayers) {
+                AnnotationLayer layer = createLayer(exLayer, user);
+                layersMap.put(layer.getName(), layer);
+                exLayersMap.put(layer.getName(), exLayer);
             }
-            createLayer(exLayer, user, attachLayer);
-            layerDetailForm.setModelObject(annotationService.getLayer(
-                    exLayer.getName(), project));
+            
+            // Second fill in the attach-layer and attach-feature information
+            for (AnnotationLayer layer : layersMap.values()) {
+                ExportedAnnotationLayer exLayer = exLayersMap.get(layer.getName());
+                if (exLayer.getAttachType() != null) {
+                    layer.setAttachType(layersMap.get(exLayer.getAttachType().getName()));
+                }
+                if (exLayer.getAttachFeature() != null) {
+                    AnnotationLayer attachLayer = annotationService.getLayer(
+                            exLayer.getAttachType().getName(), project);
+                    AnnotationFeature attachFeature = annotationService
+                            .getFeature(exLayer.getAttachFeature().getName(), attachLayer);
+                    layer.setAttachFeature(attachFeature);
+                }
+                annotationService.createLayer(layer);
+            }
+            
+            layerDetailForm.setModelObject(layersMap.get(exLayers[0].getName()));
             featureSelectionForm.setVisible(true);
         }
-        
-        private void createLayer(ExportedAnnotationLayer aExLayer, User aUser,
-                AnnotationLayer aAttachLayer)
+
+        private AnnotationLayer createLayer(ExportedAnnotationLayer aExLayer, User aUser)
             throws IOException
         {
             Project project = ProjectLayersPanel.this.getModelObject();
             AnnotationLayer layer;
+            
             if (annotationService.existsLayer(aExLayer.getName(), aExLayer.getType(), project)) {
                 layer = annotationService.getLayer(aExLayer.getName(), project);
                 ImportUtil.setLayer(annotationService, layer, aExLayer, project, aUser);
@@ -446,15 +462,12 @@ public class ProjectLayersPanel
                 layer = new AnnotationLayer();
                 ImportUtil.setLayer(annotationService, layer, aExLayer, project, aUser);
             }
-            layer.setAttachType(aAttachLayer);
+            
             for (ExportedAnnotationFeature exfeature : aExLayer.getFeatures()) {
-    
                 ExportedTagSet exTagset = exfeature.getTagSet();
                 TagSet tagSet = null;
-                if (
-                        exTagset != null && 
-                        annotationService.existsTagSet(exTagset.getName(), project)
-                ) {
+                if (exTagset != null
+                        && annotationService.existsTagSet(exTagset.getName(), project)) {
                     tagSet = annotationService.getTagSet(exTagset.getName(), project);
                     ImportUtil.createTagSet(tagSet, exTagset, project, aUser, annotationService);
                 }
@@ -474,6 +487,8 @@ public class ProjectLayersPanel
                 feature.setTagset(tagSet);
                 ImportUtil.setFeature(annotationService, feature, exfeature, project, aUser);
             }
+            
+            return layer;
         }
     }
 
@@ -486,10 +501,11 @@ public class ProjectLayersPanel
         public AnnotationFeature feature;
     }
 
-    private static enum LayerExportMode {
+    private static enum LayerExportMode
+    {
         JSON, UIMA
     }
-    
+
     private class LayerDetailForm
         extends Form<AnnotationLayer>
     {
@@ -505,7 +521,7 @@ public class ProjectLayersPanel
         private CheckBox showTextInHover;
         private CheckBox multipleTokens;
         private CheckBox linkedListBehavior;
-        
+
         private LayerExportMode exportMode = LayerExportMode.JSON;
 
         public LayerDetailForm(String id)
@@ -513,7 +529,7 @@ public class ProjectLayersPanel
             super(id, CompoundPropertyModel.of(Model.of()));
 
             setOutputMarkupPlaceholderTag(true);
-            
+
             add(new TextField<String>("uiName").setRequired(true));
             add(new TextArea<String>("description").setOutputMarkupPlaceholderTag(true));
 
@@ -524,11 +540,11 @@ public class ProjectLayersPanel
                 @Override
                 protected void onConfigure()
                 {
-                    setVisible(StringUtils.isNotBlank(LayerDetailForm.this.getModelObject()
-                            .getName()));
+                    setVisible(StringUtils
+                            .isNotBlank(LayerDetailForm.this.getModelObject().getName()));
                 }
             });
-            
+
             add(new CheckBox("enabled"));
             add(layerTypes = (DropDownChoice<String>) new DropDownChoice<String>("type",
                     Arrays.asList(new String[] { SPAN_TYPE, RELATION_TYPE, CHAIN_TYPE }))
@@ -559,8 +575,7 @@ public class ProjectLayersPanel
                 }
             });
 
-            attachTypes = new DropDownChoice<AnnotationLayer>(
-                    "attachType")
+            attachTypes = new DropDownChoice<AnnotationLayer>("attachType")
             {
                 private static final long serialVersionUID = -6705445053442011120L;
 
@@ -580,8 +595,8 @@ public class ProjectLayersPanel
                                     return new ArrayList<>();
                                 }
 
-                                return Arrays.asList(LayerDetailForm.this.getModelObject()
-                                        .getAttachType());
+                                return Arrays.asList(
+                                        LayerDetailForm.this.getModelObject().getAttachType());
                             }
                             if (!layerType.equals(RELATION_TYPE)) {
                                 return new ArrayList<>();
@@ -667,7 +682,7 @@ public class ProjectLayersPanel
                             // to work.
                             !SurfaceForm.class.getName().equals(layer.getName()) &&
                             // Not configurable for chains
-                            !CHAIN_TYPE.equals(layer.getType()) && 
+                            !CHAIN_TYPE.equals(layer.getType()) &&
                             // Not configurable for layers that attach to tokens (currently that is
                             // the only layer on which we use the attach feature)
                             layer.getAttachFeature() == null);
@@ -693,16 +708,16 @@ public class ProjectLayersPanel
                             // to work.
                             !SurfaceForm.class.getName().equals(layer.getName()) &&
                             // Not configurable for chains
-                            !CHAIN_TYPE.equals(layer.getType()) 
+                            !CHAIN_TYPE.equals(layer.getType())
                             // Not configurable for layers that attach to tokens (currently that
                             // is the only layer on which we use the attach feature)
-                            && layer.getAttachFeature() == null);
+                                            && layer.getAttachFeature() == null);
                 }
             });
-            
+
             add(showTextInHover = new CheckBox("showTextInHover")
             {
-                
+
                 private static final long serialVersionUID = -7739913125218251672L;
 
                 {
@@ -715,9 +730,9 @@ public class ProjectLayersPanel
                     super.onConfigure();
                     AnnotationLayer layer = LayerDetailForm.this.getModelObject();
                     setVisible(!isBlank(layer.getType()) &&
-                            // Not configurable for chains or relations
-                            !CHAIN_TYPE.equals(layer.getType()) &&
-                            !RELATION_TYPE.equals(layer.getType()));
+                        // Not configurable for chains or relations
+                        !CHAIN_TYPE.equals(layer.getType()) && 
+                        !RELATION_TYPE.equals(layer.getType()));
                     setEnabled(
                             // Surface form must be locked to token boundaries for CONLL-U writer
                             // to work.
@@ -729,19 +744,18 @@ public class ProjectLayersPanel
                     .add(LambdaBehavior.onConfigure(_this -> {
                         AnnotationLayer layer = LayerDetailForm.this.getModelObject();
                         // Makes no sense for relations
-                        _this.setVisible(!isBlank(layer.getType()) && 
-                                !RELATION_TYPE.equals(layer.getType()));
+                        _this.setVisible(!isBlank(layer.getType())
+                                && !RELATION_TYPE.equals(layer.getType()));
                         _this.setEnabled(
                                 // Surface form must be locked to token boundaries for CONLL-U
                                 // writer to work.
                                 !SurfaceForm.class.getName().equals(layer.getName()) &&
                                 // Not configurable for chains
-                                !CHAIN_TYPE.equals(layer.getType()) 
-                                // Not configurable for layers that attach to tokens (currently 
+                                !CHAIN_TYPE.equals(layer.getType())
+                                // Not configurable for layers that attach to tokens (currently
                                 // that is the only layer on which we use the attach feature)
-                                && layer.getAttachFeature() == null);
-                    }))
-                    . setOutputMarkupPlaceholderTag(true));
+                                                && layer.getAttachFeature() == null);
+                    })).setOutputMarkupPlaceholderTag(true));
 
             add(linkedListBehavior = new CheckBox("linkedListBehavior")
             {
@@ -771,26 +785,25 @@ public class ProjectLayersPanel
                     aTarget.add(featureDetailForm);
                 }
             });
-            
-            add(new TextArea<String>("onClickJavascriptAction").add(new AttributeModifier(
-                    "placeholder",
-                    "alert($PARAM.PID + ' ' + $PARAM.PNAME + ' ' + $PARAM.DOCID + ' ' + "
-                    + "$PARAM.DOCNAME + ' ' + $PARAM.fieldname);")));
+
+            add(new TextArea<String>("onClickJavascriptAction")
+                    .add(new AttributeModifier("placeholder",
+                            "alert($PARAM.PID + ' ' + $PARAM.PNAME + ' ' + $PARAM.DOCID + ' ' + "
+                                    + "$PARAM.DOCNAME + ' ' + $PARAM.fieldname);")));
 
             add(new DropDownChoice<LayerExportMode>("exportMode",
                     new PropertyModel<LayerExportMode>(this, "exportMode"),
-                    asList(LayerExportMode.values()),
-                    new EnumChoiceRenderer<>(this))
-                    .add(new LambdaAjaxFormComponentUpdatingBehavior("change")));
+                    asList(LayerExportMode.values()), new EnumChoiceRenderer<>(this))
+                            .add(new LambdaAjaxFormComponentUpdatingBehavior("change")));
 
-            add(new AjaxDownloadLink("export", 
+            add(new AjaxDownloadLink("export",
                     LambdaModel.of(this::getExportLayerFileName).autoDetaching(),
                     LambdaModel.of(this::exportLayer)));
 
             add(new LambdaAjaxButton<>("save", this::actionSave));
             add(new LambdaAjaxLink("cancel", this::actionCancel));
         }
-        
+
         private void actionSave(AjaxRequestTarget aTarget, Form<?> aForm)
         {
             aTarget.add(ProjectLayersPanel.this);
@@ -806,7 +819,7 @@ public class ProjectLayersPanel
             if (isNull(layer.getId())) {
                 String layerName = StringUtils
                         .capitalize(LayerDetailForm.this.getModelObject().getUiName());
-                
+
                 layerName = layerName.replaceAll("\\W", "");
                 if (layerName.isEmpty() || !isAscii(layerName)) {
                     error("Non ASCII characters can not be used as layer name!");
@@ -818,8 +831,7 @@ public class ProjectLayersPanel
                             + "] already exists in this project.");
                     return;
                 }
-                if (layer.getType().equals(RELATION_TYPE)
-                        && layer.getAttachType() == null) {
+                if (layer.getType().equals(RELATION_TYPE) && layer.getAttachType() == null) {
                     error("A relation layer needs an attach type!");
                     return;
                 }
@@ -857,25 +869,25 @@ public class ProjectLayersPanel
 
                 featureSelectionForm.setVisible(true);
             }
-            
+
             // Trigger LayerConfigurationChangedEvent
             applicationEventPublisherHolder.get()
                     .publishEvent(new LayerConfigurationChangedEvent(this, project));
         }
-        
+
         private void actionCancel(AjaxRequestTarget aTarget)
         {
             aTarget.add(ProjectLayersPanel.this);
             aTarget.addChildren(getPage(), IFeedback.class);
-            
+
             layerSelectionForm.getModelObject().layerSelection = null;
-            
+
             layerDetailForm.setModelObject(null);
-            
+
             featureSelectionForm.setVisible(false);
             featureDetailForm.setModelObject(null);
         }
-        
+
         private String getExportLayerFileName()
         {
             switch (exportMode) {
@@ -920,32 +932,34 @@ public class ProjectLayersPanel
                 return null;
             }
         }
-        
+
         private IResourceStream exportLayerJson()
         {
             try {
                 AnnotationLayer layer = layerDetailForm.getModelObject();
 
-                ExportedAnnotationLayer exLayer = 
-                        ImportUtil.exportLayerDetails(null, null, layer, annotationService);
+                List<ExportedAnnotationLayer> exLayers = new ArrayList<>();
+
+                ExportedAnnotationLayer exMainLayer = ImportUtil.exportLayerDetails(null, null,
+                        layer, annotationService);
+                exLayers.add(exMainLayer);
 
                 // If the layer is attached to another layer, then we also have to export
                 // that, otherwise we would be missing it during re-import.
                 if (layer.getAttachType() != null) {
                     AnnotationLayer attachLayer = layer.getAttachType();
-                    ExportedAnnotationLayer 
-                            exAttachLayer = ImportUtil.exportLayerDetails(
-                                    null, null, attachLayer, annotationService);
-                    exLayer.setAttachType(exAttachLayer);
+                    ExportedAnnotationLayer exAttachLayer = ImportUtil.exportLayerDetails(null,
+                            null, attachLayer, annotationService);
+                    exMainLayer.setAttachType(
+                            new ExportedAnnotationLayerReference(exAttachLayer.getName()));
+                    exLayers.add(exAttachLayer);
                 }
-                
+
                 return new InputStreamResourceStream(new ByteArrayInputStream(
-                        JSONUtil.toPrettyJsonString(exLayer).getBytes("UTF-8")));
-                
+                        JSONUtil.toPrettyJsonString(exLayers).getBytes("UTF-8")));
             }
             catch (Exception e) {
-                error("Unable to generate the JSON file: "
-                        + ExceptionUtils.getRootCauseMessage(e));
+                error("Unable to generate the JSON file: " + ExceptionUtils.getRootCauseMessage(e));
                 LOG.error("Unable to generate the JSON file", e);
                 IPartialPageRequestHandler handler = RequestCycle.get()
                         .find(IPartialPageRequestHandler.class);
@@ -955,12 +969,12 @@ public class ProjectLayersPanel
                 return null;
             }
         }
-        
+
         @Override
         protected void onConfigure()
         {
             super.onConfigure();
-            
+
             setVisible(getModelObject() != null);
         }
     }
@@ -987,7 +1001,7 @@ public class ProjectLayersPanel
 
             add(traitsContainer = new WebMarkupContainer(MID_TRAITS_CONTAINER));
             traitsContainer.setOutputMarkupId(true);
-            
+
             add(new Label("name")
             {
                 private static final long serialVersionUID = 1L;
@@ -995,37 +1009,38 @@ public class ProjectLayersPanel
                 @Override
                 protected void onConfigure()
                 {
-                    setVisible(StringUtils.isNotBlank(FeatureDetailForm.this.getModelObject()
-                            .getName()));
+                    setVisible(StringUtils
+                            .isNotBlank(FeatureDetailForm.this.getModelObject().getName()));
                 }
             });
             add(new TextField<String>("uiName").setRequired(true));
             add(new TextArea<String>("description").setOutputMarkupPlaceholderTag(true));
             add(new CheckBox("enabled"));
             add(new CheckBox("visible"));
-            add(new CheckBox("includeInHover") {
+            add(new CheckBox("includeInHover")
+            {
 
                 private static final long serialVersionUID = -8273152168889478682L;
-                
+
                 @Override
                 protected void onConfigure()
                 {
                     String layertype = layerDetailForm.getModelObject().getType();
-                    // Currently not configurable for chains or relations 
+                    // Currently not configurable for chains or relations
                     // TODO: technically it is possible
-                    setVisible(!CHAIN_TYPE.equals(layertype) &&
-                            !RELATION_TYPE.equals(layertype));
+                    setVisible(!CHAIN_TYPE.equals(layertype) && !RELATION_TYPE.equals(layertype));
                 }
-                
+
             });
             add(new CheckBox("remember"));
-            add(required = new CheckBox("required") {
+            add(required = new CheckBox("required")
+            {
                 private static final long serialVersionUID = -2716373442353375910L;
 
                 {
                     setOutputMarkupId(true);
                 }
-                
+
                 @Override
                 protected void onConfigure()
                 {
@@ -1062,7 +1077,7 @@ public class ProjectLayersPanel
                 {
                     setEnabled(isNull(FeatureDetailForm.this.getModelObject().getId()));
                 }
-                
+
                 @Override
                 protected void onModelChanged()
                 {
@@ -1078,7 +1093,7 @@ public class ProjectLayersPanel
                     else {
                         newTraits = new EmptyPanel(MID_TRAITS);
                     }
-                    
+
                     traitsContainer.addOrReplace(newTraits);
                 }
             });
@@ -1093,7 +1108,7 @@ public class ProjectLayersPanel
                     aTarget.add(traitsContainer);
                 }
             });
-            
+
             add(new Button("save", new StringResourceModel("label"))
             {
                 private static final long serialVersionUID = 1L;
@@ -1104,7 +1119,7 @@ public class ProjectLayersPanel
                     // Processing the data in onAfterSubmit so the traits panel can use the
                     // override onSubmit in its nested form and store the traits before
                     // we clear the currently selected feature.
-                    
+
                     AnnotationFeature feature = FeatureDetailForm.this.getModelObject();
                     String name = feature.getUiName();
                     name = name.replaceAll("\\W", "");
@@ -1148,14 +1163,14 @@ public class ProjectLayersPanel
                             return;
                         }
                         feature.setName(name);
-                        
+
                         FeatureSupport<?> fs = featureSupportRegistry
                                 .getFeatureSupport(featureDetailForm.featureType.getModelObject()
                                         .getFeatureSupportId());
-                        
+
                         // Let the feature support finalize the configuration of the feature
                         fs.configureFeature(feature);
-                        
+
                     }
 
                     // Save feature
@@ -1164,21 +1179,22 @@ public class ProjectLayersPanel
                     // Clear currently selected feature / feature details
                     featureSelectionForm.getModelObject().feature = null;
                     featureDetailForm.setModelObject(null);
-                    
+
                     // Trigger LayerConfigurationChangedEvent
                     applicationEventPublisherHolder.get().publishEvent(
                             new LayerConfigurationChangedEvent(this, feature.getProject()));
                 }
             });
-            
-            add(new Button("cancel", new StringResourceModel("label")) {
+
+            add(new Button("cancel", new StringResourceModel("label"))
+            {
                 private static final long serialVersionUID = 1L;
-                
+
                 {
                     // Avoid saving data
                     setDefaultFormProcessing(false);
                 }
-                
+
                 @Override
                 public void onSubmit()
                 {
@@ -1188,21 +1204,21 @@ public class ProjectLayersPanel
                 }
             });
         }
-        
+
         @Override
         protected void onModelChanged()
         {
             super.onModelChanged();
-            
+
             // Since feature type uses a lambda model, it needs to be notified explicitly.
             featureType.modelChanged();
         }
-        
+
         @Override
         protected void onConfigure()
         {
             super.onConfigure();
-            
+
             setVisible(getModelObject() != null);
         }
     }
@@ -1267,7 +1283,7 @@ public class ProjectLayersPanel
                 {
                     // cancel selection of feature list
                     feature.setModelObject(null);
-                    
+
                     AnnotationFeature newFeature = new AnnotationFeature();
                     newFeature.setLayer(layerDetailForm.getModelObject());
                     newFeature.setProject(ProjectLayersPanel.this.getModelObject());

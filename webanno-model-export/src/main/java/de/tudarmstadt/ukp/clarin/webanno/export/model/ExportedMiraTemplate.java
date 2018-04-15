@@ -36,10 +36,10 @@ public class ExportedMiraTemplate
     private boolean predictInThisPage;
 
     @JsonProperty("train_feature")
-    private ExportedAnnotationFeature trainFeature;
+    private ExportedAnnotationFeatureReference trainFeature;
 
     @JsonProperty("other_features")
-    private Set<ExportedAnnotationFeature> otherFeatures = new HashSet<>();
+    private Set<ExportedAnnotationFeatureReference> otherFeatures = new HashSet<>();
 
     @JsonProperty("current_layer")
     private boolean currentLayer = false;
@@ -70,22 +70,22 @@ public class ExportedMiraTemplate
         this.predictInThisPage = predictInThisPage;
     }
 
-    public ExportedAnnotationFeature getTrainFeature()
+    public ExportedAnnotationFeatureReference getTrainFeature()
     {
         return trainFeature;
     }
 
-    public void setTrainFeature(ExportedAnnotationFeature trainFeature)
+    public void setTrainFeature(ExportedAnnotationFeatureReference trainFeature)
     {
         this.trainFeature = trainFeature;
     }
 
-    public Set<ExportedAnnotationFeature> getOtherFeatures()
+    public Set<ExportedAnnotationFeatureReference> getOtherFeatures()
     {
         return otherFeatures;
     }
 
-    public void setOtherFeatures(Set<ExportedAnnotationFeature> otherFeatures)
+    public void setOtherFeatures(Set<ExportedAnnotationFeatureReference> otherFeatures)
     {
         this.otherFeatures = otherFeatures;
     }

@@ -62,7 +62,7 @@ public class ExportedTrainingDocument
     private boolean processed = false;
 
     @JsonProperty("feature")
-    private ExportedAnnotationFeature feature;
+    private ExportedAnnotationFeatureReference feature;
 
     public String getName()
     {
@@ -124,12 +124,12 @@ public class ExportedTrainingDocument
         this.processed = processed;
     }
 
-    public ExportedAnnotationFeature getFeature()
+    public ExportedAnnotationFeatureReference getFeature()
     {
         return feature;
     }
 
-    public void setFeature(ExportedAnnotationFeature feature)
+    public void setFeature(ExportedAnnotationFeatureReference feature)
     {
         this.feature = feature;
     }
