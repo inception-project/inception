@@ -106,8 +106,6 @@ public interface KnowledgeBaseService
 
     RepositoryImplConfig getKnowledgeBaseConfig(KnowledgeBase kb);
 
-    RepositoryConnection getConnection(KnowledgeBase kb);
-
     void registerImplicitNamespace(String aImplicitNameSpace);
 
     /**
