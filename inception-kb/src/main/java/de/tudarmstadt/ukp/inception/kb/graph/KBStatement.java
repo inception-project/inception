@@ -77,7 +77,7 @@ public class KBStatement implements Serializable
         else if (aValue instanceof IRI) {
             value = aValue;
         }
-        else if (aValue instanceof BNode) {
+        else if (aValue instanceof BNode || aValue == null) {
             value = null;
         }
         else {
