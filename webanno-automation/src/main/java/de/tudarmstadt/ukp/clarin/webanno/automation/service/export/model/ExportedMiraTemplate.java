@@ -15,13 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.export.model;
+package de.tudarmstadt.ukp.clarin.webanno.automation.service.export.model;
 
 import java.util.HashSet;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
+import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedAnnotationFeatureReference;
 
 /**
  * All required contents of a MiraTemplate to be exported.

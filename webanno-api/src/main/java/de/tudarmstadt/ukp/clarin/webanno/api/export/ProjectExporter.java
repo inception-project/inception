@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.export;
 import java.io.File;
 import java.util.Collections;
 import java.util.List;
+import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
@@ -41,4 +42,16 @@ public interface ProjectExporter
     void importData(ProjectImportRequest aRequest, Project aProject, ExportedProject aExProject,
             ZipFile aZip)
         throws Exception;
+    
+    static String normalizeEntryName(ZipEntry aEntry)
+    {
+        // Strip leading "/" that we had in ZIP files prior to 2.0.8 (bug #985)
+        String entryName = aEntry.toString();
+        if (entryName.startsWith("/")) {
+            entryName = entryName.substring(1);
+        }
+       
+        return entryName;
+    }
+
 }
