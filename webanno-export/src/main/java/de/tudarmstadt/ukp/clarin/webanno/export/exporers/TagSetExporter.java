@@ -27,6 +27,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
+import de.tudarmstadt.ukp.clarin.webanno.export.LegacyProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.export.ProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
@@ -73,9 +75,71 @@ public class TagSetExporter
             ExportedProject aExProject, ZipFile aZip)
         throws Exception
     {
-        for (ExportedTagSet exTagSet : aExProject.getTagSets()) {
-            importTagSet(new TagSet(), exTagSet, aProject);
+        // this is projects prior to version 2.0
+        if (aExProject.getVersion() == 0) {
+            importTagSetsV0(aProject, aExProject);
         }
+        else {
+            for (ExportedTagSet exTagSet : aExProject.getTagSets()) {
+                importTagSet(new TagSet(), exTagSet, aProject);
+            }
+        }
+    }
+    
+    /**
+     * Import tagsets from projects prior to WebAnno 2.0.
+     */
+    private void importTagSetsV0(Project aProject, ExportedProject aExProject)
+        throws IOException
+    {
+        List<ExportedTagSet> importedTagSets = aExProject.getTagSets();
+        
+        List<String> posTags = new ArrayList<>();
+        List<String> depTags = new ArrayList<>();
+        List<String> neTags = new ArrayList<>();
+        List<String> posTagDescriptions = new ArrayList<>();
+        List<String> depTagDescriptions = new ArrayList<>();
+        List<String> neTagDescriptions = new ArrayList<>();
+        List<String> corefTypeTags = new ArrayList<>();
+        List<String> corefRelTags = new ArrayList<>();
+        for (ExportedTagSet tagSet : importedTagSets) {
+            switch (tagSet.getTypeName()) {
+            case WebAnnoConst.POS:
+                for (ExportedTag tag : tagSet.getTags()) {
+                    posTags.add(tag.getName());
+                    posTagDescriptions.add(tag.getDescription());
+                }
+                break;
+            case WebAnnoConst.DEPENDENCY:
+                for (ExportedTag tag : tagSet.getTags()) {
+                    depTags.add(tag.getName());
+                    depTagDescriptions.add(tag.getDescription());
+                }
+                break;
+            case WebAnnoConst.NAMEDENTITY:
+                for (ExportedTag tag : tagSet.getTags()) {
+                    neTags.add(tag.getName());
+                    neTagDescriptions.add(tag.getDescription());
+                }
+                break;
+            case WebAnnoConst.COREFRELTYPE:
+                for (ExportedTag tag : tagSet.getTags()) {
+                    corefTypeTags.add(tag.getName());
+                }
+                break;
+            case WebAnnoConst.COREFERENCE:
+                for (ExportedTag tag : tagSet.getTags()) {
+                    corefRelTags.add(tag.getName());
+                }
+                break;
+            }
+        }
+        
+        new LegacyProjectInitializer(annotationService).initialize(aProject,
+                posTags.toArray(new String[0]), posTagDescriptions.toArray(new String[0]),
+                depTags.toArray(new String[0]), depTagDescriptions.toArray(new String[0]),
+                neTags.toArray(new String[0]), neTagDescriptions.toArray(new String[0]),
+                corefTypeTags.toArray(new String[0]), corefRelTags.toArray(new String[0]));
     }
     
     private void importTagSet(TagSet aTagSet, ExportedTagSet aExTagSet, Project aProject)
