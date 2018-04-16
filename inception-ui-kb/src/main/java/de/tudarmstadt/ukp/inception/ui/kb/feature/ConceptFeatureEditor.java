@@ -65,7 +65,6 @@ public class ConceptFeatureEditor
 
     private static final String MID_FEATURE = "feature";
     private static final String MID_VALUE = "value";
-    private static int CANDIDATE_LIMIT = 20;
 
     private static final long serialVersionUID = 7763348613632105600L;
 
@@ -201,9 +200,9 @@ public class ConceptFeatureEditor
     {
         return kbService.read(kb, (conn) -> {
             try {
-                List<KBHandle> list = clService.disambiguate(kb, aTypedString, aState.getSelection()
+                return clService.disambiguate(kb, aTypedString, aState
+                    .getSelection()
                     .getText(), aState.getSelection().getBegin(), aJCas.get());
-                return (list.size() > CANDIDATE_LIMIT) ? list.subList(0, CANDIDATE_LIMIT) : list;
             }
             catch (IOException e) {
                 log.error("An error occurred while retrieving entity candidates.", e);
