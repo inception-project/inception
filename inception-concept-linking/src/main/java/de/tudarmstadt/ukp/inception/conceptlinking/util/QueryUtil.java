@@ -140,7 +140,7 @@ public class QueryUtil
         ValueFactory vf = SimpleValueFactory.getInstance();
 
         String query = String.join("\n",
-            "SELECT ?itemLabel ?itemDescription",
+            "SELECT ?itemDescription",
             "WHERE {",
             "  VALUES (?item) {( ?e )}",
             "  SERVICE wikibase:label { bd:serviceParam wikibase:language \"en\"",
