@@ -123,7 +123,8 @@ public class KBStatement implements Serializable
         property = aProperty;
     }
 
-    public Object getValue() {
+    public Object getValue()
+    {
         return value;
     }
 
@@ -132,23 +133,28 @@ public class KBStatement implements Serializable
         value = aValue;
     }
 
-    public String getLanguage() {
+    public String getLanguage()
+    {
         return language;
     }
 
-    public void setLanguage(String aLanguage) {
-        language = language;
+    public void setLanguage(String aLanguage)
+    {
+        language = aLanguage;
     }
-
-    public boolean isInferred() {
+    
+    public boolean isInferred()
+    {
         return inferred;
     }
 
-    public void setInferred(boolean isInferred) {
+    public void setInferred(boolean isInferred)
+    {
         inferred = isInferred;
     }
 
-    public List<Statement> getOriginalStatements() {
+    public List<Statement> getOriginalStatements()
+    {
         return originalStatements;
     }
 

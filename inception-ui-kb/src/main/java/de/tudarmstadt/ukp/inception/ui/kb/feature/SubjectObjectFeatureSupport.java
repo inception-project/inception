@@ -17,6 +17,12 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
+import static de.tudarmstadt.ukp.inception.ui.kb.feature.FactLinkingConstants.OBJECT_LINK;
+import static de.tudarmstadt.ukp.inception.ui.kb.feature.FactLinkingConstants.OBJECT_ROLE;
+import static de.tudarmstadt.ukp.inception.ui.kb.feature.FactLinkingConstants.QUALIFIER_LINK;
+import static de.tudarmstadt.ukp.inception.ui.kb.feature.FactLinkingConstants.SUBJECT_LINK;
+import static de.tudarmstadt.ukp.inception.ui.kb.feature.FactLinkingConstants.SUBJECT_ROLE;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -53,12 +59,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 public class SubjectObjectFeatureSupport
     implements FeatureSupport<Void>
 {
-    private static final String SUBJECT_LINK = "webanno.custom.FactSubjectLink";
-    private static final String OBJECT_LINK = "webanno.custom.FactObjectLink";
-    private static final String MODIFIER_LINK = "webanno.custom.FactModifierLink";
-    private static final String SUBJECT_ROLE = "subject";
-    private static final String OBJECT_ROLE = "object";
-
     private String featureSupportId;
 
     @Override
@@ -89,7 +89,7 @@ public class SubjectObjectFeatureSupport
                 switch (annotationFeature.getLinkTypeName()) {
                 case SUBJECT_LINK: // fall-through
                 case OBJECT_LINK: // fall-through
-                case MODIFIER_LINK:
+                case QUALIFIER_LINK:
                     return true;
                 default:
                     return false;
@@ -125,10 +125,10 @@ public class SubjectObjectFeatureSupport
                     editor = new SubjectObjectFeatureEditor(aId, aOwner, aHandler, aStateModel,
                         aFeatureStateModel, OBJECT_ROLE);
                     break;
-//                case MODIFIER_LINK:
-//                    editor = new ModifierFeatureEditor(aId, aOwner, aHandler, aStateModel,
-//                        aFeatureStateModel);
-//                    break;
+                case QUALIFIER_LINK:
+                    editor = new QualifierFeatureEditor(aId, aOwner, aHandler, aStateModel,
+                        aFeatureStateModel);
+                    break;
                 default:
                     throw unsupportedLinkModeException(featureState.feature);
                 }
