@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.export.exporers;
+package de.tudarmstadt.ukp.clarin.webanno.constraints.export;
 
 import java.io.File;
 import java.util.Enumeration;
