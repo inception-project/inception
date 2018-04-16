@@ -30,8 +30,6 @@ import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 
 import org.apache.uima.cas.CAS;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
@@ -59,8 +57,6 @@ public class ImportUtil
     public static final String GUIDELINE = "guideline";
     public static final String EXPORTED_PROJECT = "exportedproject";
     public static final String CONSTRAINTS = "constraints";
-
-    private static final Logger LOG = LoggerFactory.getLogger(ImportUtil.class);
 
     /**
      * Read Tag and Tag Description. A line has a tag name and a tag description separated by a TAB
@@ -112,19 +108,6 @@ public class ImportUtil
             }
         }
         return isZipValidWebanno;
-    }
-
-    /**
-     * Remove Invalid characters
-     * 
-     * @param aName a name.
-     * @return a valid name.
-     */
-    public static String validName(String aName)
-    {
-        return aName.replace("^", "").replace("/", "").replace("\\", "").replace("&", "")
-                .replace("*", "").replace("?", "").replace("+", "").replace("$", "")
-                .replace("!", "").replace("[", "").replace("]", "");
     }
 
     @Deprecated
@@ -279,16 +262,5 @@ public class ImportUtil
         }
         exLayer.setFeatures(exFeatures);
         return exLayer;
-    }
-
-    public static String normalizeEntryName(ZipEntry aEntry)
-    {
-        // Strip leading "/" that we had in ZIP files prior to 2.0.8 (bug #985)
-        String entryName = aEntry.toString();
-        if (entryName.startsWith("/")) {
-            entryName = entryName.substring(1);
-        }
-       
-        return entryName;
     }
 }

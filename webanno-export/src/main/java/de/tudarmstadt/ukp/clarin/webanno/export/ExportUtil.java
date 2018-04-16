@@ -25,12 +25,9 @@ import java.util.List;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.uima.UIMAException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportException;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
@@ -41,18 +38,6 @@ import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsv3XWriter;
 
 public class ExportUtil
 {
-    private static final Logger LOG = LoggerFactory.getLogger(ExportUtil.class);
-    
-    private static final String ANNOTATION_ORIGINAL_FOLDER = "/annotation/";
-    private static final String CONSTRAINTS = "/constraints/";
-    private static final String LOG_FOLDER = "/" + ProjectService.LOG_FOLDER;
-    private static final String GUIDELINES_FOLDER = "/" + ImportUtil.GUIDELINE;
-    private static final String ANNOTATION_CAS_FOLDER = "/"
-            + ImportUtil.ANNOTATION_AS_SERIALISED_CAS + "/";
-    private static final String META_INF = "/" + ImportUtil.META_INF;
-    private static final String SOURCE_FOLDER = "/" + ImportUtil.SOURCE;
-    private static final String TRAIN_FOLDER = "/" + ImportUtil.TRAIN;
-    private static final String CORRECTION_USER = "CORRECTION_USER";
     private static final String CURATION_AS_SERIALISED_CAS = "/"
             + ImportUtil.CURATION_AS_SERIALISED_CAS + "/";
     private static final String CURATION_FOLDER = "/curation/";
