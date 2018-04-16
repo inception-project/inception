@@ -94,7 +94,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.export.ImportService;
 import de.tudarmstadt.ukp.clarin.webanno.export.ImportUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
@@ -168,8 +167,6 @@ public class RemoteApiController2
     private @Autowired ImportExportService importExportService;
     private @Autowired AnnotationSchemaService annotationService;
     private @Autowired UserDao userRepository;
-    private @Autowired ImportService importService;
-    //private @Autowired ExportService exportService;
     private @Autowired ProjectExportService exportService;
 
     @ExceptionHandler(value = RemoteApiException.class)
