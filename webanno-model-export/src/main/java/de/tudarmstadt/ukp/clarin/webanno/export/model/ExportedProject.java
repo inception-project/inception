@@ -47,22 +47,22 @@ public class ExportedProject
     private String mode;
 
     @JsonProperty("source_documents")
-    private List<ExportedSourceDocument> sourceDocuments;
+    private List<ExportedSourceDocument> sourceDocuments = new ArrayList<>();
 
     @JsonProperty("training_documents")
-    private List<ExportedTrainingDocument> trainingDocuments;
+    private List<ExportedTrainingDocument> trainingDocuments = new ArrayList<>();
 
     @JsonProperty("annotation_documents")
-    private List<ExportedAnnotationDocument> annotationDocuments;
+    private List<ExportedAnnotationDocument> annotationDocuments = new ArrayList<>();
 
     @JsonProperty("project_permissions")
-    private List<ExportedProjectPermission> projectPermissions;
+    private List<ExportedProjectPermission> projectPermissions = new ArrayList<>();
 
     @JsonProperty("tag_sets")
     private List<ExportedTagSet> tagSets = new ArrayList<>();
 
     @JsonProperty("layers")
-    private List<ExportedAnnotationLayer> layers;
+    private List<ExportedAnnotationLayer> layers = new ArrayList<>();
 
     @JsonProperty("mira_templates")
     private List<ExportedMiraTemplate> miraTemplates = new ArrayList<>();
