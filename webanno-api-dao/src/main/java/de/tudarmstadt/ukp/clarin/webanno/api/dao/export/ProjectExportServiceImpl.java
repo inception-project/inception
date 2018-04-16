@@ -15,9 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.export;
-
-import static de.tudarmstadt.ukp.clarin.webanno.export.ImportUtil.EXPORTED_PROJECT;
+package de.tudarmstadt.ukp.clarin.webanno.api.dao.export;
 
 import java.io.File;
 import java.io.IOException;
@@ -62,6 +60,8 @@ import de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils;
 public class ProjectExportServiceImpl
     implements ProjectExportService
 {
+    public static final String EXPORTED_PROJECT = "exportedproject";
+
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final ProjectService projectService;
@@ -220,7 +220,7 @@ public class ProjectExportServiceImpl
             for (Enumeration<? extends ZipEntry> zipEnumerate = aZip.entries(); zipEnumerate
                     .hasMoreElements();) {
                 ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
-                if (entry.toString().replace("/", "").startsWith(ImportUtil.EXPORTED_PROJECT)
+                if (entry.toString().replace("/", "").startsWith(EXPORTED_PROJECT)
                         && entry.toString().replace("/", "").endsWith(".json")) {
                     projectSettingsEntry = entry;
                     break;

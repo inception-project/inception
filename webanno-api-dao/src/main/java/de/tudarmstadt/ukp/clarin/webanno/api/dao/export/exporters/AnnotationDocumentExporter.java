@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.export.exporers;
+package de.tudarmstadt.ukp.clarin.webanno.api.dao.export.exporters;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest.FORMAT_AUTO;
@@ -43,7 +43,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExporter;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
-import de.tudarmstadt.ukp.clarin.webanno.export.ImportUtil;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedAnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -63,8 +62,7 @@ public class AnnotationDocumentExporter
     private static final String ANNOTATION_CAS_FOLDER = "/" + ANNOTATION_AS_SERIALISED_CAS + "/";
     
     private static final String CORRECTION_USER = "CORRECTION_USER";
-    private static final String CURATION_AS_SERIALISED_CAS = "/"
-            + ImportUtil.CURATION_AS_SERIALISED_CAS + "/";
+    private static final String CURATION_AS_SERIALISED_CAS = "/annotation_ser/";
     private static final String CURATION_FOLDER = "/curation/";
     
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -312,7 +310,7 @@ public class AnnotationDocumentExporter
             ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
 
             // Strip leading "/" that we had in ZIP files prior to 2.0.8 (bug #985)
-            String entryName = ImportUtil.normalizeEntryName(entry);
+            String entryName = ProjectExporter.normalizeEntryName(entry);
 
             if (entryName.startsWith(ANNOTATION_AS_SERIALISED_CAS + "/")) {
                 String fileName = entryName.replace(ANNOTATION_AS_SERIALISED_CAS + "/", "");

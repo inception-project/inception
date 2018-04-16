@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api.dao.export;
+package de.tudarmstadt.ukp.clarin.webanno.api.dao.export.exporters;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
@@ -40,12 +40,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.chunk.Chunk;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.DependencyFlavor;
 
-/**
- * This class is meant to be used only by {@link AnnotationSchemaServiceImpl} and within a
- * transaction set up by that class via
- * {@link AnnotationSchemaServiceImpl#initializeProject(Project)} or
- * {@link AnnotationSchemaServiceImpl#initializeProject(Project)}.
- */
 public class LegacyProjectInitializer
 {
     private AnnotationSchemaService annotationSchemaService;

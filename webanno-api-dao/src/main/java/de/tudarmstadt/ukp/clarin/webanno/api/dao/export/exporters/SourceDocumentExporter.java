@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.export.exporers;
+package de.tudarmstadt.ukp.clarin.webanno.api.dao.export.exporters;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -39,7 +39,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportException;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExporter;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
-import de.tudarmstadt.ukp.clarin.webanno.export.ImportUtil;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedSourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -178,7 +177,7 @@ public class SourceDocumentExporter
             ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
 
             // Strip leading "/" that we had in ZIP files prior to 2.0.8 (bug #985)
-            String entryName = ImportUtil.normalizeEntryName(entry);
+            String entryName = ProjectExporter.normalizeEntryName(entry);
 
             if (entryName.startsWith(SOURCE)) {
                 String fileName = FilenameUtils.getName(entryName);

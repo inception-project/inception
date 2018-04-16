@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.export.exporers;
+package de.tudarmstadt.ukp.clarin.webanno.api.dao.export.exporters;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest.FORMAT_AUTO;
 import static java.util.Arrays.asList;
@@ -41,7 +41,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportException;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExporter;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
-import de.tudarmstadt.ukp.clarin.webanno.export.ImportUtil;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -53,8 +52,7 @@ import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsv3XWriter;
 public class CuratedDocumentsExporter
     implements ProjectExporter
 {
-    private static final String CURATION_AS_SERIALISED_CAS = "/"
-            + ImportUtil.CURATION_AS_SERIALISED_CAS + "/";
+    private static final String CURATION_AS_SERIALISED_CAS = "/curation_ser/";
     private static final String CURATION_FOLDER = "/curation/";
 
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -82,8 +80,7 @@ public class CuratedDocumentsExporter
         Project project = aRequest.getProject();
         
         // Get all the source documents from the project
-        List<de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument> documents = documentService
-                .listSourceDocuments(project);
+        List<SourceDocument> documents = documentService.listSourceDocuments(project);
 
         // Determine which format to use for export.
         Class<?> writer;
@@ -100,12 +97,12 @@ public class CuratedDocumentsExporter
         
         int initProgress = aRequest.progress - 1;
         int i = 1;
-        for (de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument : documents) {
-            File curationCasDir = new File(aStage + CURATION_AS_SERIALISED_CAS
-                    + sourceDocument.getName());
+        for (SourceDocument sourceDocument : documents) {
+            File curationCasDir = new File(aStage,
+                    CURATION_AS_SERIALISED_CAS + sourceDocument.getName());
             FileUtils.forceMkdir(curationCasDir);
 
-            File curationDir = new File(aStage + CURATION_FOLDER + sourceDocument.getName());
+            File curationDir = new File(aStage, CURATION_FOLDER + sourceDocument.getName());
             FileUtils.forceMkdir(curationDir);
 
             // If depending on aInProgress, include only the the curation documents that are
@@ -164,7 +161,7 @@ public class CuratedDocumentsExporter
             ZipEntry entry = zipEnumerate.nextElement();
 
             // Strip leading "/" that we had in ZIP files prior to 2.0.8 (bug #985)
-            String entryName = ImportUtil.normalizeEntryName(entry);
+            String entryName = ProjectExporter.normalizeEntryName(entry);
             
             if (entryName.startsWith(CURATION_AS_SERIALISED_CAS)) {
                 String fileName = entryName.replace(CURATION_AS_SERIALISED_CAS, "");

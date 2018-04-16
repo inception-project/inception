@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.export.exporers;
+package de.tudarmstadt.ukp.clarin.webanno.api.dao.export.exporters;
 
 import java.io.File;
 import java.io.IOException;
@@ -34,41 +34,35 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExporter;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
-import de.tudarmstadt.ukp.clarin.webanno.export.ImportUtil;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils;
 
 @Component
-public class GuildelinesExporter
+public class ProjectMetaInfExporter
     implements ProjectExporter
 {
-    private static final String GUIDELINES_FOLDER = "/" + ImportUtil.GUIDELINE;
+    private static final String META_INF_FOLDER = "META-INF";
+    private static final String META_INF = "/" + META_INF_FOLDER;
 
     private final Logger log = LoggerFactory.getLogger(getClass());
     
     private @Autowired ProjectService projectService;
 
-    /**
-     * Copy Project guidelines from the file system of this project to the export folder
-     */
     @Override
     public void exportData(ProjectExportRequest aRequest, ExportedProject aExProject, File aStage)
-        throws Exception
+        throws IOException
     {
-        File guidelineDir = new File(aStage + GUIDELINES_FOLDER);
-        FileUtils.forceMkdir(guidelineDir);
-        File annotationGuidlines = projectService.getGuidelinesFolder(aRequest.getProject());
-        
-        if (annotationGuidlines.exists()) {
-            for (File annotationGuideline : annotationGuidlines.listFiles()) {
-                FileUtils.copyFileToDirectory(annotationGuideline, guidelineDir);
-            }
+        File metaInfDir = new File(aStage + META_INF);
+        FileUtils.forceMkdir(metaInfDir);
+        File metaInf = projectService.getMetaInfFolder(aRequest.getProject());
+        if (metaInf.exists()) {
+            FileUtils.copyDirectory(metaInf, metaInfDir);
         }
     }
     
     /**
-     * Copy guidelines from the exported project
+     * Copy project META_INF from the exported project
      * 
      * @param aZip
      *            the ZIP file.
@@ -84,23 +78,21 @@ public class GuildelinesExporter
     {
         for (Enumeration<? extends ZipEntry> zipEnumerate = aZip.entries(); zipEnumerate
                 .hasMoreElements();) {
-            ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
-            
+            ZipEntry entry = zipEnumerate.nextElement();
+
             // Strip leading "/" that we had in ZIP files prior to 2.0.8 (bug #985)
             String entryName = ZipUtils.normalizeEntryName(entry);
-            
-            if (entryName.startsWith(GUIDELINES_FOLDER + "/")) {
-                String fileName = FilenameUtils.getName(entry.getName());
-                if (fileName.trim().isEmpty()) {
-                    continue;
-                }
-                File guidelineDir = projectService.getGuidelinesFolder(aProject);
-                FileUtils.forceMkdir(guidelineDir);
-                FileUtils.copyInputStreamToFile(aZip.getInputStream(entry), new File(guidelineDir,
-                        fileName));
-                
-                log.info("Imported guideline [" + fileName + "] for project [" + aProject.getName()
-                        + "] with id [" + aProject.getId() + "]");
+
+            if (entryName.startsWith(META_INF_FOLDER + "/")) {
+                File metaInfDir = new File(projectService.getMetaInfFolder(aProject),
+                        FilenameUtils.getPath(entry.getName().replace(META_INF_FOLDER + "/", "")));
+                // where the file reside in the META-INF/... directory
+                FileUtils.forceMkdir(metaInfDir);
+                FileUtils.copyInputStreamToFile(aZip.getInputStream(entry),
+                        new File(metaInfDir, FilenameUtils.getName(entry.getName())));
+
+                log.info("Imported META-INF for project [" + aProject.getName() + "] with id ["
+                        + aProject.getId() + "]");
             }
         }
     }

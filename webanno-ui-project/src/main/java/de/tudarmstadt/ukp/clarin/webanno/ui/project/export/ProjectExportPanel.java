@@ -58,7 +58,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportService;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.export.ExportUtil;
-import de.tudarmstadt.ukp.clarin.webanno.export.ImportUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -80,8 +79,6 @@ public class ProjectExportPanel
     private static final long serialVersionUID = 2116717853865353733L;
 
     private static final Logger LOG = LoggerFactory.getLogger(ProjectPage.class);
-
-    public static final String EXPORTED_PROJECT = ImportUtil.EXPORTED_PROJECT;
 
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean DocumentService documentService;
