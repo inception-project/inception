@@ -30,4 +30,14 @@ public class ProjectExportException
     {
         super(message);
     }
+
+    public ProjectExportException(String aMessage, Throwable aCause)
+    {
+        super(aMessage, aCause);
+    }
+
+    public ProjectExportException(Throwable aCause)
+    {
+        super(aCause);
+    }
 }

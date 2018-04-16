@@ -360,8 +360,9 @@ public interface ProjectService
      * @throws IOException
      *             if an I/O error occurs.
      */
-    void createGuideline(Project project, File content, String fileName)
-        throws IOException;
+    void createGuideline(Project project, File content, String fileName) throws IOException;
+
+    void createGuideline(Project project, InputStream content, String fileName) throws IOException;
 
     /**
      * get the annotation guideline document from the file system

@@ -130,7 +130,7 @@ public class ExportUtil
             }
             if (layer.getAttachFeature() != null) {
                 layerToExLayers.get(layer).setAttachFeature(
-                        new ExportedAnnotationFeatureReference(layer.getAttachFeature().getName()));
+                        new ExportedAnnotationFeatureReference(layer.getAttachFeature()));
             }
         }
         exProjekt.setLayers(exLayers);
@@ -213,7 +213,7 @@ public class ExportUtil
                 exDocument.setSentenceAccessed(trainingDocument.getSentenceAccessed());
                 if (trainingDocument.getFeature() != null) {
                     exDocument.setFeature(new ExportedAnnotationFeatureReference(
-                            trainingDocument.getFeature().getName()));
+                            trainingDocument.getFeature()));
                 }
                 trainDocuments.add(exDocument);
             }
@@ -251,13 +251,12 @@ public class ExportUtil
                 exTemplate.setCurrentLayer(template.isCurrentLayer());
                 exTemplate.setResult(template.getResult());
                 exTemplate.setTrainFeature(new ExportedAnnotationFeatureReference(
-                        template.getTrainFeature().getName()));
+                        template.getTrainFeature()));
     
                 if (template.getOtherFeatures().size() > 0) {
                     Set<ExportedAnnotationFeatureReference> exOtherFeatures = new HashSet<>();
                     for (AnnotationFeature feature : template.getOtherFeatures()) {
-                        exOtherFeatures
-                                .add(new ExportedAnnotationFeatureReference(feature.getName()));
+                        exOtherFeatures.add(new ExportedAnnotationFeatureReference(feature));
                     }
                     exTemplate.setOtherFeatures(exOtherFeatures);
                 }
@@ -304,7 +303,7 @@ public class ExportUtil
                 errorMessage.append(sourceDocument.getName());
                 errorMessage.append("' related to project couldn't be located in repository");
                 LOG.error(errorMessage.toString(), ExceptionUtils.getRootCause(e));
-                model.messages.add(errorMessage.toString());
+                model.addMessage(errorMessage.toString());
                 throw new ProjectExportException(
                         "Couldn't find some source file(s) related to project");
                 // continue;
@@ -344,7 +343,7 @@ public class ExportUtil
                 errorMessage.append(trainingDocument.getName());
                 errorMessage.append("' related to project couldn't be located in repository");
                 LOG.error(errorMessage.toString(), ExceptionUtils.getRootCause(e));
-                model.messages.add(errorMessage.toString());
+                model.addMessage(errorMessage.toString());
                 throw new ProjectExportException("Couldn't find some source file(s) related to project");
 //              continue;
             }
@@ -361,7 +360,7 @@ public class ExportUtil
             ProjectExportRequest aModel, File aCopyDir)
         throws IOException, UIMAException, ClassNotFoundException
     {
-        Project project = aModel.project.getObject();
+        Project project = aModel.getProject();
         
         List<de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument> documents = documentService
                 .listSourceDocuments(project);
@@ -401,21 +400,18 @@ public class ExportUtil
             
             // Determine which format to use for export
             String formatId;
-            if (FORMAT_AUTO.equals(aModel.format)) {
+            if (FORMAT_AUTO.equals(aModel.getFormat())) {
                 formatId = sourceDocument.getFormat();
             }
             else {
-                formatId = importExportService.getWritableFormatId(aModel.format);
+                formatId = importExportService.getWritableFormatId(aModel.getFormat());
             }
             Class<?> writer = importExportService.getWritableFormats().get(formatId);
             if (writer == null) {
                 String msg = "[" + sourceDocument.getName()
                         + "] No writer found for format [" + formatId
                         + "] - exporting as WebAnno TSV instead.";
-                // Avoid repeating the same message over for different users
-                if (!aModel.messages.contains(msg)) {
-                    aModel.messages.add(msg);
-                }
+                aModel.addMessage(msg);
                 writer = WebannoTsv3XWriter.class;
             }
 
@@ -580,7 +576,7 @@ public class ExportUtil
         throws UIMAException, IOException, ClassNotFoundException,
         ProjectExportException
     {
-        Project project = aModel.project.getObject();
+        Project project = aModel.getProject();
         
         // Get all the source documents from the project
         List<de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument> documents = documentService
@@ -588,12 +584,12 @@ public class ExportUtil
 
         // Determine which format to use for export.
         Class<?> writer;
-        if (FORMAT_AUTO.equals(aModel.format)) {
+        if (FORMAT_AUTO.equals(aModel.getFormat())) {
             writer = WebannoTsv3XWriter.class;
         }
         else {
             writer = importExportService.getWritableFormats().get(
-                    importExportService.getWritableFormatId(aModel.format));
+                    importExportService.getWritableFormatId(aModel.getFormat()));
             if (writer == null) {
                 writer = WebannoTsv3XWriter.class;
             }

@@ -571,6 +571,7 @@ public class ImportUtil
         }
     }
 
+    @Deprecated
     public static void createMissingUsers(
             ExportedProject aImportedProjectSetting,
             UserDao aUserDao)

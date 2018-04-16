@@ -22,6 +22,7 @@ import java.io.IOException;
 
 import org.apache.uima.UIMAException;
 
+@Deprecated
 public interface ExportService
 {
     String SERVICE_NAME = "exportService";

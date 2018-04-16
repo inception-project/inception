@@ -1,5 +1,5 @@
 /*
- * Copyright 2017
+ * Copyright 2018
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
  *
@@ -18,13 +18,14 @@
 package de.tudarmstadt.ukp.clarin.webanno.export;
 
 import java.io.File;
+import java.util.zip.ZipFile;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
-@Deprecated
-public interface ImportService
+public interface ProjectExportService
 {
-    String SERVICE_NAME = "importService";
-    
-    Project importProject(File aProjectFile, boolean aGenerateUsers) throws Exception;
+    Project importProject(ProjectImportRequest aRequest, ZipFile aZip)
+        throws ProjectExportException;
+
+    File exportProject(ProjectExportRequest aRequest) throws ProjectExportException;
 }

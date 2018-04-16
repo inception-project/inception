@@ -19,10 +19,13 @@ package de.tudarmstadt.ukp.clarin.webanno.export.exporers;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Locale;
+import java.util.Enumeration;
+import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.io.FileUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -31,35 +34,37 @@ import de.tudarmstadt.ukp.clarin.webanno.export.ProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection;
+import de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils;
 
 @Component
-public class ProjectSettingsExporter
+public class ProjectLogExporter
     implements ProjectExporter
 {
+    private static final String LOG_FOLDER = "/" + ProjectService.LOG_FOLDER;
+
+    private final Logger log = LoggerFactory.getLogger(getClass());
+
     private @Autowired ProjectService projectService;
-    
+
     @Override
     public void exportData(ProjectExportRequest aRequest, ExportedProject aExProject, File aStage)
-        throws Exception
+        throws IOException
     {
         Project project = aRequest.getProject();
-        aExProject.setDescription(project.getDescription());
-        // In older versions of WebAnno, the mode was an enum which was serialized as upper-case
-        // during export but as lower-case in the database. This is compensating for this case.
-        aExProject.setMode(StringUtils.upperCase(project.getMode(), Locale.US));
-        aExProject.setScriptDirection(project.getScriptDirection());
-        aExProject.setVersion(project.getVersion());
-        aExProject.setDisableExport(project.isDisableExport());
-        aExProject.setCreated(project.getCreated());
-        aExProject.setUpdated(project.getUpdated());
+        File logDir = new File(aStage + LOG_FOLDER);
+        FileUtils.forceMkdir(logDir);
+        if (projectService.getProjectLogFile(project).exists()) {
+            FileUtils.copyFileToDirectory(projectService.getProjectLogFile(project), logDir);
+        }
     }
-
+    
     /**
-     * create new {@link Project} from the {@link ExportedProject} model
+     * copy project log files from the exported project
      * 
-     * @param aExProject
-     *            the project
+     * @param aZip
+     *            the ZIP file.
+     * @param aProject
+     *            the project.
      * @throws IOException
      *             if an I/O error occurs.
      */
@@ -68,22 +73,19 @@ public class ProjectSettingsExporter
             ExportedProject aExProject, ZipFile aZip)
         throws IOException
     {
-        aProject.setDescription(aExProject.getDescription());
-        // In older versions of WebAnno, the mode was an enum which was serialized as upper-case
-        // during export but as lower-case in the database. This is compensating for this case.
-        aProject.setMode(StringUtils.lowerCase(aExProject.getMode(), Locale.US));
-        aProject.setDisableExport(aExProject.isDisableExport());
-        aProject.setCreated(aExProject.getCreated());
-        aProject.setUpdated(aExProject.getUpdated());
-        
-        // Set default to LTR on import from old WebAnno versions
-        if (aExProject.getScriptDirection() == null) {
-            aProject.setScriptDirection(ScriptDirection.LTR);
+        for (Enumeration<? extends ZipEntry> zipEnumerate = aZip.entries(); zipEnumerate
+                .hasMoreElements();) {
+            ZipEntry entry = zipEnumerate.nextElement();
+
+            // Strip leading "/" that we had in ZIP files prior to 2.0.8 (bug #985)
+            String entryName = ZipUtils.normalizeEntryName(entry);
+
+            if (entryName.startsWith(LOG_FOLDER + "/")) {
+                FileUtils.copyInputStreamToFile(aZip.getInputStream(entry),
+                        projectService.getProjectLogFile(aProject));
+                log.info("Imported log for project [" + aProject.getName() + "] with id ["
+                        + aProject.getId() + "]");
+            }
         }
-        else {
-            aProject.setScriptDirection(aExProject.getScriptDirection());
-        }
-        
-        projectService.updateProject(aProject);
     }
 }

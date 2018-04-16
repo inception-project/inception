@@ -42,6 +42,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils;
 
+@Deprecated
 @Component(ExportService.SERVICE_NAME)
 public class ExportServiceImpl implements ExportService
 {
@@ -73,7 +74,7 @@ public class ExportServiceImpl implements ExportService
             // all metadata and project settings data from the database as JSON file
             File projectSettings = File.createTempFile(EXPORTED_PROJECT, ".json");
     
-            Project project = aRequest.project.getObject();
+            Project project = aRequest.getProject();
             
             if (isNull(project.getId())) {
                 throw new ProjectExportException(

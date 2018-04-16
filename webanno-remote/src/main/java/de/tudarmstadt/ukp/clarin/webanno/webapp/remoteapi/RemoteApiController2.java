@@ -44,6 +44,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.zip.ZipFile;
 
 import javax.persistence.NoResultException;
 
@@ -65,7 +66,6 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.jcas.JCas;
-import org.apache.wicket.model.Model;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -91,10 +91,11 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.export.ExportService;
 import de.tudarmstadt.ukp.clarin.webanno.export.ImportService;
 import de.tudarmstadt.ukp.clarin.webanno.export.ImportUtil;
 import de.tudarmstadt.ukp.clarin.webanno.export.ProjectExportRequest;
+import de.tudarmstadt.ukp.clarin.webanno.export.ProjectExportService;
+import de.tudarmstadt.ukp.clarin.webanno.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -168,7 +169,8 @@ public class RemoteApiController2
     private @Autowired AnnotationSchemaService annotationService;
     private @Autowired UserDao userRepository;
     private @Autowired ImportService importService;
-    private @Autowired ExportService exportService;
+    //private @Autowired ExportService exportService;
+    private @Autowired ProjectExportService exportService;
 
     @ExceptionHandler(value = RemoteApiException.class)
     public ResponseEntity<RResponse<Void>> handleException(RemoteApiException aException)
@@ -411,7 +413,9 @@ public class RemoteApiController2
                 throw new UnsupportedFormatException("Incompatible to webanno ZIP file");
             }
             
-            importedProject = importService.importProject(tempFile, false);
+//            importedProject = importService.importProject(tempFile, false);
+            ProjectImportRequest request = new ProjectImportRequest(false);
+            importedProject = exportService.importProject(request, new ZipFile(tempFile));
         }
         finally {
             tempFile.delete();
@@ -432,8 +436,9 @@ public class RemoteApiController2
         // Get project (this also ensures that it exists and that the current user can access it
         Project project = getProject(aProjectId);
         
-        ProjectExportRequest per = new ProjectExportRequest(Model.of(project), "bin");
-        File exportedFile = exportService.generateZipFile(per);
+        ProjectExportRequest request = new ProjectExportRequest(project, "bin", true);
+        //File exportedFile = exportService.generateZipFile(per);
+        File exportedFile = exportService.exportProject(request);
         
         // Turn the file into a resource and auto-delete the file when the resource closes the
         // stream.

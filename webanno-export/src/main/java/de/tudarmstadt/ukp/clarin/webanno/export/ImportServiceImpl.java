@@ -40,6 +40,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 
+@Deprecated
 @Component(ImportService.SERVICE_NAME)
 public class ImportServiceImpl
     implements ImportService

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017
+ * Copyright 2018
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
  *
@@ -21,9 +21,7 @@ import java.io.Serializable;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-
-public class ProjectExportRequest
+public class ProjectImportRequest
     implements Serializable
 {
     private static final long serialVersionUID = -4486934192675904995L;
@@ -31,53 +29,15 @@ public class ProjectExportRequest
     public static final String FORMAT_AUTO = "AUTO";
 
     public int progress = 0;
-    
-    private Project project;
-    private String format;
-    private boolean includeInProgress;
-    
-    private final Queue<String> messages = new ConcurrentLinkedQueue<>();
 
-    public ProjectExportRequest()
-    {
-        // Nothing to do;
-    }
-    
-    public ProjectExportRequest(Project aProject, String aFormat, boolean aIncludeInProgress)
-    {
-        format = aFormat;
-        project = aProject;
-        includeInProgress = aIncludeInProgress;
-    }
-    
-    public void setProject(Project aProject)
-    {
-        project = aProject;
-    }
-    
-    public Project getProject()
-    {
-        return project;
-    }
-    
-    public void setFormat(String aFormat)
-    {
-        format = aFormat;
-    }
-    
-    public String getFormat()
-    {
-        return format;
-    }
+    private final Queue<String> messages;
+    private final boolean createMissingUsers;
 
-    public void setIncludeInProgress(boolean aIncludeInProgress)
+    public ProjectImportRequest(boolean aCreateMissingUsers)
     {
-        includeInProgress = aIncludeInProgress;
-    }
-    
-    public boolean isIncludeInProgress()
-    {
-        return includeInProgress;
+        progress = 0;
+        createMissingUsers = aCreateMissingUsers;
+        messages = new ConcurrentLinkedQueue<>();
     }
 
     public void addMessage(String aMessage)
@@ -87,9 +47,14 @@ public class ProjectExportRequest
             messages.add(aMessage);
         }
     }
-    
+
     public Queue<String> getMessages()
     {
         return messages;
+    }
+
+    public boolean isCreateMissingUsers()
+    {
+        return createMissingUsers;
     }
 }
