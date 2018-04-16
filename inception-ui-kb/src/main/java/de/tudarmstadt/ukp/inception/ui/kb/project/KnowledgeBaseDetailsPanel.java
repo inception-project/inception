@@ -66,6 +66,7 @@ import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 import de.tudarmstadt.ukp.inception.kb.io.FileUploadHelper;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
+import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 import de.tudarmstadt.ukp.inception.ui.kb.project.wizard.DisabledBootstrapCheckbox;
 
 public class KnowledgeBaseDetailsPanel extends Panel {
@@ -131,6 +132,7 @@ public class KnowledgeBaseDetailsPanel extends Panel {
         ekb.setSubclassIri(kb.getSubclassIri().stringValue());
         ekb.setTypeIri(kb.getTypeIri().stringValue());
         ekb.setEnabled(kb.isEnabled());
+        ekb.setReification(kb.getReification());
 
         // wrap the given knowledge base model, then set it as the default model
         ekbModel = new CompoundPropertyModel<>(Model.of(ekb));
@@ -184,6 +186,18 @@ public class KnowledgeBaseDetailsPanel extends Panel {
                         return super.getButtonClass(option) + " disabled";
                     }
                 }));
+
+        form.add(new RequiredTextField<Reification>("reification")
+        {
+
+            private static final long serialVersionUID = -668644186068521432L;
+
+            @Override
+            protected void onConfigure()
+            {
+                setEnabled(false);
+            }
+        });
 
         // title/content
         title = new ViewModeTitle(TITLE_MARKUP_ID, ekbModel);

@@ -39,6 +39,7 @@ import org.apache.wicket.extensions.wizard.dynamic.DynamicWizardModel;
 import org.apache.wicket.extensions.wizard.dynamic.DynamicWizardStep;
 import org.apache.wicket.extensions.wizard.dynamic.IDynamicWizardStep;
 import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.RadioGroup;
 import org.apache.wicket.markup.html.form.RequiredTextField;
 import org.apache.wicket.markup.html.form.TextField;
@@ -67,6 +68,7 @@ import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 import de.tudarmstadt.ukp.inception.kb.io.FileUploadHelper;
+import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 import de.tudarmstadt.ukp.inception.ui.kb.project.EnrichedKnowledgeBase;
 import de.tudarmstadt.ukp.inception.ui.kb.project.EnrichedKnowledgeBaseUtils;
 import de.tudarmstadt.ukp.inception.ui.kb.project.KnowledgeBaseListPanel;
@@ -128,6 +130,19 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
 
             add(nameField("name", "kb.name"));
             add(repositoryTypeRadioButtons("type", "kb.type"));
+
+            //final List<Reification> reificationList = Arrays.asList(Reification.values());
+            //add(new DropDownChoice<Reification>("reification", reificationList));
+            add(selectReificationStrategy("reification", "reification"));
+        }
+
+        private DropDownChoice<Reification> selectReificationStrategy(String id, String property)
+        {
+            final List<Reification> reificationList = Arrays.asList(Reification.values());
+
+            DropDownChoice<Reification> reificationDropDownChoice = new
+                DropDownChoice<Reification>(id, model.bind(property), reificationList);
+            return reificationDropDownChoice;
         }
 
         @Override

@@ -37,19 +37,7 @@ public class InceptionValueMapper {
         Object value = aStatement.getValue();
         String language = aStatement.getLanguage();
 
-        if (value instanceof IRI) {
-            return (IRI) value;
-        }
-        else if (value instanceof String && URIUtil.isValidURIReference((String) value)) {
-            return vf.createIRI((String) value);
-        }
-        else if (language != null) {
-            return vf.createLiteral((String) value, language);
-        }
-        else {
-            DatatypeMapper mapper = new DefaultDatatypeMapper();
-            return mapper.getRDFValue(value, vf);
-        }
+        return mapValue(value, language, vf);
     }
 
     public Value mapQualifierValue(KBQualifier aQualifier, ValueFactory vf)
@@ -59,6 +47,11 @@ public class InceptionValueMapper {
         Object value = aQualifier.getValue();
         String language = aQualifier.getLanguage();
 
+        return mapValue(value, language, vf);
+    }
+
+    private Value mapValue(Object value, String language, ValueFactory vf)
+    {
         if (value instanceof IRI) {
             return (IRI) value;
         }
