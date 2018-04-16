@@ -389,6 +389,7 @@ public class ImportUtil
         aFeature.setLinkTypeName(aExFeature.getLinkTypeName());
         aFeature.setLinkTypeRoleFeatureName(aExFeature.getLinkTypeRoleFeatureName());
         aFeature.setLinkTypeTargetFeatureName(aExFeature.getLinkTypeTargetFeatureName());
+        aFeature.setTraits(aExFeature.getTraits());
 
         aAnnotationService.createFeature(aFeature);
     }
@@ -788,6 +789,7 @@ public class ImportUtil
             exFeature.setLinkTypeName(feature.getLinkTypeName());
             exFeature.setLinkTypeRoleFeatureName(feature.getLinkTypeRoleFeatureName());
             exFeature.setLinkTypeTargetFeatureName(feature.getLinkTypeTargetFeatureName());
+            exFeature.setTraits(feature.getTraits());
             
             if (feature.getTagset() != null) {
                 TagSet tagSet = feature.getTagset();

@@ -81,6 +81,9 @@ public class ExportedAnnotationFeature
     @JsonProperty("link_type_target_feature_name")
     private String linkTypeTargetFeatureName;
 
+    @JsonProperty("traits")
+    private String traits;
+
     public String getName()
     {
         return name;
@@ -249,6 +252,16 @@ public class ExportedAnnotationFeature
     public void setHideUnconstraintFeature(boolean hideUnconstraintFeature)
     {
         this.hideUnconstraintFeature = hideUnconstraintFeature;
+    }
+
+    public String getTraits()
+    {
+        return traits;
+    }
+
+    public void setTraits(String aTraits)
+    {
+        traits = aTraits;
     }
 
     @Override

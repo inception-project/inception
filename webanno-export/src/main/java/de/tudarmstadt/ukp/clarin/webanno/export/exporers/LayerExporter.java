@@ -150,6 +150,7 @@ public class LayerExporter
         exFeature.setLinkTypeName(feature.getLinkTypeName());
         exFeature.setLinkTypeRoleFeatureName(feature.getLinkTypeRoleFeatureName());
         exFeature.setLinkTypeTargetFeatureName(feature.getLinkTypeTargetFeatureName());
+        exFeature.setTraits(feature.getTraits());
         
         if (feature.getTagset() != null) {
             TagSet tagSet = feature.getTagset();
@@ -284,6 +285,7 @@ public class LayerExporter
         aFeature.setLinkTypeName(aExFeature.getLinkTypeName());
         aFeature.setLinkTypeRoleFeatureName(aExFeature.getLinkTypeRoleFeatureName());
         aFeature.setLinkTypeTargetFeatureName(aExFeature.getLinkTypeTargetFeatureName());
+        aFeature.setTraits(aExFeature.getTraits());
         
         if (aExFeature.getTagSet() != null) {
             TagSet tagset = annotationService.getTagSet(aExFeature.getTagSet().getName(), aProject);
