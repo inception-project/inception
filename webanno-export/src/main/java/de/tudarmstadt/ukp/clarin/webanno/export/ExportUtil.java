@@ -218,10 +218,10 @@ public class ExportUtil
                 trainDocuments.add(exDocument);
             }
             
-            exProjekt.setTrainingDocuments(trainDocuments);
+            exProjekt.setProperty("training_documents", trainDocuments);
         }
         else {
-            exProjekt.setTrainingDocuments(new ArrayList<>());
+            exProjekt.setProperty("training_documents", new ArrayList<>());
         }
 
         List<ExportedProjectPermission> projectPermissions = new ArrayList<>();
@@ -263,10 +263,10 @@ public class ExportUtil
                 exTemplates.add(exTemplate);
             }
     
-            exProjekt.setMiraTemplates(exTemplates);
+            exProjekt.setProperty("mira_templates", exTemplates);
         }
         else {
-            exProjekt.setMiraTemplates(new ArrayList<>());
+            exProjekt.setProperty("mira_templates", new ArrayList<>());
         }
         
         return exProjekt;

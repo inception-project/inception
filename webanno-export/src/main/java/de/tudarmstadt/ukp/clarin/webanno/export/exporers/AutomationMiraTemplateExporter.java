@@ -45,6 +45,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 public class AutomationMiraTemplateExporter
     implements ProjectExporter
 {
+    private static final String MIRA_TEMPLATES = "mira_templates";
+    
     private @Autowired AnnotationSchemaService annotationService;
     private @Autowired AutomationService automationService;
 
@@ -78,7 +80,7 @@ public class AutomationMiraTemplateExporter
             exTemplates.add(exTemplate);
         }
 
-        aExProject.setMiraTemplates(exTemplates);
+        aExProject.setProperty(MIRA_TEMPLATES, exTemplates);
     }
     
     @Override
@@ -86,7 +88,10 @@ public class AutomationMiraTemplateExporter
             ExportedProject aExProject, ZipFile aZip)
         throws Exception
     {
-        for (ExportedMiraTemplate exTemplate : aExProject.getMiraTemplates()) {
+        ExportedMiraTemplate[] templates = aExProject.getArrayProperty(MIRA_TEMPLATES,
+                ExportedMiraTemplate.class);
+        
+        for (ExportedMiraTemplate exTemplate : templates) {
             MiraTemplate template = new MiraTemplate();
             template.setAnnotateAndRepeat(exTemplate.isAnnotateAndPredict());
             template.setAutomationStarted(false);

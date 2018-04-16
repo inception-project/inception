@@ -54,9 +54,10 @@ import de.tudarmstadt.ukp.clarin.webanno.model.TrainingDocument;
 public class AutomationTrainingDocumentExporter
     implements ProjectExporter
 {
-    public static final String TRAIN = "train";
+    private static final String TRAIN = "train";
     private static final String TRAIN_FOLDER = "/" + TRAIN;
-
+    private static final String TRAINING_DOCUMENTS = "training_documents";
+    
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private @Autowired AutomationService automationService;
@@ -76,7 +77,7 @@ public class AutomationTrainingDocumentExporter
         exportTrainingDocumentContents(aRequest, aExProject, aCopyDir);
     }
     
-    private void exportTrainingDocuments(Project aProject, ExportedProject exProject)
+    private void exportTrainingDocuments(Project aProject, ExportedProject aExProject)
     {
         List<ExportedTrainingDocument> trainDocuments = new ArrayList<>();
         List<TrainingDocument> trainingDocuments = automationService
@@ -98,7 +99,7 @@ public class AutomationTrainingDocumentExporter
             trainDocuments.add(exDocument);
         }
         
-        exProject.setTrainingDocuments(trainDocuments);
+        aExProject.setProperty(TRAINING_DOCUMENTS, trainDocuments);
     }
     
     private void exportTrainingDocumentContents(ProjectExportRequest aRequest,
@@ -147,16 +148,13 @@ public class AutomationTrainingDocumentExporter
         importTrainingDocumentContents(aZip, aProject);
     }
     
-    private void importTrainingDocuments(ExportedProject aImportedProjectSetting,
-            Project aProject)
+    private void importTrainingDocuments(ExportedProject aExProject, Project aProject)
         throws IOException
     {
-        if (aImportedProjectSetting.getTrainingDocuments() == null) {
-            return;
-        }
-
-        for (ExportedTrainingDocument importedTrainingDocument : aImportedProjectSetting
-                .getTrainingDocuments()) {
+        ExportedTrainingDocument[] trainingDocuments = aExProject
+                .getArrayProperty(TRAINING_DOCUMENTS, ExportedTrainingDocument.class);
+        
+        for (ExportedTrainingDocument importedTrainingDocument : trainingDocuments) {
             TrainingDocument trainingDocument = new TrainingDocument();
             trainingDocument.setFormat(importedTrainingDocument.getFormat());
             trainingDocument.setName(importedTrainingDocument.getName());

@@ -490,12 +490,10 @@ public class ImportUtil
             Map<String, AnnotationFeature> aFeatureMap)
         throws IOException
     {
-        if (aImportedProjectSetting.getTrainingDocuments() == null) {
-            return;
-        }
+        ExportedTrainingDocument[] trainingDocuments = aImportedProjectSetting
+                .getArrayProperty("training_documents", ExportedTrainingDocument.class);
         
-        for (ExportedTrainingDocument importedTrainingDocument : aImportedProjectSetting
-                .getTrainingDocuments()) {
+        for (ExportedTrainingDocument importedTrainingDocument : trainingDocuments) {
             de.tudarmstadt.ukp.clarin.webanno.model.TrainingDocument trainingDocument =
                     new de.tudarmstadt.ukp.clarin.webanno.model.TrainingDocument();
             trainingDocument.setFormat(importedTrainingDocument.getFormat());
@@ -518,7 +516,10 @@ public class ImportUtil
             AutomationService aRepository,
             Map<String, AnnotationFeature> aFeatureMaps)
     {
-        for (ExportedMiraTemplate exTemplate : aImportedProjectSetting.getMiraTemplates()) {
+        ExportedMiraTemplate[] templates = aImportedProjectSetting
+                .getArrayProperty("mira_templates", ExportedMiraTemplate.class);
+        
+        for (ExportedMiraTemplate exTemplate : templates) {
             de.tudarmstadt.ukp.clarin.webanno.automation.model.MiraTemplate template = 
                     new de.tudarmstadt.ukp.clarin.webanno.automation.model.MiraTemplate();
             template.setAnnotateAndRepeat(exTemplate.isAnnotateAndPredict());
