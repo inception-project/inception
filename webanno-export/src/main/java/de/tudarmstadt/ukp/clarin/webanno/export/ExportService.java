@@ -22,6 +22,9 @@ import java.io.IOException;
 
 import org.apache.uima.UIMAException;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportException;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
+
 @Deprecated
 public interface ExportService
 {

@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package de.tudarmstadt.ukp.clarin.webanno.export;
+package de.tudarmstadt.ukp.clarin.webanno.api.export;
 
 /**
  * Exception thrown while exporting the whole project

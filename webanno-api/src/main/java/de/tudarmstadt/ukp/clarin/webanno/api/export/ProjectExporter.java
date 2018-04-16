@@ -15,15 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.export.exporers;
+package de.tudarmstadt.ukp.clarin.webanno.api.export;
 
 import java.io.File;
 import java.util.Collections;
 import java.util.List;
 import java.util.zip.ZipFile;
 
-import de.tudarmstadt.ukp.clarin.webanno.export.ProjectExportRequest;
-import de.tudarmstadt.ukp.clarin.webanno.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
