@@ -15,7 +15,8 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
@@ -28,9 +29,38 @@
   <version>0.3.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>INCEpTION</name>
+  <description>Towards an Infrastructure for the Distributed Exploration and Annotation of Large Corpora and Knowledge Bases</description>
+  <url>https://inception-project.github.io</url>
+  <inceptionYear>2018</inceptionYear>
+  <licenses>
+    <license>
+      <name>Apache License Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  <issueManagement>
+    <url>https://github.com/inception-project/inception/issues</url>
+    <system>GitHub Issues</system>
+  </issueManagement>
+  <scm>
+    <connection>scm:git:git://github.com/inception-project/inception</connection>
+    <developerConnection>scm:git:git@github.com:inception-project/inception.git</developerConnection>
+    <url>https://github.com/inception-project/inception</url>
+    <tag>HEAD</tag>
+  </scm>
+  <distributionManagement>
+    <repository>
+      <id>ukp-oss</id>
+      <url>https://zoidberg.ukp.informatik.tu-darmstadt.de/artifactory/public-ukp-releases-local</url>
+    </repository>
+  </distributionManagement>
+  <prerequisites>
+    <maven>3.0.5</maven>
+  </prerequisites>
   <properties>
     <webanno.version>3.4.0-SNAPSHOT</webanno.version>
-    <dkpro.version>1.9.1-SNAPSHOT</dkpro.version>
+    <dkpro.version>1.9.1</dkpro.version>
     <spring.version>5.0.4.RELEASE </spring.version>
     <spring.boot.version>1.5.10.RELEASE</spring.boot.version>
     <wicket.version>7.10.0</wicket.version>
@@ -56,6 +86,7 @@
     <module>inception-pdf-editor</module>
     <module>inception-recommendation</module>
     <module>inception-active-learning</module>
+    <module>inception-concept-linking</module>
     <module>inception-imls-core</module>
     <!-- module>inception-imls-mira</module -->
     <module>inception-imls-opennlp</module>
@@ -67,19 +98,6 @@
     <module>inception-doc</module>
   </modules>
   <repositories>
-    <!-- For RELEASEes of Miralium -->
-    <!--  
-    <repository>
-      <id>ukp-central</id>
-      <url>https://scruffy.ukp.informatik.tu-darmstadt.de/artifactory/list/external-grid/</url>
-      <releases>
-        <enabled>true</enabled>
-      </releases>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-    </repository>
-    -->
     <!-- For RELEASEes of WebAnno / DKPro Core-->
     <repository>
       <id>ukp-oss-releases</id>
@@ -103,19 +121,6 @@
       </snapshots>
     </repository>
   </repositories>
-  <scm>
-    <connection>scm:git:git.ukp.informatik.tu-darmstadt.de:inception/inception-application.git</connection>
-    <developerConnection>scm:git:git@git.ukp.informatik.tu-darmstadt.de:inception/inception-application.git</developerConnection>
-    <url>https://git.ukp.informatik.tu-darmstadt.de/inception/inception-application</url>
-    <tag>HEAD</tag>
-  </scm>
-  <distributionManagement>
-    <repository>
-      <id>ukp-central</id>
-      <name>ukp-central-releases</name>
-      <url>https://scruffy.ukp.informatik.tu-darmstadt.de/artifactory/dkpro-local</url>
-    </repository>
-  </distributionManagement>
   <dependencies>
     <!-- The logging subsystem used by WebAnno -->
     <dependency>
@@ -231,6 +236,11 @@
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-concept-linking</artifactId>
+        <version>0.3.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-imls-core</artifactId>
         <version>0.3.0-SNAPSHOT</version>
       </dependency>
@@ -271,7 +281,7 @@
         <version>4.12</version>
       </dependency>
 
-        <!-- Wicket jQuery -->
+      <!-- Wicket jQuery -->
       <dependency>
         <groupId>com.googlecode.wicket-jquery-ui</groupId>
         <artifactId>wicket-jquery-ui</artifactId>
@@ -379,6 +389,41 @@
       </dependency>
       <dependency>
         <groupId>org.apache.lucene</groupId>
+        <artifactId>lucene-queries</artifactId>
+        <version>${lucene.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.lucene</groupId>
+        <artifactId>lucene-highlighter</artifactId>
+        <version>${lucene.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.lucene</groupId>
+        <artifactId>lucene-memory</artifactId>
+        <version>${lucene.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.lucene</groupId>
+        <artifactId>lucene-backwards-codeces</artifactId>
+        <version>${lucene.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.lucene</groupId>
+        <artifactId>lucene-spatial</artifactId>
+        <version>${lucene.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.lucene</groupId>
+        <artifactId>lucene-misc</artifactId>
+        <version>${lucene.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.lucene</groupId>
+        <artifactId>lucene-join</artifactId>
+        <version>${lucene.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.lucene</groupId>
         <artifactId>lucene-analyzers-common</artifactId>
         <version>${lucene.version}</version>
       </dependency>
@@ -390,6 +435,11 @@
       <dependency>
         <groupId>org.apache.lucene</groupId>
         <artifactId>lucene-codecs</artifactId>
+        <version>${lucene.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.lucene</groupId>
+        <artifactId>lucene-backward-codecs</artifactId>
         <version>${lucene.version}</version>
       </dependency>
       <dependency>
@@ -419,6 +469,11 @@
         <groupId>commons-io</groupId>
         <artifactId>commons-io</artifactId>
         <version>2.5</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-text</artifactId>
+        <version>1.3</version>
       </dependency>
       <dependency>
         <groupId>org.apache.commons</groupId>

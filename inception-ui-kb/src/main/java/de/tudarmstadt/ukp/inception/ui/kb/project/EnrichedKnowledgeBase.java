@@ -40,6 +40,7 @@ public class EnrichedKnowledgeBase implements Serializable {
     private boolean enabled = true;
     private Reification reification = Reification.NONE;
     private List<File> files;
+    private boolean supportConceptLinking;
 
     public KnowledgeBase getKb() {
         return kb;
@@ -104,6 +105,15 @@ public class EnrichedKnowledgeBase implements Serializable {
         enabled = isEnabled;
     }
 
+    public boolean isSupportConceptLinking()
+    {
+        return supportConceptLinking;
+    }
+
+    public void setSupportConceptLinking(boolean aSupportConceptLinking)
+    {
+        supportConceptLinking = aSupportConceptLinking;
+    }
     public Reification getReification()
     {
         return reification;

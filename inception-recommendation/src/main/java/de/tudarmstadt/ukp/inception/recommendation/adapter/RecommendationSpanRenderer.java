@@ -44,6 +44,7 @@ import de.tudarmstadt.ukp.inception.recommendation.RecommendationEditorExtension
 import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.AnnotationObject;
 import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.Offset;
 import de.tudarmstadt.ukp.inception.recommendation.model.LearningRecord;
+import de.tudarmstadt.ukp.inception.recommendation.model.LearningRecordUserAction;
 import de.tudarmstadt.ukp.inception.recommendation.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.service.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.service.RecommendationService;
@@ -233,7 +234,7 @@ public class RecommendationSpanRenderer
             if (record.getOffsetCharacterBegin() == ao.getOffset().getBeginCharacter()
                     && record.getOffsetCharacterEnd() == ao.getOffset().getEndCharacter()
                     && record.getAnnotation().equals(ao.getAnnotation())
-                    && record.getUserAction().equals("rejected")) {
+                    && record.getUserAction().equals(LearningRecordUserAction.REJECTED)) {
                 return true;
             }
         }

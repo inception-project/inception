@@ -45,6 +45,10 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-api-dao</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
       <artifactId>webanno-support</artifactId>
     </dependency>
     <dependency>
@@ -63,6 +67,15 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-support</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-concept-linking</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
+      <artifactId>de.tudarmstadt.ukp.dkpro.core.api.ner-asl</artifactId>
     </dependency>
 
     <dependency>
@@ -134,6 +147,10 @@
       <artifactId>wicket-bootstrap-less</artifactId>
     </dependency>
 
+    <dependency>
+      <groupId>com.googlecode.wicket-jquery-ui</groupId>
+      <artifactId>wicket-jquery-ui-core</artifactId>
+    </dependency>
     <dependency>
       <groupId>com.googlecode.wicket-jquery-ui</groupId>
       <artifactId>wicket-kendo-ui</artifactId>

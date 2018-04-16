@@ -32,7 +32,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.recommendation.model.LearningRecord;
-
+import de.tudarmstadt.ukp.inception.recommendation.model.LearningRecordUserAction;
 
 @Component(LearningRecordService.SERVICE_NAME)
 public class LearningRecordServiceImpl implements LearningRecordService, InitializingBean {
@@ -69,7 +69,7 @@ public class LearningRecordServiceImpl implements LearningRecordService, Initial
             "= :project and l.userAction != :action and l.layer = :layer order by l.id desc";
         List<LearningRecord> learningRecords = entityManager.createQuery(sql, LearningRecord
             .class).setParameter("user", user).setParameter("project", sourceDocument
-            .getProject()).setParameter("action", "shown")
+            .getProject()).setParameter("action", LearningRecordUserAction.SHOWN)
             .setParameter("layer", layer).setMaxResults(50).getResultList();
         return learningRecords;
     }

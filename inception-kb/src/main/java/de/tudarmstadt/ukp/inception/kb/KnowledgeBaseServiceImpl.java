@@ -72,7 +72,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -100,8 +99,12 @@ public class KnowledgeBaseServiceImpl
     private final RepositoryManager repoManager;
     private final Set<String> implicitNamespaces;
 
+    @org.springframework.beans.factory.annotation.Value(value = "${data.path}/kb")
+    private File dataDir;
+
     @Autowired
-    public KnowledgeBaseServiceImpl(@Value("${data.path}") File dataDir)
+    public KnowledgeBaseServiceImpl(
+            @org.springframework.beans.factory.annotation.Value("${data.path}") File dataDir)
     {
         String url = Paths.get(dataDir.getAbsolutePath(), "kb").toUri().toString();
         repoManager = RepositoryProvider.getRepositoryManager(url);
@@ -109,8 +112,9 @@ public class KnowledgeBaseServiceImpl
         implicitNamespaces = new HashSet<>(Arrays.asList(IMPLICIT_NAMESPACES));
     }
 
-    public KnowledgeBaseServiceImpl(@Value("${data.path}") File dataDir,
-        EntityManager entityManager)
+    public KnowledgeBaseServiceImpl(
+            @org.springframework.beans.factory.annotation.Value("${data.path}") File dataDir,
+            EntityManager entityManager)
     {
         this(dataDir);
         this.entityManager = entityManager;
@@ -321,7 +325,6 @@ public class KnowledgeBaseServiceImpl
     {
         return read(kb, (conn) -> {
             ValueFactory vf = conn.getValueFactory();
-
             try (RepositoryResult<Statement> stmts = RdfUtils.getStatements(conn,
                     vf.createIRI(aIdentifier), kb.getTypeIri(), kb.getClassIri(), true)) {
                 if (stmts.hasNext()) {
@@ -378,7 +381,6 @@ public class KnowledgeBaseServiceImpl
     }
 
     @Override
-
     public KBHandle createProperty(KnowledgeBase kb, KBProperty aProperty)
     {
         if (StringUtils.isNotEmpty(aProperty.getIdentifier())) {
@@ -616,14 +618,14 @@ public class KnowledgeBaseServiceImpl
         return result;
     }
 
-    private <T> T read(KnowledgeBase kb, ReadAction<T> aAction)
+    public <T> T read(KnowledgeBase kb, ReadAction<T> aAction)
     {
         try (RepositoryConnection conn = getConnection(kb)) {
             return aAction.accept(conn);
         }
     }
 
-    private List<KBHandle> list(KnowledgeBase kb, IRI aType, boolean aIncludeInferred, boolean aAll)
+    public List<KBHandle> list(KnowledgeBase kb, IRI aType, boolean aIncludeInferred, boolean aAll)
     {
         List<KBHandle> resultList = read(kb, (conn) -> {
             String QUERY = String.join("\n"
@@ -766,12 +768,6 @@ public class KnowledgeBaseServiceImpl
     private interface UpdateAction
     {
         KBHandle accept(RepositoryConnection aConnection);
-    }
-
-
-    interface ReadAction<T>
-    {
-        T accept(RepositoryConnection aConnection);
     }
 
     @Override

@@ -112,8 +112,10 @@ public class KnowledgeBase
     @Enumerated(EnumType.STRING)
     private Reification reification = NONE;
     
-    public String getRepositoryId()
-    {
+    @Column(name = "supportConceptLinking", nullable = false)
+    private boolean supportConceptLinking = false;
+    
+    public String getRepositoryId() {
         return repositoryId;
     }
 
@@ -219,6 +221,14 @@ public class KnowledgeBase
     public boolean isManagedRepository()
     {
         return !(repositoryId == null || isEmpty(repositoryId));
+    }
+    
+    public void setSupportConceptLinking(boolean aSupportConceptLinking) {
+        supportConceptLinking = aSupportConceptLinking;
+    }
+    
+    public boolean isSupportConceptLinking() {
+        return supportConceptLinking;
     }
     
     @Override
