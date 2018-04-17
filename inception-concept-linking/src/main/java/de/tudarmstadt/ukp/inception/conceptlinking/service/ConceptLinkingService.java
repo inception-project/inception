@@ -401,10 +401,9 @@ public class ConceptLinkingService
             .currentTimeMillis() - startTime);
         List<CandidateEntity> rankedCandidates = rankCandidates(aKB, aMention, candidates, aJcas,
             aMentionBeginOffset);
-        if (rankedCandidates.size() > CANDIDATE_DISPLAY_LIMIT)  {
-            rankedCandidates = rankedCandidates.subList(0, CANDIDATE_DISPLAY_LIMIT);
-        }
+
         return rankedCandidates.stream()
+            .limit(CANDIDATE_DISPLAY_LIMIT)
             .map(c -> new KBHandle(c.getIRI(), c.getLabel() + getDescription(c.getIRI())))
             .distinct()
             .filter(h -> h.getIdentifier().contains(":"))
