@@ -99,9 +99,15 @@ public class KBStatement implements Serializable
         this.value = other.value;
     }
 
-    public String getStatementId() { return statementId; }
+    public String getStatementId()
+    {
+        return statementId;
+    }
 
-    public void setStatementId(String aStatementId) { statementId = aStatementId; }
+    public void setStatementId(String aStatementId)
+    {
+        statementId = aStatementId;
+    }
 
     public KBHandle getInstance()
     {
@@ -142,7 +148,7 @@ public class KBStatement implements Serializable
     {
         language = aLanguage;
     }
-    
+
     public boolean isInferred()
     {
         return inferred;
@@ -158,26 +164,30 @@ public class KBStatement implements Serializable
         return originalStatements;
     }
 
-    public void setOriginalStatements(List<Statement> statements) {
+    public void setOriginalStatements(List<Statement> statements)
+    {
         originalStatements = statements;
     }
 
-    public void addQualifier(KBQualifier aQualifier) { qualifiers.add(aQualifier); }
-
-    public List<KBQualifier> getQualifiers() { return qualifiers; }
-
-    public void setQualifiers(List<KBQualifier> qualifierList) { qualifiers = qualifierList; }
-
-    @Override
-    public String toString()
+    public void addQualifier(KBQualifier aQualifier)
     {
-        return new ToStringBuilder(this)
-            .append("instance", instance)
-            .append("property", property)
-            .append("value", value)
-            .append("language", language)
-            .append("inferred", inferred)
-            .append("originalStatements", originalStatements)
-            .toString();
+        qualifiers.add(aQualifier);
+    }
+
+    public List<KBQualifier> getQualifiers()
+    {
+        return qualifiers;
+    }
+
+    public void setQualifiers(List<KBQualifier> qualifierList)
+    {
+        qualifiers = qualifierList;
+    }
+
+    @Override public String toString()
+    {
+        return new ToStringBuilder(this).append("instance", instance).append("property", property)
+            .append("value", value).append("language", language).append("inferred", inferred)
+            .append("originalStatements", originalStatements).toString();
     }
 }

@@ -43,10 +43,10 @@ public class KBQualifier
 
     private List<Statement> originalStatements;
 
-    public KBQualifier(KBStatement kbStatement, KBHandle kbProperty, Object aValue)
+    public KBQualifier(KBStatement aKbStatement, KBHandle aKbProperty, Object aValue)
     {
-        this.kbStatement = kbStatement;
-        this.kbProperty = kbProperty;
+        kbStatement = aKbStatement;
+        kbProperty = aKbProperty;
         DatatypeMapper mapper = new DefaultDatatypeMapper();
 
         if (aValue instanceof Literal) {

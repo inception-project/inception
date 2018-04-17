@@ -211,7 +211,7 @@ public class NoReification implements ReificationStrategy {
     public List<KBQualifier> listQualifiers(KnowledgeBase kb, KBStatement aStatement)
     {
         log.error("Qualifiers are not supported.");
-        return null;
+        return Collections.emptyList();
     }
 
     private KBHandle update(KnowledgeBase kb, UpdateAction aAction)

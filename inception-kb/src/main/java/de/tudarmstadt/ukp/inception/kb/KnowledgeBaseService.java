@@ -288,11 +288,36 @@ public interface KnowledgeBaseService
     List<KBHandle> list(KnowledgeBase kb, IRI aType, boolean aIncludeInferred, boolean
         aAll);
 
+    /**
+     * Adds a new qualifier in the given knowledge base. Does
+     * nothing if the knowledge base is read only.
+     * @param kb The knowledge base from which the new qualifier will be added
+     * @param newQualifier The qualifier to add
+     */
     void addQualifier(KnowledgeBase kb, KBQualifier newQualifier);
 
+    /**
+     * Deletes a qualifier in the given knowledge base if it exists. Does
+     * nothing if the knowledge base is read only.
+     * @param kb The knowledge base from which the new qualifier will be deleted
+     * @param oldQualifier The qualifier to delete
+     */
     void deleteQualifier(KnowledgeBase kb, KBQualifier oldQualifier);
 
+    /**
+     * Updates a qualifier or inserts a new one. If the qualifier has an original qualifier,
+     * that old one is deleted before inserting the new one. Does nothing if the knowledge base is
+     * read only.
+     * @param kb The knowledge base from which the qualifier will be upserted
+     * @param aQualifier The qualifier to upsert
+     */
     void upsertQualifier(KnowledgeBase kb, KBQualifier aQualifier);
 
+    /**
+     * Returns all qualifiers for the given statement
+     * @param kb The knowledge base to query
+     * @param aStatement The statement finding qualifiers for
+     * @return all qualifiers for the given statement
+     */
     List<KBQualifier> listQualifiers(KnowledgeBase kb, KBStatement aStatement);
 }

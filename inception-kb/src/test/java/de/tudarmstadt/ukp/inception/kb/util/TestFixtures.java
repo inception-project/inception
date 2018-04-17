@@ -45,13 +45,15 @@ public class TestFixtures
         entityManager = aEntityManager;
     }
 
-    public Project createProject(String name) {
+    public Project createProject(String name)
+    {
         Project project = new Project();
         project.setName(name);
         return entityManager.persist(project);
     }
 
-    public KnowledgeBase buildKnowledgeBase(Project project, String name, Reification reification) {
+    public KnowledgeBase buildKnowledgeBase(Project project, String name, Reification reification)
+    {
         KnowledgeBase kb = new KnowledgeBase();
         kb.setName(name);
         kb.setProject(project);
@@ -63,14 +65,16 @@ public class TestFixtures
         return kb;
     }
 
-    public KBConcept buildConcept() {
+    public KBConcept buildConcept()
+    {
         KBConcept concept = new KBConcept();
         concept.setName("Concept name");
         concept.setDescription("Concept description");
         return concept;
     }
 
-    public KBProperty buildProperty() {
+    public KBProperty buildProperty()
+    {
         KBProperty property = new KBProperty();
         property.setDescription("Property description");
         property.setDomain(URI.create("https://test.schema.com/#domain"));
@@ -79,7 +83,8 @@ public class TestFixtures
         return property;
     }
 
-    public KBInstance buildInstance() {
+    public KBInstance buildInstance()
+    {
         KBInstance instance = new KBInstance();
         instance.setName("Instance name");
         instance.setDescription("Instance description");
@@ -87,17 +92,20 @@ public class TestFixtures
         return instance;
     }
 
-    public KBStatement buildStatement(KBHandle conceptHandle, KBHandle propertyHandle, String value) {
+    public KBStatement buildStatement(KBHandle conceptHandle, KBHandle propertyHandle, String value)
+    {
         ValueFactory vf = SimpleValueFactory.getInstance();
-        KBStatement statement = new KBStatement(conceptHandle, propertyHandle, vf.createLiteral(value));
+        KBStatement statement = new KBStatement(conceptHandle, propertyHandle,
+            vf.createLiteral(value));
         return statement;
     }
 
-    public KBQualifier buildQualifier(KBStatement kbStatement, KBHandle propertyHandle, String
-        value) {
+    public KBQualifier buildQualifier(KBStatement kbStatement, KBHandle propertyHandle,
+        String value)
+    {
         ValueFactory vf = SimpleValueFactory.getInstance();
-        KBQualifier qualifier = new KBQualifier(kbStatement, propertyHandle, vf.createLiteral
-            (value));
+        KBQualifier qualifier = new KBQualifier(kbStatement, propertyHandle,
+            vf.createLiteral(value));
         return qualifier;
     }
 }
