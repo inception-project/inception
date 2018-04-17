@@ -85,13 +85,13 @@ public class ConceptLinkingService
     private Map<String, Property> propertyWithLabels;
 
     private static final int MENTION_CONTEXT_SIZE = 5;
-    private static final int CANDIDATE_QUERY_LIMIT = 1000;
+    private static final int CANDIDATE_QUERY_LIMIT = 10000;
     private static final int FREQUENCY_THRESHOLD = 100;
     private static final int SIGNATURE_QUERY_LIMIT = 100;
     private static final String WIKIDATA_PREFIX = "http://www.wikidata.org/entity/";
     private static final String POS_VERB_PREFIX = "V";
-    private static final String POS_NOUN_PREFIX = "V";
-    private static final String POS_ADJECTIVE_PREFIX = "V";
+    private static final String POS_NOUN_PREFIX = "N";
+    private static final String POS_ADJECTIVE_PREFIX = "J";
 
     @PostConstruct
     public void init()
@@ -131,11 +131,15 @@ public class ConceptLinkingService
     /*
      * Generate a set of candidate entities from a Knowledge Base for a mention.
      * It only contains entities which are instances of a pre-defined concept.
-     * TODO lemmatize the mention if no candidates could be generated
      */
     private Set<CandidateEntity> generateCandidates(KnowledgeBase aKB, String aMention)
     {
         long startTime = System.currentTimeMillis();
+
+        if (aMention == null || aMention.isEmpty()) {
+            return Collections.emptySet();
+        }
+
         Set<CandidateEntity> candidates = new HashSet<>();
         List<String> mentionArray = Arrays.asList(aMention.split(" "));
 
@@ -144,7 +148,7 @@ public class ConceptLinkingService
 
         if (stopwords != null) {
             if (mentionArray.stream().allMatch(m -> stopwords.contains(m))) {
-                logger.error("Mention consists of stopwords only - returning.");
+                logger.error("Mention [{}] consists of stopwords only - returning.", aMention);
                 return Collections.emptySet();
             }
         }
@@ -181,8 +185,8 @@ public class ConceptLinkingService
                 }
             }
         }
-        logger.debug("It took [{}] ms to retrieve candidates from KB",
-            System.currentTimeMillis() - startTime);
+        logger.debug("It took [{}] ms to retrieve candidates from KB for mention [{}]",
+            System.currentTimeMillis() - startTime, aMention);
         return candidates;
     }
 
@@ -255,22 +259,9 @@ public class ConceptLinkingService
         List<Token> mentionContext = getMentionContext(mentionSentence, splitMention,
             MENTION_CONTEXT_SIZE);
 
-        Set<String> sentenceContentTokens = new HashSet<>();
-        for (Token t : JCasUtil.selectCovered(Token.class, mentionSentence)) {
-            if (t.getPosValue() != null) {
-                boolean isNounOrVerbOrAdjective = t.getPosValue().startsWith(POS_VERB_PREFIX)
-                        || t.getPosValue().startsWith(POS_NOUN_PREFIX)
-                        || t.getPosValue().startsWith(POS_ADJECTIVE_PREFIX);
-                boolean isNotPartOfMention = !splitMention.contains(t.getCoveredText());
-                boolean isNotStopword = (stopwords == null) || (stopwords != null &&
-                    !stopwords.contains(t.getCoveredText()));
-                if (isNounOrVerbOrAdjective && isNotPartOfMention && isNotStopword) {
-                    sentenceContentTokens.add(t.getCoveredText());
-                }
-            }
-        }
 
-        candidates.parallelStream().forEach(l -> {
+        List<CandidateEntity> result = new ArrayList<>((candidates));
+        result.parallelStream().forEach(l -> {
             String wikidataId = l.getIRI().replace(WIKIDATA_PREFIX, "");
 
             if (entityFrequencyMap != null && entityFrequencyMap.get(wikidataId) != null) {
@@ -279,30 +270,13 @@ public class ConceptLinkingService
             else {
                 l.setFrequency(0);
             }
-        });
-        List<CandidateEntity> result = sortByFrequency(new ArrayList<>((candidates)));
-        if (result.size() > FREQUENCY_THRESHOLD) {
-            result = result.subList(0, FREQUENCY_THRESHOLD);
-        }
-        result.parallelStream().forEach( l -> {
-            String wikidataId = l.getIRI().replace(WIKIDATA_PREFIX, "");
+            
             l.setIdRank(Math.log(Double.parseDouble(wikidataId.substring(1))));
             String altLabel = l.getAltLabel().toLowerCase(Locale.ENGLISH);
             LevenshteinDistance lev = new LevenshteinDistance();
             l.setLevMatchLabel(lev.apply(mention, altLabel));
             l.setLevContext(lev.apply(tokensToString(mentionContext), altLabel));
 
-            SemanticSignature sig = getSemanticSignature(aKB, wikidataId);
-            Set<String> relatedEntities = sig.getRelatedEntities();
-            Set<String> signatureOverlap = new HashSet<>();
-            for (String s : relatedEntities) {
-                if (sentenceContentTokens.contains(s)) {
-                    signatureOverlap.add(s);
-                }
-            }
-            l.setSignatureOverlapScore(splitMention.size() + signatureOverlap.size());
-            l.setNumRelatedRelations(
-                (sig.getRelatedRelations() != null) ? sig.getRelatedRelations().size() : 0);
         });
         result = sortCandidates(new ArrayList<>(candidates));
         logger.debug("It took [{}] ms to rank candidates",
@@ -317,7 +291,7 @@ public class ConceptLinkingService
     {
         candidates.sort((e1, e2) ->
             Comparator.comparingInt(CandidateEntity::getFrequency)
-                .reversed().compare(e1, e2));
+                .compare(e1, e2));
         return candidates;
     }
 
@@ -399,6 +373,7 @@ public class ConceptLinkingService
      * pre-defined concept.
      *
      * @param aKB the KB used to generate candidates
+     * @param aTypedString What the user has typed so far in the text field
      * @param aMention AnnotatorState, used to get information about what surface form was
      *                     marked
      * @param aMentionBeginOffset the offset where the mention begins in the text
@@ -406,10 +381,21 @@ public class ConceptLinkingService
      *                       tokens
      * @return ranked list of entities, starting with the most probable entity
      */
-    public List<KBHandle> disambiguate(KnowledgeBase aKB, String
+    public List<KBHandle> disambiguate(KnowledgeBase aKB, String aTypedString, String
         aMention, int aMentionBeginOffset, JCas aJcas)
     {
-        Set<CandidateEntity> candidates = generateCandidates(aKB, aMention);
+        long startTime = System.currentTimeMillis();
+
+        List<String> list = new ArrayList<>();
+        Set<CandidateEntity> candidates = new HashSet<>();
+
+        list.add(aMention);
+        list.add(aTypedString);
+        list.stream().parallel()
+            .forEach(string -> candidates.addAll(generateCandidates(aKB, string)));
+
+        logger.debug("It took [{}] ms to retrieve candidates from KB [{}]", System
+            .currentTimeMillis() - startTime);
         List<CandidateEntity> rankedCandidates = rankCandidates(aKB, aMention, candidates, aJcas,
             aMentionBeginOffset);
 

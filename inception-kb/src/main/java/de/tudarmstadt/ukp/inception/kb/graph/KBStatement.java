@@ -171,9 +171,11 @@ public class KBStatement implements Serializable
 
     public void write(RepositoryConnection conn)
     {
-        originalStatements.clear();
         Statement stmt = toStatement(conn);
-        originalStatements.add(stmt);
+        if (!inferred) {
+            originalStatements.clear();
+            originalStatements.add(stmt);
+        }
         conn.add(stmt);
     }
 

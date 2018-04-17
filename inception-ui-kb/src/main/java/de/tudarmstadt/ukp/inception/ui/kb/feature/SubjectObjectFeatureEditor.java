@@ -18,14 +18,12 @@
 package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CASException;
-import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.Component;
@@ -54,26 +52,29 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
-import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 public class SubjectObjectFeatureEditor
     extends FeatureEditor
 {
+
     private static final long serialVersionUID = 4230722501745589589L;
     private static final Logger LOG = LoggerFactory.getLogger(SubjectObjectFeatureEditor.class);
 
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean KnowledgeBaseService kbService;
+    private @SpringBean FactLinkingService factService;
 
     private WebMarkupContainer content;
     private Component focusComponent;
     private AnnotationActionHandler actionHandler;
     private IModel<AnnotatorState> stateModel;
+    private Project project;
     private LinkWithRoleModel roleModel;
     private AnnotationFeature linkedAnnotationFeature;
 
@@ -85,6 +86,7 @@ public class SubjectObjectFeatureEditor
 
         stateModel = aStateModel;
         actionHandler = aHandler;
+        project = this.getModelObject().feature.getProject();
 
         add(new Label("feature", getModelObject().feature.getUiName()));
         content = new WebMarkupContainer("content");
@@ -169,7 +171,9 @@ public class SubjectObjectFeatureEditor
     {
         DropDownList<KBHandle> field = new DropDownList<KBHandle>("value",
             LambdaModelAdapter.of(this::getSelectedKBItem, this::setSelectedKBItem),
-            LambdaModel.of(this::getKBConceptsAndInstances), new ChoiceRenderer<>("uiLabel"));
+            LambdaModel.of(() -> factService.getKBConceptsAndInstances(project)), new
+            ChoiceRenderer<>
+            ("uiLabel"));
         field.setOutputMarkupId(true);
         field.setMarkupId(ID_PREFIX + getModelObject().feature.getId());
         return field;
@@ -187,6 +191,7 @@ public class SubjectObjectFeatureEditor
 
     private boolean roleLabelIsFilled()
     {
+
         return roleModel.targetAddr != -1;
     }
 
@@ -245,16 +250,20 @@ public class SubjectObjectFeatureEditor
     private void setSelectedKBItem(KBHandle value)
     {
         if (roleLabelIsFilled()) {
-            try {
-                JCas jCas = actionHandler.getEditorCas().getCas().getJCas();
-                AnnotationFS selectedFS = WebAnnoCasUtil.selectByAddr(jCas, roleModel.targetAddr);
-                WebAnnoCasUtil
-                    .setFeature(selectedFS, linkedAnnotationFeature, value.getIdentifier());
-            }
-            catch (CASException | IOException e) {
-                LOG.error("Error: " + e.getMessage(), e);
-                error("Error: " + e.getMessage());
-            }
+            setFeatureValueInCas(value);
+        }
+    }
+
+    private void setFeatureValueInCas(KBHandle value) {
+        try {
+            JCas jCas = actionHandler.getEditorCas().getCas().getJCas();
+            AnnotationFS selectedFS = WebAnnoCasUtil.selectByAddr(jCas, roleModel.targetAddr);
+            WebAnnoCasUtil
+                .setFeature(selectedFS, linkedAnnotationFeature, value.getIdentifier());
+        }
+        catch (CASException | IOException e) {
+            LOG.error("Error: " + e.getMessage(), e);
+            error("Error: " + e.getMessage());
         }
     }
 
@@ -265,11 +274,11 @@ public class SubjectObjectFeatureEditor
             try {
                 JCas jCas = actionHandler.getEditorCas().getCas().getJCas();
                 AnnotationFS selectedFS = WebAnnoCasUtil.selectByAddr(jCas, roleModel.targetAddr);
-                Feature labelFeature = selectedFS.getType()
-                    .getFeatureByBaseName(linkedAnnotationFeature.getName());
-                String selectedKBItemIdentifier = selectedFS.getFeatureValueAsString(labelFeature);
+                String selectedKBItemIdentifier = WebAnnoCasUtil.getFeature(selectedFS,
+                    linkedAnnotationFeature.getName());
+
                 if (selectedKBItemIdentifier != null) {
-                    List<KBHandle> handles = getKBConceptsAndInstances();
+                    List<KBHandle> handles = factService.getKBConceptsAndInstances(project);
                     selectedKBHandleItem = handles.stream()
                         .filter(x -> selectedKBItemIdentifier.equals(x.getIdentifier())).findAny()
                         .orElseThrow(NoSuchElementException::new);
@@ -281,19 +290,6 @@ public class SubjectObjectFeatureEditor
             }
         }
         return selectedKBHandleItem;
-    }
-
-    private List<KBHandle> getKBConceptsAndInstances()
-    {
-        AnnotationFeature feat = getModelObject().feature;
-        List<KBHandle> handles = new ArrayList<>();
-        for (KnowledgeBase kb : kbService.getKnowledgeBases(feat.getProject())) {
-            handles.addAll(kbService.listConcepts(kb, false));
-            for (KBHandle concept : kbService.listConcepts(kb, false)) {
-                handles.addAll(kbService.listInstances(kb, concept.getIdentifier(), false));
-            }
-        }
-        return handles;
     }
 
     public static void handleException(Component aComponent, AjaxRequestTarget aTarget,

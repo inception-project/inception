@@ -19,7 +19,7 @@
 
 === GIT
 
-All WebAnno files are stored using UNIX line endings. If you develop on Windows, you have to
+All sources files are stored using UNIX line endings. If you develop on Windows, you have to
 set the `core.autocrlf` configuration setting to `input` to avoid accidentally submitting Windows
 line endings to the repository. Using `input` is a good strategy in most cases, thus you should
 consider setting this as a global (add `--global`) or even as a system (`--system`) setting.
@@ -30,16 +30,15 @@ consider setting this as a global (add `--global`) or even as a system (`--syste
 C:\> git config --global core.autocrlf input
 ----
 
-After changing this setting, best do a fresh clone and check-out of WebAnno.
+After changing this setting, best do a fresh clone and check-out of the project.
 
-=== Installation guide to develop WebAnno in Eclipse
+=== Setting up the for development in Eclipse
 
-This is a guide to setting up a developer environment in Eclipse for WebAnno using Max OS X. The 
+This is a guide to setting up a development environment using Eclipse on Mac OS X. The 
 procedure should be similar for other operation systems.  
 
-First, you need to follow some steps of the user [InstallationGuide installation guide]. You need to
-configure your MySQL-server for WebAnno. After that, jump right to the chapter WebAnno and follow
-all steps besides the first one until the end of the document.
+First, you need to follow some steps of the user [InstallationGuide installation guide]. 
+It is recommended to configure a MySQL-server.
 
 We recommend you start from a *Eclipse IDE for Java Developers* package.
 
@@ -93,7 +92,7 @@ client, use the command
 
 [source,text]
 ----
-$ git clone https://github.com/webanno/webanno.git
+$ git clone https://github.com/inception-project/inception.git
 ----
 
 In Eclipse, go to *File -> Import*, choose *Existing Maven projects*, and select the folder to which
@@ -105,28 +104,18 @@ Download Apache Tomcat from `http://tomcat.apache.org/` (we're using version 8.5
 add the Tomcat server to your runtime configuration. Go to preferences and go to
 *Servers -> Runtime environments*:
 
-// http://webanno.googlecode.com/svn/wiki/images/AddApacheTomcat.png
-
 When prompted for an installation path, specify the folder where you extracted (or installed) Apache
 Tomcat v8.5 into. 
 
 Change the runtime configuration for the project. On the left side of the dialog, you should now be
 able to select Apache Tomcat. Change its VM arguments and include the definition 
-`-Dwebanno.home="/srv/webanno"` to specify the home directory for WebAnno. Also add
-`-Dwicket.configuration=development` to enable the development mode for WebAnno. This adds additional
-debugging features to the UI and disables UI caches.
-
-// http://webanno.googlecode.com/svn/wiki/images/ChangeRunConfiguration.png
+`-Dinception.home="/srv/inception"` to specify the home directory for the application. Also add
+`-Dwicket.core.settings.general.configuration-type=development` to enable the development mode. 
+This adds additional debugging features to the UI and disables UI caches.
 
 Head to the servers pane. If you cannot locate it in your eclipse window, add it by going to
 *Window -> Show View -> Other...* and select *Servers*. Right click on *Tomcat v8.5 localhost* and
 click on *Add and remove...*:
-
-// http://webanno.googlecode.com/svn/wiki/images/AddAndRemoveServer.png
-
-// You should end up with:
-
-// http://webanno.googlecode.com/svn/wiki/images/AddAndRemoveServerFinal.png
 
 {product-name} should now be configured to start with Tomcat.
 
@@ -148,17 +137,3 @@ NOTE: Should the steps mentioned above not have been sufficient, close all the {
       in the {product-name} modules, and then re-import them into Eclipse again using *Import->Existing Maven
       projects*. During the project import, the Checkstyle configuration plugin for M2Eclipse should
       properly set up the `.checkstyle` files and activate checkstyle. 
-
-// === Troubleshooting
-// 
-// If you run into problems with the last step (Add and remove...) and get the error 'There are no
-// resources that can be added or removed from the server', checkout if you have installed 
-// _m2eclipse-wtp_:
-// 
-// http://webanno.googlecode.com/svn/wiki/images/Problems%20with%20no%20resource%20available.png
-// 
-// and go to the project settings and check if these project facets are activated for the project. 
-// If you have the _ m2eclipse-wtp_ installed, it should be sufficient to right-click on the project 
-// and do a  *Maven -> Update project* to reconfigure the project and have m2e update these settings:
-// 
-// http://webanno.googlecode.com/svn/wiki/images/ProjectsFacets.png
