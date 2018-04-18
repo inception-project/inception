@@ -96,9 +96,7 @@ public abstract class Classifier<C>
     {
         if (layer.isLockToTokenOffset()) {
             List<AnnotationObject> singleTokenPredictions = new ArrayList<>();
-            sentences.forEach(sentence -> {
-                sentence.forEach(word -> singleTokenPredictions.addAll(word));
-            });
+            sentences.forEach(sentence -> sentence.forEach(singleTokenPredictions::addAll));
             return singleTokenPredictions;
         }
 
@@ -110,11 +108,14 @@ public abstract class Classifier<C>
             int i = 0;
 
             // Repeat for as many predictions we have for each token
-            while (i < sentence.get(0).size()) {
-                int j = 0;
-                
-                while (j < sentence.size()) {
-                    AnnotationObject ao = sentence.get(j).get(i);
+            while (i < conf.getNumPredictions()) {
+
+                for (int j = 0; j < sentence.size(); j++) {
+                    List<AnnotationObject> word = sentence.get(j);
+                    if (i >= word.size()) {
+                        break;
+                    }
+                    AnnotationObject ao = word.get(i);
 
                     String coveredText = ao.getCoveredText();
                     int endCharacter = ao.getOffset().getEndCharacter();
@@ -124,7 +125,11 @@ public abstract class Classifier<C>
 
                     // For all neighboring predictions in sentence with same label
                     while (j < sentence.size() - 1) {
-                        AnnotationObject nextAo = sentence.get(j + 1).get(i);
+                        List<AnnotationObject> nextWord = sentence.get(j + 1);
+                        if (i + 1 >= nextWord.size()) {
+                            break;
+                        }
+                        AnnotationObject nextAo = nextWord.get(i);
                         
                         if (ao.getAnnotation() != null
                                 && ao.getAnnotation().equals(nextAo.getAnnotation())) {
@@ -159,7 +164,6 @@ public abstract class Classifier<C>
                         predictionsWithMergedLabels.add(mergedAo);
                         id++;
                     }
-                    j++;
                 }
                 i++;
             }
