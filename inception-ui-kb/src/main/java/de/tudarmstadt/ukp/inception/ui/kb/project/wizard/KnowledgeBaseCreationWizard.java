@@ -66,6 +66,7 @@ import de.agilecoders.wicket.core.markup.html.bootstrap.form.radio.BootstrapRadi
 import de.agilecoders.wicket.core.markup.html.bootstrap.form.radio.BootstrapRadioGroup.ISelectionChangeHandler;
 import de.agilecoders.wicket.core.markup.html.bootstrap.form.radio.EnumRadioChoiceRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
@@ -103,7 +104,7 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
     private final IModel<Project> projectModel;
     private final DynamicWizardModel wizardModel;
     private final CompoundPropertyModel<EnrichedKnowledgeBase> wizardDataModel;
-    private IModel<IriSchemaType> selection;
+    private final IModel<IriSchemaType> selection;
 
     public KnowledgeBaseCreationWizard(String id, IModel<Project> aProjectModel) {
         super(id);
@@ -349,23 +350,22 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
             super(previousStep, "", "", aModel);
             model = aModel;
             completed = true;
-            
+
             // RadioGroup to select the IriSchemaType
             BootstrapRadioGroup<IriSchemaType> iriSchemaChoice = new BootstrapRadioGroup<>(
                     "iriSchema", selection, Arrays.asList(IriSchemaType.values()),
                     new EnumRadioChoiceRenderer<>(Buttons.Type.Default, this));
             iriSchemaChoice.setOutputMarkupId(true);
 
-            
             // Add text fields for classIri, subclassIri and typeIri
             RequiredTextField<String> t1 = buildTextFieldWithBehavior("classIri", model, "classIri",
                     newChangeBGroupToCustomBehavior(iriSchemaChoice));
             add(t1);
-            
+
             RequiredTextField<String> t2 = buildTextFieldWithBehavior("subclassIri", model,
                     "subclassIri", newChangeBGroupToCustomBehavior(iriSchemaChoice));
             add(t2);
-            
+
             RequiredTextField<String> t3 = buildTextFieldWithBehavior("typeIri", model, "typeIri",
                     newChangeBGroupToCustomBehavior(iriSchemaChoice));
             add(t3);
@@ -400,6 +400,10 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
             textField.setOutputMarkupId(true);
             textField.add(EnrichedKnowledgeBaseUtils.URL_VALIDATOR);
             textField.add(behavior);
+            textField.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> {
+                // Do nothing just update the model values
+            }));
+            
             return textField;
         }
 
