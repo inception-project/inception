@@ -17,10 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.adapter;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -43,6 +44,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.inception.recommendation.RecommendationEditorExtension;
 import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.AnnotationObject;
 import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.Offset;
+import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.TokenObject;
 import de.tudarmstadt.ukp.inception.recommendation.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.model.LearningRecordUserAction;
 import de.tudarmstadt.ukp.inception.recommendation.model.Predictions;
@@ -99,11 +101,8 @@ public class RecommendationSpanRenderer
                         windowBegin, windowEnd, aJcas);
         String color = aColoringStrategy.getColor(null, null);
         String bratTypeName = TypeUtil.getUiTypeName(typeAdapter);
-        
-        List<VSpan> vspansWithoutRecommendations = new LinkedList<>();
-        for (VSpan v: vdoc.spans(layer.getId())) {
-            vspansWithoutRecommendations.add(v);
-        }
+
+        List<VSpan> vspansWithoutRecommendations = new ArrayList<>(vdoc.spans(layer.getId()));
         
         List<LearningRecord> recordedAnnotations = learningRecordService
                 .getAllRecordsByDocumentAndUserAndLayer(aState.getDocument(),
@@ -161,7 +160,7 @@ public class RecommendationSpanRenderer
             List<String> filtered = maxConfidencePerLabel.entrySet().stream()
                     .sorted((e1, e2) -> Double.compare(e2.getValue(), e1.getValue()))
                     .limit(recommendationService.getMaxSuggestions(aState.getUser()))
-                    .map(e -> e.getKey()).collect(Collectors.toList());
+                    .map(Entry::getKey).collect(Collectors.toList());
 
             // Render annotations
             for (String label : labelMap.keySet()) {
@@ -174,7 +173,7 @@ public class RecommendationSpanRenderer
                 // Create VID using the recommendation with the lowest recommendationId
                 AnnotationObject aPrediction = token.stream()
                         .filter(p -> p.getAnnotation().equals(label))
-                        .max((p1, p2) -> Integer.compare(p1.getId(), p2.getId())).get();
+                        .max(Comparator.comparingInt(TokenObject::getId)).orElse(null);
                 VID vid = new VID(RecommendationEditorExtension.BEAN_NAME, layer.getId(),
                         (int) aPrediction.getRecommenderId(), aPrediction.getId(), VID.NONE,
                         VID.NONE);
@@ -206,22 +205,24 @@ public class RecommendationSpanRenderer
      * Check if there is already an existing annotation overlapping the prediction
      * 
      */
-    public boolean isOverlapping (Collection<VSpan> vspans, Offset ao, int windowBegin) {
+    public boolean isOverlapping (Collection<VSpan> vspans, Offset recOffset, int windowBegin,
+        String feature) {
+
         for (VSpan v : vspans) {
             for (VRange o : v.getOffsets()) {
-                if ((o.getBegin() <= ao.getBeginCharacter() - windowBegin)
-                        && (o.getEnd() >= ao.getEndCharacter() - windowBegin)
+                if ((o.getBegin() <= recOffset.getBeginCharacter() - windowBegin)
+                        && (o.getEnd() >= recOffset.getEndCharacter() - windowBegin)
                         
-                    || (o.getBegin() >= ao.getBeginCharacter() - windowBegin)
-                        && (o.getEnd() <= ao.getEndCharacter() - windowBegin)
+                    || (o.getBegin() >= recOffset.getBeginCharacter() - windowBegin)
+                        && (o.getEnd() <= recOffset.getEndCharacter() - windowBegin)
                         
-                    || (o.getBegin() >= ao.getBeginCharacter() - windowBegin)
-                        && (o.getEnd() >= ao.getEndCharacter() - windowBegin) 
-                        && (o.getBegin() < ao.getEndCharacter() - windowBegin)
+                    || (o.getBegin() >= recOffset.getBeginCharacter() - windowBegin)
+                        && (o.getEnd() >= recOffset.getEndCharacter() - windowBegin)
+                        && (o.getBegin() < recOffset.getEndCharacter() - windowBegin)
                         
-                    || (o.getBegin() <= ao.getBeginCharacter() - windowBegin)
-                        && (o.getEnd() <= ao.getEndCharacter() - windowBegin)
-                        && (o.getEnd() > ao.getBeginCharacter() - windowBegin)) {
+                    || (o.getBegin() <= recOffset.getBeginCharacter() - windowBegin)
+                        && (o.getEnd() <= recOffset.getEndCharacter() - windowBegin)
+                        && (o.getEnd() > recOffset.getBeginCharacter() - windowBegin)) {
                     return true;
                 }
             }
