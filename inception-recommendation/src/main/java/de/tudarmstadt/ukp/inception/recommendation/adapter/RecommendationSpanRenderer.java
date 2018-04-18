@@ -116,9 +116,10 @@ public class RecommendationSpanRenderer
             // show only the confidence of the highest one
             for (AnnotationObject ao: token) {          
                 if (ao.getAnnotation() != null) {       
-                    if (isOverlapping(vspansWithoutRecommendations, ao.getOffset(), windowBegin)) {
-                        break;
-                    }
+//                    if (isOverlapping(vspansWithoutRecommendations, ao.getOffset(), windowBegin,
+//                        ao.getFeature())) {
+//                        break;
+//                    }
                     
                     if (isRejected(recordedAnnotations, ao)) {
                         continue;
