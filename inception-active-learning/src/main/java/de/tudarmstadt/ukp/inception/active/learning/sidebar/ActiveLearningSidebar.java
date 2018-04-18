@@ -597,6 +597,7 @@ public class ActiveLearningSidebar
         learningRecords.detach();
     }
 
+
     @OnEvent
     public void onRecommendationRejectEvent(AjaxRecommendationRejectedEvent aEvent)
     {
@@ -647,10 +648,6 @@ public class ActiveLearningSidebar
                 && eventState.getUser().equals(annotatorState.getUser())
                 && eventState.getProject().equals(annotatorState.getProject())) {
             if (acceptedRecommendation.getOffset().equals(currentRecommendation.getOffset())) {
-                if (!acceptedRecommendation.equals(currentRecommendation)) {
-                    writeLearningRecordInDatabase(LearningRecordUserAction.REJECTED);
-                }
-                
                 moveToNextRecommendation(aEvent.getTarget());
             }
             aEvent.getTarget().add(mainContainer);
