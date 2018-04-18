@@ -21,6 +21,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.recommendation.imls.conf.ClassifierConfiguration;
 import de.tudarmstadt.ukp.inception.recommendation.imls.core.ConfigurableComponent;
 import de.tudarmstadt.ukp.inception.recommendation.imls.core.classificationtool.ClassificationTool;
@@ -165,4 +167,8 @@ public abstract class Classifier<C>
         
         return predictionsWithMergedLabels;
     }
+
+    public abstract void setUser(User user);
+
+    public abstract void setProject(Project project);
 }

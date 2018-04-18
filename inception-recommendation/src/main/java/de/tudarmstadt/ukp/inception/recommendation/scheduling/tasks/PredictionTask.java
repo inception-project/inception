@@ -86,7 +86,9 @@ public class PredictionTask
                 ClassificationTool<?> ct = recommendationService.getTool(recommender,
                         recommendationService.getMaxSuggestions(user));
                 Classifier<?> classifier = ct.getClassifier();
-                
+
+                classifier.setUser(getUser());
+                classifier.setProject(getProject());
                 classifier.setModel(recommendationService.getTrainedModel(user, recommender));
     
                 List<List<TokenObject>> tokens = new ArrayList<>();
