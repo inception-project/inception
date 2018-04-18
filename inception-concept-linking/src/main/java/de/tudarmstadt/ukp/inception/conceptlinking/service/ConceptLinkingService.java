@@ -404,7 +404,7 @@ public class ConceptLinkingService
 
         return rankedCandidates.stream()
             .limit(CANDIDATE_DISPLAY_LIMIT)
-            .map(c -> new KBHandle(c.getIRI(), c.getLabel() + getDescription(c.getIRI())))
+            .map(c -> new KBHandle(c.getIRI(), c.getLabel(), getDescription(c.getIRI())))
             .distinct()
             .filter(h -> h.getIdentifier().contains(":"))
             .collect(Collectors.toList());
@@ -417,7 +417,7 @@ public class ConceptLinkingService
             if (wikidataIdResult.hasNext()) {
                 BindingSet sol = wikidataIdResult.next();
                 Value description = sol.getValue("itemDescription");
-                return (description != null) ? " (" +description.stringValue() + ")" : "";
+                return (description != null) ? description.stringValue() : "";
             }
         }
         catch (RepositoryException e) {
