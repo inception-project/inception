@@ -604,11 +604,12 @@ public class ActiveLearningSidebar
         AnnotatorState annotatorState = getModelObject();
         AnnotatorState eventState = aEvent.getAnnotatorState();
 
+        //check active learning is active and same user and same document and same layer
         if (sessionActive && eventState.getUser().equals(annotatorState.getUser()) && eventState
-            .getProject().equals(annotatorState.getProject()) && annotatorState
+            .getDocument().equals(annotatorState.getDocument()) && annotatorState
             .getSelectedAnnotationLayer().equals(selectedLayer.getObject())) {
-            if (eventState.getDocument().equals(annotatorState.getDocument())
-                && annotatorState.getSelection().getBegin() == currentRecommendation.getOffset()
+            //check same document and same token
+            if (annotatorState.getSelection().getBegin() == currentRecommendation.getOffset()
                 .getBeginCharacter()
                 && annotatorState.getSelection().getEnd() == currentRecommendation.getOffset()
                 .getEndCharacter() && aEvent.getValue() != null) {
