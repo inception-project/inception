@@ -43,8 +43,6 @@ import org.eclipse.rdf4j.query.BindingSet;
 import org.eclipse.rdf4j.query.TupleQuery;
 import org.eclipse.rdf4j.query.TupleQueryResult;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
-import org.eclipse.rdf4j.repository.RepositoryException;
-import org.eclipse.rdf4j.repository.sparql.SPARQLRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.DefaultResourceLoader;
@@ -170,10 +168,12 @@ public class ConceptLinkingService
                     Value e2 = solution.getValue("e2");
                     Value label = solution.getValue("label");
                     Value altLabel = solution.getValue("altLabel");
+                    Value description = solution.getValue("description");
 
                     CandidateEntity newEntity = new CandidateEntity((e2 != null) ? e2.stringValue() : "",
                                          (label != null) ? label.stringValue() : "",
-                                      (altLabel != null) ? altLabel.stringValue() : "");
+                                      (altLabel != null) ? altLabel.stringValue() : "",
+                        (description != null) ? description.stringValue() : "");
 
                     candidates.add(newEntity);
                 }
@@ -404,33 +404,10 @@ public class ConceptLinkingService
 
         return rankedCandidates.stream()
             .limit(CANDIDATE_DISPLAY_LIMIT)
-            .map(c -> new KBHandle(c.getIRI(), c.getLabel(), getDescription(c.getIRI())))
+            .map(c -> new KBHandle(c.getIRI(), c.getLabel(), c.getDescription()))
             .distinct()
             .filter(h -> h.getIdentifier().contains(":"))
             .collect(Collectors.toList());
     }
 
-    private String getDescription (String IRI) {
-        RepositoryConnection conn = getWikidataConnection();
-        TupleQuery query = QueryUtil.getDescription(conn, IRI);
-        try (TupleQueryResult wikidataIdResult = query.evaluate()) {
-            if (wikidataIdResult.hasNext()) {
-                BindingSet sol = wikidataIdResult.next();
-                Value description = sol.getValue("itemDescription");
-                return (description != null) ? description.stringValue() : "";
-            }
-        }
-        catch (RepositoryException e) {
-            logger.error("Could not get description for IRI " + IRI, e);
-        }
-        return null;
-    }
-
-    private RepositoryConnection getWikidataConnection()
-    {
-        SPARQLRepository repo = new SPARQLRepository(
-            "https://query.wikidata.org/bigdata/namespace/wdq/sparql");
-        repo.initialize();
-        return repo.getConnection();
-    }
 }
