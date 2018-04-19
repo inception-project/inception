@@ -234,4 +234,8 @@ public class Predictions
     {
         return predictions;
     }
+    public void clearPredictions()
+    {
+        predictions.clear();
+    }
 }

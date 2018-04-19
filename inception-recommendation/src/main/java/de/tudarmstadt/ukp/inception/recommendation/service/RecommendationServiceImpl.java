@@ -44,6 +44,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.DocumentOpenedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterAnnotationUpdateEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentResetEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -231,7 +232,15 @@ public class RecommendationServiceImpl
             scheduler.stopAllTasksForUser(username);
         }
     }
-    
+
+    @EventListener
+    public void afterDocumentReset(AfterDocumentResetEvent aEvent)
+    {
+        String userName = aEvent.getDocument().getUser();
+        Project project = aEvent.getDocument().getProject();
+        clearPredictionsForProject(userName, project);
+    }
+
     @Override
     public void setMaxSuggestions(User aUser, int aMax)
     {
@@ -285,7 +294,17 @@ public class RecommendationServiceImpl
             states.remove(aUsername);
         }
     }
-        
+
+    private void clearPredictionsForProject(String aUsername, Project project)
+    {
+        synchronized (states) {
+            RecommendationUserState state = getState(aUsername);
+            state.clearActivePredictions(project);
+            state.clearIncomingPredictions(project);
+            state.clearTrainedModels();
+            state.clearActiveRecommenders();
+        }
+    }
     
     @Override
     public void switchPredictions(User aUser, Project aProject)
@@ -347,6 +366,21 @@ public class RecommendationServiceImpl
         public void clearIncomingPredictions(Project aProject)
         {
             incomingPredictions.remove(aProject.getId());            
+        }
+
+        public void clearActivePredictions(Project aProject)
+        {
+            activePredictions.remove(aProject.getId());
+        }
+
+        public void clearTrainedModels()
+        {
+            trainedModels.clear();
+        }
+
+        public void clearActiveRecommenders()
+        {
+            activeRecommenders.clear();
         }
         
         public Object getTrainedModel(Recommender aRecommender)
