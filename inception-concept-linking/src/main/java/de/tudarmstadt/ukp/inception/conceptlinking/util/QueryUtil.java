@@ -135,4 +135,19 @@ public class QueryUtil
         return tupleQuery;
     }
 
+    public static TupleQuery getDescription (RepositoryConnection conn, String IRI)
+    {
+        ValueFactory vf = SimpleValueFactory.getInstance();
+
+        String query = String.join("\n",
+            "SELECT ?itemDescription",
+            "WHERE {",
+            "  VALUES (?item) {( ?e )}",
+            "  SERVICE wikibase:label { bd:serviceParam wikibase:language \"en\"",
+            "  }",
+            "}");
+        TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, query);
+        tupleQuery.setBinding("e", vf.createIRI(IRI));
+        return tupleQuery;
+    }
 }
