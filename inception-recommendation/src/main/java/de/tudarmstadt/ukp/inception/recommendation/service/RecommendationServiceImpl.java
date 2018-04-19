@@ -239,6 +239,8 @@ public class RecommendationServiceImpl
         String userName = aEvent.getDocument().getUser();
         Project project = aEvent.getDocument().getProject();
         clearPredictionsForProject(userName, project);
+        triggerTrainingAndClassification(aEvent.getDocument().getUser(),
+            aEvent.getDocument().getProject());
     }
 
     @Override
