@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.inception.recommendation.service;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -26,6 +28,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 
+import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.multimap.HashSetValuedHashMap;
 import org.slf4j.Logger;
@@ -40,8 +43,6 @@ import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.DocumentOpenedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterAnnotationUpdateEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -49,6 +50,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderDeletedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.imls.core.classificationtool.ClassificationTool;
 import de.tudarmstadt.ukp.inception.recommendation.model.ClassificationToolRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.model.Predictions;
@@ -67,8 +69,6 @@ public class RecommendationServiceImpl
     private @PersistenceContext EntityManager entityManager;
     
     private @Autowired SessionRegistry sessionRegistry;
-    private @Autowired AnnotationSchemaService annoService;
-    private @Autowired DocumentService docService;
     private @Autowired UserDao userRepository;
     private @Autowired ClassificationToolRegistry classificationToolRegistry;
     private @Autowired RecommendationScheduler scheduler;
@@ -212,6 +212,14 @@ public class RecommendationServiceImpl
     {
         triggerTrainingAndClassification(aEvent.getUser(), aEvent.getDocument().getProject());
     }
+
+    @EventListener
+    public void onRecommenderDelete(RecommenderDeletedEvent aEvent)
+    {
+        RecommendationUserState state = getState(aEvent.getUser());
+        state.removePredictions(aEvent.getRecommender(), aEvent.getProject());
+        triggerTrainingAndClassification(aEvent.getUser(), aEvent.getProject());
+    }
     
     private void triggerTrainingAndClassification(String aUser, Project aProject)
     {
@@ -313,6 +321,12 @@ public class RecommendationServiceImpl
         {
             return activeRecommenders;
         }
+
+        public void setActiveRecommenders(
+            MultiValuedMap<AnnotationLayer, Recommender> aActiveRecommenders)
+        {
+            activeRecommenders = aActiveRecommenders;
+        }
         
         public void setMaxPredictions(int aMaxPredictions)
         {
@@ -357,6 +371,41 @@ public class RecommendationServiceImpl
         public void putTrainedModel(Recommender aRecommender, Object aModel)
         {
             trainedModels.put(aRecommender.getId(), aModel);
+        }
+
+        public void removePredictions(Recommender aRecommender, Project aProject)
+        {
+            // Remove incoming predictions
+            Predictions incoming = incomingPredictions.get(aProject.getId());
+            if (incoming != null) {
+                incoming.removePredictions(aRecommender.getId());
+                incomingPredictions.put(aProject.getId(), incoming);
+            }
+
+            // Remove active predictions
+            Predictions active = activePredictions.get(aProject.getId());
+            if (active != null) {
+                active.removePredictions(aRecommender.getId());
+                activePredictions.put(aProject.getId(), active);
+            }
+
+            // Remove trainedModel
+            trainedModels.remove(aRecommender.getId());
+
+            // Remove from activeRecommenders map
+            MultiValuedMap<AnnotationLayer, Recommender> newActiveRecommenders
+                = new HashSetValuedHashMap<>();
+            MapIterator<AnnotationLayer, Recommender> it
+                = activeRecommenders.mapIterator();
+
+            while (it.hasNext()) {
+                AnnotationLayer layer = it.next();
+                Recommender rec = it.getValue();
+                if (!rec.equals(aRecommender)) {
+                    newActiveRecommenders.put(layer, rec);
+                }
+            }
+            setActiveRecommenders(newActiveRecommenders);
         }
     }
 }
