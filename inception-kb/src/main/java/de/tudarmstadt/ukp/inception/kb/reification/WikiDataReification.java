@@ -283,7 +283,7 @@ public class WikiDataReification
     {
         String statementId = aStatement.getStatementId();
         if (statementId != null) {
-            update(kb, (conn) -> {
+            kbService.update(kb, (conn) -> {
                 conn.remove(getStatementsById(kb, statementId));
                 conn.remove(getQualifiersById(kb, statementId));
                 aStatement.setOriginalStatements(Collections.emptyList());
@@ -296,7 +296,7 @@ public class WikiDataReification
     @Override
     public void upsertStatement(KnowledgeBase kb, KBStatement aStatement)
     {
-        update(kb, (conn) -> {
+        kbService.update(kb, (conn) -> {
             KBStatement statement = aStatement;
             String statementId = statement.getStatementId();
             if (statementId != null) {
@@ -335,7 +335,7 @@ public class WikiDataReification
             log.error("No statementId");
         }
         else {
-            update(kb, (conn) -> {
+            kbService.update(kb, (conn) -> {
                 Resource id = vf.createBNode(newQualifier.getKbStatement().getStatementId());
                 IRI predicate = vf.createIRI(newQualifier.getKbProperty().getIdentifier());
                 Value value = valueMapper.mapQualifierValue(newQualifier, vf);
@@ -358,7 +358,7 @@ public class WikiDataReification
             log.error("No statementId");
         }
         else {
-            update(kb, (conn) -> {
+            kbService.update(kb, (conn) -> {
                 conn.remove(oldQualifier.getOriginalStatements());
 
                 oldQualifier.getKbStatement().getQualifiers().remove(oldQualifier);
@@ -371,7 +371,7 @@ public class WikiDataReification
     @Override
     public void upsertQualifier(KnowledgeBase kb, KBQualifier aQualifier)
     {
-        update(kb, (conn) -> {
+        kbService.update(kb, (conn) -> {
             int index = aQualifier.getKbStatement().getQualifiers().indexOf(aQualifier);
             List<Statement> statements = reifyQualifier(kb, aQualifier);
             conn.add(statements);
@@ -413,36 +413,6 @@ public class WikiDataReification
             }
             return qualifiers;
         }
-    }
-
-    private KBHandle update(KnowledgeBase kb, UpdateAction aAction)
-    {
-        if (kb.isReadOnly()) {
-            log.warn("Knowledge base [{}] is read only, will not alter!", kb.getName());
-            return null;
-        }
-
-        KBHandle result = null;
-        try (RepositoryConnection conn = kbService.getConnection(kb)) {
-            boolean error = true;
-            try {
-                conn.begin();
-                result = aAction.accept(conn);
-                conn.commit();
-                error = false;
-            }
-            finally {
-                if (error) {
-                    conn.rollback();
-                }
-            }
-        }
-        return result;
-    }
-
-    private interface UpdateAction
-    {
-        KBHandle accept(RepositoryConnection aConnection);
     }
 
 }

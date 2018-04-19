@@ -167,7 +167,7 @@ public class NoReification implements ReificationStrategy {
     @Override
     public void deleteStatement(KnowledgeBase kb, KBStatement aStatement)
     {
-        update(kb, (conn) -> {
+        kbService.update(kb, (conn) -> {
             conn.remove(aStatement.getOriginalStatements());
             aStatement.setOriginalStatements(Collections.emptyList());
             return null;
@@ -177,7 +177,7 @@ public class NoReification implements ReificationStrategy {
     @Override
     public void upsertStatement(KnowledgeBase kb, KBStatement aStatement)
     {
-        update(kb, (conn) -> {
+        kbService.update(kb, (conn) -> {
             if (!aStatement.isInferred()) {
                 conn.remove(aStatement.getOriginalStatements());
             }
@@ -212,36 +212,6 @@ public class NoReification implements ReificationStrategy {
     {
         log.error("Qualifiers are not supported.");
         return Collections.emptyList();
-    }
-
-    private KBHandle update(KnowledgeBase kb, UpdateAction aAction)
-    {
-        if (kb.isReadOnly()) {
-            log.warn("Knowledge base [{}] is read only, will not alter!", kb.getName());
-            return null;
-        }
-
-        KBHandle result = null;
-        try (RepositoryConnection conn = kbService.getConnection(kb)) {
-            boolean error = true;
-            try {
-                conn.begin();
-                result = aAction.accept(conn);
-                conn.commit();
-                error = false;
-            }
-            finally {
-                if (error) {
-                    conn.rollback();
-                }
-            }
-        }
-        return result;
-    }
-
-    private interface UpdateAction
-    {
-        KBHandle accept(RepositoryConnection aConnection);
     }
 
 }

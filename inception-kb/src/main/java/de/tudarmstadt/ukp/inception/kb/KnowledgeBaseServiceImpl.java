@@ -593,7 +593,7 @@ public class KnowledgeBaseServiceImpl
         return KnowledgeBaseService.INCEPTION_NAMESPACE + vf.createBNode().getID();
     }
 
-    private KBHandle update(KnowledgeBase kb, UpdateAction aAction)
+    public KBHandle update(KnowledgeBase kb, UpdateAction aAction)
     {
         if (kb.isReadOnly()) {
             log.warn("Knowledge base [{}] is read only, will not alter!", kb.getName());
@@ -763,11 +763,6 @@ public class KnowledgeBaseServiceImpl
             }
         }
         return false;
-    }
-
-    private interface UpdateAction
-    {
-        KBHandle accept(RepositoryConnection aConnection);
     }
 
     @Override

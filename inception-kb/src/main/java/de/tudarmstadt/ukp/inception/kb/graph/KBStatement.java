@@ -77,7 +77,7 @@ public class KBStatement implements Serializable
         else if (aValue instanceof IRI) {
             value = aValue;
         }
-        else if (aValue instanceof BNode || aValue == null) {
+        else if (aValue instanceof BNode) {
             value = null;
         }
         else {
@@ -86,6 +86,15 @@ public class KBStatement implements Serializable
 
         originalStatements = new ArrayList<>();
 
+        qualifiers = new ArrayList<>();
+    }
+
+    public KBStatement(KBHandle aInstance, KBHandle aProperty)
+    {
+        instance = aInstance;
+        property = aProperty;
+        value = null;
+        originalStatements = new ArrayList<>();
         qualifiers = new ArrayList<>();
     }
 
@@ -154,9 +163,9 @@ public class KBStatement implements Serializable
         return inferred;
     }
 
-    public void setInferred(boolean isInferred)
+    public void setInferred(boolean aInferred)
     {
-        inferred = isInferred;
+        inferred = aInferred;
     }
 
     public List<Statement> getOriginalStatements()

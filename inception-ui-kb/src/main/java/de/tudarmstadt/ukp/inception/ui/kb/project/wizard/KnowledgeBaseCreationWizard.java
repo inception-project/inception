@@ -141,7 +141,7 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
             final List<Reification> reificationList = Arrays.asList(Reification.values());
 
             DropDownChoice<Reification> reificationDropDownChoice = new
-                DropDownChoice<Reification>(id, model.bind(property), reificationList);
+                DropDownChoice<>(id, model.bind(property), reificationList);
             return reificationDropDownChoice;
         }
 

@@ -67,7 +67,6 @@ import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 import de.tudarmstadt.ukp.inception.kb.io.FileUploadHelper;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
-import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 import de.tudarmstadt.ukp.inception.ui.kb.project.wizard.DisabledBootstrapCheckbox;
 
 public class KnowledgeBaseDetailsPanel extends Panel {
@@ -189,17 +188,8 @@ public class KnowledgeBaseDetailsPanel extends Panel {
                     }
                 }));
 
-        form.add(new RequiredTextField<Reification>("reification")
-        {
-
-            private static final long serialVersionUID = -668644186068521432L;
-
-            @Override
-            protected void onConfigure()
-            {
-                setEnabled(false);
-            }
-        });
+        // add (disabled) reification strategy
+        form.add(new Label("reification"));
 
         // title/content
         title = new ViewModeTitle(TITLE_MARKUP_ID, ekbModel);

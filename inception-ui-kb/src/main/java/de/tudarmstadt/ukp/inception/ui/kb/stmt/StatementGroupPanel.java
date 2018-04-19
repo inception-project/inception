@@ -257,9 +257,7 @@ public class StatementGroupPanel extends EventListeningPanel {
             // add a new prototype statement using this group's instance and its current property
             KBStatement statementProto = new KBStatement(
                 groupModel.getObject().getInstance(),
-                groupModel.getObject().getProperty(),
-                null
-            );
+                groupModel.getObject().getProperty());
 
             groupModel.getObject().getStatements().add(statementProto);
 

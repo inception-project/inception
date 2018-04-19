@@ -285,6 +285,13 @@ public interface KnowledgeBaseService
 
     <T> T read(KnowledgeBase kb, ReadAction<T> aAction);
 
+    KBHandle update(KnowledgeBase kb, UpdateAction aAction);
+
+    interface UpdateAction
+    {
+        KBHandle accept(RepositoryConnection aConnection);
+    }
+
     List<KBHandle> list(KnowledgeBase kb, IRI aType, boolean aIncludeInferred, boolean
         aAll);
 
