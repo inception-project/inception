@@ -202,14 +202,14 @@ public class RecommendationServiceImpl
     }
 
     @EventListener
-    public void afterAnnotationUpdate(AfterAnnotationUpdateEvent aEvent) throws Exception
+    public void afterAnnotationUpdate(AfterAnnotationUpdateEvent aEvent)
     {
         triggerTrainingAndClassification(aEvent.getDocument().getUser(),
                 aEvent.getDocument().getProject());
     }
 
     @EventListener
-    public void onDocumentOpen(DocumentOpenedEvent aEvent) throws Exception
+    public void onDocumentOpen(DocumentOpenedEvent aEvent)
     {
         triggerTrainingAndClassification(aEvent.getUser(), aEvent.getDocument().getProject());
     }
