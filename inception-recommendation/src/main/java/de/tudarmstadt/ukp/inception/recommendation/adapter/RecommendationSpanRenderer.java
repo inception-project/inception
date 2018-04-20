@@ -207,6 +207,9 @@ public class RecommendationSpanRenderer
                     vdoc.add(new VComment(vid, VCommentType.INFO, ao.getClassifier()));
                     vdoc.add(new VComment(vid, VCommentType.INFO,
                             "Confidence: " + String.format("%.2f", ao.getConfidence())));
+                    if (ao.getDescription() != null) {
+                        vdoc.add(new VComment(vid, VCommentType.INFO, ao.getDescription()));
+                    }
                 }
             }   
         }

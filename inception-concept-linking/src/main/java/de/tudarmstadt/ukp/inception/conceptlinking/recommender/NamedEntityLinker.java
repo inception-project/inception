@@ -180,8 +180,8 @@ public class NamedEntityLinker
         handles.stream()
             .limit(conf.getNumPredictions())
             .forEach(h -> predictions.add(
-            new AnnotationObject(h.getIdentifier(), token, null, tokenId++, feature,
-                "NamedEntityLinker")));
+            new AnnotationObject(h.getIdentifier(), h.getDescription(), token, null, tokenId++,
+                feature, "NamedEntityLinker")));
 
         return predictions;
 

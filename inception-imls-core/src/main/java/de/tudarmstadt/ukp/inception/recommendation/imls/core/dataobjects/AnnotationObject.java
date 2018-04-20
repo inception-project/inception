@@ -28,16 +28,18 @@ public class AnnotationObject
     
     private List<TokenObject> sentenceTokens;
     private String annotation;
+    private String description;
     private final String feature;
     private final String classifier;
     private final double confidence;
     private long recommenderId;
     
-    public <T extends TokenObject> AnnotationObject(String annotation, String documentURI,
-            String documentName, String coveredText, Offset offset, List<T> sentenceTokens, 
-            int id, String aFeature, String classifier, double confidence)
+    public <T extends TokenObject> AnnotationObject(String annotation, String description,
+        String documentURI, String documentName, String coveredText, Offset offset,
+        List<T> sentenceTokens, int id, String aFeature, String classifier, double confidence)
     {
         this.annotation = annotation;
+        this.description = description;
         this.documentURI = documentURI;
         this.documentName = documentName;
         this.coveredText = coveredText;
@@ -58,7 +60,15 @@ public class AnnotationObject
                 t.getDocumentURI(),  t.getDocumentName(), i));
         }
     }
-    
+
+    public <T extends TokenObject> AnnotationObject(String annotation, String documentURI,
+        String documentName, String coveredText, Offset offset, List<T> sentenceTokens,
+        int id, String aFeature, String classifier, double confidence)
+    {
+        this(annotation, null, documentURI, documentName, coveredText, offset, sentenceTokens, id,
+            aFeature, classifier, confidence);
+    }
+
     public <T extends TokenObject> AnnotationObject(String annotation, T token,
             List<T> sentenceTokens, int id, String aFeature, String classifier, double confidence)
     {
@@ -71,6 +81,13 @@ public class AnnotationObject
     {
         this(annotation, token.getDocumentURI(), token.getDocumentName(), token.getCoveredText(), 
         token.getOffset(), sentenceTokens, id, aFeature, classifier, -1);
+    }
+
+    public <T extends TokenObject> AnnotationObject(String annotation, String description, T token,
+        List<T> sentenceTokens, int id, String aFeature, String classifier)
+    {
+        this(annotation, description, token.getDocumentURI(), token.getDocumentName(),
+            token.getCoveredText(), token.getOffset(), sentenceTokens, id, aFeature, classifier, -1);
     }
     
     public AnnotationObject(AnnotationObject ao, int id, String aFeature, String classifier)
@@ -110,7 +127,17 @@ public class AnnotationObject
     {
         return annotation;
     }
-    
+
+    public String getDescription()
+    {
+        return description;
+    }
+
+    public void setDescription(String aDescription)
+    {
+        this.description = aDescription;
+    }
+
     public double getConfidence()
     {
         return confidence;
