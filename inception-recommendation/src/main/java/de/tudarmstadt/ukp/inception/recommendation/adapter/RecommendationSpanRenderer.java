@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.adapter;
 
+import static org.apache.commons.lang3.StringUtils.defaultString;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -29,8 +31,10 @@ import java.util.stream.Collectors;
 
 import org.apache.uima.jcas.JCas;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VComment;
@@ -39,6 +43,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocumen
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VRange;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.inception.recommendation.RecommendationEditorExtension;
@@ -79,8 +84,9 @@ public class RecommendationSpanRenderer
      */
     @Override
     public void render(JCas aJcas, VDocument vdoc, AnnotatorState aState,
-            ColoringStrategy aColoringStrategy, RecommendationService recommendationService,
-            LearningRecordService learningRecordService, AnnotationLayer layer)
+        ColoringStrategy aColoringStrategy, AnnotationLayer layer,
+        RecommendationService recommendationService, LearningRecordService learningRecordService,
+        AnnotationSchemaService aAnnotationService, FeatureSupportRegistry aFsRegistry)
     {
         if (aJcas == null || recommendationService == null) {
             return;
@@ -183,8 +189,13 @@ public class RecommendationSpanRenderer
                     AnnotationObject ao = confidencePerClassifier.get(recommenderId);
 
                     if (first) {
-                        HashMap<String, String> featureAnnotation = new HashMap<String, String>();
-                        featureAnnotation.put(ao.getFeature(), ao.getAnnotation());
+                        AnnotationFeature feature = aAnnotationService
+                            .getFeature(ao.getFeature(), layer);
+                        String annotation = defaultString(aFsRegistry.getFeatureSupport(feature)
+                            .renderFeatureValue(feature, ao.getAnnotation()));
+
+                        HashMap<String, String> featureAnnotation = new HashMap<>();
+                        featureAnnotation.put(ao.getFeature(), annotation);
 
                         VSpan v = new VSpan(layer, vid, bratTypeName,
                                 new VRange(ao.getOffset().getBeginCharacter() - windowBegin,

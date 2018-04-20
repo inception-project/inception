@@ -35,6 +35,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensio
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
@@ -71,6 +72,7 @@ public class RecommendationEditorExtension
     private @Autowired RecommendationService recommendationService;
     private @Autowired LearningRecordService learningRecordService;
     private @Autowired ApplicationEventPublisher applicationEventPublisher;
+    private @Autowired FeatureSupportRegistry fsRegistry;
 
     @Override
     public String getBeanName()
@@ -172,6 +174,6 @@ public class RecommendationEditorExtension
     {
         recommendationService.switchPredictions(aState.getUser(), aState.getProject());
         RecommendationRenderer.render(vdoc, aState, jCas, annotationService, recommendationService, 
-                learningRecordService);
+                learningRecordService, fsRegistry);
     }
 }

@@ -30,7 +30,6 @@ import java.util.Optional;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
-import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
@@ -119,17 +118,15 @@ public class ConceptFeatureSupport
     }
 
     @Override
-    public String renderFeatureValue(AnnotationFeature aFeature, AnnotationFS aFs,
-        Feature aLabelFeature)
+    public String renderFeatureValue(AnnotationFeature aFeature, String aLabel)
     {
         try {
-            String value = aFs.getFeatureValueAsString(aLabelFeature);
             String renderValue = null;
 
             // FIXME Since this might be called very often during rendering, it *might* be
             // worth to set up an LRU cache instead of relying on the performance of the
             // underlying KB store.
-            if (value != null) {
+            if (aLabel != null) {
                 ConceptFeatureTraits t = readTraits(aFeature);
 
                 // Use the concept from a particular knowledge base
@@ -137,11 +134,11 @@ public class ConceptFeatureSupport
                 if (t.getRepositoryId() != null) {
                     instance = kbService
                             .getKnowledgeBaseById(aFeature.getProject(), t.getRepositoryId())
-                            .flatMap(kb -> kbService.readInstance(kb, value));
+                            .flatMap(kb -> kbService.readInstance(kb, aLabel));
                 }
                 // Use the concept from any knowledge base (leave KB unselected)
                 else {
-                    instance = kbService.readInstance(aFeature.getProject(), value);
+                    instance = kbService.readInstance(aFeature.getProject(), aLabel);
                 }
 
                 renderValue = instance.map(KBInstance::getUiLabel)
@@ -159,9 +156,15 @@ public class ConceptFeatureSupport
     @Override
     public void setFeatureValue(JCas aJcas, AnnotationFeature aFeature, int aAddress, Object aValue)
     {
-        KBHandle kbInst = (KBHandle) aValue;
         FeatureStructure fs = selectByAddr(aJcas, FeatureStructure.class, aAddress);
-        setFeature(fs, aFeature, kbInst != null ? kbInst.getIdentifier() : null);
+        String kbIdentifier;
+        if (aValue instanceof KBHandle) {
+            kbIdentifier = ((KBHandle) aValue).getIdentifier();
+        }
+        else {
+            kbIdentifier = (String) aValue;
+        }
+        setFeature(fs, aFeature, kbIdentifier);
     }
 
     @Override
