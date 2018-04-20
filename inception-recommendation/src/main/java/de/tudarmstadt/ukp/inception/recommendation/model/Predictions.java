@@ -166,12 +166,9 @@ public class Predictions
         Type type = CasUtil.getType(aJcas.getCas(), aLayer.getName());
         List<AnnotationFS> existingAnnotations = CasUtil.selectCovered(aJcas.getCas(), 
                 type, aWindowBegin, aWindowEnd);
-        List<Integer> existingOffsets = existingAnnotations.stream().map(e -> e.getBegin())
-                .collect(Collectors.toList());
 
         return predictions.entrySet().stream()
                 .filter(f -> f.getKey().getDocumentName().equals(aDocumentName))
-                .filter(f -> !existingOffsets.contains(f.getKey().getOffset().getBeginCharacter()))
                 .filter(f -> f.getKey().getLayerId() == aLayer.getId())
                 .filter(f -> f.getKey().getOffset().getBeginCharacter() >= aWindowBegin)
                 .filter(f -> f.getKey().getOffset().getEndCharacter() <= aWindowEnd)
