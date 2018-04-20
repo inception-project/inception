@@ -91,7 +91,6 @@ public class QueryUtil
             "        ?e2 ?labelpredicate ?altLabel.",
             "        ?altLabel bif:contains '?entityLabel'. ",
             "        ?e2 schema:description ?description.",
-            "        FILTER ( lang(?description) = \"en\" )",
             "      }",
             "    }",
             "  }",
