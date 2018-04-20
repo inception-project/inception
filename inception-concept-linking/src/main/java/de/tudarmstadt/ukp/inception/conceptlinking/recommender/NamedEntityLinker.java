@@ -101,6 +101,16 @@ public class NamedEntityLinker
         this.project = project;
     }
 
+    /**
+     *
+     * @param inputData
+     *            All sentences to predict annotations for.
+     * @param <T>
+     * @return Predicted sentence.
+     *         Outer list: sentence level
+     *         Middle list: word level
+     *         Inner list: token level (predictions for each token)
+     */
     @Override
     public <T extends TokenObject> List<List<List<AnnotationObject>>> predictSentences(
         List<List<T>> inputData)

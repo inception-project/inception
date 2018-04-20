@@ -41,6 +41,11 @@ public class NamedEntityTrainer
         // Nothing to do here atm.
     }
 
+    /**
+     *
+     * @param trainingDataIncrement The current batch of training data.
+     * @return A set of AnnotationObjects with NamedEntity labels
+     */
     @Override
     public Object train(List<List<AnnotationObject>> trainingDataIncrement)
     {
