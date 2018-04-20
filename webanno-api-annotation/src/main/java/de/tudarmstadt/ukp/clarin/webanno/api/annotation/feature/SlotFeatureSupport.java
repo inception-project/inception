@@ -30,6 +30,7 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.wicket.MarkupContainer;
+import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -39,6 +40,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.FeatureEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.LinkFeatureEditor;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.LinkFeatureTraitsEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
@@ -118,6 +120,32 @@ public class SlotFeatureSupport
         }
     }
 
+    @Override
+    public Panel createTraitsEditor(String aId,  IModel<AnnotationFeature> aFeatureModel)
+    {
+        AnnotationFeature feature = aFeatureModel.getObject();
+
+        final Panel editor;
+        
+        switch (feature.getMultiValueMode()) {
+        case ARRAY:
+            switch (feature.getLinkMode()) {
+            case WITH_ROLE:
+                editor = new LinkFeatureTraitsEditor(aId, aFeatureModel);
+                break;
+            default:
+                throw unsupportedFeatureTypeException(feature);
+            }
+            break;
+        case NONE:
+            throw unsupportedLinkModeException(feature);
+        default:
+            throw unsupportedMultiValueModeException(feature);
+        }
+        
+        return editor;
+    }
+    
     @Override
     public FeatureEditor createEditor(String aId, MarkupContainer aOwner,
             AnnotationActionHandler aHandler, final IModel<AnnotatorState> aStateModel,
