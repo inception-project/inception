@@ -22,6 +22,7 @@ import java.io.Serializable;
 import java.util.List;
 
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
+import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 
 /**
  * Utility class which combines relevant inputs in a single class (so that a single Wicket Model can
@@ -37,7 +38,9 @@ public class EnrichedKnowledgeBase implements Serializable {
     private String subclassIri;
     private String typeIri;
     private boolean enabled = true;
+    private Reification reification = Reification.NONE;
     private List<File> files;
+    private boolean supportConceptLinking;
 
     public KnowledgeBase getKb() {
         return kb;
@@ -100,6 +103,25 @@ public class EnrichedKnowledgeBase implements Serializable {
     public void setEnabled(boolean isEnabled)
     {
         enabled = isEnabled;
+    }
+
+    public boolean isSupportConceptLinking()
+    {
+        return supportConceptLinking;
+    }
+
+    public void setSupportConceptLinking(boolean aSupportConceptLinking)
+    {
+        supportConceptLinking = aSupportConceptLinking;
+    }
+    public Reification getReification()
+    {
+        return reification;
+    }
+
+    public void setReification(Reification reificationStrategy)
+    {
+        reification = reificationStrategy;
     }
 
 }

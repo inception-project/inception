@@ -39,6 +39,8 @@ import org.apache.wicket.extensions.wizard.dynamic.DynamicWizardModel;
 import org.apache.wicket.extensions.wizard.dynamic.DynamicWizardStep;
 import org.apache.wicket.extensions.wizard.dynamic.IDynamicWizardStep;
 import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.form.CheckBox;
+import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.RadioGroup;
 import org.apache.wicket.markup.html.form.RequiredTextField;
 import org.apache.wicket.markup.html.form.TextField;
@@ -48,6 +50,7 @@ import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.validation.IValidator;
@@ -67,6 +70,7 @@ import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 import de.tudarmstadt.ukp.inception.kb.io.FileUploadHelper;
+import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 import de.tudarmstadt.ukp.inception.ui.kb.project.EnrichedKnowledgeBase;
 import de.tudarmstadt.ukp.inception.ui.kb.project.EnrichedKnowledgeBaseUtils;
 import de.tudarmstadt.ukp.inception.ui.kb.project.KnowledgeBaseListPanel;
@@ -128,6 +132,17 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
 
             add(nameField("name", "kb.name"));
             add(repositoryTypeRadioButtons("type", "kb.type"));
+
+            add(selectReificationStrategy("reification", "reification"));
+        }
+
+        private DropDownChoice<Reification> selectReificationStrategy(String id, String property)
+        {
+            final List<Reification> reificationList = Arrays.asList(Reification.values());
+
+            DropDownChoice<Reification> reificationDropDownChoice = new
+                DropDownChoice<>(id, model.bind(property), reificationList);
+            return reificationDropDownChoice;
         }
 
         @Override
@@ -291,7 +306,9 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
                     link.add(new Label("suggestionLabel", item.getModelObject()));
                     item.add(link);
                 }
-            });            
+            });
+            add(new CheckBox("supportConceptLinking",
+                    new PropertyModel<Boolean>(model, "supportConceptLinking")));
         }
         
         @Override

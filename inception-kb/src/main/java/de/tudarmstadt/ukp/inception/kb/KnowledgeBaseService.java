@@ -23,10 +23,12 @@ import java.io.OutputStream;
 import java.util.List;
 import java.util.Optional;
 
+import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.eclipse.rdf4j.model.vocabulary.XMLSchema;
+import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.repository.config.RepositoryImplConfig;
 import org.eclipse.rdf4j.repository.manager.RepositoryInfo;
 import org.eclipse.rdf4j.rio.RDFFormat;
@@ -36,6 +38,7 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
+import de.tudarmstadt.ukp.inception.kb.graph.KBQualifier;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
@@ -102,6 +105,8 @@ public interface KnowledgeBaseService
     RepositoryImplConfig getRemoteConfig(String url);
 
     RepositoryImplConfig getKnowledgeBaseConfig(KnowledgeBase kb);
+
+    void registerImplicitNamespace(String aImplicitNameSpace);
 
     /**
      * Creates a new concept in the given knowledge base. Does nothing 
@@ -237,6 +242,16 @@ public interface KnowledgeBaseService
      */
     List<KBHandle> listInstances(KnowledgeBase kb, String aConceptIri, boolean aAll);
 
+    // Statements
+
+    /**
+     * Initializes the internal representation of a KBStatement specifically
+     * for the given knowledge base. Call this before upserting it
+     * @param kb The knowledge base the statement will be use in
+     * @param aStatement The statement itself
+     */
+    void initStatement(KnowledgeBase kb, KBStatement aStatement);
+
     /**
      * Inserts a new statement. If the statement has an original statement, that one is deleted
      * before inserting the new one. If the statement is an inferred statement, then no deletion
@@ -260,4 +275,56 @@ public interface KnowledgeBaseService
     List<KBHandle> listRootConcepts(KnowledgeBase kb, boolean aAll);
 
     List<KBHandle> listChildConcepts(KnowledgeBase kb, String parentIdentifier, boolean aAll);
+
+    RepositoryConnection getConnection(KnowledgeBase kb);
+
+    interface ReadAction<T>
+    {
+        T accept(RepositoryConnection aConnection);
+    }
+
+    <T> T read(KnowledgeBase kb, ReadAction<T> aAction);
+
+    KBHandle update(KnowledgeBase kb, UpdateAction aAction);
+
+    interface UpdateAction
+    {
+        KBHandle accept(RepositoryConnection aConnection);
+    }
+
+    List<KBHandle> list(KnowledgeBase kb, IRI aType, boolean aIncludeInferred, boolean
+        aAll);
+
+    /**
+     * Adds a new qualifier in the given knowledge base. Does
+     * nothing if the knowledge base is read only.
+     * @param kb The knowledge base from which the new qualifier will be added
+     * @param newQualifier The qualifier to add
+     */
+    void addQualifier(KnowledgeBase kb, KBQualifier newQualifier);
+
+    /**
+     * Deletes a qualifier in the given knowledge base if it exists. Does
+     * nothing if the knowledge base is read only.
+     * @param kb The knowledge base from which the new qualifier will be deleted
+     * @param oldQualifier The qualifier to delete
+     */
+    void deleteQualifier(KnowledgeBase kb, KBQualifier oldQualifier);
+
+    /**
+     * Updates a qualifier or inserts a new one. If the qualifier has an original qualifier,
+     * that old one is deleted before inserting the new one. Does nothing if the knowledge base is
+     * read only.
+     * @param kb The knowledge base from which the qualifier will be upserted
+     * @param aQualifier The qualifier to upsert
+     */
+    void upsertQualifier(KnowledgeBase kb, KBQualifier aQualifier);
+
+    /**
+     * Returns all qualifiers for the given statement
+     * @param kb The knowledge base to query
+     * @param aStatement The statement finding qualifiers for
+     * @return all qualifiers for the given statement
+     */
+    List<KBQualifier> listQualifiers(KnowledgeBase kb, KBStatement aStatement);
 }

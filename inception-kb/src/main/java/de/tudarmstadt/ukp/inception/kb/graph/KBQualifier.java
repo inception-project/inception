@@ -1,5 +1,5 @@
 /*
- * Copyright 2017
+ * Copyright 2018
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  *
@@ -18,6 +18,15 @@
 package de.tudarmstadt.ukp.inception.kb.graph;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.cyberborean.rdfbeans.datatype.DatatypeMapper;
+import org.cyberborean.rdfbeans.datatype.DefaultDatatypeMapper;
+import org.eclipse.rdf4j.model.BNode;
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Literal;
+import org.eclipse.rdf4j.model.Statement;
 
 public class KBQualifier
     implements Serializable
@@ -26,15 +35,35 @@ public class KBQualifier
 
     private KBStatement kbStatement;
 
+    private String language;
+
     private KBHandle kbProperty;
 
     private Object value;
 
-    public KBQualifier(KBStatement kbStatement, KBHandle kbProperty, Object value)
+    private List<Statement> originalStatements;
+
+    public KBQualifier(KBStatement aKbStatement, KBHandle aKbProperty, Object aValue)
     {
-        this.kbStatement = kbStatement;
-        this.kbProperty = kbProperty;
-        this.value = value;
+        kbStatement = aKbStatement;
+        kbProperty = aKbProperty;
+        DatatypeMapper mapper = new DefaultDatatypeMapper();
+
+        if (aValue instanceof Literal) {
+            Literal litValue = (Literal) aValue;
+            language = litValue.getLanguage().orElse(null);
+            value = mapper.getJavaObject(litValue);
+        }
+        else if (aValue instanceof IRI) {
+            value = aValue;
+        }
+        else if (aValue instanceof BNode) {
+            value = null;
+        }
+        else {
+            throw new IllegalStateException("Unknown object type: " + aValue.getClass());
+        }
+        originalStatements = new ArrayList<>();
     }
 
     public KBQualifier(KBStatement kbStatement)
@@ -71,4 +100,23 @@ public class KBQualifier
     {
         this.value = value;
     }
+
+    public String getLanguage() {
+        return language;
+    }
+
+    public void setLanguage(String aLanguage) {
+        language = language;
+    }
+
+    public List<Statement> getOriginalStatements()
+    {
+        return originalStatements;
+    }
+
+    public void setOriginalStatements(List<Statement> originalStatements)
+    {
+        this.originalStatements = originalStatements;
+    }
+
 }

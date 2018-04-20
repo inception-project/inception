@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.kb.model;
 
+import static de.tudarmstadt.ukp.inception.kb.reification.Reification.NONE;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 import java.io.Serializable;
@@ -24,6 +25,7 @@ import java.util.Objects;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
@@ -39,6 +41,7 @@ import org.hibernate.annotations.OnDeleteAction;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
+import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 
 @Entity
 @Table(name = "knowledgebase",
@@ -104,10 +107,15 @@ public class KnowledgeBase
      */
     @Column(nullable = false)
     private boolean enabled = true;
+
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private Reification reification = NONE;
     
+    @Column(name = "supportConceptLinking", nullable = false)
+    private boolean supportConceptLinking = false;
     
-    public String getRepositoryId()
-    {
+    public String getRepositoryId() {
         return repositoryId;
     }
 
@@ -196,6 +204,16 @@ public class KnowledgeBase
         enabled = isEnabled;
     }
 
+    public Reification getReification()
+    {
+        return reification;
+    }
+
+    public void setReification(Reification aReification)
+    {
+        reification = aReification;
+    }
+
     /**
      * @return {@code true} if this knowledge base has a repository id, i.e. it is conceptually
      *         linked to a {@link Project} and is managed by an RDF4J repository.
@@ -203,6 +221,14 @@ public class KnowledgeBase
     public boolean isManagedRepository()
     {
         return !(repositoryId == null || isEmpty(repositoryId));
+    }
+    
+    public void setSupportConceptLinking(boolean aSupportConceptLinking) {
+        supportConceptLinking = aSupportConceptLinking;
+    }
+    
+    public boolean isSupportConceptLinking() {
+        return supportConceptLinking;
     }
     
     @Override

@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.scheduling.tasks;
 
-import static org.apache.commons.lang3.Validate.notNull;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -52,26 +50,22 @@ public class PredictionTask
 {
     private Logger log = LoggerFactory.getLogger(getClass());
     
-    private Predictions model;
-    
     private @Autowired AnnotationSchemaService annoService;
     private @Autowired RecommendationService recommendationService;
     private @Autowired DocumentService documentService;
     
-    public PredictionTask(User aUser, Project aProject, Predictions aPredictions)
+    public PredictionTask(User aUser, Project aProject)
     {
         super(aProject, aUser);
-        
-        notNull(aPredictions);
-        
-        model = aPredictions;
     }
 
     @Override
     public void run()
     {
         User user = getUser();
-        
+
+        Predictions model = new Predictions(getProject(), getUser()); 
+
         for (AnnotationLayer layer : annoService.listAnnotationLayer(getProject())) {
             if (!layer.isEnabled()) {
                 continue;
@@ -120,10 +114,14 @@ public class PredictionTask
                         recommender.getName());
                 List<AnnotationObject> predictions = classifier.predict(tokens, layer);
                 predictions.forEach(token -> token.setRecommenderId(ct.getId()));
+                
                 model.putPredictions(layer.getId(), predictions);
+                
                 log.info("[{}][{}]: Prediction complete ({} ms)", user.getUsername(),
                         recommender.getName(), (System.currentTimeMillis() - startTime));
             }
         }
+        
+        recommendationService.putIncomingPredictions(getUser(), getProject(), model);
     }
 }

@@ -23,6 +23,8 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.event.Broadcast;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
@@ -48,6 +50,7 @@ import de.tudarmstadt.ukp.inception.recommendation.event.RecommendationRejectedE
 import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.AnnotationObject;
 import de.tudarmstadt.ukp.inception.recommendation.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.model.LearningRecordChangeLocation;
+import de.tudarmstadt.ukp.inception.recommendation.model.LearningRecordUserAction;
 import de.tudarmstadt.ukp.inception.recommendation.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.render.RecommendationRenderer;
@@ -61,6 +64,8 @@ public class RecommendationEditorExtension
     implements AnnotationEditorExtension
 {
     public static final String BEAN_NAME = "recommendationEditorExtension";
+    
+    private final Logger log = LoggerFactory.getLogger(getClass());
     
     private @Autowired AnnotationSchemaService annotationService;
     private @Autowired RecommendationService recommendationService;
@@ -142,7 +147,7 @@ public class RecommendationEditorExtension
         LearningRecord record = new LearningRecord();
         record.setUser(aState.getUser().getUsername());
         record.setSourceDocument(aState.getDocument());
-        record.setUserAction("rejected");
+        record.setUserAction(LearningRecordUserAction.REJECTED);
         record.setOffsetCharacterBegin(prediction.getOffset().getBeginCharacter());
         record.setOffsetCharacterEnd(prediction.getOffset().getEndCharacter());
         record.setOffsetTokenBegin(prediction.getOffset().getBeginToken());

@@ -24,10 +24,8 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.Offset;
 public class ExtendedId
     implements Serializable
 {
-    /**
-     * 
-     */
     private static final long serialVersionUID = -5214683455382881005L;
+    
     private String userName;
     private long projectId;
     private String documentName;
