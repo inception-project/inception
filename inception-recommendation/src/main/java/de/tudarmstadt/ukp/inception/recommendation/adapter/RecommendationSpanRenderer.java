@@ -28,8 +28,10 @@ import java.util.stream.Collectors;
 
 import org.apache.uima.jcas.JCas;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VComment;
@@ -77,8 +79,9 @@ public class RecommendationSpanRenderer
      */
     @Override
     public void render(JCas aJcas, VDocument vdoc, AnnotatorState aState,
-            ColoringStrategy aColoringStrategy, RecommendationService recommendationService,
-            LearningRecordService learningRecordService, AnnotationLayer layer)
+        ColoringStrategy aColoringStrategy, AnnotationLayer layer,
+        RecommendationService recommendationService, LearningRecordService learningRecordService,
+        AnnotationSchemaService aAnnotationService, FeatureSupportRegistry aFsRegistry)
     {
         if (aJcas == null || recommendationService == null) {
             return;
