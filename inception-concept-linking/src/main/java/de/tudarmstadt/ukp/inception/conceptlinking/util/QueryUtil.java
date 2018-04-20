@@ -134,7 +134,7 @@ public class QueryUtil
 
         String query = String.join("\n",
             SPARQL_PREFIX,
-            "SELECT DISTINCT ?label ?p ?e1 WHERE ",
+            "SELECT DISTINCT ?label ?p WHERE ",
             "  {",
             "    {",
             "      {",
