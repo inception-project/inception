@@ -217,7 +217,7 @@ public class RecommendationServiceImpl
     public void onRecommenderDelete(RecommenderDeletedEvent aEvent)
     {
         RecommendationUserState state = getState(aEvent.getUser());
-        state.removePredictions(aEvent.getRecommender(), aEvent.getProject());
+        state.removePredictions(aEvent.getRecommender());
         triggerTrainingAndClassification(aEvent.getUser(), aEvent.getProject());
     }
     
@@ -373,26 +373,28 @@ public class RecommendationServiceImpl
             trainedModels.put(aRecommender.getId(), aModel);
         }
 
-        public void removePredictions(Recommender aRecommender, Project aProject)
+        public void removePredictions(Recommender aRecommender)
         {
             // Remove incoming predictions
-            Predictions incoming = incomingPredictions.get(aProject.getId());
+            Predictions incoming = incomingPredictions.get(aRecommender.getProject().getId());
             if (incoming != null) {
                 incoming.removePredictions(aRecommender.getId());
-                incomingPredictions.put(aProject.getId(), incoming);
+                incomingPredictions.put(aRecommender.getProject().getId(), incoming);
             }
 
             // Remove active predictions
-            Predictions active = activePredictions.get(aProject.getId());
+            Predictions active = activePredictions.get(aRecommender.getProject().getId());
             if (active != null) {
                 active.removePredictions(aRecommender.getId());
-                activePredictions.put(aProject.getId(), active);
+                activePredictions.put(aRecommender.getProject().getId(), active);
             }
 
             // Remove trainedModel
             trainedModels.remove(aRecommender.getId());
 
-            // Remove from activeRecommenders map
+            // Remove from activeRecommenders map.
+            // We have to do this, otherwise training and prediction continues for the
+            // recommender when a new task is triggered.
             MultiValuedMap<AnnotationLayer, Recommender> newActiveRecommenders
                 = new HashSetValuedHashMap<>();
             MapIterator<AnnotationLayer, Recommender> it
