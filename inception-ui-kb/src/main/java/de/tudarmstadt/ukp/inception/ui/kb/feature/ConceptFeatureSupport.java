@@ -156,9 +156,15 @@ public class ConceptFeatureSupport
     @Override
     public void setFeatureValue(JCas aJcas, AnnotationFeature aFeature, int aAddress, Object aValue)
     {
-        KBHandle kbInst = (KBHandle) aValue;
         FeatureStructure fs = selectByAddr(aJcas, FeatureStructure.class, aAddress);
-        setFeature(fs, aFeature, kbInst != null ? kbInst.getIdentifier() : null);
+        String kbIdentifier;
+        if (aValue instanceof KBHandle) {
+            kbIdentifier = ((KBHandle) aValue).getIdentifier();
+        }
+        else {
+            kbIdentifier = (String) aValue;
+        }
+        setFeature(fs, aFeature, kbIdentifier);
     }
 
     @Override
