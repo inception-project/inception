@@ -56,7 +56,7 @@ public class NamedEntityLinkerClassificationToolFactory
     @Override
     public String getName()
     {
-        return "Entity Classifier";
+        return "Named Entity Linker";
     }
 
     @Override
