@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.adapter;
 
+import static org.apache.commons.lang3.StringUtils.defaultString;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -40,6 +42,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocumen
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VRange;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.inception.recommendation.RecommendationEditorExtension;
@@ -186,8 +189,13 @@ public class RecommendationSpanRenderer
                     AnnotationObject ao = confidencePerClassifier.get(recommenderId);
 
                     if (first) {
-                        HashMap<String, String> featureAnnotation = new HashMap<String, String>();
-                        featureAnnotation.put(ao.getFeature(), ao.getAnnotation());
+                        AnnotationFeature feature = aAnnotationService
+                            .getFeature(ao.getFeature(), layer);
+                        String annotation = defaultString(aFsRegistry.getFeatureSupport(feature)
+                            .renderFeatureValue(feature, ao.getAnnotation()));
+
+                        HashMap<String, String> featureAnnotation = new HashMap<>();
+                        featureAnnotation.put(ao.getFeature(), annotation);
 
                         VSpan v = new VSpan(layer, vid, bratTypeName,
                                 new VRange(ao.getOffset().getBeginCharacter() - windowBegin,
