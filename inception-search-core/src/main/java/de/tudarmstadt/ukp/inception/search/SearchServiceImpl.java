@@ -67,7 +67,6 @@ public class SearchServiceImpl
     private @Autowired DocumentService documentService;
     private @Autowired ProjectService projectService;
     private @Autowired PhysicalIndexRegistry physicalIndexRegistry;
-    private @Autowired UserDao userRepository;
 
     // The index scheduler
     private IndexScheduler indexScheduler;
@@ -107,6 +106,7 @@ public class SearchServiceImpl
                 index.setProject(aProject);
                 index.setPhysicalProvider(physicalIndexFactoryName);
                 createIndex(index);
+                updateIndex(index);
             }
             
             // Get physical index object
@@ -194,7 +194,7 @@ public class SearchServiceImpl
             // Physical index does not exist. 
             
             // Set the invalid flag
-            index.setInvalid(false);
+            index.setInvalid(true);
             updateIndex(index);
 
             // Schedule new reindex process
@@ -238,7 +238,7 @@ public class SearchServiceImpl
                 // Physical index does not exist.
 
                 // Set the invalid flag
-                index.setInvalid(false);
+                index.setInvalid(true);
                 updateIndex(index);
 
                 // Schedule new reindexing process
@@ -276,7 +276,7 @@ public class SearchServiceImpl
 
         if (!index.getPhysicalIndex().isCreated()) {
             // Set the invalid flag
-            index.setInvalid(false);
+            index.setInvalid(true);
             updateIndex(index);
 
             // Schedule reindexing of the physical index
@@ -303,7 +303,7 @@ public class SearchServiceImpl
         Index index = getIndexFromMemory(project);
 
         // Set the invalid flag
-        index.setInvalid(false);
+        index.setInvalid(true);
         updateIndex(index);
 
         // Schedule reindexing of the physical index
@@ -314,6 +314,7 @@ public class SearchServiceImpl
      * Reindex the project. If there is not a physical index, create a new one.
      */
     @Override
+    @Transactional
     public void reindex(Project aProject) throws IOException
     {
         log.info("Reindexing project " + aProject.getName());

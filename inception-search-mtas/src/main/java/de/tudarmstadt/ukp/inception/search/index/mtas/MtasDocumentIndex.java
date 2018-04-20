@@ -586,19 +586,21 @@ public class MtasDocumentIndex
     @Override
     public void openPhysicalIndex()
     {
-        // Only open if it is not already open
-        if (indexWriter == null) {
-            if (!indexWriter.isOpen()) {
-                try {
-                    log.info("Opening index for project " + project.getName());
+        boolean isOpen;
+        
+        isOpen = (indexWriter == null)?false:indexWriter.isOpen();
 
-                    indexWriter = openLuceneIndex(getIndexDir());
+        if (!isOpen) {
+            // Only open if it is not already open
+            try {
+                log.info("Opening index for project " + project.getName());
 
-                    log.info("Index has been opened for project " + project.getName());
-                }
-                catch (Exception e) {
-                    log.error("Unable to open index", e);
-                }
+                indexWriter = openLuceneIndex(getIndexDir());
+
+                log.info("Index has been opened for project " + project.getName());
+            }
+            catch (Exception e) {
+                log.error("Unable to open index", e);
             }
         }
     }
