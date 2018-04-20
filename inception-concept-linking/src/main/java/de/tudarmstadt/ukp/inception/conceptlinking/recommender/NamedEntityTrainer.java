@@ -27,10 +27,10 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.conf.ClassifierConfigura
 import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.AnnotationObject;
 import de.tudarmstadt.ukp.inception.recommendation.imls.core.trainer.Trainer;
 
-public class NEIdentifierTrainer
+public class NamedEntityTrainer
     extends Trainer<Object>
 {
-    public NEIdentifierTrainer(ClassifierConfiguration<Object> configuration)
+    public NamedEntityTrainer(ClassifierConfiguration<Object> configuration)
     {
         super(configuration);
     }

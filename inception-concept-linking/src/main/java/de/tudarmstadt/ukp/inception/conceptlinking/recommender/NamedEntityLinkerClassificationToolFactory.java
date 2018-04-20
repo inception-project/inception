@@ -33,7 +33,7 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.core.classificationtool.
 import de.tudarmstadt.ukp.inception.recommendation.imls.core.classificationtool.ClassificationToolFactory;
 
 @Component
-public class NEIdentifierClassificationToolFactory
+public class NamedEntityLinkerClassificationToolFactory
     implements ClassificationToolFactory<Object>
 {
     private Logger log = LoggerFactory.getLogger(getClass());
@@ -45,7 +45,8 @@ public class NEIdentifierClassificationToolFactory
     // This is a string literal so we can rename/refactor the class without it changing its ID
     // and without the database starting to refer to non-existing recommendation tools.
     public static final String ID =
-        "de.tudarmstadt.ukp.inception.conceptlinking.recommender.NEIdentifierClassificationTool";
+        "de.tudarmstadt.ukp.inception.conceptlinking.recommender"
+            + ".NamedEntityLinkerClassificationTool";
 
     @Override
     public String getId()
@@ -63,7 +64,8 @@ public class NEIdentifierClassificationToolFactory
     public ClassificationTool<Object> createTool(long aRecommenderId, String aFeature,
         AnnotationLayer aLayer, int aMaxPredictions)
     {
-        return new NEIdentifierClassificationTool(aRecommenderId, aFeature, aLayer, kbService,
+        return new NamedEntityLinkerClassificationTool(aRecommenderId, aFeature, aLayer,
+            kbService,
             clService, docService);
     }
 

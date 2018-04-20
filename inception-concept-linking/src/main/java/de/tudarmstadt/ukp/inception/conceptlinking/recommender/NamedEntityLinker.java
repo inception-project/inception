@@ -44,7 +44,8 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.Annotat
 import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.Offset;
 import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.TokenObject;
 
-public class NEIdentifierClassifier
+public class NamedEntityLinker
+
     extends Classifier<Object>
 {
     private Logger log = LoggerFactory.getLogger(getClass());
@@ -60,7 +61,7 @@ public class NEIdentifierClassifier
     private ConceptLinkingService clService;
     private DocumentService documentService;
 
-    public NEIdentifierClassifier(ClassifierConfiguration<Object> conf, KnowledgeBaseService kbService,
+    public NamedEntityLinker(ClassifierConfiguration<Object> conf, KnowledgeBaseService kbService,
         ConceptLinkingService clService, DocumentService documentService)
     {
         super(conf);
@@ -170,7 +171,7 @@ public class NEIdentifierClassifier
             .limit(conf.getNumPredictions())
             .forEach(h -> predictions.add(
             new AnnotationObject(h.getIdentifier(), token, null, tokenId++, feature,
-                "NEIdentifierClassifier")));
+                "NamedEntityLinker")));
 
         return predictions;
 

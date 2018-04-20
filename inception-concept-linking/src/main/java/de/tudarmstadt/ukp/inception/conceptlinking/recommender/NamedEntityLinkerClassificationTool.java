@@ -26,16 +26,16 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.conf.ClassifierConfigura
 import de.tudarmstadt.ukp.inception.recommendation.imls.core.classificationtool.ClassificationTool;
 import de.tudarmstadt.ukp.inception.recommendation.imls.core.loader.ner.NerAnnotationObjectLoader;
 
-public class NEIdentifierClassificationTool
+public class NamedEntityLinkerClassificationTool
     extends ClassificationTool<Object>
 {
-    public NEIdentifierClassificationTool(long recommenderId, String feature,
+    public NamedEntityLinkerClassificationTool(long recommenderId, String feature,
         AnnotationLayer aLayer, KnowledgeBaseService kbService, ConceptLinkingService clService,
         DocumentService docService)
     {
-        super(recommenderId, NEIdentifierClassificationTool.class.getName(),
-            new NEIdentifierTrainer(new ClassifierConfiguration<>(feature)),
-            new NEIdentifierClassifier(new ClassifierConfiguration<>(feature), kbService, clService,
+        super(recommenderId, NamedEntityLinkerClassificationToolFactory.class.getName(),
+            new NamedEntityTrainer(new ClassifierConfiguration<>(feature)),
+            new NamedEntityLinker(new ClassifierConfiguration<>(feature), kbService, clService,
                 docService),
             new NerAnnotationObjectLoader(aLayer, feature), false);
     }
