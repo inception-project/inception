@@ -108,7 +108,7 @@ public abstract class Classifier<C>
             int i = 0;
 
             // Repeat for as many predictions we have for each token
-            while (i < conf.getNumPredictions()) {
+            while (i <= conf.getNumPredictions()) {
 
                 for (int j = 0; j < sentence.size(); j++) {
                     List<AnnotationObject> word = sentence.get(j);
