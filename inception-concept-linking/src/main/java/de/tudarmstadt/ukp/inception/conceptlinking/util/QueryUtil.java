@@ -62,7 +62,7 @@ public class QueryUtil
         String query = String.join("\n",
             "DEFINE input:inference 'instances'",
             SPARQL_PREFIX,
-            "SELECT DISTINCT ?e2 ?altLabel ?label WHERE",
+            "SELECT DISTINCT ?e2 ?altLabel ?label ?description WHERE",
             "{",
             "  {",
             "    {",
@@ -71,6 +71,7 @@ public class QueryUtil
             "      {",
             "        ?e2 ?labelpredicate ?altLabel.",
             "        ?altLabel bif:contains '?entityLabel'. ",
+            "        ?e2 schema:description ?description.",
             "      }",
             "    }",
             "  }",
@@ -135,4 +136,19 @@ public class QueryUtil
         return tupleQuery;
     }
 
+    public static TupleQuery getDescription (RepositoryConnection conn, String IRI)
+    {
+        ValueFactory vf = SimpleValueFactory.getInstance();
+
+        String query = String.join("\n",
+            "SELECT ?itemDescription",
+            "WHERE {",
+            "  VALUES (?item) {( ?e )}",
+            "  SERVICE wikibase:label { bd:serviceParam wikibase:language \"en\"",
+            "  }",
+            "}");
+        TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, query);
+        tupleQuery.setBinding("e", vf.createIRI(IRI));
+        return tupleQuery;
+    }
 }
