@@ -169,7 +169,7 @@ public class NEIdentifierClassifier
         handles.stream()
             .limit(conf.getNumPredictions())
             .forEach(h -> predictions.add(
-            new AnnotationObject(h.getName(), token, null, tokenId++, feature,
+            new AnnotationObject(h.getIdentifier(), token, null, tokenId++, feature,
                 "NEIdentifierClassifier")));
 
         return predictions;
