@@ -238,9 +238,8 @@ public class RecommendationServiceImpl
     {
         String userName = aEvent.getDocument().getUser();
         Project project = aEvent.getDocument().getProject();
-        clearPredictionsForProject(userName, project);
-        triggerTrainingAndClassification(aEvent.getDocument().getUser(),
-            aEvent.getDocument().getProject());
+        clearState(userName);
+        triggerTrainingAndClassification(userName, project);
     }
 
     @Override
@@ -296,17 +295,6 @@ public class RecommendationServiceImpl
             states.remove(aUsername);
         }
     }
-
-    private void clearPredictionsForProject(String aUsername, Project project)
-    {
-        synchronized (states) {
-            RecommendationUserState state = getState(aUsername);
-            state.clearActivePredictions(project);
-            state.clearIncomingPredictions(project);
-            state.clearTrainedModels();
-            state.clearActiveRecommenders();
-        }
-    }
     
     @Override
     public void switchPredictions(User aUser, Project aProject)
@@ -320,7 +308,11 @@ public class RecommendationServiceImpl
             }
         }
     }
-    
+
+    /**
+     * We are assuming that the user is actively working on one project at a time.
+     * Otherwise, the RecommendationUserState might take up a lot of memory.
+     */
     private static class RecommendationUserState
     {
         private int maxPredictions = 3;
@@ -370,21 +362,6 @@ public class RecommendationServiceImpl
             incomingPredictions.remove(aProject.getId());            
         }
 
-        public void clearActivePredictions(Project aProject)
-        {
-            activePredictions.remove(aProject.getId());
-        }
-
-        public void clearTrainedModels()
-        {
-            trainedModels.clear();
-        }
-
-        public void clearActiveRecommenders()
-        {
-            activeRecommenders.clear();
-        }
-        
         public Object getTrainedModel(Recommender aRecommender)
         {
             return trainedModels.get(aRecommender.getId());
