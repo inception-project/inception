@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.kb;
 
-import static org.apache.commons.lang3.StringUtils.startsWithAny;
-
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -26,12 +24,13 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
@@ -41,7 +40,6 @@ import javax.persistence.Query;
 import org.apache.commons.compress.compressors.CompressorException;
 import org.apache.commons.compress.compressors.CompressorStreamFactory;
 import org.apache.commons.lang3.StringUtils;
-import org.eclipse.rdf4j.model.BNode;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.ValueFactory;
@@ -83,9 +81,13 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
 import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
+import de.tudarmstadt.ukp.inception.kb.graph.KBQualifier;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.graph.RdfUtils;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
+import de.tudarmstadt.ukp.inception.kb.reification.NoReification;
+import de.tudarmstadt.ukp.inception.kb.reification.ReificationStrategy;
+import de.tudarmstadt.ukp.inception.kb.reification.WikiDataReification;
 
 @Component(KnowledgeBaseService.SERVICE_NAME)
 public class KnowledgeBaseServiceImpl
@@ -95,6 +97,7 @@ public class KnowledgeBaseServiceImpl
 
     private @PersistenceContext EntityManager entityManager;
     private final RepositoryManager repoManager;
+    private final Set<String> implicitNamespaces;
 
     @org.springframework.beans.factory.annotation.Value(value = "${data.path}/kb")
     private File dataDir;
@@ -106,6 +109,7 @@ public class KnowledgeBaseServiceImpl
         String url = Paths.get(dataDir.getAbsolutePath(), "kb").toUri().toString();
         repoManager = RepositoryProvider.getRepositoryManager(url);
         log.info("Knowledge base repository path: " + url);
+        implicitNamespaces = new HashSet<>(Arrays.asList(IMPLICIT_NAMESPACES));
     }
 
     public KnowledgeBaseServiceImpl(
@@ -231,7 +235,14 @@ public class KnowledgeBaseServiceImpl
     }
 
     @Override
-    public RepositoryConnection getConnection(KnowledgeBase kb) {
+    public void registerImplicitNamespace(String aImplicitNameSpace)
+    {
+        implicitNamespaces.add(aImplicitNameSpace);
+    }
+
+    @Override
+    public RepositoryConnection getConnection(KnowledgeBase kb)
+    {
         assertRegistration(kb);
         return repoManager.getRepository(kb.getRepositoryId()).getConnection();
     }
@@ -241,6 +252,11 @@ public class KnowledgeBaseServiceImpl
     public void importData(KnowledgeBase kb, String aFilename, InputStream aIS)
         throws RDFParseException, RepositoryException, IOException
     {
+        if (kb.isReadOnly()) {
+            log.warn("Knowledge base [{}] is read only, will not import!", kb.getName());
+            return;
+        }
+
         InputStream is = new BufferedInputStream(aIS);
         try {
             // Stream is expected to be closed by caller of importData
@@ -456,7 +472,7 @@ public class KnowledgeBaseServiceImpl
             while (conceptStmts.hasNext() && conceptIdentifier == null) {
                 Statement stmt = conceptStmts.next();
                 String id = stmt.getObject().stringValue();
-                if (!startsWithAny(id, IMPLICIT_NAMESPACES) && id.contains(":")) {
+                if (!hasImplicitNamespace(id) && id.contains(":")) {
                     conceptIdentifier = stmt.getObject().stringValue();
                 }
             }
@@ -523,73 +539,33 @@ public class KnowledgeBaseServiceImpl
     {
         IRI conceptIri = SimpleValueFactory.getInstance().createIRI(aConceptIri);
         return list(kb, conceptIri, false, aAll);
-    }    
-    
+    }
+
+    // Statements
+
+    @Override
+    public void initStatement(KnowledgeBase kb, KBStatement aStatement)
+    {
+        List<Statement> statements = getReificationStrategy(kb).reify(kb, aStatement);
+        aStatement.setOriginalStatements(statements);
+    }
+
     @Override
     public void upsertStatement(KnowledgeBase kb, KBStatement aStatement)
     {
-        update(kb, (conn) -> {
-            if (!aStatement.isInferred()) {
-                conn.remove(aStatement.getOriginalStatements());
-            }
-            aStatement.write(conn);
-            return null;
-        });
+        getReificationStrategy(kb).upsertStatement(kb, aStatement);
     }
 
     @Override
     public void deleteStatement(KnowledgeBase kb, KBStatement aStatement)
     {
-        update(kb, (conn) -> {
-            Statement statement = aStatement.toStatement(conn);
-            conn.remove(statement);
-            return null;
-        });
+        getReificationStrategy(kb).deleteStatement(kb, aStatement);
     }
 
     @Override
     public List<KBStatement> listStatements(KnowledgeBase kb, KBHandle aInstance, boolean aAll)
     {
-        Map<String, KBHandle> props = new HashMap<>();
-        for (KBHandle prop : listProperties(kb, aAll)) {
-            props.put(prop.getIdentifier(), prop);
-        }
-
-        List<Statement> explicitStmts = listStatements(kb, aInstance.getIdentifier(), false);
-        List<Statement> allStmts = listStatements(kb, aInstance.getIdentifier(), true);
-
-        List<KBStatement> statements = new ArrayList<>();
-        for (Statement stmt : allStmts) {
-            // Can this really happen?
-            if (stmt.getObject() == null) {
-                log.warn("Property with null value detected.");
-                continue;
-            }
-
-            if (stmt.getObject() instanceof BNode) {
-                log.warn("Properties with blank node values are not supported");
-                continue;
-            }
-
-            KBHandle prop = props.get(stmt.getPredicate().stringValue());
-            if (prop == null) {
-                // This happens in particular for built-in properties such as
-                // RDF / RDFS / OWL properties
-                if (aAll) {
-                    prop = new KBHandle();
-                    prop.setIdentifier(stmt.getPredicate().stringValue());
-                }
-                else {
-                    continue;
-                }
-            }
-
-            KBStatement kbStmt = KBStatement.read(aInstance, prop, stmt);
-            kbStmt.setInferred(!explicitStmts.contains(stmt));
-            statements.add(kbStmt);
-        }
-
-        return statements;
+        return getReificationStrategy(kb).listStatements(kb, aInstance, aAll);
     }
 
     @Override
@@ -597,39 +573,6 @@ public class KnowledgeBaseServiceImpl
     {
         KBHandle handle = new KBHandle(aInstance.getIdentifier(), aInstance.getName());
         return listStatements(kb, handle, aAll);
-    }
-
-    private List<Statement> listStatements(KnowledgeBase kb, String aInstanceIdentifier,
-            boolean aIncludeInferred)
-    {
-        return read(kb, (conn) -> {
-            ValueFactory vf = conn.getValueFactory();
-            String QUERY = "SELECT * WHERE { ?s ?p ?o . }";
-            TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
-            tupleQuery.setBinding("s", vf.createIRI(aInstanceIdentifier));
-            tupleQuery.setIncludeInferred(aIncludeInferred);
-
-            TupleQueryResult result;
-            try {
-                result = tupleQuery.evaluate();
-            } catch (QueryEvaluationException e) {
-                log.warn("Listing statements failed.", e);
-                return Collections.emptyList();
-            }
-
-            List<Statement> statements = new ArrayList<>();
-            IRI subject = vf.createIRI(aInstanceIdentifier);
-            while (result.hasNext()) {
-                BindingSet bindings = result.next();
-                Binding pred = bindings.getBinding("p");
-                Binding obj = bindings.getBinding("o");
-
-                IRI predicate = vf.createIRI(pred.getValue().stringValue());
-                Statement stmt = vf.createStatement(subject, predicate, obj.getValue());
-                statements.add(stmt);
-            }
-            return statements;
-        });
     }
 
     private void delete(KnowledgeBase kb, String aIdentifier)
@@ -650,7 +593,7 @@ public class KnowledgeBaseServiceImpl
         return KnowledgeBaseService.INCEPTION_NAMESPACE + vf.createBNode().getID();
     }
 
-    private KBHandle update(KnowledgeBase kb, UpdateAction aAction)
+    public KBHandle update(KnowledgeBase kb, UpdateAction aAction)
     {
         if (kb.isReadOnly()) {
             log.warn("Knowledge base [{}] is read only, will not alter!", kb.getName());
@@ -787,7 +730,7 @@ public class KnowledgeBaseServiceImpl
             String id = bindings.getBinding("s").getValue().stringValue();
             Binding label = bindings.getBinding("l");
 
-            if (!id.contains(":") || (!aAll && startsWithAny(id, IMPLICIT_NAMESPACES))) {
+            if (!id.contains(":") || (!aAll && hasImplicitNamespace(id))) {
                 continue;
             }
 
@@ -801,8 +744,48 @@ public class KnowledgeBaseServiceImpl
         return handles;
     }
 
-    private interface UpdateAction
+    private ReificationStrategy getReificationStrategy(KnowledgeBase kb)
     {
-        KBHandle accept(RepositoryConnection aConnection);
+        switch (kb.getReification()) {
+        case WIKIDATA:
+            return new WikiDataReification(this);
+        case NONE: // Fallthrough
+        default:
+            return new NoReification(this);
+        }
+    }
+
+    private boolean hasImplicitNamespace(String s)
+    {
+        for (String ns : implicitNamespaces) {
+            if (s.startsWith(ns)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public void addQualifier(KnowledgeBase kb, KBQualifier newQualifier)
+    {
+        getReificationStrategy(kb).addQualifier(kb, newQualifier);
+    }
+
+    @Override
+    public void deleteQualifier(KnowledgeBase kb, KBQualifier oldQualifier)
+    {
+        getReificationStrategy(kb).deleteQualifier(kb, oldQualifier);
+    }
+
+    @Override
+    public void upsertQualifier(KnowledgeBase kb, KBQualifier aQualifier)
+    {
+        getReificationStrategy(kb).upsertQualifier(kb, aQualifier);
+    }
+
+    @Override
+    public List<KBQualifier> listQualifiers(KnowledgeBase kb, KBStatement aStatement)
+    {
+        return getReificationStrategy(kb).listQualifiers(kb, aStatement);
     }
 }

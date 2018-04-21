@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -38,7 +39,9 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.googlecode.wicket.jquery.core.JQueryBehavior;
 import com.googlecode.wicket.jquery.core.renderer.TextRenderer;
+import com.googlecode.wicket.jquery.core.template.IJQueryTemplate;
 import com.googlecode.wicket.kendo.ui.form.autocomplete.AutoCompleteTextField;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
@@ -65,7 +68,6 @@ public class ConceptFeatureEditor
 
     private static final String MID_FEATURE = "feature";
     private static final String MID_VALUE = "value";
-    private static int CANDIDATE_LIMIT = 20;
 
     private static final long serialVersionUID = 7763348613632105600L;
 
@@ -95,6 +97,45 @@ public class ConceptFeatureEditor
             protected List<KBHandle> getChoices(String input)
             {
                 return listInstances(aState, aHandler, input);
+            }
+
+            @Override
+            public void onConfigure(JQueryBehavior behavior)
+            {
+                super.onConfigure(behavior);
+                behavior.setOption("autoWidth", true);
+            }
+
+            @Override
+            protected IJQueryTemplate newTemplate()
+            {
+                return new IJQueryTemplate()
+                {
+                    private static final long serialVersionUID = 1L;
+
+                    @Override
+                    public String getText()
+                    {
+                        // Some docs on how the templates work in Kendo, in case we need
+                        // more fancy dropdowns
+                        // http://docs.telerik.com/kendo-ui/framework/templates/overview
+                        return "# if (data.reordered == 'true') { #" +
+                            "<div title=\"#: data.description #\" "
+                            + "onmouseover=\"javascript:applyTooltip(this)\">"
+                            + "<b>#: data.name #</b></div>\n" +
+                            "# } else { #" +
+                            "<div title=\"#: data.description #\" "
+                            + "onmouseover=\"javascript:applyTooltip(this)\">"
+                            + "#: data.name #</div>\n" +
+                            "# } #";
+                    }
+
+                    @Override
+                    public List<String> getTextProperties()
+                    {
+                        return Arrays.asList("name", "description");
+                    }
+                };
             }
         };
 
@@ -149,7 +190,7 @@ public class ConceptFeatureEditor
             }
             else {
                 // If no specific KB is selected, collect instances from all KBs
-                for (KnowledgeBase kb : kbService.getKnowledgeBases(project)) {
+                for (KnowledgeBase kb : kbService.getEnabledKnowledgeBases(project)) {
                     if (kb.isSupportConceptLinking()) {
                         handles
                             .addAll(listLinkingInstances(kb, aState, () -> getEditorCas(aHandler),
@@ -201,9 +242,9 @@ public class ConceptFeatureEditor
     {
         return kbService.read(kb, (conn) -> {
             try {
-                List<KBHandle> list = clService.disambiguate(kb, aTypedString, aState.getSelection()
+                return clService.disambiguate(kb, aTypedString, aState
+                    .getSelection()
                     .getText(), aState.getSelection().getBegin(), aJCas.get());
-                return (list.size() > CANDIDATE_LIMIT) ? list.subList(0, CANDIDATE_LIMIT) : list;
             }
             catch (IOException e) {
                 log.error("An error occurred while retrieving entity candidates.", e);

@@ -24,16 +24,12 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -44,19 +40,21 @@ import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
-import org.eclipse.rdf4j.rio.RDFFormat;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit4.rules.SpringClassRule;
+import org.springframework.test.context.junit4.rules.SpringMethodRule;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -66,22 +64,47 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
+import de.tudarmstadt.ukp.inception.kb.reification.Reification;
+import de.tudarmstadt.ukp.inception.kb.util.TestFixtures;
 
-@RunWith(SpringRunner.class)
+@RunWith(Parameterized.class)
 @SpringBootTest(classes = SpringConfig.class)
 @Transactional
 @DataJpaTest
-public class KnowledgeBaseServiceImplIntegrationTest {
+public class KnowledgeBaseServiceImplIntegrationTest  {
 
     private static final String PROJECT_NAME = "Test project";
     private static final String KB_NAME = "Test knowledge base";
+
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
+
     @Autowired
     private TestEntityManager testEntityManager;
+
+    @ClassRule
+    public static final SpringClassRule SPRING_CLASS_RULE = new SpringClassRule();
+
+    @Rule
+    public final SpringMethodRule springMethodRule = new SpringMethodRule();
+
     private KnowledgeBaseServiceImpl sut;
     private Project project;
     private KnowledgeBase kb;
+    private Reification reification;
+
+    private TestFixtures testFixtures;
+
+    public KnowledgeBaseServiceImplIntegrationTest(Reification aReification) {
+        reification = aReification;
+    }
+
+    @Parameterized.Parameters(name = "Reification = {0}")
+    public static Collection<Object[]> data()
+    {
+        return Arrays.stream(Reification.values()).map(r -> new Object[] { r })
+            .collect(Collectors.toList());
+    }
 
     @BeforeClass
     public static void setUpOnce() {
@@ -89,8 +112,9 @@ public class KnowledgeBaseServiceImplIntegrationTest {
     }
 
     @Before
-    public void setUp() {
+    public void setUp() throws Exception {
         EntityManager entityManager = testEntityManager.getEntityManager();
+        testFixtures = new TestFixtures(testEntityManager);
         sut = new KnowledgeBaseServiceImpl(temporaryFolder.getRoot(), entityManager);
         project = createProject(PROJECT_NAME);
         kb = buildKnowledgeBase(project, KB_NAME);
@@ -207,119 +231,6 @@ public class KnowledgeBaseServiceImplIntegrationTest {
         assertThatExceptionOfType(IllegalStateException.class)
             .as("Check that updating knowledge base requires registration")
             .isThrownBy(() -> sut.removeKnowledgeBase(kb));
-    }
-
-    @Test
-    public void importData_WithExistingTtl_ShouldImportTriples() throws Exception {
-        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
-
-        importKnowledgeBase("data/pets.ttl");
-
-        Stream<String> conceptLabels = sut.listConcepts(kb, false).stream().map(KBHandle::getName);
-        Stream<String> propertyLabels = sut.listProperties(kb, false).stream().map(KBHandle::getName);
-        assertThat(conceptLabels)
-            .as("Check that concepts all have been imported")
-            .containsExactlyInAnyOrder("Animal", "Character", "Cat", "Dog");
-        assertThat(propertyLabels)
-            .as("Check that properties all have been imported")
-            .containsExactlyInAnyOrder("Loves", "Hates", "Has Character", "Year Of Birth");
-    }
-
-    @Test
-    public void importData_WithTwoFilesAndOneKnowledgeBase_ShouldImportAllTriples() throws Exception {
-        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
-        String[] resourceNames = {"data/pets.ttl", "data/more_pets.ttl"};
-        for (String resourceName : resourceNames) {
-            importKnowledgeBase(resourceName);
-        }
-
-        Stream<String> conceptLabels = sut.listConcepts(kb, false).stream().map(KBHandle::getName);
-        Stream<String> propertyLabels = sut.listProperties(kb, false).stream().map(KBHandle::getName);
-
-        assertThat(conceptLabels)
-            .as("Check that concepts all have been imported")
-            .containsExactlyInAnyOrder("Animal", "Character", "Cat", "Dog", "Manatee", "Turtle", "Biological class");
-        assertThat(propertyLabels)
-            .as("Check that properties all have been imported")
-            .containsExactlyInAnyOrder("Loves", "Hates", "Has Character", "Year Of Birth", "Has biological class");
-    }
-
-    @Test
-    public void importData_WithMisTypedStatements_ShouldImportWithoutError() throws Exception {
-        ClassLoader classLoader = getClass().getClassLoader();
-        String resourceName = "turtle/mismatching_literal_statement.ttl";
-        String fileName = classLoader.getResource(resourceName).getFile();
-        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
-
-        try (InputStream is = classLoader.getResourceAsStream(resourceName)) {
-            sut.importData(kb, fileName, is);
-        }
-
-        KBInstance kahmi = sut.readInstance(kb, "http://mbugert.de/pets#kahmi").get();
-        Stream<String> conceptLabels = sut.listConcepts(kb, false).stream().map(KBHandle::getName);
-        Stream<String> propertyLabels = sut.listProperties(kb, false).stream().map(KBHandle::getName);
-        Stream<Object> kahmiValues = sut.listStatements(kb, kahmi, false)
-            .stream()
-            .map(KBStatement::getValue);
-        assertThat(conceptLabels)
-            .as("Check that all concepts have been imported")
-            .containsExactlyInAnyOrder("Cat", "Character");
-        assertThat(propertyLabels)
-            .as("Check that all properties have been imported")
-            .containsExactlyInAnyOrder("Has Character");
-        assertThat(kahmiValues)
-            .as("Check that statements with wrong types have been imported")
-            .containsExactlyInAnyOrder(666);
-    }
-
-    @Test
-    public void exportData_WithLocalKnowledgeBase_ShouldExportKnowledgeBase() throws Exception {
-        KBConcept concept = new KBConcept("TestConcept");
-        KBProperty property = new KBProperty("TestProperty");
-        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
-        sut.createConcept(kb, concept);
-        sut.createProperty(kb, property);
-
-        File kbFile = temporaryFolder.newFile("exported_kb.ttl");
-        try (OutputStream os = new FileOutputStream(kbFile)) {
-            sut.exportData(kb, RDFFormat.TURTLE, os);
-        }
-
-        KnowledgeBase importedKb = buildKnowledgeBase(project, "Imported knowledge base");
-        sut.registerKnowledgeBase(importedKb, sut.getNativeConfig());
-        try (InputStream is = new FileInputStream(kbFile)) {
-            sut.importData(importedKb, kbFile.getAbsolutePath(), is);
-        }
-        List<String> conceptLabels = sut.listConcepts(importedKb, false)
-            .stream()
-            .map(KBHandle::getName)
-            .collect(Collectors.toList());
-        List<String> propertyLabels = sut.listProperties(importedKb, false)
-            .stream()
-            .map(KBHandle::getName)
-            .filter(Objects::nonNull)
-            .collect(Collectors.toList());
-        assertThat(conceptLabels)
-            .as("Check that concepts all have been exported")
-            .containsExactlyInAnyOrder("TestConcept");
-        assertThat(propertyLabels)
-            .as("Check that properties all have been exported")
-            .containsExactlyInAnyOrder("TestProperty");
-    }
-
-    @Test
-    public void exportData_WithRemoteKnowledgeBase_ShouldDoNothing() throws Exception {
-        File outputFile = temporaryFolder.newFile();
-        kb.setType(RepositoryType.REMOTE);
-        sut.registerKnowledgeBase(kb, sut.getRemoteConfig(KnowledgeBases.BABELNET.url));
-
-        try (OutputStream os = new FileOutputStream(outputFile)) {
-            sut.exportData(kb, RDFFormat.TURTLE, os);
-        }
-
-        assertThat(outputFile)
-            .as("Check that file has not been written to")
-            .matches(f -> outputFile.length() == 0);
     }
 
     @Test
@@ -1014,7 +925,7 @@ public class KnowledgeBaseServiceImplIntegrationTest {
         KBProperty property = buildProperty();
         KBHandle conceptHandle = sut.createConcept(kb, concept);
         KBHandle propertyHandle = sut.createProperty(kb, property);
-        KBStatement statement = buildStatement(conceptHandle, propertyHandle, "Test statement");
+        KBStatement statement = buildStatement(kb, conceptHandle, propertyHandle, "Test statement");
 
         sut.upsertStatement(kb, statement);
 
@@ -1037,7 +948,7 @@ public class KnowledgeBaseServiceImplIntegrationTest {
         KBProperty property = buildProperty();
         KBHandle conceptHandle = sut.createConcept(kb, concept);
         KBHandle propertyHandle = sut.createProperty(kb, property);
-        KBStatement statement = buildStatement(conceptHandle, propertyHandle, "Test statement");
+        KBStatement statement = buildStatement(kb, conceptHandle, propertyHandle, "Test statement");
         sut.upsertStatement(kb, statement);
 
         statement.setValue("Altered test property");
@@ -1062,7 +973,7 @@ public class KnowledgeBaseServiceImplIntegrationTest {
         KBProperty property = buildProperty();
         KBHandle conceptHandle = sut.createConcept(kb, concept);
         KBHandle propertyHandle = sut.createProperty(kb, property);
-        KBStatement statement = buildStatement(conceptHandle, propertyHandle, "Test statement");
+        KBStatement statement = buildStatement(kb, conceptHandle, propertyHandle, "Test statement");
         setReadOnly(kb);
 
         int statementCountBeforeUpsert = sut.listStatements(kb, conceptHandle, false).size();
@@ -1081,7 +992,7 @@ public class KnowledgeBaseServiceImplIntegrationTest {
         KBProperty property = buildProperty();
         KBHandle conceptHandle = sut.createConcept(kb, concept);
         KBHandle propertyHandle = sut.createProperty(kb, property);
-        KBStatement statement = buildStatement(conceptHandle, propertyHandle, "Test statement");
+        KBStatement statement = buildStatement(kb, conceptHandle, propertyHandle, "Test statement");
         sut.upsertStatement(kb, statement);
 
         sut.deleteStatement(kb, statement);
@@ -1099,7 +1010,7 @@ public class KnowledgeBaseServiceImplIntegrationTest {
         KBProperty property = buildProperty();
         KBHandle conceptHandle = sut.createConcept(kb, concept);
         KBHandle propertyHandle = sut.createProperty(kb, property);
-        KBStatement statement = buildStatement(conceptHandle, propertyHandle, "Test statement");
+        KBStatement statement = buildStatement(kb, conceptHandle, propertyHandle, "Test statement");
 
         assertThatCode(() -> {
             sut.deleteStatement(kb, statement);
@@ -1113,7 +1024,7 @@ public class KnowledgeBaseServiceImplIntegrationTest {
         KBProperty property = buildProperty();
         KBHandle conceptHandle = sut.createConcept(kb, concept);
         KBHandle propertyHandle = sut.createProperty(kb, property);
-        KBStatement statement = buildStatement(conceptHandle, propertyHandle, "Test statement");
+        KBStatement statement = buildStatement(kb, conceptHandle, propertyHandle, "Test statement");
         sut.upsertStatement(kb, statement);
         setReadOnly(kb);
 
@@ -1133,7 +1044,7 @@ public class KnowledgeBaseServiceImplIntegrationTest {
         KBProperty property = buildProperty();
         KBHandle conceptHandle = sut.createConcept(kb, concept);
         KBHandle propertyHandle = sut.createProperty(kb, property);
-        KBStatement statement = buildStatement(conceptHandle, propertyHandle, "Test statement");
+        KBStatement statement = buildStatement(kb, conceptHandle, propertyHandle, "Test statement");
         sut.upsertStatement(kb, statement);
 
         List<KBStatement> statements = sut.listStatements(kb, conceptHandle, false);
@@ -1144,6 +1055,10 @@ public class KnowledgeBaseServiceImplIntegrationTest {
             .hasSize(1)
             .element(0)
             .hasFieldOrPropertyWithValue("value", "Test statement");
+
+        assertThat(statements.get(0).getOriginalStatements())
+            .as("Check that original statements are recreated")
+            .containsExactlyInAnyOrderElementsOf(statement.getOriginalStatements());
     }
 
     @Test
@@ -1263,52 +1178,31 @@ public class KnowledgeBaseServiceImplIntegrationTest {
     // Helper
 
     private Project createProject(String name) {
-        Project project = new Project();
-        project.setName(name);
-        return testEntityManager.persist(project);
+        return testFixtures.createProject(name);
     }
 
     private KnowledgeBase buildKnowledgeBase(Project project, String name) {
-        KnowledgeBase kb = new KnowledgeBase();
-        kb.setName(name);
-        kb.setProject(project);
-        kb.setType(RepositoryType.LOCAL);
-        kb.setClassIri(RDFS.CLASS);
-        kb.setSubclassIri(RDFS.SUBCLASSOF);
-        kb.setTypeIri(RDF.TYPE);
-        return kb;
+        return testFixtures.buildKnowledgeBase(project, name, reification);
     }
 
     private KBConcept buildConcept() {
-        KBConcept concept = new KBConcept();
-        concept.setName("Concept name");
-        concept.setDescription("Concept description");
-        return concept;
+        return testFixtures.buildConcept();
     }
 
     private KBProperty buildProperty() {
-        KBProperty property = new KBProperty();
-        property.setDescription("Property description");
-        property.setDomain(URI.create("https://test.schema.com/#domain"));
-        property.setName("Property name");
-        property.setRange(URI.create("https://test.schema.com/#range"));
-        return property;
+        return testFixtures.buildProperty();
     }
 
     private KBInstance buildInstance() {
-        KBInstance instance = new KBInstance();
-        instance.setName("Instance name");
-        instance.setDescription("Instance description");
-        instance.setType(URI.create("https://test.schema.com/#type"));
-        return instance;
+        return testFixtures.buildInstance();
     }
 
-    private KBStatement buildStatement(KBHandle conceptHandle, KBHandle propertyHandle, String value) {
-        KBStatement statement = new KBStatement();
-        statement.setInstance(conceptHandle);
-        statement.setProperty(propertyHandle);
-        statement.setValue(value);
-        return statement;
+    private KBStatement buildStatement(KnowledgeBase knowledgeBase, KBHandle conceptHandle,
+        KBHandle propertyHandle, String value)
+    {
+        KBStatement stmt = testFixtures.buildStatement(conceptHandle, propertyHandle, value);
+        sut.initStatement(knowledgeBase, stmt);
+        return stmt;
     }
 
     private boolean isNotAbstractNorClosedStatement(KBStatement statement) {

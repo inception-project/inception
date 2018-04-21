@@ -86,6 +86,7 @@ public class ConceptLinkingService
 
     private static final int MENTION_CONTEXT_SIZE = 5;
     private static final int CANDIDATE_QUERY_LIMIT = 10000;
+    private static final int CANDIDATE_DISPLAY_LIMIT = 20;
     private static final int FREQUENCY_THRESHOLD = 100;
     private static final int SIGNATURE_QUERY_LIMIT = 100;
     private static final String WIKIDATA_PREFIX = "http://www.wikidata.org/entity/";
@@ -167,10 +168,12 @@ public class ConceptLinkingService
                     Value e2 = solution.getValue("e2");
                     Value label = solution.getValue("label");
                     Value altLabel = solution.getValue("altLabel");
+                    Value description = solution.getValue("description");
 
                     CandidateEntity newEntity = new CandidateEntity((e2 != null) ? e2.stringValue() : "",
                                          (label != null) ? label.stringValue() : "",
-                                      (altLabel != null) ? altLabel.stringValue() : "");
+                                      (altLabel != null) ? altLabel.stringValue() : "",
+                        (description != null) ? description.stringValue() : "");
 
                     candidates.add(newEntity);
                 }
@@ -400,9 +403,11 @@ public class ConceptLinkingService
             aMentionBeginOffset);
 
         return rankedCandidates.stream()
-            .map(c -> new KBHandle(c.getIRI(), c.getLabel()))
+            .map(c -> new KBHandle(c.getIRI(), c.getLabel(), c.getDescription()))
             .distinct()
+            .limit(CANDIDATE_DISPLAY_LIMIT)
             .filter(h -> h.getIdentifier().contains(":"))
             .collect(Collectors.toList());
     }
+
 }
