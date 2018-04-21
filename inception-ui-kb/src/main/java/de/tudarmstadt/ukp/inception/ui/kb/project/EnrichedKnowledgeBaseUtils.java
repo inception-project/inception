@@ -83,6 +83,7 @@ public class EnrichedKnowledgeBaseUtils
         kb.setTypeIri(factory.createIRI(ekb.getTypeIri()));
         kb.setEnabled(ekb.isEnabled());
         kb.setSupportConceptLinking(ekb.isSupportConceptLinking());
+        kb.setReification(ekb.getReification());
     }
 
     private static final void importFiles(EnrichedKnowledgeBase ekb,
