@@ -403,9 +403,9 @@ public class ConceptLinkingService
             aMentionBeginOffset);
 
         return rankedCandidates.stream()
-            .limit(CANDIDATE_DISPLAY_LIMIT)
             .map(c -> new KBHandle(c.getIRI(), c.getLabel(), c.getDescription()))
             .distinct()
+            .limit(CANDIDATE_DISPLAY_LIMIT)
             .filter(h -> h.getIdentifier().contains(":"))
             .collect(Collectors.toList());
     }
