@@ -27,6 +27,7 @@ import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.Value;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.eclipse.rdf4j.query.Binding;
 import org.eclipse.rdf4j.query.BindingSet;
 import org.eclipse.rdf4j.query.QueryEvaluationException;
@@ -163,6 +164,7 @@ public class WikiDataReification
                 // Fill kbStatement
                 KBHandle property = new KBHandle();
                 property.setIdentifier(p.getValue().stringValue());
+                property.setName(getKBHandleName(p.getValue().stringValue(), conn));
                 KBStatement kbStatement = new KBStatement(aInstance, property, value);
 
                 // Recreate original statements
@@ -186,6 +188,29 @@ public class WikiDataReification
             }
             return statements;
         }
+    }
+
+    private String getKBHandleName(String value, RepositoryConnection conn)
+    {
+        String kbHandleName = null;
+        String QUERY = String
+            .join("\n"
+                , "SELECT DISTINCT ?l WHERE {"
+                , "  ?s ?pLABEL ?l ."
+                , "}"
+                , "LIMIT 10000");
+        TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
+        tupleQuery.setBinding("pLABEL", RDFS.LABEL);
+        tupleQuery.setBinding("s", vf.createIRI(value));
+        tupleQuery.setIncludeInferred(false);
+        TupleQueryResult propertyResult;
+        propertyResult = tupleQuery.evaluate();
+        while (propertyResult.hasNext()) {
+            BindingSet bindings = propertyResult.next();
+            Binding l = bindings.getBinding("l");
+            kbHandleName = l.getValue().stringValue();
+        }
+        return kbHandleName;
     }
 
     private List<Statement> getStatementsById(KnowledgeBase kb, String aStatementId)
@@ -388,9 +413,10 @@ public class WikiDataReification
         });
     }
 
-    private int qualifierIndex(KBQualifier aQualifier) {
+    private int qualifierIndex(KBQualifier aQualifier)
+    {
         List<KBQualifier> qualifierList = aQualifier.getKbStatement().getQualifiers();
-        for(KBQualifier qualifier : qualifierList){
+        for (KBQualifier qualifier : qualifierList) {
             if (qualifier.getOriginalStatements().equals(aQualifier.getOriginalStatements())) {
                 return qualifierList.indexOf(qualifier);
             }
@@ -412,6 +438,8 @@ public class WikiDataReification
             for (Statement qualifierStatement : qualifierStatements) {
                 KBHandle property = new KBHandle();
                 property.setIdentifier(qualifierStatement.getPredicate().stringValue());
+                property.setName(getKBHandleName(qualifierStatement.getPredicate().stringValue(),
+                    kbService.getConnection(kb)));
                 Value value = qualifierStatement.getObject();
                 KBQualifier qualifier = new KBQualifier(aStatement, property, value);
 

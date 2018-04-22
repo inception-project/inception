@@ -240,13 +240,15 @@ public class StatementEditor extends EventListeningPanel
             eventHandler.addCallback(AjaxQualifierChangedEvent.class, this::actionQualifierChanged);
         }
 
-        private void actionQualifierChanged(AjaxRequestTarget target, AjaxQualifierChangedEvent event)
+        private void actionQualifierChanged(AjaxRequestTarget target,
+            AjaxQualifierChangedEvent event)
         {
             boolean isEventForThisStatement = event.getQualifier().getKbStatement()
                 .equals(statement.getObject());
             if (isEventForThisStatement) {
                 if (event.isDeleted()) {
-                    event.getQualifier().getKbStatement().getQualifiers().remove(event.getQualifier());
+                    event.getQualifier().getKbStatement().getQualifiers()
+                        .remove(event.getQualifier());
                 }
                 statement.setObject(event.getQualifier().getKbStatement());
                 target.add(qualifierListWrapper);

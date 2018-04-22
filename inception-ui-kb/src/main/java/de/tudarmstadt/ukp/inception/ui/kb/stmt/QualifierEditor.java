@@ -17,13 +17,17 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.stmt;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
+
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-
 import org.apache.wicket.event.Broadcast;
 import org.apache.wicket.markup.html.basic.Label;
-import org.apache.wicket.markup.html.form.*;
+import org.apache.wicket.markup.html.form.ChoiceRenderer;
+import org.apache.wicket.markup.html.form.DropDownChoice;
+import org.apache.wicket.markup.html.form.Form;
+import org.apache.wicket.markup.html.form.TextArea;
+import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.panel.Fragment;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
@@ -33,14 +37,13 @@ import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBQualifier;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxQualifierChangedEvent;
-
-import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
 public class QualifierEditor
     extends Panel
@@ -64,7 +67,7 @@ public class QualifierEditor
         kbModel = aKbModel;
         qualifier = aQualifier;
 
-        boolean isNewQualifier = qualifier.getObject().getKbProperty()==null;
+        boolean isNewQualifier = qualifier.getObject().getKbProperty() == null;
         if (isNewQualifier) {
             EditMode editMode = new EditMode(CONTENT_MARKUP_ID, qualifier, isNewQualifier);
             AjaxRequestTarget target = RequestCycle.get().find(AjaxRequestTarget.class);
@@ -72,7 +75,8 @@ public class QualifierEditor
                 target.focusComponent(editMode.getFocusComponent());
             }
             content = editMode;
-        } else {
+        }
+        else {
             content = new ViewMode(CONTENT_MARKUP_ID, qualifier);
         }
         add(content);
@@ -199,9 +203,6 @@ public class QualifierEditor
         qualifier.setObject(modifiedQualifier);
 
         actionCancelExistingQualifier(aTarget);
-//        send(getPage(), Broadcast.BREADTH, new AjaxQualifierChangedEvent(aTarget, qualifier
-//            .getObject()));
-
     }
 
     private void actionCancelNewQualifier(AjaxRequestTarget aTarget) {
