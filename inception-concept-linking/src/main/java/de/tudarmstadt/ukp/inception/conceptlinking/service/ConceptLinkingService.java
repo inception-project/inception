@@ -55,6 +55,7 @@ import de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity;
 import de.tudarmstadt.ukp.inception.conceptlinking.model.Property;
 import de.tudarmstadt.ukp.inception.conceptlinking.model.SemanticSignature;
 import de.tudarmstadt.ukp.inception.conceptlinking.util.FileUtils;
+import de.tudarmstadt.ukp.inception.conceptlinking.util.LRUCache;
 import de.tudarmstadt.ukp.inception.conceptlinking.util.QueryUtil;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
@@ -93,6 +94,9 @@ public class ConceptLinkingService
     private static final String POS_VERB_PREFIX = "V";
     private static final String POS_NOUN_PREFIX = "N";
     private static final String POS_ADJECTIVE_PREFIX = "J";
+
+    private Map<String, Set<CandidateEntity>> candidateCache =
+        new Collections.synchronizedMap(LRUCache<>(1024));
 
     @PostConstruct
     public void init()
@@ -137,6 +141,10 @@ public class ConceptLinkingService
     {
         if (aMention == null || aMention.isEmpty()) {
             return Collections.emptySet();
+        }
+
+        if (candidateCache.containsKey(aMention)) {
+            return candidateCache.get(aMention);
         }
 
         Set<CandidateEntity> candidates = new HashSet<>();
@@ -186,6 +194,8 @@ public class ConceptLinkingService
                 }
             }
         }
+
+        candidateCache.put(aMention, candidates);
         return candidates;
     }
 
