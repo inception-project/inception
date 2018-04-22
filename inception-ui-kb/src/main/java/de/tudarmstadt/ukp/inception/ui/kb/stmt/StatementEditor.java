@@ -37,6 +37,7 @@ import org.apache.wicket.markup.repeater.util.ModelIteratorAdapter;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
@@ -193,6 +194,7 @@ public class StatementEditor extends EventListeningPanel
                 t -> actionAddQualifier(t, aStatement.getObject()))
                 .onConfigure((_this) -> _this.setVisible(!statement.getObject().isInferred() &&
                     kbModel.getObject().getReification().supportsQualifier()));
+            addQualifierLink.add(new Label("label", new ResourceModel("qualifier.add")));
             addQualifierLink.add(new WriteProtectionBehavior(kbModel));
             add(addQualifierLink);
             

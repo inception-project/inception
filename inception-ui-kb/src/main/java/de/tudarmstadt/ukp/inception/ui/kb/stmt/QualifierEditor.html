@@ -25,6 +25,7 @@
 
 <wicket:fragment wicket:id="editMode">
     <form wicket:id="form" class="form-inline">
+        <label class="control-label">Qualifier</label>
         <select wicket:id="kbProperty" class="form-control flex-content"
             style="width:80px"></select>
         <input type="text" wicket:id="language" class="form-control" size="6"
@@ -48,6 +49,7 @@
 </wicket:fragment>
 
 <wicket:fragment wicket:id="viewMode">
+    <label class="control-label">Qualifier</label>
     <span wicket:id="property"></span>
     <wicket:enclosure child="language">
         <label>(<wicket: wicket:id="language" />)</label>
