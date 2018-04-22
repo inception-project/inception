@@ -38,6 +38,7 @@ import org.apache.commons.lang3.builder.CompareToBuilder;
 import org.apache.commons.text.similarity.LevenshteinDistance;
 import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
+import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.eclipse.rdf4j.model.Value;
 import org.eclipse.rdf4j.query.BindingSet;
 import org.eclipse.rdf4j.query.TupleQuery;
@@ -51,6 +52,7 @@ import org.springframework.stereotype.Component;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.conceptlinking.config.EntityLinkingProperties;
 import de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity;
 import de.tudarmstadt.ukp.inception.conceptlinking.model.Property;
 import de.tudarmstadt.ukp.inception.conceptlinking.model.SemanticSignature;
@@ -67,6 +69,7 @@ public class ConceptLinkingService
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private @Resource KnowledgeBaseService kbService;
+    private @SpringBean EntityLinkingProperties properties;
 
     private final String[] PUNCTUATION_VALUES
         = new String[] { "``", "''", "(", ")", ",", ".", ":", "--" };
@@ -96,7 +99,7 @@ public class ConceptLinkingService
     private static final String POS_ADJECTIVE_PREFIX = "J";
 
     private Map<String, Set<CandidateEntity>> candidateCache =
-        new Collections.synchronizedMap(LRUCache<>(1024));
+        new LRUCache<>(properties.getCacheSize());
 
     @PostConstruct
     public void init()
