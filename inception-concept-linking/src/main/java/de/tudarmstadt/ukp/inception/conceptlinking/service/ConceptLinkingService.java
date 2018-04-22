@@ -396,6 +396,8 @@ public class ConceptLinkingService
         list.add(aTypedString);
         list.stream().parallel()
             .forEach(string -> candidates.addAll(generateCandidates(aKB, string)));
+        aMention = aMention.toLowerCase(Locale.ENGLISH);
+        aTypedString = aTypedString.toLowerCase(Locale.ENGLISH);
 
         logger.debug("It took [{}] ms to retrieve candidates from KB [{}]", System
             .currentTimeMillis() - startTime);
