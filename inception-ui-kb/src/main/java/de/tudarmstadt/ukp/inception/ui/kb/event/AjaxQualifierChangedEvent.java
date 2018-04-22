@@ -29,13 +29,17 @@ public class AjaxQualifierChangedEvent
     private KBQualifier qualifier;
     private boolean deleted;
 
-    public AjaxQualifierChangedEvent(AjaxRequestTarget target, KBQualifier aModifier,
+    public AjaxQualifierChangedEvent(AjaxRequestTarget target, KBQualifier aQualifier,
         Component aComponent, boolean deleted)
     {
         super(target);
-        this.qualifier = aModifier;
+        this.qualifier = aQualifier;
         this.component = aComponent;
         this.deleted = deleted;
+    }
+
+    public AjaxQualifierChangedEvent(AjaxRequestTarget target, KBQualifier aQualifier) {
+        this(target, aQualifier, null, false);
     }
 
     public KBQualifier getQualifier() { return qualifier; }

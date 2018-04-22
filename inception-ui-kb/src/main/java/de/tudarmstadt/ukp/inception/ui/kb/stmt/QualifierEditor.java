@@ -17,19 +17,18 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.stmt;
 
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 
 import org.apache.wicket.event.Broadcast;
 import org.apache.wicket.markup.html.basic.Label;
-import org.apache.wicket.markup.html.form.ChoiceRenderer;
-import org.apache.wicket.markup.html.form.DropDownChoice;
-import org.apache.wicket.markup.html.form.Form;
-import org.apache.wicket.markup.html.form.TextField;
+import org.apache.wicket.markup.html.form.*;
 import org.apache.wicket.markup.html.panel.Fragment;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.Model;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
@@ -40,6 +39,8 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBQualifier;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxQualifierChangedEvent;
+
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
 public class QualifierEditor
     extends Panel
@@ -63,7 +64,7 @@ public class QualifierEditor
         kbModel = aKbModel;
         qualifier = aQualifier;
 
-        boolean isNewQualifier = true; //(qualifier.getObject().getKbProperty()==null);
+        boolean isNewQualifier = qualifier.getObject().getKbProperty()==null;
         if (isNewQualifier) {
             EditMode editMode = new EditMode(CONTENT_MARKUP_ID, qualifier, isNewQualifier);
             AjaxRequestTarget target = RequestCycle.get().find(AjaxRequestTarget.class);
@@ -71,6 +72,8 @@ public class QualifierEditor
                 target.focusComponent(editMode.getFocusComponent());
             }
             content = editMode;
+        } else {
+            content = new ViewMode(CONTENT_MARKUP_ID, qualifier);
         }
         add(content);
     }
@@ -83,11 +86,11 @@ public class QualifierEditor
         /**
          * Creates a new fragement for editing a qualifier.<br>
          * The editor has two slightly different behaviors, depending on the value of
-         * {@code isNewModifier}:
+         * {@code isNewQualifier}:
          * <ul>
-         * <li>{@code !isNewModifier}: Save button commits changes, cancel button discards unsaved
+         * <li>{@code !isNewQualifier}: Save button commits changes, cancel button discards unsaved
          * changes, delete button removes the qualifier from the statement.</li>
-         * <li>{@code isNewModifier}: Save button commits changes (creates a new qualifier in the
+         * <li>{@code isNewQualifier}: Save button commits changes (creates a new qualifier in the
          * statement), cancel button removes the qualifier from the UI, delete button is not visible
          * .</li>
          * </ul>
@@ -96,11 +99,11 @@ public class QualifierEditor
          *            markup ID
          * @param aQualifier
          *            qualifier model
-         * @param isNewModifier
+         * @param isNewQualifier
          *            whether the qualifier being edited is new, meaning it has no corresponding
          *            qualifier in the KB backend
          */
-        public EditMode(String aId, IModel<KBQualifier> aQualifier, boolean isNewModifier)
+        public EditMode(String aId, IModel<KBQualifier> aQualifier, boolean isNewQualifier)
         {
             super(aId, "editMode", QualifierEditor.this, aQualifier);
 
@@ -115,12 +118,23 @@ public class QualifierEditor
             form.add(type);
             initialFocusComponent = type;
 
-            form.add(new TextField<>("value"));
+            form.add(new TextField<>("language"));
 
-            form.add(new LambdaAjaxButton<>("create", QualifierEditor.this::actionTest));
-            form.add(new LambdaAjaxLink("cancel", QualifierEditor.this::actionCancelNewQualifier));
-            form.add(new LambdaAjaxLink("delete", QualifierEditor.this::actionLinkTest)
-                .setVisibilityAllowed(!isNewModifier));
+            Component valueTextArea = new TextArea<String>("value").add(
+                new LambdaAjaxFormComponentUpdatingBehavior("change", t -> t.add(getParent())));
+            //initialFocusComponent = valueTextArea;
+            form.add(valueTextArea);
+
+            form.add(new LambdaAjaxButton<>("create", QualifierEditor.this::actionSave));
+            form.add(new LambdaAjaxLink("cancel", t -> {
+                if (isNewQualifier) {
+                    QualifierEditor.this.actionCancelNewQualifier(t);
+                } else {
+                    QualifierEditor.this.actionCancelExistingQualifier(t);
+                }
+            }));
+            form.add(new LambdaAjaxLink("delete", QualifierEditor.this::actionDelete)
+                .setVisibilityAllowed(!isNewQualifier));
 
             add(form);
         }
@@ -138,27 +152,55 @@ public class QualifierEditor
     {
         private static final long serialVersionUID = 6771056914040868827L;
 
-        public ViewMode(String aId, IModel<KBQualifier> aModifier)
+        public ViewMode(String aId, IModel<KBQualifier> aQualifier)
         {
-            super(aId, "viewMode", QualifierEditor.this, aModifier);
+            super(aId, "viewMode", QualifierEditor.this, aQualifier);
             CompoundPropertyModel<KBQualifier> compoundModel = new CompoundPropertyModel<>(
-                aModifier);
-            add(new Label("property", aModifier.getObject().getKbProperty().getUiLabel()));
+                aQualifier);
+            add(new Label("property", aQualifier.getObject().getKbProperty().getUiLabel()));
+            add(new Label("language", compoundModel.bind("language")) {
+                private static final long serialVersionUID = 3436068825093393740L;
+
+                @Override
+                protected void onConfigure() {
+                    super.onConfigure();
+                    setVisible(isNotEmpty(aQualifier.getObject().getLanguage()));
+                }
+            });
             add(new Label("value", compoundModel.bind("value")));
 
             LambdaAjaxLink editLink = new LambdaAjaxLink("edit", QualifierEditor
-                .this::actionLinkTest);
+                .this::actionEdit);
             add(editLink);
         }
     }
 
-    private void actionTest(AjaxRequestTarget ajaxRequestTarget, Form<KBQualifier> aForm)
-    {
-        KBQualifier qualifier = aForm.getModelObject();
+    private void actionDelete(AjaxRequestTarget aTarget) {
+        kbService.deleteQualifier(kbModel.getObject(), qualifier.getObject());
+
+        AjaxQualifierChangedEvent deleteEvent = new AjaxQualifierChangedEvent(aTarget, qualifier
+            .getObject(), this, true);
+        send(getPage(), Broadcast.BREADTH, deleteEvent);
     }
 
-    private void actionLinkTest(AjaxRequestTarget ajaxRequestTarget)
-    {
+    private void actionEdit(AjaxRequestTarget aTarget) {
+        KBQualifier shallowCopy = new KBQualifier(qualifier.getObject());
+        IModel<KBQualifier> shallowCopyModel = Model.of(shallowCopy);
+
+        EditMode editMode = new EditMode(CONTENT_MARKUP_ID, shallowCopyModel, false);
+        content = content.replaceWith(editMode);
+        aTarget.focusComponent(editMode.getFocusComponent());
+        aTarget.add(this);
+    }
+
+    private void actionSave(AjaxRequestTarget aTarget, Form<KBQualifier> aForm) {
+        KBQualifier modifiedQualifier = aForm.getModelObject();
+        kbService.upsertQualifier(kbModel.getObject(), modifiedQualifier);
+        qualifier.setObject(modifiedQualifier);
+
+        actionCancelExistingQualifier(aTarget);
+//        send(getPage(), Broadcast.BREADTH, new AjaxQualifierChangedEvent(aTarget, qualifier
+//            .getObject()));
 
     }
 
@@ -170,7 +212,8 @@ public class QualifierEditor
     }
 
     private void actionCancelExistingQualifier(AjaxRequestTarget aTarget) {
-
+        content = content.replaceWith(new ViewMode(CONTENT_MARKUP_ID, qualifier));
+        aTarget.add(this);
     }
 
 }

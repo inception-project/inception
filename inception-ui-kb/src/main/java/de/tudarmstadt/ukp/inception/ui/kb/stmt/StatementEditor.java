@@ -112,7 +112,7 @@ public class StatementEditor extends EventListeningPanel
 
     private void actionAddQualifier(AjaxRequestTarget aTarget, KBStatement statement) {
         KBQualifier qualifierPorto = new KBQualifier(statement);
-        statement.getQualifiers().add(qualifierPorto);
+        statement.addQualifier(qualifierPorto);
         aTarget.add(this);
     }
 
@@ -191,7 +191,8 @@ public class StatementEditor extends EventListeningPanel
 
             LambdaAjaxLink addQualifierLink = new LambdaAjaxLink("addQualifier",
                 t -> actionAddQualifier(t, aStatement.getObject()))
-                .onConfigure((_this) -> _this.setVisible(!statement.getObject().isInferred()));
+                .onConfigure((_this) -> _this.setVisible(!statement.getObject().isInferred() &&
+                    kbModel.getObject().getReification().supportsQualifier()));
             addQualifierLink.add(new WriteProtectionBehavior(kbModel));
             add(addQualifierLink);
             
@@ -242,7 +243,9 @@ public class StatementEditor extends EventListeningPanel
             boolean isEventForThisStatement = event.getQualifier().getKbStatement()
                 .equals(statement.getObject());
             if (isEventForThisStatement) {
-                event.getQualifier().getKbStatement().getQualifiers().remove(event.getQualifier());
+                if (event.isDeleted()) {
+                    event.getQualifier().getKbStatement().getQualifiers().remove(event.getQualifier());
+                }
                 statement.setObject(event.getQualifier().getKbStatement());
                 target.add(qualifierListWrapper);
             }

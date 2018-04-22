@@ -106,6 +106,7 @@ public class KBStatement implements Serializable
         this.originalStatements = other.originalStatements;
         this.property = other.property;
         this.value = other.value;
+        qualifiers = other.qualifiers;
     }
 
     public String getStatementId()

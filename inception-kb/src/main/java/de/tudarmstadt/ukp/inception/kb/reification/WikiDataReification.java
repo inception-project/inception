@@ -372,7 +372,7 @@ public class WikiDataReification
     public void upsertQualifier(KnowledgeBase kb, KBQualifier aQualifier)
     {
         kbService.update(kb, (conn) -> {
-            int index = aQualifier.getKbStatement().getQualifiers().indexOf(aQualifier);
+            int index = qualifierIndex(aQualifier);
             List<Statement> statements = reifyQualifier(kb, aQualifier);
             conn.add(statements);
             if (index == -1) {
@@ -386,6 +386,16 @@ public class WikiDataReification
             }
             return null;
         });
+    }
+
+    private int qualifierIndex(KBQualifier aQualifier) {
+        List<KBQualifier> qualifierList = aQualifier.getKbStatement().getQualifiers();
+        for(KBQualifier qualifier : qualifierList){
+            if (qualifier.getOriginalStatements().equals(aQualifier.getOriginalStatements())) {
+                return qualifierList.indexOf(qualifier);
+            }
+        }
+        return -1;
     }
 
     @Override
