@@ -44,13 +44,16 @@ import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormSubmittingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderDeletedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.model.ClassificationToolRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.service.RecommendationService;
@@ -63,7 +66,9 @@ public class RecommenderEditorPanel
     private @SpringBean RecommendationService recommendationService;
     private @SpringBean AnnotationSchemaService annotationSchemaService;
     private @SpringBean ClassificationToolRegistry toolRegistry;
-    
+    private @SpringBean ApplicationEventPublisherHolder appEventPublisherHolder;
+    private @SpringBean UserDao userDao;
+
     private IModel<Project> projectModel;
     private IModel<Recommender> recommenderModel;
     private Component threshold;
@@ -78,9 +83,7 @@ public class RecommenderEditorPanel
         
         projectModel = aProject;
         recommenderModel = aRecommender;
-        
-        
-        
+
         Form<Recommender> form = new Form<>("form", CompoundPropertyModel.of(aRecommender));
         add(form);
         form.add(new Label("name"));
@@ -223,6 +226,9 @@ public class RecommenderEditorPanel
     
     private void actionDelete(AjaxRequestTarget aTarget) {
         recommendationService.deleteRecommender(recommenderModel.getObject());
+        appEventPublisherHolder.get().publishEvent(
+            new RecommenderDeletedEvent(this, recommenderModel.getObject(),
+                userDao.getCurrentUser().getUsername(), projectModel.getObject()));
         actionCancel(aTarget);
     }
     
