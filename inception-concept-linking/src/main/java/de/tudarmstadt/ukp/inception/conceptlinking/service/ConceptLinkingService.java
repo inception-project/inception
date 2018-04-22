@@ -98,8 +98,8 @@ public class ConceptLinkingService
     private static final String POS_NOUN_PREFIX = "N";
     private static final String POS_ADJECTIVE_PREFIX = "J";
 
-    private Map<String, Set<CandidateEntity>> candidateCache =
-        new LRUCache<>(properties.getCacheSize());
+    private Map<String, Set<CandidateEntity>> candidateCache = Collections
+        .synchronizedMap(new LRUCache<>(properties.getCacheSize()));
 
     @PostConstruct
     public void init()
