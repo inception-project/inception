@@ -130,9 +130,6 @@ public class QueryUtil
     public static TupleQuery generateSemanticSignatureQuery(RepositoryConnection conn, String
         wikidataId, int limit)
     {
-        ValueFactory vf = SimpleValueFactory.getInstance();
-        Literal id = vf.createLiteral("e:" + wikidataId);
-
         String query = String.join("\n",
             SPARQL_PREFIX,
             "SELECT DISTINCT ?label ?p WHERE ",
@@ -155,9 +152,8 @@ public class QueryUtil
             "  }",
             " LIMIT " + limit);
 
-        TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, query);
-        tupleQuery.setBinding("e2", id);
-        return tupleQuery;
+        query = query.replace("?e2", "e:" + wikidataId);
+        return conn.prepareTupleQuery(QueryLanguage.SPARQL, query);
     }
 
     public static TupleQuery getDescription (RepositoryConnection conn, String IRI)
