@@ -135,8 +135,6 @@ public class ConceptLinkingService
      */
     private Set<CandidateEntity> generateCandidates(KnowledgeBase aKB, String aMention)
     {
-        long startTime = System.currentTimeMillis();
-
         if (aMention == null || aMention.isEmpty()) {
             return Collections.emptySet();
         }
@@ -188,8 +186,6 @@ public class ConceptLinkingService
                 }
             }
         }
-        logger.debug("It took [{}] ms to retrieve candidates from KB for mention [{}]",
-            System.currentTimeMillis() - startTime, aMention);
         return candidates;
     }
 
@@ -389,18 +385,21 @@ public class ConceptLinkingService
     {
         long startTime = System.currentTimeMillis();
 
-        List<String> list = new ArrayList<>();
         Set<CandidateEntity> candidates = new HashSet<>();
 
-        list.add(aMention);
-        list.add(aTypedString);
-        list.stream().parallel()
-            .forEach(string -> candidates.addAll(generateCandidates(aKB, string)));
         aMention = aMention.toLowerCase(Locale.ENGLISH);
         aTypedString = aTypedString.toLowerCase(Locale.ENGLISH);
 
-        logger.debug("It took [{}] ms to retrieve candidates from KB [{}]", System
-            .currentTimeMillis() - startTime);
+        if (!aMention.startsWith(aTypedString)) {
+            candidates.addAll(generateCandidates(aKB, aTypedString));
+            logger.debug("It took [{}] ms to retrieve candidates for typed string [{}]", System
+                .currentTimeMillis() - startTime, aTypedString);
+        } else {
+            candidates.addAll(generateCandidates(aKB, aMention));
+            logger.debug("It took [{}] ms to retrieve candidates for mention [{}]", System
+                .currentTimeMillis() - startTime, aMention);
+        }
+        
         List<CandidateEntity> rankedCandidates = rankCandidates(aKB, aMention, candidates, aJcas,
             aMentionBeginOffset);
 
