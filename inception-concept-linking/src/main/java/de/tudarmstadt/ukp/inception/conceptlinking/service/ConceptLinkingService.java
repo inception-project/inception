@@ -100,7 +100,7 @@ public class ConceptLinkingService
         DefaultResourceLoader loader = new DefaultResourceLoader();
 
         org.springframework.core.io.Resource stopwordsResource = loader
-            .getResource("classpath:stopwords-de.txt");
+            .getResource("classpath:stopwords-en.txt");
         stopwords = FileUtils.loadStopwordFile(stopwordsResource);
 
         org.springframework.core.io.Resource entityFrequencyMapResource = loader
