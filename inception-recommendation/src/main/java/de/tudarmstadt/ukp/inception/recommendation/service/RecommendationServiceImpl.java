@@ -43,6 +43,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.DocumentOpenedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterAnnotationUpdateEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentResetEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -199,14 +200,14 @@ public class RecommendationServiceImpl
     }
 
     @EventListener
-    public void afterAnnotationUpdate(AfterAnnotationUpdateEvent aEvent) throws Exception
+    public void afterAnnotationUpdate(AfterAnnotationUpdateEvent aEvent)
     {
         triggerTrainingAndClassification(aEvent.getDocument().getUser(),
                 aEvent.getDocument().getProject());
     }
 
     @EventListener
-    public void onDocumentOpen(DocumentOpenedEvent aEvent) throws Exception
+    public void onDocumentOpen(DocumentOpenedEvent aEvent)
     {
         triggerTrainingAndClassification(aEvent.getUser(), aEvent.getDocument().getProject());
     }
@@ -237,7 +238,16 @@ public class RecommendationServiceImpl
             scheduler.stopAllTasksForUser(username);
         }
     }
-    
+
+    @EventListener
+    public void afterDocumentReset(AfterDocumentResetEvent aEvent)
+    {
+        String userName = aEvent.getDocument().getUser();
+        Project project = aEvent.getDocument().getProject();
+        clearState(userName);
+        triggerTrainingAndClassification(userName, project);
+    }
+
     @Override
     public void setMaxSuggestions(User aUser, int aMax)
     {
@@ -291,7 +301,6 @@ public class RecommendationServiceImpl
             states.remove(aUsername);
         }
     }
-        
     
     @Override
     public void switchPredictions(User aUser, Project aProject)
@@ -305,7 +314,11 @@ public class RecommendationServiceImpl
             }
         }
     }
-    
+
+    /**
+     * We are assuming that the user is actively working on one project at a time.
+     * Otherwise, the RecommendationUserState might take up a lot of memory.
+     */
     private static class RecommendationUserState
     {
         private int maxPredictions = 3;
@@ -360,7 +373,7 @@ public class RecommendationServiceImpl
         {
             incomingPredictions.remove(aProject.getId());            
         }
-        
+
         public Object getTrainedModel(Recommender aRecommender)
         {
             return trainedModels.get(aRecommender.getId());
