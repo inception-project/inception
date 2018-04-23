@@ -124,9 +124,7 @@ public class QualifierEditor
 
             form.add(new TextField<>("language"));
 
-            Component valueTextArea = new TextArea<String>("value").add(
-                new LambdaAjaxFormComponentUpdatingBehavior("change", t -> t.add(getParent())));
-            //initialFocusComponent = valueTextArea;
+            Component valueTextArea = new TextArea<String>("value");
             form.add(valueTextArea);
 
             form.add(new LambdaAjaxButton<>("create", QualifierEditor.this::actionSave));

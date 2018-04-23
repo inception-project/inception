@@ -129,4 +129,22 @@ public class KBQualifier
         this.originalStatements = originalStatements;
     }
 
+    public int getQualifierIndexByOriginalStatements()
+    {
+        List<KBQualifier> qualifiers = kbStatement.getQualifiers();
+        for (KBQualifier qualifier : qualifiers) {
+            boolean flag = false;
+            if (qualifier.getOriginalStatements().size() == originalStatements.size()) {
+                flag = true;
+                for (Statement statement : qualifier.getOriginalStatements()) {
+                    flag = flag && originalStatements.contains(statement);
+                }
+            }
+            if (flag) {
+                return qualifiers.indexOf(qualifier);
+            }
+        }
+        return -1;
+    }
+
 }
