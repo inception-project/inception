@@ -18,6 +18,7 @@
 
 package de.tudarmstadt.ukp.inception.conceptlinking.service;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -45,16 +46,17 @@ import org.eclipse.rdf4j.query.TupleQueryResult;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.conceptlinking.config.EntityLinkingProperties;
 import de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity;
 import de.tudarmstadt.ukp.inception.conceptlinking.model.Property;
 import de.tudarmstadt.ukp.inception.conceptlinking.model.SemanticSignature;
 import de.tudarmstadt.ukp.inception.conceptlinking.util.FileUtils;
+import de.tudarmstadt.ukp.inception.conceptlinking.util.LRUCache;
 import de.tudarmstadt.ukp.inception.conceptlinking.util.QueryUtil;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
@@ -66,23 +68,35 @@ public class ConceptLinkingService
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private @Resource KnowledgeBaseService kbService;
+    private @Resource EntityLinkingProperties properties;
+
+    @org.springframework.beans.factory.annotation.Value
+        (value = "${repository.path}/resources/stopwords-en.txt")
+    private File stopwordsFile;
+    private Set<String> stopwords;
+
+    @org.springframework.beans.factory.annotation.Value
+        (value = "${repository.path}/resources/wikidata_entity_freqs.map")
+    private File entityFrequencyFile;
+    private Map<String, Integer> entityFrequencyMap;
+
+    @org.springframework.beans.factory.annotation.Value
+        (value = "${repository.path}/resources/property_blacklist.txt")
+    private File propertyBlacklistFile;
+    private Set<String> propertyBlacklist;
+
+    @org.springframework.beans.factory.annotation.Value
+        (value = "${repository.path}/resources/properties_with_labels.txt")
+    private File propertyWithLabelsFile;
+    private Map<String, Property> propertyWithLabels;
 
     private final String[] PUNCTUATION_VALUES
         = new String[] { "``", "''", "(", ")", ",", ".", ":", "--" };
-
     private final Set<String> punctuations = new HashSet<>(Arrays.asList(PUNCTUATION_VALUES));
-
-    private Set<String> stopwords;
-
-    private Map<String, Integer> entityFrequencyMap;
-
-    private Set<String> propertyBlacklist;
 
     private Set<String> typeBlacklist = new HashSet<>(Arrays
         .asList("commonsmedia", "external-id", "globe-coordinate", "math", "monolingualtext",
             "quantity", "string", "url", "wikibase-property"));
-
-    private Map<String, Property> propertyWithLabels;
 
     private static final int MENTION_CONTEXT_SIZE = 5;
     private static final int CANDIDATE_QUERY_LIMIT = 10000;
@@ -94,26 +108,20 @@ public class ConceptLinkingService
     private static final String POS_NOUN_PREFIX = "N";
     private static final String POS_ADJECTIVE_PREFIX = "J";
 
+    private Map<String, Set<CandidateEntity>> candidateCache;
+    private Map<String, SemanticSignature> semanticSignatureCache;
+
     @PostConstruct
     public void init()
     {
-        DefaultResourceLoader loader = new DefaultResourceLoader();
-
-        org.springframework.core.io.Resource stopwordsResource = loader
-            .getResource("classpath:stopwords-de.txt");
-        stopwords = FileUtils.loadStopwordFile(stopwordsResource);
-
-        org.springframework.core.io.Resource entityFrequencyMapResource = loader
-            .getResource("classpath:wikidata_entity_freqs.map");
-        entityFrequencyMap = FileUtils.loadEntityFrequencyMap(entityFrequencyMapResource);
-
-        org.springframework.core.io.Resource propertyBlacklistResource = loader
-            .getResource("classpath:property_blacklist.txt");
-        propertyBlacklist = FileUtils.loadPropertyBlacklist(propertyBlacklistResource);
-
-        org.springframework.core.io.Resource propertyWithLabelsResource = loader
-            .getResource("classpath:properties_with_labels.txt");
-        propertyWithLabels = FileUtils.loadPropertyLabels(propertyWithLabelsResource);
+        stopwords = FileUtils.loadStopwordFile(stopwordsFile);
+        entityFrequencyMap = FileUtils.loadEntityFrequencyMap(entityFrequencyFile);
+        propertyBlacklist = FileUtils.loadPropertyBlacklist(propertyBlacklistFile);
+        propertyWithLabels = FileUtils.loadPropertyLabels(propertyWithLabelsFile);
+      
+        candidateCache = Collections.synchronizedMap(new LRUCache<>(properties.getCacheSize()));
+        semanticSignatureCache = Collections
+            .synchronizedMap(new LRUCache<>(properties.getCacheSize()));
     }
 
     public String getBeanName()
@@ -135,10 +143,12 @@ public class ConceptLinkingService
      */
     private Set<CandidateEntity> generateCandidates(KnowledgeBase aKB, String aMention)
     {
-        long startTime = System.currentTimeMillis();
-
         if (aMention == null || aMention.isEmpty()) {
             return Collections.emptySet();
+        }
+
+        if (candidateCache.containsKey(aMention)) {
+            return candidateCache.get(aMention);
         }
 
         Set<CandidateEntity> candidates = new HashSet<>();
@@ -188,8 +198,8 @@ public class ConceptLinkingService
                 }
             }
         }
-        logger.debug("It took [{}] ms to retrieve candidates from KB for mention [{}]",
-            System.currentTimeMillis() - startTime, aMention);
+
+        candidateCache.put(aMention, candidates);
         return candidates;
     }
 
@@ -366,6 +376,10 @@ public class ConceptLinkingService
      */
     private SemanticSignature getSemanticSignature(KnowledgeBase aKB, String aWikidataId)
     {
+        if (semanticSignatureCache.containsKey(aWikidataId)) {
+            return semanticSignatureCache.get(aWikidataId);
+        }
+
         Set<String> relatedRelations = new HashSet<>();
         Set<String> relatedEntities = new HashSet<>();
         try (RepositoryConnection conn = kbService.getConnection(aKB)) {
@@ -397,8 +411,10 @@ public class ConceptLinkingService
                 logger.error("could not get semantic signature", e);
             }
         }
-        
-        return new SemanticSignature(relatedEntities, relatedRelations);
+
+        SemanticSignature ss = new SemanticSignature(relatedEntities, relatedRelations);
+        semanticSignatureCache.put(aWikidataId, ss);
+        return ss;
     }
 
     /**
@@ -420,16 +436,21 @@ public class ConceptLinkingService
     {
         long startTime = System.currentTimeMillis();
 
-        List<String> list = new ArrayList<>();
         Set<CandidateEntity> candidates = new HashSet<>();
 
-        list.add(aMention);
-        list.add(aTypedString);
-        list.stream().parallel()
-            .forEach(string -> candidates.addAll(generateCandidates(aKB, string)));
+        aMention = aMention.toLowerCase(Locale.ENGLISH);
+        aTypedString = aTypedString.toLowerCase(Locale.ENGLISH);
 
-        logger.debug("It took [{}] ms to retrieve candidates from KB [{}]", System
-            .currentTimeMillis() - startTime);
+        if (!aMention.startsWith(aTypedString)) {
+            candidates.addAll(generateCandidates(aKB, aTypedString));
+            logger.debug("It took [{}] ms to retrieve candidates for typed string [{}]", System
+                .currentTimeMillis() - startTime, aTypedString);
+        } else {
+            candidates.addAll(generateCandidates(aKB, aMention));
+            logger.debug("It took [{}] ms to retrieve candidates for mention [{}]", System
+                .currentTimeMillis() - startTime, aMention);
+        }
+        
         List<CandidateEntity> rankedCandidates = rankCandidates(aKB, aMention, candidates, aJcas,
             aMentionBeginOffset);
 
