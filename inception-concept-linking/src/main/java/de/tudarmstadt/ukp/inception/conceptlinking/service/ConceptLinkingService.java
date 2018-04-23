@@ -215,7 +215,7 @@ public class ConceptLinkingService
             for (int i = 0; i < aMention.size(); i++) {
 
                 // is the word done? i-th word of mention contained in j-th token of sentence?
-                if (!mentionSentence.get(j).getCoveredText()
+                if (!mentionSentence.get(j).getCoveredText().toLowerCase(Locale.ENGLISH)
                     .contains(aMention.get(i))) {
                     break;
                 }
