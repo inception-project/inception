@@ -25,9 +25,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Function;
 
+import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.tcas.Annotation;
 import org.slf4j.Logger;
@@ -420,4 +422,113 @@ public class CasUtil
         return result;
     }
 
+    public static <T extends Annotation> List<List<AnnotationObject>> loadCustomAnnotatedSentences(
+        JCas jCas, Type annotationType, Feature feature)
+    {
+        List<List<AnnotationObject>> result = new LinkedList<>();
+
+        if (jCas == null) {
+            return result;
+        }
+
+        CAS cas = jCas.getCas();
+        Type sentenceType = JCasUtil.getType(jCas, Sentence.class);
+
+        DocumentMetaData dmd = DocumentMetaData.get(jCas);
+        String documentURI = "N/A";
+        String documentName = "N/A";
+
+        if (dmd == null) {
+            LOG.warn("DocumentMetaData is null! No DocumentURI retrievable.");
+        }
+        else {
+            documentURI = dmd.getDocumentUri();
+            documentName = dmd.getDocumentTitle();
+        }
+
+        int id = 0;
+
+        for (AnnotationFS sentence : org.apache.uima.fit.util.CasUtil.select(cas, sentenceType)) {
+            List<AnnotationFS> annotations = org.apache.uima.fit.util.CasUtil.selectCovered(annotationType, sentence);
+            if (annotations.isEmpty()) {
+                continue;
+            }
+
+            // TODO #176 use the document Id once it it available in the CAS
+            List<TokenObject> tokens = loadTokenObjects(sentence, documentURI, documentName, jCas);
+            if (tokens.isEmpty()) {
+                LOG.error("Could not retrieve tokens from annotated sentence! "
+                    + "Continue, but the returned list of annotated sentences is incomplete");
+                continue;
+            }
+
+            List<AnnotationObject> annotationObjects = getTokenAnnotationsFromFS(annotations, tokens,
+                documentURI, documentName, feature);
+
+            List<AnnotationObject> completeSentence = getAnnotationsForCompleteSentence(tokens,
+                annotationObjects, feature.getName(), id);
+            result.add(completeSentence);
+            id = id + completeSentence.size();
+        }
+
+        return result;
+    }
+
+    private static <A extends Annotation> List<AnnotationObject> getTokenAnnotationsFromFS(
+        List<AnnotationFS> annotations, List<TokenObject> sentence,
+        String documentURI, String documentName, Feature feature)
+    {
+        List<AnnotationObject> result = new LinkedList<>();
+
+
+
+        int id = 0;
+
+        for (AnnotationFS a : annotations) {
+            String annotationLabel = a.getFeatureValueAsString(feature);
+
+            List<Token> tokens = selectCovered(Token.class, a);
+
+            if (tokens == null || tokens.isEmpty()) {
+                continue;
+            }
+
+            for (int i = 0; i < tokens.size(); i++) {
+                Token token = tokens.get(i);
+                Offset offset = getTokenOffset(token, sentence);
+                TokenObject tObj = new TokenObject(offset, token.getCoveredText(),
+                    documentURI, documentName, id);
+                result.add(new AnnotationObject(annotationLabel, tObj, sentence, id, feature.getName()));
+                id++;
+            }
+        }
+
+        Collections.sort(result, (ao1, ao2) -> ao1.getOffset().compareTo(ao2.getOffset()));
+
+        return result;
+    }
+
+    // TODO #176 use the document Id once it it available in the CAS
+    public static List<TokenObject> loadTokenObjects(AnnotationFS sentence, String documentURI,
+                                                     String documentName, JCas aJCas)
+    {
+        List<TokenObject> result = new LinkedList<>();
+
+        if (sentence == null) {
+            return result;
+        }
+
+        List<AnnotationFS> tokens = org.apache.uima.fit.util.CasUtil.selectCovered(JCasUtil.getType(aJCas, Token.class),sentence);
+        for (int i = 0; i < tokens.size(); i++) {
+            int begin = tokens.get(i).getBegin();
+            int end = tokens.get(i).getEnd();
+            Token t = new Token(aJCas, begin, end);
+
+            Offset offset = new Offset(t.getBegin(), t.getEnd(), i, i);
+            // TODO #176 use the document Id once it it available in the CAS
+            result.add(new TokenObject(offset, t.getCoveredText(), documentURI, documentName, i));
+        }
+
+        return result;
+    }
 }
