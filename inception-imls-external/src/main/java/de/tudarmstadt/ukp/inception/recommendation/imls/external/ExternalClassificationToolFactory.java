@@ -1,6 +1,5 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.external;
 
-
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -25,7 +24,7 @@ public class ExternalClassificationToolFactory
 
     @Override
     public ClassificationTool<Object> createTool(long aRecommenderId, String aFeature,
-            int aMaxPredictions)
+            AnnotationLayer aLayer, int aMaxPredictions)
     {
         return new ExternalClassificationTool(aRecommenderId, aFeature);
     }

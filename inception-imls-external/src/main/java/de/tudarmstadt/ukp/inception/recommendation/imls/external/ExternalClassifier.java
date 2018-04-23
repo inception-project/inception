@@ -1,28 +1,22 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.external;
 
-import static org.apache.uima.fit.util.JCasUtil.select;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.Base64;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.apache.uima.cas.CASRuntimeException;
-import org.apache.uima.cas.TypeSystem;
 import org.apache.uima.cas.impl.XmiCasDeserializer;
 import org.apache.uima.cas.impl.XmiCasSerializer;
-import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.util.TypeSystemUtil;
 import org.apache.wicket.ajax.json.JSONException;
@@ -30,14 +24,10 @@ import org.apache.wicket.ajax.json.JSONObject;
 import org.xml.sax.SAXException;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.inception.recommendation.imls.conf.ClassifierConfiguration;
 import de.tudarmstadt.ukp.inception.recommendation.imls.core.classifier.Classifier;
 import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.AnnotationObject;
 import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.TokenObject;
-import de.tudarmstadt.ukp.inception.recommendation.imls.util.CasUtil;
-
 import de.tudarmstadt.ukp.inception.recommendation.imls.core.loader.custom.CustomAnnotationObjectLoader;
 
 public class ExternalClassifier
@@ -139,9 +129,9 @@ public class ExternalClassifier
         CustomAnnotationObjectLoader loader = new CustomAnnotationObjectLoader();
         List<List<AnnotationObject>> annotatedSentences = loader.loadAnnotationObjects(aJCas, "ArgF");
         List<List<List<AnnotationObject>>> wrappedSents = new LinkedList<>();
-        for(List<AnnotationObject> sentence : annotatedSentences){
+        for (List<AnnotationObject> sentence : annotatedSentences) {
             List<List<AnnotationObject>> sentenceList = new LinkedList<>();
-            for(AnnotationObject annotation : sentence){
+            for (AnnotationObject annotation : sentence) {
                 List<AnnotationObject> annotationList = new LinkedList<>();
                 annotationList.add(annotation);
                 sentenceList.add(annotationList);

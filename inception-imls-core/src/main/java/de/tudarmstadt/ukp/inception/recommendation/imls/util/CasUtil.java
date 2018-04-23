@@ -449,7 +449,8 @@ public class CasUtil
         int id = 0;
 
         for (AnnotationFS sentence : org.apache.uima.fit.util.CasUtil.select(cas, sentenceType)) {
-            List<AnnotationFS> annotations = org.apache.uima.fit.util.CasUtil.selectCovered(annotationType, sentence);
+            List<AnnotationFS> annotations = org.apache.uima.fit.util.CasUtil
+                    .selectCovered(annotationType, sentence);
             if (annotations.isEmpty()) {
                 continue;
             }
@@ -462,8 +463,8 @@ public class CasUtil
                 continue;
             }
 
-            List<AnnotationObject> annotationObjects = getTokenAnnotationsFromFS(annotations, tokens,
-                documentURI, documentName, feature);
+            List<AnnotationObject> annotationObjects = getTokenAnnotationsFromFS(annotations,
+                    tokens, documentURI, documentName, feature);
 
             List<AnnotationObject> completeSentence = getAnnotationsForCompleteSentence(tokens,
                 annotationObjects, feature.getName(), id);
@@ -496,9 +497,10 @@ public class CasUtil
             for (int i = 0; i < tokens.size(); i++) {
                 Token token = tokens.get(i);
                 Offset offset = getTokenOffset(token, sentence);
-                TokenObject tObj = new TokenObject(offset, token.getCoveredText(),
-                    documentURI, documentName, id);
-                result.add(new AnnotationObject(annotationLabel, tObj, sentence, id, feature.getName()));
+                TokenObject tObj = new TokenObject(offset, token.getCoveredText(), documentURI,
+                        documentName, id);
+                result.add(new AnnotationObject(annotationLabel, tObj, sentence, id,
+                        feature.getName()));
                 id++;
             }
         }
@@ -518,7 +520,8 @@ public class CasUtil
             return result;
         }
 
-        List<AnnotationFS> tokens = org.apache.uima.fit.util.CasUtil.selectCovered(JCasUtil.getType(aJCas, Token.class),sentence);
+        List<AnnotationFS> tokens = org.apache.uima.fit.util.CasUtil
+                .selectCovered(JCasUtil.getType(aJCas, Token.class), sentence);
         for (int i = 0; i < tokens.size(); i++) {
             int begin = tokens.get(i).getBegin();
             int end = tokens.get(i).getEnd();
