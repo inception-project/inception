@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.conceptlinking.util;
 
 import java.util.List;
 
+import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
@@ -126,13 +127,15 @@ public class QueryUtil
 
     /**
      *
-     * @param wikidataId wikidataId
+     * @param wikidataId wikidataId, e.g. "Q3"
      * @param limit maximum number of results
      * @return a query to retrieve the semantic signature
      */
     public static TupleQuery generateSemanticSignatureQuery(RepositoryConnection conn, String
         wikidataId, int limit)
     {
+        ValueFactory vf = SimpleValueFactory.getInstance();
+        IRI iri = vf.createIRI("http://www.wikidata.org/entity/" + wikidataId);
         String query = String.join("\n",
             SPARQL_PREFIX,
             "SELECT DISTINCT ?label ?p WHERE ",
@@ -155,8 +158,9 @@ public class QueryUtil
             "  }",
             " LIMIT " + limit);
 
-        query = query.replace("?e2", "e:" + wikidataId);
-        return conn.prepareTupleQuery(QueryLanguage.SPARQL, query);
+        TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, query);
+        tupleQuery.setBinding("e2", iri);
+        return tupleQuery;
     }
 
     public static TupleQuery getDescription (RepositoryConnection conn, String IRI)
