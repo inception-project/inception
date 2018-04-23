@@ -98,11 +98,11 @@ public class ConceptLinkingService
         .asList("commonsmedia", "external-id", "globe-coordinate", "math", "monolingualtext",
             "quantity", "string", "url", "wikibase-property"));
 
-    private static final int MENTION_CONTEXT_SIZE = 5;
-    private static final int CANDIDATE_QUERY_LIMIT = 10000;
-    private static final int CANDIDATE_DISPLAY_LIMIT = 20;
-    private static final int FREQUENCY_THRESHOLD = 100;
-    private static final int SIGNATURE_QUERY_LIMIT = 100;
+    private static int MENTION_CONTEXT_SIZE;
+    private static int CANDIDATE_QUERY_LIMIT;
+    private static int CANDIDATE_DISPLAY_LIMIT;
+    private static int FREQUENCY_THRESHOLD;
+    private static int SIGNATURE_QUERY_LIMIT;
     private static final String WIKIDATA_PREFIX = "http://www.wikidata.org/entity/";
     private static final String POS_VERB_PREFIX = "V";
     private static final String POS_NOUN_PREFIX = "N";
@@ -122,6 +122,12 @@ public class ConceptLinkingService
         candidateCache = Collections.synchronizedMap(new LRUCache<>(properties.getCacheSize()));
         semanticSignatureCache = Collections
             .synchronizedMap(new LRUCache<>(properties.getCacheSize()));
+
+        MENTION_CONTEXT_SIZE = properties.getMentionContextSize();
+        CANDIDATE_QUERY_LIMIT = properties.getCandidateQueryLimit();
+        CANDIDATE_DISPLAY_LIMIT = properties.getCandidateDisplayLimit();
+        FREQUENCY_THRESHOLD = properties.getCandidateFrequencyThreshold();
+        SIGNATURE_QUERY_LIMIT = properties.getSignatureQueryLimit();
     }
 
     public String getBeanName()
