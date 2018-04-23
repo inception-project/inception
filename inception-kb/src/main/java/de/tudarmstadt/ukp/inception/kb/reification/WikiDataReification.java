@@ -313,7 +313,7 @@ public class WikiDataReification
             }
             //add new statements
             IRI subject = vf.createIRI(statement.getInstance().getIdentifier());
-            IRI predicate = vf.createIRI(statement.getInstance().getIdentifier());
+            IRI predicate = vf.createIRI(statement.getProperty().getIdentifier());
             Resource id = vf.createBNode(statementId);
 
             Statement root = vf.createStatement(subject, predicate, id);
