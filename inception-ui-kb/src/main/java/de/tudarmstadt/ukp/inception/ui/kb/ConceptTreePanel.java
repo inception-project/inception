@@ -18,8 +18,11 @@
 package de.tudarmstadt.ukp.inception.ui.kb;
 
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import org.apache.wicket.Component;
@@ -149,6 +152,9 @@ public class ConceptTreePanel extends Panel {
     {
         private static final long serialVersionUID = 5318498575532049499L;
 
+        private Map<KBHandle, Boolean> childrenPresentCache = new HashMap<>();
+        private Map<KBHandle, List<KBHandle>> childrensCache = new HashMap<>();
+        
         @Override
         public void detach()
         {
@@ -166,17 +172,52 @@ public class ConceptTreePanel extends Panel {
         @Override
         public boolean hasChildren(KBHandle aNode)
         {
-            // FIXME Instead of querying for the whole list of children here, it would probably
-            // be more efficient to just query if at least one child exists.
-            return !kbService.listChildConcepts(kbModel.getObject(), aNode.getIdentifier(),
-                    preferences.getObject().showAllConcepts).isEmpty();
+            // If the KB is read-only, then we cache the values and re-use the cached values.
+            if (kbModel.getObject().isReadOnly()) {
+                // Leaving this code here because we might make the preemptive loading of 
+                // child presence optional.
+//                Boolean childrenPresent = childrenPresentCache.get(aNode);
+//                if (childrenPresent == null) {
+//                    childrenPresent = kbService.hasChildConcepts(kbModel.getObject(),
+//                            aNode.getIdentifier(), preferences.getObject().showAllConcepts);
+//                    childrenPresentCache.put(aNode, childrenPresent);
+//                }
+//                return childrenPresent;
+                
+                // To avoid having to send a query to the KB for every child node, just assume
+                // that there might be child nodes and show the expander until we have actually
+                // loaded the children, cached them and can show the true information.
+                List<KBHandle> children = childrensCache.get(aNode);
+                if (children == null) {
+                    return true;
+                }
+                else {
+                    return !children.isEmpty();
+                }
+            }
+            else {
+                return kbService.hasChildConcepts(kbModel.getObject(),
+                        aNode.getIdentifier(), preferences.getObject().showAllConcepts);
+            }
         }
 
         @Override
         public Iterator<? extends KBHandle> getChildren(KBHandle aNode)
         {
-            return kbService.listChildConcepts(kbModel.getObject(), aNode.getIdentifier(),
-                    preferences.getObject().showAllConcepts).iterator();
+            // If the KB is read-only, then we cache the values and re-use the cached values.
+            if (kbModel.getObject().isReadOnly()) {
+                List<KBHandle> children = childrensCache.get(aNode);
+                if (children == null) {
+                    children = kbService.listChildConcepts(kbModel.getObject(),
+                            aNode.getIdentifier(), preferences.getObject().showAllConcepts);
+                    childrensCache.put(aNode, children);
+                }
+                return children.iterator();
+            }
+            else {
+                return kbService.listChildConcepts(kbModel.getObject(), aNode.getIdentifier(),
+                        preferences.getObject().showAllConcepts).iterator();
+            }
         }
 
         @Override
