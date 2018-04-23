@@ -36,6 +36,7 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.core.classificationtool.
 import de.tudarmstadt.ukp.inception.recommendation.imls.core.classifier.Classifier;
 import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.AnnotationObject;
 import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.TokenObject;
+import de.tudarmstadt.ukp.inception.recommendation.imls.external.ExternalClassifier;
 import de.tudarmstadt.ukp.inception.recommendation.imls.util.CasUtil;
 import de.tudarmstadt.ukp.inception.recommendation.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.model.Recommender;
@@ -93,26 +94,47 @@ public class PredictionTask
                     
                 List<AnnotationDocument> docs = documentService
                         .listAnnotationDocuments(layer.getProject(), user);
-                docs.forEach(doc -> {
-                    JCas jcas;
-                    try {
-                        jcas = documentService.readAnnotationCas(doc);
-                        tokens.addAll(CasUtil.loadTokenObjects(jcas, 0, 
+
+                if(!(classifier instanceof ExternalClassifier)) {
+                    docs.forEach(doc -> {
+                        JCas jcas;
+                        try {
+                            jcas = documentService.readAnnotationCas(doc);
+                            tokens.addAll(CasUtil.loadTokenObjects(jcas, 0,
                                 jcas.getDocumentText().length()));
-                    } catch (IOException e) {
-                        log.error("Cannot read annotation CAS.", e);
-                    }
-                });
-      
-                if (tokens.isEmpty()) {
-                    log.info("[{}][{}]: No training data.", user.getUsername(),
-                            recommender.getName());
+                        } catch (IOException e) {
+                            log.error("Cannot read annotation CAS.", e);
+                        }
+                    });
+                }
+
+                if (tokens.isEmpty() && !(classifier instanceof ExternalClassifier)) {
+                    String username = user.getUsername();
+                    log.info("[{}][{}]: No training data.", username, recommender.getName());
                     return;
                 }
                 
                 log.info("[{}][{}]: Predicting labels...", user.getUsername(),
                         recommender.getName());
-                List<AnnotationObject> predictions = classifier.predict(tokens, layer);
+
+                List<AnnotationObject> predictions;
+                if(!(classifier instanceof ExternalClassifier)){
+                    predictions = classifier.predict(tokens, layer);
+                }
+                else{
+                    List<AnnotationObject> tempPredictions = new ArrayList<AnnotationObject>();
+                    docs.forEach(doc -> {
+                        JCas jcas;
+                        try {
+                            jcas = documentService.readAnnotationCas(doc);
+                            tempPredictions.addAll(classifier.predict(jcas, layer));
+                        } catch (IOException e) {
+                            log.error("Cannot read annotation CAS.", e);
+                        }
+                    });
+                    predictions = tempPredictions;
+                }
+
                 predictions.forEach(token -> token.setRecommenderId(ct.getId()));
                 
                 model.putPredictions(layer.getId(), predictions);
