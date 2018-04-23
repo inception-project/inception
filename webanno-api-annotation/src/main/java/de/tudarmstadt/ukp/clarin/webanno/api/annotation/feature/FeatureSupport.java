@@ -205,15 +205,40 @@ public interface FeatureSupport<T>
             IModel<AnnotatorState> aStateModel, IModel<FeatureState> aFeatureStateModel);
 
     /**
-     * Gets the label that should be displayed for the given feature value in the UI.
-     * {@code null} is an acceptable return value for this method.
+     * Gets the label that should be displayed for the given feature value in the UI. {@code null}
+     * is an acceptable return value for this method. 
+     * 
+     * <b>NOTE:</b> If this method should never be overwritten!
+     * 
+     * @param aFeature
+     *            the feature to be rendered.
+     * @param aFs
+     *            the feature structure from which to obtain the label.
+     * @param aLabelFeature
+     *            the feature which holds the label.
+     * @return the UI label.
      */
     default String renderFeatureValue(AnnotationFeature aFeature, AnnotationFS aFs,
             Feature aLabelFeature)
     {
-        return aFs.getFeatureValueAsString(aLabelFeature);
+        return renderFeatureValue(aFeature, aFs.getFeatureValueAsString(aLabelFeature));
     }
-    
+
+    /**
+     * Gets the label that should be displayed for the given feature value in the UI. {@code null}
+     * is an acceptable return value for this method.
+     * 
+     * @param aFeature
+     *            the feature to be rendered.
+     * @param aLabel
+     *            the internal label.
+     * @return the UI label.
+     */
+    default String renderFeatureValue(AnnotationFeature aFeature, String aLabel)
+    {
+        return aLabel;
+    }
+
     /**
      * Update this feature with a new value. This method should not be called directly but
      * rather via {@link TypeAdapter#setFeatureValue}.

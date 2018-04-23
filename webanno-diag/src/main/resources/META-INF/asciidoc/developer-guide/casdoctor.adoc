@@ -17,14 +17,14 @@
 [[sect_casdoctor]]
 == CAS Doctor
 
-The CAS Doctor is an essential tool while developing WebAnno. When enabled, it checks the CAS for
+The CAS Doctor is an essential development tool. When enabled, it checks the CAS for
 consistency when loading or saving a CAS. It can also automatically repair inconsistencies when
 configured to do so. This section gives an overview of the available checks and repairs.
 
 It is safe to enable any <<sect_checks,checks>>. However, active checks may considerably slow down 
-WebAnno, in particular for large documents or for actions that work with many documents, e.g. 
+the application, in particular for large documents or for actions that work with many documents, e.g. 
 curation or the calculation of agreement. Thus, checks should not be enabled on a production system
-unless WebAnno behaves strangely and it is necessary to check the documents for consistency.
+unless the application behaves strangely and it is necessary to check the documents for consistency.
 
 Enabling <<sect_repairs,repairs>> should be done with great care as most repairs are performing
 destructive actions. Repairs should never be enabled on a production system. The repairs are
@@ -43,7 +43,7 @@ have been implemented and are actually enabled.
 By default, CAS Doctor generates an exception when a check or repair fails. This ensures that
 inconsistencies are contained and do not propagate further. In some cases, e.g. when it is known
 that by its nature an inconsistency does not propagate and can be avoided by the user, it may be
-convenient to allow the user to continue working with WebAnno while a repair is being developed.
+convenient to allow the user to continue working with the application while a repair is being developed.
 In such a case, CAS Doctor can be configured to be non-fatal. Mind that users can always continue
 to work on documents that are consistent. CAS Doctor only prevents loading inconsistent documents
 and saving inconsistent documents.
@@ -88,12 +88,12 @@ and saving inconsistent documents.
 ID:: `AllFeatureStructuresIndexedCheck`
 Related repairs:: <<repair_RemoveDanglingChainLinksRepair>>, <<repair_RemoveDanglingRelationsRepair>>, <<repair_ReindexFeatureAttachedSpanAnnotationsRepair>>
 
-This check verifies if all reachable feature structures in the CAS are also indexed. WebAnno does not
-currently use any unindexed feature structures. If there are any unindexed feature structures in the
-CAS, it is likely due to a bug in WebAnno and can cause undefined behavior.
+This check verifies if all reachable feature structures in the CAS are also indexed. We do not
+currently use any un-indexed feature structures. If there are any un-indexed feature structures in the
+CAS, it is likely due to a bug in the application and can cause undefined behavior.
 
-For example, older versions of WebAnno had a bug that caused deleted spans still to be accessible
-through relations which had used the span as a source or target.
+For example, older versions of {product-name} had a bug that caused deleted spans still to be
+accessible through relations which had used the span as a source or target.
 
 This check is very extensive and slow. 
 
@@ -104,7 +104,7 @@ This check is very extensive and slow.
 ID:: `FeatureAttachedSpanAnnotationsTrulyAttachedCheck`
 Related repairs:: <<repair_ReattachFeatureAttachedSpanAnnotationsRepair>>, <<repair_ReattachFeatureAttachedSpanAnnotationsAndDeleteExtrasRepair>>
 
-Certain span layers in WebAnno are attached to another span layer through a feature reference
+Certain span layers are attached to another span layer through a feature reference
 from that second layer. For example, annotations in the POS layer must always be referenced from
 a Token annotation via the Token feature `pos`. This check ensures that annotations on layers such
 as the POS layer are properly referenced from the attaching layer (e.g. the Token layer).
@@ -116,7 +116,7 @@ as the POS layer are properly referenced from the attaching layer (e.g. the Toke
 ID:: `LinksReachableThroughChainsCheck`
 Related repairs:: <<repair_RemoveDanglingChainLinksRepair>>
 
-Each chain in a chain layers of WebAnno consist of a *chain* and several *links*. The chain
+Each chain in a chain layers consist of a *chain* and several *links*. The chain
 points to the first link and each link points to the following link. If the CAS contains any links
 that are not reachable through a chain, then this is likely due to a bug.
 
@@ -127,7 +127,7 @@ that are not reachable through a chain, then this is likely due to a bug.
 ID:: `NoZeroSizeTokensAndSentencesCheck`
 Related repairs:: <<repair_RemoveZeroSizeTokensAndSentencesRepair>>
 
-Zero-sized tokens and sentences are not valid in WebAnno and can cause undefined behavior.
+Zero-sized tokens and sentences are not valid and can cause undefined behavior.
 
 [[check_RelationOffsetsCheck]]
 ==== Relation Offsets Check
@@ -212,7 +212,7 @@ ID:: `RemoveDanglingRelationsRepair`
 This repair action removes all relations that point to unindexed spans. 
 
 Although this is a destructive repair action, it is likely a safe action in most cases. When
-deleting a span, WebAnno normally also deletes the attached relations (unless there is a bug).
+deleting a span, normally any attached relations are also deleted (unless there is a bug).
 Dangling relations are not visible in the user interface.
 
 [[repair_RemoveZeroSizeTokensAndSentencesRepair]]
