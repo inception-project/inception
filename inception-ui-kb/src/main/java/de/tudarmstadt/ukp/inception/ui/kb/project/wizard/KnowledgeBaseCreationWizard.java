@@ -40,6 +40,7 @@ import org.apache.wicket.extensions.wizard.dynamic.DynamicWizardStep;
 import org.apache.wicket.extensions.wizard.dynamic.IDynamicWizardStep;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
+import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.RadioGroup;
 import org.apache.wicket.markup.html.form.RequiredTextField;
 import org.apache.wicket.markup.html.form.TextField;
@@ -69,6 +70,7 @@ import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 import de.tudarmstadt.ukp.inception.kb.io.FileUploadHelper;
+import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 import de.tudarmstadt.ukp.inception.ui.kb.project.EnrichedKnowledgeBase;
 import de.tudarmstadt.ukp.inception.ui.kb.project.EnrichedKnowledgeBaseUtils;
 import de.tudarmstadt.ukp.inception.ui.kb.project.KnowledgeBaseListPanel;
@@ -100,7 +102,7 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
     private final IModel<Project> projectModel;
     private final DynamicWizardModel wizardModel;
     private final CompoundPropertyModel<EnrichedKnowledgeBase> wizardDataModel;
-    
+
     public KnowledgeBaseCreationWizard(String id, IModel<Project> aProjectModel) {
         super(id);
 
@@ -130,6 +132,17 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
 
             add(nameField("name", "kb.name"));
             add(repositoryTypeRadioButtons("type", "kb.type"));
+
+            add(selectReificationStrategy("reification", "reification"));
+        }
+
+        private DropDownChoice<Reification> selectReificationStrategy(String id, String property)
+        {
+            final List<Reification> reificationList = Arrays.asList(Reification.values());
+
+            DropDownChoice<Reification> reificationDropDownChoice = new
+                DropDownChoice<>(id, model.bind(property), reificationList);
+            return reificationDropDownChoice;
         }
 
         @Override
