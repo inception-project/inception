@@ -109,6 +109,7 @@ public class ConceptLinkingService
     private static final String POS_ADJECTIVE_PREFIX = "J";
 
     private Map<String, Set<CandidateEntity>> candidateCache;
+    private Map<String, SemanticSignature> semanticSignatureCache;
 
     @PostConstruct
     public void init()
@@ -119,6 +120,8 @@ public class ConceptLinkingService
         propertyWithLabels = FileUtils.loadPropertyLabels(propertyWithLabelsFile);
       
         candidateCache = Collections.synchronizedMap(new LRUCache<>(properties.getCacheSize()));
+        semanticSignatureCache = Collections
+            .synchronizedMap(new LRUCache<>(properties.getCacheSize()));
     }
 
     public String getBeanName()
@@ -373,6 +376,10 @@ public class ConceptLinkingService
      */
     private SemanticSignature getSemanticSignature(KnowledgeBase aKB, String aWikidataId)
     {
+        if (semanticSignatureCache.containsKey(aWikidataId)) {
+            return semanticSignatureCache.get(aWikidataId);
+        }
+
         Set<String> relatedRelations = new HashSet<>();
         Set<String> relatedEntities = new HashSet<>();
         try (RepositoryConnection conn = kbService.getConnection(aKB)) {
@@ -404,8 +411,10 @@ public class ConceptLinkingService
                 logger.error("could not get semantic signature", e);
             }
         }
-        
-        return new SemanticSignature(relatedEntities, relatedRelations);
+
+        SemanticSignature ss = new SemanticSignature(relatedEntities, relatedRelations);
+        semanticSignatureCache.put(aWikidataId, ss);
+        return ss;
     }
 
     /**
