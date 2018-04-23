@@ -274,8 +274,13 @@ public interface KnowledgeBaseService
 
     List<KBHandle> listRootConcepts(KnowledgeBase kb, boolean aAll);
 
+    boolean hasChildConcepts(KnowledgeBase aKB, String aParentIdentifier, boolean aAll);
+    
     List<KBHandle> listChildConcepts(KnowledgeBase kb, String parentIdentifier, boolean aAll);
 
+    List<KBHandle> listChildConcepts(KnowledgeBase kb, String parentIdentifier, boolean aAll,
+            int aLimit);
+    
     RepositoryConnection getConnection(KnowledgeBase kb);
 
     interface ReadAction<T>
