@@ -215,7 +215,7 @@ public class ConceptLinkingService
             for (int i = 0; i < aMention.size(); i++) {
 
                 // is the word done? i-th word of mention contained in j-th token of sentence?
-                if (!mentionSentence.get(j).getCoveredText()
+                if (!mentionSentence.get(j).getCoveredText().toLowerCase(Locale.ENGLISH)
                     .contains(aMention.get(i))) {
                     break;
                 }
@@ -262,9 +262,17 @@ public class ConceptLinkingService
         List<Token> mentionContext = getMentionContext(mentionSentence, splitMention,
             MENTION_CONTEXT_SIZE);
 
+        Set<String> sentenceContentTokens = new HashSet<>();
+        for (Token t : JCasUtil.selectCovered(Token.class, mentionSentence)) {
+            boolean isNotPartOfMention = !splitMention.contains(t.getCoveredText());
+            boolean isNotStopword = (stopwords == null) || (stopwords != null && !stopwords
+                .contains(t.getCoveredText().toLowerCase(Locale.ENGLISH)));
+            if (isNotPartOfMention && isNotStopword) {
+                sentenceContentTokens.add(t.getCoveredText().toLowerCase(Locale.ENGLISH));
+            }
+        }
 
-        List<CandidateEntity> result = new ArrayList<>((candidates));
-        result.parallelStream().forEach(l -> {
+        candidates.forEach(l -> {
             String wikidataId = l.getIRI().replace(WIKIDATA_PREFIX, "");
 
             if (entityFrequencyMap != null && entityFrequencyMap.get(wikidataId) != null) {
@@ -273,6 +281,14 @@ public class ConceptLinkingService
             else {
                 l.setFrequency(0);
             }
+
+        });
+
+        List<CandidateEntity> result = sortByFrequency(new ArrayList<>(candidates)).stream()
+            .limit(FREQUENCY_THRESHOLD).collect(Collectors.toList());
+
+        result.parallelStream().forEach(l -> {
+            String wikidataId = l.getIRI().replace(WIKIDATA_PREFIX, "");
             
             l.setIdRank(Math.log(Double.parseDouble(wikidataId.substring(1))));
             String altLabel = l.getAltLabel().toLowerCase(Locale.ENGLISH);
@@ -280,8 +296,23 @@ public class ConceptLinkingService
             l.setLevMatchLabel(lev.apply(mention, altLabel));
             l.setLevContext(lev.apply(tokensToString(mentionContext), altLabel));
 
+            SemanticSignature sig = getSemanticSignature(aKB, wikidataId);
+            Set<String> relatedEntities = sig.getRelatedEntities();
+            Set<String> signatureOverlap = new HashSet<>();
+            for (String entityLabel : relatedEntities) {
+                for (String token: entityLabel.split(" ")) {
+                    if (sentenceContentTokens.contains(token)) {
+                        signatureOverlap.add(entityLabel);
+                        break;
+                    }
+                }
+            }
+            l.setSignatureOverlap(signatureOverlap);
+            l.setSignatureOverlapScore(signatureOverlap.size());
+            l.setNumRelatedRelations(
+                (sig.getRelatedRelations() != null) ? sig.getRelatedRelations().size() : 0);
         });
-        result = sortCandidates(new ArrayList<>(candidates));
+        result = sortCandidates(result);
         logger.debug("It took [{}] ms to rank candidates",
             System.currentTimeMillis() - startTime);
         return result;
@@ -294,7 +325,7 @@ public class ConceptLinkingService
     {
         candidates.sort((e1, e2) ->
             Comparator.comparingInt(CandidateEntity::getFrequency)
-                .compare(e1, e2));
+                .reversed().compare(e1, e2));
         return candidates;
     }
 
