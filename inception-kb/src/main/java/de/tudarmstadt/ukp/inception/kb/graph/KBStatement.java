@@ -100,6 +100,7 @@ public class KBStatement implements Serializable
 
     public KBStatement(KBStatement other)
     {
+        this.statementId = other.statementId;
         this.inferred = other.inferred;
         this.instance = other.instance;
         this.language = other.language;

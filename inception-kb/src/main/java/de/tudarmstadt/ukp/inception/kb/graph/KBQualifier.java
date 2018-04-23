@@ -66,9 +66,9 @@ public class KBQualifier
         originalStatements = new ArrayList<>();
     }
 
-    public KBQualifier(KBStatement kbStatement)
+    public KBQualifier(KBStatement aKbStatement)
     {
-        this.kbStatement = kbStatement;
+        kbStatement = aKbStatement;
         originalStatements = new ArrayList<>();
     }
 
@@ -77,7 +77,7 @@ public class KBQualifier
         kbStatement = other.kbStatement;
         kbProperty = other.kbProperty;
         value = other.value;
-        this.language = other.language;
+        language = other.language;
         originalStatements = other.originalStatements;
     }
 
