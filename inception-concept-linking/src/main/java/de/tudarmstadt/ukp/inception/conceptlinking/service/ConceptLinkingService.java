@@ -18,6 +18,7 @@
 
 package de.tudarmstadt.ukp.inception.conceptlinking.service;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -45,7 +46,6 @@ import org.eclipse.rdf4j.query.TupleQueryResult;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
@@ -70,22 +70,33 @@ public class ConceptLinkingService
     private @Resource KnowledgeBaseService kbService;
     private @Resource EntityLinkingProperties properties;
 
-    private final String[] PUNCTUATION_VALUES
-        = new String[] { "``", "''", "(", ")", ",", ".", ":", "--" };
-
-    private final Set<String> punctuations = new HashSet<>(Arrays.asList(PUNCTUATION_VALUES));
-
+    @org.springframework.beans.factory.annotation.Value
+        (value = "${repository.path}/resources/stopwords-en.txt")
+    private File stopwordsFile;
     private Set<String> stopwords;
 
+    @org.springframework.beans.factory.annotation.Value
+        (value = "${repository.path}/resources/wikidata_entity_freqs.map")
+    private File entityFrequencyFile;
     private Map<String, Integer> entityFrequencyMap;
 
+    @org.springframework.beans.factory.annotation.Value
+        (value = "${repository.path}/resources/property_blacklist.txt")
+    private File propertyBlacklistFile;
     private Set<String> propertyBlacklist;
+
+    @org.springframework.beans.factory.annotation.Value
+        (value = "${repository.path}/resources/properties_with_labels.txt")
+    private File propertyWithLabelsFile;
+    private Map<String, Property> propertyWithLabels;
+
+    private final String[] PUNCTUATION_VALUES
+        = new String[] { "``", "''", "(", ")", ",", ".", ":", "--" };
+    private final Set<String> punctuations = new HashSet<>(Arrays.asList(PUNCTUATION_VALUES));
 
     private Set<String> typeBlacklist = new HashSet<>(Arrays
         .asList("commonsmedia", "external-id", "globe-coordinate", "math", "monolingualtext",
             "quantity", "string", "url", "wikibase-property"));
-
-    private Map<String, Property> propertyWithLabels;
 
     private static final int MENTION_CONTEXT_SIZE = 5;
     private static final int CANDIDATE_QUERY_LIMIT = 10000;
@@ -102,24 +113,11 @@ public class ConceptLinkingService
     @PostConstruct
     public void init()
     {
-        DefaultResourceLoader loader = new DefaultResourceLoader();
-
-        org.springframework.core.io.Resource stopwordsResource = loader
-            .getResource("classpath:stopwords-de.txt");
-        stopwords = FileUtils.loadStopwordFile(stopwordsResource);
-
-        org.springframework.core.io.Resource entityFrequencyMapResource = loader
-            .getResource("classpath:wikidata_entity_freqs.map");
-        entityFrequencyMap = FileUtils.loadEntityFrequencyMap(entityFrequencyMapResource);
-
-        org.springframework.core.io.Resource propertyBlacklistResource = loader
-            .getResource("classpath:property_blacklist.txt");
-        propertyBlacklist = FileUtils.loadPropertyBlacklist(propertyBlacklistResource);
-
-        org.springframework.core.io.Resource propertyWithLabelsResource = loader
-            .getResource("classpath:properties_with_labels.txt");
-        propertyWithLabels = FileUtils.loadPropertyLabels(propertyWithLabelsResource);
-
+        stopwords = FileUtils.loadStopwordFile(stopwordsFile);
+        entityFrequencyMap = FileUtils.loadEntityFrequencyMap(entityFrequencyFile);
+        propertyBlacklist = FileUtils.loadPropertyBlacklist(propertyBlacklistFile);
+        propertyWithLabels = FileUtils.loadPropertyLabels(propertyWithLabelsFile);
+      
         candidateCache = Collections.synchronizedMap(new LRUCache<>(properties.getCacheSize()));
     }
 
@@ -224,7 +222,7 @@ public class ConceptLinkingService
             for (int i = 0; i < aMention.size(); i++) {
 
                 // is the word done? i-th word of mention contained in j-th token of sentence?
-                if (!mentionSentence.get(j).getCoveredText()
+                if (!mentionSentence.get(j).getCoveredText().toLowerCase(Locale.ENGLISH)
                     .contains(aMention.get(i))) {
                     break;
                 }
@@ -271,9 +269,17 @@ public class ConceptLinkingService
         List<Token> mentionContext = getMentionContext(mentionSentence, splitMention,
             MENTION_CONTEXT_SIZE);
 
+        Set<String> sentenceContentTokens = new HashSet<>();
+        for (Token t : JCasUtil.selectCovered(Token.class, mentionSentence)) {
+            boolean isNotPartOfMention = !splitMention.contains(t.getCoveredText());
+            boolean isNotStopword = (stopwords == null) || (stopwords != null && !stopwords
+                .contains(t.getCoveredText().toLowerCase(Locale.ENGLISH)));
+            if (isNotPartOfMention && isNotStopword) {
+                sentenceContentTokens.add(t.getCoveredText().toLowerCase(Locale.ENGLISH));
+            }
+        }
 
-        List<CandidateEntity> result = new ArrayList<>((candidates));
-        result.parallelStream().forEach(l -> {
+        candidates.forEach(l -> {
             String wikidataId = l.getIRI().replace(WIKIDATA_PREFIX, "");
 
             if (entityFrequencyMap != null && entityFrequencyMap.get(wikidataId) != null) {
@@ -282,6 +288,14 @@ public class ConceptLinkingService
             else {
                 l.setFrequency(0);
             }
+
+        });
+
+        List<CandidateEntity> result = sortByFrequency(new ArrayList<>(candidates)).stream()
+            .limit(FREQUENCY_THRESHOLD).collect(Collectors.toList());
+
+        result.parallelStream().forEach(l -> {
+            String wikidataId = l.getIRI().replace(WIKIDATA_PREFIX, "");
             
             l.setIdRank(Math.log(Double.parseDouble(wikidataId.substring(1))));
             String altLabel = l.getAltLabel().toLowerCase(Locale.ENGLISH);
@@ -289,8 +303,23 @@ public class ConceptLinkingService
             l.setLevMatchLabel(lev.apply(mention, altLabel));
             l.setLevContext(lev.apply(tokensToString(mentionContext), altLabel));
 
+            SemanticSignature sig = getSemanticSignature(aKB, wikidataId);
+            Set<String> relatedEntities = sig.getRelatedEntities();
+            Set<String> signatureOverlap = new HashSet<>();
+            for (String entityLabel : relatedEntities) {
+                for (String token: entityLabel.split(" ")) {
+                    if (sentenceContentTokens.contains(token)) {
+                        signatureOverlap.add(entityLabel);
+                        break;
+                    }
+                }
+            }
+            l.setSignatureOverlap(signatureOverlap);
+            l.setSignatureOverlapScore(signatureOverlap.size());
+            l.setNumRelatedRelations(
+                (sig.getRelatedRelations() != null) ? sig.getRelatedRelations().size() : 0);
         });
-        result = sortCandidates(new ArrayList<>(candidates));
+        result = sortCandidates(result);
         logger.debug("It took [{}] ms to rank candidates",
             System.currentTimeMillis() - startTime);
         return result;
@@ -303,7 +332,7 @@ public class ConceptLinkingService
     {
         candidates.sort((e1, e2) ->
             Comparator.comparingInt(CandidateEntity::getFrequency)
-                .compare(e1, e2));
+                .reversed().compare(e1, e2));
         return candidates;
     }
 
