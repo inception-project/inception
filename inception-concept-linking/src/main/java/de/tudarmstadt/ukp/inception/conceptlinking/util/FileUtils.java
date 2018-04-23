@@ -19,6 +19,8 @@
 package de.tudarmstadt.ukp.inception.conceptlinking.util;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -31,7 +33,6 @@ import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.core.io.Resource;
 
 import de.tudarmstadt.ukp.inception.conceptlinking.model.Property;
 
@@ -43,32 +44,32 @@ public class FileUtils
 
     private final static Logger log = LoggerFactory.getLogger(FileUtils.class);
 
-    private static List<String> readLines(Resource r)
+    private static List<String> readLines(File r)
     {
         List<String> lines = new ArrayList<>();
         String l;
         try {
-            InputStream is = r.getInputStream();
+            InputStream is = new FileInputStream(r);
             BufferedReader br = new BufferedReader(new InputStreamReader(is, "utf8"));
             while ((l = br.readLine()) != null) {
                 lines.add(l);
             }
             br.close();
         } catch (IOException e) {
-            log.error("Could not read file " + r.getFilename(), e);
+            log.error("Could not read file " + r.getName(), e);
         }
         return lines;
     }
 
-    public static Set<String> loadStopwordFile(Resource r)
+    public static Set<String> loadStopwordFile(File r)
     {
         List<String> lines = readLines(r);
         return new HashSet<>(lines);
     }
 
-    public static Map<String, Property> loadPropertyLabels(Resource r)
+    public static Map<String, Property> loadPropertyLabels(File r)
     {
-        Map<String, Property> property2LabelMap = new HashMap<String, Property>();
+        Map<String, Property> property2LabelMap = new HashMap<>();
         List<String> lines = readLines(r);
         for (String line: lines) {
             if (!line.startsWith("#")) {
@@ -80,9 +81,9 @@ public class FileUtils
         return property2LabelMap;
     }
 
-    public static Map<String, Integer> loadEntityFrequencyMap(Resource r)
+    public static Map<String, Integer> loadEntityFrequencyMap(File r)
     {
-        Map<String, Integer> entityFreqMap = new HashMap<String, Integer>();
+        Map<String, Integer> entityFreqMap = new HashMap<>();
         List<String> lines = readLines(r);
         for (String line : lines) {
             if (!line.startsWith("#")) {
@@ -93,7 +94,7 @@ public class FileUtils
         return entityFreqMap;
     }
     
-    public static Set<String> loadPropertyBlacklist(Resource r)
+    public static Set<String> loadPropertyBlacklist(File r)
     {
         Set<String> propertyBlacklist = new HashSet<>();
         List<String> lines = readLines(r);

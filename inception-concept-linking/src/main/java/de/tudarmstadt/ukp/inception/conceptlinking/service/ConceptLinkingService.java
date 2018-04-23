@@ -18,6 +18,7 @@
 
 package de.tudarmstadt.ukp.inception.conceptlinking.service;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -45,7 +46,6 @@ import org.eclipse.rdf4j.query.TupleQueryResult;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
@@ -67,22 +67,33 @@ public class ConceptLinkingService
 
     private @Resource KnowledgeBaseService kbService;
 
-    private final String[] PUNCTUATION_VALUES
-        = new String[] { "``", "''", "(", ")", ",", ".", ":", "--" };
-
-    private final Set<String> punctuations = new HashSet<>(Arrays.asList(PUNCTUATION_VALUES));
-
+    @org.springframework.beans.factory.annotation.Value
+        (value = "${repository.path}/resources/stopwords-en.txt")
+    private File stopwordsFile;
     private Set<String> stopwords;
 
+    @org.springframework.beans.factory.annotation.Value
+        (value = "${repository.path}/resources/wikidata_entity_freqs.map")
+    private File entityFrequencyFile;
     private Map<String, Integer> entityFrequencyMap;
 
+    @org.springframework.beans.factory.annotation.Value
+        (value = "${repository.path}/resources/property_blacklist.txt")
+    private File propertyBlacklistFile;
     private Set<String> propertyBlacklist;
+
+    @org.springframework.beans.factory.annotation.Value
+        (value = "${repository.path}/resources/properties_with_labels.txt")
+    private File propertyWithLabelsFile;
+    private Map<String, Property> propertyWithLabels;
+
+    private final String[] PUNCTUATION_VALUES
+        = new String[] { "``", "''", "(", ")", ",", ".", ":", "--" };
+    private final Set<String> punctuations = new HashSet<>(Arrays.asList(PUNCTUATION_VALUES));
 
     private Set<String> typeBlacklist = new HashSet<>(Arrays
         .asList("commonsmedia", "external-id", "globe-coordinate", "math", "monolingualtext",
             "quantity", "string", "url", "wikibase-property"));
-
-    private Map<String, Property> propertyWithLabels;
 
     private static final int MENTION_CONTEXT_SIZE = 5;
     private static final int CANDIDATE_QUERY_LIMIT = 10000;
@@ -97,23 +108,10 @@ public class ConceptLinkingService
     @PostConstruct
     public void init()
     {
-        DefaultResourceLoader loader = new DefaultResourceLoader();
-
-        org.springframework.core.io.Resource stopwordsResource = loader
-            .getResource("classpath:stopwords-de.txt");
-        stopwords = FileUtils.loadStopwordFile(stopwordsResource);
-
-        org.springframework.core.io.Resource entityFrequencyMapResource = loader
-            .getResource("classpath:wikidata_entity_freqs.map");
-        entityFrequencyMap = FileUtils.loadEntityFrequencyMap(entityFrequencyMapResource);
-
-        org.springframework.core.io.Resource propertyBlacklistResource = loader
-            .getResource("classpath:property_blacklist.txt");
-        propertyBlacklist = FileUtils.loadPropertyBlacklist(propertyBlacklistResource);
-
-        org.springframework.core.io.Resource propertyWithLabelsResource = loader
-            .getResource("classpath:properties_with_labels.txt");
-        propertyWithLabels = FileUtils.loadPropertyLabels(propertyWithLabelsResource);
+        stopwords = FileUtils.loadStopwordFile(stopwordsFile);
+        entityFrequencyMap = FileUtils.loadEntityFrequencyMap(entityFrequencyFile);
+        propertyBlacklist = FileUtils.loadPropertyBlacklist(propertyBlacklistFile);
+        propertyWithLabels = FileUtils.loadPropertyLabels(propertyWithLabelsFile);
     }
 
     public String getBeanName()
