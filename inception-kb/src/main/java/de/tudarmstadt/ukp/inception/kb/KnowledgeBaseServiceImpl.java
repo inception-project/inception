@@ -439,7 +439,7 @@ public class KnowledgeBaseServiceImpl
     @Override
     public List<KBHandle> listProperties(KnowledgeBase kb, boolean aAll)
     {
-        return list(kb, RDF.PROPERTY, false, aAll);
+        return list(kb, RDF.PROPERTY, true, aAll);
     }
 
     @Override
