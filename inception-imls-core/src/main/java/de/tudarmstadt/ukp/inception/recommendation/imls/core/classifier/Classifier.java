@@ -20,6 +20,8 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.core.classifier;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.uima.jcas.JCas;
+
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.recommendation.imls.conf.ClassifierConfiguration;
 import de.tudarmstadt.ukp.inception.recommendation.imls.core.ConfigurableComponent;
@@ -27,6 +29,7 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.core.classificationtool.
 import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.AnnotationObject;
 import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.Offset;
 import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.TokenObject;
+import de.tudarmstadt.ukp.inception.recommendation.imls.util.CasUtil;
 /**
  * This class defines the methods of a classifier. Every classifier used in a
  * {@link ClassificationTool} class has to implement the defined abstract methods.
@@ -58,14 +61,16 @@ public abstract class Classifier<C>
      * Uses the given list of sentences (List&lt;AnnotationObject&gt;) and predicts the annotation
      * label for every token (the annotation label is null, if no prediction can be made).
      * 
-     * @param inputData
-     *            All sentences to predict annotations for.
+     * @param aJCas
+     *            A CAS document.
      * @return A list of predictions.
      */
-    public <T extends TokenObject> List<AnnotationObject> predict(List<List<T>> inputData, 
-            AnnotationLayer layer)
+    public <T extends TokenObject> List<AnnotationObject> predict(JCas aJCas, 
+            AnnotationLayer aLayer)
     {
-        return mergeAdjacentTokensWithSameLabel(predictSentences(inputData), layer);
+        List<List<TokenObject>> tokens = CasUtil.loadTokenObjects(aJCas, 0, 
+                aJCas.getDocumentText().length());
+        return mergeAdjacentTokensWithSameLabel(predictSentences(tokens), aLayer);
     }
 
     /**
