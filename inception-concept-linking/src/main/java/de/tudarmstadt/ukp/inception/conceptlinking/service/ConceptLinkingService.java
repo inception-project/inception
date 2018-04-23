@@ -51,10 +51,12 @@ import org.springframework.stereotype.Component;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.conceptlinking.config.EntityLinkingProperties;
 import de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity;
 import de.tudarmstadt.ukp.inception.conceptlinking.model.Property;
 import de.tudarmstadt.ukp.inception.conceptlinking.model.SemanticSignature;
 import de.tudarmstadt.ukp.inception.conceptlinking.util.FileUtils;
+import de.tudarmstadt.ukp.inception.conceptlinking.util.LRUCache;
 import de.tudarmstadt.ukp.inception.conceptlinking.util.QueryUtil;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
@@ -66,6 +68,7 @@ public class ConceptLinkingService
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private @Resource KnowledgeBaseService kbService;
+    private @Resource EntityLinkingProperties properties;
 
     @org.springframework.beans.factory.annotation.Value
         (value = "${repository.path}/resources/stopwords-en.txt")
@@ -105,6 +108,9 @@ public class ConceptLinkingService
     private static final String POS_NOUN_PREFIX = "N";
     private static final String POS_ADJECTIVE_PREFIX = "J";
 
+    private Map<String, Set<CandidateEntity>> candidateCache;
+    private Map<String, SemanticSignature> semanticSignatureCache;
+
     @PostConstruct
     public void init()
     {
@@ -112,6 +118,10 @@ public class ConceptLinkingService
         entityFrequencyMap = FileUtils.loadEntityFrequencyMap(entityFrequencyFile);
         propertyBlacklist = FileUtils.loadPropertyBlacklist(propertyBlacklistFile);
         propertyWithLabels = FileUtils.loadPropertyLabels(propertyWithLabelsFile);
+      
+        candidateCache = Collections.synchronizedMap(new LRUCache<>(properties.getCacheSize()));
+        semanticSignatureCache = Collections
+            .synchronizedMap(new LRUCache<>(properties.getCacheSize()));
     }
 
     public String getBeanName()
@@ -133,10 +143,12 @@ public class ConceptLinkingService
      */
     private Set<CandidateEntity> generateCandidates(KnowledgeBase aKB, String aMention)
     {
-        long startTime = System.currentTimeMillis();
-
         if (aMention == null || aMention.isEmpty()) {
             return Collections.emptySet();
+        }
+
+        if (candidateCache.containsKey(aMention)) {
+            return candidateCache.get(aMention);
         }
 
         Set<CandidateEntity> candidates = new HashSet<>();
@@ -186,8 +198,8 @@ public class ConceptLinkingService
                 }
             }
         }
-        logger.debug("It took [{}] ms to retrieve candidates from KB for mention [{}]",
-            System.currentTimeMillis() - startTime, aMention);
+
+        candidateCache.put(aMention, candidates);
         return candidates;
     }
 
@@ -364,6 +376,10 @@ public class ConceptLinkingService
      */
     private SemanticSignature getSemanticSignature(KnowledgeBase aKB, String aWikidataId)
     {
+        if (semanticSignatureCache.containsKey(aWikidataId)) {
+            return semanticSignatureCache.get(aWikidataId);
+        }
+
         Set<String> relatedRelations = new HashSet<>();
         Set<String> relatedEntities = new HashSet<>();
         try (RepositoryConnection conn = kbService.getConnection(aKB)) {
@@ -395,8 +411,10 @@ public class ConceptLinkingService
                 logger.error("could not get semantic signature", e);
             }
         }
-        
-        return new SemanticSignature(relatedEntities, relatedRelations);
+
+        SemanticSignature ss = new SemanticSignature(relatedEntities, relatedRelations);
+        semanticSignatureCache.put(aWikidataId, ss);
+        return ss;
     }
 
     /**
@@ -418,16 +436,21 @@ public class ConceptLinkingService
     {
         long startTime = System.currentTimeMillis();
 
-        List<String> list = new ArrayList<>();
         Set<CandidateEntity> candidates = new HashSet<>();
 
-        list.add(aMention);
-        list.add(aTypedString);
-        list.stream().parallel()
-            .forEach(string -> candidates.addAll(generateCandidates(aKB, string)));
+        aMention = aMention.toLowerCase(Locale.ENGLISH);
+        aTypedString = aTypedString.toLowerCase(Locale.ENGLISH);
 
-        logger.debug("It took [{}] ms to retrieve candidates from KB [{}]", System
-            .currentTimeMillis() - startTime);
+        if (!aMention.startsWith(aTypedString)) {
+            candidates.addAll(generateCandidates(aKB, aTypedString));
+            logger.debug("It took [{}] ms to retrieve candidates for typed string [{}]", System
+                .currentTimeMillis() - startTime, aTypedString);
+        } else {
+            candidates.addAll(generateCandidates(aKB, aMention));
+            logger.debug("It took [{}] ms to retrieve candidates for mention [{}]", System
+                .currentTimeMillis() - startTime, aMention);
+        }
+        
         List<CandidateEntity> rankedCandidates = rankCandidates(aKB, aMention, candidates, aJcas,
             aMentionBeginOffset);
 
