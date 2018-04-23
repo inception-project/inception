@@ -38,7 +38,6 @@ import org.apache.commons.lang3.builder.CompareToBuilder;
 import org.apache.commons.text.similarity.LevenshteinDistance;
 import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
-import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.eclipse.rdf4j.model.Value;
 import org.eclipse.rdf4j.query.BindingSet;
 import org.eclipse.rdf4j.query.TupleQuery;
@@ -69,7 +68,7 @@ public class ConceptLinkingService
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private @Resource KnowledgeBaseService kbService;
-    private @SpringBean EntityLinkingProperties properties;
+    private @Resource EntityLinkingProperties properties;
 
     private final String[] PUNCTUATION_VALUES
         = new String[] { "``", "''", "(", ")", ",", ".", ":", "--" };
@@ -98,8 +97,7 @@ public class ConceptLinkingService
     private static final String POS_NOUN_PREFIX = "N";
     private static final String POS_ADJECTIVE_PREFIX = "J";
 
-    private Map<String, Set<CandidateEntity>> candidateCache = Collections
-        .synchronizedMap(new LRUCache<>(properties.getCacheSize()));
+    private Map<String, Set<CandidateEntity>> candidateCache;
 
     @PostConstruct
     public void init()
@@ -121,6 +119,8 @@ public class ConceptLinkingService
         org.springframework.core.io.Resource propertyWithLabelsResource = loader
             .getResource("classpath:properties_with_labels.txt");
         propertyWithLabels = FileUtils.loadPropertyLabels(propertyWithLabelsResource);
+
+        candidateCache = Collections.synchronizedMap(new LRUCache<>(properties.getCacheSize()));
     }
 
     public String getBeanName()
