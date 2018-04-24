@@ -695,6 +695,7 @@ public class KnowledgeBaseServiceImpl
     @Override
     public List<KBHandle> listChildConcepts(KnowledgeBase aKB, String aParentIdentifier,
             boolean aAll, int aLimit)
+        throws QueryEvaluationException
     {
         // The query below only returns subclasses which simultaneously declare being a class
         // via the class property defined in the KB specification. This means that if the KB

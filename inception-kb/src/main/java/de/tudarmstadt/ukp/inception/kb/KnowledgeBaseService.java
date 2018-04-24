@@ -138,7 +138,8 @@ public interface KnowledgeBaseService
      *            a concept identifier.
      * @return the concept.
      */
-    Optional<KBConcept> readConcept(Project aProject, String aIdentifier);
+    Optional<KBConcept> readConcept(Project aProject, String aIdentifier)
+        throws QueryEvaluationException;
 
     /**
      * Updates an existing concept in the given knowledge base. Does nothing if 
@@ -219,7 +220,8 @@ public interface KnowledgeBaseService
      *            an instance identifier.
      * @return the concept.
      */
-    Optional<KBInstance> readInstance(Project aProject, String aIdentifier);
+    Optional<KBInstance> readInstance(Project aProject, String aIdentifier)
+        throws QueryEvaluationException;
 
     /**
      * Updates an existing instance in the given knowledge base. Does nothing
@@ -287,7 +289,8 @@ public interface KnowledgeBaseService
         throws QueryEvaluationException;
 
     List<KBHandle> listChildConcepts(KnowledgeBase kb, String parentIdentifier, boolean aAll,
-            int aLimit);
+            int aLimit)
+        throws QueryEvaluationException;
     
     RepositoryConnection getConnection(KnowledgeBase kb);
 

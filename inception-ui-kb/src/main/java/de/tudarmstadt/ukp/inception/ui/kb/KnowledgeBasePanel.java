@@ -22,6 +22,7 @@ import java.util.List;
 
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
@@ -30,6 +31,9 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
+import org.eclipse.rdf4j.query.QueryEvaluationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
@@ -55,6 +59,8 @@ public class KnowledgeBasePanel
 {
 
     private static final long serialVersionUID = -3717326058176546655L;
+    
+    private static final Logger LOG = LoggerFactory.getLogger(KnowledgeBasePanel.class);
 
     private static final String DETAIL_CONTAINER_MARKUP_ID = "detailContainer";
     private static final String DETAILS_MARKUP_ID = "details";
@@ -99,6 +105,7 @@ public class KnowledgeBasePanel
         ddc.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> {
             details = details.replaceWith(new EmptyPanel(DETAILS_MARKUP_ID));
             t.add(KnowledgeBasePanel.this);
+            t.addChildren(getPage(), IFeedback.class);
         }));
         ddc.setModel(aKbModel);
         ddc.setChoiceRenderer(new ChoiceRenderer<>("name"));
@@ -189,16 +196,24 @@ public class KnowledgeBasePanel
         }
         else {
             // TODO: Fix this Optional get() to actual checking
-            KBConcept selectedConcept = kbService.readConcept(kbModel.getObject(),
-                    selectedConceptHandle.getObject().getIdentifier()).get();
-            replacementPanel = new ConceptInstancePanel(DETAILS_MARKUP_ID, kbModel,
-                    selectedConceptHandle, Model.of(selectedConcept));
+            try {
+                KBConcept selectedConcept = kbService.readConcept(kbModel.getObject(),
+                        selectedConceptHandle.getObject().getIdentifier()).get();
+                replacementPanel = new ConceptInstancePanel(DETAILS_MARKUP_ID, kbModel,
+                        selectedConceptHandle, Model.of(selectedConcept));
+            }
+            catch (QueryEvaluationException e) {
+                error("Unable to read concept: " + e.getLocalizedMessage());
+                LOG.error("Unable to read concept." , e);
+                replacementPanel = new EmptyPanel(DETAILS_MARKUP_ID);;
+            }
         }
         details = details.replaceWith(replacementPanel);
 
         target.add(conceptTreePanel);
         target.add(propertyListPanel);
         target.add(detailContainer);
+        target.addChildren(getPage(), IFeedback.class);
     }
 
     private void actionNewConcept(AjaxRequestTarget target, AjaxNewConceptEvent event)
@@ -230,18 +245,25 @@ public class KnowledgeBasePanel
         }
         else {
             String identifier = selectedPropertyHandle.getObject().getIdentifier();
-            replacementPanel = kbService.readProperty(kbModel.getObject(), identifier)
-                    .<Component>map(selectedProperty -> {
-                        Model<KBProperty> model = Model.of(selectedProperty);
-                        return new PropertyPanel(DETAILS_MARKUP_ID, kbModel, selectedPropertyHandle,
-                                model);
-                    }).orElse(new EmptyPanel(DETAILS_MARKUP_ID));
+            try {
+                replacementPanel = kbService.readProperty(kbModel.getObject(), identifier)
+                        .<Component>map(selectedProperty -> {
+                            Model<KBProperty> model = Model.of(selectedProperty);
+                            return new PropertyPanel(DETAILS_MARKUP_ID, kbModel,
+                                    selectedPropertyHandle, model);
+                        }).orElse(new EmptyPanel(DETAILS_MARKUP_ID));
+            }
+            catch (QueryEvaluationException e) {
+                error("Unable to read property: " + e.getLocalizedMessage());
+                LOG.error("Unable to read property.", e);
+                replacementPanel = new EmptyPanel(DETAILS_MARKUP_ID);
+            }
         }
         details = details.replaceWith(replacementPanel);
-
         target.add(conceptTreePanel);
         target.add(propertyListPanel);
         target.add(detailContainer);
+        target.addChildren(getPage(), IFeedback.class);
     }
 
     private void actionNewProperty(AjaxRequestTarget target, AjaxNewPropertyEvent event)
@@ -257,4 +279,5 @@ public class KnowledgeBasePanel
 
         target.add(KnowledgeBasePanel.this);
     }
+    
 }

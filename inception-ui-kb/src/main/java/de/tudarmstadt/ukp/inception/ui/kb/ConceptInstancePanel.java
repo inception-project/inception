@@ -26,6 +26,9 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
+import org.eclipse.rdf4j.query.QueryEvaluationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
@@ -42,6 +45,7 @@ public class ConceptInstancePanel
 {
 
     private static final long serialVersionUID = -1413622323011843523L;
+    private static final Logger LOG = LoggerFactory.getLogger(ConceptInstancePanel.class);
 
     private static final String INSTANCE_INFO_MARKUP_ID = "instanceinfo";
 
@@ -116,12 +120,19 @@ public class ConceptInstancePanel
         if (selectedInstanceHandle.getObject() != null) {
             // load the full KBInstance and display its details in an InstanceInfoPanel
             String identifier = selectedInstanceHandle.getObject().getIdentifier();
-            replacementPanel = kbService.readInstance(kbModel.getObject(), identifier)
-                    .<Component>map(instance -> {
-                        Model<KBInstance> model = Model.of(instance);
-                        return new InstanceInfoPanel(INSTANCE_INFO_MARKUP_ID, kbModel,
-                                selectedInstanceHandle, model);
-                    }).orElse(emptyPanel());
+            try {
+                replacementPanel = kbService.readInstance(kbModel.getObject(), identifier)
+                        .<Component>map(instance -> {
+                            Model<KBInstance> model = Model.of(instance);
+                            return new InstanceInfoPanel(INSTANCE_INFO_MARKUP_ID, kbModel,
+                                    selectedInstanceHandle, model);
+                        }).orElse(emptyPanel());
+            }
+            catch (QueryEvaluationException e) {
+                replacementPanel = emptyPanel();
+                error("Unable to read instance: " + e.getLocalizedMessage()); 
+                LOG.error("Unable to read instance.",e);
+            }
         }
         else {
             replacementPanel = emptyPanel();

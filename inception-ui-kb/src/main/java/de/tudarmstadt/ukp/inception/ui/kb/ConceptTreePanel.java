@@ -43,6 +43,8 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.eclipse.rdf4j.query.QueryEvaluationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormSubmittingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
@@ -56,7 +58,8 @@ import de.tudarmstadt.ukp.inception.ui.kb.util.WriteProtectionBehavior;
 
 public class ConceptTreePanel extends Panel {
     private static final long serialVersionUID = -4032884234215283745L;
-
+    private static final Logger LOG = LoggerFactory.getLogger(ConceptTreePanel.class);
+    
     private @SpringBean KnowledgeBaseService kbService;
     
     private IModel<KBHandle> selectedConcept;
@@ -170,7 +173,8 @@ public class ConceptTreePanel extends Panel {
                 return kbService.listRootConcepts(kbModel.getObject(),
                         preferences.getObject().showAllConcepts).iterator();
             } catch (QueryEvaluationException e) {
-                error("Failed. " + e.getLocalizedMessage());
+                error("Unable to list root concepts: " + e.getLocalizedMessage());
+                LOG.error("Unable to list root concepts.", e);
                 return Collections.emptyIterator();
             }
         }
@@ -178,51 +182,65 @@ public class ConceptTreePanel extends Panel {
         @Override
         public boolean hasChildren(KBHandle aNode)
         {
-            // If the KB is read-only, then we cache the values and re-use the cached values.
-            if (kbModel.getObject().isReadOnly()) {
-                // Leaving this code here because we might make the preemptive loading of 
-                // child presence optional.
-//                Boolean childrenPresent = childrenPresentCache.get(aNode);
-//                if (childrenPresent == null) {
-//                    childrenPresent = kbService.hasChildConcepts(kbModel.getObject(),
-//                            aNode.getIdentifier(), preferences.getObject().showAllConcepts);
-//                    childrenPresentCache.put(aNode, childrenPresent);
-//                }
-//                return childrenPresent;
-                
-                // To avoid having to send a query to the KB for every child node, just assume
-                // that there might be child nodes and show the expander until we have actually
-                // loaded the children, cached them and can show the true information.
-                List<KBHandle> children = childrensCache.get(aNode);
-                if (children == null) {
-                    return true;
+            try {
+                // If the KB is read-only, then we cache the values and re-use the cached values.
+                if (kbModel.getObject().isReadOnly()) {
+                    // Leaving this code here because we might make the preemptive loading of 
+                    // child presence optional.
+    //                Boolean childrenPresent = childrenPresentCache.get(aNode);
+    //                if (childrenPresent == null) {
+    //                    childrenPresent = kbService.hasChildConcepts(kbModel.getObject(),
+    //                            aNode.getIdentifier(), preferences.getObject().showAllConcepts);
+    //                    childrenPresentCache.put(aNode, childrenPresent);
+    //                }
+    //                return childrenPresent;
+                    
+                    // To avoid having to send a query to the KB for every child node, just assume
+                    // that there might be child nodes and show the expander until we have actually
+                    // loaded the children, cached them and can show the true information.
+                    List<KBHandle> children = childrensCache.get(aNode);
+                    if (children == null) {
+                        return true;
+                    }
+                    else {
+                        return !children.isEmpty();
+                    }
                 }
                 else {
-                    return !children.isEmpty();
+                    return kbService.hasChildConcepts(kbModel.getObject(),
+                            aNode.getIdentifier(), preferences.getObject().showAllConcepts);
                 }
             }
-            else {
-                return kbService.hasChildConcepts(kbModel.getObject(),
-                        aNode.getIdentifier(), preferences.getObject().showAllConcepts);
+            catch (QueryEvaluationException e) {
+                error("Unable to list child concepts: " + e.getLocalizedMessage());
+                LOG.error("Unable to list child concepts.", e);
+                return false;
             }
         }
 
         @Override
         public Iterator<? extends KBHandle> getChildren(KBHandle aNode)
         {
-            // If the KB is read-only, then we cache the values and re-use the cached values.
-            if (kbModel.getObject().isReadOnly()) {
-                List<KBHandle> children = childrensCache.get(aNode);
-                if (children == null) {
-                    children = kbService.listChildConcepts(kbModel.getObject(),
-                            aNode.getIdentifier(), preferences.getObject().showAllConcepts);
-                    childrensCache.put(aNode, children);
+            try {
+                // If the KB is read-only, then we cache the values and re-use the cached values.
+                if (kbModel.getObject().isReadOnly()) {
+                    List<KBHandle> children = childrensCache.get(aNode);
+                    if (children == null) {
+                        children = kbService.listChildConcepts(kbModel.getObject(),
+                                aNode.getIdentifier(), preferences.getObject().showAllConcepts);
+                        childrensCache.put(aNode, children);
+                    }
+                    return children.iterator();
                 }
-                return children.iterator();
+                else {
+                    return kbService.listChildConcepts(kbModel.getObject(), aNode.getIdentifier(),
+                            preferences.getObject().showAllConcepts).iterator();
+                }
             }
-            else {
-                return kbService.listChildConcepts(kbModel.getObject(), aNode.getIdentifier(),
-                        preferences.getObject().showAllConcepts).iterator();
+            catch (QueryEvaluationException e) {
+                error("Unable to list child concepts: " + e.getLocalizedMessage());
+                LOG.error("Unable to list child concepts.", e);
+                return Collections.emptyIterator();
             }
         }
 
