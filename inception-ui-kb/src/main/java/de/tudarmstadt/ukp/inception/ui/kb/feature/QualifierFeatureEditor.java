@@ -248,7 +248,7 @@ public class QualifierFeatureEditor
         AnnotationLayer linkedLayer = annotationService
             .getLayer(linkedType, this.stateModel.getObject().getProject());
         AnnotationFeature linkedAnnotationFeature = annotationService
-            .getFeature("KBItems", linkedLayer);
+            .getFeature(FactLinkingConstants.LINKED_LAYER_FEATURE, linkedLayer);
         qualifierModel = new LambdaModelAdapter<>(() -> this.getSelectedKBItem(aItem),  (v) -> {
             this.setSelectedKBItem((KBHandle) v, aItem, linkedAnnotationFeature);
         });

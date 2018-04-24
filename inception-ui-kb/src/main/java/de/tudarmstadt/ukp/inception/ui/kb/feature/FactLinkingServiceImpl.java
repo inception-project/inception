@@ -69,12 +69,12 @@ public class FactLinkingServiceImpl implements FactLinkingService
     {
         KBHandle kbHandle = null;
         AnnotationFS selectedFS = WebAnnoCasUtil.selectByAddr(aJcas, targetAddr);
-        String kbHandleIdentifier = WebAnnoCasUtil.getFeature(selectedFS, "KBItems");
+        String kbHandleIdentifier = WebAnnoCasUtil
+            .getFeature(selectedFS, FactLinkingConstants.LINKED_LAYER_FEATURE);
         if (kbHandleIdentifier != null) {
             List<KBHandle> handles = getKBConceptsAndInstances(aProject);
-            kbHandle = handles.stream()
-                .filter(x -> kbHandleIdentifier.equals(x.getIdentifier())).findAny()
-                .orElse(null);
+            kbHandle = handles.stream().filter(x -> kbHandleIdentifier.equals(x.getIdentifier()))
+                .findAny().orElse(null);
         }
         return kbHandle;
     }
