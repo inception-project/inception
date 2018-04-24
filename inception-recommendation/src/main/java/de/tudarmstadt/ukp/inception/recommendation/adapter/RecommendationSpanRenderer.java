@@ -17,9 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.adapter;
 
-import static org.apache.commons.lang3.StringUtils.defaultString;
-
 import java.util.ArrayList;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -191,10 +190,11 @@ public class RecommendationSpanRenderer
                     if (first) {
                         AnnotationFeature feature = aAnnotationService
                             .getFeature(ao.getFeature(), layer);
-                        String annotation = defaultString(aFsRegistry.getFeatureSupport(feature)
-                            .renderFeatureValue(feature, ao.getAnnotation()));
+                        // Retrieve the UI display label for the given feature value
+                        String annotation = aFsRegistry.getFeatureSupport(feature)
+                            .renderFeatureValue(feature, ao.getAnnotation());
 
-                        HashMap<String, String> featureAnnotation = new HashMap<>();
+                        Map<String, String> featureAnnotation = new HashMap<>();
                         featureAnnotation.put(ao.getFeature(), annotation);
 
                         VSpan v = new VSpan(layer, vid, bratTypeName,
