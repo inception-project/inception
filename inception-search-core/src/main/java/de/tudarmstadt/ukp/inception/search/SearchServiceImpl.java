@@ -55,6 +55,7 @@ import de.tudarmstadt.ukp.inception.search.scheduling.IndexScheduler;
 
 
 @Component(SearchService.SERVICE_NAME)
+@Transactional
 public class SearchServiceImpl
     implements SearchService
 {
@@ -314,7 +315,6 @@ public class SearchServiceImpl
      * Reindex the project. If there is not a physical index, create a new one.
      */
     @Override
-    @Transactional
     public void reindex(Project aProject) throws IOException
     {
         log.info("Reindexing project " + aProject.getName());
@@ -349,7 +349,6 @@ public class SearchServiceImpl
         return indexObject;
     }
 
-    @Transactional
     public void createIndex(Index aIndexObject)
     {
         entityManager.persist(aIndexObject);
@@ -357,21 +356,18 @@ public class SearchServiceImpl
     }
 
     @Override
-    @Transactional
     public void updateIndex(Index aIndexObject)
     {
         entityManager.merge(aIndexObject);
         entityManager.flush();
     }
 
-    @Transactional
     public void deleteIndex(Index aIndexObject)
     {
         entityManager.remove(entityManager.contains(aIndexObject) ? aIndexObject
                 : entityManager.merge(aIndexObject));
     }
 
-    @Transactional
     public void deleteIndexByProject(Project aProject)
     {
         Index indexObject = this.getIndex(aProject);

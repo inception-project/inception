@@ -37,7 +37,6 @@ import de.tudarmstadt.ukp.inception.search.scheduling.tasks.Task;
 /**
  * Indexer scheduler. Does the project reindexing in an asynchronous way.
  */
-
 @Component
 public class IndexScheduler
 {

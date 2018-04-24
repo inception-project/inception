@@ -50,7 +50,7 @@ public class TaskConsumer
     {
         try {
             while (!Thread.interrupted()) {
-                log.info("Waiting for new task...");
+                log.info("Waiting for new indexing task...");
 
                 Runnable task = queue.take();
 

@@ -59,7 +59,7 @@ public abstract class Task
         builder.append(" [project=");
         builder.append(project.getName());
         builder.append(", user=");
-        builder.append(user.getUsername());
+        builder.append((user == null) ? " " : user.getUsername());
         builder.append("]");
         return builder.toString();
     }
