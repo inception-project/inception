@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxEventBehavior;
@@ -55,11 +56,14 @@ import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.validation.IValidator;
 import org.apache.wicket.validation.ValidationError;
+import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.googlecode.wicket.kendo.ui.form.combobox.ComboBox;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.button.Buttons;
 import de.agilecoders.wicket.core.markup.html.bootstrap.form.radio.BootstrapRadioGroup;
@@ -358,16 +362,14 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
             iriSchemaChoice.setOutputMarkupId(true);
 
             // Add text fields for classIri, subclassIri and typeIri
-            RequiredTextField<String> t1 = buildTextFieldWithBehavior("classIri", model, "classIri",
-                    newChangeBGroupToCustomBehavior(iriSchemaChoice));
+            ComboBox<String> t1 = buildComboBox("classIri", model,
+                    IriConstants.CLASS_IRIS);
             add(t1);
 
-            RequiredTextField<String> t2 = buildTextFieldWithBehavior("subclassIri", model,
-                    "subclassIri", newChangeBGroupToCustomBehavior(iriSchemaChoice));
+            ComboBox<String> t2 = buildComboBox("subclassIri", model, IriConstants.SUBCLASS_IRIS);
             add(t2);
-
-            RequiredTextField<String> t3 = buildTextFieldWithBehavior("typeIri", model, "typeIri",
-                    newChangeBGroupToCustomBehavior(iriSchemaChoice));
+   
+            ComboBox<String> t3 = buildComboBox("typeIri", model, IriConstants.TYPE_IRIS);
             add(t3);
 
             // OnChange update the model with corresponding iris
@@ -377,13 +379,11 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
 
                 @Override
                 public void onSelectionChanged(AjaxRequestTarget target, IriSchemaType bean)
-                {
+                {   
                     t1.setModelObject(bean.getClassIriString());
                     t2.setModelObject(bean.getSubclassIriString());
                     t3.setModelObject(bean.getTypeIriString());
-                    target.add(t1);
-                    target.add(t2);
-                    target.add(t3);
+                    target.add(t1,t2,t3);
                     target.add(iriSchemaChoice);
                 }
             });
@@ -391,40 +391,28 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
             add(iriSchemaChoice);
 
         }
-
-        private RequiredTextField<String> buildTextFieldWithBehavior(String id,
-                CompoundPropertyModel<EnrichedKnowledgeBase> model, String property,
-                AjaxEventBehavior behavior)
+        
+        private ComboBox<String> buildComboBox(String id,
+                CompoundPropertyModel<EnrichedKnowledgeBase> model, List<IRI> iris)
         {
-            RequiredTextField<String> textField = new RequiredTextField<>(id, model.bind(property));
-            textField.setOutputMarkupId(true);
-            textField.add(EnrichedKnowledgeBaseUtils.URL_VALIDATOR);
-            textField.add(behavior);
-            textField.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> {
-                // Do nothing just update the model values
-            }));
             
-            return textField;
-        }
+            List<String> choices = iris.stream().map(IRI::stringValue).collect(Collectors.toList());
+            ComboBox<String> comboBox = new ComboBox<String>(id, model.bind(id), choices) {
 
-        // returns a behavior for changing the iriSchema selection to CUSTOM
-        // and render corresponding button group on a "click" event
-        private AjaxEventBehavior newChangeBGroupToCustomBehavior(
-                BootstrapRadioGroup<IriSchemaType> buttonGroup)
-        {
-            return new AjaxEventBehavior("click")
-            {
-
-                private static final long serialVersionUID = -6372746431274670007L;
+                private static final long serialVersionUID = 1575770301215073872L;
 
                 @Override
-                protected void onEvent(final AjaxRequestTarget target)
-                {
-                    // switch to custom when textfield is clicked
-                    selection.setObject(IriSchemaType.CUSTOMSCHEMA);
-                    target.add(buttonGroup);
+                protected void onConfigure() {
+                    setEnabled(IriSchemaType.CUSTOMSCHEMA.equals(selection.getObject()));
                 }
             };
+            comboBox.setOutputMarkupId(true);
+            comboBox.setRequired(true);
+            comboBox.add(EnrichedKnowledgeBaseUtils.URL_VALIDATOR);
+            comboBox.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> {
+                // Do nothing just update the model values
+            }));
+            return comboBox;
         }
         
         @Override
