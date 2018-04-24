@@ -33,6 +33,17 @@
       <a wicket:id="makeExplicit" wicket:message="title:makeExplicit" class="btn-link"> <i class="fa fa-gavel" aria-hidden="true"></i></a>
       <a wicket:id="edit" wicket:message="title:edit" class="btn-link"> <i class="fa fa-pencil" aria-hidden="true"></i></a>
     </div>
+      <div wicket:id="qualifierListWrapper" class="flex-v-container flex-content flex-gutter flex-only-initial-gutter">
+            <div wicket:id="qualifierList" class="qualifier-group-statement-wrapper">
+                <div wicket:id="qualifier" class="qualifier-editor"></div>
+            </div>
+      </div>
+      <div class="pull-right">
+        <a wicket:id="addQualifier" class="btn-link">
+          <i class="fa fa-plus" aria-hidden="true"></i>
+          <wicket:container wicket:id="label"></wicket:container>
+        </a>
+      </div>
   </wicket:fragment>
 
   <wicket:fragment wicket:id="editMode">

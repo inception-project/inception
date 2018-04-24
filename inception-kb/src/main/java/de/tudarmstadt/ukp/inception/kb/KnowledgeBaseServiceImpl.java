@@ -593,6 +593,7 @@ public class KnowledgeBaseServiceImpl
         return KnowledgeBaseService.INCEPTION_NAMESPACE + vf.createBNode().getID();
     }
 
+    @Override
     public KBHandle update(KnowledgeBase kb, UpdateAction aAction)
     {
         if (kb.isReadOnly()) {
@@ -618,6 +619,7 @@ public class KnowledgeBaseServiceImpl
         return result;
     }
 
+    @Override
     public <T> T read(KnowledgeBase kb, ReadAction<T> aAction)
     {
         try (RepositoryConnection conn = getConnection(kb)) {
@@ -625,6 +627,7 @@ public class KnowledgeBaseServiceImpl
         }
     }
 
+    @Override
     public List<KBHandle> list(KnowledgeBase kb, IRI aType, boolean aIncludeInferred, boolean aAll)
     {
         List<KBHandle> resultList = read(kb, (conn) -> {
@@ -679,16 +682,30 @@ public class KnowledgeBaseServiceImpl
         resultList.sort(Comparator.comparing(KBObject::getUiLabel));
         return resultList;
     }
+    
+    @Override
+    public boolean hasChildConcepts(KnowledgeBase aKB, String aParentIdentifier, boolean aAll)
+    {
+        return !listChildConcepts(aKB, aParentIdentifier, aAll, 1).isEmpty();
+    }
 
     @Override
-    public List<KBHandle> listChildConcepts(KnowledgeBase kb, String parentIdentifier, boolean aAll)
+    public List<KBHandle> listChildConcepts(KnowledgeBase aKB, String aParentIdentifier,
+            boolean aAll)
+    {
+        return listChildConcepts(aKB, aParentIdentifier, aAll, 10000);
+    }
+
+    @Override
+    public List<KBHandle> listChildConcepts(KnowledgeBase aKB, String aParentIdentifier,
+            boolean aAll, int aLimit)
     {
         // The query below only returns subclasses which simultaneously declare being a class
         // via the class property defined in the KB specification. This means that if the KB
         // is configured to use rdfs:Class but a subclass defines itself using owl:Class, then
         // this subclass is *not* returned. We do presently *not* support mixed schemes in a
         // single KB.
-        List<KBHandle> resultList = read(kb, (conn) -> {
+        List<KBHandle> resultList = read(aKB, (conn) -> {
             String QUERY = String.join("\n"
                 , "SELECT DISTINCT ?s ?l WHERE { "
                 , "  ?s ?pSUBCLASS ?oPARENT . "
@@ -698,20 +715,23 @@ public class KnowledgeBaseServiceImpl
                 , "    FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\")) "
                 , "  } "
                 , "} "
-                , "LIMIT 10000");
+                , "LIMIT " + aLimit);
             ValueFactory vf = SimpleValueFactory.getInstance();
             TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
-            tupleQuery.setBinding("oPARENT", vf.createIRI(parentIdentifier));
-            tupleQuery.setBinding("pTYPE", kb.getTypeIri());
-            tupleQuery.setBinding("oCLASS", kb.getClassIri());
-            tupleQuery.setBinding("pSUBCLASS", kb.getSubclassIri());
+            tupleQuery.setBinding("oPARENT", vf.createIRI(aParentIdentifier));
+            tupleQuery.setBinding("pTYPE", aKB.getTypeIri());
+            tupleQuery.setBinding("oCLASS", aKB.getClassIri());
+            tupleQuery.setBinding("pSUBCLASS", aKB.getSubclassIri());
             tupleQuery.setBinding("pLABEL", RDFS.LABEL);
             tupleQuery.setIncludeInferred(false);
 
             return evaluateListQuery(tupleQuery, aAll);
         });
 
-        resultList.sort(Comparator.comparing(KBObject::getUiLabel));
+        if (resultList.size() > 1) {
+            resultList.sort(Comparator.comparing(KBObject::getUiLabel));
+        }
+        
         return resultList;
     }
 

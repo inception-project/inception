@@ -66,9 +66,19 @@ public class KBQualifier
         originalStatements = new ArrayList<>();
     }
 
-    public KBQualifier(KBStatement kbStatement)
+    public KBQualifier(KBStatement aKbStatement)
     {
-        this.kbStatement = kbStatement;
+        kbStatement = aKbStatement;
+        originalStatements = new ArrayList<>();
+    }
+
+    public KBQualifier(KBQualifier other)
+    {
+        kbStatement = other.kbStatement;
+        kbProperty = other.kbProperty;
+        value = other.value;
+        language = other.language;
+        originalStatements = other.originalStatements;
     }
 
     public KBStatement getKbStatement()
@@ -117,6 +127,26 @@ public class KBQualifier
     public void setOriginalStatements(List<Statement> originalStatements)
     {
         this.originalStatements = originalStatements;
+    }
+
+    public int getQualifierIndexByOriginalStatements()
+    {
+        List<KBQualifier> qualifiers = kbStatement.getQualifiers();
+        for (KBQualifier qualifier : qualifiers) {
+            if (qualifier.getOriginalStatements().size() == originalStatements.size()) {
+                boolean flag = true;
+                for (Statement statement : qualifier.getOriginalStatements()) {
+                    if (!originalStatements.contains(statement)) {
+                        flag = false;
+                        break;
+                    }
+                }
+                if (flag) {
+                    return qualifiers.indexOf(qualifier);
+                }
+            }
+        }
+        return -1;
     }
 
 }
