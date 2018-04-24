@@ -400,7 +400,10 @@ public class WikiDataReification
         String QUERY = String.join("\n",
             "SELECT DISTINCT ?p ?o ?l WHERE {",
             "  ?id ?p ?o .",
-            "  ?p  ?pLABEL ?l.",
+            "  OPTIONAL {",
+            "    ?p ?pLABEL ?l .",
+            "    FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\"))",
+            "  }",
             "}",
             "LIMIT 10000");
         Resource id = vf.createBNode(aStatement.getStatementId());

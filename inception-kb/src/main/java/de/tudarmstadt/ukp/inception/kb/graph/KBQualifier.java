@@ -133,15 +133,17 @@ public class KBQualifier
     {
         List<KBQualifier> qualifiers = kbStatement.getQualifiers();
         for (KBQualifier qualifier : qualifiers) {
-            boolean flag = false;
             if (qualifier.getOriginalStatements().size() == originalStatements.size()) {
-                flag = true;
+                boolean flag = true;
                 for (Statement statement : qualifier.getOriginalStatements()) {
-                    flag = flag && originalStatements.contains(statement);
+                    if (!originalStatements.contains(statement)) {
+                        flag = false;
+                        break;
+                    }
                 }
-            }
-            if (flag) {
-                return qualifiers.indexOf(qualifier);
+                if (flag) {
+                    return qualifiers.indexOf(qualifier);
+                }
             }
         }
         return -1;
