@@ -811,16 +811,19 @@ public class ProjectLayersPanel
                         .capitalize(LayerDetailForm.this.getModelObject().getUiName());
                 
                 layerName = layerName.replaceAll("\\W", "");
+                
                 if (layerName.isEmpty() || !isAscii(layerName)) {
                     error("Non ASCII characters can not be used as layer name!");
                     return;
                 }
+                
                 if (annotationService.existsLayer(TYPE_PREFIX + layerName, layer.getType(),
                         project)) {
                     error("A layer with the name [" + TYPE_PREFIX + layerName
                             + "] already exists in this project.");
                     return;
                 }
+                
                 if (layer.getType().equals(RELATION_TYPE)
                         && layer.getAttachType() == null) {
                     error("A relation layer needs an attach type!");
@@ -834,6 +837,7 @@ public class ProjectLayersPanel
 
                 layer.setProject(project);
                 layer.setName(TYPE_PREFIX + layerName);
+                
                 if (layer.getType().equals(WebAnnoConst.CHAIN_TYPE)) {
                     AnnotationFeature relationFeature = new AnnotationFeature();
                     relationFeature.setType(CAS.TYPE_NAME_STRING);
@@ -855,11 +859,11 @@ public class ProjectLayersPanel
 
                     annotationService.createFeature(typeFeature);
                 }
-
-                annotationService.createLayer(layer);
-
+                
                 featureSelectionForm.setVisible(true);
             }
+            
+            annotationService.createLayer(layer);
             
             // Trigger LayerConfigurationChangedEvent
             applicationEventPublisherHolder.get()
