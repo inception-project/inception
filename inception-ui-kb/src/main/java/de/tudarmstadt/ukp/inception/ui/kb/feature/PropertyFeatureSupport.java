@@ -58,8 +58,8 @@ public class PropertyFeatureSupport
     implements FeatureSupport<Void>
 {
     private static final Logger LOG = LoggerFactory.getLogger(PropertyFeatureSupport.class);
-    private static final String PREDICATE_KEY = "KB: Property";
-    private static final String FACT_PREDICATE_PREFIX = "kb-property:";
+    public static final String PREDICATE_KEY = "KB: Property";
+    public static final String FACT_PREDICATE_PREFIX = "kb-property:";
 
     @Autowired private KnowledgeBaseService kbService;
 
@@ -81,7 +81,7 @@ public class PropertyFeatureSupport
     public List<FeatureType> getSupportedFeatureTypes(AnnotationLayer aAnnotationLayer)
     {
         List<FeatureType> types = new ArrayList<>();
-        types.add(new FeatureType(FACT_PREDICATE_PREFIX + aAnnotationLayer.getName(), PREDICATE_KEY,
+        types.add(new FeatureType(FACT_PREDICATE_PREFIX, PREDICATE_KEY,
             featureSupportId));
         return types;
     }
