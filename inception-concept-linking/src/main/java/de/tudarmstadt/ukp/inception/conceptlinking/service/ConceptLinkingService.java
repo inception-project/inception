@@ -98,11 +98,6 @@ public class ConceptLinkingService
         .asList("commonsmedia", "external-id", "globe-coordinate", "math", "monolingualtext",
             "quantity", "string", "url", "wikibase-property"));
 
-    private static int MENTION_CONTEXT_SIZE;
-    private static int CANDIDATE_QUERY_LIMIT;
-    private static int CANDIDATE_DISPLAY_LIMIT;
-    private static int FREQUENCY_THRESHOLD;
-    private static int SIGNATURE_QUERY_LIMIT;
     private static final String WIKIDATA_PREFIX = "http://www.wikidata.org/entity/";
     private static final String POS_VERB_PREFIX = "V";
     private static final String POS_NOUN_PREFIX = "N";
@@ -122,12 +117,6 @@ public class ConceptLinkingService
         candidateCache = Collections.synchronizedMap(new LRUCache<>(properties.getCacheSize()));
         semanticSignatureCache = Collections
             .synchronizedMap(new LRUCache<>(properties.getCacheSize()));
-
-        MENTION_CONTEXT_SIZE = properties.getMentionContextSize();
-        CANDIDATE_QUERY_LIMIT = properties.getCandidateQueryLimit();
-        CANDIDATE_DISPLAY_LIMIT = properties.getCandidateDisplayLimit();
-        FREQUENCY_THRESHOLD = properties.getCandidateFrequencyThreshold();
-        SIGNATURE_QUERY_LIMIT = properties.getSignatureQueryLimit();
     }
 
     public String getBeanName()
@@ -177,7 +166,7 @@ public class ConceptLinkingService
 
         try (RepositoryConnection conn = kbService.getConnection(aKB)) {
             TupleQuery query = QueryUtil
-                .generateCandidateQuery(conn, mentionArray, CANDIDATE_QUERY_LIMIT);
+                .generateCandidateQuery(conn, mentionArray, properties.getCandidateQueryLimit());
             try (TupleQueryResult entityResult = query.evaluate()) {
                 while (entityResult.hasNext()) {
                     BindingSet solution = entityResult.next();
@@ -186,9 +175,10 @@ public class ConceptLinkingService
                     Value altLabel = solution.getValue("altLabel");
                     Value description = solution.getValue("description");
 
-                    CandidateEntity newEntity = new CandidateEntity((e2 != null) ? e2.stringValue() : "",
-                                         (label != null) ? label.stringValue() : "",
-                                      (altLabel != null) ? altLabel.stringValue() : "",
+                    CandidateEntity newEntity = new CandidateEntity(
+                        (e2 != null) ? e2.stringValue() : "",
+                        (label != null) ? label.stringValue() : "",
+                        (altLabel != null) ? altLabel.stringValue() : "",
                         (description != null) ? description.stringValue() : "");
 
                     candidates.add(newEntity);
@@ -276,7 +266,7 @@ public class ConceptLinkingService
 
         List<String> splitMention = Arrays.asList(mention.split(" "));
         List<Token> mentionContext = getMentionContext(mentionSentence, splitMention,
-            MENTION_CONTEXT_SIZE);
+            properties.getMentionContextSize());
 
         Set<String> sentenceContentTokens = new HashSet<>();
         for (Token t : JCasUtil.selectCovered(Token.class, mentionSentence)) {
@@ -301,7 +291,7 @@ public class ConceptLinkingService
         });
 
         List<CandidateEntity> result = sortByFrequency(new ArrayList<>(candidates)).stream()
-            .limit(FREQUENCY_THRESHOLD).collect(Collectors.toList());
+            .limit(properties.getCandidateFrequencyThreshold()).collect(Collectors.toList());
 
         result.parallelStream().forEach(l -> {
             String wikidataId = l.getIRI().replace(WIKIDATA_PREFIX, "");
@@ -389,8 +379,8 @@ public class ConceptLinkingService
         Set<String> relatedRelations = new HashSet<>();
         Set<String> relatedEntities = new HashSet<>();
         try (RepositoryConnection conn = kbService.getConnection(aKB)) {
-            TupleQuery query = QueryUtil
-                .generateSemanticSignatureQuery(conn, aWikidataId, SIGNATURE_QUERY_LIMIT);
+            TupleQuery query = QueryUtil.generateSemanticSignatureQuery(conn, aWikidataId,
+                properties.getSignatureQueryLimit());
             try (TupleQueryResult result = query.evaluate()) {
                 while (result.hasNext()) {
                     BindingSet sol = result.next();
@@ -463,7 +453,7 @@ public class ConceptLinkingService
         return rankedCandidates.stream()
             .map(c -> new KBHandle(c.getIRI(), c.getLabel(), c.getDescription()))
             .distinct()
-            .limit(CANDIDATE_DISPLAY_LIMIT)
+            .limit(properties.getCandidateDisplayLimit())
             .filter(h -> h.getIdentifier().contains(":"))
             .collect(Collectors.toList());
     }
