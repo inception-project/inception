@@ -132,6 +132,7 @@ public class KnowledgeBaseDetailsPanel extends Panel {
         ekb.setSubclassIri(kb.getSubclassIri().stringValue());
         ekb.setTypeIri(kb.getTypeIri().stringValue());
         ekb.setEnabled(kb.isEnabled());
+        ekb.setReification(kb.getReification());
         ekb.setSupportConceptLinking(kb.isSupportConceptLinking());
 
         // wrap the given knowledge base model, then set it as the default model
@@ -186,6 +187,9 @@ public class KnowledgeBaseDetailsPanel extends Panel {
                         return super.getButtonClass(option) + " disabled";
                     }
                 }));
+
+        // add (disabled) reification strategy
+        form.add(new Label("reification"));
 
         // title/content
         title = new ViewModeTitle(TITLE_MARKUP_ID, ekbModel);

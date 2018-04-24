@@ -190,7 +190,7 @@ public class ConceptFeatureEditor
             }
             else {
                 // If no specific KB is selected, collect instances from all KBs
-                for (KnowledgeBase kb : kbService.getKnowledgeBases(project)) {
+                for (KnowledgeBase kb : kbService.getEnabledKnowledgeBases(project)) {
                     if (kb.isSupportConceptLinking()) {
                         handles
                             .addAll(listLinkingInstances(kb, aState, () -> getEditorCas(aHandler),
