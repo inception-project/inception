@@ -22,11 +22,14 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static java.util.Arrays.asList;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
 
+import org.apache.commons.collections4.map.LRUMap;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
@@ -72,6 +75,8 @@ public class ConceptFeatureSupport
     //private @PersistenceContext EntityManager entityManager;
     
     private String featureSupportId;
+    private Map<FeatureValuePair, String> renderValueCache = Collections
+        .synchronizedMap(new LRUMap<>(200));
     
     @Override
     public String getId()
@@ -120,6 +125,10 @@ public class ConceptFeatureSupport
     @Override
     public String renderFeatureValue(AnnotationFeature aFeature, String aLabel)
     {
+        FeatureValuePair pair = new FeatureValuePair(aFeature, aLabel);
+        if (renderValueCache.containsKey(pair)) {
+            return renderValueCache.get(pair);
+        }
         try {
             String renderValue = null;
 
@@ -144,7 +153,7 @@ public class ConceptFeatureSupport
                 renderValue = instance.map(KBInstance::getUiLabel)
                         .orElseThrow(NoSuchElementException::new);
             }
-            
+            renderValueCache.put(pair, renderValue);
             return renderValue;
         }
         catch (Exception e) {
@@ -279,5 +288,34 @@ public class ConceptFeatureSupport
             AnnotationFeature aFeature)
     {
         aTD.addFeature(aFeature.getName(), "", CAS.TYPE_NAME_STRING);
+    }
+
+    private class FeatureValuePair {
+
+        private AnnotationFeature feature;
+        private String label;
+
+        FeatureValuePair(AnnotationFeature aFeature, String aLabel) {
+            feature = aFeature;
+            label = aLabel;
+        }
+
+        @Override
+        public boolean equals(Object o)
+        {
+            if (this == o)
+                return true;
+            if (o == null || getClass() != o.getClass())
+                return false;
+            FeatureValuePair that = (FeatureValuePair) o;
+            return Objects.equals(feature, that.feature) && Objects.equals(label, that.label);
+        }
+
+        @Override
+        public int hashCode()
+        {
+
+            return Objects.hash(feature, label);
+        }
     }
 }
