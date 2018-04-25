@@ -108,12 +108,15 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
     private final IModel<Project> projectModel;
     private final DynamicWizardModel wizardModel;
     private final CompoundPropertyModel<EnrichedKnowledgeBase> wizardDataModel;
-    private final IModel<IriSchemaType> selection;
+    private final IModel<IriSchemaType> selectedIriSchema;
 
     public KnowledgeBaseCreationWizard(String id, IModel<Project> aProjectModel) {
         super(id);
-
-        selection = new Model<IriSchemaType>();
+        
+        // needed for the re-rendering in SchemaConfigurenStep
+        setOutputMarkupId(true);
+        
+        selectedIriSchema = new Model<IriSchemaType>();
         
         uploadedFiles = new HashMap<>();
 
@@ -357,21 +360,21 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
 
             // RadioGroup to select the IriSchemaType
             BootstrapRadioGroup<IriSchemaType> iriSchemaChoice = new BootstrapRadioGroup<>(
-                    "iriSchema", selection, Arrays.asList(IriSchemaType.values()),
+                    "iriSchema", selectedIriSchema, Arrays.asList(IriSchemaType.values()),
                     new EnumRadioChoiceRenderer<>(Buttons.Type.Default, this));
             iriSchemaChoice.setOutputMarkupId(true);
 
             // Add text fields for classIri, subclassIri and typeIri
-            ComboBox<String> t1 = buildComboBox("classIri", model,
-                    IriConstants.CLASS_IRIS);
-            add(t1);
+            ComboBox<String> classField = buildComboBox("classIri", model, IriConstants.CLASS_IRIS);
+            add(classField);
 
-            ComboBox<String> t2 = buildComboBox("subclassIri", model, IriConstants.SUBCLASS_IRIS);
-            add(t2);
-   
-            ComboBox<String> t3 = buildComboBox("typeIri", model, IriConstants.TYPE_IRIS);
-            add(t3);
+            ComboBox<String> subclassField = buildComboBox("subclassIri", model,
+                    IriConstants.SUBCLASS_IRIS);
+            add(subclassField);
 
+            ComboBox<String> typeField = buildComboBox("typeIri", model, IriConstants.TYPE_IRIS);
+            add(typeField);
+            
             // OnChange update the model with corresponding iris
             iriSchemaChoice.setChangeHandler(new ISelectionChangeHandler<IriSchemaType>()
             {
@@ -379,12 +382,13 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
 
                 @Override
                 public void onSelectionChanged(AjaxRequestTarget target, IriSchemaType bean)
-                {   
-                    t1.setModelObject(bean.getClassIriString());
-                    t2.setModelObject(bean.getSubclassIriString());
-                    t3.setModelObject(bean.getTypeIriString());
-                    target.add(t1,t2,t3);
-                    target.add(iriSchemaChoice);
+                {
+                    classField.setModelObject(bean.getClassIriString());
+                    subclassField.setModelObject(bean.getSubclassIriString());
+                    typeField.setModelObject(bean.getTypeIriString());
+                    // For some reason it does not work if just the checkboxes
+                    // are added to the target
+                    target.addChildren(getPage(), KnowledgeBaseCreationWizard.class);
                 }
             });
 
@@ -395,15 +399,18 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
         private ComboBox<String> buildComboBox(String id,
                 CompoundPropertyModel<EnrichedKnowledgeBase> model, List<IRI> iris)
         {
-            
+
             List<String> choices = iris.stream().map(IRI::stringValue).collect(Collectors.toList());
-            ComboBox<String> comboBox = new ComboBox<String>(id, model.bind(id), choices) {
+            ComboBox<String> comboBox = new ComboBox<String>(id, model.bind(id), choices)
+            {
 
                 private static final long serialVersionUID = 1575770301215073872L;
 
                 @Override
-                protected void onConfigure() {
-                    setEnabled(IriSchemaType.CUSTOMSCHEMA.equals(selection.getObject()));
+                protected void onConfigure()
+                {
+                    super.onConfigure();
+                    setEnabled(IriSchemaType.CUSTOMSCHEMA.equals(selectedIriSchema.getObject()));
                 }
             };
             comboBox.setOutputMarkupId(true);
@@ -417,7 +424,7 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
         
         @Override
         public void applyState()
-        {
+        {   
             EnrichedKnowledgeBase ekb = wizardDataModel.getObject();
             ekb.getKb().setProject(projectModel.getObject());
        
@@ -425,6 +432,7 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
                 EnrichedKnowledgeBaseUtils.registerEkb(ekb, kbService);
             } catch (Exception e) {
                 error(e.getMessage());
+                
             }
         }
 
@@ -459,14 +467,17 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
             protected FinishButton newFinishButton(String id, IWizard wizard) {
                 FinishButton button = new FinishButton(id, wizard) {
                     private static final long serialVersionUID = -7070739469409737740L;
-
+                    
                     @Override
                     public void onAfterSubmit() {
                         // update the list panel and close the dialog - this must be done in
                         // onAfterSubmit, otherwise it cancels out the call to onFinish()
-
                         IWizardStep step = wizardModel.getActiveStep();
-                        if (step.isComplete()) {
+                        // do not close the wizard if no schema type has been selected
+                        if (selectedIriSchema.getObject() == null) {
+                            error("Please select a schema type.");
+                        }
+                        else if (step.isComplete()) {
                             AjaxRequestTarget target = RequestCycle.get()
                                     .find(AjaxRequestTarget.class);
                             target.add(findParent(KnowledgeBaseListPanel.class));
