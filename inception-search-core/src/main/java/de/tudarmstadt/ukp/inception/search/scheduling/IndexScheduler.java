@@ -46,7 +46,6 @@ public class IndexScheduler
 
     private Thread consumer;
     private BlockingQueue<Task> queue = new ArrayBlockingQueue<Task>(100);
-    private int counter = 0;
 
     @PostConstruct
     private void startSchedulerThread()

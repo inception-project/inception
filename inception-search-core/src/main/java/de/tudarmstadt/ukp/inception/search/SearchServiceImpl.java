@@ -45,7 +45,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.event.LayerConfigurationChangedEven
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndex;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexFactory;
@@ -68,9 +67,7 @@ public class SearchServiceImpl
     private @Autowired DocumentService documentService;
     private @Autowired ProjectService projectService;
     private @Autowired PhysicalIndexRegistry physicalIndexRegistry;
-
-    // The index scheduler
-    private IndexScheduler indexScheduler;
+    private @Autowired IndexScheduler indexScheduler;
 
     // Index factory
     private PhysicalIndexFactory physicalIndexFactory;
@@ -85,7 +82,6 @@ public class SearchServiceImpl
     public SearchServiceImpl()
     {
         indexes = new HashMap<>();
-        indexScheduler = new IndexScheduler();
     }
 
     /** 
