@@ -19,31 +19,45 @@ package de.tudarmstadt.ukp.inception.ui.kb.stmt;
 
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
+import java.util.Iterator;
+
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.event.Broadcast;
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.TextArea;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.panel.Fragment;
-import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.markup.repeater.Item;
+import org.apache.wicket.markup.repeater.RefreshingView;
+import org.apache.wicket.markup.repeater.ReuseIfModelsEqualStrategy;
+import org.apache.wicket.markup.repeater.util.ModelIteratorAdapter;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
+import de.tudarmstadt.ukp.inception.kb.graph.KBQualifier;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
+import de.tudarmstadt.ukp.inception.ui.kb.EventListeningPanel;
+import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxQualifierChangedEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxStatementChangedEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.util.WriteProtectionBehavior;
 
-public class StatementEditor extends Panel {
+
+
+public class StatementEditor extends EventListeningPanel
+{
 
     private static final long serialVersionUID = 7643837763550205L;
 
@@ -97,6 +111,12 @@ public class StatementEditor extends Panel {
         aTarget.add(this);
     }
 
+    private void actionAddQualifier(AjaxRequestTarget aTarget, KBStatement statement) {
+        KBQualifier qualifierPorto = new KBQualifier(statement);
+        statement.addQualifier(qualifierPorto);
+        aTarget.add(this);
+    }
+
     private void actionCancelExistingStatement(AjaxRequestTarget aTarget) {
         content = content.replaceWith(new ViewMode(CONTENT_MARKUP_ID, statement));
         aTarget.add(this);
@@ -146,6 +166,8 @@ public class StatementEditor extends Panel {
     private class ViewMode extends Fragment {
         private static final long serialVersionUID = 2375450134740203778L;
 
+        private WebMarkupContainer qualifierListWrapper;
+
         public ViewMode(String aId, IModel<KBStatement> aStatement) {
             super(aId, "viewMode", StatementEditor.this, aStatement);
 
@@ -167,13 +189,72 @@ public class StatementEditor extends Panel {
                     .onConfigure((_this) -> _this.setVisible(!statement.getObject().isInferred()));
             editLink.add(new WriteProtectionBehavior(kbModel));
             add(editLink);
+
+            LambdaAjaxLink addQualifierLink = new LambdaAjaxLink("addQualifier",
+                t -> actionAddQualifier(t, aStatement.getObject()))
+                .onConfigure((_this) -> _this.setVisible(!statement.getObject().isInferred() &&
+                    kbModel.getObject().getReification().supportsQualifier()));
+            addQualifierLink.add(new Label("label", new ResourceModel("qualifier.add")));
+            addQualifierLink.add(new WriteProtectionBehavior(kbModel));
+            add(addQualifierLink);
             
             LambdaAjaxLink makeExplicitLink = new LambdaAjaxLink("makeExplicit",
                     StatementEditor.this::actionMakeExplicit).onConfigure(
                         (_this) -> _this.setVisible(statement.getObject().isInferred()));
             makeExplicitLink.add(new WriteProtectionBehavior(kbModel));
             add(makeExplicitLink);
+
+            RefreshingView<KBQualifier> qualifierList = new RefreshingView<KBQualifier>("qualifierList")
+            {
+                private static final long serialVersionUID = -8342276415072873329L;
+
+                @Override
+                protected Iterator<IModel<KBQualifier>> getItemModels()
+                {
+                    return new ModelIteratorAdapter<KBQualifier>(
+                        statement.getObject().getQualifiers())
+                    {
+                        @Override protected IModel<KBQualifier> model(KBQualifier object)
+                        {
+                            return LambdaModel.of(() -> object);
+                        }
+                    };
+                }
+
+                @Override
+                protected void populateItem(Item<KBQualifier> aItem)
+                {
+                    QualifierEditor editor = new QualifierEditor("qualifier", kbModel,
+                        aItem.getModel());
+                    aItem.add(editor);
+                    aItem.setOutputMarkupId(true);
+                }
+            };
+            qualifierList.setItemReuseStrategy(new ReuseIfModelsEqualStrategy());
+
+            qualifierListWrapper = new WebMarkupContainer("qualifierListWrapper");
+            qualifierListWrapper.setOutputMarkupId(true);
+            qualifierListWrapper.add(qualifierList);
+            add(qualifierListWrapper);
+
+            eventHandler.addCallback(AjaxQualifierChangedEvent.class, this::actionQualifierChanged);
         }
+
+        private void actionQualifierChanged(AjaxRequestTarget target,
+            AjaxQualifierChangedEvent event)
+        {
+            boolean isEventForThisStatement = event.getQualifier().getKbStatement()
+                .equals(statement.getObject());
+            if (isEventForThisStatement) {
+                if (event.isDeleted()) {
+                    event.getQualifier().getKbStatement().getQualifiers()
+                        .remove(event.getQualifier());
+                }
+                statement.setObject(event.getQualifier().getKbStatement());
+                target.add(qualifierListWrapper);
+            }
+        }
+
     }
 
     private class EditMode extends Fragment implements Focusable {

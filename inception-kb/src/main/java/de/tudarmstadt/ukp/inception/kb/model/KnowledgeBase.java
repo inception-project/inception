@@ -241,7 +241,7 @@ public class KnowledgeBase
             builder.append(repositoryId);
         }
         else {
-            builder.append(project.toString());
+            builder.append(project);
             builder.append(", name=");
             builder.append(name);
         }

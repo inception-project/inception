@@ -29,7 +29,6 @@ import java.util.stream.Stream;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
-import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
@@ -99,18 +98,16 @@ public class PropertyFeatureSupport
     }
 
     @Override
-    public String renderFeatureValue(AnnotationFeature aFeature, AnnotationFS aFS,
-        Feature aLabelFeature)
+    public String renderFeatureValue(AnnotationFeature aFeature, String aLabel)
     {
         try {
-            String value = aFS.getFeatureValueAsString(aLabelFeature);
             String renderValue = null;
-            if (value != null) {
+            if (aLabel != null) {
                 // FIXME Since this might be called very often during rendering, it *might* be
                 // worth to set up an LRU cache instead of relying on the performance of the
                 // underlying KB store.
                 renderValue = kbService.getKnowledgeBases(aFeature.getProject()).stream()
-                    .map(k -> kbService.readProperty(k, value))
+                    .map(k -> kbService.readProperty(k, aLabel))
                     .flatMap(o -> o.map(Stream::of).orElseGet(Stream::empty))
                     .map(KBProperty::getUiLabel).findAny().orElseThrow(NoSuchElementException::new);
             }

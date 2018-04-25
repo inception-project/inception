@@ -235,8 +235,6 @@ public class SubjectObjectFeatureEditor
             roleModel = new LinkWithRoleModel();
             roleModel.role = role;
             links.add(roleModel);
-            this.stateModel.getObject()
-                .setArmedSlot(SubjectObjectFeatureEditor.this.getModelObject().feature, 0);
         }
         else {
             roleModel = links.get(0);
