@@ -23,18 +23,25 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.apache.uima.jcas.JCas;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
+import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
@@ -62,15 +69,20 @@ public class NamedEntityLinker
     private KnowledgeBaseService kbService;
     private ConceptLinkingService clService;
     private DocumentService documentService;
+    private AnnotationSchemaService annoService;
+    private FeatureSupportRegistry fsRegistry;
 
-    public NamedEntityLinker(ClassifierConfiguration<Object> conf, KnowledgeBaseService kbService,
-        ConceptLinkingService clService, DocumentService documentService)
+    public NamedEntityLinker(ClassifierConfiguration<Object> aConf, KnowledgeBaseService aKbService,
+        ConceptLinkingService aClService, DocumentService aDocService,
+        AnnotationSchemaService aAnnoService, FeatureSupportRegistry aFsRegistry)
     {
-        super(conf);
-        this.kbService = kbService;
-        this.clService = clService;
-        this.documentService = documentService;
-        this.conf.setNumPredictions(numPredictions);
+        super(aConf);
+        kbService = aKbService;
+        clService = aClService;
+        documentService = aDocService;
+        annoService = aAnnoService;
+        fsRegistry = aFsRegistry;
+        conf.setNumPredictions(numPredictions);
     }
 
     @Override
@@ -156,24 +168,23 @@ public class NamedEntityLinker
     private List<AnnotationObject> predictToken(TokenObject token)
     {
         List<KBHandle> handles = new ArrayList<>();
+
+        AnnotationLayer layer = annoService
+            .getLayer("de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity", project);
+        AnnotationFeature feat = annoService.getFeature(feature, layer);
+        FeatureSupport<ConceptFeatureTraits> fs = fsRegistry.getFeatureSupport(feat);
+        ConceptFeatureTraits traits = fs.readTraits(feat);
+
+        if (traits.getRepositoryId() != null) {
+            Optional<KnowledgeBase> kb = kbService.getKnowledgeBaseById(project,
+                traits.getRepositoryId());
+            if (kb.isPresent() && kb.get().isSupportConceptLinking()) {
+                handles.addAll(readCandidates(kb.get(), token));
+            }
+        }
         for (KnowledgeBase kb : kbService.getEnabledKnowledgeBases(project)) {
             if (kb.isSupportConceptLinking()) {
-                handles.addAll(kbService.read(kb, (conn) -> {
-                    SourceDocument doc = documentService
-                        .getSourceDocument(project, token.getDocumentName());
-                    AnnotationDocument annoDoc = documentService
-                        .createOrGetAnnotationDocument(doc, user);
-                    JCas jCas;
-                    try {
-                        jCas = documentService.readAnnotationCas(annoDoc);
-                        return clService.disambiguate(kb, null, token.getCoveredText(),
-                            token.getOffset().getBeginCharacter(), jCas);
-                    }
-                    catch (IOException e) {
-                        log.error("An error occurred while retrieving entity candidates.", e);
-                        return Collections.emptyList();
-                    }
-                }));
+                handles.addAll(readCandidates(kb, token));
             }
         }
 
@@ -194,5 +205,24 @@ public class NamedEntityLinker
         return nerAnnotations.stream()
             .map(TokenObject::getOffset)
             .anyMatch(t -> t.equals(token.getOffset()));
+    }
+
+    private List<KBHandle> readCandidates(KnowledgeBase kb, TokenObject token) {
+        return kbService.read(kb, (conn) -> {
+            SourceDocument doc = documentService
+                .getSourceDocument(project, token.getDocumentName());
+            AnnotationDocument annoDoc = documentService
+                .createOrGetAnnotationDocument(doc, user);
+            JCas jCas;
+            try {
+                jCas = documentService.readAnnotationCas(annoDoc);
+                return clService.disambiguate(kb, null, token.getCoveredText(),
+                    token.getOffset().getBeginCharacter(), jCas);
+            }
+            catch (IOException e) {
+                log.error("An error occurred while retrieving entity candidates.", e);
+                return Collections.emptyList();
+            }
+        });
     }
 }

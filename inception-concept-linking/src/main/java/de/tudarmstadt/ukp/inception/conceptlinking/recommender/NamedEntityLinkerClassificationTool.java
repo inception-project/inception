@@ -18,7 +18,9 @@
 
 package de.tudarmstadt.ukp.inception.conceptlinking.recommender;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
@@ -38,12 +40,13 @@ public class NamedEntityLinkerClassificationTool
 
     public NamedEntityLinkerClassificationTool(long recommenderId, String feature,
         AnnotationLayer aLayer, KnowledgeBaseService kbService, ConceptLinkingService clService,
-        DocumentService docService)
+        DocumentService docService, AnnotationSchemaService annoService,
+        FeatureSupportRegistry fsRegistry)
     {
         super(recommenderId, NamedEntityLinkerClassificationToolFactory.class.getName(),
             new NamedEntityTrainer(new ClassifierConfiguration<>(feature)),
             new NamedEntityLinker(new ClassifierConfiguration<>(feature), kbService, clService,
-                docService),
+                docService, annoService, fsRegistry),
             new NerAnnotationObjectLoader(aLayer, NAMED_ENTITY_CLASSIFICATION_FEATURE), false);
     }
 

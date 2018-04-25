@@ -24,7 +24,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
@@ -41,6 +43,8 @@ public class NamedEntityLinkerClassificationToolFactory
     @Autowired KnowledgeBaseService kbService;
     @Autowired ConceptLinkingService clService;
     @Autowired DocumentService docService;
+    @Autowired AnnotationSchemaService annoService;
+    @Autowired FeatureSupportRegistry fsRegistry;
 
     // This is a string literal so we can rename/refactor the class without it changing its ID
     // and without the database starting to refer to non-existing recommendation tools.
@@ -64,7 +68,7 @@ public class NamedEntityLinkerClassificationToolFactory
         AnnotationLayer aLayer, int aMaxPredictions)
     {
         return new NamedEntityLinkerClassificationTool(aRecommenderId, aFeature, aLayer, kbService,
-            clService, docService);
+            clService, docService, annoService, fsRegistry);
     }
 
     @Override
