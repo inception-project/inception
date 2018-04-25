@@ -19,7 +19,9 @@ package de.tudarmstadt.ukp.inception.recommendation;
 
 import java.io.IOException;
 
+import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.event.Broadcast;
@@ -100,37 +102,52 @@ public class RecommendationEditorExtension
             AnnotatorState aState, AjaxRequestTarget aTarget, JCas aJCas, VID aVID, int aBegin,
             int aEnd) throws AnnotationException, IOException
     {
-        // Obtain the predicted label
         Predictions model = 
                 recommendationService.getPredictions(aState.getUser(), aState.getProject());
-        
         AnnotationObject prediction = model.getPredictionByVID(aVID);
+        // Obtain the predicted label
         String predictedValue = prediction.getAnnotation();
         
-        // Create the annotation - this also takes care of attaching to an annotation if necessary
         Recommender recommender = recommendationService.getRecommender(aVID.getId());
         AnnotationLayer layer = annotationService.getLayer(aVID.getLayerId());
+
+        // The feature of the predicted label
         AnnotationFeature feature = annotationService.getFeature(recommender.getFeature(), layer);
         SpanAdapter adapter = (SpanAdapter) annotationService.getAdapter(layer);
-        int id = adapter.add(aState, aJCas, aBegin, aEnd);
+
+        // Get all annotations at this position
+        Type type = CasUtil.getType(aJCas.getCas(), layer.getName());
+        AnnotationFS annoFS = WebAnnoCasUtil.selectSingleFsAt(aJCas,
+            type, aBegin, aEnd);
+        int address;
+
+        // Existing annotation at this position
+        if (annoFS != null) {
+            address = WebAnnoCasUtil.getAddr(annoFS);
+        }
+        else {
+            // Create the annotation - this also takes care of attaching to an annotation if necessary
+            address = adapter.add(aState, aJCas, aBegin, aEnd);
+        }
+
         String fsId = fsRegistry.getFeatureSupport(feature).getId();
         if (fsId.equals("conceptFeatureSupport") || fsId.equals("propertyFeatureSupport")) {
             String uiName = fsRegistry.getFeatureSupport(feature)
                 .renderFeatureValue(feature, predictedValue);
             KBHandle kbHandle = new KBHandle(predictedValue, uiName);
-            adapter.setFeatureValue(aState, aJCas, id, feature, kbHandle);
+            adapter.setFeatureValue(aState, aJCas, address, feature, kbHandle);
         }
         else {
-            adapter.setFeatureValue(aState, aJCas, id, feature, predictedValue);
+            adapter.setFeatureValue(aState, aJCas, address, feature, predictedValue);
         }
 
         // Send an event that the recommendation was accepted
-        AnnotationFS fs = WebAnnoCasUtil.selectByAddr(aJCas, AnnotationFS.class, id);
+        AnnotationFS fs = WebAnnoCasUtil.selectByAddr(aJCas, AnnotationFS.class, address);
         applicationEventPublisher.publishEvent(new RecommendationAcceptedEvent(this,
                 aState.getDocument(), aState.getUser().getUsername(), fs, feature, predictedValue));
 
         // Set selection to the accepted annotation
-        aState.getSelection().selectSpan(new VID(id), aJCas, aBegin, aEnd);
+        aState.getSelection().selectSpan(new VID(address), aJCas, aBegin, aEnd);
 
         // ... select it and load it into the detail editor panel
         aActionHandler.actionSelect(aTarget, aJCas);            

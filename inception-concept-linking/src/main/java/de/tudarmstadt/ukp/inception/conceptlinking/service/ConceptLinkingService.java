@@ -423,7 +423,7 @@ public class ConceptLinkingService
      * pre-defined concept.
      *
      * @param aKB the KB used to generate candidates
-     * @param aTypedString What the user has typed so far in the text field
+     * @param aTypedString What the user has typed so far in the text field. Might be null.
      * @param aMention AnnotatorState, used to get information about what surface form was
      *                     marked
      * @param aMentionBeginOffset the offset where the mention begins in the text
@@ -439,13 +439,21 @@ public class ConceptLinkingService
         Set<CandidateEntity> candidates = new HashSet<>();
 
         aMention = aMention.toLowerCase(Locale.ENGLISH);
-        aTypedString = aTypedString.toLowerCase(Locale.ENGLISH);
 
-        if (!aMention.startsWith(aTypedString)) {
-            candidates.addAll(generateCandidates(aKB, aTypedString));
-            logger.debug("It took [{}] ms to retrieve candidates for typed string [{}]", System
-                .currentTimeMillis() - startTime, aTypedString);
-        } else {
+        if (aTypedString != null) {
+            aTypedString = aTypedString.toLowerCase(Locale.ENGLISH);
+            if (!aMention.startsWith(aTypedString)) {
+                candidates.addAll(generateCandidates(aKB, aTypedString));
+                logger.debug("It took [{}] ms to retrieve candidates for typed string [{}]", System
+                    .currentTimeMillis() - startTime, aTypedString);
+            }
+            else {
+                candidates.addAll(generateCandidates(aKB, aMention));
+                logger.debug("It took [{}] ms to retrieve candidates for mention [{}]", System
+                    .currentTimeMillis() - startTime, aMention);
+            }
+        }
+         else {
             candidates.addAll(generateCandidates(aKB, aMention));
             logger.debug("It took [{}] ms to retrieve candidates for mention [{}]", System
                 .currentTimeMillis() - startTime, aMention);

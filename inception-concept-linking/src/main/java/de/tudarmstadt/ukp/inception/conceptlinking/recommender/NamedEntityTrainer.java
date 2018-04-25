@@ -53,6 +53,7 @@ public class NamedEntityTrainer
         trainingDataIncrement.forEach(annotations::addAll);
         return annotations.stream()
             .filter(a -> a.getAnnotation() != null)
+            .filter(a -> a.getFeature().equals("value"))
             .collect(Collectors.toSet());
     }
 

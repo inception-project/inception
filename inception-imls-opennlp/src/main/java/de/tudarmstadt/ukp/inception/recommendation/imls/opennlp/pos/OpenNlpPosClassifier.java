@@ -23,8 +23,6 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.recommendation.imls.conf.ClassifierConfiguration;
 import de.tudarmstadt.ukp.inception.recommendation.imls.core.classifier.Classifier;
 import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.AnnotationObject;
@@ -81,7 +79,7 @@ public class OpenNlpPosClassifier
         }
 
         POSTaggerME tagger = new POSTaggerME(model);
-        
+
         int id = 0;
 
         String feature = conf.getFeature();
@@ -92,16 +90,16 @@ public class OpenNlpPosClassifier
         for (List<T> sentence : inputData) {
 
             String[] tokenArr = CasUtil.getCoveredTexts(sentence);
-            
+
             opennlp.tools.util.Sequence[] bestSequences = tagger.topKSequences(tokenArr);
             double[][] confidence = new double[bestSequences.length][tokenArr.length];
 
-            List<List<AnnotationObject>> sentencePredictions = new LinkedList<>();  
-            
+            List<List<AnnotationObject>> sentencePredictions = new LinkedList<>();
+
             for (int j = 0; j < bestSequences[0].getOutcomes().size(); j++) {
-                
+
                 List<AnnotationObject> wordPredictions = new LinkedList<>();
-                
+
                 for (int i = 0; i < bestSequences.length; i++) {
                     confidence[i] = bestSequences[i].getProbs();
 
@@ -111,26 +109,14 @@ public class OpenNlpPosClassifier
                     id++;
                     wordPredictions.add(ao);
                 }
-                
+
                 sentencePredictions.add(wordPredictions);
             }
-            
+
             result.add(sentencePredictions);
         }
 
         return result;
-    }
-
-    @Override
-    public void setUser(User user)
-    {
-        // Not needed.
-    }
-
-    @Override
-    public void setProject(Project project)
-    {
-        // Not needed.
     }
 
     @Override

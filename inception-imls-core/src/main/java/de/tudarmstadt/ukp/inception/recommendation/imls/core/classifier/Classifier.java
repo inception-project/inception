@@ -126,7 +126,7 @@ public abstract class Classifier<C>
                     // For all neighboring predictions in sentence with same label
                     while (j < sentence.size() - 1) {
                         List<AnnotationObject> nextWord = sentence.get(j + 1);
-                        if (i + 1 >= nextWord.size()) {
+                        if (i >= nextWord.size()) {
                             break;
                         }
                         AnnotationObject nextAo = nextWord.get(i);
@@ -172,7 +172,13 @@ public abstract class Classifier<C>
         return predictionsWithMergedLabels;
     }
 
-    public abstract void setUser(User user);
+    public void setUser(User user)
+    {
 
-    public abstract void setProject(Project project);
+    }
+
+    public void setProject(Project project)
+    {
+
+    }
 }

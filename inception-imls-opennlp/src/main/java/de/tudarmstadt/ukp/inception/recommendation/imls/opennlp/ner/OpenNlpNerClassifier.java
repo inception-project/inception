@@ -23,8 +23,6 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.recommendation.imls.conf.ClassifierConfiguration;
 import de.tudarmstadt.ukp.inception.recommendation.imls.core.classifier.Classifier;
 import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.AnnotationObject;
@@ -119,18 +117,6 @@ public class OpenNlpNerClassifier extends Classifier<TrainingParameters>
         }
         
         return result;
-    }
-
-    @Override
-    public void setUser(User user)
-    {
-        // Not needed.
-    }
-
-    @Override
-    public void setProject(Project project)
-    {
-        // Not needed.
     }
 
     @Override

@@ -36,7 +36,7 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.core.classificationtool.
 public class NamedEntityLinkerClassificationToolFactory
     implements ClassificationToolFactory<Object>
 {
-    private Logger log = LoggerFactory.getLogger(getClass());
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     @Autowired KnowledgeBaseService kbService;
     @Autowired ConceptLinkingService clService;

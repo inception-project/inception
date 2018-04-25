@@ -45,10 +45,9 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.Offset;
 import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.TokenObject;
 
 public class NamedEntityLinker
-
     extends Classifier<Object>
 {
-    private Logger log = LoggerFactory.getLogger(getClass());
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     private int tokenId = 0;
     private User user;
@@ -90,9 +89,9 @@ public class NamedEntityLinker
     }
 
     @Override
-    public void setUser(User user)
+    public void setUser(User aUser)
     {
-        this.user = user;
+        user = aUser;
     }
 
     @Override
@@ -107,9 +106,9 @@ public class NamedEntityLinker
      *            All sentences to predict annotations for.
      * @param <T>
      * @return Predicted sentence.
-     *         Outer list: sentence level
-     *         Middle list: word level
-     *         Inner list: token level (predictions for each token)
+     *         Outer list: Represents a document
+     *         Middle list: Represents a sentence
+     *         Inner list: Represents a token (predictions for each token)
      */
     @Override
     public <T extends TokenObject> List<List<List<AnnotationObject>>> predictSentences(
