@@ -18,21 +18,16 @@
 package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
-import com.googlecode.wicket.jquery.core.JQueryBehavior;
-import com.googlecode.wicket.jquery.core.renderer.TextRenderer;
-import com.googlecode.wicket.jquery.core.template.IJQueryTemplate;
-import com.googlecode.wicket.kendo.ui.form.autocomplete.AutoCompleteTextField;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.JCasProvider;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
-import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
-import org.apache.uima.cas.CASException;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.Component;
@@ -44,7 +39,6 @@ import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
-import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
@@ -53,10 +47,16 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.googlecode.wicket.kendo.ui.form.dropdown.DropDownList;
+import com.googlecode.wicket.jquery.core.JQueryBehavior;
+import com.googlecode.wicket.jquery.core.renderer.TextRenderer;
+import com.googlecode.wicket.jquery.core.template.IJQueryTemplate;
+import com.googlecode.wicket.kendo.ui.form.autocomplete.AutoCompleteTextField;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.JCasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.FeatureEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
@@ -68,8 +68,10 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
+import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
+import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 public class SubjectObjectFeatureEditor
     extends FeatureEditor
@@ -79,10 +81,10 @@ public class SubjectObjectFeatureEditor
     private static final Logger LOG = LoggerFactory.getLogger(SubjectObjectFeatureEditor.class);
 
     private @SpringBean AnnotationSchemaService annotationService;
-    private @SpringBean FeatureSupportRegistry featureSupportRegistry;
     private @SpringBean ConceptLinkingService clService;
-    private @SpringBean KnowledgeBaseService kbService;
     private @SpringBean FactLinkingService factService;
+    private @SpringBean FeatureSupportRegistry featureSupportRegistry;
+    private @SpringBean KnowledgeBaseService kbService;
 
     private WebMarkupContainer content;
     private Component focusComponent;
@@ -118,9 +120,6 @@ public class SubjectObjectFeatureEditor
 
         content.add(createSubjectObjectLabel());
         content.add(createRemoveLabelIcon());
-//        content.add(focusComponent = createFieldComboBox());
-//        content.add(new ConceptFeatureEditor("subjectObjectConcept", aOwner, aFeatureStateModel,
-//            aStateModel, aHandler));
         content.add(focusComponent = createAutoCompleteTextField(actionHandler));
     }
 
@@ -182,18 +181,6 @@ public class SubjectObjectFeatureEditor
                 handleException(this, aTarget, e);
             }
         }
-    }
-
-    private DropDownList<KBHandle> createFieldComboBox()
-    {
-        DropDownList<KBHandle> field = new DropDownList<KBHandle>("value",
-            LambdaModelAdapter.of(this::getSelectedKBItem, this::setSelectedKBItem),
-            LambdaModel.of(() -> factService.getKBConceptsAndInstances(project)), new
-            ChoiceRenderer<>
-            ("uiLabel"));
-        field.setOutputMarkupId(true);
-        field.setMarkupId(ID_PREFIX + getModelObject().feature.getId());
-        return field;
     }
 
     private String getSelectionSlotLabel()
@@ -263,6 +250,62 @@ public class SubjectObjectFeatureEditor
             .getFeature(FactLinkingConstants.LINKED_LAYER_FEATURE, linkedLayer);
     }
 
+    private AutoCompleteTextField<KBHandle> createAutoCompleteTextField(
+        AnnotationActionHandler aHandler)
+    {
+        AutoCompleteTextField<KBHandle> field = new AutoCompleteTextField<KBHandle>("value",
+            LambdaModelAdapter.of(this::getSelectedKBItem, this::setSelectedKBItem),
+            new TextRenderer<KBHandle>("uiLabel"), KBHandle.class)
+        {
+
+            private static final long serialVersionUID = 5683897252648514996L;
+
+            @Override protected List<KBHandle> getChoices(String input)
+            {
+                return listInstances(aHandler, input);
+            }
+
+            @Override public void onConfigure(JQueryBehavior behavior)
+            {
+                super.onConfigure(behavior);
+                behavior.setOption("autoWidth", true);
+            }
+
+            @Override protected IJQueryTemplate newTemplate()
+            {
+                return new IJQueryTemplate()
+                {
+                    private static final long serialVersionUID = 1L;
+
+                    @Override public String getText()
+                    {
+                        // Some docs on how the templates work in Kendo, in case we need
+                        // more fancy dropdowns
+                        // http://docs.telerik.com/kendo-ui/framework/templates/overview
+                        return "# if (data.reordered == 'true') { #"
+                            + "<div title=\"#: data.description #\" "
+                            + "onmouseover=\"javascript:applyTooltip(this)\">"
+                            + "<b>#: data.name #</b></div>\n" + "# } else { #"
+                            + "<div title=\"#: data.description #\" "
+                            + "onmouseover=\"javascript:applyTooltip(this)\">"
+                            + "#: data.name #</div>\n" + "# } #";
+                    }
+
+                    @Override public List<String> getTextProperties()
+                    {
+                        return Arrays.asList("name", "description");
+                    }
+                };
+            }
+        };
+
+        // Ensure that markup IDs of feature editor focus components remain constant across
+        // refreshes of the feature editor panel. This is required to restore the focus.
+        field.setOutputMarkupId(true);
+        field.setMarkupId(ID_PREFIX + getModelObject().feature.getId());
+        return field;
+    }
+
     private void setSelectedKBItem(KBHandle value)
     {
         if (roleLabelIsFilled()) {
@@ -274,10 +317,10 @@ public class SubjectObjectFeatureEditor
         try {
             JCas jCas = actionHandler.getEditorCas();
             AnnotationFS selectedFS = WebAnnoCasUtil.selectByAddr(jCas, roleModel.targetAddr);
-            WebAnnoCasUtil
-                .setFeature(selectedFS, linkedAnnotationFeature, value.getIdentifier());
-            actionHandler.actionCreateOrUpdate(RequestCycle.get().find(AjaxRequestTarget.class),
-                jCas);
+            WebAnnoCasUtil.setFeature(selectedFS, linkedAnnotationFeature,
+                value != null ? value.getIdentifier() : value);
+            actionHandler
+                .actionCreateOrUpdate(RequestCycle.get().find(AjaxRequestTarget.class), jCas);
         }
         catch (Exception e) {
             LOG.error("Error: " + e.getMessage(), e);
@@ -308,68 +351,6 @@ public class SubjectObjectFeatureEditor
             }
         }
         return selectedKBHandleItem;
-    }
-
-    private AutoCompleteTextField<KBHandle> createAutoCompleteTextField(AnnotationActionHandler aHandler)
-    {
-        AutoCompleteTextField<KBHandle> field = new AutoCompleteTextField<KBHandle>("value",
-            LambdaModelAdapter.of(this::getSelectedKBItem, this::setSelectedKBItem),
-            new TextRenderer<KBHandle>("uiLabel"))
-        {
-
-            private static final long serialVersionUID = 5683897252648514996L;
-
-            @Override
-            protected List<KBHandle> getChoices(String input)
-            {
-                return listInstances(aHandler, input);
-            }
-
-            @Override
-            public void onConfigure(JQueryBehavior behavior)
-            {
-                super.onConfigure(behavior);
-                behavior.setOption("autoWidth", true);
-            }
-
-            @Override
-            protected IJQueryTemplate newTemplate()
-            {
-                return new IJQueryTemplate()
-                {
-                    private static final long serialVersionUID = 1L;
-
-                    @Override
-                    public String getText()
-                    {
-                        // Some docs on how the templates work in Kendo, in case we need
-                        // more fancy dropdowns
-                        // http://docs.telerik.com/kendo-ui/framework/templates/overview
-                        return "# if (data.reordered == 'true') { #" +
-                            "<div title=\"#: data.description #\" "
-                            + "onmouseover=\"javascript:applyTooltip(this)\">"
-                            + "<b>#: data.name #</b></div>\n" +
-                            "# } else { #" +
-                            "<div title=\"#: data.description #\" "
-                            + "onmouseover=\"javascript:applyTooltip(this)\">"
-                            + "#: data.name #</div>\n" +
-                            "# } #";
-                    }
-
-                    @Override
-                    public List<String> getTextProperties()
-                    {
-                        return Arrays.asList("name", "description");
-                    }
-                };
-            }
-        };
-
-        // Ensure that markup IDs of feature editor focus components remain constant across
-        // refreshes of the feature editor panel. This is required to restore the focus.
-        field.setOutputMarkupId(true);
-        field.setMarkupId(ID_PREFIX + getModelObject().feature.getId());
-        return field;
     }
 
     private List<KBHandle> listInstances(AnnotationActionHandler aHandler,
@@ -450,12 +431,14 @@ public class SubjectObjectFeatureEditor
         return handles;
     }
 
-    private List<KBHandle> listLinkingInstances(KnowledgeBase kb, JCasProvider aJCas, String aTypedString)
+    private List<KBHandle> listLinkingInstances(KnowledgeBase kb, JCasProvider aJCas,
+        String aTypedString)
     {
         return kbService.read(kb, (conn) -> {
             try {
-                return clService.disambiguate(kb, aTypedString, roleModel.label, roleModel.targetAddr,
-                    aJCas.get());
+                return clService
+                    .disambiguate(kb, aTypedString, roleModel.label, roleModel.targetAddr,
+                        aJCas.get());
             }
             catch (IOException e) {
                 LOG.error("An error occurred while retrieving entity candidates.", e);
