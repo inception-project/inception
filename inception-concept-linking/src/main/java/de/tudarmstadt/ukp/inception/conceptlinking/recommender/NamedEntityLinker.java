@@ -54,8 +54,11 @@ public class NamedEntityLinker
     private Project project;
     private final String feature = "identifier";
 
+    // Annotations in the project marked as NamedEntity
     private Set<AnnotationObject> nerAnnotations = new HashSet<>();
 
+    // How many predictions for this recommender should be displayed
+    private int numPredictions = 3;
     private KnowledgeBaseService kbService;
     private ConceptLinkingService clService;
     private DocumentService documentService;
@@ -67,7 +70,7 @@ public class NamedEntityLinker
         this.kbService = kbService;
         this.clService = clService;
         this.documentService = documentService;
-        this.conf.setNumPredictions(3);
+        this.conf.setNumPredictions(numPredictions);
     }
 
     @Override
