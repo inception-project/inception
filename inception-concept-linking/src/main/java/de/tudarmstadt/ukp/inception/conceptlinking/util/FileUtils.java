@@ -56,7 +56,7 @@ public class FileUtils
             }
             br.close();
         } catch (IOException e) {
-            log.error("Could not read file " + r.getName(), e);
+            log.error("Resource file [{}] not present.", r.getName());
         }
         return lines;
     }
