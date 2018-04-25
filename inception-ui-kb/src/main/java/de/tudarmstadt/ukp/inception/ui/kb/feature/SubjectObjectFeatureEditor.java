@@ -18,9 +18,18 @@
 package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.NoSuchElementException;
+import java.util.*;
+import java.util.stream.Collectors;
 
+import com.googlecode.wicket.jquery.core.JQueryBehavior;
+import com.googlecode.wicket.jquery.core.renderer.TextRenderer;
+import com.googlecode.wicket.jquery.core.template.IJQueryTemplate;
+import com.googlecode.wicket.kendo.ui.form.autocomplete.AutoCompleteTextField;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.JCasProvider;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
+import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CASException;
@@ -31,12 +40,15 @@ import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AttributeAppender;
+import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,6 +79,8 @@ public class SubjectObjectFeatureEditor
     private static final Logger LOG = LoggerFactory.getLogger(SubjectObjectFeatureEditor.class);
 
     private @SpringBean AnnotationSchemaService annotationService;
+    private @SpringBean FeatureSupportRegistry featureSupportRegistry;
+    private @SpringBean ConceptLinkingService clService;
     private @SpringBean KnowledgeBaseService kbService;
     private @SpringBean FactLinkingService factService;
 
@@ -104,7 +118,10 @@ public class SubjectObjectFeatureEditor
 
         content.add(createSubjectObjectLabel());
         content.add(createRemoveLabelIcon());
-        content.add(focusComponent = createFieldComboBox());
+//        content.add(focusComponent = createFieldComboBox());
+//        content.add(new ConceptFeatureEditor("subjectObjectConcept", aOwner, aFeatureStateModel,
+//            aStateModel, aHandler));
+        content.add(focusComponent = createAutoCompleteTextField(actionHandler));
     }
 
     private Label createSubjectObjectLabel()
@@ -255,12 +272,14 @@ public class SubjectObjectFeatureEditor
 
     private void setFeatureValueInCas(KBHandle value) {
         try {
-            JCas jCas = actionHandler.getEditorCas().getCas().getJCas();
+            JCas jCas = actionHandler.getEditorCas();
             AnnotationFS selectedFS = WebAnnoCasUtil.selectByAddr(jCas, roleModel.targetAddr);
             WebAnnoCasUtil
                 .setFeature(selectedFS, linkedAnnotationFeature, value.getIdentifier());
+            actionHandler.actionCreateOrUpdate(RequestCycle.get().find(AjaxRequestTarget.class),
+                jCas);
         }
-        catch (CASException | IOException e) {
+        catch (Exception e) {
             LOG.error("Error: " + e.getMessage(), e);
             error("Error: " + e.getMessage());
         }
@@ -271,7 +290,7 @@ public class SubjectObjectFeatureEditor
         KBHandle selectedKBHandleItem = null;
         if (roleLabelIsFilled()) {
             try {
-                JCas jCas = actionHandler.getEditorCas().getCas().getJCas();
+                JCas jCas = actionHandler.getEditorCas();
                 AnnotationFS selectedFS = WebAnnoCasUtil.selectByAddr(jCas, roleModel.targetAddr);
                 String selectedKBItemIdentifier = WebAnnoCasUtil.getFeature(selectedFS,
                     linkedAnnotationFeature.getName());
@@ -283,12 +302,172 @@ public class SubjectObjectFeatureEditor
                         .orElseThrow(NoSuchElementException::new);
                 }
             }
-            catch (CASException | IOException e) {
+            catch (Exception e) {
                 LOG.error("Error: " + e.getMessage(), e);
                 error("Error: " + e.getMessage());
             }
         }
         return selectedKBHandleItem;
+    }
+
+    private AutoCompleteTextField<KBHandle> createAutoCompleteTextField(AnnotationActionHandler aHandler)
+    {
+        AutoCompleteTextField<KBHandle> field = new AutoCompleteTextField<KBHandle>("value",
+            LambdaModelAdapter.of(this::getSelectedKBItem, this::setSelectedKBItem),
+            new TextRenderer<KBHandle>("uiLabel"))
+        {
+
+            private static final long serialVersionUID = 5683897252648514996L;
+
+            @Override
+            protected List<KBHandle> getChoices(String input)
+            {
+                return listInstances(aHandler, input);
+            }
+
+            @Override
+            public void onConfigure(JQueryBehavior behavior)
+            {
+                super.onConfigure(behavior);
+                behavior.setOption("autoWidth", true);
+            }
+
+            @Override
+            protected IJQueryTemplate newTemplate()
+            {
+                return new IJQueryTemplate()
+                {
+                    private static final long serialVersionUID = 1L;
+
+                    @Override
+                    public String getText()
+                    {
+                        // Some docs on how the templates work in Kendo, in case we need
+                        // more fancy dropdowns
+                        // http://docs.telerik.com/kendo-ui/framework/templates/overview
+                        return "# if (data.reordered == 'true') { #" +
+                            "<div title=\"#: data.description #\" "
+                            + "onmouseover=\"javascript:applyTooltip(this)\">"
+                            + "<b>#: data.name #</b></div>\n" +
+                            "# } else { #" +
+                            "<div title=\"#: data.description #\" "
+                            + "onmouseover=\"javascript:applyTooltip(this)\">"
+                            + "#: data.name #</div>\n" +
+                            "# } #";
+                    }
+
+                    @Override
+                    public List<String> getTextProperties()
+                    {
+                        return Arrays.asList("name", "description");
+                    }
+                };
+            }
+        };
+
+        // Ensure that markup IDs of feature editor focus components remain constant across
+        // refreshes of the feature editor panel. This is required to restore the focus.
+        field.setOutputMarkupId(true);
+        field.setMarkupId(ID_PREFIX + getModelObject().feature.getId());
+        return field;
+    }
+
+    private List<KBHandle> listInstances(AnnotationActionHandler aHandler,
+        String aTypedString)
+    {
+        if (linkedAnnotationFeature == null) {
+            String linkedType = this.getModelObject().feature.getType();
+            AnnotationLayer linkedLayer = annotationService
+                .getLayer(linkedType, this.stateModel.getObject().getProject());
+            linkedAnnotationFeature = annotationService
+                .getFeature(FactLinkingConstants.LINKED_LAYER_FEATURE, linkedLayer);
+        }
+        List<KBHandle> handles = new ArrayList<>();
+        try {
+            FeatureSupport<ConceptFeatureTraits> fs = featureSupportRegistry
+                .getFeatureSupport(linkedAnnotationFeature);
+            ConceptFeatureTraits traits = fs.readTraits(linkedAnnotationFeature);
+
+            if (traits.getRepositoryId() != null) {
+                // If a specific KB is selected, get its instances
+                Optional<KnowledgeBase> kb = kbService.getKnowledgeBaseById(project,
+                    traits.getRepositoryId());
+                if (kb.isPresent()) {
+                    if (kb.get().isSupportConceptLinking()) {
+                        handles.addAll(listLinkingInstances(kb.get(), () -> getEditorCas
+                            (aHandler), aTypedString));
+                    }
+                    else {
+                        if (traits.getScope() != null) {
+                            handles = kbService.listInstances(kb.get(), traits.getScope(), false)
+                                .stream()
+                                .filter(inst -> inst.getUiLabel().contains(aTypedString))
+                                .collect(Collectors.toList());
+                        }
+                        else {
+                            for (KBHandle concept : kbService.listConcepts(kb.get(), false)) {
+                                handles.addAll(kbService.listInstances(kb.get(),
+                                    concept.getIdentifier(), false));
+                            }
+                        }
+                    }
+                }
+            }
+            else {
+                // If no specific KB is selected, collect instances from all KBs
+                for (KnowledgeBase kb : kbService.getEnabledKnowledgeBases(project)) {
+                    if (kb.isSupportConceptLinking()) {
+                        handles
+                            .addAll(listLinkingInstances(kb, () -> getEditorCas(aHandler),
+                                aTypedString));
+                    }
+                    else {
+                        if (traits.getScope() != null) {
+                            handles.addAll(kbService.listInstances(kb, traits.getScope(), false)
+                                .stream()
+                                .filter(inst -> inst.getUiLabel().contains(aTypedString))
+                                .collect(Collectors.toList()));
+                        }
+                        else {
+                            for (KBHandle concept : kbService.listConcepts(kb, false)) {
+                                handles.addAll(
+                                    kbService.listInstances(kb, concept.getIdentifier(), false));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        catch (Exception e) {
+            // LOG.error("Unable to read traits", e);
+            error("Unable to read traits: " + ExceptionUtils.getRootCauseMessage(e));
+            IPartialPageRequestHandler target = RequestCycle.get()
+                .find(IPartialPageRequestHandler.class);
+            if (target != null) {
+                target.addChildren(getPage(), IFeedback.class);
+            }
+        }
+        return handles;
+    }
+
+    private List<KBHandle> listLinkingInstances(KnowledgeBase kb, JCasProvider aJCas, String aTypedString)
+    {
+        return kbService.read(kb, (conn) -> {
+            try {
+                return clService.disambiguate(kb, aTypedString, roleModel.label, roleModel.targetAddr,
+                    aJCas.get());
+            }
+            catch (IOException e) {
+                LOG.error("An error occurred while retrieving entity candidates.", e);
+                error(e);
+                return Collections.emptyList();
+            }
+        });
+    }
+
+    private JCas getEditorCas(AnnotationActionHandler aHandler) throws IOException
+    {
+        return aHandler.getEditorCas();
     }
 
     public static void handleException(Component aComponent, AjaxRequestTarget aTarget,
