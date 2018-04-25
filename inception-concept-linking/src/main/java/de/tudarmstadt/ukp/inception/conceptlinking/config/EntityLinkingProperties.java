@@ -27,6 +27,12 @@ public class EntityLinkingProperties
 {
     private int cacheSize = 1024;
 
+    private int mentionContextSize = 5;
+    private int candidateQueryLimit = 2500;
+    private int candidateDisplayLimit = 20;
+    private int candidateFrequencyThreshold = 25;
+    private int signatureQueryLimit = Integer.MAX_VALUE;
+
     public int getCacheSize()
     {
         return cacheSize;
@@ -35,6 +41,56 @@ public class EntityLinkingProperties
     public void setCacheSize(int cacheSize)
     {
         this.cacheSize = cacheSize;
+    }
+
+    public int getMentionContextSize()
+    {
+        return mentionContextSize;
+    }
+
+    public void setMentionContextSize(int mentionContextSize)
+    {
+        this.mentionContextSize = mentionContextSize;
+    }
+
+    public int getCandidateQueryLimit()
+    {
+        return candidateQueryLimit;
+    }
+
+    public void setCandidateQueryLimit(int candidateQueryLimit)
+    {
+        this.candidateQueryLimit = candidateQueryLimit;
+    }
+
+    public int getCandidateDisplayLimit()
+    {
+        return candidateDisplayLimit;
+    }
+
+    public void setCandidateDisplayLimit(int candidateDisplayLimit)
+    {
+        this.candidateDisplayLimit = candidateDisplayLimit;
+    }
+
+    public int getCandidateFrequencyThreshold()
+    {
+        return candidateFrequencyThreshold;
+    }
+
+    public void setCandidateFrequencyThreshold(int candidateFrequencyThreshold)
+    {
+        this.candidateFrequencyThreshold = candidateFrequencyThreshold;
+    }
+
+    public int getSignatureQueryLimit()
+    {
+        return signatureQueryLimit;
+    }
+
+    public void setSignatureQueryLimit(int signatureQueryLimit)
+    {
+        this.signatureQueryLimit = signatureQueryLimit;
     }
 }
 
