@@ -70,20 +70,20 @@ public class FactLayerInitializer
         factLayer.setMultipleTokens(true);
 
         annotationSchemaService.createFeature(
-            new AnnotationFeature(aProject, factLayer, "KBPredicate", "a-Predicate",
-                PropertyFeatureSupport.FACT_PREDICATE_PREFIX, "Predicate " + "of a fact", null));
+            new AnnotationFeature(aProject, factLayer, "predicate", "1) Predicate",
+                PropertyFeatureSupport.FACT_PREDICATE_PREFIX, "Predicate of a fact", null));
 
-        AnnotationFeature subjectFeature = createLinkedFeature("Subject", "b-Subject",
+        AnnotationFeature subjectFeature = createLinkedFeature("subject", "2) Subject",
             "The subject of a fact.", FactLinkingConstants.SUBJECT_LINK, factLayer, aProject);
         annotationSchemaService.createFeature(subjectFeature);
         annotationSchemaService.createLayer(factLayer);
 
-        AnnotationFeature objectFeature = createLinkedFeature("Object", "c-Object",
+        AnnotationFeature objectFeature = createLinkedFeature("object", "3) Object",
             "The object of a fact.", FactLinkingConstants.OBJECT_LINK, factLayer, aProject);
         annotationSchemaService.createFeature(objectFeature);
         annotationSchemaService.createLayer(factLayer);
 
-        AnnotationFeature qualifierFeature = createLinkedFeature("Qualifier", "d-Qualifier",
+        AnnotationFeature qualifierFeature = createLinkedFeature("qualifiers", "4) Qualifiers",
             "The qualifier of a fact.", FactLinkingConstants.QUALIFIER_LINK, factLayer, aProject);
         annotationSchemaService.createFeature(qualifierFeature);
         annotationSchemaService.createLayer(factLayer);
