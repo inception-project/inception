@@ -120,7 +120,7 @@ public class SubjectObjectFeatureEditor
 
         content.add(createSubjectObjectLabel());
         content.add(createRemoveLabelIcon());
-        content.add(focusComponent = createAutoCompleteTextField(actionHandler));
+        content.add(focusComponent = createAutoCompleteTextField());
     }
 
     private Label createSubjectObjectLabel()
@@ -250,8 +250,7 @@ public class SubjectObjectFeatureEditor
             .getFeature(FactLinkingConstants.LINKED_LAYER_FEATURE, linkedLayer);
     }
 
-    private AutoCompleteTextField<KBHandle> createAutoCompleteTextField(
-        AnnotationActionHandler aHandler)
+    private AutoCompleteTextField<KBHandle> createAutoCompleteTextField()
     {
         AutoCompleteTextField<KBHandle> field = new AutoCompleteTextField<KBHandle>("value",
             LambdaModelAdapter.of(this::getSelectedKBItem, this::setSelectedKBItem),
@@ -262,7 +261,7 @@ public class SubjectObjectFeatureEditor
 
             @Override protected List<KBHandle> getChoices(String input)
             {
-                return listInstances(aHandler, input);
+                return listInstances(actionHandler, input);
             }
 
             @Override public void onConfigure(JQueryBehavior behavior)
@@ -319,8 +318,6 @@ public class SubjectObjectFeatureEditor
             AnnotationFS selectedFS = WebAnnoCasUtil.selectByAddr(jCas, roleModel.targetAddr);
             WebAnnoCasUtil.setFeature(selectedFS, linkedAnnotationFeature,
                 value != null ? value.getIdentifier() : value);
-            actionHandler
-                .actionCreateOrUpdate(RequestCycle.get().find(AjaxRequestTarget.class), jCas);
         }
         catch (Exception e) {
             LOG.error("Error: " + e.getMessage(), e);
