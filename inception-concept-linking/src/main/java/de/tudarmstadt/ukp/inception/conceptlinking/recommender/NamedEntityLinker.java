@@ -153,7 +153,7 @@ public class NamedEntityLinker
     private List<AnnotationObject> predictToken(TokenObject token)
     {
         List<KBHandle> handles = new ArrayList<>();
-        for (KnowledgeBase kb : kbService.getKnowledgeBases(project)) {
+        for (KnowledgeBase kb : kbService.getEnabledKnowledgeBases(project)) {
             if (kb.isSupportConceptLinking()) {
                 handles.addAll(kbService.read(kb, (conn) -> {
                     SourceDocument doc = documentService
