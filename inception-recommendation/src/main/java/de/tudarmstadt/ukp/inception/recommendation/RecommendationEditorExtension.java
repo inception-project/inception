@@ -126,7 +126,7 @@ public class RecommendationEditorExtension
             address = WebAnnoCasUtil.getAddr(annoFS);
         }
         else {
-            // Create the annotation - this also takes care of attaching to an annotation if necessary
+        // Create the annotation - this also takes care of attaching to an annotation if necessary
             address = adapter.add(aState, aJCas, aBegin, aEnd);
         }
 

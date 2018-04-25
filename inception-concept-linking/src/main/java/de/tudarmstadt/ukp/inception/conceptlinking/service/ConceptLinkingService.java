@@ -449,7 +449,7 @@ public class ConceptLinkingService
                     .currentTimeMillis() - startTime, aMention);
             }
         }
-         else {
+        else {
             candidates.addAll(generateCandidates(aKB, aMention));
             logger.debug("It took [{}] ms to retrieve candidates for mention [{}]", System
                 .currentTimeMillis() - startTime, aMention);

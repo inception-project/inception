@@ -87,7 +87,8 @@ public class AnnotationObject
         List<T> sentenceTokens, int id, String aFeature, String classifier)
     {
         this(annotation, description, token.getDocumentURI(), token.getDocumentName(),
-            token.getCoveredText(), token.getOffset(), sentenceTokens, id, aFeature, classifier, -1);
+            token.getCoveredText(), token.getOffset(), sentenceTokens, id, aFeature, classifier,
+            -1);
     }
     
     public AnnotationObject(AnnotationObject ao, int id, String aFeature, String classifier)
