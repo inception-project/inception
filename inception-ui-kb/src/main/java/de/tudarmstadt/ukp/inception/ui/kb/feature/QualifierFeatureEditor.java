@@ -352,6 +352,7 @@ public class QualifierFeatureEditor
 
             // Need to re-render the whole form because a slot in another
             // link editor might get unarmed
+            selectedRole = null;
             aTarget.add(getOwner());
         }
     }
@@ -461,7 +462,7 @@ public class QualifierFeatureEditor
     {
         AutoCompleteTextField<KBHandle> field = new AutoCompleteTextField<KBHandle>("newRole",
             new PropertyModel<KBHandle>(this, "selectedRole"),
-            new TextRenderer<KBHandle>("uiLabel"))
+            new TextRenderer<KBHandle>("uiLabel"), KBHandle.class)
         {
 
             private static final long serialVersionUID = 1458626823154651501L;
