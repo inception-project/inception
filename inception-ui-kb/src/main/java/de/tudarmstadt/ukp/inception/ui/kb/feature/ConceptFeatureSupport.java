@@ -22,11 +22,15 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static java.util.Arrays.asList;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
 
+import org.apache.commons.collections4.map.LRUMap;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
@@ -73,6 +77,8 @@ public class ConceptFeatureSupport
     //private @PersistenceContext EntityManager entityManager;
     
     private String featureSupportId;
+    private Map<ImmutablePair<AnnotationFeature, String>, String> renderValueCache = Collections
+        .synchronizedMap(new LRUMap<>(200));
     
     @Override
     public String getId()
@@ -122,8 +128,11 @@ public class ConceptFeatureSupport
     public String renderFeatureValue(AnnotationFeature aFeature, String aLabel)
     {
         try {
-            String renderValue = null;
-
+            ImmutablePair<AnnotationFeature, String> pair = new ImmutablePair<>(aFeature, aLabel);
+            String renderValue = renderValueCache.get(pair);
+            if (renderValue != null) {
+                return renderValue;
+            }
             // FIXME Since this might be called very often during rendering, it *might* be
             // worth to set up an LRU cache instead of relying on the performance of the
             // underlying KB store.
@@ -145,7 +154,7 @@ public class ConceptFeatureSupport
                 renderValue = instance.map(KBInstance::getUiLabel)
                         .orElseThrow(NoSuchElementException::new);
             }
-            
+            renderValueCache.put(pair, renderValue);
             return renderValue;
         }
         catch (Exception e) {
@@ -281,4 +290,5 @@ public class ConceptFeatureSupport
     {
         aTD.addFeature(aFeature.getName(), "", CAS.TYPE_NAME_STRING);
     }
+
 }
