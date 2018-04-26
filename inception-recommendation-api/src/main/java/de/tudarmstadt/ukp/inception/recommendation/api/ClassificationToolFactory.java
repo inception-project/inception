@@ -52,13 +52,43 @@ public interface ClassificationToolFactory<T>
      * 
      * @param aId
      *            a markup ID.
-     * @param aFeatureModel
-     *            a model holding the annotation feature for which the traits editor should be
-     *            created.
+     * @param aRecommender
+     *            a model holding the recommender for which the traits editor should be created.
      * @return the traits editor component .
      */
-    default Panel createTraitsEditor(String aId, IModel<Recommender> aFeatureModel)
+    default Panel createTraitsEditor(String aId, IModel<Recommender> aRecommender)
     {
         return new EmptyPanel(aId);
+    }
+    
+    /**
+     * Read the traits for the given {@link Recommender}. If traits are supported, then this method
+     * must be overwritten. A typical implementation would read the traits from a JSON string stored
+     * in {@link Recommender#getTraits}, but it would also possible to load the traits from a
+     * database table.
+     * 
+     * @param aRecommender
+     *            the recommender whose traits should be obtained.
+     * @return the traits.
+     */
+    default T readTraits(Recommender aRecommender)
+    {
+        return null;
+    }
+
+    /**
+     * Write the traits for the given {@link Recommender}. If traits are supported, then this method
+     * must be overwritten. A typical implementation would write the traits from to JSON string
+     * stored in {@link Recommender#setTraits}, but it would also possible to store the traits from
+     * a database table.
+     * 
+     * @param aRecommender
+     *            the recommender whose traits should be written.
+     * @param aTraits
+     *            the traits.
+     */
+    default void writeTraits(Recommender aRecommender, T aTraits)
+    {
+        aRecommender.setTraits(null);
     }
 }
