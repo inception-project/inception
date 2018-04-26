@@ -19,12 +19,15 @@ package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
 public final class FactLinkingConstants
 {
-    public static final String SUBJECT_LINK = "webanno.custom.FactSubjectLink";
-    public static final String OBJECT_LINK = "webanno.custom.FactObjectLink";
-    public static final String QUALIFIER_LINK = "webanno.custom.FactQualifierLink";
+    public static final String SUBJECT_LINK = "de.tudarmstadt.ukp.inception.api.kb.type.FactSubjectLink";
+    public static final String OBJECT_LINK = "de.tudarmstadt.ukp.inception.api.kb.type.FactObjectLink";
+    public static final String QUALIFIER_LINK = "de.tudarmstadt.ukp.inception.api.kb.type.FactQualifierLink";
 
     public static final String SUBJECT_ROLE = "subject";
     public static final String OBJECT_ROLE = "object";
 
-    public static final String FACT_LAYER = "webanno.custom.Fact";
+    public static final String FACT_LAYER = "de.tudarmstadt.ukp.inception.api.kb.type.Fact";
+
+    //identifier here is a feature of the NamedEntity layer
+    public static final String LINKED_LAYER_FEATURE = "identifier";
 }

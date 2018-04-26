@@ -46,7 +46,12 @@ public class ClassifierConfiguration<T>
     private String language = "en";
     private File modelFile = new File("target/models", "model.bin");
     private String feature;
-    
+
+    /**
+     * The number of predictions that should be displayed
+     */
+    private int numPredictions;
+
     public ClassifierConfiguration() 
     {
         
@@ -100,6 +105,16 @@ public class ClassifierConfiguration<T>
     public void setModelFile(File modelFile)
     {
         this.modelFile = modelFile;
+    }
+
+    public int getNumPredictions()
+    {
+        return numPredictions;
+    }
+
+    public void setNumPredictions(int numPredictions)
+    {
+        this.numPredictions = numPredictions;
     }
 
     @Override

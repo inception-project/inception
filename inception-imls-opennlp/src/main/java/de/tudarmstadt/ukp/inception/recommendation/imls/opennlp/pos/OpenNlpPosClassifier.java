@@ -79,7 +79,7 @@ public class OpenNlpPosClassifier
         }
 
         POSTaggerME tagger = new POSTaggerME(model);
-        
+
         int id = 0;
 
         String feature = conf.getFeature();
@@ -90,16 +90,16 @@ public class OpenNlpPosClassifier
         for (List<T> sentence : inputData) {
 
             String[] tokenArr = CasUtil.getCoveredTexts(sentence);
-            
+
             opennlp.tools.util.Sequence[] bestSequences = tagger.topKSequences(tokenArr);
             double[][] confidence = new double[bestSequences.length][tokenArr.length];
 
-            List<List<AnnotationObject>> sentencePredictions = new LinkedList<>();  
-            
+            List<List<AnnotationObject>> sentencePredictions = new LinkedList<>();
+
             for (int j = 0; j < bestSequences[0].getOutcomes().size(); j++) {
-                
+
                 List<AnnotationObject> wordPredictions = new LinkedList<>();
-                
+
                 for (int i = 0; i < bestSequences.length; i++) {
                     confidence[i] = bestSequences[i].getProbs();
 
@@ -109,10 +109,10 @@ public class OpenNlpPosClassifier
                     id++;
                     wordPredictions.add(ao);
                 }
-                
+
                 sentencePredictions.add(wordPredictions);
             }
-            
+
             result.add(sentencePredictions);
         }
 

@@ -25,6 +25,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -41,7 +42,7 @@ public class RecommendationRenderer
     /**
      * wrap JSON responses to BRAT visualizer
      *
-     * @param vdoc
+     * @param aVdoc
      *            A VDocument containing annotations for the given layer
      * @param aState
      *            the annotator state.
@@ -50,9 +51,9 @@ public class RecommendationRenderer
      * @param aAnnotationService
      *            the annotation service.s
      */
-    public static void render(VDocument vdoc, AnnotatorState aState, JCas aJCas,
-            AnnotationSchemaService aAnnotationService, RecommendationService recommendationService,
-            LearningRecordService learningRecordService)
+    public static void render(VDocument aVdoc, AnnotatorState aState, JCas aJCas,
+            AnnotationSchemaService aAnnotationService, RecommendationService aRecService,
+            LearningRecordService aLearningRecordService, FeatureSupportRegistry aFsRegistry)
     {
         if (aJCas == null) {
             return;
@@ -73,8 +74,8 @@ public class RecommendationRenderer
             TypeAdapter adapter = aAnnotationService.getAdapter(layer);      
             RecommendationTypeRenderer renderer = getRenderer(adapter);
             if (renderer != null) {
-                renderer.render(aJCas, vdoc, aState, coloringStrategy, recommendationService,
-                        learningRecordService, layer);
+                renderer.render(aJCas, aVdoc, aState, coloringStrategy, layer, aRecService,
+                    aLearningRecordService, aAnnotationService, aFsRegistry);
             }
         }
     }
