@@ -808,4 +808,10 @@ public class KnowledgeBaseServiceImpl
     {
         return getReificationStrategy(kb).listQualifiers(kb, aStatement);
     }
+
+    @Override
+    public boolean statementsMatchSPO(KnowledgeBase akb, KBStatement mockStatement)
+    {
+        return getReificationStrategy(akb).statementsMatchSPO(akb, mockStatement);
+    }
 }

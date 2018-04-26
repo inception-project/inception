@@ -451,4 +451,41 @@ public class WikiDataReification
         }
     }
 
+    @Override
+    public boolean statementsMatchSPO(KnowledgeBase akb, KBStatement mockStatement)
+    {
+        try (RepositoryConnection conn = kbService.getConnection(akb)) {
+            ValueFactory vf = conn.getValueFactory();
+            String QUERY = String
+                .join("\n",
+                    "SELECT * WHERE {",
+                    "  ?s  ?p  ?id .",
+                    "  ?id ?ps ?o .",
+                    "  FILTER(STRSTARTS(STR(?ps), STR(?ps_ns)))",
+                    "}",
+                    "LIMIT 10");
+            TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
+            tupleQuery.setBinding("s", vf.createIRI(mockStatement.getInstance().getIdentifier()));
+            tupleQuery.setBinding("p", vf.createIRI(mockStatement.getProperty().getIdentifier()));
+
+            InceptionValueMapper mapper = new InceptionValueMapper();
+            tupleQuery.setBinding("o", mapper.mapStatementValue(mockStatement, vf));
+            tupleQuery.setBinding("ps_ns", vf.createIRI(PREDICATE_NAMESPACE));
+
+            TupleQueryResult result;
+            try {
+                result = tupleQuery.evaluate();
+            }
+            catch (QueryEvaluationException e) {
+                log.warn("Listing statements failed.", e);
+                return false;
+            }
+
+            while (result.hasNext()) {
+                return true;
+            }
+            return false;
+        }
+    }
+
 }

@@ -78,4 +78,26 @@ public class FactLinkingServiceImpl implements FactLinkingService
         }
         return kbHandle;
     }
+
+    @Override
+    public KnowledgeBase getKBByKBHandle(KBHandle kbHandle, Project aProject)
+    {
+        for (KnowledgeBase kb : kbService.getKnowledgeBases(aProject)) {
+            if (kbService.listProperties(kb, false).contains(kbHandle)) {
+                return kb;
+            }
+            if (kbService.listConcepts(kb, false).contains(kbHandle)) {
+                return kb;
+            }
+            for (KBHandle concept : kbService.listConcepts(kb, false)) {
+                if (kbService.listInstances(kb, concept.getIdentifier(), false)
+                    .contains(kbHandle)) {
+                    return kb;
+                }
+            }
+
+        }
+        return null;
+    }
+
 }

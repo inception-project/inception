@@ -23,6 +23,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.io.InputStream;
 import java.net.URI;
@@ -1173,6 +1175,40 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         List<KnowledgeBase> knowledgeBases = sut.getEnabledKnowledgeBases(project);
 
         assertThat(knowledgeBases).as("Check that the list is empty").isEmpty();
+    }
+
+    @Test
+    public void statementsMatchSPO_WithMatchedStatement_ShouldReturnTure()
+    {
+        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
+        KBConcept concept = buildConcept();
+        KBProperty property = buildProperty();
+        KBHandle conceptHandle = sut.createConcept(kb, concept);
+        KBHandle propertyHandle = sut.createProperty(kb, property);
+        KBStatement statement = buildStatement(kb, conceptHandle, propertyHandle, "Test statement");
+
+        sut.upsertStatement(kb, statement);
+
+        KBStatement mockStatement = buildStatement(kb, conceptHandle, propertyHandle,
+            "Test statement");
+        assertTrue(sut.statementsMatchSPO(kb, mockStatement));
+    }
+
+    @Test
+    public void statementsMatchSPO_WithMissmatchedStatement_ShouldReturnFalse()
+    {
+        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
+        KBConcept concept = buildConcept();
+        KBProperty property = buildProperty();
+        KBHandle conceptHandle = sut.createConcept(kb, concept);
+        KBHandle propertyHandle = sut.createProperty(kb, property);
+        KBStatement statement = buildStatement(kb, conceptHandle, propertyHandle, "Test");
+
+        sut.upsertStatement(kb, statement);
+
+        KBStatement mockStatement = buildStatement(kb, conceptHandle, propertyHandle,
+            "Test statement");
+        assertFalse(sut.statementsMatchSPO(kb, mockStatement));
     }
 
     // Helper

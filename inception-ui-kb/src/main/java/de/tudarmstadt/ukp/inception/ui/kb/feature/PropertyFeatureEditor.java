@@ -17,6 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
+import static de.tudarmstadt.ukp.inception.ui.kb.feature.FactLinkingConstants.FACT_LAYER;
+
+import java.util.List;
+
+import org.apache.uima.jcas.JCas;
 import org.apache.wicket.Component;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
@@ -34,10 +39,16 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionH
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.FeatureEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
+import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
+import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 public class PropertyFeatureEditor
     extends FeatureEditor
@@ -48,6 +59,7 @@ public class PropertyFeatureEditor
     private IModel<AnnotatorState> stateModel;
     private AnnotationActionHandler actionHandler;
     private Project project;
+    private Boolean existStatements = false;
 
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean KnowledgeBaseService kbService;
@@ -63,6 +75,8 @@ public class PropertyFeatureEditor
         project = this.getModelObject().feature.getProject();
         add(new Label("feature", getModelObject().feature.getUiName()));
         add(focusComponent = createFieldComboBox());
+        add(createStatementIndicatorLabel());
+        add(createNoStatementLabel());
     }
 
     private DropDownList<KBHandle> createFieldComboBox()
@@ -73,6 +87,24 @@ public class PropertyFeatureEditor
         field.setOutputMarkupId(true);
         field.setMarkupId(ID_PREFIX + getModelObject().feature.getId());
         return field;
+    }
+
+    private Label createStatementIndicatorLabel()
+    {
+        Label statementExists = new Label("statementExists",
+            "There is at least one statement " + "in the KB which matches for this SPO.");
+        statementExists
+            .add(LambdaBehavior.onConfigure(component -> component.setVisible(existStatements)));
+        return statementExists;
+    }
+
+    private Label createNoStatementLabel()
+    {
+        Label statementDoesNotExist = new Label("statementDoesNotExist",
+            "There is no statement " + "in the KB which matches this SPO.");
+        statementDoesNotExist
+            .add(LambdaBehavior.onConfigure(component -> component.setVisible(!existStatements)));
+        return statementDoesNotExist;
     }
 
     @Override
@@ -86,5 +118,48 @@ public class PropertyFeatureEditor
     {
         return focusComponent;
     }
+
+    @Override
+    public void onConfigure()
+    {
+        KBHandle subject = getHandle(FactLinkingConstants.SUBJECT_ROLE);
+        KBHandle object = getHandle(FactLinkingConstants.OBJECT_ROLE);
+        KBHandle predicate = (KBHandle) getModelObject().value;
+        if (subject != null && object != null && predicate != null) {
+            KBStatement mockStatement = new KBStatement(subject, predicate);
+            mockStatement.setValue(object.getUiLabel());
+            KnowledgeBase kb = factService.getKBByKBHandle(predicate, project);
+            existStatements = kbService.statementsMatchSPO(kb, mockStatement);
+        }
+    }
+
+    private KBHandle getHandle(String name)
+    {
+        return getLinkedSubjectObjectKBHandle(name, actionHandler, stateModel.getObject());
+    }
+
+    public KBHandle getLinkedSubjectObjectKBHandle(String featureName,
+        AnnotationActionHandler actionHandler, AnnotatorState aState)
+    {
+        AnnotationLayer factLayer = annotationService.getLayer(FACT_LAYER, aState.getProject());
+        KBHandle kbHandle = null;
+        AnnotationFeature annotationFeature = annotationService.getFeature(featureName, factLayer);
+        List<LinkWithRoleModel> featureValue = (List<LinkWithRoleModel>) aState
+            .getFeatureState(annotationFeature).value;
+        int targetAddress = featureValue.get(0).targetAddr;
+        if (targetAddress != -1) {
+            JCas jCas = null;
+            try {
+                jCas = actionHandler.getEditorCas();
+            }
+            catch (Exception e) {
+                LOG.error("Error: " + e.getMessage(), e);
+            }
+            kbHandle = factService
+                .getKBHandleFromCasByAddr(jCas, targetAddress, aState.getProject());
+        }
+        return kbHandle;
+    }
+
 }
 

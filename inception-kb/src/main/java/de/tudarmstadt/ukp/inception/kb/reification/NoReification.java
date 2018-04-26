@@ -214,4 +214,33 @@ public class NoReification implements ReificationStrategy {
         return Collections.emptyList();
     }
 
+    @Override
+    public boolean statementsMatchSPO(KnowledgeBase akb, KBStatement mockStatement)
+    {
+        try (RepositoryConnection conn = kbService.getConnection(akb)) {
+            ValueFactory vf = conn.getValueFactory();
+            String QUERY = "SELECT * WHERE { ?s ?p ?o . }";
+            TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
+            tupleQuery.setBinding("s", vf.createIRI(mockStatement.getInstance().getIdentifier()));
+            tupleQuery.setBinding("p", vf.createIRI(mockStatement.getProperty().getIdentifier()));
+
+            InceptionValueMapper mapper = new InceptionValueMapper();
+            tupleQuery.setBinding("o", mapper.mapStatementValue(mockStatement, vf));
+
+            TupleQueryResult result;
+            try {
+                result = tupleQuery.evaluate();
+            }
+            catch (QueryEvaluationException e) {
+                log.warn("Listing statements failed.", e);
+                return false;
+            }
+
+            while (result.hasNext()) {
+                return true;
+            }
+            return false;
+        }
+    }
+
 }

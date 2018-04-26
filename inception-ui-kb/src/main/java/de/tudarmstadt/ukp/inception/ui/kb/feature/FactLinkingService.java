@@ -24,6 +24,7 @@ import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
+import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 public interface FactLinkingService
 {
@@ -34,4 +35,6 @@ public interface FactLinkingService
     List<KBHandle> getAllPredicatesFromKB(Project aProject);
 
     KBHandle getKBHandleFromCasByAddr(JCas aJcas, int targetAddr, Project aProject);
+
+    KnowledgeBase getKBByKBHandle(KBHandle kbHandle, Project aProject);
 }
