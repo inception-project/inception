@@ -235,8 +235,6 @@ public class SubjectObjectFeatureEditor
             roleModel = new LinkWithRoleModel();
             roleModel.role = role;
             links.add(roleModel);
-            this.stateModel.getObject()
-                .setArmedSlot(SubjectObjectFeatureEditor.this.getModelObject().feature, 0);
         }
         else {
             roleModel = links.get(0);
@@ -244,7 +242,8 @@ public class SubjectObjectFeatureEditor
         String linkedType = this.getModelObject().feature.getType();
         AnnotationLayer linkedLayer = annotationService
             .getLayer(linkedType, this.stateModel.getObject().getProject());
-        linkedAnnotationFeature = annotationService.getFeature("KBItems", linkedLayer);
+        linkedAnnotationFeature = annotationService
+            .getFeature(FactLinkingConstants.LINKED_LAYER_FEATURE, linkedLayer);
     }
 
     private void setSelectedKBItem(KBHandle value)

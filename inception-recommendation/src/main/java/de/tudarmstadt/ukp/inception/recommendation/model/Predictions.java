@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.recommendation.model;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -28,9 +29,6 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-import org.apache.uima.cas.Type;
-import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -90,7 +88,7 @@ public class Predictions
      * 
      */
     public Map<String, List<List<AnnotationObject>>> getPredictionsForWholeProject(
-        AnnotationLayer aLayer, DocumentService aDocumentService) 
+        AnnotationLayer aLayer, DocumentService aDocumentService)
     {
         Map<String, List<List<AnnotationObject>>> predictions = new HashMap<>();
 
@@ -162,22 +160,15 @@ public class Predictions
      * @param aJcas 
      */
     public List<AnnotationObject> getFlattenedPredictions(String aDocumentName,
-            AnnotationLayer aLayer, int aWindowBegin, int aWindowEnd, JCas aJcas) {
-        Type type = CasUtil.getType(aJcas.getCas(), aLayer.getName());
-        List<AnnotationFS> existingAnnotations = CasUtil.selectCovered(aJcas.getCas(), 
-                type, aWindowBegin, aWindowEnd);
-        List<Integer> existingOffsets = existingAnnotations.stream().map(e -> e.getBegin())
-                .collect(Collectors.toList());
-
+        AnnotationLayer aLayer,  int aWindowBegin, int aWindowEnd, JCas aJcas)
+    {
         return predictions.entrySet().stream()
                 .filter(f -> f.getKey().getDocumentName().equals(aDocumentName))
-                .filter(f -> !existingOffsets.contains(f.getKey().getOffset().getBeginCharacter()))
                 .filter(f -> f.getKey().getLayerId() == aLayer.getId())
                 .filter(f -> f.getKey().getOffset().getBeginCharacter() >= aWindowBegin)
                 .filter(f -> f.getKey().getOffset().getEndCharacter() <= aWindowEnd)
-                .map(e -> e.getValue())
-                .sorted((e1, e2) -> Integer.compare(e1.getOffset().getBeginCharacter(),
-                        e2.getOffset().getBeginCharacter()))
+                .map(Map.Entry::getValue)
+                .sorted(Comparator.comparingInt(e2 -> e2.getOffset().getBeginCharacter()))
                 .collect(Collectors.toList());
     }
 
