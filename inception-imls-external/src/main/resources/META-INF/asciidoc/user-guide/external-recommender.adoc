@@ -14,18 +14,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-= {product-name} User Guide
-The {product-name} Team
-
-== External recommender
+= External recommender
 
 This guide describes how to set up external recommenders.
 
-=== Setting up neuralweb
+== Setting up neuralweb
 
 The currently supported external classifier is *neuralweb*. Set it up according to its documentation and install a model. The easist way to do this is to rename the model to `arg_model.h5` and put it into `models/default`. Start the server with `python app.py`.
 
-=== Setting up INCEpTION
+== Setting up INCEpTION
 
 Create a new project. Add a new layer called `ArgLayer` to it. Make sure that it is a span layer. Activate `Allow multiple tokens` and `Allow crossing sentence boundaries`.
 
