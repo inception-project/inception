@@ -55,6 +55,7 @@ import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.repository.RepositoryException;
 import org.eclipse.rdf4j.repository.RepositoryResult;
 import org.eclipse.rdf4j.repository.config.RepositoryConfig;
+import org.eclipse.rdf4j.repository.config.RepositoryConfigException;
 import org.eclipse.rdf4j.repository.config.RepositoryImplConfig;
 import org.eclipse.rdf4j.repository.manager.RepositoryInfo;
 import org.eclipse.rdf4j.repository.manager.RepositoryManager;
@@ -140,6 +141,7 @@ public class KnowledgeBaseServiceImpl
     @Transactional
     @Override
     public void registerKnowledgeBase(KnowledgeBase kb, RepositoryImplConfig cfg)
+        throws RepositoryException, RepositoryConfigException
     {
         // obtain unique repository id
         String baseName = "pid-" + Long.toString(kb.getProject().getId()) + "-kbid-";
@@ -170,6 +172,7 @@ public class KnowledgeBaseServiceImpl
     @Transactional
     @Override
     public void updateKnowledgeBase(KnowledgeBase kb, RepositoryImplConfig cfg)
+        throws RepositoryException, RepositoryConfigException
     {
         assertRegistration(kb);
         repoManager.addRepositoryConfig(new RepositoryConfig(kb.getRepositoryId(), cfg));
@@ -199,6 +202,7 @@ public class KnowledgeBaseServiceImpl
     @Transactional
     @Override
     public void removeKnowledgeBase(KnowledgeBase kb)
+        throws RepositoryException, RepositoryConfigException
     {
         assertRegistration(kb);
         repoManager.removeRepository(kb.getRepositoryId());
@@ -228,6 +232,7 @@ public class KnowledgeBaseServiceImpl
 
     @Override
     public RepositoryImplConfig getKnowledgeBaseConfig(KnowledgeBase kb)
+        throws RepositoryConfigException, RepositoryException
     {
         assertRegistration(kb);
         return repoManager.getRepositoryConfig(kb.getRepositoryId()).getRepositoryImplConfig();
@@ -544,13 +549,13 @@ public class KnowledgeBaseServiceImpl
     }
 
     @Override
-    public void upsertStatement(KnowledgeBase kb, KBStatement aStatement)
+    public void upsertStatement(KnowledgeBase kb, KBStatement aStatement) throws RepositoryException
     {
         getReificationStrategy(kb).upsertStatement(kb, aStatement);
     }
 
     @Override
-    public void deleteStatement(KnowledgeBase kb, KBStatement aStatement)
+    public void deleteStatement(KnowledgeBase kb, KBStatement aStatement) throws RepositoryException
     {
         getReificationStrategy(kb).deleteStatement(kb, aStatement);
     }

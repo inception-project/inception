@@ -21,6 +21,7 @@ import java.net.URI;
 
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
@@ -131,7 +132,8 @@ public class ConceptInstancePanel
             catch (QueryEvaluationException e) {
                 replacementPanel = emptyPanel();
                 error("Unable to read instance: " + e.getLocalizedMessage()); 
-                LOG.error("Unable to read instance.",e);
+                LOG.error("Unable to read instance.", e);
+                target.addChildren(getPage(), IFeedback.class);
             }
         }
         else {

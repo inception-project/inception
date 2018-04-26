@@ -173,7 +173,7 @@ public class ConceptTreePanel extends Panel {
                 return kbService.listRootConcepts(kbModel.getObject(),
                         preferences.getObject().showAllConcepts).iterator();
             } catch (QueryEvaluationException e) {
-                error("Unable to list root concepts: " + e.getLocalizedMessage());
+                error(getString("listRootConceptsErrorMsg") + ": " + e.getLocalizedMessage());
                 LOG.error("Unable to list root concepts.", e);
                 return Collections.emptyIterator();
             }
@@ -212,7 +212,7 @@ public class ConceptTreePanel extends Panel {
                 }
             }
             catch (QueryEvaluationException e) {
-                error("Unable to list child concepts: " + e.getLocalizedMessage());
+                error(getString("listChildConceptsErrorMsg") + ": " + e.getLocalizedMessage());
                 LOG.error("Unable to list child concepts.", e);
                 return false;
             }
@@ -238,7 +238,7 @@ public class ConceptTreePanel extends Panel {
                 }
             }
             catch (QueryEvaluationException e) {
-                error("Unable to list child concepts: " + e.getLocalizedMessage());
+                error(getString("listChildConceptsErrorMsg") + ": " + e.getLocalizedMessage());
                 LOG.error("Unable to list child concepts.", e);
                 return Collections.emptyIterator();
             }

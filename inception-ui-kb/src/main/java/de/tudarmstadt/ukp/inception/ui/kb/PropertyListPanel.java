@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.ui.kb;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -70,12 +71,13 @@ public class PropertyListPanel extends Panel {
         kbModel = aKbModel;
         preferences = Model.of(new Preferences());
 
-        OverviewListChoice<KBHandle> overviewList = new OverviewListChoice<>("properties");
+        OverviewListChoice<KBHandle> overviewList = new OverviewListChoice<KBHandle>("properties");
         overviewList.setChoiceRenderer(new ChoiceRenderer<>("uiLabel"));
         overviewList.setModel(selectedProperty);
         overviewList.setChoices(LambdaModel.of(this::getProperties));
         overviewList.add(new LambdaAjaxFormComponentUpdatingBehavior("change",
                 this::actionSelectionChanged));
+        
         add(overviewList);
 
         add(new Label("count", LambdaModel.of(() -> overviewList.getChoices().size())));
@@ -131,15 +133,19 @@ public class PropertyListPanel extends Panel {
     private List<KBHandle> getProperties() {
         if (isVisibleInHierarchy()) {
             Preferences prefs = preferences.getObject();
+            List<KBHandle> statements = new ArrayList<>();
             try {
-                List<KBHandle> statements = kbService.listProperties(kbModel.getObject(),
+                statements = kbService.listProperties(kbModel.getObject(),
                         prefs.showAllProperties);
                 return statements;
             }
             catch (QueryEvaluationException e) {
+                //FIXME when this error(...) is called, a -org.apache.wicket.WicketRuntimeException:
+                //Cannot modify component hierarchy after render phase has started- is thrown.
                 //error("Unable to list properties: " + e.getLocalizedMessage());
-                LOG.debug("Unable to list properties.",e);
-                return Collections.emptyList();
+                LOG.debug("Unable to list properties.", e);
+                statements.add(new KBHandle("Unable to list properties."));
+                return statements;
             }
         } else {
             return Collections.emptyList();

@@ -30,6 +30,8 @@ import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.eclipse.rdf4j.model.vocabulary.XMLSchema;
 import org.eclipse.rdf4j.query.QueryEvaluationException;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
+import org.eclipse.rdf4j.repository.RepositoryException;
+import org.eclipse.rdf4j.repository.config.RepositoryConfigException;
 import org.eclipse.rdf4j.repository.config.RepositoryImplConfig;
 import org.eclipse.rdf4j.repository.manager.RepositoryInfo;
 import org.eclipse.rdf4j.rio.RDFFormat;
@@ -75,7 +77,8 @@ public interface KnowledgeBaseService
      */
     boolean isEmpty(KnowledgeBase kb);
 
-    void registerKnowledgeBase(KnowledgeBase kb, RepositoryImplConfig cfg);
+    void registerKnowledgeBase(KnowledgeBase kb, RepositoryImplConfig cfg)
+        throws RepositoryException, RepositoryConfigException;
 
     boolean knowledgeBaseExists(Project project, String kbName);
 
@@ -85,9 +88,11 @@ public interface KnowledgeBaseService
      * Update the configuration of a knowledge base.
      * The given knowledge base must have been added before.
      */
-    void updateKnowledgeBase(KnowledgeBase kb, RepositoryImplConfig cfg);
+    void updateKnowledgeBase(KnowledgeBase kb, RepositoryImplConfig cfg)
+        throws RepositoryException, RepositoryConfigException;
 
-    void removeKnowledgeBase(KnowledgeBase kb);
+    void removeKnowledgeBase(KnowledgeBase kb)
+        throws RepositoryException, RepositoryConfigException;
 
     List<KnowledgeBase> getKnowledgeBases(Project aProject);
     
@@ -105,7 +110,8 @@ public interface KnowledgeBaseService
 
     RepositoryImplConfig getRemoteConfig(String url);
 
-    RepositoryImplConfig getKnowledgeBaseConfig(KnowledgeBase kb);
+    RepositoryImplConfig getKnowledgeBaseConfig(KnowledgeBase kb)
+        throws RepositoryConfigException, RepositoryException;
 
     void registerImplicitNamespace(String aImplicitNameSpace);
 
@@ -265,7 +271,7 @@ public interface KnowledgeBaseService
      * attempt will be made, but the statement will be added as a new explicit statement. Does
      * nothing if the knowledge base is read only.
      */
-    void upsertStatement(KnowledgeBase kb, KBStatement aStatement);
+    void upsertStatement(KnowledgeBase kb, KBStatement aStatement) throws RepositoryException;
 
     /**
      * Deletes a statement in the given knowledge base if it exists. Does
@@ -273,7 +279,7 @@ public interface KnowledgeBaseService
      * @param kb The knowledge base from which the new concept will be deleted
      * @param aStatement The statement to delete
      */
-    void deleteStatement(KnowledgeBase kb, KBStatement aStatement);
+    void deleteStatement(KnowledgeBase kb, KBStatement aStatement) throws RepositoryException;
 
     List<KBStatement> listStatements(KnowledgeBase kb, KBHandle aInstance, boolean aAll)
         throws QueryEvaluationException;

@@ -84,7 +84,7 @@ public class KnowledgeBasePanel
             IModel<KnowledgeBase> aKbModel)
     {
         super(id, aKbModel);
-
+        
         setOutputMarkupId(true);
 
         kbModel = aKbModel;
@@ -204,8 +204,9 @@ public class KnowledgeBasePanel
             }
             catch (QueryEvaluationException e) {
                 error("Unable to read concept: " + e.getLocalizedMessage());
-                LOG.error("Unable to read concept." , e);
-                replacementPanel = new EmptyPanel(DETAILS_MARKUP_ID);;
+                LOG.error("Unable to read concept.", e);
+                replacementPanel = new EmptyPanel(DETAILS_MARKUP_ID);
+
             }
         }
         details = details.replaceWith(replacementPanel);

@@ -24,6 +24,7 @@ import java.util.Iterator;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.event.Broadcast;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Form;
@@ -40,6 +41,9 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.eclipse.rdf4j.repository.RepositoryException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
@@ -60,6 +64,7 @@ public class StatementEditor extends EventListeningPanel
 {
 
     private static final long serialVersionUID = 7643837763550205L;
+    private static final Logger LOG = LoggerFactory.getLogger(StatementEditor.class);
 
     private static final String CONTENT_MARKUP_ID = "content";
 
@@ -131,36 +136,56 @@ public class StatementEditor extends EventListeningPanel
 
     private void actionSave(AjaxRequestTarget aTarget, Form<KBStatement> aForm) {
         KBStatement modifiedStatement = aForm.getModelObject();
-
-        // persist the modified statement and replace the original, unchanged model
-        kbService.upsertStatement(kbModel.getObject(), modifiedStatement);
-        statement.setObject(modifiedStatement);
-
-        // switch back to ViewMode and send notification to listeners
-        actionCancelExistingStatement(aTarget);
-        send(getPage(), Broadcast.BREADTH,
-                new AjaxStatementChangedEvent(aTarget, statement.getObject()));
+        try {
+            // persist the modified statement and replace the original, unchanged model
+            kbService.upsertStatement(kbModel.getObject(), modifiedStatement);
+            statement.setObject(modifiedStatement);
+            // switch back to ViewMode and send notification to listeners
+            actionCancelExistingStatement(aTarget);
+            send(getPage(), Broadcast.BREADTH,
+                    new AjaxStatementChangedEvent(aTarget, statement.getObject()));
+        }
+        catch (RepositoryException e) {
+            error("Unable to update statement: " + e.getLocalizedMessage());
+            LOG.error("Unable to update statement.", e);
+            aTarget.addChildren(getPage(), IFeedback.class);
+        }
     }
 
     private void actionDelete(AjaxRequestTarget aTarget) {
-        kbService.deleteStatement(kbModel.getObject(), statement.getObject());
+        try {
+            kbService.deleteStatement(kbModel.getObject(), statement.getObject());
 
-        AjaxStatementChangedEvent deleteEvent = new AjaxStatementChangedEvent(aTarget,
-                statement.getObject(), this, true);
-        send(getPage(), Broadcast.BREADTH, deleteEvent);
+            AjaxStatementChangedEvent deleteEvent = new AjaxStatementChangedEvent(aTarget,
+                    statement.getObject(), this, true);
+            send(getPage(), Broadcast.BREADTH, deleteEvent);
+        }
+        catch (RepositoryException e) {
+            error("Unable to delete statement: " + e.getLocalizedMessage());
+            LOG.error("Unable to delete statement.", e);
+            aTarget.addChildren(getPage(), IFeedback.class);
+        }
     }
 
     private void actionMakeExplicit(AjaxRequestTarget aTarget) {
-        // add the statement as-is to the knowledge base
-        kbService.upsertStatement(kbModel.getObject(), statement.getObject());
-
-        // to update the statement in the UI, one could either reload all statements of the
-        // corresponding instance or (much easier) just set the inferred attribute of the
-        // KBStatement to false, so that's what's done here
-        statement.getObject().setInferred(false);
-        aTarget.add(this);
-        send(getPage(), Broadcast.BREADTH,
-                new AjaxStatementChangedEvent(aTarget, statement.getObject()));
+        try {
+            // add the statement as-is to the knowledge base
+            kbService.upsertStatement(kbModel.getObject(), statement.getObject());
+    
+            // to update the statement in the UI, one could either reload all statements of the
+            // corresponding instance or (much easier) just set the inferred attribute of the
+            // KBStatement to false, so that's what's done here
+            statement.getObject().setInferred(false);
+            aTarget.add(this);
+            send(getPage(), Broadcast.BREADTH,
+                    new AjaxStatementChangedEvent(aTarget, statement.getObject()));
+            
+        }
+        catch (RepositoryException e) {
+            error("Unable to make statement explicit " + e.getLocalizedMessage());
+            LOG.error("Unable to make statement explicit.", e);
+            aTarget.addChildren(getPage(), IFeedback.class);
+        }
     }
 
     private class ViewMode extends Fragment {
