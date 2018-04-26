@@ -18,21 +18,16 @@
 package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
-import com.googlecode.wicket.jquery.core.JQueryBehavior;
-import com.googlecode.wicket.jquery.core.renderer.TextRenderer;
-import com.googlecode.wicket.jquery.core.template.IJQueryTemplate;
-import com.googlecode.wicket.kendo.ui.form.autocomplete.AutoCompleteTextField;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.JCasProvider;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
-import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
-import org.apache.uima.cas.CASException;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.Component;
@@ -45,8 +40,6 @@ import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
-import org.apache.wicket.markup.html.form.ChoiceRenderer;
-import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.markup.repeater.RefreshingView;
@@ -60,10 +53,16 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.googlecode.wicket.kendo.ui.form.dropdown.DropDownList;
+import com.googlecode.wicket.jquery.core.JQueryBehavior;
+import com.googlecode.wicket.jquery.core.renderer.TextRenderer;
+import com.googlecode.wicket.jquery.core.template.IJQueryTemplate;
+import com.googlecode.wicket.kendo.ui.form.autocomplete.AutoCompleteTextField;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.JCasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.FeatureEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
@@ -72,11 +71,12 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
+import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
+import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
+import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 public class QualifierFeatureEditor
     extends FeatureEditor
@@ -184,7 +184,6 @@ public class QualifierFeatureEditor
             }
         });
 
-//        content.add(focusComponent = createSelectRoleDropdownChoice());
         content.add(focusComponent = createSelectPropertyAutoCompleteTextField());
 
         // Add a new empty slot with the specified role
@@ -243,8 +242,6 @@ public class QualifierFeatureEditor
                 AnnotatorState state = QualifierFeatureEditor.this.stateModel.getObject();
                 setVisible(state.isSlotArmed() && QualifierFeatureEditor.this.getModelObject()
                     .feature.equals(state.getArmedFeature()));
-                // setEnabled(model.isSlotArmed()
-                // && aModel.feature.equals(model.getArmedFeature()));
             }
 
             @Override
@@ -255,7 +252,8 @@ public class QualifierFeatureEditor
         });
     }
 
-    private AutoCompleteTextField<KBHandle> createMentionKBLinkTextField(Item<LinkWithRoleModel> aItem)
+    private AutoCompleteTextField<KBHandle> createMentionKBLinkTextField(
+        Item<LinkWithRoleModel> aItem)
     {
         String linkedType = this.getModelObject().feature.getType();
         AnnotationLayer linkedLayer = annotationService
@@ -263,7 +261,7 @@ public class QualifierFeatureEditor
         AnnotationFeature linkedAnnotationFeature = annotationService
             .getFeature(FactLinkingConstants.LINKED_LAYER_FEATURE, linkedLayer);
 
-        qualifierModel = new LambdaModelAdapter<>(() -> this.getSelectedKBItem(aItem),  (v) -> {
+        qualifierModel = new LambdaModelAdapter<>(() -> this.getSelectedKBItem(aItem), (v) -> {
             this.setSelectedKBItem((KBHandle) v, aItem, linkedAnnotationFeature);
         });
 
@@ -273,25 +271,29 @@ public class QualifierFeatureEditor
 
             private static final long serialVersionUID = 5683897252648514996L;
 
-            @Override protected List<KBHandle> getChoices(String input)
+            @Override
+            protected List<KBHandle> getChoices(String input)
             {
-                return listInstances(actionHandler, input, linkedAnnotationFeature, aItem
-                    .getModelObject().label, aItem.getModelObject().targetAddr);
+                return listInstances(actionHandler, input, linkedAnnotationFeature,
+                    aItem.getModelObject().label, aItem.getModelObject().targetAddr);
             }
 
-            @Override public void onConfigure(JQueryBehavior behavior)
+            @Override
+            public void onConfigure(JQueryBehavior behavior)
             {
                 super.onConfigure(behavior);
                 behavior.setOption("autoWidth", true);
             }
 
-            @Override protected IJQueryTemplate newTemplate()
+            @Override
+            protected IJQueryTemplate newTemplate()
             {
                 return new IJQueryTemplate()
                 {
                     private static final long serialVersionUID = 1L;
 
-                    @Override public String getText()
+                    @Override
+                    public String getText()
                     {
                         // Some docs on how the templates work in Kendo, in case we need
                         // more fancy dropdowns
@@ -305,7 +307,8 @@ public class QualifierFeatureEditor
                             + "#: data.name #</div>\n" + "# } #";
                     }
 
-                    @Override public List<String> getTextProperties()
+                    @Override
+                    public List<String> getTextProperties()
                     {
                         return Arrays.asList("name", "description");
                     }
@@ -316,7 +319,6 @@ public class QualifierFeatureEditor
         // Ensure that markup IDs of feature editor focus components remain constant across
         // refreshes of the feature editor panel. This is required to restore the focus.
         field.setOutputMarkupId(true);
-        field.setMarkupId(ID_PREFIX + getModelObject().feature.getId());
         return field;
     }
 
@@ -392,6 +394,7 @@ public class QualifierFeatureEditor
 
         links.remove(state.getArmedSlot());
         state.clearArmedSlot();
+        selectedRole = null;
 
         aTarget.add(content);
 
@@ -412,12 +415,15 @@ public class QualifierFeatureEditor
 
         if (state.isArmedSlot(getModelObject().feature, aItem.getIndex())) {
             state.clearArmedSlot();
+            selectedRole = null;
             aTarget.add(content);
         }
         else {
             state.setArmedSlot(getModelObject().feature, aItem.getIndex());
             // Need to re-render the whole form because a slot in another
             // link editor might get unarmed
+            selectedRole = new KBHandle();
+            selectedRole.setName(aItem.getModelObject().role);
             aTarget.add(getOwner());
         }
     }
@@ -446,17 +452,6 @@ public class QualifierFeatureEditor
             LOG.error("Error: " + e.getMessage(), e);
         }
     }
-
-//    private DropDownChoice<KBHandle> createSelectRoleDropdownChoice()
-//    {
-//        DropDownChoice<KBHandle> field = new DropDownChoice<KBHandle>("newRole",
-//            new PropertyModel<KBHandle>(this, "selectedRole"),
-//            factService.getAllPredicatesFromKB(project), new ChoiceRenderer<>
-//            ("uiLabel"));
-//        field.setOutputMarkupId(true);
-//        field.setMarkupId(ID_PREFIX + getModelObject().feature.getId());
-//        return field;
-//    }
 
     private AutoCompleteTextField<KBHandle> createSelectPropertyAutoCompleteTextField()
     {
