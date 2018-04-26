@@ -1,5 +1,5 @@
 /*
- * Copyright 2018
+ * Copyright 2017
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  *
@@ -15,31 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.model;
+package de.tudarmstadt.ukp.inception.recommendation.api.model;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.PersistentEnum;
+import de.tudarmstadt.ukp.clarin.webanno.support.PersistentEnumUserType;
 
-public enum LearningRecordUserAction implements PersistentEnum
-{
+public class LearningRecordChangeLocationType extends
+    PersistentEnumUserType<LearningRecordChangeLocation> {
 
-    REJECTED("rejected"),
-    ACCEPTED("accepted"),
-    SKIPPED("skipped"),
-    SHOWN("shown"),
-    CORRECTED("corrected");
-
-    private final String id;
-
-    LearningRecordUserAction(String aId)
-    {
-        id = aId;
+    @Override
+    public Class<LearningRecordChangeLocation> returnedClass() {
+        return
+            LearningRecordChangeLocation.class;
     }
-
-    public String getName() { return getId(); }
-
-    @Override
-    public String getId() { return id; }
-
-    @Override
-    public String toString() { return getId(); }
 }

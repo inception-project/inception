@@ -15,12 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.imls.conf;
+package de.tudarmstadt.ukp.inception.recommendation.api;
 
 import java.io.File;
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
 /**
  * The generic classifier configuration. It is used to define more general settings like:
@@ -115,13 +112,6 @@ public class ClassifierConfiguration<T>
     public void setNumPredictions(int numPredictions)
     {
         this.numPredictions = numPredictions;
-    }
-
-    @Override
-    public String toString()
-    {
-        Gson gson = new GsonBuilder().setPrettyPrinting().create();
-        return gson.toJson(this);
     }
 
     public String getFeature()

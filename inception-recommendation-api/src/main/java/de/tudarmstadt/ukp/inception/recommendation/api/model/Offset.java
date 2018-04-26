@@ -15,68 +15,88 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects;
+package de.tudarmstadt.ukp.inception.recommendation.api.model;
 
 import java.io.Serializable;
 
-public class Offset implements Comparable<Offset>, Serializable
+public class Offset
+    implements Comparable<Offset>, Serializable
 {
-    /**
-     * 
-     */
     private static final long serialVersionUID = -3084534351646334021L;
-    int beginCharacter = -1;
-    int beginToken = -1;
-    int endCharacter = -1;
-    int endToken = -1;
+
+    private int beginCharacter = -1;
+    private int endCharacter = -1;
     
     @Deprecated
-    public Offset() {}
+    private int beginToken = -1;
     
-    public Offset(int beginCharacter, int endCharacter, int beginToken, int endToken) {
+    @Deprecated
+    private int endToken = -1;
+
+    @Deprecated
+    public Offset()
+    {
+    }
+
+    public Offset(int beginCharacter, int endCharacter, int beginToken, int endToken)
+    {
         this.beginCharacter = beginCharacter;
         this.endCharacter = endCharacter;
         this.beginToken = beginToken;
         this.endToken = endToken;
     }
-    
+
     @Override
-    public String toString() {
-        return "Char: (" + beginCharacter + "," + endCharacter + "), Token: (" + beginToken + "," + endToken + ")";
+    public String toString()
+    {
+        return "Char: (" + beginCharacter + "," + endCharacter + "), Token: (" + beginToken + ","
+                + endToken + ")";
     }
-    
+
     public int getBeginCharacter()
     {
         return beginCharacter;
     }
+
     public void setBeginCharacter(int beginCharacter)
     {
         this.beginCharacter = beginCharacter;
     }
+
+    @Deprecated
     public int getBeginToken()
     {
         return beginToken;
     }
+
+    @Deprecated
     public void setBeginToken(int beginToken)
     {
         this.beginToken = beginToken;
     }
+
     public int getEndCharacter()
     {
         return endCharacter;
     }
+
     public void setEndCharacter(int endCharacter)
     {
         this.endCharacter = endCharacter;
     }
+
+    @Deprecated
     public int getEndToken()
     {
         return endToken;
     }
+
+    @Deprecated
     public void setEndToken(int endToken)
     {
         this.endToken = endToken;
     }
+
     @Override
     public int hashCode()
     {
@@ -88,6 +108,7 @@ public class Offset implements Comparable<Offset>, Serializable
         result = prime * result + endToken;
         return result;
     }
+
     @Override
     public boolean equals(Object obj)
     {
@@ -121,7 +142,7 @@ public class Offset implements Comparable<Offset>, Serializable
     {
         if (o == null) {
             return 1;
-        }        
+        }
         if (this.equals(o)) {
             return 0;
         }
@@ -138,9 +159,7 @@ public class Offset implements Comparable<Offset>, Serializable
         if (this.getBeginToken() == o.getBeginToken() && this.getEndToken() < this.getEndToken()) {
             return -1;
         }
-        
+
         return 1;
     }
-    
-    
 }

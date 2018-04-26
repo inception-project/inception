@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.imls.core.loader;
+package de.tudarmstadt.ukp.inception.recommendation.api;
 
 import static org.apache.uima.fit.pipeline.SimplePipeline.iteratePipeline;
 
@@ -25,7 +25,7 @@ import java.util.List;
 import org.apache.uima.collection.CollectionReaderDescription;
 import org.apache.uima.jcas.JCas;
 
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.AnnotationObject;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
 
 /**
  * Provides functions to load annotations from JCas or a CollectionReaderDescription.

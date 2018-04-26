@@ -15,14 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.model;
+package de.tudarmstadt.ukp.inception.recommendation.api;
 
 import java.util.List;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.classificationtool.ClassificationTool;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.classificationtool.ClassificationToolFactory;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 
 public interface ClassificationToolRegistry
 {

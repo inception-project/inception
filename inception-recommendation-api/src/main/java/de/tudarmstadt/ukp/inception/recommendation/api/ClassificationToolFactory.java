@@ -15,10 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.imls.core.classificationtool;
+package de.tudarmstadt.ukp.inception.recommendation.api;
+
+import org.apache.wicket.markup.html.panel.EmptyPanel;
+import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 
 public interface ClassificationToolFactory<T>
 {
@@ -36,4 +41,24 @@ public interface ClassificationToolFactory<T>
         int aMaxPredictions);
 
     boolean accepts(AnnotationLayer aLayer, AnnotationFeature aFeature);
+    
+    /**
+     * Returns a Wicket component to configure the specific traits of this classifier. Note that
+     * every {@link ClassificationToolFactory} has to return a <b>different class</b> here. So it is
+     * not possible to simple return a Wicket {@link Panel} here, but it must be a subclass of
+     * {@link Panel} used exclusively by the current {@link ClassificationToolFactory}. If this is
+     * not done, then the traits editor in the UI will not be correctly updated when switching
+     * between feature types!
+     * 
+     * @param aId
+     *            a markup ID.
+     * @param aFeatureModel
+     *            a model holding the annotation feature for which the traits editor should be
+     *            created.
+     * @return the traits editor component .
+     */
+    default Panel createTraitsEditor(String aId, IModel<Recommender> aFeatureModel)
+    {
+        return new EmptyPanel(aId);
+    }
 }

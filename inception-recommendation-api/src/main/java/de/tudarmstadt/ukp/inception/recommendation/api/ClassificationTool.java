@@ -15,14 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.imls.core.classificationtool;
+package de.tudarmstadt.ukp.inception.recommendation.api;
 
 import org.apache.uima.jcas.JCas;
-
-import de.tudarmstadt.ukp.inception.recommendation.imls.conf.ClassifierConfiguration;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.classifier.Classifier;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.loader.AnnotationObjectLoader;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.trainer.Trainer;
 
 /**
  * The core class of the incremental machine learning suite. This class combines the parts needed

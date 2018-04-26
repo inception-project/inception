@@ -15,9 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.imls.core;
-
-import de.tudarmstadt.ukp.inception.recommendation.imls.conf.ClassifierConfiguration;
+package de.tudarmstadt.ukp.inception.recommendation.api;
 
 /**
  * Defines if an object can contain a ClassifierConfiguration.

@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.model;
+package de.tudarmstadt.ukp.inception.recommendation.service;
 
 import static org.apache.commons.lang3.Validate.notNull;
 
@@ -37,8 +37,10 @@ import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.classificationtool.ClassificationTool;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.classificationtool.ClassificationToolFactory;
+import de.tudarmstadt.ukp.inception.recommendation.api.ClassificationTool;
+import de.tudarmstadt.ukp.inception.recommendation.api.ClassificationToolFactory;
+import de.tudarmstadt.ukp.inception.recommendation.api.ClassificationToolRegistry;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 
 @Component
 public class ClassificationToolRegistryImpl

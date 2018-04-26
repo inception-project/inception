@@ -15,11 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.model;
+package de.tudarmstadt.ukp.inception.recommendation.api.model;
 
 import java.io.Serializable;
-
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.Offset;
 
 public class ExtendedId
     implements Serializable

@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.service;
+package de.tudarmstadt.ukp.inception.recommendation.api;
 
 import java.util.List;
 
@@ -24,7 +24,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.inception.recommendation.model.LearningRecord;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 
 
 public interface LearningRecordService {
