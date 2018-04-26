@@ -26,10 +26,10 @@ The currently supported external classifier is *neuralweb*. Set it up according 
 
 Create a new project. Add a new layer called `ArgLayer` to it. Make sure that it is a span layer. Activate `Allow multiple tokens` and `Allow crossing sentence boundaries`.
 
-image::external-recommender-layer-configuration.jpg[Layer configuration]
+image::external-recommender-layer-configuration.png[Layer configuration]
 
 Create a new feature for the layer you just created. It is called `ArgF` and its type is `Primitive:String`.
 
-image::external-recommender-feature-configuration.jpg[Feature configuration]
+image::external-recommender-feature-configuration.png[Feature configuration]
 
 Add the external recommender to the just created layer `ArgLayer` and set it to always active.
