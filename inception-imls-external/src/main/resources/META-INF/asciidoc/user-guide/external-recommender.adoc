@@ -1,0 +1,38 @@
+// Copyright 2018
+// Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+// Technische Universität Darmstadt
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+= {product-name} User Guide
+The {product-name} Team
+
+== External recommender
+
+This guide describes how to set up external recommenders.
+
+=== Setting up neuralweb
+
+The currently supported external classifier is *neuralweb*. Set it up according to its documentation and install a model. The easist way to do this is to rename the model to `arg_model.h5` and put it into `models/default`. Start the server with `python app.py`.
+
+=== Setting up INCEpTION
+
+Create a new project. Add a new layer called `ArgLayer` to it. Make sure that it is a span layer. Activate `Allow multiple tokens` and `Allow crossing sentence boundaries`.
+
+image::external-recommender-layer-configuration.jpg[Layer configuration]
+
+Create a new feature for the layer you just created. It is called `ArgF` and its type is `Primitive:String`.
+
+image::external-recommender-feature-configuration.jpg[Feature configuration]
+
+Add the external recommender to the just created layer `ArgLayer` and set it to always active.

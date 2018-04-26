@@ -108,3 +108,7 @@ include::{include-dir}webannotsv.adoc[]
 <<<
 
 include::{include-dir}troubleshooting.adoc[]
+
+<<<
+
+include::{include-dir}external-recommender.adoc[]
