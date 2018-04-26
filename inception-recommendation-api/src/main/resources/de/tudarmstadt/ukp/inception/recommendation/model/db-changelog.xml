@@ -91,11 +91,23 @@
     </addColumn>
   </changeSet>
 
-	<changeSet author="INCEpTION Team" id="20180301-recommendation-01">
-		<sql>update recommender set alwaysSelected = true where alwaysSelected is null</sql>
-		<addNotNullConstraint tableName="recommender"
-			columnName="alwaysSelected" columnDataType="BOOLEAN"
-		 />
-	</changeSet>
+  <changeSet author="INCEpTION Team" id="20180301-recommendation-01">
+    <sql>update recommender set alwaysSelected = true where alwaysSelected is null</sql>
+    <addNotNullConstraint tableName="recommender"
+      columnName="alwaysSelected" columnDataType="BOOLEAN"
+     />
+  </changeSet>
 
+  <changeSet author="INCEpTION Team" id="20180426-recommendation-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="recommender" columnName="traits"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="recommender">
+      <column name="traits" type="LONGTEXT">
+        <constraints nullable="true" />
+      </column>
+    </addColumn>
+  </changeSet>  
 </databaseChangeLog>

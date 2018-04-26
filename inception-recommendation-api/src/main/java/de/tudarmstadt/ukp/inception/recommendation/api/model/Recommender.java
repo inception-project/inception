@@ -19,10 +19,12 @@ package de.tudarmstadt.ukp.inception.recommendation.api.model;
 
 import java.io.Serializable;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
@@ -66,6 +68,10 @@ public class Recommender
     private boolean alwaysSelected;
     
     private boolean enabled = true;
+    
+    @Lob
+    @Column(length = 64000)
+    private String traits;
     
     public Recommender()
     {
@@ -165,6 +171,16 @@ public class Recommender
         enabled = aEnabled;
     }
 
+    public String getTraits()
+    {
+        return traits;
+    }
+
+    public void setTraits(String aTraits)
+    {
+        traits = aTraits;
+    }
+    
     @Override
     public int hashCode()
     {
