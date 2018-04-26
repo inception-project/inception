@@ -17,10 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.adapter;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -46,6 +47,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.inception.recommendation.RecommendationEditorExtension;
 import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.AnnotationObject;
 import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.Offset;
+import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.TokenObject;
 import de.tudarmstadt.ukp.inception.recommendation.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.model.LearningRecordUserAction;
 import de.tudarmstadt.ukp.inception.recommendation.model.Predictions;
@@ -103,11 +105,8 @@ public class RecommendationSpanRenderer
                         windowBegin, windowEnd, aJcas);
         String color = aColoringStrategy.getColor(null, null);
         String bratTypeName = TypeUtil.getUiTypeName(typeAdapter);
-        
-        List<VSpan> vspansWithoutRecommendations = new LinkedList<>();
-        for (VSpan v: vdoc.spans(layer.getId())) {
-            vspansWithoutRecommendations.add(v);
-        }
+
+        List<VSpan> vspansWithoutRecommendations = new ArrayList<>(vdoc.spans(layer.getId()));
         
         List<LearningRecord> recordedAnnotations = learningRecordService
                 .getAllRecordsByDocumentAndUserAndLayer(aState.getDocument(),
@@ -120,7 +119,8 @@ public class RecommendationSpanRenderer
             // show only the confidence of the highest one
             for (AnnotationObject ao: token) {          
                 if (ao.getAnnotation() != null) {       
-                    if (isOverlapping(vspansWithoutRecommendations, ao.getOffset(), windowBegin)) {
+                    if (isOverlapping(vspansWithoutRecommendations, ao.getOffset(), windowBegin,
+                        ao.getFeature())) {
                         break;
                     }
                     
@@ -147,7 +147,6 @@ public class RecommendationSpanRenderer
                 }
             }
             
-            
             // Determine the maximum confidence for per Label
             Map<String, Double> maxConfidencePerLabel = new HashMap<>();
             for (String label : labelMap.keySet()) {
@@ -164,28 +163,33 @@ public class RecommendationSpanRenderer
             List<String> filtered = maxConfidencePerLabel.entrySet().stream()
                     .sorted((e1, e2) -> Double.compare(e2.getValue(), e1.getValue()))
                     .limit(recommendationService.getMaxSuggestions(aState.getUser()))
-                    .map(e -> e.getKey()).collect(Collectors.toList());
+                    .map(Entry::getKey).collect(Collectors.toList());
 
-            // Render annotations
+            // Render annotations for each label
             for (String label : labelMap.keySet()) {
                 if (!filtered.contains(label)) {
                     continue;
                 }
 
-                Map<Long, AnnotationObject> confidencePerClassifier = labelMap.get(label);
-                
                 // Create VID using the recommendation with the lowest recommendationId
-                AnnotationObject aPrediction = token.stream()
+                AnnotationObject prediction = token.stream()
                         .filter(p -> p.getAnnotation().equals(label))
-                        .max((p1, p2) -> Integer.compare(p1.getId(), p2.getId())).get();
+                        .max(Comparator.comparingInt(TokenObject::getId)).orElse(null);
+
+                if (prediction == null) {
+                    continue;
+                }
+
                 VID vid = new VID(RecommendationEditorExtension.BEAN_NAME, layer.getId(),
-                        (int) aPrediction.getRecommenderId(), aPrediction.getId(), VID.NONE,
+                        (int) prediction.getRecommenderId(), prediction.getId(), VID.NONE,
                         VID.NONE);
                 
                 boolean first = true;
+                Map<Long, AnnotationObject> confidencePerClassifier = labelMap.get(label);
                 for (Long recommenderId: confidencePerClassifier.keySet()) {
                     AnnotationObject ao = confidencePerClassifier.get(recommenderId);
 
+                    // Only necessary for creating the first
                     if (first) {
                         AnnotationFeature feature = aAnnotationService
                             .getFeature(ao.getFeature(), layer);
@@ -204,10 +208,16 @@ public class RecommendationSpanRenderer
                         first = false;
                     }
                     vdoc.add(new VComment(vid, VCommentType.INFO, ao.getClassifier()));
-                    vdoc.add(new VComment(vid, VCommentType.INFO,
-                            "Confidence: " + String.format("%.2f", ao.getConfidence())));
+                    if (ao.getConfidence() != -1) {
+                        vdoc.add(new VComment(vid, VCommentType.INFO,
+                            String.format("Confidence: %.2f", ao.getConfidence())));
+                    }
+                    if (ao.getDescription() != null && !ao.getDescription().isEmpty()) {
+                        vdoc.add(new VComment(vid, VCommentType.INFO,
+                            "Description: " + ao.getDescription()));
+                    }
                 }
-            }   
+            }
         }
     }
     
@@ -215,22 +225,28 @@ public class RecommendationSpanRenderer
      * Check if there is already an existing annotation overlapping the prediction
      * 
      */
-    public boolean isOverlapping (Collection<VSpan> vspans, Offset ao, int windowBegin) {
+    private boolean isOverlapping (Collection<VSpan> vspans, Offset recOffset, int windowBegin,
+        String feature) {
+
         for (VSpan v : vspans) {
             for (VRange o : v.getOffsets()) {
-                if ((o.getBegin() <= ao.getBeginCharacter() - windowBegin)
-                        && (o.getEnd() >= ao.getEndCharacter() - windowBegin)
+                if ((o.getBegin() <= recOffset.getBeginCharacter() - windowBegin)
+                        && (o.getEnd() >= recOffset.getEndCharacter() - windowBegin)
                         
-                    || (o.getBegin() >= ao.getBeginCharacter() - windowBegin)
-                        && (o.getEnd() <= ao.getEndCharacter() - windowBegin)
+                    || (o.getBegin() >= recOffset.getBeginCharacter() - windowBegin)
+                        && (o.getEnd() <= recOffset.getEndCharacter() - windowBegin)
                         
-                    || (o.getBegin() >= ao.getBeginCharacter() - windowBegin)
-                        && (o.getEnd() >= ao.getEndCharacter() - windowBegin) 
-                        && (o.getBegin() < ao.getEndCharacter() - windowBegin)
+                    || (o.getBegin() >= recOffset.getBeginCharacter() - windowBegin)
+                        && (o.getEnd() >= recOffset.getEndCharacter() - windowBegin)
+                        && (o.getBegin() < recOffset.getEndCharacter() - windowBegin)
                         
-                    || (o.getBegin() <= ao.getBeginCharacter() - windowBegin)
-                        && (o.getEnd() <= ao.getEndCharacter() - windowBegin)
-                        && (o.getEnd() > ao.getBeginCharacter() - windowBegin)) {
+                    || (o.getBegin() <= recOffset.getBeginCharacter() - windowBegin)
+                        && (o.getEnd() <= recOffset.getEndCharacter() - windowBegin)
+                        && (o.getEnd() > recOffset.getBeginCharacter() - windowBegin)) {
+                    if (v.getFeatures().get(feature) == null || v.getFeatures().get(feature)
+                        .isEmpty()) {
+                        continue;
+                    }
                     return true;
                 }
             }
@@ -238,7 +254,7 @@ public class RecommendationSpanRenderer
         return false;
     }
     
-    public boolean isRejected(List<LearningRecord> recordedRecommendations, AnnotationObject ao)
+    private boolean isRejected(List<LearningRecord> recordedRecommendations, AnnotationObject ao)
     {
         for (LearningRecord record : recordedRecommendations) {
             if (record.getOffsetCharacterBegin() == ao.getOffset().getBeginCharacter()
