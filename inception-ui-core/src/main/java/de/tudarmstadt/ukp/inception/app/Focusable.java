@@ -15,16 +15,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.ui.kb.project.wizard;
+package de.tudarmstadt.ukp.inception.app;
 
-import org.apache.wicket.extensions.wizard.AjaxWizardButtonBar;
-import org.apache.wicket.extensions.wizard.Wizard;
+import org.apache.wicket.Component;
 
-public class BootstrapWizardButtonBar extends AjaxWizardButtonBar {
+/**
+ * Interface used to indicate which child component to focus initially in a form holding multiple
+ * child components.
+ *
+ */
+public interface Focusable {
 
-    private static final long serialVersionUID = 7136194479524182883L;
-
-    public BootstrapWizardButtonBar(String id, Wizard wizard) {
-        super(id, wizard);
-    }
+    /**
+     * Returns the component which should receive the focus once this {@code Focusable} is rendered
+     * initially.
+     * 
+     * @return the component to focus once this {@code Focusable} is rendered
+     */
+    public Component getFocusComponent();
 }
