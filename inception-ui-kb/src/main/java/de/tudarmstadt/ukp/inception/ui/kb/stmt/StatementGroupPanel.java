@@ -31,6 +31,7 @@ import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.Fragment;
+import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.markup.repeater.RefreshingView;
 import org.apache.wicket.markup.repeater.ReuseIfModelsEqualStrategy;
@@ -41,6 +42,7 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
@@ -48,14 +50,12 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
-import de.tudarmstadt.ukp.inception.ui.kb.EventListeningPanel;
-import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxPropertySelectionEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxStatementChangedEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxStatementGroupChangedEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.util.WriteProtectionBehavior;
 
-public class StatementGroupPanel extends EventListeningPanel {
+public class StatementGroupPanel extends Panel {
 
     private static final long serialVersionUID = 2431747012293487976L;
     
@@ -103,8 +103,7 @@ public class StatementGroupPanel extends EventListeningPanel {
     
     private void actionCancelNewProperty(AjaxRequestTarget target) {
         StatementGroupBean bean = groupModel.getObject();
-        AjaxEvent event = new AjaxStatementGroupChangedEvent(target, bean, true);
-        send(getPage(), Broadcast.BREADTH, event);
+        send(getPage(), Broadcast.BREADTH, new AjaxStatementGroupChangedEvent(target, bean, true));
     }    
     
     private class NewStatementGroupFragment extends Fragment implements Focusable {
@@ -218,7 +217,6 @@ public class StatementGroupPanel extends EventListeningPanel {
             form.add(addLink);
             add(form);
 
-            eventHandler.addCallback(AjaxStatementChangedEvent.class, this::actionStatementChanged);
         }
         
         private void actionPropertyLinkClicked(AjaxRequestTarget target) {
@@ -226,8 +224,8 @@ public class StatementGroupPanel extends EventListeningPanel {
                     new AjaxPropertySelectionEvent(target, groupModel.getObject().getProperty()));
         }
         
-        private void actionStatementChanged(AjaxRequestTarget target,
-                AjaxStatementChangedEvent event) {
+        @OnEvent
+        public void actionStatementChanged(AjaxStatementChangedEvent event) {
             // event is not relevant if the statement in the event has a different property than the
             // property of this statement group
             boolean isEventForThisStatementGroup = event.getStatement()
@@ -244,11 +242,11 @@ public class StatementGroupPanel extends EventListeningPanel {
 
                 if (bean.getStatements().isEmpty()) {
                     send(getPage(), Broadcast.BREADTH,
-                            new AjaxStatementGroupChangedEvent(target, bean, true));
+                            new AjaxStatementGroupChangedEvent(event.getTarget(), bean, true));
                 } else {
                     // refresh the list wrapper (only necessary if at least one statement remains,
                     // otherwise the whole statement group is removed anyway)
-                    target.add(statementListWrapper);
+                    event.getTarget().add(statementListWrapper);
                 }
             }
         }

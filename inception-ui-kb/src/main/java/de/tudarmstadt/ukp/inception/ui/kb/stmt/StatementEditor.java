@@ -30,6 +30,7 @@ import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.TextArea;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.panel.Fragment;
+import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.markup.repeater.RefreshingView;
 import org.apache.wicket.markup.repeater.ReuseIfModelsEqualStrategy;
@@ -40,6 +41,7 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
@@ -49,14 +51,13 @@ import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBQualifier;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
-import de.tudarmstadt.ukp.inception.ui.kb.EventListeningPanel;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxQualifierChangedEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxStatementChangedEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.util.WriteProtectionBehavior;
 
 
 
-public class StatementEditor extends EventListeningPanel
+public class StatementEditor extends Panel
 {
 
     private static final long serialVersionUID = 7643837763550205L;
@@ -236,12 +237,10 @@ public class StatementEditor extends EventListeningPanel
             qualifierListWrapper.setOutputMarkupId(true);
             qualifierListWrapper.add(qualifierList);
             add(qualifierListWrapper);
-
-            eventHandler.addCallback(AjaxQualifierChangedEvent.class, this::actionQualifierChanged);
         }
 
-        private void actionQualifierChanged(AjaxRequestTarget target,
-            AjaxQualifierChangedEvent event)
+        @OnEvent
+        public void actionQualifierChanged(AjaxQualifierChangedEvent event)
         {
             boolean isEventForThisStatement = event.getQualifier().getKbStatement()
                 .equals(statement.getObject());
@@ -251,7 +250,7 @@ public class StatementEditor extends EventListeningPanel
                         .remove(event.getQualifier());
                 }
                 statement.setObject(event.getQualifier().getKbStatement());
-                target.add(qualifierListWrapper);
+                event.getTarget().add(qualifierListWrapper);
             }
         }
 

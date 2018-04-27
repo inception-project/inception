@@ -29,6 +29,7 @@ import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.panel.Fragment;
+import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.ResourceModel;
@@ -58,7 +59,7 @@ import de.tudarmstadt.ukp.inception.ui.kb.util.WriteProtectionBehavior;
  *            the type of {@link KBObject} this {@code AbstractInfoPanel} specializes on
  *            (properties, concepts, instances, ...)
  */
-public abstract class AbstractInfoPanel<T extends KBObject> extends EventListeningPanel {
+public abstract class AbstractInfoPanel<T extends KBObject> extends Panel {
 
     private static final long serialVersionUID = -1413622323011843523L;
 
