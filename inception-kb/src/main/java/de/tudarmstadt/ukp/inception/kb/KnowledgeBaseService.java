@@ -30,7 +30,6 @@ import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.eclipse.rdf4j.model.vocabulary.XMLSchema;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.repository.config.RepositoryImplConfig;
-import org.eclipse.rdf4j.repository.manager.RepositoryInfo;
 import org.eclipse.rdf4j.rio.RDFFormat;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -96,9 +95,6 @@ public interface KnowledgeBaseService
      * @return all enabled KBs 
      */
     List<KnowledgeBase> getEnabledKnowledgeBases(Project aProject);
-    
-    // TODO refactor so that rdf4j dependencies are not leaked here anymore
-    RepositoryInfo getKnowledgeBaseInfo(KnowledgeBase kb);
 
     RepositoryImplConfig getNativeConfig();
 

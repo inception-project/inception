@@ -57,7 +57,6 @@ import org.eclipse.rdf4j.repository.RepositoryException;
 import org.eclipse.rdf4j.repository.RepositoryResult;
 import org.eclipse.rdf4j.repository.config.RepositoryConfig;
 import org.eclipse.rdf4j.repository.config.RepositoryImplConfig;
-import org.eclipse.rdf4j.repository.manager.RepositoryInfo;
 import org.eclipse.rdf4j.repository.manager.RepositoryManager;
 import org.eclipse.rdf4j.repository.manager.RepositoryProvider;
 import org.eclipse.rdf4j.repository.sail.config.SailRepositoryConfig;
@@ -205,13 +204,6 @@ public class KnowledgeBaseServiceImpl
         repoManager.removeRepository(kb.getRepositoryId());
 
         entityManager.remove(entityManager.contains(kb) ? kb : entityManager.merge(kb));
-    }
-
-    @Override
-    public RepositoryInfo getKnowledgeBaseInfo(KnowledgeBase kb)
-    {
-        assertRegistration(kb);
-        return repoManager.getRepositoryInfo(kb.getRepositoryId());
     }
 
     @Override
