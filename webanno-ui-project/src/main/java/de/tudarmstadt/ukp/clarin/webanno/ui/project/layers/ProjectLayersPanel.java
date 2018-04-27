@@ -1060,14 +1060,21 @@ public class ProjectLayersPanel
                     setNullValid(false);
                     setChoiceRenderer(new ChoiceRenderer<>("uiName"));
                     setModel(model);
-                    setChoices(LambdaModel.of(() -> featureSupportRegistry
-                            .getAllTypes(layerDetailForm.getModelObject())));
                 }
 
                 @Override
                 protected void onConfigure()
                 {
-                    setEnabled(isNull(FeatureDetailForm.this.getModelObject().getId()));
+                    if (isNull(FeatureDetailForm.this.getModelObject().getId())) {
+                        setEnabled(true);
+                        setChoices(LambdaModel.of(() -> featureSupportRegistry
+                                .getUserSelectableTypes(layerDetailForm.getModelObject())));
+                    }
+                    else {
+                        setEnabled(false);
+                        setChoices(LambdaModel.of(() -> featureSupportRegistry
+                                .getAllTypes(layerDetailForm.getModelObject())));
+                    }
                 }
                 
                 @Override
