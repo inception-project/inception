@@ -45,14 +45,14 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.inception.recommendation.RecommendationEditorExtension;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.AnnotationObject;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.Offset;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.TokenObject;
-import de.tudarmstadt.ukp.inception.recommendation.model.LearningRecord;
-import de.tudarmstadt.ukp.inception.recommendation.model.LearningRecordUserAction;
-import de.tudarmstadt.ukp.inception.recommendation.model.Predictions;
-import de.tudarmstadt.ukp.inception.recommendation.service.LearningRecordService;
-import de.tudarmstadt.ukp.inception.recommendation.service.RecommendationService;
+import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
+import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.TokenObject;
 
 /**
  * Render spans.

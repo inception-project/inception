@@ -23,8 +23,8 @@ import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.AnnotationObject;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.loader.AnnotationObjectLoader;
+import de.tudarmstadt.ukp.inception.recommendation.api.AnnotationObjectLoader;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
 import de.tudarmstadt.ukp.inception.recommendation.imls.util.CasUtil;
 
 public class NerAnnotationObjectLoader implements AnnotationObjectLoader

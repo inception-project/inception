@@ -31,8 +31,9 @@ import org.springframework.transaction.annotation.Transactional;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.inception.recommendation.model.LearningRecord;
-import de.tudarmstadt.ukp.inception.recommendation.model.LearningRecordUserAction;
+import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
 
 @Component(LearningRecordService.SERVICE_NAME)
 public class LearningRecordServiceImpl implements LearningRecordService, InitializingBean {

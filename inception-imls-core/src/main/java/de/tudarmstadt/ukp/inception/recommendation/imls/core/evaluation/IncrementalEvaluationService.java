@@ -25,9 +25,9 @@ import org.apache.uima.jcas.JCas;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.tudarmstadt.ukp.inception.recommendation.api.ClassificationTool;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
 import de.tudarmstadt.ukp.inception.recommendation.imls.conf.EvaluationConfiguration;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.classificationtool.ClassificationTool;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.AnnotationObject;
 import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.ExtendedResult;
 

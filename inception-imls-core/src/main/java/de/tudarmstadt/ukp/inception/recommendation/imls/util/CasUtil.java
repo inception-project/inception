@@ -37,9 +37,9 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.AnnotationObject;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.Offset;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.TokenObject;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.TokenObject;
 
 /**
  * A helper class to load AnnotationObjects from a JCas object.

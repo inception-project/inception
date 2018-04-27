@@ -21,7 +21,7 @@ package de.tudarmstadt.ukp.inception.recommendation.event;
 import org.springframework.context.ApplicationEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.inception.recommendation.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 
 public class RecommenderDeletedEvent
     extends ApplicationEvent

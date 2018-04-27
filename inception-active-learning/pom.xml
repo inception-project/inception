@@ -58,7 +58,7 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-imls-core</artifactId>
+      <artifactId>inception-recommendation-api</artifactId>
     </dependency>
 
     <dependency>

@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.inception.active.learning.sidebar;
 
 import java.io.Serializable;
 
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.AnnotationObject;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
 
 public class RecommendationDifference implements Serializable
 {
