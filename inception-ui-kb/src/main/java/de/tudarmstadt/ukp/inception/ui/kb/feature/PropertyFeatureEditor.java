@@ -171,7 +171,10 @@ public class PropertyFeatureEditor
         KBHandle subject = getHandle(FactLinkingConstants.SUBJECT_ROLE);
         KBHandle object = getHandle(FactLinkingConstants.OBJECT_ROLE);
         KBHandle predicate = (KBHandle) getModelObject().value;
-        if (subject != null && object != null && predicate != null) {
+        if (subject == null || object == null || predicate == null) {
+            existStatements = false;
+        }
+        else {
             KBStatement mockStatement = new KBStatement(subject, predicate);
             mockStatement.setValue(object.getUiLabel());
             KnowledgeBase kb = factService.getKBByKBHandle(predicate, project);
@@ -192,20 +195,21 @@ public class PropertyFeatureEditor
         AnnotationFeature annotationFeature = annotationService.getFeature(featureName, factLayer);
         List<LinkWithRoleModel> featureValue = (List<LinkWithRoleModel>) aState
             .getFeatureState(annotationFeature).value;
-        int targetAddress = featureValue.get(0).targetAddr;
-        if (targetAddress != -1) {
-            JCas jCas = null;
-            try {
-                jCas = actionHandler.getEditorCas();
+        if (!featureValue.isEmpty()) {
+            int targetAddress = featureValue.get(0).targetAddr;
+            if (targetAddress != -1) {
+                JCas jCas = null;
+                try {
+                    jCas = actionHandler.getEditorCas();
+                }
+                catch (Exception e) {
+                    LOG.error("Error: " + e.getMessage(), e);
+                }
+                kbHandle = factService
+                    .getKBHandleFromCasByAddr(jCas, targetAddress, aState.getProject());
             }
-            catch (Exception e) {
-                LOG.error("Error: " + e.getMessage(), e);
-            }
-            kbHandle = factService
-                .getKBHandleFromCasByAddr(jCas, targetAddress, aState.getProject());
         }
         return kbHandle;
     }
-
 }
 

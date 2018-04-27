@@ -349,8 +349,6 @@ public class QualifierFeatureEditor
             LinkWithRoleModel m = new LinkWithRoleModel();
             m.role = selectedRole.getUiLabel();
             links.add(m);
-            state.setArmedSlot(QualifierFeatureEditor.this.getModelObject().feature,
-                links.size() - 1);
 
             // Need to re-render the whole form because a slot in another
             // link editor might get unarmed
