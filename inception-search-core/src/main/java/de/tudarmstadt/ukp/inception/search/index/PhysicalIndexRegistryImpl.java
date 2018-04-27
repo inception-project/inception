@@ -42,7 +42,8 @@ public class PhysicalIndexRegistryImpl
 
     private List<PhysicalIndexFactory> extensions;
 
-    public PhysicalIndexRegistryImpl(@Lazy @Autowired(required = false) List<PhysicalIndexFactory> aExtensions)
+    public PhysicalIndexRegistryImpl(
+            @Lazy @Autowired(required = false) List<PhysicalIndexFactory> aExtensions)
     {
         extensionsProxy = aExtensions;
     }
