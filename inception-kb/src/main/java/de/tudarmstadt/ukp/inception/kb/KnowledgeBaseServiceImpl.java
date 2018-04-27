@@ -108,7 +108,7 @@ public class KnowledgeBaseServiceImpl
         String url = Paths.get(dataDir.getAbsolutePath(), "kb").toUri().toString();
         repoManager = RepositoryProvider.getRepositoryManager(url);
         log.info("Knowledge base repository path: " + url);
-        implicitNamespaces = new HashSet<>(Arrays.asList(IMPLICIT_NAMESPACES));
+        implicitNamespaces = new HashSet<>(Arrays.asList(IriConstants.IMPLICIT_NAMESPACES));
     }
 
     public KnowledgeBaseServiceImpl(
@@ -582,7 +582,7 @@ public class KnowledgeBaseServiceImpl
     private String generateIdentifier(RepositoryConnection conn, KnowledgeBase kb)
     {
         ValueFactory vf = conn.getValueFactory();
-        return KnowledgeBaseService.INCEPTION_NAMESPACE + vf.createBNode().getID();
+        return IriConstants.INCEPTION_NAMESPACE + vf.createBNode().getID();
     }
 
     @Override

@@ -24,10 +24,6 @@ import java.util.List;
 import java.util.Optional;
 
 import org.eclipse.rdf4j.model.IRI;
-import org.eclipse.rdf4j.model.vocabulary.OWL;
-import org.eclipse.rdf4j.model.vocabulary.RDF;
-import org.eclipse.rdf4j.model.vocabulary.RDFS;
-import org.eclipse.rdf4j.model.vocabulary.XMLSchema;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.repository.config.RepositoryImplConfig;
 import org.eclipse.rdf4j.rio.RDFFormat;
@@ -43,11 +39,6 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 public interface KnowledgeBaseService
 {
-    String INCEPTION_SCHEMA_NAMESPACE = "http://www.ukp.informatik.tu-darmstadt.de/inception/schema-1.0#";
-    String INCEPTION_NAMESPACE = "http://www.ukp.informatik.tu-darmstadt.de/inception/1.0#";
-    String[] IMPLICIT_NAMESPACES = { RDF.NAMESPACE, RDFS.NAMESPACE, XMLSchema.NAMESPACE,
-            OWL.NAMESPACE, INCEPTION_SCHEMA_NAMESPACE };
-
     String SERVICE_NAME = "knowledgeBaseService";
 
     void importData(KnowledgeBase kb, String aFilename, InputStream aIS) throws IOException;

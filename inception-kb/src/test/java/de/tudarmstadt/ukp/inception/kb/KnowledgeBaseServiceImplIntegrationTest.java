@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.kb;
 
-import static de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService.IMPLICIT_NAMESPACES;
-import static de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService.INCEPTION_NAMESPACE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -481,7 +479,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
             .element(0)
             .hasFieldOrPropertyWithValue("identifier", handle.getIdentifier())
             .hasFieldOrPropertyWithValue("name", handle.getName())
-            .matches(h -> h.getIdentifier().startsWith(INCEPTION_NAMESPACE));
+            .matches(h -> h.getIdentifier().startsWith(IriConstants.INCEPTION_NAMESPACE));
     }
 
     @Test
@@ -705,7 +703,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
             .element(0)
             .hasFieldOrPropertyWithValue("identifier", handle.getIdentifier())
             .hasFieldOrPropertyWithValue("name", handle.getName())
-            .matches(h -> h.getIdentifier().startsWith(INCEPTION_NAMESPACE));
+            .matches(h -> h.getIdentifier().startsWith(IriConstants.INCEPTION_NAMESPACE));
     }
 
     @Test
@@ -915,7 +913,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
             .element(0)
             .hasFieldOrPropertyWithValue("identifier", instanceHandle.getIdentifier())
             .hasFieldOrPropertyWithValue("name", instanceHandle.getName())
-            .matches(h -> h.getIdentifier().startsWith(INCEPTION_NAMESPACE));
+            .matches(h -> h.getIdentifier().startsWith(IriConstants.INCEPTION_NAMESPACE));
     }
 
     @Test
@@ -1211,7 +1209,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     }
 
     private boolean hasImplicitNamespace(KBHandle handle) {
-        return Arrays.stream(IMPLICIT_NAMESPACES)
+        return Arrays.stream(IriConstants.IMPLICIT_NAMESPACES)
             .anyMatch(ns -> handle.getIdentifier().startsWith(ns));
     }
 

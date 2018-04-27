@@ -37,7 +37,7 @@ import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.repository.RepositoryException;
 import org.eclipse.rdf4j.repository.RepositoryResult;
 
-import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
+import de.tudarmstadt.ukp.inception.kb.IriConstants;
 
 public class RdfUtils
 {
@@ -124,7 +124,7 @@ public class RdfUtils
     }
     
     public static boolean isFromImplicitNamespace(KBHandle handle) {
-        return Arrays.stream(KnowledgeBaseService.IMPLICIT_NAMESPACES)
+        return Arrays.stream(IriConstants.IMPLICIT_NAMESPACES)
                 .anyMatch(ns -> handle.getIdentifier().startsWith(ns));
     }
 }
