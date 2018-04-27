@@ -281,8 +281,8 @@ public class RecommenderEditorPanel
 
     private void actionSave(AjaxRequestTarget aTarget, Form<Recommender> aForm) {
         Recommender recommender = aForm.getModelObject();
-        recommender.setName(String.format(Locale.US, "[%s] %s (%.2f)",
-                recommender.getLayer().getUiName(),
+        recommender.setName(String.format(Locale.US, "[%s@%s] %s (%.2f)",
+                recommender.getFeature(), recommender.getLayer().getUiName(),
                 StringUtils.substringAfterLast(recommender.getTool(), "."),
                 recommender.getThreshold()));
         recommender.setProject(recommender.getLayer().getProject());
