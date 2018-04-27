@@ -551,6 +551,8 @@ public class QualifierFeatureEditor
         return selectedKBHandleItem;
     }
 
+    //TODO: (issue #122 )this method is similar to the method listInstances in ConceptFeatureEditor.
+    //It should be refactored.
     private List<KBHandle> listInstances(AnnotationActionHandler aHandler,
         String aTypedString, AnnotationFeature linkedAnnotationFeature, String roleLabe, int
         roleAddr)
@@ -630,6 +632,8 @@ public class QualifierFeatureEditor
         return handles;
     }
 
+    //TODO: (issue #122 )this method is similar to the method listInstances in ConceptFeatureEditor.
+    //It should be refactored.
     private List<KBHandle> listLinkingInstances(KnowledgeBase kb, JCasProvider aJCas,
         String aTypedString, String roleLabel, int roleAddr)
     {

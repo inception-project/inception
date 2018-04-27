@@ -351,6 +351,8 @@ public class SubjectObjectFeatureEditor
         return selectedKBHandleItem;
     }
 
+    //TODO: (issue #122 )this method is similar to the method listInstances in ConceptFeatureEditor.
+    //It should be refactored.
     private List<KBHandle> listInstances(AnnotationActionHandler aHandler,
         String aTypedString)
     {
@@ -429,6 +431,8 @@ public class SubjectObjectFeatureEditor
         return handles;
     }
 
+    //TODO: (issue #122 )this method is similar to the method listInstances in ConceptFeatureEditor.
+    //It should be refactored.
     private List<KBHandle> listLinkingInstances(KnowledgeBase kb, JCasProvider aJCas,
         String aTypedString)
     {
