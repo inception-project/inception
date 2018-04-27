@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.search;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
@@ -66,8 +67,16 @@ public class SearchServiceImpl
     @Value(value = "${repository.path}")
     private String dir;
 
+    @Autowired
     public SearchServiceImpl()
     {
+        indexes = new HashMap<>();
+    }
+
+    public SearchServiceImpl(
+            @org.springframework.beans.factory.annotation.Value("${data.path}") File aDir)
+    {
+        dir = aDir.getAbsolutePath();
         indexes = new HashMap<>();
     }
 
