@@ -17,6 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.log.model;
 
+import java.util.Collection;
+import java.util.stream.Collectors;
+
+import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -37,8 +41,8 @@ public class FeatureChangeDetails
     public FeatureChangeDetails(AnnotationFS aFS, Object aNew, Object aOld)
     {
         ann = new AnnotationDetails(aFS);
-        value = aNew;
-        previousValue = aOld;
+        setValue(aNew);
+        setPreviousValue(aOld);
     }
 
     public AnnotationDetails getAnnotation()
@@ -58,7 +62,7 @@ public class FeatureChangeDetails
 
     public void setValue(Object aValue)
     {
-        value = aValue;
+        value = sanitize(aValue);
     }
 
     public Object getPreviousValue()
@@ -68,6 +72,21 @@ public class FeatureChangeDetails
 
     public void setPreviousValue(Object aPreviousValue)
     {
-        previousValue = aPreviousValue;
+        previousValue = sanitize(aPreviousValue);
+    }
+    
+    private Object sanitize(Object aObject)
+    {
+        if (aObject instanceof Collection) {
+            Collection<?> values = (Collection) aObject;
+            return values.stream().map(it -> sanitize(it)).collect(Collectors.toList());
+        }
+        if (aObject instanceof FeatureStructure) {
+            // Not an optimal solution but avoids stack overflow errors at the moment
+            return aObject.toString();
+        }
+        else {
+            return aObject;
+        }
     }
 }
