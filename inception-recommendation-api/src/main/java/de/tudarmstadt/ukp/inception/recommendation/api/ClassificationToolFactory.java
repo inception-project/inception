@@ -25,7 +25,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 
-public interface ClassificationToolFactory<T>
+public interface ClassificationToolFactory<C, T>
 {
     /**
      * Get the ID of the classification tool.
@@ -37,7 +37,7 @@ public interface ClassificationToolFactory<T>
      */
     String getName();
     
-    ClassificationTool<T> createTool(long aRecommenderId, String aFeature, AnnotationLayer aLayer,
+    ClassificationTool<C> createTool(long aRecommenderId, String aFeature, AnnotationLayer aLayer,
         int aMaxPredictions);
 
     boolean accepts(AnnotationLayer aLayer, AnnotationFeature aFeature);

@@ -60,12 +60,13 @@ public class LearningRecord
     private int offsetCharacterEnd;
     private String tokenText;
     private String annotation;
-    @Type(type = "de.tudarmstadt.ukp.inception.recommendation.model" +
-        ".LearningRecordUserActionType")
+    
+    @Type(type = "de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserActionType")
     private LearningRecordUserAction userAction;
+    
     private String user;
-    @Type(type = "de.tudarmstadt.ukp.inception.recommendation.model" +
-        ".LearningRecordChangeLocationType")
+    
+    @Type(type = "de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocationType")
     private LearningRecordChangeLocation changeLocation;
 
     public Long getId() {

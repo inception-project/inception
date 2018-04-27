@@ -26,7 +26,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.ClassificationToolFactory
 
 @Component
 public class DL4JPosClassificationToolFactory
-    implements ClassificationToolFactory<DL4JConfigurationParameters>
+    implements ClassificationToolFactory<DL4JConfigurationParameters, Void>
 {
     // This is a string literal so we can rename/refactor the class without it changing its ID
     // and without the database starting to refer to non-existing recommendation tools.

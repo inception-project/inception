@@ -36,7 +36,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.ClassificationToolFactory
 
 @Component
 public class NamedEntityLinkerClassificationToolFactory
-    implements ClassificationToolFactory<Object>
+    implements ClassificationToolFactory<Object, Void>
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 

@@ -29,7 +29,7 @@ import opennlp.tools.util.TrainingParameters;
 
 @Component
 public class OpenNlpNerClassificationToolFactory
-    implements ClassificationToolFactory<TrainingParameters>
+    implements ClassificationToolFactory<TrainingParameters, Void>
 {
     private Logger log = LoggerFactory.getLogger(getClass());
 

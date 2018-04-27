@@ -29,7 +29,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.ClassificationToolFactory
 
 @Component
 public class StringMatchingPosClassificationToolFactory
-    implements ClassificationToolFactory<Object>
+    implements ClassificationToolFactory<Object, Void>
 {
     private Logger log = LoggerFactory.getLogger(getClass());
 

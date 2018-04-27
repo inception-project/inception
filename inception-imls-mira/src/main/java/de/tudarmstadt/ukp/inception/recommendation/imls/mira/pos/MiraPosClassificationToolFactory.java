@@ -26,7 +26,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.ClassificationToolFactory
 
 @Component
 public class MiraPosClassificationToolFactory
-    implements ClassificationToolFactory<MiraConfigurationParameters>
+    implements ClassificationToolFactory<MiraConfigurationParameters, Void>
 {
     // This is a string literal so we can rename/refactor the class without it changing its ID
     // and without the database starting to refer to non-existing recommendation tools.
