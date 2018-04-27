@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.external;
 
-import de.tudarmstadt.ukp.inception.recommendation.imls.conf.ClassifierConfiguration;
+import de.tudarmstadt.ukp.inception.recommendation.api.ClassifierConfiguration;
 
 public class BaseConfiguration
     extends ClassifierConfiguration<Object>

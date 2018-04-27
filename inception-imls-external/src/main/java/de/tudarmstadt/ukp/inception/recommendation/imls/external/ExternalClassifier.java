@@ -41,11 +41,10 @@ import org.apache.wicket.ajax.json.JSONObject;
 import org.xml.sax.SAXException;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.inception.recommendation.imls.conf.ClassifierConfiguration;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.classifier.Classifier;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.AnnotationObject;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.TokenObject;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.loader.custom.CustomAnnotationObjectLoader;
+import de.tudarmstadt.ukp.inception.recommendation.api.Classifier;
+import de.tudarmstadt.ukp.inception.recommendation.api.ClassifierConfiguration;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.TokenObject;
 
 public class ExternalClassifier
     extends Classifier<Object>

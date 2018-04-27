@@ -23,7 +23,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.AnnotationObject;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
 
 /**
  * Provides helper methods to transform the loaded annotated sentence into an interim stage object

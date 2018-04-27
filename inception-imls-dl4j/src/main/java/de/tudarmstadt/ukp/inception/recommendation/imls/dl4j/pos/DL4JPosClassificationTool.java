@@ -26,8 +26,8 @@ import org.slf4j.LoggerFactory;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.datasets.Dataset;
 import de.tudarmstadt.ukp.dkpro.core.api.datasets.DatasetFactory;
-import de.tudarmstadt.ukp.inception.recommendation.imls.conf.ClassifierConfiguration;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.classificationtool.ClassificationTool;
+import de.tudarmstadt.ukp.inception.recommendation.api.ClassificationTool;
+import de.tudarmstadt.ukp.inception.recommendation.api.ClassifierConfiguration;
 import de.tudarmstadt.ukp.inception.recommendation.imls.core.loader.pos.PosAnnotationObjectLoader;
 
 /**

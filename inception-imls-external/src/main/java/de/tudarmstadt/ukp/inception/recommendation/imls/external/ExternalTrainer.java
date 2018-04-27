@@ -20,9 +20,9 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.external;
 import java.util.HashMap;
 import java.util.List;
 
-import de.tudarmstadt.ukp.inception.recommendation.imls.conf.ClassifierConfiguration;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.AnnotationObject;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.trainer.Trainer;
+import de.tudarmstadt.ukp.inception.recommendation.api.ClassifierConfiguration;
+import de.tudarmstadt.ukp.inception.recommendation.api.Trainer;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
 
 public class ExternalTrainer
     extends Trainer<Object>

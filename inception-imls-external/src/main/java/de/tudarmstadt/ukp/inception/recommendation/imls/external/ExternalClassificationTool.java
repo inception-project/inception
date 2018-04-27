@@ -17,9 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.external;
 
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.classificationtool.ClassificationTool;
-
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.loader.custom.CustomAnnotationObjectLoader;
+import de.tudarmstadt.ukp.inception.recommendation.api.ClassificationTool;
 
 
 //TODO: Assign meaningful ids
