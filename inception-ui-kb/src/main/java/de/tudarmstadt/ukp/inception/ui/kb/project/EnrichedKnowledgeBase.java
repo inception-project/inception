@@ -22,7 +22,6 @@ import java.io.Serializable;
 import java.util.List;
 
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
-import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 
 /**
  * Utility class which combines relevant inputs in a single class (so that a single Wicket Model can
@@ -34,13 +33,7 @@ public class EnrichedKnowledgeBase implements Serializable {
 
     private KnowledgeBase kb;
     private String url;
-    private String classIri;
-    private String subclassIri;
-    private String typeIri;
-    private boolean enabled = true;
-    private Reification reification = Reification.NONE;
     private List<File> files;
-    private boolean supportConceptLinking;
 
     public KnowledgeBase getKb() {
         return kb;
@@ -64,64 +57,6 @@ public class EnrichedKnowledgeBase implements Serializable {
 
     public void setFiles(List<File> files) {
         this.files = files;
-    }
-
-    public String getClassIri()
-    {
-        return classIri;
-    }
-
-    public void setClassIri(String aClassUri)
-    {
-        classIri = aClassUri;
-    }
-
-    public String getSubclassIri()
-    {
-        return subclassIri;
-    }
-
-    public void setSubclassIri(String aSubclassUri)
-    {
-        subclassIri = aSubclassUri;
-    }
-
-    public String getTypeIri() {
-        return typeIri;
-    }
-
-    public void setTypeIri(String aTypeUri)
-    {
-        typeIri = aTypeUri;
-    }
-
-    public boolean isEnabled()
-    {
-        return enabled;
-    }
-
-    public void setEnabled(boolean isEnabled)
-    {
-        enabled = isEnabled;
-    }
-
-    public boolean isSupportConceptLinking()
-    {
-        return supportConceptLinking;
-    }
-
-    public void setSupportConceptLinking(boolean aSupportConceptLinking)
-    {
-        supportConceptLinking = aSupportConceptLinking;
-    }
-    public Reification getReification()
-    {
-        return reification;
-    }
-
-    public void setReification(Reification reificationStrategy)
-    {
-        reification = reificationStrategy;
     }
 
 }

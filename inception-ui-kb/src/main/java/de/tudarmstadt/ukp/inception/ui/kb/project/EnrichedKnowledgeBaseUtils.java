@@ -22,9 +22,11 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+import org.apache.wicket.validation.IValidatable;
+import org.apache.wicket.validation.IValidator;
+import org.apache.wicket.validation.ValidationError;
 import org.apache.wicket.validation.validator.UrlValidator;
-import org.eclipse.rdf4j.model.ValueFactory;
-import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.util.URIUtil;
 import org.eclipse.rdf4j.repository.RepositoryException;
 import org.eclipse.rdf4j.repository.config.RepositoryImplConfig;
 import org.eclipse.rdf4j.rio.RDFParseException;
@@ -35,6 +37,20 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 public class EnrichedKnowledgeBaseUtils
 {
+
+    public static final IValidator<String> IRI_VALIDATOR = new IValidator<String>()
+    {
+        private static final long serialVersionUID = 7022579868551171981L;
+
+        @Override
+        public void validate(IValidatable<String> validatable)
+        {
+            if (!URIUtil.isValidURIReference(validatable.getValue())) {
+                validatable.error(new ValidationError(this));
+            }
+        }
+    };
+
     public static final UrlValidator URL_VALIDATOR = new UrlValidator(
             new String[] { "http", "https" });
 
@@ -46,7 +62,6 @@ public class EnrichedKnowledgeBaseUtils
     public static final void registerEkb(EnrichedKnowledgeBase ekb, KnowledgeBaseService kbService)
             throws Exception {
         KnowledgeBase kb = ekb.getKb();
-        setKnowledgeBaseFields(ekb);
 
         // set up the repository config, then register the knowledge base
         RepositoryImplConfig cfg;
@@ -67,23 +82,11 @@ public class EnrichedKnowledgeBaseUtils
     
     public static final void updateEkb(EnrichedKnowledgeBase ekb, RepositoryImplConfig cfg,
             KnowledgeBaseService kbService) throws Exception {
-        setKnowledgeBaseFields(ekb);
         KnowledgeBase kb = ekb.getKb();
         kbService.updateKnowledgeBase(kb, cfg);
         if (kb.getType() == RepositoryType.LOCAL) {
             importFiles(ekb, kbService);
         }
-    }
-
-    private static final void setKnowledgeBaseFields(EnrichedKnowledgeBase ekb) {
-        KnowledgeBase kb = ekb.getKb();
-        ValueFactory factory = SimpleValueFactory.getInstance();
-        kb.setClassIri(factory.createIRI(ekb.getClassIri()));
-        kb.setSubclassIri(factory.createIRI(ekb.getSubclassIri()));
-        kb.setTypeIri(factory.createIRI(ekb.getTypeIri()));
-        kb.setEnabled(ekb.isEnabled());
-        kb.setSupportConceptLinking(ekb.isSupportConceptLinking());
-        kb.setReification(ekb.getReification());
     }
 
     private static final void importFiles(EnrichedKnowledgeBase ekb,

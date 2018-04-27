@@ -50,12 +50,12 @@ import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.validation.IValidator;
 import org.apache.wicket.validation.ValidationError;
 import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,6 +66,7 @@ import de.agilecoders.wicket.core.markup.html.bootstrap.form.radio.BootstrapRadi
 import de.agilecoders.wicket.core.markup.html.bootstrap.form.radio.EnumRadioChoiceRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.inception.app.bootstrap.BootstrapWizard;
 import de.tudarmstadt.ukp.inception.app.bootstrap.BootstrapWizardButtonBar;
 import de.tudarmstadt.ukp.inception.kb.IriConstants;
@@ -134,16 +135,16 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
 
             add(nameField("name", "kb.name"));
             add(repositoryTypeRadioButtons("type", "kb.type"));
-
-            add(selectReificationStrategy("reification", "reification"));
+            add(selectReificationStrategy("reification", "kb.reification"));
         }
 
         private DropDownChoice<Reification> selectReificationStrategy(String id, String property)
         {
             final List<Reification> reificationList = Arrays.asList(Reification.values());
 
-            DropDownChoice<Reification> reificationDropDownChoice = new
-                DropDownChoice<>(id, model.bind(property), reificationList);
+            DropDownChoice<Reification> reificationDropDownChoice = new DropDownChoice<>(id,
+                    model.bind(property), reificationList);
+            reificationDropDownChoice.setRequired(true);
             return reificationDropDownChoice;
         }
 
@@ -309,8 +310,7 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
                     item.add(link);
                 }
             });
-            add(new CheckBox("supportConceptLinking",
-                    new PropertyModel<Boolean>(model, "supportConceptLinking")));
+            add(new CheckBox("supportConceptLinking", model.bind("kb.supportConceptLinking")));
         }
         
         @Override
@@ -348,21 +348,24 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
             model = aModel;
             completed = true;
 
-            add(buildComboBox("classIri", model, IriConstants.CLASS_IRIS));
-            add(buildComboBox("subclassIri", model, IriConstants.SUBCLASS_IRIS));
-            add(buildComboBox("typeIri", model, IriConstants.TYPE_IRIS));
+            add(buildComboBox("classIri", model.bind("kb.classIri"), IriConstants.CLASS_IRIS));
+            add(buildComboBox("subclassIri", model.bind("kb.subclassIri"), IriConstants.SUBCLASS_IRIS));
+            add(buildComboBox("typeIri", model.bind("kb.typeIri"), IriConstants.TYPE_IRIS));
         }
 
-        private ComboBox<String> buildComboBox(String name,
-                                               CompoundPropertyModel<EnrichedKnowledgeBase> model,
-                                               List<IRI> iris) {
-            List<String> choices = iris.stream()
-                .map(IRI::stringValue)
-                .collect(Collectors.toList());
-            ComboBox<String> comboBox = new ComboBox<>(name, model.bind(name), choices);
+        private ComboBox<String> buildComboBox(String name, IModel<IRI> model, List<IRI> iris)
+        {
+            model.setObject(iris.get(0));
+
+            List<String> choices = iris.stream().map(IRI::stringValue).collect(Collectors.toList());
+
+            IModel<String> adapter = new LambdaModelAdapter<String>(
+                    () -> model.getObject().stringValue(),
+                    str -> model.setObject(SimpleValueFactory.getInstance().createIRI(str)));
+
+            ComboBox<String> comboBox = new ComboBox<String>(name, adapter, choices);
             comboBox.setRequired(true);
-            comboBox.add(EnrichedKnowledgeBaseUtils.URL_VALIDATOR);
-            comboBox.setDefaultModelObject(choices.get(0));
+            comboBox.add(EnrichedKnowledgeBaseUtils.IRI_VALIDATOR);
             return comboBox;
         }
 

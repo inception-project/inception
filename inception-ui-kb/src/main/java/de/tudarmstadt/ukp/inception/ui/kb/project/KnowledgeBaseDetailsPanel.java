@@ -46,6 +46,8 @@ import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.resource.IResourceStream;
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.repository.RepositoryException;
 import org.eclipse.rdf4j.repository.config.RepositoryImplConfig;
 import org.eclipse.rdf4j.repository.sparql.config.SPARQLRepositoryConfig;
@@ -61,6 +63,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxDownloadLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.TempFileResource;
 import de.tudarmstadt.ukp.inception.app.bootstrap.DisabledBootstrapCheckbox;
@@ -127,13 +130,6 @@ public class KnowledgeBaseDetailsPanel extends Panel {
             String url = ((SPARQLRepositoryConfig) cfg).getQueryEndpointUrl();
             ekb.setUrl(url);
         }
-        
-        ekb.setClassIri(kb.getClassIri().stringValue());
-        ekb.setSubclassIri(kb.getSubclassIri().stringValue());
-        ekb.setTypeIri(kb.getTypeIri().stringValue());
-        ekb.setEnabled(kb.isEnabled());
-        ekb.setReification(kb.getReification());
-        ekb.setSupportConceptLinking(kb.isSupportConceptLinking());
 
         // wrap the given knowledge base model, then set it as the default model
         ekbModel = new CompoundPropertyModel<>(Model.of(ekb));
@@ -189,7 +185,7 @@ public class KnowledgeBaseDetailsPanel extends Panel {
                 }));
 
         // add (disabled) reification strategy
-        form.add(new Label("reification"));
+        form.add(new Label("reification", ekbModel.bind("kb.reification")));
 
         // title/content
         title = new ViewModeTitle(TITLE_MARKUP_ID, ekbModel);
@@ -387,12 +383,12 @@ public class KnowledgeBaseDetailsPanel extends Panel {
         @Override
         protected void setUpCommonComponents(WebMarkupContainer wmc) {
             // Schema configuration
-            addDisabledUrlField(wmc, "classIri");
-            addDisabledUrlField(wmc, "subclassIri");
-            addDisabledUrlField(wmc, "typeIri");
-            wmc.add(new CheckBox("enabled")
+            addDisabledIriField(wmc, "classIri", model.bind("kb.classIri"));
+            addDisabledIriField(wmc, "subclassIri", model.bind("kb.subclassIri"));
+            addDisabledIriField(wmc, "typeIri", model.bind("kb.typeIri"));
+            wmc.add(new CheckBox("enabled", model.bind("kb.enabled"))
                 .add(LambdaBehavior.onConfigure(it -> it.setEnabled(false))));
-            wmc.add(new CheckBox("supportConceptLinking")
+            wmc.add(new CheckBox("supportConceptLinking", model.bind("kb.supportConceptLinking"))
                 .add(LambdaBehavior.onConfigure(it -> it.setEnabled(false))));
         }
 
@@ -433,12 +429,17 @@ public class KnowledgeBaseDetailsPanel extends Panel {
             addDisabledUrlField(wmc, "url");
         }
 
-        private void addDisabledUrlField(WebMarkupContainer wmc, String id)
+        private void addDisabledIriField(WebMarkupContainer wmc, String id, IModel<IRI> model)
         {
-            TextField<String> textField = new RequiredTextField<String>(id)
+            TextField<IRI> textField = new RequiredTextField<IRI>(id, model)
             {
+                private static final long serialVersionUID = 5886070596284072382L;
 
-                private static final long serialVersionUID = -7733443305863666055L;
+                @Override
+                protected String getModelValue()
+                {
+                    return getModelObject().stringValue();
+                }
 
                 @Override
                 protected void onConfigure()
@@ -446,6 +447,13 @@ public class KnowledgeBaseDetailsPanel extends Panel {
                     setEnabled(false);
                 }
             };
+            wmc.add(textField);
+        }
+
+        private void addDisabledUrlField(WebMarkupContainer wmc, String id)
+        {
+            TextField<String> textField = new RequiredTextField<String>(id);
+            textField.add(LambdaBehavior.onConfigure(tf -> tf.setEnabled(false)));
             wmc.add(textField);
         }
     }
@@ -471,11 +479,11 @@ public class KnowledgeBaseDetailsPanel extends Panel {
         @Override
         protected void setUpCommonComponents(WebMarkupContainer wmc) {
             // Schema configuration
-            addUrlField(wmc, "classIri");
-            addUrlField(wmc, "subclassIri");
-            addUrlField(wmc, "typeIri");
-            wmc.add(new CheckBox("enabled"));
-            wmc.add(new CheckBox("supportConceptLinking"));
+            addIriField(wmc, "classIri", model.bind("kb.classIri"));
+            addIriField(wmc, "subclassIri", model.bind("kb.subclassIri"));
+            addIriField(wmc, "typeIri", model.bind("kb.typeIri"));
+            wmc.add(new CheckBox("enabled", model.bind("kb.enabled")));
+            wmc.add(new CheckBox("supportConceptLinking", model.bind("kb.supportConceptLinking")));
         }
 
         @Override
@@ -507,7 +515,17 @@ public class KnowledgeBaseDetailsPanel extends Panel {
             addUrlField(wmc, "url");
         }
 
-        private void addUrlField(WebMarkupContainer wmc, String id) {
+        private void addIriField(WebMarkupContainer wmc, String id, IModel<IRI> model) {
+            IModel<String> adapter = new LambdaModelAdapter<String>(
+                    () -> model.getObject().stringValue(),
+                    str -> model.setObject(SimpleValueFactory.getInstance().createIRI(str)));
+            TextField<String> textField = new RequiredTextField<String>(id, adapter);
+            textField.add(EnrichedKnowledgeBaseUtils.IRI_VALIDATOR);
+            wmc.add(textField);
+        }
+
+        private void addUrlField(WebMarkupContainer wmc, String id)
+        {
             TextField<String> textField = new RequiredTextField<String>(id);
             textField.add(EnrichedKnowledgeBaseUtils.URL_VALIDATOR);
             wmc.add(textField);
