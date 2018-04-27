@@ -592,7 +592,7 @@ public class MtasDocumentIndex
     {
         boolean isOpen;
         
-        isOpen = (indexWriter == null)?false:indexWriter.isOpen();
+        isOpen = (indexWriter == null) ? false : indexWriter.isOpen();
 
         if (!isOpen) {
             // Only open if it is not already open

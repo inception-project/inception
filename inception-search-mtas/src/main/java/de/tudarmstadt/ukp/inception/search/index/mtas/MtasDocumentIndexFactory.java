@@ -41,8 +41,9 @@ public class MtasDocumentIndexFactory
     }
 
     @Override
-    public PhysicalIndex getNewIndex(Project aProject, AnnotationSchemaService aAnnotationSchemaService,
-            DocumentService aDocumentService, ProjectService aProjectService, String aDir)
+    public PhysicalIndex getNewIndex(Project aProject,
+            AnnotationSchemaService aAnnotationSchemaService, DocumentService aDocumentService,
+            ProjectService aProjectService, String aDir)
     {
         PhysicalIndex indexBase = null;
         try {
