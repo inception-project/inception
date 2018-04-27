@@ -25,7 +25,6 @@ import java.io.OutputStream;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -322,6 +321,7 @@ public class KnowledgeBaseServiceImpl
 
     @Override
     public Optional<KBConcept> readConcept(KnowledgeBase kb, String aIdentifier)
+        throws QueryEvaluationException
     {
         return read(kb, (conn) -> {
             ValueFactory vf = conn.getValueFactory();
@@ -331,12 +331,10 @@ public class KnowledgeBaseServiceImpl
                     Statement conceptStmt = stmts.next();
                     KBConcept kbConcept = KBConcept.read(conn, conceptStmt);
                     return Optional.of(kbConcept);
-                } else {
+                }
+                else {
                     return Optional.empty();
                 }
-            } catch (QueryEvaluationException e) {
-                log.warn("Reading concept failed", e);
-                return Optional.empty();
             }
         });
     }
@@ -409,10 +407,7 @@ public class KnowledgeBaseServiceImpl
                 } else {
                     return Optional.empty();
                 }
-            } catch (QueryEvaluationException e) {
-                log.warn("Reading property failed.", e);
-                return Optional.empty();
-            }
+            } 
         });
     }
 
@@ -460,6 +455,7 @@ public class KnowledgeBaseServiceImpl
 
     @Override
     public Optional<KBInstance> readInstance(KnowledgeBase kb, String aIdentifier)
+        throws QueryEvaluationException
     {
         try (RepositoryConnection conn = getConnection(kb)) {
             ValueFactory vf = conn.getValueFactory();
@@ -495,9 +491,6 @@ public class KnowledgeBaseServiceImpl
                     return Optional.empty();
                 }
             }
-        } catch (QueryEvaluationException e) {
-            log.warn("Reading concept for instance failed.", e);
-            return Optional.empty();
         }
     }
     
@@ -629,6 +622,7 @@ public class KnowledgeBaseServiceImpl
 
     @Override
     public List<KBHandle> list(KnowledgeBase kb, IRI aType, boolean aIncludeInferred, boolean aAll)
+        throws QueryEvaluationException
     {
         List<KBHandle> resultList = read(kb, (conn) -> {
             String QUERY = String.join("\n"
@@ -656,6 +650,7 @@ public class KnowledgeBaseServiceImpl
 
     @Override
     public List<KBHandle> listRootConcepts(KnowledgeBase kb, boolean aAll)
+        throws QueryEvaluationException
     {
         List<KBHandle> resultList = read(kb, (conn) -> {
             String QUERY = String.join("\n"
@@ -692,6 +687,7 @@ public class KnowledgeBaseServiceImpl
     @Override
     public List<KBHandle> listChildConcepts(KnowledgeBase aKB, String aParentIdentifier,
             boolean aAll)
+        throws QueryEvaluationException
     {
         return listChildConcepts(aKB, aParentIdentifier, aAll, 10000);
     }
@@ -735,14 +731,10 @@ public class KnowledgeBaseServiceImpl
         return resultList;
     }
 
-    private List<KBHandle> evaluateListQuery(TupleQuery tupleQuery, boolean aAll) {
-        TupleQueryResult result;
-        try {
-            result = tupleQuery.evaluate();
-        } catch (QueryEvaluationException e) {
-            log.warn("Evaluating list query failed.", e);
-            return Collections.emptyList();
-        }
+    private List<KBHandle> evaluateListQuery(TupleQuery tupleQuery, boolean aAll)
+        throws QueryEvaluationException
+    {
+        TupleQueryResult result = tupleQuery.evaluate();        
         
         List<KBHandle> handles = new ArrayList<>();
         while (result.hasNext()) {

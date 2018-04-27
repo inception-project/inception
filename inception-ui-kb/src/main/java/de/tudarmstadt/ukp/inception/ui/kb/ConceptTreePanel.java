@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.ui.kb;
 
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -41,6 +42,7 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.eclipse.rdf4j.query.QueryEvaluationException;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormSubmittingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
@@ -164,9 +166,13 @@ public class ConceptTreePanel extends Panel {
         @Override
         public Iterator<? extends KBHandle> getRoots()
         {
-            return kbService
-                    .listRootConcepts(kbModel.getObject(), preferences.getObject().showAllConcepts)
-                    .iterator();
+            try {
+                return kbService.listRootConcepts(kbModel.getObject(),
+                        preferences.getObject().showAllConcepts).iterator();
+            } catch (QueryEvaluationException e) {
+                error("Failed. " + e.getLocalizedMessage());
+                return Collections.emptyIterator();
+            }
         }
 
         @Override

@@ -28,6 +28,7 @@ import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.eclipse.rdf4j.model.vocabulary.XMLSchema;
+import org.eclipse.rdf4j.query.QueryEvaluationException;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.repository.config.RepositoryImplConfig;
 import org.eclipse.rdf4j.repository.manager.RepositoryInfo;
@@ -125,7 +126,8 @@ public interface KnowledgeBaseService
      *            a concept identifier.
      * @return the concept.
      */
-    Optional<KBConcept> readConcept(KnowledgeBase kb, String aIdentifier);
+    Optional<KBConcept> readConcept(KnowledgeBase kb, String aIdentifier)
+        throws QueryEvaluationException;
 
     /**
      * Find the specified concept form the first KB in the project which provides it.
@@ -154,7 +156,7 @@ public interface KnowledgeBaseService
      */
     void deleteConcept(KnowledgeBase kb, KBConcept aType);
 
-    List<KBHandle> listConcepts(KnowledgeBase kb, boolean aAll);
+    List<KBHandle> listConcepts(KnowledgeBase kb, boolean aAll) throws QueryEvaluationException;
 
     /**
      * Creates a new property in the given knowledge base. Does nothing
@@ -164,7 +166,8 @@ public interface KnowledgeBaseService
      */
     KBHandle createProperty(KnowledgeBase kb, KBProperty aProperty);
 
-    Optional<KBProperty> readProperty(KnowledgeBase kb, String aIdentifier);
+    Optional<KBProperty> readProperty(KnowledgeBase kb, String aIdentifier)
+        throws QueryEvaluationException;
 
     /**
      * Updates an existing property in the given knowledge base. Does nothing
@@ -182,7 +185,7 @@ public interface KnowledgeBaseService
      */
     void deleteProperty(KnowledgeBase kb, KBProperty aType);
 
-    List<KBHandle> listProperties(KnowledgeBase kb, boolean aAll);
+    List<KBHandle> listProperties(KnowledgeBase kb, boolean aAll) throws QueryEvaluationException;
 
     /**
      * Creates a new instance in the given knowledge base. Does nothing if the knowledge base is
@@ -204,7 +207,8 @@ public interface KnowledgeBaseService
      *            an instance identifier.
      * @return the concept.
      */
-    Optional<KBInstance> readInstance(KnowledgeBase kb, String aIdentifier);
+    Optional<KBInstance> readInstance(KnowledgeBase kb, String aIdentifier)
+        throws QueryEvaluationException;
 
     /**
      * Find the specified instance form the first KB in the project which provides it.
@@ -240,7 +244,8 @@ public interface KnowledgeBaseService
      * @param aAll        True if entities with implicit namespaces (e.g. defined by RDF)
      * @return All instances of the given concept
      */
-    List<KBHandle> listInstances(KnowledgeBase kb, String aConceptIri, boolean aAll);
+    List<KBHandle> listInstances(KnowledgeBase kb, String aConceptIri, boolean aAll)
+        throws QueryEvaluationException;
 
     // Statements
 
@@ -268,15 +273,18 @@ public interface KnowledgeBaseService
      */
     void deleteStatement(KnowledgeBase kb, KBStatement aStatement);
 
-    List<KBStatement> listStatements(KnowledgeBase kb, KBHandle aInstance, boolean aAll);
+    List<KBStatement> listStatements(KnowledgeBase kb, KBHandle aInstance, boolean aAll)
+        throws QueryEvaluationException;
 
-    List<KBStatement> listStatements(KnowledgeBase kb, KBInstance aInstance, boolean aAll);
+    List<KBStatement> listStatements(KnowledgeBase kb, KBInstance aInstance, boolean aAll)
+        throws QueryEvaluationException;
 
-    List<KBHandle> listRootConcepts(KnowledgeBase kb, boolean aAll);
+    List<KBHandle> listRootConcepts(KnowledgeBase kb, boolean aAll) throws QueryEvaluationException;
 
     boolean hasChildConcepts(KnowledgeBase aKB, String aParentIdentifier, boolean aAll);
     
-    List<KBHandle> listChildConcepts(KnowledgeBase kb, String parentIdentifier, boolean aAll);
+    List<KBHandle> listChildConcepts(KnowledgeBase kb, String parentIdentifier, boolean aAll)
+        throws QueryEvaluationException;
 
     List<KBHandle> listChildConcepts(KnowledgeBase kb, String parentIdentifier, boolean aAll,
             int aLimit);
