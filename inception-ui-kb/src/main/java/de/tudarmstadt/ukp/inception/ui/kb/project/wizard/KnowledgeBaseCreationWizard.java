@@ -74,9 +74,9 @@ import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 import de.tudarmstadt.ukp.inception.kb.io.FileUploadHelper;
 import de.tudarmstadt.ukp.inception.kb.reification.Reification;
-import de.tudarmstadt.ukp.inception.ui.kb.project.EnrichedKnowledgeBase;
-import de.tudarmstadt.ukp.inception.ui.kb.project.EnrichedKnowledgeBaseUtils;
+import de.tudarmstadt.ukp.inception.ui.kb.project.KnowledgeBaseWrapper;
 import de.tudarmstadt.ukp.inception.ui.kb.project.KnowledgeBaseListPanel;
+import de.tudarmstadt.ukp.inception.ui.kb.project.Validators;
 
 /**
  * Wizard for registering a new knowledge base for a project.
@@ -104,7 +104,7 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
     private final Map<String, File> uploadedFiles;
     private final IModel<Project> projectModel;
     private final DynamicWizardModel wizardModel;
-    private final CompoundPropertyModel<EnrichedKnowledgeBase> wizardDataModel;
+    private final CompoundPropertyModel<KnowledgeBaseWrapper> wizardDataModel;
 
     public KnowledgeBaseCreationWizard(String id, IModel<Project> aProjectModel) {
         super(id);
@@ -112,7 +112,7 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
         uploadedFiles = new HashMap<>();
 
         projectModel = aProjectModel;
-        wizardDataModel = new CompoundPropertyModel<>(new EnrichedKnowledgeBase());
+        wizardDataModel = new CompoundPropertyModel<>(new KnowledgeBaseWrapper());
 
         wizardModel = new DynamicWizardModel(new TypeStep(null, wizardDataModel));
         wizardModel.setLastVisible(false);
@@ -126,10 +126,10 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
 
         private static final long serialVersionUID = 2632078392967948962L;
         
-        private CompoundPropertyModel<EnrichedKnowledgeBase> model;
+        private CompoundPropertyModel<KnowledgeBaseWrapper> model;
 
         public TypeStep(IDynamicWizardStep previousStep,
-                CompoundPropertyModel<EnrichedKnowledgeBase> model) {
+                CompoundPropertyModel<KnowledgeBaseWrapper> model) {
             super(previousStep, "", "", model);
             this.model = model;
 
@@ -212,12 +212,12 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
 
         private static final long serialVersionUID = 8212277960059805657L;
         
-        private CompoundPropertyModel<EnrichedKnowledgeBase> model;
+        private CompoundPropertyModel<KnowledgeBaseWrapper> model;
         private FileUploadField fileUpload;
         private boolean completed;
 
         public LocalRepositoryStep(IDynamicWizardStep previousStep,
-                CompoundPropertyModel<EnrichedKnowledgeBase> model) {
+                CompoundPropertyModel<KnowledgeBaseWrapper> model) {
             super(previousStep);
             this.model = model;
             completed = true;
@@ -279,15 +279,15 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
 
         private static final long serialVersionUID = -707885872360370015L;
 
-        private CompoundPropertyModel<EnrichedKnowledgeBase> model;
+        private CompoundPropertyModel<KnowledgeBaseWrapper> model;
 
         public RemoteRepositoryStep(IDynamicWizardStep previousStep,
-                CompoundPropertyModel<EnrichedKnowledgeBase> model) {
+                CompoundPropertyModel<KnowledgeBaseWrapper> model) {
             super(previousStep, "", "", model);
             this.model = model;
             
             RequiredTextField<String> urlField = new RequiredTextField<>("url");
-            urlField.add(EnrichedKnowledgeBaseUtils.URL_VALIDATOR);
+            urlField.add(Validators.URL_VALIDATOR);
             add(urlField);
             
             // for up to MAXIMUM_REMOTE_REPO_SUGGESTIONS of knowledge bases, create a link which
@@ -338,11 +338,11 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
     private final class SchemaConfigurationStep extends DynamicWizardStep {
         private static final long serialVersionUID = -12355235971946712L;
 
-        private final CompoundPropertyModel<EnrichedKnowledgeBase> model;
+        private final CompoundPropertyModel<KnowledgeBaseWrapper> model;
         private boolean completed;
 
         public SchemaConfigurationStep(IDynamicWizardStep previousStep,
-                                       CompoundPropertyModel<EnrichedKnowledgeBase> aModel)
+                                       CompoundPropertyModel<KnowledgeBaseWrapper> aModel)
         {
             super(previousStep, "", "", aModel);
             model = aModel;
@@ -365,18 +365,18 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
 
             ComboBox<String> comboBox = new ComboBox<String>(name, adapter, choices);
             comboBox.setRequired(true);
-            comboBox.add(EnrichedKnowledgeBaseUtils.IRI_VALIDATOR);
+            comboBox.add(Validators.IRI_VALIDATOR);
             return comboBox;
         }
 
         @Override
         public void applyState()
         {
-            EnrichedKnowledgeBase ekb = wizardDataModel.getObject();
+            KnowledgeBaseWrapper ekb = wizardDataModel.getObject();
             ekb.getKb().setProject(projectModel.getObject());
        
             try {
-                EnrichedKnowledgeBaseUtils.registerEkb(ekb, kbService);
+                KnowledgeBaseWrapper.registerEkb(ekb, kbService);
             } catch (Exception e) {
                 error(e.getMessage());
             }

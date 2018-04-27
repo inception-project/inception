@@ -107,7 +107,7 @@ public class KnowledgeBaseDetailsPanel extends Panel {
     private @SpringBean KnowledgeBaseService kbService;
 
     private final IModel<KnowledgeBase> kbModel;
-    private final CompoundPropertyModel<EnrichedKnowledgeBase> ekbModel;
+    private final CompoundPropertyModel<KnowledgeBaseWrapper> ekbModel;
     
     private Component title;
     private Component content;
@@ -121,7 +121,7 @@ public class KnowledgeBaseDetailsPanel extends Panel {
 
         kbModel = aKbModel;
 
-        EnrichedKnowledgeBase ekb = new EnrichedKnowledgeBase();
+        KnowledgeBaseWrapper ekb = new KnowledgeBaseWrapper();
         KnowledgeBase kb = kbModel.getObject();
         ekb.setKb(kb);
         // set the URL of the EKB to the current SPARQL URL, if dealing with a remote repository
@@ -137,7 +137,7 @@ public class KnowledgeBaseDetailsPanel extends Panel {
 
         // this form contains all the wicket components in this panel; not only the components used
         // for editing, but also the ones for showing information about a KB (when in ViewMode)
-        Form<EnrichedKnowledgeBase> form = new Form<EnrichedKnowledgeBase>("form", ekbModel) {
+        Form<KnowledgeBaseWrapper> form = new Form<KnowledgeBaseWrapper>("form", ekbModel) {
             private static final long serialVersionUID = -4253347478525087385L;
 
             /**
@@ -220,7 +220,7 @@ public class KnowledgeBaseDetailsPanel extends Panel {
                 // the call needs to occur in onAfterSubmit, otherwise the file uploads are
                 // submitted after actionSave is called
                 KnowledgeBaseDetailsPanel.this.actionSave(target,
-                        (Form<EnrichedKnowledgeBase>) form);
+                        (Form<KnowledgeBaseWrapper>) form);
             }
         });
         form.add(new LambdaAjaxLink("cancel", KnowledgeBaseDetailsPanel.this::stopEditing) {
@@ -249,8 +249,8 @@ public class KnowledgeBaseDetailsPanel extends Panel {
         kbModel.setObject(ekbModel.getObject().getKb());
     }
 
-    private void actionSave(AjaxRequestTarget aTarget, Form<EnrichedKnowledgeBase> aForm) {
-        EnrichedKnowledgeBase ekb = ekbModel.getObject();
+    private void actionSave(AjaxRequestTarget aTarget, Form<KnowledgeBaseWrapper> aForm) {
+        KnowledgeBaseWrapper ekb = ekbModel.getObject();
         
         // if dealing with a remote repository and a non-empty URL, get a new RepositoryImplConfig
         // for the new URL; otherwise keep using the existing config
@@ -262,7 +262,7 @@ public class KnowledgeBaseDetailsPanel extends Panel {
         }
 
         try {
-            EnrichedKnowledgeBaseUtils.updateEkb(ekb, cfg, kbService);
+            KnowledgeBaseWrapper.updateEkb(ekb, cfg, kbService);
         } catch (Exception e) {
             error(e.getMessage());
         }
@@ -328,10 +328,10 @@ public class KnowledgeBaseDetailsPanel extends Panel {
 
         private static final long serialVersionUID = 4325217938170626840L;
         
-        protected CompoundPropertyModel<EnrichedKnowledgeBase> model;
+        protected CompoundPropertyModel<KnowledgeBaseWrapper> model;
         
         public DetailFragment(String id, String markupId,
-                CompoundPropertyModel<EnrichedKnowledgeBase> model) {
+                CompoundPropertyModel<KnowledgeBaseWrapper> model) {
             super(id, markupId, KnowledgeBaseDetailsPanel.this, model);
             
             this.model = model;
@@ -366,7 +366,7 @@ public class KnowledgeBaseDetailsPanel extends Panel {
 
         private static final long serialVersionUID = -346255717342200090L;
 
-        public ViewModeTitle(String id, CompoundPropertyModel<EnrichedKnowledgeBase> model) {
+        public ViewModeTitle(String id, CompoundPropertyModel<KnowledgeBaseWrapper> model) {
             super(id, "viewModeTitle", KnowledgeBaseDetailsPanel.this, model);
             add(new Label("name", model.bind("kb.name")));
         }
@@ -376,7 +376,7 @@ public class KnowledgeBaseDetailsPanel extends Panel {
 
         private static final long serialVersionUID = -6584701320032256335L;
 
-        public ViewMode(String id, CompoundPropertyModel<EnrichedKnowledgeBase> model) {
+        public ViewMode(String id, CompoundPropertyModel<KnowledgeBaseWrapper> model) {
             super(id, "viewModeContent", model);
         }
 
@@ -462,7 +462,7 @@ public class KnowledgeBaseDetailsPanel extends Panel {
 
         private static final long serialVersionUID = -5459222108913316798L;
 
-        public EditModeTitle(String id, CompoundPropertyModel<EnrichedKnowledgeBase> model) {
+        public EditModeTitle(String id, CompoundPropertyModel<KnowledgeBaseWrapper> model) {
             super(id, "editModeTitle", KnowledgeBaseDetailsPanel.this, model);
             add(new RequiredTextField<>("name", model.bind("kb.name")));
         }
@@ -472,7 +472,7 @@ public class KnowledgeBaseDetailsPanel extends Panel {
 
         private static final long serialVersionUID = 7838564354437836375L;
 
-        public EditMode(String id, CompoundPropertyModel<EnrichedKnowledgeBase> model) {
+        public EditMode(String id, CompoundPropertyModel<KnowledgeBaseWrapper> model) {
             super(id, "editModeContent", model);
         }
 
@@ -520,14 +520,14 @@ public class KnowledgeBaseDetailsPanel extends Panel {
                     () -> model.getObject().stringValue(),
                     str -> model.setObject(SimpleValueFactory.getInstance().createIRI(str)));
             TextField<String> textField = new RequiredTextField<String>(id, adapter);
-            textField.add(EnrichedKnowledgeBaseUtils.IRI_VALIDATOR);
+            textField.add(Validators.IRI_VALIDATOR);
             wmc.add(textField);
         }
 
         private void addUrlField(WebMarkupContainer wmc, String id)
         {
             TextField<String> textField = new RequiredTextField<String>(id);
-            textField.add(EnrichedKnowledgeBaseUtils.URL_VALIDATOR);
+            textField.add(Validators.URL_VALIDATOR);
             wmc.add(textField);
         }
     }
