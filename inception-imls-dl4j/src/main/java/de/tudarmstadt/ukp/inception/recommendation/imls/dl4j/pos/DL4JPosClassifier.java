@@ -41,7 +41,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.Classifier;
 import de.tudarmstadt.ukp.inception.recommendation.api.ClassifierConfiguration;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.TokenObject;
-import de.tudarmstadt.ukp.inception.recommendation.imls.util.CasUtil;
+import de.tudarmstadt.ukp.inception.recommendation.api.util.CasUtil;
 
 /**
  * The implementation of a POS-Tagger using the DL4J library and a multi layer neural network. 

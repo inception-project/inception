@@ -38,8 +38,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.TokenObject;
-import de.tudarmstadt.ukp.inception.recommendation.imls.util.CasUtil;
 
 /**
  * This consumer predicts new annotations for a given annotation layer, if a classification tool for
@@ -91,31 +89,31 @@ public class PredictionTask
                 classifier.setProject(getProject());
                 classifier.setModel(recommendationService.getTrainedModel(user, recommender));
     
-                List<List<TokenObject>> tokens = new ArrayList<>();
-                    
+                List<AnnotationObject> predictions = new ArrayList<>();
+                
+                log.info("[{}][{}]: Predicting labels...", user.getUsername(),
+                        recommender.getName());
+                
                 List<AnnotationDocument> docs = documentService
                         .listAnnotationDocuments(layer.getProject(), user);
+
                 docs.forEach(doc -> {
-                    JCas jcas;
                     try {
-                        jcas = documentService.readAnnotationCas(doc);
-                        tokens.addAll(CasUtil.loadTokenObjects(jcas, 0, 
-                                jcas.getDocumentText().length()));
+                        JCas jcas = documentService.readAnnotationCas(doc);
+                        predictions.addAll(classifier.predict(jcas, layer));
                     } catch (IOException e) {
                         log.error("Cannot read annotation CAS.", e);
                     }
                 });
       
-                if (tokens.isEmpty()) {
-                    log.info("[{}][{}]: No training data.", user.getUsername(),
+                // Tell the predictions who created them
+                predictions.forEach(token -> token.setRecommenderId(ct.getId()));
+
+                if (predictions.isEmpty()) {
+                    log.info("[{}][{}]: No prediction data.", user.getUsername(),
                             recommender.getName());
                     return;
                 }
-                
-                log.info("[{}][{}]: Predicting labels...", user.getUsername(),
-                        recommender.getName());
-                List<AnnotationObject> predictions = classifier.predict(tokens, layer);
-                predictions.forEach(token -> token.setRecommenderId(ct.getId()));
                 
                 model.putPredictions(layer.getId(), predictions);
                 

@@ -79,6 +79,10 @@
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-imls-dl4j</artifactId>
     </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-imls-external</artifactId>
+    </dependency>
     <!--  
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -384,7 +388,6 @@
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-tomcat</artifactId>
-      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
@@ -602,6 +605,7 @@
               <!-- INCEpTION backend modules - used via Spring -->
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-concept-linking</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-recommendation</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-external</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-dl4j</usedDependency>
               <!-- usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-mira</usedDependency -->
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-opennlp</usedDependency>

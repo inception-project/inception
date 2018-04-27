@@ -25,7 +25,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.inception.recommendation.api.AnnotationObjectLoader;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
-import de.tudarmstadt.ukp.inception.recommendation.imls.util.CasUtil;
+import de.tudarmstadt.ukp.inception.recommendation.api.util.CasUtil;
 
 public class NerAnnotationObjectLoader implements AnnotationObjectLoader
 {
