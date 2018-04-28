@@ -20,30 +20,27 @@ package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
-import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
-import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
-import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
-import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
+import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
+import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 @Component(FactLinkingService.SERVICE_NAME)
@@ -114,13 +111,18 @@ public class FactLinkingServiceImpl implements FactLinkingService
         return kbHandle;
     }
 
-    //TODO
     @Override
-    public KnowledgeBase getKBByKBHandle(KBHandle kbHandle, Project aProject)
+    public KnowledgeBase getKBByKBHandleAndTraits(KBHandle kbHandle, Project aProject,
+        ConceptFeatureTraits traits)
     {
-        for (KnowledgeBase kb : kbService.getKnowledgeBases(aProject)) {
-            if (kbService.listProperties(kb, false).contains(kbHandle)) {
-                return kb;
+        if (traits.getRepositoryId() != null) {
+            return kbService.getKnowledgeBaseById(aProject, traits.getRepositoryId()).get();
+        }
+        else {
+            for (KnowledgeBase kb : kbService.getKnowledgeBases(aProject)) {
+                if (kbService.listProperties(kb, false).contains(kbHandle)) {
+                    return kb;
+                }
             }
         }
         return null;

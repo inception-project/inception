@@ -22,10 +22,6 @@ import static de.tudarmstadt.ukp.inception.ui.kb.feature.FactLinkingConstants.FA
 import java.util.Arrays;
 import java.util.List;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
-import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.Component;
 import org.apache.wicket.MarkupContainer;
@@ -42,6 +38,7 @@ import com.googlecode.wicket.jquery.core.template.IJQueryTemplate;
 import com.googlecode.wicket.kendo.ui.form.autocomplete.AutoCompleteTextField;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.FeatureEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
@@ -50,6 +47,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
+import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
@@ -64,6 +62,7 @@ public class PropertyFeatureEditor
     private IModel<AnnotatorState> stateModel;
     private AnnotationActionHandler actionHandler;
     private Project project;
+    private ConceptFeatureTraits traits;
     private Boolean existStatements = false;
 
     private @SpringBean AnnotationSchemaService annotationService;
@@ -79,6 +78,7 @@ public class PropertyFeatureEditor
         stateModel = aStateModel;
         actionHandler = aHandler;
         project = this.getModelObject().feature.getProject();
+        traits = factService.getFeatureTraits(project);
         add(new Label("feature", getModelObject().feature.getUiName()));
         add(focusComponent = createAutoCompleteTextField());
         add(createStatementIndicatorLabel());
@@ -95,7 +95,6 @@ public class PropertyFeatureEditor
 
             @Override protected List<KBHandle> getChoices(String input)
             {
-                ConceptFeatureTraits traits = factService.getFeatureTraits(project);
                 return factService.getPredicatesFromKB(project, traits);
             }
 
@@ -182,7 +181,7 @@ public class PropertyFeatureEditor
         else {
             KBStatement mockStatement = new KBStatement(subject, predicate);
             mockStatement.setValue(object.getUiLabel());
-            KnowledgeBase kb = factService.getKBByKBHandle(predicate, project);
+            KnowledgeBase kb = factService.getKBByKBHandleAndTraits(predicate, project, traits);
             existStatements = kbService.statementsMatchSPO(kb, mockStatement);
         }
     }
@@ -203,14 +202,7 @@ public class PropertyFeatureEditor
         if (!featureValue.isEmpty()) {
             int targetAddress = featureValue.get(0).targetAddr;
             if (targetAddress != -1) {
-                AnnotationLayer linkedLayer = annotationService.getLayer(NamedEntity.class
-                    .getName(), project);
-                AnnotationFeature linkedFeature = annotationService.getFeature
-                    (FactLinkingConstants.LINKED_LAYER_FEATURE, linkedLayer);
-                FeatureSupport<ConceptFeatureTraits> fs = featureSupportRegistry
-                    .getFeatureSupport(linkedFeature);
-                ConceptFeatureTraits traits = fs.readTraits(linkedFeature);
-                JCas jCas = null;
+                JCas jCas;
                 try {
                     jCas = actionHandler.getEditorCas();
                     kbHandle = factService
