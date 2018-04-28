@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.text.AnnotationFS;
@@ -539,10 +540,11 @@ public class QualifierFeatureEditor
         KBHandle selectedKBHandleItem = null;
         if (aItem.getModelObject().targetAddr != -1) {
             try {
+                ConceptFeatureTraits traits = factService.getFeatureTraits(project);
                 JCas jCas = actionHandler.getEditorCas();
                 int targetAddr = aItem.getModelObject().targetAddr;
                 selectedKBHandleItem = factService.getKBHandleFromCasByAddr(jCas, targetAddr,
-                    project);
+                    project, traits);
             } catch (Exception e) {
                 LOG.error("Error: " + e.getMessage(), e);
                 error("Error: " + e.getMessage());

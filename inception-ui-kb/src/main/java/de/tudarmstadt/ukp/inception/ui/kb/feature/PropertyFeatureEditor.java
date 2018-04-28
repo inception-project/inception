@@ -22,6 +22,10 @@ import static de.tudarmstadt.ukp.inception.ui.kb.feature.FactLinkingConstants.FA
 import java.util.Arrays;
 import java.util.List;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
+import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.Component;
 import org.apache.wicket.MarkupContainer;
@@ -65,6 +69,7 @@ public class PropertyFeatureEditor
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean KnowledgeBaseService kbService;
     private @SpringBean FactLinkingService factService;
+    private @SpringBean FeatureSupportRegistry featureSupportRegistry;
 
     public PropertyFeatureEditor(String aId, MarkupContainer aOwner,
         AnnotationActionHandler aHandler, final IModel<AnnotatorState> aStateModel,
@@ -197,15 +202,24 @@ public class PropertyFeatureEditor
         if (!featureValue.isEmpty()) {
             int targetAddress = featureValue.get(0).targetAddr;
             if (targetAddress != -1) {
+                AnnotationLayer linkedLayer = annotationService.getLayer(NamedEntity.class
+                    .getName(), project);
+                AnnotationFeature linkedFeature = annotationService.getFeature
+                    (FactLinkingConstants.LINKED_LAYER_FEATURE, linkedLayer);
+                FeatureSupport<ConceptFeatureTraits> fs = featureSupportRegistry
+                    .getFeatureSupport(linkedFeature);
+                ConceptFeatureTraits traits = fs.readTraits(linkedFeature);
                 JCas jCas = null;
                 try {
                     jCas = actionHandler.getEditorCas();
+                    kbHandle = factService
+                        .getKBHandleFromCasByAddr(jCas, targetAddress, aState.getProject(), traits);
                 }
                 catch (Exception e) {
                     LOG.error("Error: " + e.getMessage(), e);
+                    error("Error: " + e.getMessage());
                 }
-                kbHandle = factService
-                    .getKBHandleFromCasByAddr(jCas, targetAddress, aState.getProject());
+
             }
         }
         return kbHandle;

@@ -26,6 +26,7 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.text.AnnotationFS;
@@ -333,14 +334,13 @@ public class SubjectObjectFeatureEditor
             try {
                 JCas jCas = actionHandler.getEditorCas();
                 AnnotationFS selectedFS = WebAnnoCasUtil.selectByAddr(jCas, roleModel.targetAddr);
-                String selectedKBItemIdentifier = WebAnnoCasUtil.getFeature(selectedFS,
-                    linkedAnnotationFeature.getName());
+                String selectedKBItemIdentifier = WebAnnoCasUtil
+                    .getFeature(selectedFS, linkedAnnotationFeature.getName());
 
                 if (selectedKBItemIdentifier != null) {
-                    List<KBHandle> handles = factService.getKBConceptsAndInstances(project);
-                    selectedKBHandleItem = handles.stream()
-                        .filter(x -> selectedKBItemIdentifier.equals(x.getIdentifier())).findAny()
-                        .orElseThrow(NoSuchElementException::new);
+                    ConceptFeatureTraits traits = factService.getFeatureTraits(project);
+                    selectedKBHandleItem = factService.getKBInstancesByIdentifierAndTraits
+                        (selectedKBItemIdentifier, project, traits);
                 }
             }
             catch (Exception e) {

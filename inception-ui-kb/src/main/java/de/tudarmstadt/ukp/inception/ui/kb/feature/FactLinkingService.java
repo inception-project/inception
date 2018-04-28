@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
 import java.util.List;
 
+import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -30,11 +31,14 @@ public interface FactLinkingService
 {
     String SERVICE_NAME = "factLinkingService";
 
-    List<KBHandle> getKBConceptsAndInstances(Project aProject);
-
     List<KBHandle> getAllPredicatesFromKB(Project aProject);
 
-    KBHandle getKBHandleFromCasByAddr(JCas aJcas, int targetAddr, Project aProject);
+    KBHandle getKBHandleFromCasByAddr(JCas aJcas, int targetAddr, Project aProject, ConceptFeatureTraits traits);
 
     KnowledgeBase getKBByKBHandle(KBHandle kbHandle, Project aProject);
+
+    ConceptFeatureTraits getFeatureTraits(Project aProject);
+
+    KBHandle getKBInstancesByIdentifierAndTraits(String kbHandleIdentifier, Project aProject,
+        ConceptFeatureTraits traits);
 }

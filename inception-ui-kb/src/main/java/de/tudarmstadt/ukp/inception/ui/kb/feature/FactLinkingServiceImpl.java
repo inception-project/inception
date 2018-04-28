@@ -20,9 +20,21 @@ package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Optional;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
+import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
+import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
+import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
+import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,21 +50,10 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 public class FactLinkingServiceImpl implements FactLinkingService
 {
     @Autowired private KnowledgeBaseService kbService;
+    @Autowired private AnnotationSchemaService annotationService;
+    @Autowired private FeatureSupportRegistry featureSupportRegistry;
 
     private final Logger LOG = LoggerFactory.getLogger(getClass());
-
-    @Override
-    public List<KBHandle> getKBConceptsAndInstances(Project aProject)
-    {
-        List<KBHandle> handles = new ArrayList<>();
-        for (KnowledgeBase kb : kbService.getKnowledgeBases(aProject)) {
-            handles.addAll(kbService.listConcepts(kb, false));
-            for (KBHandle concept : kbService.listConcepts(kb, false)) {
-                handles.addAll(kbService.listInstances(kb, concept.getIdentifier(), false));
-            }
-        }
-        return handles;
-    }
 
     @Override
     public List<KBHandle> getAllPredicatesFromKB(Project aProject)
@@ -65,20 +66,45 @@ public class FactLinkingServiceImpl implements FactLinkingService
     }
 
     @Override
-    public KBHandle getKBHandleFromCasByAddr(JCas aJcas, int targetAddr, Project aProject)
+    public KBHandle getKBHandleFromCasByAddr(JCas aJcas, int targetAddr, Project aProject,
+        ConceptFeatureTraits traits)
     {
-        KBHandle kbHandle = null;
         AnnotationFS selectedFS = WebAnnoCasUtil.selectByAddr(aJcas, targetAddr);
         String kbHandleIdentifier = WebAnnoCasUtil
             .getFeature(selectedFS, FactLinkingConstants.LINKED_LAYER_FEATURE);
-        if (kbHandleIdentifier != null) {
-            List<KBHandle> handles = getKBConceptsAndInstances(aProject);
-            kbHandle = handles.stream().filter(x -> kbHandleIdentifier.equals(x.getIdentifier()))
-                .findAny().orElse(null);
+        KBHandle kbHandle = null;
+        try {
+            kbHandle = getKBInstancesByIdentifierAndTraits(kbHandleIdentifier, aProject,
+                traits);
+        }
+        catch (Exception e) {
+            LOG.error("Error: " + e.getMessage(), e);
         }
         return kbHandle;
     }
 
+    @Override
+    public KBHandle getKBInstancesByIdentifierAndTraits(String kbHandleIdentifier, Project aProject,
+        ConceptFeatureTraits traits)
+    {
+        KBHandle kbHandle = null;
+        if (kbHandleIdentifier != null) {
+            Optional<KBInstance> instance;
+            // Use the concept from a particular knowledge base
+            if (traits.getRepositoryId() != null) {
+                instance = kbService.getKnowledgeBaseById(aProject, traits.getRepositoryId())
+                    .flatMap(kb -> kbService.readInstance(kb, kbHandleIdentifier));
+            }
+            // Use the concept from any knowledge base (leave KB unselected)
+            else {
+                instance = kbService.readInstance(aProject, kbHandleIdentifier);
+            }
+            return instance.map(i -> KBHandle.of(i)).orElse(null);
+        }
+        return kbHandle;
+    }
+
+    //TODO
     @Override
     public KnowledgeBase getKBByKBHandle(KBHandle kbHandle, Project aProject)
     {
@@ -88,6 +114,19 @@ public class FactLinkingServiceImpl implements FactLinkingService
             }
         }
         return null;
+    }
+
+    @Override
+    public ConceptFeatureTraits getFeatureTraits(Project aProject)
+    {
+        AnnotationLayer linkedLayer = annotationService
+            .getLayer(NamedEntity.class.getName(), aProject);
+        AnnotationFeature linkedFeature = annotationService
+            .getFeature(FactLinkingConstants.LINKED_LAYER_FEATURE, linkedLayer);
+        FeatureSupport<ConceptFeatureTraits> fs = featureSupportRegistry
+            .getFeatureSupport(linkedFeature);
+        ConceptFeatureTraits traits = fs.readTraits(linkedFeature);
+        return traits;
     }
 
 }
