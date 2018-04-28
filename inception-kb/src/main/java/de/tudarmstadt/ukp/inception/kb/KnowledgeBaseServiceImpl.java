@@ -24,10 +24,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -108,7 +106,7 @@ public class KnowledgeBaseServiceImpl
         String url = Paths.get(dataDir.getAbsolutePath(), "kb").toUri().toString();
         repoManager = RepositoryProvider.getRepositoryManager(url);
         log.info("Knowledge base repository path: " + url);
-        implicitNamespaces = new HashSet<>(Arrays.asList(IriConstants.IMPLICIT_NAMESPACES));
+        implicitNamespaces = IriConstants.IMPLICIT_NAMESPACES;
     }
 
     public KnowledgeBaseServiceImpl(
