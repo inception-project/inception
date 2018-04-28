@@ -95,7 +95,8 @@ public class PropertyFeatureEditor
 
             @Override protected List<KBHandle> getChoices(String input)
             {
-                return factService.getAllPredicatesFromKB(project);
+                ConceptFeatureTraits traits = factService.getFeatureTraits(project);
+                return factService.getPredicatesFromKB(project, traits);
             }
 
             @Override public void onConfigure(JQueryBehavior behavior)

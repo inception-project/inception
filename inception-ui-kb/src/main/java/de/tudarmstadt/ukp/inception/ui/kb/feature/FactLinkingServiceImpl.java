@@ -56,11 +56,21 @@ public class FactLinkingServiceImpl implements FactLinkingService
     private final Logger LOG = LoggerFactory.getLogger(getClass());
 
     @Override
-    public List<KBHandle> getAllPredicatesFromKB(Project aProject)
+    public List<KBHandle> getPredicatesFromKB(Project aProject, ConceptFeatureTraits traits)
     {
         List<KBHandle> handles = new ArrayList<>();
-        for (KnowledgeBase kb : kbService.getKnowledgeBases(aProject)) {
-            handles.addAll(kbService.listProperties(kb, false));
+        if (traits.getRepositoryId() != null) {
+            // If a specific KB is selected, get its properties
+            Optional<KnowledgeBase> kb = kbService
+                .getKnowledgeBaseById(aProject, traits.getRepositoryId());
+            if (kb.isPresent()) {
+                handles.addAll(kbService.listProperties(kb.get(), false));
+            }
+        }
+        else {
+            for (KnowledgeBase kb : kbService.getKnowledgeBases(aProject)) {
+                handles.addAll(kbService.listProperties(kb, false));
+            }
         }
         return handles;
     }

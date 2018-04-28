@@ -31,7 +31,7 @@ public interface FactLinkingService
 {
     String SERVICE_NAME = "factLinkingService";
 
-    List<KBHandle> getAllPredicatesFromKB(Project aProject);
+    List<KBHandle> getPredicatesFromKB(Project aProject, ConceptFeatureTraits traits);
 
     KBHandle getKBHandleFromCasByAddr(JCas aJcas, int targetAddr, Project aProject, ConceptFeatureTraits traits);
 

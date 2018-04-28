@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.text.AnnotationFS;
@@ -463,7 +462,8 @@ public class QualifierFeatureEditor
 
             @Override protected List<KBHandle> getChoices(String input)
             {
-                return factService.getAllPredicatesFromKB(project);
+                ConceptFeatureTraits traits = factService.getFeatureTraits(project);
+                return factService.getPredicatesFromKB(project, traits);
             }
 
             @Override public void onConfigure(JQueryBehavior behavior)
