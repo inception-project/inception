@@ -17,9 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
+import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
+
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -36,6 +37,7 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.feedback.IFeedback;
+import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.model.CompoundPropertyModel;
@@ -57,6 +59,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationExce
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.FeatureEditor;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.KendoChoiceDescriptionScriptReference;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
@@ -121,6 +124,14 @@ public class SubjectObjectFeatureEditor
         content.add(createSubjectObjectLabel());
         content.add(createRemoveLabelIcon());
         content.add(focusComponent = createAutoCompleteTextField());
+    }
+    
+    @Override
+    public void renderHead(IHeaderResponse aResponse)
+    {
+        super.renderHead(aResponse);
+        
+        aResponse.render(forReference(KendoChoiceDescriptionScriptReference.get()));
     }
 
     private Label createSubjectObjectLabel()
@@ -270,31 +281,10 @@ public class SubjectObjectFeatureEditor
                 behavior.setOption("autoWidth", true);
             }
 
-            @Override protected IJQueryTemplate newTemplate()
+            @Override
+            protected IJQueryTemplate newTemplate()
             {
-                return new IJQueryTemplate()
-                {
-                    private static final long serialVersionUID = 1L;
-
-                    @Override public String getText()
-                    {
-                        // Some docs on how the templates work in Kendo, in case we need
-                        // more fancy dropdowns
-                        // http://docs.telerik.com/kendo-ui/framework/templates/overview
-                        return "# if (data.reordered == 'true') { #"
-                            + "<div title=\"#: data.description #\" "
-                            + "onmouseover=\"javascript:applyTooltip(this)\">"
-                            + "<b>#: data.name #</b></div>\n" + "# } else { #"
-                            + "<div title=\"#: data.description #\" "
-                            + "onmouseover=\"javascript:applyTooltip(this)\">"
-                            + "#: data.name #</div>\n" + "# } #";
-                    }
-
-                    @Override public List<String> getTextProperties()
-                    {
-                        return Arrays.asList("name", "description");
-                    }
-                };
+                return KendoChoiceDescriptionScriptReference.template();
             }
         };
 
