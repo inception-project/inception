@@ -47,6 +47,7 @@ import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.resource.IResourceStream;
 import org.eclipse.rdf4j.repository.RepositoryException;
+import org.eclipse.rdf4j.repository.config.RepositoryConfigException;
 import org.eclipse.rdf4j.repository.config.RepositoryImplConfig;
 import org.eclipse.rdf4j.repository.sparql.config.SPARQLRepositoryConfig;
 import org.eclipse.rdf4j.rio.RDFFormat;
@@ -254,26 +255,35 @@ public class KnowledgeBaseDetailsPanel extends Panel {
     }
 
     private void actionSave(AjaxRequestTarget aTarget, Form<EnrichedKnowledgeBase> aForm) {
-        EnrichedKnowledgeBase ekb = ekbModel.getObject();
-        
-        // if dealing with a remote repository and a non-empty URL, get a new RepositoryImplConfig
-        // for the new URL; otherwise keep using the existing config
-        RepositoryImplConfig cfg;
-        if (ekb.getKb().getType() == RepositoryType.REMOTE && ekb.getUrl() != null) {
-            cfg = kbService.getRemoteConfig(ekb.getUrl());
-        } else {
-            cfg = kbService.getKnowledgeBaseConfig(ekb.getKb());
-        }
-
         try {
-            EnrichedKnowledgeBaseUtils.updateEkb(ekb, cfg, kbService);
-        } catch (Exception e) {
-            error(e.getMessage());
-        }
-        modelChanged();
+            EnrichedKnowledgeBase ekb = ekbModel.getObject();
 
-        stopEditing(aTarget);
-        aTarget.add(findParentWithAssociatedMarkup());        
+            // if dealing with a remote repository and a non-empty URL, get a new
+            // RepositoryImplConfig
+            // for the new URL; otherwise keep using the existing config
+            RepositoryImplConfig cfg;
+            if (ekb.getKb().getType() == RepositoryType.REMOTE && ekb.getUrl() != null) {
+                cfg = kbService.getRemoteConfig(ekb.getUrl());
+            }
+            else {
+                cfg = kbService.getKnowledgeBaseConfig(ekb.getKb());
+            }
+
+            try {
+                EnrichedKnowledgeBaseUtils.updateEkb(ekb, cfg, kbService);
+            }
+            catch (Exception e) {
+                error(e.getMessage());
+            }
+            modelChanged();
+
+            stopEditing(aTarget);
+            aTarget.add(findParentWithAssociatedMarkup());
+        }
+        catch (RepositoryConfigException | RepositoryException e) {
+            error("Unable to save knowledgebase: " + e.getLocalizedMessage());
+            log.error("Unable to save knowledgebase.", e);
+        }
     }
 
     private void actionDelete(AjaxRequestTarget aTarget) {
@@ -285,10 +295,16 @@ public class KnowledgeBaseDetailsPanel extends Panel {
         confirmationDialog.show(aTarget);
         confirmationDialog.setConfirmAction((t) -> {
             KnowledgeBase kb = ekbModel.getObject().getKb();
-            kbService.removeKnowledgeBase(kb);
-            ekbModel.getObject().setKb(null);
-            modelChanged();
-
+            try {
+                kbService.removeKnowledgeBase(kb);
+                ekbModel.getObject().setKb(null);
+                modelChanged();
+            }
+            catch (RepositoryException | RepositoryConfigException e) {
+                error("Unable to remove knowledge base: " + e.getLocalizedMessage());
+                log.error("Unable to remove knowledge base.", e);
+                
+            }
             t.add(this);
             t.add(findParentWithAssociatedMarkup());
         });

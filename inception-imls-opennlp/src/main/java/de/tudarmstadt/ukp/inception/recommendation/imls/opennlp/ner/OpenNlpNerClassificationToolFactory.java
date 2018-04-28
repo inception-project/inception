@@ -66,6 +66,6 @@ public class OpenNlpNerClassificationToolFactory
         
         return (aLayer.isLockToTokenOffset() || aLayer.isMultipleTokens())
                 && !aLayer.isCrossSentence() && "span".equals(aLayer.getType())
-                && CAS.TYPE_NAME_STRING.equals(aFeature.getType());
+                && CAS.TYPE_NAME_STRING.equals(aFeature.getType()) || aFeature.isVirtualFeature();
     }
 }

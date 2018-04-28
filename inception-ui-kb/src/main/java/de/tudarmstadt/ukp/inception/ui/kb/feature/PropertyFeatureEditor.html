@@ -18,26 +18,6 @@
 -->
 <html xmlns="http://www.w3.org/1999/xhtml"
   xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
-<wicket:head>
-    <script>
-        function applyTooltip(aElement) {
-            if (!$(aElement).data('ui-tooltip')) {
-                $(aElement).tooltip({
-                    position: { my: 'center bottom', at: 'center top', of: '.page-footer' },
-                    show: false,
-                    hide: false,
-                    content: function() {
-                        var html =
-                            '<div class="tooltip-title">' + ($(this).text() ? $(this).text() : 'no title') +
-                            '</div> <div class="tooltip-content tooltip-pre">' + ($(this).attr('title') ? $(this).attr('title') : 'no description' )+'</div>';
-                        return html;
-                    }
-                });
-                setTimeout(function() { $(aElement).tooltip().mouseover();; }, 0);
-            }
-        }
-    </script>
-</wicket:head>
 <wicket:panel>
   <div class="panel panel-default panel-small">
     <div class="panel-heading">

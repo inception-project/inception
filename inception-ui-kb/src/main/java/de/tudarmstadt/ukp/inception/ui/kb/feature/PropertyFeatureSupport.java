@@ -80,8 +80,7 @@ public class PropertyFeatureSupport
     public List<FeatureType> getSupportedFeatureTypes(AnnotationLayer aAnnotationLayer)
     {
         List<FeatureType> types = new ArrayList<>();
-        types.add(new FeatureType(FACT_PREDICATE_PREFIX, PREDICATE_KEY,
-            featureSupportId));
+        types.add(new FeatureType(FACT_PREDICATE_PREFIX, PREDICATE_KEY, featureSupportId, true));
         return types;
     }
 

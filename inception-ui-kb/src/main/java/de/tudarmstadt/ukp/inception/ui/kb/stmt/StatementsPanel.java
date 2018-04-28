@@ -41,6 +41,9 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.model.util.ListModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.eclipse.rdf4j.query.QueryEvaluationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.button.Buttons;
 import de.agilecoders.wicket.core.markup.html.bootstrap.form.radio.BootstrapRadioGroup;
@@ -58,7 +61,8 @@ import de.tudarmstadt.ukp.inception.ui.kb.util.WriteProtectionBehavior;
 
 public class StatementsPanel extends EventListeningPanel {
     private static final long serialVersionUID = -6655528906388195399L;
-    
+    private static final Logger LOG = LoggerFactory.getLogger(StatementsPanel.class);
+
     private @SpringBean KnowledgeBaseService kbService;
 
     private IModel<KnowledgeBase> kbModel;
@@ -236,8 +240,16 @@ public class StatementsPanel extends EventListeningPanel {
     private List<StatementGroupBean> getStatementGroupBeans() {        
         // obtain list of statements according to the detail preferences
         StatementDetailPreference prefs = detailPreference.getObject();
-        List<KBStatement> statements = kbService.listStatements(kbModel.getObject(),
-                instance.getObject(), prefs == StatementDetailPreference.ALL);
+        List<KBStatement> statements = new ArrayList<>();
+        try {
+
+            statements = kbService.listStatements(kbModel.getObject(), instance.getObject(),
+                    prefs == StatementDetailPreference.ALL);
+        }
+        catch (QueryEvaluationException e) {
+            error("Unable to list statements: " + e.getLocalizedMessage());
+            LOG.error("Unable to list statements.", e);
+        }
         if (prefs == StatementDetailPreference.BASIC) {
             statements.removeIf((s) -> s.isInferred());
         }

@@ -25,7 +25,6 @@ import java.io.OutputStream;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -56,6 +55,7 @@ import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.repository.RepositoryException;
 import org.eclipse.rdf4j.repository.RepositoryResult;
 import org.eclipse.rdf4j.repository.config.RepositoryConfig;
+import org.eclipse.rdf4j.repository.config.RepositoryConfigException;
 import org.eclipse.rdf4j.repository.config.RepositoryImplConfig;
 import org.eclipse.rdf4j.repository.manager.RepositoryInfo;
 import org.eclipse.rdf4j.repository.manager.RepositoryManager;
@@ -141,6 +141,7 @@ public class KnowledgeBaseServiceImpl
     @Transactional
     @Override
     public void registerKnowledgeBase(KnowledgeBase kb, RepositoryImplConfig cfg)
+        throws RepositoryException, RepositoryConfigException
     {
         // obtain unique repository id
         String baseName = "pid-" + Long.toString(kb.getProject().getId()) + "-kbid-";
@@ -171,6 +172,7 @@ public class KnowledgeBaseServiceImpl
     @Transactional
     @Override
     public void updateKnowledgeBase(KnowledgeBase kb, RepositoryImplConfig cfg)
+        throws RepositoryException, RepositoryConfigException
     {
         assertRegistration(kb);
         repoManager.addRepositoryConfig(new RepositoryConfig(kb.getRepositoryId(), cfg));
@@ -200,6 +202,7 @@ public class KnowledgeBaseServiceImpl
     @Transactional
     @Override
     public void removeKnowledgeBase(KnowledgeBase kb)
+        throws RepositoryException, RepositoryConfigException
     {
         assertRegistration(kb);
         repoManager.removeRepository(kb.getRepositoryId());
@@ -229,6 +232,7 @@ public class KnowledgeBaseServiceImpl
 
     @Override
     public RepositoryImplConfig getKnowledgeBaseConfig(KnowledgeBase kb)
+        throws RepositoryConfigException, RepositoryException
     {
         assertRegistration(kb);
         return repoManager.getRepositoryConfig(kb.getRepositoryId()).getRepositoryImplConfig();
@@ -322,6 +326,7 @@ public class KnowledgeBaseServiceImpl
 
     @Override
     public Optional<KBConcept> readConcept(KnowledgeBase kb, String aIdentifier)
+        throws QueryEvaluationException
     {
         return read(kb, (conn) -> {
             ValueFactory vf = conn.getValueFactory();
@@ -331,12 +336,10 @@ public class KnowledgeBaseServiceImpl
                     Statement conceptStmt = stmts.next();
                     KBConcept kbConcept = KBConcept.read(conn, conceptStmt);
                     return Optional.of(kbConcept);
-                } else {
+                }
+                else {
                     return Optional.empty();
                 }
-            } catch (QueryEvaluationException e) {
-                log.warn("Reading concept failed", e);
-                return Optional.empty();
             }
         });
     }
@@ -409,10 +412,7 @@ public class KnowledgeBaseServiceImpl
                 } else {
                     return Optional.empty();
                 }
-            } catch (QueryEvaluationException e) {
-                log.warn("Reading property failed.", e);
-                return Optional.empty();
-            }
+            } 
         });
     }
 
@@ -460,6 +460,7 @@ public class KnowledgeBaseServiceImpl
 
     @Override
     public Optional<KBInstance> readInstance(KnowledgeBase kb, String aIdentifier)
+        throws QueryEvaluationException
     {
         try (RepositoryConnection conn = getConnection(kb)) {
             ValueFactory vf = conn.getValueFactory();
@@ -495,9 +496,6 @@ public class KnowledgeBaseServiceImpl
                     return Optional.empty();
                 }
             }
-        } catch (QueryEvaluationException e) {
-            log.warn("Reading concept for instance failed.", e);
-            return Optional.empty();
         }
     }
     
@@ -551,13 +549,13 @@ public class KnowledgeBaseServiceImpl
     }
 
     @Override
-    public void upsertStatement(KnowledgeBase kb, KBStatement aStatement)
+    public void upsertStatement(KnowledgeBase kb, KBStatement aStatement) throws RepositoryException
     {
         getReificationStrategy(kb).upsertStatement(kb, aStatement);
     }
 
     @Override
-    public void deleteStatement(KnowledgeBase kb, KBStatement aStatement)
+    public void deleteStatement(KnowledgeBase kb, KBStatement aStatement) throws RepositoryException
     {
         getReificationStrategy(kb).deleteStatement(kb, aStatement);
     }
@@ -629,6 +627,7 @@ public class KnowledgeBaseServiceImpl
 
     @Override
     public List<KBHandle> list(KnowledgeBase kb, IRI aType, boolean aIncludeInferred, boolean aAll)
+        throws QueryEvaluationException
     {
         List<KBHandle> resultList = read(kb, (conn) -> {
             String QUERY = String.join("\n"
@@ -656,6 +655,7 @@ public class KnowledgeBaseServiceImpl
 
     @Override
     public List<KBHandle> listRootConcepts(KnowledgeBase kb, boolean aAll)
+        throws QueryEvaluationException
     {
         List<KBHandle> resultList = read(kb, (conn) -> {
             String QUERY = String.join("\n"
@@ -692,6 +692,7 @@ public class KnowledgeBaseServiceImpl
     @Override
     public List<KBHandle> listChildConcepts(KnowledgeBase aKB, String aParentIdentifier,
             boolean aAll)
+        throws QueryEvaluationException
     {
         return listChildConcepts(aKB, aParentIdentifier, aAll, 10000);
     }
@@ -699,6 +700,7 @@ public class KnowledgeBaseServiceImpl
     @Override
     public List<KBHandle> listChildConcepts(KnowledgeBase aKB, String aParentIdentifier,
             boolean aAll, int aLimit)
+        throws QueryEvaluationException
     {
         // The query below only returns subclasses which simultaneously declare being a class
         // via the class property defined in the KB specification. This means that if the KB
@@ -735,14 +737,10 @@ public class KnowledgeBaseServiceImpl
         return resultList;
     }
 
-    private List<KBHandle> evaluateListQuery(TupleQuery tupleQuery, boolean aAll) {
-        TupleQueryResult result;
-        try {
-            result = tupleQuery.evaluate();
-        } catch (QueryEvaluationException e) {
-            log.warn("Evaluating list query failed.", e);
-            return Collections.emptyList();
-        }
+    private List<KBHandle> evaluateListQuery(TupleQuery tupleQuery, boolean aAll)
+        throws QueryEvaluationException
+    {
+        TupleQueryResult result = tupleQuery.evaluate();        
         
         List<KBHandle> handles = new ArrayList<>();
         while (result.hasNext()) {
