@@ -517,8 +517,8 @@ public class KnowledgeBaseDetailsPanel extends Panel {
 
         private void addIriField(WebMarkupContainer wmc, String id, IModel<IRI> model) {
             IModel<String> adapter = new LambdaModelAdapter<String>(
-                    () -> model.getObject().stringValue(),
-                    str -> model.setObject(SimpleValueFactory.getInstance().createIRI(str)));
+                () -> model.getObject().stringValue(),
+                str -> model.setObject(SimpleValueFactory.getInstance().createIRI(str)));
             TextField<String> textField = new RequiredTextField<String>(id, adapter);
             textField.add(Validators.IRI_VALIDATOR);
             wmc.add(textField);

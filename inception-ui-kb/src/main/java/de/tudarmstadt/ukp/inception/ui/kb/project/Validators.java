@@ -39,6 +39,6 @@ public class Validators
         }
     };
     public static final UrlValidator URL_VALIDATOR = new UrlValidator(
-    new String[] { "http", "https" });
+        new String[] { "http", "https" });
 
 }

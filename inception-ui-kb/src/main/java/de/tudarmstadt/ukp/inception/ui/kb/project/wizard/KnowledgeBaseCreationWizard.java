@@ -74,8 +74,8 @@ import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 import de.tudarmstadt.ukp.inception.kb.io.FileUploadHelper;
 import de.tudarmstadt.ukp.inception.kb.reification.Reification;
-import de.tudarmstadt.ukp.inception.ui.kb.project.KnowledgeBaseWrapper;
 import de.tudarmstadt.ukp.inception.ui.kb.project.KnowledgeBaseListPanel;
+import de.tudarmstadt.ukp.inception.ui.kb.project.KnowledgeBaseWrapper;
 import de.tudarmstadt.ukp.inception.ui.kb.project.Validators;
 
 /**
@@ -349,7 +349,8 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
             completed = true;
 
             add(buildComboBox("classIri", model.bind("kb.classIri"), IriConstants.CLASS_IRIS));
-            add(buildComboBox("subclassIri", model.bind("kb.subclassIri"), IriConstants.SUBCLASS_IRIS));
+            add(buildComboBox("subclassIri", model.bind("kb.subclassIri"),
+                    IriConstants.SUBCLASS_IRIS));
             add(buildComboBox("typeIri", model.bind("kb.typeIri"), IriConstants.TYPE_IRIS));
         }
 
@@ -360,8 +361,8 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
             List<String> choices = iris.stream().map(IRI::stringValue).collect(Collectors.toList());
 
             IModel<String> adapter = new LambdaModelAdapter<String>(
-                    () -> model.getObject().stringValue(),
-                    str -> model.setObject(SimpleValueFactory.getInstance().createIRI(str)));
+                () -> model.getObject().stringValue(),
+                str -> model.setObject(SimpleValueFactory.getInstance().createIRI(str)));
 
             ComboBox<String> comboBox = new ComboBox<String>(name, adapter, choices);
             comboBox.setRequired(true);
