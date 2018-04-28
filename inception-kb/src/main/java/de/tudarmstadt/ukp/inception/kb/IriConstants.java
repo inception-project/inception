@@ -42,8 +42,8 @@ public class IriConstants
 
     public static final String WIKIDATA_NAMESPACE = "https://www.wikidata.org/wiki/";
 
-    public static final String[] IMPLICIT_NAMESPACES = { RDF.NAMESPACE, RDFS.NAMESPACE,
-            XMLSchema.NAMESPACE, OWL.NAMESPACE, INCEPTION_SCHEMA_NAMESPACE };
+    public static final Set<String> IMPLICIT_NAMESPACES = new HashSet<>(Arrays.asList(RDF.NAMESPACE,
+            RDFS.NAMESPACE, XMLSchema.NAMESPACE, OWL.NAMESPACE, INCEPTION_SCHEMA_NAMESPACE));
 
     /**
      * Define "important" URIs to allow for importance-based sorting of statements.

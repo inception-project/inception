@@ -1209,7 +1209,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     }
 
     private boolean hasImplicitNamespace(KBHandle handle) {
-        return Arrays.stream(IriConstants.IMPLICIT_NAMESPACES)
+        return IriConstants.IMPLICIT_NAMESPACES.stream()
             .anyMatch(ns -> handle.getIdentifier().startsWith(ns));
     }
 
