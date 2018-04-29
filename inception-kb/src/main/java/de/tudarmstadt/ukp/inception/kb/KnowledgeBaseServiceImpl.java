@@ -660,10 +660,16 @@ public class KnowledgeBaseServiceImpl
             // Get all concepts that are implicitly marked as a class by being a superclass of
             // something or that are explicitly marked as being a class. In any case, filter out
             // those concepts that have superclasses (i.e. are not root classes).
+            // For concepts that are implicitly marked as classes by virtue of being the 
+            // superclass of something, we also assert that these classes are actually defined
+            // within the present ontology by looking for some statement which has them as subject.
             String QUERY = String.join("\n",
                     "SELECT DISTINCT ?s ?l WHERE { ",
                     "  { ?s ?pTYPE ?oCLASS . } UNION ", 
-                    "  { ?someSubClass ?pSUBCLASS ?s . } ", 
+                    "  { ",
+                    "    ?someSubClass ?pSUBCLASS ?s . ", 
+                    "    ?s ?someProperty ?someObject . ", 
+                    "  } ", 
                     "  FILTER NOT EXISTS { ?s ?pSUBCLASS ?someSuperClass . } ",
                     "  OPTIONAL { ",
                     "    ?s ?pLABEL ?l . ",
