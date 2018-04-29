@@ -227,19 +227,9 @@ public class NoReification implements ReificationStrategy {
             InceptionValueMapper mapper = new InceptionValueMapper();
             tupleQuery.setBinding("o", mapper.mapStatementValue(mockStatement, vf));
 
-            TupleQueryResult result;
-            try {
-                result = tupleQuery.evaluate();
+            try (TupleQueryResult result = tupleQuery.evaluate()) {
+                return result.hasNext();
             }
-            catch (QueryEvaluationException e) {
-                log.warn("Listing statements failed.", e);
-                return false;
-            }
-
-            while (result.hasNext()) {
-                return true;
-            }
-            return false;
         }
     }
 

@@ -501,12 +501,6 @@ public class QualifierFeatureEditor
         return focusComponent;
     }
 
-    @Override
-    public void onConfigure()
-    {
-
-    }
-
     private void actionAdd(AjaxRequestTarget aTarget)
     {
         if (selectedRole == null) {

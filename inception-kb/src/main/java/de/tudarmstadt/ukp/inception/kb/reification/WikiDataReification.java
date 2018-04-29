@@ -472,20 +472,9 @@ public class WikiDataReification
             tupleQuery.setBinding("o", mapper.mapStatementValue(mockStatement, vf));
             tupleQuery.setBinding("ps_ns", vf.createIRI(PREDICATE_NAMESPACE));
 
-            TupleQueryResult result;
-            try {
-                result = tupleQuery.evaluate();
+            try (TupleQueryResult result = tupleQuery.evaluate()) {
+                return result.hasNext();
             }
-            catch (QueryEvaluationException e) {
-                log.warn("Listing statements failed.", e);
-                return false;
-            }
-
-            while (result.hasNext()) {
-                return true;
-            }
-            return false;
         }
     }
-
 }

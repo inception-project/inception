@@ -66,7 +66,7 @@ public class PropertyFeatureEditor
     private AnnotationActionHandler actionHandler;
     private Project project;
     private ConceptFeatureTraits traits;
-    private Boolean existStatements = false;
+    private boolean existStatements = false;
 
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean KnowledgeBaseService kbService;
