@@ -27,10 +27,10 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
-import org.wicketstuff.event.annotation.OnEvent;
 import org.eclipse.rdf4j.query.QueryEvaluationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
@@ -82,7 +82,6 @@ public class ConceptInstancePanel
      * Acts upon statement changes. If the changed statement renames the selected instance, the name
      * in the respective {@link KBHandle} is updated. Otherwise, no action is taken.
      *
-     * @param target
      * @param event
      */
     @OnEvent
@@ -131,7 +130,7 @@ public class ConceptInstancePanel
                 replacementPanel = emptyPanel();
                 error("Unable to read instance: " + e.getLocalizedMessage()); 
                 LOG.error("Unable to read instance.", e);
-                target.addChildren(getPage(), IFeedback.class);
+                event.getTarget().addChildren(getPage(), IFeedback.class);
             }
         }
         else {

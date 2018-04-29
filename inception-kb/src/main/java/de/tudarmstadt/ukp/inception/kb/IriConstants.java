@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.kb;
 
 import static java.util.Arrays.asList;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -35,7 +36,6 @@ import org.eclipse.rdf4j.model.vocabulary.XMLSchema;
 public class IriConstants
 {
     public static final String INCEPTION_SCHEMA_NAMESPACE = "http://www.ukp.informatik.tu-darmstadt.de/inception/schema-1.0#";
-
     public static final String INCEPTION_NAMESPACE = "http://www.ukp.informatik.tu-darmstadt.de/inception/1.0#";
 
     public static final String PREFIX_WIKIDATA_ENTITY = "http://www.wikidata.org/entity/";
@@ -69,6 +69,7 @@ public class IriConstants
 
     static {
         ValueFactory vf = SimpleValueFactory.getInstance();
+
         WIKIDATA_CLASS = vf.createIRI(PREFIX_WIKIDATA_ENTITY, "Q35120");
         WIKIDATA_SUBCLASS = vf.createIRI(PREFIX_WIKIDATA_DIRECT, "P279");
         WIKIDATA_TYPE = vf.createIRI(PREFIX_WIKIDATA_DIRECT, "P31");
@@ -77,6 +78,4 @@ public class IriConstants
         SUBCLASS_IRIS = asList(RDFS.SUBCLASSOF, WIKIDATA_SUBCLASS);
         TYPE_IRIS = asList(RDF.TYPE, WIKIDATA_TYPE);
     }
-
-
 }

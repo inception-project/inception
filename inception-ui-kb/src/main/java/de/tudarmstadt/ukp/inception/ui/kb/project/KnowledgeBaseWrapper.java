@@ -71,12 +71,12 @@ public class KnowledgeBaseWrapper implements Serializable {
         this.files = files;
     }
 
-    public static final void updateEkb(KnowledgeBaseWrapper ekb, RepositoryImplConfig cfg,
+    public static final void updateKb(KnowledgeBaseWrapper kbw, RepositoryImplConfig cfg,
             KnowledgeBaseService kbService) throws Exception {
-        KnowledgeBase kb = ekb.getKb();
+        KnowledgeBase kb = kbw.getKb();
         kbService.updateKnowledgeBase(kb, cfg);
         if (kb.getType() == RepositoryType.LOCAL) {
-            KnowledgeBaseWrapper.importFiles(ekb, kbService);
+            KnowledgeBaseWrapper.importFiles(kbw, kbService);
         }
     }
 
@@ -84,9 +84,9 @@ public class KnowledgeBaseWrapper implements Serializable {
      * Handles creation/updating of knowledge bases which is necessary either when creating or
      * editing a new knowledge base in the project settings.
      */
-    public static final void registerEkb(KnowledgeBaseWrapper ekb, KnowledgeBaseService kbService)
+    public static final void registerKb(KnowledgeBaseWrapper kbw, KnowledgeBaseService kbService)
             throws Exception {
-        KnowledgeBase kb = ekb.getKb();
+        KnowledgeBase kb = kbw.getKb();
     
         // set up the repository config, then register the knowledge base
         RepositoryImplConfig cfg;
@@ -94,10 +94,10 @@ public class KnowledgeBaseWrapper implements Serializable {
         case LOCAL:
             cfg = kbService.getNativeConfig();
             kbService.registerKnowledgeBase(kb, cfg);
-            KnowledgeBaseWrapper.importFiles(ekb, kbService);
+            KnowledgeBaseWrapper.importFiles(kbw, kbService);
             break;
         case REMOTE:
-            cfg = kbService.getRemoteConfig(ekb.getUrl());
+            cfg = kbService.getRemoteConfig(kbw.getUrl());
             kbService.registerKnowledgeBase(kb, cfg);
             break;
         default:
@@ -106,10 +106,10 @@ public class KnowledgeBaseWrapper implements Serializable {
     }
     
 
-    private static final void importFiles(KnowledgeBaseWrapper ekb,
+    private static final void importFiles(KnowledgeBaseWrapper kbw,
                                           KnowledgeBaseService kbService) throws Exception {
-        KnowledgeBase kb = ekb.getKb();
-        for (File f : ekb.getFiles()) {
+        KnowledgeBase kb = kbw.getKb();
+        for (File f : kbw.getFiles()) {
             try (InputStream is = new FileInputStream(f)) {
                 kbService.importData(kb, f.getName(), is);
             } catch (IOException | RDFParseException | RepositoryException e) {

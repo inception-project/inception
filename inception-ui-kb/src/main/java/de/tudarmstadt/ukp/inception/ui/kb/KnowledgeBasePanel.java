@@ -140,7 +140,6 @@ public class KnowledgeBasePanel
      * statement change can have (transforming a property into a concept?), it is the simplest
      * working solution.
      *
-     * @param target
      * @param event
      */
     @OnEvent
@@ -203,10 +202,8 @@ public class KnowledgeBasePanel
         }
         details = details.replaceWith(replacementPanel);
 
-        event.getTarget().add(conceptTreePanel);
-        event.getTarget().add(propertyListPanel);
-        event.getTarget().add(detailContainer);
-        target.addChildren(getPage(), IFeedback.class);
+        event.getTarget().add(conceptTreePanel, propertyListPanel, detailContainer);
+        event.getTarget().addChildren(getPage(), IFeedback.class);
     }
 
     @OnEvent
@@ -254,10 +251,8 @@ public class KnowledgeBasePanel
             }
         }
         details = details.replaceWith(replacementPanel);
-        event.getTarget().add(conceptTreePanel);
-        event.getTarget().add(propertyListPanel);
-        event.getTarget().add(detailContainer);
-        target.addChildren(getPage(), IFeedback.class);
+        event.getTarget().add(conceptTreePanel, propertyListPanel, detailContainer);
+        event.getTarget().addChildren(getPage(), IFeedback.class);
     }
 
     @OnEvent

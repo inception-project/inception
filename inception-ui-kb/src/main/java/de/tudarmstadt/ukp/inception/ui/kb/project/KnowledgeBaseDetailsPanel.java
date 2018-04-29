@@ -108,7 +108,7 @@ public class KnowledgeBaseDetailsPanel extends Panel {
     private @SpringBean KnowledgeBaseService kbService;
 
     private final IModel<KnowledgeBase> kbModel;
-    private final CompoundPropertyModel<KnowledgeBaseWrapper> ekbModel;
+    private final CompoundPropertyModel<KnowledgeBaseWrapper> kbwModel;
     
     private Component title;
     private Component content;
@@ -122,23 +122,23 @@ public class KnowledgeBaseDetailsPanel extends Panel {
 
         kbModel = aKbModel;
 
-        KnowledgeBaseWrapper ekb = new KnowledgeBaseWrapper();
+        KnowledgeBaseWrapper kbw = new KnowledgeBaseWrapper();
         KnowledgeBase kb = kbModel.getObject();
-        ekb.setKb(kb);
-        // set the URL of the EKB to the current SPARQL URL, if dealing with a remote repository
-        if (ekb.getKb().getType() == RepositoryType.REMOTE) {
+        kbw.setKb(kb);
+        // set the URL of the KBW to the current SPARQL URL, if dealing with a remote repository
+        if (kbw.getKb().getType() == RepositoryType.REMOTE) {
             RepositoryImplConfig cfg = kbService.getKnowledgeBaseConfig(kb);
             String url = ((SPARQLRepositoryConfig) cfg).getQueryEndpointUrl();
-            ekb.setUrl(url);
+            kbw.setUrl(url);
         }
 
         // wrap the given knowledge base model, then set it as the default model
-        ekbModel = new CompoundPropertyModel<>(Model.of(ekb));
-        setDefaultModel(ekbModel);
+        kbwModel = new CompoundPropertyModel<>(Model.of(kbw));
+        setDefaultModel(kbwModel);
 
         // this form contains all the wicket components in this panel; not only the components used
         // for editing, but also the ones for showing information about a KB (when in ViewMode)
-        Form<KnowledgeBaseWrapper> form = new Form<KnowledgeBaseWrapper>("form", ekbModel) {
+        Form<KnowledgeBaseWrapper> form = new Form<KnowledgeBaseWrapper>("form", kbwModel) {
             private static final long serialVersionUID = -4253347478525087385L;
 
             /**
@@ -161,10 +161,10 @@ public class KnowledgeBaseDetailsPanel extends Panel {
                     FileUploadHelper fileUploadHelper = new FileUploadHelper(getApplication());
                     List<File> fileUploads = new ArrayList<>();
                     for (FileUpload fu : fileUploadField.getFileUploads()) {
-                        File tmpFile = fileUploadHelper.writeToTemporaryFile(fu, ekb);
+                        File tmpFile = fileUploadHelper.writeToTemporaryFile(fu, kbw);
                         fileUploads.add(tmpFile);
                     }
-                    ekbModel.getObject().setFiles(fileUploads);
+                    kbwModel.getObject().setFiles(fileUploads);
                 } catch (Exception e) {
                     log.error("Error while uploading files", e);
                     error("Could not upload files");
@@ -174,7 +174,7 @@ public class KnowledgeBaseDetailsPanel extends Panel {
         add(form);
         
         // add (disabled) radio choice for local/remote repository
-        form.add(new BootstrapRadioGroup<RepositoryType>("type", ekbModel.bind("kb.type"),
+        form.add(new BootstrapRadioGroup<RepositoryType>("type", kbwModel.bind("kb.type"),
                 Arrays.asList(RepositoryType.values()),
                 new EnumRadioChoiceRenderer<RepositoryType>(Buttons.Type.Default, this) {
                     private static final long serialVersionUID = 1073440402072678330L;
@@ -186,11 +186,11 @@ public class KnowledgeBaseDetailsPanel extends Panel {
                 }));
 
         // add (disabled) reification strategy
-        form.add(new Label("reification", ekbModel.bind("kb.reification")));
+        form.add(new Label("reification", kbwModel.bind("kb.reification")));
 
         // title/content
-        title = new ViewModeTitle(TITLE_MARKUP_ID, ekbModel);
-        content = new ViewMode(CONTENT_MARKUP_ID, ekbModel);
+        title = new ViewModeTitle(TITLE_MARKUP_ID, kbwModel);
+        content = new ViewMode(CONTENT_MARKUP_ID, kbwModel);
         form.add(title);
         form.add(content);
 
@@ -247,26 +247,30 @@ public class KnowledgeBaseDetailsPanel extends Panel {
     @Override
     protected void onModelChanged() {
         // propagate the changes to the original knowledge base model
-        kbModel.setObject(ekbModel.getObject().getKb());
+        kbModel.setObject(kbwModel.getObject().getKb());
     }
 
-    private void actionSave(AjaxRequestTarget aTarget, Form<KnowledgeBaseWrapper> aForm) {
-	try {
-		KnowledgeBaseWrapper ekb = ekbModel.getObject();
-	
-		// if dealing with a remote repository and a non-empty URL, get a new RepositoryImplConfig
-		// for the new URL; otherwise keep using the existing config
-		RepositoryImplConfig cfg;
-		if (ekb.getKb().getType() == RepositoryType.REMOTE && ekb.getUrl() != null) {
-		    cfg = kbService.getRemoteConfig(ekb.getUrl());
-		} else {
-		    cfg = kbService.getKnowledgeBaseConfig(ekb.getKb());
-		}
-            	KnowledgeBaseWrapper.updateEkb(ekb, cfg, kbService);
-		modelChanged();
-		stopEditing(aTarget);
-		aTarget.add(findParentWithAssociatedMarkup());
-        } catch (RepositoryConfigException | RepositoryException e) {
+    private void actionSave(AjaxRequestTarget aTarget, Form<KnowledgeBaseWrapper> aForm)
+    {
+        try {
+            KnowledgeBaseWrapper kbw = kbwModel.getObject();
+
+            // if dealing with a remote repository and a non-empty URL, get a new
+            // RepositoryImplConfig
+            // for the new URL; otherwise keep using the existing config
+            RepositoryImplConfig cfg;
+            if (kbw.getKb().getType() == RepositoryType.REMOTE && kbw.getUrl() != null) {
+                cfg = kbService.getRemoteConfig(kbw.getUrl());
+            }
+            else {
+                cfg = kbService.getKnowledgeBaseConfig(kbw.getKb());
+            }
+            KnowledgeBaseWrapper.updateKb(kbw, cfg, kbService);
+            modelChanged();
+            stopEditing(aTarget);
+            aTarget.add(findParentWithAssociatedMarkup());
+        }
+        catch (Exception e) {
             error("Unable to save knowledgebase: " + e.getLocalizedMessage());
             log.error("Unable to save knowledgebase.", e);
         }
@@ -277,13 +281,13 @@ public class KnowledgeBaseDetailsPanel extends Panel {
         confirmationDialog.setTitleModel(
                 new StringResourceModel("kb.details.delete.confirmation.title", this));
         confirmationDialog.setContentModel(new StringResourceModel(
-                "kb.details.delete.confirmation.content", this, ekbModel.bind("kb")));
+                "kb.details.delete.confirmation.content", this, kbwModel.bind("kb")));
         confirmationDialog.show(aTarget);
         confirmationDialog.setConfirmAction((t) -> {
-            KnowledgeBase kb = ekbModel.getObject().getKb();
+            KnowledgeBase kb = kbwModel.getObject().getKb();
             try {
                 kbService.removeKnowledgeBase(kb);
-                ekbModel.getObject().setKb(null);
+                kbwModel.getObject().setKb(null);
                 modelChanged();
             }
             catch (RepositoryException | RepositoryConfigException e) {
@@ -298,9 +302,9 @@ public class KnowledgeBaseDetailsPanel extends Panel {
 
     private void actionClear(AjaxRequestTarget aTarget) {
         try {
-            kbService.clear(ekbModel.getObject().getKb());
+            kbService.clear(kbwModel.getObject().getKb());
             info(new StringResourceModel("kb.details.local.contents.clear.feedback",
-                    ekbModel.bind("kb")));
+                    kbwModel.bind("kb")));
             aTarget.add(this);
         } catch (RepositoryException e) {
             error(e);
@@ -313,15 +317,15 @@ public class KnowledgeBaseDetailsPanel extends Panel {
     }
 
     private void startEditing(AjaxRequestTarget aTarget) {
-        title = title.replaceWith(new EditModeTitle(TITLE_MARKUP_ID, ekbModel));
-        content = content.replaceWith(new EditMode(CONTENT_MARKUP_ID, ekbModel));
+        title = title.replaceWith(new EditModeTitle(TITLE_MARKUP_ID, kbwModel));
+        content = content.replaceWith(new EditMode(CONTENT_MARKUP_ID, kbwModel));
         aTarget.add(this);
         isEditing = true;
     }
     
     private void stopEditing(AjaxRequestTarget aTarget) {
-        title = title.replaceWith(new ViewModeTitle(TITLE_MARKUP_ID, ekbModel));
-        content = content.replaceWith(new ViewMode(CONTENT_MARKUP_ID, ekbModel));
+        title = title.replaceWith(new ViewModeTitle(TITLE_MARKUP_ID, kbwModel));
+        content = content.replaceWith(new ViewMode(CONTENT_MARKUP_ID, kbwModel));
         aTarget.add(this);
         isEditing = false;
     }
