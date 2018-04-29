@@ -24,7 +24,10 @@ import java.util.List;
 import java.util.Optional;
 
 import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.query.QueryEvaluationException;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
+import org.eclipse.rdf4j.repository.RepositoryException;
+import org.eclipse.rdf4j.repository.config.RepositoryConfigException;
 import org.eclipse.rdf4j.repository.config.RepositoryImplConfig;
 import org.eclipse.rdf4j.rio.RDFFormat;
 
@@ -64,7 +67,8 @@ public interface KnowledgeBaseService
      */
     boolean isEmpty(KnowledgeBase kb);
 
-    void registerKnowledgeBase(KnowledgeBase kb, RepositoryImplConfig cfg);
+    void registerKnowledgeBase(KnowledgeBase kb, RepositoryImplConfig cfg)
+        throws RepositoryException, RepositoryConfigException;
 
     boolean knowledgeBaseExists(Project project, String kbName);
 
@@ -74,9 +78,11 @@ public interface KnowledgeBaseService
      * Update the configuration of a knowledge base.
      * The given knowledge base must have been added before.
      */
-    void updateKnowledgeBase(KnowledgeBase kb, RepositoryImplConfig cfg);
+    void updateKnowledgeBase(KnowledgeBase kb, RepositoryImplConfig cfg)
+        throws RepositoryException, RepositoryConfigException;
 
-    void removeKnowledgeBase(KnowledgeBase kb);
+    void removeKnowledgeBase(KnowledgeBase kb)
+        throws RepositoryException, RepositoryConfigException;
 
     List<KnowledgeBase> getKnowledgeBases(Project aProject);
     
@@ -91,7 +97,8 @@ public interface KnowledgeBaseService
 
     RepositoryImplConfig getRemoteConfig(String url);
 
-    RepositoryImplConfig getKnowledgeBaseConfig(KnowledgeBase kb);
+    RepositoryImplConfig getKnowledgeBaseConfig(KnowledgeBase kb)
+        throws RepositoryConfigException, RepositoryException;
 
     void registerImplicitNamespace(String aImplicitNameSpace);
 
@@ -112,7 +119,8 @@ public interface KnowledgeBaseService
      *            a concept identifier.
      * @return the concept.
      */
-    Optional<KBConcept> readConcept(KnowledgeBase kb, String aIdentifier);
+    Optional<KBConcept> readConcept(KnowledgeBase kb, String aIdentifier)
+        throws QueryEvaluationException;
 
     /**
      * Find the specified concept form the first KB in the project which provides it.
@@ -123,7 +131,8 @@ public interface KnowledgeBaseService
      *            a concept identifier.
      * @return the concept.
      */
-    Optional<KBConcept> readConcept(Project aProject, String aIdentifier);
+    Optional<KBConcept> readConcept(Project aProject, String aIdentifier)
+        throws QueryEvaluationException;
 
     /**
      * Updates an existing concept in the given knowledge base. Does nothing if 
@@ -141,7 +150,7 @@ public interface KnowledgeBaseService
      */
     void deleteConcept(KnowledgeBase kb, KBConcept aType);
 
-    List<KBHandle> listConcepts(KnowledgeBase kb, boolean aAll);
+    List<KBHandle> listConcepts(KnowledgeBase kb, boolean aAll) throws QueryEvaluationException;
 
     /**
      * Creates a new property in the given knowledge base. Does nothing
@@ -151,7 +160,8 @@ public interface KnowledgeBaseService
      */
     KBHandle createProperty(KnowledgeBase kb, KBProperty aProperty);
 
-    Optional<KBProperty> readProperty(KnowledgeBase kb, String aIdentifier);
+    Optional<KBProperty> readProperty(KnowledgeBase kb, String aIdentifier)
+        throws QueryEvaluationException;
 
     /**
      * Updates an existing property in the given knowledge base. Does nothing
@@ -169,7 +179,7 @@ public interface KnowledgeBaseService
      */
     void deleteProperty(KnowledgeBase kb, KBProperty aType);
 
-    List<KBHandle> listProperties(KnowledgeBase kb, boolean aAll);
+    List<KBHandle> listProperties(KnowledgeBase kb, boolean aAll) throws QueryEvaluationException;
 
     /**
      * Creates a new instance in the given knowledge base. Does nothing if the knowledge base is
@@ -191,7 +201,8 @@ public interface KnowledgeBaseService
      *            an instance identifier.
      * @return the concept.
      */
-    Optional<KBInstance> readInstance(KnowledgeBase kb, String aIdentifier);
+    Optional<KBInstance> readInstance(KnowledgeBase kb, String aIdentifier)
+        throws QueryEvaluationException;
 
     /**
      * Find the specified instance form the first KB in the project which provides it.
@@ -202,7 +213,8 @@ public interface KnowledgeBaseService
      *            an instance identifier.
      * @return the concept.
      */
-    Optional<KBInstance> readInstance(Project aProject, String aIdentifier);
+    Optional<KBInstance> readInstance(Project aProject, String aIdentifier)
+        throws QueryEvaluationException;
 
     /**
      * Updates an existing instance in the given knowledge base. Does nothing
@@ -227,7 +239,8 @@ public interface KnowledgeBaseService
      * @param aAll        True if entities with implicit namespaces (e.g. defined by RDF)
      * @return All instances of the given concept
      */
-    List<KBHandle> listInstances(KnowledgeBase kb, String aConceptIri, boolean aAll);
+    List<KBHandle> listInstances(KnowledgeBase kb, String aConceptIri, boolean aAll)
+        throws QueryEvaluationException;
 
     // Statements
 
@@ -245,7 +258,7 @@ public interface KnowledgeBaseService
      * attempt will be made, but the statement will be added as a new explicit statement. Does
      * nothing if the knowledge base is read only.
      */
-    void upsertStatement(KnowledgeBase kb, KBStatement aStatement);
+    void upsertStatement(KnowledgeBase kb, KBStatement aStatement) throws RepositoryException;
 
     /**
      * Deletes a statement in the given knowledge base if it exists. Does
@@ -253,20 +266,24 @@ public interface KnowledgeBaseService
      * @param kb The knowledge base from which the new concept will be deleted
      * @param aStatement The statement to delete
      */
-    void deleteStatement(KnowledgeBase kb, KBStatement aStatement);
+    void deleteStatement(KnowledgeBase kb, KBStatement aStatement) throws RepositoryException;
 
-    List<KBStatement> listStatements(KnowledgeBase kb, KBHandle aInstance, boolean aAll);
+    List<KBStatement> listStatements(KnowledgeBase kb, KBHandle aInstance, boolean aAll)
+        throws QueryEvaluationException;
 
-    List<KBStatement> listStatements(KnowledgeBase kb, KBInstance aInstance, boolean aAll);
+    List<KBStatement> listStatements(KnowledgeBase kb, KBInstance aInstance, boolean aAll)
+        throws QueryEvaluationException;
 
-    List<KBHandle> listRootConcepts(KnowledgeBase kb, boolean aAll);
+    List<KBHandle> listRootConcepts(KnowledgeBase kb, boolean aAll) throws QueryEvaluationException;
 
     boolean hasChildConcepts(KnowledgeBase aKB, String aParentIdentifier, boolean aAll);
     
-    List<KBHandle> listChildConcepts(KnowledgeBase kb, String parentIdentifier, boolean aAll);
+    List<KBHandle> listChildConcepts(KnowledgeBase kb, String parentIdentifier, boolean aAll)
+        throws QueryEvaluationException;
 
     List<KBHandle> listChildConcepts(KnowledgeBase kb, String parentIdentifier, boolean aAll,
-            int aLimit);
+            int aLimit)
+        throws QueryEvaluationException;
     
     RepositoryConnection getConnection(KnowledgeBase kb);
 

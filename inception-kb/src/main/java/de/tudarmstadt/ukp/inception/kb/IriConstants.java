@@ -18,9 +18,8 @@
 
 package de.tudarmstadt.ukp.inception.kb;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
+import static java.util.Arrays.asList;
+
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -35,12 +34,12 @@ import org.eclipse.rdf4j.model.vocabulary.XMLSchema;
 
 public class IriConstants
 {
-
     public static final String INCEPTION_SCHEMA_NAMESPACE = "http://www.ukp.informatik.tu-darmstadt.de/inception/schema-1.0#";
 
     public static final String INCEPTION_NAMESPACE = "http://www.ukp.informatik.tu-darmstadt.de/inception/1.0#";
 
-    public static final String WIKIDATA_NAMESPACE = "https://www.wikidata.org/wiki/";
+    public static final String PREFIX_WIKIDATA_ENTITY = "http://www.wikidata.org/entity/";
+    public static final String PREFIX_WIKIDATA_DIRECT = "http://www.wikidata.org/prop/direct/";
 
     public static final Set<String> IMPLICIT_NAMESPACES = new HashSet<>(Arrays.asList(RDF.NAMESPACE,
             RDFS.NAMESPACE, XMLSchema.NAMESPACE, OWL.NAMESPACE, INCEPTION_SCHEMA_NAMESPACE));
@@ -70,19 +69,13 @@ public class IriConstants
 
     static {
         ValueFactory vf = SimpleValueFactory.getInstance();
-        WIKIDATA_CLASS = vf.createIRI(WIKIDATA_NAMESPACE, "Q35120");
-        WIKIDATA_SUBCLASS = vf.createIRI(WIKIDATA_NAMESPACE, "Property:P279");
-        WIKIDATA_TYPE = vf.createIRI(WIKIDATA_NAMESPACE, "Property:P31");
+        WIKIDATA_CLASS = vf.createIRI(PREFIX_WIKIDATA_ENTITY, "Q35120");
+        WIKIDATA_SUBCLASS = vf.createIRI(PREFIX_WIKIDATA_DIRECT, "P279");
+        WIKIDATA_TYPE = vf.createIRI(PREFIX_WIKIDATA_DIRECT, "P31");
 
-        CLASS_IRIS = buildImmutableList(RDFS.CLASS, OWL.CLASS, WIKIDATA_CLASS);
-        SUBCLASS_IRIS = buildImmutableList(RDFS.SUBCLASSOF, WIKIDATA_SUBCLASS);
-        TYPE_IRIS = buildImmutableList(RDF.TYPE, WIKIDATA_TYPE);
-    }
-
-    private static <T> List<T> buildImmutableList(T... items)
-    {
-        List<T> list = new ArrayList(Arrays.asList(items));
-        return Collections.unmodifiableList(list);
+        CLASS_IRIS = asList(RDFS.CLASS, OWL.CLASS, WIKIDATA_CLASS);
+        SUBCLASS_IRIS = asList(RDFS.SUBCLASSOF, WIKIDATA_SUBCLASS);
+        TYPE_IRIS = asList(RDF.TYPE, WIKIDATA_TYPE);
     }
 
 

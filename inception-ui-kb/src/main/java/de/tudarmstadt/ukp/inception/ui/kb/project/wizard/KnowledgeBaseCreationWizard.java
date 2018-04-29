@@ -50,12 +50,16 @@ import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.Model;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.validation.IValidator;
 import org.apache.wicket.validation.ValidationError;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.vocabulary.OWL;
+import org.eclipse.rdf4j.model.vocabulary.RDF;
+import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,8 +67,10 @@ import com.googlecode.wicket.kendo.ui.form.combobox.ComboBox;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.button.Buttons;
 import de.agilecoders.wicket.core.markup.html.bootstrap.form.radio.BootstrapRadioGroup;
+import de.agilecoders.wicket.core.markup.html.bootstrap.form.radio.BootstrapRadioGroup.ISelectionChangeHandler;
 import de.agilecoders.wicket.core.markup.html.bootstrap.form.radio.EnumRadioChoiceRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.inception.app.bootstrap.BootstrapWizard;
@@ -105,10 +111,16 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
     private final IModel<Project> projectModel;
     private final DynamicWizardModel wizardModel;
     private final CompoundPropertyModel<KnowledgeBaseWrapper> wizardDataModel;
+    private final IModel<IriSchemaType> selectedIriSchema;
 
     public KnowledgeBaseCreationWizard(String id, IModel<Project> aProjectModel) {
         super(id);
-
+        
+        // needed for the re-rendering in SchemaConfigurenStep
+        setOutputMarkupId(true);
+        
+        selectedIriSchema = new Model<IriSchemaType>();
+        
         uploadedFiles = new HashMap<>();
 
         projectModel = aProjectModel;
@@ -348,13 +360,45 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
             model = aModel;
             completed = true;
 
-            add(buildComboBox("classIri", model.bind("kb.classIri"), IriConstants.CLASS_IRIS));
-            add(buildComboBox("subclassIri", model.bind("kb.subclassIri"),
-                    IriConstants.SUBCLASS_IRIS));
-            add(buildComboBox("typeIri", model.bind("kb.typeIri"), IriConstants.TYPE_IRIS));
-        }
+            // RadioGroup to select the IriSchemaType
+            BootstrapRadioGroup<IriSchemaType> iriSchemaChoice = new BootstrapRadioGroup<>(
+                    "iriSchema", selectedIriSchema, Arrays.asList(IriSchemaType.values()),
+                    new EnumRadioChoiceRenderer<>(Buttons.Type.Default, this));
+            iriSchemaChoice.setOutputMarkupId(true);
+		
+	// Add text fields for classIri, subclassIri and typeIri
+            ComboBox<String> classField = buildComboBox("classIri", model.bind("kb.classIri"), IriConstants.CLASS_IRIS);
+            add(classField);
 
-        private ComboBox<String> buildComboBox(String name, IModel<IRI> model, List<IRI> iris)
+            ComboBox<String> subclassField = buildComboBox("subclassIri", model.bind("kb.subclassIri"),
+                    IriConstants.SUBCLASS_IRIS);
+            add(subclassField);
+
+            ComboBox<String> typeField = buildComboBox("typeIri", model.bind("kb.typeIri"), IriConstants.TYPE_IRIS);
+            add(typeField);
+            
+            // OnChange update the model with corresponding iris
+            iriSchemaChoice.setChangeHandler(new ISelectionChangeHandler<IriSchemaType>()
+            {
+                private static final long serialVersionUID = 1653808650286121732L;
+
+                @Override
+                public void onSelectionChanged(AjaxRequestTarget target, IriSchemaType bean)
+                {
+                    classField.setModelObject(bean.getClassIriString());
+                    subclassField.setModelObject(bean.getSubclassIriString());
+                    typeField.setModelObject(bean.getTypeIriString());
+                    // For some reason it does not work if just the checkboxes
+                    // are added to the target
+                    target.addChildren(getPage(), KnowledgeBaseCreationWizard.class);
+                }
+            });
+
+            add(iriSchemaChoice);
+        }
+        
+        private ComboBox<String> buildComboBox(String id,
+                CompoundPropertyModel<EnrichedKnowledgeBase> model, List<IRI> iris)
         {
             model.setObject(iris.get(0));
 
@@ -364,15 +408,30 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
                 () -> model.getObject().stringValue(),
                 str -> model.setObject(SimpleValueFactory.getInstance().createIRI(str)));
 
-            ComboBox<String> comboBox = new ComboBox<String>(name, adapter, choices);
+            ComboBox<String> comboBox = new ComboBox<String>(name, adapter, choices)
+            {
+
+                private static final long serialVersionUID = 1575770301215073872L;
+
+                @Override
+                protected void onConfigure()
+                {
+                    super.onConfigure();
+                    setEnabled(IriSchemaType.CUSTOMSCHEMA.equals(selectedIriSchema.getObject()));
+                }
+            };
+		comboBox.setOutputMarkupId(true);
             comboBox.setRequired(true);
             comboBox.add(Validators.IRI_VALIDATOR);
+	comboBox.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> {
+                // Do nothing just update the model values
+            }));
             return comboBox;
         }
-
+        
         @Override
         public void applyState()
-        {
+        {   
             KnowledgeBaseWrapper ekb = wizardDataModel.getObject();
             ekb.getKb().setProject(projectModel.getObject());
        
@@ -380,6 +439,7 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
                 KnowledgeBaseWrapper.registerEkb(ekb, kbService);
             } catch (Exception e) {
                 error(e.getMessage());
+                
             }
         }
 
@@ -414,14 +474,17 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
             protected FinishButton newFinishButton(String id, IWizard wizard) {
                 FinishButton button = new FinishButton(id, wizard) {
                     private static final long serialVersionUID = -7070739469409737740L;
-
+                    
                     @Override
                     public void onAfterSubmit() {
                         // update the list panel and close the dialog - this must be done in
                         // onAfterSubmit, otherwise it cancels out the call to onFinish()
-
                         IWizardStep step = wizardModel.getActiveStep();
-                        if (step.isComplete()) {
+                        // do not close the wizard if no schema type has been selected
+                        if (selectedIriSchema.getObject() == null) {
+                            error("Please select a schema type.");
+                        }
+                        else if (step.isComplete()) {
                             AjaxRequestTarget target = RequestCycle.get()
                                     .find(AjaxRequestTarget.class);
                             target.add(findParent(KnowledgeBaseListPanel.class));
@@ -449,6 +512,46 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
         };
         return buttonBar;
     }
+    
+    public enum IriSchemaType
+    {
+        RDFSCHEMA(RDFS.CLASS.stringValue(), RDFS.SUBCLASSOF.stringValue(),
+                    RDF.TYPE.stringValue()),
+        
+        WIKIDATASCHEMA(IriConstants.WIKIDATA_CLASS.stringValue(),
+                        IriConstants.WIKIDATA_SUBCLASS.stringValue(),
+                        IriConstants.WIKIDATA_TYPE.stringValue()),
+        
+        OWLSCHEMA(OWL.CLASS.stringValue(), RDFS.SUBCLASSOF.stringValue(),
+                    RDF.TYPE.stringValue()),
+        
+        CUSTOMSCHEMA("", "", "");
 
+        private final String classIriString;
+        private final String subclassIriString;
+        private final String typeIriString;
 
+        private IriSchemaType(String aClassIriString, String aSubclassIriString,
+                String aTypeIriString)
+        {
+            classIriString = aClassIriString;
+            subclassIriString = aSubclassIriString;
+            typeIriString = aTypeIriString;
+        }
+
+        public String getClassIriString()
+        {
+            return classIriString;
+        }
+
+        public String getSubclassIriString()
+        {
+            return subclassIriString;
+        }
+
+        public String getTypeIriString()
+        {
+            return typeIriString;
+        }
+    }
 }

@@ -84,6 +84,7 @@
     <module>inception-ui-dashboard</module>
     <module>inception-html-editor</module>
     <module>inception-pdf-editor</module>
+    <module>inception-recommendation-api</module>
     <module>inception-recommendation</module>
     <module>inception-active-learning</module>
     <module>inception-concept-linking</module>
@@ -92,10 +93,12 @@
     <module>inception-imls-opennlp</module>
     <module>inception-imls-stringmatch</module>
     <module>inception-imls-dl4j</module>
+    <module>inception-imls-external</module>
     <module>inception-log</module>
     <module>inception-support</module>
     <!-- Documentation -->
     <module>inception-doc</module>
+
   </modules>
   <repositories>
     <!-- For RELEASEes of WebAnno / DKPro Core-->
@@ -221,6 +224,11 @@
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-recommendation-api</artifactId>
+        <version>0.3.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-active-learning</artifactId>
         <version>0.3.0-SNAPSHOT</version>
       </dependency>
@@ -262,6 +270,11 @@
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-imls-stringmatch</artifactId>
+        <version>0.3.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-imls-external</artifactId>
         <version>0.3.0-SNAPSHOT</version>
       </dependency>
       <dependency>
@@ -484,6 +497,16 @@
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-compress</artifactId>
         <version>1.14</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.httpcomponents</groupId>
+        <artifactId>httpclient</artifactId>
+        <version>4.5.3</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.httpcomponents</groupId>
+        <artifactId>httpcore</artifactId>
+        <version>4.4.9</version>
       </dependency>
       <dependency>
       <groupId>it.unimi.dsi</groupId>

@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.ui.kb;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.NoResultException;
@@ -112,9 +113,16 @@ public class KnowledgeBasePage
     
     protected void commonInit(Project aProject) {
         IModel<Project> projectModel = new LambdaModel<>(() -> aProject);
-       
-        List<KnowledgeBase> knowledgeBases = kbService
-                .getEnabledKnowledgeBases(projectModel.getObject());
+
+        List<KnowledgeBase> knowledgeBases = new ArrayList<KnowledgeBase>();
+        try {
+            knowledgeBases = kbService.getEnabledKnowledgeBases(projectModel.getObject());
+        }
+        catch (Exception e) {
+            error("Unable to fetch knowledgebases: " + e.getLocalizedMessage());
+            LOG.error("Unable to fetch knowledgebases.",e);
+        }
+        
         if (knowledgeBases.isEmpty()) {
             abort();
         }       
@@ -123,6 +131,7 @@ public class KnowledgeBasePage
         IModel<KnowledgeBase> kbModel = Model.of(knowledgeBases.get(0));
         KnowledgeBasePanel panel = new KnowledgeBasePanel("content", projectModel, kbModel);
         add(panel);
+        
     }
     
     @Override
