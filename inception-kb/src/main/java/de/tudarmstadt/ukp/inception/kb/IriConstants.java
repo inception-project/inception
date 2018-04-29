@@ -18,9 +18,8 @@
 
 package de.tudarmstadt.ukp.inception.kb;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
+import static java.util.Arrays.asList;
+
 import java.util.List;
 
 import org.eclipse.rdf4j.model.IRI;
@@ -32,8 +31,8 @@ import org.eclipse.rdf4j.model.vocabulary.RDFS;
 
 public class IriConstants
 {
-
-    public static final String WIKIDATA_NAMESPACE = "https://www.wikidata.org/wiki/";
+    public static final String PREFIX_WIKIDATA_ENTITY = "http://www.wikidata.org/entity/";
+    public static final String PREFIX_WIKIDATA_DIRECT = "http://www.wikidata.org/prop/direct/";
 
     /**
      * https://www.wikidata.org/wiki/Q35120
@@ -54,18 +53,12 @@ public class IriConstants
 
     static {
         ValueFactory vf = SimpleValueFactory.getInstance();
-        WIKIDATA_CLASS = vf.createIRI(WIKIDATA_NAMESPACE, "Q35120");
-        WIKIDATA_SUBCLASS = vf.createIRI(WIKIDATA_NAMESPACE, "Property:P279");
-        WIKIDATA_TYPE = vf.createIRI(WIKIDATA_NAMESPACE, "Property:P31");
+        WIKIDATA_CLASS = vf.createIRI(PREFIX_WIKIDATA_ENTITY, "Q35120");
+        WIKIDATA_SUBCLASS = vf.createIRI(PREFIX_WIKIDATA_DIRECT, "P279");
+        WIKIDATA_TYPE = vf.createIRI(PREFIX_WIKIDATA_DIRECT, "P31");
 
-        CLASS_IRIS = buildImmutableList(RDFS.CLASS, OWL.CLASS, WIKIDATA_CLASS);
-        SUBCLASS_IRIS = buildImmutableList(RDFS.SUBCLASSOF, WIKIDATA_SUBCLASS);
-        TYPE_IRIS = buildImmutableList(RDF.TYPE, WIKIDATA_TYPE);
-    }
-
-    private static <T> List<T> buildImmutableList(T... items)
-    {
-        List<T> list = new ArrayList(Arrays.asList(items));
-        return Collections.unmodifiableList(list);
+        CLASS_IRIS = asList(RDFS.CLASS, OWL.CLASS, WIKIDATA_CLASS);
+        SUBCLASS_IRIS = asList(RDFS.SUBCLASSOF, WIKIDATA_SUBCLASS);
+        TYPE_IRIS = asList(RDF.TYPE, WIKIDATA_TYPE);
     }
 }

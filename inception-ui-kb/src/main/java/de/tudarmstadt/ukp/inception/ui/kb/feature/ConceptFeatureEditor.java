@@ -74,6 +74,8 @@ public class ConceptFeatureEditor
     private static final String MID_VALUE = "value";
 
     private static final long serialVersionUID = 7763348613632105600L;
+    private static final Logger LOG = LoggerFactory.getLogger(ConceptFeatureEditor.class);
+
 
     private Component focusComponent;
 

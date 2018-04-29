@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.stmt;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -41,6 +43,9 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.eclipse.rdf4j.query.QueryEvaluationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
@@ -58,6 +63,8 @@ import de.tudarmstadt.ukp.inception.ui.kb.util.WriteProtectionBehavior;
 public class StatementGroupPanel extends EventListeningPanel {
 
     private static final long serialVersionUID = 2431747012293487976L;
+    private static final Logger LOG = LoggerFactory.getLogger(StatementGroupPanel.class);
+
     
     private static final String CONTENT_MARKUP_ID = "content";
 
@@ -143,16 +150,28 @@ public class StatementGroupPanel extends EventListeningPanel {
         private List<KBHandle> getUnusedProperties() {
             StatementGroupBean bean = groupModel.getObject(); 
             StatementDetailPreference detailPreference = bean.getDetailPreference();
-            
-            Set<KBHandle> existingPropertyHandles = kbService
-                    .listStatements(bean.getKb(), bean.getInstance(),
-                            detailPreference == StatementDetailPreference.ALL)
-                    .stream()
-                    .map(stmt -> stmt.getProperty())
-                    .collect(Collectors.toSet());
+            Set<KBHandle> existingPropertyHandles = Collections.emptySet();
+            try {
+                existingPropertyHandles = kbService
+                        .listStatements(bean.getKb(), bean.getInstance(),
+                                detailPreference == StatementDetailPreference.ALL)
+                        .stream().map(stmt -> stmt.getProperty()).collect(Collectors.toSet());
+            }
+            catch (QueryEvaluationException e) {
+                error("Unable to list statements: " + e.getLocalizedMessage());
+                LOG.error("Unable to list statements.", e);
 
-            List<KBHandle> properties = kbService.listProperties(groupModel.getObject().getKb(),
-                    detailPreference == StatementDetailPreference.ALL);
+            }
+
+            List<KBHandle> properties = new ArrayList<>();
+            try {
+                properties = kbService.listProperties(groupModel.getObject().getKb(),
+                        detailPreference == StatementDetailPreference.ALL);
+            }
+            catch (QueryEvaluationException e) {
+                error("Unable to list properties: " + e.getLocalizedMessage());
+                LOG.error("Unable to list properties.", e);
+            }
             properties.removeAll(existingPropertyHandles);
             return properties;
         }
