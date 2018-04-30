@@ -172,9 +172,13 @@ public class MtasDocumentIndex
             MtasSpanQuery mtasSpanQuery = createQuery(FIELD_CONTENT, modifiedQuery);
             return doQuery(indexReader, aUser, FIELD_CONTENT, mtasSpanQuery, prefixes);
         }
+        catch (mtas.parser.cql.ParseException e) {
+            log.error("Mtas query syntax error", e);
+            throw (new ExecutionException(e.getMessage()));
+        }
         catch (Exception e) {
             log.error("Query execution error", e);
-            throw(new ExecutionException("Query execution error", e));
+            throw (new ExecutionException("Query execution error", e));
         }
     }
 
