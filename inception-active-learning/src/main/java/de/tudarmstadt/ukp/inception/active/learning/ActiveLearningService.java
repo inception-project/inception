@@ -23,14 +23,13 @@ import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 
 public interface ActiveLearningService
 {
     List<List<AnnotationObject>> getRecommendationsForWholeProject(Predictions model,
-            AnnotationLayer aLayer, Project aProject, String aUsername);
+            AnnotationLayer aLayer);
     
     List<List<AnnotationObject>> getRecommendationFromRecommendationModel(AnnotatorState aState,
             AnnotationLayer aLayer);

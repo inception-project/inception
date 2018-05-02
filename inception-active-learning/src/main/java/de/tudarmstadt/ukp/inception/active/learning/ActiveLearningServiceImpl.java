@@ -23,16 +23,12 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.uima.jcas.JCas;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
@@ -41,10 +37,8 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 public class ActiveLearningServiceImpl
     implements ActiveLearningService
 {
-    private final Logger LOG = LoggerFactory.getLogger(getClass());
     private final DocumentService documentService;
     private final RecommendationService recommendationService;
-    private @Autowired CasStorageService casStorageService;
 
     @Autowired
     public ActiveLearningServiceImpl(DocumentService aDocumentService,
@@ -66,8 +60,7 @@ public class ActiveLearningServiceImpl
         }
 
         // getRecommendationsForThisDocument(model);
-        return getRecommendationsForWholeProject(model, aLayer, aState.getProject(), aState
-            .getUser().getUsername());
+        return getRecommendationsForWholeProject(model, aLayer);
     }
 
 //    private List<List<AnnotationObject>> getRecommendationsForThisDocument(AnnotatorState aState,
@@ -80,8 +73,9 @@ public class ActiveLearningServiceImpl
 //                windowEnd, aJcas);
 //    }
 
-    @Override public List<List<AnnotationObject>> getRecommendationsForWholeProject(
-        Predictions model, AnnotationLayer aLayer, Project aProject, String aUsername)
+    @Override
+    public List<List<AnnotationObject>> getRecommendationsForWholeProject(Predictions model,
+            AnnotationLayer aLayer)
     {
         List<List<AnnotationObject>> result = new ArrayList<>();
 
