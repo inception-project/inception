@@ -130,7 +130,7 @@ public class SlotFeatureSupport
     @Override
     public Panel createTraitsEditor(String aId,  IModel<AnnotationFeature> aFeatureModel)
     {
-        return new LinkFeatureTraitsEditor(aId, aFeatureModel);
+        return new LinkFeatureTraitsEditor(aId, this, aFeatureModel);
     }
     
     @Override
