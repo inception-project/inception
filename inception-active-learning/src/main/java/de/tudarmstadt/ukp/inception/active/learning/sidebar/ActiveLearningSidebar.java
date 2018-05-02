@@ -36,6 +36,7 @@ import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.string.Strings;
 import org.slf4j.Logger;
@@ -57,6 +58,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VTextMar
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
@@ -140,6 +142,7 @@ public class ActiveLearningSidebar
     private VID highlightVID;
     private LearningRecord selectedRecord;
     private Date learnSkippedRecommendationTime;
+    private ConfirmationDialog confirmationDialog;
 
     public ActiveLearningSidebar(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, JCasProvider aJCasProvider,
@@ -157,6 +160,8 @@ public class ActiveLearningSidebar
         mainContainer.add(createRecommendationOperationForm());
         mainContainer.add(createLearningHistory());
         add(mainContainer);
+        confirmationDialog = new ConfirmationDialog("confirmationDialog");
+        add(confirmationDialog);
     }
 
     private Form<?> createSessionControlForm()
@@ -456,7 +461,7 @@ public class ActiveLearningSidebar
         
         // Save CAS
         aActionHandler.actionCreateOrUpdate(aTarget, jCas);
-        
+
         moveToNextRecommendation(aTarget);
     }
 
@@ -589,13 +594,32 @@ public class ActiveLearningSidebar
                 selectedLayer.getObject());
     }
 
-    private void actionRemoveHistoryItem(AjaxRequestTarget aTarget,
-            LearningRecord aRecord)
+    private void actionRemoveHistoryItem(AjaxRequestTarget aTarget, LearningRecord aRecord)
+        throws IOException, AnnotationException
     {
         aTarget.add(mainContainer);
         annotationPage.actionRefreshDocument(aTarget);
         learningRecordService.delete(aRecord);
         learningRecords.detach();
+        if (aRecord.getUserAction().equals(LearningRecordUserAction.ACCEPTED) && isAnnotatedInCas(
+            aRecord)) {
+            confirmationDialog.setTitleModel(
+                new StringResourceModel("alSidebar.history.delete.confirmation.title", this));
+            confirmationDialog.setContentModel(
+                new StringResourceModel("alSidebar.history.delete.confirmation.content", this,
+                    null));
+            confirmationDialog.show(aTarget);
+            confirmationDialog.setConfirmAction(t -> deleteAnnotationByHistory(t, aRecord));
+        }
+    }
+
+    private void deleteAnnotationByHistory(AjaxRequestTarget aTarget, LearningRecord aRecord)
+        throws IOException, AnnotationException
+    {
+        JCas jCas = getActionHandler().getEditorCas();
+        this.getModelObject().getSelection().selectSpan(highlightVID, jCas, aRecord
+            .getOffsetCharacterBegin(), aRecord.getOffsetCharacterEnd());
+        getActionHandler().actionDelete(aTarget);
     }
 
     @OnEvent
