@@ -840,6 +840,8 @@
                   <excludes>
                     <exclude>.gitignore</exclude>
                     <exclude>.checkstyle</exclude>
+                    <exclude>suppressions.xml</exclude>
+                    <exclude>marker-*</exclude>
                     <!-- maven config files -->
                     <exclude>src/main/filter/**/*</exclude>
                     <!-- release generated artifact -->
