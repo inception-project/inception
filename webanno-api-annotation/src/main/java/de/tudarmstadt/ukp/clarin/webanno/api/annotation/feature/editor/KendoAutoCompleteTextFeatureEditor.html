@@ -17,26 +17,6 @@
 #limitations under the License.
 -->
 <html xmlns:wicket="http://wicket.apache.org">
-<wicket:head>
-  <script>
-    function applyTooltip(aElement) {
-      if (!$(aElement).data('ui-tooltip')) {
-        $(aElement).tooltip({
-          position: { my: 'center bottom', at: 'center top', of: '.page-footer' },
-          show: false,
-          hide: false,
-          content: function() { 
-            var html =  
-              '<div class="tooltip-title">' + ($(this).text() ? $(this).text() : 'no title') +
-              '</div> <div class="tooltip-content tooltip-pre">' + ($(this).attr('title') ? $(this).attr('title') : 'no description' )+'</div>';
-            return html;
-          }
-        });
-        setTimeout(function() { $(aElement).tooltip().mouseover();; }, 0);
-      }
-    }
-  </script>
-</wicket:head>
 <wicket:panel>
   <div class="form-group" wicket:enclosure="value">
     <label wicket:for="value" class="col-sm-3 control-label">

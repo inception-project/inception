@@ -130,27 +130,7 @@ public class SlotFeatureSupport
     @Override
     public Panel createTraitsEditor(String aId,  IModel<AnnotationFeature> aFeatureModel)
     {
-        AnnotationFeature feature = aFeatureModel.getObject();
-
-        final Panel editor;
-        
-        switch (feature.getMultiValueMode()) {
-        case ARRAY:
-            switch (feature.getLinkMode()) {
-            case WITH_ROLE:
-                editor = new LinkFeatureTraitsEditor(aId, this, aFeatureModel);
-                break;
-            default:
-                throw unsupportedFeatureTypeException(feature);
-            }
-            break;
-        case NONE:
-            throw unsupportedLinkModeException(feature);
-        default:
-            throw unsupportedMultiValueModeException(feature);
-        }
-        
-        return editor;
+        return new LinkFeatureTraitsEditor(aId, aFeatureModel);
     }
     
     @Override
