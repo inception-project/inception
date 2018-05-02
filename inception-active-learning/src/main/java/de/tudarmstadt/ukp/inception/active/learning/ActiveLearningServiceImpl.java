@@ -17,16 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.active.learning;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
-import org.apache.uima.cas.Type;
-import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,7 +33,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
@@ -97,28 +91,9 @@ public class ActiveLearningServiceImpl
         Set<String> documentNameSet = recommendationsMap.keySet();
 
         for (String documentName : documentNameSet) {
-
-            SourceDocument aDocument = documentService.getSourceDocument(aProject, documentName);
-            List<List<AnnotationObject>> aoForEachDocument = recommendationsMap.get(documentName);
-            try {
-                JCas aJcas = casStorageService.readCas(aDocument, aUsername);
-                Type type = CasUtil.getType(aJcas.getCas(), aLayer.getName());
-                List<AnnotationFS> existingAnnotations = CasUtil
-                    .selectCovered(aJcas.getCas(), type, 0, aJcas.getDocumentText().length() - 1);
-                List<Integer> existingOffsets = existingAnnotations.stream().map(e -> e.getBegin())
-                    .collect(Collectors.toList());
-                for (List<AnnotationObject> aoList : aoForEachDocument) {
-                    aoList.removeIf(
-                        ao -> existingOffsets.contains(ao.getOffset().getBeginCharacter()));
-                }
-            }
-            catch (IOException e) {
-                LOG.error("Error: " + e.getMessage(), e);
-            }
-            result.addAll(aoForEachDocument);
+            result.addAll(recommendationsMap.get(documentName));
         }
 
-        result.removeIf(l -> l.isEmpty());
         return result;
     }
     
