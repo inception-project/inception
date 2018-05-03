@@ -336,4 +336,6 @@ public interface KnowledgeBaseService
      * @return all qualifiers for the given statement
      */
     List<KBQualifier> listQualifiers(KnowledgeBase kb, KBStatement aStatement);
+
+    boolean statementsMatchSPO(KnowledgeBase akb, KBStatement mockStatement);
 }
