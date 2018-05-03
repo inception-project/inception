@@ -17,21 +17,19 @@
  */
 package de.tudarmstadt.ukp.inception.search.index.mtas;
 
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.junit.Assert.assertEquals;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Properties;
 
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.FixMethodOrder;
 import org.junit.Rule;
 import org.junit.Test;
@@ -41,20 +39,17 @@ import org.junit.runners.MethodSorters;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.MediaType;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.FileSystemUtils;
 import org.springframework.web.context.WebApplicationContext;
 
@@ -69,6 +64,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.dao.AnnotationSchemaServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.CasStorageServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.DocumentServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.ImportExportServiceImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.initializers.NamedEntityLayerInitializer;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.initializers.TokenLayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.export.ExportService;
@@ -76,6 +73,7 @@ import de.tudarmstadt.ukp.clarin.webanno.export.ExportServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.export.ImportService;
 import de.tudarmstadt.ukp.clarin.webanno.export.ImportServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.project.ProjectServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDaoImpl;
@@ -84,54 +82,39 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
 import de.tudarmstadt.ukp.dkpro.core.io.text.TextReader;
 import de.tudarmstadt.ukp.dkpro.core.io.text.TextWriter;
+import de.tudarmstadt.ukp.inception.search.SearchResult;
+import de.tudarmstadt.ukp.inception.search.SearchService;
+import de.tudarmstadt.ukp.inception.search.SearchServiceImpl;
+import de.tudarmstadt.ukp.inception.search.index.IndexFactory;
+import de.tudarmstadt.ukp.inception.search.index.IndexRegistry;
+import de.tudarmstadt.ukp.inception.search.index.IndexRegistryImpl;
 
 /**
- * The Class MtasSearchTestConsistency.
+ * The Class MtasDocumentIndexTest.
  */
-// @Ignore("Currently does not run because requires INCEpTION running as well")
-//@RunWith(SpringRunner.class)
-//@EnableAutoConfiguration
-//@SpringBootTest(classes = SpringConfig.class, webEnvironment = WebEnvironment.MOCK)
-//@EntityScan({ "de.tudarmstadt.ukp.clarin.webanno.model",
-//        "de.tudarmstadt.ukp.clarin.webanno.security.model" })
-//@Transactional
-//@DataJpaTest
 
-@RunWith(SpringRunner.class) 
+@RunWith(SpringRunner.class)
 @EnableAutoConfiguration
 @SpringBootTest(webEnvironment = WebEnvironment.MOCK)
-//@EnableWebSecurity
-@EntityScan({
-    "de.tudarmstadt.ukp.clarin.webanno.model",
-    "de.tudarmstadt.ukp.clarin.webanno.security.model" })
+@EnableWebSecurity
+@EntityScan({ "de.tudarmstadt.ukp.clarin.webanno.model",
+        "de.tudarmstadt.ukp.clarin.webanno.security.model" })
 @TestPropertySource(locations = "classpath:MtasDocumentIndexTest.properties")
-//@FixMethodOrder(MethodSorters.NAME_ASCENDING)
-
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 
 public class MtasDocumentIndexTest
 {
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
-//    private @Autowired TestEntityManager testEntityManager;
-
-    // private SearchServiceImpl searchService;
-    // private Project project;
-    // private @Autowired IndexRegistry indexRegistry;
-    // private AnnotationSchemaService annotationSchemaService;
-    // private DocumentService documentService;
-    // private ProjectService projectService;
-
-    // Index factory
-    // private IndexFactory indexFactory;
-    // private String indexFactoryName = "mtasDocumentIndexFactory";
-
-    // Index
-    // private Index index;
-
     private @Autowired WebApplicationContext context;
 
     private @Autowired UserDao userRepository;
+
+    private @Autowired ProjectService projectService;
+    private @Autowired DocumentService documentService;
+    private @Autowired SearchService searchService;
+    private @Autowired AnnotationSchemaService annotationSchemaService;
 
     private MockMvc mvc;
 
@@ -141,79 +124,68 @@ public class MtasDocumentIndexTest
     // in the DB and clean the test repository once!
     private static boolean initialized = false;
 
-    @BeforeClass
-    public static void setUpOnce()
-    {
-        System.setProperty("org.eclipse.rdf4j.repository.debug", "true");
-    }
-
     @Before
     public void setUp()
     {
-        /*
-         * EntityManager entityManager = testEntityManager.getEntityManager(); searchService = new
-         * SearchServiceImpl(temporaryFolder.getRoot());
-         * 
-         * project = createProject(PROJECT_NAME);
-         * 
-         * indexFactory = indexRegistry.getIndexFactory(indexFactoryName);
-         * 
-         * index = indexFactory.getNewIndex(project, annotationSchemaService, documentService,
-         * projectService, temporaryFolder.getRoot().getAbsolutePath());
-         * 
-         * index.createIndex();
-         */
+        mvc = MockMvcBuilders.webAppContextSetup(context).alwaysDo(print())
+                .apply(SecurityMockMvcConfigurers.springSecurity()).build();
 
-        
-//        mvc = MockMvcBuilders.webAppContextSetup(context).alwaysDo(print())
-//                .apply(SecurityMockMvcConfigurers.springSecurity()).build();
-//
-//        if (!initialized) {
-//            userRepository.create(new User("admin", Role.ROLE_ADMIN));
-//            initialized = true;
-//
-//            FileSystemUtils.deleteRecursively(new File("target/MtasDocumentIndexTest"));
-//        }
+        if (!initialized) {
+            userRepository.create(new User("admin", Role.ROLE_ADMIN));
+            initialized = true;
 
+            FileSystemUtils.deleteRecursively(new File("target/MtasDocumentIndexTest"));
+        }
     }
 
     @Test
-    public void t001_testProjectCreate() throws Exception
+    public void testSimpleQuery() throws Exception
     {
-        mvc.perform(
-                get("/api/v2/projects").with(csrf().asHeader()).with(user("admin").roles("ADMIN")))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType("application/json;charset=UTF-8"))
-                .andExpect(jsonPath("$.messages").isEmpty());
+        Project project = new Project();
 
-        mvc.perform(
-                post("/api/v2/projects").with(csrf().asHeader()).with(user("admin").roles("ADMIN"))
-                        .contentType(MediaType.MULTIPART_FORM_DATA).param("name", "project1"))
-                .andExpect(status().isCreated())
-                .andExpect(content().contentType("application/json;charset=UTF-8"))
-                .andExpect(jsonPath("$.body.id").value("1"))
-                .andExpect(jsonPath("$.body.name").value("project1"));
+        project.setName("TestProject");
 
-        mvc.perform(
-                get("/api/v2/projects").with(csrf().asHeader()).with(user("admin").roles("ADMIN")))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType("application/json;charset=UTF-8"))
-                .andExpect(jsonPath("$.body[0].id").value("1"))
-                .andExpect(jsonPath("$.body[0].name").value("project1"));
+        projectService.createProject(project);
+
+        annotationSchemaService.initializeProject(project);
+
+        SourceDocument sourceDocument = new SourceDocument();
+
+        sourceDocument.setName("test");
+        sourceDocument.setProject(project);
+        sourceDocument.setFormat("text");
+
+        String fileContent = "The capital of Galicia is Santiago de Compostela.";
+
+        InputStream fileStream = new ByteArrayInputStream(
+                fileContent.getBytes(StandardCharsets.UTF_8));
+
+        documentService.uploadSourceDocument(fileStream, sourceDocument);
+
+        User user = userRepository.get("admin");
+        String query = "Galicia";
+
+        ArrayList<SearchResult> results = (ArrayList<SearchResult>) searchService.query(user,
+                project, query);
+
+        SearchResult expectedResult = new SearchResult();
+        expectedResult.setDocumentId(1);
+        expectedResult.setDocumentTitle("test");
+        expectedResult.setText("Galicia ");
+        expectedResult.setLeftContext("capital of ");
+        expectedResult.setRightContext("is ");
+        expectedResult.setOffsetStart(15);
+        expectedResult.setOffsetEnd(22);
+        expectedResult.setTokenStart(3);
+        expectedResult.setTokenLength(1);
+
+        ArrayList<SearchResult> expectedResults = new ArrayList<SearchResult>();
+        expectedResults.add(expectedResult);
+
+        assertEquals(results.get(0), expectedResult);
+//        assertArrayEquals(results.toArray(), expectedResults.toArray());
     }
 
-//    private Project createProject(String name)
-//    {
-//        Project project = new Project();
-//        project.setName(name);
-//        return testEntityManager.persist(project);
-//    }
-
-    // @Test
-    // public void testCreateIndex() throws Exception
-    // {
-    // index.createIndex();
-    // }
     @Configuration
     public static class TestContext
     {
@@ -222,43 +194,79 @@ public class MtasDocumentIndexTest
         {
             return new ProjectServiceImpl();
         }
-        
+
+        @Bean
+        public IndexFactory mtasDocumentIndexFactory()
+        {
+            return new MtasDocumentIndexFactory();
+        }
+
+        @Lazy
+        @Bean
+        public NamedEntityLayerInitializer NamedEntityLayerInitializer(
+                @Lazy @Autowired AnnotationSchemaService aAnnotationService)
+        {
+            return new NamedEntityLayerInitializer(aAnnotationService);
+        }
+
+        @Lazy
+        @Bean
+        public TokenLayerInitializer TokenLayerInitializer(
+                @Lazy @Autowired AnnotationSchemaService aAnnotationService)
+        {
+            return new TokenLayerInitializer(aAnnotationService);
+        }
+
+        @Lazy
+        @Bean
+        public IndexRegistry indexRegistry(
+                @Lazy @Autowired(required = false) List<IndexFactory> aExtensions)
+        {
+            return new IndexRegistryImpl(aExtensions);
+        }
+
+        @Bean
+        public SearchService searchService()
+        {
+            return new SearchServiceImpl();
+        }
+
         @Bean
         public UserDao userRepository()
         {
             return new UserDaoImpl();
         }
-        
+
         @Bean
         public DocumentService documentService()
         {
             return new DocumentServiceImpl();
         }
-        
+
         @Bean
         public AnnotationSchemaService annotationService()
         {
             return new AnnotationSchemaServiceImpl();
         }
-        
+
         @Bean
         public FeatureSupportRegistry featureSupportRegistry()
         {
             return new FeatureSupportRegistryImpl(Collections.emptyList());
         }
-        
+
         @Bean
         public CasStorageService casStorageService()
         {
             return new CasStorageServiceImpl();
         }
-        
+
         @Bean
         public ImportExportService importExportService()
         {
             return new ImportExportServiceImpl();
         }
-        
+
         @Bean
         public CurationDocumentService curationDocumentService()
         {
@@ -286,7 +294,7 @@ public class MtasDocumentIndexTest
             props.put("text.writer", TextWriter.class.getName());
             return props;
         }
-        
+
         @Bean
         public ApplicationContextProvider contextProvider()
         {

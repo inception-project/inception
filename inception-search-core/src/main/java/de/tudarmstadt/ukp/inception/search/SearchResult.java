@@ -126,4 +126,68 @@ public class SearchResult
     {
         documentTitle = aDocumentTitle;
     }
+
+    @Override
+    public int hashCode()
+    {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + (int) (documentId ^ (documentId >>> 32));
+        result = prime * result + ((documentTitle == null) ? 0 : documentTitle.hashCode());
+        result = prime * result + ((leftContext == null) ? 0 : leftContext.hashCode());
+        result = prime * result + offsetEnd;
+        result = prime * result + offsetStart;
+        result = prime * result + ((rightContext == null) ? 0 : rightContext.hashCode());
+        result = prime * result + ((text == null) ? 0 : text.hashCode());
+        result = prime * result + tokenLength;
+        result = prime * result + tokenStart;
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj)
+    {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        SearchResult other = (SearchResult) obj;
+        if (documentId != other.documentId)
+            return false;
+        if (documentTitle == null) {
+            if (other.documentTitle != null)
+                return false;
+        }
+        else if (!documentTitle.equals(other.documentTitle))
+            return false;
+        if (leftContext == null) {
+            if (other.leftContext != null)
+                return false;
+        }
+        else if (!leftContext.equals(other.leftContext))
+            return false;
+        if (offsetEnd != other.offsetEnd)
+            return false;
+        if (offsetStart != other.offsetStart)
+            return false;
+        if (rightContext == null) {
+            if (other.rightContext != null)
+                return false;
+        }
+        else if (!rightContext.equals(other.rightContext))
+            return false;
+        if (text == null) {
+            if (other.text != null)
+                return false;
+        }
+        else if (!text.equals(other.text))
+            return false;
+        if (tokenLength != other.tokenLength)
+            return false;
+        if (tokenStart != other.tokenStart)
+            return false;
+        return true;
+    }
 }
