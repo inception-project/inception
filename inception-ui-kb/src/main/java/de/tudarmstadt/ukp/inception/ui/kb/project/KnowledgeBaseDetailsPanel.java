@@ -132,6 +132,7 @@ public class KnowledgeBaseDetailsPanel extends Panel {
         ekb.setClassIri(kb.getClassIri().stringValue());
         ekb.setSubclassIri(kb.getSubclassIri().stringValue());
         ekb.setTypeIri(kb.getTypeIri().stringValue());
+        ekb.setDescriptionIri(kb.getDescriptionIri().stringValue());
         ekb.setEnabled(kb.isEnabled());
         ekb.setReification(kb.getReification());
         ekb.setSupportConceptLinking(kb.isSupportConceptLinking());
@@ -406,6 +407,7 @@ public class KnowledgeBaseDetailsPanel extends Panel {
             addDisabledUrlField(wmc, "classIri");
             addDisabledUrlField(wmc, "subclassIri");
             addDisabledUrlField(wmc, "typeIri");
+            addDisabledUrlField(wmc, "descriptionIri");
             wmc.add(new CheckBox("enabled")
                 .add(LambdaBehavior.onConfigure(it -> it.setEnabled(false))));
             wmc.add(new CheckBox("supportConceptLinking")
@@ -490,6 +492,7 @@ public class KnowledgeBaseDetailsPanel extends Panel {
             addUrlField(wmc, "classIri");
             addUrlField(wmc, "subclassIri");
             addUrlField(wmc, "typeIri");
+            addUrlField(wmc, "descriptionIri");
             wmc.add(new CheckBox("enabled"));
             wmc.add(new CheckBox("supportConceptLinking"));
         }

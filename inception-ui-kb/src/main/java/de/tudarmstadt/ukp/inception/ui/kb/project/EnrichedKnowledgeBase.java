@@ -37,6 +37,8 @@ public class EnrichedKnowledgeBase implements Serializable {
     private String classIri;
     private String subclassIri;
     private String typeIri;
+    private String descriptionIri;
+
     private boolean enabled = true;
     private Reification reification = Reification.NONE;
     private List<File> files;
@@ -93,6 +95,16 @@ public class EnrichedKnowledgeBase implements Serializable {
     public void setTypeIri(String aTypeUri)
     {
         typeIri = aTypeUri;
+    }
+
+    public String getDescriptionIri()
+    {
+        return descriptionIri;
+    }
+
+    public void setDescriptionIri(String aDescriptionIri)
+    {
+        descriptionIri = aDescriptionIri;
     }
 
     public boolean isEnabled()
