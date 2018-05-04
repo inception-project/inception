@@ -364,7 +364,7 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
                     new EnumRadioChoiceRenderer<>(Buttons.Type.Default, this));
             iriSchemaChoice.setOutputMarkupId(true);
 
-            // Add text fields for classIri, subclassIri and typeIri
+            // Add text fields for classIri, subclassIri, typeIri and descriptionIri
             ComboBox<String> classField = buildComboBox("classIri", model, IriConstants.CLASS_IRIS);
             add(classField);
 
@@ -374,7 +374,11 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
 
             ComboBox<String> typeField = buildComboBox("typeIri", model, IriConstants.TYPE_IRIS);
             add(typeField);
-            
+
+            ComboBox<String> descriptionField = buildComboBox("descriptionIri", model,
+                IriConstants.DESCRIPTION_IRIS);
+            add(descriptionField);
+
             // OnChange update the model with corresponding iris
             iriSchemaChoice.setChangeHandler(new ISelectionChangeHandler<IriSchemaType>()
             {
@@ -386,6 +390,7 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
                     classField.setModelObject(bean.getClassIriString());
                     subclassField.setModelObject(bean.getSubclassIriString());
                     typeField.setModelObject(bean.getTypeIriString());
+                    descriptionField.setModelObject(bean.getDescriptionIriString());
                     // For some reason it does not work if just the checkboxes
                     // are added to the target
                     target.addChildren(getPage(), KnowledgeBaseCreationWizard.class);
@@ -509,27 +514,30 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
     public enum IriSchemaType
     {
         RDFSCHEMA(RDFS.CLASS.stringValue(), RDFS.SUBCLASSOF.stringValue(),
-                    RDF.TYPE.stringValue()),
+                    RDF.TYPE.stringValue(), RDFS.COMMENT.stringValue()),
         
         WIKIDATASCHEMA(IriConstants.WIKIDATA_CLASS.stringValue(),
                         IriConstants.WIKIDATA_SUBCLASS.stringValue(),
-                        IriConstants.WIKIDATA_TYPE.stringValue()),
+                        IriConstants.WIKIDATA_TYPE.stringValue(),
+                        IriConstants.SCHEMA_DESCRIPTION.stringValue()),
         
         OWLSCHEMA(OWL.CLASS.stringValue(), RDFS.SUBCLASSOF.stringValue(),
-                    RDF.TYPE.stringValue()),
+                    RDF.TYPE.stringValue(), RDFS.COMMENT.stringValue()),
         
-        CUSTOMSCHEMA("", "", "");
+        CUSTOMSCHEMA("", "", "", "");
 
         private final String classIriString;
         private final String subclassIriString;
         private final String typeIriString;
+        private final String descriptionString;
 
         private IriSchemaType(String aClassIriString, String aSubclassIriString,
-                String aTypeIriString)
+                String aTypeIriString, String aDescriptionString)
         {
             classIriString = aClassIriString;
             subclassIriString = aSubclassIriString;
             typeIriString = aTypeIriString;
+            descriptionString = aDescriptionString;
         }
 
         public String getClassIriString()
@@ -545,6 +553,11 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
         public String getTypeIriString()
         {
             return typeIriString;
+        }
+
+        public String getDescriptionIriString()
+        {
+            return descriptionString;
         }
     }
 }

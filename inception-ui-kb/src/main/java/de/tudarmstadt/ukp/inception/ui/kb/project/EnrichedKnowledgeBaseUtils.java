@@ -81,6 +81,7 @@ public class EnrichedKnowledgeBaseUtils
         kb.setClassIri(factory.createIRI(ekb.getClassIri()));
         kb.setSubclassIri(factory.createIRI(ekb.getSubclassIri()));
         kb.setTypeIri(factory.createIRI(ekb.getTypeIri()));
+        kb.setDescriptionIri(factory.createIRI(ekb.getDescriptionIri()));
         kb.setEnabled(ekb.isEnabled());
         kb.setSupportConceptLinking(ekb.isSupportConceptLinking());
         kb.setReification(ekb.getReification());
