@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.search.index.mtas;
 
 import static org.junit.Assert.assertEquals;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -45,13 +44,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.util.FileSystemUtils;
-import org.springframework.web.context.WebApplicationContext;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
@@ -65,6 +60,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.dao.CasStorageServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.DocumentServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.ImportExportServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.initializers.NamedEntityLayerInitializer;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.initializers.PartOfSpeechLayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.initializers.TokenLayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentServiceImpl;
@@ -107,16 +103,12 @@ public class MtasDocumentIndexTest
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
-    private @Autowired WebApplicationContext context;
-
     private @Autowired UserDao userRepository;
 
     private @Autowired ProjectService projectService;
     private @Autowired DocumentService documentService;
     private @Autowired SearchService searchService;
     private @Autowired AnnotationSchemaService annotationSchemaService;
-
-    private MockMvc mvc;
 
     // If this is not static, for some reason the value is re-set to false before a
     // test method is invoked. However, the DB is not reset - and it should not be.
@@ -127,9 +119,6 @@ public class MtasDocumentIndexTest
     @Before
     public void setUp()
     {
-        mvc = MockMvcBuilders.webAppContextSetup(context).alwaysDo(print())
-                .apply(SecurityMockMvcConfigurers.springSecurity()).build();
-
         if (!initialized) {
             userRepository.create(new User("admin", Role.ROLE_ADMIN));
             initialized = true;
@@ -183,7 +172,53 @@ public class MtasDocumentIndexTest
         expectedResults.add(expectedResult);
 
         assertEquals(results.get(0), expectedResult);
-//        assertArrayEquals(results.toArray(), expectedResults.toArray());
+    }
+
+    @Test
+    public void testAnnotationQuery() throws Exception
+    {
+        Project project = new Project();
+
+        project.setName("TestProject");
+
+        projectService.createProject(project);
+
+        annotationSchemaService.initializeProject(project);
+
+        SourceDocument sourceDocument = new SourceDocument();
+
+        sourceDocument.setName("test");
+        sourceDocument.setProject(project);
+        sourceDocument.setFormat("text");
+
+        String fileContent = "The capital of Galicia is Santiago de Compostela.";
+
+        InputStream fileStream = new ByteArrayInputStream(
+                fileContent.getBytes(StandardCharsets.UTF_8));
+
+        documentService.uploadSourceDocument(fileStream, sourceDocument);
+
+        User user = userRepository.get("admin");
+        String query = "Galicia";
+
+        ArrayList<SearchResult> results = (ArrayList<SearchResult>) searchService.query(user,
+                project, query);
+
+        SearchResult expectedResult = new SearchResult();
+        expectedResult.setDocumentId(1);
+        expectedResult.setDocumentTitle("test");
+        expectedResult.setText("Galicia ");
+        expectedResult.setLeftContext("capital of ");
+        expectedResult.setRightContext("is ");
+        expectedResult.setOffsetStart(15);
+        expectedResult.setOffsetEnd(22);
+        expectedResult.setTokenStart(3);
+        expectedResult.setTokenLength(1);
+
+        ArrayList<SearchResult> expectedResults = new ArrayList<SearchResult>();
+        expectedResults.add(expectedResult);
+
+        assertEquals(results.get(0), expectedResult);
     }
 
     @Configuration
@@ -211,10 +246,18 @@ public class MtasDocumentIndexTest
 
         @Lazy
         @Bean
-        public TokenLayerInitializer TokenLayerInitializer(
-                @Lazy @Autowired AnnotationSchemaService aAnnotationService)
+        public PartOfSpeechLayerInitializer PartOfSpeechLayerInitializer(
+                @Lazy @Autowired AnnotationSchemaService aAnnotationSchemaService)
         {
-            return new TokenLayerInitializer(aAnnotationService);
+            return new PartOfSpeechLayerInitializer(aAnnotationSchemaService);
+        }
+
+        @Lazy
+        @Bean
+        public TokenLayerInitializer TokenLayerInitializer(
+                @Lazy @Autowired AnnotationSchemaService aAnnotationSchemaService)
+        {
+            return new TokenLayerInitializer(aAnnotationSchemaService);
         }
 
         @Lazy
@@ -244,7 +287,7 @@ public class MtasDocumentIndexTest
         }
 
         @Bean
-        public AnnotationSchemaService annotationService()
+        public AnnotationSchemaService annotationSchemaService()
         {
             return new AnnotationSchemaServiceImpl();
         }
