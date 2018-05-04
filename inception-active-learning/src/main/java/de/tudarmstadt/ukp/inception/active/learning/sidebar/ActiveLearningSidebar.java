@@ -44,6 +44,7 @@ import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.JCasProvider;
@@ -123,6 +124,7 @@ public class ActiveLearningSidebar
     private @SpringBean LearningRecordService learningRecordService;
     private @SpringBean DocumentService documentService;
     private @SpringBean ApplicationEventPublisherHolder applicationEventPublisherHolder;
+    private @SpringBean CasStorageService casStorageService;
 
     private IModel<AnnotationLayer> selectedLayer;
     private IModel<List<LearningRecord>> learningRecords;
@@ -541,6 +543,7 @@ public class ActiveLearningSidebar
     {
         actionShowSelectedDocument(aTarget, record.getSourceDocument(),
             record.getOffsetCharacterBegin());
+        JCas aJcas = this.getJCasProvider().get();
 
         if (record.getUserAction().equals(LearningRecordUserAction.REJECTED)) {
             highlightTextAndDisplayMessage(aTarget, record);
@@ -554,15 +557,14 @@ public class ActiveLearningSidebar
         // if the suggestion doesn't exit -> if that suggestion is accepted and annotated,
         // highlight the annotation.
         // else, highlight the text.
-        else if (!isAnnotatedInCas(record)) {
+        else if (!isAnnotatedInCas(record, aJcas)) {
             highlightTextAndDisplayMessage(aTarget, record);
         }
     }
 
-    private boolean isAnnotatedInCas(LearningRecord aRecord)
+    private boolean isAnnotatedInCas(LearningRecord aRecord, JCas aJcas)
         throws IOException
     {
-        JCas aJcas = this.getJCasProvider().get();
         Type type = CasUtil.getType(aJcas.getCas(), selectedLayer.getObject().getName());
         AnnotationFS annotationFS = WebAnnoCasUtil
             .selectSingleFsAt(aJcas, type, aRecord.getOffsetCharacterBegin(),
@@ -605,24 +607,28 @@ public class ActiveLearningSidebar
         annotationPage.actionRefreshDocument(aTarget);
         learningRecordService.delete(aRecord);
         learningRecords.detach();
-        if (aRecord.getUserAction().equals(LearningRecordUserAction.ACCEPTED) && isAnnotatedInCas(
-            aRecord)) {
-            confirmationDialog.setTitleModel(
-                new StringResourceModel("alSidebar.history.delete.confirmation.title", this));
-            confirmationDialog.setContentModel(
-                new StringResourceModel("alSidebar.history.delete.confirmation.content", this,
-                    null));
-            confirmationDialog.show(aTarget);
-            confirmationDialog.setConfirmAction(t -> deleteAnnotationByHistory(t, aRecord));
+        if (aRecord.getUserAction().equals(LearningRecordUserAction.ACCEPTED)) {
+            JCas aJcas = casStorageService.readCas(aRecord.getSourceDocument(), aRecord.getUser());
+            if (isAnnotatedInCas(aRecord, aJcas)) {
+                confirmationDialog.setTitleModel(
+                    new StringResourceModel("alSidebar.history.delete.confirmation.title", this));
+                confirmationDialog.setContentModel(
+                    new StringResourceModel("alSidebar.history.delete.confirmation.content", this,
+                        null));
+                confirmationDialog.show(aTarget);
+                confirmationDialog
+                    .setConfirmAction(t -> deleteAnnotationByHistory(t, aRecord, aJcas));
+            }
         }
     }
 
-    private void deleteAnnotationByHistory(AjaxRequestTarget aTarget, LearningRecord aRecord)
+    private void deleteAnnotationByHistory(AjaxRequestTarget aTarget, LearningRecord aRecord,
+        JCas aJcas)
         throws IOException, AnnotationException
     {
-        JCas jCas = getActionHandler().getEditorCas();
-        this.getModelObject().getSelection().selectSpan(highlightVID, jCas, aRecord
-            .getOffsetCharacterBegin(), aRecord.getOffsetCharacterEnd());
+        this.getModelObject().getSelection()
+            .selectSpan(highlightVID, aJcas, aRecord.getOffsetCharacterBegin(),
+                aRecord.getOffsetCharacterEnd());
         getActionHandler().actionDelete(aTarget);
     }
 
