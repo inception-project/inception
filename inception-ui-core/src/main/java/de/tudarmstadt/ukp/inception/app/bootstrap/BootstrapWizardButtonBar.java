@@ -15,13 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.ui.kb.event;
+package de.tudarmstadt.ukp.inception.app.bootstrap;
 
-import java.io.Serializable;
+import org.apache.wicket.extensions.wizard.AjaxWizardButtonBar;
+import org.apache.wicket.extensions.wizard.Wizard;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.AjaxPayloadCallback;
+public class BootstrapWizardButtonBar extends AjaxWizardButtonBar {
 
-public interface AjaxStatementChangedCallback<T extends Serializable>
-        extends AjaxPayloadCallback<AjaxStatementChangedEvent> {
+    private static final long serialVersionUID = 7136194479524182883L;
 
+    public BootstrapWizardButtonBar(String id, Wizard wizard) {
+        super(id, wizard);
+    }
 }

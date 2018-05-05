@@ -32,6 +32,7 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Form;
+import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.markup.repeater.RefreshingView;
 import org.apache.wicket.markup.repeater.util.ModelIteratorAdapter;
@@ -44,6 +45,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.eclipse.rdf4j.query.QueryEvaluationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.wicketstuff.event.annotation.OnEvent;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.button.Buttons;
 import de.agilecoders.wicket.core.markup.html.bootstrap.form.radio.BootstrapRadioGroup;
@@ -55,11 +57,10 @@ import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
-import de.tudarmstadt.ukp.inception.ui.kb.EventListeningPanel;
+import de.tudarmstadt.ukp.inception.ui.kb.WriteProtectionBehavior;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxStatementGroupChangedEvent;
-import de.tudarmstadt.ukp.inception.ui.kb.util.WriteProtectionBehavior;
 
-public class StatementsPanel extends EventListeningPanel {
+public class StatementsPanel extends Panel {
     private static final long serialVersionUID = -6655528906388195399L;
     private static final Logger LOG = LoggerFactory.getLogger(StatementsPanel.class);
 
@@ -146,13 +147,11 @@ public class StatementsPanel extends EventListeningPanel {
         addLink.add(new Label("label", new ResourceModel("statement.add")));
         addLink.add(new WriteProtectionBehavior(kbModel));
         add(addLink);
-                
-        eventHandler.addCallback(AjaxStatementGroupChangedEvent.class,
-                this::actionStatementGroupChanged);
+
     }
     
-    private void actionStatementGroupChanged(AjaxRequestTarget target,
-            AjaxStatementGroupChangedEvent event) {
+    @OnEvent
+    public void actionStatementGroupChanged(AjaxStatementGroupChangedEvent event) {
         // event is irrelevant if it is concerned with a different knowledge base instance
         boolean isEventForThisStatementsPanel = instance.getObject()
                 .equals(event.getBean().getInstance());
@@ -165,7 +164,7 @@ public class StatementsPanel extends EventListeningPanel {
         if (event.isDeleted()) {
             statementGroups.getObject().removeIf(sgb -> sgb.equals(event.getBean()));
         }
-        target.add(this);
+        event.getTarget().add(this);
     }
     
     private void setUpDetailPreference(StatementDetailPreference aDetailPreference) {

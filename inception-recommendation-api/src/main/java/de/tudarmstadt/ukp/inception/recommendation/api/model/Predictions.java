@@ -29,6 +29,9 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+import org.apache.uima.cas.Type;
+import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -87,7 +90,7 @@ public class Predictions
      * 
      */
     public Map<String, List<List<AnnotationObject>>> getPredictionsForWholeProject(
-        AnnotationLayer aLayer, DocumentService aDocumentService)
+        AnnotationLayer aLayer, DocumentService aDocumentService, boolean aFilterExisting)
     {
         Map<String, List<List<AnnotationObject>>> predictions = new HashMap<>();
 
@@ -100,11 +103,11 @@ public class Predictions
                 jcas = aDocumentService.readAnnotationCas(doc);
                 // TODO #176 use the document Id once it it available in the CAS
                 List<List<AnnotationObject>> p = getPredictions(doc.getName(), aLayer, 0,
-                        jcas.getDocumentText().length() - 1, jcas);
+                        jcas.getDocumentText().length() - 1, jcas, aFilterExisting);
                 predictions.put(doc.getName(), p);
             } catch (IOException e) {
                 logger.info("Cannot read JCas: ", e);
-            }   
+            }
         }
 
         return predictions;
@@ -117,9 +120,10 @@ public class Predictions
      * list is a list of predictions for a token
      */
     public List<List<AnnotationObject>> getPredictions(String aDocumentName, AnnotationLayer aLayer,
-            int aWindowBegin, int aWindowEnd, JCas aJcas) {
+        int aWindowBegin, int aWindowEnd, JCas aJcas, boolean aFilterExisting)
+    {
         List<AnnotationObject> p = getFlattenedPredictions(aDocumentName, aLayer, aWindowBegin,
-                aWindowEnd, aJcas);
+            aWindowEnd, aJcas, aFilterExisting);
         Iterator<AnnotationObject> it = p.iterator();
         
         List<List<AnnotationObject>> result = new ArrayList<>();
@@ -159,16 +163,36 @@ public class Predictions
      * @param aJcas 
      */
     public List<AnnotationObject> getFlattenedPredictions(String aDocumentName,
-        AnnotationLayer aLayer,  int aWindowBegin, int aWindowEnd, JCas aJcas)
+        AnnotationLayer aLayer, int aWindowBegin, int aWindowEnd, JCas aJcas,
+        boolean aFilterExisting)
     {
-        return predictions.entrySet().stream()
-                .filter(f -> f.getKey().getDocumentName().equals(aDocumentName))
-                .filter(f -> f.getKey().getLayerId() == aLayer.getId())
-                .filter(f -> f.getKey().getOffset().getBeginCharacter() >= aWindowBegin)
-                .filter(f -> f.getKey().getOffset().getEndCharacter() <= aWindowEnd)
-                .map(Map.Entry::getValue)
-                .sorted(Comparator.comparingInt(e2 -> e2.getOffset().getBeginCharacter()))
+        List<Map.Entry<ExtendedId, AnnotationObject>> p = predictions.entrySet().stream()
+            .filter(f -> f.getKey().getDocumentName().equals(aDocumentName))
+            .filter(f -> f.getKey().getLayerId() == aLayer.getId())
+            .filter(f -> f.getKey().getOffset().getBeginCharacter() >= aWindowBegin)
+            .filter(f -> f.getKey().getOffset().getEndCharacter() <= aWindowEnd)
+            .sorted(Comparator.comparingInt(e2 -> e2.getValue().getOffset().getBeginCharacter()))
+            .collect(Collectors.toList());
+
+        if (aFilterExisting) {
+            Type type = CasUtil.getType(aJcas.getCas(), aLayer.getName());
+            List<AnnotationFS> existingAnnotations = CasUtil.selectCovered(aJcas.getCas(),
+                type, aWindowBegin, aWindowEnd);
+            List<Integer> existingOffsets = existingAnnotations.stream()
+                .map(AnnotationFS::getBegin)
                 .collect(Collectors.toList());
+
+            return p.stream()
+                .filter(f -> !existingOffsets.contains(f.getKey().getOffset().getBeginCharacter()))
+                .map(Map.Entry::getValue)
+                .collect(Collectors.toList());
+
+        }
+        else {
+            return p.stream()
+                .map(Map.Entry::getValue)
+                .collect(Collectors.toList());
+        }
     }
 
     /**

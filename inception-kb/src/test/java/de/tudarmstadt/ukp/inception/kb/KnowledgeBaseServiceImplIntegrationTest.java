@@ -17,12 +17,12 @@
  */
 package de.tudarmstadt.ukp.inception.kb;
 
-import static de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService.IMPLICIT_NAMESPACES;
-import static de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService.INCEPTION_NAMESPACE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.io.InputStream;
 import java.net.URI;
@@ -481,7 +481,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
             .element(0)
             .hasFieldOrPropertyWithValue("identifier", handle.getIdentifier())
             .hasFieldOrPropertyWithValue("name", handle.getName())
-            .matches(h -> h.getIdentifier().startsWith(INCEPTION_NAMESPACE));
+            .matches(h -> h.getIdentifier().startsWith(IriConstants.INCEPTION_NAMESPACE));
     }
 
     @Test
@@ -705,7 +705,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
             .element(0)
             .hasFieldOrPropertyWithValue("identifier", handle.getIdentifier())
             .hasFieldOrPropertyWithValue("name", handle.getName())
-            .matches(h -> h.getIdentifier().startsWith(INCEPTION_NAMESPACE));
+            .matches(h -> h.getIdentifier().startsWith(IriConstants.INCEPTION_NAMESPACE));
     }
 
     @Test
@@ -915,7 +915,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
             .element(0)
             .hasFieldOrPropertyWithValue("identifier", instanceHandle.getIdentifier())
             .hasFieldOrPropertyWithValue("name", instanceHandle.getName())
-            .matches(h -> h.getIdentifier().startsWith(INCEPTION_NAMESPACE));
+            .matches(h -> h.getIdentifier().startsWith(IriConstants.INCEPTION_NAMESPACE));
     }
 
     @Test
@@ -1175,6 +1175,40 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         assertThat(knowledgeBases).as("Check that the list is empty").isEmpty();
     }
 
+    @Test
+    public void statementsMatchSPO_WithMatchedStatement_ShouldReturnTure()
+    {
+        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
+        KBConcept concept = buildConcept();
+        KBProperty property = buildProperty();
+        KBHandle conceptHandle = sut.createConcept(kb, concept);
+        KBHandle propertyHandle = sut.createProperty(kb, property);
+        KBStatement statement = buildStatement(kb, conceptHandle, propertyHandle, "Test statement");
+
+        sut.upsertStatement(kb, statement);
+
+        KBStatement mockStatement = buildStatement(kb, conceptHandle, propertyHandle,
+            "Test statement");
+        assertTrue(sut.statementsMatchSPO(kb, mockStatement));
+    }
+
+    @Test
+    public void statementsMatchSPO_WithMissmatchedStatement_ShouldReturnFalse()
+    {
+        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
+        KBConcept concept = buildConcept();
+        KBProperty property = buildProperty();
+        KBHandle conceptHandle = sut.createConcept(kb, concept);
+        KBHandle propertyHandle = sut.createProperty(kb, property);
+        KBStatement statement = buildStatement(kb, conceptHandle, propertyHandle, "Test");
+
+        sut.upsertStatement(kb, statement);
+
+        KBStatement mockStatement = buildStatement(kb, conceptHandle, propertyHandle,
+            "Test statement");
+        assertFalse(sut.statementsMatchSPO(kb, mockStatement));
+    }
+
     // Helper
 
     private Project createProject(String name) {
@@ -1211,7 +1245,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     }
 
     private boolean hasImplicitNamespace(KBHandle handle) {
-        return Arrays.stream(IMPLICIT_NAMESPACES)
+        return IriConstants.IMPLICIT_NAMESPACES.stream()
             .anyMatch(ns -> handle.getIdentifier().startsWith(ns));
     }
 

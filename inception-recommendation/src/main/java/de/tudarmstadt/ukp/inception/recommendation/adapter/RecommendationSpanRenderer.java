@@ -100,9 +100,9 @@ public class RecommendationSpanRenderer
         }
         
         // TODO #176 use the document Id once it it available in the CAS
-        List<List<AnnotationObject>> recommendations = 
-                model.getPredictions(DocumentMetaData.get(aJcas).getDocumentTitle(), layer,
-                        windowBegin, windowEnd, aJcas);
+        List<List<AnnotationObject>> recommendations = model
+            .getPredictions(DocumentMetaData.get(aJcas).getDocumentTitle(), layer,
+                windowBegin, windowEnd, aJcas, false);
         String color = aColoringStrategy.getColor(null, null);
         String bratTypeName = TypeUtil.getUiTypeName(typeAdapter);
 
