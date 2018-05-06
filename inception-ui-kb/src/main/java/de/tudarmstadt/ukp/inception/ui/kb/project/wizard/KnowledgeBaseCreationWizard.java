@@ -38,6 +38,7 @@ import org.apache.wicket.extensions.wizard.IWizardStep;
 import org.apache.wicket.extensions.wizard.dynamic.DynamicWizardModel;
 import org.apache.wicket.extensions.wizard.dynamic.DynamicWizardStep;
 import org.apache.wicket.extensions.wizard.dynamic.IDynamicWizardStep;
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.DropDownChoice;
@@ -51,15 +52,12 @@ import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.validation.IValidator;
 import org.apache.wicket.validation.ValidationError;
 import org.eclipse.rdf4j.model.IRI;
-import org.eclipse.rdf4j.model.vocabulary.OWL;
-import org.eclipse.rdf4j.model.vocabulary.RDF;
-import org.eclipse.rdf4j.model.vocabulary.RDFS;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,14 +70,18 @@ import de.agilecoders.wicket.core.markup.html.bootstrap.form.radio.EnumRadioChoi
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
+import de.tudarmstadt.ukp.inception.app.bootstrap.BootstrapWizard;
+import de.tudarmstadt.ukp.inception.app.bootstrap.BootstrapWizardButtonBar;
 import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 import de.tudarmstadt.ukp.inception.kb.io.FileUploadHelper;
 import de.tudarmstadt.ukp.inception.kb.reification.Reification;
-import de.tudarmstadt.ukp.inception.ui.kb.project.EnrichedKnowledgeBase;
-import de.tudarmstadt.ukp.inception.ui.kb.project.EnrichedKnowledgeBaseUtils;
 import de.tudarmstadt.ukp.inception.ui.kb.project.KnowledgeBaseListPanel;
+import de.tudarmstadt.ukp.inception.ui.kb.project.KnowledgeBaseWrapper;
+import de.tudarmstadt.ukp.inception.ui.kb.project.Validators;
 
 /**
  * Wizard for registering a new knowledge base for a project.
@@ -107,21 +109,18 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
     private final Map<String, File> uploadedFiles;
     private final IModel<Project> projectModel;
     private final DynamicWizardModel wizardModel;
-    private final CompoundPropertyModel<EnrichedKnowledgeBase> wizardDataModel;
-    private final IModel<IriSchemaType> selectedIriSchema;
+    private final CompoundPropertyModel<KnowledgeBaseWrapper> wizardDataModel;
+    private final IModel<SchemaProfile> selectedSchemaProfile;
 
     public KnowledgeBaseCreationWizard(String id, IModel<Project> aProjectModel) {
         super(id);
-        
-        // needed for the re-rendering in SchemaConfigurenStep
-        setOutputMarkupId(true);
-        
-        selectedIriSchema = new Model<IriSchemaType>();
+
+        selectedSchemaProfile = Model.of(SchemaProfile.RDFSCHEMA);
         
         uploadedFiles = new HashMap<>();
 
         projectModel = aProjectModel;
-        wizardDataModel = new CompoundPropertyModel<>(new EnrichedKnowledgeBase());
+        wizardDataModel = new CompoundPropertyModel<>(new KnowledgeBaseWrapper());
 
         wizardModel = new DynamicWizardModel(new TypeStep(null, wizardDataModel));
         wizardModel.setLastVisible(false);
@@ -135,25 +134,25 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
 
         private static final long serialVersionUID = 2632078392967948962L;
         
-        private CompoundPropertyModel<EnrichedKnowledgeBase> model;
+        private CompoundPropertyModel<KnowledgeBaseWrapper> model;
 
         public TypeStep(IDynamicWizardStep previousStep,
-                CompoundPropertyModel<EnrichedKnowledgeBase> model) {
+                CompoundPropertyModel<KnowledgeBaseWrapper> model) {
             super(previousStep, "", "", model);
             this.model = model;
 
             add(nameField("name", "kb.name"));
             add(repositoryTypeRadioButtons("type", "kb.type"));
-
-            add(selectReificationStrategy("reification", "reification"));
+            add(selectReificationStrategy("reification", "kb.reification"));
         }
 
         private DropDownChoice<Reification> selectReificationStrategy(String id, String property)
         {
             final List<Reification> reificationList = Arrays.asList(Reification.values());
 
-            DropDownChoice<Reification> reificationDropDownChoice = new
-                DropDownChoice<>(id, model.bind(property), reificationList);
+            DropDownChoice<Reification> reificationDropDownChoice = new DropDownChoice<>(id,
+                    model.bind(property), reificationList);
+            reificationDropDownChoice.setRequired(true);
             return reificationDropDownChoice;
         }
 
@@ -221,12 +220,12 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
 
         private static final long serialVersionUID = 8212277960059805657L;
         
-        private CompoundPropertyModel<EnrichedKnowledgeBase> model;
+        private CompoundPropertyModel<KnowledgeBaseWrapper> model;
         private FileUploadField fileUpload;
         private boolean completed;
 
         public LocalRepositoryStep(IDynamicWizardStep previousStep,
-                CompoundPropertyModel<EnrichedKnowledgeBase> model) {
+                CompoundPropertyModel<KnowledgeBaseWrapper> model) {
             super(previousStep);
             this.model = model;
             completed = true;
@@ -288,15 +287,15 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
 
         private static final long serialVersionUID = -707885872360370015L;
 
-        private CompoundPropertyModel<EnrichedKnowledgeBase> model;
+        private CompoundPropertyModel<KnowledgeBaseWrapper> model;
 
         public RemoteRepositoryStep(IDynamicWizardStep previousStep,
-                CompoundPropertyModel<EnrichedKnowledgeBase> model) {
+                CompoundPropertyModel<KnowledgeBaseWrapper> model) {
             super(previousStep, "", "", model);
             this.model = model;
             
             RequiredTextField<String> urlField = new RequiredTextField<>("url");
-            urlField.add(EnrichedKnowledgeBaseUtils.URL_VALIDATOR);
+            urlField.add(Validators.URL_VALIDATOR);
             add(urlField);
             
             // for up to MAXIMUM_REMOTE_REPO_SUGGESTIONS of knowledge bases, create a link which
@@ -319,8 +318,7 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
                     item.add(link);
                 }
             });
-            add(new CheckBox("supportConceptLinking",
-                    new PropertyModel<Boolean>(model, "supportConceptLinking")));
+            add(new CheckBox("supportConceptLinking", model.bind("kb.supportConceptLinking")));
         }
         
         @Override
@@ -345,82 +343,79 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
     /**
      * Wizard step asking for the knowledge base schema
      */
-    private final class SchemaConfigurationStep extends DynamicWizardStep {
+    private final class SchemaConfigurationStep
+        extends DynamicWizardStep
+    {
         private static final long serialVersionUID = -12355235971946712L;
 
-        private final CompoundPropertyModel<EnrichedKnowledgeBase> model;
-        private boolean completed;
+        private final CompoundPropertyModel<KnowledgeBaseWrapper> model;
 
         public SchemaConfigurationStep(IDynamicWizardStep previousStep,
-                                       CompoundPropertyModel<EnrichedKnowledgeBase> aModel)
+                CompoundPropertyModel<KnowledgeBaseWrapper> aModel)
         {
             super(previousStep, "", "", aModel);
             model = aModel;
-            completed = true;
 
             // RadioGroup to select the IriSchemaType
-            BootstrapRadioGroup<IriSchemaType> iriSchemaChoice = new BootstrapRadioGroup<>(
-                    "iriSchema", selectedIriSchema, Arrays.asList(IriSchemaType.values()),
+            BootstrapRadioGroup<SchemaProfile> iriSchemaChoice = new BootstrapRadioGroup<>(
+                    "iriSchema", selectedSchemaProfile, Arrays.asList(SchemaProfile.values()),
                     new EnumRadioChoiceRenderer<>(Buttons.Type.Default, this));
             iriSchemaChoice.setOutputMarkupId(true);
+            
+            // The Kendo comboboxes do not redraw properly when added directly to an
+            // AjaxRequestTarget (for each combobox, a text field and a dropdown will be shown).
+            // Instead, wrap all of them in a WMC and redraw that. 
+            WebMarkupContainer comboBoxWrapper = new WebMarkupContainer("comboBoxWrapper");
+            comboBoxWrapper.setOutputMarkupId(true);
+            add(comboBoxWrapper);
 
             // Add text fields for classIri, subclassIri, typeIri and descriptionIri
-            ComboBox<String> classField = buildComboBox("classIri", model, IriConstants.CLASS_IRIS);
-            add(classField);
-
-            ComboBox<String> subclassField = buildComboBox("subclassIri", model,
-                    IriConstants.SUBCLASS_IRIS);
-            add(subclassField);
-
-            ComboBox<String> typeField = buildComboBox("typeIri", model, IriConstants.TYPE_IRIS);
-            add(typeField);
-
-            ComboBox<String> descriptionField = buildComboBox("descriptionIri", model,
-                IriConstants.DESCRIPTION_IRIS);
+            ComboBox<String> classField = buildComboBox("classIri", model.bind("kb.classIri"),
+                    IriConstants.CLASS_IRIS);
+            ComboBox<String> subclassField = buildComboBox("subclassIri",
+                    model.bind("kb.subclassIri"), IriConstants.SUBCLASS_IRIS);
+            ComboBox<String> typeField = buildComboBox("typeIri", model.bind("kb.typeIri"),
+                    IriConstants.TYPE_IRIS);
+            ComboBox<String> descriptionField = buildComboBox("descriptionIri",
+                model.bind("kb.descriptionIri"), IriConstants.DESCRIPTION_IRIS);
             add(descriptionField);
+            comboBoxWrapper.add(classField, subclassField, typeField);
 
             // OnChange update the model with corresponding iris
-            iriSchemaChoice.setChangeHandler(new ISelectionChangeHandler<IriSchemaType>()
+            iriSchemaChoice.setChangeHandler(new ISelectionChangeHandler<SchemaProfile>()
             {
                 private static final long serialVersionUID = 1653808650286121732L;
 
                 @Override
-                public void onSelectionChanged(AjaxRequestTarget target, IriSchemaType bean)
+                public void onSelectionChanged(AjaxRequestTarget target, SchemaProfile bean)
                 {
-                    classField.setModelObject(bean.getClassIriString());
-                    subclassField.setModelObject(bean.getSubclassIriString());
-                    typeField.setModelObject(bean.getTypeIriString());
-                    descriptionField.setModelObject(bean.getDescriptionIriString());
-                    // For some reason it does not work if just the checkboxes
-                    // are added to the target
-                    target.addChildren(getPage(), KnowledgeBaseCreationWizard.class);
+                    classField.setModelObject(bean.getClassIri().stringValue());
+                    subclassField.setModelObject(bean.getSubclassIri().stringValue());
+                    typeField.setModelObject(bean.getTypeIri().stringValue());
+                    descriptionField.setModelObject(bean.getDescriptionIri().stringValue());
+                    target.add(comboBoxWrapper, iriSchemaChoice);
                 }
             });
 
             add(iriSchemaChoice);
-
         }
-        
-        private ComboBox<String> buildComboBox(String id,
-                CompoundPropertyModel<EnrichedKnowledgeBase> model, List<IRI> iris)
+
+        private ComboBox<String> buildComboBox(String id, IModel<IRI> model, List<IRI> iris)
         {
+            model.setObject(iris.get(0));
 
             List<String> choices = iris.stream().map(IRI::stringValue).collect(Collectors.toList());
-            ComboBox<String> comboBox = new ComboBox<String>(id, model.bind(id), choices)
-            {
 
-                private static final long serialVersionUID = 1575770301215073872L;
+            IModel<String> adapter = new LambdaModelAdapter<String>(
+                () -> model.getObject().stringValue(),
+                str -> model.setObject(SimpleValueFactory.getInstance().createIRI(str)));
 
-                @Override
-                protected void onConfigure()
-                {
-                    super.onConfigure();
-                    setEnabled(IriSchemaType.CUSTOMSCHEMA.equals(selectedIriSchema.getObject()));
-                }
-            };
+            ComboBox<String> comboBox = new ComboBox<String>(id, adapter, choices);
+            comboBox.add(LambdaBehavior.onConfigure(cb -> cb.setEnabled(
+                    SchemaProfile.CUSTOMSCHEMA.equals(selectedSchemaProfile.getObject()))));
             comboBox.setOutputMarkupId(true);
             comboBox.setRequired(true);
-            comboBox.add(EnrichedKnowledgeBaseUtils.URL_VALIDATOR);
+            comboBox.add(Validators.IRI_VALIDATOR);
             comboBox.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> {
                 // Do nothing just update the model values
             }));
@@ -430,11 +425,11 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
         @Override
         public void applyState()
         {   
-            EnrichedKnowledgeBase ekb = wizardDataModel.getObject();
-            ekb.getKb().setProject(projectModel.getObject());
+            KnowledgeBaseWrapper wrapper = wizardDataModel.getObject();
+            wrapper.getKb().setProject(projectModel.getObject());
        
             try {
-                EnrichedKnowledgeBaseUtils.registerEkb(ekb, kbService);
+                KnowledgeBaseWrapper.registerKb(wrapper, kbService);
             } catch (Exception e) {
                 error(e.getMessage());
                 
@@ -444,7 +439,7 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
         @Override
         public boolean isComplete()
         {
-            return completed;
+            return true;
         }
 
         @Override
@@ -472,17 +467,14 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
             protected FinishButton newFinishButton(String id, IWizard wizard) {
                 FinishButton button = new FinishButton(id, wizard) {
                     private static final long serialVersionUID = -7070739469409737740L;
-                    
+
                     @Override
                     public void onAfterSubmit() {
                         // update the list panel and close the dialog - this must be done in
                         // onAfterSubmit, otherwise it cancels out the call to onFinish()
+                        
                         IWizardStep step = wizardModel.getActiveStep();
-                        // do not close the wizard if no schema type has been selected
-                        if (selectedIriSchema.getObject() == null) {
-                            error("Please select a schema type.");
-                        }
-                        else if (step.isComplete()) {
+                        if (step.isComplete()) {
                             AjaxRequestTarget target = RequestCycle.get()
                                     .find(AjaxRequestTarget.class);
                             target.add(findParent(KnowledgeBaseListPanel.class));
@@ -509,55 +501,5 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
             }
         };
         return buttonBar;
-    }
-    
-    public enum IriSchemaType
-    {
-        RDFSCHEMA(RDFS.CLASS.stringValue(), RDFS.SUBCLASSOF.stringValue(),
-                    RDF.TYPE.stringValue(), RDFS.COMMENT.stringValue()),
-        
-        WIKIDATASCHEMA(IriConstants.WIKIDATA_CLASS.stringValue(),
-                        IriConstants.WIKIDATA_SUBCLASS.stringValue(),
-                        IriConstants.WIKIDATA_TYPE.stringValue(),
-                        IriConstants.SCHEMA_DESCRIPTION.stringValue()),
-        
-        OWLSCHEMA(OWL.CLASS.stringValue(), RDFS.SUBCLASSOF.stringValue(),
-                    RDF.TYPE.stringValue(), RDFS.COMMENT.stringValue()),
-        
-        CUSTOMSCHEMA("", "", "", "");
-
-        private final String classIriString;
-        private final String subclassIriString;
-        private final String typeIriString;
-        private final String descriptionString;
-
-        private IriSchemaType(String aClassIriString, String aSubclassIriString,
-                String aTypeIriString, String aDescriptionString)
-        {
-            classIriString = aClassIriString;
-            subclassIriString = aSubclassIriString;
-            typeIriString = aTypeIriString;
-            descriptionString = aDescriptionString;
-        }
-
-        public String getClassIriString()
-        {
-            return classIriString;
-        }
-
-        public String getSubclassIriString()
-        {
-            return subclassIriString;
-        }
-
-        public String getTypeIriString()
-        {
-            return typeIriString;
-        }
-
-        public String getDescriptionIriString()
-        {
-            return descriptionString;
-        }
     }
 }

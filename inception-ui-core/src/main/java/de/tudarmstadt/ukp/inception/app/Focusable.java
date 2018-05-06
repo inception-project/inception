@@ -15,20 +15,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.ui.kb.event;
+package de.tudarmstadt.ukp.inception.app;
 
-import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.Component;
 
-public class AjaxEvent {
-    
-    protected AjaxRequestTarget target;
+/**
+ * Interface used to indicate which child component to focus initially in a form holding multiple
+ * child components.
+ *
+ */
+public interface Focusable {
 
-    public AjaxEvent(AjaxRequestTarget target) {
-        this.target = target;
-    }
-    
-    public AjaxRequestTarget getTarget() {
-        return target;
-    }
-
+    /**
+     * Returns the component which should receive the focus once this {@code Focusable} is rendered
+     * initially.
+     * 
+     * @return the component to focus once this {@code Focusable} is rendered
+     */
+    public Component getFocusComponent();
 }
