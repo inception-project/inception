@@ -84,6 +84,7 @@ public class EnrichedKnowledgeBaseUtils
         kb.setEnabled(ekb.isEnabled());
         kb.setSupportConceptLinking(ekb.isSupportConceptLinking());
         kb.setReification(ekb.getReification());
+        kb.setBasePrefix(ekb.getBasePrefix());
     }
 
     private static final void importFiles(EnrichedKnowledgeBase ekb,

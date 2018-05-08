@@ -41,6 +41,7 @@ public class EnrichedKnowledgeBase implements Serializable {
     private Reification reification = Reification.NONE;
     private List<File> files;
     private boolean supportConceptLinking;
+    private String basePrefix;
 
     public KnowledgeBase getKb() {
         return kb;
@@ -123,5 +124,17 @@ public class EnrichedKnowledgeBase implements Serializable {
     {
         reification = reificationStrategy;
     }
+
+    public String getBasePrefix()
+    {
+        return basePrefix;
+    }
+
+    public void setBasePrefix(String aBasePrefix)
+    {
+        basePrefix = aBasePrefix;
+    }
+    
+    
 
 }

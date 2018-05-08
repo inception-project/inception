@@ -393,7 +393,36 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
             });
 
             add(iriSchemaChoice);
+            
+            // Base Prefix Label and TextField only shown in CUSTOM - "mode"
+            Label basePrefixLabel = new Label("basePrefixLabel", "Base Prefix") {
 
+                private static final long serialVersionUID = -1664209681297576256L;
+
+                @Override
+                protected void onConfigure()
+                {
+                    super.onConfigure();
+                    setVisible(IriSchemaType.CUSTOMSCHEMA.equals(selectedIriSchema.getObject()));
+                }
+            }; 
+            
+            add(basePrefixLabel);
+            
+            TextField<String> basePrefix = new TextField<String>("basePrefix",
+                    model.bind("basePrefix"))
+            {
+                private static final long serialVersionUID = -8973666497412424655L;
+
+                @Override
+                protected void onConfigure()
+                {
+                    super.onConfigure();
+                    setVisible(IriSchemaType.CUSTOMSCHEMA.equals(selectedIriSchema.getObject()));
+                }
+            };
+            basePrefix.setDefaultModelObject(KnowledgeBaseService.INCEPTION_NAMESPACE);
+            add(basePrefix);
         }
         
         private ComboBox<String> buildComboBox(String id,

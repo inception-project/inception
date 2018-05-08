@@ -135,6 +135,8 @@ public class KnowledgeBaseDetailsPanel extends Panel {
         ekb.setEnabled(kb.isEnabled());
         ekb.setReification(kb.getReification());
         ekb.setSupportConceptLinking(kb.isSupportConceptLinking());
+        ekb.setBasePrefix(kb.getBasePrefix());
+        System.out.println(ekb.getBasePrefix());
 
         // wrap the given knowledge base model, then set it as the default model
         ekbModel = new CompoundPropertyModel<>(Model.of(ekb));
@@ -410,6 +412,9 @@ public class KnowledgeBaseDetailsPanel extends Panel {
                 .add(LambdaBehavior.onConfigure(it -> it.setEnabled(false))));
             wmc.add(new CheckBox("supportConceptLinking")
                 .add(LambdaBehavior.onConfigure(it -> it.setEnabled(false))));
+            wmc.add(new TextField<String>("basePrefix")
+                    .add(LambdaBehavior.onConfigure(it -> it.setEnabled(false))));
+            
         }
 
         @Override
@@ -492,6 +497,7 @@ public class KnowledgeBaseDetailsPanel extends Panel {
             addUrlField(wmc, "typeIri");
             wmc.add(new CheckBox("enabled"));
             wmc.add(new CheckBox("supportConceptLinking"));
+            wmc.add(new TextField<String>("basePrefix"));
         }
 
         @Override
