@@ -215,7 +215,7 @@ public class Predictions
         return predictions.values().stream()
                 .filter(f -> f.getOffset().getBeginCharacter() == aBegin
                         && f.getOffset().getEndCharacter() == aEnd)
-                .filter(f -> f.getAnnotation().equals(aLabel))
+                .filter(f -> f.getLabel().equals(aLabel))
                 .max((p1, p2) -> Integer.compare(p1.getId(), p2.getId()));
     }
     
@@ -227,7 +227,7 @@ public class Predictions
     public void putPredictions(long aLayerId, List<AnnotationObject> aPredictions)
     {
         aPredictions.forEach(prediction -> {
-            if (prediction.getAnnotation() != null) {
+            if (prediction.getLabel() != null) {
                 predictions.put(new ExtendedId(user.getUsername(), project.getId(),
                         prediction.getDocumentName(), aLayerId, prediction.getOffset(),
                         prediction.getRecommenderId(), prediction.getId(), -1), prediction);

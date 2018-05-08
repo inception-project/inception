@@ -106,7 +106,7 @@ public class RecommendationEditorExtension
                 recommendationService.getPredictions(aState.getUser(), aState.getProject());
         AnnotationObject prediction = model.getPredictionByVID(aVID);
         // Obtain the predicted label
-        String predictedValue = prediction.getAnnotation();
+        String predictedValue = prediction.getLabel();
         
         Recommender recommender = recommendationService.getRecommender(aVID.getId());
         AnnotationLayer layer = annotationService.getLayer(aVID.getLayerId());
@@ -170,7 +170,7 @@ public class RecommendationEditorExtension
         AnnotationFeature feature = annotationService.getFeature(recommender.getFeature(), layer);
         
         AnnotationObject prediction = model.getPredictionByVID(aVID);
-        String predictedValue = prediction.getAnnotation();
+        String predictedValue = prediction.getLabel();
         String tokenText = aJCas.getDocumentText().substring(aBegin, aEnd);
         
         LearningRecord record = new LearningRecord();

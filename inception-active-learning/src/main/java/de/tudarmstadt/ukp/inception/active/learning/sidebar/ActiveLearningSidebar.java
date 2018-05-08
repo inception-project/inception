@@ -284,7 +284,7 @@ public class ActiveLearningSidebar
     {
         highlightRecommendation(aTarget, currentRecommendation.getOffset().getBeginCharacter(),
                 currentRecommendation.getOffset().getEndCharacter(),
-                currentRecommendation.getCoveredText(), currentRecommendation.getAnnotation());
+                currentRecommendation.getCoveredText(), currentRecommendation.getLabel());
     }
     
     private void highlightRecommendation(AjaxRequestTarget aTarget, int aBegin, int aEnd,
@@ -355,7 +355,7 @@ public class ActiveLearningSidebar
         
         recommendationForm.add(createRecommendationCoveredTextLink());
         recommendationForm.add(new Label(CID_RECOMMENDED_PREDITION, LambdaModel.of(() -> 
-                currentRecommendation != null ? currentRecommendation.getAnnotation() : null)));
+                currentRecommendation != null ? currentRecommendation.getLabel() : null)));
         recommendationForm.add(new Label(CID_RECOMMENDED_CONFIDENCE, LambdaModel.of(() -> 
                 currentRecommendation != null ? currentRecommendation.getConfidence() : 0.0)));
         recommendationForm.add(new Label(CID_RECOMMENDED_DIFFERENCE, LambdaModel.of(() -> 
@@ -426,7 +426,7 @@ public class ActiveLearningSidebar
         record.setOffsetTokenEnd(currentRecommendation.getOffset().getEndToken());
         record.setOffsetCharacterBegin(currentRecommendation.getOffset().getBeginCharacter());
         record.setOffsetCharacterEnd(currentRecommendation.getOffset().getEndCharacter());
-        record.setAnnotation(currentRecommendation.getAnnotation());
+        record.setAnnotation(currentRecommendation.getLabel());
         record.setLayer(selectedLayer.getObject());
         record.setChangeLocation(LearningRecordChangeLocation.AL_SIDEBAR);
 
@@ -449,7 +449,7 @@ public class ActiveLearningSidebar
         for (AnnotationFeature feature : annotationService
                 .listAnnotationFeature(selectedLayer.getObject())) {
             adapter.setFeatureValue(annotatorState, jCas, id, feature,
-                    acceptedRecommendation.getAnnotation());
+                    acceptedRecommendation.getLabel());
         }
         
         // Open accepted recommendation in the annotation detail editor panel
@@ -664,7 +664,7 @@ public class ActiveLearningSidebar
         record.setOffsetTokenEnd(acceptedRecommendation.getOffset().getEndToken());
         record.setOffsetCharacterBegin(acceptedRecommendation.getOffset().getBeginCharacter());
         record.setOffsetCharacterEnd(acceptedRecommendation.getOffset().getEndCharacter());
-        record.setAnnotation(acceptedRecommendation.getAnnotation());
+        record.setAnnotation(acceptedRecommendation.getLabel());
         record.setLayer(annotationService.getLayer(aEvent.getVid().getLayerId()));
         record.setChangeLocation(LearningRecordChangeLocation.MAIN_EDITOR);
         learningRecordService.create(record);

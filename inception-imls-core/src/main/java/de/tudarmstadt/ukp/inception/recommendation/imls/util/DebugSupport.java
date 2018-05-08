@@ -156,7 +156,7 @@ public class DebugSupport
         sb.append(delimiter);
         sb.append(offset.getBeginToken()).append("..").append(offset.getEndToken());
         sb.append(delimiter);
-        sb.append(ao.getAnnotation());
+        sb.append(ao.getLabel());
         sb.append(delimiter);
         sb.append(ao.getCoveredText());
     }
@@ -171,7 +171,7 @@ public class DebugSupport
         Offset offset = ao.getOffset();
         sb.append(ao.getCoveredText());
         sb.append(delimiter);
-        sb.append(ao.getAnnotation());
+        sb.append(ao.getLabel());
         sb.append(delimiter);
         sb.append(offset.getBeginToken()).append("..").append(offset.getEndToken());
         sb.append(delimiter);

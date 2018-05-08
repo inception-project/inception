@@ -52,6 +52,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.TokenObject;
 public class CasUtil
 {
     private static Logger LOG = LoggerFactory.getLogger(CasUtil.class);
+    private static final String SOURCE = "CasUtil";
 
     private CasUtil()
     {
@@ -193,20 +194,23 @@ public class CasUtil
             TokenObject tObj = sentence.get(i);
 
             if (indexAnnotations >= annotations.size()) {
-                result.add(new AnnotationObject(null, tObj, sentence, id, feature));
+                result.add(new AnnotationObject(tObj, id, feature, SOURCE));
                 continue;
             }
 
             AnnotationObject aObj = annotations.get(indexAnnotations);
 
             if (aObj.getOffset().equals(tObj.getOffset())) {
-                result.add(new AnnotationObject(aObj, id, feature));
+                AnnotationObject annotationObject = new AnnotationObject(aObj);
+                annotationObject.setId(id);
+                annotationObject.setFeature(feature);
+                result.add(annotationObject);
                 indexAnnotations++;
             }
             else {
                 // Since not all tokens in the sentence are annotated, 
                 // we need to add some AnnotationObjects with empty label in respective positions
-                result.add(new AnnotationObject(null, tObj, sentence, id, feature));
+                result.add(new AnnotationObject(tObj, id, feature, SOURCE));
             }
             id++;
         }
@@ -238,7 +242,7 @@ public class CasUtil
                 TokenObject tObj = new TokenObject(offset, token.getCoveredText(),
                     documentURI, documentName, id);
                 result.add(
-                    new AnnotationObject(annotationLabel, tObj, sentence, id, feature.getName()));
+                    new AnnotationObject(tObj, annotationLabel, "", id, feature.getName(), SOURCE));
                 id++;
             }
         }
@@ -274,7 +278,7 @@ public class CasUtil
                 Offset offset = getTokenOffset(token, sentence);
                 TokenObject tObj = new TokenObject(offset, token.getCoveredText(), 
                     documentURI, documentName, id);
-                result.add(new AnnotationObject(annotationLabel, tObj, sentence, id, feature));
+                result.add(new AnnotationObject(tObj, annotationLabel, "", id, feature, SOURCE));
                 id++;
             }
         }
@@ -397,8 +401,7 @@ public class CasUtil
 
             for (int i = 0; i < sentence.size(); i++) {
                 T t = sentence.get(i);
-                annotations.add(new AnnotationObject(null, (TokenObject) t,
-                        (List<TokenObject>) sentence, id, feature, classifier));
+                annotations.add(new AnnotationObject(t, id, feature, classifier));
                 id++;
             }
 
@@ -499,8 +502,8 @@ public class CasUtil
                 Offset offset = getTokenOffset(token, sentence);
                 TokenObject tObj = new TokenObject(offset, token.getCoveredText(), documentURI,
                         documentName, id);
-                result.add(new AnnotationObject(annotationLabel, tObj, sentence, id,
-                        feature.getName()));
+                result.add(new AnnotationObject(tObj, annotationLabel, "",
+                        id, feature.getName(), SOURCE));
                 id++;
             }
         }
