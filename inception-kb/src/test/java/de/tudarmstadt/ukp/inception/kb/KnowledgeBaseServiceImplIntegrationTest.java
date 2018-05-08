@@ -193,6 +193,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         kb.setTypeIri(OWL.THING);
         kb.setReadOnly(true);
         kb.setEnabled(false);
+        kb.setBasePrefix("MyBasePrefix");
         sut.updateKnowledgeBase(kb, sut.getNativeConfig());
 
         KnowledgeBase savedKb = testEntityManager.find(KnowledgeBase.class, kb.getRepositoryId());
@@ -204,7 +205,8 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
             .hasFieldOrPropertyWithValue("typeIri", OWL.THING)
             .hasFieldOrPropertyWithValue("name", "New name")
             .hasFieldOrPropertyWithValue("readOnly", true)
-            .hasFieldOrPropertyWithValue("enabled", false);
+            .hasFieldOrPropertyWithValue("enabled", false)
+            .hasFieldOrPropertyWithValue("basePrefix", "MyBasePrefix");
     }
 
     @Test
