@@ -40,7 +40,7 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
+import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 
@@ -117,7 +117,7 @@ public class KnowledgeBase
     private boolean supportConceptLinking = false;
     
     @Column(nullable = false)
-    private String basePrefix = KnowledgeBaseService.INCEPTION_NAMESPACE;
+    private String basePrefix = IriConstants.INCEPTION_NAMESPACE;
     
     public String getRepositoryId() {
         return repositoryId;

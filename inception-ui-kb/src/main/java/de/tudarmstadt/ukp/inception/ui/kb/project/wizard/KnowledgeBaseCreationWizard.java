@@ -114,7 +114,7 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
 
     public KnowledgeBaseCreationWizard(String id, IModel<Project> aProjectModel) {
         super(id);
-
+        
         selectedSchemaProfile = Model.of(SchemaProfile.RDFSCHEMA);
         
         uploadedFiles = new HashMap<>();
@@ -365,9 +365,9 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
             // The Kendo comboboxes do not redraw properly when added directly to an
             // AjaxRequestTarget (for each combobox, a text field and a dropdown will be shown).
             // Instead, wrap all of them in a WMC and redraw that. 
-            WebMarkupContainer comboBoxWrapper = new WebMarkupContainer("comboBoxWrapper");
-            comboBoxWrapper.setOutputMarkupId(true);
-            add(comboBoxWrapper);
+            WebMarkupContainer contentWrapper = new WebMarkupContainer("contentWrapper");
+            contentWrapper.setOutputMarkupId(true);
+            add(contentWrapper);
 
             // Add text fields for classIri, subclassIri and typeIri
             ComboBox<String> classField = buildComboBox("classIri", model.bind("kb.classIri"),
@@ -376,8 +376,26 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
                     model.bind("kb.subclassIri"), IriConstants.SUBCLASS_IRIS);
             ComboBox<String> typeField = buildComboBox("typeIri", model.bind("kb.typeIri"),
                     IriConstants.TYPE_IRIS);
-            comboBoxWrapper.add(classField, subclassField, typeField);
-
+            contentWrapper.add(classField, subclassField, typeField);
+            
+            // Base Prefix Label and TextField only shown in CUSTOM - "mode"
+            Label basePrefixLabel = new Label("basePrefixLabel", "Base Prefix");
+            basePrefixLabel.add(LambdaBehavior.onConfigure(tf -> tf.setVisible(
+                    SchemaProfile.CUSTOMSCHEMA.equals(selectedSchemaProfile.getObject()))));
+            basePrefixLabel.setOutputMarkupId(true);
+            contentWrapper.add(basePrefixLabel);
+            
+            TextField<String> basePrefix = new TextField<String>("basePrefix",
+                    model.bind("kb.basePrefix"));
+            basePrefix.add(LambdaBehavior.onConfigure(tf -> tf.setVisible(
+                    SchemaProfile.CUSTOMSCHEMA.equals(selectedSchemaProfile.getObject()))));
+            basePrefix.setConvertEmptyInputStringToNull(false);
+            basePrefix.setOutputMarkupId(true);
+            contentWrapper.add(basePrefix);
+            
+            
+           
+            
             // OnChange update the model with corresponding iris
             iriSchemaChoice.setChangeHandler(new ISelectionChangeHandler<SchemaProfile>()
             {
@@ -389,41 +407,14 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
                     classField.setModelObject(bean.getClassIri().stringValue());
                     subclassField.setModelObject(bean.getSubclassIri().stringValue());
                     typeField.setModelObject(bean.getTypeIri().stringValue());
-                    target.add(comboBoxWrapper, iriSchemaChoice);
+                    target.add(contentWrapper, iriSchemaChoice);
                 }
             });
 
             add(iriSchemaChoice);
             
-            // Base Prefix Label and TextField only shown in CUSTOM - "mode"
-            Label basePrefixLabel = new Label("basePrefixLabel", "Base Prefix") {
-
-                private static final long serialVersionUID = -1664209681297576256L;
-
-                @Override
-                protected void onConfigure()
-                {
-                    super.onConfigure();
-                    setVisible(IriSchemaType.CUSTOMSCHEMA.equals(selectedIriSchema.getObject()));
-                }
-            }; 
             
-            add(basePrefixLabel);
             
-            TextField<String> basePrefix = new TextField<String>("basePrefix",
-                    model.bind("basePrefix"))
-            {
-                private static final long serialVersionUID = -8973666497412424655L;
-
-                @Override
-                protected void onConfigure()
-                {
-                    super.onConfigure();
-                    setVisible(IriSchemaType.CUSTOMSCHEMA.equals(selectedIriSchema.getObject()));
-                }
-            };
-            basePrefix.setDefaultModelObject(KnowledgeBaseService.INCEPTION_NAMESPACE);
-            add(basePrefix);
         }
 
         private ComboBox<String> buildComboBox(String id, IModel<IRI> model, List<IRI> iris)

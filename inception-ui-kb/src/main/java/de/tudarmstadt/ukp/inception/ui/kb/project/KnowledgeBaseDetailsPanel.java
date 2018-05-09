@@ -400,6 +400,8 @@ public class KnowledgeBaseDetailsPanel extends Panel {
                 .add(LambdaBehavior.onConfigure(it -> it.setEnabled(false))));
             wmc.add(new CheckBox("supportConceptLinking", model.bind("kb.supportConceptLinking"))
                 .add(LambdaBehavior.onConfigure(it -> it.setEnabled(false))));
+            wmc.add(new TextField<String>("basePrefix", model.bind("kb.basePrefix"))
+                    .add(LambdaBehavior.onConfigure(it -> it.setEnabled(false))));
         }
 
         @Override
@@ -494,6 +496,8 @@ public class KnowledgeBaseDetailsPanel extends Panel {
             addIriField(wmc, "typeIri", model.bind("kb.typeIri"));
             wmc.add(new CheckBox("enabled", model.bind("kb.enabled")));
             wmc.add(new CheckBox("supportConceptLinking", model.bind("kb.supportConceptLinking")));
+            wmc.add(new TextField<String>("basePrefix", model.bind("kb.basePrefix"))
+                    .setConvertEmptyInputStringToNull(false));
         }
 
         @Override
