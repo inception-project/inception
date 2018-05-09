@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.kb.graph;
 
-import java.util.Arrays;
 import java.util.Optional;
 
 import org.eclipse.rdf4j.common.iteration.ConvertingIteration;
@@ -37,7 +36,7 @@ import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.repository.RepositoryException;
 import org.eclipse.rdf4j.repository.RepositoryResult;
 
-import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
+import de.tudarmstadt.ukp.inception.kb.IriConstants;
 
 public class RdfUtils
 {
@@ -124,7 +123,7 @@ public class RdfUtils
     }
     
     public static boolean isFromImplicitNamespace(KBHandle handle) {
-        return Arrays.stream(KnowledgeBaseService.IMPLICIT_NAMESPACES)
+        return IriConstants.IMPLICIT_NAMESPACES.stream()
                 .anyMatch(ns -> handle.getIdentifier().startsWith(ns));
     }
 }

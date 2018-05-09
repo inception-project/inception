@@ -80,7 +80,7 @@ public class ActiveLearningServiceImpl
         List<List<AnnotationObject>> result = new ArrayList<>();
 
         Map<String, List<List<AnnotationObject>>> recommendationsMap = model
-                .getPredictionsForWholeProject(aLayer, documentService);
+            .getPredictionsForWholeProject(aLayer, documentService, true);
 
         Set<String> documentNameSet = recommendationsMap.keySet();
 
@@ -100,6 +100,6 @@ public class ActiveLearningServiceImpl
                 aState.getProject());
         // TODO #176 use the document Id once it it available in the CAS
         return model.getFlattenedPredictions(aState.getDocument().getName(), aSelectedLayer,
-                windowBegin, windowEnd, aJcas);
+            windowBegin, windowEnd, aJcas, true);
     }
 }
