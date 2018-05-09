@@ -20,9 +20,9 @@ package de.tudarmstadt.ukp.inception.ui.kb;
 import java.net.URI;
 
 import org.apache.wicket.Component;
-import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.panel.EmptyPanel;
+import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -30,6 +30,7 @@ import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.eclipse.rdf4j.query.QueryEvaluationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
@@ -42,7 +43,7 @@ import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxNewInstanceEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxStatementChangedEvent;
 
 public class ConceptInstancePanel
-    extends EventListeningPanel
+    extends Panel
 {
 
     private static final long serialVersionUID = -1413622323011843523L;
@@ -75,21 +76,16 @@ public class ConceptInstancePanel
 
         instanceInfoPanel = new EmptyPanel(INSTANCE_INFO_MARKUP_ID).setVisibilityAllowed(false);
         add(instanceInfoPanel);
-
-        eventHandler.addCallback(AjaxInstanceSelectionEvent.class, this::actionInstanceSelection);
-        eventHandler.addCallback(AjaxNewInstanceEvent.class, this::actionNewInstance);
-        eventHandler.addCallback(AjaxStatementChangedEvent.class, this::actionStatementChanged);
     }
 
     /**
      * Acts upon statement changes. If the changed statement renames the selected instance, the name
      * in the respective {@link KBHandle} is updated. Otherwise, no action is taken.
      *
-     * @param target
      * @param event
      */
-    private void actionStatementChanged(AjaxRequestTarget target,
-            AjaxStatementChangedEvent event)
+    @OnEvent
+    public void actionStatementChanged(AjaxStatementChangedEvent event)
     {
         KBStatement statement = event.getStatement();
         KBHandle instanceHandle = selectedInstanceHandle.getObject();
@@ -108,10 +104,11 @@ public class ConceptInstancePanel
 
         instanceHandle.setName((String) statement.getValue());
         selectedInstanceHandle.setObject(instanceHandle);
-        target.add(this);
+        event.getTarget().add(this);
     }
 
-    private void actionInstanceSelection(AjaxRequestTarget target, AjaxInstanceSelectionEvent event)
+    @OnEvent
+    public void actionInstanceSelection(AjaxInstanceSelectionEvent event)
     {
         selectedInstanceHandle.setObject(event.getSelection());
 
@@ -133,17 +130,18 @@ public class ConceptInstancePanel
                 replacementPanel = emptyPanel();
                 error("Unable to read instance: " + e.getLocalizedMessage()); 
                 LOG.error("Unable to read instance.", e);
-                target.addChildren(getPage(), IFeedback.class);
+                event.getTarget().addChildren(getPage(), IFeedback.class);
             }
         }
         else {
             replacementPanel = emptyPanel();
         }
         instanceInfoPanel = instanceInfoPanel.replaceWith(replacementPanel);
-        target.add(this);
+        event.getTarget().add(this);
     }
 
-    private void actionNewInstance(AjaxRequestTarget target, AjaxNewInstanceEvent event)
+    @OnEvent
+    public void actionNewInstance(AjaxNewInstanceEvent event)
     {
         // cancel selection in the instance list
         selectedInstanceHandle.setObject(null);
@@ -160,7 +158,7 @@ public class ConceptInstancePanel
                 selectedInstanceHandle, Model.of(instance));
         instanceInfoPanel = instanceInfoPanel.replaceWith(replacement);
 
-        target.add(this);
+        event.getTarget().add(this);
     }
 
     private Component emptyPanel()
