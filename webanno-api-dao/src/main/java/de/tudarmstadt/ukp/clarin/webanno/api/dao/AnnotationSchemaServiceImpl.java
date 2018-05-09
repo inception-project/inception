@@ -414,6 +414,7 @@ public class AnnotationSchemaServiceImpl
     }
 
     @Override
+    @Transactional
     public TagSet createTagSet(String aDescription, String aTagSetName, String aLanguage,
             String[] aTags, String[] aTagDescription, Project aProject)
                 throws IOException
