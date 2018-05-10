@@ -39,12 +39,6 @@ public class BooleanFeatureEditor
         add(new Label("feature", getModelObject().feature.getUiName()));
 
         field = new CheckBox("value");
-        
-        // Ensure that markup IDs of feature editor focus components remain constant across
-        // refreshes of the feature editor panel. This is required to restore the focus.
-        field.setOutputMarkupId(true);
-        field.setMarkupId(ID_PREFIX + getModelObject().feature.getId());
-        
         add(field);
     }
 
