@@ -90,6 +90,8 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 public class AnnotationFeatureForm
     extends Form<AnnotatorState>
 {
+    public static final String ID_PREFIX = "featureEditorHead";
+    
     private static final long serialVersionUID = 3635145598405490893L;
 
     // Add "featureEditorPanel" to AjaxRequestTargets instead of "featureEditorPanelContent"
@@ -872,6 +874,13 @@ public class AnnotationFeatureForm
             // that automatically saves feature editors on change/blur. 
             // Check addAnnotateActionBehavior.
             frag.setOutputMarkupId(true);
+            frag.setOutputMarkupPlaceholderTag(true);
+            
+            // Ensure that markup IDs of feature editor focus components remain constant across
+            // refreshes of the feature editor panel. This is required to restore the focus.
+            frag.getFocusComponent().setOutputMarkupId(true);
+            frag.getFocusComponent().setMarkupId(ID_PREFIX + frag.getModelObject().feature.getId());
+            
             item.add(frag);
         }
 

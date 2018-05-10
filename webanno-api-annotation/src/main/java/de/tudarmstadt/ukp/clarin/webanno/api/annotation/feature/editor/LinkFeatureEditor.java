@@ -247,11 +247,6 @@ public class LinkFeatureEditor
                 }
             };
 
-            // Ensure that markup IDs of feature editor focus components remain constant across
-            // refreshs of the feature editor panel. This is required to restore the focus.
-            field.setOutputMarkupId(true);
-            field.setMarkupId(ID_PREFIX + getModelObject().feature.getId());
-
             content.add(field);
         }
         else {

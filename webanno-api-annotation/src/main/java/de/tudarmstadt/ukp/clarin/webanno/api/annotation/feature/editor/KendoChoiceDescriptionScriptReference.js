@@ -21,6 +21,13 @@ function applyTooltip(aElement) {
       position: { my: 'center bottom', at: 'center top', of: '.page-footer' },
       show: false,
       hide: false,
+      create: function( event, ui ) {
+        // The elements to which the tooltips are bound may be dynamically discarded and reloaded
+        // and may not receive the events then which usually cause the tooltip to disappear. To
+        // avoid orphan tooltips hanging around, clear all JQuery tooltips here before rendering
+        // new ones.
+        $("[role='tooltip']").each(function() { $(this).remove(); });
+      },
       content: function() { 
         var html =  
           '<div class="tooltip-title">' + ($(this).text() ? $(this).text() : 'no title') +

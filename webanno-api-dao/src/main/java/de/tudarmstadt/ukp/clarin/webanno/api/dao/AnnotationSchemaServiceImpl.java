@@ -430,6 +430,7 @@ public class AnnotationSchemaServiceImpl
     }
 
     @Override
+    @Transactional
     public TagSet createTagSet(String aDescription, String aTagSetName, String aLanguage,
             String[] aTags, String[] aTagDescription, Project aProject)
                 throws IOException
@@ -463,10 +464,21 @@ public class AnnotationSchemaServiceImpl
         Deque<ProjectInitializer> deque = new LinkedList<>(initializers);
         Set<Class<? extends ProjectInitializer>> initsSeen = new HashSet<>();
         Set<ProjectInitializer> initsDeferred = SetUtils.newIdentityHashSet();
+
+        Set<Class<? extends ProjectInitializer>> allInits = new HashSet<>();
+
+        for (ProjectInitializer initializer : deque) {
+            allInits.add(initializer.getClass());
+        }
         
         while (!deque.isEmpty()) {
             ProjectInitializer initializer = deque.pop();
-            
+
+            if (!allInits.containsAll(initializer.getDependencies())) {
+                throw new IllegalStateException(
+                        "Missing dependencies of " + initializer + " initializer from " + deque);
+            }
+
             if (initsDeferred.contains(initializer)) {
                 throw new IllegalStateException("Circular initializer dependencies in "
                         + initsDeferred + " via " + initializer);
