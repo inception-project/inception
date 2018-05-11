@@ -378,7 +378,7 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
                     IriConstants.TYPE_IRIS);
             contentWrapper.add(classField, subclassField, typeField);
             
-            // Base Prefix Label and TextField only shown in CUSTOM - "mode"
+            // Label and TextField for basePrefix only shown in CUSTOM mode
             Label basePrefixLabel = new Label("basePrefixLabel", "Base Prefix");
             basePrefixLabel.add(LambdaBehavior.onConfigure(tf -> tf.setVisible(
                     SchemaProfile.CUSTOMSCHEMA.equals(selectedSchemaProfile.getObject()))));

@@ -21,6 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -303,6 +304,26 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
             .hasFieldOrPropertyWithValue("description", concept.getDescription())
             .hasFieldOrPropertyWithValue("name", concept.getName());
     }
+    
+    @Test
+    public void createConcept_WithCustomBasePrefix_ShouldCreateNewConceptWithCustomPrefix()
+    {
+        KBConcept concept = buildConcept();
+
+        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
+        String customPrefix = "http://www.ukp.informatik.tu-darmstadt.de/customPrefix#";
+        kb.setBasePrefix(customPrefix);
+        KBHandle handle = sut.createConcept(kb, concept);
+
+        KBConcept savedConcept = sut.readConcept(kb, handle.getIdentifier()).get();
+        assertThat(savedConcept).as("Check that concept was saved correctly")
+                .hasFieldOrPropertyWithValue("description", concept.getDescription())
+                .hasFieldOrPropertyWithValue("name", concept.getName());
+
+        String id = savedConcept.getIdentifier();
+        String savedConceptPrefix = id.substring(0, id.lastIndexOf("#") + 1);
+        assertEquals(customPrefix, savedConceptPrefix);
+    }
 
     @Test
     public void createConcept_WithNonemptyIdentifier_ShouldThrowIllegalArgumentException() {
@@ -512,6 +533,26 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
             .hasFieldOrPropertyWithValue("domain", property.getDomain())
             .hasFieldOrPropertyWithValue("name", property.getName())
             .hasFieldOrPropertyWithValue("range", property.getRange());
+    }
+    
+    @Test
+    public void createProperty_WithCustomBasePrefix_ShouldCreateNewPropertyWithCustomPrefix()
+    {
+        KBProperty property = buildProperty();
+
+        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
+        String customPrefix = "http://www.ukp.informatik.tu-darmstadt.de/customPrefix#";
+        kb.setBasePrefix(customPrefix);
+        KBHandle handle = sut.createProperty(kb, property);
+
+        KBProperty savedProperty = sut.readProperty(kb, handle.getIdentifier()).get();
+        assertThat(savedProperty).as("Check that property was saved correctly")
+                .hasFieldOrPropertyWithValue("description", property.getDescription())
+                .hasFieldOrPropertyWithValue("name", property.getName());
+
+        String id = savedProperty.getIdentifier();
+        String savedPropertyPrefix = id.substring(0, id.lastIndexOf("#") + 1);
+        assertEquals(customPrefix, savedPropertyPrefix);
     }
 
     @Test
@@ -733,6 +774,26 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
             .as("Check that instance was saved correctly")
             .hasFieldOrPropertyWithValue("description", instance.getDescription())
             .hasFieldOrPropertyWithValue("name", instance.getName());
+    }
+    
+    @Test
+    public void createInstance_WithCustomBasePrefix_ShouldCreateNewInstanceWithCustomPrefix()
+    {
+        KBInstance instance = buildInstance();
+
+        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
+        String customPrefix = "http://www.ukp.informatik.tu-darmstadt.de/customPrefix#";
+        kb.setBasePrefix(customPrefix);
+        KBHandle handle = sut.createInstance(kb, instance);
+
+        KBInstance savedInstance = sut.readInstance(kb, handle.getIdentifier()).get();
+        assertThat(savedInstance).as("Check that Instance was saved correctly")
+                .hasFieldOrPropertyWithValue("description", instance.getDescription())
+                .hasFieldOrPropertyWithValue("name", instance.getName());
+
+        String id = savedInstance.getIdentifier();
+        String savedInstancePrefix = id.substring(0, id.lastIndexOf("#") + 1);
+        assertEquals(customPrefix, savedInstancePrefix);
     }
 
     @Test
