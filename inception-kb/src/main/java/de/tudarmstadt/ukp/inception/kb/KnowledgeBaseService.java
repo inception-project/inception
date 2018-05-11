@@ -338,4 +338,6 @@ public interface KnowledgeBaseService
     List<KBQualifier> listQualifiers(KnowledgeBase kb, KBStatement aStatement);
 
     boolean statementsMatchSPO(KnowledgeBase akb, KBStatement mockStatement);
+
+    void indexLocalKb(KnowledgeBase aKb) throws IOException;
 }

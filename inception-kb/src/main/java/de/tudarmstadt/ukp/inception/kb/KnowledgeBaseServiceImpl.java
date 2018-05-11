@@ -37,6 +37,15 @@ import javax.persistence.Query;
 import org.apache.commons.compress.compressors.CompressorException;
 import org.apache.commons.compress.compressors.CompressorStreamFactory;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.document.Document;
+import org.apache.lucene.document.Field;
+import org.apache.lucene.document.StringField;
+import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.store.Directory;
+import org.apache.lucene.store.FSDirectory;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.ValueFactory;
@@ -57,6 +66,7 @@ import org.eclipse.rdf4j.repository.config.RepositoryConfigException;
 import org.eclipse.rdf4j.repository.config.RepositoryImplConfig;
 import org.eclipse.rdf4j.repository.manager.RepositoryManager;
 import org.eclipse.rdf4j.repository.manager.RepositoryProvider;
+import org.eclipse.rdf4j.repository.sail.SailRepository;
 import org.eclipse.rdf4j.repository.sail.config.SailRepositoryConfig;
 import org.eclipse.rdf4j.repository.sparql.config.SPARQLRepositoryConfig;
 import org.eclipse.rdf4j.rio.RDFFormat;
@@ -64,6 +74,8 @@ import org.eclipse.rdf4j.rio.RDFParseException;
 import org.eclipse.rdf4j.rio.RDFWriter;
 import org.eclipse.rdf4j.rio.Rio;
 import org.eclipse.rdf4j.sail.inferencer.fc.config.ForwardChainingRDFSInferencerConfig;
+import org.eclipse.rdf4j.sail.lucene.LuceneSail;
+import org.eclipse.rdf4j.sail.memory.MemoryStore;
 import org.eclipse.rdf4j.sail.nativerdf.config.NativeStoreConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -95,6 +107,7 @@ public class KnowledgeBaseServiceImpl
     private @PersistenceContext EntityManager entityManager;
     private final RepositoryManager repoManager;
     private final Set<String> implicitNamespaces;
+    private SailRepository luceneSail;
 
     @org.springframework.beans.factory.annotation.Value(value = "${data.path}/kb")
     private File dataDir;
@@ -107,6 +120,7 @@ public class KnowledgeBaseServiceImpl
         repoManager = RepositoryProvider.getRepositoryManager(url);
         log.info("Knowledge base repository path: " + url);
         implicitNamespaces = IriConstants.IMPLICIT_NAMESPACES;
+        luceneSail = setupLuceneSail();
     }
 
     public KnowledgeBaseServiceImpl(
@@ -801,5 +815,78 @@ public class KnowledgeBaseServiceImpl
     public boolean statementsMatchSPO(KnowledgeBase akb, KBStatement mockStatement)
     {
         return getReificationStrategy(akb).statementsMatchSPO(akb, mockStatement);
+    }
+
+    public void openIndex(KnowledgeBase aKb)
+    {
+        try {
+
+            log.info("Index has been opened for KB " + aKb.getName());
+        }
+        catch (Exception e) {
+            log.error("Unable to open index", e);
+        }
+    }
+
+    public SailRepository setupLuceneSail()
+    {
+        // create a sesame memory sail
+        MemoryStore memoryStore = new MemoryStore();
+
+        // create a lucenesail to wrap the memorystore
+        LuceneSail lucenesail = new LuceneSail();
+
+        // set this parameter to store the lucene index on disk
+        //d
+        lucenesail.setParameter(LuceneSail.LUCENE_DIR_KEY, "${repository.path}/luceneIndex");
+
+        // wrap memorystore in a lucenesail
+        lucenesail.setBaseSail(memoryStore);
+
+        // create a Repository to access the sails
+        SailRepository repository = new SailRepository(lucenesail);
+        repository.initialize();
+        return repository;
+    }
+
+    @Override
+    public void indexLocalKb(KnowledgeBase aKb) throws IOException
+    {
+        Analyzer analyzer = new StandardAnalyzer();
+        File f = new File("${repository.path}/luceneIndex");
+        Directory directory = FSDirectory.open(f.toPath());
+        IndexWriter indexWriter = new IndexWriter(directory, new IndexWriterConfig(analyzer));
+
+        try (RepositoryConnection conn = getConnection(aKb)) {
+            RepositoryResult<Statement> stmts = RdfUtils
+                .getStatementsSparql(conn, null, RDFS.LABEL, null, false);
+            while (stmts.hasNext()) {
+                Statement stmt = stmts.next();
+                String id = stmt.getSubject().stringValue();
+                String label = stmt.getObject().stringValue();
+                try {
+                    indexEntity(id, label, indexWriter);
+                }
+                catch (IOException e) {
+                    log.error("Could not index entity with id [{}] and label [{}]", id, label);
+                }
+            }
+        }
+
+        indexWriter.close();
+    }
+
+    private void indexEntity(String aId, String aLabel, IndexWriter aIndexWriter)
+        throws IOException
+    {
+        String FIELD_ID = "id";
+        String FIELD_CONTENT = "label";
+        Document doc = new Document();
+        doc.add(new StringField(FIELD_ID, aId, Field.Store.YES));
+        doc.add(new StringField(FIELD_CONTENT, aLabel, Field.Store.YES));
+        aIndexWriter.addDocument(doc);
+        aIndexWriter.commit();
+
+        log.info("Entity indexed with id [{}] and label [{}]", aId, aLabel);
     }
 }

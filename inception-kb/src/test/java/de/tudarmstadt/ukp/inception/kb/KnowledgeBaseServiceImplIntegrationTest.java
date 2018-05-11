@@ -1081,7 +1081,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     public void getConceptRoots_WithWildlifeOntology_ShouldReturnRootConcepts() throws Exception {
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         importKnowledgeBase("data/wildlife_ontology.ttl");
-        setSchema(kb, OWL.CLASS, RDFS.SUBCLASSOF, RDF.TYPE);
+        setSchema(kb, OWL.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT);
 
         Stream<String> rootConcepts = sut.listRootConcepts(kb, false).stream()
                 .map(KBHandle::getName);

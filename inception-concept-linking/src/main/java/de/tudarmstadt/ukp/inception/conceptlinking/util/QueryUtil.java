@@ -76,20 +76,18 @@ public class QueryUtil
      * @return a query to retrieve candidate entities
      */
     public static TupleQuery generateCandidateQuery(RepositoryConnection conn, List<String>
-        tokens, int limit, IRI aDescriptionIri)
+        tokens, int limit, IRI aDescriptionIri, IRI aFtsIri)
     {
         String query = String.join("\n",
-            "DEFINE input:inference 'instances'",
             SPARQL_PREFIX,
             "SELECT DISTINCT ?e2 ?altLabel ?label ?description WHERE",
             "{",
             "  {",
             "    {",
             "      VALUES ?labelpredicate {rdfs:label skos:altLabel}",
-            "      GRAPH " + TERMS,
             "      {",
             "        ?e2 ?labelpredicate ?altLabel.",
-            "        ?altLabel bif:contains '?entityLabel'. ",
+            "        ?altLabel ?ftsIri '?entityLabel'. ",
             "        OPTIONAL",
             "        {",
             "          ?e2 ?descriptionIri ?description.",
@@ -98,19 +96,19 @@ public class QueryUtil
             "      }",
             "    }",
             "  }",
-            "  FILTER EXISTS { GRAPH " + STATEMENTS + " { ?e2 ?p ?v }}",
+            "  FILTER EXISTS {  { ?e2 ?p ?v }}",
             "  FILTER NOT EXISTS ",
             "  {",
             "    VALUES ?topic {" + String.join(" ", WIKIMEDIA_INTERNAL,
                 WIKIMEDIA_PROJECT_PAGE, WIKIMEDIA_CATEGORY, WIKIMEDIA_DISAMBIGUATION_PAGE,
                 WIKIMEDIA_LIST_ARTICLE, WIKIMEDIA_TEMPLATE, WIKIMEDIA_NEWS_ARTICLE,
                 WIKIMEDIA_NAVIGATIONAL_TEMPLATE) +
-                "}",
-            "    GRAPH " + INSTANCES + " {?e2 rdf:type ?topic}",
+            "  }",
+            "    {?e2 rdf:type ?topic}",
             "  }",
             "  BIND (STRLEN(?altLabel) as ?len)",
             "  {",
-            "    GRAPH " + TERMS + " { ?e2 rdfs:label ?label. }",
+            "    { ?e2 rdfs:label ?label. }",
             "    FILTER ( lang(?label) = \"en\" )",
             "  }",
             "}",
@@ -118,13 +116,19 @@ public class QueryUtil
 
         ValueFactory vf = SimpleValueFactory.getInstance();
         Literal tokensJoined = vf.createLiteral(String.join(" ",tokens));
-
+        
         TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, query);
         tupleQuery.setBinding("entityLabel", tokensJoined);
         tupleQuery.setBinding("descriptionIri", aDescriptionIri);
+        tupleQuery.setBinding("ftsIri", aFtsIri);
         return tupleQuery;
     }
 
+    public void exampleFtsQuery()
+    {
+        String a = String.join("\n",
+            "SELECT");
+    }
     /**
      *
      * @param wikidataId wikidataId, e.g. "Q3"

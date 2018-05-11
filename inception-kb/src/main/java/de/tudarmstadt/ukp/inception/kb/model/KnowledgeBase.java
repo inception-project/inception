@@ -105,6 +105,12 @@ public class KnowledgeBase
     @Column(nullable = false)
     private IRI descriptionIri;
 
+    /**
+     * The IRI used for full text search, e.g. bif:contains or <http://www.openrdf.org/contrib/lucenesail#>
+     */
+    @Column
+    private IRI ftsIri;
+
     @Column(nullable = false)
     private boolean readOnly;
 
@@ -198,6 +204,16 @@ public class KnowledgeBase
     public void setDescriptionIri(IRI aDescriptionIri)
     {
         descriptionIri = aDescriptionIri;
+    }
+
+    public IRI getFtsIri()
+    {
+        return ftsIri;
+    }
+
+    public void setFtsIri(IRI ftsIri)
+    {
+        this.ftsIri = ftsIri;
     }
 
     public boolean isReadOnly()

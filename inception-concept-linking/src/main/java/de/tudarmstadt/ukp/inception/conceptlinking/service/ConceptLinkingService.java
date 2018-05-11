@@ -167,7 +167,7 @@ public class ConceptLinkingService
         try (RepositoryConnection conn = kbService.getConnection(aKB)) {
             TupleQuery query = QueryUtil
                 .generateCandidateQuery(conn, mentionArray, properties.getCandidateQueryLimit(),
-                    aKB.getDescriptionIri());
+                    aKB.getDescriptionIri(), aKB.getFtsIri());
             try (TupleQueryResult entityResult = query.evaluate()) {
                 while (entityResult.hasNext()) {
                     BindingSet solution = entityResult.next();

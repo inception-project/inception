@@ -212,4 +212,18 @@
     </addColumn>
   </changeSet>
 
+  <changeSet author="INCEpTION Team" id="20180511">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="knowledgebase" columnName="ftsIri"/>
+      </not>
+    </preConditions>
+
+    <addColumn tableName="knowledgebase">
+      <column name="ftsIri"
+              type="VARCHAR(255)">
+      </column>
+    </addColumn>
+  </changeSet>
+
 </databaseChangeLog>

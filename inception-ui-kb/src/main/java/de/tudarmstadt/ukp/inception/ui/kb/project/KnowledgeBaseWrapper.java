@@ -95,6 +95,7 @@ public class KnowledgeBaseWrapper implements Serializable {
             cfg = kbService.getNativeConfig();
             kbService.registerKnowledgeBase(kb, cfg);
             KnowledgeBaseWrapper.importFiles(kbw, kbService);
+            kbService.indexLocalKb(kb);
             break;
         case REMOTE:
             cfg = kbService.getRemoteConfig(kbw.getUrl());
