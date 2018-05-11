@@ -1,5 +1,5 @@
 #FORMAT=WebAnno TSV 3.2
-#T_SP=de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity|value
+#T_SP=webanno.custom.Span|value
 
 
 #Text=I like it 😊 .

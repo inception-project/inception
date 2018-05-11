@@ -1,5 +1,5 @@
 #FORMAT=WebAnno TSV 3.2
-#T_RL=webanno.custom.ComplexRelation|value|boolValue|intValue|BT_de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token
+#T_RL=webanno.custom.ComplexRelation|value|boolValue|integerValue|BT_de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token
 
 
 #Text=This is a test .

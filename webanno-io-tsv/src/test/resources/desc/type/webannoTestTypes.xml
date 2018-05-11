@@ -1,20 +1,32 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <typeSystemDescription xmlns="http://uima.apache.org/resourceSpecifier">
-    <name>webannoTestTypes</name>
-    <description/>
-    <version>1.0</version>
-    <vendor/>
+  <name>webannoTestTypes</name>
+  <description/>
+  <version>1.0</version>
+  <vendor/>
   <types>
     <typeDescription>
       <name>webanno.custom.SimpleSpan</name>
       <description/>
       <supertypeName>uima.tcas.Annotation</supertypeName>
     </typeDescription>
-  <typeDescription>
+    <typeDescription>
+      <name>webanno.custom.Span</name>
+      <description/>
+      <supertypeName>uima.tcas.Annotation</supertypeName>
+      <features>
+        <featureDescription>
+          <name>value</name>
+          <description/>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+      </features>
+    </typeDescription>
+    <typeDescription>
       <name>webanno.custom.SimpleRelation</name>
       <description/>
       <supertypeName>uima.tcas.Annotation</supertypeName>
-    <features>
+      <features>
         <featureDescription>
           <name>Governor</name>
           <description/>
@@ -42,14 +54,14 @@
           <description/>
           <rangeTypeName>uima.tcas.Annotation</rangeTypeName>
         </featureDescription>
-      <featureDescription>
+        <featureDescription>
           <name>value</name>
           <description/>
           <rangeTypeName>uima.cas.String</rangeTypeName>
         </featureDescription>
       </features>
     </typeDescription>
-  <typeDescription>
+    <typeDescription>
       <name>webanno.custom.ComplexRelation</name>
       <description/>
       <supertypeName>uima.tcas.Annotation</supertypeName>
@@ -75,13 +87,13 @@
           <rangeTypeName>uima.cas.Boolean</rangeTypeName>
         </featureDescription>
         <featureDescription>
-          <name>intValue</name>
+          <name>integerValue</name>
           <description/>
           <rangeTypeName>uima.cas.Integer</rangeTypeName>
         </featureDescription>
       </features>
     </typeDescription>
-  <typeDescription>
+    <typeDescription>
       <name>webanno.custom.SimpleLinkHost</name>
       <description/>
       <supertypeName>uima.tcas.Annotation</supertypeName>
@@ -112,7 +124,7 @@
         </featureDescription>
       </features>
     </typeDescription>
-  <typeDescription>
+    <typeDescription>
       <name>webanno.custom.SimpleChain</name>
       <description/>
       <supertypeName>uima.cas.AnnotationBase</supertypeName>
@@ -146,7 +158,7 @@
         </featureDescription>
       </features>
     </typeDescription>
-  <typeDescription>
+    <typeDescription>
       <name>webanno.custom.ComplexLinkHost</name>
       <description/>
       <supertypeName>uima.tcas.Annotation</supertypeName>

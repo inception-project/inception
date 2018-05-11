@@ -113,5 +113,28 @@
         </plugin>
       </plugins>
     </pluginManagement>
+    <plugins>
+      <plugin>
+        <!--generate types dynamically -->
+        <groupId>org.apache.uima</groupId>
+        <artifactId>jcasgen-maven-plugin</artifactId>
+        <version>${uima.version}</version>
+        <configuration>
+          <limitToProject>true</limitToProject>
+          <outputDirectory>${project.build.directory}/generated-test-sources/jcasgen</outputDirectory>
+          <typeSystemIncludes>
+            <include>src/test/resources/desc/type/**/*.xml</include>
+          </typeSystemIncludes>
+        </configuration>
+        <executions>
+          <execution>
+            <phase>generate-test-sources</phase>
+            <goals>
+              <goal>generate</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
   </build>
 </project>
