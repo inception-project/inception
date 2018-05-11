@@ -39,6 +39,7 @@ import javax.persistence.Query;
 import org.apache.commons.compress.compressors.CompressorException;
 import org.apache.commons.compress.compressors.CompressorStreamFactory;
 import org.apache.commons.lang3.StringUtils;
+import org.eclipse.rdf4j.common.iteration.Iterations;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.ValueFactory;
@@ -374,7 +375,7 @@ public class KnowledgeBaseServiceImpl
     @Override
     public void deleteConcept(KnowledgeBase kb, KBConcept aConcept)
     {
-        delete(kb, aConcept.getIdentifier());
+        getReificationStrategy(kb).deleteConcept(kb, aConcept);
     }
 
     @Override
@@ -433,7 +434,7 @@ public class KnowledgeBaseServiceImpl
     @Override
     public void deleteProperty(KnowledgeBase kb, KBProperty aType)
     {
-        delete(kb, aType.getIdentifier());
+        getReificationStrategy(kb).deleteProperty(kb, aType);
     }
 
     @Override
@@ -451,6 +452,7 @@ public class KnowledgeBaseServiceImpl
 
         return update(kb, (conn) -> {
             String identifier = generateIdentifier(conn, kb);
+            System.out.println(identifier);
             aInstance.setIdentifier(identifier);
             aInstance.write(conn, kb);
 
@@ -529,7 +531,7 @@ public class KnowledgeBaseServiceImpl
     @Override
     public void deleteInstance(KnowledgeBase kb, KBInstance aInstance)
     {
-        delete(kb, aInstance.getIdentifier());
+        getReificationStrategy(kb).deleteInstance(kb, aInstance);
     }
 
     @Override
@@ -572,17 +574,23 @@ public class KnowledgeBaseServiceImpl
         KBHandle handle = new KBHandle(aInstance.getIdentifier(), aInstance.getName());
         return listStatements(kb, handle, aAll);
     }
-
-    private void delete(KnowledgeBase kb, String aIdentifier)
+    
+    @Override
+    public List<Statement> listStatementsWithNoneSubjectReference(KnowledgeBase kb,
+            String aIdentifier)
     {
-        update(kb, (conn) -> {
+        try (RepositoryConnection conn = getConnection(kb)) {
             ValueFactory vf = conn.getValueFactory();
-            try (RepositoryResult<Statement> stmts = conn
-                .getStatements(vf.createIRI(aIdentifier), null, null)) {
-                conn.remove(stmts);
+            IRI iri = vf.createIRI(aIdentifier);
+            try (RepositoryResult<Statement> predStmts = conn.getStatements(null, iri, null);
+                    RepositoryResult<Statement> objStmts = conn.getStatements(null, null, iri)) {
+                List<Statement> allStmts = new ArrayList<>();
+                Iterations.addAll(predStmts, allStmts);
+                Iterations.addAll(objStmts, allStmts);
+                return allStmts;
+
             }
-            return null;
-        });
+        }
     }
 
     private String generateIdentifier(RepositoryConnection conn, KnowledgeBase kb)

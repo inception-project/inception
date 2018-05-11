@@ -40,7 +40,10 @@ import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.inception.kb.InceptionValueMapper;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
+import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
+import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
+import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBQualifier;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
@@ -282,6 +285,30 @@ public class WikiDataReification
         }
 
     }
+    
+    @Override
+    public void deleteInstance(KnowledgeBase kb, KBInstance aInstance)
+    {
+        delete(kb, aInstance.getIdentifier());
+    }
+
+    @Override
+    public void deleteProperty(KnowledgeBase kb, KBProperty aProperty)
+    {
+        delete(kb, aProperty.getIdentifier());
+    }
+
+    @Override
+    public void deleteConcept(KnowledgeBase kb, KBConcept aConcept)
+    {
+        delete(kb, aConcept.getIdentifier());
+    }
+
+    private void delete(KnowledgeBase kb, String aIdentifier)
+    {
+        // TODO: implement cascading deletion
+        throw new UnsupportedOperationException();
+    }
 
     @Override
     public void deleteStatement(KnowledgeBase kb, KBStatement aStatement)
@@ -450,5 +477,6 @@ public class WikiDataReification
             return qualifiers;
         }
     }
+
 
 }

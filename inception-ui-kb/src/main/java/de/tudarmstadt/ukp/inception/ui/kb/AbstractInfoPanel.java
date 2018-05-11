@@ -21,6 +21,7 @@ import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
 import java.util.Comparator;
+import java.util.List;
 
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Component;
@@ -34,12 +35,15 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.cycle.RequestCycle;
+import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.eclipse.rdf4j.model.Statement;
 
 import com.googlecode.wicket.kendo.ui.widget.tooltip.TooltipBehavior;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
@@ -64,6 +68,8 @@ public abstract class AbstractInfoPanel<T extends KBObject> extends EventListeni
 
     private static final String CONTENT_MARKUP_ID = "content";
 
+    private @SpringBean KnowledgeBaseService kbService;
+    
     protected IModel<T> kbObjectModel;
     protected IModel<KBHandle> handleModel;
     protected IModel<KnowledgeBase> kbModel;
@@ -221,8 +227,22 @@ public abstract class AbstractInfoPanel<T extends KBObject> extends EventListeni
     private void confirmActionDelete(AjaxRequestTarget aTarget) {
         confirmationDialog.setTitleModel(
                 new StringResourceModel("kbobject.delete.confirmation.title", this));
-        confirmationDialog.setContentModel(new StringResourceModel(
-                "kbobject.delete.confirmation.content", this, handleModel));
+        
+        // find out whether there are statements that reference the object
+        List<Statement> statementsWithReference = kbService
+                .listStatementsWithNoneSubjectReference(kbModel.getObject(),
+                        kbObjectModel.getObject().getIdentifier());
+        System.out.println(statementsWithReference);
+        if (statementsWithReference.isEmpty()) {
+            confirmationDialog.setContentModel(new StringResourceModel(
+                    "kbobject.delete.confirmation.content", this, handleModel));
+        }
+        else {
+            confirmationDialog.setContentModel(
+                    new StringResourceModel("kbobject.delete.confirmation.extendedContent", this,
+                            handleModel).setParameters(statementsWithReference.size()));
+
+        }
         confirmationDialog.show(aTarget);
         confirmationDialog.setConfirmAction(this::actionDelete);
     }

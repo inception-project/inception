@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
@@ -280,7 +281,16 @@ public interface KnowledgeBaseService
      * @param aStatement The statement to delete
      */
     void deleteStatement(KnowledgeBase kb, KBStatement aStatement) throws RepositoryException;
-
+    
+    /**
+     * Lists all statements in which the entity appears but is not the subject 
+     * @param kb The knowledge base to query
+     * @param aIdentifier The identifier of the entity
+     * @return All statements that match the specification
+     */
+    List<Statement> listStatementsWithNoneSubjectReference(KnowledgeBase kb,
+            String aIdentifier);
+    
     List<KBStatement> listStatements(KnowledgeBase kb, KBHandle aInstance, boolean aAll)
         throws QueryEvaluationException;
 
