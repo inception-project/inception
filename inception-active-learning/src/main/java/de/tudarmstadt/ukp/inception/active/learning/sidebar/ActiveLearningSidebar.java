@@ -22,6 +22,11 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.FeatureEditor;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.FeatureStateModel;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
@@ -121,6 +126,7 @@ public class ActiveLearningSidebar
     private @SpringBean LearningRecordService learningRecordService;
     private @SpringBean DocumentService documentService;
     private @SpringBean ApplicationEventPublisherHolder applicationEventPublisherHolder;
+    private @SpringBean FeatureSupportRegistry featureSupportRegistry;
 
     private IModel<AnnotationLayer> selectedLayer;
     private IModel<List<LearningRecord>> learningRecords;
@@ -360,6 +366,7 @@ public class ActiveLearningSidebar
                 currentRecommendation != null ? currentRecommendation.getConfidence() : 0.0)));
         recommendationForm.add(new Label(CID_RECOMMENDED_DIFFERENCE, LambdaModel.of(() -> 
                 currentDifference != null ? currentDifference.getDifference() : 0.0)));
+        recommendationForm.add(createFeatureEditor());
         
         recommendationForm.add(new LambdaAjaxLink(CID_ACCEPT_BUTTON, this::actionAccept));
         recommendationForm.add(new LambdaAjaxLink(CID_SKIP_BUTTON, this::actionSkip));
@@ -702,5 +709,21 @@ public class ActiveLearningSidebar
                 }
             }
         }
+    }
+
+    private FeatureEditor createFeatureEditor() {
+        AnnotationFeature annotationFeature = annotationService
+            .listAnnotationFeature(selectedLayer.getObject()).get(0);
+        FeatureSupport featureSupport = featureSupportRegistry
+            .getFeatureSupport(annotationFeature);
+        IModel<FeatureState> aFeatureStateModel = Model.of(new FeatureState(annotationFeature,
+            null));
+        aFeatureStateModel.getObject().tagset = annotationService.listTags(annotationFeature
+            .getTagset());
+        FeatureEditor editor = featureSupport.createEditor("editor", mainContainer, this
+            .getActionHandler(), this.getModel(), aFeatureStateModel);
+        editor.add(LambdaBehavior.onConfigure(component -> component.setVisible
+            (sessionActive && hasUnseenRecommendation)));
+        return editor;
     }
 }
