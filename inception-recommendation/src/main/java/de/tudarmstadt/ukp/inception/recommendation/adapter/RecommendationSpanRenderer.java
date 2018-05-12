@@ -118,10 +118,10 @@ public class RecommendationSpanRenderer
             // For recommendations with the same label by the same classifier,
             // show only the confidence of the highest one
             for (AnnotationObject ao: token) {          
-                if (ao.getAnnotation() != null) {       
-                    if (isOverlapping(vspansWithoutRecommendations, ao.getOffset(), windowBegin,
-                        ao.getFeature())) {
-                        break;
+                if (ao.getAnnotation() != null) {
+                    if (isOverlappingForFeature(vspansWithoutRecommendations, ao.getOffset(),
+                        windowBegin, ao.getFeature())) {
+                        continue;
                     }
                     
                     if (isRejected(recordedAnnotations, ao)) {
@@ -225,8 +225,9 @@ public class RecommendationSpanRenderer
      * Check if there is already an existing annotation overlapping the prediction
      * 
      */
-    private boolean isOverlapping (Collection<VSpan> vspans, Offset recOffset, int windowBegin,
-        String feature) {
+    private boolean isOverlappingForFeature(Collection<VSpan> vspans, Offset recOffset,
+        int windowBegin, String feature)
+    {
 
         for (VSpan v : vspans) {
             for (VRange o : v.getOffsets()) {
