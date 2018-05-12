@@ -42,6 +42,7 @@ import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.eclipse.rdf4j.model.Value;
 import org.eclipse.rdf4j.query.BindingSet;
+import org.eclipse.rdf4j.query.QueryEvaluationException;
 import org.eclipse.rdf4j.query.TupleQuery;
 import org.eclipse.rdf4j.query.TupleQueryResult;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
@@ -183,6 +184,9 @@ public class ConceptLinkingService
                     candidates.add(newEntity);
                 }
             }
+        }
+        catch (QueryEvaluationException e) {
+            logger.error("Query evaluation was unsuccessful: ", e);
         }
 
         if (candidates.isEmpty()) {
