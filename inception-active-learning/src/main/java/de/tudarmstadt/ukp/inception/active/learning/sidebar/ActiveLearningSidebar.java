@@ -68,6 +68,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.event.AjaxAfterAnnotation
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.inception.active.learning.ActiveLearningService;
 import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningRecommendationEvent;
+import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningRejectRecommendationEvent;
 import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningSessionCompletedEvent;
 import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningSessionStartedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.RecommendationEditorExtension;
@@ -649,11 +650,11 @@ public class ActiveLearningSidebar
     public void onRecommendationAcceptEvent(AjaxRecommendationAcceptedEvent aEvent)
     {
         AnnotatorState annotatorState = ActiveLearningSidebar.this.getModelObject();
-        predictionModel = recommendationService.getPredictions(annotatorState.getUser(),
-            annotatorState.getProject());
+        predictionModel = recommendationService
+            .getPredictions(annotatorState.getUser(), annotatorState.getProject());
         AnnotatorState eventState = aEvent.getAnnotatorState();
         AnnotationObject acceptedRecommendation = predictionModel
-                .getPredictionByVID(aEvent.getVid());
+            .getPredictionByVID(aEvent.getVid());
 
         LearningRecord record = new LearningRecord();
         record.setUser(eventState.getUser().getUsername());
@@ -669,10 +670,21 @@ public class ActiveLearningSidebar
         record.setChangeLocation(LearningRecordChangeLocation.MAIN_EDITOR);
         learningRecordService.create(record);
 
-        if (sessionActive && currentRecommendation != null
-                && eventState.getUser().equals(annotatorState.getUser())
-                && eventState.getProject().equals(annotatorState.getProject())) {
+        if (sessionActive && currentRecommendation != null && eventState.getUser()
+            .equals(annotatorState.getUser()) && eventState.getDocument()
+            .equals(annotatorState.getDocument())) {
+            //if the token of accepted recommendation is same to the token of current
+            // recommendation, active learning sidebar should show next recommendation.
             if (acceptedRecommendation.getOffset().equals(currentRecommendation.getOffset())) {
+                //if the accepted recommendation is different from current recommendation, then
+                // current recommendation is rejected implicitly.
+                if (!acceptedRecommendation.getAnnotation()
+                    .equals(currentRecommendation.getAnnotation())) {
+                    applicationEventPublisherHolder.get().publishEvent(
+                        new ActiveLearningRejectRecommendationEvent(this, eventState.getDocument(),
+                            eventState.getUser().getUsername(), selectedLayer.getObject(),
+                            currentRecommendation));
+                }
                 moveToNextRecommendation(aEvent.getTarget());
             }
             aEvent.getTarget().add(mainContainer);

@@ -130,6 +130,10 @@ public class RecommendationEditorExtension
             address = adapter.add(aState, aJCas, aBegin, aEnd);
         }
 
+        //send an event to AL sidebar for accept this recommendation
+        aTarget.getPage().send(aTarget.getPage(), Broadcast.BREADTH, new
+            AjaxRecommendationAcceptedEvent(aTarget, aState, aVID));
+
         String fsId = fsRegistry.getFeatureSupport(feature).getId();
         if (fsId.equals("conceptFeatureSupport") || fsId.equals("propertyFeatureSupport")) {
             String uiName = fsRegistry.getFeatureSupport(feature)
@@ -152,9 +156,6 @@ public class RecommendationEditorExtension
         // ... select it and load it into the detail editor panel
         aActionHandler.actionSelect(aTarget, aJCas);            
         aActionHandler.actionCreateOrUpdate(aTarget, aJCas);
-
-        aTarget.getPage().send(aTarget.getPage(), Broadcast.BREADTH, new
-            AjaxRecommendationAcceptedEvent(aTarget, aState, aVID));
     }
     
     private void actionRejectRecommendation(AnnotationActionHandler aActionHandler,
