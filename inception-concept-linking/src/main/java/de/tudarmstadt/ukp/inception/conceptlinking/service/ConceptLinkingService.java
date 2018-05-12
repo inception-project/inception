@@ -33,6 +33,7 @@ import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
+import javax.ws.rs.HEAD;
 
 import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.builder.CompareToBuilder;
@@ -90,10 +91,6 @@ public class ConceptLinkingService
     private File propertyWithLabelsFile;
     private Map<String, Property> propertyWithLabels;
 
-    private final String[] PUNCTUATION_VALUES
-        = new String[] { "``", "''", "(", ")", ",", ".", ":", "--" };
-    private final Set<String> punctuations = new HashSet<>(Arrays.asList(PUNCTUATION_VALUES));
-
     private Set<String> typeBlacklist = new HashSet<>(Arrays
         .asList("commonsmedia", "external-id", "globe-coordinate", "math", "monolingualtext",
             "quantity", "string", "url", "wikibase-property"));
@@ -149,24 +146,26 @@ public class ConceptLinkingService
         Set<CandidateEntity> candidates = new HashSet<>();
         List<String> mentionArray = Arrays.asList(aMention.split(" "));
 
-        mentionArray = mentionArray.stream().filter(m -> !punctuations.contains(m))
+        // Remove any character that is not a letter
+        mentionArray = mentionArray.stream().map(m -> m.replaceAll("[^\\p{L}^\\d]", ""))
             .collect(Collectors.toList());
 
         if (stopwords != null) {
-            if (mentionArray.stream().allMatch(m -> stopwords.contains(m))) {
+            if (stopwords.containsAll(mentionArray)) {
                 logger.error("Mention [{}] consists of stopwords only - returning.", aMention);
                 return Collections.emptySet();
             }
         }
 
-        if (mentionArray.isEmpty()) {
+        aMention = String.join(" ", mentionArray);
+        if (aMention.isEmpty()) {
             logger.error("Mention is empty!");
             return Collections.emptySet();
         }
 
         try (RepositoryConnection conn = kbService.getConnection(aKB)) {
             TupleQuery query = QueryUtil
-                .generateCandidateQuery(conn, mentionArray, properties.getCandidateQueryLimit());
+                .generateCandidateQuery(conn, aMention, properties.getCandidateQueryLimit());
             try (TupleQueryResult entityResult = query.evaluate()) {
                 while (entityResult.hasNext()) {
                     BindingSet solution = entityResult.next();
