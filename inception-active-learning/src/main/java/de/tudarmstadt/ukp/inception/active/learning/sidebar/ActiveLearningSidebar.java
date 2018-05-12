@@ -18,10 +18,12 @@
 package de.tudarmstadt.ukp.inception.active.learning.sidebar;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.FeatureEditor;
@@ -100,6 +102,7 @@ public class ActiveLearningSidebar
     private static final String CID_REJECT_BUTTON = "rejectButton";
     private static final String CID_SKIP_BUTTON = "skipButton";
     private static final String CID_ACCEPT_BUTTON = "acceptButton";
+    private static final String CID_CORRECT_BUTTON = "correctButton";
     private static final String CID_RECOMMENDATION_COVERED_TEXT_LINK = "recommendationCoveredTextLink";
     private static final String CID_RECOMMENDED_DIFFERENCE = "recommendedDifference";
     private static final String CID_RECOMMENDED_CONFIDENCE = "recommendedConfidence";
@@ -146,6 +149,7 @@ public class ActiveLearningSidebar
     private VID highlightVID;
     private LearningRecord selectedRecord;
     private Date learnSkippedRecommendationTime;
+    private FeatureState featureState;
 
     public ActiveLearningSidebar(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, JCasProvider aJCasProvider,
@@ -371,6 +375,7 @@ public class ActiveLearningSidebar
         recommendationForm.add(new LambdaAjaxLink(CID_ACCEPT_BUTTON, this::actionAccept));
         recommendationForm.add(new LambdaAjaxLink(CID_SKIP_BUTTON, this::actionSkip));
         recommendationForm.add(new LambdaAjaxLink(CID_REJECT_BUTTON, this::actionReject));
+        recommendationForm.add(new LambdaAjaxLink(CID_CORRECT_BUTTON, this::actionCorrect));
         
         return recommendationForm;
     }
@@ -468,6 +473,20 @@ public class ActiveLearningSidebar
         // Save CAS
         aActionHandler.actionCreateOrUpdate(aTarget, jCas);
         
+        moveToNextRecommendation(aTarget);
+    }
+
+    private void actionCorrect(AjaxRequestTarget aTarget)
+        throws IOException, AnnotationException
+    {
+        SpanAdapter adapter = (SpanAdapter) annotationService.getAdapter(selectedLayer.getObject());
+        JCas aJCas = this.getJCasProvider().get();
+        int address = adapter.add(this.getModelObject(), aJCas, currentRecommendation.getOffset()
+            .getBeginCharacter(), currentRecommendation.getOffset().getEndCharacter());
+        AnnotationFS fs = WebAnnoCasUtil.selectByAddr(aJCas, AnnotationFS.class, address);
+        Serializable value = null;
+        value = annotationService.getAdapter(selectedLayer.getObject()).getFeatureValue(annotationService
+            .listAnnotationFeature(selectedLayer.getObject()).get(0), fs);
         moveToNextRecommendation(aTarget);
     }
 
@@ -716,10 +735,15 @@ public class ActiveLearningSidebar
             .listAnnotationFeature(selectedLayer.getObject()).get(0);
         FeatureSupport featureSupport = featureSupportRegistry
             .getFeatureSupport(annotationFeature);
-        IModel<FeatureState> aFeatureStateModel = Model.of(new FeatureState(annotationFeature,
-            null));
-        aFeatureStateModel.getObject().tagset = annotationService.listTags(annotationFeature
+
+        featureState = new FeatureState(annotationFeature, null);
+        featureState.tagset = annotationService.listTags(annotationFeature
             .getTagset());
+        IModel<FeatureState> aFeatureStateModel = Model.of(featureState);
+//        IModel<FeatureState> aFeatureStateModel = Model.of(new FeatureState(annotationFeature,
+//            null));
+//        aFeatureStateModel.getObject().tagset = annotationService.listTags(annotationFeature
+//            .getTagset());
         FeatureEditor editor = featureSupport.createEditor("editor", mainContainer, this
             .getActionHandler(), this.getModel(), aFeatureStateModel);
         editor.add(LambdaBehavior.onConfigure(component -> component.setVisible
