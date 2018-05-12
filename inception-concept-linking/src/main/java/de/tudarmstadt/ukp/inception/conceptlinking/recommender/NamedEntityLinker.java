@@ -144,7 +144,7 @@ public class NamedEntityLinker
                     int endToken = token.getOffset().getEndToken();
 
                     TokenObject nextTokenObject = sentence.get(sentenceIndex + 1);
-                    while (isNamedEntity(nextTokenObject)) {
+                    while (isNamedEntity(nextTokenObject) && sentenceIndex < sentence.size() - 2) {
                         coveredText.append(" ").append(nextTokenObject.getCoveredText());
                         endCharacter = nextTokenObject.getOffset().getEndCharacter();
                         endToken = nextTokenObject.getOffset().getEndToken();
