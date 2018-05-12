@@ -489,9 +489,7 @@ public class KnowledgeBaseDetailsPanel extends Panel {
         @Override
         protected void setUpCommonComponents(WebMarkupContainer wmc) {
             // Schema configuration
-            addIriField(wmc, "classIri", model.bind("kb.classIri"));
-            addIriField(wmc, "subclassIri", model.bind("kb.subclassIri"));
-            addIriField(wmc, "typeIri", model.bind("kb.typeIri"));
+            wmc.add(new KnowledgeBaseIriPanel("iriPanel", model));
             wmc.add(new CheckBox("enabled", model.bind("kb.enabled")));
             wmc.add(new CheckBox("supportConceptLinking", model.bind("kb.supportConceptLinking")));
         }
