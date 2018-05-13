@@ -79,6 +79,31 @@ public class TsvColumn
     {
         return targetTypeHint;
     }
+    
+    public int getIndex()
+    {
+        return index;
+    }
+
+    public Type getUimaType()
+    {
+        return uimaType;
+    }
+
+    public Feature getUimaFeature()
+    {
+        return uimaFeature;
+    }
+
+    public LayerType getLayerType()
+    {
+        return layerType;
+    }
+
+    public FeatureType getFeatureType()
+    {
+        return featureType;
+    }
 
     @Override
     public String toString()
