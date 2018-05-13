@@ -86,14 +86,16 @@ public class KnowledgeBaseIriPanel
         comboBoxWrapper.setOutputMarkupId(true);
         add(comboBoxWrapper);
 
-        // Add text fields for classIri, subclassIri and typeIri
+        // Add text fields for classIri, subclassIri, typeIri and descriptionIri
         ComboBox<String> classField = buildComboBox("classIri", kbModel.bind("kb.classIri"),
                 IriConstants.CLASS_IRIS);
         ComboBox<String> subclassField = buildComboBox("subclassIri",
                 kbModel.bind("kb.subclassIri"), IriConstants.SUBCLASS_IRIS);
         ComboBox<String> typeField = buildComboBox("typeIri", kbModel.bind("kb.typeIri"),
                 IriConstants.TYPE_IRIS);
-        comboBoxWrapper.add(classField, subclassField, typeField);
+        ComboBox<String> descriptionField = buildComboBox("descriptionIri",
+                kbModel.bind("kb.descriptionIri"), IriConstants.DESCRIPTION_IRIS);
+        comboBoxWrapper.add(classField, subclassField, typeField, descriptionField);
 
         // OnChange update the model with corresponding iris
         iriSchemaChoice.setChangeHandler(new ISelectionChangeHandler<SchemaProfile>()
@@ -106,6 +108,7 @@ public class KnowledgeBaseIriPanel
                 classField.setModelObject(bean.getClassIri().stringValue());
                 subclassField.setModelObject(bean.getSubclassIri().stringValue());
                 typeField.setModelObject(bean.getTypeIri().stringValue());
+                descriptionField.setModelObject(bean.getDescriptionIri().stringValue());
 
                 target.add(comboBoxWrapper, iriSchemaChoice);
             }
@@ -146,7 +149,7 @@ public class KnowledgeBaseIriPanel
         for (int i = 0; i < profiles.length; i++) {
             // Check if kb has a known schema profile
             if (equalsSchemaProfile(profiles[i], kb.getClassIri(), kb.getSubclassIri(),
-                    kb.getTypeIri())) {
+                    kb.getTypeIri(), kb.getDescriptionIri())) {
                 return profiles[i];
             }
         }
@@ -159,10 +162,11 @@ public class KnowledgeBaseIriPanel
      * profile
      */
     private boolean equalsSchemaProfile(SchemaProfile profile, IRI classIri, IRI subclassIri,
-            IRI typeIri)
+            IRI typeIri, IRI descriptionIri)
     {
         if (profile.getClassIri().equals(classIri) && profile.getSubclassIri().equals(subclassIri)
-                && profile.getTypeIri().equals(typeIri)) {
+                && profile.getTypeIri().equals(typeIri)
+                && profile.getDescriptionIri().equals(descriptionIri)) {
             return true;
         }
         else {
