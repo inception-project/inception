@@ -396,6 +396,7 @@ public class KnowledgeBaseDetailsPanel extends Panel {
             addDisabledIriField(wmc, "classIri", model.bind("kb.classIri"));
             addDisabledIriField(wmc, "subclassIri", model.bind("kb.subclassIri"));
             addDisabledIriField(wmc, "typeIri", model.bind("kb.typeIri"));
+            addDisabledIriField(wmc, "descriptionIri", model.bind("kb.descriptionIri"));
             wmc.add(new CheckBox("enabled", model.bind("kb.enabled"))
                 .add(LambdaBehavior.onConfigure(it -> it.setEnabled(false))));
             wmc.add(new CheckBox("supportConceptLinking", model.bind("kb.supportConceptLinking"))
@@ -492,6 +493,7 @@ public class KnowledgeBaseDetailsPanel extends Panel {
             addIriField(wmc, "classIri", model.bind("kb.classIri"));
             addIriField(wmc, "subclassIri", model.bind("kb.subclassIri"));
             addIriField(wmc, "typeIri", model.bind("kb.typeIri"));
+            addIriField(wmc, "descriptionIri", model.bind("kb.descriptionIri"));
             wmc.add(new CheckBox("enabled", model.bind("kb.enabled")));
             wmc.add(new CheckBox("supportConceptLinking", model.bind("kb.supportConceptLinking")));
         }
