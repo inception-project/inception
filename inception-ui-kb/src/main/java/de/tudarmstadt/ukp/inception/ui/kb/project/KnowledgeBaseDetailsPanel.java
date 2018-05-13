@@ -46,6 +46,8 @@ import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.resource.IResourceStream;
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.repository.RepositoryException;
 import org.eclipse.rdf4j.repository.config.RepositoryConfigException;
 import org.eclipse.rdf4j.repository.config.RepositoryImplConfig;
@@ -62,13 +64,14 @@ import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxDownloadLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.TempFileResource;
+import de.tudarmstadt.ukp.inception.app.bootstrap.DisabledBootstrapCheckbox;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 import de.tudarmstadt.ukp.inception.kb.io.FileUploadHelper;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
-import de.tudarmstadt.ukp.inception.ui.kb.project.wizard.DisabledBootstrapCheckbox;
 
 public class KnowledgeBaseDetailsPanel extends Panel {
 
@@ -105,7 +108,7 @@ public class KnowledgeBaseDetailsPanel extends Panel {
     private @SpringBean KnowledgeBaseService kbService;
 
     private final IModel<KnowledgeBase> kbModel;
-    private final CompoundPropertyModel<EnrichedKnowledgeBase> ekbModel;
+    private final CompoundPropertyModel<KnowledgeBaseWrapper> kbwModel;
     
     private Component title;
     private Component content;
@@ -119,30 +122,23 @@ public class KnowledgeBaseDetailsPanel extends Panel {
 
         kbModel = aKbModel;
 
-        EnrichedKnowledgeBase ekb = new EnrichedKnowledgeBase();
+        KnowledgeBaseWrapper kbw = new KnowledgeBaseWrapper();
         KnowledgeBase kb = kbModel.getObject();
-        ekb.setKb(kb);
-        // set the URL of the EKB to the current SPARQL URL, if dealing with a remote repository
-        if (ekb.getKb().getType() == RepositoryType.REMOTE) {
+        kbw.setKb(kb);
+        // set the URL of the KBW to the current SPARQL URL, if dealing with a remote repository
+        if (kbw.getKb().getType() == RepositoryType.REMOTE) {
             RepositoryImplConfig cfg = kbService.getKnowledgeBaseConfig(kb);
             String url = ((SPARQLRepositoryConfig) cfg).getQueryEndpointUrl();
-            ekb.setUrl(url);
+            kbw.setUrl(url);
         }
-        
-        ekb.setClassIri(kb.getClassIri().stringValue());
-        ekb.setSubclassIri(kb.getSubclassIri().stringValue());
-        ekb.setTypeIri(kb.getTypeIri().stringValue());
-        ekb.setEnabled(kb.isEnabled());
-        ekb.setReification(kb.getReification());
-        ekb.setSupportConceptLinking(kb.isSupportConceptLinking());
 
         // wrap the given knowledge base model, then set it as the default model
-        ekbModel = new CompoundPropertyModel<>(Model.of(ekb));
-        setDefaultModel(ekbModel);
+        kbwModel = new CompoundPropertyModel<>(Model.of(kbw));
+        setDefaultModel(kbwModel);
 
         // this form contains all the wicket components in this panel; not only the components used
         // for editing, but also the ones for showing information about a KB (when in ViewMode)
-        Form<EnrichedKnowledgeBase> form = new Form<EnrichedKnowledgeBase>("form", ekbModel) {
+        Form<KnowledgeBaseWrapper> form = new Form<KnowledgeBaseWrapper>("form", kbwModel) {
             private static final long serialVersionUID = -4253347478525087385L;
 
             /**
@@ -165,10 +161,10 @@ public class KnowledgeBaseDetailsPanel extends Panel {
                     FileUploadHelper fileUploadHelper = new FileUploadHelper(getApplication());
                     List<File> fileUploads = new ArrayList<>();
                     for (FileUpload fu : fileUploadField.getFileUploads()) {
-                        File tmpFile = fileUploadHelper.writeToTemporaryFile(fu, ekb);
+                        File tmpFile = fileUploadHelper.writeToTemporaryFile(fu, kbw);
                         fileUploads.add(tmpFile);
                     }
-                    ekbModel.getObject().setFiles(fileUploads);
+                    kbwModel.getObject().setFiles(fileUploads);
                 } catch (Exception e) {
                     log.error("Error while uploading files", e);
                     error("Could not upload files");
@@ -178,7 +174,7 @@ public class KnowledgeBaseDetailsPanel extends Panel {
         add(form);
         
         // add (disabled) radio choice for local/remote repository
-        form.add(new BootstrapRadioGroup<RepositoryType>("type", ekbModel.bind("kb.type"),
+        form.add(new BootstrapRadioGroup<RepositoryType>("type", kbwModel.bind("kb.type"),
                 Arrays.asList(RepositoryType.values()),
                 new EnumRadioChoiceRenderer<RepositoryType>(Buttons.Type.Default, this) {
                     private static final long serialVersionUID = 1073440402072678330L;
@@ -190,11 +186,11 @@ public class KnowledgeBaseDetailsPanel extends Panel {
                 }));
 
         // add (disabled) reification strategy
-        form.add(new Label("reification"));
+        form.add(new Label("reification", kbwModel.bind("kb.reification")));
 
         // title/content
-        title = new ViewModeTitle(TITLE_MARKUP_ID, ekbModel);
-        content = new ViewMode(CONTENT_MARKUP_ID, ekbModel);
+        title = new ViewModeTitle(TITLE_MARKUP_ID, kbwModel);
+        content = new ViewMode(CONTENT_MARKUP_ID, kbwModel);
         form.add(title);
         form.add(content);
 
@@ -225,7 +221,7 @@ public class KnowledgeBaseDetailsPanel extends Panel {
                 // the call needs to occur in onAfterSubmit, otherwise the file uploads are
                 // submitted after actionSave is called
                 KnowledgeBaseDetailsPanel.this.actionSave(target,
-                        (Form<EnrichedKnowledgeBase>) form);
+                        (Form<KnowledgeBaseWrapper>) form);
             }
         });
         form.add(new LambdaAjaxLink("cancel", KnowledgeBaseDetailsPanel.this::stopEditing) {
@@ -251,36 +247,30 @@ public class KnowledgeBaseDetailsPanel extends Panel {
     @Override
     protected void onModelChanged() {
         // propagate the changes to the original knowledge base model
-        kbModel.setObject(ekbModel.getObject().getKb());
+        kbModel.setObject(kbwModel.getObject().getKb());
     }
 
-    private void actionSave(AjaxRequestTarget aTarget, Form<EnrichedKnowledgeBase> aForm) {
+    private void actionSave(AjaxRequestTarget aTarget, Form<KnowledgeBaseWrapper> aForm)
+    {
         try {
-            EnrichedKnowledgeBase ekb = ekbModel.getObject();
+            KnowledgeBaseWrapper kbw = kbwModel.getObject();
 
             // if dealing with a remote repository and a non-empty URL, get a new
             // RepositoryImplConfig
             // for the new URL; otherwise keep using the existing config
             RepositoryImplConfig cfg;
-            if (ekb.getKb().getType() == RepositoryType.REMOTE && ekb.getUrl() != null) {
-                cfg = kbService.getRemoteConfig(ekb.getUrl());
+            if (kbw.getKb().getType() == RepositoryType.REMOTE && kbw.getUrl() != null) {
+                cfg = kbService.getRemoteConfig(kbw.getUrl());
             }
             else {
-                cfg = kbService.getKnowledgeBaseConfig(ekb.getKb());
+                cfg = kbService.getKnowledgeBaseConfig(kbw.getKb());
             }
-
-            try {
-                EnrichedKnowledgeBaseUtils.updateEkb(ekb, cfg, kbService);
-            }
-            catch (Exception e) {
-                error(e.getMessage());
-            }
+            KnowledgeBaseWrapper.updateKb(kbw, cfg, kbService);
             modelChanged();
-
             stopEditing(aTarget);
             aTarget.add(findParentWithAssociatedMarkup());
         }
-        catch (RepositoryConfigException | RepositoryException e) {
+        catch (Exception e) {
             error("Unable to save knowledgebase: " + e.getLocalizedMessage());
             log.error("Unable to save knowledgebase.", e);
         }
@@ -291,13 +281,13 @@ public class KnowledgeBaseDetailsPanel extends Panel {
         confirmationDialog.setTitleModel(
                 new StringResourceModel("kb.details.delete.confirmation.title", this));
         confirmationDialog.setContentModel(new StringResourceModel(
-                "kb.details.delete.confirmation.content", this, ekbModel.bind("kb")));
+                "kb.details.delete.confirmation.content", this, kbwModel.bind("kb")));
         confirmationDialog.show(aTarget);
         confirmationDialog.setConfirmAction((t) -> {
-            KnowledgeBase kb = ekbModel.getObject().getKb();
+            KnowledgeBase kb = kbwModel.getObject().getKb();
             try {
                 kbService.removeKnowledgeBase(kb);
-                ekbModel.getObject().setKb(null);
+                kbwModel.getObject().setKb(null);
                 modelChanged();
             }
             catch (RepositoryException | RepositoryConfigException e) {
@@ -312,9 +302,9 @@ public class KnowledgeBaseDetailsPanel extends Panel {
 
     private void actionClear(AjaxRequestTarget aTarget) {
         try {
-            kbService.clear(ekbModel.getObject().getKb());
+            kbService.clear(kbwModel.getObject().getKb());
             info(new StringResourceModel("kb.details.local.contents.clear.feedback",
-                    ekbModel.bind("kb")));
+                    kbwModel.bind("kb")));
             aTarget.add(this);
         } catch (RepositoryException e) {
             error(e);
@@ -327,15 +317,15 @@ public class KnowledgeBaseDetailsPanel extends Panel {
     }
 
     private void startEditing(AjaxRequestTarget aTarget) {
-        title = title.replaceWith(new EditModeTitle(TITLE_MARKUP_ID, ekbModel));
-        content = content.replaceWith(new EditMode(CONTENT_MARKUP_ID, ekbModel));
+        title = title.replaceWith(new EditModeTitle(TITLE_MARKUP_ID, kbwModel));
+        content = content.replaceWith(new EditMode(CONTENT_MARKUP_ID, kbwModel));
         aTarget.add(this);
         isEditing = true;
     }
     
     private void stopEditing(AjaxRequestTarget aTarget) {
-        title = title.replaceWith(new ViewModeTitle(TITLE_MARKUP_ID, ekbModel));
-        content = content.replaceWith(new ViewMode(CONTENT_MARKUP_ID, ekbModel));
+        title = title.replaceWith(new ViewModeTitle(TITLE_MARKUP_ID, kbwModel));
+        content = content.replaceWith(new ViewMode(CONTENT_MARKUP_ID, kbwModel));
         aTarget.add(this);
         isEditing = false;
     }
@@ -348,10 +338,10 @@ public class KnowledgeBaseDetailsPanel extends Panel {
 
         private static final long serialVersionUID = 4325217938170626840L;
         
-        protected CompoundPropertyModel<EnrichedKnowledgeBase> model;
+        protected CompoundPropertyModel<KnowledgeBaseWrapper> model;
         
         public DetailFragment(String id, String markupId,
-                CompoundPropertyModel<EnrichedKnowledgeBase> model) {
+                CompoundPropertyModel<KnowledgeBaseWrapper> model) {
             super(id, markupId, KnowledgeBaseDetailsPanel.this, model);
             
             this.model = model;
@@ -386,7 +376,7 @@ public class KnowledgeBaseDetailsPanel extends Panel {
 
         private static final long serialVersionUID = -346255717342200090L;
 
-        public ViewModeTitle(String id, CompoundPropertyModel<EnrichedKnowledgeBase> model) {
+        public ViewModeTitle(String id, CompoundPropertyModel<KnowledgeBaseWrapper> model) {
             super(id, "viewModeTitle", KnowledgeBaseDetailsPanel.this, model);
             add(new Label("name", model.bind("kb.name")));
         }
@@ -396,19 +386,20 @@ public class KnowledgeBaseDetailsPanel extends Panel {
 
         private static final long serialVersionUID = -6584701320032256335L;
 
-        public ViewMode(String id, CompoundPropertyModel<EnrichedKnowledgeBase> model) {
+        public ViewMode(String id, CompoundPropertyModel<KnowledgeBaseWrapper> model) {
             super(id, "viewModeContent", model);
         }
 
         @Override
         protected void setUpCommonComponents(WebMarkupContainer wmc) {
             // Schema configuration
-            addDisabledUrlField(wmc, "classIri");
-            addDisabledUrlField(wmc, "subclassIri");
-            addDisabledUrlField(wmc, "typeIri");
-            wmc.add(new CheckBox("enabled")
+            addDisabledIriField(wmc, "classIri", model.bind("kb.classIri"));
+            addDisabledIriField(wmc, "subclassIri", model.bind("kb.subclassIri"));
+            addDisabledIriField(wmc, "typeIri", model.bind("kb.typeIri"));
+            addDisabledIriField(wmc, "descriptionIri", model.bind("kb.descriptionIri"));
+            wmc.add(new CheckBox("enabled", model.bind("kb.enabled"))
                 .add(LambdaBehavior.onConfigure(it -> it.setEnabled(false))));
-            wmc.add(new CheckBox("supportConceptLinking")
+            wmc.add(new CheckBox("supportConceptLinking", model.bind("kb.supportConceptLinking"))
                 .add(LambdaBehavior.onConfigure(it -> it.setEnabled(false))));
         }
 
@@ -449,12 +440,17 @@ public class KnowledgeBaseDetailsPanel extends Panel {
             addDisabledUrlField(wmc, "url");
         }
 
-        private void addDisabledUrlField(WebMarkupContainer wmc, String id)
+        private void addDisabledIriField(WebMarkupContainer wmc, String id, IModel<IRI> model)
         {
-            TextField<String> textField = new RequiredTextField<String>(id)
+            TextField<IRI> textField = new RequiredTextField<IRI>(id, model)
             {
+                private static final long serialVersionUID = 5886070596284072382L;
 
-                private static final long serialVersionUID = -7733443305863666055L;
+                @Override
+                protected String getModelValue()
+                {
+                    return getModelObject().stringValue();
+                }
 
                 @Override
                 protected void onConfigure()
@@ -464,13 +460,20 @@ public class KnowledgeBaseDetailsPanel extends Panel {
             };
             wmc.add(textField);
         }
+
+        private void addDisabledUrlField(WebMarkupContainer wmc, String id)
+        {
+            TextField<String> textField = new RequiredTextField<String>(id);
+            textField.add(LambdaBehavior.onConfigure(tf -> tf.setEnabled(false)));
+            wmc.add(textField);
+        }
     }
 
     private class EditModeTitle extends Fragment {
 
         private static final long serialVersionUID = -5459222108913316798L;
 
-        public EditModeTitle(String id, CompoundPropertyModel<EnrichedKnowledgeBase> model) {
+        public EditModeTitle(String id, CompoundPropertyModel<KnowledgeBaseWrapper> model) {
             super(id, "editModeTitle", KnowledgeBaseDetailsPanel.this, model);
             add(new RequiredTextField<>("name", model.bind("kb.name")));
         }
@@ -480,18 +483,19 @@ public class KnowledgeBaseDetailsPanel extends Panel {
 
         private static final long serialVersionUID = 7838564354437836375L;
 
-        public EditMode(String id, CompoundPropertyModel<EnrichedKnowledgeBase> model) {
+        public EditMode(String id, CompoundPropertyModel<KnowledgeBaseWrapper> model) {
             super(id, "editModeContent", model);
         }
 
         @Override
         protected void setUpCommonComponents(WebMarkupContainer wmc) {
             // Schema configuration
-            addUrlField(wmc, "classIri");
-            addUrlField(wmc, "subclassIri");
-            addUrlField(wmc, "typeIri");
-            wmc.add(new CheckBox("enabled"));
-            wmc.add(new CheckBox("supportConceptLinking"));
+            addIriField(wmc, "classIri", model.bind("kb.classIri"));
+            addIriField(wmc, "subclassIri", model.bind("kb.subclassIri"));
+            addIriField(wmc, "typeIri", model.bind("kb.typeIri"));
+            addIriField(wmc, "descriptionIri", model.bind("kb.descriptionIri"));
+            wmc.add(new CheckBox("enabled", model.bind("kb.enabled")));
+            wmc.add(new CheckBox("supportConceptLinking", model.bind("kb.supportConceptLinking")));
         }
 
         @Override
@@ -523,9 +527,19 @@ public class KnowledgeBaseDetailsPanel extends Panel {
             addUrlField(wmc, "url");
         }
 
-        private void addUrlField(WebMarkupContainer wmc, String id) {
+        private void addIriField(WebMarkupContainer wmc, String id, IModel<IRI> model) {
+            IModel<String> adapter = new LambdaModelAdapter<String>(
+                () -> model.getObject().stringValue(),
+                str -> model.setObject(SimpleValueFactory.getInstance().createIRI(str)));
+            TextField<String> textField = new RequiredTextField<String>(id, adapter);
+            textField.add(Validators.IRI_VALIDATOR);
+            wmc.add(textField);
+        }
+
+        private void addUrlField(WebMarkupContainer wmc, String id)
+        {
             TextField<String> textField = new RequiredTextField<String>(id);
-            textField.add(EnrichedKnowledgeBaseUtils.URL_VALIDATOR);
+            textField.add(Validators.URL_VALIDATOR);
             wmc.add(textField);
         }
     }

@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -289,10 +288,6 @@ public class SubjectObjectFeatureEditor
             }
         };
 
-        // Ensure that markup IDs of feature editor focus components remain constant across
-        // refreshes of the feature editor panel. This is required to restore the focus.
-        field.setOutputMarkupId(true);
-        field.setMarkupId(ID_PREFIX + getModelObject().feature.getId());
         return field;
     }
 
@@ -323,14 +318,13 @@ public class SubjectObjectFeatureEditor
             try {
                 JCas jCas = actionHandler.getEditorCas();
                 AnnotationFS selectedFS = WebAnnoCasUtil.selectByAddr(jCas, roleModel.targetAddr);
-                String selectedKBItemIdentifier = WebAnnoCasUtil.getFeature(selectedFS,
-                    linkedAnnotationFeature.getName());
+                String selectedKBItemIdentifier = WebAnnoCasUtil
+                    .getFeature(selectedFS, linkedAnnotationFeature.getName());
 
                 if (selectedKBItemIdentifier != null) {
-                    List<KBHandle> handles = factService.getKBConceptsAndInstances(project);
-                    selectedKBHandleItem = handles.stream()
-                        .filter(x -> selectedKBItemIdentifier.equals(x.getIdentifier())).findAny()
-                        .orElseThrow(NoSuchElementException::new);
+                    ConceptFeatureTraits traits = factService.getFeatureTraits(project);
+                    selectedKBHandleItem = factService.getKBInstancesByIdentifierAndTraits
+                        (selectedKBItemIdentifier, project, traits);
                 }
             }
             catch (Exception e) {
@@ -341,6 +335,8 @@ public class SubjectObjectFeatureEditor
         return selectedKBHandleItem;
     }
 
+    //TODO: (issue #122 )this method is similar to the method listInstances in ConceptFeatureEditor.
+    //It should be refactored.
     private List<KBHandle> listInstances(AnnotationActionHandler aHandler,
         String aTypedString)
     {
@@ -419,6 +415,8 @@ public class SubjectObjectFeatureEditor
         return handles;
     }
 
+    //TODO: (issue #122 )this method is similar to the method listInstances in ConceptFeatureEditor.
+    //It should be refactored.
     private List<KBHandle> listLinkingInstances(KnowledgeBase kb, JCasProvider aJCas,
         String aTypedString)
     {

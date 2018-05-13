@@ -127,10 +127,6 @@ public class ConceptFeatureEditor
             }
         };
 
-        // Ensure that markup IDs of feature editor focus components remain constant across
-        // refreshes of the feature editor panel. This is required to restore the focus.
-        field.setOutputMarkupId(true);
-        field.setMarkupId(ID_PREFIX + getModelObject().feature.getId());
         return field;
     }
 
@@ -139,6 +135,8 @@ public class ConceptFeatureEditor
         return aHandler.getEditorCas();
     }
 
+    //TODO: (issue #122 )this method is similar to the method listInstances in
+    // SubjectObjectFeatureEditor and QualifierFeatureEditor. It should be refactored.
     private List<KBHandle> listInstances(AnnotatorState aState, AnnotationActionHandler aHandler,
         String aTypedString)
     {
@@ -225,6 +223,8 @@ public class ConceptFeatureEditor
         return focusComponent;
     }
 
+    //TODO: (issue #122 )this method is similar to the method listInstances in
+    // SubjectObjectFeatureEditor and QualifierFeatureEditor. It should be refactored.
     private List<KBHandle> listLinkingInstances(KnowledgeBase kb,
         AnnotatorState aState, JCasProvider aJCas, String aTypedString)
     {

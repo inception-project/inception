@@ -240,10 +240,12 @@ public class ActiveLearningSidebar
         if (currentDifference != null) {
             hasUnseenRecommendation = true;
             currentRecommendation = currentDifference.getRecommendation1();
- 
+
             try {
-                actionShowSelectedDocument(aTarget, getModelObject().getDocument(),
-                        currentRecommendation.getOffset().getBeginCharacter());
+                actionShowSelectedDocument(aTarget, documentService
+                        .getSourceDocument(this.getModelObject().getProject(),
+                            currentRecommendation.getDocumentName()),
+                    currentRecommendation.getOffset().getBeginCharacter());
             }
             catch (IOException e) {
                 LOG.error("Unable to switch to document : {} ", e.getMessage(), e);
@@ -404,8 +406,10 @@ public class ActiveLearningSidebar
     private void jumpToRecommendationLocationAndHighlightRecommendation(AjaxRequestTarget aTarget)
         throws IOException
     {
-        actionShowSelectedDocument(aTarget, getModelObject().getDocument(),
-                currentRecommendation.getOffset().getBeginCharacter());
+        actionShowSelectedDocument(aTarget, documentService
+                .getSourceDocument(this.getModelObject().getProject(),
+                    currentRecommendation.getDocumentName()),
+            currentRecommendation.getOffset().getBeginCharacter());
         highlightCurrentRecommendation(aTarget);
     }
 

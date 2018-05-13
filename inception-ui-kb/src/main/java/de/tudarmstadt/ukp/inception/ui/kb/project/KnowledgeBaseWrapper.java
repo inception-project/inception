@@ -21,10 +21,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Serializable;
+import java.util.List;
 
-import org.apache.wicket.validation.validator.UrlValidator;
-import org.eclipse.rdf4j.model.ValueFactory;
-import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.repository.RepositoryException;
 import org.eclipse.rdf4j.repository.config.RepositoryImplConfig;
 import org.eclipse.rdf4j.rio.RDFParseException;
@@ -33,31 +32,72 @@ import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
-public class EnrichedKnowledgeBaseUtils
-{
-    public static final UrlValidator URL_VALIDATOR = new UrlValidator(
-            new String[] { "http", "https" });
+/**
+ * Wrapper class around {@link KnowledgeBase}.<br>
+ * Purpose: any forms containing file upload fields (for adding files to local knowledge bases) need
+ * a knowledge-base-like model object which can hold {@link File} objects. Similarly, a remote KB's
+ * URL needs to be captured in a form. Since {@code KnowledgeBase} should have neither of those
+ * attributes, this wrapper exists.
+ */
+public class KnowledgeBaseWrapper implements Serializable {
+
+    private static final long serialVersionUID = 4639345743242356537L;
+
+    private KnowledgeBase kb;
+    private String url;
+    private List<File> files;
+
+    public KnowledgeBase getKb() {
+        return kb;
+    }
+    
+    public void setKb(KnowledgeBase kb) {
+        this.kb = kb;
+    }
+
+    public String getUrl() {
+        return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
+    }
+
+    public List<File> getFiles() {
+        return files;
+    }
+
+    public void setFiles(List<File> files) {
+        this.files = files;
+    }
+
+    public static final void updateKb(KnowledgeBaseWrapper kbw, RepositoryImplConfig cfg,
+            KnowledgeBaseService kbService) throws Exception {
+        KnowledgeBase kb = kbw.getKb();
+        kbService.updateKnowledgeBase(kb, cfg);
+        if (kb.getType() == RepositoryType.LOCAL) {
+            KnowledgeBaseWrapper.importFiles(kbw, kbService);
+        }
+    }
 
     /**
      * Handles creation/updating of knowledge bases which is necessary either when creating or
-     * editing a new knowledge base in the project settings. TODO This utility class is ugly. In
-     * fact, the whole EKB thing is ugly, but it works for now.
+     * editing a new knowledge base in the project settings.
      */
-    public static final void registerEkb(EnrichedKnowledgeBase ekb, KnowledgeBaseService kbService)
+    public static final void registerKb(KnowledgeBaseWrapper kbw, KnowledgeBaseService kbService)
             throws Exception {
-        KnowledgeBase kb = ekb.getKb();
-        setKnowledgeBaseFields(ekb);
-
+        KnowledgeBase kb = kbw.getKb();
+    
         // set up the repository config, then register the knowledge base
         RepositoryImplConfig cfg;
         switch (kb.getType()) {
         case LOCAL:
             cfg = kbService.getNativeConfig();
             kbService.registerKnowledgeBase(kb, cfg);
-            importFiles(ekb, kbService);
+            KnowledgeBaseWrapper.importFiles(kbw, kbService);
             break;
         case REMOTE:
-            cfg = kbService.getRemoteConfig(ekb.getUrl());
+            cfg = kbService.getRemoteConfig(kbw.getUrl());
             kbService.registerKnowledgeBase(kb, cfg);
             break;
         default:
@@ -65,31 +105,11 @@ public class EnrichedKnowledgeBaseUtils
         }
     }
     
-    public static final void updateEkb(EnrichedKnowledgeBase ekb, RepositoryImplConfig cfg,
-            KnowledgeBaseService kbService) throws Exception {
-        setKnowledgeBaseFields(ekb);
-        KnowledgeBase kb = ekb.getKb();
-        kbService.updateKnowledgeBase(kb, cfg);
-        if (kb.getType() == RepositoryType.LOCAL) {
-            importFiles(ekb, kbService);
-        }
-    }
 
-    private static final void setKnowledgeBaseFields(EnrichedKnowledgeBase ekb) {
-        KnowledgeBase kb = ekb.getKb();
-        ValueFactory factory = SimpleValueFactory.getInstance();
-        kb.setClassIri(factory.createIRI(ekb.getClassIri()));
-        kb.setSubclassIri(factory.createIRI(ekb.getSubclassIri()));
-        kb.setTypeIri(factory.createIRI(ekb.getTypeIri()));
-        kb.setEnabled(ekb.isEnabled());
-        kb.setSupportConceptLinking(ekb.isSupportConceptLinking());
-        kb.setReification(ekb.getReification());
-    }
-
-    private static final void importFiles(EnrichedKnowledgeBase ekb,
+    private static final void importFiles(KnowledgeBaseWrapper kbw,
                                           KnowledgeBaseService kbService) throws Exception {
-        KnowledgeBase kb = ekb.getKb();
-        for (File f : ekb.getFiles()) {
+        KnowledgeBase kb = kbw.getKb();
+        for (File f : kbw.getFiles()) {
             try (InputStream is = new FileInputStream(f)) {
                 kbService.importData(kb, f.getName(), is);
             } catch (IOException | RDFParseException | RepositoryException e) {
@@ -97,4 +117,5 @@ public class EnrichedKnowledgeBaseUtils
             }
         }
     }
+
 }
