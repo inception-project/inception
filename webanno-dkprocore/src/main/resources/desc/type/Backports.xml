@@ -6,6 +6,10 @@
 Backported "SurfaceForm" type from DKPro Core 1.9.0 for CoNLL-U.
 
 Backported "SemArg" and "SemPred" from DKPRo Core 1.9.0 for Conll2009.
+
+Backported "POS" from DKPro Core 1.9.1 for "coarseValue".
+
+Backported "MorphologicalFeatures" from DKPro Core 1.9.1 for new features.
 </description>
     <version>1.0</version>
     <vendor>Ubiquitous Knowledge Processing (UKP) Lab, Technische Universität Darmstadt</vendor>
@@ -100,6 +104,129 @@ relational adjectives, such as "proud" (with arguments who and of what).</descri
           <name>target</name>
           <description>The target argument.</description>
           <rangeTypeName>de.tudarmstadt.ukp.dkpro.core.api.semantics.type.SemArg</rangeTypeName>
+        </featureDescription>
+      </features>
+    </typeDescription>
+    <typeDescription>
+      <name>de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS</name>
+      <description>The part of speech of a word or a phrase.</description>
+      <supertypeName>uima.tcas.Annotation</supertypeName>
+      <features>
+        <featureDescription>
+          <name>PosValue</name>
+          <description>Fine-grained POS tag. This is the tag as produced by a POS tagger or obtained from a reader.</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+      <featureDescription>
+          <name>coarseValue</name>
+          <description>Coarse-grained POS tag. This may be produced by a POS tagger or reader in addition to the fine-grained tag.</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+      </features>
+    </typeDescription>
+    <typeDescription>
+      <name>de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.morph.MorphologicalFeatures</name>
+      <description>Morphological categories that can be attached to tokens.
+
+The features are supposed to match the Universal Dependency v1 features.</description>
+      <supertypeName>uima.tcas.Annotation</supertypeName>
+      <features>
+        <featureDescription>
+          <name>gender</name>
+          <description/>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>number</name>
+          <description>Singular/plural</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>case</name>
+          <description>Nouns: nominative, genetiv, dative, ...</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>degree</name>
+          <description>Adjectives: comparative/Superlative</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>verbForm</name>
+          <description/>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>tense</name>
+          <description>Verbs: past tense, present tense, future tense, etc.</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>mood</name>
+          <description>Verbs: indicative, imperative, subjunctive</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>voice</name>
+          <description>Verbs: active/passive</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>definiteness</name>
+          <description>Definite or indefinite</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>value</name>
+          <description>The original morphological analysis results as produced by a tool or as recorded in a corpus (if available). If the categories were originally encoded in such a string, the other features are filled by analyzing this string. If the categories were provided separately, e.g. by different attributed in an XML-encoded corpus, this field may remain empty.</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>person</name>
+          <description>Verbs: 1st, 2nd, 3rd person</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>aspect</name>
+          <description>Verbs: perfective, imperfective</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>animacy</name>
+          <description/>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>negative</name>
+          <description/>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>numType</name>
+          <description/>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>possessive</name>
+          <description/>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>pronType</name>
+          <description/>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>reflex</name>
+          <description/>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>transitivity</name>
+          <description>Verbs: transitive/intransitive
+
+@deprecated</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
         </featureDescription>
       </features>
     </typeDescription>
