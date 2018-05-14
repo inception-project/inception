@@ -122,6 +122,9 @@ public class KnowledgeBase
     @Column(name = "supportConceptLinking", nullable = false)
     private boolean supportConceptLinking = false;
     
+    /**
+     * All statements created in a local KB are prefixed with this string 
+     */
     @Column(nullable = false)
     private String basePrefix = IriConstants.INCEPTION_NAMESPACE;
     
