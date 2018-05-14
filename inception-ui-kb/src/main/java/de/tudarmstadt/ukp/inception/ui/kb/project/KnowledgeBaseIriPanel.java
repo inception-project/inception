@@ -164,14 +164,10 @@ public class KnowledgeBaseIriPanel
     private boolean equalsSchemaProfile(SchemaProfile profile, IRI classIri, IRI subclassIri,
             IRI typeIri, IRI descriptionIri)
     {
-        if (profile.getClassIri().equals(classIri) && profile.getSubclassIri().equals(subclassIri)
+        return profile.getClassIri().equals(classIri)
+                && profile.getSubclassIri().equals(subclassIri)
                 && profile.getTypeIri().equals(typeIri)
-                && profile.getDescriptionIri().equals(descriptionIri)) {
-            return true;
-        }
-        else {
-            return false;
-        }
+                && profile.getDescriptionIri().equals(descriptionIri);
     }
 
 }
