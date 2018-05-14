@@ -183,7 +183,7 @@ public class MtasDocumentIndex
         }
         catch (Exception e) {
             log.error("Query execution error", e);
-            throw(new ExecutionException("Query execution error", e));
+            throw (new ExecutionException("Query execution error", e));
         }
     }
 
