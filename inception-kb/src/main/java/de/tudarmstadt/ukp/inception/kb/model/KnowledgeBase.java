@@ -100,6 +100,12 @@ public class KnowledgeBase
     @Column(nullable = false)
     private IRI typeIri;
 
+    /**
+     * The IRI for a property describing B being a description of A, e.g. schema:description
+     */
+    @Column(nullable = false)
+    private IRI descriptionIri;
+
     @Column(nullable = false)
     private boolean readOnly;
 
@@ -186,6 +192,16 @@ public class KnowledgeBase
     public void setTypeIri(IRI aTypeIri)
     {
         typeIri = aTypeIri;
+    }
+
+    public IRI getDescriptionIri()
+    {
+        return descriptionIri;
+    }
+
+    public void setDescriptionIri(IRI aDescriptionIri)
+    {
+        descriptionIri = aDescriptionIri;
     }
 
     public boolean isReadOnly()

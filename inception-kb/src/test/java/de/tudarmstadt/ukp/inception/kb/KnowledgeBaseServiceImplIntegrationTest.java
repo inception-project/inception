@@ -192,6 +192,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         kb.setClassIri(OWL.CLASS);
         kb.setSubclassIri(OWL.NOTHING);
         kb.setTypeIri(OWL.THING);
+        kb.setDescriptionIri(IriConstants.SCHEMA_DESCRIPTION);
         kb.setReadOnly(true);
         kb.setEnabled(false);
         kb.setBasePrefix("MyBasePrefix");
@@ -204,6 +205,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
             .hasFieldOrPropertyWithValue("classIri", OWL.CLASS)
             .hasFieldOrPropertyWithValue("subclassIri", OWL.NOTHING)
             .hasFieldOrPropertyWithValue("typeIri", OWL.THING)
+            .hasFieldOrPropertyWithValue("descriptionIri", IriConstants.SCHEMA_DESCRIPTION)
             .hasFieldOrPropertyWithValue("name", "New name")
             .hasFieldOrPropertyWithValue("readOnly", true)
             .hasFieldOrPropertyWithValue("enabled", false)
@@ -1142,7 +1144,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     public void getConceptRoots_WithWildlifeOntology_ShouldReturnRootConcepts() throws Exception {
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         importKnowledgeBase("data/wildlife_ontology.ttl");
-        setSchema(kb, OWL.CLASS, RDFS.SUBCLASSOF, RDF.TYPE);
+        setSchema(kb, OWL.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT);
 
         Stream<String> rootConcepts = sut.listRootConcepts(kb, false).stream()
                 .map(KBHandle::getName);
@@ -1160,7 +1162,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     public void getConceptRoots_WithSparqlPlayground_ReturnsOnlyRootConcepts() throws Exception {
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         importKnowledgeBase("data/sparql_playground.ttl");
-        setSchema(kb, RDFS.CLASS, RDFS.SUBCLASSOF, RDF.TYPE);
+        setSchema(kb, RDFS.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT);
 
         Stream<String> childConcepts = sut.listRootConcepts(kb, false).stream()
                 .map(KBHandle::getName);
@@ -1175,7 +1177,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     public void getChildConcepts_WithSparqlPlayground_ReturnsAnimals() throws Exception {
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         importKnowledgeBase("data/sparql_playground.ttl");
-        setSchema(kb, RDFS.CLASS, RDFS.SUBCLASSOF, RDF.TYPE);
+        setSchema(kb, RDFS.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT);
         KBConcept concept = sut.readConcept(kb, "http://example.org/tuto/ontology#Animal").get();
 
         Stream<String> childConcepts = sut.listChildConcepts(kb, concept.getIdentifier(), false)
@@ -1195,7 +1197,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         importKnowledgeBase("data/streams.ttl");
         KBConcept concept = sut.readConcept(kb, "http://mrklie.com/schemas/streams#input").get();
-        setSchema(kb, RDFS.CLASS, RDFS.SUBCLASSOF, RDF.TYPE);
+        setSchema(kb, RDFS.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT);
 
         Stream<String> childConcepts = sut.listChildConcepts(kb, concept.getIdentifier(), false)
             .stream()
@@ -1324,10 +1326,12 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         sut.updateKnowledgeBase(kb, sut.getKnowledgeBaseConfig(kb));
     }
 
-    private void setSchema(KnowledgeBase kb, IRI classIri, IRI subclassIri, IRI typeIri) {
+    private void setSchema(KnowledgeBase kb, IRI classIri, IRI subclassIri, IRI typeIri,
+        IRI descriptionIri) {
         kb.setClassIri(classIri);
         kb.setSubclassIri(subclassIri);
         kb.setTypeIri(typeIri);
+        kb.setDescriptionIri(descriptionIri);
         sut.updateKnowledgeBase(kb, sut.getKnowledgeBaseConfig(kb));
     }
 }
