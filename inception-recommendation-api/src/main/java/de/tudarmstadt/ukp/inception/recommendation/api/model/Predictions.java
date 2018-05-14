@@ -41,6 +41,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 /**
@@ -202,6 +203,19 @@ public class Predictions
     public AnnotationObject getPredictionByVID(VID aVID) 
     {
         return predictions.values().stream()
+                .filter(f -> f.getId() == aVID.getSubId())
+                .filter(f -> f.getRecommenderId() == aVID.getId())
+                .collect(Collectors.toList()).get(0);
+    }
+
+    /**
+     * Returns the first prediction that matches recommendationId and recommenderId
+     * in the given document
+     */
+    public AnnotationObject getPredictionInDocumentByVID(SourceDocument document, VID aVID)
+    {
+        return predictions.values().stream()
+                .filter(f -> f.getDocumentName().equals(document.getName()))
                 .filter(f -> f.getId() == aVID.getSubId())
                 .filter(f -> f.getRecommenderId() == aVID.getId())
                 .collect(Collectors.toList()).get(0);

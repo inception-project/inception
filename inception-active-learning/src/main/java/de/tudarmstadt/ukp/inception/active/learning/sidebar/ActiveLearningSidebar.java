@@ -57,6 +57,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VTextMar
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
@@ -634,9 +635,10 @@ public class ActiveLearningSidebar
         
         if (sessionActive && eventState.getUser().equals(annotatorState.getUser())
                 && eventState.getProject().equals(annotatorState.getProject())) {
-            if (eventState.getDocument().equals(annotatorState.getDocument())
+            SourceDocument document = eventState.getDocument();
+            if (document.equals(annotatorState.getDocument())
                     && aEvent.getVid().getLayerId() == selectedLayer.getObject().getId()
-                    && predictionModel.getPredictionByVID(aEvent.getVid())
+                    && predictionModel.getPredictionInDocumentByVID(document, aEvent.getVid())
                             .equals(currentRecommendation)) {
                 
                 moveToNextRecommendation(aEvent.getTarget());
