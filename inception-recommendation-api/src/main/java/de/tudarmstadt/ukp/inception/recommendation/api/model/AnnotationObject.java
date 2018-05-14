@@ -36,7 +36,7 @@ public class AnnotationObject
     private long recommenderId;
 
     public AnnotationObject(TokenObject aToken, String aLabel, String aUiLabel, int aId,
-            String aFeature, String aSource, double aConfidence)
+                            String aFeature, String aSource, double aConfidence)
     {
         token = aToken;
         label = aLabel;
@@ -50,18 +50,27 @@ public class AnnotationObject
     /**
      * Creates an AnnotationObject with default confidence
      */
-    public AnnotationObject(TokenObject token, String label, String uiLabel, int id,
-            String aFeature, String source)
+    public AnnotationObject(TokenObject aToken, String aLabel, String aUiLabel, int aId,
+                            String aFeature, String aSource)
     {
-        this(token, label, uiLabel, id, aFeature, source, DEFAULT_CONFIDENCE);
+        this(aToken, aLabel, aUiLabel, aId, aFeature, aSource, DEFAULT_CONFIDENCE);
+    }
+
+    /**
+     * Creates an AnnotationObject with null label and uiLabel
+     */
+    public AnnotationObject(TokenObject aToken, int aId, String aFeature,
+                            String aSource, double aConfidence)
+    {
+        this(aToken, null, null, aId, aFeature, aSource, aConfidence);
     }
 
     /**
      * Creates an AnnotationObject with default confidence and null label and uiLabel
      */
-    public AnnotationObject(TokenObject token, int id, String feature, String source)
+    public AnnotationObject(TokenObject aToken, int aId, String aFeature, String aSource)
     {
-        this(token, null, null, id, feature, source);
+        this(aToken, null, null, aId, aFeature, aSource);
     }
 
     /**

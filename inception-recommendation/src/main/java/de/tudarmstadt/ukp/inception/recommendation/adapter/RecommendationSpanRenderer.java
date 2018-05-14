@@ -116,8 +116,9 @@ public class RecommendationSpanRenderer
  
             // For recommendations with the same label by the same classifier,
             // show only the confidence of the highest one
-            for (AnnotationObject ao: token) {          
-                if (ao.getLabel() != null) {
+            for (AnnotationObject ao: token) {
+                String label = ao.getLabel();
+                if (label != null) {
                     if (isOverlapping(vspansWithoutRecommendations, ao.getOffset(), windowBegin,
                         ao.getFeature())) {
                         break;
@@ -126,22 +127,21 @@ public class RecommendationSpanRenderer
                     if (isRejected(recordedAnnotations, ao)) {
                         continue;
                     }
-                    
-                    if (!labelMap.containsKey(ao.getLabel())
-                            || !labelMap.get(ao.getLabel())
-                                    .containsKey(ao.getRecommenderId())
-                            || labelMap.get(ao.getLabel()).get(ao.getRecommenderId())
-                                    .getConfidence() < ao.getConfidence()) {
+
+                    if (!labelMap.containsKey(label)
+                            || !labelMap.get(label).containsKey(ao.getRecommenderId())
+                            || labelMap.get(label).get(ao.getRecommenderId())
+                               .getConfidence() < ao.getConfidence()) {
 
                         Map<Long, AnnotationObject> confidencePerClassifier;
-                        if (labelMap.get(ao.getLabel()) == null) {
+                        if (labelMap.get(label) == null) {
                             confidencePerClassifier = new HashMap<>();
                         } else {
-                            confidencePerClassifier = labelMap.get(ao.getLabel());
+                            confidencePerClassifier = labelMap.get(label);
                         }
                         
                         confidencePerClassifier.put(ao.getRecommenderId(), ao);
-                        labelMap.put(ao.getLabel(), confidencePerClassifier);
+                        labelMap.put(label, confidencePerClassifier);
                     }
                 }
             }

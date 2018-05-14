@@ -106,7 +106,7 @@ public class OpenNlpPosClassifier
                     AnnotationObject ao = new AnnotationObject(
                             sentence.get(j),
                             bestSequences[i].getOutcomes().get(j),
-                            "",
+                            null,
                             id,
                             feature, "OpenNlpPosClassifier", confidence[i][j]);
                     id++;
