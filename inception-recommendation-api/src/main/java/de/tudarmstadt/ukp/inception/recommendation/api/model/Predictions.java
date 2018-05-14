@@ -197,28 +197,16 @@ public class Predictions
     }
 
     /**
-     * Returns the first one that matches recommendationId and recommenderId
-     * @return
-     */
-    public AnnotationObject getPredictionByVID(VID aVID) 
-    {
-        return predictions.values().stream()
-                .filter(f -> f.getId() == aVID.getSubId())
-                .filter(f -> f.getRecommenderId() == aVID.getId())
-                .collect(Collectors.toList()).get(0);
-    }
-
-    /**
      * Returns the first prediction that matches recommendationId and recommenderId
-     * in the given document
+     * in the given document.
      */
-    public AnnotationObject getPredictionInDocumentByVID(SourceDocument document, VID aVID)
+    public Optional<AnnotationObject> getPredictionByVID(SourceDocument document, VID aVID)
     {
         return predictions.values().stream()
                 .filter(f -> f.getDocumentName().equals(document.getName()))
                 .filter(f -> f.getId() == aVID.getSubId())
                 .filter(f -> f.getRecommenderId() == aVID.getId())
-                .collect(Collectors.toList()).get(0);
+                .findFirst();
     }
 
     /**
@@ -230,7 +218,7 @@ public class Predictions
                 .filter(f -> f.getOffset().getBeginCharacter() == aBegin
                         && f.getOffset().getEndCharacter() == aEnd)
                 .filter(f -> f.getAnnotation().equals(aLabel))
-                .max((p1, p2) -> Integer.compare(p1.getId(), p2.getId()));
+                .max(Comparator.comparingInt(TokenObject::getId));
     }
     
     /**
