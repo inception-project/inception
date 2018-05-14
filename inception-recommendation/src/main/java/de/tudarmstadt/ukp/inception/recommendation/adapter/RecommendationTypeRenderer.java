@@ -19,12 +19,14 @@ package de.tudarmstadt.ukp.inception.recommendation.adapter;
 
 import org.apache.uima.jcas.JCas;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.inception.recommendation.service.LearningRecordService;
-import de.tudarmstadt.ukp.inception.recommendation.service.RecommendationService;
+import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
+import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 
 /**
  * Type Adapters for span, arc, and chain annotations
@@ -38,14 +40,15 @@ public interface RecommendationTypeRenderer
      *
      * @param aJcas
      *            The JCAS object containing annotations
-     * @param vdoc
+     * @param aVdoc
      *            A VDocument containing annotations for the given layer
      * @param aBratAnnotatorModel
      *            Data model for brat annotations
      * @param aColoringStrategy
      *            the coloring strategy to render this layer
      */
-    void render(JCas aJcas, VDocument vdoc, AnnotatorState aBratAnnotatorModel,
-            ColoringStrategy aColoringStrategy, RecommendationService recommendationService,
-            LearningRecordService learningRecordService, AnnotationLayer layer);
+    void render(JCas aJcas, VDocument aVdoc, AnnotatorState aBratAnnotatorModel,
+        ColoringStrategy aColoringStrategy, AnnotationLayer aLayer,
+        RecommendationService aRecService, LearningRecordService aLearningRecordService,
+        AnnotationSchemaService aAnnotationService, FeatureSupportRegistry aFsRegistry);
 }

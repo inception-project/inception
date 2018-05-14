@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.kb.model;
 
+import static de.tudarmstadt.ukp.inception.kb.reification.Reification.NONE;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 import java.io.Serializable;
@@ -24,6 +25,7 @@ import java.util.Objects;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
@@ -39,6 +41,7 @@ import org.hibernate.annotations.OnDeleteAction;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
+import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 
 @Entity
 @Table(name = "knowledgebase",
@@ -96,6 +99,12 @@ public class KnowledgeBase
     @Column(nullable = false)
     private IRI typeIri;
 
+    /**
+     * The IRI for a property describing B being a description of A, e.g. schema:description
+     */
+    @Column(nullable = false)
+    private IRI descriptionIri;
+
     @Column(nullable = false)
     private boolean readOnly;
 
@@ -104,7 +113,10 @@ public class KnowledgeBase
      */
     @Column(nullable = false)
     private boolean enabled = true;
-    
+
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private Reification reification = NONE;
     
     @Column(name = "supportConceptLinking", nullable = false)
     private boolean supportConceptLinking = false;
@@ -178,6 +190,16 @@ public class KnowledgeBase
         typeIri = aTypeIri;
     }
 
+    public IRI getDescriptionIri()
+    {
+        return descriptionIri;
+    }
+
+    public void setDescriptionIri(IRI aDescriptionIri)
+    {
+        descriptionIri = aDescriptionIri;
+    }
+
     public boolean isReadOnly()
     {
         return readOnly;
@@ -196,6 +218,16 @@ public class KnowledgeBase
     public void setEnabled(boolean isEnabled)
     {
         enabled = isEnabled;
+    }
+
+    public Reification getReification()
+    {
+        return reification;
+    }
+
+    public void setReification(Reification aReification)
+    {
+        reification = aReification;
     }
 
     /**
@@ -225,7 +257,7 @@ public class KnowledgeBase
             builder.append(repositoryId);
         }
         else {
-            builder.append(project.toString());
+            builder.append(project);
             builder.append(", name=");
             builder.append(name);
         }

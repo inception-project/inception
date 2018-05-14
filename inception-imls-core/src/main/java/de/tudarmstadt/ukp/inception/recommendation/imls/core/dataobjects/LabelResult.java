@@ -26,6 +26,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
+
 public class LabelResult implements Serializable
 {
     private static final long serialVersionUID = 5321986223804608554L;

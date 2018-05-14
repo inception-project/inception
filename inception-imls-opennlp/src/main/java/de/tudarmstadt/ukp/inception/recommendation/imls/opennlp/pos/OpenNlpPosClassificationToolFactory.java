@@ -14,22 +14,26 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.pos;
+ */
+package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.pos;
 
 import org.apache.uima.cas.CAS;
+import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.model.IModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.classificationtool.ClassificationTool;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.classificationtool.ClassificationToolFactory;
+import de.tudarmstadt.ukp.inception.recommendation.api.ClassificationTool;
+import de.tudarmstadt.ukp.inception.recommendation.api.ClassificationToolFactory;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import opennlp.tools.util.TrainingParameters;
 
 @Component
 public class OpenNlpPosClassificationToolFactory
-    implements ClassificationToolFactory<TrainingParameters>
+    implements ClassificationToolFactory<TrainingParameters, OpenNlpPosClassificationToolTraits>
 {
     private Logger log = LoggerFactory.getLogger(getClass());
 
@@ -66,5 +70,11 @@ public class OpenNlpPosClassificationToolFactory
         
         return aLayer.isLockToTokenOffset() && "span".equals(aLayer.getType())
                 && CAS.TYPE_NAME_STRING.equals(aFeature.getType());
+    }
+    
+    @Override
+    public Panel createTraitsEditor(String aId, IModel<Recommender> aRecommender)
+    {
+        return new OpenNlpPosClassificationToolTraitsEditor(aId, this, aRecommender);
     }
 }

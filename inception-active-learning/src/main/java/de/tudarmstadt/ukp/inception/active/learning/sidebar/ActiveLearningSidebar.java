@@ -64,21 +64,22 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaChoiceRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.event.AjaxAfterAnnotationUpdateEvent;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.inception.active.learning.ActiveLearningService;
 import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningRecommendationEvent;
 import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningSessionCompletedEvent;
 import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningSessionStartedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.RecommendationEditorExtension;
+import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
+import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.event.AjaxRecommendationAcceptedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.AjaxRecommendationRejectedEvent;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.AnnotationObject;
-import de.tudarmstadt.ukp.inception.recommendation.model.LearningRecord;
-import de.tudarmstadt.ukp.inception.recommendation.model.LearningRecordChangeLocation;
-import de.tudarmstadt.ukp.inception.recommendation.model.LearningRecordUserAction;
-import de.tudarmstadt.ukp.inception.recommendation.model.Predictions;
-import de.tudarmstadt.ukp.inception.recommendation.service.LearningRecordService;
-import de.tudarmstadt.ukp.inception.recommendation.service.RecommendationService;
 
 public class ActiveLearningSidebar
     extends AnnotationSidebar_ImplBase
@@ -239,10 +240,12 @@ public class ActiveLearningSidebar
         if (currentDifference != null) {
             hasUnseenRecommendation = true;
             currentRecommendation = currentDifference.getRecommendation1();
- 
+
             try {
-                actionShowSelectedDocument(aTarget, getModelObject().getDocument(),
-                        currentRecommendation.getOffset().getBeginCharacter());
+                actionShowSelectedDocument(aTarget, documentService
+                        .getSourceDocument(this.getModelObject().getProject(),
+                            currentRecommendation.getDocumentName()),
+                    currentRecommendation.getOffset().getBeginCharacter());
             }
             catch (IOException e) {
                 LOG.error("Unable to switch to document : {} ", e.getMessage(), e);
@@ -403,8 +406,10 @@ public class ActiveLearningSidebar
     private void jumpToRecommendationLocationAndHighlightRecommendation(AjaxRequestTarget aTarget)
         throws IOException
     {
-        actionShowSelectedDocument(aTarget, getModelObject().getDocument(),
-                currentRecommendation.getOffset().getBeginCharacter());
+        actionShowSelectedDocument(aTarget, documentService
+                .getSourceDocument(this.getModelObject().getProject(),
+                    currentRecommendation.getDocumentName()),
+            currentRecommendation.getOffset().getBeginCharacter());
         highlightCurrentRecommendation(aTarget);
     }
 
@@ -598,6 +603,27 @@ public class ActiveLearningSidebar
     }
 
     @OnEvent
+    public void afterAnnotationUpdateEvent(AjaxAfterAnnotationUpdateEvent aEvent)
+    {
+        AnnotatorState annotatorState = getModelObject();
+        AnnotatorState eventState = aEvent.getAnnotatorState();
+
+        //check active learning is active and same user and same document and same layer
+        if (sessionActive && eventState.getUser().equals(annotatorState.getUser()) && eventState
+            .getDocument().equals(annotatorState.getDocument()) && annotatorState
+            .getSelectedAnnotationLayer().equals(selectedLayer.getObject())) {
+            //check same document and same token
+            if (annotatorState.getSelection().getBegin() == currentRecommendation.getOffset()
+                .getBeginCharacter()
+                && annotatorState.getSelection().getEnd() == currentRecommendation.getOffset()
+                .getEndCharacter() && aEvent.getValue() != null) {
+                moveToNextRecommendation(aEvent.getTarget());
+            }
+            aEvent.getTarget().add(mainContainer);
+        }
+    }
+
+    @OnEvent
     public void onRecommendationRejectEvent(AjaxRecommendationRejectedEvent aEvent)
     {
         AnnotatorState annotatorState = getModelObject();
@@ -647,10 +673,6 @@ public class ActiveLearningSidebar
                 && eventState.getUser().equals(annotatorState.getUser())
                 && eventState.getProject().equals(annotatorState.getProject())) {
             if (acceptedRecommendation.getOffset().equals(currentRecommendation.getOffset())) {
-                if (!acceptedRecommendation.equals(currentRecommendation)) {
-                    writeLearningRecordInDatabase(LearningRecordUserAction.REJECTED);
-                }
-                
                 moveToNextRecommendation(aEvent.getTarget());
             }
             aEvent.getTarget().add(mainContainer);

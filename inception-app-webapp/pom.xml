@@ -21,7 +21,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>0.3.0-SNAPSHOT</version>
+    <version>0.4.0-SNAPSHOT</version>
     <relativePath>..</relativePath>
   </parent>
   <artifactId>inception-app-webapp</artifactId>
@@ -58,7 +58,6 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-concept-linking</artifactId>
-      <version>0.3.0-SNAPSHOT</version>
       <exclusions>
         <exclusion>
           <groupId>ch.qos.logback</groupId>
@@ -79,6 +78,10 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-imls-dl4j</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-imls-external</artifactId>
     </dependency>
     <!--  
     <dependency>
@@ -385,7 +388,6 @@
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-tomcat</artifactId>
-      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
@@ -413,32 +415,6 @@
     -->
   </dependencies>
   <build>
-    <resources>
-      <resource>
-        <filtering>false</filtering>
-        <directory>src/main/resources</directory>
-        <excludes>
-          <exclude>META-INF/version.properties</exclude>
-        </excludes>
-      </resource>
-      <resource>
-        <filtering>true</filtering>
-        <directory>src/main/resources</directory>
-        <includes>
-          <include>META-INF/version.properties</include>
-        </includes>
-      </resource>
-      <resource>
-        <filtering>false</filtering>
-        <directory>src/main/java</directory>
-        <includes>
-          <include>**</include>
-        </includes>
-        <excludes>
-          <exclude>**/*.java</exclude>
-        </excludes>
-      </resource>
-    </resources>
     <plugins>
       <!-- 
         This module has a slight complex setup to allow making it work in a command line build
@@ -603,6 +579,7 @@
               <!-- INCEpTION backend modules - used via Spring -->
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-concept-linking</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-recommendation</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-external</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-dl4j</usedDependency>
               <!-- usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-mira</usedDependency -->
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-opennlp</usedDependency>

@@ -19,33 +19,54 @@ package de.tudarmstadt.ukp.inception.ui.kb.stmt;
 
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
+import java.util.Iterator;
+
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.event.Broadcast;
+import org.apache.wicket.feedback.IFeedback;
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.TextArea;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.panel.Fragment;
 import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.markup.repeater.Item;
+import org.apache.wicket.markup.repeater.RefreshingView;
+import org.apache.wicket.markup.repeater.ReuseIfModelsEqualStrategy;
+import org.apache.wicket.markup.repeater.util.ModelIteratorAdapter;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.eclipse.rdf4j.repository.RepositoryException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
+import de.tudarmstadt.ukp.inception.app.Focusable;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
+import de.tudarmstadt.ukp.inception.kb.graph.KBQualifier;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
+import de.tudarmstadt.ukp.inception.ui.kb.WriteProtectionBehavior;
+import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxQualifierChangedEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxStatementChangedEvent;
-import de.tudarmstadt.ukp.inception.ui.kb.util.WriteProtectionBehavior;
 
-public class StatementEditor extends Panel {
+
+
+public class StatementEditor extends Panel
+{
 
     private static final long serialVersionUID = 7643837763550205L;
+    private static final Logger LOG = LoggerFactory.getLogger(StatementEditor.class);
 
     private static final String CONTENT_MARKUP_ID = "content";
 
@@ -97,6 +118,12 @@ public class StatementEditor extends Panel {
         aTarget.add(this);
     }
 
+    private void actionAddQualifier(AjaxRequestTarget aTarget, KBStatement statement) {
+        KBQualifier qualifierPorto = new KBQualifier(statement);
+        statement.addQualifier(qualifierPorto);
+        aTarget.add(this);
+    }
+
     private void actionCancelExistingStatement(AjaxRequestTarget aTarget) {
         content = content.replaceWith(new ViewMode(CONTENT_MARKUP_ID, statement));
         aTarget.add(this);
@@ -111,40 +138,62 @@ public class StatementEditor extends Panel {
 
     private void actionSave(AjaxRequestTarget aTarget, Form<KBStatement> aForm) {
         KBStatement modifiedStatement = aForm.getModelObject();
-
-        // persist the modified statement and replace the original, unchanged model
-        kbService.upsertStatement(kbModel.getObject(), modifiedStatement);
-        statement.setObject(modifiedStatement);
-
-        // switch back to ViewMode and send notification to listeners
-        actionCancelExistingStatement(aTarget);
-        send(getPage(), Broadcast.BREADTH,
-                new AjaxStatementChangedEvent(aTarget, statement.getObject()));
+        try {
+            // persist the modified statement and replace the original, unchanged model
+            kbService.upsertStatement(kbModel.getObject(), modifiedStatement);
+            statement.setObject(modifiedStatement);
+            // switch back to ViewMode and send notification to listeners
+            actionCancelExistingStatement(aTarget);
+            send(getPage(), Broadcast.BREADTH,
+                    new AjaxStatementChangedEvent(aTarget, statement.getObject()));
+        }
+        catch (RepositoryException e) {
+            error("Unable to update statement: " + e.getLocalizedMessage());
+            LOG.error("Unable to update statement.", e);
+            aTarget.addChildren(getPage(), IFeedback.class);
+        }
     }
 
     private void actionDelete(AjaxRequestTarget aTarget) {
-        kbService.deleteStatement(kbModel.getObject(), statement.getObject());
+        try {
+            kbService.deleteStatement(kbModel.getObject(), statement.getObject());
 
-        AjaxStatementChangedEvent deleteEvent = new AjaxStatementChangedEvent(aTarget,
-                statement.getObject(), this, true);
-        send(getPage(), Broadcast.BREADTH, deleteEvent);
+            AjaxStatementChangedEvent deleteEvent = new AjaxStatementChangedEvent(aTarget,
+                    statement.getObject(), this, true);
+            send(getPage(), Broadcast.BREADTH, deleteEvent);
+        }
+        catch (RepositoryException e) {
+            error("Unable to delete statement: " + e.getLocalizedMessage());
+            LOG.error("Unable to delete statement.", e);
+            aTarget.addChildren(getPage(), IFeedback.class);
+        }
     }
 
     private void actionMakeExplicit(AjaxRequestTarget aTarget) {
-        // add the statement as-is to the knowledge base
-        kbService.upsertStatement(kbModel.getObject(), statement.getObject());
-
-        // to update the statement in the UI, one could either reload all statements of the
-        // corresponding instance or (much easier) just set the inferred attribute of the
-        // KBStatement to false, so that's what's done here
-        statement.getObject().setInferred(false);
-        aTarget.add(this);
-        send(getPage(), Broadcast.BREADTH,
-                new AjaxStatementChangedEvent(aTarget, statement.getObject()));
+        try {
+            // add the statement as-is to the knowledge base
+            kbService.upsertStatement(kbModel.getObject(), statement.getObject());
+    
+            // to update the statement in the UI, one could either reload all statements of the
+            // corresponding instance or (much easier) just set the inferred attribute of the
+            // KBStatement to false, so that's what's done here
+            statement.getObject().setInferred(false);
+            aTarget.add(this);
+            send(getPage(), Broadcast.BREADTH,
+                    new AjaxStatementChangedEvent(aTarget, statement.getObject()));
+            
+        }
+        catch (RepositoryException e) {
+            error("Unable to make statement explicit " + e.getLocalizedMessage());
+            LOG.error("Unable to make statement explicit.", e);
+            aTarget.addChildren(getPage(), IFeedback.class);
+        }
     }
 
     private class ViewMode extends Fragment {
         private static final long serialVersionUID = 2375450134740203778L;
+
+        private WebMarkupContainer qualifierListWrapper;
 
         public ViewMode(String aId, IModel<KBStatement> aStatement) {
             super(aId, "viewMode", StatementEditor.this, aStatement);
@@ -167,13 +216,70 @@ public class StatementEditor extends Panel {
                     .onConfigure((_this) -> _this.setVisible(!statement.getObject().isInferred()));
             editLink.add(new WriteProtectionBehavior(kbModel));
             add(editLink);
+
+            LambdaAjaxLink addQualifierLink = new LambdaAjaxLink("addQualifier",
+                t -> actionAddQualifier(t, aStatement.getObject()))
+                .onConfigure((_this) -> _this.setVisible(!statement.getObject().isInferred() &&
+                    kbModel.getObject().getReification().supportsQualifier()));
+            addQualifierLink.add(new Label("label", new ResourceModel("qualifier.add")));
+            addQualifierLink.add(new WriteProtectionBehavior(kbModel));
+            add(addQualifierLink);
             
             LambdaAjaxLink makeExplicitLink = new LambdaAjaxLink("makeExplicit",
                     StatementEditor.this::actionMakeExplicit).onConfigure(
                         (_this) -> _this.setVisible(statement.getObject().isInferred()));
             makeExplicitLink.add(new WriteProtectionBehavior(kbModel));
             add(makeExplicitLink);
+
+            RefreshingView<KBQualifier> qualifierList = new RefreshingView<KBQualifier>("qualifierList")
+            {
+                private static final long serialVersionUID = -8342276415072873329L;
+
+                @Override
+                protected Iterator<IModel<KBQualifier>> getItemModels()
+                {
+                    return new ModelIteratorAdapter<KBQualifier>(
+                        statement.getObject().getQualifiers())
+                    {
+                        @Override protected IModel<KBQualifier> model(KBQualifier object)
+                        {
+                            return LambdaModel.of(() -> object);
+                        }
+                    };
+                }
+
+                @Override
+                protected void populateItem(Item<KBQualifier> aItem)
+                {
+                    QualifierEditor editor = new QualifierEditor("qualifier", kbModel,
+                        aItem.getModel());
+                    aItem.add(editor);
+                    aItem.setOutputMarkupId(true);
+                }
+            };
+            qualifierList.setItemReuseStrategy(new ReuseIfModelsEqualStrategy());
+
+            qualifierListWrapper = new WebMarkupContainer("qualifierListWrapper");
+            qualifierListWrapper.setOutputMarkupId(true);
+            qualifierListWrapper.add(qualifierList);
+            add(qualifierListWrapper);
         }
+
+        @OnEvent
+        public void actionQualifierChanged(AjaxQualifierChangedEvent event)
+        {
+            boolean isEventForThisStatement = event.getQualifier().getKbStatement()
+                .equals(statement.getObject());
+            if (isEventForThisStatement) {
+                if (event.isDeleted()) {
+                    event.getQualifier().getKbStatement().getQualifiers()
+                        .remove(event.getQualifier());
+                }
+                statement.setObject(event.getQualifier().getKbStatement());
+                event.getTarget().add(qualifierListWrapper);
+            }
+        }
+
     }
 
     private class EditMode extends Fragment implements Focusable {

@@ -18,10 +18,11 @@
 package de.tudarmstadt.ukp.inception.ui.kb.event;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.wicketstuff.event.annotation.AbstractAjaxAwareEvent;
 
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 
-public class AjaxSelectionEvent extends AjaxEvent {
+public class AjaxSelectionEvent extends AbstractAjaxAwareEvent {
 
     private KBHandle selection;
 

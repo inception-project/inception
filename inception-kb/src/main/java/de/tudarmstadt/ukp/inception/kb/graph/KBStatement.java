@@ -29,14 +29,15 @@ import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.Value;
-import org.eclipse.rdf4j.model.ValueFactory;
-import org.eclipse.rdf4j.model.util.URIUtil;
-import org.eclipse.rdf4j.repository.RepositoryConnection;
+
+import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
+import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 public class KBStatement implements Serializable
 {
     private static final long serialVersionUID = 6117845741665780184L;
 
+    private String statementId;
     // Subject
     private KBHandle instance;
 
@@ -51,44 +52,72 @@ public class KBStatement implements Serializable
 
     private boolean inferred;
 
-    private List<Statement> originalStatements = new ArrayList<>();
+    private List<Statement> originalStatements;
 
-    public KBStatement()
+    private List<KBQualifier> qualifiers;
+
+    /**
+     * Call {@link KnowledgeBaseService#initStatement(KnowledgeBase, KBStatement)}
+     * after constructing this in order to allow upserting.
+     * @param aInstance
+     * @param aProperty
+     * @param aValue
+     */
+    public KBStatement(KBHandle aInstance, KBHandle aProperty, Value aValue)
     {
+        instance = aInstance;
+        property = aProperty;
+
+        DatatypeMapper mapper = new DefaultDatatypeMapper();
+        if (aValue instanceof Literal) {
+            Literal litValue = (Literal) aValue;
+            language = litValue.getLanguage().orElse(null);
+            value = mapper.getJavaObject(litValue);
+        }
+        else if (aValue instanceof IRI) {
+            value = aValue;
+        }
+        else if (aValue instanceof BNode) {
+            value = null;
+        }
+        else {
+            throw new IllegalStateException("Unknown object type: " + aValue.getClass());
+        }
+
+        originalStatements = new ArrayList<>();
+
+        qualifiers = new ArrayList<>();
+    }
+
+    public KBStatement(KBHandle aInstance, KBHandle aProperty)
+    {
+        instance = aInstance;
+        property = aProperty;
+        value = null;
+        originalStatements = new ArrayList<>();
+        qualifiers = new ArrayList<>();
     }
 
     public KBStatement(KBStatement other)
     {
+        this.statementId = other.statementId;
         this.inferred = other.inferred;
         this.instance = other.instance;
         this.language = other.language;
         this.originalStatements = other.originalStatements;
         this.property = other.property;
         this.value = other.value;
+        qualifiers = other.qualifiers;
     }
 
-    public static KBStatement read(KBHandle aInstance, KBHandle aProperty, Statement aStmt)
+    public String getStatementId()
     {
-        DatatypeMapper mapper = new DefaultDatatypeMapper();
-        KBStatement kbStmt = new KBStatement();
-        kbStmt.originalStatements.add(aStmt);
-        kbStmt.setInstance(aInstance);
-        kbStmt.setProperty(aProperty);
-        if (aStmt.getObject() instanceof Literal) {
-            Literal litValue = (Literal) aStmt.getObject();
-            kbStmt.setLanguage(litValue.getLanguage().orElse(null));
-            kbStmt.setValue((Serializable) mapper.getJavaObject(litValue));
-        }
-        else if (aStmt.getObject() instanceof IRI) {
-            kbStmt.setValue(aStmt.getObject());
-        }
-        else if (aStmt.getObject() instanceof BNode) {
-            kbStmt.setValue(null);
-        }
-        else {
-            throw new IllegalStateException("Unknown object type: " + aStmt.getObject().getClass());
-        }
-        return kbStmt;
+        return statementId;
+    }
+
+    public void setStatementId(String aStatementId)
+    {
+        statementId = aStatementId;
     }
 
     public KBHandle getInstance()
@@ -130,7 +159,7 @@ public class KBStatement implements Serializable
     {
         language = aLanguage;
     }
-    
+
     public boolean isInferred()
     {
         return inferred;
@@ -146,48 +175,30 @@ public class KBStatement implements Serializable
         return originalStatements;
     }
 
-    public Statement toStatement(RepositoryConnection conn)
+    public void setOriginalStatements(List<Statement> statements)
     {
-        ValueFactory vf = conn.getValueFactory();
-        IRI subject = vf.createIRI(instance.getIdentifier());
-        IRI predicate = vf.createIRI(property.getIdentifier());
-
-        Value object;
-        if (value instanceof IRI) {
-            object = (IRI) value;
-        } else if (URIUtil.isValidURIReference((String) value)) {
-            object = vf.createIRI((String) value);
-        }
-        else if (language != null) {
-            object = vf.createLiteral((String) value, language);
-        }
-        else {
-            DatatypeMapper mapper = new DefaultDatatypeMapper();
-            object = mapper.getRDFValue(value, vf);
-        }
-
-        return vf.createStatement(subject, predicate, object);
+        originalStatements = statements;
     }
 
-    public void write(RepositoryConnection conn)
+    public void addQualifier(KBQualifier aQualifier)
     {
-        Statement stmt = toStatement(conn);
-        if (!inferred) {
-            originalStatements.clear();
-            originalStatements.add(stmt);
-        }
-        conn.add(stmt);
+        qualifiers.add(aQualifier);
     }
 
-    @Override
-    public String toString()
+    public List<KBQualifier> getQualifiers()
     {
-        return new ToStringBuilder(this).append("instance", instance)
-            .append("property", property)
-            .append("value", value)
-            .append("language", language)
-            .append("inferred", inferred)
-            .append("originalStatements", originalStatements)
-            .toString();
+        return qualifiers;
+    }
+
+    public void setQualifiers(List<KBQualifier> qualifierList)
+    {
+        qualifiers = qualifierList;
+    }
+
+    @Override public String toString()
+    {
+        return new ToStringBuilder(this).append("instance", instance).append("property", property)
+            .append("value", value).append("language", language).append("inferred", inferred)
+            .append("originalStatements", originalStatements).toString();
     }
 }

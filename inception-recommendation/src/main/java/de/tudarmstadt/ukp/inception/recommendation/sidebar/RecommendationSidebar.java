@@ -29,7 +29,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
-import de.tudarmstadt.ukp.inception.recommendation.service.RecommendationService;
+import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 
 public class RecommendationSidebar
     extends AnnotationSidebar_ImplBase
