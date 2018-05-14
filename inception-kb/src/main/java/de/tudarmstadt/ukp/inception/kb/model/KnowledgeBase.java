@@ -48,11 +48,12 @@ import de.tudarmstadt.ukp.inception.kb.reification.Reification;
     uniqueConstraints = { @UniqueConstraint(columnNames = { "project", "name",  }) })
 @NamedQueries({
     @NamedQuery(name = "KnowledgeBase.getByProject",
-    query = "from KnowledgeBase kb where kb.project = :project"),
+    query = "from KnowledgeBase kb where kb.project = :project order by lower(kb.name)"),
     @NamedQuery(name = "KnowledgeBase.getByName",
         query = "from KnowledgeBase kb where kb.project = :project and kb.name = :name "),
     @NamedQuery(name = "KnowledgeBase.getByProjectWhereEnabledTrue",
-    query = "from KnowledgeBase kb where kb.project = :project and kb.enabled = true") 
+    query = "from KnowledgeBase kb where kb.project = :project and kb.enabled = true "
+            + "order by lower(kb.name)") 
 })
 public class KnowledgeBase
     implements Serializable

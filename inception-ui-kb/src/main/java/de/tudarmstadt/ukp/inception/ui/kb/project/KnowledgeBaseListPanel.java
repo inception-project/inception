@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.project;
 
-import java.util.stream.Collectors;
-
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
@@ -59,9 +57,7 @@ public class KnowledgeBaseListPanel extends ListPanel_ImplBase {
         overviewList = new OverviewListChoice<>("knowledgebases");
         overviewList.setChoiceRenderer(new ChoiceRenderer<>("name"));
         overviewList.setChoices(
-                LambdaModel.of(() -> kbService.getKnowledgeBases(projectModel.getObject()).stream()
-                        .sorted((kb1, kb2) -> kb1.getName().compareToIgnoreCase(kb2.getName()))
-                        .collect(Collectors.toList())));
+                LambdaModel.of(() -> kbService.getKnowledgeBases(projectModel.getObject())));
         overviewList.setModel(kbModel);
         overviewList.add(new LambdaAjaxFormComponentUpdatingBehavior("change", this::onChange));
         add(overviewList);
