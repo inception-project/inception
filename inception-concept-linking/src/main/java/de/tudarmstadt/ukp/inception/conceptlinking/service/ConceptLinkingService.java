@@ -144,28 +144,28 @@ public class ConceptLinkingService
         }
 
         Set<CandidateEntity> candidates = new HashSet<>();
-        List<String> mentionArray = Arrays.asList(aMention.split(" "));
+        List<String> mentionList = Arrays.asList(aMention.split(" "));
 
         // Remove any character that is not a letter
-        mentionArray = mentionArray.stream().map(m -> m.replaceAll("[^\\p{L}^\\d]", ""))
+        mentionList = mentionList.stream().map(m -> m.replaceAll("[^\\p{L}^\\d]", ""))
             .collect(Collectors.toList());
 
         if (stopwords != null) {
-            if (stopwords.containsAll(mentionArray)) {
+            if (stopwords.containsAll(mentionList)) {
                 logger.error("Mention [{}] consists of stopwords only - returning.", aMention);
                 return Collections.emptySet();
             }
         }
 
-        aMention = String.join(" ", mentionArray);
-        if (aMention.isEmpty()) {
+        String processedMention = String.join(" ", mentionList);
+        if (processedMention.isEmpty()) {
             logger.error("Mention is empty!");
             return Collections.emptySet();
         }
 
         try (RepositoryConnection conn = kbService.getConnection(aKB)) {
             TupleQuery query = QueryUtil
-                .generateCandidateQuery(conn, aMention, properties.getCandidateQueryLimit());
+                .generateCandidateQuery(conn, processedMention, properties.getCandidateQueryLimit());
             try (TupleQueryResult entityResult = query.evaluate()) {
                 while (entityResult.hasNext()) {
                     BindingSet solution = entityResult.next();
@@ -189,7 +189,7 @@ public class ConceptLinkingService
         }
 
         if (candidates.isEmpty()) {
-            String[] split = aMention.split(" ");
+            String[] split = processedMention.split(" ");
             if (split.length > 1) {
                 for (String s : split) {
                     candidates.addAll(generateCandidates(aKB, s));
@@ -197,7 +197,7 @@ public class ConceptLinkingService
             }
         }
 
-        candidateCache.put(aMention, candidates);
+        candidateCache.put(processedMention, candidates);
         return candidates;
     }
 
