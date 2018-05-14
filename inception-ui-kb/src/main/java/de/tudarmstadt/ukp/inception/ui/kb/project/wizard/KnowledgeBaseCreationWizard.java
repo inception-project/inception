@@ -369,13 +369,16 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
             comboBoxWrapper.setOutputMarkupId(true);
             add(comboBoxWrapper);
 
-            // Add text fields for classIri, subclassIri and typeIri
+            // Add text fields for classIri, subclassIri, typeIri and descriptionIri
             ComboBox<String> classField = buildComboBox("classIri", model.bind("kb.classIri"),
                     IriConstants.CLASS_IRIS);
             ComboBox<String> subclassField = buildComboBox("subclassIri",
                     model.bind("kb.subclassIri"), IriConstants.SUBCLASS_IRIS);
             ComboBox<String> typeField = buildComboBox("typeIri", model.bind("kb.typeIri"),
                     IriConstants.TYPE_IRIS);
+            ComboBox<String> descriptionField = buildComboBox("descriptionIri",
+                model.bind("kb.descriptionIri"), IriConstants.DESCRIPTION_IRIS);
+            add(descriptionField);
             comboBoxWrapper.add(classField, subclassField, typeField);
 
             // OnChange update the model with corresponding iris
@@ -389,6 +392,7 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
                     classField.setModelObject(bean.getClassIri().stringValue());
                     subclassField.setModelObject(bean.getSubclassIri().stringValue());
                     typeField.setModelObject(bean.getTypeIri().stringValue());
+                    descriptionField.setModelObject(bean.getDescriptionIri().stringValue());
                     target.add(comboBoxWrapper, iriSchemaChoice);
                 }
             });
