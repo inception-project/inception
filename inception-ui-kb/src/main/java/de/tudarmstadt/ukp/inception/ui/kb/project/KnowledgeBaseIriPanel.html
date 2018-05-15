@@ -47,15 +47,21 @@
         </label>
         <input type="text" wicket:id="typeIri" class="form-control"/>
       </div>
+      
       <div class="form-group col-xs-12">
         <label class="control-label">
           <wicket:message key="kb.iri.descriptionIri" />
         </label>
         <input type="text" wicket:id="descriptionIri" class="form-control"/>
       </div>
+      
       <div class="form-group col-xs-12">
-        <label class="control-label" wicket:id="basePrefixLabel"></label>
-        <input type="text" wicket:id="basePrefix" class="form-control"/>
+        <wicket:enclosure child="basePrefix">
+          <label class="control-label">
+            <wicket:message key="kb.iri.basePrefix" />
+          </label>
+          <input type="text" wicket:id="basePrefix" class="form-control"/>
+        </wicket:enclosure>
       </div>
     </div>
   </wicket:panel>

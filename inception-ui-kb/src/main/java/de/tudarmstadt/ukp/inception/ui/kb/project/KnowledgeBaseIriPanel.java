@@ -23,7 +23,6 @@ import java.util.stream.Collectors;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.WebMarkupContainer;
-import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
@@ -109,12 +108,6 @@ public class KnowledgeBaseIriPanel
         basePrefix.setConvertEmptyInputStringToNull(false);
         basePrefix.setOutputMarkupId(true);
         contentWrapper.add(basePrefix);
-
-        Label basePrefixLabel = new Label("basePrefixLabel", getString("basePrefix"));
-        basePrefixLabel
-                .add(LambdaBehavior.onConfigure(tf -> tf.setVisible(isBasePrefixVisible())));
-        basePrefixLabel.setOutputMarkupId(true);
-        contentWrapper.add(basePrefixLabel);
 
         // OnChange update the model with corresponding iris
         iriSchemaChoice.setChangeHandler(new ISelectionChangeHandler<SchemaProfile>()
