@@ -105,6 +105,18 @@ public class KnowledgeBase
      */
     @Column(nullable = false)
     private IRI descriptionIri;
+    
+    /**
+     * 
+     */
+    @Column(nullable = false)
+    private IRI labelIri;
+    
+    /**
+     * 
+     */
+    @Column(nullable = false)
+    private IRI propertyTypeIri;
 
     @Column(nullable = false)
     private boolean readOnly;
@@ -199,6 +211,26 @@ public class KnowledgeBase
     public void setDescriptionIri(IRI aDescriptionIri)
     {
         descriptionIri = aDescriptionIri;
+    }
+
+    public IRI getLabelIri()
+    {
+        return labelIri;
+    }
+
+    public void setLabelIri(IRI aLabelIri)
+    {
+        labelIri = aLabelIri;
+    }
+
+    public IRI getPropertyTypeIri()
+    {
+        return propertyTypeIri;
+    }
+
+    public void setPropertyTypeIri(IRI aPropertyTypeIri)
+    {
+        propertyTypeIri = aPropertyTypeIri;
     }
 
     public boolean isReadOnly()

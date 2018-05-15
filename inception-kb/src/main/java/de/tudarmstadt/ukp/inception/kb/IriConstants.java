@@ -75,6 +75,8 @@ public class IriConstants
     public static final List<IRI> SUBCLASS_IRIS;
     public static final List<IRI> TYPE_IRIS;
     public static final List<IRI> DESCRIPTION_IRIS;
+    public static final List<IRI> LABEL_IRIS;
+    public static final List<IRI> PROPERTY_TYPE_IRIS;
 
     static {
         ValueFactory vf = SimpleValueFactory.getInstance();
@@ -88,5 +90,7 @@ public class IriConstants
         SUBCLASS_IRIS = asList(RDFS.SUBCLASSOF, WIKIDATA_SUBCLASS);
         TYPE_IRIS = asList(RDF.TYPE, WIKIDATA_TYPE);
         DESCRIPTION_IRIS = asList(RDFS.COMMENT, SCHEMA_DESCRIPTION);
+        LABEL_IRIS = asList(RDFS.LABEL);
+        PROPERTY_TYPE_IRIS =  asList(RDF.PROPERTY);
     }
 }
