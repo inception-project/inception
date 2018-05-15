@@ -447,9 +447,11 @@ public class ActiveLearningSidebar
         int end = acceptedRecommendation.getOffset().getEndCharacter();
         int id = adapter.add(annotatorState, jCas, begin, end);
         for (AnnotationFeature feature : annotationService
-                .listAnnotationFeature(selectedLayer.getObject())) {
-            adapter.setFeatureValue(annotatorState, jCas, id, feature,
+            .listAnnotationFeature(selectedLayer.getObject())) {
+            if (feature.getName().equals(acceptedRecommendation.getFeature())) {
+                adapter.setFeatureValue(annotatorState, jCas, id, feature,
                     acceptedRecommendation.getAnnotation());
+            }
         }
         
         // Open accepted recommendation in the annotation detail editor panel
@@ -567,10 +569,12 @@ public class ActiveLearningSidebar
                 .listAnnotationFeature(selectedLayer.getObject())) {
                 String annotatedValue = WebAnnoCasUtil
                     .getFeature(annotationFS, annotationFeature.getName());
-                if (annotatedValue.equals(aRecord.getAnnotation())) {
-                    highlightVID = new VID(WebAnnoCasUtil.getAddr(annotationFS));
-                    vMarkerType = ANNOTATION_MARKER;
-                    return true;
+                if (annotatedValue != null) {
+                    if (annotatedValue.equals(aRecord.getAnnotation())) {
+                        highlightVID = new VID(WebAnnoCasUtil.getAddr(annotationFS));
+                        vMarkerType = ANNOTATION_MARKER;
+                        return true;
+                    }
                 }
             }
         }
