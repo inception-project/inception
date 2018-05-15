@@ -24,6 +24,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model.Feature
 import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model.LayerType.CHAIN;
 import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model.LayerType.RELATION;
 import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model.LayerType.SPAN;
+import static org.apache.commons.lang3.StringUtils.compare;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -66,7 +67,13 @@ public class TsvSchema
     
     public List<TsvColumn> getColumns(Type aType)
     {
-        return getColumns().stream().filter(c -> c.uimaType.equals(aType))
+        return getColumns().stream()
+                .filter(c -> c.uimaType.equals(aType))
+                // Sort by name so we get a stable column order even if type systems are merged
+                // in different orders, e.g. in unit tests.
+                .sorted((a, b) -> compare(
+                        a.getUimaFeature() != null ? a.getUimaFeature().getShortName() : null,
+                        b.getUimaFeature() != null ? b.getUimaFeature().getShortName() : null))
                 .collect(Collectors.toList());
     }
     
@@ -82,7 +89,7 @@ public class TsvSchema
         List<TsvColumn> cols = new ArrayList<>();
         
         // COMPATIBILITY NOTE
-        // We try t maintain the same order of columns as the WebAnnoTsv3Writer because the 
+        // We try to maintain the same order of columns as the WebAnnoTsv3Writer because the 
         // WebAnnoTsv3Reader needs that order. Our own reader does not rely on this order.
         // - SPAN layers without slot features
         // - SPAN layers with slot features
