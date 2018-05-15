@@ -638,9 +638,15 @@ public class ActiveLearningSidebar
             SourceDocument document = eventState.getDocument();
             VID vid = aEvent.getVid();
             Optional<AnnotationObject> prediction = model.getPredictionByVID(document, vid);
+
+            if (!prediction.isPresent()) {
+                LOG.error("Could not find prediction in [{}] with id [{}]", document, vid);
+                error("Could not find prediction");
+                return;
+            }
+
             if (document.equals(annotatorState.getDocument())
                     && vid.getLayerId() == selectedLayer.getObject().getId()
-                    && prediction.isPresent()
                     && prediction.get().equals(currentRecommendation)) {
                 
                 moveToNextRecommendation(aEvent.getTarget());
@@ -661,7 +667,8 @@ public class ActiveLearningSidebar
         Optional<AnnotationObject> oRecommendation = model.getPredictionByVID(document, vid);
 
         if (!oRecommendation.isPresent()) {
-            LOG.error("Could not find annotation in [{}] with id [{}]", document, vid);
+            LOG.error("Could not find prediction in [{}] with id [{}]", document, vid);
+            error("Could not find prediction");
             return;
         }
 
