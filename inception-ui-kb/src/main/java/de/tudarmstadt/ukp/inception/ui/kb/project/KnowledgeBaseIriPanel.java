@@ -24,7 +24,6 @@ import java.util.stream.Collectors;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
-import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
@@ -100,10 +99,13 @@ public class KnowledgeBaseIriPanel
         contentWrapper.add(classField, subclassField, typeField, descriptionField);
 
         //Add textfield and label for basePrefix
-        TextField<String> basePrefix = new TextField<String>("basePrefix",
-                kbModel.bind("kb.basePrefix"));
+        ComboBox<String> basePrefix = new ComboBox<String>("basePrefix",
+                kbModel.bind("kb.basePrefix"), Arrays.asList(IriConstants.INCEPTION_NAMESPACE));
         basePrefix
                 .add(LambdaBehavior.onConfigure(tf -> tf.setVisible(isBasePrefixVisible())));
+        basePrefix.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> {
+            // Do nothing just update the model values
+        }));
         basePrefix.setConvertEmptyInputStringToNull(false);
         basePrefix.setOutputMarkupId(true);
         contentWrapper.add(basePrefix);
@@ -141,7 +143,7 @@ public class KnowledgeBaseIriPanel
         if (model.getObject() == null) {
             model.setObject(iris.get(0));
         }
-
+ 
         List<String> choices = iris.stream().map(IRI::stringValue).collect(Collectors.toList());
 
         IModel<String> adapter = new LambdaModelAdapter<String>(
