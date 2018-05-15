@@ -20,13 +20,14 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor;
 import static org.apache.commons.lang3.StringUtils.containsIgnoreCase;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
 import org.apache.wicket.MarkupContainer;
+import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.html.form.AbstractTextComponent;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.util.convert.ConversionException;
@@ -70,6 +71,14 @@ public class KendoAutoCompleteTextFeatureEditor
             IModel<FeatureState> aModel)
     {
         super(aId, aItem, aModel);
+    }
+    
+    @Override
+    public void renderHead(IHeaderResponse aResponse)
+    {
+        super.renderHead(aResponse);
+        
+        aResponse.render(forReference(KendoChoiceDescriptionScriptReference.get()));
     }
 
     @Override
@@ -148,33 +157,7 @@ public class KendoAutoCompleteTextFeatureEditor
             @Override
             protected IJQueryTemplate newTemplate()
             {
-                return new IJQueryTemplate()
-                {
-                    private static final long serialVersionUID = 1L;
-                    
-                    @Override
-                    public String getText()
-                    {
-                        // Some docs on how the templates work in Kendo, in case we need
-                        // more fancy dropdowns
-                        // http://docs.telerik.com/kendo-ui/framework/templates/overview
-                        return "# if (data.reordered == 'true') { #" +
-                            "<div title=\"#: data.description #\" "
-                            + "onmouseover=\"javascript:applyTooltip(this)\">"
-                            + "<b>#: data.name #</b></div>\n" +
-                            "# } else { #" +
-                            "<div title=\"#: data.description #\" "
-                            + "onmouseover=\"javascript:applyTooltip(this)\">"
-                            + "#: data.name #</div>\n" +
-                            "# } #";
-                    }
-
-                    @Override
-                    public List<String> getTextProperties()
-                    {
-                        return Arrays.asList("name", "description", "reordered");
-                    }
-                };
+                return KendoChoiceDescriptionScriptReference.templateReorderable();
             }
         };
     }

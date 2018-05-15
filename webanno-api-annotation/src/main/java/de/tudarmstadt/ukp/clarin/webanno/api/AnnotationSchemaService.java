@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
@@ -75,6 +76,16 @@ public interface AnnotationSchemaService
     void createLayer(AnnotationLayer type);
 
     void createFeature(AnnotationFeature feature);
+
+    
+    /**
+     * Get Tag by its ID
+     * 
+     * @param id
+     *            the tag id.
+     * @return the tag.
+     */
+    Optional<Tag> getTag(long id);
 
     /**
      * gets a {@link Tag} using its name and a {@link TagSet}

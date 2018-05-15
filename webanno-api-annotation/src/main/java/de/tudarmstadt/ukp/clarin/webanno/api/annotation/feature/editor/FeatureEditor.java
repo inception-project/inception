@@ -29,8 +29,6 @@ public abstract class FeatureEditor
 {
     private static final long serialVersionUID = -7275181609671919722L;
 
-    protected static final String ID_PREFIX = "featureEditorHead";
-    
     private MarkupContainer owner;
     
     /**

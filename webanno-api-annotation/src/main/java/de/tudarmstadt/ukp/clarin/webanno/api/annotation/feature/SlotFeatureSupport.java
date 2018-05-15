@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,7 +31,10 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.wicket.MarkupContainer;
+import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -39,6 +43,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.FeatureEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.LinkFeatureEditor;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.LinkFeatureTraits;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.LinkFeatureTraitsEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
@@ -47,13 +53,16 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
+import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 @Component
 public class SlotFeatureSupport
-    implements FeatureSupport<Void>
+    implements FeatureSupport<LinkFeatureTraits>
 {
+    private final Logger log = LoggerFactory.getLogger(getClass());
+    
     private @Autowired AnnotationSchemaService annotationService;
 
     private String featureSupportId;
@@ -118,6 +127,12 @@ public class SlotFeatureSupport
         }
     }
 
+    @Override
+    public Panel createTraitsEditor(String aId,  IModel<AnnotationFeature> aFeatureModel)
+    {
+        return new LinkFeatureTraitsEditor(aId, this, aFeatureModel);
+    }
+    
     @Override
     public FeatureEditor createEditor(String aId, MarkupContainer aOwner,
             AnnotationActionHandler aHandler, final IModel<AnnotatorState> aStateModel,
@@ -202,5 +217,34 @@ public class SlotFeatureSupport
             }
         }
         return (T) links;
+    }
+    
+    @Override
+    public LinkFeatureTraits readTraits(AnnotationFeature aFeature)
+    {
+        LinkFeatureTraits traits = null;
+        try {
+            traits = JSONUtil.fromJsonString(LinkFeatureTraits.class, aFeature.getTraits());
+        }
+        catch (IOException e) {
+            log.error("Unable to read traits", e);
+        }
+        
+        if (traits == null) {
+            traits = new LinkFeatureTraits();
+        }
+        
+        return traits;
+    }
+    
+    @Override
+    public void writeTraits(AnnotationFeature aFeature, LinkFeatureTraits aTraits)
+    {
+        try {
+            aFeature.setTraits(JSONUtil.toJsonString(aTraits));
+        }
+        catch (IOException e) {
+            log.error("Unable to write traits", e);
+        }
     }
 }

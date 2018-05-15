@@ -821,10 +821,12 @@ public class ProjectLayersPanel
                         .capitalize(LayerDetailForm.this.getModelObject().getUiName());
 
                 layerName = layerName.replaceAll("\\W", "");
+                
                 if (layerName.isEmpty() || !isAscii(layerName)) {
                     error("Non ASCII characters can not be used as layer name!");
                     return;
                 }
+                
                 if (annotationService.existsLayer(TYPE_PREFIX + layerName, layer.getType(),
                         project)) {
                     error("A layer with the name [" + TYPE_PREFIX + layerName
@@ -843,6 +845,7 @@ public class ProjectLayersPanel
 
                 layer.setProject(project);
                 layer.setName(TYPE_PREFIX + layerName);
+                
                 if (layer.getType().equals(WebAnnoConst.CHAIN_TYPE)) {
                     AnnotationFeature relationFeature = new AnnotationFeature();
                     relationFeature.setType(CAS.TYPE_NAME_STRING);
@@ -864,12 +867,12 @@ public class ProjectLayersPanel
 
                     annotationService.createFeature(typeFeature);
                 }
-
-                annotationService.createLayer(layer);
-
+                
                 featureSelectionForm.setVisible(true);
             }
-
+            
+            annotationService.createLayer(layer);
+            
             // Trigger LayerConfigurationChangedEvent
             applicationEventPublisherHolder.get()
                     .publishEvent(new LayerConfigurationChangedEvent(this, project));
@@ -1068,14 +1071,21 @@ public class ProjectLayersPanel
                     setNullValid(false);
                     setChoiceRenderer(new ChoiceRenderer<>("uiName"));
                     setModel(model);
-                    setChoices(LambdaModel.of(() -> featureSupportRegistry
-                            .getAllTypes(layerDetailForm.getModelObject())));
                 }
 
                 @Override
                 protected void onConfigure()
                 {
-                    setEnabled(isNull(FeatureDetailForm.this.getModelObject().getId()));
+                    if (isNull(FeatureDetailForm.this.getModelObject().getId())) {
+                        setEnabled(true);
+                        setChoices(LambdaModel.of(() -> featureSupportRegistry
+                                .getUserSelectableTypes(layerDetailForm.getModelObject())));
+                    }
+                    else {
+                        setEnabled(false);
+                        setChoices(LambdaModel.of(() -> featureSupportRegistry
+                                .getAllTypes(layerDetailForm.getModelObject())));
+                    }
                 }
 
                 @Override
