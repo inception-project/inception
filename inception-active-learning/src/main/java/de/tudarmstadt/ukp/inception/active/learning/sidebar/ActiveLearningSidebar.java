@@ -446,13 +446,10 @@ public class ActiveLearningSidebar
         int begin = acceptedRecommendation.getOffset().getBeginCharacter();
         int end = acceptedRecommendation.getOffset().getEndCharacter();
         int id = adapter.add(annotatorState, jCas, begin, end);
-        for (AnnotationFeature feature : annotationService
-            .listAnnotationFeature(selectedLayer.getObject())) {
-            if (feature.getName().equals(acceptedRecommendation.getFeature())) {
-                adapter.setFeatureValue(annotatorState, jCas, id, feature,
-                    acceptedRecommendation.getAnnotation());
-            }
-        }
+        AnnotationFeature feature = annotationService
+            .getFeature(acceptedRecommendation.getFeature(), selectedLayer.getObject());
+        adapter.setFeatureValue(annotatorState, jCas, id, feature,
+            acceptedRecommendation.getAnnotation());
         
         // Open accepted recommendation in the annotation detail editor panel
         VID vid = new VID(id);
@@ -569,12 +566,10 @@ public class ActiveLearningSidebar
                 .listAnnotationFeature(selectedLayer.getObject())) {
                 String annotatedValue = WebAnnoCasUtil
                     .getFeature(annotationFS, annotationFeature.getName());
-                if (annotatedValue != null) {
-                    if (annotatedValue.equals(aRecord.getAnnotation())) {
-                        highlightVID = new VID(WebAnnoCasUtil.getAddr(annotationFS));
-                        vMarkerType = ANNOTATION_MARKER;
-                        return true;
-                    }
+                if (aRecord.getAnnotation().equals(annotatedValue)) {
+                    highlightVID = new VID(WebAnnoCasUtil.getAddr(annotationFS));
+                    vMarkerType = ANNOTATION_MARKER;
+                    return true;
                 }
             }
         }
