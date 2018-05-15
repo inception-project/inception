@@ -23,15 +23,15 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 /**
  * Gets only tag name and tag description to be exported.
  * No need to get the tag ID and other details from the persistent entity
- *
  */
 @JsonPropertyOrder(value = { "tag_name", "tag_description" })
 public class ExportedTag
 {
     @JsonProperty("tag_name")
-    String name;
+    private String name;
+    
     @JsonProperty("tag_description")
-    String description;
+    private String description;
 
     public String getName()
     {

@@ -47,7 +47,6 @@ import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.JsonImportUtil;
-import de.tudarmstadt.ukp.clarin.webanno.export.ImportService;
 import de.tudarmstadt.ukp.clarin.webanno.export.ImportUtil;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTagSetConstant;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -64,7 +63,6 @@ public class TagSetImportPanel
 
     private static final Logger LOG = LoggerFactory.getLogger(TagSetImportPanel.class);
     
-    private @SpringBean ImportService importService;
     private @SpringBean AnnotationSchemaService annotationService;
     
     private IModel<Project> selectedProject;

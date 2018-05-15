@@ -17,25 +17,33 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.export.model;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection;
+import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 
 /**
  * All required contents of a project to be exported.
  */
 @JsonPropertyOrder(value = { "name", "description", "mode", "version" })
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class Project
+public class ExportedProject
 {
     @JsonProperty(value = "name", required = true)
     private String name;
@@ -47,25 +55,19 @@ public class Project
     private String mode;
 
     @JsonProperty("source_documents")
-    private List<SourceDocument> sourceDocuments;
-
-    @JsonProperty("training_documents")
-    private List<TrainingDocument> trainingDocuments;
+    private List<ExportedSourceDocument> sourceDocuments = new ArrayList<>();
 
     @JsonProperty("annotation_documents")
-    private List<AnnotationDocument> annotationDocuments;
+    private List<ExportedAnnotationDocument> annotationDocuments = new ArrayList<>();
 
     @JsonProperty("project_permissions")
-    private List<ProjectPermission> projectPermissions;
+    private List<ExportedProjectPermission> projectPermissions = new ArrayList<>();
 
     @JsonProperty("tag_sets")
     private List<ExportedTagSet> tagSets = new ArrayList<>();
 
     @JsonProperty("layers")
-    private List<AnnotationLayer> layers;
-
-    @JsonProperty("mira_templates")
-    private List<MiraTemplate> miraTemplates = new ArrayList<>();
+    private List<ExportedAnnotationLayer> layers = new ArrayList<>();
 
     @JsonProperty("version")
     private int version;
@@ -83,6 +85,8 @@ public class Project
     @JsonProperty("updated")
     @Temporal(TemporalType.TIMESTAMP)
     private Date updated;
+    
+    private Map<String, Object> properties = new HashMap<>();
     
     public String getName()
     {
@@ -104,42 +108,32 @@ public class Project
         this.description = description;
     }
 
-    public List<SourceDocument> getSourceDocuments()
+    public List<ExportedSourceDocument> getSourceDocuments()
     {
         return sourceDocuments;
     }
 
-    public void setSourceDocuments(List<SourceDocument> sourceDocuments)
+    public void setSourceDocuments(List<ExportedSourceDocument> sourceDocuments)
     {
         this.sourceDocuments = sourceDocuments;
     }
 
-    public List<TrainingDocument> getTrainingDocuments()
-    {
-        return trainingDocuments;
-    }
-
-    public void setTrainingDocuments(List<TrainingDocument> trainingDocuments)
-    {
-        this.trainingDocuments = trainingDocuments;
-    }
-
-    public List<AnnotationDocument> getAnnotationDocuments()
+    public List<ExportedAnnotationDocument> getAnnotationDocuments()
     {
         return annotationDocuments;
     }
 
-    public void setAnnotationDocuments(List<AnnotationDocument> annotationDocuments)
+    public void setAnnotationDocuments(List<ExportedAnnotationDocument> annotationDocuments)
     {
         this.annotationDocuments = annotationDocuments;
     }
 
-    public List<ProjectPermission> getProjectPermissions()
+    public List<ExportedProjectPermission> getProjectPermissions()
     {
         return projectPermissions;
     }
 
-    public void setProjectPermissions(List<ProjectPermission> projectPermissions)
+    public void setProjectPermissions(List<ExportedProjectPermission> projectPermissions)
     {
         this.projectPermissions = projectPermissions;
     }
@@ -174,11 +168,6 @@ public class Project
         this.version = version;
     }
 
-    public List<AnnotationLayer> getLayers()
-    {
-        return layers;
-    }
-
     public boolean isDisableExport()
     {
         return disableExport;
@@ -189,19 +178,14 @@ public class Project
         this.disableExport = disableExport;
     }
 
-    public void setLayers(List<AnnotationLayer> layers)
+    public List<ExportedAnnotationLayer> getLayers()
+    {
+        return layers;
+    }
+
+    public void setLayers(List<ExportedAnnotationLayer> layers)
     {
         this.layers = layers;
-    }
-
-    public List<MiraTemplate> getMiraTemplates()
-    {
-        return miraTemplates;
-    }
-
-    public void setMiraTemplates(List<MiraTemplate> miraTemplates)
-    {
-        this.miraTemplates = miraTemplates;
     }
 
     public ScriptDirection getScriptDirection()
@@ -232,5 +216,62 @@ public class Project
     public void setUpdated(Date aUpdated)
     {
         updated = aUpdated;
+    }
+    
+    @JsonAnySetter
+    public void setProperty(String name, Object value)
+    {
+        properties.put(name, value);
+    }
+    
+    /**
+     * Get the value of the given property.
+     * 
+     * @param aName
+     *            the property name.
+     * @param aToValueType
+     *            the value type.
+     * @return the value.
+     */
+    public <T> Optional<T> getProperty(String aName, Class<T> aToValueType)
+    {
+        Object value = properties.get(aName);
+        if (value != null) {
+            return Optional.of(JSONUtil.getJsonConverter().getObjectMapper().convertValue(value,
+                    aToValueType));
+        }
+        else {
+            return Optional.empty();
+        }
+    }
+
+    /**
+     * Get the value of the given property as an array. This method never returns {@code null}. If
+     * the property is not set, an empty array is returned.
+     * 
+     * @param aName
+     *            the property name.
+     * @param aToValueType
+     *            the array component type.
+     * @return the array.
+     */
+    @SuppressWarnings("unchecked")
+    public <T> T[] getArrayProperty(String aName, Class<T> aToValueType)
+    {
+        Object value = properties.get(aName);
+        if (value != null) {
+            ObjectMapper mapper = JSONUtil.getJsonConverter().getObjectMapper();
+            return JSONUtil.getJsonConverter().getObjectMapper().convertValue(value,
+                    mapper.getTypeFactory().constructArrayType(aToValueType));
+        }
+        else {
+            return (T[]) Array.newInstance(aToValueType, 0);
+        }
+    }
+
+    @JsonAnyGetter
+    public Map<String, Object> getProperties()
+    {
+        return properties;
     }
 }

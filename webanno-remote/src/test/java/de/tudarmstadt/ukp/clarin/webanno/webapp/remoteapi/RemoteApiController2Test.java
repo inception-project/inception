@@ -65,12 +65,10 @@ import de.tudarmstadt.ukp.clarin.webanno.api.dao.AnnotationSchemaServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.CasStorageServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.DocumentServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.ImportExportServiceImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.export.ProjectExportServiceImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportService;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentServiceImpl;
-import de.tudarmstadt.ukp.clarin.webanno.export.ExportService;
-import de.tudarmstadt.ukp.clarin.webanno.export.ExportServiceImpl;
-import de.tudarmstadt.ukp.clarin.webanno.export.ImportService;
-import de.tudarmstadt.ukp.clarin.webanno.export.ImportServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.project.ProjectServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDaoImpl;
@@ -323,15 +321,9 @@ public class RemoteApiController2Test
         }
 
         @Bean
-        public ImportService importService()
+        public ProjectExportService exportService()
         {
-            return new ImportServiceImpl();
-        }
-
-        @Bean
-        public ExportService exportService()
-        {
-            return new ExportServiceImpl();
+            return new ProjectExportServiceImpl(null, projectService());
         }
 
         @Bean

@@ -26,28 +26,25 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 
 /**
- * Source document information to be exported/imported
- *
- *
+ * Annotation document information to be exported/imported
  */
-@JsonPropertyOrder(value = { "name", "format", "state" })
+@JsonPropertyOrder(value = { "name", "user", "state", "timestamp" })
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class SourceDocument
+public class ExportedAnnotationDocument
 {
     @JsonProperty("name")
-    String name;
-
-    @JsonProperty("format")
-    String format;
-
+    private String name;
+    
+    @JsonProperty("user")
+    private String user;
+    
     @JsonProperty("state")
-    SourceDocumentState state;
-
+    private AnnotationDocumentState state;
+    
     @JsonProperty("timestamp")
-    @Temporal(TemporalType.TIMESTAMP)
     private Date timestamp;
 
     @JsonProperty("sentence_accessed")
@@ -71,22 +68,22 @@ public class SourceDocument
         this.name = name;
     }
 
-    public String getFormat()
+    public String getUser()
     {
-        return format;
+        return user;
     }
 
-    public void setFormat(String format)
+    public void setUser(String user)
     {
-        this.format = format;
+        this.user = user;
     }
 
-    public SourceDocumentState getState()
+    public AnnotationDocumentState getState()
     {
         return state;
     }
 
-    public void setState(SourceDocumentState state)
+    public void setState(AnnotationDocumentState state)
     {
         this.state = state;
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017
+ * Copyright 2018
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
  *
@@ -15,33 +15,46 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.export;
+package de.tudarmstadt.ukp.clarin.webanno.api.export;
 
 import java.io.Serializable;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import org.apache.wicket.model.IModel;
-
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-
-public class ProjectExportRequest
+public class ProjectImportRequest
     implements Serializable
 {
     private static final long serialVersionUID = -4486934192675904995L;
-    
+
     public static final String FORMAT_AUTO = "AUTO";
-    
-    public String format;
-    public IModel<Project> project;
+
     public int progress = 0;
-    public final Queue<String> messages;
-            
-    public ProjectExportRequest(IModel<Project> aProject, String aFormat)
+
+    private final Queue<String> messages;
+    private final boolean createMissingUsers;
+
+    public ProjectImportRequest(boolean aCreateMissingUsers)
     {
-        format = aFormat;
-        project = aProject;
         progress = 0;
+        createMissingUsers = aCreateMissingUsers;
         messages = new ConcurrentLinkedQueue<>();
+    }
+
+    public void addMessage(String aMessage)
+    {
+        // Avoid repeating the same message over for different users
+        if (!messages.contains(aMessage)) {
+            messages.add(aMessage);
+        }
+    }
+
+    public Queue<String> getMessages()
+    {
+        return messages;
+    }
+
+    public boolean isCreateMissingUsers()
+    {
+        return createMissingUsers;
     }
 }

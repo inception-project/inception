@@ -360,8 +360,9 @@ public interface ProjectService
      * @throws IOException
      *             if an I/O error occurs.
      */
-    void createGuideline(Project project, File content, String fileName)
-        throws IOException;
+    void createGuideline(Project project, File content, String fileName) throws IOException;
+
+    void createGuideline(Project project, InputStream content, String fileName) throws IOException;
 
     /**
      * get the annotation guideline document from the file system
@@ -423,7 +424,7 @@ public interface ProjectService
     // --------------------------------------------------------------------------------------------
 
     void onProjectImport(ZipFile zip,
-            de.tudarmstadt.ukp.clarin.webanno.export.model.Project aExportedProject,
+            de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject aExportedProject,
             Project aProject)
         throws Exception;
     

@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.export.model;
+package de.tudarmstadt.ukp.clarin.webanno.automation.service.export.model;
 
 import java.util.Date;
 
@@ -28,6 +28,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
+import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedAnnotationFeatureReference;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.TrainDocumentState;
 
@@ -36,20 +37,20 @@ import de.tudarmstadt.ukp.clarin.webanno.model.TrainDocumentState;
  */
 @JsonPropertyOrder(value = { "name", "format", "state" })
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class TrainingDocument
+public class ExportedTrainingDocument
 {
     @JsonProperty("name")
-    String name;
+    private String name;
 
     @JsonProperty("format")
-    String format;
+    private String format;
+    
     @ManyToOne
-
     @JoinColumn(name = "project")
-    Project project;
+    private Project project;
 
     @JsonProperty("state")
-    TrainDocumentState state;
+    private TrainDocumentState state;
 
     @JsonProperty("timestamp")
     @Temporal(TemporalType.TIMESTAMP)
@@ -62,7 +63,7 @@ public class TrainingDocument
     private boolean processed = false;
 
     @JsonProperty("feature")
-    AnnotationFeature feature;
+    private ExportedAnnotationFeatureReference feature;
 
     public String getName()
     {
@@ -124,12 +125,12 @@ public class TrainingDocument
         this.processed = processed;
     }
 
-    public AnnotationFeature getFeature()
+    public ExportedAnnotationFeatureReference getFeature()
     {
         return feature;
     }
 
-    public void setFeature(AnnotationFeature feature)
+    public void setFeature(ExportedAnnotationFeatureReference feature)
     {
         this.feature = feature;
     }

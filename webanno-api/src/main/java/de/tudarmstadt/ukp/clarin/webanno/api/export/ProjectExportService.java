@@ -1,5 +1,5 @@
 /*
- * Copyright 2017
+ * Copyright 2018
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
  *
@@ -15,17 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.export;
+package de.tudarmstadt.ukp.clarin.webanno.api.export;
 
 import java.io.File;
-import java.io.IOException;
+import java.util.zip.ZipFile;
 
-import org.apache.uima.UIMAException;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
-public interface ExportService
+public interface ProjectExportService
 {
-    String SERVICE_NAME = "exportService";
-    
-    File generateZipFile(final ProjectExportRequest aRequest)
-        throws IOException, UIMAException, ClassNotFoundException, ProjectExportException;
+    Project importProject(ProjectImportRequest aRequest, ZipFile aZip)
+        throws ProjectExportException;
+
+    File exportProject(ProjectExportRequest aRequest) throws ProjectExportException;
 }

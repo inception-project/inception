@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.export.model;
+package de.tudarmstadt.ukp.clarin.webanno.automation.service.export.model;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -23,11 +23,13 @@ import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedAnnotationFeatureReference;
+
 /**
  * All required contents of a MiraTemplate to be exported.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class MiraTemplate
+public class ExportedMiraTemplate
 {
     @JsonProperty("automation_started")
     private boolean automationStarted = false;
@@ -36,10 +38,10 @@ public class MiraTemplate
     private boolean predictInThisPage;
 
     @JsonProperty("train_feature")
-    private AnnotationFeature trainFeature;
+    private ExportedAnnotationFeatureReference trainFeature;
 
     @JsonProperty("other_features")
-    private Set<AnnotationFeature> otherFeatures = new HashSet<>();
+    private Set<ExportedAnnotationFeatureReference> otherFeatures = new HashSet<>();
 
     @JsonProperty("current_layer")
     private boolean currentLayer = false;
@@ -70,22 +72,22 @@ public class MiraTemplate
         this.predictInThisPage = predictInThisPage;
     }
 
-    public AnnotationFeature getTrainFeature()
+    public ExportedAnnotationFeatureReference getTrainFeature()
     {
         return trainFeature;
     }
 
-    public void setTrainFeature(AnnotationFeature trainFeature)
+    public void setTrainFeature(ExportedAnnotationFeatureReference trainFeature)
     {
         this.trainFeature = trainFeature;
     }
 
-    public Set<AnnotationFeature> getOtherFeatures()
+    public Set<ExportedAnnotationFeatureReference> getOtherFeatures()
     {
         return otherFeatures;
     }
 
-    public void setOtherFeatures(Set<AnnotationFeature> otherFeatures)
+    public void setOtherFeatures(Set<ExportedAnnotationFeatureReference> otherFeatures)
     {
         this.otherFeatures = otherFeatures;
     }

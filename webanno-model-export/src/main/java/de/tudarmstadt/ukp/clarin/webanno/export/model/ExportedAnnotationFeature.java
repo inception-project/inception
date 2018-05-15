@@ -28,10 +28,10 @@ import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
  * exported.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class AnnotationFeature
+public class ExportedAnnotationFeature
 {
     @JsonProperty("name")
-    String name;
+    private String name;
 
     @JsonProperty("tag_set")
     private ExportedTagSet tagSet;
@@ -80,6 +80,9 @@ public class AnnotationFeature
 
     @JsonProperty("link_type_target_feature_name")
     private String linkTypeTargetFeatureName;
+
+    @JsonProperty("traits")
+    private String traits;
 
     public String getName()
     {
@@ -251,6 +254,16 @@ public class AnnotationFeature
         this.hideUnconstraintFeature = hideUnconstraintFeature;
     }
 
+    public String getTraits()
+    {
+        return traits;
+    }
+
+    public void setTraits(String aTraits)
+    {
+        traits = aTraits;
+    }
+
     @Override
     public int hashCode()
     {
@@ -274,7 +287,7 @@ public class AnnotationFeature
         if (getClass() != obj.getClass()) {
             return false;
         }
-        AnnotationFeature other = (AnnotationFeature) obj;
+        ExportedAnnotationFeature other = (ExportedAnnotationFeature) obj;
         if (name == null) {
             if (other.name != null) {
                 return false;

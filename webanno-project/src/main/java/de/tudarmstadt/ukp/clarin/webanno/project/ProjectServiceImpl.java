@@ -68,6 +68,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectType;
 import de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterProjectCreatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeProjectRemovedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
@@ -418,11 +419,19 @@ public class ProjectServiceImpl
     public void createGuideline(Project aProject, File aContent, String aFileName)
         throws IOException
     {
+        try (InputStream is = new FileInputStream(aContent)) {
+            createGuideline(aProject, is, aFileName);
+        }
+    }
+    
+    @Override
+    public void createGuideline(Project aProject, InputStream aIS, String aFileName)
+        throws IOException
+    {
         String guidelinePath = dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/" + aProject.getId()
                 + "/" + GUIDELINES_FOLDER + "/";
         FileUtils.forceMkdir(new File(guidelinePath));
-        copyLarge(new FileInputStream(aContent), new FileOutputStream(new File(guidelinePath
-                + aFileName)));
+        copyLarge(aIS, new FileOutputStream(new File(guidelinePath + aFileName)));
 
         try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
                 String.valueOf(aProject.getId()))) {
@@ -697,7 +706,7 @@ public class ProjectServiceImpl
     @Override
     @Transactional
     public void onProjectImport(ZipFile aZip,
-            de.tudarmstadt.ukp.clarin.webanno.export.model.Project aExportedProject,
+            de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject aExportedProject,
             Project aProject)
         throws Exception
     {
@@ -721,6 +730,7 @@ public class ProjectServiceImpl
      * @throws IOException if an I/O error occurs.
      */
     @SuppressWarnings("rawtypes")
+    @Deprecated
     private void createProjectLog(ZipFile zip, Project aProject)
         throws IOException
     {
@@ -745,6 +755,7 @@ public class ProjectServiceImpl
      * @param aProject the project.
      * @throws IOException if an I/O error occurs.
      */
+    @Deprecated
     @SuppressWarnings("rawtypes")
     private void createProjectGuideline(ZipFile zip, Project aProject)
         throws IOException
@@ -777,6 +788,7 @@ public class ProjectServiceImpl
      * @param aProject the project.
      * @throws IOException if an I/O error occurs.
      */
+    @Deprecated
     @SuppressWarnings("rawtypes")
     private void createProjectMetaInf(ZipFile zip, Project aProject)
         throws IOException
@@ -803,7 +815,7 @@ public class ProjectServiceImpl
 
     /**
      * Create {@link ProjectPermission} from the exported
-     * {@link de.tudarmstadt.ukp.clarin.webanno.export.model.ProjectPermission}
+     * {@link de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProjectPermission}
      * 
      * @param aImportedProjectSetting
      *            the imported project.
@@ -812,13 +824,14 @@ public class ProjectServiceImpl
      * @throws IOException
      *             if an I/O error occurs.
      */
+    @Deprecated
     private void createProjectPermission(
-            de.tudarmstadt.ukp.clarin.webanno.export.model.Project aImportedProjectSetting,
+            de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject aImportedProjectSetting,
             Project aImportedProject)
         throws IOException
     {
-        for (de.tudarmstadt.ukp.clarin.webanno.export.model.ProjectPermission importedPermission :
-            aImportedProjectSetting.getProjectPermissions()) {
+        for (ExportedProjectPermission importedPermission : aImportedProjectSetting
+                .getProjectPermissions()) {
             ProjectPermission permission = new ProjectPermission();
             permission.setLevel(importedPermission.getLevel());
             permission.setProject(aImportedProject);

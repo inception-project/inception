@@ -21,19 +21,20 @@ import java.util.zip.ZipFile;
 
 import org.springframework.context.ApplicationEvent;
 
+import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
+@Deprecated
 public class ProjectImportEvent
     extends ApplicationEvent
 {
     private static final long serialVersionUID = 5604222911753768415L;
 
     private final ZipFile zip;
-    private final de.tudarmstadt.ukp.clarin.webanno.export.model.Project exportedProject;
+    private final ExportedProject exportedProject;
     private final Project project;
 
-    public ProjectImportEvent(Object aSource, ZipFile aZip,
-            de.tudarmstadt.ukp.clarin.webanno.export.model.Project aExportedProject,
+    public ProjectImportEvent(Object aSource, ZipFile aZip, ExportedProject aExportedProject,
             Project aProject)
     {
         super(aSource);
@@ -52,7 +53,7 @@ public class ProjectImportEvent
         return zip;
     }
 
-    public de.tudarmstadt.ukp.clarin.webanno.export.model.Project getExportedProject()
+    public de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject getExportedProject()
     {
         return exportedProject;
     }

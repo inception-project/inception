@@ -24,18 +24,15 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * All required contents of a project to be exported.
- *
- *
  */
-
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class AnnotationLayer
+public class ExportedAnnotationLayer
 {
     @JsonProperty("name")
-    String name;
+    private String name;
 
     @JsonProperty("features")
-    private List<AnnotationFeature> features;
+    private List<ExportedAnnotationFeature> features;
 
     @JsonProperty("uiName")
     private String uiName;
@@ -56,10 +53,10 @@ public class AnnotationLayer
     private boolean readonly = false;
 
     @JsonProperty("attach_type")
-    private AnnotationLayer attachType;
+    private ExportedAnnotationLayerReference attachType;
 
     @JsonProperty("attach_feature")
-    private AnnotationFeature attachFeature;
+    private ExportedAnnotationFeatureReference attachFeature;
 
     @JsonProperty("lock_to_token_offset")
     private boolean lockToTokenOffset = true;
@@ -69,19 +66,19 @@ public class AnnotationLayer
 
     @JsonProperty("cross_sentence")
     private boolean crossSentence;
-    
+
     @JsonProperty("show_hover")
     private boolean showTextInHover = true;
 
     @JsonProperty("multiple_tokens")
     private boolean multipleTokens;
-    
+
     @JsonProperty("project_name")
     private String projectName;
 
     @JsonProperty("linked_list_behavior")
     private boolean linkedListBehavior;
-    
+
     @JsonProperty("on_click_javascript_action")
     private String onClickJavascriptAction;
 
@@ -95,12 +92,12 @@ public class AnnotationLayer
         this.name = name;
     }
 
-    public List<AnnotationFeature> getFeatures()
+    public List<ExportedAnnotationFeature> getFeatures()
     {
         return features;
     }
 
-    public void setFeatures(List<AnnotationFeature> features)
+    public void setFeatures(List<ExportedAnnotationFeature> features)
     {
         this.features = features;
     }
@@ -155,12 +152,12 @@ public class AnnotationLayer
         this.builtIn = builtIn;
     }
 
-    public AnnotationLayer getAttachType()
+    public ExportedAnnotationLayerReference getAttachType()
     {
         return attachType;
     }
 
-    public void setAttachType(AnnotationLayer attachType)
+    public void setAttachType(ExportedAnnotationLayerReference attachType)
     {
         this.attachType = attachType;
     }
@@ -215,12 +212,12 @@ public class AnnotationLayer
         this.multipleTokens = multipleTokens;
     }
 
-    public AnnotationFeature getAttachFeature()
+    public ExportedAnnotationFeatureReference getAttachFeature()
     {
         return attachFeature;
     }
 
-    public void setAttachFeature(AnnotationFeature attachFeature)
+    public void setAttachFeature(ExportedAnnotationFeatureReference attachFeature)
     {
         this.attachFeature = attachFeature;
     }
@@ -254,7 +251,7 @@ public class AnnotationLayer
     {
         readonly = aReadonly;
     }
-    
+
     public String getOnClickJavascriptAction()
     {
         return onClickJavascriptAction;
@@ -288,7 +285,7 @@ public class AnnotationLayer
         if (getClass() != obj.getClass()) {
             return false;
         }
-        AnnotationLayer other = (AnnotationLayer) obj;
+        ExportedAnnotationLayer other = (ExportedAnnotationLayer) obj;
         if (name == null) {
             if (other.name != null) {
                 return false;

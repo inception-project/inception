@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package de.tudarmstadt.ukp.clarin.webanno.export;
+package de.tudarmstadt.ukp.clarin.webanno.api.export;
 
 /**
  * Exception thrown while exporting the whole project
@@ -29,5 +29,15 @@ public class ProjectExportException
     public ProjectExportException(String message)
     {
         super(message);
+    }
+
+    public ProjectExportException(String aMessage, Throwable aCause)
+    {
+        super(aMessage, aCause);
+    }
+
+    public ProjectExportException(Throwable aCause)
+    {
+        super(aCause);
     }
 }
