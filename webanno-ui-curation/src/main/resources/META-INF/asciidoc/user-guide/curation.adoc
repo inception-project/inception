@@ -21,7 +21,7 @@ NOTE: This functionality is only available to *project managers* (managers of ex
       *curators*, and *administrators*. Curators and project managers only see projects in which
       they hold the respective roles.
 
-When navigating to the *Curation Page*, the procedure for opening projects and documents is the same as in <<sect_annotation>>. The *Page* navigation is also equivalent to <<sect_annotation>>.
+When navigating to the *Curation Page*, the procedure for opening projects and documents is the same as in <<sect_annotation>>. The navigation within the document is also equivalent to <<sect_annotation>>.
 
 .Explanation of the project colors in the curation open document dialog
 [cols="2*"]
@@ -49,30 +49,39 @@ When navigating to the *Curation Page*, the procedure for opening projects and d
 | Red
 |===
 
-In the left frame of the window, named *Sentences*, an overview of the chosen document is displayed. Sentences are represented by their number inside the document. The ones shaded in red created a conflict in annotation.
+In the left frame of the window, named *Sentences*, an overview of the chosen document is displayed. Sentences are represented by their number inside the document. Sentences containing a disagreement between annotators are colored in red. Click on a sentence in order to select it and to to edit it in the central part of the page. 
 
-// FIXME: Make and upload new screenshots; new functionality: go between docs
+image::curation_1.png[align="center"]
 
-image::curation1.png[align="center"]
+The center part of the annotation page is divided into the *Annotation* pane which is a full-scale
+annotation editor and contains the final data from the curation step. Below it are multiple read-only
+panes containing the annotations from individual annotators. Clicking on an annotation in any of the
+annotator's panes transfers the respective annotation to the *Annotation* pane.
 
-If you want to see the annotations that were made in a sentence, you have to click on the sentence. Then on the right side of the window, the annotations are displayed.
+When a document is opened for the first time in the curation page, the application analyzes agreements
+and disagreemens between annotators. All annotations on which all annotators agree are automatically
+copied to the *Annotation* pane. Any annotations on which the annotators disagree are skipped.
 
-The frame called *Merged* shows the result of the default merge of the conflicting annotations. Below it, the annotated sentences are shown in separate frames, titled with the names of the annotators. By clicking on an annotation in one of the annotator's frames, you accept the annotation and merge it into the *Merged* view. The sentence in the merged frame can be treated like a sentence in the *Annotation*. By selecting a word with a click you are able to produce new annotations, by clicking on an annotation, you are able to change its classification or delete it.
-The different states of the annotation agreement are marked by different colors. If the annotations were the same, they are marked grey in the lower frames and light blue in the merged frame. If the annotations are disparate, the markings are dark blue in the lower frames. By default, they are not taken into the merged file. If you choose one annotation to be right by clicking on it, the chosen annotation will turn green in the frame of the corresponding annotator. Also, the annotation will say *USE* next to the classification. 
+The annotator's panes are color-coded according to their relation with the contents of the *Annotation*
+pane and according to the agreement status. If the annotations were the same, they are marked *grey* in the lower panes. If the annotations are disparate, the markings are dark blue in the lower frames. By default, they are not taken into the merged file. If you choose one annotation to be right by clicking on it, the chosen annotation will turn green in the frame of the corresponding annotator. Also, the annotation will say *USE* next to the classification. 
+
+Note that the *Annotation* pane is not color-coded. It uses whatever coloring strategy is configured
+in the *Settings* dialog.
+
 The annotations which were not chosen to be in the merged file are marked dark blue. The annotations which were wrongly classified are marked in red.
 
-.Explanation of the annotation colors in curation view
-[cols="2*"]
+.Explanation of the annotation colors in the annotator's panes (lower panes)
+[cols="1,3"]
 |===
-| Light Blue (in upper frame)
-| final annotation
+| Grey
+| all annotators agree
 
-| Dark Blue (in the lower frame)
-| not chosen annotation
+| Blue 
+| disagreement requiring curation; annotators disagree and there is no corresponding annotation in the upper *Annotation* pane yet
 
-| White (in lower frame)
-| chosen annotation
+| Green 
+| accepted; matches the corresponding annotation in the upper *Annotation* pane
 
-| Red (in lower frame)
-| wrong annotation (same span, other type).
+| Red 
+| rejected; different to the corresponding annotation in the upper *Annotation* pane
 |===
