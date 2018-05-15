@@ -37,7 +37,6 @@ import de.tudarmstadt.ukp.inception.search.index.PhysicalIndex;
 /**
  * A persistence object for meta-data of an index. The index is
  * stored in the file system.
- *
  */
 
 @Entity
