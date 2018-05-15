@@ -88,7 +88,7 @@ public class KnowledgeBaseIriPanel
         contentWrapper.setOutputMarkupId(true);
         add(contentWrapper);
 
-        // Add text fields for classIri, subclassIri, typeIri and descriptionIri
+        // Add comboboxes for classIri, subclassIri, typeIri and descriptionIri
         ComboBox<String> classField = buildComboBox("classIri", kbModel.bind("kb.classIri"),
                 IriConstants.CLASS_IRIS);
         ComboBox<String> subclassField = buildComboBox("subclassIri",
@@ -99,21 +99,20 @@ public class KnowledgeBaseIriPanel
                 kbModel.bind("kb.descriptionIri"), IriConstants.DESCRIPTION_IRIS);
         contentWrapper.add(classField, subclassField, typeField, descriptionField);
 
-        // Label and TextField for basePrefix only shown in CUSTOM mode
-        Label basePrefixLabel = new Label("basePrefixLabel", "Base Prefix");
-        basePrefixLabel.add(LambdaBehavior.onConfigure(tf -> tf.setVisible(
-                SchemaProfile.CUSTOMSCHEMA.equals(selectedSchemaProfile.getObject()))));
-        basePrefixLabel.setOutputMarkupId(true);
-        contentWrapper.add(basePrefixLabel);
-        
+        //Add textfield and label for basePrefix
         TextField<String> basePrefix = new TextField<String>("basePrefix",
                 kbModel.bind("kb.basePrefix"));
-        basePrefix.add(LambdaBehavior.onConfigure(tf -> tf.setVisible(
-                SchemaProfile.CUSTOMSCHEMA.equals(selectedSchemaProfile.getObject()))));
+        basePrefix
+                .add(LambdaBehavior.onConfigure(tf -> tf.setVisible(isBasePrefixVisible())));
         basePrefix.setConvertEmptyInputStringToNull(false);
         basePrefix.setOutputMarkupId(true);
         contentWrapper.add(basePrefix);
-                
+
+        Label basePrefixLabel = new Label("basePrefixLabel", getString("basePrefix"));
+        basePrefixLabel
+                .add(LambdaBehavior.onConfigure(tf -> tf.setVisible(isBasePrefixVisible())));
+        basePrefixLabel.setOutputMarkupId(true);
+        contentWrapper.add(basePrefixLabel);
 
         // OnChange update the model with corresponding iris
         iriSchemaChoice.setChangeHandler(new ISelectionChangeHandler<SchemaProfile>()
@@ -186,6 +185,16 @@ public class KnowledgeBaseIriPanel
                 && profile.getSubclassIri().equals(subclassIri)
                 && profile.getTypeIri().equals(typeIri)
                 && profile.getDescriptionIri().equals(descriptionIri);
+    }
+    
+    /**
+     * Label and TextField for basePrefix only show up in CUSTOM mode or if the user has changed
+     * the default value
+     */
+    private boolean isBasePrefixVisible()
+    {
+        return SchemaProfile.CUSTOMSCHEMA.equals(selectedSchemaProfile.getObject()) || !kbModel
+                .getObject().getKb().getBasePrefix().equals(IriConstants.INCEPTION_NAMESPACE);
     }
 
 }
