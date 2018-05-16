@@ -111,6 +111,7 @@ public class RecommendationEditorExtension
         Optional<AnnotationObject> prediction = model.getPredictionByVID(document, aVID);
         if (!prediction.isPresent()) {
             log.error("Could not find annotation in [{}] with id [{}]", document, aVID);
+            aTarget.getPage().error("Could not find annotation");
             return;
         }
 
@@ -182,6 +183,7 @@ public class RecommendationEditorExtension
         Optional<AnnotationObject> oPrediction = model.getPredictionByVID(document, aVID);
         if (!oPrediction.isPresent()) {
             log.error("Could not find annotation in [{}] with id [{}]", document, aVID);
+            aTarget.getPage().error("Could not find annotation");
             return;
         }
 
