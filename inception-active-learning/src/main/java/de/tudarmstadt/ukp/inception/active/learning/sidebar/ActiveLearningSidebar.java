@@ -354,9 +354,9 @@ public class ActiveLearningSidebar
         aTarget.add(mainContainer);
     }
 
-    private Form<?> createRecommendationOperationForm()
+    private Form<Void> createRecommendationOperationForm()
     {
-        Form<?> recommendationForm = new Form<Void>(CID_RECOMMENDATION_FORM);
+        Form<Void> recommendationForm = new Form<Void>(CID_RECOMMENDATION_FORM);
         recommendationForm.add(LambdaBehavior.onConfigure(component -> component.setVisible
             (sessionActive && hasUnseenRecommendation)));
         recommendationForm.setOutputMarkupPlaceholderTag(true);
@@ -373,7 +373,7 @@ public class ActiveLearningSidebar
         recommendationForm.add(new LambdaAjaxLink(CID_ACCEPT_BUTTON, this::actionAccept));
         recommendationForm.add(new LambdaAjaxLink(CID_SKIP_BUTTON, this::actionSkip));
         recommendationForm.add(new LambdaAjaxLink(CID_REJECT_BUTTON, this::actionReject));
-        recommendationForm.add(new LambdaAjaxLink(CID_CORRECT_BUTTON, this::actionCorrect));
+        recommendationForm.add(new LambdaAjaxButton<>(CID_CORRECT_BUTTON, this::actionCorrect));
 
         return recommendationForm;
     }
@@ -474,7 +474,7 @@ public class ActiveLearningSidebar
         moveToNextRecommendation(aTarget);
     }
 
-    private void actionCorrect(AjaxRequestTarget aTarget)
+    private void actionCorrect(AjaxRequestTarget aTarget, Form<Void> aForm)
         throws IOException, AnnotationException
     {
         Serializable value = featureState.value;
