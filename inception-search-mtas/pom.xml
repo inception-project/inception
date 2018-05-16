@@ -52,6 +52,12 @@
       <artifactId>inception-search-core</artifactId>
     </dependency>
     
+    <!-- Search functionality for annotated KB entries-->
+     <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-kb</artifactId>
+    </dependency>
+    
     <dependency>
       <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
       <artifactId>de.tudarmstadt.ukp.dkpro.core.api.metadata-asl</artifactId>

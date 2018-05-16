@@ -176,6 +176,7 @@ public class SearchServiceImpl
             String title = result.getDocumentTitle();
         }
 
+        log.debug("Result Size : {}", results.size());
         return results;
     }
 
