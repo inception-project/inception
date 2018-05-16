@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.NavigableMap;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 
@@ -51,6 +52,9 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
+import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
+import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
 import mtas.analysis.parser.MtasParser;
 import mtas.analysis.token.MtasToken;
 import mtas.analysis.token.MtasTokenCollection;
@@ -60,9 +64,12 @@ import mtas.analysis.util.MtasConfiguration;
 import mtas.analysis.util.MtasParserException;
 import mtas.analysis.util.MtasTokenizerFactory;
 
+
+
 public class MtasUimaParser
     extends MtasParser
 {
+	
     private final Logger log = LoggerFactory.getLogger(getClass());
     
     // Annotation layers being indexed by Mtas
@@ -76,18 +83,25 @@ public class MtasUimaParser
     // Project id
     Project project;
     
+    
+    private KnowledgeBaseService kbService;
+    
     final private String MTAS_SENTENCE_LABEL = "s";
 
     public MtasUimaParser(MtasConfiguration config)
     {
+    	
         super(config);
-
         annotationSchemaService = ApplicationContextProvider.getApplicationContext()
                 .getBean(AnnotationSchemaService.class);
 
         projectService = ApplicationContextProvider.getApplicationContext()
                 .getBean(ProjectService.class);
 
+        kbService = ApplicationContextProvider.getApplicationContext()
+                .getBean(KnowledgeBaseService.class);
+
+        
         if (config.attributes.get(MtasTokenizerFactory.ARGUMENT_PARSER_ARGS) != null) {
             // Read parser argument that contains the projectId
             JSONObject jsonParserConfiguration = new JSONObject(
@@ -227,21 +241,43 @@ public class MtasUimaParser
                                 // Cast to Object so that the proper valueOf signature is used by
                                 // the compiler, otherwise it will think that a String argument is
                                 // char[].
-                                featureValue = String.valueOf((Object) WebAnnoCasUtil
+                              
+                            	featureValue = String.valueOf((Object) WebAnnoCasUtil
                                         .getFeature(annotation, feature.getName()));
                                 
+                                String labelStr = null;
+                                if(feature.getUiName().equals("identifier") && featureValue!="null") 
+                                	 labelStr = getUILabel(featureValue);
+                               
                                 // Add the UI annotation.feature name to the index as an annotation.
                                 // Replace spaces with underscore in the UI name.
                                 
-                                MtasToken mtasAnnotationFeature = new MtasTokenString(mtasId++,
+                                MtasToken mtasAnnotationFeatureIRI = new MtasTokenString(mtasId++,
                                         annotationUiName.replace(" ", "_") + "."
                                                 + feature.getUiName().replace(" ", "_")
                                                 + MtasToken.DELIMITER + featureValue,
                                         beginToken);
-                                mtasAnnotationFeature.setOffset(annotation.getBegin(),
+                                mtasAnnotationFeatureIRI.setOffset(annotation.getBegin(),
                                         annotation.getEnd());
-                                mtasAnnotationFeature.addPositionRange(beginToken, endToken);
-                                tokenCollection.add(mtasAnnotationFeature);
+                                mtasAnnotationFeatureIRI.addPositionRange(beginToken, endToken);
+                                tokenCollection.add(mtasAnnotationFeatureIRI);
+                                
+                                
+                                // Add the UI annotation.feature label to the index as an annotation.
+                                // Replace spaces with underscore in the UI name.
+                                if(labelStr!=null) {
+                                	String indexedStr = annotationUiName.replace(" ", "_") + "."
+                                            + feature.getUiName().replace(" ", "_")+"."+labelStr;
+                                	 log.debug("Indexed String: {}",indexedStr);
+                                	 MtasToken mtasAnnotationFeatureLabel = new MtasTokenString(mtasId++,
+                                			 indexedStr ,
+                                             beginToken);
+                                     mtasAnnotationFeatureLabel.setOffset(annotation.getBegin(),
+                                             annotation.getEnd());
+                                     mtasAnnotationFeatureLabel.addPositionRange(beginToken, endToken);
+                                     tokenCollection.add(mtasAnnotationFeatureLabel);
+                                }
+                               
                             }
                         }
                     }
@@ -259,6 +295,36 @@ public class MtasUimaParser
     {
         return null;
     }
+    
+    
+    /**
+     * Takes in IRI for identifier and returns teh label String
+     * Eg: 
+     * InputParameter :- http://www.w3.org/TR/2003/PR-owl-guide-20031209/wine#RoseDAnjou
+     * Returned :- "Concept"+MtasToken.DELIMITER+RoseDAnjou
+     * @param iri
+     * @return
+     */
+    public String getUILabel(String iri) {
+    	
+    	StringBuffer labelStr  = new StringBuffer("");
+    	Optional kbReference = null;
+    	kbReference =  kbService.readConcept(project, iri);
+        if (kbReference.isPresent()) {
+        	KBConcept concept = (KBConcept) kbReference.get(); 
+        	labelStr.append("Concept"+MtasToken.DELIMITER+concept.getUiLabel());
+        }
+        else {
+            kbReference =  kbService.readInstance(project, iri);
+            if(kbReference.isPresent()) {
+            	KBInstance instance = (KBInstance) kbReference.get();
+            	labelStr.append("Instance"+MtasToken.DELIMITER+instance.getUiLabel());
+            }
+            
+        }       
+        return labelStr.toString();
+    }
+    
 
     class SimpleAnnotationLayer
     {
