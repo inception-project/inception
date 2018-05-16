@@ -304,10 +304,11 @@ public class ActiveLearningSidebar
                 vMarkerType = ANNOTATION_MARKER;
             }
             else {
-                error("Recommendation [" + aText + "] as [" + aRecommendation
-                        + "] no longer exists");
+                String msg = String.format("Recommendation [%s] as [%s] no longer exists",
+                        aText, aRecommendation);
+                log.error(msg);
+                error(msg);
                 aTarget.addChildren(getPage(), IFeedback.class);
-                
             }
         }
     }
@@ -582,6 +583,7 @@ public class ActiveLearningSidebar
     {
         selectedRecord = aRecord;
         vMarkerType = TEXT_MARKER;
+        log.error("No annotation could be highlighted.");
         error("No annotation could be highlighted.");
         aTarget.addChildren(getPage(), IFeedback.class);
     }
