@@ -76,9 +76,8 @@ public class QueryUtil
      * @return a query to retrieve candidate entities
      */
     public static TupleQuery generateCandidateQuery(RepositoryConnection conn, List<String>
-        tokens, int limit)
+        tokens, int limit, IRI aDescriptionIri)
     {
-
         String query = String.join("\n",
             "DEFINE input:inference 'instances'",
             SPARQL_PREFIX,
@@ -93,7 +92,7 @@ public class QueryUtil
             "        ?altLabel bif:contains '?entityLabel'. ",
             "        OPTIONAL",
             "        {",
-            "          ?e2 schema:description ?description.",
+            "          ?e2 ?descriptionIri ?description.",
             "          FILTER ( lang(?description) = \"en\" )",
             "        }",
             "      }",
@@ -122,6 +121,7 @@ public class QueryUtil
 
         TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, query);
         tupleQuery.setBinding("entityLabel", tokensJoined);
+        tupleQuery.setBinding("descriptionIri", aDescriptionIri);
         return tupleQuery;
     }
 

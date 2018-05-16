@@ -83,13 +83,18 @@ public interface KnowledgeBaseService
 
     void removeKnowledgeBase(KnowledgeBase kb)
         throws RepositoryException, RepositoryConfigException;
-
+    
+    /**
+     * Get knowledge bases from a given project.
+     * @param aProject The project that contains the knowledge bases.
+     * @return All KBs sorted by name in lexicographical order, ignoring the case.
+     */
     List<KnowledgeBase> getKnowledgeBases(Project aProject);
     
     /**
-     * Get knowledge bases from a given project 
-     * @param aProject the project that contains the knowledge bases
-     * @return all enabled KBs 
+     * Get enabled knowledge bases from a given project.
+     * @param aProject The project that contains the knowledge bases.
+     * @return All enabled KBs sorted by name in lexicographical order, ignoring the case.
      */
     List<KnowledgeBase> getEnabledKnowledgeBases(Project aProject);
 
