@@ -608,6 +608,8 @@ public class ActiveLearningSidebar
         learningRecordService.delete(aRecord);
         learningRecords.detach();
         if (aRecord.getUserAction().equals(LearningRecordUserAction.ACCEPTED)) {
+            actionShowSelectedDocument(aTarget, aRecord.getSourceDocument(),
+                aRecord.getOffsetCharacterBegin());
             JCas aJcas = casStorageService.readCas(aRecord.getSourceDocument(), aRecord.getUser());
             if (isAnnotatedInCas(aRecord, aJcas)) {
                 confirmationDialog.setTitleModel(
