@@ -201,8 +201,11 @@ public class KnowledgeBasePanel
             }
         }
         details = details.replaceWith(replacementPanel);
-
-        event.getTarget().add(conceptTreePanel, propertyListPanel, detailContainer);
+        
+        if (event.isRedrawConceptListPanel()) {
+            event.getTarget().add(conceptTreePanel);
+        }
+        event.getTarget().add(propertyListPanel, detailContainer);
         event.getTarget().addChildren(getPage(), IFeedback.class);
     }
 
@@ -227,7 +230,7 @@ public class KnowledgeBasePanel
         // cancel selection of concept
         selectedConceptHandle.setObject(null);
         selectedPropertyHandle.setObject(event.getSelection());
-
+        
         // replace detail view: empty panel if a deselection took place (see lengthy explanation
         // above)
         Component replacementPanel;
@@ -251,7 +254,11 @@ public class KnowledgeBasePanel
             }
         }
         details = details.replaceWith(replacementPanel);
-        event.getTarget().add(conceptTreePanel, propertyListPanel, detailContainer);
+        
+        if (event.isRedrawProperyListPanel()) {
+            event.getTarget().add(propertyListPanel);
+        }
+        event.getTarget().add(conceptTreePanel, detailContainer);
         event.getTarget().addChildren(getPage(), IFeedback.class);
     }
 
@@ -266,7 +273,6 @@ public class KnowledgeBasePanel
         Component replacement = new PropertyPanel(DETAILS_MARKUP_ID, kbModel,
                 selectedPropertyHandle, Model.of(new KBProperty()));
         details = details.replaceWith(replacement);
-
         event.getTarget().add(KnowledgeBasePanel.this);
     }
 }
