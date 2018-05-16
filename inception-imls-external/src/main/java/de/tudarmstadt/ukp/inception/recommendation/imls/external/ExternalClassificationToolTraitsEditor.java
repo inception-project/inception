@@ -58,7 +58,7 @@ public class ExternalClassificationToolTraitsEditor
             }
         };
 
-        TextField remoteUrl = new TextField("remoteUrl");
+        TextField<String> remoteUrl = new TextField<>("remoteUrl");
         remoteUrl.setRequired(true);
         remoteUrl.add(new UrlValidator());
         form.add(remoteUrl);

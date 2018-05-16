@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.recommendation.api.ClassificationTool;
@@ -57,6 +58,12 @@ public class ExternalClassificationToolFactory
     }
 
     @Override
+    public String getName()
+    {
+        return "Remote classifier";
+    }
+
+    @Override
     public ClassificationTool<Object> createTool(long aRecommenderId, String aFeature,
             AnnotationLayer aLayer, int aMaxPredictions)
     {
@@ -75,13 +82,7 @@ public class ExternalClassificationToolFactory
         }
         
         return (aLayer.isLockToTokenOffset() || aLayer.isMultipleTokens())
-                && aLayer.isCrossSentence() && "span".equals(aLayer.getType());
-    }
-
-    @Override
-    public String getName()
-    {
-        return ExternalClassificationTool.class.getName();
+                && WebAnnoConst.SPAN_TYPE.equals(aLayer.getType());
     }
 
     @Override
@@ -110,7 +111,6 @@ public class ExternalClassificationToolFactory
         try {
             String json = toJsonString(aTraits);
             aRecommender.setTraits(json);
-            recommendationService.createOrUpdateRecommender(aRecommender);
         } catch (IOException e) {
             log.error("Error while writing traits", e);
         }
