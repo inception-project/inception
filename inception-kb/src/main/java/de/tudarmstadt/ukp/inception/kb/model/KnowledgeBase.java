@@ -107,13 +107,13 @@ public class KnowledgeBase
     private IRI descriptionIri;
     
     /**
-     * 
+     * The IRI for a property describing B being a label for A, e.g. rdfs:label 
      */
     @Column(nullable = false)
     private IRI labelIri;
     
     /**
-     * 
+     * The IRI for an object describing A is of type propertyType, e.g. rdf:Property 
      */
     @Column(nullable = false)
     private IRI propertyTypeIri;
