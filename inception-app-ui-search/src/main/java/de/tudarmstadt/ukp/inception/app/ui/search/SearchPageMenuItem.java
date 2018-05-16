@@ -42,7 +42,7 @@ public class SearchPageMenuItem implements MenuItem
     @Override
     public boolean applies()
     {
-        return true;
+        return false;
     }
     
     @Override

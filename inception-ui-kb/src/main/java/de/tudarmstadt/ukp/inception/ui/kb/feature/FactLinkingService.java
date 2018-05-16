@@ -23,15 +23,24 @@ import java.util.List;
 import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
+import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 public interface FactLinkingService
 {
     String SERVICE_NAME = "factLinkingService";
 
-    List<KBHandle> getKBConceptsAndInstances(Project aProject);
+    List<KBHandle> getPredicatesFromKB(Project aProject, ConceptFeatureTraits traits);
 
-    List<KBHandle> getAllPredicatesFromKB(Project aProject);
+    KBHandle getKBHandleFromCasByAddr(JCas aJcas, int targetAddr, Project aProject,
+        ConceptFeatureTraits traits);
 
-    KBHandle getKBHandleFromCasByAddr(JCas aJcas, int targetAddr, Project aProject);
+    KnowledgeBase getKBByKBHandleAndTraits(KBHandle kbHandle, Project aProject,
+        ConceptFeatureTraits traits);
+
+    ConceptFeatureTraits getFeatureTraits(Project aProject);
+
+    KBHandle getKBInstancesByIdentifierAndTraits(String kbHandleIdentifier, Project aProject,
+        ConceptFeatureTraits traits);
 }

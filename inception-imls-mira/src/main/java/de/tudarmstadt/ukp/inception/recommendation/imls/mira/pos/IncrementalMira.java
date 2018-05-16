@@ -22,7 +22,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Vector;
 
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.AnnotationObject;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
 import edu.lium.mira.Example;
 import edu.lium.mira.Mira;
 import edu.lium.mira.Mira.FScorer;

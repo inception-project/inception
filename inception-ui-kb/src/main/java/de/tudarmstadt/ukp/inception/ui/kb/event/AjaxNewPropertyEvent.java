@@ -18,8 +18,9 @@
 package de.tudarmstadt.ukp.inception.ui.kb.event;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.wicketstuff.event.annotation.AbstractAjaxAwareEvent;
 
-public class AjaxNewPropertyEvent extends AjaxEvent {
+public class AjaxNewPropertyEvent extends AbstractAjaxAwareEvent {
 
     public AjaxNewPropertyEvent(AjaxRequestTarget target) {
         super(target);

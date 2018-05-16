@@ -71,15 +71,15 @@ import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningRecommen
 import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningSessionCompletedEvent;
 import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningSessionStartedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.RecommendationEditorExtension;
+import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
+import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.event.AjaxRecommendationAcceptedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.AjaxRecommendationRejectedEvent;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.AnnotationObject;
-import de.tudarmstadt.ukp.inception.recommendation.model.LearningRecord;
-import de.tudarmstadt.ukp.inception.recommendation.model.LearningRecordChangeLocation;
-import de.tudarmstadt.ukp.inception.recommendation.model.LearningRecordUserAction;
-import de.tudarmstadt.ukp.inception.recommendation.model.Predictions;
-import de.tudarmstadt.ukp.inception.recommendation.service.LearningRecordService;
-import de.tudarmstadt.ukp.inception.recommendation.service.RecommendationService;
 
 public class ActiveLearningSidebar
     extends AnnotationSidebar_ImplBase
@@ -240,10 +240,12 @@ public class ActiveLearningSidebar
         if (currentDifference != null) {
             hasUnseenRecommendation = true;
             currentRecommendation = currentDifference.getRecommendation1();
- 
+
             try {
-                actionShowSelectedDocument(aTarget, getModelObject().getDocument(),
-                        currentRecommendation.getOffset().getBeginCharacter());
+                actionShowSelectedDocument(aTarget, documentService
+                        .getSourceDocument(this.getModelObject().getProject(),
+                            currentRecommendation.getDocumentName()),
+                    currentRecommendation.getOffset().getBeginCharacter());
             }
             catch (IOException e) {
                 LOG.error("Unable to switch to document : {} ", e.getMessage(), e);
@@ -404,8 +406,10 @@ public class ActiveLearningSidebar
     private void jumpToRecommendationLocationAndHighlightRecommendation(AjaxRequestTarget aTarget)
         throws IOException
     {
-        actionShowSelectedDocument(aTarget, getModelObject().getDocument(),
-                currentRecommendation.getOffset().getBeginCharacter());
+        actionShowSelectedDocument(aTarget, documentService
+                .getSourceDocument(this.getModelObject().getProject(),
+                    currentRecommendation.getDocumentName()),
+            currentRecommendation.getOffset().getBeginCharacter());
         highlightCurrentRecommendation(aTarget);
     }
 

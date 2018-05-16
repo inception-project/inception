@@ -32,7 +32,7 @@ import org.nd4j.linalg.dataset.DataSet;
 import org.nd4j.linalg.factory.Nd4j;
 import org.nd4j.linalg.indexing.INDArrayIndex;
 
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.AnnotationObject;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
 
 public class Vectorizer
 {

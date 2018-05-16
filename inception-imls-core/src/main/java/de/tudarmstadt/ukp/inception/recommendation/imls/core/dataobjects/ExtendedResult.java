@@ -24,6 +24,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
+
 public class ExtendedResult
     implements Serializable
 {

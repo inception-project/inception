@@ -48,11 +48,12 @@ import de.tudarmstadt.ukp.inception.kb.reification.Reification;
     uniqueConstraints = { @UniqueConstraint(columnNames = { "project", "name",  }) })
 @NamedQueries({
     @NamedQuery(name = "KnowledgeBase.getByProject",
-    query = "from KnowledgeBase kb where kb.project = :project"),
+    query = "from KnowledgeBase kb where kb.project = :project order by lower(kb.name)"),
     @NamedQuery(name = "KnowledgeBase.getByName",
         query = "from KnowledgeBase kb where kb.project = :project and kb.name = :name "),
     @NamedQuery(name = "KnowledgeBase.getByProjectWhereEnabledTrue",
-    query = "from KnowledgeBase kb where kb.project = :project and kb.enabled = true") 
+    query = "from KnowledgeBase kb where kb.project = :project and kb.enabled = true "
+            + "order by lower(kb.name)") 
 })
 public class KnowledgeBase
     implements Serializable
@@ -98,6 +99,12 @@ public class KnowledgeBase
      */
     @Column(nullable = false)
     private IRI typeIri;
+
+    /**
+     * The IRI for a property describing B being a description of A, e.g. schema:description
+     */
+    @Column(nullable = false)
+    private IRI descriptionIri;
 
     @Column(nullable = false)
     private boolean readOnly;
@@ -184,6 +191,16 @@ public class KnowledgeBase
         typeIri = aTypeIri;
     }
 
+    public IRI getDescriptionIri()
+    {
+        return descriptionIri;
+    }
+
+    public void setDescriptionIri(IRI aDescriptionIri)
+    {
+        descriptionIri = aDescriptionIri;
+    }
+
     public boolean isReadOnly()
     {
         return readOnly;
@@ -241,7 +258,7 @@ public class KnowledgeBase
             builder.append(repositoryId);
         }
         else {
-            builder.append(project.toString());
+            builder.append(project);
             builder.append(", name=");
             builder.append(name);
         }

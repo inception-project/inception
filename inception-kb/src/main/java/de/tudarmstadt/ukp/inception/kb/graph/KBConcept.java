@@ -53,8 +53,8 @@ public class KBConcept
     /* Commented out until the functionality which uses them is actually implemented
     static {
         ValueFactory factory = SimpleValueFactory.getInstance();
-        CLOSED = factory.createIRI(KnowledgeBaseService.INCEPTION_SCHEMA_NAMESPACE, "closed");
-        ABSTRACT = factory.createIRI(KnowledgeBaseService.INCEPTION_SCHEMA_NAMESPACE, "abstract");
+        CLOSED = factory.createIRI(IriConstants.INCEPTION_SCHEMA_NAMESPACE, "closed");
+        ABSTRACT = factory.createIRI(IriConstants.INCEPTION_SCHEMA_NAMESPACE, "abstract");
     }
     */
 

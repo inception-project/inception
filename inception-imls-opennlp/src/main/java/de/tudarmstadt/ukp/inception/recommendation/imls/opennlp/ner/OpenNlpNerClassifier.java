@@ -23,10 +23,10 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.inception.recommendation.imls.conf.ClassifierConfiguration;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.classifier.Classifier;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.AnnotationObject;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.TokenObject;
+import de.tudarmstadt.ukp.inception.recommendation.api.Classifier;
+import de.tudarmstadt.ukp.inception.recommendation.api.ClassifierConfiguration;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.TokenObject;
 import opennlp.tools.namefind.NameFinderME;
 import opennlp.tools.namefind.TokenNameFinderModel;
 import opennlp.tools.util.Span;

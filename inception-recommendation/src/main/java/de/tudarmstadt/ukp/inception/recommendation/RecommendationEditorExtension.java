@@ -19,7 +19,9 @@ package de.tudarmstadt.ukp.inception.recommendation;
 
 import java.io.IOException;
 
+import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.event.Broadcast;
@@ -35,6 +37,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensio
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
@@ -43,19 +46,20 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.message.DoActionResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.SpanAnnotationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
+import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
+import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.event.AjaxRecommendationAcceptedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.AjaxRecommendationRejectedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommendationAcceptedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommendationRejectedEvent;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.AnnotationObject;
-import de.tudarmstadt.ukp.inception.recommendation.model.LearningRecord;
-import de.tudarmstadt.ukp.inception.recommendation.model.LearningRecordChangeLocation;
-import de.tudarmstadt.ukp.inception.recommendation.model.LearningRecordUserAction;
-import de.tudarmstadt.ukp.inception.recommendation.model.Predictions;
-import de.tudarmstadt.ukp.inception.recommendation.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.render.RecommendationRenderer;
-import de.tudarmstadt.ukp.inception.recommendation.service.LearningRecordService;
-import de.tudarmstadt.ukp.inception.recommendation.service.RecommendationService;
 
 
 @Component
@@ -71,6 +75,7 @@ public class RecommendationEditorExtension
     private @Autowired RecommendationService recommendationService;
     private @Autowired LearningRecordService learningRecordService;
     private @Autowired ApplicationEventPublisher applicationEventPublisher;
+    private @Autowired FeatureSupportRegistry fsRegistry;
 
     @Override
     public String getBeanName()
@@ -97,28 +102,52 @@ public class RecommendationEditorExtension
             AnnotatorState aState, AjaxRequestTarget aTarget, JCas aJCas, VID aVID, int aBegin,
             int aEnd) throws AnnotationException, IOException
     {
-        // Obtain the predicted label
         Predictions model = 
                 recommendationService.getPredictions(aState.getUser(), aState.getProject());
-        
         AnnotationObject prediction = model.getPredictionByVID(aVID);
+        // Obtain the predicted label
         String predictedValue = prediction.getAnnotation();
         
-        // Create the annotation - this also takes care of attaching to an annotation if necessary
         Recommender recommender = recommendationService.getRecommender(aVID.getId());
         AnnotationLayer layer = annotationService.getLayer(aVID.getLayerId());
+
+        // The feature of the predicted label
         AnnotationFeature feature = annotationService.getFeature(recommender.getFeature(), layer);
-        SpanAdapter adapter = (SpanAdapter) annotationService.getAdapter(layer); 
-        int id = adapter.add(aState, aJCas, aBegin, aEnd); 
-        adapter.setFeatureValue(aState, aJCas, id, feature, predictedValue);
-        
+        SpanAdapter adapter = (SpanAdapter) annotationService.getAdapter(layer);
+
+        // Get all annotations at this position
+        Type type = CasUtil.getType(aJCas.getCas(), layer.getName());
+        AnnotationFS annoFS = WebAnnoCasUtil.selectSingleFsAt(aJCas,
+            type, aBegin, aEnd);
+        int address;
+
+        // Existing annotation at this position
+        if (annoFS != null) {
+            address = WebAnnoCasUtil.getAddr(annoFS);
+        }
+        else {
+        // Create the annotation - this also takes care of attaching to an annotation if necessary
+            address = adapter.add(aState, aJCas, aBegin, aEnd);
+        }
+
+        String fsId = fsRegistry.getFeatureSupport(feature).getId();
+        if (fsId.equals("conceptFeatureSupport") || fsId.equals("propertyFeatureSupport")) {
+            String uiName = fsRegistry.getFeatureSupport(feature)
+                .renderFeatureValue(feature, predictedValue);
+            KBHandle kbHandle = new KBHandle(predictedValue, uiName);
+            adapter.setFeatureValue(aState, aJCas, address, feature, kbHandle);
+        }
+        else {
+            adapter.setFeatureValue(aState, aJCas, address, feature, predictedValue);
+        }
+
         // Send an event that the recommendation was accepted
-        AnnotationFS fs = WebAnnoCasUtil.selectByAddr(aJCas, AnnotationFS.class, id);
+        AnnotationFS fs = WebAnnoCasUtil.selectByAddr(aJCas, AnnotationFS.class, address);
         applicationEventPublisher.publishEvent(new RecommendationAcceptedEvent(this,
                 aState.getDocument(), aState.getUser().getUsername(), fs, feature, predictedValue));
 
         // Set selection to the accepted annotation
-        aState.getSelection().selectSpan(new VID(id), aJCas, aBegin, aEnd);
+        aState.getSelection().selectSpan(new VID(address), aJCas, aBegin, aEnd);
 
         // ... select it and load it into the detail editor panel
         aActionHandler.actionSelect(aTarget, aJCas);            
@@ -172,6 +201,6 @@ public class RecommendationEditorExtension
     {
         recommendationService.switchPredictions(aState.getUser(), aState.getProject());
         RecommendationRenderer.render(vdoc, aState, jCas, annotationService, recommendationService, 
-                learningRecordService);
+                learningRecordService, fsRegistry);
     }
 }
