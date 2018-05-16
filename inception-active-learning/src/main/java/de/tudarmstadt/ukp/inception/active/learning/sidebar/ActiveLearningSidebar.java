@@ -23,12 +23,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.FeatureEditor;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.FeatureStateModel;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
@@ -727,24 +721,20 @@ public class ActiveLearningSidebar
         }
     }
 
-    private FeatureEditor createFeatureEditor() {
+    private FeatureEditor createFeatureEditor()
+    {
         AnnotationFeature annotationFeature = annotationService
             .listAnnotationFeature(selectedLayer.getObject()).get(0);
-        FeatureSupport featureSupport = featureSupportRegistry
-            .getFeatureSupport(annotationFeature);
+        FeatureSupport featureSupport = featureSupportRegistry.getFeatureSupport(annotationFeature);
 
         featureState = new FeatureState(annotationFeature, null);
-        featureState.tagset = annotationService.listTags(annotationFeature
-            .getTagset());
+        featureState.tagset = annotationService.listTags(annotationFeature.getTagset());
         IModel<FeatureState> aFeatureStateModel = Model.of(featureState);
-//        IModel<FeatureState> aFeatureStateModel = Model.of(new FeatureState(annotationFeature,
-//            null));
-//        aFeatureStateModel.getObject().tagset = annotationService.listTags(annotationFeature
-//            .getTagset());
-        FeatureEditor editor = featureSupport.createEditor("editor", mainContainer, this
-            .getActionHandler(), this.getModel(), aFeatureStateModel);
-        editor.add(LambdaBehavior.onConfigure(component -> component.setVisible
-            (sessionActive && hasUnseenRecommendation)));
+        FeatureEditor editor = featureSupport
+            .createEditor("editor", mainContainer, this.getActionHandler(), this.getModel(),
+                aFeatureStateModel);
+        editor.add(LambdaBehavior.onConfigure(
+            component -> component.setVisible(sessionActive && hasUnseenRecommendation)));
         return editor;
     }
 }
