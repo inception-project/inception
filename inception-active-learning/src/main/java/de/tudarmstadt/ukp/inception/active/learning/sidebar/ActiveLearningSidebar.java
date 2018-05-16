@@ -669,6 +669,7 @@ public class ActiveLearningSidebar
         if (!oRecommendation.isPresent()) {
             LOG.error("Could not find prediction in [{}] with id [{}]", document, vid);
             error("Could not find prediction");
+            aEvent.getTarget().addChildren(getPage(), IFeedback.class);
             return;
         }
 
