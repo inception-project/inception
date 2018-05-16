@@ -46,7 +46,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.message.DoActionResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.SpanAnnotationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
@@ -130,16 +129,8 @@ public class RecommendationEditorExtension
             address = adapter.add(aState, aJCas, aBegin, aEnd);
         }
 
-        String fsId = fsRegistry.getFeatureSupport(feature).getId();
-        if (fsId.equals("conceptFeatureSupport") || fsId.equals("propertyFeatureSupport")) {
-            String uiName = fsRegistry.getFeatureSupport(feature)
-                .renderFeatureValue(feature, predictedValue);
-            KBHandle kbHandle = new KBHandle(predictedValue, uiName);
-            adapter.setFeatureValue(aState, aJCas, address, feature, kbHandle);
-        }
-        else {
-            adapter.setFeatureValue(aState, aJCas, address, feature, predictedValue);
-        }
+        recommendationService
+            .setFeatureValue(fsRegistry, feature, predictedValue, adapter, aState, aJCas, address);
 
         // Send an event that the recommendation was accepted
         AnnotationFS fs = WebAnnoCasUtil.selectByAddr(aJCas, AnnotationFS.class, address);

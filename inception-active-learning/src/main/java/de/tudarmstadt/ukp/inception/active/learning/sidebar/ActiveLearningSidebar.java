@@ -48,6 +48,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionH
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.JCasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAnnotationsEvent;
@@ -121,6 +122,7 @@ public class ActiveLearningSidebar
     private @SpringBean LearningRecordService learningRecordService;
     private @SpringBean DocumentService documentService;
     private @SpringBean ApplicationEventPublisherHolder applicationEventPublisherHolder;
+    private @SpringBean FeatureSupportRegistry fsRegistry;
 
     private IModel<AnnotationLayer> selectedLayer;
     private IModel<List<LearningRecord>> learningRecords;
@@ -448,9 +450,13 @@ public class ActiveLearningSidebar
         int id = adapter.add(annotatorState, jCas, begin, end);
         AnnotationFeature feature = annotationService
             .getFeature(acceptedRecommendation.getFeature(), selectedLayer.getObject());
-        adapter.setFeatureValue(annotatorState, jCas, id, feature,
-            acceptedRecommendation.getAnnotation());
-        
+
+        String predictedValue = acceptedRecommendation.getAnnotation();
+
+        recommendationService.setFeatureValue(fsRegistry, feature, predictedValue, adapter,
+            annotatorState, jCas, id);
+
+
         // Open accepted recommendation in the annotation detail editor panel
         VID vid = new VID(id);
         annotatorState.getSelection().selectSpan(vid, jCas, begin, end);
