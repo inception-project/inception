@@ -479,14 +479,7 @@ public class ActiveLearningSidebar
     private void actionCorrect(AjaxRequestTarget aTarget)
         throws IOException, AnnotationException
     {
-        SpanAdapter adapter = (SpanAdapter) annotationService.getAdapter(selectedLayer.getObject());
-        JCas aJCas = this.getJCasProvider().get();
-        int address = adapter.add(this.getModelObject(), aJCas, currentRecommendation.getOffset()
-            .getBeginCharacter(), currentRecommendation.getOffset().getEndCharacter());
-        AnnotationFS fs = WebAnnoCasUtil.selectByAddr(aJCas, AnnotationFS.class, address);
-        Serializable value = null;
-        value = annotationService.getAdapter(selectedLayer.getObject()).getFeatureValue(annotationService
-            .listAnnotationFeature(selectedLayer.getObject()).get(0), fs);
+        Serializable value = featureState.value;
         moveToNextRecommendation(aTarget);
     }
 
