@@ -66,6 +66,11 @@ public class IriConstants
      * https://www.wikidata.org/wiki/Property:P31
      */
     public static final IRI WIKIDATA_TYPE;
+    
+    /**
+     * https://www.wikidata.org/wiki/Q18616576
+     */
+    public static final IRI WIKIDATA_PROPERTY_TYPE;
 
     /**
      * http://www.schema.org/description
@@ -85,6 +90,7 @@ public class IriConstants
         WIKIDATA_CLASS = vf.createIRI(PREFIX_WIKIDATA_ENTITY, "Q35120");
         WIKIDATA_SUBCLASS = vf.createIRI(PREFIX_WIKIDATA_DIRECT, "P279");
         WIKIDATA_TYPE = vf.createIRI(PREFIX_WIKIDATA_DIRECT, "P31");
+        WIKIDATA_PROPERTY_TYPE =  vf.createIRI(PREFIX_WIKIDATA_ENTITY, "Q18616576");
         SCHEMA_DESCRIPTION = vf.createIRI(PREFIX_SCHEMA, "description");
 
         CLASS_IRIS = asList(RDFS.CLASS, OWL.CLASS, WIKIDATA_CLASS, SKOS.CONCEPT);
@@ -92,6 +98,6 @@ public class IriConstants
         TYPE_IRIS = asList(RDF.TYPE, WIKIDATA_TYPE);
         DESCRIPTION_IRIS = asList(RDFS.COMMENT, SCHEMA_DESCRIPTION);
         LABEL_IRIS = asList(RDFS.LABEL);
-        PROPERTY_TYPE_IRIS =  asList(RDF.PROPERTY);
+        PROPERTY_TYPE_IRIS = asList(RDF.PROPERTY, WIKIDATA_PROPERTY_TYPE);
     }
 }
