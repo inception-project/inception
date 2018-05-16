@@ -129,21 +129,21 @@ public class RecommendationServiceImpl
 
     @Override
     @Transactional
-    public void createOrUpdateRecommender(Recommender aSettings)
+    public void createOrUpdateRecommender(Recommender aRecommender)
     {
-        if (aSettings.getId() == null) {
-            entityManager.persist(aSettings);
+        if (aRecommender.getId() == null) {
+            entityManager.persist(aRecommender);
         }
         else {
-            entityManager.merge(aSettings);
+            entityManager.merge(aRecommender);
         }
     }
 
     @Override
     @Transactional
-    public void deleteRecommender(Recommender aSettings)
+    public void deleteRecommender(Recommender aRecommender)
     {
-        Recommender settings = aSettings;
+        Recommender settings = aRecommender;
 
         if (!entityManager.contains(settings)) {
             settings = entityManager.merge(settings);
