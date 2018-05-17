@@ -74,13 +74,11 @@ import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentResetEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AnnotationStateChangeEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeDocumentRemovedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.DocumentStateChangedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.ProjectStateChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.ProjectState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
@@ -882,103 +880,18 @@ public class DocumentServiceImpl
     @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
     public void onDocumentStateChangeEvent(DocumentStateChangedEvent aEvent)
     {
-        recalculateProjectState(aEvent.getDocument().getProject());
+        projectService.recalculateProjectState(aEvent.getDocument().getProject());
     }
 
     @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
     public void onAfterDocumentCreatedEvent(AfterDocumentCreatedEvent aEvent)
     {
-        recalculateProjectState(aEvent.getDocument().getProject());
+        projectService.recalculateProjectState(aEvent.getDocument().getProject());
     }
 
     @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
     public void onBeforeDocumentRemovedEvent(BeforeDocumentRemovedEvent aEvent)
     {
-        recalculateProjectState(aEvent.getDocument().getProject());
-    }
-
-    private void recalculateProjectState(Project aProject)
-    {
-        Project project;
-        try {
-            project = projectService.getProject(aProject.getId());
-        }
-        catch (NoResultException e) {
-            // This happens when this method is called as part of deleting an entire project.
-            // In such a case, the project may no longer be available, so there is no point in
-            // updating its state. So then we do nothing here.
-            return;
-        }
-        
-        String query = 
-                "SELECT new " + SourceDocumentStateStats.class.getName() + "(" +
-                "COUNT(*), " +
-                "SUM(CASE WHEN state = :an  THEN 1 ELSE 0 END), " +
-                "SUM(CASE WHEN (state = :aip OR state is NULL) THEN 1 ELSE 0 END), " +
-                "SUM(CASE WHEN state = :af  THEN 1 ELSE 0 END), " +
-                "SUM(CASE WHEN state = :cip THEN 1 ELSE 0 END), " +
-                "SUM(CASE WHEN state = :cf  THEN 1 ELSE 0 END)) " +
-                "FROM SourceDocument " + 
-                "WHERE project = :project";
-        
-        SourceDocumentStateStats stats = entityManager.createQuery(
-                        query, SourceDocumentStateStats.class)
-                .setParameter("project", aProject)
-                .setParameter("an", SourceDocumentState.NEW)
-                .setParameter("aip", SourceDocumentState.ANNOTATION_IN_PROGRESS)
-                .setParameter("af", SourceDocumentState.ANNOTATION_FINISHED)
-                .setParameter("cip", SourceDocumentState.CURATION_IN_PROGRESS)
-                .setParameter("cf", SourceDocumentState.CURATION_FINISHED)
-                .getSingleResult();
-        
-        ProjectState oldState = project.getState();
-        
-        if (stats.total == stats.cf) {
-            project.setState(ProjectState.CURATION_FINISHED);
-        }
-        else if (stats.total == stats.af) {
-            project.setState(ProjectState.ANNOTATION_FINISHED);
-        }
-        else if (stats.total == stats.an) {
-            project.setState(ProjectState.NEW);
-        }
-        else if (stats.cip > 0) {
-            project.setState(ProjectState.CURATION_IN_PROGRESS);
-        }
-        else if (stats.aip > 0) {
-            project.setState(ProjectState.ANNOTATION_IN_PROGRESS);
-        }
-        else {
-            throw new IllegalStateException("Unable to determine project state.");
-        }
-        
-        if (!Objects.equals(oldState, project.getState())) {
-            applicationEventPublisher.publishEvent(
-                    new ProjectStateChangedEvent(this, project, oldState));
-        }
-        
-        projectService.updateProject(project);
-    }
-
-    public static final class SourceDocumentStateStats
-    {
-        public final long total;
-        public final long an;
-        public final long aip;
-        public final long af;
-        public final long cip;
-        public final long cf;
-        
-        public SourceDocumentStateStats(Long aTotal, Long aAn, Long aAip, Long aAf, Long aCip,
-                Long aCf)
-        {
-            super();
-            total = aTotal != null ? aTotal : 0l;
-            an = aAn != null ? aAn : 0l;
-            aip = aAip != null ? aAip : 0l;
-            af = aAf != null ? aAf : 0l;
-            cip = aCip != null ? aCip : 0l;
-            cf = aCf != null ? aCf : 0l;
-        }
+        projectService.recalculateProjectState(aEvent.getDocument().getProject());
     }
 }
