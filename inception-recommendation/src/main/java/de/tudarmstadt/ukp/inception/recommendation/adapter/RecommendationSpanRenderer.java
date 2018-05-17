@@ -117,33 +117,31 @@ public class RecommendationSpanRenderer
  
             // For recommendations with the same label by the same classifier,
             // show only the confidence of the highest one
-            for (AnnotationObject ao: token) {          
-                if (ao.getAnnotation() != null) {       
-                    if (isOverlapping(vspansWithoutRecommendations, ao.getOffset(), windowBegin,
-                        ao.getFeature())) {
-                        break;
-                    }
-                    
-                    if (isRejected(recordedAnnotations, ao)) {
-                        continue;
-                    }
-                    
-                    if (!labelMap.containsKey(ao.getAnnotation())
-                            || !labelMap.get(ao.getAnnotation())
-                                    .containsKey(ao.getRecommenderId())
-                            || labelMap.get(ao.getAnnotation()).get(ao.getRecommenderId())
-                                    .getConfidence() < ao.getConfidence()) {
+            for (AnnotationObject ao: token) {
+                boolean hasNoAnnotation = ao.getAnnotation() == null;
+                boolean isOverlappingForFeature = isOverlappingForFeature(
+                    vspansWithoutRecommendations, ao.getOffset(), windowBegin, ao.getFeature());
+                boolean isRejected = isRejected(recordedAnnotations, ao);
 
-                        Map<Long, AnnotationObject> confidencePerClassifier;
-                        if (labelMap.get(ao.getAnnotation()) == null) {
-                            confidencePerClassifier = new HashMap<>();
-                        } else {
-                            confidencePerClassifier = labelMap.get(ao.getAnnotation());
-                        }
-                        
-                        confidencePerClassifier.put(ao.getRecommenderId(), ao);
-                        labelMap.put(ao.getAnnotation(), confidencePerClassifier);
+                if (hasNoAnnotation || isOverlappingForFeature || isRejected) {
+                    continue;
+                }
+
+                if (!labelMap.containsKey(ao.getAnnotation())
+                        || !labelMap.get(ao.getAnnotation())
+                                .containsKey(ao.getRecommenderId())
+                        || labelMap.get(ao.getAnnotation()).get(ao.getRecommenderId())
+                                .getConfidence() < ao.getConfidence()) {
+
+                    Map<Long, AnnotationObject> confidencePerClassifier;
+                    if (labelMap.get(ao.getAnnotation()) == null) {
+                        confidencePerClassifier = new HashMap<>();
+                    } else {
+                        confidencePerClassifier = labelMap.get(ao.getAnnotation());
                     }
+
+                    confidencePerClassifier.put(ao.getRecommenderId(), ao);
+                    labelMap.put(ao.getAnnotation(), confidencePerClassifier);
                 }
             }
             
@@ -225,8 +223,9 @@ public class RecommendationSpanRenderer
      * Check if there is already an existing annotation overlapping the prediction
      * 
      */
-    private boolean isOverlapping (Collection<VSpan> vspans, Offset recOffset, int windowBegin,
-        String feature) {
+    private boolean isOverlappingForFeature(Collection<VSpan> vspans, Offset recOffset,
+        int windowBegin, String feature)
+    {
 
         for (VSpan v : vspans) {
             for (VRange o : v.getOffsets()) {
