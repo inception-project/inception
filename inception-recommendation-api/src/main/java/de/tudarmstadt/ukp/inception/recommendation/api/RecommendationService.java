@@ -19,6 +19,10 @@ package de.tudarmstadt.ukp.inception.recommendation.api;
 
 import java.util.List;
 
+import org.apache.uima.jcas.JCas;
+
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -34,9 +38,9 @@ public interface RecommendationService
 {
     static final String SERVICE_NAME = "recommendationService";
     
-    void createOrUpdateRecommender(Recommender aSettings);
+    void createOrUpdateRecommender(Recommender aRecommender);
 
-    void deleteRecommender(Recommender aSettings);
+    void deleteRecommender(Recommender aRecommender);
     
     Recommender getRecommender(long aId);
 
@@ -77,4 +81,7 @@ public interface RecommendationService
     void putIncomingPredictions(User aUser, Project aProject, Predictions aPredictions);
     
     void switchPredictions(User aUser, Project aProject);
+
+    void setFeatureValue(AnnotationFeature aFeature, String aPredictedValue,
+        SpanAdapter aAdapter, AnnotatorState aState, JCas aJcas, int address);
 }

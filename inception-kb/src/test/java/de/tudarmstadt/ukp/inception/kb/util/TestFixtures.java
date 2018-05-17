@@ -61,6 +61,8 @@ public class TestFixtures
         kb.setClassIri(RDFS.CLASS);
         kb.setSubclassIri(RDFS.SUBCLASSOF);
         kb.setTypeIri(RDF.TYPE);
+        kb.setDescriptionIri(RDFS.COMMENT);
+
         kb.setReification(reification);
         return kb;
     }
