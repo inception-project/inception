@@ -44,7 +44,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.DocumentOpenedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterAnnotationUpdateEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentResetEvent;
@@ -53,7 +52,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.recommendation.api.ClassificationTool;
 import de.tudarmstadt.ukp.inception.recommendation.api.ClassificationToolRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
@@ -321,21 +319,11 @@ public class RecommendationServiceImpl
         }
     }
 
-    public void setFeatureValue(FeatureSupportRegistry fsRegistry, AnnotationFeature aFeature,
-        String aPredictedValue, SpanAdapter aAdapter, AnnotatorState aState, JCas aJcas,
-        int address)
+    @Override
+    public void setFeatureValue(AnnotationFeature aFeature, String aPredictedValue,
+        SpanAdapter aAdapter, AnnotatorState aState, JCas aJcas, int aAddress)
     {
-        String fsId = fsRegistry.getFeatureSupport(aFeature).getId();
-
-        if (fsId.equals("conceptFeatureSupport") || fsId.equals("propertyFeatureSupport")) {
-            String uiName = fsRegistry.getFeatureSupport(aFeature)
-                .renderFeatureValue(aFeature, aPredictedValue);
-            KBHandle kbHandle = new KBHandle(aPredictedValue, uiName);
-            aAdapter.setFeatureValue(aState, aJcas, address, aFeature, kbHandle);
-        }
-        else {
-            aAdapter.setFeatureValue(aState, aJcas, address, aFeature, aPredictedValue);
-        }
+        aAdapter.setFeatureValue(aState, aJcas, aAddress, aFeature, aPredictedValue);
     }
 
     /**

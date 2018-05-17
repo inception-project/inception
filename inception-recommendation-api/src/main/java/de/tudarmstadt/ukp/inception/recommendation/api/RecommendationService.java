@@ -22,7 +22,6 @@ import java.util.List;
 import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -83,7 +82,6 @@ public interface RecommendationService
     
     void switchPredictions(User aUser, Project aProject);
 
-    void setFeatureValue(FeatureSupportRegistry fsRegistry, AnnotationFeature aFeature,
-        String aPredictedValue, SpanAdapter aAdapter, AnnotatorState aState, JCas aJcas,
-        int address);
+    void setFeatureValue(AnnotationFeature aFeature, String aPredictedValue,
+        SpanAdapter aAdapter, AnnotatorState aState, JCas aJcas, int address);
 }

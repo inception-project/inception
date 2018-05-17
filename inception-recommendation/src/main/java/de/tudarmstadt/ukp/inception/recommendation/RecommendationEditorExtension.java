@@ -130,7 +130,7 @@ public class RecommendationEditorExtension
         }
 
         recommendationService
-            .setFeatureValue(fsRegistry, feature, predictedValue, adapter, aState, aJCas, address);
+            .setFeatureValue(feature, predictedValue, adapter, aState, aJCas, address);
 
         // Send an event that the recommendation was accepted
         AnnotationFS fs = WebAnnoCasUtil.selectByAddr(aJCas, AnnotationFS.class, address);

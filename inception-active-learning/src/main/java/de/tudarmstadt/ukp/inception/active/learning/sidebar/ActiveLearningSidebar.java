@@ -453,8 +453,8 @@ public class ActiveLearningSidebar
 
         String predictedValue = acceptedRecommendation.getAnnotation();
 
-        recommendationService.setFeatureValue(fsRegistry, feature, predictedValue, adapter,
-            annotatorState, jCas, id);
+        recommendationService.setFeatureValue(feature, predictedValue, adapter, annotatorState,
+            jCas, id);
 
 
         // Open accepted recommendation in the annotation detail editor panel
