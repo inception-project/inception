@@ -127,9 +127,22 @@ public class PropertyFeatureSupport
     public void setFeatureValue(JCas aJcas, AnnotationFeature aFeature, int aAddress,
         Object aValue)
     {
-        KBHandle kbProp = (KBHandle) aValue;
         FeatureStructure fs = selectByAddr(aJcas, FeatureStructure.class, aAddress);
-        setFeature(fs, aFeature, kbProp != null ? kbProp.getIdentifier() : null);
+        
+        // Normally, we get KBHandles back from the feature editors
+        if (aValue instanceof KBHandle) {
+            KBHandle kbProp = (KBHandle) aValue;
+            setFeature(fs, aFeature, kbProp.getIdentifier());
+        }
+        // When used in a recommendation context, we might get the concept identifier as a string
+        // value.
+        else if (aValue instanceof String || aValue == null) {
+            setFeature(fs, aFeature, aValue);
+        }
+        else {
+            throw new IllegalArgumentException(
+                    "Unable to handle value [" + aValue + "] of type [" + aValue.getClass() + "]");
+        }
     }
 
     @Override

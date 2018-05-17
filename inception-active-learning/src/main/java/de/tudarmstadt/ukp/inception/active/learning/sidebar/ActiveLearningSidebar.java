@@ -48,6 +48,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionH
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.JCasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAnnotationsEvent;
@@ -122,6 +123,7 @@ public class ActiveLearningSidebar
     private @SpringBean LearningRecordService learningRecordService;
     private @SpringBean DocumentService documentService;
     private @SpringBean ApplicationEventPublisherHolder applicationEventPublisherHolder;
+    private @SpringBean FeatureSupportRegistry fsRegistry;
 
     private IModel<AnnotationLayer> selectedLayer;
     private IModel<List<LearningRecord>> learningRecords;
@@ -448,12 +450,15 @@ public class ActiveLearningSidebar
         int begin = acceptedRecommendation.getOffset().getBeginCharacter();
         int end = acceptedRecommendation.getOffset().getEndCharacter();
         int id = adapter.add(annotatorState, jCas, begin, end);
-        for (AnnotationFeature feature : annotationService
-                .listAnnotationFeature(selectedLayer.getObject())) {
-            adapter.setFeatureValue(annotatorState, jCas, id, feature,
-                    acceptedRecommendation.getAnnotation());
-        }
-        
+        AnnotationFeature feature = annotationService
+            .getFeature(acceptedRecommendation.getFeature(), selectedLayer.getObject());
+
+        String predictedValue = acceptedRecommendation.getAnnotation();
+
+        recommendationService.setFeatureValue(feature, predictedValue, adapter, annotatorState,
+            jCas, id);
+
+
         // Open accepted recommendation in the annotation detail editor panel
         VID vid = new VID(id);
         annotatorState.getSelection().selectSpan(vid, jCas, begin, end);
@@ -569,7 +574,7 @@ public class ActiveLearningSidebar
                 .listAnnotationFeature(selectedLayer.getObject())) {
                 String annotatedValue = WebAnnoCasUtil
                     .getFeature(annotationFS, annotationFeature.getName());
-                if (annotatedValue.equals(aRecord.getAnnotation())) {
+                if (aRecord.getAnnotation().equals(annotatedValue)) {
                     highlightVID = new VID(WebAnnoCasUtil.getAddr(annotationFS));
                     vMarkerType = ANNOTATION_MARKER;
                     return true;
