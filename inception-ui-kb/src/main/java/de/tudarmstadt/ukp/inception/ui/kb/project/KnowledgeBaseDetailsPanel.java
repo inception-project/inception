@@ -393,10 +393,13 @@ public class KnowledgeBaseDetailsPanel extends Panel {
         @Override
         protected void setUpCommonComponents(WebMarkupContainer wmc) {
             // Schema configuration
-            addDisabledIriField(wmc, "classIri", model.bind("kb.classIri"));
-            addDisabledIriField(wmc, "subclassIri", model.bind("kb.subclassIri"));
-            addDisabledIriField(wmc, "typeIri", model.bind("kb.typeIri"));
-            addDisabledIriField(wmc, "descriptionIri", model.bind("kb.descriptionIri"));
+            
+            Component iriPanel = new KnowledgeBaseIriPanel("iriPanel", model)
+                    .add(LambdaBehavior.onConfigure(it -> it.setEnabled(false)));
+            // don't show radio group in view mode 
+            iriPanel.get("iriSchema").setVisible(false);
+            wmc.add(iriPanel);
+            
             wmc.add(new CheckBox("enabled", model.bind("kb.enabled"))
                 .add(LambdaBehavior.onConfigure(it -> it.setEnabled(false))));
             wmc.add(new CheckBox("supportConceptLinking", model.bind("kb.supportConceptLinking"))
@@ -490,10 +493,7 @@ public class KnowledgeBaseDetailsPanel extends Panel {
         @Override
         protected void setUpCommonComponents(WebMarkupContainer wmc) {
             // Schema configuration
-            addIriField(wmc, "classIri", model.bind("kb.classIri"));
-            addIriField(wmc, "subclassIri", model.bind("kb.subclassIri"));
-            addIriField(wmc, "typeIri", model.bind("kb.typeIri"));
-            addIriField(wmc, "descriptionIri", model.bind("kb.descriptionIri"));
+            wmc.add(new KnowledgeBaseIriPanel("iriPanel", model));
             wmc.add(new CheckBox("enabled", model.bind("kb.enabled")));
             wmc.add(new CheckBox("supportConceptLinking", model.bind("kb.supportConceptLinking")));
         }

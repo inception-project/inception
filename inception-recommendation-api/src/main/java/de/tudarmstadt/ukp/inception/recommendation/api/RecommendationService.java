@@ -34,9 +34,9 @@ public interface RecommendationService
 {
     static final String SERVICE_NAME = "recommendationService";
     
-    void createOrUpdateRecommender(Recommender aSettings);
+    void createOrUpdateRecommender(Recommender aRecommender);
 
-    void deleteRecommender(Recommender aSettings);
+    void deleteRecommender(Recommender aRecommender);
     
     Recommender getRecommender(long aId);
 
