@@ -26,24 +26,27 @@ import de.tudarmstadt.ukp.inception.kb.IriConstants;
 
 public enum SchemaProfile
 {
-    RDFSCHEMA(RDFS.CLASS, RDFS.SUBCLASSOF, RDF.TYPE),
+    RDFSCHEMA(RDFS.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT),
 
     WIKIDATASCHEMA(IriConstants.WIKIDATA_CLASS, IriConstants.WIKIDATA_SUBCLASS,
-            IriConstants.WIKIDATA_TYPE),
+            IriConstants.WIKIDATA_TYPE, RDFS.COMMENT),
 
-    OWLSCHEMA(OWL.CLASS, RDFS.SUBCLASSOF, RDF.TYPE),
+    OWLSCHEMA(OWL.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT),
 
-    CUSTOMSCHEMA(RDFS.CLASS, RDFS.SUBCLASSOF, RDF.TYPE);
+    CUSTOMSCHEMA(RDFS.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT);
 
     private final IRI classIri;
     private final IRI subclassIri;
     private final IRI typeIri;
+    private final IRI descriptionIri;
 
-    private SchemaProfile(IRI aClassIri, IRI aSubclassIri, IRI aTypeIri)
+
+    private SchemaProfile(IRI aClassIri, IRI aSubclassIri, IRI aTypeIri, IRI aDescriptionIri)
     {
         classIri = aClassIri;
         subclassIri = aSubclassIri;
         typeIri = aTypeIri;
+        descriptionIri = aDescriptionIri;
     }
 
     public IRI getClassIri()
@@ -59,5 +62,10 @@ public enum SchemaProfile
     public IRI getTypeIri()
     {
         return typeIri;
+    }
+
+    public IRI getDescriptionIri()
+    {
+        return descriptionIri;
     }
 }
