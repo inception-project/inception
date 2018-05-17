@@ -23,6 +23,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
@@ -60,6 +61,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ChallengeResponseDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.NameUtil;
 
 public class ProjectDetailPanel
@@ -137,23 +139,24 @@ public class ProjectDetailPanel
         
     private DropDownChoice<String> makeProjectTypeChoice()
     {
-        DropDownChoice<String> projectTypes = new DropDownChoice<String>("mode", projectService
-                .listProjectTypes().stream().map(t -> t.id()).collect(Collectors.toList()))
-        {
-            private static final long serialVersionUID = -8268365384613932108L;
+        List<String> types = projectService.listProjectTypes().stream().map(t -> t.id())
+                .collect(Collectors.toList());
 
-            @Override
-            protected void onConfigure()
-            {
-                super.onConfigure();
-                setEnabled(nonNull(projectModel.getObject())
-                        && isNull(projectModel.getObject().getId()));
-            }
-        };
+        DropDownChoice<String> projectTypes = new DropDownChoice<>("mode", types);
+
+        projectTypes.add(LambdaBehavior.onConfigure(it -> it.setEnabled(
+                nonNull(projectModel.getObject()) && isNull(projectModel.getObject().getId()))));
 
         projectTypes.setRequired(true);
+        
+        // If there is only a single project type, then we can simply select that and do not need
+        // to show the choice at all.
+        if (types.size() == 1) {
+            projectTypes.setVisible(false);
+            projectModel.getObject().setMode(types.get(0));
+        }
+        
         return projectTypes;
-
     }
 
     private void actionSave(AjaxRequestTarget aTarget, Form<Project> aForm)
