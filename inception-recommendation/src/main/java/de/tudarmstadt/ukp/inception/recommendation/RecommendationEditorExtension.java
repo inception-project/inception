@@ -26,6 +26,7 @@ import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.event.Broadcast;
+import org.apache.wicket.feedback.IFeedback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -112,6 +113,7 @@ public class RecommendationEditorExtension
         if (!prediction.isPresent()) {
             log.error("Could not find annotation in [{}] with id [{}]", document, aVID);
             aTarget.getPage().error("Could not find annotation");
+            aTarget.addChildren(aTarget.getPage(), IFeedback.class);
             return;
         }
 
@@ -184,6 +186,7 @@ public class RecommendationEditorExtension
         if (!oPrediction.isPresent()) {
             log.error("Could not find annotation in [{}] with id [{}]", document, aVID);
             aTarget.getPage().error("Could not find annotation");
+            aTarget.addChildren(aTarget.getPage(), IFeedback.class);
             return;
         }
 
