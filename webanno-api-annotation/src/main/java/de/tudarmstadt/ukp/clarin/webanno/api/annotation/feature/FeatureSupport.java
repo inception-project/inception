@@ -242,6 +242,13 @@ public interface FeatureSupport<T>
     /**
      * Update this feature with a new value. This method should not be called directly but
      * rather via {@link TypeAdapter#setFeatureValue}.
+     * <p>
+     * Normally, this method accepts a primitive UIMA-supported type as value. However, if may
+     * also accept a different type which needs to be converted to a primitive UIMA-supported
+     * type. If this is the case, the method should also always still accept a value of the
+     * primitive type to which the value is converted. For example, if the method accepts a
+     * {@code Pair<Integer, String>} and then stores the integer key to the CAS, then it should
+     * also accept {@code Integer} values.
      *
      * @param aJcas
      *            the JCas.
