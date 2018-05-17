@@ -40,6 +40,7 @@ public class IriConstants
 
     public static final String PREFIX_WIKIDATA_ENTITY = "http://www.wikidata.org/entity/";
     public static final String PREFIX_WIKIDATA_DIRECT = "http://www.wikidata.org/prop/direct/";
+    public static final String PREFIX_SCHEMA = "http://schema.org/";
 
     public static final Set<String> IMPLICIT_NAMESPACES = new HashSet<>(Arrays.asList(RDF.NAMESPACE,
             RDFS.NAMESPACE, XMLSchema.NAMESPACE, OWL.NAMESPACE, INCEPTION_SCHEMA_NAMESPACE));
@@ -54,18 +55,26 @@ public class IriConstants
      * https://www.wikidata.org/wiki/Q35120
      */
     public static final IRI WIKIDATA_CLASS;
+
     /**
      * https://www.wikidata.org/wiki/Property:P279
      */
     public static final IRI WIKIDATA_SUBCLASS;
+
     /**
      * https://www.wikidata.org/wiki/Property:P31
      */
     public static final IRI WIKIDATA_TYPE;
 
+    /**
+     * http://www.schema.org/description
+     */
+    public static final IRI SCHEMA_DESCRIPTION;
+
     public static final List<IRI> CLASS_IRIS;
     public static final List<IRI> SUBCLASS_IRIS;
     public static final List<IRI> TYPE_IRIS;
+    public static final List<IRI> DESCRIPTION_IRIS;
 
     static {
         ValueFactory vf = SimpleValueFactory.getInstance();
@@ -73,9 +82,11 @@ public class IriConstants
         WIKIDATA_CLASS = vf.createIRI(PREFIX_WIKIDATA_ENTITY, "Q35120");
         WIKIDATA_SUBCLASS = vf.createIRI(PREFIX_WIKIDATA_DIRECT, "P279");
         WIKIDATA_TYPE = vf.createIRI(PREFIX_WIKIDATA_DIRECT, "P31");
+        SCHEMA_DESCRIPTION = vf.createIRI(PREFIX_SCHEMA, "description");
 
         CLASS_IRIS = asList(RDFS.CLASS, OWL.CLASS, WIKIDATA_CLASS);
         SUBCLASS_IRIS = asList(RDFS.SUBCLASSOF, WIKIDATA_SUBCLASS);
         TYPE_IRIS = asList(RDF.TYPE, WIKIDATA_TYPE);
+        DESCRIPTION_IRIS = asList(RDFS.COMMENT, SCHEMA_DESCRIPTION);
     }
 }
