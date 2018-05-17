@@ -58,6 +58,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VTextMar
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
@@ -137,7 +138,7 @@ public class ActiveLearningSidebar
     private AnnotationObject currentRecommendation;
     private RecommendationDifference currentDifference;
     private AnnotationPage annotationPage;
-    private Predictions predictionModel;
+    private Predictions model;
     private String vMarkerType = "";
     private VID highlightVID;
     private LearningRecord selectedRecord;
@@ -293,10 +294,10 @@ public class ActiveLearningSidebar
             String aText, String aRecommendation)
     {
         AnnotatorState annotatorState = ActiveLearningSidebar.this.getModelObject();
-        predictionModel = recommendationService.getPredictions(annotatorState.getUser(),
+        model = recommendationService.getPredictions(annotatorState.getUser(),
                 annotatorState.getProject());
-        if (predictionModel != null) {
-            Optional<AnnotationObject> aoForVID = predictionModel.getPrediction(aBegin, aEnd,
+        if (model != null) {
+            Optional<AnnotationObject> aoForVID = model.getPrediction(aBegin, aEnd,
                     aRecommendation);
             if (aoForVID.isPresent()) {
                 highlightVID = new VID(RecommendationEditorExtension.BEAN_NAME,
@@ -305,10 +306,11 @@ public class ActiveLearningSidebar
                 vMarkerType = ANNOTATION_MARKER;
             }
             else {
-                error("Recommendation [" + aText + "] as [" + aRecommendation
-                        + "] no longer exists");
+                String msg = String.format("Recommendation [%s] as [%s] no longer exists",
+                        aText, aRecommendation);
+                LOG.error(msg);
+                error(msg);
                 aTarget.addChildren(getPage(), IFeedback.class);
-                
             }
         }
     }
@@ -586,6 +588,7 @@ public class ActiveLearningSidebar
     {
         selectedRecord = aRecord;
         vMarkerType = TEXT_MARKER;
+        LOG.error("No annotation could be highlighted.");
         error("No annotation could be highlighted.");
         aTarget.addChildren(getPage(), IFeedback.class);
     }
@@ -634,15 +637,24 @@ public class ActiveLearningSidebar
         AnnotatorState annotatorState = getModelObject();
         AnnotatorState eventState = aEvent.getAnnotatorState();
         
-        predictionModel = recommendationService.getPredictions(annotatorState.getUser(),
+        model = recommendationService.getPredictions(annotatorState.getUser(),
                 annotatorState.getProject());
         
         if (sessionActive && eventState.getUser().equals(annotatorState.getUser())
                 && eventState.getProject().equals(annotatorState.getProject())) {
-            if (eventState.getDocument().equals(annotatorState.getDocument())
-                    && aEvent.getVid().getLayerId() == selectedLayer.getObject().getId()
-                    && predictionModel.getPredictionByVID(aEvent.getVid())
-                            .equals(currentRecommendation)) {
+            SourceDocument document = eventState.getDocument();
+            VID vid = aEvent.getVid();
+            Optional<AnnotationObject> prediction = model.getPredictionByVID(document, vid);
+
+            if (!prediction.isPresent()) {
+                LOG.error("Could not find prediction in [{}] with id [{}]", document, vid);
+                error("Could not find prediction");
+                return;
+            }
+
+            if (document.equals(annotatorState.getDocument())
+                    && vid.getLayerId() == selectedLayer.getObject().getId()
+                    && prediction.get().equals(currentRecommendation)) {
                 
                 moveToNextRecommendation(aEvent.getTarget());
             }
@@ -654,12 +666,21 @@ public class ActiveLearningSidebar
     public void onRecommendationAcceptEvent(AjaxRecommendationAcceptedEvent aEvent)
     {
         AnnotatorState annotatorState = ActiveLearningSidebar.this.getModelObject();
-        predictionModel = recommendationService.getPredictions(annotatorState.getUser(),
+        model = recommendationService.getPredictions(annotatorState.getUser(),
             annotatorState.getProject());
         AnnotatorState eventState = aEvent.getAnnotatorState();
-        AnnotationObject acceptedRecommendation = predictionModel
-                .getPredictionByVID(aEvent.getVid());
+        SourceDocument document = annotatorState.getDocument();
+        VID vid = aEvent.getVid();
+        Optional<AnnotationObject> oRecommendation = model.getPredictionByVID(document, vid);
 
+        if (!oRecommendation.isPresent()) {
+            LOG.error("Could not find prediction in [{}] with id [{}]", document, vid);
+            error("Could not find prediction");
+            aEvent.getTarget().addChildren(getPage(), IFeedback.class);
+            return;
+        }
+
+        AnnotationObject acceptedRecommendation = oRecommendation.get();
         LearningRecord record = new LearningRecord();
         record.setUser(eventState.getUser().getUsername());
         record.setSourceDocument(eventState.getDocument());
@@ -670,7 +691,7 @@ public class ActiveLearningSidebar
         record.setOffsetCharacterBegin(acceptedRecommendation.getOffset().getBeginCharacter());
         record.setOffsetCharacterEnd(acceptedRecommendation.getOffset().getEndCharacter());
         record.setAnnotation(acceptedRecommendation.getAnnotation());
-        record.setLayer(annotationService.getLayer(aEvent.getVid().getLayerId()));
+        record.setLayer(annotationService.getLayer(vid.getLayerId()));
         record.setChangeLocation(LearningRecordChangeLocation.MAIN_EDITOR);
         learningRecordService.create(record);
 
