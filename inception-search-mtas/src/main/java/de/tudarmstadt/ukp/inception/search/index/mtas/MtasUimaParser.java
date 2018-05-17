@@ -64,14 +64,10 @@ import mtas.analysis.util.MtasConfiguration;
 import mtas.analysis.util.MtasParserException;
 import mtas.analysis.util.MtasTokenizerFactory;
 
+public class MtasUimaParser extends MtasParser {
 
-
-public class MtasUimaParser
-    extends MtasParser
-{
-	
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
+
     // Annotation layers being indexed by Mtas
     private HashMap<String, AnnotationLayer> layers;
     private HashMap<String, ArrayList<AnnotationFeature>> layerFeatures;
@@ -82,15 +78,13 @@ public class MtasUimaParser
 
     // Project id
     Project project;
-    
-    
+
     private KnowledgeBaseService kbService;
-    
+
     final private String MTAS_SENTENCE_LABEL = "s";
 
-    public MtasUimaParser(MtasConfiguration config)
-    {
-    	
+    public MtasUimaParser(MtasConfiguration config) {
+
         super(config);
         annotationSchemaService = ApplicationContextProvider.getApplicationContext()
                 .getBean(AnnotationSchemaService.class);
@@ -101,7 +95,6 @@ public class MtasUimaParser
         kbService = ApplicationContextProvider.getApplicationContext()
                 .getBean(KnowledgeBaseService.class);
 
-        
         if (config.attributes.get(MtasTokenizerFactory.ARGUMENT_PARSER_ARGS) != null) {
             // Read parser argument that contains the projectId
             JSONObject jsonParserConfiguration = new JSONObject(
@@ -114,7 +107,7 @@ public class MtasUimaParser
             layerFeatures = new HashMap<String, ArrayList<AnnotationFeature>>();
 
             for (AnnotationLayer layer : annotationSchemaService.listAnnotationLayer(project)) {
-                if (layer.isEnabled() ) { 
+                if (layer.isEnabled()) {
                     layers.put(layer.getName(), layer);
                     ArrayList<AnnotationFeature> features = new ArrayList<AnnotationFeature>();
                     for (AnnotationFeature feature : annotationSchemaService
@@ -129,15 +122,14 @@ public class MtasUimaParser
 
     @Override
     public MtasTokenCollection createTokenCollection(Reader reader)
-        throws MtasParserException, MtasConfigException
-    {
+            throws MtasParserException, MtasConfigException {
 
         MtasTokenCollection tokenCollection = new MtasTokenCollection();
 
         if (project == null) {
             return tokenCollection;
         }
-        
+
         try {
             TypeSystemDescription builtInTypes = TypeSystemDescriptionFactory
                     .createTypeSystemDescription();
@@ -157,7 +149,9 @@ public class MtasUimaParser
             int mtasId = 0;
             int tokenNum = 0;
 
-            // Build indexes over the token start and end positions such that we can quickly locate
+            // Build indexes over the token start and end positions such that we
+            // can quickly
+            // locate
             // tokens based on their offsets.
             NavigableMap<Integer, Integer> tokenBeginIndex = new TreeMap<>();
             NavigableMap<Integer, Integer> tokenEndIndex = new TreeMap<>();
@@ -179,16 +173,17 @@ public class MtasUimaParser
                         : "";
 
                 // Get begin of the first token. Special cases:
-                // 1) if the first token starts after the first char. For example, when there's
+                // 1) if the first token starts after the first char. For
+                // example, when there's
                 // a space or line break in the beginning of the document.
-                // 2) if the last token ends before the last char. Same as above.
+                // 2) if the last token ends before the last char. Same as
+                // above.
 
                 int beginToken = 0;
 
                 if (tokenBeginIndex.floorEntry(annotation.getBegin()) == null) {
                     beginToken = tokenBeginIndex.firstEntry().getValue();
-                }
-                else {
+                } else {
                     beginToken = tokenBeginIndex.floorEntry(annotation.getBegin()).getValue();
                 }
 
@@ -196,8 +191,7 @@ public class MtasUimaParser
 
                 if (tokenEndIndex.ceilingEntry(annotation.getEnd() - 1) == null) {
                     endToken = tokenEndIndex.lastEntry().getValue();
-                }
-                else {
+                } else {
                     endToken = tokenEndIndex.ceilingEntry(annotation.getEnd() - 1).getValue();
                 }
 
@@ -217,13 +211,13 @@ public class MtasUimaParser
                     mtasSentence.setOffset(annotation.getBegin(), annotation.getEnd());
                     mtasSentence.addPositionRange(beginToken, endToken);
                     tokenCollection.add(mtasSentence);
-                }
-                else {
+                } else {
                     // Other annotation types - annotate the features
                     if (layers.get(annotationName) != null) {
-                        // Add the UI annotation name to the index as an annotation.
+                        // Add the UI annotation name to the index as an
+                        // annotation.
                         // Replace spaces with underscore in the UI name.
-                        
+
                         MtasToken mtasAnnotation = new MtasTokenString(mtasId++,
                                 annotationUiName.replace(" ", "_") + MtasToken.DELIMITER,
                                 beginToken);
@@ -231,27 +225,35 @@ public class MtasUimaParser
                         mtasAnnotation.addPositionRange(beginToken, endToken);
                         tokenCollection.add(mtasAnnotation);
 
-                        // Get features for this annotation, if it is indexed. First comes the
+                        // Get features for this annotation, if it is indexed.
+                        // First comes the
                         // internal feature name, then the UI feature name
-                        for (AnnotationFeature feature: layerFeatures.get(annotationName)) {
+                        for (AnnotationFeature feature : layerFeatures.get(annotationName)) {
                             String featureValue = "";
-                            // Test if the internal feature name is a primitive feature
+                            // Test if the internal feature name is a primitive
+                            // feature
                             if (WebAnnoCasUtil.isPrimitiveFeature(annotation, feature.getName())) {
-                                // Get the feature value using the internal name.
-                                // Cast to Object so that the proper valueOf signature is used by
-                                // the compiler, otherwise it will think that a String argument is
+                                // Get the feature value using the internal
+                                // name.
+                                // Cast to Object so that the proper valueOf
+                                // signature is used by
+                                // the compiler, otherwise it will think that a
+                                // String argument is
                                 // char[].
-                              
-                            	featureValue = String.valueOf((Object) WebAnnoCasUtil
+
+                                featureValue = String.valueOf((Object) WebAnnoCasUtil
                                         .getFeature(annotation, feature.getName()));
-                                
+
                                 String labelStr = null;
-                                if(feature.getUiName().equals("identifier") && featureValue!="null") 
-                                	 labelStr = getUILabel(featureValue);
-                               
-                                // Add the UI annotation.feature name to the index as an annotation.
-                                // Replace spaces with underscore in the UI name.
-                                
+                                if (feature.getUiName().equals("identifier")
+                                        && featureValue != "null")
+                                    labelStr = getUILabel(featureValue);
+
+                                // Add the UI annotation.feature name to the
+                                // index as an annotation.
+                                // Replace spaces with underscore in the UI
+                                // name.
+
                                 MtasToken mtasAnnotationFeatureIRI = new MtasTokenString(mtasId++,
                                         annotationUiName.replace(" ", "_") + "."
                                                 + feature.getUiName().replace(" ", "_")
@@ -261,115 +263,103 @@ public class MtasUimaParser
                                         annotation.getEnd());
                                 mtasAnnotationFeatureIRI.addPositionRange(beginToken, endToken);
                                 tokenCollection.add(mtasAnnotationFeatureIRI);
-                                
-                                
-                                // Add the UI annotation.feature label to the index as an annotation.
-                                // Replace spaces with underscore in the UI name.
-                                if(labelStr!=null) {
-                                	String indexedStr = annotationUiName.replace(" ", "_") + "."
-                                            + feature.getUiName().replace(" ", "_")+"."+labelStr;
-                                	 log.debug("Indexed String: {}",indexedStr);
-                                	 MtasToken mtasAnnotationFeatureLabel = new MtasTokenString(mtasId++,
-                                			 indexedStr ,
-                                             beginToken);
-                                     mtasAnnotationFeatureLabel.setOffset(annotation.getBegin(),
-                                             annotation.getEnd());
-                                     mtasAnnotationFeatureLabel.addPositionRange(beginToken, endToken);
-                                     tokenCollection.add(mtasAnnotationFeatureLabel);
+
+                                // Add the UI annotation.feature label to the
+                                // index as an annotation.
+                                // Replace spaces with underscore in the UI
+                                // name.
+                                if (labelStr != null) {
+                                    String indexedStr = annotationUiName.replace(" ", "_") + "."
+                                            + feature.getUiName().replace(" ", "_") + "."
+                                            + labelStr;
+                                    log.debug("Indexed String: {}", indexedStr);
+                                    MtasToken mtasAnnotationFeatureLabel = new MtasTokenString(
+                                            mtasId++, indexedStr, beginToken);
+                                    mtasAnnotationFeatureLabel.setOffset(annotation.getBegin(),
+                                            annotation.getEnd());
+                                    mtasAnnotationFeatureLabel.addPositionRange(beginToken,
+                                            endToken);
+                                    tokenCollection.add(mtasAnnotationFeatureLabel);
                                 }
-                               
+
                             }
                         }
                     }
                 }
             }
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             log.error("Unable to index document", e);
         }
         return tokenCollection;
     }
 
     @Override
-    public String printConfig()
-    {
+    public String printConfig() {
         return null;
     }
-    
-    
+
     /**
-     * Takes in IRI for identifier and returns teh label String
-     * Eg: 
-     * InputParameter :- http://www.w3.org/TR/2003/PR-owl-guide-20031209/wine#RoseDAnjou
-     * Returned :- "Concept"+MtasToken.DELIMITER+RoseDAnjou
+     * Takes in IRI for identifier and returns teh label String Eg: InputParameter :-
+     * http://www.w3.org/TR/2003/PR-owl-guide-20031209/wine#RoseDAnjou Returned :-
+     * "Concept"+MtasToken.DELIMITER+RoseDAnjou
+     * 
      * @param iri
      * @return
      */
     public String getUILabel(String iri) {
-    	
-    	StringBuffer labelStr  = new StringBuffer("");
-    	Optional kbReference = null;
-    	kbReference =  kbService.readConcept(project, iri);
+
+        StringBuilder labelStr = new StringBuilder();
+        Optional kbReference = null;
+        kbReference = kbService.readConcept(project, iri);
         if (kbReference.isPresent()) {
-        	KBConcept concept = (KBConcept) kbReference.get(); 
-        	labelStr.append("Concept"+MtasToken.DELIMITER+concept.getUiLabel());
-        }
-        else {
-            kbReference =  kbService.readInstance(project, iri);
-            if(kbReference.isPresent()) {
-            	KBInstance instance = (KBInstance) kbReference.get();
-            	labelStr.append("Instance"+MtasToken.DELIMITER+instance.getUiLabel());
+            KBConcept concept = (KBConcept) kbReference.get();
+            labelStr.append("Concept" + MtasToken.DELIMITER + concept.getUiLabel());
+        } else {
+            kbReference = kbService.readInstance(project, iri);
+            if (kbReference.isPresent()) {
+                KBInstance instance = (KBInstance) kbReference.get();
+                labelStr.append("Instance" + MtasToken.DELIMITER + instance.getUiLabel());
             }
-            
-        }       
+
+        }
         return labelStr.toString();
     }
-    
 
-    class SimpleAnnotationLayer
-    {
+    class SimpleAnnotationLayer {
         private ArrayList<Pair<String, String>> features;
         private String LayerName;
         private String LayerUiName;
         private String LayerShorName;
 
-        public ArrayList<Pair<String, String>> getFeatures()
-        {
+        public ArrayList<Pair<String, String>> getFeatures() {
             return features;
         }
 
-        public void setFeatures(ArrayList<Pair<String, String>> features)
-        {
+        public void setFeatures(ArrayList<Pair<String, String>> features) {
             this.features = features;
         }
 
-        public String getLayerName()
-        {
+        public String getLayerName() {
             return LayerName;
         }
 
-        public void setLayerName(String layerName)
-        {
+        public void setLayerName(String layerName) {
             LayerName = layerName;
         }
 
-        public String getLayerUiName()
-        {
+        public String getLayerUiName() {
             return LayerUiName;
         }
 
-        public void setLayerUiName(String layerUiName)
-        {
+        public void setLayerUiName(String layerUiName) {
             LayerUiName = layerUiName;
         }
 
-        public String getLayerShorName()
-        {
+        public String getLayerShorName() {
             return LayerShorName;
         }
 
-        public void setLayerShorName(String layerShorName)
-        {
+        public void setLayerShorName(String layerShorName) {
             LayerShorName = layerShorName;
         }
     }
