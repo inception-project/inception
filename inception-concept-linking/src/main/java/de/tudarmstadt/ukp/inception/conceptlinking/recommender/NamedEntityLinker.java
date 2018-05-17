@@ -145,8 +145,10 @@ public class NamedEntityLinker
 
                     TokenObject nextTokenObject = sentence.get(sentenceIndex + 1);
                     // Checking whether the next TokenObject is a NE
-                    // and whether the sentenceIndex for the next TokenObject is still in the range of the sentence
-                    while (isNamedEntity(nextTokenObject) && sentenceIndex + 1 < sentence.size() - 1) {
+                    // and whether the sentenceIndex for the next TokenObject is still
+                    // in the range of the sentence
+                    while (isNamedEntity(nextTokenObject)
+                        && sentenceIndex + 1 < sentence.size() - 1) {
                         coveredText.append(" ").append(nextTokenObject.getCoveredText());
                         endCharacter = nextTokenObject.getOffset().getEndCharacter();
                         endToken = nextTokenObject.getOffset().getEndToken();
