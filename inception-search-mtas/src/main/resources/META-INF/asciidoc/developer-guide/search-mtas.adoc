@@ -1,0 +1,22 @@
+[[sect_search-mtas]]
+
+==== Mtas Index
+
+The Mtas index is implemented in the *MtasDocumentIndex* and *MtasDocumentIndexFactory* classes. Furthermore, the *MtasUimaParser* class provides a parser to be used by Lucene when adding a new document to the index.
+
+* MtasDocumentIndexFactory
+
+The factory allows to build a new MtasDocumentIndex through the getNewIndex method, which is called by the search service.
+
+* MtasDocumentIndex
+
+This class holds the main functionalities of a Mtas index. Its methods are called by the search service and allow to create, open close and drop a Mtas index. It allows to add or delete a document from an index, as well as to perform queries on the index.
+
+Each index is related to only one project, and every project can have only one index from a given search provider.
+
+When adding a document to a Mtas index, the Lucene engine will use the class MtasUimaParser in order to find out which are the tokens and annotations to be indexed.
+
+* MtasUimaParser
+
+The parser is responsible for creating a new TokenCollection to be used by Lucene, whenever a new document is being indexed. The token collection consists of all the tokens and annotations found in the document, which are transformed into Mtas tokens in order to be added to the Lucene index. The parser scans the document CAS and goes through all its annotations, finding out which ones are related to the annotation layers in the document's project - those are the annotations to be indexed. Currently, the parser only indexes span type annotations.
+

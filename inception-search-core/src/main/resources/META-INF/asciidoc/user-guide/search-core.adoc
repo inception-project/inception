@@ -1,0 +1,20 @@
+[[sect_search-core]]
+
+=== Search
+
+The INCEpTION search module allows to search for words, passages and annotations made in the 
+documents of a given project. For doing a search, the user must access the search sidebar located 
+in the left of the screen, write a query and press the *Search* button. The results will be shown 
+below the query, grouped by the document where they come from. Every result is shown in KWIC 
+(keyword in context) style, i.e., surrounded by a left and right context to facilitate its 
+identification.
+
+Clicking on a result will make the central main editor automatically jump to the position of that
+result inside the original document. Only documents contained in the current project will be
+retrieved by a given search.
+
+INCEpTION allows the configuration of different search providers. Currently, the default search 
+is provided by *Mtas* (Multi Tier Annotation Search), a Lucene/Solr based search and indexing 
+mechanism developed by Meertens Institut (https://meertensinstituut.github.io/mtas).
+
+image::search-core-search.png[Search sidebar]

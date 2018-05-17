@@ -32,3 +32,9 @@ include::{include-dir}database.adoc[]
 <<<
 
 include::{include-dir}systemproperties.adoc[]
+
+<<<
+
+include::{include-dir}search-core.adoc[]
+
+include::{include-dir}search-mtas.adoc[]
