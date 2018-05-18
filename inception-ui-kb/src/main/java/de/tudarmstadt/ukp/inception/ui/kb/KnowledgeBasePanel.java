@@ -202,10 +202,10 @@ public class KnowledgeBasePanel
         }
         details = details.replaceWith(replacementPanel);
         
-        if (event.isRedrawConceptListPanel()) {
-            event.getTarget().add(conceptTreePanel);
+        if (event.isRedrawConceptandPropertyListPanels()) {
+            event.getTarget().add(conceptTreePanel, propertyListPanel);
         }
-        event.getTarget().add(propertyListPanel, detailContainer);
+        event.getTarget().add(detailContainer);
         event.getTarget().addChildren(getPage(), IFeedback.class);
     }
 
@@ -255,10 +255,10 @@ public class KnowledgeBasePanel
         }
         details = details.replaceWith(replacementPanel);
         
-        if (event.isRedrawProperyListPanel()) {
-            event.getTarget().add(propertyListPanel);
+        if (event.isRedrawConceptandPropertyListPanels()) {
+            event.getTarget().add(propertyListPanel, conceptTreePanel);
         }
-        event.getTarget().add(conceptTreePanel, detailContainer);
+        event.getTarget().add(detailContainer);
         event.getTarget().addChildren(getPage(), IFeedback.class);
     }
 
