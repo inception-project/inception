@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.dl4j.pos;
 
 import java.io.File;
 
-import de.tudarmstadt.ukp.inception.recommendation.imls.conf.ClassifierConfiguration;
+import de.tudarmstadt.ukp.inception.recommendation.api.ClassifierConfiguration;
 
 /**
  * The base configuration for the implemented DL4J classification tool. It sets up the path to the

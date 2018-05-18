@@ -24,12 +24,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
-import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
@@ -49,18 +49,22 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
+import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 @Component
 public class PropertyFeatureSupport
     implements FeatureSupport<Void>
 {
     private static final Logger LOG = LoggerFactory.getLogger(PropertyFeatureSupport.class);
-    private static final String PREDICATE_KEY = "KB: Property";
-    private static final String FACT_PREDICATE_PREFIX = "kb-property:";
+    public static final String PREDICATE_KEY = "KB: Property";
+    public static final String FACT_PREDICATE_PREFIX = "kb-property:";
 
+    @Autowired private FactLinkingService factService;
     @Autowired private KnowledgeBaseService kbService;
 
     private String featureSupportId;
@@ -81,8 +85,7 @@ public class PropertyFeatureSupport
     public List<FeatureType> getSupportedFeatureTypes(AnnotationLayer aAnnotationLayer)
     {
         List<FeatureType> types = new ArrayList<>();
-        types.add(new FeatureType(FACT_PREDICATE_PREFIX + aAnnotationLayer.getName(), PREDICATE_KEY,
-            featureSupportId));
+        types.add(new FeatureType(FACT_PREDICATE_PREFIX, PREDICATE_KEY, featureSupportId, true));
         return types;
     }
 
@@ -99,18 +102,16 @@ public class PropertyFeatureSupport
     }
 
     @Override
-    public String renderFeatureValue(AnnotationFeature aFeature, AnnotationFS aFS,
-        Feature aLabelFeature)
+    public String renderFeatureValue(AnnotationFeature aFeature, String aLabel)
     {
         try {
-            String value = aFS.getFeatureValueAsString(aLabelFeature);
             String renderValue = null;
-            if (value != null) {
+            if (aLabel != null) {
                 // FIXME Since this might be called very often during rendering, it *might* be
                 // worth to set up an LRU cache instead of relying on the performance of the
                 // underlying KB store.
                 renderValue = kbService.getKnowledgeBases(aFeature.getProject()).stream()
-                    .map(k -> kbService.readProperty(k, value))
+                    .map(k -> kbService.readProperty(k, aLabel))
                     .flatMap(o -> o.map(Stream::of).orElseGet(Stream::empty))
                     .map(KBProperty::getUiLabel).findAny().orElseThrow(NoSuchElementException::new);
             }
@@ -126,9 +127,22 @@ public class PropertyFeatureSupport
     public void setFeatureValue(JCas aJcas, AnnotationFeature aFeature, int aAddress,
         Object aValue)
     {
-        KBHandle kbProp = (KBHandle) aValue;
         FeatureStructure fs = selectByAddr(aJcas, FeatureStructure.class, aAddress);
-        setFeature(fs, aFeature, kbProp != null ? kbProp.getIdentifier() : null);
+        
+        // Normally, we get KBHandles back from the feature editors
+        if (aValue instanceof KBHandle) {
+            KBHandle kbProp = (KBHandle) aValue;
+            setFeature(fs, aFeature, kbProp.getIdentifier());
+        }
+        // When used in a recommendation context, we might get the concept identifier as a string
+        // value.
+        else if (aValue instanceof String || aValue == null) {
+            setFeature(fs, aFeature, aValue);
+        }
+        else {
+            throw new IllegalArgumentException(
+                    "Unable to handle value [" + aValue + "] of type [" + aValue.getClass() + "]");
+        }
     }
 
     @Override
@@ -139,18 +153,32 @@ public class PropertyFeatureSupport
 
         // Sanity check
         if (!Objects.equals(effectiveType, feature.getRange().getName())) {
-            throw new IllegalArgumentException("Actual feature type ["
-                + feature.getRange().getName() + "] does not match expected feature type ["
-                + effectiveType + "].");
+            throw new IllegalArgumentException(
+                "Actual feature type [" + feature.getRange().getName()
+                    + "] does not match expected feature type [" + effectiveType + "].");
         }
 
         String value = (String) WebAnnoCasUtil.getFeature(aFS, aFeature.getName());
         if (value != null) {
-            KBProperty prop = kbService.getKnowledgeBases(aFeature.getProject()).stream()
-                .map(k -> kbService.readProperty(k, value))
-                .flatMap(o -> o.map(Stream::of).orElseGet(Stream::empty)).findAny()
-                .orElseThrow(NoSuchElementException::new);
-            return new KBHandle(prop.getIdentifier(), prop.getName());
+            Project project = aFeature.getProject();
+            ConceptFeatureTraits traits = factService.getFeatureTraits(project);
+            // Use the property from a particular knowledge base
+            Optional<KBProperty> property = null;
+            if (traits.getRepositoryId() != null) {
+                property = kbService
+                    .getKnowledgeBaseById(aFeature.getProject(), traits.getRepositoryId())
+                    .flatMap(kb -> kbService.readProperty(kb, value));
+            }
+            // Use the property from any knowledge base (leave KB unselected)
+            else {
+                for (KnowledgeBase kb : kbService.getKnowledgeBases(project)) {
+                    property = kbService.readProperty(kb, value);
+                    if (property.isPresent()) {
+                        break;
+                    }
+                }
+            }
+            return property.map(i -> KBHandle.of(i)).orElseThrow(NoSuchElementException::new);
         }
         else {
             return null;

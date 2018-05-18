@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.conceptlinking.util;
 
 import java.util.List;
 
+import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
@@ -75,9 +76,8 @@ public class QueryUtil
      * @return a query to retrieve candidate entities
      */
     public static TupleQuery generateCandidateQuery(RepositoryConnection conn, List<String>
-        tokens, int limit)
+        tokens, int limit, IRI aDescriptionIri)
     {
-
         String query = String.join("\n",
             "DEFINE input:inference 'instances'",
             SPARQL_PREFIX,
@@ -92,7 +92,7 @@ public class QueryUtil
             "        ?altLabel bif:contains '?entityLabel'. ",
             "        OPTIONAL",
             "        {",
-            "          ?e2 schema:description ?description.",
+            "          ?e2 ?descriptionIri ?description.",
             "          FILTER ( lang(?description) = \"en\" )",
             "        }",
             "      }",
@@ -121,12 +121,13 @@ public class QueryUtil
 
         TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, query);
         tupleQuery.setBinding("entityLabel", tokensJoined);
+        tupleQuery.setBinding("descriptionIri", aDescriptionIri);
         return tupleQuery;
     }
 
     /**
      *
-     * @param wikidataId wikidataId
+     * @param wikidataId wikidataId, e.g. "Q3"
      * @param limit maximum number of results
      * @return a query to retrieve the semantic signature
      */
@@ -134,8 +135,7 @@ public class QueryUtil
         wikidataId, int limit)
     {
         ValueFactory vf = SimpleValueFactory.getInstance();
-        Literal id = vf.createLiteral("e:" + wikidataId);
-
+        IRI iri = vf.createIRI("http://www.wikidata.org/entity/" + wikidataId);
         String query = String.join("\n",
             SPARQL_PREFIX,
             "SELECT DISTINCT ?label ?p WHERE ",
@@ -159,7 +159,7 @@ public class QueryUtil
             " LIMIT " + limit);
 
         TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, query);
-        tupleQuery.setBinding("e2", id);
+        tupleQuery.setBinding("e2", iri);
         return tupleQuery;
     }
 
