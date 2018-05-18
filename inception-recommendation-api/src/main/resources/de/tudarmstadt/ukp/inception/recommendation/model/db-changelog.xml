@@ -311,4 +311,11 @@
       </column>
     </addColumn>
   </changeSet>
+
+  <changeSet author="INCEpTION Team" id="20180511">
+    <preConditions onFail="MARK_RAN">
+      <columnExists tableName="recommender" columnName="classifierId" />
+    </preConditions>
+    <dropColumn tableName="recommender" columnName="classifierId" />
+  </changeSet>
 </databaseChangeLog>
