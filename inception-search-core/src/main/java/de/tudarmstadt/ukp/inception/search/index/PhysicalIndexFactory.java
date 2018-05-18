@@ -17,29 +17,20 @@
  */
 package de.tudarmstadt.ukp.inception.search.index;
 
-import org.springframework.beans.factory.BeanNameAware;
-import org.springframework.core.Ordered;
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
-public abstract class IndexFactoryImplBase
-    implements BeanNameAware, Ordered, IndexFactory
+public interface PhysicalIndexFactory
 {
-    private String beanName;
+    /**
+     * @return get the bean name.
+     */
+    String getBeanName();
 
-    @Override
-    public void setBeanName(String aName)
-    {
-        beanName = aName;
-    }
+    String getDisplayName();
 
-    @Override
-    public String getBeanName()
-    {
-        return beanName;
-    }
-
-    @Override
-    public int getOrder()
-    {
-        return Ordered.LOWEST_PRECEDENCE;
-    }
+    PhysicalIndex getNewIndex(Project aProject, AnnotationSchemaService aAnnotationSchemaService,
+            DocumentService aDocumentService, ProjectService aProjectService, String aDir);
 }

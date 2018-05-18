@@ -33,16 +33,17 @@ import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.springframework.stereotype.Component;
 
 @Component
-public class IndexRegistryImpl
-    implements IndexRegistry, BeanPostProcessor
+public class PhysicalIndexRegistryImpl
+    implements PhysicalIndexRegistry, BeanPostProcessor
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private final List<IndexFactory> extensionsProxy;
+    private final List<PhysicalIndexFactory> extensionsProxy;
 
-    private List<IndexFactory> extensions;
+    private List<PhysicalIndexFactory> extensions;
 
-    public IndexRegistryImpl(@Lazy @Autowired(required = false) List<IndexFactory> aExtensions)
+    public PhysicalIndexRegistryImpl(
+            @Lazy @Autowired(required = false) List<PhysicalIndexFactory> aExtensions)
     {
         extensionsProxy = aExtensions;
     }
@@ -55,13 +56,13 @@ public class IndexRegistryImpl
     
     /* package private */ void init()
     {
-        List<IndexFactory> exts = new ArrayList<>();
+        List<PhysicalIndexFactory> exts = new ArrayList<>();
 
         if (extensionsProxy != null) {
             exts.addAll(extensionsProxy);
             AnnotationAwareOrderComparator.sort(exts);
         
-            for (IndexFactory fs : exts) {
+            for (PhysicalIndexFactory fs : exts) {
                 log.info("Found index extension: {}",
                         ClassUtils.getAbbreviatedName(fs.getClass(), 20));
             }
@@ -71,13 +72,13 @@ public class IndexRegistryImpl
     }
     
     @Override
-    public List<IndexFactory> getIndexFactories()
+    public List<PhysicalIndexFactory> getIndexFactories()
     {
         return extensions;
     }
 
     @Override
-    public IndexFactory getIndexFactory(String aId)
+    public PhysicalIndexFactory getIndexFactory(String aId)
     {
         if (aId == null) {
             return null;
@@ -89,7 +90,7 @@ public class IndexRegistryImpl
     }
 
     @Override
-    public IndexFactory getDefaultIndexFactory()
+    public PhysicalIndexFactory getDefaultIndexFactory()
     {
         return getIndexFactories().get(0);
     }
