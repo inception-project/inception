@@ -176,7 +176,7 @@
   <!-- Drop foreign key constraint to project table. The project field was 
     removed since it is available via other foreign keys, e.g. layer or source 
     document. -->
-  <changeSet author="WebAnno Team" id="20180114-al-05">
+  <changeSet author="INCEpTION Team" id="20180114-al-05">
     <preConditions onFail="MARK_RAN">
       <foreignKeyConstraintExists
         foreignKeyTableName="learning_record" foreignKeyName="FK_c2vau3axkdb53ck4uqiv5sty3" />
@@ -187,7 +187,7 @@
 
   <!-- Remove project column. The project field was removed since it is available 
     via other foreign keys, e.g. layer or source document. -->
-  <changeSet author="WebAnno Team" id="20180114-al-06">
+  <changeSet author="INCEpTION Team" id="20180114-al-06">
     <preConditions onFail="MARK_RAN">
       <columnExists tableName="learning_record" columnName="project" />
     </preConditions>
@@ -196,7 +196,7 @@
 
   <!-- Drop foreign key constraint to user table. The project user was changed 
     in the Java model to a simple string field instead of an entity reference. -->
-  <changeSet author="WebAnno Team" id="20180114-al-07">
+  <changeSet author="INCEpTION Team" id="20180114-al-07">
     <preConditions onFail="MARK_RAN">
       <foreignKeyConstraintExists
         foreignKeyTableName="learning_record" foreignKeyName="FK_2ywpay9iepm6ajmsykc485nqi" />
