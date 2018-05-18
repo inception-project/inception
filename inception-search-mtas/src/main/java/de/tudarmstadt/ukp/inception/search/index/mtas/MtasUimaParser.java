@@ -52,9 +52,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
-import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
-import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
+import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import mtas.analysis.parser.MtasParser;
 import mtas.analysis.token.MtasToken;
 import mtas.analysis.token.MtasTokenCollection;
@@ -79,7 +77,7 @@ public class MtasUimaParser extends MtasParser {
     // Project id
     Project project;
 
-    private KnowledgeBaseService kbService;
+    KBUtility kbUtil;
 
     final private String MTAS_SENTENCE_LABEL = "s";
 
@@ -92,8 +90,7 @@ public class MtasUimaParser extends MtasParser {
         projectService = ApplicationContextProvider.getApplicationContext()
                 .getBean(ProjectService.class);
 
-        kbService = ApplicationContextProvider.getApplicationContext()
-                .getBean(KnowledgeBaseService.class);
+        kbUtil = new KBUtility();
 
         if (config.attributes.get(MtasTokenizerFactory.ARGUMENT_PARSER_ARGS) != null) {
             // Read parser argument that contains the projectId
@@ -309,19 +306,14 @@ public class MtasUimaParser extends MtasParser {
     public String getUILabel(String iri) {
 
         StringBuilder labelStr = new StringBuilder();
-        Optional kbReference = null;
-        kbReference = kbService.readConcept(project, iri);
-        if (kbReference.isPresent()) {
-            KBConcept concept = (KBConcept) kbReference.get();
-            labelStr.append("Concept" + MtasToken.DELIMITER + concept.getUiLabel());
+        Optional<KBObject> kbObject = kbUtil.readKBEntry(project, iri);
+        if (kbObject.isPresent()) {
+            labelStr.append(kbObject.get().getClass().getSimpleName() + MtasToken.DELIMITER
+                    + kbObject.get().getUiLabel());
         } else {
-            kbReference = kbService.readInstance(project, iri);
-            if (kbReference.isPresent()) {
-                KBInstance instance = (KBInstance) kbReference.get();
-                labelStr.append("Instance" + MtasToken.DELIMITER + instance.getUiLabel());
-            }
-
+            return null;
         }
+
         return labelStr.toString();
     }
 
