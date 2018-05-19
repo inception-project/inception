@@ -43,6 +43,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.app.Focusable;
+import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
@@ -174,11 +175,12 @@ public abstract class AbstractInfoPanel<T extends KBObject> extends Panel {
             deleteButton.add(new WriteProtectionBehavior(kbModel));
             add(deleteButton);
             
-            // button for deleting the KBObject
+            // button for creating a new subclass that is only visible for concepts  
             LambdaAjaxLink createSubclassButton = new LambdaAjaxLink("createSubclass",
                     AbstractInfoPanel.this::actionCreateSubclass).onConfigure((_this) -> {
                         _this.setVisible(kbObjectModel.getObject() != null
-                                && isNotEmpty(kbObjectModel.getObject().getIdentifier()));
+                                && isNotEmpty(kbObjectModel.getObject().getIdentifier())
+                                && kbObjectModel.getObject() instanceof KBConcept);
                     });
             createSubclassButton.add(new Label("subclassLabel",
                     new ResourceModel(getCreateSubclassButtonResourceKey())));

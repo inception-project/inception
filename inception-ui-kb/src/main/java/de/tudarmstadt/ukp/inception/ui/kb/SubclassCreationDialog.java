@@ -19,8 +19,8 @@ package de.tudarmstadt.ukp.inception.ui.kb;
 
 import java.util.NoSuchElementException;
 
+import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.event.Broadcast;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.feedback.IFeedback;
@@ -73,12 +73,6 @@ public class SubclassCreationDialog
 
     }
 
-    @Override
-    public void show(IPartialPageRequestHandler target)
-    {
-        super.show(target);
-    }
-
     private class ContentPanel
         extends Panel
     {
@@ -104,6 +98,8 @@ public class SubclassCreationDialog
             // add components for input form
             RequiredTextField<String> name = new RequiredTextField<String>("subClassName",
                     newSubclassConceptModel.bind("name"));
+            name.add(AttributeModifier.append("placeholder",
+                    new ResourceModel("subclassNamePlaceholder")));
 
             LambdaAjaxButton<KBConcept> createButton = new LambdaAjaxButton<KBConcept>(
                     "createSubclass", ContentPanel.this::actionCreateSubclass);
