@@ -241,6 +241,18 @@ public class SourceDocument
         }
         return true;
     }
+    
+    @Override
+    public String toString()
+    {
+        StringBuilder builder = new StringBuilder();
+        builder.append("[");
+        builder.append(name);
+        builder.append("](");
+        builder.append(id);
+        builder.append(")");
+        return builder.toString();
+    }
 
     public static final Comparator<SourceDocument> NAME_COMPARATOR = Comparator
             .comparing(SourceDocument::getName);
