@@ -47,4 +47,4 @@ history is a valid acceptance, after the learning record is deleted, a confirmat
 pops up to confirm whether to delete the annotation too.
 
 The user may finish the current active learning session whenever he wants. If there are pending
-suggestions, they might be shown in the next active learning session that he starts.
+suggestions, they might be shown in the next active learning session that he starts. +
