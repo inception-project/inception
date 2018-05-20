@@ -1,5 +1,5 @@
 /*
- * Copyright 2017
+ * Copyright 2018
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  *
@@ -7,7 +7,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,15 +15,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.search.index;
+package de.tudarmstadt.ukp.inception.recommendation.imls.external;
 
-import java.util.List;
+import java.io.Serializable;
 
-public interface IndexRegistry
+public class ExternalClassifierTraits
+    implements Serializable
 {
-    List<IndexFactory> getIndexFactories();
 
-    IndexFactory getIndexFactory(String aId);
+    private static final long serialVersionUID = -3109239605741337123L;
 
-    IndexFactory getDefaultIndexFactory();
+    private String remoteUrl = "http://localhost:12889/tag";
+
+    public String getRemoteUrl()
+    {
+        return remoteUrl;
+    }
+
+    public void setRemoteUrl(String aRemoteUrl)
+    {
+        remoteUrl = aRemoteUrl;
+    }
 }
