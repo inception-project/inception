@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.scheduling;
+package de.tudarmstadt.ukp.inception.search.scheduling;
 
 import static org.apache.commons.lang3.Validate.notNull;
 
@@ -26,21 +26,21 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.context.ApplicationContext;
 
-import de.tudarmstadt.ukp.inception.recommendation.scheduling.tasks.Task;
+import de.tudarmstadt.ukp.inception.search.scheduling.tasks.Task;
 
 public class TaskConsumer
     implements Runnable
 {
-    private static Logger log = LoggerFactory.getLogger(TaskConsumer.class);
-    
-    private final ApplicationContext applicationContext;
+    private Logger log = LoggerFactory.getLogger(getClass());
+
+    private ApplicationContext applicationContext;
     private BlockingQueue<Task> queue;
- 
+
     public TaskConsumer(ApplicationContext aApplicationContext, BlockingQueue<Task> aQueue)
     {
         notNull(aQueue);
         notNull(aApplicationContext);
-        
+
         queue = aQueue;
         applicationContext = aApplicationContext;
     }
@@ -50,16 +50,16 @@ public class TaskConsumer
     {
         try {
             while (!Thread.interrupted()) {
-                log.info("Waiting for new task...");
-                
+                log.info("Waiting for new indexing task...");
+
                 Runnable task = queue.take();
-                
+
                 try {
                     AutowireCapableBeanFactory factory = applicationContext
                             .getAutowireCapableBeanFactory();
                     factory.autowireBean(task);
                     factory.initializeBean(task, "transientTask");
-                    
+
                     task.run();
                 }
                 catch (Exception e) {

@@ -32,7 +32,18 @@ import de.tudarmstadt.ukp.inception.recommendation.api.util.CasUtil;
 public class CustomAnnotationObjectLoader
     implements AnnotationObjectLoader
 {
-    public List<List<AnnotationObject>> loadAnnotationObjects(JCas aJCas, String featureName)
+
+    private final String featureName;
+    private final String typeName;
+
+    public CustomAnnotationObjectLoader(String aFeatureName, String aTypeName)
+    {
+        featureName = aFeatureName;
+        typeName = aTypeName;
+    }
+
+    @Override
+    public List<List<AnnotationObject>> loadAnnotationObjects(JCas aJCas)
     {
         List<List<AnnotationObject>> result = new LinkedList<>();
 
@@ -41,19 +52,12 @@ public class CustomAnnotationObjectLoader
         }
         
         CAS cas = aJCas.getCas();
-        //TODO: Pass Layer as parameter
-        Type annotationType = org.apache.uima.fit.util.CasUtil.getType(cas , "webanno.custom.ArgLayer");
+        Type annotationType = org.apache.uima.fit.util.CasUtil.getType(cas , typeName);
         Feature feature = annotationType.getFeatureByBaseName(featureName);
         
         result = CasUtil.loadCustomAnnotatedSentences(aJCas, annotationType, feature);
 
         return result;
-    }
-
-    @Override
-    public List<List<AnnotationObject>> loadAnnotationObjects(JCas aJCas)
-    {
-        return loadAnnotationObjects(aJCas, "ArgF");
     }
 
     @Override
