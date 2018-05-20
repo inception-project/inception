@@ -220,12 +220,16 @@ public class SuggestionViewPanel
             UserAnnotationSegment aCurationUserSegment, JCas aJcas)
             throws AnnotationException, UIMAException, ClassNotFoundException, IOException
     {
-        User user = userRepository.get(aCurationUserSegment.getUsername());
         SourceDocument sourceDocument = aCurationUserSegment.getAnnotatorState().getDocument();
         AnnotationDocument clickedAnnotationDocument = documentService
-                .getAnnotationDocument(sourceDocument, user);
+                .getAnnotationDocument(sourceDocument, aCurationUserSegment.getUsername());
 
-        Integer address = aRequest.getParameterValue(PARAM_ID).toInteger();
+        if (clickedAnnotationDocument == null) {
+            throw new AnnotationException("No annotation document for source document "
+                    + sourceDocument + " for user [" + aCurationUserSegment.getUsername() + "]");
+        }
+        
+        int address = aRequest.getParameterValue(PARAM_ID).toInt();
         String spanType = removePrefix(aRequest.getParameterValue(PARAM_TYPE).toString());
 
         createSpan(spanType, aCurationUserSegment.getAnnotatorState(), aJcas,
