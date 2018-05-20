@@ -256,14 +256,21 @@ public class DocumentServiceImpl
     @Transactional(noRollbackFor = NoResultException.class)
     public AnnotationDocument getAnnotationDocument(SourceDocument aDocument, User aUser)
     {
+        return getAnnotationDocument(aDocument, aUser.getUsername());
+    }
+
+    @Override
+    @Transactional(noRollbackFor = NoResultException.class)
+    public AnnotationDocument getAnnotationDocument(SourceDocument aDocument, String aUser)
+    {
         return entityManager
                 .createQuery(
                         "FROM AnnotationDocument WHERE document = :document AND " + "user =:user"
                                 + " AND project = :project", AnnotationDocument.class)
-                .setParameter("document", aDocument).setParameter("user", aUser.getUsername())
+                .setParameter("document", aDocument).setParameter("user", aUser)
                 .setParameter("project", aDocument.getProject()).getSingleResult();
     }
-
+    
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
     public SourceDocument getSourceDocument(Project aProject, String aDocumentName)
