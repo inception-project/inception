@@ -289,15 +289,28 @@ public interface DocumentService
     /**
      * Get the annotation document.
      *
-     * @param document
+     * @param aDocument
      *            the source document.
-     * @param user
+     * @param aUser
      *            the user.
      * @return the annotation document.
      * @throws NoResultException
      *             if no annotation document exists for the given source/user.
      */
-    AnnotationDocument getAnnotationDocument(SourceDocument document, User user);
+    AnnotationDocument getAnnotationDocument(SourceDocument aDocument, User aUser);
+
+    /**
+     * Get the annotation document.
+     *
+     * @param aDocument
+     *            the source document.
+     * @param aUser
+     *            the user.
+     * @return the annotation document.
+     * @throws NoResultException
+     *             if no annotation document exists for the given source/user.
+     */
+    AnnotationDocument getAnnotationDocument(SourceDocument aDocument, String aUser);
 
     /**
      * Gets the CAS for the given annotation document. Converts it form the source document if
