@@ -15,26 +15,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.search;
+package de.tudarmstadt.ukp.inception.search.index;
 
-import java.io.IOException;
-import java.util.List;
-
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.inception.search.model.Index;
 
-public interface SearchService
+public interface PhysicalIndexFactory
 {
-    static final String SERVICE_NAME = "searchService";
+    /**
+     * @return get the bean name.
+     */
+    String getBeanName();
 
-    List<SearchResult> query(User aUser, Project aProject, String aQuery)
-        throws IOException, ExecutionException;
+    String getDisplayName();
 
-    void reindex(Project aproject) throws IOException;
-
-    public Index getIndex(Project aProject);
-
-    public void updateIndex(Index aIndexObject);
-
+    PhysicalIndex getNewIndex(Project aProject, AnnotationSchemaService aAnnotationSchemaService,
+            DocumentService aDocumentService, ProjectService aProjectService, String aDir);
 }
