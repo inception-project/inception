@@ -47,6 +47,7 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
+import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxConceptSelectionEvent;
 
 public class SubclassCreationDialog
@@ -140,8 +141,12 @@ public class SubclassCreationDialog
                 ValueFactory vf = SimpleValueFactory.getInstance();
                 KBStatement subclassOfStmt = new KBStatement(newConceptHandle, propertyHandle,
                         vf.createIRI(parentConceptId));
-                kbService.upsertStatement(kbModel.getObject(), subclassOfStmt);
-
+                //set reification to NONE just for "upserting" the statement, then restore old value
+                Reification kbReification = kb.getReification();
+                kb.setReification(Reification.NONE);
+                kbService.upsertStatement(kb, subclassOfStmt);
+                kb.setReification(kbReification);
+                
                 // select newly created concept right away to show the statements
                 send(getPage(), Broadcast.BREADTH,
                         new AjaxConceptSelectionEvent(aTarget, newConceptHandle));
