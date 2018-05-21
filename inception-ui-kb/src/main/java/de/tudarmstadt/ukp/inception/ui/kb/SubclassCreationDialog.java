@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb;
 
+import java.util.List;
 import java.util.NoSuchElementException;
 
 import org.apache.wicket.AttributeModifier;
@@ -32,6 +33,7 @@ import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
+import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
@@ -131,6 +133,21 @@ public class SubclassCreationDialog
                 KBHandle propertyHandle = new KBHandle(property.getIdentifier(), property.getName(),
                         property.getDescription());
 
+                // check whether the subclass name already exists for this superclass
+                List<KBHandle> existingSubclasses = kbService.listChildConcepts(kb,
+                        parentConceptHandleModel.getObject().getIdentifier(), true);
+                
+                for (KBHandle subclass : existingSubclasses) {
+                    if (newSubclassConceptModel.getObject().getName().equals(subclass.getName())) {
+
+                        error(new StringResourceModel("createSubclassErrorMsg", this).setParameters(
+                                subclass.getName(),
+                                parentConceptHandleModel.getObject().getName()).getString());
+                        aTarget.addChildren(getPage(), IFeedback.class);
+                        return;
+                    }
+                }
+                
                 // create the new concept
                 KBHandle newConceptHandle = kbService.createConcept(kb,
                         newSubclassConceptModel.getObject());
