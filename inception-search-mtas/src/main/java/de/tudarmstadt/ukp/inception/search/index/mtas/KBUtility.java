@@ -26,44 +26,58 @@ public class KBUtility {
     private KnowledgeBaseService kbService;
 
     public KBUtility() {
-        super();
-        // TODO Auto-generated constructor stub
+
         kbService = ApplicationContextProvider.getApplicationContext()
                 .getBean(KnowledgeBaseService.class);
 
     }
+    
+    /**
+     * Return Class type of KBObject
+     * @param kbObject
+     * @return
+     */
+    public String getType(Optional<KBObject> kbObject) {
 
-    public Optional<KBObject> readKBEntry(Project aProject, String aIdentifier)
-    {
+        String classType = null;
+        if (kbObject != null) {
+            classType = kbObject.get().getClass().getSimpleName();
+        }
+        return classType;
+
+    }
+    
+
+    public Optional<KBObject> readKBIdentifier(Project aProject, String aIdentifier) {
+    
         for (KnowledgeBase kb : kbService.getKnowledgeBases(aProject)) {
-            try {
-                RepositoryConnection conn = kbService.getConnection(kb);
+            try (RepositoryConnection conn = kbService.getConnection(kb)) {
                 ValueFactory vf = conn.getValueFactory();
                 RepositoryResult<Statement> stmts = RdfUtils.getStatements(conn,
                         vf.createIRI(aIdentifier), kb.getTypeIri(), kb.getClassIri(), true);
-                
+    
                 if (stmts.hasNext()) {
                     Statement conceptStmt = stmts.next();
                     KBConcept kbConcept = KBConcept.read(conn, conceptStmt);
                     return Optional.of(kbConcept);
                 }
-                
-                else if (!stmts.hasNext()) { 
-                    
+    
+                else if (!stmts.hasNext()) {
+    
                     Optional<KBInstance> kbInstance = kbService.readInstance(kb, aIdentifier);
-                    return  Optional.of(kbInstance.get());
-                }                    
-                
-            }
-            catch (QueryEvaluationException e) {
-                log.warn("Reading KB Entries failed.", e);
+    
+                    if (kbInstance != null) {
+                        return Optional.of(kbInstance.get());
+                    }
+    
+                }
+    
+            } catch (QueryEvaluationException e) {
+                log.error("Reading KB Entries failed.", e);
                 return Optional.empty();
-            }
-            
-            
+            } 
         }
         return Optional.empty();
-        
     }
 
 }
