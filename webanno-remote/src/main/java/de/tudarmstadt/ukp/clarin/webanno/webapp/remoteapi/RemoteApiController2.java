@@ -438,7 +438,7 @@ public class RemoteApiController2
         Project project = getProject(aProjectId);
         
         ProjectExportRequest per = new ProjectExportRequest(Model.of(project),
-                aFormat.orElse("bin"));
+                aFormat.orElse("UIMA binary CAS"));
         File exportedFile = exportService.generateZipFile(per);
         
         // Turn the file into a resource and auto-delete the file when the resource closes the
