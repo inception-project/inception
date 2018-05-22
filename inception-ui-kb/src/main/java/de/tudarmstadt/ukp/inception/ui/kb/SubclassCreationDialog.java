@@ -142,7 +142,7 @@ public class SubclassCreationDialog
 
                         error(new StringResourceModel("createSubclassErrorMsg", this).setParameters(
                                 subclass.getName(),
-                                parentConceptHandleModel.getObject().getName()).getString());
+                                parentConceptHandleModel.getObject().getUiLabel()).getString());
                         aTarget.addChildren(getPage(), IFeedback.class);
                         return;
                     }
