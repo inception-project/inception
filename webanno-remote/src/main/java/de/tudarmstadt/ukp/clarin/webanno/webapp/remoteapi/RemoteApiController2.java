@@ -430,13 +430,15 @@ public class RemoteApiController2
             method = RequestMethod.GET,
             produces = { "application/zip", APPLICATION_JSON_UTF8_VALUE })
     public ResponseEntity<InputStreamResource> projectExport(
-            @PathVariable(PARAM_PROJECT_ID) long aProjectId)
+            @PathVariable(PARAM_PROJECT_ID) long aProjectId,
+            @RequestParam(value = PARAM_FORMAT) Optional<String> aFormat)
         throws Exception
     {
         // Get project (this also ensures that it exists and that the current user can access it
         Project project = getProject(aProjectId);
         
-        ProjectExportRequest per = new ProjectExportRequest(Model.of(project), "bin");
+        ProjectExportRequest per = new ProjectExportRequest(Model.of(project),
+                aFormat.orElse("bin"));
         File exportedFile = exportService.generateZipFile(per);
         
         // Turn the file into a resource and auto-delete the file when the resource closes the
