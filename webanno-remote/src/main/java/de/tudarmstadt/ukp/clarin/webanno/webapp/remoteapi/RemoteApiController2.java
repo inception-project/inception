@@ -102,6 +102,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectState;
+import de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -328,6 +329,9 @@ public class RemoteApiController2
         LOG.info("Creating project [" + aName + "]");
         Project project = new Project();
         project.setName(aName);
+        project.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
+        project.setScriptDirection(ScriptDirection.LTR);
+        project.setState(ProjectState.NEW);
         projectService.createProject(project);
         annotationService.initializeProject(project);
         
