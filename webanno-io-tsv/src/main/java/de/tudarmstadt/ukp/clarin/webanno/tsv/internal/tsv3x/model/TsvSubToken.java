@@ -17,6 +17,7 @@
  */package de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model;
 
 import org.apache.commons.lang3.Validate;
+import org.springframework.lang.NonNull;
 
 public class TsvSubToken extends TsvToken
 {
@@ -24,7 +25,7 @@ public class TsvSubToken extends TsvToken
     private final int begin;
     private final int end;
     
-    public TsvSubToken(TsvToken aToken, int aBegin, int aEnd)
+    public TsvSubToken(@NonNull TsvToken aToken, int aBegin, int aEnd)
     {
         super(aToken.getDocument(), aToken.getSentence(), aToken.getUimaToken(),
                 aToken.getPosition());
