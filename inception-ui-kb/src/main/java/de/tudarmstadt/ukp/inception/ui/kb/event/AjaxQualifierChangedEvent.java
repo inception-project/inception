@@ -19,11 +19,12 @@ package de.tudarmstadt.ukp.inception.ui.kb.event;
 
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.wicketstuff.event.annotation.AbstractAjaxAwareEvent;
 
 import de.tudarmstadt.ukp.inception.kb.graph.KBQualifier;
 
 public class AjaxQualifierChangedEvent
-    extends AjaxEvent
+    extends AbstractAjaxAwareEvent
 {
     private Component component;
     private KBQualifier qualifier;

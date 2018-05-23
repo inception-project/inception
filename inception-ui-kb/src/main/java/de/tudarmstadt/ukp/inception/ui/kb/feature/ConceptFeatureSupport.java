@@ -166,9 +166,22 @@ public class ConceptFeatureSupport
     @Override
     public void setFeatureValue(JCas aJcas, AnnotationFeature aFeature, int aAddress, Object aValue)
     {
-        KBHandle kbInst = (KBHandle) aValue;
         FeatureStructure fs = selectByAddr(aJcas, FeatureStructure.class, aAddress);
-        setFeature(fs, aFeature, kbInst != null ? kbInst.getIdentifier() : null);
+        
+        // Normally, we get KBHandles back from the feature editors
+        if (aValue instanceof KBHandle) {
+            KBHandle kbInst = (KBHandle) aValue;
+            setFeature(fs, aFeature, kbInst.getIdentifier());
+        }
+        // When used in a recommendation context, we might get the concept identifier as a string
+        // value.
+        else if (aValue instanceof String || aValue == null) {
+            setFeature(fs, aFeature, aValue);
+        }
+        else {
+            throw new IllegalArgumentException(
+                    "Unable to handle value [" + aValue + "] of type [" + aValue.getClass() + "]");
+        }
     }
 
     @Override

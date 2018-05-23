@@ -24,9 +24,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -58,7 +56,6 @@ import org.eclipse.rdf4j.repository.RepositoryResult;
 import org.eclipse.rdf4j.repository.config.RepositoryConfig;
 import org.eclipse.rdf4j.repository.config.RepositoryConfigException;
 import org.eclipse.rdf4j.repository.config.RepositoryImplConfig;
-import org.eclipse.rdf4j.repository.manager.RepositoryInfo;
 import org.eclipse.rdf4j.repository.manager.RepositoryManager;
 import org.eclipse.rdf4j.repository.manager.RepositoryProvider;
 import org.eclipse.rdf4j.repository.sail.config.SailRepositoryConfig;
@@ -110,7 +107,7 @@ public class KnowledgeBaseServiceImpl
         String url = Paths.get(dataDir.getAbsolutePath(), "kb").toUri().toString();
         repoManager = RepositoryProvider.getRepositoryManager(url);
         log.info("Knowledge base repository path: " + url);
-        implicitNamespaces = new HashSet<>(Arrays.asList(IMPLICIT_NAMESPACES));
+        implicitNamespaces = IriConstants.IMPLICIT_NAMESPACES;
     }
 
     public KnowledgeBaseServiceImpl(
@@ -209,13 +206,6 @@ public class KnowledgeBaseServiceImpl
         repoManager.removeRepository(kb.getRepositoryId());
 
         entityManager.remove(entityManager.contains(kb) ? kb : entityManager.merge(kb));
-    }
-
-    @Override
-    public RepositoryInfo getKnowledgeBaseInfo(KnowledgeBase kb)
-    {
-        assertRegistration(kb);
-        return repoManager.getRepositoryInfo(kb.getRepositoryId());
     }
 
     @Override
@@ -596,7 +586,7 @@ public class KnowledgeBaseServiceImpl
     private String generateIdentifier(RepositoryConnection conn, KnowledgeBase kb)
     {
         ValueFactory vf = conn.getValueFactory();
-        return KnowledgeBaseService.INCEPTION_NAMESPACE + vf.createBNode().getID();
+        return IriConstants.INCEPTION_NAMESPACE + vf.createBNode().getID();
     }
 
     @Override
@@ -813,5 +803,11 @@ public class KnowledgeBaseServiceImpl
     public List<KBQualifier> listQualifiers(KnowledgeBase kb, KBStatement aStatement)
     {
         return getReificationStrategy(kb).listQualifiers(kb, aStatement);
+    }
+
+    @Override
+    public boolean statementsMatchSPO(KnowledgeBase akb, KBStatement mockStatement)
+    {
+        return getReificationStrategy(akb).statementsMatchSPO(akb, mockStatement);
     }
 }
