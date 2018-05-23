@@ -42,8 +42,6 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.automation.service.AutomationService;
-import de.tudarmstadt.ukp.clarin.webanno.automation.service.export.AutomationMiraTemplateExporter;
-import de.tudarmstadt.ukp.clarin.webanno.automation.service.export.AutomationTrainingDocumentExporter;
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.standalone.LoadingSplashScreen;
 import de.tudarmstadt.ukp.clarin.webanno.support.standalone.ShutdownDialogAvailableEvent;
@@ -57,10 +55,7 @@ import de.tudarmstadt.ukp.inception.app.config.InceptionBanner;
 @ComponentScan(excludeFilters = {
         @Filter(type = FilterType.CUSTOM, classes = TypeExcludeFilter.class),
         @Filter(type = FilterType.CUSTOM, classes = AutoConfigurationExcludeFilter.class),
-        @Filter(type = FilterType.ASSIGNABLE_TYPE, classes = { 
-                AutomationService.class, AutomationMiraTemplateExporter.class,
-                AutomationTrainingDocumentExporter.class
-        })})
+        @Filter(type = FilterType.ASSIGNABLE_TYPE, classes = { AutomationService.class })})
 @EntityScan(basePackages = {
         // Include WebAnno entity packages separately so we can skip the automation entities!
         "de.tudarmstadt.ukp.clarin.webanno.model",
