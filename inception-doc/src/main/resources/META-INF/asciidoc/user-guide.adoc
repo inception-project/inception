@@ -77,6 +77,7 @@ include::{include-dir}menu.adoc[]
 
 include::{include-dir}annotation.adoc[]
 include::{include-dir}annotation_recommendation.adoc[]
+include::{include-dir}annotation_activeLearning.adoc[]
 
 <<<
 

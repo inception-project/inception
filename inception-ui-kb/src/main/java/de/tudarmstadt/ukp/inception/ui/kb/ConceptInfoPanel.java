@@ -55,7 +55,7 @@ public class ConceptInfoPanel extends AbstractInfoPanel<KBConcept> {
         KBHandle handle = kbService.createConcept(kbModel.getObject(), concept);
 
         // select newly created property right away to show the statements
-        send(getPage(), Broadcast.BREADTH, new AjaxConceptSelectionEvent(aTarget, handle));
+        send(getPage(), Broadcast.BREADTH, new AjaxConceptSelectionEvent(aTarget, handle, true));
     }
 
     @Override
@@ -64,7 +64,7 @@ public class ConceptInfoPanel extends AbstractInfoPanel<KBConcept> {
         kbObjectModel.setObject(null);
 
         // send deselection event
-        send(getPage(), Broadcast.BREADTH, new AjaxConceptSelectionEvent(aTarget, null));
+        send(getPage(), Broadcast.BREADTH, new AjaxConceptSelectionEvent(aTarget, null, true));
     }
 
     @Override
