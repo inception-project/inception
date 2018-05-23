@@ -566,7 +566,7 @@ public class KnowledgeBaseServiceImpl
     }
     
     @Override
-    public List<Statement> listStatementsWithNoneSubjectReference(KnowledgeBase kb,
+    public List<Statement> listStatementsWithPredicateOrObjectReference(KnowledgeBase kb,
             String aIdentifier)
     {
         try (RepositoryConnection conn = getConnection(kb)) {

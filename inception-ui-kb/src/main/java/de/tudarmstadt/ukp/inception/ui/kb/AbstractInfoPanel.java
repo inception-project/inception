@@ -45,6 +45,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.app.Focusable;
+import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
@@ -229,7 +230,7 @@ public abstract class AbstractInfoPanel<T extends KBObject> extends Panel {
         
         // find out whether there are statements that reference the object
         List<Statement> statementsWithReference = kbService
-                .listStatementsWithNoneSubjectReference(kbModel.getObject(),
+                .listStatementsWithPredicateOrObjectReference(kbModel.getObject(),
                         kbObjectModel.getObject().getIdentifier());
         System.out.println(statementsWithReference);
         if (statementsWithReference.isEmpty()) {
