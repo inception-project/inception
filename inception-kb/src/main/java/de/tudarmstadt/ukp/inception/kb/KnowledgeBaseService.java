@@ -275,7 +275,7 @@ public interface KnowledgeBaseService
     void deleteStatement(KnowledgeBase kb, KBStatement aStatement) throws RepositoryException;
     
     /**
-     * Lists all statements in which the entity appears as predicate or object 
+     * Lists all statements in which the given identifier appears as predicate or object 
      * @param kb The knowledge base to query
      * @param aIdentifier The identifier of the entity
      * @return All statements that match the specification

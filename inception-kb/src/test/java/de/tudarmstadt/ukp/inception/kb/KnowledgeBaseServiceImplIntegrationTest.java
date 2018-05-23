@@ -31,12 +31,14 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.persistence.EntityManager;
 
 import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
@@ -429,6 +431,32 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
             .hasFieldOrPropertyWithValue("name", "Concept name");
     }
 
+    @Test
+    public void deleteConcept_WithConceptReferencedAsObject_ShouldDeleteConceptAndStatement() {
+        KBInstance instance = buildInstance();
+        KBProperty property = buildProperty();
+        KBConcept concept = buildConcept();
+     
+        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
+        KBHandle subHandle = sut.createInstance(kb, instance);
+        KBHandle predHandle = sut.createProperty(kb, property);
+        KBHandle conceptHandle = sut.createConcept(kb, concept);
+        String conceptId = conceptHandle.getIdentifier();
+        
+        sut.upsertStatement(kb, buildStatement(kb, subHandle, predHandle, conceptId));
+        
+        sut.deleteConcept(kb, concept);
+        
+        assertThat(sut.listStatementsWithPredicateOrObjectReference(kb, conceptId))
+            .isEmpty();
+
+        Optional<KBConcept> savedConcept = sut.readConcept(kb, conceptId);
+        assertThat(savedConcept.isPresent())
+            .as("Check that concept was not found after delete")
+            .isFalse();
+        
+    }
+    
     @Test
     public void deleteConcept_WithExistingConcept_ShouldDeleteConcept() {
         KBConcept concept = buildConcept();
@@ -873,6 +901,32 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
             .as("Check that instance was not found after delete")
             .isFalse();
     }
+    
+    @Test
+    public void deleteInstance_WithInstanceReferencedAsObject_ShouldDeleteInstanceAndStatement()
+    {
+        KBInstance instance = buildInstance();
+        KBProperty property = buildProperty();
+        KBInstance Instance = buildInstance();
+
+        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
+        KBHandle subHandle = sut.createInstance(kb, instance);
+        KBHandle predHandle = sut.createProperty(kb, property);
+        KBHandle instanceHandle = sut.createInstance(kb, Instance);
+        String instanceId = instanceHandle.getIdentifier();
+
+        sut.upsertStatement(kb, buildStatement(kb, subHandle, predHandle, instanceId));
+
+        sut.deleteInstance(kb, Instance);
+
+        assertThat(sut.listStatementsWithPredicateOrObjectReference(kb, instanceId))
+            .isEmpty();
+
+        Optional<KBInstance> savedInstance = sut.readInstance(kb, instanceId);
+        assertThat(savedInstance.isPresent()).as("Check that Instance was not found after delete")
+                .isFalse();
+
+    }
 
     @Test
     public void deleteInstance_WithNonexistentProperty_ShouldNoNothing() {
@@ -1175,6 +1229,38 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         List<KnowledgeBase> knowledgeBases = sut.getEnabledKnowledgeBases(project);
 
         assertThat(knowledgeBases).as("Check that the list is empty").isEmpty();
+    }
+    
+    @Test
+    public void listStatementsWithPredicateOrObjectReference_WithExistingStatements_ShouldOnlyReturnStatementsWhereIdIsPredOrObj()
+    {
+        KBInstance subjectInstance = buildInstance();
+        KBInstance objectInstance = buildInstance();
+        KBProperty property = buildProperty();
+     
+        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
+        
+        KBHandle subjectHandle = sut.createInstance(kb, subjectInstance);
+        KBHandle predHandle = sut.createProperty(kb, property);
+        KBHandle objectHandle = sut.createInstance(kb, objectInstance);
+        String testInstanceId = objectHandle.getIdentifier();
+        
+        KBStatement stmt1 = buildStatement(kb, subjectHandle, predHandle, testInstanceId);
+        
+        sut.upsertStatement(kb, stmt1);
+        List<Statement> result = sut.listStatementsWithPredicateOrObjectReference(kb, testInstanceId);
+        assertThat(result)
+            .allMatch(new Predicate<Statement>() {
+
+                @Override
+                public boolean test(Statement arg0)
+                {
+                    return arg0.getObject().stringValue().equals(testInstanceId);
+                }
+                
+            });
+        assertTrue(result.size() >= 1);
+        
     }
 
     @Test

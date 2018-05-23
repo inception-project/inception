@@ -232,7 +232,7 @@ public abstract class AbstractInfoPanel<T extends KBObject> extends Panel {
         List<Statement> statementsWithReference = kbService
                 .listStatementsWithPredicateOrObjectReference(kbModel.getObject(),
                         kbObjectModel.getObject().getIdentifier());
-        System.out.println(statementsWithReference);
+
         if (statementsWithReference.isEmpty()) {
             confirmationDialog.setContentModel(new StringResourceModel(
                     "kbobject.delete.confirmation.content", this, handleModel));

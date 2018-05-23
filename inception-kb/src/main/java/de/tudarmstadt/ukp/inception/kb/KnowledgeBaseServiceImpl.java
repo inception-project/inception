@@ -442,7 +442,6 @@ public class KnowledgeBaseServiceImpl
 
         return update(kb, (conn) -> {
             String identifier = generateIdentifier(conn, kb);
-            System.out.println(identifier);
             aInstance.setIdentifier(identifier);
             aInstance.write(conn, kb);
 
