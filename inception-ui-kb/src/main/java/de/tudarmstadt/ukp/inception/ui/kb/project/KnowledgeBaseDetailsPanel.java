@@ -393,7 +393,7 @@ public class KnowledgeBaseDetailsPanel extends Panel {
             
             Component iriPanel = new KnowledgeBaseIriPanel("iriPanel", model)
                     .add(LambdaBehavior.onConfigure(it -> it.setEnabled(false)));
-            // don't show radio group and base prefix in view mode 
+            // don't show radio group in view mode 
             iriPanel.get("iriSchema").setVisible(false);
             wmc.add(iriPanel);
             
