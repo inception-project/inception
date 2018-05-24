@@ -22,60 +22,46 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 public class KBUtility {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
-
     private KnowledgeBaseService kbService;
-
     public KBUtility() {
-
         kbService = ApplicationContextProvider.getApplicationContext()
                 .getBean(KnowledgeBaseService.class);
-
     }
-    
+
     /**
      * Return Class type of KBObject
+     * 
      * @param kbObject
      * @return
      */
-    public String getType(Optional<KBObject> kbObject) {
-
-        String classType = null;
-        if (kbObject != null) {
-            classType = kbObject.get().getClass().getSimpleName();
-        }
-        return classType;
-
+    public Optional<String> getType(Optional<KBObject> kbObject) {
+        return kbObject.map((p) -> p.getClass().getSimpleName());
     }
-    
 
+    /**
+     * Read identifier URI and return Optional<KBObject>
+     * @param aProject
+     * @param aIdentifier
+     * @return
+     */
     public Optional<KBObject> readKBIdentifier(Project aProject, String aIdentifier) {
-    
         for (KnowledgeBase kb : kbService.getKnowledgeBases(aProject)) {
             try (RepositoryConnection conn = kbService.getConnection(kb)) {
                 ValueFactory vf = conn.getValueFactory();
                 RepositoryResult<Statement> stmts = RdfUtils.getStatements(conn,
                         vf.createIRI(aIdentifier), kb.getTypeIri(), kb.getClassIri(), true);
-    
                 if (stmts.hasNext()) {
                     Statement conceptStmt = stmts.next();
                     KBConcept kbConcept = KBConcept.read(conn, conceptStmt);
                     return Optional.of(kbConcept);
-                }
-    
-                else if (!stmts.hasNext()) {
-    
+                } else if (!stmts.hasNext()) {
                     Optional<KBInstance> kbInstance = kbService.readInstance(kb, aIdentifier);
-    
-                    if (kbInstance != null) {
-                        return Optional.of(kbInstance.get());
-                    }
-    
+                    return kbInstance.flatMap((p) -> Optional.of(p));
                 }
-    
             } catch (QueryEvaluationException e) {
                 log.error("Reading KB Entries failed.", e);
                 return Optional.empty();
-            } 
+            }
         }
         return Optional.empty();
     }
