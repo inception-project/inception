@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.conceptlinking.util;
 
-import java.util.List;
-
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.model.ValueFactory;
@@ -75,8 +73,8 @@ public class QueryUtil
      * @param limit maximum number of results
      * @return a query to retrieve candidate entities
      */
-    public static TupleQuery generateCandidateQuery(RepositoryConnection conn, List<String>
-        tokens, int limit, IRI aDescriptionIri)
+    public static TupleQuery generateCandidateQuery(RepositoryConnection conn, String tokens,
+        int limit, IRI aDescriptionIri)
     {
         String query = String.join("\n",
             "DEFINE input:inference 'instances'",

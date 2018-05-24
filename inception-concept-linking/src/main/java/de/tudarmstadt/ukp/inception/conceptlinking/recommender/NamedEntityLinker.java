@@ -131,7 +131,7 @@ public class NamedEntityLinker
     {
         List<List<List<AnnotationObject>>> result = new ArrayList<>();
 
-        for (List<T> sentence : inputData) {
+        inputData.parallelStream().forEach(sentence -> {
             List<List<AnnotationObject>> annotatedSentence = new ArrayList<>();
             int sentenceIndex = 0;
             while (sentenceIndex < sentence.size() - 1) {
@@ -165,7 +165,7 @@ public class NamedEntityLinker
                 sentenceIndex++;
             }
             result.add(annotatedSentence);
-        }
+        });
         return result;
     }
 
