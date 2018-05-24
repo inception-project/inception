@@ -220,20 +220,22 @@ public class SuggestionViewPanel
             UserAnnotationSegment aCurationUserSegment, JCas aJcas)
             throws AnnotationException, UIMAException, ClassNotFoundException, IOException
     {
-        SourceDocument sourceDocument = aCurationUserSegment.getAnnotatorState().getDocument();
-        AnnotationDocument clickedAnnotationDocument = documentService
-                .getAnnotationDocument(sourceDocument, aCurationUserSegment.getUsername());
-
-        if (clickedAnnotationDocument == null) {
-            throw new AnnotationException("No annotation document for source document "
-                    + sourceDocument + " for user [" + aCurationUserSegment.getUsername() + "]");
+        AnnotationDocument clickedAnnotationDocument;
+        AnnotatorState state = aCurationUserSegment.getAnnotatorState();
+        if (state.getMode().equals(Mode.AUTOMATION) || state.getMode().equals(Mode.CORRECTION)) {
+            // createSpan / getJCas do not require an annotation document in this mode
+            clickedAnnotationDocument = null;
+        }
+        else {
+            SourceDocument sourceDocument = aCurationUserSegment.getAnnotatorState().getDocument();
+            clickedAnnotationDocument = documentService.getAnnotationDocument(sourceDocument,
+                    aCurationUserSegment.getUsername());
         }
         
         int address = aRequest.getParameterValue(PARAM_ID).toInt();
         String spanType = removePrefix(aRequest.getParameterValue(PARAM_TYPE).toString());
 
-        createSpan(spanType, aCurationUserSegment.getAnnotatorState(), aJcas,
-                clickedAnnotationDocument, address);
+        createSpan(spanType, state, aJcas, clickedAnnotationDocument, address);
     }
 
     private void createSpan(String spanType, AnnotatorState aBModel, JCas aMergeJCas,
