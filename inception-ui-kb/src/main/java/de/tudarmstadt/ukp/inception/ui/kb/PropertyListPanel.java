@@ -123,7 +123,7 @@ public class PropertyListPanel extends Panel {
     private void actionPreferenceChanged(AjaxRequestTarget aTarget) {
         if (!preferences.getObject().showAllProperties && selectedProperty.getObject() != null
                 && RdfUtils.isFromImplicitNamespace(selectedProperty.getObject())) {
-            send(getPage(), Broadcast.BREADTH, new AjaxPropertySelectionEvent(aTarget, null));
+            send(getPage(), Broadcast.BREADTH, new AjaxPropertySelectionEvent(aTarget, null, true));
         } else {
             aTarget.add(this);
         }

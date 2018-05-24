@@ -239,9 +239,10 @@ public class StatementGroupPanel extends Panel {
 
         }
         
-        private void actionPropertyLinkClicked(AjaxRequestTarget target) {
-            send(getPage(), Broadcast.BREADTH,
-                    new AjaxPropertySelectionEvent(target, groupModel.getObject().getProperty()));
+        private void actionPropertyLinkClicked(AjaxRequestTarget target)
+        {
+            send(getPage(), Broadcast.BREADTH, new AjaxPropertySelectionEvent(target,
+                    groupModel.getObject().getProperty(), true));
         }
         
         @OnEvent
