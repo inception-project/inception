@@ -117,7 +117,7 @@ public class RecommendationSpanRenderer
             // For recommendations with the same label by the same classifier,
             // show only the confidence of the highest one
             for (AnnotationObject ao: token) {
-                boolean hasNoAnnotation = ao.getAnnotation() == null;
+                boolean hasNoAnnotation = ao.getLabel() == null;
                 boolean isOverlappingForFeature = isOverlappingForFeature(
                     vspansWithoutRecommendations, ao.getOffset(), windowBegin, ao.getFeature());
                 boolean isRejected = isRejected(recordedAnnotations, ao);
@@ -126,21 +126,21 @@ public class RecommendationSpanRenderer
                     continue;
                 }
 
-                if (!labelMap.containsKey(ao.getAnnotation())
-                        || !labelMap.get(ao.getAnnotation())
+                if (!labelMap.containsKey(ao.getLabel())
+                        || !labelMap.get(ao.getLabel())
                                 .containsKey(ao.getRecommenderId())
-                        || labelMap.get(ao.getAnnotation()).get(ao.getRecommenderId())
+                        || labelMap.get(ao.getLabel()).get(ao.getRecommenderId())
                                 .getConfidence() < ao.getConfidence()) {
 
                     Map<Long, AnnotationObject> confidencePerClassifier;
-                    if (labelMap.get(ao.getAnnotation()) == null) {
+                    if (labelMap.get(ao.getLabel()) == null) {
                         confidencePerClassifier = new HashMap<>();
                     } else {
-                        confidencePerClassifier = labelMap.get(ao.getAnnotation());
+                        confidencePerClassifier = labelMap.get(ao.getLabel());
                     }
 
                     confidencePerClassifier.put(ao.getRecommenderId(), ao);
-                    labelMap.put(ao.getAnnotation(), confidencePerClassifier);
+                    labelMap.put(ao.getLabel(), confidencePerClassifier);
                 }
             }
             

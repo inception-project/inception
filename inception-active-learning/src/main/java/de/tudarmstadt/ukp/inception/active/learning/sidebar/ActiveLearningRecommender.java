@@ -114,13 +114,13 @@ public class ActiveLearningRecommender
     private static boolean isAlreadyInCleanList(List<AnnotationObject> cleanRecommendationList,
             AnnotationObject recommendationItem)
     {
-        String classifier = recommendationItem.getSource();
+        String source = recommendationItem.getSource();
         String annotation = recommendationItem.getLabel();
         String documentName = recommendationItem.getDocumentName();
         
         for (AnnotationObject existedRecommendation : cleanRecommendationList) {
             if (
-                    existedRecommendation.getSource().equals(classifier) &&
+                    existedRecommendation.getSource().equals(source) &&
                     existedRecommendation.getLabel().equals(annotation) &&
                     existedRecommendation.getDocumentName().equals(documentName)
             ) {

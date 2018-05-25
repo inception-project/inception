@@ -74,6 +74,14 @@ public class AnnotationObject
     }
 
     /**
+     * Creates an AnnotationObject with default confidence and null label, uiLabel and source
+     */
+    public AnnotationObject(TokenObject aToken, int aId, String aFeature)
+    {
+        this(aToken, null, null, aId, aFeature, null);
+    }
+
+    /**
      * Copy constructor.
      *
      * @param ao The annotationObject to copy
