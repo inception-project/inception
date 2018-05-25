@@ -229,34 +229,38 @@ public class MtasUimaParser extends MtasParser {
                                 // char[].
                                 featureValue = String.valueOf((Object) WebAnnoCasUtil
                                         .getFeature(annotation, feature.getName()));
-
-                                String labelStr = "";
-                                if (feature.getUiName().equals("identifier") && featureValue != "null") {
-                                    labelStr = getUILabel(featureValue);
-                                }
                                     
                                 // Add the UI annotation.feature name to the index as an annotation.
                                 // Replace spaces with underscore in the UI name.
                                 
-                                // Indexing for IRI
-                                MtasToken mtasAnnotationFeatureIRI = new MtasTokenString(mtasId++,
+                                MtasToken mtasAnnotationFeature = new MtasTokenString(mtasId++,
                                         annotationUiName.replace(" ", "_") + "."
                                                 + feature.getUiName().replace(" ", "_")
                                                 + MtasToken.DELIMITER + featureValue,
                                         beginToken);
-                                mtasAnnotationFeatureIRI.setOffset(annotation.getBegin(),
+                                mtasAnnotationFeature.setOffset(annotation.getBegin(),
                                         annotation.getEnd());
-                                mtasAnnotationFeatureIRI.addPositionRange(beginToken, endToken);
-                                tokenCollection.add(mtasAnnotationFeatureIRI);
+                                mtasAnnotationFeature.addPositionRange(beginToken, endToken);
+                                tokenCollection.add(mtasAnnotationFeature);
 
-                                // Add the UI annotation.feature name to the index as an annotation.
-                                // Replace spaces with underscore in the UI name.
+                                // Returns KB IRI label after checking if the  
+                                // feature type is associated with KB and feature value is not null
 
+                                String labelStr = "";
+                                if (feature.getType().contains("kb") && featureValue != "null") {
+                                    labelStr = getUILabel(featureValue);
+                                }
+
+                                
                                 if (!labelStr.isEmpty()) {
+
+                                    // Index IRI feature value with their labels along with 
+                                    // annotation.feature name  
                                     
                                     String indexedStr = annotationUiName.replace(" ", "_") + "."
-                                            + feature.getUiName().replace(" ", "_") + "." + labelStr;
-                                    
+                                            + feature.getUiName().replace(" ", "_") + "."
+                                            + labelStr;
+
                                     // Indexing UI annotation with type i.e Concept/Instance
                                     log.debug("Indexed String with type for : {}", indexedStr);
                                     MtasToken mtasAnnotationTypeFeatureLabel = new MtasTokenString(
@@ -266,14 +270,17 @@ public class MtasUimaParser extends MtasParser {
                                     mtasAnnotationTypeFeatureLabel.addPositionRange(beginToken,
                                             endToken);
                                     tokenCollection.add(mtasAnnotationTypeFeatureLabel);
-                                    
+
                                     indexedStr = annotationUiName.replace(" ", "_") + "."
-                                            + feature.getUiName().replace(" ", "_") 
-                                            + MtasToken.DELIMITER + labelStr.split(MtasToken.DELIMITER)[1];
-                                    
+                                            + feature.getUiName().replace(" ", "_")
+                                            + MtasToken.DELIMITER
+                                            + labelStr.split(MtasToken.DELIMITER)[1];
+
                                     // Indexing UI annotation without type i.e Concept/Instance
                                     log.debug("Indexed String without type for : {}", indexedStr);
-                                    log.debug("Indexed String without type for : {},{},{},{}", annotation.getBegin(),annotation.getEnd(),beginToken,endToken);
+                                    log.debug("Indexed String without type for : {},{},{},{}",
+                                            annotation.getBegin(), annotation.getEnd(), beginToken,
+                                            endToken);
                                     MtasToken mtasAnnotationFeatureLabel = new MtasTokenString(
                                             mtasId++, indexedStr, beginToken);
                                     mtasAnnotationFeatureLabel.setOffset(annotation.getBegin(),
@@ -307,10 +314,10 @@ public class MtasUimaParser extends MtasParser {
      * @param iri
      * @return
      */
-    public String getUILabel(String iri) {
+    public String getUILabel(String aIRI) {
 
         StringBuilder labelStr = new StringBuilder();
-        Optional<KBObject> kbObject = kbUtil.readKBIdentifier(project, iri);
+        Optional<KBObject> kbObject = kbUtil.readKBIdentifier(project, aIRI);
         if (kbObject.isPresent()) {
             labelStr.append(kbObject.get().getClass().getSimpleName() + MtasToken.DELIMITER
                     + kbObject.get().getUiLabel());
