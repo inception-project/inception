@@ -127,3 +127,8 @@ in https://meertensinstituut.github.io/mtas/search_cql.html.
 
  <Named_entity.identifier="ChateauMorgonBeaujolais"/>
  
+ * OR All named entities identifier with annotated identifier *ChateauMorgonBeaujolais* or *AmericanWine*
+ 
+ (<Named_entity.identifier="ChateauMorgonBeaujolais"/> | <Named_entity.identifier="AmericanWine"/>)
+ 
+ 
