@@ -132,7 +132,7 @@ public class NamedEntityLinker
     {
         List<List<List<AnnotationObject>>> result = new ArrayList<>();
 
-        for (List<T> sentence : inputData) {
+        inputData.parallelStream().forEach(sentence -> {
             List<List<AnnotationObject>> annotatedSentence = new ArrayList<>();
             int sentenceIndex = 0;
             while (sentenceIndex < sentence.size() - 1) {
@@ -145,7 +145,11 @@ public class NamedEntityLinker
                     int endToken = token.getOffset().getEndToken();
 
                     TokenObject nextTokenObject = sentence.get(sentenceIndex + 1);
-                    while (isNamedEntity(nextTokenObject)) {
+                    // Checking whether the next TokenObject is a NE
+                    // and whether the sentenceIndex for the next TokenObject is still
+                    // in the range of the sentence
+                    while (isNamedEntity(nextTokenObject)
+                        && sentenceIndex + 1 < sentence.size() - 1) {
                         coveredText.append(" ").append(nextTokenObject.getCoveredText());
                         endCharacter = nextTokenObject.getOffset().getEndCharacter();
                         endToken = nextTokenObject.getOffset().getEndToken();
@@ -162,7 +166,7 @@ public class NamedEntityLinker
                 sentenceIndex++;
             }
             result.add(annotatedSentence);
-        }
+        });
         return result;
     }
 

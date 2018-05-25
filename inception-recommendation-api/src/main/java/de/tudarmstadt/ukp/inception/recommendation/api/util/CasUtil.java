@@ -470,7 +470,7 @@ public class CasUtil
                     tokens, documentURI, documentName, feature);
 
             List<AnnotationObject> completeSentence = getAnnotationsForCompleteSentence(tokens,
-                annotationObjects, feature.getName(), id);
+                annotationObjects, feature.getShortName(), id);
             result.add(completeSentence);
             id = id + completeSentence.size();
         }
