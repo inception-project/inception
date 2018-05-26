@@ -34,7 +34,8 @@ public class TsvSubToken extends TsvToken
         Validate.isTrue(aBegin <= aEnd,
                 "End offset must be larger or equal to begin offset: [begin: %d, end: %d]", aBegin,
                 aEnd);
-        if (aToken.getUimaToken() != null) {
+        if (aToken.getUimaToken() != null
+                && aToken.getUimaToken().getCAS().getDocumentText() != null) {
             int length = aToken.getUimaToken().getCAS().getDocumentText().length();
             Validate.isTrue(aBegin <= length, "Begin offset must be in document range [0-%d]): %d",
                     length, aBegin);
