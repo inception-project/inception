@@ -560,6 +560,8 @@ public class MonitoringPage
         public MonitoringDetailForm(String id)
         {
             super(id, new CompoundPropertyModel<>(new EntityModel<>(new Project())));
+            
+            add(new Label("name"));
         }
     }
     
