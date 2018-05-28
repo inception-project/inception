@@ -58,6 +58,16 @@ public class KnowledgeBaseIriPanel
         selectedSchemaProfile = Model.of(SchemaProfile.RDFSCHEMA);
 
         kbModel = aModel;
+        
+        // Add textfield and label for basePrefix
+        ComboBox<String> basePrefix = new ComboBox<String>("basePrefix",
+                kbModel.bind("kb.basePrefix"), Arrays.asList(IriConstants.INCEPTION_NAMESPACE));
+        basePrefix.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> {
+            // Do nothing just update the model values
+        }));
+        basePrefix.setConvertEmptyInputStringToNull(false);
+        basePrefix.setOutputMarkupId(true);
+        add(basePrefix);
 
         // RadioGroup to select the IriSchemaType
         BootstrapRadioGroup<SchemaProfile> iriSchemaChoice = new BootstrapRadioGroup<SchemaProfile>(
@@ -86,7 +96,7 @@ public class KnowledgeBaseIriPanel
         comboBoxWrapper.setOutputMarkupId(true);
         add(comboBoxWrapper);
 
-        // Add text fields for classIri, subclassIri, typeIri and descriptionIri
+        // Add comboboxes for classIri, subclassIri, typeIri and descriptionIri
         ComboBox<String> classField = buildComboBox("classIri", kbModel.bind("kb.classIri"),
                 IriConstants.CLASS_IRIS);
         ComboBox<String> subclassField = buildComboBox("subclassIri",
@@ -131,7 +141,7 @@ public class KnowledgeBaseIriPanel
         if (model.getObject() == null) {
             model.setObject(iris.get(0));
         }
-
+ 
         List<String> choices = iris.stream().map(IRI::stringValue).collect(Collectors.toList());
 
         IModel<String> adapter = new LambdaModelAdapter<String>(
@@ -178,6 +188,16 @@ public class KnowledgeBaseIriPanel
                 && profile.getDescriptionIri().equals(descriptionIri)
                 && profile.getLabelIri().equals(labelIri)
                 && profile.getPropertyTypeIri().equals(propertyTypeIri);
+    }
+    
+    /**
+     * Label and TextField for basePrefix only show up in CUSTOM mode or if the user has changed
+     * the default value
+     */
+    private boolean isBasePrefixVisible()
+    {
+        return SchemaProfile.CUSTOMSCHEMA.equals(selectedSchemaProfile.getObject()) || !kbModel
+                .getObject().getKb().getBasePrefix().equals(IriConstants.INCEPTION_NAMESPACE);
     }
 
 }

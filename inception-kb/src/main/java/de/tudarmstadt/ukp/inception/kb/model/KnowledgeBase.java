@@ -40,6 +40,7 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 
@@ -133,6 +134,12 @@ public class KnowledgeBase
     
     @Column(name = "supportConceptLinking", nullable = false)
     private boolean supportConceptLinking = false;
+    
+    /**
+     * All statements created in a local KB are prefixed with this string 
+     */
+    @Column(nullable = false)
+    private String basePrefix = IriConstants.INCEPTION_NAMESPACE;
     
     public String getRepositoryId() {
         return repositoryId;
@@ -280,6 +287,16 @@ public class KnowledgeBase
         return supportConceptLinking;
     }
     
+    public String getBasePrefix()
+    {
+        return basePrefix;
+    }
+
+    public void setBasePrefix(String aBasePrefix)
+    {
+        basePrefix = aBasePrefix;
+    }
+
     @Override
     public String toString()
     {
