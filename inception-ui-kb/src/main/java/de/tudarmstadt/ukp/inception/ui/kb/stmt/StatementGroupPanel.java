@@ -182,7 +182,7 @@ public class StatementGroupPanel extends Panel {
         }
     }
     
-    private class ExistingStatementGroupFragment extends Fragment {
+    public class ExistingStatementGroupFragment extends Fragment {
         
         private static final long serialVersionUID = 5054250870556101031L;
         
