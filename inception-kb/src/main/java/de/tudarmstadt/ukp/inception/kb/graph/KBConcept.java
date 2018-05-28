@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
@@ -181,18 +182,17 @@ public class KBConcept
         */
     }
 
-    public static KBConcept read(RepositoryConnection aConn, Statement aStmt)
+    public static KBConcept read(RepositoryConnection aConn, Resource aSubject)
     {
         KBConcept kbConcept = new KBConcept();
-        kbConcept.setIdentifier(aStmt.getSubject().stringValue());
-        kbConcept.originalStatements.add(aStmt);
+        kbConcept.setIdentifier(aSubject.stringValue());
 
-        readFirst(aConn, aStmt.getSubject(), RDFS.LABEL, null).ifPresent((stmt) -> {
+        readFirst(aConn, aSubject, RDFS.LABEL, null).ifPresent((stmt) -> {
             kbConcept.setName(stmt.getObject().stringValue());
             kbConcept.originalStatements.add(stmt);
         });
 
-        readFirst(aConn, aStmt.getSubject(), RDFS.COMMENT, null).ifPresent((stmt) -> {
+        readFirst(aConn, aSubject, RDFS.COMMENT, null).ifPresent((stmt) -> {
             kbConcept.setDescription(stmt.getObject().stringValue());
             kbConcept.originalStatements.add(stmt);
         });

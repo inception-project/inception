@@ -38,6 +38,7 @@ import org.apache.commons.compress.compressors.CompressorException;
 import org.apache.commons.compress.compressors.CompressorStreamFactory;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
@@ -320,16 +321,13 @@ public class KnowledgeBaseServiceImpl
     {
         return read(kb, (conn) -> {
             ValueFactory vf = conn.getValueFactory();
-            try (RepositoryResult<Statement> stmts = RdfUtils.getStatements(conn,
-                    vf.createIRI(aIdentifier), kb.getTypeIri(), kb.getClassIri(), true)) {
-                if (stmts.hasNext()) {
-                    Statement conceptStmt = stmts.next();
-                    KBConcept kbConcept = KBConcept.read(conn, conceptStmt);
-                    return Optional.of(kbConcept);
-                }
-                else {
-                    return Optional.empty();
-                }
+            Resource subject = vf.createIRI(aIdentifier);
+            if (RdfUtils.existsStatementsWithSubject(conn, subject, false)) {
+                KBConcept kbConcept = KBConcept.read(conn, vf.createIRI(aIdentifier));
+                return Optional.of(kbConcept);
+            }
+            else {
+                return Optional.empty();
             }
         });
     }
@@ -370,6 +368,7 @@ public class KnowledgeBaseServiceImpl
     @Override
     public List<KBHandle> listConcepts(KnowledgeBase kb, boolean aAll)
     {
+        // FIXME https://github.com/inception-project/inception/issues/136
         return list(kb, kb.getClassIri(), true, aAll);
     }
 
@@ -457,7 +456,7 @@ public class KnowledgeBaseServiceImpl
             // Try to figure out the type of the instance - we ignore the inferred types here
             // and only make use of the explicitly asserted types
             RepositoryResult<Statement> conceptStmts = RdfUtils.getStatementsSparql(conn,
-                    vf.createIRI(aIdentifier), kb.getTypeIri(), null, false);
+                    vf.createIRI(aIdentifier), kb.getTypeIri(), null, 1000, false);
 
             String conceptIdentifier = null;
             while (conceptStmts.hasNext() && conceptIdentifier == null) {
@@ -648,17 +647,28 @@ public class KnowledgeBaseServiceImpl
         throws QueryEvaluationException
     {
         List<KBHandle> resultList = read(kb, (conn) -> {
-            String QUERY = String.join("\n"
-                , "SELECT DISTINCT ?s ?l WHERE { "
-                , "  ?s ?pTYPE ?oCLASS . "
-                , "FILTER NOT EXISTS { "
-                , "  ?s ?pSUBCLASS ?otherSub . "
-                , "} OPTIONAL { "
-                , "    ?s ?pLABEL ?l . "
-                , "    FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\")) "
-                , "  } "
-                , "} "
-                , "LIMIT 10000");
+            // Get all concepts that are implicitly marked as a class by being a superclass of
+            // something or that are explicitly marked as being a class. In any case, filter out
+            // those concepts that have superclasses (i.e. are not root classes).
+            // For concepts that are implicitly marked as classes by virtue of being the 
+            // superclass of something, we also assert that these classes are actually defined
+            // within the present ontology by looking for some statement which has them as subject.
+            String QUERY = String.join("\n",
+                    "SELECT DISTINCT ?s ?l WHERE { ",
+                    "  { ?s ?pTYPE ?oCLASS . } UNION ", 
+                    "  { ",
+                    "    ?someSubClass ?pSUBCLASS ?s . ", 
+                    "    ?s ?someProperty ?someObject . ", 
+                    "  } ", 
+                    "  FILTER NOT EXISTS { ?s ?pSUBCLASS ?someSuperClass . } ",
+                    "  OPTIONAL { ",
+                    "    ?s ?pLABEL ?l . ",
+                    "    FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\")) ",
+                    "  } ",
+                    "} ",
+                    // "ORDER BY ?l " + // https://jira.blazegraph.com/browse/BLZG-4476
+                    "LIMIT 10000");
+
             TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
             tupleQuery.setBinding("pTYPE", kb.getTypeIri());
             tupleQuery.setBinding("oCLASS", kb.getClassIri());
@@ -698,21 +708,18 @@ public class KnowledgeBaseServiceImpl
         // this subclass is *not* returned. We do presently *not* support mixed schemes in a
         // single KB.
         List<KBHandle> resultList = read(aKB, (conn) -> {
-            String QUERY = String.join("\n"
-                , "SELECT DISTINCT ?s ?l WHERE { "
-                , "  ?s ?pSUBCLASS ?oPARENT . "
-                , "  ?s ?pTYPE ?oCLASS . "
-                , "  OPTIONAL { "
-                , "    ?s ?pLABEL ?l . "
-                , "    FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\")) "
-                , "  } "
-                , "} "
-                , "LIMIT " + aLimit);
+            String QUERY = String.join("\n",
+                "SELECT DISTINCT ?s ?l WHERE { ",
+                "  ?s ?pSUBCLASS ?oPARENT . ",
+                "  OPTIONAL { ",
+                "    ?s ?pLABEL ?l . ",
+                "    FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\")) ",
+                "  } ",
+                "} ",
+                "LIMIT " + aLimit);
             ValueFactory vf = SimpleValueFactory.getInstance();
             TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
             tupleQuery.setBinding("oPARENT", vf.createIRI(aParentIdentifier));
-            tupleQuery.setBinding("pTYPE", aKB.getTypeIri());
-            tupleQuery.setBinding("oCLASS", aKB.getClassIri());
             tupleQuery.setBinding("pSUBCLASS", aKB.getSubclassIri());
             tupleQuery.setBinding("pLABEL", RDFS.LABEL);
             tupleQuery.setIncludeInferred(false);
