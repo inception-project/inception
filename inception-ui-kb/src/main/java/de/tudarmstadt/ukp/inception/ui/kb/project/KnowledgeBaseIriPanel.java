@@ -92,9 +92,9 @@ public class KnowledgeBaseIriPanel
         // The Kendo comboboxes do not redraw properly when added directly to an
         // AjaxRequestTarget (for each combobox, a text field and a dropdown will be shown).
         // Instead, wrap all of them in a WMC and redraw that.
-        WebMarkupContainer contentWrapper = new WebMarkupContainer("contentWrapper");
-        contentWrapper.setOutputMarkupId(true);
-        add(contentWrapper);
+        WebMarkupContainer comboBoxWrapper = new WebMarkupContainer("comboBoxWrapper");
+        comboBoxWrapper.setOutputMarkupId(true);
+        add(comboBoxWrapper);
 
         // Add comboboxes for classIri, subclassIri, typeIri and descriptionIri
         ComboBox<String> classField = buildComboBox("classIri", kbModel.bind("kb.classIri"),
@@ -105,7 +105,12 @@ public class KnowledgeBaseIriPanel
                 IriConstants.TYPE_IRIS);
         ComboBox<String> descriptionField = buildComboBox("descriptionIri",
                 kbModel.bind("kb.descriptionIri"), IriConstants.DESCRIPTION_IRIS);
-        contentWrapper.add(classField, subclassField, typeField, descriptionField);
+        ComboBox<String> labelField = buildComboBox("labelIri",
+                kbModel.bind("kb.labelIri"), IriConstants.LABEL_IRIS);
+        ComboBox<String> propertyTypeField = buildComboBox("propertyTypeIri",
+                kbModel.bind("kb.propertyTypeIri"), IriConstants.PROPERTY_TYPE_IRIS);
+        comboBoxWrapper.add(classField, subclassField, typeField, descriptionField, labelField,
+                propertyTypeField);
 
         // OnChange update the model with corresponding iris
         iriSchemaChoice.setChangeHandler(new ISelectionChangeHandler<SchemaProfile>()
@@ -119,8 +124,10 @@ public class KnowledgeBaseIriPanel
                 subclassField.setModelObject(bean.getSubclassIri().stringValue());
                 typeField.setModelObject(bean.getTypeIri().stringValue());
                 descriptionField.setModelObject(bean.getDescriptionIri().stringValue());
+                labelField.setModelObject(bean.getLabelIri().stringValue());
+                propertyTypeField.setModelObject(bean.getPropertyTypeIri().stringValue());
 
-                target.add(contentWrapper, iriSchemaChoice);
+                target.add(comboBoxWrapper, iriSchemaChoice);
             }
         });
 
@@ -159,7 +166,8 @@ public class KnowledgeBaseIriPanel
         for (int i = 0; i < profiles.length; i++) {
             // Check if kb has a known schema profile
             if (equalsSchemaProfile(profiles[i], kb.getClassIri(), kb.getSubclassIri(),
-                    kb.getTypeIri(), kb.getDescriptionIri())) {
+                    kb.getTypeIri(), kb.getDescriptionIri(), kb.getLabelIri(),
+                    kb.getPropertyTypeIri())) {
                 return profiles[i];
             }
         }
@@ -172,12 +180,14 @@ public class KnowledgeBaseIriPanel
      * profile
      */
     private boolean equalsSchemaProfile(SchemaProfile profile, IRI classIri, IRI subclassIri,
-            IRI typeIri, IRI descriptionIri)
+            IRI typeIri, IRI descriptionIri, IRI labelIri, IRI propertyTypeIri)
     {
         return profile.getClassIri().equals(classIri)
                 && profile.getSubclassIri().equals(subclassIri)
                 && profile.getTypeIri().equals(typeIri)
-                && profile.getDescriptionIri().equals(descriptionIri);
+                && profile.getDescriptionIri().equals(descriptionIri)
+                && profile.getLabelIri().equals(labelIri)
+                && profile.getPropertyTypeIri().equals(propertyTypeIri);
     }
     
     /**
