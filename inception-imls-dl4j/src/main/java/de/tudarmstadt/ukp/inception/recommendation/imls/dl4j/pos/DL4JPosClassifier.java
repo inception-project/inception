@@ -170,7 +170,7 @@ public class DL4JPosClassifier
             for (int i = 0; i < sentence.size(); i++) {
                 int tagIdx = argMax.getInt(i);
                 T t = sentence.get(i);
-                AnnotationObject ao = new AnnotationObject(tagset.get(tagIdx), t, sentence, 
+                AnnotationObject ao = new AnnotationObject(tagset.get(tagIdx), t,
                         id, feature, "DL4JPosClassifier");
                 List<AnnotationObject> word = new LinkedList<>();
                 word.add(ao);

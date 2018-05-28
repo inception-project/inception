@@ -92,7 +92,7 @@
     <!-- module>inception-imls-mira</module -->
     <module>inception-imls-opennlp</module>
     <module>inception-imls-stringmatch</module>
-    <module>inception-imls-dl4j</module>
+    <!-- module>inception-imls-dl4j</module -->
     <module>inception-imls-external</module>
     <module>inception-log</module>
     <module>inception-support</module>

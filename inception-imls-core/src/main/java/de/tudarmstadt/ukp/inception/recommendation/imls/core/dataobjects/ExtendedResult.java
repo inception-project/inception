@@ -72,8 +72,8 @@ public class ExtendedResult
                         + "is something wrong.";
             
             for (int i = 0; i < actualSentence.size(); i++) {
-                String aoActual = actualSentence.get(i).getAnnotation();
-                String aoExpected = expectedSentence.get(i).getAnnotation();
+                String aoActual = actualSentence.get(i).getLabel();
+                String aoExpected = expectedSentence.get(i).getLabel();
     
                 if (aoActual != null && !aoActual.isEmpty()) {
                     actualAnnotationCount++;
