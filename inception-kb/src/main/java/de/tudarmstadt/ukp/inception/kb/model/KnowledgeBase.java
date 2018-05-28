@@ -105,6 +105,18 @@ public class KnowledgeBase
      */
     @Column(nullable = false)
     private IRI descriptionIri;
+    
+    /**
+     * The IRI for a property describing B being a label for A, e.g. rdfs:label 
+     */
+    @Column(nullable = false)
+    private IRI labelIri;
+    
+    /**
+     * The IRI for an object describing A is of type propertyType, e.g. rdf:Property 
+     */
+    @Column(nullable = false)
+    private IRI propertyTypeIri;
 
     @Column(nullable = false)
     private boolean readOnly;
@@ -199,6 +211,26 @@ public class KnowledgeBase
     public void setDescriptionIri(IRI aDescriptionIri)
     {
         descriptionIri = aDescriptionIri;
+    }
+
+    public IRI getLabelIri()
+    {
+        return labelIri;
+    }
+
+    public void setLabelIri(IRI aLabelIri)
+    {
+        labelIri = aLabelIri;
+    }
+
+    public IRI getPropertyTypeIri()
+    {
+        return propertyTypeIri;
+    }
+
+    public void setPropertyTypeIri(IRI aPropertyTypeIri)
+    {
+        propertyTypeIri = aPropertyTypeIri;
     }
 
     public boolean isReadOnly()

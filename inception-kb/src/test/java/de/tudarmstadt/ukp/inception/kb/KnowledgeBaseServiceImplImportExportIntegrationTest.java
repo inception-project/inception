@@ -245,6 +245,8 @@ public class KnowledgeBaseServiceImplImportExportIntegrationTest {
         kb.setSubclassIri(RDFS.SUBCLASSOF);
         kb.setTypeIri(RDF.TYPE);
         kb.setDescriptionIri(RDFS.COMMENT);
+        kb.setLabelIri(RDFS.LABEL);
+        kb.setPropertyTypeIri(RDF.PROPERTY);
         return kb;
     }
 

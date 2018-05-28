@@ -211,5 +211,37 @@
       </column>
     </addColumn>
   </changeSet>
+  
+  <changeSet author="INCEpTION Team" id="20180515-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="knowledgebase" columnName="labelIri"/>
+      </not>
+    </preConditions>
+
+    <addColumn tableName="knowledgebase">
+      <column name="labelIri"
+              type="VARCHAR(255)"
+              defaultValue="http://www.w3.org/2000/01/rdf-schema#label">
+        <constraints nullable="false" />
+      </column>
+    </addColumn>
+  </changeSet>
+  
+  <changeSet author="INCEpTION Team" id="20180515-2">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="knowledgebase" columnName="propertyTypeIri"/>
+      </not>
+    </preConditions>
+
+    <addColumn tableName="knowledgebase">
+      <column name="propertyTypeIri"
+              type="VARCHAR(255)"
+              defaultValue="http://www.w3.org/1999/02/22-rdf-syntax-ns#Property">
+        <constraints nullable="false" />
+      </column>
+    </addColumn>
+  </changeSet>
 
 </databaseChangeLog>
