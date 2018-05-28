@@ -61,9 +61,9 @@ public class StringMatchingPosTrainer
 
         List<AnnotationObject> flatTrainingsData = ListUtil.flattenList(trainingDataIncrement);
         flatTrainingsData.forEach(item -> {
-            if (item.getAnnotation() != null && trainedModel.get(item.getCoveredText()) == null) {
+            if (item.getLabel() != null && trainedModel.get(item.getCoveredText()) == null) {
                 try {
-                    trainedModel.put(item.getCoveredText(), item.getAnnotation());
+                    trainedModel.put(item.getCoveredText(), item.getLabel());
                 }
                 catch (Throwable t) {
                     log.error("Cannot add annotation to the training model.", t);
