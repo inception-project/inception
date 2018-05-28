@@ -133,8 +133,8 @@ public abstract class Classifier<C>
                         }
                         AnnotationObject nextAo = nextWord.get(i);
                         
-                        if (ao.getAnnotation() != null
-                                && ao.getAnnotation().equals(nextAo.getAnnotation())) {
+                        if (ao.getLabel() != null
+                                && ao.getLabel().equals(nextAo.getLabel())) {
                             coveredText = coveredText + " " + nextAo.getCoveredText();
                             confidence.add(nextAo.getConfidence());
                             endCharacter = nextAo.getOffset().getEndCharacter();
@@ -157,12 +157,12 @@ public abstract class Classifier<C>
                     else {
                         double averagedConfidence = confidence.stream().mapToDouble(a -> a)
                                 .average().getAsDouble();
-                        AnnotationObject mergedAo = new AnnotationObject(ao.getAnnotation(),
-                                ao.getDocumentURI(), ao.getDocumentName(), coveredText,
-                                new Offset(ao.getOffset().getBeginCharacter(), endCharacter,
-                                        ao.getOffset().getBeginToken(), endToken),
-                                ao.getSentenceTokens(), id, ao.getFeature(),
-                                ao.getClassifier(), averagedConfidence);
+                        AnnotationObject mergedAo = new AnnotationObject(ao);
+                        Offset offset = new Offset(ao.getOffset().getBeginCharacter(), endCharacter,
+                                ao.getOffset().getBeginToken(), endToken);
+                        mergedAo.setOffset(offset);
+                        mergedAo.setCoveredText(coveredText);
+                        mergedAo.setConfidence(averagedConfidence);
                         predictionsWithMergedLabels.add(mergedAo);
                         id++;
                     }
