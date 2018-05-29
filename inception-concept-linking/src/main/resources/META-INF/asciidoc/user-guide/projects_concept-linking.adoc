@@ -1,0 +1,19 @@
+[[sect_projects_concept-linking]]
+=== Interactive Concept Linking
+The user can setup a local or remote KB for his project in the settings, which includes the configuration
+for the various IRIs. The necessary IRIs are as follows.
+
+* Class IRI: Declares a resource as a class.
+* Subclass IRI: Allows the declaration of hierarchies of classes.
+* Type IRI: Indicates that resource A is an instance of resource B.
+* Description IRI: Indicates that resource A is a description of concept.
+
+For concept linking, the only relevant IRI is the Description IRI.
+Checking “Supports Concept Linking” will activate the disambiguation pipeline.
+Otherwise, all entities from the KB are displayed in alphabetical order, as it was done before.
+
+A fully configured Knowledge Base for concept linking can be seen in the screenshot below.
+
+Documentation about the NamedEntityLinker can be found in the <<sect_projects_recommendation, Project Settings>> .
+
+image::concept-linking1.png[align="center"]
