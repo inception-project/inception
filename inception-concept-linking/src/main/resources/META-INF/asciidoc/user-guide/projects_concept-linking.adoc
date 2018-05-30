@@ -1,19 +1,38 @@
 [[sect_projects_concept-linking]]
-=== Interactive Concept Linking
-The user can setup a local or remote KB for his project in the settings, which includes the configuration
-for the various IRIs. The necessary IRIs are as follows.
+=== Concept Linking
+The user can setup a local or remote KB for his project in the settings, which includes the
+configuration for the various IRIs. The necessary IRIs are as follows.
 
 * Class IRI: Declares a resource as a class.
 * Subclass IRI: Allows the declaration of hierarchies of classes.
 * Type IRI: Indicates that resource A is an instance of resource B.
-* Description IRI: Indicates that resource A is a description of concept.
+* Description IRI: Indicates that resource A is a description of resource B.
 
-For concept linking, the only relevant IRI is the Description IRI.
+For Concept Linking, the only relevant IRI is the Description IRI, which needs to be selected to enable Concept Linking functionality.
+Furthermore, the KB must support full-text-search. It is planned to enable full-text-search for local KBs in the next release.
 Checking “Supports Concept Linking” will activate the disambiguation pipeline.
-Otherwise, all entities from the KB are displayed in alphabetical order, as it was done before.
+If it is not checked, Concept Linking still works, but all concepts from the KB are displayed
+in alphabetical order.
 
-A fully configured Knowledge Base for concept linking can be seen in the screenshot below.
+A Knowledge Base configured for Concept Linking can be seen in the screenshot below.
+
+image::concept-linking1.png[align="center"]
 
 Documentation about the NamedEntityLinker can be found in the <<sect_projects_recommendation, Project Settings>> .
 
-image::concept-linking1.png[align="center"]
+
+==== Resources
+There are several resources that can be put into the `.inception/resources` folder. These include:
+
+* properties_with_labels.txt
+- A list of properties and their corresponding labels, tab-separated
+
+* property_blacklist.txt
+- A list of properties that is filtered when computing the Semantic Signature, one property per line.
+
+* stopwords-en.txt
+- A list of stopwords, one stopword per line.
+
+* wikidata_entity_freqs.map
+- Each line consists of a the ID of a concept and its frequency in the KB, tab-separated.
+

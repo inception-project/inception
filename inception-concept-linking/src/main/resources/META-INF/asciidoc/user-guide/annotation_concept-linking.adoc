@@ -1,4 +1,5 @@
 [[sect_annotation_concept-linking]]
+=== Concept Linking
 ==== Interactive Concept Linking
 When the user wants to link a mention, he marks it and starts typing the name of the concept.
 This triggers a pass through the entity linking pipeline and retrieves a ranked list of candidates,
