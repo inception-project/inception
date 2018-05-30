@@ -195,6 +195,22 @@
       </column>
     </addColumn>
   </changeSet>
+  
+  <changeSet author="INCEpTION Team" id="20180503-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="knowledgebase" columnName="basePrefix"/>
+      </not>
+    </preConditions>
+
+    <addColumn tableName="knowledgebase">
+      <column name="basePrefix"
+              type="VARCHAR(255)"
+              defaultValue="http://www.ukp.informatik.tu-darmstadt.de/inception/1.0#">
+        <constraints nullable="false" />
+      </column>
+    </addColumn>
+  </changeSet>
 
   <changeSet author="INCEpTION Team" id="20180503">
     <preConditions onFail="MARK_RAN">

@@ -21,6 +21,14 @@
 <body>
   <wicket:panel>
     <div class="form-group col-xs-12">
+        <wicket:enclosure child="basePrefix">
+          <label class="control-label">
+            <wicket:message key="kb.iri.basePrefix" />
+          </label>
+          <input type="text" wicket:id="basePrefix" class="form-control"/>
+        </wicket:enclosure>
+    </div>
+    <div class="form-group col-xs-12">
       <label class="control-label">
         <wicket:message key="kb.iri.iriSchema" />
       </label>
@@ -70,7 +78,6 @@
       </div>
       
     </div>
-    
   </wicket:panel>
 </body>
 </html>
