@@ -1121,6 +1121,34 @@ public abstract class WebAnnoTsv3WriterTestBase
     }
 
     @Test
+    public void testUnsetSlotFeature() throws Exception
+    {
+        JCas jcas = makeJCasOneSentence();
+        CAS cas = jcas.getCas();
+        
+        List<Token> tokens = new ArrayList<>(select(jcas, Token.class));
+        
+        Token t1 = tokens.get(0);
+        Token t2 = tokens.get(1);
+        Token t3 = tokens.get(2);
+        
+        Type type = cas.getTypeSystem().getType("webanno.custom.SimpleSpan");
+        AnnotationFS s2 = cas.createAnnotation(type, t2.getBegin(), t2.getEnd());
+        cas.addFsToIndexes(s2);
+        AnnotationFS s3 = cas.createAnnotation(type, t3.getBegin(), t3.getEnd());
+        cas.addFsToIndexes(s3);
+
+        makeLinkHostFS(jcas, "webanno.custom.FlexLinkHost", t1.getBegin(), t1.getEnd(),
+                (FeatureStructure[]) null);
+        
+        writeAndAssertEquals(jcas, 
+                WebannoTsv3Writer.PARAM_SLOT_FEATS, asList("webanno.custom.FlexLinkHost:links"),
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList("webanno.custom.SimpleSpan", 
+                        "webanno.custom.SimpleLinkHost"),
+                WebannoTsv3Writer.PARAM_LINK_TYPES, asList("webanno.custom.FlexLinkType"),
+                WebannoTsv3Writer.PARAM_SLOT_TARGETS, asList("webanno.custom.SimpleSpan"));
+    }
+    @Test
     public void testSimpleSlotFeatureWithoutValues() throws Exception
     {
         JCas jcas = makeJCasOneSentence();
@@ -1749,8 +1777,10 @@ public abstract class WebAnnoTsv3WriterTestBase
     {
         Type hostType = aJCas.getTypeSystem().getType(aType);
         AnnotationFS hostA1 = aJCas.getCas().createAnnotation(hostType, aBegin, aEnd);
-        hostA1.setFeatureValue(hostType.getFeatureByBaseName("links"),
-                FSCollectionFactory.createFSArray(aJCas, asList(aLinks)));
+        if (aLinks != null) {
+            hostA1.setFeatureValue(hostType.getFeatureByBaseName("links"),
+                    FSCollectionFactory.createFSArray(aJCas, asList(aLinks)));
+        }
         aJCas.getCas().addFsToIndexes(hostA1);
         return hostA1;
     }
