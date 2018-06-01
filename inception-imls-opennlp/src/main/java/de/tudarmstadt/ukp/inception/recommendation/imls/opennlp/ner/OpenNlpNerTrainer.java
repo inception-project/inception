@@ -77,7 +77,7 @@ public class OpenNlpNerTrainer
                 AnnotationObject aoFirst = namedEntity.get(0);
                 AnnotationObject aoLast = namedEntity.get(namedEntity.size() - 1);
                 Span span = new Span(aoFirst.getOffset().getBeginToken(),
-                        aoLast.getOffset().getEndToken() + 1, aoFirst.getAnnotation());
+                        aoLast.getOffset().getEndToken() + 1, aoFirst.getLabel());
                 spans.add(span);
             }
 
