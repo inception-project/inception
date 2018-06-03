@@ -122,17 +122,18 @@ public class KBInstance
 
     public static KBInstance read(RepositoryConnection aConn, Statement aStmt)
     {
+        String language = "en";
         KBInstance kbInst = new KBInstance();
         kbInst.setType(URI.create(aStmt.getObject().stringValue()));
         kbInst.setIdentifier(aStmt.getSubject().stringValue());
         kbInst.originalStatements.add(aStmt);
 
-        readFirst(aConn, aStmt.getSubject(), RDFS.LABEL, null).ifPresent((stmt) -> {
+        readFirst(aConn, aStmt.getSubject(), RDFS.LABEL, null, language).ifPresent((stmt) -> {
             kbInst.setName(stmt.getObject().stringValue());
             kbInst.originalStatements.add(stmt);
         });
 
-        readFirst(aConn, aStmt.getSubject(), RDFS.COMMENT, null).ifPresent((stmt) -> {
+        readFirst(aConn, aStmt.getSubject(), RDFS.COMMENT, null, language).ifPresent((stmt) -> {
             kbInst.setDescription(stmt.getObject().stringValue());
             kbInst.originalStatements.add(stmt);
         });
