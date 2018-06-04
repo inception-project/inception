@@ -1,21 +1,24 @@
 [[sect_annotation_concept-linking]]
 === Concept Linking
+Concept Linking is the task of identifying concept mentions in the text and linking them to their
+corresponding concept in a knowledge base.
+Use cases of Concept Linking are commonly found in the area of biomedical text mining, e.g.
+to facilitate understanding of unexplained terminology or abbreviations in scientific literature by linking
+biological entities.
+
 ==== Interactive Concept Linking
+Interactive Concept Linking allows users to manually link concept mentions to a KB. It is especially
+useful in situations where there is no substantial training data available from the start,
+i.e. when no previous linkings have been made. In this case, each concept mention is disambiguated
+with the help of heuristical rules.
+
 When the user wants to link a mention, he marks it and starts typing the name of the concept.
-This triggers a pass through the entity linking pipeline and retrieves a ranked list of candidates,
-which is displayed to the user in the form of a drop-down menu.
-In order to enable a user to select the correct concept, it is crucial for him to receive textual
-information about the candidates in question. This is realized by showing an overlay text box with
-descriptions retrieved from the KB.
+A ranked list of candidates is then displayed in the form of a drop-down menu.
+In order to make the disambiguation process easier, descriptions are shown for each candidate.
 
 image::concept-linking2.png[align="center"]
 
-If the typed string matches the marked surface form, the query is executed with the whole
-surface form as query string. Otherwise, a query is started every time the user types something new
-in the concept selector field. That way, even mentions that are lexically different from the names
-under which they are known in the KB can be linked, as visible in the screenshot below.
-
-image::concept-linking3.png[align="center"]
+The suggestions are updated every time it receives new input.
 
 ==== Automated Concept Suggestions
 
