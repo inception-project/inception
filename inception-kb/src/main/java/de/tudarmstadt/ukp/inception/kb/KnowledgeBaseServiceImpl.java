@@ -66,7 +66,6 @@ import org.eclipse.rdf4j.repository.config.RepositoryConfigException;
 import org.eclipse.rdf4j.repository.config.RepositoryImplConfig;
 import org.eclipse.rdf4j.repository.manager.RepositoryManager;
 import org.eclipse.rdf4j.repository.manager.RepositoryProvider;
-import org.eclipse.rdf4j.repository.sail.SailRepository;
 import org.eclipse.rdf4j.repository.sail.config.SailRepositoryConfig;
 import org.eclipse.rdf4j.repository.sparql.config.SPARQLRepositoryConfig;
 import org.eclipse.rdf4j.rio.RDFFormat;
@@ -74,8 +73,7 @@ import org.eclipse.rdf4j.rio.RDFParseException;
 import org.eclipse.rdf4j.rio.RDFWriter;
 import org.eclipse.rdf4j.rio.Rio;
 import org.eclipse.rdf4j.sail.inferencer.fc.config.ForwardChainingRDFSInferencerConfig;
-import org.eclipse.rdf4j.sail.lucene.LuceneSail;
-import org.eclipse.rdf4j.sail.memory.MemoryStore;
+import org.eclipse.rdf4j.sail.lucene.config.LuceneSailConfig;
 import org.eclipse.rdf4j.sail.nativerdf.config.NativeStoreConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -107,7 +105,6 @@ public class KnowledgeBaseServiceImpl
     private @PersistenceContext EntityManager entityManager;
     private final RepositoryManager repoManager;
     private final Set<String> implicitNamespaces;
-    private SailRepository luceneSail;
 
     @org.springframework.beans.factory.annotation.Value(value = "${data.path}/kb")
     private File dataDir;
@@ -120,7 +117,6 @@ public class KnowledgeBaseServiceImpl
         repoManager = RepositoryProvider.getRepositoryManager(url);
         log.info("Knowledge base repository path: " + url);
         implicitNamespaces = IriConstants.IMPLICIT_NAMESPACES;
-        luceneSail = setupLuceneSail();
     }
 
     public KnowledgeBaseServiceImpl(
@@ -225,7 +221,7 @@ public class KnowledgeBaseServiceImpl
     public RepositoryImplConfig getNativeConfig()
     {
         return new SailRepositoryConfig(
-            new ForwardChainingRDFSInferencerConfig(new NativeStoreConfig()));
+            new ForwardChainingRDFSInferencerConfig(new LuceneSailConfig(new NativeStoreConfig())));
     }
 
     @Override
@@ -829,27 +825,27 @@ public class KnowledgeBaseServiceImpl
             log.error("Unable to open index", e);
         }
     }
-
-    public SailRepository setupLuceneSail()
-    {
-        // create a sesame memory sail
-        MemoryStore memoryStore = new MemoryStore();
-
-        // create a lucenesail to wrap the memorystore
-        LuceneSail lucenesail = new LuceneSail();
-
-        // set this parameter to store the lucene index on disk
-        //d
-        lucenesail.setParameter(LuceneSail.LUCENE_DIR_KEY, "${repository.path}/luceneIndex");
-
-        // wrap memorystore in a lucenesail
-        lucenesail.setBaseSail(memoryStore);
-
-        // create a Repository to access the sails
-        SailRepository repository = new SailRepository(lucenesail);
-        repository.initialize();
-        return repository;
-    }
+//
+//    public SailRepository setupLuceneSail()
+//    {
+//        // create a sesame memory sail
+//        MemoryStore memoryStore = new MemoryStore();
+//
+//        // create a lucenesail to wrap the memorystore
+//        LuceneSail lucenesail = new LuceneSail();
+//
+//        // set this parameter to store the lucene index on disk
+//        //d
+//        lucenesail.setParameter(LuceneSail.LUCENE_DIR_KEY, "${repository.path}/luceneIndex");
+//
+//        // wrap memorystore in a lucenesail
+//        lucenesail.setBaseSail(memoryStore);
+//
+//        // create a Repository to access the sails
+//        SailRepository repository = new SailRepository(lucenesail);
+//        repository.initialize();
+//        return repository;
+//    }
 
     @Override
     public void indexLocalKb(KnowledgeBase aKb) throws IOException
