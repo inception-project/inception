@@ -84,7 +84,8 @@ public class TagSetImportPanel
         selectedTagSet = aTagSet;
         
         Form<Preferences> form = new Form<>("form", CompoundPropertyModel.of(preferences));
-        form.add(new DropDownChoice<>("format", LambdaModel.of(this::supportedFormats)));
+        form.add(new DropDownChoice<>("format", LambdaModel.of(this::supportedFormats))
+                .setRequired(true));
         form.add(new CheckBox("overwrite"));
         form.add(fileUpload = new FileUploadField("content", new ListModel<>()));
         fileUpload.setRequired(true);

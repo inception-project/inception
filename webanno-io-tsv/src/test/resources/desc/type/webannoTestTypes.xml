@@ -125,6 +125,37 @@
       </features>
     </typeDescription>
     <typeDescription>
+      <name>webanno.custom.FlexLinkHost</name>
+      <description/>
+      <supertypeName>uima.tcas.Annotation</supertypeName>
+      <features>
+        <featureDescription>
+          <name>links</name>
+          <description/>
+          <rangeTypeName>uima.cas.FSArray</rangeTypeName>
+          <elementType>webanno.custom.FlexLinkType</elementType>
+          <multipleReferencesAllowed>false</multipleReferencesAllowed>
+        </featureDescription>
+      </features>
+    </typeDescription>
+    <typeDescription>
+      <name>webanno.custom.FlexLinkType</name>
+      <description/>
+      <supertypeName>uima.cas.TOP</supertypeName>
+      <features>
+        <featureDescription>
+          <name>role</name>
+          <description/>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>target</name>
+          <description/>
+          <rangeTypeName>uima.tcas.Annotation</rangeTypeName>
+        </featureDescription>
+      </features>
+    </typeDescription>
+    <typeDescription>
       <name>webanno.custom.SimpleChain</name>
       <description/>
       <supertypeName>uima.cas.AnnotationBase</supertypeName>

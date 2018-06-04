@@ -14,7 +14,8 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */package de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x;
+ */
+package de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x;
 
 import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.Escaping.escapeText;
 import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.Escaping.escapeValue;
@@ -362,7 +363,9 @@ public class Tsv3XSerializer
             }
         }
         else {
-            aOut.print(NULL_COLUMN);
+            // If the slot hosts has no slots, we use this column as a placeholder so we know
+            // the span of the slot host
+            aOut.print(NULL_VALUE);
         }
     }    
     
