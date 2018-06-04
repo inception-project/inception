@@ -65,17 +65,13 @@ public class ConceptInstancePanel
             IModel<KBHandle> selectedConceptHandle, IModel<KBConcept> selectedConceptModel)
     {
         super(aId, selectedConceptModel);
-
         setOutputMarkupId(true);
-
         kbModel = aKbModel;
         selectedInstanceHandle = Model.of();
         this.selectedConceptHandle = selectedConceptHandle;
-
         add(new ConceptInfoPanel("info", kbModel, selectedConceptHandle, selectedConceptModel));
         add(new InstanceListPanel("instances", kbModel, selectedConceptHandle,
                 selectedInstanceHandle));
-        
         annotatedSearchPanel = new AnnotatedListIdentifiers("annotatedResultGroups", kbModel,
                 selectedConceptHandle, selectedInstanceHandle);
         add(annotatedSearchPanel);
