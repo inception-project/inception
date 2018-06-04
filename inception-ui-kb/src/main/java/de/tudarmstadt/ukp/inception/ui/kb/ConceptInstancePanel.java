@@ -75,8 +75,6 @@ public class ConceptInstancePanel
         add(new ConceptInfoPanel("info", kbModel, selectedConceptHandle, selectedConceptModel));
         add(new InstanceListPanel("instances", kbModel, selectedConceptHandle,
                 selectedInstanceHandle));
-//        add(new AnnotatedListIdentifiers("annotatedResultGroups", kbModel, selectedConceptHandle,
-//                selectedInstanceHandle));
         
         annotatedSearchPanel = new AnnotatedListIdentifiers("annotatedResultGroups", kbModel,
                 selectedConceptHandle, selectedInstanceHandle);
