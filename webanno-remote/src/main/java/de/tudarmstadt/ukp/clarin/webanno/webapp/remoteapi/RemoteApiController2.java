@@ -102,6 +102,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectState;
+import de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -328,6 +329,9 @@ public class RemoteApiController2
         LOG.info("Creating project [" + aName + "]");
         Project project = new Project();
         project.setName(aName);
+        project.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
+        project.setScriptDirection(ScriptDirection.LTR);
+        project.setState(ProjectState.NEW);
         projectService.createProject(project);
         annotationService.initializeProject(project);
         
@@ -426,13 +430,15 @@ public class RemoteApiController2
             method = RequestMethod.GET,
             produces = { "application/zip", APPLICATION_JSON_UTF8_VALUE })
     public ResponseEntity<InputStreamResource> projectExport(
-            @PathVariable(PARAM_PROJECT_ID) long aProjectId)
+            @PathVariable(PARAM_PROJECT_ID) long aProjectId,
+            @RequestParam(value = PARAM_FORMAT) Optional<String> aFormat)
         throws Exception
     {
         // Get project (this also ensures that it exists and that the current user can access it
         Project project = getProject(aProjectId);
         
-        ProjectExportRequest per = new ProjectExportRequest(Model.of(project), "bin");
+        ProjectExportRequest per = new ProjectExportRequest(Model.of(project),
+                aFormat.orElse("UIMA binary CAS"));
         File exportedFile = exportService.generateZipFile(per);
         
         // Turn the file into a resource and auto-delete the file when the resource closes the
