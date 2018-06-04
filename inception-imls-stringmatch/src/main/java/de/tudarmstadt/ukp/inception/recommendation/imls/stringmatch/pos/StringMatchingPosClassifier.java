@@ -91,8 +91,8 @@ public class StringMatchingPosClassifier
                 T t = sentence.get(i);
 
                 AnnotationObject ao = new AnnotationObject(
-                        annotationMapping.get(t.getCoveredText()), t, sentence, id, feature,
-                        "StringMatchingPosClassifier");
+                        t, annotationMapping.get(t.getCoveredText()), null,
+                        id, feature, "StringMatchingPosClassifier");
                 word.add(ao);
                 id++;
                 annotatedSentence.add(word);
