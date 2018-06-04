@@ -34,7 +34,7 @@ public class AnnotatedListIdentifiers
     private static final Logger LOG = LoggerFactory.getLogger(AnnotatedListIdentifiers.class);
 
     // TO replace with KB.identifier after subClass and instances change
-    private String searchQuery = "<Named_entity.identifier=\"XYZ\"/>";
+    private String searchQuery = "<KB.Entity=\"XYZ\"/>";
     private @SpringBean DocumentService documentService;
     private @SpringBean KnowledgeBaseService kbService;
     private @SpringBean SearchService searchService;

@@ -288,6 +288,19 @@ public class MtasUimaParser extends MtasParser {
                                     mtasAnnotationFeatureLabel.addPositionRange(beginToken,
                                             endToken);
                                     tokenCollection.add(mtasAnnotationFeatureLabel);
+                                    
+                                    // Indexing UI annotation without type and layer for generic search
+                                    indexedStr = "KB.Entity" + MtasToken.DELIMITER
+                                            + labelStr.split(MtasToken.DELIMITER)[1];
+                                    MtasToken mtasAnnotationKBEntity = new MtasTokenString(
+                                            mtasId++, indexedStr, beginToken);
+                                    mtasAnnotationKBEntity.setOffset(annotation.getBegin(),
+                                            annotation.getEnd());
+                                    mtasAnnotationKBEntity.addPositionRange(beginToken,
+                                            endToken);
+                                    tokenCollection.add(mtasAnnotationKBEntity);
+                                    
+                                    
                                 }
 
                             }
@@ -300,7 +313,7 @@ public class MtasUimaParser extends MtasParser {
         }
         return tokenCollection;
     }
-
+    
     @Override
     public String printConfig() {
         return null;
@@ -326,6 +339,10 @@ public class MtasUimaParser extends MtasParser {
         }
 
         return labelStr.toString();
+    }
+    
+    public MtasToken getMtasTokenKBFeature() {
+        
     }
 
     class SimpleAnnotationLayer {
