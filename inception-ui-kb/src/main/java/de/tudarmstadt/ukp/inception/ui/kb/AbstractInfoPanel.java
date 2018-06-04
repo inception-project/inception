@@ -26,6 +26,7 @@ import java.util.List;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.TextField;
@@ -46,6 +47,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.app.Focusable;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
+import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
@@ -75,6 +77,7 @@ public abstract class AbstractInfoPanel<T extends KBObject> extends Panel {
     protected IModel<KnowledgeBase> kbModel;
     
     private ConfirmationDialog confirmationDialog;
+    private ModalWindow modal;
     
 
     public AbstractInfoPanel(String aId, IModel<KnowledgeBase> aKbModel,
@@ -89,6 +92,9 @@ public abstract class AbstractInfoPanel<T extends KBObject> extends Panel {
         // when creating a new KBObject, activate the form and obtain the AjaxRequestTarget to set
         // the focus to the name field
         Component content;
+        modal = new SubclassCreationDialog("createSubclass", kbModel, handleModel);
+        add(modal);
+
         boolean isNew = kbObjectModel.getObject() != null
                 && isEmpty(kbObjectModel.getObject().getIdentifier());
         if (isNew) {
@@ -173,7 +179,19 @@ public abstract class AbstractInfoPanel<T extends KBObject> extends Panel {
                     });
             deleteButton.add(new Label("label", new ResourceModel(getDeleteButtonResourceKey())));
             deleteButton.add(new WriteProtectionBehavior(kbModel));
-            add(deleteButton);            
+            add(deleteButton);
+            
+            // button for creating a new subclass that is only visible for concepts  
+            LambdaAjaxLink createSubclassButton = new LambdaAjaxLink("createSubclass",
+                    AbstractInfoPanel.this::actionCreateSubclass).onConfigure((_this) -> {
+                        _this.setVisible(kbObjectModel.getObject() != null
+                                && isNotEmpty(kbObjectModel.getObject().getIdentifier())
+                                && kbObjectModel.getObject() instanceof KBConcept);
+                    });
+            createSubclassButton.add(new Label("subclassLabel",
+                    new ResourceModel(getCreateSubclassButtonResourceKey())));
+            createSubclassButton.add(new WriteProtectionBehavior(kbModel));
+            add(createSubclassButton);
 
             // show statements about this KBObject
             StatementsPanel statementsPanel = new StatementsPanel("statements", kbModel,
@@ -190,6 +208,11 @@ public abstract class AbstractInfoPanel<T extends KBObject> extends Panel {
         return null;
     }
     
+    public String getCreateSubclassButtonResourceKey()
+    {
+        return "createSubclass";
+    }
+
     protected String getCreateButtonResourceKey() {
         return "create";
     }
@@ -245,6 +268,10 @@ public abstract class AbstractInfoPanel<T extends KBObject> extends Panel {
         }
         confirmationDialog.show(aTarget);
         confirmationDialog.setConfirmAction(this::actionDelete);
+    }
+    
+    private void actionCreateSubclass(AjaxRequestTarget aTarget) {
+        modal.show(aTarget);
     }
     
     protected abstract void actionDelete(AjaxRequestTarget aTarget);

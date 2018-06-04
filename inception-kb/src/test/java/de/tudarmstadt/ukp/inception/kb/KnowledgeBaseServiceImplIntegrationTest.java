@@ -21,6 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -194,8 +195,11 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         kb.setSubclassIri(OWL.NOTHING);
         kb.setTypeIri(OWL.THING);
         kb.setDescriptionIri(IriConstants.SCHEMA_DESCRIPTION);
+        kb.setLabelIri(RDFS.LITERAL);
+        kb.setPropertyTypeIri(OWL.OBJECTPROPERTY);
         kb.setReadOnly(true);
         kb.setEnabled(false);
+        kb.setBasePrefix("MyBasePrefix");
         sut.updateKnowledgeBase(kb, sut.getNativeConfig());
 
         KnowledgeBase savedKb = testEntityManager.find(KnowledgeBase.class, kb.getRepositoryId());
@@ -208,7 +212,11 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
             .hasFieldOrPropertyWithValue("descriptionIri", IriConstants.SCHEMA_DESCRIPTION)
             .hasFieldOrPropertyWithValue("name", "New name")
             .hasFieldOrPropertyWithValue("readOnly", true)
-            .hasFieldOrPropertyWithValue("enabled", false);
+            .hasFieldOrPropertyWithValue("enabled", false)
+            .hasFieldOrPropertyWithValue("labelIri", RDFS.LITERAL)
+            .hasFieldOrPropertyWithValue("propertyTypeIri", OWL.OBJECTPROPERTY)
+            .hasFieldOrPropertyWithValue("basePrefix", "MyBasePrefix");
+
     }
 
     @Test
@@ -304,6 +312,26 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
             .as("Check that concept was saved correctly")
             .hasFieldOrPropertyWithValue("description", concept.getDescription())
             .hasFieldOrPropertyWithValue("name", concept.getName());
+    }
+    
+    @Test
+    public void createConcept_WithCustomBasePrefix_ShouldCreateNewConceptWithCustomPrefix()
+    {
+        KBConcept concept = buildConcept();
+
+        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
+        String customPrefix = "http://www.ukp.informatik.tu-darmstadt.de/customPrefix#";
+        kb.setBasePrefix(customPrefix);
+        KBHandle handle = sut.createConcept(kb, concept);
+
+        KBConcept savedConcept = sut.readConcept(kb, handle.getIdentifier()).get();
+        assertThat(savedConcept).as("Check that concept was saved correctly")
+                .hasFieldOrPropertyWithValue("description", concept.getDescription())
+                .hasFieldOrPropertyWithValue("name", concept.getName());
+
+        String id = savedConcept.getIdentifier();
+        String savedConceptPrefix = id.substring(0, id.lastIndexOf("#") + 1);
+        assertEquals(customPrefix, savedConceptPrefix);
     }
 
     @Test
@@ -541,6 +569,26 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
             .hasFieldOrPropertyWithValue("name", property.getName())
             .hasFieldOrPropertyWithValue("range", property.getRange());
     }
+    
+    @Test
+    public void createProperty_WithCustomBasePrefix_ShouldCreateNewPropertyWithCustomPrefix()
+    {
+        KBProperty property = buildProperty();
+
+        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
+        String customPrefix = "http://www.ukp.informatik.tu-darmstadt.de/customPrefix#";
+        kb.setBasePrefix(customPrefix);
+        KBHandle handle = sut.createProperty(kb, property);
+
+        KBProperty savedProperty = sut.readProperty(kb, handle.getIdentifier()).get();
+        assertThat(savedProperty).as("Check that property was saved correctly")
+                .hasFieldOrPropertyWithValue("description", property.getDescription())
+                .hasFieldOrPropertyWithValue("name", property.getName());
+
+        String id = savedProperty.getIdentifier();
+        String savedPropertyPrefix = id.substring(0, id.lastIndexOf("#") + 1);
+        assertEquals(customPrefix, savedPropertyPrefix);
+    }
 
     @Test
     public void createProperty_WithNonemptyIdentifier_ShouldThrowIllegalArgumentException() {
@@ -761,6 +809,26 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
             .as("Check that instance was saved correctly")
             .hasFieldOrPropertyWithValue("description", instance.getDescription())
             .hasFieldOrPropertyWithValue("name", instance.getName());
+    }
+    
+    @Test
+    public void createInstance_WithCustomBasePrefix_ShouldCreateNewInstanceWithCustomPrefix()
+    {
+        KBInstance instance = buildInstance();
+
+        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
+        String customPrefix = "http://www.ukp.informatik.tu-darmstadt.de/customPrefix#";
+        kb.setBasePrefix(customPrefix);
+        KBHandle handle = sut.createInstance(kb, instance);
+
+        KBInstance savedInstance = sut.readInstance(kb, handle.getIdentifier()).get();
+        assertThat(savedInstance).as("Check that Instance was saved correctly")
+                .hasFieldOrPropertyWithValue("description", instance.getDescription())
+                .hasFieldOrPropertyWithValue("name", instance.getName());
+
+        String id = savedInstance.getIdentifier();
+        String savedInstancePrefix = id.substring(0, id.lastIndexOf("#") + 1);
+        assertEquals(customPrefix, savedInstancePrefix);
     }
 
     @Test
@@ -1135,7 +1203,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     public void getConceptRoots_WithWildlifeOntology_ShouldReturnRootConcepts() throws Exception {
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         importKnowledgeBase("data/wildlife_ontology.ttl");
-        setSchema(kb, OWL.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT);
+        setSchema(kb, OWL.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT, RDFS.LABEL, RDF.PROPERTY);
 
         Stream<String> rootConcepts = sut.listRootConcepts(kb, false).stream()
                 .map(KBHandle::getName);
@@ -1153,7 +1221,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     public void getConceptRoots_WithSparqlPlayground_ReturnsOnlyRootConcepts() throws Exception {
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         importKnowledgeBase("data/sparql_playground.ttl");
-        setSchema(kb, RDFS.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT);
+        setSchema(kb, RDFS.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT, RDFS.LABEL, RDF.PROPERTY);
 
         Stream<String> childConcepts = sut.listRootConcepts(kb, false).stream()
                 .map(KBHandle::getName);
@@ -1168,7 +1236,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     public void getChildConcepts_WithSparqlPlayground_ReturnsAnimals() throws Exception {
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         importKnowledgeBase("data/sparql_playground.ttl");
-        setSchema(kb, RDFS.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT);
+        setSchema(kb, RDFS.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT, RDFS.LABEL, RDF.PROPERTY);
         KBConcept concept = sut.readConcept(kb, "http://example.org/tuto/ontology#Animal").get();
 
         Stream<String> childConcepts = sut.listChildConcepts(kb, concept.getIdentifier(), false)
@@ -1188,7 +1256,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         importKnowledgeBase("data/streams.ttl");
         KBConcept concept = sut.readConcept(kb, "http://mrklie.com/schemas/streams#input").get();
-        setSchema(kb, RDFS.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT);
+        setSchema(kb, RDFS.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT, RDFS.LABEL, RDF.PROPERTY);
 
         Stream<String> childConcepts = sut.listChildConcepts(kb, concept.getIdentifier(), false)
             .stream()
@@ -1350,11 +1418,13 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     }
 
     private void setSchema(KnowledgeBase kb, IRI classIri, IRI subclassIri, IRI typeIri,
-        IRI descriptionIri) {
+        IRI descriptionIri, IRI labelIri, IRI propertyTypeIri) {
         kb.setClassIri(classIri);
         kb.setSubclassIri(subclassIri);
         kb.setTypeIri(typeIri);
         kb.setDescriptionIri(descriptionIri);
+        kb.setLabelIri(labelIri);
+        kb.setPropertyTypeIri(propertyTypeIri);
         sut.updateKnowledgeBase(kb, sut.getKnowledgeBaseConfig(kb));
     }
 }

@@ -585,7 +585,9 @@ public class KnowledgeBaseServiceImpl
     private String generateIdentifier(RepositoryConnection conn, KnowledgeBase kb)
     {
         ValueFactory vf = conn.getValueFactory();
-        return IriConstants.INCEPTION_NAMESPACE + vf.createBNode().getID();
+        // default value of basePrefix is IriConstants.INCEPTION_NAMESPACE
+        String basePrefix = kb.getBasePrefix();
+        return basePrefix + vf.createBNode().getID();
     }
 
     @Override
