@@ -40,6 +40,7 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 
@@ -53,7 +54,7 @@ import de.tudarmstadt.ukp.inception.kb.reification.Reification;
         query = "from KnowledgeBase kb where kb.project = :project and kb.name = :name "),
     @NamedQuery(name = "KnowledgeBase.getByProjectWhereEnabledTrue",
     query = "from KnowledgeBase kb where kb.project = :project and kb.enabled = true "
-            + "order by lower(kb.name)")
+            + "order by lower(kb.name)") 
 })
 public class KnowledgeBase
     implements Serializable
@@ -107,6 +108,18 @@ public class KnowledgeBase
     private IRI descriptionIri;
 
     /**
+     * The IRI for a property describing B being a label for A, e.g. rdfs:label
+     */
+    @Column(nullable = false)
+    private IRI labelIri;
+
+    /**
+     * The IRI for an object describing A is of type propertyType, e.g. rdf:Property
+     */
+    @Column(nullable = false)
+    private IRI propertyTypeIri;
+
+    /**
      * The IRI used for full text search, e.g. bif:contains or <http://www.openrdf.org/contrib/lucenesail#>
      */
     @Column
@@ -128,6 +141,12 @@ public class KnowledgeBase
     @Column(name = "supportConceptLinking", nullable = false)
     private boolean supportConceptLinking = false;
     
+    /**
+     * All statements created in a local KB are prefixed with this string
+     */
+    @Column(nullable = false)
+    private String basePrefix = IriConstants.INCEPTION_NAMESPACE;
+
     public String getRepositoryId() {
         return repositoryId;
     }
@@ -207,6 +226,26 @@ public class KnowledgeBase
         descriptionIri = aDescriptionIri;
     }
 
+    public IRI getLabelIri()
+    {
+        return labelIri;
+    }
+
+    public void setLabelIri(IRI aLabelIri)
+    {
+        labelIri = aLabelIri;
+    }
+
+    public IRI getPropertyTypeIri()
+    {
+        return propertyTypeIri;
+    }
+
+    public void setPropertyTypeIri(IRI aPropertyTypeIri)
+    {
+        propertyTypeIri = aPropertyTypeIri;
+    }
+
     public IRI getFtsIri()
     {
         return ftsIri;
@@ -264,6 +303,16 @@ public class KnowledgeBase
         return supportConceptLinking;
     }
     
+    public String getBasePrefix()
+    {
+        return basePrefix;
+    }
+
+    public void setBasePrefix(String aBasePrefix)
+    {
+        basePrefix = aBasePrefix;
+    }
+
     @Override
     public String toString()
     {
