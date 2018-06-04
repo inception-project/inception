@@ -341,7 +341,13 @@ public class MtasUimaParser extends MtasParser {
         return labelStr.toString();
     }
     
+    /**
+     * Method Implementation to get MtasToken (To be done when subclass and class 
+     * semantics to be included
+     * @return
+     */
     public MtasToken getMtasTokenKBFeature() {
+        return null;
         
     }
 
