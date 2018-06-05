@@ -108,9 +108,11 @@ public class ExternalClassifier
         }
         
         //Contruct Http Request
-        // TODO: Use traits url
-        String remoteUrl = "http://localhost:12889/tag";
-        // String remoteUrl = traits.getRemoteUrl();
+        String remoteUrl = traits.getRemoteUrl();
+        if (remoteUrl == null || remoteUrl.isEmpty()) {
+            remoteUrl = "http://localhost:12889/tag";
+        }
+        
         CloseableHttpClient httpclient = HttpClients.createDefault();
         HttpPost httpPost = new HttpPost(remoteUrl);
         httpPost.addHeader("content-type", "application/json");
