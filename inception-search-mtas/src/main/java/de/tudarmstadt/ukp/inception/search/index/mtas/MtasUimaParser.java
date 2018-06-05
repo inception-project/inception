@@ -31,6 +31,7 @@ import java.util.TreeMap;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.logging.Log;
 import org.apache.uima.cas.impl.XmiCasDeserializer;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.factory.TypeSystemDescriptionFactory;
@@ -300,7 +301,6 @@ public class MtasUimaParser extends MtasParser {
                                             endToken);
                                     tokenCollection.add(mtasAnnotationKBEntity);
                                     
-                                    
                                 }
 
                             }
@@ -330,6 +330,7 @@ public class MtasUimaParser extends MtasParser {
     public String getUILabel(String aIRI) {
 
         StringBuilder labelStr = new StringBuilder();
+        System.out.println();
         Optional<KBObject> kbObject = kbUtil.readKBIdentifier(project, aIRI);
         if (kbObject.isPresent()) {
             labelStr.append(kbObject.get().getClass().getSimpleName() + MtasToken.DELIMITER

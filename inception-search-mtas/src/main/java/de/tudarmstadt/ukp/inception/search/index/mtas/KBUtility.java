@@ -71,10 +71,14 @@ public class KBUtility {
                 if (stmts.hasNext()) {
                     Statement conceptStmt = stmts.next();
                     KBConcept kbConcept = KBConcept.read(conn, conceptStmt);
-                    return Optional.of(kbConcept);
+                    if (kbConcept != null) {
+                        return Optional.of(kbConcept);
+                    }
                 } else if (!stmts.hasNext()) {
                     Optional<KBInstance> kbInstance = kbService.readInstance(kb, aIdentifier);
-                    return kbInstance.flatMap((p) -> Optional.of(p));
+                    if (kbInstance.isPresent()) {
+                        return kbInstance.flatMap((p) -> Optional.of(p));
+                    }
                 }
             } catch (QueryEvaluationException e) {
                 log.error("Reading KB Entries failed.", e);
