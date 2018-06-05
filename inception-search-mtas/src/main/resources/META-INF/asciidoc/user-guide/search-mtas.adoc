@@ -104,7 +104,11 @@ in https://meertensinstituut.github.io/mtas/search_cql.html.
  (<Named_entity.value="OTH"/> | <Named_entity.value="LOC"/>) intersecting
 <SemArg/>
 
-* Single token Named Entity Identifier : all occurrences of the annotated identifier *ChateauMorgonBeaujolais*
+* Generic Search over annotated KB entities : all occurrences for KB entity *Bordeaux*
+
+ <KBEntity="Bordeaux"/>
+
+* Named Entity Identifier : all occurrences of the annotated identifier *ChateauMorgonBeaujolais*
 	
  [Named_entity.identifier="ChateauMorgonBeaujolais"]
 
@@ -112,16 +116,16 @@ in https://meertensinstituut.github.io/mtas/search_cql.html.
 
 * Named Entity Identifier for KB instance: all occurrences of the annotated identifier *ChateauMorgonBeaujolais*
 
- [Named_entity.identifier.KBInstance="ChateauMorgonBeaujolais"]
+ [Named_entity.identifier.instance="ChateauMorgonBeaujolais"]
 
- <Named_entity.identifier.KBInstance="ChateauMorgonBeaujolais"/>
+ <Named_entity.identifier.instance="ChateauMorgonBeaujolais"/>
 
 
 * Named Entity Identifier for KB concept: all occurrences of the annotated identifier *AmericanWine*
 
- [Named_entity.identifier.KBConcept="AmericanWine"]
+ [Named_entity.identifier.class="AmericanWine"]
 
- <Named_entity.identifier.KBConcept="AmericanWine"/>
+ <Named_entity.identifier.class="AmericanWine"/>
 
 * Named Entity Identifier covering multiple tokens: all occurrences of the annotated identifier *ChateauMorgonBeaujolais*
 
