@@ -248,19 +248,30 @@ public class MtasUimaParser extends MtasParser {
                                 // feature type is associated with KB and feature value is not null
 
                                 String labelStr = "";
-                                if (feature.getType().contains("kb") && featureValue != "null") {
+                                if (feature.getType().contains(IndexingConstants.KB) && featureValue != "null") {
                                     labelStr = getUILabel(featureValue);
                                 }
 
                                 
+                                
                                 if (!labelStr.isEmpty()) {
 
+                                    String kbType = labelStr.split(MtasToken.DELIMITER)[0];
+                                    String kbValue = labelStr.split(MtasToken.DELIMITER)[1];
+                                    
+                                    if (kbType.equals(IndexingConstants.kbConcept)) {
+                                        kbType = IndexingConstants.indexKBConcept;
+                                                
+                                    }
+                                    else if (kbType.equals(IndexingConstants.kbInstance)) {
+                                        kbType = IndexingConstants.indexKBInstance;
+                                    }
+                                    
                                     // Index IRI feature value with their labels along with 
                                     // annotation.feature name  
-                                    
                                     String indexedStr = annotationUiName.replace(" ", "_") + "."
                                             + feature.getUiName().replace(" ", "_") + "."
-                                            + labelStr;
+                                            + kbType + MtasToken.DELIMITER + kbValue;
 
                                     // Indexing UI annotation with type i.e Concept/Instance
                                     log.debug("Indexed String with type for : {}", indexedStr);
@@ -274,14 +285,10 @@ public class MtasUimaParser extends MtasParser {
 
                                     indexedStr = annotationUiName.replace(" ", "_") + "."
                                             + feature.getUiName().replace(" ", "_")
-                                            + MtasToken.DELIMITER
-                                            + labelStr.split(MtasToken.DELIMITER)[1];
+                                            + MtasToken.DELIMITER + kbValue;
 
                                     // Indexing UI annotation without type i.e Concept/Instance
                                     log.debug("Indexed String without type for : {}", indexedStr);
-                                    log.debug("Indexed String without type for : {},{},{},{}",
-                                            annotation.getBegin(), annotation.getEnd(), beginToken,
-                                            endToken);
                                     MtasToken mtasAnnotationFeatureLabel = new MtasTokenString(
                                             mtasId++, indexedStr, beginToken);
                                     mtasAnnotationFeatureLabel.setOffset(annotation.getBegin(),
@@ -291,8 +298,9 @@ public class MtasUimaParser extends MtasParser {
                                     tokenCollection.add(mtasAnnotationFeatureLabel);
                                     
                                     // Indexing UI annotation without type and layer for generic search
-                                    indexedStr = "KB.Entity" + MtasToken.DELIMITER
-                                            + labelStr.split(MtasToken.DELIMITER)[1];
+                                    indexedStr = IndexingConstants.kbEntity + MtasToken.DELIMITER
+                                            + kbValue;
+                                    log.debug("Indexed String without type and label for : {}", indexedStr);
                                     MtasToken mtasAnnotationKBEntity = new MtasTokenString(
                                             mtasId++, indexedStr, beginToken);
                                     mtasAnnotationKBEntity.setOffset(annotation.getBegin(),
