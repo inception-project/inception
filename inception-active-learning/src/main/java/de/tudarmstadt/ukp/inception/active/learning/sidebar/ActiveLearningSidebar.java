@@ -36,6 +36,7 @@ import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.string.Strings;
 import org.slf4j.Logger;
@@ -43,6 +44,7 @@ import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.JCasProvider;
@@ -59,6 +61,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
@@ -124,6 +127,7 @@ public class ActiveLearningSidebar
     private @SpringBean DocumentService documentService;
     private @SpringBean ApplicationEventPublisherHolder applicationEventPublisherHolder;
     private @SpringBean FeatureSupportRegistry fsRegistry;
+    private @SpringBean CasStorageService casStorageService;
 
     private IModel<AnnotationLayer> selectedLayer;
     private IModel<List<LearningRecord>> learningRecords;
@@ -143,6 +147,7 @@ public class ActiveLearningSidebar
     private VID highlightVID;
     private LearningRecord selectedRecord;
     private Date learnSkippedRecommendationTime;
+    private ConfirmationDialog confirmationDialog;
 
     public ActiveLearningSidebar(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, JCasProvider aJCasProvider,
@@ -160,6 +165,8 @@ public class ActiveLearningSidebar
         mainContainer.add(createRecommendationOperationForm());
         mainContainer.add(createLearningHistory());
         add(mainContainer);
+        confirmationDialog = new ConfirmationDialog("confirmationDialog");
+        add(confirmationDialog);
     }
 
     private Form<?> createSessionControlForm()
@@ -287,7 +294,7 @@ public class ActiveLearningSidebar
     {
         highlightRecommendation(aTarget, currentRecommendation.getOffset().getBeginCharacter(),
                 currentRecommendation.getOffset().getEndCharacter(),
-                currentRecommendation.getCoveredText(), currentRecommendation.getAnnotation());
+                currentRecommendation.getCoveredText(), currentRecommendation.getLabel());
     }
     
     private void highlightRecommendation(AjaxRequestTarget aTarget, int aBegin, int aEnd,
@@ -359,7 +366,7 @@ public class ActiveLearningSidebar
         
         recommendationForm.add(createRecommendationCoveredTextLink());
         recommendationForm.add(new Label(CID_RECOMMENDED_PREDITION, LambdaModel.of(() -> 
-                currentRecommendation != null ? currentRecommendation.getAnnotation() : null)));
+                currentRecommendation != null ? currentRecommendation.getLabel() : null)));
         recommendationForm.add(new Label(CID_RECOMMENDED_CONFIDENCE, LambdaModel.of(() -> 
                 currentRecommendation != null ? currentRecommendation.getConfidence() : 0.0)));
         recommendationForm.add(new Label(CID_RECOMMENDED_DIFFERENCE, LambdaModel.of(() -> 
@@ -430,7 +437,7 @@ public class ActiveLearningSidebar
         record.setOffsetTokenEnd(currentRecommendation.getOffset().getEndToken());
         record.setOffsetCharacterBegin(currentRecommendation.getOffset().getBeginCharacter());
         record.setOffsetCharacterEnd(currentRecommendation.getOffset().getEndCharacter());
-        record.setAnnotation(currentRecommendation.getAnnotation());
+        record.setAnnotation(currentRecommendation.getLabel());
         record.setLayer(selectedLayer.getObject());
         record.setChangeLocation(LearningRecordChangeLocation.AL_SIDEBAR);
 
@@ -453,7 +460,7 @@ public class ActiveLearningSidebar
         AnnotationFeature feature = annotationService
             .getFeature(acceptedRecommendation.getFeature(), selectedLayer.getObject());
 
-        String predictedValue = acceptedRecommendation.getAnnotation();
+        String predictedValue = acceptedRecommendation.getLabel();
 
         recommendationService.setFeatureValue(feature, predictedValue, adapter, annotatorState,
             jCas, id);
@@ -467,7 +474,7 @@ public class ActiveLearningSidebar
         
         // Save CAS
         aActionHandler.actionCreateOrUpdate(aTarget, jCas);
-        
+
         moveToNextRecommendation(aTarget);
     }
 
@@ -543,6 +550,7 @@ public class ActiveLearningSidebar
     {
         actionShowSelectedDocument(aTarget, record.getSourceDocument(),
             record.getOffsetCharacterBegin());
+        JCas aJcas = this.getJCasProvider().get();
 
         if (record.getUserAction().equals(LearningRecordUserAction.REJECTED)) {
             highlightTextAndDisplayMessage(aTarget, record);
@@ -556,15 +564,14 @@ public class ActiveLearningSidebar
         // if the suggestion doesn't exit -> if that suggestion is accepted and annotated,
         // highlight the annotation.
         // else, highlight the text.
-        else if (!isAnnotatedInCas(record)) {
+        else if (!isAnnotatedInCas(record, aJcas)) {
             highlightTextAndDisplayMessage(aTarget, record);
         }
     }
 
-    private boolean isAnnotatedInCas(LearningRecord aRecord)
+    private boolean isAnnotatedInCas(LearningRecord aRecord, JCas aJcas)
         throws IOException
     {
-        JCas aJcas = this.getJCasProvider().get();
         Type type = CasUtil.getType(aJcas.getCas(), selectedLayer.getObject().getName());
         AnnotationFS annotationFS = WebAnnoCasUtil
             .selectSingleFsAt(aJcas, type, aRecord.getOffsetCharacterBegin(),
@@ -601,13 +608,38 @@ public class ActiveLearningSidebar
                 selectedLayer.getObject());
     }
 
-    private void actionRemoveHistoryItem(AjaxRequestTarget aTarget,
-            LearningRecord aRecord)
+    private void actionRemoveHistoryItem(AjaxRequestTarget aTarget, LearningRecord aRecord)
+        throws IOException, AnnotationException
     {
         aTarget.add(mainContainer);
         annotationPage.actionRefreshDocument(aTarget);
         learningRecordService.delete(aRecord);
         learningRecords.detach();
+        if (aRecord.getUserAction().equals(LearningRecordUserAction.ACCEPTED)) {
+            actionShowSelectedDocument(aTarget, aRecord.getSourceDocument(),
+                aRecord.getOffsetCharacterBegin());
+            JCas aJcas = casStorageService.readCas(aRecord.getSourceDocument(), aRecord.getUser());
+            if (isAnnotatedInCas(aRecord, aJcas)) {
+                confirmationDialog.setTitleModel(
+                    new StringResourceModel("alSidebar.history.delete.confirmation.title", this));
+                confirmationDialog.setContentModel(
+                    new StringResourceModel("alSidebar.history.delete.confirmation.content", this,
+                        null));
+                confirmationDialog.show(aTarget);
+                confirmationDialog
+                    .setConfirmAction(t -> deleteAnnotationByHistory(t, aRecord, aJcas));
+            }
+        }
+    }
+
+    private void deleteAnnotationByHistory(AjaxRequestTarget aTarget, LearningRecord aRecord,
+        JCas aJcas)
+        throws IOException, AnnotationException
+    {
+        this.getModelObject().getSelection()
+            .selectSpan(highlightVID, aJcas, aRecord.getOffsetCharacterBegin(),
+                aRecord.getOffsetCharacterEnd());
+        getActionHandler().actionDelete(aTarget);
     }
 
     @OnEvent
@@ -690,7 +722,7 @@ public class ActiveLearningSidebar
         record.setOffsetTokenEnd(acceptedRecommendation.getOffset().getEndToken());
         record.setOffsetCharacterBegin(acceptedRecommendation.getOffset().getBeginCharacter());
         record.setOffsetCharacterEnd(acceptedRecommendation.getOffset().getEndCharacter());
-        record.setAnnotation(acceptedRecommendation.getAnnotation());
+        record.setAnnotation(acceptedRecommendation.getLabel());
         record.setLayer(annotationService.getLayer(vid.getLayerId()));
         record.setChangeLocation(LearningRecordChangeLocation.MAIN_EDITOR);
         learningRecordService.create(record);

@@ -28,4 +28,5 @@
   <include file="de/tudarmstadt/ukp/inception/kb/model/db-changelog.xml"/>
   <include file="de/tudarmstadt/ukp/inception/recommendation/model/db-changelog.xml"/>
   <include file="de/tudarmstadt/ukp/inception/log/model/db-changelog.xml"/>
+  <include file="de/tudarmstadt/ukp/inception/search/model/db-changelog.xml"/>
 </databaseChangeLog>
