@@ -82,6 +82,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -122,6 +123,8 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.model.RProject;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.model.RResponse;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.Info;
 import io.swagger.annotations.SwaggerDefinition;
@@ -294,13 +297,17 @@ public class RemoteApiController2
     }
     
     @ApiOperation(value = "Create a new project")
+    @ApiImplicitParams({
+        @ApiImplicitParam(name = PARAM_NAME, paramType = "form", required = true),
+        @ApiImplicitParam(name = PARAM_CREATOR, paramType = "form")
+    })
     @RequestMapping(
             value = ("/" + PROJECTS), 
             method = RequestMethod.POST, 
             consumes = MULTIPART_FORM_DATA_VALUE,
             produces = APPLICATION_JSON_UTF8_VALUE)    
     public ResponseEntity<RResponse<RProject>> projectCreate(
-            @RequestParam(PARAM_NAME) String aName, 
+            @RequestParam(PARAM_NAME) String aName,
             @RequestParam(PARAM_CREATOR) Optional<String> aCreator,
             UriComponentsBuilder aUcb)
         throws Exception
@@ -388,7 +395,7 @@ public class RemoteApiController2
             consumes = MULTIPART_FORM_DATA_VALUE,
             produces = APPLICATION_JSON_UTF8_VALUE)    
     public ResponseEntity<RResponse<RProject>> projectImport(
-            @RequestParam(PARAM_FILE) MultipartFile aFile)
+            @RequestPart(PARAM_FILE) MultipartFile aFile)
         throws Exception
     {
         // Get current user - this will throw an exception if the current user does not exit
@@ -485,6 +492,11 @@ public class RemoteApiController2
     }
     
     @ApiOperation(value = "Create a new document in a project")
+    @ApiImplicitParams({
+        @ApiImplicitParam(name = PARAM_NAME, paramType = "form", required = true),
+        @ApiImplicitParam(name = PARAM_FORMAT, paramType = "form", required = true),
+        @ApiImplicitParam(name = PARAM_STATE, paramType = "form", required = true),
+    })
     @RequestMapping(
             value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS, 
             method = RequestMethod.POST,
@@ -492,10 +504,10 @@ public class RemoteApiController2
             produces = APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<RResponse<RDocument>> documentCreate(
             @PathVariable(PARAM_PROJECT_ID) long aProjectId,
-            @RequestParam(value = PARAM_CONTENT) MultipartFile aFile,
-            @RequestParam(value = PARAM_NAME) String aName,
-            @RequestParam(value = PARAM_FORMAT) String aFormat,
-            @RequestParam(value = PARAM_STATE) Optional<String> aState,
+            @RequestParam(PARAM_CONTENT) MultipartFile aFile,
+            @RequestParam(PARAM_NAME) String aName,
+            @RequestParam(PARAM_FORMAT) String aFormat,
+            @RequestParam(PARAM_STATE) Optional<String> aState,
             UriComponentsBuilder aUcb)
         throws Exception
     {               
@@ -687,6 +699,10 @@ public class RemoteApiController2
     }
     
     @ApiOperation(value = "Create annotations for a document in a project")
+    @ApiImplicitParams({
+        @ApiImplicitParam(name = PARAM_FORMAT, paramType = "form", required = true),
+        @ApiImplicitParam(name = PARAM_STATE, paramType = "form", required = true),
+    })
     @RequestMapping(
             value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS + "/{"
                     + PARAM_DOCUMENT_ID + "}/" + ANNOTATIONS + "/{" + PARAM_ANNOTATOR_ID + "}",
@@ -697,9 +713,9 @@ public class RemoteApiController2
             @PathVariable(PARAM_PROJECT_ID) long aProjectId,
             @PathVariable(PARAM_DOCUMENT_ID) long aDocumentId,
             @PathVariable(PARAM_ANNOTATOR_ID) String aAnnotatorId,
-            @RequestParam(value = PARAM_CONTENT) MultipartFile aFile,
-            @RequestParam(value = PARAM_FORMAT) Optional<String> aFormat,
-            @RequestParam(value = PARAM_STATE) Optional<String> aState,
+            @RequestPart(PARAM_CONTENT) MultipartFile aFile,
+            @RequestParam(PARAM_FORMAT) Optional<String> aFormat,
+            @RequestParam(PARAM_STATE) Optional<String> aState,
             UriComponentsBuilder aUcb) 
         throws Exception
     {
@@ -776,6 +792,10 @@ public class RemoteApiController2
     }
     
     @ApiOperation(value = "Create curation for a document in a project")
+    @ApiImplicitParams({
+        @ApiImplicitParam(name = PARAM_FORMAT, paramType = "form", required = true),
+        @ApiImplicitParam(name = PARAM_STATE, paramType = "form", required = true),
+    })
     @RequestMapping(
             value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS + "/{"
                     + PARAM_DOCUMENT_ID + "}/" + CURATION,
@@ -785,9 +805,9 @@ public class RemoteApiController2
     public ResponseEntity<RResponse<RAnnotation>> curationCreate(
             @PathVariable(PARAM_PROJECT_ID) long aProjectId,
             @PathVariable(PARAM_DOCUMENT_ID) long aDocumentId,
-            @RequestParam(value = PARAM_CONTENT) MultipartFile aFile,
-            @RequestParam(value = PARAM_FORMAT) Optional<String> aFormat,
-            @RequestParam(value = PARAM_STATE) Optional<String> aState,
+            @RequestPart(value = PARAM_CONTENT) MultipartFile aFile,
+            @RequestParam(PARAM_FORMAT) Optional<String> aFormat,
+            @RequestParam(PARAM_STATE) Optional<String> aState,
             UriComponentsBuilder aUcb) 
         throws Exception
     {
