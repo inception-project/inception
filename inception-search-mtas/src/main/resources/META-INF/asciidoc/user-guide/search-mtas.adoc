@@ -106,7 +106,7 @@ in https://meertensinstituut.github.io/mtas/search_cql.html.
 
 * Generic Search over annotated KB entities : all occurrences for KB entity *Bordeaux*
 
- <KBEntity="Bordeaux"/>
+ <KB.Entity="Bordeaux"/>
 
 * Named Entity Identifier : all occurrences of the annotated identifier *ChateauMorgonBeaujolais*
 	
