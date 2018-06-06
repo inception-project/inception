@@ -72,9 +72,17 @@ public class ConceptInstancePanel
         add(new ConceptInfoPanel("info", kbModel, selectedConceptHandle, selectedConceptModel));
         add(new InstanceListPanel("instances", kbModel, selectedConceptHandle,
                 selectedInstanceHandle));
-        annotatedSearchPanel = new AnnotatedListIdentifiers("annotatedResultGroups", kbModel,
-                selectedConceptHandle, selectedInstanceHandle);
-        add(annotatedSearchPanel);
+        if (selectedConceptHandle.getObject() != null) {
+            annotatedSearchPanel = new AnnotatedListIdentifiers("annotatedResultGroups", kbModel,
+                    selectedConceptHandle, selectedInstanceHandle);
+            add(annotatedSearchPanel);
+        }
+        else {
+            annotatedSearchPanel = new EmptyPanel("annotatedResultGroups")
+                    .setVisibilityAllowed(false);
+            add(annotatedSearchPanel);
+        }
+        
         instanceInfoPanel = new EmptyPanel(INSTANCE_INFO_MARKUP_ID).setVisibilityAllowed(false);
         add(instanceInfoPanel);
     }
@@ -166,9 +174,6 @@ public class ConceptInstancePanel
         // replace instance info view
         Component replacement = new InstanceInfoPanel(INSTANCE_INFO_MARKUP_ID, kbModel,
                 selectedInstanceHandle, Model.of(instance));
-        Component replacementSearch = new AnnotatedListIdentifiers("annotatedResultGroups", 
-                kbModel, selectedConceptHandle, selectedInstanceHandle);
-        annotatedSearchPanel = annotatedSearchPanel.replaceWith(replacementSearch);
         instanceInfoPanel = instanceInfoPanel.replaceWith(replacement);
 
         event.getTarget().add(this);
