@@ -94,6 +94,15 @@ public class TestFixtures
         return instance;
     }
 
+    public KBInstance buildInstanceWithLanguage(String aLanguage)
+    {
+        KBInstance instance = new KBInstance();
+        instance.setName("Instance name @" + aLanguage);
+        instance.setDescription("Instance description @" + aLanguage);
+        instance.setType(URI.create("https://test.schema.com/#type"));
+        return instance;
+    }
+
     public KBStatement buildStatement(KBHandle conceptHandle, KBHandle propertyHandle, String value)
     {
         ValueFactory vf = SimpleValueFactory.getInstance();
