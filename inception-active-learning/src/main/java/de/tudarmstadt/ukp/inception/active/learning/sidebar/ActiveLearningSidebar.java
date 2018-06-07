@@ -135,6 +135,7 @@ public class ActiveLearningSidebar
 
     private IModel<AnnotationLayer> selectedLayer;
     private IModel<List<LearningRecord>> learningRecords;
+    private IModel<FeatureState> aFeatureStateModel;
 
     private final WebMarkupContainer mainContainer;
 
@@ -153,6 +154,7 @@ public class ActiveLearningSidebar
     private Date learnSkippedRecommendationTime;
     private FeatureState featureState;
     private ConfirmationDialog confirmationDialog;
+    private FeatureEditor editor;
 
     public ActiveLearningSidebar(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, JCasProvider aJCasProvider,
@@ -255,7 +257,18 @@ public class ActiveLearningSidebar
         if (currentDifference != null) {
             hasUnseenRecommendation = true;
             currentRecommendation = currentDifference.getRecommendation1();
-            featureState.value = currentRecommendation.getAnnotation();
+
+            AnnotationFeature annotationFeature = annotationService
+                .getFeature(currentRecommendation.getFeature(), selectedLayer.getObject());
+            featureState = new FeatureState(annotationFeature, currentRecommendation.getLabel());
+            aFeatureStateModel = Model.of(featureState);
+            aFeatureStateModel.detach();
+            FeatureSupport featureSupport = featureSupportRegistry.getFeatureSupport(annotationFeature);
+            editor = featureSupport
+                .createEditor("editor", mainContainer, this.getActionHandler(), this.getModel(),
+                    aFeatureStateModel);
+            editor.detach();
+            aTarget.add(editor);
 
             try {
                 actionShowSelectedDocument(aTarget, documentService
@@ -433,24 +446,32 @@ public class ActiveLearningSidebar
 
     private FeatureEditor createFeatureEditor()
     {
-        AnnotationFeature annotationFeature = annotationService
-            .listAnnotationFeature(selectedLayer.getObject()).get(0);
+        AnnotationFeature annotationFeature;
+        if (currentRecommendation != null) {
+            annotationFeature = annotationService
+                .getFeature(currentRecommendation.getFeature(), selectedLayer.getObject());
+        }
+        else {
+            annotationFeature = annotationService
+                .listAnnotationFeature(selectedLayer.getObject()).get(0);
+        }
         FeatureSupport featureSupport = featureSupportRegistry.getFeatureSupport(annotationFeature);
 
         featureState = new FeatureState(annotationFeature, null);
         featureState.tagset = annotationService.listTags(annotationFeature.getTagset());
-        IModel<FeatureState> aFeatureStateModel = Model.of(featureState);
-        FeatureEditor editor = featureSupport
+        aFeatureStateModel = Model.of(featureState);
+        editor = featureSupport
             .createEditor("editor", mainContainer, this.getActionHandler(), this.getModel(),
                 aFeatureStateModel);
-        editor.add(LambdaBehavior.onConfigure(
-            component -> component.setVisible(sessionActive && hasUnseenRecommendation)));
+        //            editor.add(LambdaBehavior.onConfigure(
+        //                component -> component.setVisible(sessionActive &&
+        // hasUnseenRecommendation)));
         return editor;
     }
 
     private void writeLearningRecordInDatabase(LearningRecordUserAction userAction)
     {
-        writeLearningRecordInDatabase(userAction, currentRecommendation.getAnnotation());
+        writeLearningRecordInDatabase(userAction, currentRecommendation.getLabel());
     }
 
     private void writeLearningRecordInDatabase(LearningRecordUserAction userAction, String
@@ -480,7 +501,7 @@ public class ActiveLearningSidebar
         aTarget.add(mainContainer);
         String selectedFeaturevalue = featureState.value.toString();
 
-        if (selectedFeaturevalue.equals(currentRecommendation.getAnnotation())) {
+        if (selectedFeaturevalue.equals(currentRecommendation.getLabel())) {
             writeLearningRecordInDatabase(LearningRecordUserAction.ACCEPTED);
         }
         else {
