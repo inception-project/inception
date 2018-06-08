@@ -379,7 +379,7 @@ public class DocumentServiceImpl
 
         return count > 0;
     }
-
+    
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
     public boolean existsFinishedAnnotation(Project aProject)
@@ -734,32 +734,6 @@ public class DocumentServiceImpl
         JCas jcas = createOrReadInitialCas(aDocument);
         writeAnnotationCas(jcas, aDocument, aUser, false);
         applicationEventPublisher.publishEvent(new AfterDocumentResetEvent(this, adoc, jcas));
-    }
-    
-    /**
-     * Return true if there exist at least one annotation document FINISHED for annotation for this
-     * {@link SourceDocument}
-     *
-     * @param aSourceDocument
-     *            the source document.
-     * @param aProject
-     *            the project.
-     * @return if a finished document exists.
-     */
-    @Override
-    public boolean existFinishedDocument(SourceDocument aSourceDocument, Project aProject)
-    {
-        List<de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument> annotationDocuments =
-                listAnnotationDocuments(aSourceDocument);
-        boolean finishedAnnotationDocumentExist = false;
-        for (de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument annotationDocument : 
-            annotationDocuments) {
-            if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
-                finishedAnnotationDocumentExist = true;
-                break;
-            }
-        }
-        return finishedAnnotationDocumentExist;
     }
     
     @Override

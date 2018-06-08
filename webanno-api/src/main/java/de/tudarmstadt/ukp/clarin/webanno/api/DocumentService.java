@@ -452,11 +452,6 @@ public interface DocumentService
      */
     void removeAnnotationDocument(AnnotationDocument annotationDocument);
 
-    /**
-     * If any of the users finished one annotation document
-     */
-    boolean existFinishedDocument(SourceDocument aSourceDocument, Project aProject);
-
     AnnotationDocument createOrGetAnnotationDocument(SourceDocument aDocument, User aUser);
     
     /**
