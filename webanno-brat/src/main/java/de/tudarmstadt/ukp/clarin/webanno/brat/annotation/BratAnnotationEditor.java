@@ -409,8 +409,8 @@ public class BratAnnotationEditor
             // Create new span annotation - in this case we get the offset information from the
             // request
             String offsets = request.getParameterValue(PARAM_OFFSETS).toString();
-            OffsetsList offsetLists = JSONUtil.getJsonConverter().getObjectMapper()
-                    .readValue(offsets, OffsetsList.class);
+            OffsetsList offsetLists = JSONUtil.getObjectMapper().readValue(offsets,
+                    OffsetsList.class);
 
             int annotationBegin = getModelObject().getWindowBeginOffset()
                     + offsetLists.get(0).getBegin();
@@ -538,7 +538,7 @@ public class BratAnnotationEditor
         JsonNode current = null;
         JsonNode previous = null;
         try {
-            ObjectMapper mapper = JSONUtil.getJsonConverter().getObjectMapper();
+            ObjectMapper mapper = JSONUtil.getObjectMapper();
             current = mapper.readTree(json);
             previous = lastRenderedJson != null ? mapper.readTree(lastRenderedJson) : null;
         }

@@ -101,8 +101,6 @@ public class CasToBratJsonTest
     @Test
     public void testGenerateBratJsonGetCollection() throws IOException
     {
-        MappingJackson2HttpMessageConverter jsonConverter = 
-                new MappingJackson2HttpMessageConverter();
         String jsonFilePath = "target/test-output/output_cas_to_json_collection.json";
 
         GetCollectionInformationResponse collectionInformation = 
@@ -151,7 +149,7 @@ public class CasToBratJsonTest
         tagSetNames
                 .add(de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.COREFRELTYPE);
 
-        JSONUtil.generatePrettyJson(jsonConverter, collectionInformation, new File(jsonFilePath));
+        JSONUtil.generatePrettyJson(collectionInformation, new File(jsonFilePath));
 
         assertThat(
                 linesOf(new File("src/test/resources/output_cas_to_json_collection_expected.json"),
@@ -164,8 +162,6 @@ public class CasToBratJsonTest
     @Test
     public void testGenerateBratJsonGetDocument() throws Exception
     {
-        MappingJackson2HttpMessageConverter jsonConverter = 
-                new MappingJackson2HttpMessageConverter();
         String jsonFilePath = "target/test-output/output_cas_to_json_document.json";
         String file = "src/test/resources/tcf04-karin-wl.xml";
         
@@ -187,7 +183,7 @@ public class CasToBratJsonTest
         GetDocumentResponse response = new GetDocumentResponse();
         BratRenderer.render(response, state, vdoc, jCas, annotationSchemaService);
 
-        JSONUtil.generatePrettyJson(jsonConverter, response, new File(jsonFilePath));
+        JSONUtil.generatePrettyJson(response, new File(jsonFilePath));
 
         assertThat(linesOf(new File("src/test/resources/output_cas_to_json_document_expected.json"),
                 "UTF-8")).isEqualTo(linesOf(new File(jsonFilePath), "UTF-8"));

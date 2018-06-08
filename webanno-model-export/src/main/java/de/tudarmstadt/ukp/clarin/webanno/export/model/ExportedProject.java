@@ -237,8 +237,7 @@ public class ExportedProject
     {
         Object value = properties.get(aName);
         if (value != null) {
-            return Optional.of(JSONUtil.getJsonConverter().getObjectMapper().convertValue(value,
-                    aToValueType));
+            return Optional.of(JSONUtil.getObjectMapper().convertValue(value, aToValueType));
         }
         else {
             return Optional.empty();
@@ -260,8 +259,8 @@ public class ExportedProject
     {
         Object value = properties.get(aName);
         if (value != null) {
-            ObjectMapper mapper = JSONUtil.getJsonConverter().getObjectMapper();
-            return JSONUtil.getJsonConverter().getObjectMapper().convertValue(value,
+            ObjectMapper mapper = JSONUtil.getObjectMapper();
+            return JSONUtil.getObjectMapper().convertValue(value,
                     mapper.getTypeFactory().constructArrayType(aToValueType));
         }
         else {

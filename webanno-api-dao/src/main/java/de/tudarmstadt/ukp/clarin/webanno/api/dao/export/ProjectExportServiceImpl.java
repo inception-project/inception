@@ -232,8 +232,8 @@ public class ProjectExportServiceImpl
             try (InputStream is = aZip.getInputStream(projectSettingsEntry)) {
                 text = IOUtils.toString(is, "UTF-8");
             }
-            ExportedProject exProject = JSONUtil.getJsonConverter().getObjectMapper()
-                    .readValue(text, ExportedProject.class);
+            ExportedProject exProject = JSONUtil.getObjectMapper().readValue(text,
+                    ExportedProject.class);
             
             // If the name of the project is already taken, generate a new name
             String projectName = exProject.getName();

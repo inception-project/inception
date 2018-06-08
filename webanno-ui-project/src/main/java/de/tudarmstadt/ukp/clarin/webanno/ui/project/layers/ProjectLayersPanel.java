@@ -416,8 +416,8 @@ public class ProjectLayersPanel
             
             String text = IOUtils.toString(aIS, "UTF-8");
 
-            ExportedAnnotationLayer[] exLayers = JSONUtil.getJsonConverter().getObjectMapper()
-                    .readValue(text, ExportedAnnotationLayer[].class);
+            ExportedAnnotationLayer[] exLayers = JSONUtil.getObjectMapper().readValue(text,
+                    ExportedAnnotationLayer[].class);
             
             // First import the layers but without setting the attach-layers/features
             Map<String, ExportedAnnotationLayer> exLayersMap = new HashMap<>();
