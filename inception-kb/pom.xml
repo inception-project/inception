@@ -80,10 +80,6 @@
     </dependency>
     <dependency>
       <groupId>org.eclipse.rdf4j</groupId>
-      <artifactId>rdf4j-sail-inferencer</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.eclipse.rdf4j</groupId>
       <artifactId>rdf4j-rio-api</artifactId>
     </dependency>
     <dependency>
