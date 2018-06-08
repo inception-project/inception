@@ -886,8 +886,26 @@ public class DocumentServiceImpl
             }
         }
         return listSourceDocuments(aProject).size() * users.size() - ignored;
-
     }
+    
+    @Override
+    public boolean existsCurationDocument(Project aProject)
+    {
+        Validate.notNull(aProject, "Project must be specified");
+        
+        boolean curationDocumentExist = false;
+        List<SourceDocument> documents = listSourceDocuments(aProject);
+
+        for (SourceDocument sourceDocument : documents) {
+            // If the curation document is finished
+            if (SourceDocumentState.CURATION_FINISHED.equals(sourceDocument.getState())) {
+                curationDocumentExist = true;
+                break;
+            }
+        }
+        return curationDocumentExist;
+    }
+
     
     private List<String> getAllAnnotators(Project aProject)
     {
