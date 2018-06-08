@@ -650,7 +650,8 @@ public class KnowledgeBaseServiceImpl
         List<KBHandle> resultList = read(kb, (conn) -> {
             String QUERY = String.join("\n"
                 , "SELECT DISTINCT ?s ?l WHERE { "
-                , "  ?s ?pTYPE ?oCLASS . "
+                , " { ?s ?pTYPE ?oCLASS . } "
+                , "UNION { ?someSubClass ?pSUBCLASS ?s . } ."
                 , "FILTER NOT EXISTS { "
                 , "  ?s ?pSUBCLASS ?otherSub . "
                 , "} OPTIONAL { "
@@ -658,7 +659,7 @@ public class KnowledgeBaseServiceImpl
                 , "    FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\")) "
                 , "  } "
                 , "} "
-                , "LIMIT 10000");
+                , "LIMIT 10000" );
             TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
             tupleQuery.setBinding("pTYPE", kb.getTypeIri());
             tupleQuery.setBinding("oCLASS", kb.getClassIri());
@@ -692,6 +693,7 @@ public class KnowledgeBaseServiceImpl
             boolean aAll, int aLimit)
         throws QueryEvaluationException
     {
+        System.out.println(aParentIdentifier);
         // The query below only returns subclasses which simultaneously declare being a class
         // via the class property defined in the KB specification. This means that if the KB
         // is configured to use rdfs:Class but a subclass defines itself using owl:Class, then
@@ -700,8 +702,9 @@ public class KnowledgeBaseServiceImpl
         List<KBHandle> resultList = read(aKB, (conn) -> {
             String QUERY = String.join("\n"
                 , "SELECT DISTINCT ?s ?l WHERE { "
-                , "  ?s ?pSUBCLASS ?oPARENT . "
-                , "  ?s ?pTYPE ?oCLASS . "
+                , " ?s ?pSUBCLASS ?oPARENT .  " 
+                //, "UNION { ?s ?pTYPE ?oCLASS . } ."
+                //, "  ?s ?pTYPE ?oCLASS . "
                 , "  OPTIONAL { "
                 , "    ?s ?pLABEL ?l . "
                 , "    FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\")) "
