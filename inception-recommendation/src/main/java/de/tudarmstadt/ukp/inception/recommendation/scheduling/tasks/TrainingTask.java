@@ -156,7 +156,7 @@ public class TrainingTask
         }
 
         for (AnnotationObject ao : sentence) {
-            if (ao.getAnnotation() == null) {
+            if (ao.getLabel() == null) {
                 return false;
             }
         }

@@ -76,10 +76,6 @@
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-log</artifactId>
     </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-kb</artifactId>
-    </dependency>
     
     <dependency>
       <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
