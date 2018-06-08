@@ -132,7 +132,7 @@ public class MtasDocumentIndexTest
     {
         Project project = new Project();
 
-        project.setName("TestProject");
+        project.setName("TestSimpleQuery");
 
         projectService.createProject(project);
 
@@ -158,7 +158,7 @@ public class MtasDocumentIndexTest
                 project, query);
 
         SearchResult expectedResult = new SearchResult();
-        expectedResult.setDocumentId(1);
+        expectedResult.setDocumentId(sourceDocument.getId());
         expectedResult.setDocumentTitle("test");
         expectedResult.setText("Galicia ");
         expectedResult.setLeftContext("capital of ");
@@ -179,7 +179,7 @@ public class MtasDocumentIndexTest
     {
         Project project = new Project();
 
-        project.setName("TestProject");
+        project.setName("TestAnnotationQuery");
 
         projectService.createProject(project);
 
@@ -205,7 +205,7 @@ public class MtasDocumentIndexTest
                 project, query);
 
         SearchResult expectedResult = new SearchResult();
-        expectedResult.setDocumentId(1);
+        expectedResult.setDocumentId(sourceDocument.getId());
         expectedResult.setDocumentTitle("test");
         expectedResult.setText("Galicia ");
         expectedResult.setLeftContext("capital of ");
