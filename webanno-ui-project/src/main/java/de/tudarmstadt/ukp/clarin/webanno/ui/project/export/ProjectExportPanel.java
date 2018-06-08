@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.project.export;
 
+import static java.util.Objects.nonNull;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -59,7 +61,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportService;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.export.ExportUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.AJAXDownload;
 import de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils;
@@ -110,23 +111,6 @@ public class ProjectExportPanel
         add(new ProjectExportForm("exportForm", aProjectModel));
     }
 
-    private boolean existsCurationDocument(Project aProject)
-    {
-        boolean curationDocumentExist = false;
-        List<de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument> documents = documentService
-                .listSourceDocuments(aProject);
-
-        for (de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument : documents) {
-
-            // If the curation document is finished
-            if (SourceDocumentState.CURATION_FINISHED.equals(sourceDocument.getState())) {
-                curationDocumentExist = true;
-                break;
-            }
-        }
-        return curationDocumentExist;
-    }
-    
     public class ProjectExportForm
         extends Form<ProjectExportRequest>
     {
@@ -135,7 +119,7 @@ public class ProjectExportPanel
         public ProjectExportForm(String id, IModel<Project> aProject)
         {
             super(id, new CompoundPropertyModel<>(
-                    new ProjectExportRequest(null, ProjectExportRequest.FORMAT_AUTO, true)));
+                    new ProjectExportRequest(ProjectExportRequest.FORMAT_AUTO, true)));
             
             add(new DropDownChoice<String>("format", new LoadableDetachableModel<List<String>>()
             {
@@ -173,7 +157,7 @@ public class ProjectExportPanel
                         exportTempDir.delete();
                         exportTempDir.mkdirs();
 
-                        boolean curationDocumentExist = existsCurationDocument(
+                        boolean curationDocumentExist = documentService.existsCurationDocument(
                                 ProjectExportForm.this.getModelObject().getProject());
 
                         if (!curationDocumentExist) {
@@ -229,8 +213,9 @@ public class ProjectExportPanel
 
                 @Override
                 public boolean isVisible() {
-                    return existsCurationDocument(
-                            ProjectExportForm.this.getModelObject().getProject());
+                    Project project = ProjectExportPanel.this.getModelObject();
+                    return nonNull(project) ? documentService.existsCurationDocument(project)
+                            : false;
                 }
 
                 @Override

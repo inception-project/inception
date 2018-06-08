@@ -43,6 +43,17 @@ public class ProjectExportRequest
         // Nothing to do;
     }
     
+    /**
+     * Create a new project export request. Use this constructor if the project is not known yet
+     * or may change. Make sure to set the project via the setter before starting the export.
+     */
+    public ProjectExportRequest(String aFormat, boolean aIncludeInProgress)
+    {
+        format = aFormat;
+        project = null;
+        includeInProgress = aIncludeInProgress;
+    }
+    
     public ProjectExportRequest(Project aProject, String aFormat, boolean aIncludeInProgress)
     {
         format = aFormat;

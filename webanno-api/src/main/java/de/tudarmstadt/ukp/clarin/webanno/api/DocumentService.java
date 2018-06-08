@@ -468,6 +468,12 @@ public interface DocumentService
      * In order to provide access to the status of a document for a given user, the results is
      * returned as a map where the source document is the key and the annotation document is the
      * value. The annotation document may be {@code null}.
+     * 
+     * @param aProject
+     *            the project for which annotatable documents should be returned.
+     * @param aUser
+     *            the user for whom annotatable documents should be returned.
+     * @return annotatable documents.
      */
     Map<SourceDocument, AnnotationDocument> listAnnotatableDocuments(Project aProject, User aUser);
     
@@ -476,4 +482,13 @@ public interface DocumentService
 
     AnnotationDocumentState transitionAnnotationDocumentState(AnnotationDocument aDocument,
             AnnotationDocumentStateTransition aTransition);
+
+    /**
+     * Check if any curation documents exists in the given project.
+     * 
+     * @param aProject
+     *            the project.
+     * @return whether any curation documents exist.
+     */
+    boolean existsCurationDocument(Project aProject);
 }
