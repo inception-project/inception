@@ -1,0 +1,33 @@
+[[sect_annotation_concept-linking]]
+=== Concept Linking
+Concept Linking is the task of identifying concept mentions in the text and linking them to their
+corresponding concept in a knowledge base.
+Use cases of Concept Linking are commonly found in the area of biomedical text mining, e.g.
+to facilitate understanding of unexplained terminology or abbreviations in scientific literature by linking
+biological entities.
+
+==== Interactive Concept Linking
+Interactive Concept Linking allows users to manually link concept mentions to a KB. It is especially
+useful in situations where there is no substantial training data available from the start,
+i.e. when no previous linkings have been made. In this case, each concept mention is disambiguated
+with the help of heuristical rules.
+
+When the user wants to link a mention, he marks it and starts typing the name of the concept.
+A ranked list of candidates is then displayed in the form of a drop-down menu.
+In order to make the disambiguation process easier, descriptions are shown for each candidate.
+
+image::concept-linking2.png[align="center"]
+
+The suggestions are updated every time it receives new input.
+
+==== Automated Concept Suggestions
+
+The Named Entity Linker (NEL) displays three highest-ranked candidates as suggestions boxes
+over each mention annotated as Named Entity.
+The user can accept, reject or ignore these suggestions.
+If a suggestion is rejected, it is not showed again.
+It is possible to combine the NEL with the existing Named Entity Recommenders for the NE type,
+which makes the annotation process even faster.
+The recommender needs to be set up in the <<sect_projects_recommendation, Project Settings>>.
+
+image::concept-linking4.png[align="center"]
