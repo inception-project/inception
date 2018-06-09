@@ -339,8 +339,6 @@ public class SubjectObjectFeatureEditor
                     selectedKBHandleItem = factService.getKBInstancesByIdentifierAndTraits
                         (selectedKBItemIdentifier, project, traits);
                 }
-                
-                throw new RuntimeException("test");
             }
             catch (Exception e) {
                 LOG.error("Error: " + e.getMessage(), e);
