@@ -52,6 +52,7 @@ import com.googlecode.wicket.jquery.core.JQueryBehavior;
 import com.googlecode.wicket.jquery.core.renderer.TextRenderer;
 import com.googlecode.wicket.jquery.core.template.IJQueryTemplate;
 import com.googlecode.wicket.kendo.ui.form.autocomplete.AutoCompleteTextField;
+
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.JCasProvider;
@@ -293,21 +294,22 @@ public class SubjectObjectFeatureEditor
 
     private void setSelectedKBItem(KBHandle value)
     {
+        // We do not want to store the error handle.
+        if (KBHandle.isErrorHandle(value)) {
+            return;
+        }
+        
         if (roleLabelIsFilled()) {
-            setFeatureValueInCas(value);
-        }
-    }
-
-    private void setFeatureValueInCas(KBHandle value) {
-        try {
-            JCas jCas = actionHandler.getEditorCas();
-            AnnotationFS selectedFS = WebAnnoCasUtil.selectByAddr(jCas, roleModel.targetAddr);
-            WebAnnoCasUtil.setFeature(selectedFS, linkedAnnotationFeature,
-                value != null ? value.getIdentifier() : value);
-        }
-        catch (Exception e) {
-            LOG.error("Error: " + e.getMessage(), e);
-            error("Error: " + e.getMessage());
+            try {
+                JCas jCas = actionHandler.getEditorCas();
+                AnnotationFS selectedFS = WebAnnoCasUtil.selectByAddr(jCas, roleModel.targetAddr);
+                WebAnnoCasUtil.setFeature(selectedFS, linkedAnnotationFeature,
+                    value != null ? value.getIdentifier() : value);
+            }
+            catch (Exception e) {
+                error("Error: " + e.getMessage());
+                LOG.error("Error: " + e.getMessage(), e);
+            }
         }
     }
 
@@ -315,21 +317,38 @@ public class SubjectObjectFeatureEditor
     {
         KBHandle selectedKBHandleItem = null;
         if (roleLabelIsFilled()) {
+            String selectedKBItemIdentifier = null;
+            
             try {
                 JCas jCas = actionHandler.getEditorCas();
                 AnnotationFS selectedFS = WebAnnoCasUtil.selectByAddr(jCas, roleModel.targetAddr);
-                String selectedKBItemIdentifier = WebAnnoCasUtil
+                selectedKBItemIdentifier = WebAnnoCasUtil
                     .getFeature(selectedFS, linkedAnnotationFeature.getName());
-
+            }
+            catch (Exception e) {
+                LOG.error("Error: " + e.getMessage(), e);
+                // We cannot use feedback messages in code that is called from the load() method
+                // of a LoadableDetachableModel, so this is an alternative way of passing the
+                // error on to the user.
+                selectedKBHandleItem = KBHandle.errorHandle("Unable to load CAS", e);
+            }
+            
+            try {
                 if (selectedKBItemIdentifier != null) {
                     ConceptFeatureTraits traits = factService.getFeatureTraits(project);
                     selectedKBHandleItem = factService.getKBInstancesByIdentifierAndTraits
                         (selectedKBItemIdentifier, project, traits);
                 }
+                
+                throw new RuntimeException("test");
             }
             catch (Exception e) {
                 LOG.error("Error: " + e.getMessage(), e);
-                error("Error: " + e.getMessage());
+                // We cannot use feedback messages in code that is called from the load() method
+                // of a LoadableDetachableModel, so this is an alternative way of passing the
+                // error on to the user.
+                selectedKBHandleItem = KBHandle
+                        .errorHandle("Unable to resolve [" + selectedKBItemIdentifier + "]", e);
             }
         }
         return selectedKBHandleItem;
