@@ -91,15 +91,14 @@ public class TestFixtures
         instance.setName("Instance name");
         instance.setDescription("Instance description");
         instance.setType(URI.create("https://test.schema.com/#type"));
+        instance.setLanguage("en");
         return instance;
     }
 
     public KBInstance buildInstanceWithLanguage(String aLanguage)
     {
-        KBInstance instance = new KBInstance();
-        instance.setName("Instance name @" + aLanguage);
-        instance.setDescription("Instance description @" + aLanguage);
-        instance.setType(URI.create("https://test.schema.com/#type"));
+        KBInstance instance = buildInstance();
+        instance.setLanguage(aLanguage);
         return instance;
     }
 

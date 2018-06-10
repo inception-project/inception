@@ -1228,9 +1228,9 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         });
 
         KBInstance firstInstance = sut.readInstance(kb, germanHandle.getIdentifier()).get();
-        assertThat(firstInstance.getName())
+        assertThat(firstInstance.getLanguage())
             .as("Check that the English instance is retrieved.")
-            .endsWith("@en");
+            .isEqualTo("en");
     }
 
     // Helper
