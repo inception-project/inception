@@ -26,8 +26,6 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 public class KBHandle
     implements KBObject
 {
-    public static final String ERROR_ID = "<<<ERROR>>>";
-    
     private static final long serialVersionUID = -4284462837460396185L;
     private String identifier;
     private String name;
@@ -117,15 +115,5 @@ public class KBHandle
             .append("identifier", identifier)
             .append("name", name)
             .toString();
-    }
-    
-    public static boolean isErrorHandle(KBHandle aHandle)
-    {
-        return aHandle != null && ERROR_ID.equals(aHandle.getIdentifier());
-    }
-    
-    public static KBHandle errorHandle(String aMessage, Throwable aException)
-    {
-        return new KBHandle(ERROR_ID, "Error: " + aMessage, aMessage);
     }
 }

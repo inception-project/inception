@@ -74,6 +74,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
+import de.tudarmstadt.ukp.inception.kb.graph.KBErrorHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
@@ -295,7 +296,7 @@ public class SubjectObjectFeatureEditor
     private void setSelectedKBItem(KBHandle value)
     {
         // We do not want to store the error handle.
-        if (KBHandle.isErrorHandle(value)) {
+        if (value instanceof KBErrorHandle) {
             return;
         }
         
@@ -330,7 +331,7 @@ public class SubjectObjectFeatureEditor
                 // We cannot use feedback messages in code that is called from the load() method
                 // of a LoadableDetachableModel, so this is an alternative way of passing the
                 // error on to the user.
-                return KBHandle.errorHandle("Error loading CAS: " + e.getMessage(), e);
+                return new KBErrorHandle("Error loading CAS: " + e.getMessage(), e);
             }
             
             if (selectedKBItemIdentifier != null) {
@@ -345,8 +346,8 @@ public class SubjectObjectFeatureEditor
                     // We cannot use feedback messages in code that is called from the load() method
                     // of a LoadableDetachableModel, so this is an alternative way of passing the
                     // error on to the user.
-                    return KBHandle
-                            .errorHandle("Unable to resolve [" + selectedKBItemIdentifier + "]", e);
+                    return new KBErrorHandle("Unable to resolve [" + selectedKBItemIdentifier + "]",
+                            e);
                 }
             }
         }
