@@ -87,7 +87,7 @@ public class RecommenderExporter implements ProjectExporter {
 
         aExProject.setProperty(KEY, exportedRecommenders);
         int n = exportedRecommenders.size();
-        LOG.info("Exported [{}] recommender for project [{}]", n, project.getName());
+        LOG.info("Exported [{}] recommenders for project [{}]", n, project.getName());
     }
 
     @Override
@@ -115,6 +115,6 @@ public class RecommenderExporter implements ProjectExporter {
         }
 
         int n = recommenders.length;
-        LOG.info("Imported [{}] recommender for project [{}]", n, aProject.getName());
+        LOG.info("Imported [{}] recommenders for project [{}]", n, aProject.getName());
     }
 }
