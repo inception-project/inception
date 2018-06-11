@@ -104,7 +104,10 @@ public class OpenNlpPosClassifier
                     confidence[i] = bestSequences[i].getProbs();
 
                     AnnotationObject ao = new AnnotationObject(
-                            bestSequences[i].getOutcomes().get(j), sentence.get(j), sentence, id,
+                            sentence.get(j),
+                            bestSequences[i].getOutcomes().get(j),
+                            null,
+                            id,
                             feature, "OpenNlpPosClassifier", confidence[i][j]);
                     id++;
                     wordPredictions.add(ao);

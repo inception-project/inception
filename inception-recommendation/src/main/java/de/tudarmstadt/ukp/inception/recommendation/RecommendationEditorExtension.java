@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.recommendation;
 
 import java.io.IOException;
+import java.util.Optional;
 
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
@@ -25,6 +26,7 @@ import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.event.Broadcast;
+import org.apache.wicket.feedback.IFeedback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,7 +48,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.message.DoActionResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.SpanAnnotationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
@@ -102,11 +104,20 @@ public class RecommendationEditorExtension
             AnnotatorState aState, AjaxRequestTarget aTarget, JCas aJCas, VID aVID, int aBegin,
             int aEnd) throws AnnotationException, IOException
     {
-        Predictions model = 
+
+        SourceDocument document = aState.getDocument();
+        Predictions model =
                 recommendationService.getPredictions(aState.getUser(), aState.getProject());
-        AnnotationObject prediction = model.getPredictionByVID(aVID);
+        Optional<AnnotationObject> prediction = model.getPredictionByVID(document, aVID);
+        if (!prediction.isPresent()) {
+            log.error("Could not find annotation in [{}] with id [{}]", document, aVID);
+            aTarget.getPage().error("Could not find annotation");
+            aTarget.addChildren(aTarget.getPage(), IFeedback.class);
+            return;
+        }
+
         // Obtain the predicted label
-        String predictedValue = prediction.getAnnotation();
+        String predictedValue = prediction.get().getLabel();
         
         Recommender recommender = recommendationService.getRecommender(aVID.getId());
         AnnotationLayer layer = annotationService.getLayer(aVID.getLayerId());
@@ -130,21 +141,13 @@ public class RecommendationEditorExtension
             address = adapter.add(aState, aJCas, aBegin, aEnd);
         }
 
-        String fsId = fsRegistry.getFeatureSupport(feature).getId();
-        if (fsId.equals("conceptFeatureSupport") || fsId.equals("propertyFeatureSupport")) {
-            String uiName = fsRegistry.getFeatureSupport(feature)
-                .renderFeatureValue(feature, predictedValue);
-            KBHandle kbHandle = new KBHandle(predictedValue, uiName);
-            adapter.setFeatureValue(aState, aJCas, address, feature, kbHandle);
-        }
-        else {
-            adapter.setFeatureValue(aState, aJCas, address, feature, predictedValue);
-        }
+        recommendationService
+            .setFeatureValue(feature, predictedValue, adapter, aState, aJCas, address);
 
         // Send an event that the recommendation was accepted
         AnnotationFS fs = WebAnnoCasUtil.selectByAddr(aJCas, AnnotationFS.class, address);
         applicationEventPublisher.publishEvent(new RecommendationAcceptedEvent(this,
-                aState.getDocument(), aState.getUser().getUsername(), fs, feature, predictedValue));
+                document, aState.getUser().getUsername(), fs, feature, predictedValue));
 
         // Set selection to the accepted annotation
         aState.getSelection().selectSpan(new VID(address), aJCas, aBegin, aEnd);
@@ -168,14 +171,23 @@ public class RecommendationEditorExtension
         Recommender recommender = recommendationService.getRecommender(aVID.getId());
         AnnotationLayer layer = annotationService.getLayer(aVID.getLayerId());
         AnnotationFeature feature = annotationService.getFeature(recommender.getFeature(), layer);
-        
-        AnnotationObject prediction = model.getPredictionByVID(aVID);
-        String predictedValue = prediction.getAnnotation();
+
+        SourceDocument document = aState.getDocument();
+        Optional<AnnotationObject> oPrediction = model.getPredictionByVID(document, aVID);
+        if (!oPrediction.isPresent()) {
+            log.error("Could not find annotation in [{}] with id [{}]", document, aVID);
+            aTarget.getPage().error("Could not find annotation");
+            aTarget.addChildren(aTarget.getPage(), IFeedback.class);
+            return;
+        }
+
+        AnnotationObject prediction = oPrediction.get();
+        String predictedValue = prediction.getLabel();
         String tokenText = aJCas.getDocumentText().substring(aBegin, aEnd);
         
         LearningRecord record = new LearningRecord();
         record.setUser(aState.getUser().getUsername());
-        record.setSourceDocument(aState.getDocument());
+        record.setSourceDocument(document);
         record.setUserAction(LearningRecordUserAction.REJECTED);
         record.setOffsetCharacterBegin(prediction.getOffset().getBeginCharacter());
         record.setOffsetCharacterEnd(prediction.getOffset().getEndCharacter());
@@ -192,7 +204,7 @@ public class RecommendationEditorExtension
         aTarget.getPage().send(aTarget.getPage(), Broadcast.BREADTH, new
             AjaxRecommendationRejectedEvent(aTarget, aState, aVID));
         applicationEventPublisher.publishEvent(new RecommendationRejectedEvent(this,
-                aState.getDocument(), aState.getUser().getUsername(), aBegin, aEnd, tokenText,
+                document, aState.getUser().getUsername(), aBegin, aEnd, tokenText,
                 feature, predictedValue));
     }
 
