@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.exporter;
 
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
@@ -33,8 +32,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.springframework.context.ApplicationContext;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
@@ -42,11 +39,11 @@ import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 
-public class RecommenderExporterTest {
+public class RecommenderExporterTest
+{
 
     private @Mock AnnotationSchemaService annotationService;
     private @Mock RecommendationService recommendationService;
@@ -56,14 +53,9 @@ public class RecommenderExporterTest {
     private RecommenderExporter sut;
 
     @Before
-    public void setUp() {
+    public void setUp()
+    {
         initMocks(this);
-
-        // Monkey patch JSONUtil
-        ApplicationContextProvider applicationContextProvider = new ApplicationContextProvider();
-        ApplicationContext context = mock(ApplicationContext.class);
-        when(context.getBean(MappingJackson2HttpMessageConverter.class)).thenReturn(new MappingJackson2HttpMessageConverter());
-        applicationContextProvider.setApplicationContext(context);
 
         layer = new AnnotationLayer();
         layer.setName("Layer");
@@ -78,7 +70,8 @@ public class RecommenderExporterTest {
     }
 
     @Test
-    public void thatExportingWorks() {
+    public void thatExportingWorks()
+    {
         // Export the project
         ProjectExportRequest exportRequest = new ProjectExportRequest();
         exportRequest.setProject(project);
@@ -101,7 +94,8 @@ public class RecommenderExporterTest {
                 .containsExactlyInAnyOrderElementsOf(recommenders());
     }
 
-    private List<Recommender> recommenders() {
+    private List<Recommender> recommenders()
+    {
         Recommender recommender1 = buildRecommender("1");
         recommender1.setAlwaysSelected(true);
         recommender1.setEnabled(true);
@@ -125,15 +119,15 @@ public class RecommenderExporterTest {
         return Arrays.asList(recommender1, recommender2, recommender3, recommender4);
     }
 
-    private Recommender buildRecommender(String id) {
+    private Recommender buildRecommender(String id)
+    {
         Recommender recommender = new Recommender();
         recommender.setFeature("Feature " + id);
-        recommender.setName("Recommender "+ id);
-        recommender.setTool("Tool "  + id);
+        recommender.setName("Recommender " + id);
+        recommender.setTool("Tool " + id);
         recommender.setTraits("Traits " + id);
         recommender.setLayer(layer);
         recommender.setProject(project);
-
         return recommender;
     }
 
