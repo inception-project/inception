@@ -52,6 +52,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import mtas.analysis.parser.MtasParser;
 import mtas.analysis.token.MtasToken;
@@ -73,11 +74,10 @@ public class MtasUimaParser extends MtasParser {
     // Annotation schema and project services
     private AnnotationSchemaService annotationSchemaService;
     private ProjectService projectService;
+    private KnowledgeBaseService kbService;
 
     // Project id
     Project project;
-
-    private KBUtility kbUtil;
 
     final private String MTAS_SENTENCE_LABEL = "s";
 
@@ -86,23 +86,19 @@ public class MtasUimaParser extends MtasParser {
         super(config);
         annotationSchemaService = ApplicationContextProvider.getApplicationContext()
                 .getBean(AnnotationSchemaService.class);
-
         projectService = ApplicationContextProvider.getApplicationContext()
                 .getBean(ProjectService.class);
-
-        kbUtil = new KBUtility();
-
+        kbService = ApplicationContextProvider.getApplicationContext()
+                .getBean(KnowledgeBaseService.class);
+        new KBUtility(kbService);
         if (config.attributes.get(MtasTokenizerFactory.ARGUMENT_PARSER_ARGS) != null) {
             // Read parser argument that contains the projectId
             JSONObject jsonParserConfiguration = new JSONObject(
                     config.attributes.get(MtasTokenizerFactory.ARGUMENT_PARSER_ARGS));
-
             project = projectService.getProject(jsonParserConfiguration.getInt("projectId"));
-
             // Initialize and populate the hash maps for the layers and features
             layers = new HashMap<String, AnnotationLayer>();
             layerFeatures = new HashMap<String, ArrayList<AnnotationFeature>>();
-
             for (AnnotationLayer layer : annotationSchemaService.listAnnotationLayer(project)) {
                 if (layer.isEnabled()) {
                     layers.put(layer.getName(), layer);
@@ -229,38 +225,27 @@ public class MtasUimaParser extends MtasParser {
                                 // char[].
                                 featureValue = String.valueOf((Object) WebAnnoCasUtil
                                         .getFeature(annotation, feature.getName()));
-                                    
                                 // Add the UI annotation.feature name to the index as an annotation.
                                 // Replace spaces with underscore in the UI name.
-                                
                                 MtasToken mtasAnnotationFeature = new MtasTokenString(mtasId++,
-                                        annotationUiName.replace(" ", "_") + "."
-                                                + feature.getUiName().replace(" ", "_")
-                                                + MtasToken.DELIMITER + featureValue,
-                                        beginToken);
+                                        getIndexedName(annotationUiName) + "."
+                                        + getIndexedName(feature.getUiName()) 
+                                        + MtasToken.DELIMITER + featureValue, beginToken);
                                 mtasAnnotationFeature.setOffset(annotation.getBegin(),
                                         annotation.getEnd());
                                 mtasAnnotationFeature.addPositionRange(beginToken, endToken);
                                 tokenCollection.add(mtasAnnotationFeature);
-
                                 // Returns KB IRI label after checking if the  
                                 // feature type is associated with KB and feature value is not null
-
                                 String labelStr = "";
                                 if (feature.getType().contains(IndexingConstants.KB) && featureValue != "null") {
                                     labelStr = getUILabel(featureValue);
                                 }
-
-                                
-                                
                                 if (!labelStr.isEmpty()) {
-
                                     String kbType = labelStr.split(MtasToken.DELIMITER)[0];
                                     String kbValue = labelStr.split(MtasToken.DELIMITER)[1];
-                                    
                                     if (kbType.equals(IndexingConstants.kbConcept)) {
                                         kbType = IndexingConstants.indexKBConcept;
-                                                
                                     }
                                     else if (kbType.equals(IndexingConstants.kbInstance)) {
                                         kbType = IndexingConstants.indexKBInstance;
@@ -268,10 +253,9 @@ public class MtasUimaParser extends MtasParser {
                                     
                                     // Index IRI feature value with their labels along with 
                                     // annotation.feature name  
-                                    String indexedStr = annotationUiName.replace(" ", "_") + "."
-                                            + feature.getUiName().replace(" ", "_") + "."
+                                    String indexedStr = getIndexedName(annotationUiName) + "."
+                                            + getIndexedName(feature.getUiName()) + "."
                                             + kbType + MtasToken.DELIMITER + kbValue;
-
                                     // Indexing UI annotation with type i.e Concept/Instance
                                     log.debug("Indexed String with type for : {}", indexedStr);
                                     MtasToken mtasAnnotationTypeFeatureLabel = new MtasTokenString(
@@ -281,11 +265,10 @@ public class MtasUimaParser extends MtasParser {
                                     mtasAnnotationTypeFeatureLabel.addPositionRange(beginToken,
                                             endToken);
                                     tokenCollection.add(mtasAnnotationTypeFeatureLabel);
-
-                                    indexedStr = annotationUiName.replace(" ", "_") + "."
-                                            + feature.getUiName().replace(" ", "_")
+                                    indexedStr = getIndexedName(annotationUiName) + "."
+                                            + getIndexedName(feature.getUiName())
                                             + MtasToken.DELIMITER + kbValue;
-
+                                    
                                     // Indexing UI annotation without type i.e Concept/Instance
                                     log.debug("Indexed String without type for : {}", indexedStr);
                                     MtasToken mtasAnnotationFeatureLabel = new MtasTokenString(
@@ -307,9 +290,7 @@ public class MtasUimaParser extends MtasParser {
                                     mtasAnnotationKBEntity.addPositionRange(beginToken,
                                             endToken);
                                     tokenCollection.add(mtasAnnotationKBEntity);
-                                    
                                 }
-
                             }
                         }
                     }
@@ -321,31 +302,36 @@ public class MtasUimaParser extends MtasParser {
         return tokenCollection;
     }
     
+    public String getIndexedName(String uiName) {
+        String indexedName = uiName.replace(" ", "_");
+        return indexedName;
+    }
+    
+    
     @Override
     public String printConfig() {
         return null;
     }
 
     /**
-     * Takes in IRI for identifier and returns teh label String Eg: InputParameter :-
-     * http://www.w3.org/TR/2003/PR-owl-guide-20031209/wine#RoseDAnjou Returned :-
-     * "KBConcept"+MtasToken.DELIMITER+RoseDAnjou
      * 
-     * @param iri
-     * @return
+     * Takes in {@code IRI} for identifier as {@code String} and returns the label String 
+     * Eg:- InputParameter :- {@code http://www.w3.org/TR/2003/PR-owl-guide-20031209/wine#RoseDAnjou} 
+     * Returned :- {@code KBConcept} + {@code MtasToken.DELIMITER} + RoseDAnjou
+     * @param String iri 
+     * @return String {@code KBObject}+{@code MtasToken.DELIMITER}
+     *          +{@code KBObject.get().getUiLabel()}
      */
     public String getUILabel(String aIRI) {
-
         StringBuilder labelStr = new StringBuilder();
         System.out.println();
-        Optional<KBObject> kbObject = kbUtil.readKBIdentifier(project, aIRI);
+        Optional<KBObject> kbObject = KBUtility.readKBIdentifier(project, aIRI);
         if (kbObject.isPresent()) {
-            labelStr.append(kbObject.get().getClass().getSimpleName() + MtasToken.DELIMITER
-                    + kbObject.get().getUiLabel());
+            labelStr.append(kbObject.get().getClass().getSimpleName())
+            .append(MtasToken.DELIMITER).append(kbObject.get().getUiLabel());
         } else {
             return labelStr.toString();
         }
-
         return labelStr.toString();
     }
     

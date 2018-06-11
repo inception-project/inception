@@ -258,8 +258,6 @@ public class SearchServiceImpl
             }
 
         }
-
-        log.debug("Result Size : {}", results.size());
         return results;
     }
 

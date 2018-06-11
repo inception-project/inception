@@ -804,5 +804,4 @@ public class KnowledgeBaseServiceImpl
     {
         return getReificationStrategy(akb).statementsMatchSPO(akb, mockStatement);
     }
-
 }

@@ -29,7 +29,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
@@ -39,11 +38,11 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 public class KBUtility {
 
-    private final Logger log = LoggerFactory.getLogger(getClass());
-    private KnowledgeBaseService kbService;
-    public KBUtility() {
-        kbService = ApplicationContextProvider.getApplicationContext()
-                .getBean(KnowledgeBaseService.class);
+    private final static Logger log = LoggerFactory.getLogger(KBUtility.class.getName());
+    private static KnowledgeBaseService kbService;
+    
+    public KBUtility(KnowledgeBaseService kbService) {
+        KBUtility.kbService = kbService;
     }
 
     /**
@@ -62,7 +61,7 @@ public class KBUtility {
      * @param aIdentifier
      * @return
      */
-    public Optional<KBObject> readKBIdentifier(Project aProject, String aIdentifier) {
+    public static Optional<KBObject> readKBIdentifier(Project aProject, String aIdentifier) {
         for (KnowledgeBase kb : kbService.getKnowledgeBases(aProject)) {
             try (RepositoryConnection conn = kbService.getConnection(kb)) {
                 ValueFactory vf = conn.getValueFactory();
@@ -70,7 +69,7 @@ public class KBUtility {
                         vf.createIRI(aIdentifier), kb.getTypeIri(), kb.getClassIri(), true);
                 if (stmts.hasNext()) {
                     Statement conceptStmt = stmts.next();
-                    KBConcept kbConcept = KBConcept.read(conn, conceptStmt);
+                    KBConcept kbConcept = KBConcept.read(conn, conceptStmt, kb);
                     if (kbConcept != null) {
                         return Optional.of(kbConcept);
                     }
