@@ -161,19 +161,27 @@ public class SubjectObjectFeatureSupport
     }
 
     @Override
-    public <T> T getFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
+    public <V> V unwrapFeatureValue(AnnotationFeature aFeature, Object aValue)
     {
-        // Get type and features - we need them later in the loop
-        Feature linkFeature = aFS.getType().getFeatureByBaseName(aFeature.getName());
-        Type linkType = aFS.getCAS().getTypeSystem().getType(aFeature.getLinkTypeName());
-        Feature roleFeat = linkType.getFeatureByBaseName(aFeature
-            .getLinkTypeRoleFeatureName());
-        Feature targetFeat = linkType.getFeatureByBaseName(aFeature
-            .getLinkTypeTargetFeatureName());
+        // This is not actually implemented because the setFeatureValue knows how to deal with
+        // slot features. This only needs to be implemented when WebAnnoCasUtil.setLinkFeature
+        // is moved into the slot feature support.
+        return (V) aValue;
+    }
+    
+    @Override
+    public List<LinkWithRoleModel> wrapFeatureValue(AnnotationFeature aFeature, CAS aCAS,
+            Object aValue)
+    {
+        if (aValue instanceof ArrayFS) {
+            ArrayFS array = (ArrayFS) aValue;
 
-        List<LinkWithRoleModel> links = new ArrayList<>();
-        ArrayFS array = (ArrayFS) aFS.getFeatureValue(linkFeature);
-        if (array != null) {
+            Type linkType = aCAS.getTypeSystem().getType(aFeature.getLinkTypeName());
+            Feature roleFeat = linkType.getFeatureByBaseName(aFeature.getLinkTypeRoleFeatureName());
+            Feature targetFeat = linkType
+                    .getFeatureByBaseName(aFeature.getLinkTypeTargetFeatureName());
+
+            List<LinkWithRoleModel> links = new ArrayList<>();
             for (FeatureStructure link : array.toArray()) {
                 LinkWithRoleModel m = new LinkWithRoleModel();
                 m.role = link.getStringValue(roleFeat);
@@ -182,8 +190,21 @@ public class SubjectObjectFeatureSupport
                     .getCoveredText();
                 links.add(m);
             }
+            
+            return links;
         }
-        return (T) links;
+        else if (aValue == null ) {
+            return new ArrayList<>();
+        }
+        else {
+            throw new IllegalArgumentException(
+                    "Unable to handle value [" + aValue + "] of type [" + aValue.getClass() + "]");
+        }
     }
 
+    @Override
+    public String getCasType(AnnotationFeature aFeature)
+    {
+        return CAS.TYPE_NAME_FS_ARRAY;
+    }
 }
