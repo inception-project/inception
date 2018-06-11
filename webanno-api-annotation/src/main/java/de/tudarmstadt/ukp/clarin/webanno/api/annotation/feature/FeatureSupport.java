@@ -21,8 +21,10 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.setFeature;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
+import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
@@ -263,11 +265,72 @@ public interface FeatureSupport<T>
             Object aValue)
     {
         FeatureStructure fs = selectByAddr(aJcas, FeatureStructure.class, aAddress);
-        setFeature(fs, aFeature, aValue);
+        
+        Feature feature = fs.getType().getFeatureByBaseName(aFeature.getName());
+        
+        final String effectiveType = getCasType(aFeature);
+        
+        // Sanity check
+        if (!Objects.equals(effectiveType, feature.getRange().getName())) {
+            throw new IllegalArgumentException("Actual feature type ["
+                    + feature.getRange().getName() + "] does not match expected feature type ["
+                    + effectiveType + "].");
+        }
+        
+        Object value = unwrapFeatureValue(aFeature, aValue);
+        setFeature(fs, aFeature, value);
     }
-    
-    <V> V getFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS);
 
+    /**
+     * Return the CAS type name used for the given feature. This is used to sanity-check the
+     * feature of the FS when getting/setting the feature value.
+     * 
+     * @return the CAS type name used for the given feature.
+     * 
+     */
+    String getCasType(AnnotationFeature aFeature);
+    
+    default <V> V getFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
+    {
+        Feature feature = aFS.getType().getFeatureByBaseName(aFeature.getName());
+        
+        final String effectiveType = getCasType(aFeature);
+        
+        // Sanity check
+        if (!Objects.equals(effectiveType, feature.getRange().getName())) {
+            throw new IllegalArgumentException("Actual feature type ["
+                    + feature.getRange().getName() + "] does not match expected feature type ["
+                    + effectiveType + "].");
+        }
+        
+        return (V) wrapFeatureValue(aFeature, aFS.getCAS(), aFS.getFeatureValue(feature));
+    }
+
+    /**
+     * Convert the value returned by the feature editor to the value stored in the CAS.
+     * 
+     * @param aFeature
+     *            the feature.
+     * @param aValue
+     *            the value provided from the feature editor.
+     * @return the CAS value.
+     */
+    <V> V  unwrapFeatureValue(AnnotationFeature aFeature, Object aValue);
+
+    /**
+     * Convert a CAS representation of the feature value to the type of value which the feature
+     * editor expects.
+     * 
+     * @param aFeature
+     *            the feature.
+     * @param aCAS
+     *            the CAS mainly for access to the type system.
+     * @param aValue
+     *            string representation of the value
+     * @return feature editor representation of the value.
+     */
+    Object wrapFeatureValue(AnnotationFeature aFeature, CAS aCAS, Object aValue);
+    
     default IllegalArgumentException unsupportedFeatureTypeException(AnnotationFeature aFeature)
     {
         return new IllegalArgumentException("Unsupported type [" + aFeature.getType()
