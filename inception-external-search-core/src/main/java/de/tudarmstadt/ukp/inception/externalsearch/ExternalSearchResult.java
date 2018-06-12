@@ -34,7 +34,7 @@ public class ExternalSearchResult
     private String text;
     private String leftContext;
     private String rightContext;
-    private long documentId;
+    private String documentId;
     private String documentTitle;
 
     public int getTokenStart()
@@ -107,12 +107,12 @@ public class ExternalSearchResult
         rightContext = aRightContext;
     }
 
-    public long getDocumentId()
+    public String getDocumentId()
     {
         return documentId;
     }
 
-    public void setDocumentId(long aDocumentId)
+    public void setDocumentId(String aDocumentId)
     {
         documentId = aDocumentId;
     }

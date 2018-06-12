@@ -49,8 +49,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
-import de.tudarmstadt.ukp.inception.search.SearchResult;
-import de.tudarmstadt.ukp.inception.search.SearchService;
+import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
+import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchService;
 
 @MountPath("/search.html")
 public class SearchPage extends ApplicationPageBase
@@ -61,7 +61,7 @@ public class SearchPage extends ApplicationPageBase
 
     private @SpringBean DocumentService documentService;
     private @SpringBean ProjectService projectService;
-    private @SpringBean SearchService searchService;
+    private @SpringBean ExternalSearchService externalSearchService;
     private @SpringBean UserDao userRepository;
 
     final WebMarkupContainer mainContainer = new WebMarkupContainer("mainContainer");
@@ -187,17 +187,17 @@ public class SearchPage extends ApplicationPageBase
     private void searchDocuments(String aQuery)
     {
         documents.clear();
-        List<SearchResult> results = new ArrayList<SearchResult>();
+        List<ExternalSearchResult> results = new ArrayList<ExternalSearchResult>();
 
         try {
-            results = searchService.query(currentUser, currentProject, aQuery);
+            results = externalSearchService.query(currentUser, currentProject, aQuery);
         }
         catch (Exception e) {
             LOG.error("Unable to perform query", e);
             error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
         }
 
-        for (SearchResult result : results) {
+        for (ExternalSearchResult result : results) {
             documents.add(
                     documentService.getSourceDocument(currentProject, result.getDocumentTitle()));
         }

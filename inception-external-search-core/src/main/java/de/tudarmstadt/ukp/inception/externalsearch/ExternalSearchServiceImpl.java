@@ -42,11 +42,11 @@ public class ExternalSearchServiceImpl
     private @Autowired AnnotationSchemaService annotationSchemaService;
     private @Autowired DocumentService documentService;
     private @Autowired ProjectService projectService;
-    private @Autowired ExternalSearchProviderRegistry indexRegistry;
+    private @Autowired ExternalSearchProviderRegistry externalSearchProviderRegistry;
 
     // Index factory
     private ExternalSearchProviderFactory externalSearchProviderFactory;
-    private String externalSearchProviderFactoryName = "elasticSearchFactory";
+    private String externalSearchProviderFactoryName = "elasticSearchProviderFactory";
 
     // The indexes for each project
     private static Map<Long, ExternalSearchProvider> searchProviders;
@@ -62,7 +62,7 @@ public class ExternalSearchServiceImpl
     private ExternalSearchProvider getExternalSearchProviderByProject(Project aProject)
     {
         if (!searchProviders.containsKey(aProject.getId())) {
-            externalSearchProviderFactory = indexRegistry
+            externalSearchProviderFactory = externalSearchProviderRegistry
                     .getExternalSearchProviderFactory(externalSearchProviderFactoryName);
 
             searchProviders.put(aProject.getId(),
@@ -76,30 +76,23 @@ public class ExternalSearchServiceImpl
     @Override
     public List<ExternalSearchResult> query(User aUser, Project aProject, String aQuery)
     {
-        ExternalSearchProvider index = getExternalSearchProviderByProject(aProject);
+        ExternalSearchProvider provider = getExternalSearchProviderByProject(aProject);
 
-        if (!index.isIndexCreated()) {
-            // Index does not exist. Create it.
-            index.createIndex();
+        if (provider.isConnected()) {
+
+            log.debug("Running query: {}", aQuery);
+
+            List<ExternalSearchResult> results = provider.executeQuery(aUser, aQuery, null, null);
+
+            for (ExternalSearchResult result : results) {
+                String title = result.getDocumentTitle();
+            }
+            return results;
         }
         else {
-            // Index exists
-
-            if (!index.isIndexOpen()) {
-                // Index is not open. Open it.
-                index.openIndex();
-            }
+            return null;
         }
 
-        log.debug("Running query: {}", aQuery);
-
-        List<ExternalSearchResult> results = index.executeQuery(aUser, aQuery, null, null);
-
-        for (ExternalSearchResult result : results) {
-            String title = result.getDocumentTitle();
-        }
-
-        return results;
     }
 
 }

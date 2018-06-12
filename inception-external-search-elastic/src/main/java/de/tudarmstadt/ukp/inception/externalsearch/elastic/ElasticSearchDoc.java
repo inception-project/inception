@@ -1,6 +1,6 @@
 /*
  * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab
+ * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,21 +15,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.externalsearch;
+package de.tudarmstadt.ukp.inception.externalsearch.elastic;
 
-import java.util.List;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-
-public interface ExternalSearchProvider
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class ElasticSearchDoc
 {
-    public boolean connect(String aUrl, String aUser, String aPassword);
+    private String text;
 
-    void disconnect();
+    public String getText()
+    {
+        return text;
+    }
 
-    public boolean isConnected();
-
-    public List<ExternalSearchResult> executeQuery(User aUser, String aQuery, String aSortOrder,
-            String... sResultField);
+    public void setText(String text)
+    {
+        this.text = text;
+    }
 
 }
