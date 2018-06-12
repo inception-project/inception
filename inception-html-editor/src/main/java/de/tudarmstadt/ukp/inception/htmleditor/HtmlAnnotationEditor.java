@@ -266,7 +266,7 @@ public class HtmlAnnotationEditor
         private void create(AjaxRequestTarget aTarget, String payload)
             throws JsonParseException, JsonMappingException, IOException
         {
-            Annotation anno = JSONUtil.getJsonConverter().getObjectMapper().readValue(payload,
+            Annotation anno = JSONUtil.getObjectMapper().readValue(payload,
                     Annotation.class);
 
             if (anno.getRanges().isEmpty()) {
