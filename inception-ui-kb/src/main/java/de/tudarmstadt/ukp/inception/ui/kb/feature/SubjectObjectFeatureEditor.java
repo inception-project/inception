@@ -52,6 +52,7 @@ import com.googlecode.wicket.jquery.core.JQueryBehavior;
 import com.googlecode.wicket.jquery.core.renderer.TextRenderer;
 import com.googlecode.wicket.jquery.core.template.IJQueryTemplate;
 import com.googlecode.wicket.kendo.ui.form.autocomplete.AutoCompleteTextField;
+
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.JCasProvider;
@@ -73,6 +74,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
+import de.tudarmstadt.ukp.inception.kb.graph.KBErrorHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
@@ -293,21 +295,22 @@ public class SubjectObjectFeatureEditor
 
     private void setSelectedKBItem(KBHandle value)
     {
+        // We do not want to store the error handle.
+        if (value instanceof KBErrorHandle) {
+            return;
+        }
+        
         if (roleLabelIsFilled()) {
-            setFeatureValueInCas(value);
-        }
-    }
-
-    private void setFeatureValueInCas(KBHandle value) {
-        try {
-            JCas jCas = actionHandler.getEditorCas();
-            AnnotationFS selectedFS = WebAnnoCasUtil.selectByAddr(jCas, roleModel.targetAddr);
-            WebAnnoCasUtil.setFeature(selectedFS, linkedAnnotationFeature,
-                value != null ? value.getIdentifier() : value);
-        }
-        catch (Exception e) {
-            LOG.error("Error: " + e.getMessage(), e);
-            error("Error: " + e.getMessage());
+            try {
+                JCas jCas = actionHandler.getEditorCas();
+                AnnotationFS selectedFS = WebAnnoCasUtil.selectByAddr(jCas, roleModel.targetAddr);
+                WebAnnoCasUtil.setFeature(selectedFS, linkedAnnotationFeature,
+                    value != null ? value.getIdentifier() : value);
+            }
+            catch (Exception e) {
+                error("Error: " + e.getMessage());
+                LOG.error("Error: " + e.getMessage(), e);
+            }
         }
     }
 
@@ -315,21 +318,37 @@ public class SubjectObjectFeatureEditor
     {
         KBHandle selectedKBHandleItem = null;
         if (roleLabelIsFilled()) {
+            String selectedKBItemIdentifier;
+            
             try {
                 JCas jCas = actionHandler.getEditorCas();
                 AnnotationFS selectedFS = WebAnnoCasUtil.selectByAddr(jCas, roleModel.targetAddr);
-                String selectedKBItemIdentifier = WebAnnoCasUtil
-                    .getFeature(selectedFS, linkedAnnotationFeature.getName());
-
-                if (selectedKBItemIdentifier != null) {
-                    ConceptFeatureTraits traits = factService.getFeatureTraits(project);
-                    selectedKBHandleItem = factService.getKBInstancesByIdentifierAndTraits
-                        (selectedKBItemIdentifier, project, traits);
-                }
+                selectedKBItemIdentifier = WebAnnoCasUtil.getFeature(selectedFS,
+                        linkedAnnotationFeature.getName());
             }
             catch (Exception e) {
-                LOG.error("Error: " + e.getMessage(), e);
-                error("Error: " + e.getMessage());
+                LOG.error("Error loading CAS:  " + e.getMessage(), e);
+                // We cannot use feedback messages in code that is called from the load() method
+                // of a LoadableDetachableModel, so this is an alternative way of passing the
+                // error on to the user.
+                return new KBErrorHandle("Error loading CAS: " + e.getMessage(), e);
+            }
+            
+            if (selectedKBItemIdentifier != null) {
+                try {
+                    ConceptFeatureTraits traits = factService.getFeatureTraits(project);
+                    selectedKBHandleItem = factService.getKBInstancesByIdentifierAndTraits(
+                            selectedKBItemIdentifier, project, traits);
+                }
+                catch (Exception e) {
+                    LOG.error("Unable to resolve [" + selectedKBItemIdentifier + "]: "
+                            + e.getMessage(), e);
+                    // We cannot use feedback messages in code that is called from the load() method
+                    // of a LoadableDetachableModel, so this is an alternative way of passing the
+                    // error on to the user.
+                    return new KBErrorHandle("Unable to resolve [" + selectedKBItemIdentifier + "]",
+                            e);
+                }
             }
         }
         return selectedKBHandleItem;

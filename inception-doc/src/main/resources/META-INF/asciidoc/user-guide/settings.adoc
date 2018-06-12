@@ -1,0 +1,5 @@
+[[Configurable Settings]]
+== Configurable Settings
+
+There are multiple settings that can be configured in the file `settings.properties`.
+The file must be created by the user and put under the root directory under `.inception`
