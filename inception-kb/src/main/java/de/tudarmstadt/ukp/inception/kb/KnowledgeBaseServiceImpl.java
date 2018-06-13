@@ -647,15 +647,19 @@ public class KnowledgeBaseServiceImpl
     public List<KBHandle> listRootConcepts(KnowledgeBase kb, boolean aAll)
         throws QueryEvaluationException
     {
+        
         List<KBHandle> resultList = read(kb, (conn) -> {
             String QUERY = String.join("\n"
                 , "SELECT DISTINCT ?s ?l WHERE { "
                 , " { ?s ?pTYPE ?oCLASS . } "
                 , "UNION { ?someSubClass ?pSUBCLASS ?s . } ."
                 , "FILTER NOT EXISTS { "
-                , "  ?s ?pSUBCLASS ?otherSub . "
+                , " ?s ?pSUBCLASS ?otherSub . "
+                , " FILTER (?s != ?otherSub) }"
+                , "FILTER NOT EXISTS { "
+                , "  ?s owl:intersectionOf ?list . "
                 , "} OPTIONAL { "
-                , "    ?s ?pLABEL ?l . "
+                , "     ?s ?pLABEL ?l . "
                 , "    FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\")) "
                 , "  } "
                 , "} "
@@ -688,12 +692,12 @@ public class KnowledgeBaseServiceImpl
         return listChildConcepts(aKB, aParentIdentifier, aAll, 10000);
     }
 
+    // Need to work on the query for variable inputs like owl:intersectionOf, rdf:rest*/rdf:first
     @Override
     public List<KBHandle> listChildConcepts(KnowledgeBase aKB, String aParentIdentifier,
             boolean aAll, int aLimit)
         throws QueryEvaluationException
     {
-        System.out.println(aParentIdentifier);
         // The query below only returns subclasses which simultaneously declare being a class
         // via the class property defined in the KB specification. This means that if the KB
         // is configured to use rdfs:Class but a subclass defines itself using owl:Class, then
@@ -702,9 +706,10 @@ public class KnowledgeBaseServiceImpl
         List<KBHandle> resultList = read(aKB, (conn) -> {
             String QUERY = String.join("\n"
                 , "SELECT DISTINCT ?s ?l WHERE { "
-                , " ?s ?pSUBCLASS ?oPARENT .  " 
-                //, "UNION { ?s ?pTYPE ?oCLASS . } ."
-                //, "  ?s ?pTYPE ?oCLASS . "
+                , "{?s ?pSUBCLASS ?oPARENT . }" 
+                , "UNION { ?s ?pTYPE ?oCLASS ."
+                , "?s owl:intersectionOf ?list . "
+                , "FILTER EXISTS { ?list rdf:rest*/rdf:first ?oPARENT} }"
                 , "  OPTIONAL { "
                 , "    ?s ?pLABEL ?l . "
                 , "    FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\")) "
