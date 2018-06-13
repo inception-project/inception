@@ -94,8 +94,12 @@ public class KBHandle
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         KBHandle kbHandle = (KBHandle) o;
         return Objects.equals(identifier, kbHandle.identifier);
     }

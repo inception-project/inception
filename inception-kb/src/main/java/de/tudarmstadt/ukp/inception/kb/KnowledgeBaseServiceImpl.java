@@ -61,7 +61,6 @@ import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.RDFParseException;
 import org.eclipse.rdf4j.rio.RDFWriter;
 import org.eclipse.rdf4j.rio.Rio;
-import org.eclipse.rdf4j.sail.inferencer.fc.config.ForwardChainingRDFSInferencerConfig;
 import org.eclipse.rdf4j.sail.nativerdf.config.NativeStoreConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -208,8 +207,11 @@ public class KnowledgeBaseServiceImpl
     @Override
     public RepositoryImplConfig getNativeConfig()
     {
-        return new SailRepositoryConfig(
-            new ForwardChainingRDFSInferencerConfig(new NativeStoreConfig()));
+        // See #221 - Disabled because it is too slow during import
+        // return new SailRepositoryConfig(
+        //   new ForwardChainingRDFSInferencerConfig(new NativeStoreConfig()));
+        
+        return new SailRepositoryConfig(new NativeStoreConfig());
     }
 
     @Override
