@@ -112,7 +112,7 @@ public class PropertyFeatureSupport
     }
 
     @Override
-    public String unwrapFeatureValue(AnnotationFeature aFeature, Object aValue)
+    public String unwrapFeatureValue(AnnotationFeature aFeature, CAS aCAS, Object aValue)
     {
         // Normally, we get KBHandles back from the feature editors
         if (aValue instanceof KBHandle) {
@@ -162,12 +162,6 @@ public class PropertyFeatureSupport
             throw new IllegalArgumentException(
                     "Unable to handle value [" + aValue + "] of type [" + aValue.getClass() + "]");
         }
-    }
-    
-    @Override
-    public String getCasType(AnnotationFeature aFeature)
-    {
-        return CAS.TYPE_NAME_STRING;
     }
     
     @Override

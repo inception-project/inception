@@ -161,12 +161,29 @@ public class SubjectObjectFeatureSupport
     }
 
     @Override
-    public <V> V unwrapFeatureValue(AnnotationFeature aFeature, Object aValue)
+    public List<LinkWithRoleModel> getFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
     {
-        // This is not actually implemented because the setFeatureValue knows how to deal with
-        // slot features. This only needs to be implemented when WebAnnoCasUtil.setLinkFeature
-        // is moved into the slot feature support.
-        return (V) aValue;
+        Feature linkFeature = aFS.getType().getFeatureByBaseName(aFeature.getName());
+        return wrapFeatureValue(aFeature, aFS.getCAS(), aFS.getFeatureValue(linkFeature));
+    }
+    
+    @Override
+    public List<LinkWithRoleModel> unwrapFeatureValue(AnnotationFeature aFeature, CAS aCAS,
+            Object aValue)
+    {
+        if (aValue instanceof List) {
+            // This is not actually implemented because the setFeatureValue knows how to deal with
+            // slot features. This only needs to be implemented when WebAnnoCasUtil.setLinkFeature
+            // is moved into the slot feature support.
+            return (List<LinkWithRoleModel>) aValue;
+        }
+        else if (aValue == null) {
+            return null;
+        }
+        else {
+            throw new IllegalArgumentException(
+                    "Unable to handle value [" + aValue + "] of type [" + aValue.getClass() + "]");
+        }
     }
     
     @Override
@@ -200,11 +217,5 @@ public class SubjectObjectFeatureSupport
             throw new IllegalArgumentException(
                     "Unable to handle value [" + aValue + "] of type [" + aValue.getClass() + "]");
         }
-    }
-
-    @Override
-    public String getCasType(AnnotationFeature aFeature)
-    {
-        return CAS.TYPE_NAME_FS_ARRAY;
     }
 }

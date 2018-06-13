@@ -66,12 +66,17 @@ public class ConceptFeatureSupport
     public static final String ANY_CONCEPT = "<ANY>";
     public static final String TYPE_ANY_CONCEPT = PREFIX + ANY_CONCEPT;
 
-    private @Autowired KnowledgeBaseService kbService;
-    //private @PersistenceContext EntityManager entityManager;
+    private final KnowledgeBaseService kbService;
     
     private String featureSupportId;
     private Map<ImmutablePair<AnnotationFeature, String>, String> renderValueCache = Collections
         .synchronizedMap(new LRUMap<>(200));
+
+    @Autowired
+    public ConceptFeatureSupport(KnowledgeBaseService aKbService)
+    {
+        kbService = aKbService;
+    }
     
     @Override
     public String getId()
@@ -157,7 +162,7 @@ public class ConceptFeatureSupport
     }
 
     @Override
-    public String unwrapFeatureValue(AnnotationFeature aFeature, Object aValue)
+    public String unwrapFeatureValue(AnnotationFeature aFeature, CAS aCAS, Object aValue)
     {
         // Normally, we get KBHandles back from the feature editors
         if (aValue instanceof KBHandle) {
@@ -198,6 +203,9 @@ public class ConceptFeatureSupport
 //
 //            return instance.map(i -> KBHandle.of(i)).orElseThrow(NoSuchElementException::new);
         }
+        else if (aValue instanceof KBHandle) {
+            return (KBHandle) aValue;
+        }
         else if (aValue == null ) {
             return null;
         }
@@ -205,12 +213,6 @@ public class ConceptFeatureSupport
             throw new IllegalArgumentException(
                     "Unable to handle value [" + aValue + "] of type [" + aValue.getClass() + "]");
         }
-    }
-    
-    @Override
-    public String getCasType(AnnotationFeature aFeature)
-    {
-        return CAS.TYPE_NAME_STRING;
     }
     
     @Override
