@@ -152,7 +152,8 @@ public class CopyAnnotationTest
         }.getMockInstance();
         
         featureSupportRegistry = new FeatureSupportRegistryImpl(
-                asList(new PrimitiveUimaFeatureSupport(), new SlotFeatureSupport()));
+                asList(new PrimitiveUimaFeatureSupport(),
+                        new SlotFeatureSupport(annotationSchemaService)));
         featureSupportRegistry.init();
     }
     

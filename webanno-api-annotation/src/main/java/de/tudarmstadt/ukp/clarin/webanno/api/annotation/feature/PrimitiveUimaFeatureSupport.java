@@ -108,17 +108,11 @@ public class PrimitiveUimaFeatureSupport
     }
     
     @Override
-    public <V> V  unwrapFeatureValue(AnnotationFeature aFeature, Object aValue)
+    public <V> V  unwrapFeatureValue(AnnotationFeature aFeature, CAS aCAS, Object aValue)
     {
         return (V) aValue;
     }
     
-    @Override
-    public String getCasType(AnnotationFeature aFeature)
-    {
-        return aFeature.getType();
-    }
-
     @Override
     public Panel createTraitsEditor(String aId,  IModel<AnnotationFeature> aFeatureModel)
     {

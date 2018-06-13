@@ -21,13 +21,13 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.setFeature;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
@@ -266,44 +266,26 @@ public interface FeatureSupport<T>
     {
         FeatureStructure fs = selectByAddr(aJcas, FeatureStructure.class, aAddress);
         
-        Feature feature = fs.getType().getFeatureByBaseName(aFeature.getName());
-        
-        final String effectiveType = getCasType(aFeature);
-        
-        // Sanity check
-        if (!Objects.equals(effectiveType, feature.getRange().getName())) {
-            throw new IllegalArgumentException("Actual feature type ["
-                    + feature.getRange().getName() + "] does not match expected feature type ["
-                    + effectiveType + "].");
-        }
-        
-        Object value = unwrapFeatureValue(aFeature, aValue);
+        Object value = unwrapFeatureValue(aFeature, fs.getCAS(), aValue);
         setFeature(fs, aFeature, value);
     }
 
-    /**
-     * Return the CAS type name used for the given feature. This is used to sanity-check the
-     * feature of the FS when getting/setting the feature value.
-     * 
-     * @return the CAS type name used for the given feature.
-     * 
-     */
-    String getCasType(AnnotationFeature aFeature);
-    
     default <V> V getFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
     {
-        Feature feature = aFS.getType().getFeatureByBaseName(aFeature.getName());
+        Object value;
         
-        final String effectiveType = getCasType(aFeature);
-        
-        // Sanity check
-        if (!Objects.equals(effectiveType, feature.getRange().getName())) {
-            throw new IllegalArgumentException("Actual feature type ["
-                    + feature.getRange().getName() + "] does not match expected feature type ["
-                    + effectiveType + "].");
+        Feature f = aFS.getType().getFeatureByBaseName(aFeature.getName());
+        if (f.getRange().isPrimitive()) {
+            value = FSUtil.getFeature(aFS, aFeature.getName(), Object.class);
+        }
+        else if (FSUtil.isMultiValuedFeature(aFS, f)) {
+            value = FSUtil.getFeature(aFS, aFeature.getName(), List.class);
+        }
+        else {
+            value = FSUtil.getFeature(aFS, aFeature.getName(), FeatureStructure.class);
         }
         
-        return (V) wrapFeatureValue(aFeature, aFS.getCAS(), aFS.getFeatureValue(feature));
+        return (V) wrapFeatureValue(aFeature, aFS.getCAS(), value);
     }
 
     /**
@@ -315,7 +297,7 @@ public interface FeatureSupport<T>
      *            the value provided from the feature editor.
      * @return the CAS value.
      */
-    <V> V  unwrapFeatureValue(AnnotationFeature aFeature, Object aValue);
+    <V> V  unwrapFeatureValue(AnnotationFeature aFeature, CAS aCAS, Object aValue);
 
     /**
      * Convert a CAS representation of the feature value to the type of value which the feature
