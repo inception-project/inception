@@ -23,9 +23,11 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import java.util.List;
 import java.util.Optional;
 
+import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
@@ -263,11 +265,54 @@ public interface FeatureSupport<T>
             Object aValue)
     {
         FeatureStructure fs = selectByAddr(aJcas, FeatureStructure.class, aAddress);
-        setFeature(fs, aFeature, aValue);
+        
+        Object value = unwrapFeatureValue(aFeature, fs.getCAS(), aValue);
+        setFeature(fs, aFeature, value);
     }
-    
-    <V> V getFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS);
 
+    default <V> V getFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
+    {
+        Object value;
+        
+        Feature f = aFS.getType().getFeatureByBaseName(aFeature.getName());
+        if (f.getRange().isPrimitive()) {
+            value = FSUtil.getFeature(aFS, aFeature.getName(), Object.class);
+        }
+        else if (FSUtil.isMultiValuedFeature(aFS, f)) {
+            value = FSUtil.getFeature(aFS, aFeature.getName(), List.class);
+        }
+        else {
+            value = FSUtil.getFeature(aFS, aFeature.getName(), FeatureStructure.class);
+        }
+        
+        return (V) wrapFeatureValue(aFeature, aFS.getCAS(), value);
+    }
+
+    /**
+     * Convert the value returned by the feature editor to the value stored in the CAS.
+     * 
+     * @param aFeature
+     *            the feature.
+     * @param aValue
+     *            the value provided from the feature editor.
+     * @return the CAS value.
+     */
+    <V> V  unwrapFeatureValue(AnnotationFeature aFeature, CAS aCAS, Object aValue);
+
+    /**
+     * Convert a CAS representation of the feature value to the type of value which the feature
+     * editor expects.
+     * 
+     * @param aFeature
+     *            the feature.
+     * @param aCAS
+     *            the CAS mainly for access to the type system.
+     * @param aValue
+     *            string representation of the value
+     * @return feature editor representation of the value.
+     */
+    Object wrapFeatureValue(AnnotationFeature aFeature, CAS aCAS, Object aValue);
+    
     default IllegalArgumentException unsupportedFeatureTypeException(AnnotationFeature aFeature)
     {
         return new IllegalArgumentException("Unsupported type [" + aFeature.getType()

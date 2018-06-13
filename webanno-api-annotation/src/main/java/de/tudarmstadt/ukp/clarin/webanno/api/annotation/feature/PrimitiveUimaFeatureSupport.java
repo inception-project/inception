@@ -22,11 +22,8 @@ import static java.util.Arrays.asList;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.Feature;
-import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.wicket.MarkupContainer;
@@ -45,7 +42,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.NumberFea
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.UimaStringTraitsEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
@@ -103,6 +99,18 @@ public class PrimitiveUimaFeatureSupport
         default:
             return false;
         }
+    }
+
+    @Override
+    public Object wrapFeatureValue(AnnotationFeature aFeature, CAS aCAS, Object aValue)
+    {
+        return aValue;
+    }
+    
+    @Override
+    public <V> V  unwrapFeatureValue(AnnotationFeature aFeature, CAS aCAS, Object aValue)
+    {
+        return (V) aValue;
     }
     
     @Override
@@ -206,21 +214,5 @@ public class PrimitiveUimaFeatureSupport
     {
         // Only string features support tagsets
         return CAS.TYPE_NAME_STRING.equals(aFeature.getType());
-    }
-    
-    @Override
-    public <T> T getFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
-    {
-        Feature feature = aFS.getType().getFeatureByBaseName(aFeature.getName());
-        final String effectiveType = aFeature.getType();
-        
-        // Sanity check
-        if (!Objects.equals(effectiveType, feature.getRange().getName())) {
-            throw new IllegalArgumentException("Actual feature type ["
-                    + feature.getRange().getName() + "] does not match expected feature type ["
-                    + effectiveType + "].");
-        }
-
-        return WebAnnoCasUtil.getFeature(aFS, aFeature.getName());
     }
 }

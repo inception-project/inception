@@ -34,6 +34,18 @@ public class LinkWithRoleModel
     public int targetAddr = -1;
     public boolean autoCreated;
 
+    public LinkWithRoleModel()
+    {
+        // No-args constructor
+    }
+    
+    public LinkWithRoleModel(String aRole, String aLabel, int aTargetAddr)
+    {
+        role = aRole;
+        label = aLabel;
+        targetAddr = aTargetAddr;
+    }
+
     @Override
     public int hashCode()
     {
@@ -78,5 +90,21 @@ public class LinkWithRoleModel
             return false;
         }
         return true;
+    }
+
+    @Override
+    public String toString()
+    {
+        StringBuilder builder = new StringBuilder();
+        builder.append("LinkWithRoleModel [role=");
+        builder.append(role);
+        builder.append(", label=");
+        builder.append(label);
+        builder.append(", targetAddr=");
+        builder.append(targetAddr);
+        builder.append(", autoCreated=");
+        builder.append(autoCreated);
+        builder.append("]");
+        return builder.toString();
     }
 }

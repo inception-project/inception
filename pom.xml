@@ -75,6 +75,8 @@
     <springfox.version>2.7.0</springfox.version>
     <batik.version>1.9.1</batik.version>
     <json.version>20180130</json.version>
+    <mockito.version>2.18.3</mockito.version>
+    <assertj.version>3.10.0</assertj.version>
   </properties>
   <repositories>
     <repository>
@@ -153,9 +155,14 @@
         <version>4.12</version>
       </dependency>
       <dependency>
+        <groupId>org.mockito</groupId>
+        <artifactId>mockito-core</artifactId>
+        <version>${mockito.version}</version>
+      </dependency>
+      <dependency>
         <groupId>org.assertj</groupId>
         <artifactId>assertj-core</artifactId>
-        <version>3.9.0</version>
+        <version>${assertj.version}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.uima</groupId>
