@@ -17,12 +17,44 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.project;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.ProjectState.ANNOTATION_FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.ProjectState.ANNOTATION_IN_PROGRESS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.ProjectState.CURATION_FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.ProjectState.CURATION_IN_PROGRESS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.ProjectState.NEW;
+import static org.junit.Assert.assertEquals;
+
 import java.util.Random;
 
 import org.junit.Test;
 
 public class SourceDocumentStateStatsTest
 {
+    @Test
+    public void testGetProjectState()
+    {
+        assertEquals(NEW,
+                new SourceDocumentStateStats(1l, 1l, 0l, 0l, 0l, 0l).getProjectState());
+        assertEquals(ANNOTATION_IN_PROGRESS,
+                new SourceDocumentStateStats(1l, 0l, 1l, 0l, 0l, 0l).getProjectState());
+        assertEquals(ANNOTATION_IN_PROGRESS,
+                new SourceDocumentStateStats(2l, 0l, 1l, 1l, 0l, 0l).getProjectState());
+        assertEquals(ANNOTATION_IN_PROGRESS,
+                new SourceDocumentStateStats(3l, 1l, 1l, 1l, 0l, 0l).getProjectState());
+        assertEquals(ANNOTATION_FINISHED,
+                new SourceDocumentStateStats(1l, 0l, 0l, 1l, 0l, 0l).getProjectState());
+        assertEquals(CURATION_IN_PROGRESS,
+                new SourceDocumentStateStats(1l, 0l, 0l, 0l, 1l, 0l).getProjectState());
+        assertEquals(CURATION_IN_PROGRESS,
+                new SourceDocumentStateStats(2l, 1l, 0l, 0l, 1l, 0l).getProjectState());
+        assertEquals(CURATION_IN_PROGRESS,
+                new SourceDocumentStateStats(3l, 1l, 1l, 0l, 1l, 0l).getProjectState());
+        assertEquals(CURATION_IN_PROGRESS,
+                new SourceDocumentStateStats(4l, 1l, 1l, 1l, 1l, 0l).getProjectState());
+        assertEquals(CURATION_FINISHED,
+                new SourceDocumentStateStats(1l, 0l, 0l, 0l, 0l, 1l).getProjectState());
+    }
+    
     @Test
     public void testGetProjectStateIsDefinedSweep()
     {
