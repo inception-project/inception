@@ -32,6 +32,7 @@ import org.apache.uima.jcas.JCas;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.FeatureValueUpdatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
@@ -138,5 +139,11 @@ public abstract class TypeAdapter_ImplBase
         if (applicationEventPublisher != null) {
             applicationEventPublisher.publishEvent(aEvent);
         }
+    }
+    
+    @Override
+    public void initialize(AnnotationSchemaService aSchemaService)
+    {
+        // Nothing to do
     }
 }
