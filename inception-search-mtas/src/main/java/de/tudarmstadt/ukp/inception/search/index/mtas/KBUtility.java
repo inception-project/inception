@@ -1,5 +1,5 @@
 /*
- * Copyright 2017
+ * Copyright 2018
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  *
@@ -29,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
@@ -39,14 +40,11 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 public class KBUtility {
 
     private final static Logger log = LoggerFactory.getLogger(KBUtility.class.getName());
-    private static KnowledgeBaseService kbService;
-    
-    public KBUtility(KnowledgeBaseService kbService) {
-        KBUtility.kbService = kbService;
-    }
+    private static KnowledgeBaseService kbService = ApplicationContextProvider.getApplicationContext()
+            .getBean(KnowledgeBaseService.class);
 
     /**
-     * Return Class type of KBObject
+     * Return class type of KBObject
      * 
      * @param kbObject
      * @return

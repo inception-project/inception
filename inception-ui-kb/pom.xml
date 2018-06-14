@@ -76,7 +76,6 @@
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-search-core</artifactId>
     </dependency>
-
     
     <dependency>
       <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>

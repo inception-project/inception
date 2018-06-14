@@ -40,11 +40,15 @@ import org.apache.uima.jcas.tcas.Annotation;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.util.CasCreationUtils;
 import org.apache.wicket.ajax.json.JSONObject;
+import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -52,6 +56,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import mtas.analysis.parser.MtasParser;
@@ -74,11 +79,12 @@ public class MtasUimaParser extends MtasParser {
     // Annotation schema and project services
     private AnnotationSchemaService annotationSchemaService;
     private ProjectService projectService;
-    private KnowledgeBaseService kbService;
+    //private KnowledgeBaseService kbService;
 
     // Project id
     Project project;
 
+    private FeatureSupportRegistry featureSupportRegistry;
     final private String MTAS_SENTENCE_LABEL = "s";
 
     public MtasUimaParser(MtasConfiguration config) {
@@ -88,9 +94,9 @@ public class MtasUimaParser extends MtasParser {
                 .getBean(AnnotationSchemaService.class);
         projectService = ApplicationContextProvider.getApplicationContext()
                 .getBean(ProjectService.class);
-        kbService = ApplicationContextProvider.getApplicationContext()
-                .getBean(KnowledgeBaseService.class);
-        new KBUtility(kbService);
+        featureSupportRegistry = ApplicationContextProvider.getApplicationContext()
+                .getBean(FeatureSupportRegistry.class);
+        //kbService = ApplicationContextProvider.getApplicationContext().getBean(KnowledgeBaseService.class);
         if (config.attributes.get(MtasTokenizerFactory.ARGUMENT_PARSER_ARGS) != null) {
             // Read parser argument that contains the projectId
             JSONObject jsonParserConfiguration = new JSONObject(
@@ -157,7 +163,6 @@ public class MtasUimaParser extends MtasParser {
                 if (processed.contains(annotation)) {
                     continue;
                 }
-
                 String annotationName = annotation.getType().getName();
                 String annotationUiName = layers.containsKey(annotationName)
                         ? layers.get(annotationName).getUiName()
@@ -172,15 +177,17 @@ public class MtasUimaParser extends MtasParser {
 
                 if (tokenBeginIndex.floorEntry(annotation.getBegin()) == null) {
                     beginToken = tokenBeginIndex.firstEntry().getValue();
-                } else {
+                }
+                else {
                     beginToken = tokenBeginIndex.floorEntry(annotation.getBegin()).getValue();
                 }
-
+                
                 int endToken = 0;
-
+                
                 if (tokenEndIndex.ceilingEntry(annotation.getEnd() - 1) == null) {
                     endToken = tokenEndIndex.lastEntry().getValue();
-                } else {
+                }
+                else {
                     endToken = tokenEndIndex.ceilingEntry(annotation.getEnd() - 1).getValue();
                 }
 
@@ -225,6 +232,9 @@ public class MtasUimaParser extends MtasParser {
                                 // char[].
                                 featureValue = String.valueOf((Object) WebAnnoCasUtil
                                         .getFeature(annotation, feature.getName()));
+                                
+                                FeatureSupport<ConceptFeatureTraits> fs = featureSupportRegistry.getFeatureSupport(feature);
+                                String value = fs.renderFeatureValue(feature,featureValue);
                                 // Add the UI annotation.feature name to the index as an annotation.
                                 // Replace spaces with underscore in the UI name.
                                 MtasToken mtasAnnotationFeature = new MtasTokenString(mtasId++,
@@ -238,7 +248,7 @@ public class MtasUimaParser extends MtasParser {
                                 // Returns KB IRI label after checking if the  
                                 // feature type is associated with KB and feature value is not null
                                 String labelStr = "";
-                                if (feature.getType().contains(IndexingConstants.KB) && featureValue != "null") {
+                                if (feature.getType().contains(IndexingConstants.KB) && (!featureValue.equals("null"))) {
                                     labelStr = getUILabel(featureValue);
                                 }
                                 if (!labelStr.isEmpty()) {
@@ -307,20 +317,18 @@ public class MtasUimaParser extends MtasParser {
         return indexedName;
     }
     
-    
     @Override
     public String printConfig() {
         return null;
     }
-
     /**
      * 
      * Takes in {@code IRI} for identifier as {@code String} and returns the label String 
      * Eg:- InputParameter :- {@code http://www.w3.org/TR/2003/PR-owl-guide-20031209/wine#RoseDAnjou} 
-     * Returned :- {@code KBConcept} + {@code MtasToken.DELIMITER} + RoseDAnjou
+     * Returned :- {@link KBConcept} + {@link MtasToken.DELIMITER} + RoseDAnjou
      * @param String iri 
-     * @return String {@code KBObject}+{@code MtasToken.DELIMITER}
-     *          +{@code KBObject.get().getUiLabel()}
+     * @return String {@link KBObject}+{@link MtasToken.DELIMITER}
+     *          +{@link KBObject.get().getUiLabel()}
      */
     public String getUILabel(String aIRI) {
         StringBuilder labelStr = new StringBuilder();
