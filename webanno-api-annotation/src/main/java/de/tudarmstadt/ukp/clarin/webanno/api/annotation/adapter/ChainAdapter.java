@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.COREFERENCE_RELATION_FEATURE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.COREFERENCE_TYPE_FEATURE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectOverlapping;
 import static org.apache.uima.fit.util.CasUtil.selectFS;
 
@@ -35,6 +37,7 @@ import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
 import org.springframework.context.ApplicationEventPublisher;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.MultipleSentenceCoveredException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
@@ -546,5 +549,29 @@ public class ChainAdapter
     public String getChainFirstFeatureName()
     {
         return chainFirstFeatureName;
+    }
+    
+    @Override
+    public void initialize(AnnotationSchemaService aSchemaService)
+    {
+        AnnotationFeature relationFeature = new AnnotationFeature();
+        relationFeature.setType(CAS.TYPE_NAME_STRING);
+        relationFeature.setName(COREFERENCE_RELATION_FEATURE);
+        relationFeature.setLayer(getLayer());
+        relationFeature.setEnabled(true);
+        relationFeature.setUiName("Reference Relation");
+        relationFeature.setProject(getLayer().getProject());
+
+        aSchemaService.createFeature(relationFeature);
+
+        AnnotationFeature typeFeature = new AnnotationFeature();
+        typeFeature.setType(CAS.TYPE_NAME_STRING);
+        typeFeature.setName(COREFERENCE_TYPE_FEATURE);
+        typeFeature.setLayer(getLayer());
+        typeFeature.setEnabled(true);
+        typeFeature.setUiName("Reference Type");
+        typeFeature.setProject(getLayer().getProject());
+
+        aSchemaService.createFeature(typeFeature);
     }
 }

@@ -176,25 +176,8 @@ public class ProjectServiceImpl
                 .getSingleResult();
         
         ProjectState oldState = project.getState();
-        
-        if (stats.total == stats.cf) {
-            project.setState(ProjectState.CURATION_FINISHED);
-        }
-        else if (stats.total == stats.af) {
-            project.setState(ProjectState.ANNOTATION_FINISHED);
-        }
-        else if (stats.total == stats.an) {
-            project.setState(ProjectState.NEW);
-        }
-        else if (stats.cip > 0) {
-            project.setState(ProjectState.CURATION_IN_PROGRESS);
-        }
-        else if (stats.aip > 0) {
-            project.setState(ProjectState.ANNOTATION_IN_PROGRESS);
-        }
-        else {
-            throw new IllegalStateException("Unable to determine project state.");
-        }
+
+        project.setState(stats.getProjectState());
         
         if (!Objects.equals(oldState, project.getState())) {
             applicationEventPublisher.publishEvent(
@@ -980,27 +963,5 @@ public class ProjectServiceImpl
     public List<ProjectType> listProjectTypes()
     {
         return Collections.unmodifiableList(projectTypes);
-    }
-    
-    public static final class SourceDocumentStateStats
-    {
-        public final long total;
-        public final long an;
-        public final long aip;
-        public final long af;
-        public final long cip;
-        public final long cf;
-        
-        public SourceDocumentStateStats(Long aTotal, Long aAn, Long aAip, Long aAf, Long aCip,
-                Long aCf)
-        {
-            super();
-            total = aTotal != null ? aTotal : 0l;
-            an = aAn != null ? aAn : 0l;
-            aip = aAip != null ? aAip : 0l;
-            af = aAf != null ? aAf : 0l;
-            cip = aCip != null ? aCip : 0l;
-            cf = aCf != null ? aCf : 0l;
-        }
     }
 }

@@ -18,8 +18,6 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.project.layers;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.COREFERENCE_RELATION_FEATURE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.COREFERENCE_TYPE_FEATURE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static java.util.Arrays.asList;
@@ -33,8 +31,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
-import java.nio.charset.CharsetEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -94,6 +90,7 @@ import org.slf4j.LoggerFactory;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureType;
@@ -816,63 +813,55 @@ public class ProjectLayersPanel
             }
 
             final Project project = ProjectLayersPanel.this.getModelObject();
-            if (isNull(layer.getId())) {
-                String layerName = StringUtils
-                        .capitalize(LayerDetailForm.this.getModelObject().getUiName());
-
+            // Set type name only when the layer is initially created. After that, only the UI
+            // name may be updated. Also any validation related to the type name only needs to
+            // happen on the initial creation.
+            boolean isNewLayer = isNull(layer.getId());
+            if (isNewLayer) {
+                String layerName = StringUtils.capitalize(layer.getUiName());
                 layerName = layerName.replaceAll("\\W", "");
-                
-                if (layerName.isEmpty() || !isAscii(layerName)) {
-                    error("Non ASCII characters can not be used as layer name!");
+
+                if (layerName.isEmpty()) {
+                    error("Unable to derive internal name from [" + layer.getUiName()
+                            + "]. Please choose a different initial name and rename after the "
+                            + "layer has been created.");
                     return;
                 }
                 
-                if (annotationService.existsLayer(TYPE_PREFIX + layerName, layer.getType(),
-                        project)) {
+                if (!Character.isJavaIdentifierStart(layerName.charAt(0))) {
+                    error("Initial layer name cannot start with [" + layerName.charAt(0)
+                            + "]. Please choose a different initial name and rename after the "
+                            + "layer has been created.");
+                    return;
+                }
+                
+                if (annotationService.existsLayer(TYPE_PREFIX + layerName, project)) {
                     error("A layer with the name [" + TYPE_PREFIX + layerName
                             + "] already exists in this project.");
                     return;
                 }
-                if (layer.getType().equals(RELATION_TYPE) && layer.getAttachType() == null) {
-                    error("A relation layer needs an attach type!");
-                    return;
-                }
 
-                if ((TYPE_PREFIX + layerName).endsWith(".")) {
-                    error("Layer names cannot end in '.'.");
-                    return;
-                }
-
-                layer.setProject(project);
                 layer.setName(TYPE_PREFIX + layerName);
-                
-                if (layer.getType().equals(WebAnnoConst.CHAIN_TYPE)) {
-                    AnnotationFeature relationFeature = new AnnotationFeature();
-                    relationFeature.setType(CAS.TYPE_NAME_STRING);
-                    relationFeature.setName(COREFERENCE_RELATION_FEATURE);
-                    relationFeature.setLayer(layer);
-                    relationFeature.setEnabled(true);
-                    relationFeature.setUiName("Reference Relation");
-                    relationFeature.setProject(project);
-
-                    annotationService.createFeature(relationFeature);
-
-                    AnnotationFeature typeFeature = new AnnotationFeature();
-                    typeFeature.setType(CAS.TYPE_NAME_STRING);
-                    typeFeature.setName(COREFERENCE_TYPE_FEATURE);
-                    typeFeature.setLayer(layer);
-                    typeFeature.setEnabled(true);
-                    typeFeature.setUiName("Reference Type");
-                    typeFeature.setProject(project);
-
-                    annotationService.createFeature(typeFeature);
-                }
-                
-                featureSelectionForm.setVisible(true);
             }
             
+            if (layer.getType().equals(RELATION_TYPE) && layer.getAttachType() == null) {
+                error("A relation layer needs to attach to a span layer.");
+                return;
+            }
+
+            layer.setProject(project);
+
             annotationService.createLayer(layer);
             
+            // Initialize default features if necessary but only after the layer has actually been
+            // persisted in the database.
+            if (isNewLayer) {
+                TypeAdapter adapter = annotationService.getAdapter(layer);
+                adapter.initialize(annotationService);
+            }
+
+            featureSelectionForm.setVisible(true);
+
             // Trigger LayerConfigurationChangedEvent
             applicationEventPublisherHolder.get()
                     .publishEvent(new LayerConfigurationChangedEvent(this, project));
@@ -980,12 +969,6 @@ public class ProjectLayersPanel
 
             setVisible(getModelObject() != null);
         }
-    }
-
-    public static boolean isAscii(String v)
-    {
-        CharsetEncoder asciiEncoder = StandardCharsets.US_ASCII.newEncoder();
-        return asciiEncoder.canEncode(v);
     }
 
     private class FeatureDetailForm
