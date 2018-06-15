@@ -57,14 +57,6 @@ task is further explained in <<sect_curation>>.
 The document merged by the curator can be exported as soon as the curator clicked on *Done* for the
 document. The extraction of curated documents is also explained in <<sect_projects>>.
 
-////
-<<<
-==  Tutorials
-
-For tutorials on the different functionalities of {product-name}, please see [https://code.google.com/p/webanno/wiki/Tutorials Tutorials]. 
-Soon also video-tutorials will be available.
-////
-
 <<<
 
 include::{include-dir}installation.adoc[]
@@ -84,6 +76,9 @@ include::{include-dir}menu.adoc[]
 <<<
 
 include::{include-dir}annotation.adoc[]
+include::{include-dir}annotation_concept-linking.adoc[]
+include::{include-dir}annotation_recommendation.adoc[]
+include::{include-dir}annotation_activeLearning.adoc[]
 
 <<<
 
@@ -96,6 +91,8 @@ include::{include-dir}monitoring.adoc[]
 <<<
 
 include::{include-dir}projects.adoc[]
+include::{include-dir}projects_concept-linking.adoc[]
+include::{include-dir}projects_recommendation.adoc[]
 
 <<<
 
@@ -116,3 +113,8 @@ include::{include-dir}webannotsv.adoc[]
 <<<
 
 include::{include-dir}troubleshooting.adoc[]
+
+<<<
+
+include::{include-dir}settings.adoc[]
+include::{include-dir}settings_concept-linking.adoc[]

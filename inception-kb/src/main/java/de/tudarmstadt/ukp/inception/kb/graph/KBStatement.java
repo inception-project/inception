@@ -22,18 +22,22 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.cyberborean.rdfbeans.datatype.DatatypeMapper;
+import org.cyberborean.rdfbeans.datatype.DefaultDatatypeMapper;
 import org.eclipse.rdf4j.model.BNode;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.Value;
-import org.eclipse.rdf4j.model.ValueFactory;
-import org.eclipse.rdf4j.repository.RepositoryConnection;
+
+import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
+import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 public class KBStatement implements Serializable
 {
     private static final long serialVersionUID = 6117845741665780184L;
 
+    private String statementId;
     // Subject
     private KBHandle instance;
 
@@ -41,39 +45,79 @@ public class KBStatement implements Serializable
     private KBHandle property;
 
     // Object
-    private Value value;
+    private Object value;
+
+    // Language
+    private String language;
 
     private boolean inferred;
 
-    private List<Statement> originalStatements = new ArrayList<>();
+    private List<Statement> originalStatements;
 
-    public KBStatement()
+    private List<KBQualifier> qualifiers;
+
+    /**
+     * Call {@link KnowledgeBaseService#initStatement(KnowledgeBase, KBStatement)}
+     * after constructing this in order to allow upserting.
+     * @param aInstance
+     * @param aProperty
+     * @param aValue
+     */
+    public KBStatement(KBHandle aInstance, KBHandle aProperty, Value aValue)
     {
+        instance = aInstance;
+        property = aProperty;
+
+        DatatypeMapper mapper = new DefaultDatatypeMapper();
+        if (aValue instanceof Literal) {
+            Literal litValue = (Literal) aValue;
+            language = litValue.getLanguage().orElse(null);
+            value = mapper.getJavaObject(litValue);
+        }
+        else if (aValue instanceof IRI) {
+            value = aValue;
+        }
+        else if (aValue instanceof BNode) {
+            value = null;
+        }
+        else {
+            throw new IllegalStateException("Unknown object type: " + aValue.getClass());
+        }
+
+        originalStatements = new ArrayList<>();
+
+        qualifiers = new ArrayList<>();
+    }
+
+    public KBStatement(KBHandle aInstance, KBHandle aProperty)
+    {
+        instance = aInstance;
+        property = aProperty;
+        value = null;
+        originalStatements = new ArrayList<>();
+        qualifiers = new ArrayList<>();
     }
 
     public KBStatement(KBStatement other)
     {
+        this.statementId = other.statementId;
         this.inferred = other.inferred;
         this.instance = other.instance;
+        this.language = other.language;
         this.originalStatements = other.originalStatements;
         this.property = other.property;
         this.value = other.value;
+        qualifiers = other.qualifiers;
     }
 
-    public static KBStatement read(KBHandle aInstance, KBHandle aProperty, Statement aStmt)
+    public String getStatementId()
     {
-        KBStatement kbStmt = new KBStatement();
-        kbStmt.originalStatements.add(aStmt);
-        kbStmt.setInstance(aInstance);
-        kbStmt.setProperty(aProperty);       
-        if (aStmt.getObject() instanceof Literal || aStmt.getObject() instanceof IRI) {
-            kbStmt.setValue(aStmt.getObject());
-        } else if (aStmt.getObject() instanceof BNode) {
-            kbStmt.setValue(null);
-        } else {
-            throw new IllegalStateException("Unknown object type: " + aStmt.getObject().getClass());
-        }
-        return kbStmt;
+        return statementId;
+    }
+
+    public void setStatementId(String aStatementId)
+    {
+        statementId = aStatementId;
     }
 
     public KBHandle getInstance()
@@ -101,11 +145,21 @@ public class KBStatement implements Serializable
         return value;
     }
 
-    public void setValue(Value aValue)
+    public void setValue(Object aValue)
     {
         value = aValue;
     }
-    
+
+    public String getLanguage()
+    {
+        return language;
+    }
+
+    public void setLanguage(String aLanguage)
+    {
+        language = aLanguage;
+    }
+
     public boolean isInferred()
     {
         return inferred;
@@ -121,31 +175,30 @@ public class KBStatement implements Serializable
         return originalStatements;
     }
 
-    public Statement toStatement(RepositoryConnection conn)
+    public void setOriginalStatements(List<Statement> statements)
     {
-        ValueFactory vf = conn.getValueFactory();
-        IRI subject = vf.createIRI(instance.getIdentifier());
-        IRI predicate = vf.createIRI(property.getIdentifier());
-        Value object = value;
-        return vf.createStatement(subject, predicate, object);
+        originalStatements = statements;
     }
 
-    public void write(RepositoryConnection conn)
+    public void addQualifier(KBQualifier aQualifier)
     {
-        originalStatements.clear();
-        Statement stmt = toStatement(conn);
-        originalStatements.add(stmt);
-        conn.add(stmt);
+        qualifiers.add(aQualifier);
     }
 
-    @Override
-    public String toString()
+    public List<KBQualifier> getQualifiers()
     {
-        return new ToStringBuilder(this).append("instance", instance)
-            .append("property", property)
-            .append("value", value)
-            .append("inferred", inferred)
-            .append("originalStatements", originalStatements)
-            .toString();
+        return qualifiers;
+    }
+
+    public void setQualifiers(List<KBQualifier> qualifierList)
+    {
+        qualifiers = qualifierList;
+    }
+
+    @Override public String toString()
+    {
+        return new ToStringBuilder(this).append("instance", instance).append("property", property)
+            .append("value", value).append("language", language).append("inferred", inferred)
+            .append("originalStatements", originalStatements).toString();
     }
 }

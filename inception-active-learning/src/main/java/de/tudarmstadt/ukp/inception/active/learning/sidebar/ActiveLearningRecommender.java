@@ -35,10 +35,10 @@ import org.apache.uima.jcas.JCas;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.active.learning.ActiveLearningService;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.AnnotationObject;
-import de.tudarmstadt.ukp.inception.recommendation.model.LearningRecord;
-import de.tudarmstadt.ukp.inception.recommendation.model.LearningRecordUserAction;
-import de.tudarmstadt.ukp.inception.recommendation.service.LearningRecordService;
+import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
 
 public class ActiveLearningRecommender
     implements Serializable
@@ -93,7 +93,7 @@ public class ActiveLearningRecommender
         List<AnnotationObject> recommendationsList)
     {
         if (recommendationsList != null) {
-            recommendationsList.removeIf(recommendation -> recommendation.getAnnotation() == null);
+            recommendationsList.removeIf(recommendation -> recommendation.getLabel() == null);
         }
     }
 
@@ -114,14 +114,14 @@ public class ActiveLearningRecommender
     private static boolean isAlreadyInCleanList(List<AnnotationObject> cleanRecommendationList,
             AnnotationObject recommendationItem)
     {
-        String classifier = recommendationItem.getClassifier();
-        String annotation = recommendationItem.getAnnotation();
+        String source = recommendationItem.getSource();
+        String annotation = recommendationItem.getLabel();
         String documentName = recommendationItem.getDocumentName();
         
         for (AnnotationObject existedRecommendation : cleanRecommendationList) {
             if (
-                    existedRecommendation.getClassifier().equals(classifier) && 
-                    existedRecommendation.getAnnotation().equals(annotation) &&
+                    existedRecommendation.getSource().equals(source) &&
+                    existedRecommendation.getLabel().equals(annotation) &&
                     existedRecommendation.getDocumentName().equals(documentName)
             ) {
                 return true;
@@ -171,7 +171,7 @@ public class ActiveLearningRecommender
         return aRecord.getSourceDocument().getName().equals(aRecommendation.getDocumentName()) && 
                 aRecord.getOffsetTokenBegin() == aRecommendation.getOffset().getBeginToken() && 
                 aRecord.getOffsetTokenEnd() == aRecommendation.getOffset().getEndToken() && 
-                aRecord.getAnnotation().equals(aRecommendation.getAnnotation());
+                aRecord.getAnnotation().equals(aRecommendation.getLabel());
     }
 
     /**
@@ -237,10 +237,10 @@ public class ActiveLearningRecommender
         int numberOfStringMatchingClassifer = 0;
         int numberOfOpenNLPClassifier = 0;
         for (AnnotationObject recommendation : recommendationListPerToken) {
-            if (recommendation.getClassifier().contains("StringMatching")) {
+            if (recommendation.getSource().contains("StringMatching")) {
                 numberOfStringMatchingClassifer++;
             }
-            if (recommendation.getClassifier().contains("OpenNlp")) {
+            if (recommendation.getSource().contains("OpenNlp")) {
                 numberOfOpenNLPClassifier++;
             }
         }
@@ -253,11 +253,11 @@ public class ActiveLearningRecommender
     {
         List<AnnotationObject> stringMatchingClassifierAnnotationObject = new ArrayList<>();
         for (AnnotationObject recommendation : recommendationsPerToken) {
-            if (recommendation.getClassifier().contains("StringMatching")) {
+            if (recommendation.getSource().contains("StringMatching")) {
                 stringMatchingClassifierAnnotationObject.add(recommendation);
             }
         }
-        recommendationsPerToken.removeIf(recommendation -> recommendation.getClassifier()
+        recommendationsPerToken.removeIf(recommendation -> recommendation.getSource()
             .contains("StringMatching"));
         listOfRecommendationsPerTokenPerClassifier.add(recommendationsPerToken);
         listOfRecommendationsPerTokenPerClassifier.add(stringMatchingClassifierAnnotationObject);
@@ -381,7 +381,7 @@ public class ActiveLearningRecommender
     public boolean recordCompareToRecommendation(AnnotationObject aRecommendation,
         LearningRecord aRecord)
     {
-        return aRecommendation.getAnnotation().equals(aRecord.getAnnotation())
+        return aRecommendation.getLabel().equals(aRecord.getAnnotation())
             && aRecommendation.getDocumentName().equals(aRecord.getSourceDocument().getName())
             && aRecommendation.getOffset().getBeginCharacter() == aRecord.getOffsetCharacterBegin()
             && aRecommendation.getOffset().getEndCharacter() == aRecord.getOffsetCharacterEnd();

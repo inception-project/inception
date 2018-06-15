@@ -21,7 +21,7 @@ import org.apache.wicket.markup.html.form.FormComponentPanel;
 import org.apache.wicket.model.IModel;
 import org.eclipse.rdf4j.model.Value;
 
-import de.tudarmstadt.ukp.inception.ui.kb.stmt.Focusable;
+import de.tudarmstadt.ukp.inception.app.Focusable;
 
 public abstract class ValueEditor<T extends Value> extends FormComponentPanel<T>
         implements Focusable {

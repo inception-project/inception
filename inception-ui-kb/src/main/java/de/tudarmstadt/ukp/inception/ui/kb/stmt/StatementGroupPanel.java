@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.inception.ui.kb.stmt;
 
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
@@ -33,6 +35,7 @@ import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.Fragment;
+import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.markup.repeater.RefreshingView;
 import org.apache.wicket.markup.repeater.ReuseIfModelsEqualStrategy;
@@ -46,25 +49,30 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.query.QueryEvaluationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
+import de.tudarmstadt.ukp.inception.app.Focusable;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
-import de.tudarmstadt.ukp.inception.ui.kb.EventListeningPanel;
-import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxEvent;
+import de.tudarmstadt.ukp.inception.ui.kb.WriteProtectionBehavior;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxPropertySelectionEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxStatementChangedEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxStatementGroupChangedEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.stmt.editor.StatementEditor;
-import de.tudarmstadt.ukp.inception.ui.kb.util.WriteProtectionBehavior;
 
-public class StatementGroupPanel extends EventListeningPanel {
+public class StatementGroupPanel extends Panel {
 
     private static final long serialVersionUID = 2431747012293487976L;
+    private static final Logger LOG = LoggerFactory.getLogger(StatementGroupPanel.class);
+
     
     private static final String CONTENT_MARKUP_ID = "content";
 
@@ -110,8 +118,7 @@ public class StatementGroupPanel extends EventListeningPanel {
     
     private void actionCancelNewProperty(AjaxRequestTarget target) {
         StatementGroupBean bean = groupModel.getObject();
-        AjaxEvent event = new AjaxStatementGroupChangedEvent(target, bean, true);
-        send(getPage(), Broadcast.BREADTH, event);
+        send(getPage(), Broadcast.BREADTH, new AjaxStatementGroupChangedEvent(target, bean, true));
     }    
     
     private class NewStatementGroupFragment extends Fragment implements Focusable {
@@ -150,16 +157,28 @@ public class StatementGroupPanel extends EventListeningPanel {
         private List<KBHandle> getUnusedProperties() {
             StatementGroupBean bean = groupModel.getObject(); 
             StatementDetailPreference detailPreference = bean.getDetailPreference();
-            
-            Set<KBHandle> existingPropertyHandles = kbService
-                    .listStatements(bean.getKb(), bean.getInstance(),
-                            detailPreference == StatementDetailPreference.ALL)
-                    .stream()
-                    .map(stmt -> stmt.getProperty())
-                    .collect(Collectors.toSet());
+            Set<KBHandle> existingPropertyHandles = Collections.emptySet();
+            try {
+                existingPropertyHandles = kbService
+                        .listStatements(bean.getKb(), bean.getInstance(),
+                                detailPreference == StatementDetailPreference.ALL)
+                        .stream().map(stmt -> stmt.getProperty()).collect(Collectors.toSet());
+            }
+            catch (QueryEvaluationException e) {
+                error("Unable to list statements: " + e.getLocalizedMessage());
+                LOG.error("Unable to list statements.", e);
 
-            List<KBHandle> properties = kbService.listProperties(groupModel.getObject().getKb(),
-                    detailPreference == StatementDetailPreference.ALL);
+            }
+
+            List<KBHandle> properties = new ArrayList<>();
+            try {
+                properties = kbService.listProperties(groupModel.getObject().getKb(),
+                        detailPreference == StatementDetailPreference.ALL);
+            }
+            catch (QueryEvaluationException e) {
+                error("Unable to list properties: " + e.getLocalizedMessage());
+                LOG.error("Unable to list properties.", e);
+            }
             properties.removeAll(existingPropertyHandles);
             return properties;
         }
@@ -170,7 +189,7 @@ public class StatementGroupPanel extends EventListeningPanel {
         }
     }
     
-    private class ExistingStatementGroupFragment extends Fragment {
+    public class ExistingStatementGroupFragment extends Fragment {
         
         private static final long serialVersionUID = 5054250870556101031L;
         
@@ -243,16 +262,16 @@ public class StatementGroupPanel extends EventListeningPanel {
             form.add(addLink);
             add(form);
 
-            eventHandler.addCallback(AjaxStatementChangedEvent.class, this::actionStatementChanged);
         }
         
-        private void actionPropertyLinkClicked(AjaxRequestTarget target) {
-            send(getPage(), Broadcast.BREADTH,
-                    new AjaxPropertySelectionEvent(target, groupModel.getObject().getProperty()));
+        private void actionPropertyLinkClicked(AjaxRequestTarget target)
+        {
+            send(getPage(), Broadcast.BREADTH, new AjaxPropertySelectionEvent(target,
+                    groupModel.getObject().getProperty(), true));
         }
         
-        private void actionStatementChanged(AjaxRequestTarget target,
-                AjaxStatementChangedEvent event) {
+        @OnEvent
+        public void actionStatementChanged(AjaxStatementChangedEvent event) {
             // event is not relevant if the statement in the event has a different property than the
             // property of this statement group
             boolean isEventForThisStatementGroup = event.getStatement()
@@ -269,20 +288,21 @@ public class StatementGroupPanel extends EventListeningPanel {
 
                 if (bean.getStatements().isEmpty()) {
                     send(getPage(), Broadcast.BREADTH,
-                            new AjaxStatementGroupChangedEvent(target, bean, true));
+                            new AjaxStatementGroupChangedEvent(event.getTarget(), bean, true));
                 } else {
                     // refresh the list wrapper (only necessary if at least one statement remains,
                     // otherwise the whole statement group is removed anyway)
-                    target.add(statementListWrapper);
+                    event.getTarget().add(statementListWrapper);
                 }
             }
         }
 
         private void actionAddValue(AjaxRequestTarget target) {
             // add a new prototype statement using this group's instance and its current property
-            KBStatement statementProto = new KBStatement();
-            statementProto.setInstance(groupModel.getObject().getInstance());
-            statementProto.setProperty(groupModel.getObject().getProperty());
+            KBStatement statementProto = new KBStatement(
+                groupModel.getObject().getInstance(),
+                groupModel.getObject().getProperty());
+
             groupModel.getObject().getStatements().add(statementProto);
 
             target.add(statementListWrapper);

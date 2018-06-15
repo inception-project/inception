@@ -29,8 +29,10 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxConceptSelectionEvent;
 
-public class IRIValuePresenter<T extends IRI> extends Panel {
-
+public class IRIValuePresenter<T extends IRI>
+    extends Panel
+    implements ValuePresenter<T>
+{
     private static final long serialVersionUID = -2127902473859929221L;
     
     private IModel<String> stringModel;

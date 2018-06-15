@@ -23,11 +23,11 @@ import java.util.stream.Collectors;
 
 public enum KnowledgeBases
 {
-
     BRITISH_MUSEUM("British Museum", "http://collection.britishmuseum.org/sparql"),
-    YAGO("YAGO", "https://linkeddata1.calcul.u-psud.fr/sparql"),
+    WIKIDATA("Wikidata", "https://query.wikidata.org/sparql"),
     DBPEDIA("DBpedia", "http://dbpedia.org/sparql"),
-    BABELNET("BabelNet", "http://babelnet.org/sparql/");
+    BABELNET("BabelNet", "http://babelnet.org/sparql/"),
+    YAGO("YAGO", "https://linkeddata1.calcul.u-psud.fr/sparql");
 
     public static final Map<String, String> KNOWLEDGE_BASES;
 

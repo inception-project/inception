@@ -33,13 +33,13 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.classificationtool.ClassificationTool;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.AnnotationObject;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.loader.AnnotationObjectLoader;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.trainer.Trainer;
-import de.tudarmstadt.ukp.inception.recommendation.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.AnnotationObjectLoader;
+import de.tudarmstadt.ukp.inception.recommendation.api.ClassificationTool;
+import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
+import de.tudarmstadt.ukp.inception.recommendation.api.Trainer;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.scheduling.RecommendationScheduler;
-import de.tudarmstadt.ukp.inception.recommendation.service.RecommendationService;
 
 /**
  * This consumer trains a new classifier model, if a classification tool was selected before.
@@ -156,7 +156,7 @@ public class TrainingTask
         }
 
         for (AnnotationObject ao : sentence) {
-            if (ao.getAnnotation() == null) {
+            if (ao.getLabel() == null) {
                 return false;
             }
         }

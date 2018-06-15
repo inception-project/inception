@@ -24,6 +24,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
+
 public class ExtendedResult
     implements Serializable
 {
@@ -70,8 +72,8 @@ public class ExtendedResult
                         + "is something wrong.";
             
             for (int i = 0; i < actualSentence.size(); i++) {
-                String aoActual = actualSentence.get(i).getAnnotation();
-                String aoExpected = expectedSentence.get(i).getAnnotation();
+                String aoActual = actualSentence.get(i).getLabel();
+                String aoExpected = expectedSentence.get(i).getLabel();
     
                 if (aoActual != null && !aoActual.isEmpty()) {
                     actualAnnotationCount++;

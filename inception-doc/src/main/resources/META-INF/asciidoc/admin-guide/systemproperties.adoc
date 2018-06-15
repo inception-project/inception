@@ -24,10 +24,10 @@
 | Default
 | Example
 
-| webanno.home
-| WebAnno home folder
-| ~/.webanno
-| /srv/webanno
+| inception.home
+| INCEpTION home folder
+| ~/.inception
+| /srv/inception
 
 | javamelody.disabled
 | Disable JavaMelody

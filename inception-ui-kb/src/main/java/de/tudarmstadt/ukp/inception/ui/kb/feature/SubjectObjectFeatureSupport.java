@@ -17,6 +17,12 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
+import static de.tudarmstadt.ukp.inception.ui.kb.feature.FactLinkingConstants.OBJECT_LINK;
+import static de.tudarmstadt.ukp.inception.ui.kb.feature.FactLinkingConstants.OBJECT_ROLE;
+import static de.tudarmstadt.ukp.inception.ui.kb.feature.FactLinkingConstants.QUALIFIER_LINK;
+import static de.tudarmstadt.ukp.inception.ui.kb.feature.FactLinkingConstants.SUBJECT_LINK;
+import static de.tudarmstadt.ukp.inception.ui.kb.feature.FactLinkingConstants.SUBJECT_ROLE;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -53,12 +59,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 public class SubjectObjectFeatureSupport
     implements FeatureSupport<Void>
 {
-    private static final String SUBJECT_LINK = "webanno.custom.FactSubjectLink";
-    private static final String OBJECT_LINK = "webanno.custom.FactObjectLink";
-    private static final String MODIFIER_LINK = "webanno.custom.FactModifierLink";
-    private static final String SUBJECT_ROLE = "subject";
-    private static final String OBJECT_ROLE = "object";
-
     private String featureSupportId;
 
     @Override
@@ -89,7 +89,7 @@ public class SubjectObjectFeatureSupport
                 switch (annotationFeature.getLinkTypeName()) {
                 case SUBJECT_LINK: // fall-through
                 case OBJECT_LINK: // fall-through
-                case MODIFIER_LINK:
+                case QUALIFIER_LINK:
                     return true;
                 default:
                     return false;
@@ -125,10 +125,10 @@ public class SubjectObjectFeatureSupport
                     editor = new SubjectObjectFeatureEditor(aId, aOwner, aHandler, aStateModel,
                         aFeatureStateModel, OBJECT_ROLE);
                     break;
-//                case MODIFIER_LINK:
-//                    editor = new ModifierFeatureEditor(aId, aOwner, aHandler, aStateModel,
-//                        aFeatureStateModel);
-//                    break;
+                case QUALIFIER_LINK:
+                    editor = new QualifierFeatureEditor(aId, aOwner, aHandler, aStateModel,
+                        aFeatureStateModel);
+                    break;
                 default:
                     throw unsupportedLinkModeException(featureState.feature);
                 }
@@ -161,19 +161,44 @@ public class SubjectObjectFeatureSupport
     }
 
     @Override
-    public <T> T getFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
+    public List<LinkWithRoleModel> getFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
     {
-        // Get type and features - we need them later in the loop
         Feature linkFeature = aFS.getType().getFeatureByBaseName(aFeature.getName());
-        Type linkType = aFS.getCAS().getTypeSystem().getType(aFeature.getLinkTypeName());
-        Feature roleFeat = linkType.getFeatureByBaseName(aFeature
-            .getLinkTypeRoleFeatureName());
-        Feature targetFeat = linkType.getFeatureByBaseName(aFeature
-            .getLinkTypeTargetFeatureName());
+        return wrapFeatureValue(aFeature, aFS.getCAS(), aFS.getFeatureValue(linkFeature));
+    }
+    
+    @Override
+    public List<LinkWithRoleModel> unwrapFeatureValue(AnnotationFeature aFeature, CAS aCAS,
+            Object aValue)
+    {
+        if (aValue instanceof List) {
+            // This is not actually implemented because the setFeatureValue knows how to deal with
+            // slot features. This only needs to be implemented when WebAnnoCasUtil.setLinkFeature
+            // is moved into the slot feature support.
+            return (List<LinkWithRoleModel>) aValue;
+        }
+        else if (aValue == null) {
+            return null;
+        }
+        else {
+            throw new IllegalArgumentException(
+                    "Unable to handle value [" + aValue + "] of type [" + aValue.getClass() + "]");
+        }
+    }
+    
+    @Override
+    public List<LinkWithRoleModel> wrapFeatureValue(AnnotationFeature aFeature, CAS aCAS,
+            Object aValue)
+    {
+        if (aValue instanceof ArrayFS) {
+            ArrayFS array = (ArrayFS) aValue;
 
-        List<LinkWithRoleModel> links = new ArrayList<>();
-        ArrayFS array = (ArrayFS) aFS.getFeatureValue(linkFeature);
-        if (array != null) {
+            Type linkType = aCAS.getTypeSystem().getType(aFeature.getLinkTypeName());
+            Feature roleFeat = linkType.getFeatureByBaseName(aFeature.getLinkTypeRoleFeatureName());
+            Feature targetFeat = linkType
+                    .getFeatureByBaseName(aFeature.getLinkTypeTargetFeatureName());
+
+            List<LinkWithRoleModel> links = new ArrayList<>();
             for (FeatureStructure link : array.toArray()) {
                 LinkWithRoleModel m = new LinkWithRoleModel();
                 m.role = link.getStringValue(roleFeat);
@@ -182,8 +207,15 @@ public class SubjectObjectFeatureSupport
                     .getCoveredText();
                 links.add(m);
             }
+            
+            return links;
         }
-        return (T) links;
+        else if (aValue == null ) {
+            return new ArrayList<>();
+        }
+        else {
+            throw new IllegalArgumentException(
+                    "Unable to handle value [" + aValue + "] of type [" + aValue.getClass() + "]");
+        }
     }
-
 }

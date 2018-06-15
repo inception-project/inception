@@ -17,8 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.conceptlinking.util;
 
-import java.util.List;
-
+import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
@@ -43,26 +42,44 @@ public class QueryUtil
     private static final String STATEMENTS = "<http://wikidata.org/statements>";
     private static final String TERMS = "<http://wikidata.org/terms>";
 
-    /**
+    /*
      * instance of this page are about some Wikimedia-only content and should not refer to external
      * World entities
      */
     private static final String WIKIMEDIA_INTERNAL = "e:Q17442446";
 
+    /*
+     * page in various non-article namespaces on a Wikimedia project
+     */
+    private static final String WIKIMEDIA_PROJECT_PAGE = "e:Q14204246";
+
+    private static final String WIKIMEDIA_DISAMBIGUATION_PAGE = "e:Q4167410";
+
+    private static final String WIKIMEDIA_CATEGORY = "e:Q4167836";
+
+    /*
+     * page of a Wikimedia project with a list of something
+     */
+    private static final String WIKIMEDIA_LIST_ARTICLE = "e:Q13406463";
+
+    private static final String WIKIMEDIA_TEMPLATE = "e:Q11266439";
+
+    private static final String WIKIMEDIA_NEWS_ARTICLE = "e:Q17633526";
+
+    private static final String WIKIMEDIA_NAVIGATIONAL_TEMPLATE = "e:Q11753321";
     /**
      *
      * @param tokens the words spanned by the mention
      * @param limit maximum number of results
      * @return a query to retrieve candidate entities
      */
-    public static TupleQuery generateCandidateQuery(RepositoryConnection conn, List<String>
-        tokens, int limit)
+    public static TupleQuery generateCandidateQuery(RepositoryConnection conn, String tokens,
+        int limit, IRI aDescriptionIri)
     {
-
         String query = String.join("\n",
             "DEFINE input:inference 'instances'",
             SPARQL_PREFIX,
-            "SELECT DISTINCT ?e2 ?altLabel ?label WHERE",
+            "SELECT DISTINCT ?e2 ?altLabel ?label ?description WHERE",
             "{",
             "  {",
             "    {",
@@ -71,13 +88,22 @@ public class QueryUtil
             "      {",
             "        ?e2 ?labelpredicate ?altLabel.",
             "        ?altLabel bif:contains '?entityLabel'. ",
+            "        OPTIONAL",
+            "        {",
+            "          ?e2 ?descriptionIri ?description.",
+            "          FILTER ( lang(?description) = \"en\" )",
+            "        }",
             "      }",
             "    }",
             "  }",
             "  FILTER EXISTS { GRAPH " + STATEMENTS + " { ?e2 ?p ?v }}",
             "  FILTER NOT EXISTS ",
             "  {",
-            "    VALUES ?topic {" + WIKIMEDIA_INTERNAL + "}",
+            "    VALUES ?topic {" + String.join(" ", WIKIMEDIA_INTERNAL,
+                WIKIMEDIA_PROJECT_PAGE, WIKIMEDIA_CATEGORY, WIKIMEDIA_DISAMBIGUATION_PAGE,
+                WIKIMEDIA_LIST_ARTICLE, WIKIMEDIA_TEMPLATE, WIKIMEDIA_NEWS_ARTICLE,
+                WIKIMEDIA_NAVIGATIONAL_TEMPLATE) +
+                "}",
             "    GRAPH " + INSTANCES + " {?e2 rdf:type ?topic}",
             "  }",
             "  BIND (STRLEN(?altLabel) as ?len)",
@@ -93,12 +119,13 @@ public class QueryUtil
 
         TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, query);
         tupleQuery.setBinding("entityLabel", tokensJoined);
+        tupleQuery.setBinding("descriptionIri", aDescriptionIri);
         return tupleQuery;
     }
 
     /**
      *
-     * @param wikidataId wikidataId
+     * @param wikidataId wikidataId, e.g. "Q3"
      * @param limit maximum number of results
      * @return a query to retrieve the semantic signature
      */
@@ -106,11 +133,10 @@ public class QueryUtil
         wikidataId, int limit)
     {
         ValueFactory vf = SimpleValueFactory.getInstance();
-        Literal id = vf.createLiteral("e:" + wikidataId);
-
+        IRI iri = vf.createIRI("http://www.wikidata.org/entity/" + wikidataId);
         String query = String.join("\n",
             SPARQL_PREFIX,
-            "SELECT DISTINCT ?label ?p ?e1 WHERE ",
+            "SELECT DISTINCT ?label ?p WHERE ",
             "  {",
             "    {",
             "      {",
@@ -131,8 +157,23 @@ public class QueryUtil
             " LIMIT " + limit);
 
         TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, query);
-        tupleQuery.setBinding("e2", id);
+        tupleQuery.setBinding("e2", iri);
         return tupleQuery;
     }
 
+    public static TupleQuery getDescription (RepositoryConnection conn, String IRI)
+    {
+        ValueFactory vf = SimpleValueFactory.getInstance();
+
+        String query = String.join("\n",
+            "SELECT ?itemDescription",
+            "WHERE {",
+            "  VALUES (?item) {( ?e )}",
+            "  SERVICE wikibase:label { bd:serviceParam wikibase:language \"en\"",
+            "  }",
+            "}");
+        TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, query);
+        tupleQuery.setBinding("e", vf.createIRI(IRI));
+        return tupleQuery;
+    }
 }

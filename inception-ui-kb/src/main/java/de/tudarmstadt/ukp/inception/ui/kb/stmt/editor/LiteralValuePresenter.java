@@ -26,43 +26,49 @@ import org.cyberborean.rdfbeans.datatype.DatatypeMapper;
 import org.cyberborean.rdfbeans.datatype.DefaultDatatypeMapper;
 import org.eclipse.rdf4j.model.Literal;
 
-public class LiteralValuePresenter extends Panel {
-
+public class LiteralValuePresenter
+    extends Panel
+    implements ValuePresenter<Literal>
+{
     private static final long serialVersionUID = -6774637988828817203L;
-    
+
     private IModel<Literal> model;
     private IModel<String> value;
     private IModel<String> language;
 
-    public LiteralValuePresenter(String id, IModel<Literal> model) {
+    public LiteralValuePresenter(String id, IModel<Literal> model)
+    {
         super(id, model);
-        
+
         this.model = model;
-        
+
         value = Model.of();
         language = Model.of();
-        
+
         add(new Label("value", value));
-        add(new Label("language", language) {
+        add(new Label("language", language)
+        {
             private static final long serialVersionUID = 3436068825093393740L;
 
             @Override
-            protected void onConfigure() {
+            protected void onConfigure()
+            {
                 super.onConfigure();
                 String language = (String) this.getDefaultModelObject();
                 setVisible(StringUtils.isNotEmpty(language));
             }
         });
     }
-    
+
     @Override
-    protected void onBeforeRender() {
+    protected void onBeforeRender()
+    {
         Literal literal = this.model.getObject();
-        
-        DatatypeMapper mapper = new DefaultDatatypeMapper();        
+
+        DatatypeMapper mapper = new DefaultDatatypeMapper();
         value.setObject(mapper.getJavaObject(literal).toString());
         language.setObject(literal.getLanguage().orElse(null));
-        
+
         super.onBeforeRender();
     }
 }

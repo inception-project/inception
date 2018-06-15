@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.ner;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.classificationtool.ClassificationTool;
+import de.tudarmstadt.ukp.inception.recommendation.api.ClassificationTool;
 import de.tudarmstadt.ukp.inception.recommendation.imls.core.loader.ner.NerAnnotationObjectLoader;
 import opennlp.tools.util.TrainingParameters;
 

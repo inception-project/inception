@@ -33,6 +33,9 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.eclipse.rdf4j.query.QueryEvaluationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormSubmittingBehavior;
@@ -45,10 +48,10 @@ import de.tudarmstadt.ukp.inception.kb.graph.RdfUtils;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxConceptSelectionEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxNewConceptEvent;
-import de.tudarmstadt.ukp.inception.ui.kb.util.WriteProtectionBehavior;
 
 public class ConceptListPanel extends Panel {
     private static final long serialVersionUID = -4032884234215283745L;
+    private static final Logger LOG = LoggerFactory.getLogger(ConceptListPanel.class);
     
     private static final int LIST_MAX_ROWS = 30;
 
@@ -107,7 +110,7 @@ public class ConceptListPanel extends Panel {
     private void actionPreferenceChanged(AjaxRequestTarget aTarget) {
         if (!preferences.getObject().showAllConcepts && selectedConcept.getObject() != null
                 && RdfUtils.isFromImplicitNamespace(selectedConcept.getObject())) {
-            send(getPage(), Broadcast.BREADTH, new AjaxConceptSelectionEvent(aTarget, null));
+            send(getPage(), Broadcast.BREADTH, new AjaxConceptSelectionEvent(aTarget, null, true));
         } else {
             aTarget.add(this);
         }
@@ -116,9 +119,15 @@ public class ConceptListPanel extends Panel {
     private List<KBHandle> getConcepts() {
         if (isVisibleInHierarchy()) {
             Preferences prefs = preferences.getObject();
-            List<KBHandle> statements = kbService.listConcepts(kbModel.getObject(),
+            try {
+                return kbService.listConcepts(kbModel.getObject(),
                     prefs.showAllConcepts);
-            return statements;
+            }
+            catch (QueryEvaluationException e) {
+                error("Unable to list concepts: " + e.getLocalizedMessage());
+                LOG.error("Unable to list concepts.",e);
+                return Collections.emptyList();
+            }
         } else {
             return Collections.emptyList();
         }

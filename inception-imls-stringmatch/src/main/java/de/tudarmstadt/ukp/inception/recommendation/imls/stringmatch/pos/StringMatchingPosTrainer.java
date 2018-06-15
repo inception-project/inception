@@ -29,9 +29,9 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.inception.recommendation.imls.conf.ClassifierConfiguration;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.AnnotationObject;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.trainer.Trainer;
+import de.tudarmstadt.ukp.inception.recommendation.api.ClassifierConfiguration;
+import de.tudarmstadt.ukp.inception.recommendation.api.Trainer;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
 import de.tudarmstadt.ukp.inception.recommendation.imls.util.ListUtil;
 
 /** 
@@ -61,9 +61,9 @@ public class StringMatchingPosTrainer
 
         List<AnnotationObject> flatTrainingsData = ListUtil.flattenList(trainingDataIncrement);
         flatTrainingsData.forEach(item -> {
-            if (item.getAnnotation() != null && trainedModel.get(item.getCoveredText()) == null) {
+            if (item.getLabel() != null && trainedModel.get(item.getCoveredText()) == null) {
                 try {
-                    trainedModel.put(item.getCoveredText(), item.getAnnotation());
+                    trainedModel.put(item.getCoveredText(), item.getLabel());
                 }
                 catch (Throwable t) {
                     log.error("Cannot add annotation to the training model.", t);

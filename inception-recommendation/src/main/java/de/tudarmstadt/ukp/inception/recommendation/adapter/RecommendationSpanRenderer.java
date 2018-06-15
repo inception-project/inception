@@ -17,10 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.adapter;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -28,8 +29,10 @@ import java.util.stream.Collectors;
 
 import org.apache.uima.jcas.JCas;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VComment;
@@ -38,16 +41,17 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocumen
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VRange;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.inception.recommendation.RecommendationEditorExtension;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.AnnotationObject;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.Offset;
-import de.tudarmstadt.ukp.inception.recommendation.model.LearningRecord;
-import de.tudarmstadt.ukp.inception.recommendation.model.LearningRecordUserAction;
-import de.tudarmstadt.ukp.inception.recommendation.model.Predictions;
-import de.tudarmstadt.ukp.inception.recommendation.service.LearningRecordService;
-import de.tudarmstadt.ukp.inception.recommendation.service.RecommendationService;
+import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
+import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 
 /**
  * Render spans.
@@ -77,8 +81,9 @@ public class RecommendationSpanRenderer
      */
     @Override
     public void render(JCas aJcas, VDocument vdoc, AnnotatorState aState,
-            ColoringStrategy aColoringStrategy, RecommendationService recommendationService,
-            LearningRecordService learningRecordService, AnnotationLayer layer)
+        ColoringStrategy aColoringStrategy, AnnotationLayer layer,
+        RecommendationService recommendationService, LearningRecordService learningRecordService,
+        AnnotationSchemaService aAnnotationService, FeatureSupportRegistry aFsRegistry)
     {
         if (aJcas == null || recommendationService == null) {
             return;
@@ -94,16 +99,13 @@ public class RecommendationSpanRenderer
         }
         
         // TODO #176 use the document Id once it it available in the CAS
-        List<List<AnnotationObject>> recommendations = 
-                model.getPredictions(DocumentMetaData.get(aJcas).getDocumentTitle(), layer,
-                        windowBegin, windowEnd, aJcas);
+        List<List<AnnotationObject>> recommendations = model
+            .getPredictions(DocumentMetaData.get(aJcas).getDocumentTitle(), layer,
+                windowBegin, windowEnd, aJcas, false);
         String color = aColoringStrategy.getColor(null, null);
         String bratTypeName = TypeUtil.getUiTypeName(typeAdapter);
-        
-        List<VSpan> vspansWithoutRecommendations = new LinkedList<>();
-        for (VSpan v: vdoc.spans(layer.getId())) {
-            vspansWithoutRecommendations.add(v);
-        }
+
+        List<VSpan> vspansWithoutRecommendations = new ArrayList<>(vdoc.spans(layer.getId()));
         
         List<LearningRecord> recordedAnnotations = learningRecordService
                 .getAllRecordsByDocumentAndUserAndLayer(aState.getDocument(),
@@ -114,35 +116,33 @@ public class RecommendationSpanRenderer
  
             // For recommendations with the same label by the same classifier,
             // show only the confidence of the highest one
-            for (AnnotationObject ao: token) {          
-                if (ao.getAnnotation() != null) {       
-                    if (isOverlapping(vspansWithoutRecommendations, ao.getOffset(), windowBegin)) {
-                        break;
-                    }
-                    
-                    if (isRejected(recordedAnnotations, ao)) {
-                        continue;
-                    }
-                    
-                    if (!labelMap.containsKey(ao.getAnnotation())
-                            || !labelMap.get(ao.getAnnotation())
-                                    .containsKey(ao.getRecommenderId())
-                            || labelMap.get(ao.getAnnotation()).get(ao.getRecommenderId())
-                                    .getConfidence() < ao.getConfidence()) {
+            for (AnnotationObject ao: token) {
+                boolean hasNoAnnotation = ao.getLabel() == null;
+                boolean isOverlappingForFeature = isOverlappingForFeature(
+                    vspansWithoutRecommendations, ao.getOffset(), windowBegin, ao.getFeature());
+                boolean isRejected = isRejected(recordedAnnotations, ao);
 
-                        Map<Long, AnnotationObject> confidencePerClassifier;
-                        if (labelMap.get(ao.getAnnotation()) == null) {
-                            confidencePerClassifier = new HashMap<>();
-                        } else {
-                            confidencePerClassifier = labelMap.get(ao.getAnnotation());
-                        }
-                        
-                        confidencePerClassifier.put(ao.getRecommenderId(), ao);
-                        labelMap.put(ao.getAnnotation(), confidencePerClassifier);
+                if (hasNoAnnotation || isOverlappingForFeature || isRejected) {
+                    continue;
+                }
+
+                if (!labelMap.containsKey(ao.getLabel())
+                        || !labelMap.get(ao.getLabel())
+                                .containsKey(ao.getRecommenderId())
+                        || labelMap.get(ao.getLabel()).get(ao.getRecommenderId())
+                                .getConfidence() < ao.getConfidence()) {
+
+                    Map<Long, AnnotationObject> confidencePerClassifier;
+                    if (labelMap.get(ao.getLabel()) == null) {
+                        confidencePerClassifier = new HashMap<>();
+                    } else {
+                        confidencePerClassifier = labelMap.get(ao.getLabel());
                     }
+
+                    confidencePerClassifier.put(ao.getRecommenderId(), ao);
+                    labelMap.put(ao.getLabel(), confidencePerClassifier);
                 }
             }
-            
             
             // Determine the maximum confidence for per Label
             Map<String, Double> maxConfidencePerLabel = new HashMap<>();
@@ -160,31 +160,42 @@ public class RecommendationSpanRenderer
             List<String> filtered = maxConfidencePerLabel.entrySet().stream()
                     .sorted((e1, e2) -> Double.compare(e2.getValue(), e1.getValue()))
                     .limit(recommendationService.getMaxSuggestions(aState.getUser()))
-                    .map(e -> e.getKey()).collect(Collectors.toList());
+                    .map(Entry::getKey).collect(Collectors.toList());
 
-            // Render annotations
+            // Render annotations for each label
             for (String label : labelMap.keySet()) {
                 if (!filtered.contains(label)) {
                     continue;
                 }
 
-                Map<Long, AnnotationObject> confidencePerClassifier = labelMap.get(label);
-                
                 // Create VID using the recommendation with the lowest recommendationId
-                AnnotationObject aPrediction = token.stream()
-                        .filter(p -> p.getAnnotation().equals(label))
-                        .max((p1, p2) -> Integer.compare(p1.getId(), p2.getId())).get();
+                AnnotationObject prediction = token.stream()
+                        .filter(p -> p.getLabel().equals(label))
+                        .max(Comparator.comparingInt(AnnotationObject::getId)).orElse(null);
+
+                if (prediction == null) {
+                    continue;
+                }
+
                 VID vid = new VID(RecommendationEditorExtension.BEAN_NAME, layer.getId(),
-                        (int) aPrediction.getRecommenderId(), aPrediction.getId(), VID.NONE,
+                        (int) prediction.getRecommenderId(), prediction.getId(), VID.NONE,
                         VID.NONE);
                 
                 boolean first = true;
+                Map<Long, AnnotationObject> confidencePerClassifier = labelMap.get(label);
                 for (Long recommenderId: confidencePerClassifier.keySet()) {
                     AnnotationObject ao = confidencePerClassifier.get(recommenderId);
 
+                    // Only necessary for creating the first
                     if (first) {
-                        HashMap<String, String> featureAnnotation = new HashMap<String, String>();
-                        featureAnnotation.put(ao.getFeature(), ao.getAnnotation());
+                        AnnotationFeature feature = aAnnotationService
+                            .getFeature(ao.getFeature(), layer);
+                        // Retrieve the UI display label for the given feature value
+                        String annotation = aFsRegistry.getFeatureSupport(feature)
+                            .renderFeatureValue(feature, ao.getLabel());
+
+                        Map<String, String> featureAnnotation = new HashMap<>();
+                        featureAnnotation.put(ao.getFeature(), annotation);
 
                         VSpan v = new VSpan(layer, vid, bratTypeName,
                                 new VRange(ao.getOffset().getBeginCharacter() - windowBegin,
@@ -193,11 +204,17 @@ public class RecommendationSpanRenderer
                         vdoc.add(v);
                         first = false;
                     }
-                    vdoc.add(new VComment(vid, VCommentType.INFO, ao.getClassifier()));
-                    vdoc.add(new VComment(vid, VCommentType.INFO,
-                            "Confidence: " + String.format("%.2f", ao.getConfidence())));
+                    vdoc.add(new VComment(vid, VCommentType.INFO, ao.getSource()));
+                    if (ao.getConfidence() != -1) {
+                        vdoc.add(new VComment(vid, VCommentType.INFO,
+                            String.format("Confidence: %.2f", ao.getConfidence())));
+                    }
+                    if (ao.getUiLabel() != null && !ao.getUiLabel().isEmpty()) {
+                        vdoc.add(new VComment(vid, VCommentType.INFO,
+                            "Description: " + ao.getUiLabel()));
+                    }
                 }
-            }   
+            }
         }
     }
     
@@ -205,22 +222,29 @@ public class RecommendationSpanRenderer
      * Check if there is already an existing annotation overlapping the prediction
      * 
      */
-    public boolean isOverlapping (Collection<VSpan> vspans, Offset ao, int windowBegin) {
+    private boolean isOverlappingForFeature(Collection<VSpan> vspans, Offset recOffset,
+        int windowBegin, String feature)
+    {
+
         for (VSpan v : vspans) {
             for (VRange o : v.getOffsets()) {
-                if ((o.getBegin() <= ao.getBeginCharacter() - windowBegin)
-                        && (o.getEnd() >= ao.getEndCharacter() - windowBegin)
+                if ((o.getBegin() <= recOffset.getBeginCharacter() - windowBegin)
+                        && (o.getEnd() >= recOffset.getEndCharacter() - windowBegin)
                         
-                    || (o.getBegin() >= ao.getBeginCharacter() - windowBegin)
-                        && (o.getEnd() <= ao.getEndCharacter() - windowBegin)
+                    || (o.getBegin() >= recOffset.getBeginCharacter() - windowBegin)
+                        && (o.getEnd() <= recOffset.getEndCharacter() - windowBegin)
                         
-                    || (o.getBegin() >= ao.getBeginCharacter() - windowBegin)
-                        && (o.getEnd() >= ao.getEndCharacter() - windowBegin) 
-                        && (o.getBegin() < ao.getEndCharacter() - windowBegin)
+                    || (o.getBegin() >= recOffset.getBeginCharacter() - windowBegin)
+                        && (o.getEnd() >= recOffset.getEndCharacter() - windowBegin)
+                        && (o.getBegin() < recOffset.getEndCharacter() - windowBegin)
                         
-                    || (o.getBegin() <= ao.getBeginCharacter() - windowBegin)
-                        && (o.getEnd() <= ao.getEndCharacter() - windowBegin)
-                        && (o.getEnd() > ao.getBeginCharacter() - windowBegin)) {
+                    || (o.getBegin() <= recOffset.getBeginCharacter() - windowBegin)
+                        && (o.getEnd() <= recOffset.getEndCharacter() - windowBegin)
+                        && (o.getEnd() > recOffset.getBeginCharacter() - windowBegin)) {
+                    if (v.getFeatures().get(feature) == null || v.getFeatures().get(feature)
+                        .isEmpty()) {
+                        continue;
+                    }
                     return true;
                 }
             }
@@ -228,12 +252,12 @@ public class RecommendationSpanRenderer
         return false;
     }
     
-    public boolean isRejected(List<LearningRecord> recordedRecommendations, AnnotationObject ao)
+    private boolean isRejected(List<LearningRecord> recordedRecommendations, AnnotationObject ao)
     {
         for (LearningRecord record : recordedRecommendations) {
             if (record.getOffsetCharacterBegin() == ao.getOffset().getBeginCharacter()
                     && record.getOffsetCharacterEnd() == ao.getOffset().getEndCharacter()
-                    && record.getAnnotation().equals(ao.getAnnotation())
+                    && record.getAnnotation().equals(ao.getLabel())
                     && record.getUserAction().equals(LearningRecordUserAction.REJECTED)) {
                 return true;
             }

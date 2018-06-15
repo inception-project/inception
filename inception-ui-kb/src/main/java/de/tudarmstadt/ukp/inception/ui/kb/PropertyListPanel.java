@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.ui.kb;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -33,6 +34,9 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.eclipse.rdf4j.query.QueryEvaluationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormSubmittingBehavior;
@@ -45,11 +49,11 @@ import de.tudarmstadt.ukp.inception.kb.graph.RdfUtils;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxNewPropertyEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxPropertySelectionEvent;
-import de.tudarmstadt.ukp.inception.ui.kb.util.WriteProtectionBehavior;
 
 public class PropertyListPanel extends Panel {
     
     private static final long serialVersionUID = 4129861816335804882L;
+    private static final Logger LOG = LoggerFactory.getLogger(PropertyListPanel.class);
 
     private @SpringBean KnowledgeBaseService kbService;
 
@@ -66,12 +70,13 @@ public class PropertyListPanel extends Panel {
         kbModel = aKbModel;
         preferences = Model.of(new Preferences());
 
-        OverviewListChoice<KBHandle> overviewList = new OverviewListChoice<>("properties");
+        OverviewListChoice<KBHandle> overviewList = new OverviewListChoice<KBHandle>("properties");
         overviewList.setChoiceRenderer(new ChoiceRenderer<>("uiLabel"));
         overviewList.setModel(selectedProperty);
         overviewList.setChoices(LambdaModel.of(this::getProperties));
         overviewList.add(new LambdaAjaxFormComponentUpdatingBehavior("change",
                 this::actionSelectionChanged));
+        
         add(overviewList);
 
         add(new Label("count", LambdaModel.of(() -> overviewList.getChoices().size())));
@@ -118,7 +123,7 @@ public class PropertyListPanel extends Panel {
     private void actionPreferenceChanged(AjaxRequestTarget aTarget) {
         if (!preferences.getObject().showAllProperties && selectedProperty.getObject() != null
                 && RdfUtils.isFromImplicitNamespace(selectedProperty.getObject())) {
-            send(getPage(), Broadcast.BREADTH, new AjaxPropertySelectionEvent(aTarget, null));
+            send(getPage(), Broadcast.BREADTH, new AjaxPropertySelectionEvent(aTarget, null, true));
         } else {
             aTarget.add(this);
         }
@@ -127,9 +132,20 @@ public class PropertyListPanel extends Panel {
     private List<KBHandle> getProperties() {
         if (isVisibleInHierarchy()) {
             Preferences prefs = preferences.getObject();
-            List<KBHandle> statements = kbService.listProperties(kbModel.getObject(),
-                    prefs.showAllProperties);
-            return statements;
+            List<KBHandle> statements = new ArrayList<>();
+            try {
+                statements = kbService.listProperties(kbModel.getObject(),
+                        prefs.showAllProperties);
+                return statements;
+            }
+            catch (QueryEvaluationException e) {
+                //FIXME when this error(...) is called, a -org.apache.wicket.WicketRuntimeException:
+                //Cannot modify component hierarchy after render phase has started- is thrown.
+                //error("Unable to list properties: " + e.getLocalizedMessage());
+                LOG.debug("Unable to list properties.", e);
+                statements.add(new KBHandle("Unable to list properties."));
+                return statements;
+            }
         } else {
             return Collections.emptyList();
         }

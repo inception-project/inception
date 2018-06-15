@@ -19,10 +19,7 @@ package de.tudarmstadt.ukp.inception.ui.kb;
 
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
-import java.util.Arrays;
 import java.util.Comparator;
-import java.util.HashSet;
-import java.util.Set;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.event.Broadcast;
@@ -30,6 +27,7 @@ import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
+import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
@@ -41,9 +39,6 @@ import de.tudarmstadt.ukp.inception.ui.kb.stmt.StatementGroupBean;
 public class ConceptInfoPanel extends AbstractInfoPanel<KBConcept> {
 
     private static final long serialVersionUID = -8328024977043837787L;
-    
-    private static final Set<String> IMPORTANT_CONCEPT_URIS = new HashSet<>(
-            Arrays.asList("http://www.w3.org/2000/01/rdf-schema#subClassOf"));
     
     private @SpringBean KnowledgeBaseService kbService;
 
@@ -60,7 +55,7 @@ public class ConceptInfoPanel extends AbstractInfoPanel<KBConcept> {
         KBHandle handle = kbService.createConcept(kbModel.getObject(), concept);
 
         // select newly created property right away to show the statements
-        send(getPage(), Broadcast.BREADTH, new AjaxConceptSelectionEvent(aTarget, handle));
+        send(getPage(), Broadcast.BREADTH, new AjaxConceptSelectionEvent(aTarget, handle, true));
     }
 
     @Override
@@ -69,7 +64,7 @@ public class ConceptInfoPanel extends AbstractInfoPanel<KBConcept> {
         kbObjectModel.setObject(null);
 
         // send deselection event
-        send(getPage(), Broadcast.BREADTH, new AjaxConceptSelectionEvent(aTarget, null));
+        send(getPage(), Broadcast.BREADTH, new AjaxConceptSelectionEvent(aTarget, null, true));
     }
 
     @Override
@@ -98,6 +93,6 @@ public class ConceptInfoPanel extends AbstractInfoPanel<KBConcept> {
     @Override
     protected Comparator<StatementGroupBean> getStatementGroupComparator() {
         return new ImportantStatementComparator(
-            sgb -> IMPORTANT_CONCEPT_URIS.contains(sgb.getProperty().getIdentifier()));
+            sgb -> IriConstants.IMPORTANT_CONCEPT_URIS.contains(sgb.getProperty().getIdentifier()));
     }
 }
