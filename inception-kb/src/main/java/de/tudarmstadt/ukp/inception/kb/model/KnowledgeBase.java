@@ -21,9 +21,11 @@ import static de.tudarmstadt.ukp.inception.kb.reification.Reification.NONE;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 import java.io.Serializable;
+import java.util.List;
 import java.util.Objects;
 
 import javax.persistence.Column;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -140,6 +142,12 @@ public class KnowledgeBase
      */
     @Column(nullable = false)
     private String basePrefix = IriConstants.INCEPTION_NAMESPACE;
+    
+    /**
+     * A List of explicitly defined root concepts that can be used if auto detection takes too long
+     */
+    //@ElementCollection
+    //private List<IRI> explicitlyDefinedRootConcepts;
     
     public String getRepositoryId() {
         return repositoryId;
@@ -296,7 +304,17 @@ public class KnowledgeBase
     {
         basePrefix = aBasePrefix;
     }
+    /*
+    public List<IRI> getExplicitlyDefinedRootConcepts()
+    {
+        return explicitlyDefinedRootConcepts;
+    }
 
+    public void setExplicitlyDefinedRootConcepts(List<IRI> aExplicitlyDefinedRootConcepts)
+    {
+        explicitlyDefinedRootConcepts = aExplicitlyDefinedRootConcepts;
+    }
+    */
     @Override
     public String toString()
     {
