@@ -17,20 +17,12 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.setFeature;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.Feature;
-import org.apache.uima.cas.FeatureStructure;
-import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.wicket.MarkupContainer;
@@ -46,15 +38,11 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureType;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.FeatureEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
-import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 @Component
 public class PropertyFeatureSupport
@@ -124,54 +112,58 @@ public class PropertyFeatureSupport
     }
 
     @Override
-    public void setFeatureValue(JCas aJcas, AnnotationFeature aFeature, int aAddress,
-        Object aValue)
+    public String unwrapFeatureValue(AnnotationFeature aFeature, CAS aCAS, Object aValue)
     {
-        KBHandle kbProp = (KBHandle) aValue;
-        FeatureStructure fs = selectByAddr(aJcas, FeatureStructure.class, aAddress);
-        setFeature(fs, aFeature, kbProp != null ? kbProp.getIdentifier() : null);
+        // Normally, we get KBHandles back from the feature editors
+        if (aValue instanceof KBHandle) {
+            return ((KBHandle) aValue).getIdentifier();
+        }
+        // When used in a recommendation context, we might get the concept identifier as a string
+        // value.
+        else if (aValue instanceof String || aValue == null) {
+            return (String) aValue;
+        }
+        else {
+            throw new IllegalArgumentException(
+                    "Unable to handle value [" + aValue + "] of type [" + aValue.getClass() + "]");
+        }
     }
 
     @Override
-    public KBHandle getFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
+    public KBHandle wrapFeatureValue(AnnotationFeature aFeature, CAS aCAS, Object aValue)
     {
-        Feature feature = aFS.getType().getFeatureByBaseName(aFeature.getName());
-        final String effectiveType = CAS.TYPE_NAME_STRING;
-
-        // Sanity check
-        if (!Objects.equals(effectiveType, feature.getRange().getName())) {
-            throw new IllegalArgumentException(
-                "Actual feature type [" + feature.getRange().getName()
-                    + "] does not match expected feature type [" + effectiveType + "].");
+        if (aValue instanceof String) {
+            String identifier = (String) aValue;
+            return new KBHandle(identifier, renderFeatureValue(aFeature, identifier));
+//            Project project = aFeature.getProject();
+//            ConceptFeatureTraits traits = factService.getFeatureTraits(project);
+//            // Use the property from a particular knowledge base
+//            Optional<KBProperty> property = null;
+//            if (traits.getRepositoryId() != null) {
+//                property = kbService
+//                    .getKnowledgeBaseById(aFeature.getProject(), traits.getRepositoryId())
+//                    .flatMap(kb -> kbService.readProperty(kb, identifier));
+//            }
+//            // Use the property from any knowledge base (leave KB unselected)
+//            else {
+//                for (KnowledgeBase kb : kbService.getKnowledgeBases(project)) {
+//                    property = kbService.readProperty(kb, identifier);
+//                    if (property.isPresent()) {
+//                        break;
+//                    }
+//                }
+//            }
+//            return property.map(i -> KBHandle.of(i)).orElseThrow(NoSuchElementException::new);
         }
-
-        String value = (String) WebAnnoCasUtil.getFeature(aFS, aFeature.getName());
-        if (value != null) {
-            Project project = aFeature.getProject();
-            ConceptFeatureTraits traits = factService.getFeatureTraits(project);
-            // Use the property from a particular knowledge base
-            Optional<KBProperty> property = null;
-            if (traits.getRepositoryId() != null) {
-                property = kbService
-                    .getKnowledgeBaseById(aFeature.getProject(), traits.getRepositoryId())
-                    .flatMap(kb -> kbService.readProperty(kb, value));
-            }
-            // Use the property from any knowledge base (leave KB unselected)
-            else {
-                for (KnowledgeBase kb : kbService.getKnowledgeBases(project)) {
-                    property = kbService.readProperty(kb, value);
-                    if (property.isPresent()) {
-                        break;
-                    }
-                }
-            }
-            return property.map(i -> KBHandle.of(i)).orElseThrow(NoSuchElementException::new);
-        }
-        else {
+        else if (aValue == null ) {
             return null;
         }
+        else {
+            throw new IllegalArgumentException(
+                    "Unable to handle value [" + aValue + "] of type [" + aValue.getClass() + "]");
+        }
     }
-
+    
     @Override
     public FeatureEditor createEditor(String aId, MarkupContainer aOwner,
             AnnotationActionHandler aHandler, IModel<AnnotatorState> aStateModel,
@@ -204,6 +196,5 @@ public class PropertyFeatureSupport
     {
         aTD.addFeature(aFeature.getName(), "", CAS.TYPE_NAME_STRING);
     }
-
 }
 

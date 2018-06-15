@@ -41,8 +41,6 @@ import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
-import org.eclipse.rdf4j.model.vocabulary.RDF;
-import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.eclipse.rdf4j.query.Binding;
 import org.eclipse.rdf4j.query.BindingSet;
 import org.eclipse.rdf4j.query.QueryEvaluationException;
@@ -63,7 +61,6 @@ import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.RDFParseException;
 import org.eclipse.rdf4j.rio.RDFWriter;
 import org.eclipse.rdf4j.rio.Rio;
-import org.eclipse.rdf4j.sail.inferencer.fc.config.ForwardChainingRDFSInferencerConfig;
 import org.eclipse.rdf4j.sail.nativerdf.config.NativeStoreConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -210,8 +207,11 @@ public class KnowledgeBaseServiceImpl
     @Override
     public RepositoryImplConfig getNativeConfig()
     {
-        return new SailRepositoryConfig(
-            new ForwardChainingRDFSInferencerConfig(new NativeStoreConfig()));
+        // See #221 - Disabled because it is too slow during import
+        // return new SailRepositoryConfig(
+        //   new ForwardChainingRDFSInferencerConfig(new NativeStoreConfig()));
+        
+        return new SailRepositoryConfig(new NativeStoreConfig());
     }
 
     @Override
@@ -324,7 +324,7 @@ public class KnowledgeBaseServiceImpl
                     vf.createIRI(aIdentifier), kb.getTypeIri(), kb.getClassIri(), true)) {
                 if (stmts.hasNext()) {
                     Statement conceptStmt = stmts.next();
-                    KBConcept kbConcept = KBConcept.read(conn, conceptStmt);
+                    KBConcept kbConcept = KBConcept.read(conn, conceptStmt, kb);
                     return Optional.of(kbConcept);
                 }
                 else {
@@ -394,10 +394,10 @@ public class KnowledgeBaseServiceImpl
         return read(kb, (conn) -> {
             ValueFactory vf = conn.getValueFactory();
             try (RepositoryResult<Statement> stmts = RdfUtils.getStatements(conn,
-                    vf.createIRI(aIdentifier), kb.getTypeIri(), RDF.PROPERTY, true)) {
+                    vf.createIRI(aIdentifier), kb.getTypeIri(), kb.getPropertyTypeIri(), true)) {
                 if (stmts.hasNext()) {
                     Statement propStmt = stmts.next();
-                    KBProperty kbProp = KBProperty.read(conn, propStmt);
+                    KBProperty kbProp = KBProperty.read(conn, propStmt, kb);
                     return Optional.of(kbProp);
                 } else {
                     return Optional.empty();
@@ -429,7 +429,7 @@ public class KnowledgeBaseServiceImpl
     @Override
     public List<KBHandle> listProperties(KnowledgeBase kb, boolean aAll)
     {
-        return list(kb, RDF.PROPERTY, true, aAll);
+        return list(kb, kb.getPropertyTypeIri(), true, aAll);
     }
 
     @Override
@@ -480,7 +480,7 @@ public class KnowledgeBaseServiceImpl
                     true)) {
                 if (instanceStmts.hasNext()) {
                     Statement kbStmt = instanceStmts.next();
-                    KBInstance kbInst = KBInstance.read(conn, kbStmt);
+                    KBInstance kbInst = KBInstance.read(conn, kbStmt, kb);
                     return Optional.of(kbInst);
                 } else {
                     return Optional.empty();
@@ -578,7 +578,9 @@ public class KnowledgeBaseServiceImpl
     private String generateIdentifier(RepositoryConnection conn, KnowledgeBase kb)
     {
         ValueFactory vf = conn.getValueFactory();
-        return IriConstants.INCEPTION_NAMESPACE + vf.createBNode().getID();
+        // default value of basePrefix is IriConstants.INCEPTION_NAMESPACE
+        String basePrefix = kb.getBasePrefix();
+        return basePrefix + vf.createBNode().getID();
     }
 
     @Override
@@ -632,7 +634,7 @@ public class KnowledgeBaseServiceImpl
             TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
             tupleQuery.setBinding("pTYPE", kb.getTypeIri());
             tupleQuery.setBinding("oPROPERTY", aType);
-            tupleQuery.setBinding("pLABEL", RDFS.LABEL);
+            tupleQuery.setBinding("pLABEL", kb.getLabelIri());
             tupleQuery.setIncludeInferred(aIncludeInferred);
 
             return evaluateListQuery(tupleQuery, aAll);
@@ -663,7 +665,7 @@ public class KnowledgeBaseServiceImpl
             tupleQuery.setBinding("pTYPE", kb.getTypeIri());
             tupleQuery.setBinding("oCLASS", kb.getClassIri());
             tupleQuery.setBinding("pSUBCLASS", kb.getSubclassIri());
-            tupleQuery.setBinding("pLABEL", RDFS.LABEL);
+            tupleQuery.setBinding("pLABEL", kb.getLabelIri());
             tupleQuery.setIncludeInferred(false);
 
             return evaluateListQuery(tupleQuery, aAll);
@@ -714,7 +716,7 @@ public class KnowledgeBaseServiceImpl
             tupleQuery.setBinding("pTYPE", aKB.getTypeIri());
             tupleQuery.setBinding("oCLASS", aKB.getClassIri());
             tupleQuery.setBinding("pSUBCLASS", aKB.getSubclassIri());
-            tupleQuery.setBinding("pLABEL", RDFS.LABEL);
+            tupleQuery.setBinding("pLABEL", aKB.getLabelIri());
             tupleQuery.setIncludeInferred(false);
 
             return evaluateListQuery(tupleQuery, aAll);

@@ -193,20 +193,23 @@ public class CasUtil
             TokenObject tObj = sentence.get(i);
 
             if (indexAnnotations >= annotations.size()) {
-                result.add(new AnnotationObject(null, tObj, sentence, id, feature));
+                result.add(new AnnotationObject(tObj, id, feature));
                 continue;
             }
 
             AnnotationObject aObj = annotations.get(indexAnnotations);
 
             if (aObj.getOffset().equals(tObj.getOffset())) {
-                result.add(new AnnotationObject(aObj, id, feature));
+                AnnotationObject annotationObject = new AnnotationObject(aObj);
+                annotationObject.setId(id);
+                annotationObject.setFeature(feature);
+                result.add(annotationObject);
                 indexAnnotations++;
             }
             else {
                 // Since not all tokens in the sentence are annotated, 
                 // we need to add some AnnotationObjects with empty label in respective positions
-                result.add(new AnnotationObject(null, tObj, sentence, id, feature));
+                result.add(new AnnotationObject(tObj, id, feature));
             }
             id++;
         }
@@ -237,8 +240,9 @@ public class CasUtil
                 Offset offset = getTokenOffset(token, sentence);
                 TokenObject tObj = new TokenObject(offset, token.getCoveredText(),
                     documentURI, documentName, id);
-                result.add(
-                    new AnnotationObject(annotationLabel, tObj, sentence, id, feature.getName()));
+                AnnotationObject ao = new AnnotationObject(tObj, id, feature.getName());
+                ao.setLabel(annotationLabel);
+                result.add(ao);
                 id++;
             }
         }
@@ -274,7 +278,9 @@ public class CasUtil
                 Offset offset = getTokenOffset(token, sentence);
                 TokenObject tObj = new TokenObject(offset, token.getCoveredText(), 
                     documentURI, documentName, id);
-                result.add(new AnnotationObject(annotationLabel, tObj, sentence, id, feature));
+                AnnotationObject ao = new AnnotationObject(tObj, id, feature);
+                ao.setLabel(annotationLabel);
+                result.add(ao);
                 id++;
             }
         }
@@ -397,8 +403,7 @@ public class CasUtil
 
             for (int i = 0; i < sentence.size(); i++) {
                 T t = sentence.get(i);
-                annotations.add(new AnnotationObject(null, (TokenObject) t,
-                        (List<TokenObject>) sentence, id, feature, classifier));
+                annotations.add(new AnnotationObject(t, id, feature, classifier));
                 id++;
             }
 
@@ -467,7 +472,7 @@ public class CasUtil
                     tokens, documentURI, documentName, feature);
 
             List<AnnotationObject> completeSentence = getAnnotationsForCompleteSentence(tokens,
-                annotationObjects, feature.getName(), id);
+                annotationObjects, feature.getShortName(), id);
             result.add(completeSentence);
             id = id + completeSentence.size();
         }
@@ -499,8 +504,8 @@ public class CasUtil
                 Offset offset = getTokenOffset(token, sentence);
                 TokenObject tObj = new TokenObject(offset, token.getCoveredText(), documentURI,
                         documentName, id);
-                result.add(new AnnotationObject(annotationLabel, tObj, sentence, id,
-                        feature.getName()));
+                AnnotationObject ao = new AnnotationObject(tObj, id, feature.getName());
+                ao.setLabel(annotationLabel);
                 id++;
             }
         }

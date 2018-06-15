@@ -36,6 +36,7 @@ import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.string.Strings;
 import org.slf4j.Logger;
@@ -43,11 +44,13 @@ import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.JCasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAnnotationsEvent;
@@ -57,6 +60,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VTextMar
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
@@ -68,7 +73,6 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.event.AjaxAfterAnnotation
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.inception.active.learning.ActiveLearningService;
 import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningRecommendationEvent;
-import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningRejectRecommendationEvent;
 import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningSessionCompletedEvent;
 import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningSessionStartedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.RecommendationEditorExtension;
@@ -122,6 +126,8 @@ public class ActiveLearningSidebar
     private @SpringBean LearningRecordService learningRecordService;
     private @SpringBean DocumentService documentService;
     private @SpringBean ApplicationEventPublisherHolder applicationEventPublisherHolder;
+    private @SpringBean FeatureSupportRegistry fsRegistry;
+    private @SpringBean CasStorageService casStorageService;
 
     private IModel<AnnotationLayer> selectedLayer;
     private IModel<List<LearningRecord>> learningRecords;
@@ -136,11 +142,12 @@ public class ActiveLearningSidebar
     private AnnotationObject currentRecommendation;
     private RecommendationDifference currentDifference;
     private AnnotationPage annotationPage;
-    private Predictions predictionModel;
+    private Predictions model;
     private String vMarkerType = "";
     private VID highlightVID;
     private LearningRecord selectedRecord;
     private Date learnSkippedRecommendationTime;
+    private ConfirmationDialog confirmationDialog;
 
     public ActiveLearningSidebar(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, JCasProvider aJCasProvider,
@@ -158,6 +165,8 @@ public class ActiveLearningSidebar
         mainContainer.add(createRecommendationOperationForm());
         mainContainer.add(createLearningHistory());
         add(mainContainer);
+        confirmationDialog = new ConfirmationDialog("confirmationDialog");
+        add(confirmationDialog);
     }
 
     private Form<?> createSessionControlForm()
@@ -285,17 +294,17 @@ public class ActiveLearningSidebar
     {
         highlightRecommendation(aTarget, currentRecommendation.getOffset().getBeginCharacter(),
                 currentRecommendation.getOffset().getEndCharacter(),
-                currentRecommendation.getCoveredText(), currentRecommendation.getAnnotation());
+                currentRecommendation.getCoveredText(), currentRecommendation.getLabel());
     }
     
     private void highlightRecommendation(AjaxRequestTarget aTarget, int aBegin, int aEnd,
             String aText, String aRecommendation)
     {
         AnnotatorState annotatorState = ActiveLearningSidebar.this.getModelObject();
-        predictionModel = recommendationService.getPredictions(annotatorState.getUser(),
+        model = recommendationService.getPredictions(annotatorState.getUser(),
                 annotatorState.getProject());
-        if (predictionModel != null) {
-            Optional<AnnotationObject> aoForVID = predictionModel.getPrediction(aBegin, aEnd,
+        if (model != null) {
+            Optional<AnnotationObject> aoForVID = model.getPrediction(aBegin, aEnd,
                     aRecommendation);
             if (aoForVID.isPresent()) {
                 highlightVID = new VID(RecommendationEditorExtension.BEAN_NAME,
@@ -304,10 +313,11 @@ public class ActiveLearningSidebar
                 vMarkerType = ANNOTATION_MARKER;
             }
             else {
-                error("Recommendation [" + aText + "] as [" + aRecommendation
-                        + "] no longer exists");
+                String msg = String.format("Recommendation [%s] as [%s] no longer exists",
+                        aText, aRecommendation);
+                LOG.error(msg);
+                error(msg);
                 aTarget.addChildren(getPage(), IFeedback.class);
-                
             }
         }
     }
@@ -356,7 +366,7 @@ public class ActiveLearningSidebar
         
         recommendationForm.add(createRecommendationCoveredTextLink());
         recommendationForm.add(new Label(CID_RECOMMENDED_PREDITION, LambdaModel.of(() -> 
-                currentRecommendation != null ? currentRecommendation.getAnnotation() : null)));
+                currentRecommendation != null ? currentRecommendation.getLabel() : null)));
         recommendationForm.add(new Label(CID_RECOMMENDED_CONFIDENCE, LambdaModel.of(() -> 
                 currentRecommendation != null ? currentRecommendation.getConfidence() : 0.0)));
         recommendationForm.add(new Label(CID_RECOMMENDED_DIFFERENCE, LambdaModel.of(() -> 
@@ -427,7 +437,7 @@ public class ActiveLearningSidebar
         record.setOffsetTokenEnd(currentRecommendation.getOffset().getEndToken());
         record.setOffsetCharacterBegin(currentRecommendation.getOffset().getBeginCharacter());
         record.setOffsetCharacterEnd(currentRecommendation.getOffset().getEndCharacter());
-        record.setAnnotation(currentRecommendation.getAnnotation());
+        record.setAnnotation(currentRecommendation.getLabel());
         record.setLayer(selectedLayer.getObject());
         record.setChangeLocation(LearningRecordChangeLocation.AL_SIDEBAR);
 
@@ -447,12 +457,15 @@ public class ActiveLearningSidebar
         int begin = acceptedRecommendation.getOffset().getBeginCharacter();
         int end = acceptedRecommendation.getOffset().getEndCharacter();
         int id = adapter.add(annotatorState, jCas, begin, end);
-        for (AnnotationFeature feature : annotationService
-                .listAnnotationFeature(selectedLayer.getObject())) {
-            adapter.setFeatureValue(annotatorState, jCas, id, feature,
-                    acceptedRecommendation.getAnnotation());
-        }
-        
+        AnnotationFeature feature = annotationService
+            .getFeature(acceptedRecommendation.getFeature(), selectedLayer.getObject());
+
+        String predictedValue = acceptedRecommendation.getLabel();
+
+        recommendationService.setFeatureValue(feature, predictedValue, adapter, annotatorState,
+            jCas, id);
+
+
         // Open accepted recommendation in the annotation detail editor panel
         VID vid = new VID(id);
         annotatorState.getSelection().selectSpan(vid, jCas, begin, end);
@@ -461,7 +474,7 @@ public class ActiveLearningSidebar
         
         // Save CAS
         aActionHandler.actionCreateOrUpdate(aTarget, jCas);
-        
+
         moveToNextRecommendation(aTarget);
     }
 
@@ -537,6 +550,7 @@ public class ActiveLearningSidebar
     {
         actionShowSelectedDocument(aTarget, record.getSourceDocument(),
             record.getOffsetCharacterBegin());
+        JCas aJcas = this.getJCasProvider().get();
 
         if (record.getUserAction().equals(LearningRecordUserAction.REJECTED)) {
             highlightTextAndDisplayMessage(aTarget, record);
@@ -550,15 +564,14 @@ public class ActiveLearningSidebar
         // if the suggestion doesn't exit -> if that suggestion is accepted and annotated,
         // highlight the annotation.
         // else, highlight the text.
-        else if (!isAnnotatedInCas(record)) {
+        else if (!isAnnotatedInCas(record, aJcas)) {
             highlightTextAndDisplayMessage(aTarget, record);
         }
     }
 
-    private boolean isAnnotatedInCas(LearningRecord aRecord)
+    private boolean isAnnotatedInCas(LearningRecord aRecord, JCas aJcas)
         throws IOException
     {
-        JCas aJcas = this.getJCasProvider().get();
         Type type = CasUtil.getType(aJcas.getCas(), selectedLayer.getObject().getName());
         AnnotationFS annotationFS = WebAnnoCasUtil
             .selectSingleFsAt(aJcas, type, aRecord.getOffsetCharacterBegin(),
@@ -568,7 +581,7 @@ public class ActiveLearningSidebar
                 .listAnnotationFeature(selectedLayer.getObject())) {
                 String annotatedValue = WebAnnoCasUtil
                     .getFeature(annotationFS, annotationFeature.getName());
-                if (annotatedValue.equals(aRecord.getAnnotation())) {
+                if (aRecord.getAnnotation().equals(annotatedValue)) {
                     highlightVID = new VID(WebAnnoCasUtil.getAddr(annotationFS));
                     vMarkerType = ANNOTATION_MARKER;
                     return true;
@@ -582,6 +595,7 @@ public class ActiveLearningSidebar
     {
         selectedRecord = aRecord;
         vMarkerType = TEXT_MARKER;
+        LOG.error("No annotation could be highlighted.");
         error("No annotation could be highlighted.");
         aTarget.addChildren(getPage(), IFeedback.class);
     }
@@ -594,13 +608,38 @@ public class ActiveLearningSidebar
                 selectedLayer.getObject());
     }
 
-    private void actionRemoveHistoryItem(AjaxRequestTarget aTarget,
-            LearningRecord aRecord)
+    private void actionRemoveHistoryItem(AjaxRequestTarget aTarget, LearningRecord aRecord)
+        throws IOException, AnnotationException
     {
         aTarget.add(mainContainer);
         annotationPage.actionRefreshDocument(aTarget);
         learningRecordService.delete(aRecord);
         learningRecords.detach();
+        if (aRecord.getUserAction().equals(LearningRecordUserAction.ACCEPTED)) {
+            actionShowSelectedDocument(aTarget, aRecord.getSourceDocument(),
+                aRecord.getOffsetCharacterBegin());
+            JCas aJcas = casStorageService.readCas(aRecord.getSourceDocument(), aRecord.getUser());
+            if (isAnnotatedInCas(aRecord, aJcas)) {
+                confirmationDialog.setTitleModel(
+                    new StringResourceModel("alSidebar.history.delete.confirmation.title", this));
+                confirmationDialog.setContentModel(
+                    new StringResourceModel("alSidebar.history.delete.confirmation.content", this,
+                        null));
+                confirmationDialog.show(aTarget);
+                confirmationDialog
+                    .setConfirmAction(t -> deleteAnnotationByHistory(t, aRecord, aJcas));
+            }
+        }
+    }
+
+    private void deleteAnnotationByHistory(AjaxRequestTarget aTarget, LearningRecord aRecord,
+        JCas aJcas)
+        throws IOException, AnnotationException
+    {
+        this.getModelObject().getSelection()
+            .selectSpan(highlightVID, aJcas, aRecord.getOffsetCharacterBegin(),
+                aRecord.getOffsetCharacterEnd());
+        getActionHandler().actionDelete(aTarget);
     }
 
     @OnEvent
@@ -630,15 +669,24 @@ public class ActiveLearningSidebar
         AnnotatorState annotatorState = getModelObject();
         AnnotatorState eventState = aEvent.getAnnotatorState();
         
-        predictionModel = recommendationService.getPredictions(annotatorState.getUser(),
+        model = recommendationService.getPredictions(annotatorState.getUser(),
                 annotatorState.getProject());
         
         if (sessionActive && eventState.getUser().equals(annotatorState.getUser())
                 && eventState.getProject().equals(annotatorState.getProject())) {
-            if (eventState.getDocument().equals(annotatorState.getDocument())
-                    && aEvent.getVid().getLayerId() == selectedLayer.getObject().getId()
-                    && predictionModel.getPredictionByVID(aEvent.getVid())
-                            .equals(currentRecommendation)) {
+            SourceDocument document = eventState.getDocument();
+            VID vid = aEvent.getVid();
+            Optional<AnnotationObject> prediction = model.getPredictionByVID(document, vid);
+
+            if (!prediction.isPresent()) {
+                LOG.error("Could not find prediction in [{}] with id [{}]", document, vid);
+                error("Could not find prediction");
+                return;
+            }
+
+            if (document.equals(annotatorState.getDocument())
+                    && vid.getLayerId() == selectedLayer.getObject().getId()
+                    && prediction.get().equals(currentRecommendation)) {
                 
                 moveToNextRecommendation(aEvent.getTarget());
             }
@@ -650,12 +698,21 @@ public class ActiveLearningSidebar
     public void onRecommendationAcceptEvent(AjaxRecommendationAcceptedEvent aEvent)
     {
         AnnotatorState annotatorState = ActiveLearningSidebar.this.getModelObject();
-        predictionModel = recommendationService
-            .getPredictions(annotatorState.getUser(), annotatorState.getProject());
+        model = recommendationService.getPredictions(annotatorState.getUser(),
+            annotatorState.getProject());
         AnnotatorState eventState = aEvent.getAnnotatorState();
-        AnnotationObject acceptedRecommendation = predictionModel
-            .getPredictionByVID(aEvent.getVid());
+        SourceDocument document = annotatorState.getDocument();
+        VID vid = aEvent.getVid();
+        Optional<AnnotationObject> oRecommendation = model.getPredictionByVID(document, vid);
 
+        if (!oRecommendation.isPresent()) {
+            LOG.error("Could not find prediction in [{}] with id [{}]", document, vid);
+            error("Could not find prediction");
+            aEvent.getTarget().addChildren(getPage(), IFeedback.class);
+            return;
+        }
+
+        AnnotationObject acceptedRecommendation = oRecommendation.get();
         LearningRecord record = new LearningRecord();
         record.setUser(eventState.getUser().getUsername());
         record.setSourceDocument(eventState.getDocument());
@@ -665,26 +722,15 @@ public class ActiveLearningSidebar
         record.setOffsetTokenEnd(acceptedRecommendation.getOffset().getEndToken());
         record.setOffsetCharacterBegin(acceptedRecommendation.getOffset().getBeginCharacter());
         record.setOffsetCharacterEnd(acceptedRecommendation.getOffset().getEndCharacter());
-        record.setAnnotation(acceptedRecommendation.getAnnotation());
-        record.setLayer(annotationService.getLayer(aEvent.getVid().getLayerId()));
+        record.setAnnotation(acceptedRecommendation.getLabel());
+        record.setLayer(annotationService.getLayer(vid.getLayerId()));
         record.setChangeLocation(LearningRecordChangeLocation.MAIN_EDITOR);
         learningRecordService.create(record);
 
-        if (sessionActive && currentRecommendation != null && eventState.getUser()
-            .equals(annotatorState.getUser()) && eventState.getDocument()
-            .equals(annotatorState.getDocument())) {
-            //if the token of accepted recommendation is same to the token of current
-            // recommendation, active learning sidebar should show next recommendation.
+        if (sessionActive && currentRecommendation != null
+                && eventState.getUser().equals(annotatorState.getUser())
+                && eventState.getProject().equals(annotatorState.getProject())) {
             if (acceptedRecommendation.getOffset().equals(currentRecommendation.getOffset())) {
-                //if the accepted recommendation is different from current recommendation, then
-                // current recommendation is rejected implicitly.
-                if (!acceptedRecommendation.getAnnotation()
-                    .equals(currentRecommendation.getAnnotation())) {
-                    applicationEventPublisherHolder.get().publishEvent(
-                        new ActiveLearningRejectRecommendationEvent(this, eventState.getDocument(),
-                            eventState.getUser().getUsername(), selectedLayer.getObject(),
-                            currentRecommendation));
-                }
                 moveToNextRecommendation(aEvent.getTarget());
             }
             aEvent.getTarget().add(mainContainer);

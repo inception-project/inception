@@ -14,18 +14,4 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-=== Version 3.2.x to 3.3.0
-
-* When upgrading from 3.2.x or earlier to 3.3.0 or later, Automation projects break.
-
-=== Version 2.3.1 to 3.0.0
-
-* The access permissions of the super admin have changed. Super admins can no longer access
-  annotation, curation, and monitoring pages for all projects. They can only access them if they
-  are annotators, admins, or curators in the respective projects. However, they still have full
-  access to the project settings of all projects and can simply give themselves the missing
-  permissions. **After an upgrade to 3.0.0, all super admins who require project permissions on existing
-  projects should assign these permissions to themselves. This also applies when importing old 
-  projects.** For new projects, the creator of the project always starts with annotator, curator,
-  and project admin permissions. If these permissions are not required by the project creator,
-  they should be removed after project creation.
+// No migration instructions so far.

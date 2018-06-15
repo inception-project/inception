@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.conceptlinking.util;
 
-import java.util.List;
-
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.model.ValueFactory;
@@ -75,10 +73,9 @@ public class QueryUtil
      * @param limit maximum number of results
      * @return a query to retrieve candidate entities
      */
-    public static TupleQuery generateCandidateQuery(RepositoryConnection conn, List<String>
-        tokens, int limit)
+    public static TupleQuery generateCandidateQuery(RepositoryConnection conn, String tokens,
+        int limit, IRI aDescriptionIri)
     {
-
         String query = String.join("\n",
             "DEFINE input:inference 'instances'",
             SPARQL_PREFIX,
@@ -93,7 +90,7 @@ public class QueryUtil
             "        ?altLabel bif:contains '?entityLabel'. ",
             "        OPTIONAL",
             "        {",
-            "          ?e2 schema:description ?description.",
+            "          ?e2 ?descriptionIri ?description.",
             "          FILTER ( lang(?description) = \"en\" )",
             "        }",
             "      }",
@@ -122,6 +119,7 @@ public class QueryUtil
 
         TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, query);
         tupleQuery.setBinding("entityLabel", tokensJoined);
+        tupleQuery.setBinding("descriptionIri", aDescriptionIri);
         return tupleQuery;
     }
 
