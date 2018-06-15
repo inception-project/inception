@@ -28,38 +28,54 @@ import org.eclipse.rdf4j.repository.RepositoryResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
+import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
+import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
 import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.graph.RdfUtils;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 public class KBUtility {
-
     private final static Logger log = LoggerFactory.getLogger(KBUtility.class.getName());
-    private static KnowledgeBaseService kbService = ApplicationContextProvider.getApplicationContext()
-            .getBean(KnowledgeBaseService.class);
-
     /**
-     * Return class type of KBObject
+     * Returns class type of {@link KBObject}
      * 
      * @param kbObject
-     * @return
+     * @return {@link Optional<String>} 
      */
     public Optional<String> getType(Optional<KBObject> kbObject) {
         return kbObject.map((p) -> p.getClass().getSimpleName());
     }
+    /**
+     * Read identifier IRI and return {@link KBHandle}
+     * @param {@link FeatureSupportRegistry} featureSupportRegistry
+     * @param {@link AnnotationFeature} feature
+     * @param String featureValue 
+     * @return {@link KBHandle} which can be used to read the IRI.
+     */
+    public static KBHandle readKBIdentifier(FeatureSupportRegistry featureSupportRegistry,
+            AnnotationFeature feature, String featureValue)
+    {
+        FeatureSupport<ConceptFeatureTraits> fs = featureSupportRegistry.getFeatureSupport(feature);
+        KBHandle handle = (KBHandle) fs.wrapFeatureValue(feature, null, featureValue);
+        return handle;
+    }
 
     /**
-     * Read identifier URI and return Optional<KBObject>
-     * @param aProject
+     * Read identifier IRI and return {@link Optional<KBObject>}
+     * @param {@link Project} aProject 
      * @param aIdentifier
-     * @return
+     * @return {@link Optional<KBObject>} of type {@link KBConcept} or {@link KBInstance}
      */
-    public static Optional<KBObject> readKBIdentifier(Project aProject, String aIdentifier) {
+    public static Optional<KBObject> readKBIdentifier(KnowledgeBaseService kbService,
+            Project aProject, String aIdentifier)
+    {
         for (KnowledgeBase kb : kbService.getKnowledgeBases(aProject)) {
             try (RepositoryConnection conn = kbService.getConnection(kb)) {
                 ValueFactory vf = conn.getValueFactory();
@@ -71,18 +87,19 @@ public class KBUtility {
                     if (kbConcept != null) {
                         return Optional.of(kbConcept);
                     }
-                } else if (!stmts.hasNext()) {
+                }
+                else if (!stmts.hasNext()) {
                     Optional<KBInstance> kbInstance = kbService.readInstance(kb, aIdentifier);
                     if (kbInstance.isPresent()) {
                         return kbInstance.flatMap((p) -> Optional.of(p));
                     }
                 }
-            } catch (QueryEvaluationException e) {
+            }
+            catch (QueryEvaluationException e) {
                 log.error("Reading KB Entries failed.", e);
                 return Optional.empty();
             }
         }
         return Optional.empty();
     }
-
 }
