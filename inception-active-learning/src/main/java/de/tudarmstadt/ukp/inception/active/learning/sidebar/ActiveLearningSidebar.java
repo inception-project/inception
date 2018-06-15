@@ -148,6 +148,7 @@ public class ActiveLearningSidebar
     private LearningRecord selectedRecord;
     private Date learnSkippedRecommendationTime;
     private ConfirmationDialog confirmationDialog;
+    private AnnotationFeature annotationFeature;
 
     public ActiveLearningSidebar(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, JCasProvider aJCasProvider,
@@ -440,6 +441,7 @@ public class ActiveLearningSidebar
         record.setAnnotation(currentRecommendation.getLabel());
         record.setLayer(selectedLayer.getObject());
         record.setChangeLocation(LearningRecordChangeLocation.AL_SIDEBAR);
+        record.setAnnotationFeature(annotationFeature);
 
         learningRecordService.create(record);
     }
@@ -457,12 +459,12 @@ public class ActiveLearningSidebar
         int begin = acceptedRecommendation.getOffset().getBeginCharacter();
         int end = acceptedRecommendation.getOffset().getEndCharacter();
         int id = adapter.add(annotatorState, jCas, begin, end);
-        AnnotationFeature feature = annotationService
+        annotationFeature = annotationService
             .getFeature(acceptedRecommendation.getFeature(), selectedLayer.getObject());
 
         String predictedValue = acceptedRecommendation.getLabel();
 
-        recommendationService.setFeatureValue(feature, predictedValue, adapter, annotatorState,
+        recommendationService.setFeatureValue(annotationFeature, predictedValue, adapter, annotatorState,
             jCas, id);
 
 
@@ -713,6 +715,9 @@ public class ActiveLearningSidebar
         }
 
         AnnotationObject acceptedRecommendation = oRecommendation.get();
+        AnnotationFeature feature = annotationService
+            .getFeature(acceptedRecommendation.getFeature(),
+                annotationService.getLayer(vid.getLayerId()));
         LearningRecord record = new LearningRecord();
         record.setUser(eventState.getUser().getUsername());
         record.setSourceDocument(eventState.getDocument());
@@ -725,12 +730,15 @@ public class ActiveLearningSidebar
         record.setAnnotation(acceptedRecommendation.getLabel());
         record.setLayer(annotationService.getLayer(vid.getLayerId()));
         record.setChangeLocation(LearningRecordChangeLocation.MAIN_EDITOR);
+        record.setAnnotationFeature(feature);
         learningRecordService.create(record);
 
         if (sessionActive && currentRecommendation != null
                 && eventState.getUser().equals(annotatorState.getUser())
                 && eventState.getProject().equals(annotatorState.getProject())) {
-            if (acceptedRecommendation.getOffset().equals(currentRecommendation.getOffset())) {
+            if (acceptedRecommendation.getOffset().equals(currentRecommendation.getOffset()) &&
+                annotationService.getLayer(vid.getLayerId()).equals(selectedLayer.getObject()) &&
+                acceptedRecommendation.getFeature().equals(currentRecommendation.getFeature())) {
                 moveToNextRecommendation(aEvent.getTarget());
             }
             aEvent.getTarget().add(mainContainer);

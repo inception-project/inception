@@ -197,6 +197,7 @@ public class RecommendationEditorExtension
         record.setAnnotation(predictedValue);
         record.setLayer(layer);
         record.setChangeLocation(LearningRecordChangeLocation.MAIN_EDITOR);
+        record.setAnnotationFeature(feature);
         learningRecordService.create(record);
         aActionHandler.actionSelect(aTarget, aJCas);
         
