@@ -320,7 +320,7 @@ public class RecommendationServiceImpl
     }
 
     @Override
-    public void setFeatureValue(AnnotationFeature aFeature, String aPredictedValue,
+    public void setFeatureValue(AnnotationFeature aFeature, Object aPredictedValue,
         SpanAdapter aAdapter, AnnotatorState aState, JCas aJcas, int aAddress)
     {
         aAdapter.setFeatureValue(aState, aJcas, aAddress, aFeature, aPredictedValue);

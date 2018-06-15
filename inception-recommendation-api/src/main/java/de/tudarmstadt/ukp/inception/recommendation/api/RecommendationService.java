@@ -82,6 +82,6 @@ public interface RecommendationService
     
     void switchPredictions(User aUser, Project aProject);
 
-    void setFeatureValue(AnnotationFeature aFeature, String aPredictedValue,
+    void setFeatureValue(AnnotationFeature aFeature, Object aPredictedValue,
         SpanAdapter aAdapter, AnnotatorState aState, JCas aJcas, int address);
 }

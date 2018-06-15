@@ -22,6 +22,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
+import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
+import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
+import de.tudarmstadt.ukp.inception.ui.kb.feature.FactLinkingService;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
@@ -132,6 +135,7 @@ public class ActiveLearningSidebar
     private @SpringBean FeatureSupportRegistry fsRegistry;
     private @SpringBean CasStorageService casStorageService;
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
+    private @SpringBean FactLinkingService factService;
 
     private IModel<AnnotationLayer> selectedLayer;
     private IModel<List<LearningRecord>> learningRecords;
@@ -155,6 +159,9 @@ public class ActiveLearningSidebar
     private FeatureState featureState;
     private ConfirmationDialog confirmationDialog;
     private FeatureEditor editor;
+    private Form<Void> recommendationForm;
+    private AnnotationFeature annotationFeature;
+
 
     public ActiveLearningSidebar(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, JCasProvider aJCasProvider,
@@ -260,15 +267,26 @@ public class ActiveLearningSidebar
 
             AnnotationFeature annotationFeature = annotationService
                 .getFeature(currentRecommendation.getFeature(), selectedLayer.getObject());
-            featureState = new FeatureState(annotationFeature, currentRecommendation.getLabel());
+            if (selectedLayer.getObject().getUiName().equals("Named entity") && annotationFeature
+                .getUiName().equals( "identifier"))
+            {
+                ConceptFeatureTraits traits = factService.getFeatureTraits(this.getModelObject()
+                    .getProject());
+                KBHandle value = factService.getKBInstancesByIdentifierAndTraits
+                    (currentRecommendation.getLabel(), this.getModelObject().getProject(), traits);
+                featureState = new FeatureState(annotationFeature, value);
+            }
+            else {
+                featureState = new FeatureState(annotationFeature, currentRecommendation.getLabel());
+            }
+            featureState.tagset = annotationService.listTags(annotationFeature.getTagset());
             aFeatureStateModel = Model.of(featureState);
-            aFeatureStateModel.detach();
             FeatureSupport featureSupport = featureSupportRegistry.getFeatureSupport(annotationFeature);
             editor = featureSupport
                 .createEditor("editor", mainContainer, this.getActionHandler(), this.getModel(),
                     aFeatureStateModel);
-            editor.detach();
-            aTarget.add(editor);
+            recommendationForm.addOrReplace(editor);
+            aTarget.add(mainContainer);
 
             try {
                 actionShowSelectedDocument(aTarget, documentService
@@ -378,7 +396,7 @@ public class ActiveLearningSidebar
 
     private Form<Void> createRecommendationOperationForm()
     {
-        Form<Void> recommendationForm = new Form<Void>(CID_RECOMMENDATION_FORM);
+        recommendationForm = new Form<Void>(CID_RECOMMENDATION_FORM);
         recommendationForm.add(LambdaBehavior.onConfigure(component -> component.setVisible
             (sessionActive && hasUnseenRecommendation)));
         recommendationForm.setOutputMarkupPlaceholderTag(true);
@@ -446,7 +464,6 @@ public class ActiveLearningSidebar
 
     private FeatureEditor createFeatureEditor()
     {
-        AnnotationFeature annotationFeature;
         if (currentRecommendation != null) {
             annotationFeature = annotationService
                 .getFeature(currentRecommendation.getFeature(), selectedLayer.getObject());
@@ -499,13 +516,23 @@ public class ActiveLearningSidebar
         throws IOException, AnnotationException
     {
         aTarget.add(mainContainer);
-        String selectedFeaturevalue = featureState.value.toString();
-
-        if (selectedFeaturevalue.equals(currentRecommendation.getLabel())) {
-            writeLearningRecordInDatabase(LearningRecordUserAction.ACCEPTED);
+        String selectedFeatureIdentifier;
+        String selectedFeatureName;
+        if (selectedLayer.getObject().getUiName().equals("Named entity") && annotationFeature
+            .getUiName().equals( "identifier")) {
+            selectedFeatureIdentifier = ((KBHandle) featureState.value).getIdentifier();
+            selectedFeatureName = ((KBHandle) featureState.value).getName();
         }
         else {
-            writeLearningRecordInDatabase(LearningRecordUserAction.CORRECTED, selectedFeaturevalue);
+            selectedFeatureIdentifier  = featureState.value.toString();
+            selectedFeatureName = featureState.value.toString();
+        }
+
+        if (selectedFeatureIdentifier.equals(currentRecommendation.getLabel())) {
+            writeLearningRecordInDatabase(LearningRecordUserAction.ACCEPTED, selectedFeatureName);
+        }
+        else {
+            writeLearningRecordInDatabase(LearningRecordUserAction.CORRECTED, selectedFeatureName);
         }
 
         AnnotatorState annotatorState = ActiveLearningSidebar.this.getModelObject();
@@ -518,7 +545,7 @@ public class ActiveLearningSidebar
         AnnotationFeature feature = annotationService
             .getFeature(currentRecommendation.getFeature(), selectedLayer.getObject());
         recommendationService
-            .setFeatureValue(feature, selectedFeaturevalue, adapter, annotatorState, jCas, id);
+            .setFeatureValue(feature, featureState.value, adapter, annotatorState, jCas, id);
 
         // Open accepted recommendation in the annotation detail editor panel
         VID vid = new VID(id);
