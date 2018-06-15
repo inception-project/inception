@@ -166,7 +166,7 @@ public class SubclassCreationDialog
                 
                 // select newly created concept right away to show the statements
                 send(getPage(), Broadcast.BREADTH,
-                        new AjaxConceptSelectionEvent(aTarget, newConceptHandle));
+                        new AjaxConceptSelectionEvent(aTarget, newConceptHandle,true));
 
             }
             catch (QueryEvaluationException | NoSuchElementException e) {
