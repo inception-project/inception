@@ -647,6 +647,7 @@ public class KnowledgeBaseServiceImpl
     public List<KBHandle> listRootConcepts(KnowledgeBase kb, boolean aAll)
         throws QueryEvaluationException
     {
+        
         List<KBHandle> resultList = read(kb, (conn) -> {
             String QUERY = String.join("\n"
                 , "SELECT DISTINCT ?s ?l WHERE { "

@@ -259,13 +259,5 @@
       </column>
     </addColumn>
   </changeSet>
-  
-  <changeSet author="INCEpTION Team" id="20180614-1">
-    <createTable tableName="knowledgebase_explicitlyDefinedRootConcepts">
-      <column name="id" type="VARCHAR(36)">
-        <constraints nullable="false" unique="true"/>
-      </column>
-    </createTable>
-  </changeSet>
 
 </databaseChangeLog>

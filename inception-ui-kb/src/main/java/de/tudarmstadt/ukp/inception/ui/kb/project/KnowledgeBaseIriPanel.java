@@ -34,15 +34,12 @@ import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.query.QueryEvaluationException;
-import org.eclipse.rdf4j.query.QueryLanguage;
-import org.eclipse.rdf4j.query.TupleQuery;
-import org.eclipse.rdf4j.query.TupleQueryResult;
-import org.eclipse.rdf4j.repository.RepositoryConnection;
 
 import com.googlecode.wicket.kendo.ui.form.combobox.ComboBox;
 
@@ -69,7 +66,8 @@ public class KnowledgeBaseIriPanel
     private final WebMarkupContainer advancedSettingsWrapper;
     private @SpringBean KnowledgeBaseService kbService;
 
-    public KnowledgeBaseIriPanel(String id, CompoundPropertyModel<KnowledgeBaseWrapper> aModel)
+    public KnowledgeBaseIriPanel(String id, CompoundPropertyModel<KnowledgeBaseWrapper> aModel,
+            KnowledgeBaseIriPanelMode mode)
     {
         super(id);
         setOutputMarkupId(true);
@@ -152,45 +150,62 @@ public class KnowledgeBaseIriPanel
 
         add(iriSchemaChoice);
         
+     
         // Add wrapper with advanced settings panel inside
         advancedSettingsWrapper = new WebMarkupContainer("advancedSettingsWrapper");
         advancedSettingsWrapper.setOutputMarkupId(true);
         advancedSettingsWrapper.setVisible(false);
+        advancedSettingsWrapper.setOutputMarkupPlaceholderTag(true);
+        
         add(advancedSettingsWrapper);
         
-        AdvancedIriSettingsPanel advancedSettingsPanel = new AdvancedIriSettingsPanel(
-                "advancedSettings", kbModel);
-        advancedSettingsPanel.setOutputMarkupId(true);
-        
-        advancedSettingsWrapper.add(advancedSettingsPanel);
+        // Only add advanced settings panel in the project settings because the kb has not been 
+        // registered in the wizard at the point where we want to read specified concepts to check 
+        // whether they exist (see isConceptValid method).
         
         LambdaAjaxLink toggleAdvancedSettings = new LambdaAjaxLink("toggleAdvancedSettings",
                 KnowledgeBaseIriPanel.this::actionToggleAdvancedSettings);
+        toggleAdvancedSettings.setVisible(false);
         add(toggleAdvancedSettings);
-        toggleAdvancedSettings.add(new Label("toggleAdvSettingsLabel") {
+        
+        if (KnowledgeBaseIriPanelMode.PROJECTSETTINGS.equals(mode)) {
+            AdvancedIriSettingsPanel advancedSettingsPanel = new AdvancedIriSettingsPanel(
+                    "advancedSettings", kbModel);
+            advancedSettingsPanel.setOutputMarkupId(true);
             
-            private static final long serialVersionUID = -1593621355344848909L;
-
-            @Override
-            protected void onConfigure()
-            {
-                super.onConfigure();
-                IModel<String> labelModel;
-                if (advancedSettingsWrapper.isVisible()) {
-                    labelModel = new Model<String>("Hide");
+            toggleAdvancedSettings.setVisible(true);
+            advancedSettingsWrapper.add(advancedSettingsPanel);
+            
+            Label toggleAdvancedSettingsLabel = new Label("toggleAdvSettingsLabel") {
+                
+                private static final long serialVersionUID = -1593621355344848909L;
+                
+                @Override
+                protected void onConfigure()
+                {
+                    super.onConfigure();
+                    IModel<String> labelModel;
+                    if (advancedSettingsWrapper.isVisible()) {
+                        labelModel = new ResourceModel("toogleAdvSettingsHide");
+                    }
+                    else {
+                        labelModel = new ResourceModel("toggleAdvSettingsShow");
+                    }
+                    setDefaultModel(labelModel);
                 }
-                else {
-                    labelModel = new Model<String>("Show advanced settings");
-                }
-                setDefaultModel(labelModel);
-            }
-        });
+            };
+            toggleAdvancedSettings.setOutputMarkupId(true);
+            toggleAdvancedSettings.add(toggleAdvancedSettingsLabel);
+        }
+        
+        
 
     }
     
     private void actionToggleAdvancedSettings(AjaxRequestTarget aTarget) {
         advancedSettingsWrapper.setVisible(!advancedSettingsWrapper.isVisible());
-        aTarget.addChildren(getPage(), KnowledgeBaseIriPanel.class);
+        aTarget.add(advancedSettingsWrapper);
+        aTarget.add(get("toggleAdvancedSettings"));
     }
 
     private ComboBox<String> buildComboBox(String id, IModel<IRI> model, List<IRI> iris)
@@ -228,6 +243,7 @@ public class KnowledgeBaseIriPanel
         iriTextfield.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> {
             // Do nothing just update the model values
         }));
+        iriTextfield.setEnabled(false);
         
         return iriTextfield;
     }
@@ -318,46 +334,42 @@ public class KnowledgeBaseIriPanel
             
             TextField<String> newRootConcept = new TextField<String>("newConceptField",
                     newConceptIRIString);
+            newRootConcept.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> {
+                // Do nothing just update the model values
+            }));
             add(newRootConcept);
             LambdaAjaxLink specifyConcept = new LambdaAjaxLink("newExplicitConcept",
                     AdvancedIriSettingsPanel.this::actionNewRootConcept);
             add(specifyConcept);
-            specifyConcept.add(new Label("add", new Model<String>("Specify root concept")));
+            specifyConcept.add(new Label("add", new ResourceModel("specifyRootConcept")));
             
         }
         
         private void actionNewRootConcept(AjaxRequestTarget aTarget) {
             ValueFactory vf = SimpleValueFactory.getInstance();
             IRI concept = vf.createIRI(newConceptIRIString.getObject());
-            if (conceptExists(kbModel.getObject().getKb(), concept, true)) {
+            if (isConceptValid(kbModel.getObject().getKb(), concept, true)) {
                 concepts.add(concept);
             }
             else {
-                error("Concept does not exist");
+                error("Concept does not exist or has already been specified");
                 aTarget.addChildren(getPage(), IFeedback.class);
             }
-            aTarget.addChildren(getPage(), KnowledgeBaseIriPanel.class);
+            aTarget.add(advancedSettingsWrapper);
         }
         
         private void actionRemoveConcept(AjaxRequestTarget aTarget, IRI iri) {
             concepts.remove(iri);
-            aTarget.addChildren(getPage(), KnowledgeBaseIriPanel.class);
+            aTarget.add(advancedSettingsWrapper);
         }
         
-        public boolean conceptExists(KnowledgeBase kb, IRI conceptIRI, boolean aAll)
+        public boolean isConceptValid(KnowledgeBase kb, IRI conceptIRI, boolean aAll)
             throws QueryEvaluationException
         {
-            try (RepositoryConnection conn = kbService.getConnection(kbModel.getObject().getKb())) {
-                String QUERY = "SELECT * WHERE { ?s ?pTYPE ?sClass . }";
-                TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
-                tupleQuery.setBinding("s", conceptIRI);
-                tupleQuery.setBinding("pType", kb.getTypeIri());
-                tupleQuery.setBinding("sClass", kb.getClassIri());
-
-                try (TupleQueryResult result = tupleQuery.evaluate()) {
-                    return result.hasNext();
-                }
-            }
+            return kbService.readConcept(kbModel.getObject().getKb(), conceptIRI.stringValue())
+                    .isPresent()
+                    && !concepts.contains(conceptIRI);
+            
         }
 
     }

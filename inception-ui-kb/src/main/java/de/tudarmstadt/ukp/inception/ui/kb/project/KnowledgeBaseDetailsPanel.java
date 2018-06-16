@@ -391,8 +391,9 @@ public class KnowledgeBaseDetailsPanel extends Panel {
         protected void setUpCommonComponents(WebMarkupContainer wmc) {
             // Schema configuration
             
-            Component iriPanel = new KnowledgeBaseIriPanel("iriPanel", model)
-                    .add(LambdaBehavior.onConfigure(it -> it.setEnabled(false)));
+            Component iriPanel = new KnowledgeBaseIriPanel("iriPanel", model,
+                    KnowledgeBaseIriPanelMode.PROJECTSETTINGS)
+                            .add(LambdaBehavior.onConfigure(it -> it.setEnabled(false)));
             // don't show radio group in view mode 
             iriPanel.get("iriSchema").setVisible(false);
             wmc.add(iriPanel);
@@ -469,7 +470,8 @@ public class KnowledgeBaseDetailsPanel extends Panel {
         @Override
         protected void setUpCommonComponents(WebMarkupContainer wmc) {
             // Schema configuration
-            wmc.add(new KnowledgeBaseIriPanel("iriPanel", model));
+            wmc.add(new KnowledgeBaseIriPanel("iriPanel", model,
+                    KnowledgeBaseIriPanelMode.PROJECTSETTINGS));
             wmc.add(new CheckBox("enabled", model.bind("kb.enabled")));
             wmc.add(new CheckBox("supportConceptLinking", model.bind("kb.supportConceptLinking")));
         }
