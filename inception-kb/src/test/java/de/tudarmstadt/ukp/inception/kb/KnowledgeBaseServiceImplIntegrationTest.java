@@ -38,6 +38,8 @@ import java.util.stream.Stream;
 import javax.persistence.EntityManager;
 
 import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.ValueFactory;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
@@ -198,6 +200,13 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         kb.setReadOnly(true);
         kb.setEnabled(false);
         kb.setBasePrefix("MyBasePrefix");
+        ValueFactory vf = SimpleValueFactory.getInstance();
+        IRI rootConcept1 = vf.createIRI("http://www.ics.forth.gr/isl/CRMinf/I1_Argumentation");
+        IRI rootConcept2 = vf.createIRI("file:/data-to-load/07bde589-588c-4f0d-8715-c71c0ba2bfdb/crm-extensions/F10_Person");
+        List<IRI> concepts = new ArrayList<IRI>();
+        concepts.add(rootConcept1);
+        concepts.add(rootConcept2);
+        kb.setExplicitlyDefinedRootConcepts(concepts);
         sut.updateKnowledgeBase(kb, sut.getNativeConfig());
 
         KnowledgeBase savedKb = testEntityManager.find(KnowledgeBase.class, kb.getRepositoryId());
@@ -213,7 +222,8 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
             .hasFieldOrPropertyWithValue("enabled", false)
             .hasFieldOrPropertyWithValue("labelIri", RDFS.LITERAL)
             .hasFieldOrPropertyWithValue("propertyTypeIri", OWL.OBJECTPROPERTY)
-            .hasFieldOrPropertyWithValue("basePrefix", "MyBasePrefix");
+            .hasFieldOrPropertyWithValue("basePrefix", "MyBasePrefix")
+            .hasFieldOrPropertyWithValue("explicitlyDefinedRootConcepts", Arrays.asList(rootConcept1, rootConcept2));
 
     }
 
@@ -1157,6 +1167,32 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         String[] expectedLabels = {
             "Adaptation", "Animal Intelligence", "Conservation Status", "Ecozone",
             "Habitat", "Red List Status", "Taxon Name", "Taxonomic Rank"
+        };
+        assertThat(rootConcepts)
+            .as("Check that all root concepts have been found")
+            .containsExactlyInAnyOrder(expectedLabels);
+    }
+    
+    @Test
+    public void getConceptRoots_WithWildlifeOntologyAndExplicityDefinedConcepts_ShouldReturnRootConcepts() throws Exception {
+        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
+        ValueFactory vf = SimpleValueFactory.getInstance();
+        IRI rootConcept1 = vf.createIRI("http://purl.org/ontology/wo/AnimalIntelligence");
+        IRI rootConcept2 = vf.createIRI("http://purl.org/ontology/wo/Ecozone");
+        List<IRI> concepts = new ArrayList<IRI>();
+        concepts.add(rootConcept1);
+        concepts.add(rootConcept2);
+        kb.setExplicitlyDefinedRootConcepts(concepts);
+        sut.updateKnowledgeBase(kb, sut.getNativeConfig());
+        
+        importKnowledgeBase("data/wildlife_ontology.ttl");
+        setSchema(kb, OWL.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT, RDFS.LABEL, RDF.PROPERTY);
+
+        Stream<String> rootConcepts = sut.listRootConcepts(kb, false).stream()
+                .map(KBHandle::getName);
+
+        String[] expectedLabels = {
+            "Animal Intelligence", "Ecozone"
         };
         assertThat(rootConcepts)
             .as("Check that all root concepts have been found")

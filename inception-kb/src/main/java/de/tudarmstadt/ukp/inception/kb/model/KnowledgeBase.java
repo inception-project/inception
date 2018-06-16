@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.inception.kb.reification.Reification.NONE;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -29,6 +30,7 @@ import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
@@ -146,8 +148,8 @@ public class KnowledgeBase
     /**
      * A List of explicitly defined root concepts that can be used if auto detection takes too long
      */
-    //@ElementCollection
-    //private List<IRI> explicitlyDefinedRootConcepts;
+    @ElementCollection(fetch = FetchType.EAGER)
+    private List<IRI> explicitlyDefinedRootConcepts = new ArrayList<>();
     
     public String getRepositoryId() {
         return repositoryId;
@@ -304,7 +306,7 @@ public class KnowledgeBase
     {
         basePrefix = aBasePrefix;
     }
-    /*
+    
     public List<IRI> getExplicitlyDefinedRootConcepts()
     {
         return explicitlyDefinedRootConcepts;
@@ -314,7 +316,7 @@ public class KnowledgeBase
     {
         explicitlyDefinedRootConcepts = aExplicitlyDefinedRootConcepts;
     }
-    */
+    
     @Override
     public String toString()
     {

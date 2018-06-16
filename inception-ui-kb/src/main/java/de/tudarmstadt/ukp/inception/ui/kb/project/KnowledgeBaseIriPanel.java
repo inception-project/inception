@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.project;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -63,7 +62,7 @@ public class KnowledgeBaseIriPanel
     private static final long serialVersionUID = -7189344732710228206L;
     private final IModel<SchemaProfile> selectedSchemaProfile;
     private final CompoundPropertyModel<KnowledgeBaseWrapper> kbModel;
-    private final WebMarkupContainer advancedSettingsWrapper;
+    private final AdvancedIriSettingsPanel advancedSettingsPanel;
     private @SpringBean KnowledgeBaseService kbService;
 
     public KnowledgeBaseIriPanel(String id, CompoundPropertyModel<KnowledgeBaseWrapper> aModel,
@@ -151,17 +150,17 @@ public class KnowledgeBaseIriPanel
         add(iriSchemaChoice);
         
      
-        // Add wrapper with advanced settings panel inside
-        advancedSettingsWrapper = new WebMarkupContainer("advancedSettingsWrapper");
-        advancedSettingsWrapper.setOutputMarkupId(true);
-        advancedSettingsWrapper.setVisible(false);
-        advancedSettingsWrapper.setOutputMarkupPlaceholderTag(true);
+        // Add advanced settings panel
+        advancedSettingsPanel = new AdvancedIriSettingsPanel(
+                "advancedSettings", kbModel);
+        advancedSettingsPanel.setVisible(false);
+        advancedSettingsPanel.setOutputMarkupPlaceholderTag(true);
         
-        add(advancedSettingsWrapper);
+        add(advancedSettingsPanel);  
         
-        // Only add advanced settings panel in the project settings because the kb has not been 
-        // registered in the wizard at the point where we want to read specified concepts to check 
-        // whether they exist (see isConceptValid method).
+        // Only make the advanced settings panel visible in the project settings because the kb has
+        // not been registered in the wizard at the point where we want to read specified concepts 
+        // to check whether they exist (see isConceptValid method).
         
         LambdaAjaxLink toggleAdvancedSettings = new LambdaAjaxLink("toggleAdvancedSettings",
                 KnowledgeBaseIriPanel.this::actionToggleAdvancedSettings);
@@ -169,12 +168,8 @@ public class KnowledgeBaseIriPanel
         add(toggleAdvancedSettings);
         
         if (KnowledgeBaseIriPanelMode.PROJECTSETTINGS.equals(mode)) {
-            AdvancedIriSettingsPanel advancedSettingsPanel = new AdvancedIriSettingsPanel(
-                    "advancedSettings", kbModel);
-            advancedSettingsPanel.setOutputMarkupId(true);
-            
+             
             toggleAdvancedSettings.setVisible(true);
-            advancedSettingsWrapper.add(advancedSettingsPanel);
             
             Label toggleAdvancedSettingsLabel = new Label("toggleAdvSettingsLabel") {
                 
@@ -185,7 +180,7 @@ public class KnowledgeBaseIriPanel
                 {
                     super.onConfigure();
                     IModel<String> labelModel;
-                    if (advancedSettingsWrapper.isVisible()) {
+                    if (advancedSettingsPanel.isVisible()) {
                         labelModel = new ResourceModel("toogleAdvSettingsHide");
                     }
                     else {
@@ -203,8 +198,8 @@ public class KnowledgeBaseIriPanel
     }
     
     private void actionToggleAdvancedSettings(AjaxRequestTarget aTarget) {
-        advancedSettingsWrapper.setVisible(!advancedSettingsWrapper.isVisible());
-        aTarget.add(advancedSettingsWrapper);
+        advancedSettingsPanel.setVisible(!advancedSettingsPanel.isVisible());
+        aTarget.add(advancedSettingsPanel);
         aTarget.add(get("toggleAdvancedSettings"));
     }
 
@@ -292,26 +287,11 @@ public class KnowledgeBaseIriPanel
             super(id);
 
             kbModel = aModel;
-            concepts = new ArrayList<>();
+            concepts = kbModel.getObject().getKb().getExplicitlyDefinedRootConcepts();
             setOutputMarkupId(true);
-            /**
-            add(new ListView<IRI>("explicitlyDefinedRootConcepts",
-                    kbModel.bind("kb.explicitlyDefinedRootConcepts"))
-            {
 
-                private static final long serialVersionUID = 1L;
-
-                @Override
-                protected void populateItem(ListItem<IRI> item)
-                {
-                    item.add(buildTextField("textField", item.getModel()));
-
-                }
-
-            });
-            **/
             ListView<IRI> conceptsListView = new ListView<IRI>("explicitlyDefinedRootConcepts",
-                    concepts)
+                    kbModel.bind("kb.explicitlyDefinedRootConcepts"))
             {
 
                 private static final long serialVersionUID = 1L;
@@ -355,12 +335,12 @@ public class KnowledgeBaseIriPanel
                 error("Concept does not exist or has already been specified");
                 aTarget.addChildren(getPage(), IFeedback.class);
             }
-            aTarget.add(advancedSettingsWrapper);
+            aTarget.add(advancedSettingsPanel);
         }
         
         private void actionRemoveConcept(AjaxRequestTarget aTarget, IRI iri) {
             concepts.remove(iri);
-            aTarget.add(advancedSettingsWrapper);
+            aTarget.add(advancedSettingsPanel);
         }
         
         public boolean isConceptValid(KnowledgeBase kb, IRI conceptIRI, boolean aAll)
