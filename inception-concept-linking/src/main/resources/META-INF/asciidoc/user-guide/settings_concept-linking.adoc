@@ -1,0 +1,38 @@
+[[sect_settings_concept-linking]]
+=== Concept Linking
+There are several configurable parameters related to the Concept Linking functionality:
+
+* Cache Size
+- This parameter controls the size of the Candidate Cache, which stores a set of candidates for a mention.
+Increasing the cache size will reduce the number of queries that have to be made against the KB
+and therefore increase average retrieval time.
+
+* Candidate Frequency Threshold
+- This parameter controls after how many concepts the ranking approach should take into account by
+selecting the `n` most frequent concepts. Increasing this parameter will lead to a longer ranking time,
+since more candidates are considered for ranking.
+
+* Mention Context Size
+- This parameter declares the size `k` of the context, where the context is defined as the words
+included in a window with `k` words to both left and right.
+
+* Candidate Retrieval Limit
+- This parameter defines how many concepts should be retrieved for the Candidate Retrieval step.
+Increasing this parameter will lead to a longer time to retrieve candidates from the KB.
+
+* Semantic Signature Query Limit
+- This parameter defines how many concepts should be retrieved for the Semantic Signature of a candidate.
+Increasing this parameter will lead to a longer time to retrieve concepts for constructing the Semantic Signature.
+
+* Candidate Display Limit
+- This parameter regulates how many candidates will be displayed for a mention in the Concept Selector UI.
+
+If no value for a parameter is specified, its default value is used. The default values are shown as
+examples of how the parameters can be configured below:
+
+inception.entity-linking.cacheSize = 2500
+inception.entity-linking.mentionContextSize = 5
+inception.entity-linking.candidateQueryLimit = 2500
+inception.entity-linking.candidateDisplayLimit = 20
+inception.entity-linking.candidateFrequencyThreshold = 25
+inception.entity-linking.signatureQueryLimit = 2147483647

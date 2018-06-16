@@ -108,9 +108,8 @@ public class ExternalClassifier
         }
         
         //Contruct Http Request
-        // TODO: Use traits url
-        String remoteUrl = "http://localhost:12889/tag";
-        // String remoteUrl = traits.getRemoteUrl();
+        String remoteUrl = traits.getRemoteUrl();
+
         CloseableHttpClient httpclient = HttpClients.createDefault();
         HttpPost httpPost = new HttpPost(remoteUrl);
         httpPost.addHeader("content-type", "application/json");
@@ -144,7 +143,6 @@ public class ExternalClassifier
         catch (UnsupportedOperationException | SAXException | IOException e) {
             log.error("Error while sending request!", e);
         }
-        
 
         List<List<AnnotationObject>> annotatedSentences = loader.loadAnnotationObjects(aJCas);
         List<List<List<AnnotationObject>>> wrappedSents = new LinkedList<>();

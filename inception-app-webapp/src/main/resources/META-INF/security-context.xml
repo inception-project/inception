@@ -58,6 +58,7 @@
       to a proper application page.
     -->
     <security:intercept-url access="permitAll" pattern="/favicon.ico" />
+    <security:intercept-url access="permitAll" pattern="/favicon.png" />
     <security:intercept-url access="permitAll" pattern="/assets/**" />
     <security:intercept-url access="permitAll" pattern="/images/**" />
     <security:intercept-url access="permitAll" pattern="/resources/**" />
