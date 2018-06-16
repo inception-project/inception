@@ -17,43 +17,73 @@
  */
 package de.tudarmstadt.ukp.inception.active.learning.event;
 
+import java.util.List;
+
 import org.springframework.context.ApplicationEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
 
-public class ActiveLearningRecommendationEvent extends ApplicationEvent {
+public class ActiveLearningRecommendationEvent
+    extends ApplicationEvent
+{
 
     private static final long serialVersionUID = -2741267700429534514L;
     private final SourceDocument document;
-    private final AnnotationObject annotationObject;
+    private final AnnotationObject currentRecommendation;
     private final String user;
     private final AnnotationLayer layer;
+    private final String annotationFeature;
+    private final String action;
+    private final List<AnnotationObject> allRecommendations;
 
-    public ActiveLearningRecommendationEvent(Object source, SourceDocument document,
-                                             AnnotationObject annotationObject,
-                                             String user, AnnotationLayer layer) {
-        super(source);
-        this.document = document;
-        this.annotationObject = annotationObject;
-        this.user = user;
-        this.layer = layer;
+    public ActiveLearningRecommendationEvent(Object aSource, SourceDocument aDocument,
+        AnnotationObject aCurrentRecommendation, String aUser, AnnotationLayer aLayer,
+        String anAnnotationFeature, String anAction, List<AnnotationObject> theAllRecommendations)
+    {
+        super(aSource);
+        document = aDocument;
+        currentRecommendation = aCurrentRecommendation;
+        user = aUser;
+        layer = aLayer;
+        annotationFeature = anAnnotationFeature;
+        action = anAction;
+        allRecommendations = theAllRecommendations;
     }
 
-    public SourceDocument getDocument() {
+    public SourceDocument getDocument()
+    {
         return document;
     }
 
-    public AnnotationObject getAnnotationObject() {
-        return annotationObject;
+    public AnnotationObject getCurrentRecommendation()
+    {
+        return currentRecommendation;
     }
 
-    public String getUser() {
+    public String getUser()
+    {
         return user;
     }
 
-    public AnnotationLayer getLayer() {
+    public AnnotationLayer getLayer()
+    {
         return layer;
+    }
+
+    public String getAnnotationFeature()
+    {
+        return annotationFeature;
+    }
+
+    public String getAction()
+    {
+        return action;
+    }
+
+    public List<AnnotationObject> getAllRecommendations()
+    {
+        return allRecommendations;
     }
 }

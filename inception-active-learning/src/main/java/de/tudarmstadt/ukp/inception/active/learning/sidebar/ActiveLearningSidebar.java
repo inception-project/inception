@@ -280,14 +280,7 @@ public class ActiveLearningSidebar
     private void setShowingRecommendation()
     {
         AnnotatorState annotatorState = getModelObject();
-        writeLearningRecordInDatabase(LearningRecordUserAction.SHOWN);
-        
-        applicationEventPublisherHolder.get().publishEvent(
-                new ActiveLearningRecommendationEvent(this,
-                        documentService.getSourceDocument(annotatorState.getProject(),
-                                currentRecommendation.getDocumentName()),
-                        currentRecommendation, annotatorState.getUser().getUsername(),
-                        selectedLayer.getObject()));
+        writeLearningRecordInDatabaseAndEventLog(LearningRecordUserAction.SHOWN);
     }
 
     private void highlightCurrentRecommendation(AjaxRequestTarget aTarget)
@@ -424,7 +417,7 @@ public class ActiveLearningSidebar
         highlightCurrentRecommendation(aTarget);
     }
 
-    private void writeLearningRecordInDatabase(LearningRecordUserAction userAction)
+    private void writeLearningRecordInDatabaseAndEventLog(LearningRecordUserAction userAction)
     {
         AnnotatorState annotatorState = ActiveLearningSidebar.this.getModelObject();
         
@@ -442,12 +435,25 @@ public class ActiveLearningSidebar
         record.setChangeLocation(LearningRecordChangeLocation.AL_SIDEBAR);
 
         learningRecordService.create(record);
+
+        model = recommendationService
+            .getPredictions(annotatorState.getUser(), annotatorState.getProject());
+        applicationEventPublisherHolder.get().publishEvent(
+            new ActiveLearningRecommendationEvent(this, documentService
+                .getSourceDocument(annotatorState.getProject(),
+                    currentRecommendation.getDocumentName()), currentRecommendation,
+                annotatorState.getUser().getUsername(), selectedLayer.getObject(),
+                currentRecommendation.getFeature(), userAction.toString(), model
+                .getPredictionsByTokenAndFeature(
+                    currentRecommendation.getOffset().getBeginCharacter(),
+                    currentRecommendation.getOffset().getEndCharacter(),
+                    currentRecommendation.getFeature())));
     }
 
     private void actionAccept(AjaxRequestTarget aTarget) throws AnnotationException, IOException
     {
         aTarget.add(mainContainer);
-        writeLearningRecordInDatabase(LearningRecordUserAction.ACCEPTED);
+        writeLearningRecordInDatabaseAndEventLog(LearningRecordUserAction.ACCEPTED);
         
         // Create annotation from recommendation
         AnnotatorState annotatorState = ActiveLearningSidebar.this.getModelObject();
@@ -481,14 +487,14 @@ public class ActiveLearningSidebar
     private void actionSkip(AjaxRequestTarget aTarget) throws IOException
     {
         aTarget.add(mainContainer);
-        writeLearningRecordInDatabase(LearningRecordUserAction.SKIPPED);
+        writeLearningRecordInDatabaseAndEventLog(LearningRecordUserAction.SKIPPED);
         moveToNextRecommendation(aTarget);
     }
 
     private void actionReject(AjaxRequestTarget aTarget) throws IOException
     {
         aTarget.add(mainContainer);
-        writeLearningRecordInDatabase(LearningRecordUserAction.REJECTED);
+        writeLearningRecordInDatabaseAndEventLog(LearningRecordUserAction.REJECTED);
         moveToNextRecommendation(aTarget);
     }
     
@@ -663,17 +669,16 @@ public class ActiveLearningSidebar
         }
     }
 
-    @OnEvent
-    public void onRecommendationRejectEvent(AjaxRecommendationRejectedEvent aEvent)
+    @OnEvent public void onRecommendationRejectEvent(AjaxRecommendationRejectedEvent aEvent)
     {
         AnnotatorState annotatorState = getModelObject();
         AnnotatorState eventState = aEvent.getAnnotatorState();
-        
-        model = recommendationService.getPredictions(annotatorState.getUser(),
-                annotatorState.getProject());
-        
-        if (sessionActive && eventState.getUser().equals(annotatorState.getUser())
-                && eventState.getProject().equals(annotatorState.getProject())) {
+
+        model = recommendationService
+            .getPredictions(annotatorState.getUser(), annotatorState.getProject());
+
+        if (sessionActive && eventState.getUser().equals(annotatorState.getUser()) && eventState
+            .getProject().equals(annotatorState.getProject())) {
             SourceDocument document = eventState.getDocument();
             VID vid = aEvent.getVid();
             Optional<AnnotationObject> prediction = model.getPredictionByVID(document, vid);
@@ -684,10 +689,20 @@ public class ActiveLearningSidebar
                 return;
             }
 
-            if (document.equals(annotatorState.getDocument())
-                    && vid.getLayerId() == selectedLayer.getObject().getId()
-                    && prediction.get().equals(currentRecommendation)) {
-                
+            AnnotationObject rejectedRecommendation = prediction.get();
+            applicationEventPublisherHolder.get().publishEvent(
+                new ActiveLearningRecommendationEvent(this, eventState.getDocument(),
+                    rejectedRecommendation, annotatorState.getUser().getUsername(),
+                    selectedLayer.getObject(), rejectedRecommendation.getFeature(),
+                    LearningRecordUserAction.REJECTED.toString(), model
+                    .getPredictionsByTokenAndFeature(
+                        rejectedRecommendation.getOffset().getBeginCharacter(),
+                        rejectedRecommendation.getOffset().getEndCharacter(),
+                        rejectedRecommendation.getFeature())));
+
+            if (document.equals(annotatorState.getDocument()) && vid.getLayerId() == selectedLayer
+                .getObject().getId() && prediction.get().equals(currentRecommendation)) {
+
                 moveToNextRecommendation(aEvent.getTarget());
             }
             aEvent.getTarget().add(mainContainer);
@@ -726,6 +741,17 @@ public class ActiveLearningSidebar
         record.setLayer(annotationService.getLayer(vid.getLayerId()));
         record.setChangeLocation(LearningRecordChangeLocation.MAIN_EDITOR);
         learningRecordService.create(record);
+
+        model = recommendationService
+            .getPredictions(annotatorState.getUser(), annotatorState.getProject());
+        applicationEventPublisherHolder.get().publishEvent(
+            new ActiveLearningRecommendationEvent(this, eventState.getDocument(),
+                acceptedRecommendation, annotatorState.getUser().getUsername(),
+                selectedLayer.getObject(), acceptedRecommendation.getFeature(),
+                LearningRecordUserAction.ACCEPTED.toString(), model.getPredictionsByTokenAndFeature(
+                acceptedRecommendation.getOffset().getBeginCharacter(),
+                acceptedRecommendation.getOffset().getEndCharacter(),
+                acceptedRecommendation.getFeature())));
 
         if (sessionActive && currentRecommendation != null
                 && eventState.getUser().equals(annotatorState.getUser())

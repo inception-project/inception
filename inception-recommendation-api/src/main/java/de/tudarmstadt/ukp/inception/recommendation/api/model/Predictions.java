@@ -261,4 +261,12 @@ public class Predictions
         predictions.entrySet()
             .removeIf((p) -> p.getKey().getRecommenderId() == recommenderId);
     }
+
+    public List<AnnotationObject> getPredictionsByTokenAndFeature(int aBegin, int aEnd,
+        String aFeature)
+    {
+        return predictions.values().stream().filter(f -> f.getOffset().getBeginCharacter() == aBegin
+            && f.getOffset().getEndCharacter() == aEnd).filter(f -> f.getFeature().equals(aFeature))
+            .collect(Collectors.toList());
+    }
 }
