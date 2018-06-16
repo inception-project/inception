@@ -431,6 +431,5 @@ public class RecommendationServiceImpl
             }
             setActiveRecommenders(newActiveRecommenders);
         }
-
     }
 }
