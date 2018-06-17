@@ -35,6 +35,7 @@ import org.eclipse.rdf4j.query.TupleQueryResult;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.repository.RepositoryException;
 import org.eclipse.rdf4j.repository.RepositoryResult;
+import org.eclipse.rdf4j.rio.ntriples.NTriplesUtil;
 
 import de.tudarmstadt.ukp.inception.kb.IriConstants;
 
@@ -104,7 +105,8 @@ public class RdfUtils
     {
         String filter = "";
         if (language != null) {
-            filter = "FILTER(LANG(?o) = \"\" || LANGMATCHES(LANG(?o), \"" + language + "\")).";
+            filter = "FILTER(LANG(?o) = \"\" || LANGMATCHES(LANG(?o), \"" + NTriplesUtil
+                .escapeString(language) + "\")).";
         }
         String QUERY = String.join("\n",
             "SELECT * WHERE { ",
