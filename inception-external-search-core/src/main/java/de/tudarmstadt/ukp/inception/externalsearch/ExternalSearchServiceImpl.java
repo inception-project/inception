@@ -46,7 +46,7 @@ public class ExternalSearchServiceImpl
 
     // Index factory
     private ExternalSearchProviderFactory externalSearchProviderFactory;
-    private String externalSearchProviderFactoryName = "elasticSearchProviderFactory";
+    private String externalSearchProviderFactoryName = "ElasticSearchProviderFactory";
 
     // The indexes for each project
     private static Map<Long, ExternalSearchProvider> searchProviders;

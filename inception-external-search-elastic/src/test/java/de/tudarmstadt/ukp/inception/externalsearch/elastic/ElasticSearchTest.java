@@ -153,7 +153,7 @@ public class ElasticSearchTest
         }
 
         @Bean
-        public ExternalSearchProviderFactory elasticSearchProviderFactory()
+        public ExternalSearchProviderFactory ElasticSearchProviderFactory()
         {
             return new ElasticSearchProviderFactory();
         }
