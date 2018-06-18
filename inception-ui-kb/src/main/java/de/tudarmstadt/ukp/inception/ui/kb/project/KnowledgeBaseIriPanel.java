@@ -348,8 +348,7 @@ public class KnowledgeBaseIriPanel
         {
             return kbService.readConcept(kbModel.getObject().getKb(), conceptIRI.stringValue())
                     .isPresent()
-                    && !concepts.contains(conceptIRI);
-            
+                    && !concepts.contains(conceptIRI);  
         }
 
     }
