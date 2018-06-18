@@ -20,6 +20,9 @@ package de.tudarmstadt.ukp.inception.externalsearch.elastic;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.web.client.RestTemplate;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -30,7 +33,8 @@ public class ElasticSearchProvider
     implements ExternalSearchProvider
 {
 
-    private String connectionString = "";
+    private String server = "http://xxx";
+    private String connectionString = server + "/_search";
 
     @Override
     public boolean connect(String aUrl, String aUser, String aPassword)
@@ -58,14 +62,22 @@ public class ElasticSearchProvider
     {
         List<ExternalSearchResult> results = new ArrayList<ExternalSearchResult>();
 
-        // URLCodec codec = new org.apache.commons.codec.net.URLCodec();
-        // String query = codec.encode(String.format(parameterString, aQuery));
-
         RestTemplate restTemplate = new RestTemplate();
 
         ElasticSearchResult queryResult;
 
-        queryResult = restTemplate.getForObject(connectionString + aQuery,
+        // Set headers
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        // Set body
+        String body = "{\"query\": {\"match\" : {\"doc.text\":\"" + aQuery + "\"}}}";
+
+        // Set http entity
+        HttpEntity<String> entity = new HttpEntity<String>(body, headers);
+
+        // Send post query
+        queryResult = restTemplate.postForObject(connectionString, entity,
                 ElasticSearchResult.class);
 
         for (ElasticSearchHit hit : queryResult.getHits().getHits()) {
