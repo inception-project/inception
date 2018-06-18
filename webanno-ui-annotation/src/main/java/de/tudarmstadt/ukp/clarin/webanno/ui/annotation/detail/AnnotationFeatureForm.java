@@ -532,7 +532,7 @@ public class AnnotationFeatureForm
             protected void onConfigure()
             {
                 super.onConfigure();
-                setEnabled(isForwardable());
+                setVisible(isForwardable());
                 if (!isForwardable()) {
                     AnnotationFeatureForm.this.getModelObject().setForwardAnnotation(false);
                 }
