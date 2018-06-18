@@ -151,8 +151,8 @@ NOTE: It is important that both of the features have tagsets assigned - otherwis
 Constraints can be applied to the roles of slot features. This is useful, e.g. when annotating predicate/argument structures where specific predicates can only have certain arguments. 
 
 Consider having a span layer `SemPred` resembling a semantic predicate and bearing a slot feature `arguments` and a string feature `senseId`. We want to restrict the possible argument roles based on the lemma associated with the predicate. The first rule in the following example restricts the `senseId` depending on the value of a `Lemma` annotation at the same position as the `SemPred` annotation. The second rule then restricts the choice of roles for the arguments based on the `senseId`. Note that to apply a restriction to the role of a slot feature, it is
-necessary to append `.role` to the feature name. Thus, while we can write e.g. `senseId = "Request"` for a simple
-string feature, it is necessary to write `arguments.role = "Addressee"`.
+necessary to append `.role` to the feature name (that is because `role` is technically a nested feature). 
+Thus, while we can write e.g. `senseId = "Request"` for a simple string feature, it is necessary to write `arguments.role = "Addressee"`.
 
 Note that some role labels are marked with the flag `(!)`. This is a special flag for slot features and indicates that slots with these role labels should be automatically displayed in the UI ready to be filled. This should be used for mandatory or common slots and saves time as the annotator does not have to manually create the slots before filling them.
 
