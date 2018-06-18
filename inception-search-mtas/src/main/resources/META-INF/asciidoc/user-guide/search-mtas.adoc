@@ -104,26 +104,25 @@ in https://meertensinstituut.github.io/mtas/search_cql.html.
  (<Named_entity.value="OTH"/> | <Named_entity.value="LOC"/>) intersecting
 <SemArg/>
 
+==== Concept Annotation queries
+
 * Generic Search over annotated KB entities : all occurrences for KB entity *Bordeaux*
 
  <KB.Entity="Bordeaux"/>
 
-* Named Entity Identifier : all occurrences of the annotated identifier *ChateauMorgonBeaujolais*
-	
- [Named_entity.identifier="ChateauMorgonBeaujolais"]
+* Named Entity Identifier : all occurrences of the annotated identifier *ChateauMorgonBeaujolais* 
+
+  Note:	*ChateauMorgonBeaujolais* is the label for an example instance from KnowledgeBase, with IRI: http://www.w3.org/TR/2003/PR-owl-guide-20031209/wine#ChateauMorgonBeaujolais 
 
  <Named_entity.identifier="ChateauMorgonBeaujolais"/>
 
 * Named Entity Identifier for KB instance: all occurrences of the annotated identifier *ChateauMorgonBeaujolais*
 
- [Named_entity.identifier.instance="ChateauMorgonBeaujolais"]
-
  <Named_entity.identifier.instance="ChateauMorgonBeaujolais"/>
-
 
 * Named Entity Identifier for KB concept: all occurrences of the annotated identifier *AmericanWine*
 
- [Named_entity.identifier.class="AmericanWine"]
+  Note:	*AmericanWine* is the label for an example concept from KnowledgeBase, with IRI: http://www.w3.org/TR/2003/PR-owl-guide-20031209/wine#AmericanWine
 
  <Named_entity.identifier.class="AmericanWine"/>
 
@@ -134,5 +133,4 @@ in https://meertensinstituut.github.io/mtas/search_cql.html.
  * OR All named entities identifier with annotated identifier *ChateauMorgonBeaujolais* or *AmericanWine*
  
  (<Named_entity.identifier="ChateauMorgonBeaujolais"/> | <Named_entity.identifier="AmericanWine"/>)
- 
  
