@@ -15,39 +15,42 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.ui.kb.stmt.editor;
+package de.tudarmstadt.ukp.inception.ui.kb.value;
 
-import java.io.Serializable;
+import java.util.List;
 
-import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.model.IModel;
-import org.eclipse.rdf4j.model.IRI;
-import org.eclipse.rdf4j.model.Value;
+import org.springframework.beans.factory.BeanNameAware;
+
+import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
+import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
+import de.tudarmstadt.ukp.inception.ui.kb.value.editor.ValueEditor;
+import de.tudarmstadt.ukp.inception.ui.kb.value.editor.ValuePresenter;
 
 /**
- * A {@link DatatypeSupport} reports if it supports a given datatype (string, int, etc., identified
+ * A {@link ValueTypeSupport} reports if it supports a given datatype (string, int, etc., identified
  * by IRIs). It provides Wicket components for presenting and editing values of supported datatypes.
  */
-public interface DatatypeSupport extends Serializable {
-
-    // TODO could rely on DatatypeHandlerRegistry from org.eclipse.rdf4j.rio
-
-    public boolean isSupported(IRI datatype);
+public interface ValueTypeSupport
+    extends BeanNameAware
+{
+    String getId();
     
-    public boolean isValid(IRI datatype, Value value);
+    List<ValueType> getSupportedValueTypes();
+    
+    boolean accepts(KBStatement aStatement, KBProperty aProperty);
 
     /**
      * Returns a {@link ValueEditor} instance given a datatype IRI (most likely the range of a
      * property or the datatype of a statement).
      * 
-     * @param datatype
-     *            the IRI of the datatype
-     * @param id
+     * @param aId
      *            Wicket markup id received by the editor instances
      * 
      * @return a {@link ValueEditor} instance
      */
-    public ValueEditor<?> createEditor(IRI datatype, String id, IModel<Value> model);
-    
-    public WebMarkupContainer createPresenter(IRI datatype, String id, IModel<Value> model);
+    ValueEditor createEditor(String aId, IModel<KBStatement> aModel, IModel<KBProperty> aDatatype);
+
+    ValuePresenter createPresenter(String aId, IModel<KBStatement> aModel,
+            IModel<KBProperty> aDatatype);
 }

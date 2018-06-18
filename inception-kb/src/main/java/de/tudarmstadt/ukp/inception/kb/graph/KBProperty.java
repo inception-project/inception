@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.inception.kb.graph;
 import static de.tudarmstadt.ukp.inception.kb.graph.RdfUtils.readFirst;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -45,11 +44,11 @@ public class KBProperty
     private String identifier;
     private String name;
     private String description;
-    private URI domain;
+    private String domain;
     /**
      * Declares the class or data type of the object in a triple whose predicate is that property.
      */
-    private URI range;
+    private String range;
     private List<Statement> originalStatements = new ArrayList<>();
 
     public KBProperty()
@@ -95,22 +94,22 @@ public class KBProperty
         description = aDescription;
     }
 
-    public URI getDomain()
+    public String getDomain()
     {
         return domain;
     }
 
-    public void setDomain(URI aDomain)
+    public void setDomain(String aDomain)
     {
         domain = aDomain;
     }
 
-    public URI getRange()
+    public String getRange()
     {
         return range;
     }
 
-    public void setRange(URI aRange)
+    public void setRange(String aRange)
     {
         range = aRange;
     }
@@ -177,12 +176,12 @@ public class KBProperty
         });
 
         readFirst(aConn, aStmt.getSubject(), RDFS.RANGE, null).ifPresent((stmt) -> {
-            kbProp.setRange(URI.create(stmt.getObject().stringValue()));
+            kbProp.setRange(stmt.getObject().stringValue());
             kbProp.originalStatements.add(stmt);
         });
 
         readFirst(aConn, aStmt.getSubject(), RDFS.DOMAIN, null).ifPresent((stmt) -> {
-            kbProp.setDomain(URI.create(stmt.getObject().stringValue()));
+            kbProp.setDomain(stmt.getObject().stringValue());
             kbProp.originalStatements.add(stmt);
         });
 

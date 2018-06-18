@@ -15,58 +15,45 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.ui.kb.stmt.editor;
+package de.tudarmstadt.ukp.inception.ui.kb.value.editor;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.event.Broadcast;
 import org.apache.wicket.markup.html.basic.Label;
-import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.Model;
 import org.eclipse.rdf4j.model.IRI;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
+import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxConceptSelectionEvent;
 
-public class IRIValuePresenter<T extends IRI>
-    extends Panel
-    implements ValuePresenter<T>
+public class IRIValuePresenter
+    extends ValuePresenter
 {
     private static final long serialVersionUID = -2127902473859929221L;
-    
-    private IModel<String> stringModel;
-    private IModel<T> iriModel;
 
-    public IRIValuePresenter(String id, IModel<T> model) {
-        super(id, model);
-        
-        iriModel = model;
-        stringModel = Model.of();
-        
+    public IRIValuePresenter(String id, IModel<KBStatement> aModel)
+    {
+        super(id, aModel);
+
         LambdaAjaxLink link = new LambdaAjaxLink("link", this::actionIRILinkClicked);
-        link.add(new Label("label", stringModel));
+        link.add(new Label("label", LambdaModel.of(this::getLabel)));
         add(link);
     }
-    
-    @Override
-    protected void onBeforeRender() {
-        Object object = getDefaultModelObject();
-        
-        // if the model provides what it promises
-        if (object instanceof IRI) {
-            IRI iri = (IRI) object;
-            stringModel.setObject(iri.getLocalName());
-        } else {
-            stringModel.setObject(null);
-        }
-        super.onBeforeRender();
+
+    private String getLabel()
+    {
+        KBStatement stmt = getModelObject();
+        return ((IRI) stmt.getValue()).getLocalName();
     }
-    
-    private void actionIRILinkClicked(AjaxRequestTarget target) {
+
+    private void actionIRILinkClicked(AjaxRequestTarget target)
+    {
         // TODO need to know what the IRI refers to - concept, property, both???
-        T selectedIRI = iriModel.getObject();
-        KBHandle selectedConcept = new KBHandle(selectedIRI.stringValue());
+        KBStatement stmt = getModelObject();
+        KBHandle selectedConcept = new KBHandle(((IRI) stmt.getValue()).toString());
         send(getPage(), Broadcast.BREADTH, new AjaxConceptSelectionEvent(target, selectedConcept));
     }
 }

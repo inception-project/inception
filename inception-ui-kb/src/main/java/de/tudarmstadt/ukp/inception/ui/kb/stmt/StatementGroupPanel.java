@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.stmt;
 
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -46,9 +45,6 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.eclipse.rdf4j.model.IRI;
-import org.eclipse.rdf4j.model.ValueFactory;
-import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.query.QueryEvaluationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -210,18 +206,7 @@ public class StatementGroupPanel extends Panel {
             // obtain IRI of property range, if existent
             Optional<KBProperty> property = kbService.readProperty(groupModel.getObject().getKb(),
                     groupModel.getObject().getProperty().getIdentifier());
-            IRI propertyIRI;
-            if (!property.isPresent() || property.get().getRange() == null) {
-                // if the property can't be found (this has happened for British Museum) or if the
-                // range is undefined, use null 
-                propertyIRI = null;
-            } else {
-                // otherwise, obtain the IRI
-                URI uri = property.get().getRange();
-                ValueFactory factory = SimpleValueFactory.getInstance();
-                propertyIRI = factory.createIRI(uri.toString());
-            }            
-            IModel<IRI> propertyIriModel = Model.of(propertyIRI);
+            IModel<KBProperty> propertyModel = Model.of(property.orElse(null));
 
             RefreshingView<KBStatement> statementList = new RefreshingView<KBStatement>(
                     "statementList") {
@@ -241,7 +226,7 @@ public class StatementGroupPanel extends Panel {
                 @Override
                 protected void populateItem(Item<KBStatement> aItem) {
                     StatementEditor editor = new StatementEditor("statement",
-                            groupModel.bind("kb"), aItem.getModel(), propertyIriModel);
+                            groupModel.bind("kb"), aItem.getModel(), propertyModel);
                     aItem.add(editor);
                     aItem.setOutputMarkupId(true);
                 }

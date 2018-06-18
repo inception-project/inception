@@ -623,9 +623,9 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         KBHandle handle = sut.createProperty(kb, property);
 
         property.setDescription("New property description");
-        property.setDomain(URI.create("https://new.schema.com/#domain"));
+        property.setDomain("https://new.schema.com/#domain");
         property.setName("New property name");
-        property.setRange(URI.create("https://new.schema.com/#range"));
+        property.setRange("https://new.schema.com/#range");
         sut.updateProperty(kb, property);
 
         KBProperty savedProperty = sut.readProperty(kb, handle.getIdentifier()).get();
@@ -687,9 +687,9 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         setReadOnly(kb);
 
         property.setDescription("New property description");
-        property.setDomain(URI.create("https://new.schema.com/#domain"));
+        property.setDomain("https://new.schema.com/#domain");
         property.setName("New property name");
-        property.setRange(URI.create("https://new.schema.com/#range"));
+        property.setRange("https://new.schema.com/#range");
         sut.updateProperty(kb, property);
 
         KBProperty savedProperty = sut.readProperty(kb, handle.getIdentifier()).get();

@@ -15,9 +15,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.ui.kb.stmt.editor;
+package de.tudarmstadt.ukp.inception.ui.kb.value.editor;
 
-public interface ValuePresenter<T>
+import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.model.IModel;
+
+import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
+
+public abstract class ValuePresenter
+    extends Panel
 {
-    // FIXME
+    private static final long serialVersionUID = -7446040894278213264L;
+
+    public ValuePresenter(String aId, IModel<KBStatement> aModel)
+    {
+        super(aId, aModel);
+    }
+    
+    public KBStatement getModelObject()
+    {
+        return (KBStatement) getDefaultModelObject();
+    }
 }

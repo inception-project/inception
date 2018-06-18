@@ -15,38 +15,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.ui.kb.stmt.editor;
+package de.tudarmstadt.ukp.inception.ui.kb.value.editor;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.markup.html.basic.Label;
-import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.Model;
-import org.cyberborean.rdfbeans.datatype.DatatypeMapper;
-import org.cyberborean.rdfbeans.datatype.DefaultDatatypeMapper;
-import org.eclipse.rdf4j.model.Literal;
 
-public class LiteralValuePresenter
-    extends Panel
-    implements ValuePresenter<Literal>
+import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
+
+public class StringLiteralValuePresenter
+    extends ValuePresenter
 {
     private static final long serialVersionUID = -6774637988828817203L;
 
-    private IModel<Literal> model;
-    private IModel<String> value;
-    private IModel<String> language;
-
-    public LiteralValuePresenter(String id, IModel<Literal> model)
+    public StringLiteralValuePresenter(String aId, IModel<KBStatement> aModel)
     {
-        super(id, model);
+        super(aId, CompoundPropertyModel.of(aModel));
 
-        this.model = model;
-
-        value = Model.of();
-        language = Model.of();
-
-        add(new Label("value", value));
-        add(new Label("language", language)
+        add(new Label("value"));
+        add(new Label("language")
         {
             private static final long serialVersionUID = 3436068825093393740L;
 
@@ -58,17 +46,5 @@ public class LiteralValuePresenter
                 setVisible(StringUtils.isNotEmpty(language));
             }
         });
-    }
-
-    @Override
-    protected void onBeforeRender()
-    {
-        Literal literal = this.model.getObject();
-
-        DatatypeMapper mapper = new DefaultDatatypeMapper();
-        value.setObject(mapper.getJavaObject(literal).toString());
-        language.setObject(literal.getLanguage().orElse(null));
-
-        super.onBeforeRender();
     }
 }

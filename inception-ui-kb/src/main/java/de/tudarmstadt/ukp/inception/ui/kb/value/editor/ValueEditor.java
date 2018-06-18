@@ -15,21 +15,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.ui.kb.stmt.editor;
+package de.tudarmstadt.ukp.inception.ui.kb.value.editor;
 
-import org.apache.wicket.Component;
-import org.eclipse.rdf4j.model.Value;
+import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.model.IModel;
 
-public class InvalidStatementValueEditorPresenter extends ValueEditor<Value> {
+import de.tudarmstadt.ukp.inception.app.Focusable;
+import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 
-    private static final long serialVersionUID = 4441851713886758935L;
+public abstract class ValueEditor
+    extends Panel
+    implements Focusable
+{
+    private static final long serialVersionUID = -7446040894278213264L;
 
-    public InvalidStatementValueEditorPresenter(String id) {
-        super(id, null);
+    public ValueEditor(String aId, IModel<KBStatement> aModel)
+    {
+        super(aId, aModel);
     }
-
-    @Override
-    public Component getFocusComponent() {
-        return null;
+    
+    public KBStatement getModelObject()
+    {
+        return (KBStatement) getDefaultModelObject();
     }
 }

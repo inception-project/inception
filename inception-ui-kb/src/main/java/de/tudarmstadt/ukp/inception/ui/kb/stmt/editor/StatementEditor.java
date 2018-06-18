@@ -25,6 +25,8 @@ import org.apache.wicket.event.Broadcast;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.form.ChoiceRenderer;
+import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.Fragment;
 import org.apache.wicket.markup.html.panel.Panel;
@@ -38,7 +40,6 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.repository.RepositoryException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,6 +50,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.inception.app.Focusable;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
+import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBQualifier;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
@@ -56,6 +58,9 @@ import de.tudarmstadt.ukp.inception.ui.kb.WriteProtectionBehavior;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxQualifierChangedEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxStatementChangedEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.stmt.QualifierEditor;
+import de.tudarmstadt.ukp.inception.ui.kb.value.ValueType;
+import de.tudarmstadt.ukp.inception.ui.kb.value.ValueTypeSupportRegistry;
+import de.tudarmstadt.ukp.inception.ui.kb.value.editor.ValueEditor;
 
 public class StatementEditor extends Panel
 {
@@ -66,25 +71,22 @@ public class StatementEditor extends Panel
     private static final String CONTENT_MARKUP_ID = "content";
 
     private @SpringBean KnowledgeBaseService kbService;
+    private @SpringBean ValueTypeSupportRegistry valueTypeRegistry;
     
-    private IModel<DatatypeSupport> datatypeSupport;
     private IModel<KnowledgeBase> kbModel;
     private IModel<KBStatement> statement;
-    private IModel<IRI> propertyIri;
+    private IModel<KBProperty> property;
     private Component content;
 
     public StatementEditor(String aId, IModel<KnowledgeBase> aKbModel,
-            IModel<KBStatement> aStatement, IModel<IRI> aPropertyIri) {
+            IModel<KBStatement> aStatement, IModel<KBProperty> aProperty) {
         super(aId, aStatement);
 
         setOutputMarkupId(true);
         
-        // TODO avoid frequent reinstantiation - instance could be kept same across all stmt eds.
-        datatypeSupport = Model.of(new MetaDatatypeSupport(aKbModel.getObject()));
-
         kbModel = aKbModel;
         statement = aStatement;
-        propertyIri = aPropertyIri;
+        property = aProperty;
 
         // new statements start with edit mode right away
         boolean isNewStatement = statement.getObject().getOriginalStatements().isEmpty();
@@ -203,8 +205,9 @@ public class StatementEditor extends Panel
             CompoundPropertyModel<KBStatement> model = new CompoundPropertyModel<>(
                     aStatement);
 
-            WebMarkupContainer presenter = datatypeSupport.getObject()
-                    .createPresenter(propertyIri.getObject(), "value", model.bind("value"));
+            WebMarkupContainer presenter = valueTypeRegistry
+                    .getValueSupport(aStatement.getObject(), property.getObject())
+                    .createPresenter("value", model, property);
             add(presenter);
             
             LambdaAjaxLink editLink = new LambdaAjaxLink("edit", StatementEditor.this::actionEdit)
@@ -280,7 +283,9 @@ public class StatementEditor extends Panel
     private class EditMode extends Fragment implements Focusable {
         private static final long serialVersionUID = 2489925553729209190L;
 
-        private ValueEditor<?> editor;
+        private ValueEditor editor;
+        
+        private DropDownChoice<ValueType> valueType;
 
         /**
          * Creates a new fragement for editing a statement.<br>
@@ -305,11 +310,19 @@ public class StatementEditor extends Panel
             super(aId, "editMode", StatementEditor.this, aStatement);
             CompoundPropertyModel<KBStatement> model = CompoundPropertyModel.of(aStatement);
             Form<KBStatement> form = new Form<>("form", model);
-                       
+            
+            valueType = new DropDownChoice<>("valueType", valueTypeRegistry.getAllTypes());
+            valueType.setChoiceRenderer(new ChoiceRenderer<>("uiName"));
+            valueType.setModel(Model.of(
+                    valueTypeRegistry.getValueType(aStatement.getObject(), property.getObject())));
+            // TODO need to replace the editor when the choice here is changed
+            form.add(valueType);
+            
             // use the IRI to obtain the appropriate value editor
-            editor = datatypeSupport.getObject().createEditor(propertyIri.getObject(),
-                    "value", model.bind("value"));
+            editor = valueTypeRegistry.getValueSupport(aStatement.getObject(), property.getObject())
+                    .createEditor("value", model, property);
             form.add(editor);
+            
             form.add(new LambdaAjaxButton<>("save", StatementEditor.this::actionSave));
             form.add(new LambdaAjaxLink("cancel", t -> {
                 if (isNewStatement) {
