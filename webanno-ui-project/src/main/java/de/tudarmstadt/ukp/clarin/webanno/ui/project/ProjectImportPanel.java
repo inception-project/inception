@@ -105,7 +105,7 @@ public class ProjectImportPanel
                     
                     //importedProject = importService.importProject(tempFile, aGenerateUsers);
                     ProjectImportRequest request = new ProjectImportRequest(aGenerateUsers);
-                    exportService.importProject(request, new ZipFile(tempFile));
+                    importedProject = exportService.importProject(request, new ZipFile(tempFile));
                 }
                 finally {
                     tempFile.delete();
