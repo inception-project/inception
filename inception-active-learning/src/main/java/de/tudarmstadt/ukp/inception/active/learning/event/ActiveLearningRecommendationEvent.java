@@ -24,6 +24,7 @@ import org.springframework.context.ApplicationEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
 
 public class ActiveLearningRecommendationEvent
     extends ApplicationEvent
@@ -35,21 +36,22 @@ public class ActiveLearningRecommendationEvent
     private final String user;
     private final AnnotationLayer layer;
     private final String annotationFeature;
-    private final String action;
+    private final LearningRecordUserAction action;
     private final List<AnnotationObject> allRecommendations;
 
     public ActiveLearningRecommendationEvent(Object aSource, SourceDocument aDocument,
         AnnotationObject aCurrentRecommendation, String aUser, AnnotationLayer aLayer,
-        String anAnnotationFeature, String anAction, List<AnnotationObject> theAllRecommendations)
+        String aAnnotationFeature, LearningRecordUserAction aAction,
+        List<AnnotationObject> aAllRecommendations)
     {
         super(aSource);
         document = aDocument;
         currentRecommendation = aCurrentRecommendation;
         user = aUser;
         layer = aLayer;
-        annotationFeature = anAnnotationFeature;
-        action = anAction;
-        allRecommendations = theAllRecommendations;
+        annotationFeature = aAnnotationFeature;
+        action = aAction;
+        allRecommendations = aAllRecommendations;
     }
 
     public SourceDocument getDocument()
@@ -77,7 +79,7 @@ public class ActiveLearningRecommendationEvent
         return annotationFeature;
     }
 
-    public String getAction()
+    public LearningRecordUserAction getAction()
     {
         return action;
     }

@@ -443,7 +443,7 @@ public class ActiveLearningSidebar
                 .getSourceDocument(annotatorState.getProject(),
                     currentRecommendation.getDocumentName()), currentRecommendation,
                 annotatorState.getUser().getUsername(), selectedLayer.getObject(),
-                currentRecommendation.getFeature(), userAction.toString(), model
+                currentRecommendation.getFeature(), userAction, model
                 .getPredictionsByTokenAndFeature(
                     currentRecommendation.getOffset().getBeginCharacter(),
                     currentRecommendation.getOffset().getEndCharacter(),
@@ -694,11 +694,10 @@ public class ActiveLearningSidebar
                 new ActiveLearningRecommendationEvent(this, eventState.getDocument(),
                     rejectedRecommendation, annotatorState.getUser().getUsername(),
                     selectedLayer.getObject(), rejectedRecommendation.getFeature(),
-                    LearningRecordUserAction.REJECTED.toString(), model
-                    .getPredictionsByTokenAndFeature(
-                        rejectedRecommendation.getOffset().getBeginCharacter(),
-                        rejectedRecommendation.getOffset().getEndCharacter(),
-                        rejectedRecommendation.getFeature())));
+                    LearningRecordUserAction.REJECTED, model.getPredictionsByTokenAndFeature(
+                    rejectedRecommendation.getOffset().getBeginCharacter(),
+                    rejectedRecommendation.getOffset().getEndCharacter(),
+                    rejectedRecommendation.getFeature())));
 
             if (document.equals(annotatorState.getDocument()) && vid.getLayerId() == selectedLayer
                 .getObject().getId() && prediction.get().equals(currentRecommendation)) {
@@ -748,7 +747,7 @@ public class ActiveLearningSidebar
             new ActiveLearningRecommendationEvent(this, eventState.getDocument(),
                 acceptedRecommendation, annotatorState.getUser().getUsername(),
                 selectedLayer.getObject(), acceptedRecommendation.getFeature(),
-                LearningRecordUserAction.ACCEPTED.toString(), model.getPredictionsByTokenAndFeature(
+                LearningRecordUserAction.ACCEPTED, model.getPredictionsByTokenAndFeature(
                 acceptedRecommendation.getOffset().getBeginCharacter(),
                 acceptedRecommendation.getOffset().getEndCharacter(),
                 acceptedRecommendation.getFeature())));

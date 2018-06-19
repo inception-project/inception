@@ -28,6 +28,9 @@ import org.springframework.stereotype.Component;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningRecommendationEvent;
 import de.tudarmstadt.ukp.inception.log.adapter.EventLoggingAdapter;
+import de.tudarmstadt.ukp.inception.log.model.AnnotationDetails;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
+
 
 @Component
 public class ActiveLearningRecommendationEventAdapter
@@ -58,15 +61,17 @@ public class ActiveLearningRecommendationEventAdapter
     {
         try {
             ActiveLearningRecommendationDetails details = new ActiveLearningRecommendationDetails();
-            details.coveredText = aEvent.getCurrentRecommendation().getCoveredText();
-            details.layer = aEvent.getLayer().getUiName();
+            details.ann = new AnnotationDetails();
+            details.ann.setBegin(aEvent.getCurrentRecommendation().getOffset().getBeginCharacter());
+            details.ann.setEnd(aEvent.getCurrentRecommendation().getOffset().getEndCharacter());
+            details.ann.setText(aEvent.getCurrentRecommendation().getCoveredText());
+            details.ann.setType(aEvent.getLayer().getName());
             details.annotationFeature = aEvent.getAnnotationFeature();
-            details.characterBeginOffset = aEvent.getCurrentRecommendation().getOffset()
-                .getBeginCharacter();
-            details.characterEndOffset = aEvent.getCurrentRecommendation().getOffset()
-                .getEndCharacter();
             details.userAction = aEvent.getAction();
             details.currentLabel = aEvent.getCurrentRecommendation().getLabel();
+            details.confidence = aEvent.getCurrentRecommendation().getConfidence();
+            details.recommenderId = aEvent.getCurrentRecommendation().getRecommenderId();
+
             List<String> allLabelList = aEvent.getAllRecommendations().stream()
                 .map(ao -> ao.getLabel()).collect(Collectors.toList());
             details.allLabels = String.join(", ", allLabelList);
@@ -80,13 +85,12 @@ public class ActiveLearningRecommendationEventAdapter
 
     public static class ActiveLearningRecommendationDetails
     {
-        public String coveredText;
-        public String layer;
+        public AnnotationDetails ann;
         public String annotationFeature;
-        public int characterBeginOffset;
-        public int characterEndOffset;
-        public String userAction;
+        public LearningRecordUserAction userAction;
         public String currentLabel;
+        public double confidence;
+        public long recommenderId;
         public String allLabels;
     }
 }
