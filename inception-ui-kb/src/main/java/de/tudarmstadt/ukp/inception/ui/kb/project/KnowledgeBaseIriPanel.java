@@ -127,7 +127,6 @@ public class KnowledgeBaseIriPanel
         comboBoxWrapper.add(classField, subclassField, typeField, descriptionField, labelField,
                 propertyTypeField);
        
-
         // OnChange update the model with corresponding iris
         iriSchemaChoice.setChangeHandler(new ISelectionChangeHandler<SchemaProfile>()
         {
@@ -146,33 +145,27 @@ public class KnowledgeBaseIriPanel
                 target.add(comboBoxWrapper, iriSchemaChoice);
             }
         });
-
         add(iriSchemaChoice);
-        
-     
+           
         // Add advanced settings panel
         advancedSettingsPanel = new AdvancedIriSettingsPanel(
                 "advancedSettings", kbModel);
         advancedSettingsPanel.setVisible(false);
         advancedSettingsPanel.setOutputMarkupPlaceholderTag(true);
-        
         add(advancedSettingsPanel);  
         
         // Only make the advanced settings panel visible in the project settings because the kb has
         // not been registered in the wizard at the point where we want to read specified concepts 
-        // to check whether they exist (see isConceptValid method).
-        
+        // to check whether they exist (see isConceptValid method).     
         LambdaAjaxLink toggleAdvancedSettings = new LambdaAjaxLink("toggleAdvancedSettings",
                 KnowledgeBaseIriPanel.this::actionToggleAdvancedSettings);
         toggleAdvancedSettings.setVisible(false);
         add(toggleAdvancedSettings);
         
         if (KnowledgeBaseIriPanelMode.PROJECTSETTINGS.equals(mode)) {
-             
             toggleAdvancedSettings.setVisible(true);
-            
-            Label toggleAdvancedSettingsLabel = new Label("toggleAdvSettingsLabel") {
-                
+            Label toggleAdvancedSettingsLabel = new Label("toggleAdvSettingsLabel")
+            {
                 private static final long serialVersionUID = -1593621355344848909L;
                 
                 @Override
@@ -192,9 +185,6 @@ public class KnowledgeBaseIriPanel
             toggleAdvancedSettings.setOutputMarkupId(true);
             toggleAdvancedSettings.add(toggleAdvancedSettingsLabel);
         }
-        
-        
-
     }
     
     private void actionToggleAdvancedSettings(AjaxRequestTarget aTarget) {
@@ -238,8 +228,7 @@ public class KnowledgeBaseIriPanel
         iriTextfield.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> {
             // Do nothing just update the model values
         }));
-        iriTextfield.setEnabled(false);
-        
+        iriTextfield.setEnabled(false);       
         return iriTextfield;
     }
 
@@ -293,9 +282,8 @@ public class KnowledgeBaseIriPanel
             ListView<IRI> conceptsListView = new ListView<IRI>("explicitlyDefinedRootConcepts",
                     kbModel.bind("kb.explicitlyDefinedRootConcepts"))
             {
-
                 private static final long serialVersionUID = 1L;
-
+                
                 @Override
                 protected void populateItem(ListItem<IRI> item)
                 {   
@@ -305,7 +293,6 @@ public class KnowledgeBaseIriPanel
                         AdvancedIriSettingsPanel.this.actionRemoveConcept(t, item.getModelObject());
                     }));
                     item.add(conceptForm);
-
                 }
 
             };
@@ -322,7 +309,6 @@ public class KnowledgeBaseIriPanel
                     AdvancedIriSettingsPanel.this::actionNewRootConcept);
             add(specifyConcept);
             specifyConcept.add(new Label("add", new ResourceModel("specifyRootConcept")));
-            
         }
         
         private void actionNewRootConcept(AjaxRequestTarget aTarget) {
@@ -350,7 +336,5 @@ public class KnowledgeBaseIriPanel
                     .isPresent()
                     && !concepts.contains(conceptIRI);  
         }
-
     }
-
 }
