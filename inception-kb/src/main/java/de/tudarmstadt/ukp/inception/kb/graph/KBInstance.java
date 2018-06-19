@@ -44,6 +44,17 @@ public class KBInstance
     private URI type;
     private List<Statement> originalStatements = new ArrayList<>();
 
+    public KBInstance()
+    {
+        // No-args constructor
+    }
+
+    public KBInstance(String aIdentifier, String aName)
+    {
+        identifier = aIdentifier;
+        name = aName;
+    }
+
     @Override
     public String getIdentifier()
     {
