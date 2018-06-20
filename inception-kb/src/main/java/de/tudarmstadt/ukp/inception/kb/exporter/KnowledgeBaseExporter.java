@@ -1,14 +1,22 @@
 package de.tudarmstadt.ukp.inception.kb.exporter;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+import org.apache.commons.io.FileUtils;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.repository.config.RepositoryImplConfig;
 import org.eclipse.rdf4j.repository.sparql.config.SPARQLRepositoryConfig;
+import org.eclipse.rdf4j.rio.RDFFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +37,12 @@ public class KnowledgeBaseExporter implements ProjectExporter
 {
     private static final String KEY = "knowledgeBases";
     private static final Logger LOG = LoggerFactory.getLogger(KnowledgeBaseExporter.class);
+    
+    private static final String SOURCE = "knowledgeBase_source";
+    private static final String SOURCE_FOLDER = "/" + SOURCE;
+    private static final String KNOWLEDGEBASEFILES = SOURCE_FOLDER + "/";
+    
+    private static final RDFFormat knowledgeBaseFileExportFormat = RDFFormat.TURTLE;
     
     private final KnowledgeBaseService kbService;
     
@@ -61,17 +75,40 @@ public class KnowledgeBaseExporter implements ProjectExporter
             exportedKB.setBasePrefix(kb.getBasePrefix());
             exportedKnowledgeBases.add(exportedKB);
             
-            // set url for remote KB for local KB the value is just null
             if (kb.getType() == RepositoryType.REMOTE) {
+                // set url for remote KB
                 RepositoryImplConfig cfg = kbService.getKnowledgeBaseConfig(kb);
                 String url = ((SPARQLRepositoryConfig) cfg).getQueryEndpointUrl();
                 exportedKB.setRemoteURL(url);
             }
+            else {
+                // export local kb files
+                exportKnowledgeBaseFiles(aFile, kb);
+            }
+            
         }
-        
         aExProject.setProperty(KEY, exportedKnowledgeBases);
         int n = exportedKnowledgeBases.size();
         LOG.info("Exported [{}] knowledge bases for project [{}]", n, project.getName());
+    }
+    
+    /**
+     * exports the source files of local a knowledge base in the format specified in
+     * {@link #knowledgeBaseFileExportFormat}
+     */
+    private void exportKnowledgeBaseFiles(File aFile, KnowledgeBase kb)
+        throws FileNotFoundException, IOException
+    {
+        File sourceKnowledgeBaseDir = new File(aFile + SOURCE_FOLDER);
+        FileUtils.forceMkdir(sourceKnowledgeBaseDir);
+
+        // create file with name "<knowledgebaseName>.<fileExtension>" in folder
+        // knowledgeBase_source
+        File kbData = new File(aFile + getSourceFileName(kb));
+        kbData.createNewFile();
+        try (OutputStream os = new FileOutputStream(kbData)) {
+            kbService.exportData(kb, knowledgeBaseFileExportFormat, os);
+        }
     }
 
     @Override
@@ -101,21 +138,39 @@ public class KnowledgeBaseExporter implements ProjectExporter
             
             // Get config and register knowledge base
             RepositoryImplConfig cfg;
-            switch (kb.getType()) {
-            case LOCAL:
+            if (kb.getType() == RepositoryType.LOCAL) {
                 cfg = kbService.getNativeConfig();
                 kbService.registerKnowledgeBase(kb, cfg);
-                break;
-            case REMOTE:
+                importKnowledgeBaseFiles(aZip, kb);
+            }
+            else {
                 cfg = kbService.getRemoteConfig(exportedKB.getRemoteURL());
                 kbService.registerKnowledgeBase(kb, cfg);
-                break;
-            default:
-                throw new IllegalStateException();
             }
         }
         int n = knowledgeBases.length;
         LOG.info("Imported [{}] knowledge bases for project [{}]", n, aProject.getName());
     }
     
+    /**
+     * import the source files of local a knowledge base form the zip file of an previously exported
+     * project {@link #knowledgeBaseFileExportFormat}
+     */
+    private void importKnowledgeBaseFiles(ZipFile aZip, KnowledgeBase kb) throws IOException
+    {   
+        String sourceFileName = getSourceFileName(kb);
+        // remove leading "/"
+        ZipEntry entry = aZip.getEntry(sourceFileName.substring(1));
+        
+        try (InputStream is = aZip.getInputStream(entry)) {
+            kbService.importData(kb, sourceFileName, is);
+        }
+    }
+    
+    private String getSourceFileName(KnowledgeBase kb)
+    {
+        return KNOWLEDGEBASEFILES + kb.getName() + "."
+                + knowledgeBaseFileExportFormat.getDefaultFileExtension();
+    }
+        
 }

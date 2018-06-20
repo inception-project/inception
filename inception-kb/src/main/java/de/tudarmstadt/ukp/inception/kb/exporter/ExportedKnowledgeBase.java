@@ -64,6 +64,7 @@ public class ExportedKnowledgeBase
     @JsonProperty("basePrefix")
     private String basePrefix;
     
+    // set to null for local knowledge bases
     @JsonProperty("remoteURL")
     private String remoteURL;
 
