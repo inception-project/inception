@@ -52,12 +52,12 @@ import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 @Component
 public class KnowledgeBaseExporter implements ProjectExporter
 {
-    private static final String KEY = "knowledgeBases";
+    private static final String KEY = "knowledge_bases";
     private static final Logger LOG = LoggerFactory.getLogger(KnowledgeBaseExporter.class);
     
-    private static final String SOURCE = "knowledgeBase_source";
-    private static final String SOURCE_FOLDER = "/" + SOURCE;
-    private static final String KNOWLEDGEBASEFILES = SOURCE_FOLDER + "/";
+    private static final String KB = "kb";
+    private static final String KB_FOLDER = "/" + KB;
+    private static final String KNOWLEDGEBASEFILES = KB_FOLDER + "/";
     
     private static final RDFFormat knowledgeBaseFileExportFormat = RDFFormat.TURTLE;
     
@@ -116,11 +116,11 @@ public class KnowledgeBaseExporter implements ProjectExporter
     private void exportKnowledgeBaseFiles(File aFile, KnowledgeBase kb)
         throws FileNotFoundException, IOException
     {
-        File sourceKnowledgeBaseDir = new File(aFile + SOURCE_FOLDER);
+        File sourceKnowledgeBaseDir = new File(aFile + KB_FOLDER);
         FileUtils.forceMkdir(sourceKnowledgeBaseDir);
 
         // create file with name "<knowledgebaseName>.<fileExtension>" in folder
-        // knowledgeBase_source
+        // KB_FOLDER
         File kbData = new File(aFile + getSourceFileName(kb));
         kbData.createNewFile();
         try (OutputStream os = new FileOutputStream(kbData)) {
@@ -170,7 +170,7 @@ public class KnowledgeBaseExporter implements ProjectExporter
     }
     
     /**
-     * import the source files of local a knowledge base form the zip file of an previously exported
+     * import the source files of local a knowledge base form the zip file of a previously exported
      * project {@link #knowledgeBaseFileExportFormat}
      */
     private void importKnowledgeBaseFiles(ZipFile aZip, KnowledgeBase kb) throws IOException
