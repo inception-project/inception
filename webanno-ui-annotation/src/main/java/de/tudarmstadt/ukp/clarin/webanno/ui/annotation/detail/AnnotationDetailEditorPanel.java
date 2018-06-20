@@ -633,12 +633,8 @@ public class AnnotationDetailEditorPanel
         // feature editors
         writeFeatureEditorModelsToCas(adapter, aJCas);
 
-        //Send AjaxEvent so that Active Learning sidebar could receive the changes
-        List<Serializable> values = new ArrayList<>();
-        for (FeatureState featureState : featureStates) {
-            send(getPage(), Broadcast.BREADTH, new AjaxAfterAnnotationUpdateEvent(aTarget, state,
-                    featureState.value));
-        }
+        // Notify other UI elements (e.g. sidebars) about the update so that they can react to it
+        send(getPage(), Broadcast.BREADTH, new AjaxAfterAnnotationUpdateEvent(aTarget, state));
 
         // Update progress information
         LOG.trace("actionAnnotate() updating progress information");

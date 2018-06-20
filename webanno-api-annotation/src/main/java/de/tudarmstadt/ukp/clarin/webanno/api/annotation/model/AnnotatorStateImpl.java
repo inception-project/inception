@@ -119,7 +119,7 @@ public class AnnotatorStateImpl
      */
     private int unitCount;
 
-    private List<FeatureState> featureModels = new ArrayList<>();          
+    private final List<FeatureState> featureModels = new ArrayList<>();          
     
     /**
      * Constraints object from rule file

@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.event;
 
-import java.io.Serializable;
-
 import org.apache.wicket.ajax.AjaxRequestTarget;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
@@ -27,14 +25,11 @@ public class AjaxAfterAnnotationUpdateEvent
 {
     protected AjaxRequestTarget target;
     private AnnotatorState annotatorState;
-    private Serializable value;
 
-    public AjaxAfterAnnotationUpdateEvent(AjaxRequestTarget aTarget, AnnotatorState aState,
-            Serializable aValue)
+    public AjaxAfterAnnotationUpdateEvent(AjaxRequestTarget aTarget, AnnotatorState aState)
     {
         target = aTarget;
         annotatorState = aState;
-        value = aValue;
     }
 
     public AjaxRequestTarget getTarget()
@@ -45,10 +40,5 @@ public class AjaxAfterAnnotationUpdateEvent
     public AnnotatorState getAnnotatorState()
     {
         return annotatorState;
-    }
-
-    public Serializable getValue()
-    {
-        return value;
     }
 }
