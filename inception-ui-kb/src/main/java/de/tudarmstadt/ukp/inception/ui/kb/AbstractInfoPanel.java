@@ -163,8 +163,14 @@ public abstract class AbstractInfoPanel<T extends KBObject> extends Panel {
             Label uiLabel = new Label("uiLabel", compoundModel.bind("uiLabel"));
             uiLabel.add(new TooltipBehavior(compoundModel.bind("identifier")));
             add(uiLabel);
+            // IModel<String> val = compoundModel.bind("identifier");
+            // MootipSettings mooSettings = new MootipSettings();
+            // mooSettings.setEvalAlways(true);
+            // mooSettings.setShowOnMouseEnter(true);
+            // MootipBehaviour behaviour = new MootipBehaviour("",val.getObject());
+            // behaviour.setMootipSettings(mooSettings);
+            // uiLabel.add(behaviour);
             add(new Label("typeLabel", new ResourceModel(getTypeLabelResourceKey())));
-
             // button for deleting the KBObject
             LambdaAjaxLink deleteButton = new LambdaAjaxLink("delete",
                     AbstractInfoPanel.this::confirmActionDelete).onConfigure((_this) -> {

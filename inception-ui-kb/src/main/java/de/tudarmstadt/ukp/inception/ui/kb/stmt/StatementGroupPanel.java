@@ -49,6 +49,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
 
+import com.googlecode.wicket.kendo.ui.widget.tooltip.TooltipBehavior;
+
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
@@ -192,12 +194,11 @@ public class StatementGroupPanel extends Panel {
             super(aId, "existingStatementGroup", StatementGroupPanel.this, groupModel);
                         
             Form<StatementGroupBean> form = new Form<StatementGroupBean>("form");
-            
             LambdaAjaxLink propertyLink = new LambdaAjaxLink("propertyLink",
                     this::actionPropertyLinkClicked);
             propertyLink.add(new Label("property", groupModel.bind("property.uiLabel")));
+            propertyLink.add(new TooltipBehavior(groupModel.bind("property.identifier")));
             form.add(propertyLink);
-
             RefreshingView<KBStatement> statementList = new RefreshingView<KBStatement>(
                     "statementList") {
                 private static final long serialVersionUID = 5811425707843441458L;
