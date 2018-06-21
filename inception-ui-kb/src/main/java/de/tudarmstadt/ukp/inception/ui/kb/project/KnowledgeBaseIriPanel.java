@@ -206,7 +206,7 @@ public class KnowledgeBaseIriPanel
             () -> model.getObject().stringValue(),
             str -> model.setObject(SimpleValueFactory.getInstance().createIRI(str)));
 
-        ComboBox<String> comboBox = new ComboBox<String>(id, adapter, choices);
+        ComboBox<String> comboBox = new ComboBox<>(id, adapter, choices);
         comboBox.add(LambdaBehavior.onConfigure(cb -> cb
                 .setEnabled(SchemaProfile.CUSTOMSCHEMA.equals(selectedSchemaProfile.getObject()))));
         comboBox.setOutputMarkupId(true);
@@ -223,7 +223,7 @@ public class KnowledgeBaseIriPanel
             () -> model.getObject().stringValue(),
             str -> model.setObject(SimpleValueFactory.getInstance().createIRI(str)));
         
-        TextField<String> iriTextfield = new TextField<String>(id, adapter);
+        TextField<String> iriTextfield = new TextField<>(id, adapter);
         iriTextfield.setOutputMarkupId(true);
         iriTextfield.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> {
             // Do nothing just update the model values

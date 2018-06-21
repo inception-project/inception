@@ -32,7 +32,6 @@ import java.util.stream.Stream;
 
 import javax.persistence.EntityManager;
 
-import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.eclipse.rdf4j.rio.RDFFormat;
@@ -249,7 +248,7 @@ public class KnowledgeBaseServiceImplImportExportIntegrationTest {
         kb.setDescriptionIri(RDFS.COMMENT);
         kb.setLabelIri(RDFS.LABEL);
         kb.setPropertyTypeIri(RDF.PROPERTY);
-        kb.setExplicitlyDefinedRootConcepts(new ArrayList<IRI>());
+        kb.setExplicitlyDefinedRootConcepts(new ArrayList<>());
         return kb;
     }
 
