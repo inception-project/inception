@@ -413,6 +413,10 @@
       <version>${javamelody.version}</version>
     </dependency>
     -->
+    <dependency>
+    	<groupId>de.tudarmstadt.ukp.inception.app</groupId>
+    	<artifactId>inception-external-search-elastic</artifactId>
+    </dependency>
   </dependencies>
   <build>
     <plugins>

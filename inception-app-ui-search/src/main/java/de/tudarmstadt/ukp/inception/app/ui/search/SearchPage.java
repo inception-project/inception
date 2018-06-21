@@ -18,11 +18,8 @@
 package de.tudarmstadt.ukp.inception.app.ui.search;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
@@ -45,7 +42,6 @@ import org.wicketstuff.annotation.mount.MountPath;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
@@ -66,8 +62,8 @@ public class SearchPage extends ApplicationPageBase
 
     final WebMarkupContainer mainContainer = new WebMarkupContainer("mainContainer");
 
-    private ListView<SourceDocument> documentList;
-    private ArrayList<SourceDocument> documents = new ArrayList<SourceDocument>();
+    private ListView<ExternalSearchResult> resultList;
+    private ArrayList<ExternalSearchResult> results = new ArrayList<ExternalSearchResult>();
 
     Model<String> targetQuery = Model.of("");
 
@@ -116,7 +112,7 @@ public class SearchPage extends ApplicationPageBase
 
         SearchForm searchForm = new SearchForm("searchForm");
 
-        documentList = new ListView<SourceDocument>("results", documents)
+        resultList = new ListView<ExternalSearchResult>("results", results)
         {
             /**
              * 
@@ -124,28 +120,31 @@ public class SearchPage extends ApplicationPageBase
             private static final long serialVersionUID = -631500052426449048L;
 
             @Override
-            protected void populateItem(ListItem<SourceDocument> item)
+            protected void populateItem(ListItem<ExternalSearchResult> item)
             {
-                AjaxLink<Void> documentId = new AjaxLink<Void>("documentId")
-                {
-                    /**
-                     * 
-                     */
-                    private static final long serialVersionUID = 1L;
+//                AjaxLink<Void> documentId = new AjaxLink<Void>("documentId")
+//                {
+//                    /**
+//                     * 
+//                     */
+//                    private static final long serialVersionUID = 1L;
+//
+//                    @Override
+//                    public void onClick(AjaxRequestTarget target)
+//                    {
+//                        target.appendJavaScript(
+//                                "alert('" + item.getModel().getObject().getDocumentId() + "');");
+//                    }
+//                };
+//                item.add(documentId);
+                item.add(
+                        new Label("documentId", item.getModel().getObject().getDocumentId()));
 
-                    @Override
-                    public void onClick(AjaxRequestTarget target)
-                    {
-                        target.appendJavaScript(
-                                "alert('" + item.getModel().getObject().getId() + "');");
-                    }
-                };
-                item.add(documentId);
-
-                item.add(new Label("documentTitle", item.getModel().getObject().getName()));
+                item.add(
+                        new Label("documentTitle", item.getModel().getObject().getDocumentTitle()));
             }
         };
-        mainContainer.add(documentList);
+        mainContainer.add(resultList);
 
         mainContainer.add(searchForm);
 
@@ -186,20 +185,17 @@ public class SearchPage extends ApplicationPageBase
 
     private void searchDocuments(String aQuery)
     {
-        documents.clear();
-        List<ExternalSearchResult> results = new ArrayList<ExternalSearchResult>();
+        results.clear();
 
         try {
-            results = externalSearchService.query(currentUser, currentProject, aQuery);
+            for (ExternalSearchResult result : externalSearchService.query(currentUser,
+                    currentProject, aQuery)) {
+                results.add(result);
+            }
         }
         catch (Exception e) {
             LOG.error("Unable to perform query", e);
             error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
-        }
-
-        for (ExternalSearchResult result : results) {
-            documents.add(
-                    documentService.getSourceDocument(currentProject, result.getDocumentTitle()));
         }
     }
 

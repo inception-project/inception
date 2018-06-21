@@ -103,11 +103,10 @@
     <dependency>
     	<groupId>de.tudarmstadt.ukp.inception.app</groupId>
     	<artifactId>inception-external-search-core</artifactId>
-    	<version>0.4.0-SNAPSHOT</version>
     </dependency>
     <dependency>
     	<groupId>de.tudarmstadt.ukp.inception.app</groupId>
-    	<artifactId>inception-app-ui-search</artifactId>
+    	<artifactId>inception-search-core</artifactId>
     </dependency>
   </dependencies>
 </project>
