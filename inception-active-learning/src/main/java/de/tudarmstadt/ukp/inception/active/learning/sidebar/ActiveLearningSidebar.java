@@ -26,6 +26,7 @@ import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
+import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
@@ -55,6 +56,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VAnnotat
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VMarker;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VTextMarker;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -142,7 +144,7 @@ public class ActiveLearningSidebar
     private VID highlightVID;
     private LearningRecord selectedRecord;
     private Date learnSkippedRecommendationTime;
-
+    
     public ActiveLearningSidebar(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, JCasProvider aJCasProvider,
             AnnotationPage aAnnotationPage)
@@ -392,11 +394,14 @@ public class ActiveLearningSidebar
 
     private void writeLearningRecordInDatabase(LearningRecordUserAction userAction)
     {
-        AnnotatorState annotatorState = ActiveLearningSidebar.this.getModelObject();
+        AnnotatorState state = ActiveLearningSidebar.this.getModelObject();
+        
+        SourceDocument sourceDoc = documentService.getSourceDocument(state.getProject(),
+                currentRecommendation.getDocumentName());
         
         LearningRecord record = new LearningRecord();
-        record.setUser(annotatorState.getUser().getUsername());
-        record.setSourceDocument(annotatorState.getDocument());
+        record.setUser(state.getUser().getUsername());
+        record.setSourceDocument(sourceDoc);
         record.setTokenText(currentRecommendation.getCoveredText());
         record.setUserAction(userAction);
         record.setOffsetTokenBegin(currentRecommendation.getOffset().getBeginToken());
@@ -413,34 +418,37 @@ public class ActiveLearningSidebar
     private void actionAccept(AjaxRequestTarget aTarget) throws AnnotationException, IOException
     {
         aTarget.add(mainContainer);
+
         writeLearningRecordInDatabase(LearningRecordUserAction.ACCEPTED);
-        
+
+        AnnotatorState state = ActiveLearningSidebar.this.getModelObject();
+        int begin = currentRecommendation.getOffset().getBeginCharacter();
+        int end = currentRecommendation.getOffset().getEndCharacter();
+
+        // Load CAS in which to create the annotation
+        SourceDocument sourceDoc = documentService.getSourceDocument(state.getProject(),
+                currentRecommendation.getDocumentName());
+        AnnotationDocument annoDoc = documentService.createOrGetAnnotationDocument(sourceDoc,
+                state.getUser());
+        JCas jCas = documentService.readAnnotationCas(annoDoc);
+
         // Create annotation from recommendation
-        AnnotatorState annotatorState = ActiveLearningSidebar.this.getModelObject();
-        JCas jCas = this.getJCasProvider().get();
         SpanAdapter adapter = (SpanAdapter) annotationService.getAdapter(selectedLayer.getObject());
-        AnnotationObject acceptedRecommendation = currentRecommendation;
-        int begin = acceptedRecommendation.getOffset().getBeginCharacter();
-        int end = acceptedRecommendation.getOffset().getEndCharacter();
-        int id = adapter.add(annotatorState, jCas, begin, end);
-        AnnotationFeature feature = annotationService
-            .getFeature(acceptedRecommendation.getFeature(), selectedLayer.getObject());
+        int id = adapter.add(state, jCas, begin, end);
+        AnnotationFeature feature = annotationService.getFeature(currentRecommendation.getFeature(),
+                selectedLayer.getObject());
+        recommendationService.setFeatureValue(feature, currentRecommendation.getAnnotation(),
+                adapter, state, jCas, id);
 
-        String predictedValue = acceptedRecommendation.getAnnotation();
+//        // Open accepted recommendation in the annotation detail editor panel
+//        VID vid = new VID(id);
+//        state.getSelection().selectSpan(vid, jCas, begin, end);
+//        AnnotationActionHandler aActionHandler = this.getActionHandler();
+//        aActionHandler.actionSelect(aTarget, jCas);
 
-        recommendationService.setFeatureValue(feature, predictedValue, adapter, annotatorState,
-            jCas, id);
+        // Save CAS after annotation has been created
+        documentService.writeAnnotationCas(jCas, annoDoc, true);
 
-
-        // Open accepted recommendation in the annotation detail editor panel
-        VID vid = new VID(id);
-        annotatorState.getSelection().selectSpan(vid, jCas, begin, end);
-        AnnotationActionHandler aActionHandler = this.getActionHandler();
-        aActionHandler.actionSelect(aTarget, jCas);
-        
-        // Save CAS
-        aActionHandler.actionCreateOrUpdate(aTarget, jCas);
-        
         moveToNextRecommendation(aTarget);
     }
 
@@ -460,6 +468,11 @@ public class ActiveLearningSidebar
     
     private void moveToNextRecommendation(AjaxRequestTarget aTarget)
     {
+        // Clear the annotation detail editor and the selection to avoid confusions.
+        AnnotatorState state = ActiveLearningSidebar.this.getModelObject();
+        state.getSelection().clear();
+        aTarget.add((Component) getActionHandler());
+        
         annotationPage.actionRefreshDocument(aTarget);
         currentDifference = activeLearningRecommender
                 .generateRecommendationWithLowestDifference(learningRecordService,
@@ -589,15 +602,20 @@ public class ActiveLearningSidebar
         AnnotatorState annotatorState = getModelObject();
         AnnotatorState eventState = aEvent.getAnnotatorState();
 
-        //check active learning is active and same user and same document and same layer
-        if (sessionActive && eventState.getUser().equals(annotatorState.getUser()) && eventState
-            .getDocument().equals(annotatorState.getDocument()) && annotatorState
-            .getSelectedAnnotationLayer().equals(selectedLayer.getObject())) {
+        // Check active learning is active and same user and same document and same layer
+        if (
+                sessionActive && 
+                currentRecommendation != null &&
+                eventState.getUser().equals(annotatorState.getUser()) && 
+                eventState.getDocument().equals(annotatorState.getDocument()) && 
+                annotatorState.getSelectedAnnotationLayer().equals(selectedLayer.getObject())
+        ) {
             //check same document and same token
             if (annotatorState.getSelection().getBegin() == currentRecommendation.getOffset()
                 .getBeginCharacter()
                 && annotatorState.getSelection().getEnd() == currentRecommendation.getOffset()
-                .getEndCharacter() && aEvent.getValue() != null) {
+                .getEndCharacter()
+            ) {
                 moveToNextRecommendation(aEvent.getTarget());
             }
             aEvent.getTarget().add(mainContainer);
