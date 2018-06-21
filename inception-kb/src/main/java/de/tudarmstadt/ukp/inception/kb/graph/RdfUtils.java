@@ -22,6 +22,7 @@ import java.util.Optional;
 import org.eclipse.rdf4j.common.iteration.ConvertingIteration;
 import org.eclipse.rdf4j.common.iteration.ExceptionConvertingIteration;
 import org.eclipse.rdf4j.common.iteration.Iteration;
+import org.eclipse.rdf4j.common.iteration.Iterations;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.model.Statement;
@@ -68,7 +69,7 @@ public class RdfUtils
     public static RepositoryResult<Statement> getStatements(
             RepositoryConnection conn, Resource subj, IRI pred, Value obj, boolean includeInferred)
     {
-        return getStatementsSparql(conn, subj, pred, obj, includeInferred);
+        return getStatementsSparql(conn, subj, pred, obj, 1000, includeInferred);
     }
 
     
@@ -79,10 +80,10 @@ public class RdfUtils
     }
     
     public static RepositoryResult<Statement> getStatementsSparql(RepositoryConnection conn,
-            Resource subj, IRI pred, Value obj, boolean includeInferred)
+            Resource subj, IRI pred, Value obj, int aLimit, boolean includeInferred)
         throws QueryEvaluationException
     {
-        String QUERY = "SELECT * WHERE { ?s ?p ?o } LIMIT 1000";
+        String QUERY = "SELECT * WHERE { ?s ?p ?o } LIMIT " + aLimit;
         TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
         if (subj != null) {
             tupleQuery.setBinding("s", subj);
@@ -121,6 +122,34 @@ public class RdfUtils
         
         return new RepositoryResult<Statement>(i2);
     }
+    
+    public static boolean existsStatementsWithSubject(
+            RepositoryConnection conn, Resource subj, boolean includeInferred)
+    {
+        try (RepositoryResult<Statement> stmts = getStatementsSparql(conn, subj, null, null, 1,
+                includeInferred)) {
+            return !Iterations.asList(stmts).isEmpty();
+        }
+    }
+    
+
+    /**
+     * Get all statements about the given subject.
+     * 
+     * @param conn
+     *            a repository connection
+     * @param subj
+     *            the subject resource
+     * @param includeInferred
+     *            whether to include inferred statements
+     * @return all statements with the given subject resource
+     */
+    public static RepositoryResult<Statement> getStatementsWithSubject(
+            RepositoryConnection conn, Resource subj, boolean includeInferred)
+    {
+        return getStatementsSparql(conn, subj, null, null, 1000, includeInferred);
+    }
+
     
     public static boolean isFromImplicitNamespace(KBHandle handle) {
         return IriConstants.IMPLICIT_NAMESPACES.stream()
