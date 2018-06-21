@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.search.index.mtas;
 
 import java.util.Optional;
 
+import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.query.QueryEvaluationException;
@@ -82,8 +83,7 @@ public class KBUtility {
                 RepositoryResult<Statement> stmts = RdfUtils.getStatements(conn,
                         vf.createIRI(aIdentifier), kb.getTypeIri(), kb.getClassIri(), true);
                 if (stmts.hasNext()) {
-                    Statement conceptStmt = stmts.next();
-                    KBConcept kbConcept = KBConcept.read(conn, conceptStmt, kb);
+                    KBConcept kbConcept = KBConcept.read(conn, vf.createIRI(aIdentifier), kb);
                     if (kbConcept != null) {
                         return Optional.of(kbConcept);
                     }
