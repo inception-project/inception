@@ -38,6 +38,7 @@ import org.apache.commons.compress.compressors.CompressorException;
 import org.apache.commons.compress.compressors.CompressorStreamFactory;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
@@ -313,23 +314,20 @@ public class KnowledgeBaseServiceImpl
             return new KBHandle(identifier, aConcept.getName());
         });
     }
-
+    
     @Override
     public Optional<KBConcept> readConcept(KnowledgeBase kb, String aIdentifier)
         throws QueryEvaluationException
     {
         return read(kb, (conn) -> {
             ValueFactory vf = conn.getValueFactory();
-            try (RepositoryResult<Statement> stmts = RdfUtils.getStatements(conn,
-                    vf.createIRI(aIdentifier), kb.getTypeIri(), kb.getClassIri(), true)) {
-                if (stmts.hasNext()) {
-                    Statement conceptStmt = stmts.next();
-                    KBConcept kbConcept = KBConcept.read(conn, conceptStmt, kb);
-                    return Optional.of(kbConcept);
-                }
-                else {
-                    return Optional.empty();
-                }
+            Resource subject = vf.createIRI(aIdentifier);
+            if (RdfUtils.existsStatementsWithSubject(conn, subject, false)) {
+                KBConcept kbConcept = KBConcept.read(conn, vf.createIRI(aIdentifier),kb);
+                return Optional.of(kbConcept);
+            }
+            else {
+                return Optional.empty();
             }
         });
     }
@@ -457,7 +455,7 @@ public class KnowledgeBaseServiceImpl
             // Try to figure out the type of the instance - we ignore the inferred types here
             // and only make use of the explicitly asserted types
             RepositoryResult<Statement> conceptStmts = RdfUtils.getStatementsSparql(conn,
-                    vf.createIRI(aIdentifier), kb.getTypeIri(), null, false);
+                    vf.createIRI(aIdentifier), kb.getTypeIri(), null, 1000, false);
 
             String conceptIdentifier = null;
             while (conceptStmts.hasNext() && conceptIdentifier == null) {
