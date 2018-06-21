@@ -38,7 +38,6 @@ import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.apache.wicket.util.string.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
@@ -378,34 +377,8 @@ public class ActiveLearningSidebar
     {
         LambdaAjaxLink link = new LambdaAjaxLink(CID_RECOMMENDATION_COVERED_TEXT_LINK,
                 this::jumpToRecommendationLocationAndHighlightRecommendation);
-//        link.setBody(LambdaModel.of(() -> Optional.ofNullable(currentRecommendation)
-//                .map(it -> it.getCoveredText()).orElse("")));
-        
-        link.setEscapeModelStrings(false);
-        link.setBody(LambdaModel.of(() -> {
-            if (currentRecommendation == null) {
-                return "";
-            }
-            else {
-                try {
-                    JCas jcas = getJCasProvider().get();
-                    String text = jcas.getDocumentText();
-                    int begin = currentRecommendation.getOffset().getBeginCharacter();
-                    int end = currentRecommendation.getOffset().getEndCharacter();
-                    int windowBegin = Math.max(begin - 25, 0);
-                    int windowEnd = Math.min(end + 25, text.length());
-                    
-                    return 
-                            Strings.escapeMarkup(text.substring(windowBegin, begin)) +
-                            "<b>" + Strings.escapeMarkup(text.substring(begin, end)) + "</b>" +
-                            Strings.escapeMarkup(text.substring(end, windowEnd));
-                            
-                }
-                catch (Exception e) {
-                    return "ERROR";
-                }
-            }
-        }));
+        link.setBody(LambdaModel.of(() -> Optional.ofNullable(currentRecommendation)
+                .map(it -> it.getCoveredText()).orElse("")));
         return link;
     }
 
