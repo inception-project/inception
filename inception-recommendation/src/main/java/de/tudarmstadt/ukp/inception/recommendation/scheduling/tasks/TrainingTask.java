@@ -81,27 +81,40 @@ public class TrainingTask
             for (Recommender recommender : recommenders) {
                 long startTime = System.currentTimeMillis();
 
-                ClassificationTool<?> classificationTool = recommendationService
-                        .getTool(recommender, recommendationService.getMaxSuggestions(user));
-
-                Trainer<?> trainer = classificationTool.getTrainer();
-
-                log.info("[{}][{}]: Extracting training data...", user.getUsername(),
-                        recommender.getName());
-                List<List<AnnotationObject>> trainingData = getTrainingData(classificationTool);
-
-                if (trainingData == null || trainingData.isEmpty()) {
-                    log.info("[{}][{}]: No training data.", user.getUsername(),
+                try {
+                    ClassificationTool<?> classificationTool = recommendationService
+                            .getTool(recommender, recommendationService.getMaxSuggestions(user));
+    
+                    Trainer<?> trainer = classificationTool.getTrainer();
+    
+                    log.info("[{}][{}]: Extracting training data...", user.getUsername(),
                             recommender.getName());
-                    continue;
+                    List<List<AnnotationObject>> trainingData = getTrainingData(classificationTool);
+    
+                    if (trainingData == null || trainingData.isEmpty()) {
+                        log.info("[{}][{}]: No training data.", user.getUsername(),
+                                recommender.getName());
+                        continue;
+                    }
+    
+                    log.info("[{}][{}]: Training model...", user.getUsername(),
+                            recommender.getName());
+                    Object model = trainer.train(trainingData);
+                    if (model != null) {
+                        recommendationService.storeTrainedModel(user, recommender, model);
+                    }
+                    else {
+                        log.info("[{}][{}]: Training produced no model", user.getUsername(),
+                                recommender.getName());
+                    }
+    
+                    log.info("[{}][{}]: Training complete ({} ms)", user.getUsername(),
+                            recommender.getName(), (System.currentTimeMillis() - startTime));
                 }
-
-                log.info("[{}][{}]: Training model...", user.getUsername(), recommender.getName());
-                Object model = trainer.train(trainingData);
-                recommendationService.storeTrainedModel(user, recommender, model);
-
-                log.info("[{}][{}]: Training complete ({} ms)", user.getUsername(),
-                        recommender.getName(), (System.currentTimeMillis() - startTime));
+                catch (Exception e) {
+                    log.info("[{}][{}]: Training failed ({} ms)", user.getUsername(),
+                            recommender.getName(), (System.currentTimeMillis() - startTime), e);
+                }
             }
         }
         
