@@ -30,9 +30,10 @@ public class RecommenderEvaluationResultEvent extends ApplicationEvent
     private final String user;
     private final ExtendedResult result;
     private final long duration;
+    private final boolean active;
     
     public RecommenderEvaluationResultEvent(Object aSource, Recommender aRecommender, String aUser,
-            ExtendedResult aResult, long aDuration)
+            ExtendedResult aResult, long aDuration, boolean aActive)
     {
         super(aSource);
 
@@ -40,6 +41,7 @@ public class RecommenderEvaluationResultEvent extends ApplicationEvent
         user = aUser;
         result = aResult;
         duration = aDuration;
+        active = aActive;
     }
 
     public String getUser()
@@ -60,6 +62,11 @@ public class RecommenderEvaluationResultEvent extends ApplicationEvent
     public long getDuration()
     {
         return duration;
+    }
+    
+    public boolean isActive()
+    {
+        return active;
     }
 
     @Override

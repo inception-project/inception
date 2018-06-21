@@ -207,6 +207,7 @@ public class IncrementalTrainingEvaluationSuite
 
         result.setTrainingDuration(lastTrainingDuration);
         result.setClassifyingDuration(classifyingEndTime - classifyingStartTime);
+        result.setTestSetSize(knownData.size());
         result.setTrainingSetSize(knownData.size());
         result.setIterationNumber(currentIteration);
 
@@ -254,11 +255,17 @@ public class IncrementalTrainingEvaluationSuite
             
         long classifyingEndTime = System.currentTimeMillis();
 
+        long trainingSetAnnotationCount = trainingData.stream().flatMap(List::stream).count();
+        
         ExtendedResult result = new ExtendedResult(expectedData, predictedData);
         result.setTrainingDuration(lastTrainingDuration);
         result.setClassifyingDuration(classifyingEndTime - classifyingStartTime);
-        result.setTrainingSetSize(expectedData.size());
+        result.setTestSetSize(expectedData.size());
+        result.setTrainingSetSize(trainingData.size());
+        result.setTrainingSetAnnotationCount(trainingSetAnnotationCount);
         result.setIterationNumber(currentIteration);
+        result.setSplit(conf.getSplitTestDataPercentage());
+        result.setShuffleTrainingSet(conf.isShuffleTrainingSet());
 
         return result;
     }

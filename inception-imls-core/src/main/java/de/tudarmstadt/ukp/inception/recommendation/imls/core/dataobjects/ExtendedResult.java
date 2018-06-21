@@ -24,6 +24,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Validate;
+
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
 
 public class ExtendedResult
@@ -37,14 +40,24 @@ public class ExtendedResult
     private long iterationNumber;
     private long trainingDuration;
     private long classifyingDuration;
-    private int trainingSetSize;
+    
+    // These annotations are micro annotations, e.g. POS or NEs within the sentences
+    private long trainingSetAnnotationCount = 0;
+    private long expectedAnnotationCount = 0;
+    private long actualAnnotationCount = 0;
+    
+    // The training/test set size is measured in sentences
+    private long trainingSetSize;
+    private long testSetSize;
+    
+    // The split on the sentence level
+    private double split;
+    private boolean shuffleTrainingSet;
 
-    private int tp = 0;
-    private int fp = 0;
-    private int tn = 0;
-    private int fn = 0;
-    private int expectedAnnotationCount = 0;
-    private int actualAnnotationCount = 0;
+    private long tp = 0;
+    private long fp = 0;
+    private long tn = 0;
+    private long fn = 0;
     
     private Set<String> labels = new HashSet<String>();
     private LabelResult labelResult;
@@ -63,6 +76,7 @@ public class ExtendedResult
                     "Expected and actual list size is not equal! This seems wrong.");
         }
         
+        long total = 0;
         for (int sentenceNr = 0; sentenceNr < expected.size(); sentenceNr++) {
             List<AnnotationObject> expectedSentence = expected.get(sentenceNr);
             List<AnnotationObject> actualSentence = actual.get(sentenceNr);
@@ -74,19 +88,24 @@ public class ExtendedResult
             for (int i = 0; i < actualSentence.size(); i++) {
                 String aoActual = actualSentence.get(i).getLabel();
                 String aoExpected = expectedSentence.get(i).getLabel();
-    
-                if (aoActual != null && !aoActual.isEmpty()) {
+   
+                total++;
+                
+                if (StringUtils.isNotEmpty(aoActual)) {
                     actualAnnotationCount++;
                     labels.add(aoActual);
                 }
     
-                if (aoExpected != null && !aoExpected.isEmpty()) {
+                if (StringUtils.isNotEmpty(aoExpected)) {
                     expectedAnnotationCount++;
                     labels.add(aoExpected);
                 }
     
-                if (aoActual != null && !aoActual.isEmpty() && aoExpected != null
-                        && !aoExpected.isEmpty() && aoActual.equals(aoExpected)) {                
+                if (
+                        StringUtils.isNotEmpty(aoActual) && 
+                        StringUtils.isNotEmpty(aoExpected) && 
+                        aoActual.equals(aoExpected)
+                ) {
                     tp++;
                 }
             }
@@ -113,40 +132,56 @@ public class ExtendedResult
             fScore = 2 * precision * recall / (precision + recall);
         }
         
+        // Everything that the classifier predicted wrongly is a FP
         fp = actualAnnotationCount - tp;
+        
+        // Everything that the classifier did not predict at all is a FN
         fn = expectedAnnotationCount - tp;
-        tn = expected.size() - tp - fp - fn;
+        
+        // Everything that the classifier did not predict and is not in the gold standard is a TN
+        tn = total - tp - fp - fn;
+        
+        Validate.isTrue(fp >= 0, "FP cannot be negative: %d", fp);
+        Validate.isTrue(fn >= 0, "FN cannot be negative: %d", fn);
+        Validate.isTrue(tp >= 0, "FP cannot be negative: %d", tp);
+        Validate.isTrue(tn >= 0, "TN cannot be negative: %d", tn);
         
         labelResult = new LabelResult(expected, actual, labels);
     }
 
     
-    public int getTp()
+    public long getTp()
     {
         return tp;
     }
 
-    public int getFp()
+    public long getFp()
     {
         return fp;
     }
 
-    public int getTn()
+    public long getTn()
     {
         return tn;
     }
 
-    public int getFn()
+    public long getFn()
     {
         return fn;
     }
 
-    public int getExpectedAnnotationCount()
+    /**
+     * @return number of annotations in the test set.
+     */
+    public long getTestSetAnnotationCount()
     {
         return expectedAnnotationCount;
     }
 
-    public int getActualAnnotationCount()
+    /**
+     * @return number of annotations produced by the classifier on the test set.
+     */
+    public long getClassifierTestResultAnnotationCount()
     {
         return actualAnnotationCount;
     }
@@ -210,18 +245,63 @@ public class ExtendedResult
         this.classifyingDuration = classifyingDuration;
     }
 
-    public int getTrainingSetSize()
+    /**
+     * @return number of sentences in the training set.
+     */
+    public long getTrainingSetSize()
     {
         return trainingSetSize;
     }
 
-    public void setTrainingSetSize(int trainingSetSize)
+    public void setTrainingSetSize(long trainingSetSize)
     {
         this.trainingSetSize = trainingSetSize;
     }
     
+    /**
+     * @return number of sentences in the test set.
+     */
+    public long getTestSetSize()
+    {
+        return testSetSize;
+    }
+
+    public void setTestSetSize(long aTestSetSize)
+    {
+        testSetSize = aTestSetSize;
+    }
+
     public LabelResult getLabelResult() {
         return labelResult;
     }
 
+    public double getSplit()
+    {
+        return split;
+    }
+
+    public void setSplit(double aSplit)
+    {
+        split = aSplit;
+    }
+
+    public void setShuffleTrainingSet(boolean aShuffleTrainingSet)
+    {
+        shuffleTrainingSet = aShuffleTrainingSet;
+    }
+    
+    public boolean isShuffleTrainingSet()
+    {
+        return shuffleTrainingSet;
+    }
+
+    public long getTrainingSetAnnotationCount()
+    {
+        return trainingSetAnnotationCount;
+    }
+
+    public void setTrainingSetAnnotationCount(long aTrainingSetAnnotationCount)
+    {
+        trainingSetAnnotationCount = aTrainingSetAnnotationCount;
+    }
 }

@@ -93,12 +93,6 @@ public class SelectionTask
                         continue;
                     }
                     
-                    if (recommender.isAlwaysSelected()) {
-                        log.info("[{}][{}]: Always active", user.getUsername(), ct.getId());
-                        activeRecommenders.add(recommender);
-                        continue;
-                    }
-    
                     log.info("[{}][{}]: Evaluating...", user.getUsername(), recommender.getName());
                     
                     EvaluationConfiguration suiteConf = EvaluationHelper
@@ -117,24 +111,32 @@ public class SelectionTask
                         continue;
                     }
     
-                    Double threshold = recommender.getThreshold();
-                    if (result.getFscore() >= threshold) {
+                    boolean activated;
+                    if (recommender.isAlwaysSelected()) {
+                        log.info("[{}][{}]: Always active (f-score {})", user.getUsername(),
+                                ct.getId(), result.getFscore());
                         activeRecommenders.add(recommender);
-                        log.info("[{}][{}]: Activated ({} is above threshold {})",
+                        activated = true;
+                    }
+                    else if (result.getFscore() >= recommender.getThreshold()) {
+                        log.info("[{}][{}]: Activated (f-score {} is above threshold {})",
                                 user.getUsername(), recommender.getName(), result.getFscore(),
-                                threshold);
+                                recommender.getThreshold());
+                        activeRecommenders.add(recommender);
+                        activated = true;
                     }
                     else {
-                        log.info("[{}][{}]: Not activated ({} is not above threshold {})",
+                        log.info("[{}][{}]: Not activated (f-score {} is not above threshold {})",
                                 user.getUsername(), recommender.getName(), result.getFscore(),
-                                threshold);
+                                recommender.getThreshold());
+                        activated = false;
                     }
                     
                     appEventPublisher.publishEvent(new RecommenderEvaluationResultEvent(this,
                             recommender, user.getUsername(), result,
-                            System.currentTimeMillis() - start));
+                            System.currentTimeMillis() - start, activated));
                 }
-                catch (Exception e) {
+                catch (Throwable e) {
                     log.error("An error occured", e);
                 }
             }
