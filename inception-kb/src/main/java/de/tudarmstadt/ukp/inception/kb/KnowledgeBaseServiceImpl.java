@@ -651,17 +651,17 @@ public class KnowledgeBaseServiceImpl
         List<KBHandle> resultList = read(kb, (conn) -> {
             String QUERY = String.join("\n"
                 , "SELECT DISTINCT ?s ?l WHERE { "
-                , " { ?s ?pTYPE ?oCLASS . } "
-                , "UNION { ?someSubClass ?pSUBCLASS ?s . } ."
-                , "FILTER NOT EXISTS { "
-                , " ?s ?pSUBCLASS ?otherSub . "
-                , " FILTER (?s != ?otherSub) }"
-                , "FILTER NOT EXISTS { "
-                , "  ?s owl:intersectionOf ?list . "
-                , "} OPTIONAL { "
-                , "     ?s ?pLABEL ?l . "
-                , "    FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\")) "
-                , "  } "
+                , "     { ?s ?pTYPE ?oCLASS . } "
+                , "     UNION { ?someSubClass ?pSUBCLASS ?s . } ."
+                , "     FILTER NOT EXISTS { "
+                , "         ?s ?pSUBCLASS ?otherSub . "
+                , "         FILTER (?s != ?otherSub) }"
+                , "     FILTER NOT EXISTS { "
+                , "         ?s owl:intersectionOf ?list . }"
+                , "     OPTIONAL { "
+                , "         ?s ?pLABEL ?l . "
+                , "         FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\")) "
+                , "     } "
                 , "} "
                 , "LIMIT 10000" );
             TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
@@ -706,14 +706,14 @@ public class KnowledgeBaseServiceImpl
         List<KBHandle> resultList = read(aKB, (conn) -> {
             String QUERY = String.join("\n"
                 , "SELECT DISTINCT ?s ?l WHERE { "
-                , "{?s ?pSUBCLASS ?oPARENT . }" 
-                , "UNION { ?s ?pTYPE ?oCLASS ."
-                , "?s owl:intersectionOf ?list . "
-                , "FILTER EXISTS { ?list rdf:rest*/rdf:first ?oPARENT} }"
-                , "  OPTIONAL { "
-                , "    ?s ?pLABEL ?l . "
-                , "    FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\")) "
-                , "  } "
+                , "     {?s ?pSUBCLASS ?oPARENT . }" 
+                , "     UNION { ?s ?pTYPE ?oCLASS ."
+                , "         ?s owl:intersectionOf ?list . "
+                , "         FILTER EXISTS { ?list rdf:rest*/rdf:first ?oPARENT} }"
+                , "     OPTIONAL { "
+                , "         ?s ?pLABEL ?l . "
+                , "         FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\")) "
+                , "     } "
                 , "} "
                 , "LIMIT " + aLimit);
             ValueFactory vf = SimpleValueFactory.getInstance();
@@ -754,7 +754,9 @@ public class KnowledgeBaseServiceImpl
             if (label != null) {
                 handle.setName(label.getValue().stringValue());
             }
-
+            else {
+                handle.setName(handle.getUiLabel());
+            }
             handles.add(handle);
         }
         return handles;
