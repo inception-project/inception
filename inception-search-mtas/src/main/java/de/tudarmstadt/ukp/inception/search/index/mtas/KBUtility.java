@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.inception.search.index.mtas;
 
 import java.util.Optional;
 
-import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.query.QueryEvaluationException;
