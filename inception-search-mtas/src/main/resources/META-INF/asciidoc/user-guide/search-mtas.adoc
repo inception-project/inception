@@ -7,6 +7,38 @@ Query Language), as shown in the following examples.
 More examples and information about CQL syntax can be found 
 in https://meertensinstituut.github.io/mtas/search_cql.html.
 
+When performing queries, the user must reference the annotation types using the layer names, 
+as defined in the project schema. In the same way, the features must be referenced using their names 
+as defined in the project schema. In both cases, empty spaces in the names must be replaced by 
+an underscore. 
+
+Thus, *Lemma* refers to the *Lemma* layer, *Lemma.Lemma* refers to the the *Lemma* feature in the 
+*Lemma* layer. In the same way, *Named_entity* refers to *Named entity* layer, and 
+*Named_entity.value* refers to the *value* feature in the *Named entity* layer.
+
+Annotations made over single tokens can be queried using the [...] syntax, while annotations 
+made over multiple tokens must be queried using the <../> syntax. 
+
+In the first case, the user must always provide a feature and a value. The following syntax returns 
+all single token annotations of the *LayerX* layer whose *FeatureX* feature have the given value.
+
+ [LayerX.FeatureX="value"]
+ 
+In the second case, the user may or not provide a feature and a value. Thus, the following syntax 
+will return all multi-token annotations of the *LayerX* layer, regardless of their features and 
+values. 
+
+ <LayerX/>
+ 
+On the other hand, the following syntax will return the multi-token annotations whose *FeatureX* 
+feature has the given value.
+
+ <LayerX.FeatureX="value"/>
+
+Notice that the multi-token query syntax can also be used to retrieve single token annotations (e.g.
+POS or lemma annotations).
+
+===== Basic Annotation queries
 * Single token: all occurrences of the token *Galicia*
 
  Galicia
@@ -37,11 +69,11 @@ in https://meertensinstituut.github.io/mtas/search_cql.html.
 
 * Sequence: all occurrences of the token *house* immediately followed by a verb
 
- [Token=“house"][POS.PosValue=“VERB"]
+ [Token="house"][POS.PosValue="VERB"]
 
 * Sequence: all occurrences of a verb immediately followed by a named entity
 
- [POS.PosValue=“VERB"]<Named_entity/>
+ [POS.PosValue="VERB"]<Named_entity/>
  
 * Sequence: All occurrences of two named entities in a row
 
@@ -104,7 +136,7 @@ in https://meertensinstituut.github.io/mtas/search_cql.html.
  (<Named_entity.value="OTH"/> | <Named_entity.value="LOC"/>) intersecting
 <SemArg/>
 
-==== Concept Annotation queries
+===== Concept Annotation queries
 
 * Generic Search over annotated KB entities : all occurrences for KB entity *Bordeaux*
 
