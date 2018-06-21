@@ -73,8 +73,7 @@ public class SearchServiceImpl
         indexes = new HashMap<>();
     }
 
-    public SearchServiceImpl(
-            @org.springframework.beans.factory.annotation.Value("${data.path}") File aDir)
+    public SearchServiceImpl(@Value("${data.path}") File aDir)
     {
         dir = aDir.getAbsolutePath();
         indexes = new HashMap<>();

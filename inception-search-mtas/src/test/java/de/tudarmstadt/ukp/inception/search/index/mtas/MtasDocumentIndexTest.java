@@ -1,5 +1,5 @@
 /*
- * Copyright 2017
+ * Copyright 2018
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  *
@@ -154,7 +154,7 @@ public class MtasDocumentIndexTest
         User user = userRepository.get("admin");
         String query = "Galicia";
 
-        ArrayList<SearchResult> results = (ArrayList<SearchResult>) searchService.query(user,
+        List<SearchResult> results = (ArrayList<SearchResult>) searchService.query(user,
                 project, query);
 
         SearchResult expectedResult = new SearchResult();

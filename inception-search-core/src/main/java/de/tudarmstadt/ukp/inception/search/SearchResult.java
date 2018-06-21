@@ -132,7 +132,6 @@ public class SearchResult
     {
         final int prime = 31;
         int result = 1;
-        result = prime * result + (int) (documentId ^ (documentId >>> 32));
         result = prime * result + ((documentTitle == null) ? 0 : documentTitle.hashCode());
         result = prime * result + ((leftContext == null) ? 0 : leftContext.hashCode());
         result = prime * result + offsetEnd;
@@ -154,8 +153,6 @@ public class SearchResult
         if (getClass() != obj.getClass())
             return false;
         SearchResult other = (SearchResult) obj;
-        if (documentId != other.documentId)
-            return false;
         if (documentTitle == null) {
             if (other.documentTitle != null)
                 return false;
