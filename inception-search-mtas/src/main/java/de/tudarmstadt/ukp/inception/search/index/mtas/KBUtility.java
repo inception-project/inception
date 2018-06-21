@@ -43,15 +43,7 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 public class KBUtility {
     private final static Logger log = LoggerFactory.getLogger(KBUtility.class.getName());
-    /**
-     * Returns class type of {@link KBObject}
-     * 
-     * @param kbObject
-     * @return {@link Optional<String>} 
-     */
-    public Optional<String> getType(Optional<KBObject> kbObject) {
-        return kbObject.map((p) -> p.getClass().getSimpleName());
-    }
+
     /**
      * Read identifier IRI and return {@link KBHandle}
      * @param {@link FeatureSupportRegistry} featureSupportRegistry

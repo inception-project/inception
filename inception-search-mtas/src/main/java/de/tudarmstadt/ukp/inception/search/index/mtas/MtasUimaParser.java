@@ -223,25 +223,26 @@ public class MtasUimaParser extends MtasParser {
                                 tokenCollection.add(mtasAnnotationFeature);
                                 // Returns KB IRI label after checking if the  
                                 // feature type is associated with KB and feature value is not null
-                                String labelStr = "";
+                                String labelStr = null;
                                 if (feature.getType().contains(IndexingConstants.KB)
                                         && (!featureValue.equals("null"))) {
                                     labelStr = getUILabel(featureValue);
                                 }
                                 if (!labelStr.isEmpty()) {
-                                    String kbType = labelStr.split(MtasToken.DELIMITER)[0];
-                                    String kbValue = labelStr.split(MtasToken.DELIMITER)[1];
-                                    if (kbType.equals(IndexingConstants.kbConcept)) {
-                                        kbType = IndexingConstants.indexKBConcept;
+                                    String[] kbValues = labelStr.split(MtasToken.DELIMITER);
+                                    
+                                    if (IndexingConstants.KBCONCEPT.equals(kbValues[0])) {
+                                        kbValues[0] = IndexingConstants.INDEXKBCONCEPT;
                                     }
-                                    else if (kbType.equals(IndexingConstants.kbInstance)) {
-                                        kbType = IndexingConstants.indexKBInstance;
+                                    else if (IndexingConstants.KBINSTANCE.equals(kbValues[0])) {
+                                        kbValues[0] = IndexingConstants.INDEXKBINSTANCE;
                                     }
+                                    
                                     // Index IRI feature value with their labels along with 
                                     // annotation.feature name  
                                     String indexedStr = getIndexedName(annotationUiName) + "."
                                             + getIndexedName(feature.getUiName()) + "."
-                                            + kbType + MtasToken.DELIMITER + kbValue;
+                                            + kbValues[0] + MtasToken.DELIMITER + kbValues[1];
 
                                     // Indexing UI annotation with type i.e Concept/Instance
                                     log.debug("Indexed String with type for : {}", indexedStr);
@@ -254,7 +255,7 @@ public class MtasUimaParser extends MtasParser {
                                     tokenCollection.add(mtasAnnotationTypeFeatureLabel);
                                     indexedStr = getIndexedName(annotationUiName) + "."
                                             + getIndexedName(feature.getUiName())
-                                            + MtasToken.DELIMITER + kbValue;
+                                            + MtasToken.DELIMITER + kbValues[1];
                                     
                                     // Indexing UI annotation without type i.e Concept/Instance
                                     log.debug("Indexed String without type for : {}", indexedStr);
@@ -267,7 +268,7 @@ public class MtasUimaParser extends MtasParser {
                                     tokenCollection.add(mtasAnnotationFeatureLabel);
                                     
                                     // Indexing UI annotation without type and layer for generic search
-                                    indexedStr = IndexingConstants.kbEntity + MtasToken.DELIMITER + kbValue;
+                                    indexedStr = IndexingConstants.KBENTITY + MtasToken.DELIMITER + kbValues[1];
                                     log.debug("Indexed String without type and label for : {}", indexedStr);
                                     MtasToken mtasAnnotationKBEntity = new MtasTokenString(
                                             mtasId++, indexedStr, beginToken);
