@@ -46,9 +46,9 @@ public class KBUtility {
 
     /**
      * Read identifier IRI and return {@link KBHandle}
-     * @param {@link FeatureSupportRegistry} featureSupportRegistry
-     * @param {@link AnnotationFeature} feature
-     * @param String featureValue 
+     * @param featureSupportRegistry
+     * @param feature
+     * @param featureValue 
      * @return {@link KBHandle} which can be used to read the IRI.
      */
     public static KBHandle readKBIdentifier(FeatureSupportRegistry featureSupportRegistry,
@@ -60,10 +60,10 @@ public class KBUtility {
     }
 
     /**
-     * Read identifier IRI and return {@link Optional<KBObject>}
-     * @param {@link Project} aProject 
+     * Read identifier IRI and return {@link Optional} of {@link KBObject}
+     * @param aProject 
      * @param aIdentifier
-     * @return {@link Optional<KBObject>} of type {@link KBConcept} or {@link KBInstance}
+     * @return {@link Optional} of {@link KBObject} of type {@link KBConcept} or {@link KBInstance}
      */
     public static Optional<KBObject> readKBIdentifier(KnowledgeBaseService kbService,
             Project aProject, String aIdentifier)

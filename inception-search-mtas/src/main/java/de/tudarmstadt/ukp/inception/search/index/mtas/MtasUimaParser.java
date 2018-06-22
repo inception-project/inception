@@ -53,7 +53,6 @@ import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
-import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import mtas.analysis.parser.MtasParser;
 import mtas.analysis.token.MtasToken;
@@ -293,10 +292,9 @@ public class MtasUimaParser extends MtasParser {
     }
 
     /**
-     * Replaces space with underscore n a {@code String}
-     * @param {@code String} uiName
-     * @return {@code String} 
-     *          Replacing the input string spaces with '_' 
+     * Replaces space with underscore in a {@code String}
+     * @param uiName
+     * @return String replacing the input string spaces with '_' 
      */
     public String getIndexedName(String uiName)
     {
@@ -306,12 +304,10 @@ public class MtasUimaParser extends MtasParser {
 
     /**
      * Takes in {@code IRI} for identifier as {@code String} and returns the label String 
-     * Eg:- InputParameter :- {@code http://www.w3.org/TR/2003/PR-owl-guide-20031209/wine#RoseDAnjou} 
-     * Returned :- {@link KBConcept} + {@link MtasToken.DELIMITER} + RoseDAnjou
-     * @param String aIRI
-     *             The identifier as IRI  
-     * @return String {@link KBObject}+{@link MtasToken.DELIMITER}
-     *          +{@link KBObject.get().getUiLabel()}
+     * Eg:- InputParameter String is {@code http://www.w3.org/TR/2003/PR-owl-guide-20031209/wine#RoseDAnjou}, 
+     * it returns {@code KBConcept} + {@link MtasToken#DELIMITER} + RoseDAnjou
+     * @param aIRI  the identifier value as IRI  
+     * @return String
      */
     public String getUILabel(String aIRI) {
         StringBuilder labelStr = new StringBuilder();
