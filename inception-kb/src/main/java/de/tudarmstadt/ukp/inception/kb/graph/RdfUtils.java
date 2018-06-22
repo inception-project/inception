@@ -35,6 +35,7 @@ import org.eclipse.rdf4j.query.TupleQueryResult;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.repository.RepositoryException;
 import org.eclipse.rdf4j.repository.RepositoryResult;
+import org.eclipse.rdf4j.rio.ntriples.NTriplesUtil;
 
 import de.tudarmstadt.ukp.inception.kb.IriConstants;
 
@@ -43,7 +44,7 @@ public class RdfUtils
     public static Optional<Value> readFirstValue(RepositoryConnection conn, Resource subj, IRI pred,
             Resource... contexts)
     {
-        Optional<Statement> statement = readFirst(conn, subj, pred, null, contexts);
+        Optional<Statement> statement = readFirst(conn, subj, pred, null);
         if (statement.isPresent()) {
             return Optional.of(statement.get().getObject());
         }
@@ -53,9 +54,10 @@ public class RdfUtils
     }
 
     public static Optional<Statement> readFirst(RepositoryConnection conn, Resource subj, IRI pred,
-            Value obj, Resource... contexts)
+            Value obj, String language)
     {
-        try (RepositoryResult<Statement> results = getStatements(conn, subj, pred, obj, false)) {
+        try (RepositoryResult<Statement> results =
+            getStatements(conn, subj, pred, obj, false, language)) {
             if (results.hasNext()) {
                 return Optional.of(results.next());
             }
@@ -65,10 +67,22 @@ public class RdfUtils
         }
     }
 
-    public static RepositoryResult<Statement> getStatements(
-            RepositoryConnection conn, Resource subj, IRI pred, Value obj, boolean includeInferred)
+    public static Optional<Statement> readFirst(RepositoryConnection conn, Resource subj, IRI pred,
+        Value obj)
     {
-        return getStatementsSparql(conn, subj, pred, obj, includeInferred);
+        return readFirst(conn, subj, pred, obj, null);
+    }
+
+    public static RepositoryResult<Statement> getStatements(RepositoryConnection conn,
+        Resource subj, IRI pred, Value obj, boolean includeInferred)
+    {
+        return getStatementsSparql(conn, subj, pred, obj, includeInferred, null);
+    }
+
+    public static RepositoryResult<Statement> getStatements(RepositoryConnection conn,
+        Resource subj, IRI pred, Value obj, boolean includeInferred, String language)
+    {
+        return getStatementsSparql(conn, subj, pred, obj, includeInferred, language);
     }
 
     
@@ -77,12 +91,28 @@ public class RdfUtils
             throws QueryEvaluationException {
         return conn.getStatements(subj, pred, obj, includeInferred);
     }
-    
+
     public static RepositoryResult<Statement> getStatementsSparql(RepositoryConnection conn,
-            Resource subj, IRI pred, Value obj, boolean includeInferred)
+        Resource subj, IRI pred, Value obj, boolean includeInferred)
         throws QueryEvaluationException
     {
-        String QUERY = "SELECT * WHERE { ?s ?p ?o } LIMIT 1000";
+        return getStatementsSparql(conn, subj, pred, obj, includeInferred, null);
+    }
+
+    public static RepositoryResult<Statement> getStatementsSparql(RepositoryConnection conn,
+            Resource subj, IRI pred, Value obj, boolean includeInferred, String language)
+        throws QueryEvaluationException
+    {
+        String filter = "";
+        if (language != null) {
+            filter = "FILTER(LANG(?o) = \"\" || LANGMATCHES(LANG(?o), \"" + NTriplesUtil
+                .escapeString(language) + "\")).";
+        }
+        String QUERY = String.join("\n",
+            "SELECT * WHERE { ",
+            "?s ?p ?o ",
+            filter,
+            "} LIMIT 1000");
         TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
         if (subj != null) {
             tupleQuery.setBinding("s", subj);
