@@ -74,7 +74,7 @@
   <modules>
     <module>inception-build</module>
     <module>inception-app-webapp</module>
-    <module>inception-app-ui-search</module>
+    <module>inception-ui-external-search</module>
     <module>inception-search-core</module>
     <!-- >module>inception-search-mimir</module -->
     <module>inception-search-mtas</module>
