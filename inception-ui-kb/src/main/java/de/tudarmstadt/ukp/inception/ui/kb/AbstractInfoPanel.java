@@ -36,8 +36,8 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.cycle.RequestCycle;
-
-import com.googlecode.wicket.kendo.ui.widget.tooltip.TooltipBehavior;
+import org.wicketstuff.minis.behavior.mootip.MootipBehaviour;
+import org.wicketstuff.minis.behavior.mootip.MootipSettings;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
@@ -161,15 +161,20 @@ public abstract class AbstractInfoPanel<T extends KBObject> extends Panel {
             super(id, "viewMode", AbstractInfoPanel.this);
 
             Label uiLabel = new Label("uiLabel", compoundModel.bind("uiLabel"));
-            uiLabel.add(new TooltipBehavior(compoundModel.bind("identifier")));
+            
+            //uiLabel.add(new TooltipBehavior(compoundModel.bind("identifier")));
+            
+            
+            IModel<String> val = compoundModel.bind("identifier");
+            MootipSettings mooSettings = new MootipSettings();
+            //mooSettings.setEvalAlways(true);
+            mooSettings.setShowOnMouseEnter(true);
+            mooSettings.setFixed(true);
+            MootipBehaviour behaviour = new MootipBehaviour("", val.getObject());
+            behaviour.setMootipSettings(mooSettings);
+            uiLabel.add(behaviour);
+            
             add(uiLabel);
-            // IModel<String> val = compoundModel.bind("identifier");
-            // MootipSettings mooSettings = new MootipSettings();
-            // mooSettings.setEvalAlways(true);
-            // mooSettings.setShowOnMouseEnter(true);
-            // MootipBehaviour behaviour = new MootipBehaviour("",val.getObject());
-            // behaviour.setMootipSettings(mooSettings);
-            // uiLabel.add(behaviour);
             add(new Label("typeLabel", new ResourceModel(getTypeLabelResourceKey())));
             // button for deleting the KBObject
             LambdaAjaxLink deleteButton = new LambdaAjaxLink("delete",
