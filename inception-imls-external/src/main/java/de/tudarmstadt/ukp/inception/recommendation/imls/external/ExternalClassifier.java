@@ -121,8 +121,9 @@ public class ExternalClassifier
         //i.e. JSON with Base64 encoded bytestreams of Typesystem-XML and CAS-XMI
         try {
             String jsonString = new JSONObject()
-                    .put("CAS", new String(Base64.getEncoder().encode(casOS.toByteArray()), "utf-8"))
-                    .put("Typesystem", new String(Base64.getEncoder().encode(typeOS.toByteArray()), "utf-8"))
+                    .put("CAS", new String(Base64.getEncoder().encode(casOS.toByteArray()),
+                        "utf-8")).put("Typesystem",
+                    new String(Base64.getEncoder().encode(typeOS.toByteArray()), "utf-8"))
                     .put("Layer", new String(layer.getName()))
                     .toString();
             httpPost.setEntity(new StringEntity(jsonString, "utf-8"));

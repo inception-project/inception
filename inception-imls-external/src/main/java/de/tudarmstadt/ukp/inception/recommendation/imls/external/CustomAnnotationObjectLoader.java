@@ -54,8 +54,9 @@ public class CustomAnnotationObjectLoader
         CAS cas = aJCas.getCas();
         Type annotationType = org.apache.uima.fit.util.CasUtil.getType(cas , typeName);
         Feature feature = annotationType.getFeatureByBaseName(featureName);
-        
-        result = CasUtil.loadCustomAnnotatedSentences(aJCas, annotationType, feature, aRecommenderId);
+
+        result = CasUtil
+            .loadCustomAnnotatedSentences(aJCas, annotationType, feature, aRecommenderId);
 
         return result;
     }
