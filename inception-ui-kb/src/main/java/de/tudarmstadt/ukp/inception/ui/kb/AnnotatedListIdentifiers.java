@@ -51,8 +51,6 @@ public class AnnotatedListIdentifiers
     private static final long serialVersionUID = -2431507947235476294L;
     private static final Logger LOG = LoggerFactory.getLogger(AnnotatedListIdentifiers.class);
 
-    // TO replace with KB.identifier after subClass and instances change
-    private String searchQuery = "<KB.Entity=\"XYZ\"/>";
     private @SpringBean DocumentService documentService;
     private @SpringBean KnowledgeBaseService kbService;
     private @SpringBean SearchService searchService;
@@ -74,17 +72,22 @@ public class AnnotatedListIdentifiers
         kbModel = aKbModel;
         conceptModel = aConcept;
         currentUser = userRepository.getCurrentUser();
-        System.out.println(aInstance.getObject());
+        // TO replace with KB.identifier after subClass and instances change
+        String queryHead = "<KB.Entity=\"";
+        String queryEnd = "\"/>";
+        StringBuffer query = new StringBuffer();
         if (aInstance.getObject() == null) {
             String concept = aConcept.getObject().getUiLabel();
-            targetQuery = Model.of(searchQuery.replace("XYZ", concept));
+            targetQuery = Model
+                    .of(query.append(queryHead).append(concept).append(queryEnd).toString());
         }
         else {
             String instance = aInstance.getObject().getUiLabel();
-            targetQuery = Model.of(searchQuery.replace("XYZ", instance));
+            targetQuery = Model
+                    .of(query.append(queryHead).append(instance).append(queryEnd).toString());
         }
         LambdaModel<List<SearchResult>> searchResults = LambdaModel.of(this::getSearchResults);
-        LOG.debug("SearchResult count : " + searchResults.getObject().size());
+        LOG.debug("SearchResult count : {}" , searchResults.getObject().size());
         OverviewListChoice<String> overviewList = new OverviewListChoice<String>(
                 "annotatedResultGroups")
         {
@@ -108,7 +111,7 @@ public class AnnotatedListIdentifiers
             String sentence = new String();
             sentence = sentence + x.getText();
             searchResultList.add(sentence);
-            LOG.debug("Sentence search : " + sentence);
+            LOG.debug("Sentence search : {}" , sentence);
         }
         return searchResultList;
     }
@@ -131,6 +134,7 @@ public class AnnotatedListIdentifiers
             return searchService.query(currentUser, currentProject, targetQuery.getObject());
         }
         catch (Exception e) {
+            LOG.debug("Error in the query.", e);
             error("Error in the query: " + e.getMessage());
             return Collections.emptyList();
         }

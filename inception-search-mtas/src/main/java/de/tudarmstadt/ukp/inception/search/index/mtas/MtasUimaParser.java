@@ -267,9 +267,12 @@ public class MtasUimaParser extends MtasParser {
                                             endToken);
                                     tokenCollection.add(mtasAnnotationFeatureLabel);
                                     
-                                    // Indexing UI annotation without type and layer for generic search
-                                    indexedStr = IndexingConstants.KBENTITY + MtasToken.DELIMITER + kbValues[1];
-                                    log.debug("Indexed String without type and label for : {}", indexedStr);
+                                    // Indexing UI annotation without type and layer for generic
+                                    // search
+                                    indexedStr = IndexingConstants.KBENTITY + MtasToken.DELIMITER
+                                            + kbValues[1];
+                                    log.debug("Indexed String without type and label for : {}",
+                                            indexedStr);
                                     MtasToken mtasAnnotationKBEntity = new MtasTokenString(
                                             mtasId++, indexedStr, beginToken);
                                     mtasAnnotationKBEntity.setOffset(annotation.getBegin(),
@@ -292,7 +295,8 @@ public class MtasUimaParser extends MtasParser {
     /**
      * Replaces space with underscore n a {@code String}
      * @param {@code String} uiName
-     * @return {@code String}
+     * @return {@code String} 
+     *          Replacing the input string spaces with '_' 
      */
     public String getIndexedName(String uiName)
     {
@@ -300,16 +304,12 @@ public class MtasUimaParser extends MtasParser {
         return indexedName;
     }
 
-    @Override
-    public String printConfig() {
-        return null;
-    }
     /**
-     * 
      * Takes in {@code IRI} for identifier as {@code String} and returns the label String 
      * Eg:- InputParameter :- {@code http://www.w3.org/TR/2003/PR-owl-guide-20031209/wine#RoseDAnjou} 
      * Returned :- {@link KBConcept} + {@link MtasToken.DELIMITER} + RoseDAnjou
-     * @param String iri 
+     * @param String aIRI
+     *             The identifier as IRI  
      * @return String {@link KBObject}+{@link MtasToken.DELIMITER}
      *          +{@link KBObject.get().getUiLabel()}
      */
@@ -320,21 +320,10 @@ public class MtasUimaParser extends MtasParser {
         if (kbObject.isPresent()) {
             labelStr.append(kbObject.get().getClass().getSimpleName())
             .append(MtasToken.DELIMITER).append(kbObject.get().getUiLabel());
-        } else {
-            return labelStr.toString();
         }
         return labelStr.toString();
     }
     
-    /**
-     * Method Implementation to get MtasToken (To be done when subclass and class 
-     * semantics to be included
-     * @return
-     */
-    public MtasToken getMtasTokenKBFeature() {
-        return null;
-    }
-
     class SimpleAnnotationLayer {
         private ArrayList<Pair<String, String>> features;
         private String LayerName;
@@ -372,5 +361,12 @@ public class MtasUimaParser extends MtasParser {
         public void setLayerShorName(String layerShorName) {
             LayerShorName = layerShorName;
         }
+    }
+
+    @Override
+    public String printConfig()
+    {
+        // TODO Auto-generated method stub
+        return null;
     }
 }
