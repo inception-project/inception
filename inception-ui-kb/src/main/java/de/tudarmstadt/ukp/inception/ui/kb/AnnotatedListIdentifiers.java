@@ -72,7 +72,7 @@ public class AnnotatedListIdentifiers
         kbModel = aKbModel;
         conceptModel = aConcept;
         currentUser = userRepository.getCurrentUser();
-        // TO replace with KB.identifier after subClass and instances change
+        //TODO TO replace with KB.identifier after subClass and instances change
         String queryHead = "<KB.Entity=\"";
         String queryEnd = "\"/>";
         StringBuffer query = new StringBuffer();
