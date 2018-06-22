@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
@@ -149,6 +150,7 @@ public class KnowledgeBase
      * A List of explicitly defined root concepts that can be used if auto detection takes too long
      */
     @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "knowledgebase_explicitly_defined_root_concepts")
     private List<IRI> explicitlyDefinedRootConcepts = new ArrayList<>();
     
     public String getRepositoryId() {

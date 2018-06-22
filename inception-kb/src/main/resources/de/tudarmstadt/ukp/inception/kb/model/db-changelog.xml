@@ -263,10 +263,10 @@
   <changeSet author="INCEpTION Team" id="20180616-1">
     <preConditions onFail="MARK_RAN">
       <not>
-        <tableExists tableName="knowledgebase_explicitlyDefinedRootConcepts"/>
+        <tableExists tableName="knowledgebase_explicitly_defined_root_concepts"/>
       </not>
     </preConditions>
-    <createTable tableName="knowledgebase_explicitlyDefinedRootConcepts">
+    <createTable tableName="knowledgebase_explicitly_defined_root_concepts">
       <column name="knowledgebase_repositoryId" type="VARCHAR(255)">
         <constraints nullable="false" />
       </column>
