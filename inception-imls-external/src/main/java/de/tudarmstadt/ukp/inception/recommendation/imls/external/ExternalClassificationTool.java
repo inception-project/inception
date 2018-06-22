@@ -30,7 +30,7 @@ public class ExternalClassificationTool
         super(recommenderId, ExternalClassificationTool.class.getName(),
                 new ExternalTrainer(new BaseConfiguration()),
                 new ExternalClassifier(new BaseConfiguration(feature),
-                        new CustomAnnotationObjectLoader(feature, type), traits),
+                        new CustomAnnotationObjectLoader(feature, type), traits, recommenderId),
                 new CustomAnnotationObjectLoader(feature, type), true);
     }
 

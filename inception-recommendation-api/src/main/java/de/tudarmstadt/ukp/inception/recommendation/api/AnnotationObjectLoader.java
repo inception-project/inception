@@ -46,5 +46,5 @@ public interface AnnotationObjectLoader
 
     List<List<AnnotationObject>> loadAnnotationObjectsForTesting(JCas aJCas);
 
-    List<List<AnnotationObject>> loadAnnotationObjects(JCas aJCas);
+    List<List<AnnotationObject>> loadAnnotationObjects(JCas aJCas, long aRecommenderId);
 }

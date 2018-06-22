@@ -25,7 +25,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.apache.uima.jcas.JCas;
 import org.slf4j.Logger;
@@ -193,11 +192,13 @@ public class NamedEntityLinker
             }
         }
 
-        return handles.stream()
-            .limit(conf.getNumPredictions())
-            .map(h -> new AnnotationObject(token, h.getIdentifier(), h.getDescription(),
-                    tokenId++, feature, "NamedEntityLinker"))
-            .collect(Collectors.toList());
+        List<AnnotationObject> list = new ArrayList<>();
+        for (KBHandle h: handles) {
+            list.add(new AnnotationObject(token, h.getIdentifier(), h.getDescription(), tokenId,
+                feature, "NamedEntityLinker", conf.getRecommenderId()));
+            tokenId++;
+        }
+        return list;
     }
 
     private boolean isNamedEntity(TokenObject token)

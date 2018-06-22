@@ -87,7 +87,7 @@ public class StringMatchingNerClassifier
             for (T token : sentence) {
                 List<AnnotationObject> word = new ArrayList<>();
                 word.add(new AnnotationObject(token, tokenId, feature,
-                        "StringMatchingNerClassifier"));
+                        "StringMatchingNerClassifier", conf.getRecommenderId()));
                 tokenId++;
                 annotatedSentence.add(word);
             }

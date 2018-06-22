@@ -51,8 +51,8 @@ public class PosAnnotationObjectLoader implements AnnotationObjectLoader
     }
 
     @Override
-    public List<List<AnnotationObject>> loadAnnotationObjects(JCas jCas)
+    public List<List<AnnotationObject>> loadAnnotationObjects(JCas jCas, long aRecommenderId)
     {
-        return CasUtil.loadAnnotatedSentences(jCas, layer, feature);
+        return CasUtil.loadAnnotatedSentences(jCas, aRecommenderId, layer, feature);
     }
 }

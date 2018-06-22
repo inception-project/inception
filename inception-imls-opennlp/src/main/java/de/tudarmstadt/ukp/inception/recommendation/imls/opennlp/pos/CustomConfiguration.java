@@ -39,9 +39,10 @@ public class CustomConfiguration
         this.setParams(params);
     }
     
-    public CustomConfiguration(int beamSize, String feature)
+    public CustomConfiguration(int beamSize, String feature, long aRecommenderId)
     {
         this(beamSize);
         setFeature(feature);
+        setRecommenderId(aRecommenderId);
     }
 }

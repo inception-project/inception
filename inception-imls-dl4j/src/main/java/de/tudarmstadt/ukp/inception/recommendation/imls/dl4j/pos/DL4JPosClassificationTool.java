@@ -39,11 +39,11 @@ public class DL4JPosClassificationTool
     private static final Logger logger = LoggerFactory.getLogger(DL4JPosClassificationTool.class);
 
     public DL4JPosClassificationTool(long aRecommenderId, String feature) {
-        this(getCache(), feature, null);
+        this(aRecommenderId, getCache(), feature, null);
     }
 
     public DL4JPosClassificationTool(long aRecommenderId, String feature, AnnotationLayer aLayer) {
-        this(getCache(), feature, aLayer);
+        this(aRecommenderId, getCache(), feature, aLayer);
     }
     
     public static File getCache() {
@@ -52,13 +52,15 @@ public class DL4JPosClassificationTool
         return folder;
     }
             
-    public DL4JPosClassificationTool(File aCache, String feature, AnnotationLayer aLayer)
+    public DL4JPosClassificationTool(long aRecommenderId, File aCache, String feature,
+        AnnotationLayer aLayer)
     {
         super();
         DatasetFactory loader = new DatasetFactory(aCache);
         Dataset ds = null;
-        ClassifierConfiguration<DL4JConfigurationParameters> conf = 
-                new de.tudarmstadt.ukp.inception.recommendation.imls.dl4j.pos.BaseConfiguration();
+        ClassifierConfiguration<DL4JConfigurationParameters> conf =
+            new de.tudarmstadt.ukp.inception.recommendation.imls.dl4j.pos.BaseConfiguration(
+            aRecommenderId);
         try {
             ds = loader.load("glove.6B.50d.dl4jw2v");
             // ds = loader.load("glove.6B.100d.dl4jw2v");

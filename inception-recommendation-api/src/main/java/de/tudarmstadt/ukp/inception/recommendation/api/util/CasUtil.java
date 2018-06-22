@@ -20,8 +20,8 @@ package de.tudarmstadt.ukp.inception.recommendation.api.util;
 import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.apache.uima.fit.util.JCasUtil.selectCovered;
 
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Function;
 
@@ -60,21 +60,21 @@ public class CasUtil
     /**
      *
      *
-     * @param jCas the JCas of the document from which the annotated sentences should be retrieved
+     * @param aJcas the JCas of the document from which the annotated sentences should be retrieved
      * @param aLayer the layer for which features should be retrieved
      * @param aFeatureName the name of the feature
      * @return an annotated document
      */
     public static <T extends Annotation> List<List<AnnotationObject>> loadAnnotatedSentences(
-        JCas jCas, AnnotationLayer aLayer, String aFeatureName)
+        JCas aJcas, long aRecommenderId, AnnotationLayer aLayer, String aFeatureName)
     {
-        List<List<AnnotationObject>> result = new LinkedList<>();
+        List<List<AnnotationObject>> result = new ArrayList<>();
 
-        if (jCas == null) {
+        if (aJcas == null) {
             return result;
         }
 
-        DocumentMetaData dmd = DocumentMetaData.get(jCas);
+        DocumentMetaData dmd = DocumentMetaData.get(aJcas);
         String documentURI = "N/A";
         String documentName = "N/A";
 
@@ -88,9 +88,9 @@ public class CasUtil
 
         int id = 0;
 
-        for (Sentence s : select(jCas, Sentence.class)) {
+        for (Sentence s : select(aJcas, Sentence.class)) {
             Type annotationType = org.apache.uima.fit.util.CasUtil
-                .getType(jCas.getCas(), aLayer.getName());
+                .getType(aJcas.getCas(), aLayer.getName());
             List<AnnotationFS> annotations = org.apache.uima.fit.util.CasUtil
                 .selectCovered(annotationType, s);
             Feature feature = annotationType.getFeatureByBaseName(aFeatureName);
@@ -108,10 +108,10 @@ public class CasUtil
             }
 
             List<AnnotationObject> annotationObjects = getTokenAnnotations(annotations, tokens,
-                documentURI, documentName, feature);
+                documentURI, documentName, feature, aRecommenderId);
 
             List<AnnotationObject> completeSentence = getAnnotationsForCompleteSentence(tokens,
-                annotationObjects, aFeatureName, id);
+                annotationObjects, aFeatureName, id, aRecommenderId);
             result.add(completeSentence);
             id = id + completeSentence.size();
         }
@@ -132,7 +132,7 @@ public class CasUtil
     public static <T extends Annotation> List<List<AnnotationObject>> loadAnnotatedSentences(
             JCas jCas, Class<T> annotationType, String feature, Function<T, String> applyFunction)
     {
-        List<List<AnnotationObject>> result = new LinkedList<>();
+        List<List<AnnotationObject>> result = new ArrayList<>();
 
         if (jCas == null) {
             return result;
@@ -178,10 +178,22 @@ public class CasUtil
         return result;
     }
 
+    /**
+     * Only for ClassificationTool Unit tests
+     */
+    @Deprecated
     private static <A extends Annotation> List<AnnotationObject> getAnnotationsForCompleteSentence(
-            List<TokenObject> sentence, List<AnnotationObject> annotations, String feature, int id)
+        List<TokenObject> sentence, List<AnnotationObject> annotationObjects, String feature,
+        int id)
     {
-        List<AnnotationObject> result = new LinkedList<>();
+        return getAnnotationsForCompleteSentence(sentence, annotationObjects, feature, id, 0);
+    }
+
+    private static <A extends Annotation> List<AnnotationObject> getAnnotationsForCompleteSentence(
+        List<TokenObject> sentence, List<AnnotationObject> annotations, String feature, int id,
+        long aRecommenderId)
+    {
+        List<AnnotationObject> result = new ArrayList<>();
         int indexAnnotations = 0;
 
         if (sentence == null || annotations == null || sentence.isEmpty()
@@ -193,7 +205,8 @@ public class CasUtil
             TokenObject tObj = sentence.get(i);
 
             if (indexAnnotations >= annotations.size()) {
-                result.add(new AnnotationObject(tObj, id, feature));
+                result.add(new AnnotationObject(tObj, id, feature, aRecommenderId));
+                id++;
                 continue;
             }
 
@@ -203,13 +216,14 @@ public class CasUtil
                 AnnotationObject annotationObject = new AnnotationObject(aObj);
                 annotationObject.setId(id);
                 annotationObject.setFeature(feature);
+                annotationObject.setRecommenderId(aRecommenderId);
                 result.add(annotationObject);
                 indexAnnotations++;
             }
             else {
                 // Since not all tokens in the sentence are annotated, 
                 // we need to add some AnnotationObjects with empty label in respective positions
-                result.add(new AnnotationObject(tObj, id, feature));
+                result.add(new AnnotationObject(tObj, id, feature, aRecommenderId));
             }
             id++;
         }
@@ -220,9 +234,9 @@ public class CasUtil
 
     private static <A extends Annotation> List<AnnotationObject> getTokenAnnotations(
         List<AnnotationFS> annotations, List<TokenObject> sentence, String documentURI,
-        String documentName, Feature feature)
+        String documentName, Feature feature, long aRecommenderId)
     {
-        List<AnnotationObject> result = new LinkedList<>();
+        List<AnnotationObject> result = new ArrayList<>();
 
         int id = 0;
 
@@ -240,7 +254,8 @@ public class CasUtil
                 Offset offset = getTokenOffset(token, sentence);
                 TokenObject tObj = new TokenObject(offset, token.getCoveredText(),
                     documentURI, documentName, id);
-                AnnotationObject ao = new AnnotationObject(tObj, id, feature.getName());
+                AnnotationObject ao = new AnnotationObject(tObj, id, feature.getName(),
+                    aRecommenderId);
                 ao.setLabel(annotationLabel);
                 result.add(ao);
                 id++;
@@ -260,7 +275,7 @@ public class CasUtil
             List<A> annotations, List<TokenObject> sentence, Function<A, String> applyFunction,
             String documentURI, String documentName, String feature)
     {
-        List<AnnotationObject> result = new LinkedList<>();
+        List<AnnotationObject> result = new ArrayList<>();
 
         int id = 0;
         
@@ -278,7 +293,7 @@ public class CasUtil
                 Offset offset = getTokenOffset(token, sentence);
                 TokenObject tObj = new TokenObject(offset, token.getCoveredText(), 
                     documentURI, documentName, id);
-                AnnotationObject ao = new AnnotationObject(tObj, id, feature);
+                AnnotationObject ao = new AnnotationObject(tObj, id, feature, 0);
                 ao.setLabel(annotationLabel);
                 result.add(ao);
                 id++;
@@ -307,7 +322,7 @@ public class CasUtil
     public static List<TokenObject> loadTokenObjects(Sentence s, String documentURI, 
         String documentName)
     {
-        List<TokenObject> result = new LinkedList<>();
+        List<TokenObject> result = new ArrayList<>();
 
         if (s == null) {
             return result;
@@ -327,7 +342,7 @@ public class CasUtil
 
     public static List<List<TokenObject>> loadTokenObjects(JCas jCas)
     {
-        List<List<TokenObject>> result = new LinkedList<>();
+        List<List<TokenObject>> result = new ArrayList<>();
 
         if (jCas == null) {
             return result;
@@ -358,7 +373,7 @@ public class CasUtil
      */
     public static List<List<TokenObject>> loadTokenObjects(JCas jCas, int begin, int end)
     {
-        List<List<TokenObject>> result = new LinkedList<>();
+        List<List<TokenObject>> result = new ArrayList<>();
 
         if (jCas == null) {
             return result;
@@ -388,9 +403,9 @@ public class CasUtil
 
     @SuppressWarnings("unchecked")
     public static <T extends TokenObject> List<List<AnnotationObject>> transformToAnnotationObjects(
-            List<List<T>> sentences, String feature, String classifier)
+            List<List<T>> sentences, String feature, String classifier, long aRecommenderId)
     {
-        List<List<AnnotationObject>> result = new LinkedList<>();
+        List<List<AnnotationObject>> result = new ArrayList<>();
 
         if (sentences == null) {
             return result;
@@ -399,11 +414,11 @@ public class CasUtil
         int id = 0;
         
         for (List<T> sentence : sentences) {
-            List<AnnotationObject> annotations = new LinkedList<>();
+            List<AnnotationObject> annotations = new ArrayList<>();
 
             for (int i = 0; i < sentence.size(); i++) {
                 T t = sentence.get(i);
-                annotations.add(new AnnotationObject(t, id, feature, classifier));
+                annotations.add(new AnnotationObject(t, id, feature, classifier, aRecommenderId));
                 id++;
             }
 
@@ -428,9 +443,9 @@ public class CasUtil
     }
 
     public static <T extends Annotation> List<List<AnnotationObject>> loadCustomAnnotatedSentences(
-        JCas jCas, Type annotationType, Feature feature)
+        JCas jCas, Type annotationType, Feature feature, long aRecommenderId)
     {
-        List<List<AnnotationObject>> result = new LinkedList<>();
+        List<List<AnnotationObject>> result = new ArrayList<>();
 
         if (jCas == null) {
             return result;
@@ -469,7 +484,7 @@ public class CasUtil
             }
 
             List<AnnotationObject> annotationObjects = getTokenAnnotationsFromFS(annotations,
-                    tokens, documentURI, documentName, feature);
+                    tokens, documentURI, documentName, feature, aRecommenderId);
 
             List<AnnotationObject> completeSentence = getAnnotationsForCompleteSentence(tokens,
                 annotationObjects, feature.getShortName(), id);
@@ -482,12 +497,9 @@ public class CasUtil
 
     private static <A extends Annotation> List<AnnotationObject> getTokenAnnotationsFromFS(
         List<AnnotationFS> annotations, List<TokenObject> sentence,
-        String documentURI, String documentName, Feature feature)
+        String documentURI, String documentName, Feature feature, long aRecommenderId)
     {
-        List<AnnotationObject> result = new LinkedList<>();
-
-
-
+        List<AnnotationObject> result = new ArrayList<>();
         int id = 0;
 
         for (AnnotationFS a : annotations) {
@@ -504,7 +516,8 @@ public class CasUtil
                 Offset offset = getTokenOffset(token, sentence);
                 TokenObject tObj = new TokenObject(offset, token.getCoveredText(), documentURI,
                         documentName, id);
-                AnnotationObject ao = new AnnotationObject(tObj, id, feature.getName());
+                AnnotationObject ao = new AnnotationObject(tObj, id, feature.getName(),
+                    aRecommenderId);
                 ao.setLabel(annotationLabel);
                 id++;
             }
@@ -519,7 +532,7 @@ public class CasUtil
     public static List<TokenObject> loadTokenObjects(AnnotationFS sentence, String documentURI,
                                                      String documentName, JCas aJCas)
     {
-        List<TokenObject> result = new LinkedList<>();
+        List<TokenObject> result = new ArrayList<>();
 
         if (sentence == null) {
             return result;

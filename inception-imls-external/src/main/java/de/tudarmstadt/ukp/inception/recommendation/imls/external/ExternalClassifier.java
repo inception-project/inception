@@ -55,14 +55,16 @@ public class ExternalClassifier
     private final Logger log = LoggerFactory.getLogger(getClass());
     private CustomAnnotationObjectLoader loader;
     private ExternalClassifierTraits traits;
+    private long recommenderId;
 
     public ExternalClassifier(ClassifierConfiguration<Object> aConfiguration,
                               CustomAnnotationObjectLoader aLoader,
-                              ExternalClassifierTraits aTraits)
+                              ExternalClassifierTraits aTraits, long aRecommenderId)
     {
         super(aConfiguration);
         loader = aLoader;
         traits = aTraits;
+        recommenderId = aRecommenderId;
     }
 
     @Override
@@ -144,7 +146,8 @@ public class ExternalClassifier
             log.error("Error while sending request!", e);
         }
 
-        List<List<AnnotationObject>> annotatedSentences = loader.loadAnnotationObjects(aJCas);
+        List<List<AnnotationObject>> annotatedSentences = loader.loadAnnotationObjects(aJCas,
+            recommenderId);
         List<List<List<AnnotationObject>>> wrappedSents = new LinkedList<>();
         for (List<AnnotationObject> sentence : annotatedSentences) {
             List<List<AnnotationObject>> sentenceList = new LinkedList<>();
