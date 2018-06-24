@@ -162,7 +162,7 @@ public class SelectionTask
                 continue;
             }
             
-            data.addAll(ct.getLoader().loadAnnotationObjectsForTesting(jCas));
+            data.addAll(ct.getLoader().loadAnnotationObjectsForEvaluation(jCas));
         }
 
         return es.evaluate(data);

@@ -67,10 +67,10 @@ public class IncrementalEvaluationService
         }
         
         if (conf.getFeature() != null) {
-            return evaluateIncremental(loader.loadAnnotationObjectsForTesting(jCas));
+            return evaluateIncremental(loader.loadAnnotationObjectsForEvaluation(jCas));
         }
         else {
-            return evaluateIncremental(loader.loadAnnotationObjectsForTesting(jCas));
+            return evaluateIncremental(loader.loadAnnotationObjectsForEvaluation(jCas));
         }
     }
 

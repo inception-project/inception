@@ -361,7 +361,7 @@ public class EvaluationPage
                 if (jCas == null) {
                     continue;
                 }
-                annotatedData.addAll(loader.loadAnnotationObjectsForTesting(jCas));
+                annotatedData.addAll(loader.loadAnnotationObjectsForEvaluation(jCas));
             }            
             
             EvaluationResult result = 

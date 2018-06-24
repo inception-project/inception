@@ -62,7 +62,7 @@ public class CustomAnnotationObjectLoader
     }
 
     @Override
-    public List<List<AnnotationObject>> loadAnnotationObjectsForTesting(JCas aJCas)
+    public List<List<AnnotationObject>> loadAnnotationObjectsForEvaluation(JCas aJCas)
     {
         throw new UnsupportedOperationException("Write unit tests please!");
     }

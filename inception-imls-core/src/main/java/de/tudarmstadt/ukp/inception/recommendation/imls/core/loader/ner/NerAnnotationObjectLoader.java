@@ -45,7 +45,7 @@ public class NerAnnotationObjectLoader implements AnnotationObjectLoader
 
     @Deprecated
     @Override
-    public List<List<AnnotationObject>> loadAnnotationObjectsForTesting(JCas jCas)
+    public List<List<AnnotationObject>> loadAnnotationObjectsForEvaluation(JCas jCas)
     {
         return CasUtil.loadAnnotatedSentences(jCas, NamedEntity.class, "value",
             NamedEntity::getValue);

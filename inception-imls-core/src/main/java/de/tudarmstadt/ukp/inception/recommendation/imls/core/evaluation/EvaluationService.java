@@ -129,10 +129,10 @@ public class EvaluationService
         }
 
         if (conf.getFeature() != null) {
-            return evaluate(loader.loadAnnotationObjectsForTesting(jCas));
+            return evaluate(loader.loadAnnotationObjectsForEvaluation(jCas));
         }
         else {
-            return evaluate(loader.loadAnnotationObjectsForTesting(jCas));
+            return evaluate(loader.loadAnnotationObjectsForEvaluation(jCas));
         }
     }
 

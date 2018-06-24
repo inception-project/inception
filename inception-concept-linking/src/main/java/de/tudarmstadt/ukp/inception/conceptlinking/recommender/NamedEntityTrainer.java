@@ -26,7 +26,6 @@ import java.util.stream.Collectors;
 import de.tudarmstadt.ukp.inception.recommendation.api.ClassifierConfiguration;
 import de.tudarmstadt.ukp.inception.recommendation.api.Trainer;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
-import de.tudarmstadt.ukp.inception.recommendation.imls.util.ListUtil;
 
 public class NamedEntityTrainer
     extends Trainer<Object>
@@ -50,8 +49,8 @@ public class NamedEntityTrainer
     @Override
     public Object train(List<List<AnnotationObject>> trainingDataIncrement)
     {
-        Set<AnnotationObject> annotations = new HashSet<>(
-            ListUtil.flattenList(trainingDataIncrement));
+        Set<AnnotationObject> annotations = new HashSet<>();
+        trainingDataIncrement.forEach(annotations::addAll);
         return annotations.stream()
             .filter(a -> a.getLabel() != null)
             .filter(a -> a.getFeature().equals("value"))

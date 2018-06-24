@@ -29,6 +29,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.datasets.DatasetFactory;
 import de.tudarmstadt.ukp.inception.recommendation.api.ClassificationTool;
 import de.tudarmstadt.ukp.inception.recommendation.api.ClassifierConfiguration;
 import de.tudarmstadt.ukp.inception.recommendation.imls.core.loader.pos.PosAnnotationObjectLoader;
+import de.tudarmstadt.ukp.inception.recommendation.imls.dl4j.pos.BaseConfiguration;
 
 /**
  * Implementation of POS-Tagging using the DL4J library to build a multi-Layer neural net. 
@@ -58,8 +59,7 @@ public class DL4JPosClassificationTool
         super();
         DatasetFactory loader = new DatasetFactory(aCache);
         Dataset ds = null;
-        ClassifierConfiguration<DL4JConfigurationParameters> conf =
-            new de.tudarmstadt.ukp.inception.recommendation.imls.dl4j.pos.BaseConfiguration(
+        ClassifierConfiguration<DL4JConfigurationParameters> conf = new BaseConfiguration(
             aRecommenderId);
         try {
             ds = loader.load("glove.6B.50d.dl4jw2v");
