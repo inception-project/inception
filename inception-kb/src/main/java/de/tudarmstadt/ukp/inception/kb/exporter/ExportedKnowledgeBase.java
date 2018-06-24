@@ -31,25 +31,25 @@ public class ExportedKnowledgeBase
     @JsonProperty("type")
     private String type;
     
-    @JsonProperty("classIri")
+    @JsonProperty("class_iri")
     private String classIri;
 
-    @JsonProperty("subclassIri")
+    @JsonProperty("subclass_iri")
     private String subclassIri;
 
-    @JsonProperty("typeIri")
+    @JsonProperty("type_iri")
     private String typeIri;
 
-    @JsonProperty("descriptionIri")
+    @JsonProperty("description_iri")
     private String descriptionIri;
 
-    @JsonProperty("labelIri")
+    @JsonProperty("label_iri")
     private String labelIri;
 
-    @JsonProperty("propertyTypeIri")
+    @JsonProperty("property_type_iri")
     private String propertyTypeIri;
 
-    @JsonProperty("readOnly")
+    @JsonProperty("read_only")
     private boolean readOnly;
 
     @JsonProperty("enabled")
@@ -58,14 +58,14 @@ public class ExportedKnowledgeBase
     @JsonProperty("reification")
     private String reification;
     
-    @JsonProperty("supportConceptLinking")
+    @JsonProperty("support_concept_linking")
     private boolean supportConceptLinking;
     
-    @JsonProperty("basePrefix")
+    @JsonProperty("base_prefix")
     private String basePrefix;
     
     // set to null for local knowledge bases
-    @JsonProperty("remoteURL")
+    @JsonProperty("remote_url")
     private String remoteURL;
 
     public String getName()
