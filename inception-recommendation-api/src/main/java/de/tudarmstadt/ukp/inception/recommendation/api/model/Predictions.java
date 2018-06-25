@@ -262,13 +262,29 @@ public class Predictions
             .removeIf((p) -> p.getKey().getRecommenderId() == recommenderId);
     }
 
-    public List<AnnotationObject> getPredictionsByTokenAndFeature(int aBegin, int aEnd,
-        String aFeature)
+    /**
+     * TODO #176 use the document Id once it it available in the CAS
+     * Returns a list of predictions for a given token that matches the given layer and
+     * the annotation feature in the given document
+     *
+     * @param aDocumentName the given document name
+     * @param aLayer the given layer
+     * @param aBegin the offset character begin
+     * @param aEnd the offset character end
+     * @param aFeature the given annotation feature name
+     * @return
+     */
+    public List<AnnotationObject> getPredictionsByTokenAndFeature(String aDocumentName,
+        AnnotationLayer aLayer, int aBegin, int aEnd, String aFeature)
     {
-        return predictions.values().stream()
-            .filter(f -> f.getOffset().getBeginCharacter() == aBegin
-                && f.getOffset().getEndCharacter() == aEnd)
-            .filter(f -> f.getFeature().equals(aFeature))
+        return predictions.entrySet().stream()
+            .filter(f -> f.getKey().getDocumentName().equals(aDocumentName))
+            .filter(f -> f.getKey().getLayerId() == aLayer.getId())
+            .filter(f -> f.getKey().getOffset().getBeginCharacter() == aBegin)
+            .filter(f -> f.getKey().getOffset().getEndCharacter() == aEnd)
+            .filter(f -> f.getValue().getFeature().equals(aFeature))
+            .map(Map.Entry::getValue)
             .collect(Collectors.toList());
+
     }
 }

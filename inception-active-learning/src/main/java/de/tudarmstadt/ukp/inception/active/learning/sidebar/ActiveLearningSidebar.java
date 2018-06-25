@@ -422,6 +422,8 @@ public class ActiveLearningSidebar
                 state.getUser().getUsername(), selectedLayer.getObject(),
                 currentRecommendation.getFeature(), userAction, model
                 .getPredictionsByTokenAndFeature(
+                    currentRecommendation.getDocumentName(),
+                    selectedLayer.getObject(),
                     currentRecommendation.getOffset().getBeginCharacter(),
                     currentRecommendation.getOffset().getEndCharacter(),
                     currentRecommendation.getFeature())));
@@ -678,8 +680,10 @@ public class ActiveLearningSidebar
             applicationEventPublisherHolder.get().publishEvent(
                 new ActiveLearningRecommendationEvent(this, eventState.getDocument(),
                     rejectedRecommendation, annotatorState.getUser().getUsername(),
-                    selectedLayer.getObject(), rejectedRecommendation.getFeature(),
+                    eventState.getSelectedAnnotationLayer(), rejectedRecommendation.getFeature(),
                     LearningRecordUserAction.REJECTED, model.getPredictionsByTokenAndFeature(
+                    rejectedRecommendation.getDocumentName(),
+                    eventState.getSelectedAnnotationLayer(),
                     rejectedRecommendation.getOffset().getBeginCharacter(),
                     rejectedRecommendation.getOffset().getEndCharacter(),
                     rejectedRecommendation.getFeature())));
@@ -722,7 +726,7 @@ public class ActiveLearningSidebar
         record.setOffsetCharacterBegin(acceptedRecommendation.getOffset().getBeginCharacter());
         record.setOffsetCharacterEnd(acceptedRecommendation.getOffset().getEndCharacter());
         record.setAnnotation(acceptedRecommendation.getLabel());
-        record.setLayer(annotationService.getLayer(vid.getLayerId()));
+        record.setLayer(eventState.getSelectedAnnotationLayer());
         record.setChangeLocation(LearningRecordChangeLocation.MAIN_EDITOR);
         learningRecordService.create(record);
 
@@ -731,8 +735,10 @@ public class ActiveLearningSidebar
         applicationEventPublisherHolder.get().publishEvent(
             new ActiveLearningRecommendationEvent(this, eventState.getDocument(),
                 acceptedRecommendation, annotatorState.getUser().getUsername(),
-                selectedLayer.getObject(), acceptedRecommendation.getFeature(),
+                eventState.getSelectedAnnotationLayer(), acceptedRecommendation.getFeature(),
                 LearningRecordUserAction.ACCEPTED, model.getPredictionsByTokenAndFeature(
+                acceptedRecommendation.getDocumentName(),
+                eventState.getSelectedAnnotationLayer(),
                 acceptedRecommendation.getOffset().getBeginCharacter(),
                 acceptedRecommendation.getOffset().getEndCharacter(),
                 acceptedRecommendation.getFeature())));
