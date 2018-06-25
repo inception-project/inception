@@ -90,9 +90,9 @@ public class StringMatchingPosClassifier
                 List<AnnotationObject> word = new LinkedList<>();
                 T t = sentence.get(i);
 
-                AnnotationObject ao = new AnnotationObject(
-                        t, annotationMapping.get(t.getCoveredText()), null,
-                        id, feature, "StringMatchingPosClassifier");
+                AnnotationObject ao = new AnnotationObject(t,
+                    annotationMapping.get(t.getCoveredText()), null, id, feature,
+                    "StringMatchingPosClassifier", conf.getRecommenderId());
                 word.add(ao);
                 id++;
                 annotatedSentence.add(word);
