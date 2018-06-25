@@ -197,7 +197,8 @@ public class StatementGroupPanel extends Panel {
             LambdaAjaxLink propertyLink = new LambdaAjaxLink("propertyLink",
                     this::actionPropertyLinkClicked);
             propertyLink.add(new Label("property", groupModel.bind("property.uiLabel")));
-            propertyLink.add(new TooltipBehavior(groupModel.bind("property.identifier")));
+            propertyLink.add(new TooltipBehavior(groupModel.bind("property.identifier"))
+                    .setOption("autoHide", false));
             form.add(propertyLink);
             RefreshingView<KBStatement> statementList = new RefreshingView<KBStatement>(
                     "statementList") {
