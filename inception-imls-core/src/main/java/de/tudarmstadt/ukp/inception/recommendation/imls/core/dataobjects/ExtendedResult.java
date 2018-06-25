@@ -24,6 +24,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.lang3.Validate;
+
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
 
 public class ExtendedResult
@@ -57,19 +59,22 @@ public class ExtendedResult
     public ExtendedResult(List<List<AnnotationObject>> expected,
             List<List<AnnotationObject>> actual)
     {
-
-        if (expected != null && actual != null && expected.size() != actual.size()) {
-            throw new IllegalStateException(
-                    "Expected and actual list size is not equal! This seems wrong.");
+        Validate.notNull(expected, "Expected sequences must not be null");
+        Validate.notNull(actual, "Actual sequences must not be null");
+        
+        if (expected.size() != actual.size()) {
+            throw new IllegalArgumentException("Number of expected [" + expected.size()
+                    + "] and actual [" + actual.size() + "] sequences is not equal!");
         }
         
         for (int sentenceNr = 0; sentenceNr < expected.size(); sentenceNr++) {
             List<AnnotationObject> expectedSentence = expected.get(sentenceNr);
             List<AnnotationObject> actualSentence = actual.get(sentenceNr);
-            
-            assert expectedSentence.size() == actualSentence.size() :
-                "Expected sentence and actual sentence should be equal! Seems there "
-                        + "is something wrong.";
+
+            if (expectedSentence.size() != actualSentence.size()) {
+                throw new IllegalArgumentException("Number of expected [" + expectedSentence.size()
+                        + "] and actual [" + actualSentence.size() + "] tokens is not equal!");
+            }
             
             for (int i = 0; i < actualSentence.size(); i++) {
                 String aoActual = actualSentence.get(i).getAnnotation();

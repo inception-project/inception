@@ -62,7 +62,7 @@ public class TaskConsumer
                     
                     task.run();
                 }
-                catch (Exception e) {
+                catch (Throwable e) {
                     log.error("{} failed.", task, e);
                 }
 
