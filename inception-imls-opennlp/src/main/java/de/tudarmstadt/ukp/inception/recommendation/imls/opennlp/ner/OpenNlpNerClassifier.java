@@ -103,7 +103,7 @@ public class OpenNlpNerClassifier extends Classifier<TrainingParameters>
                 T t = sentence.get(i);
                 List<AnnotationObject> word = new LinkedList<>();
                 word.add(new AnnotationObject(t, id, feature,
-                        "OpenNlpNerClassifier", confidence[i]));
+                        "OpenNlpNerClassifier", confidence[i], conf.getRecommenderId()));
                 id++;
                 annotatedSentence.add(word);
             }

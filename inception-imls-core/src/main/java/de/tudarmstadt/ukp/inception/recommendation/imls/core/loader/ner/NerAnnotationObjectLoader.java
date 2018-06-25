@@ -45,16 +45,16 @@ public class NerAnnotationObjectLoader implements AnnotationObjectLoader
 
     @Deprecated
     @Override
-    public List<List<AnnotationObject>> loadAnnotationObjectsForTesting(JCas jCas)
+    public List<List<AnnotationObject>> loadAnnotationObjectsForEvaluation(JCas jCas)
     {
         return CasUtil.loadAnnotatedSentences(jCas, NamedEntity.class, "value",
             NamedEntity::getValue);
     }
 
     @Override
-    public List<List<AnnotationObject>> loadAnnotationObjects(JCas jCas)
+    public List<List<AnnotationObject>> loadAnnotationObjects(JCas aJcas, long aRecommenderId)
     {
-        return CasUtil.loadAnnotatedSentences(jCas, layer, feature);
+        return CasUtil.loadAnnotatedSentences(aJcas, aRecommenderId, layer, feature);
     }
 
 }

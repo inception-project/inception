@@ -38,13 +38,13 @@ public interface AnnotationObjectLoader
         List<List<AnnotationObject>> result = new ArrayList<>();
 
         for (JCas jCas : iteratePipeline(reader)) {
-            result.addAll(loadAnnotationObjectsForTesting(jCas));
+            result.addAll(loadAnnotationObjectsForEvaluation(jCas));
         }
 
         return result;
     }
 
-    List<List<AnnotationObject>> loadAnnotationObjectsForTesting(JCas aJCas);
+    List<List<AnnotationObject>> loadAnnotationObjectsForEvaluation(JCas aJCas);
 
-    List<List<AnnotationObject>> loadAnnotationObjects(JCas aJCas);
+    List<List<AnnotationObject>> loadAnnotationObjects(JCas aJCas, long aRecommenderId);
 }
