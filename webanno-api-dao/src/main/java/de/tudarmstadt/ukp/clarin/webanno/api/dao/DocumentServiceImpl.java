@@ -46,12 +46,7 @@ import javax.persistence.PersistenceContext;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.uima.UIMAException;
-import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.CASException;
 import org.apache.uima.jcas.JCas;
-import org.apache.uima.resource.ResourceInitializationException;
-import org.apache.uima.resource.metadata.TypeSystemDescription;
-import org.apache.uima.util.CasCreationUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -197,10 +192,7 @@ public class DocumentServiceImpl
     public boolean existsCas(SourceDocument aDocument, String aUser)
         throws IOException
     {
-        Validate.notNull(aDocument, "Source document must be specified");
-        Validate.notBlank(aUser, "User must be specified");
-        
-        return getCasFile(aDocument, aUser).exists();
+        return casStorageService.existsCas(aDocument, aUser);
     }
 
     @Override
@@ -247,10 +239,7 @@ public class DocumentServiceImpl
     @Override
     public File getCasFile(SourceDocument aDocument, String aUser) throws IOException
     {
-        Validate.notNull(aDocument, "Source document must be specified");
-        Validate.notBlank(aUser, "User must be specified");
-
-        return new File(casStorageService.getAnnotationFolder(aDocument), aUser + ".ser");
+        return casStorageService.getCasFile(aDocument, aUser);
     }
     
     @Override
@@ -529,7 +518,7 @@ public class DocumentServiceImpl
             
             // Check if the file has a valid format / can be converted without error
             // This requires that the document ID has already been assigned
-            jcas = createInitialCas(aDocument);
+            jcas = createOrReadInitialCas(aDocument);
         }
         catch (IOException e) {
             FileUtils.forceDelete(targetFile);
@@ -554,73 +543,37 @@ public class DocumentServiceImpl
     }
     
     @Override
-    public boolean existsInitialCas(SourceDocument aDocument)
+    public JCas createOrReadInitialCas(SourceDocument aDocument)
         throws IOException
     {
-        return existsCas(aDocument, INITIAL_CAS_PSEUDO_USER);
+        return createOrReadInitialCas(aDocument, true);
     }
-
+        
     @Override
-    public JCas createInitialCas(SourceDocument aDocument)
-        throws UIMAException, IOException
+    public JCas createOrReadInitialCas(SourceDocument aDocument, boolean aAnalyzeAndRepair)
+        throws IOException
     {
-        return createInitialCas(aDocument, true);
+        Validate.notNull(aDocument, "Source document must be specified");
+        
+        log.info("Loading initial CAS for source document " + "[{}]({}) in project [{}]({})",
+                aDocument.getName(), aDocument.getId(), aDocument.getProject().getName(),
+                aDocument.getProject().getId());
+        
+        return casStorageService.readOrCreateCas(aDocument, INITIAL_CAS_PSEUDO_USER,
+                aAnalyzeAndRepair, () -> {
+                // Normally, the initial CAS should be created on document import, but after
+                // adding this feature, the existing projects do not yet have initial CASes, so
+                // we create them here lazily
+                try {
+                    return importExportService.importCasFromFile(
+                            getSourceDocumentFile(aDocument), aDocument.getProject(),
+                            aDocument.getFormat());
+                }
+                catch (UIMAException e) {
+                    throw new IOException("Unable to create CAS: " + e.getMessage(), e);
+                }
+            });
     }
-
-    @Override
-    public JCas createInitialCas(SourceDocument aDocument, boolean aAnalyzeRepairAndSave)
-        throws UIMAException, IOException
-    {
-        // Normally, the initial CAS should be created on document import, but after
-        // adding this feature, the existing projects do not yet have initial CASes, so
-        // we create them here lazily
-        JCas jcas = importExportService.importCasFromFile(getSourceDocumentFile(aDocument),
-                aDocument.getProject(), aDocument.getFormat());
-        
-        if (aAnalyzeRepairAndSave) {
-            casStorageService.analyzeAndRepair(aDocument, INITIAL_CAS_PSEUDO_USER, jcas.getCas());
-            
-            CasPersistenceUtils.writeSerializedCas(jcas,
-                    getCasFile(aDocument, INITIAL_CAS_PSEUDO_USER));
-        }
-        
-        return jcas;
-    }
-
-    @Override
-    public JCas readInitialCas(SourceDocument aDocument)
-        throws CASException, ResourceInitializationException, IOException
-    {
-        return readInitialCas(aDocument, true);
-    }
-
-    @Override
-    public JCas readInitialCas(SourceDocument aDocument, boolean aAnalyzeAndRepair)
-        throws CASException, ResourceInitializationException, IOException
-    {
-        CAS cas = CasCreationUtils.createCas((TypeSystemDescription) null, null, null);
-        
-        CasPersistenceUtils.readSerializedCas(cas, getCasFile(aDocument, INITIAL_CAS_PSEUDO_USER));
-        
-        if (aAnalyzeAndRepair) {
-            casStorageService.analyzeAndRepair(aDocument, INITIAL_CAS_PSEUDO_USER, cas);
-        }
-        
-        return cas.getJCas();
-    }
-
-    @Override
-    public JCas createOrReadInitialCas(SourceDocument aDocument)
-        throws IOException, UIMAException
-    {
-        if (existsInitialCas(aDocument)) {
-            return readInitialCas(aDocument);
-        }
-        else {
-            return createInitialCas(aDocument);
-        }
-    }
-        
     
     @Override
     @Transactional
@@ -643,46 +596,19 @@ public class DocumentServiceImpl
     public JCas readAnnotationCas(AnnotationDocument aAnnotationDocument)
         throws IOException
     {
-        return readAnnotationCas(aAnnotationDocument, true);
-    }
-    
-    @Override
-    @Transactional
-    public JCas readAnnotationCas(AnnotationDocument aAnnotationDocument, boolean aAnalyzeAndRepair)
-        throws IOException
-    {
-        // If there is no CAS yet for the annotation document, create one.
-        JCas jcas = null;
+        Validate.notNull(aAnnotationDocument, "Annotation document must be specified");
+        
         SourceDocument aDocument = aAnnotationDocument.getDocument();
         String user = aAnnotationDocument.getUser();
-        if (!existsCas(aAnnotationDocument.getDocument(), user)) {
+        
+        // If there is no CAS yet for the annotation document, create one.
+        JCas jcas  = casStorageService.readOrCreateCas(aDocument, user, true, () -> {
             // Convert the source file into an annotation CAS
-            try {
-                if (!existsInitialCas(aDocument)) {
-                    jcas = createInitialCas(aDocument, aAnalyzeAndRepair);
-                }
-
-                // Ok, so at this point, we either have the lazily converted CAS already loaded
-                // or we know that we can load the existing initial CAS.
-                if (jcas == null) {
-                    jcas = readInitialCas(aDocument, aAnalyzeAndRepair);
-                }
-            }
-            catch (Exception e) {
-                log.error("The reader for format [" + aDocument.getFormat()
-                        + "] is unable to digest data", e);
-                throw new IOException("The reader for format [" + aDocument.getFormat()
-                        + "] is unable to digest data: " + e.getMessage());
-            }
-            casStorageService.writeCas(aDocument, jcas, user);
-        }
-        else {
-            // Read existing CAS
-            // We intentionally do not upgrade the CAS here because in general the IDs
-            // must remain stable. If an upgrade is required the caller should do it
-            jcas = casStorageService.readCas(aDocument, user, aAnalyzeAndRepair);
-        }
-
+            return createOrReadInitialCas(aDocument, true);
+        });
+        
+        // We intentionally do not upgrade the CAS here because in general the IDs
+        // must remain stable. If an upgrade is required the caller should do it
         return jcas;
     }
 

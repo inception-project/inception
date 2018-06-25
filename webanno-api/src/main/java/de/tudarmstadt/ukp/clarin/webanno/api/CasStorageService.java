@@ -23,9 +23,7 @@ import java.io.IOException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.jcas.JCas;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 public interface CasStorageService
 {
@@ -43,31 +41,67 @@ public interface CasStorageService
      *            the user who annotates the document if it is user's annotation document OR the
      *            CURATION_USER
      */
-    void writeCas(SourceDocument aDocument, JCas aJcas, String aUserName)
-        throws IOException;
+    void writeCas(SourceDocument aDocument, JCas aJcas, String aUserName) throws IOException;
     
     /**
-     * For a given {@link SourceDocument}, return the {@link AnnotationDocument} for the user or for
-     * the CURATION_USER
+     * Retrieve the annotation CAS of a given user for a given {@link SourceDocument}. By default
+     * applies the CAS doctor.
      *
      * @param aDocument
-     *            the {@link SourceDocument}
+     *            the document.
      * @param aUsername
-     *            the {@link User} who annotates the {@link SourceDocument} or the CURATION_USER
+     *            the user.
+     * @return the CAS.
+     * @throws IOException
+     *             if there was a problem loading or creating the CAS.
      */
-    JCas readCas(SourceDocument aDocument, String aUsername)
-        throws IOException;
-        
+    JCas readCas(SourceDocument aDocument, String aUsername) throws IOException;        
 
+    /**
+     * Retrieve the annotation CAS of a given user for a given {@link SourceDocument}.
+     *
+     * @param aDocument
+     *            the document.
+     * @param aUsername
+     *            the user.
+     * @param aAnalyzeAndRepair
+     *            whether to apply the CAS doctor.
+     * @return the CAS.
+     * @throws IOException
+     *             if there was a problem loading or creating the CAS.
+     */
     JCas readCas(SourceDocument aDocument, String aUsername, boolean aAnalyzeAndRepair)
         throws IOException;
-    
-    boolean deleteCas(SourceDocument aDocument, String aUsername)
+
+    /**
+     * Retrieve the annotation CAS of a given user for a given {@link SourceDocument}. If it does
+     * not exist, create it using the given supplier. The result is immediately persisted to the
+     * storage.
+     * 
+     * @param aDocument
+     *            the document.
+     * @param aUsername
+     *            the user.
+     * @param aAnalyzeAndRepair
+     *            whether to apply the CAS doctor.
+     * @param aSupplier
+     *            a function to create a new CAS if there is none yet.
+     * @return the CAS.
+     * @throws IOException
+     *             if there was a problem loading or creating the CAS.
+     */
+    JCas readOrCreateCas(SourceDocument aDocument, String aUsername, boolean aAnalyzeAndRepair,
+            JCasProvider aSupplier)
         throws IOException;
+
+    boolean deleteCas(SourceDocument aDocument, String aUsername) throws IOException;
     
-    File getAnnotationFolder(SourceDocument aDocument)
-            throws IOException;
+    File getAnnotationFolder(SourceDocument aDocument) throws IOException;
     
+    File getCasFile(SourceDocument aDocument, String aUser) throws IOException;
+
+    boolean existsCas(SourceDocument aDocument, String aUser) throws IOException;
+
     void analyzeAndRepair(SourceDocument aDocument, String aUsername, CAS aCas);
     
     boolean isCacheEnabled();

@@ -26,9 +26,7 @@ import java.util.Map;
 import javax.persistence.NoResultException;
 
 import org.apache.uima.UIMAException;
-import org.apache.uima.cas.CASException;
 import org.apache.uima.jcas.JCas;
-import org.apache.uima.resource.ResourceInitializationException;
 import org.springframework.security.access.prepost.PreAuthorize;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -314,7 +312,7 @@ public interface DocumentService
 
     /**
      * Gets the CAS for the given annotation document. Converts it form the source document if
-     * necessary.
+     * necessary. The converted CAS is analyzed using CAS doctor and saved.
      *
      * @param annotationDocument
      *            the annotation document.
@@ -325,9 +323,6 @@ public interface DocumentService
     JCas readAnnotationCas(AnnotationDocument annotationDocument)
         throws IOException;
 
-    JCas readAnnotationCas(AnnotationDocument aAnnotationDocument, boolean aAnalyzeAndRepair)
-        throws IOException;
-    
     void deleteAnnotationCas(AnnotationDocument annotationDocument)
         throws IOException;
     
@@ -351,28 +346,31 @@ public interface DocumentService
     JCas readAnnotationCas(SourceDocument document, User user)
         throws IOException;
 
-    boolean existsInitialCas(SourceDocument aDocument)
+    /**
+     * Read the initial CAS for the given document. If the CAS does not exist then it is created. 
+     * 
+     * @param aDocument
+     *            the source document.
+     * @return the CAS.
+     * @throws IOException
+     *             if there was a problem loading the CAS.
+     */
+    JCas createOrReadInitialCas(SourceDocument aDocument)
         throws IOException;
-    
-    JCas createInitialCas(SourceDocument aDocument)
-        throws UIMAException, IOException, ClassNotFoundException;
 
     /**
+     * Read the initial CAS for the given document. If the CAS does not exist then it is created. 
      * 
+     * @param aDocument
+     *            the source document.
      * @param aAnalyzeAndRepair
-     *            if {@code false} then the CAS is not analyzed, repaired, and also not saved.
+     *            whether to apply CAS doctor.
+     * @return the CAS.
+     * @throws IOException
+     *             if there was a problem loading the CAS.
      */
-    JCas createInitialCas(SourceDocument aDocument, boolean aAnalyzeAndRepair)
-            throws UIMAException, IOException, ClassNotFoundException;
-
-    JCas readInitialCas(SourceDocument aDocument)
-        throws CASException, ResourceInitializationException, IOException;
-    
-    JCas readInitialCas(SourceDocument aDocument, boolean aAnalyzeAndRepair)
-            throws CASException, ResourceInitializationException, IOException;
-
-    JCas createOrReadInitialCas(SourceDocument aDocument)
-        throws IOException, UIMAException, ClassNotFoundException;
+    JCas createOrReadInitialCas(SourceDocument aDocument, boolean aAnalyzeAndRepair)
+        throws IOException;
 
     /**
      * List all the {@link AnnotationDocument}s, if available for a given {@link SourceDocument} in

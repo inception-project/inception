@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api.annotation.action;
+package de.tudarmstadt.ukp.clarin.webanno.api;
 
 import java.io.IOException;
 import java.io.Serializable;

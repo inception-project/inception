@@ -34,6 +34,7 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.comparator.LastModifiedFileComparator;
+import org.apache.commons.lang3.Validate;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.jcas.JCas;
@@ -52,12 +53,11 @@ import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
+import de.tudarmstadt.ukp.clarin.webanno.api.JCasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctorException;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 
@@ -123,21 +123,47 @@ public class CasStorageServiceImpl
     public void writeCas(SourceDocument aDocument, JCas aJcas, String aUserName)
         throws IOException
     {
-        File annotationFolder = getAnnotationFolder(aDocument);
-        File targetPath = getAnnotationFolder(aDocument);
-        realWriteCas(aDocument.getProject(), aDocument.getName(), aDocument.getId(), aJcas,
-                aUserName, annotationFolder, targetPath);
-
-        // Update the CAS in the cache
-        if (isCacheEnabled()) {
-            JCasCacheKey key = JCasCacheKey.of(aDocument, aUserName);
-            JCasCacheEntry entry = getCache().get(key);
-            if (entry == null) {
-                entry = new JCasCacheEntry();
-                entry.jcas = aJcas;
+        try {
+            if (casDoctor != null) {
+                casDoctor.analyze(aDocument.getProject(), aJcas.getCas());
             }
-            entry.writes++;
-            getCache().put(key, entry);
+        }
+        catch (CasDoctorException e) {
+            StringBuilder detailMsg = new StringBuilder();
+            detailMsg.append("CAS Doctor found problems for user [").append(aUserName)
+                    .append("] in source document [").append(aDocument.getName()).append("] (")
+                    .append(aDocument.getId()).append(") in project[")
+                    .append(aDocument.getProject().getName()).append("] (")
+                    .append(aDocument.getProject().getId()).append(")\n");
+            e.getDetails().forEach(m -> 
+                    detailMsg.append(String.format("- [%s] %s%n", m.level, m.message)));
+
+            throw new IOException(detailMsg.toString());
+        }
+        catch (Exception e) {
+            throw new IOException("Error analyzing CAS of user [" + aUserName
+                    + "] in source document [" + aDocument.getName() + "] (" + aDocument.getId()
+                    + ") in project [" + aDocument.getProject().getName() + "] ("
+                    + aDocument.getProject().getId() + ")", e);
+        }
+        
+        synchronized (lock) {
+            File annotationFolder = getAnnotationFolder(aDocument);
+            File targetPath = getAnnotationFolder(aDocument);
+            realWriteCas(aDocument.getProject(), aDocument.getName(), aDocument.getId(), aJcas,
+                    aUserName, annotationFolder, targetPath);
+    
+            // Update the CAS in the cache
+            if (isCacheEnabled()) {
+                JCasCacheKey key = JCasCacheKey.of(aDocument, aUserName);
+                JCasCacheEntry entry = getCache().get(key);
+                if (entry == null) {
+                    entry = new JCasCacheEntry();
+                    entry.jcas = aJcas;
+                }
+                entry.writes++;
+                getCache().put(key, entry);
+            }
         }
     }
     
@@ -149,169 +175,154 @@ public class CasStorageServiceImpl
                 aDocumentName, aDocumentId, aUserName, aProject.getName(), aProject.getId());
         // DebugUtils.smallStack();
 
+        // File annotationFolder = getAnnotationFolder(aDocument);
+        FileUtils.forceMkdir(aAnnotationFolder);
+
+        final String username = aUserName;
+
+        File currentVersion = new File(aAnnotationFolder, username + ".ser");
+        File oldVersion = new File(aAnnotationFolder, username + ".ser.old");
+
+        // Save current version
         try {
-            if (casDoctor != null) {
-                casDoctor.analyze(aProject, aJcas.getCas());
+            // Make a backup of the current version of the file before overwriting
+            if (currentVersion.exists()) {
+                renameFile(currentVersion, oldVersion);
             }
-        }
-        catch (CasDoctorException e) {
-            StringBuilder detailMsg = new StringBuilder();
-            detailMsg.append("CAS Doctor found problems for user [").append(aUserName)
-                    .append("] in source document [").append(aDocumentName).append("] (")
-                    .append(aDocumentId).append(") in project[").append(aProject.getName())
-                    .append("] (").append(aProject.getId()).append(")\n");
-            e.getDetails().forEach(m ->
-                    detailMsg.append(String.format("- [%s] %s%n", m.level, m.message)));
 
-            throw new DataRetrievalFailureException(detailMsg.toString());
-        }
-        catch (Exception e) {
-            throw new DataRetrievalFailureException("Error analyzing CAS of user [" + aUserName
-                    + "] in source document [" + aDocumentName + "] (" + aDocumentId
-                    + ") in project [" + aProject.getName() + "] (" + aProject.getId() + ")", e);
-        }
-
-        synchronized (lock) {
-            // File annotationFolder = getAnnotationFolder(aDocument);
-            FileUtils.forceMkdir(aAnnotationFolder);
-
-            final String username = aUserName;
-
-            File currentVersion = new File(aAnnotationFolder, username + ".ser");
-            File oldVersion = new File(aAnnotationFolder, username + ".ser.old");
-
-            // Save current version
+            // Now write the new version to "<username>.ser" or CURATION_USER.ser
+            DocumentMetaData md;
             try {
-                // Make a backup of the current version of the file before overwriting
-                if (currentVersion.exists()) {
-                    renameFile(currentVersion, oldVersion);
-                }
-
-                // Now write the new version to "<username>.ser" or CURATION_USER.ser
-                DocumentMetaData md;
-                try {
-                    md = DocumentMetaData.get(aJcas);
-                }
-                catch (IllegalArgumentException e) {
-                    md = DocumentMetaData.create(aJcas);
-                }
-                md.setDocumentId(aUserName);
-
-                // File targetPath = getAnnotationFolder(aDocument);
-                CasPersistenceUtils.writeSerializedCas(aJcas,
-                        new File(aTargetPath, aUserName + ".ser"));
-
-                try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
-                        String.valueOf(aProject.getId()))) {
-                    log.info(
-                            "Updated annotations for user [{}] on document [{}]({}) in project [{}]({})",
-                            aUserName, aDocumentName, aDocumentId, aProject.getName(),
-                            aProject.getId());
-                }
-
-                // If the saving was successful, we delete the old version
-                if (oldVersion.exists()) {
-                    FileUtils.forceDelete(oldVersion);
-                }
+                md = DocumentMetaData.get(aJcas);
             }
-            catch (IOException e) {
-                // If we could not save the new version, restore the old one.
-                FileUtils.forceDelete(currentVersion);
-                // If this is the first version, there is no old version, so do not restore anything
-                if (oldVersion.exists()) {
-                    renameFile(oldVersion, currentVersion);
-                }
-                // Now abort anyway
-                throw e;
+            catch (IllegalArgumentException e) {
+                md = DocumentMetaData.create(aJcas);
+            }
+            md.setDocumentId(aUserName);
+
+            // File targetPath = getAnnotationFolder(aDocument);
+            CasPersistenceUtils.writeSerializedCas(aJcas,
+                    new File(aTargetPath, aUserName + ".ser"));
+
+            try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
+                    String.valueOf(aProject.getId()))) {
+                log.info(
+                        "Updated annotations for user [{}] on document [{}]({}) in project [{}]({})",
+                        aUserName, aDocumentName, aDocumentId, aProject.getName(),
+                        aProject.getId());
             }
 
-            // Manage history
-            if (backupInterval > 0) {
-                // Determine the reference point in time based on the current version
-                long now = currentVersion.lastModified();
+            if (currentVersion.length() < oldVersion.length()) {
+                log.info(
+                        "Annotations truncated for user [{}] on document [{}]({}) in project "
+                        + "[{}]({}): {} -> {} bytes ({} bytes removed)",
+                        aUserName, aDocumentName, aDocumentId, aProject.getName(),
+                        aProject.getId(), oldVersion.length(), currentVersion.length(), 
+                        currentVersion.length() - oldVersion.length());
+            }
+            
+            // If the saving was successful, we delete the old version
+            if (oldVersion.exists()) {
+                FileUtils.forceDelete(oldVersion);
+            }
+        }
+        catch (IOException e) {
+            // If we could not save the new version, restore the old one.
+            FileUtils.forceDelete(currentVersion);
+            // If this is the first version, there is no old version, so do not restore anything
+            if (oldVersion.exists()) {
+                renameFile(oldVersion, currentVersion);
+            }
+            // Now abort anyway
+            throw e;
+        }
 
-                // Get all history files for the current user
-                File[] history = aAnnotationFolder.listFiles(new FileFilter()
+        // Manage history
+        if (backupInterval > 0) {
+            // Determine the reference point in time based on the current version
+            long now = currentVersion.lastModified();
+
+            // Get all history files for the current user
+            File[] history = aAnnotationFolder.listFiles(new FileFilter()
+            {
+                private final Matcher matcher = Pattern
+                        .compile(Pattern.quote(username) + "\\.ser\\.[0-9]+\\.bak").matcher("");
+
+                @Override
+                public boolean accept(File aFile)
                 {
-                    private final Matcher matcher = Pattern
-                            .compile(Pattern.quote(username) + "\\.ser\\.[0-9]+\\.bak").matcher("");
+                    // Check if the filename matches the pattern given above.
+                    return matcher.reset(aFile.getName()).matches();
+                }
+            });
 
-                    @Override
-                    public boolean accept(File aFile)
-                    {
-                        // Check if the filename matches the pattern given above.
-                        return matcher.reset(aFile.getName()).matches();
-                    }
-                });
+            // Sort the files (oldest one first)
+            Arrays.sort(history, LastModifiedFileComparator.LASTMODIFIED_COMPARATOR);
 
-                // Sort the files (oldest one first)
-                Arrays.sort(history, LastModifiedFileComparator.LASTMODIFIED_COMPARATOR);
-
-                // Check if we need to make a new history file
-                boolean historyFileCreated = false;
-                File historyFile = new File(aAnnotationFolder, username + ".ser." + now + ".bak");
-                if (history.length == 0) {
-                    // If there is no history yet but we should keep history, then we create a
-                    // history file in any case.
+            // Check if we need to make a new history file
+            boolean historyFileCreated = false;
+            File historyFile = new File(aAnnotationFolder, username + ".ser." + now + ".bak");
+            if (history.length == 0) {
+                // If there is no history yet but we should keep history, then we create a
+                // history file in any case.
+                FileUtils.copyFile(currentVersion, historyFile);
+                historyFileCreated = true;
+            }
+            else {
+                // Check if the newest history file is significantly older than the current one
+                File latestHistory = history[history.length - 1];
+                if (latestHistory.lastModified() + backupInterval < now) {
                     FileUtils.copyFile(currentVersion, historyFile);
                     historyFileCreated = true;
                 }
-                else {
-                    // Check if the newest history file is significantly older than the current one
-                    File latestHistory = history[history.length - 1];
-                    if (latestHistory.lastModified() + backupInterval < now) {
-                        FileUtils.copyFile(currentVersion, historyFile);
-                        historyFileCreated = true;
+            }
+
+            // Prune history based on number of backup
+            if (historyFileCreated) {
+                // The new version is not in the history, so we keep that in any case. That
+                // means we need to keep one less.
+                int toKeep = Math.max(backupKeepNumber - 1, 0);
+                if ((backupKeepNumber > 0) && (toKeep < history.length)) {
+                    // Copy the oldest files to a new array
+                    File[] toRemove = new File[history.length - toKeep];
+                    System.arraycopy(history, 0, toRemove, 0, toRemove.length);
+
+                    // Restrict the history to what is left
+                    File[] newHistory = new File[toKeep];
+                    if (toKeep > 0) {
+                        System.arraycopy(history, toRemove.length, newHistory, 0,
+                                newHistory.length);
+                    }
+                    history = newHistory;
+
+                    // Remove these old files
+                    for (File file : toRemove) {
+                        FileUtils.forceDelete(file);
+
+                        try (MDC.MDCCloseable closable = MDC.putCloseable(
+                                Logging.KEY_PROJECT_ID, String.valueOf(aProject.getId()))) {
+                            log.info(
+                                    "Removed surplus history file [{}] of user [{}] for "
+                                            + "document [{}]({}) in project [{}]({})",
+                                    file.getName(), aUserName, aDocumentName, aDocumentId,
+                                    aProject.getName(), aProject.getId());
+                        }
                     }
                 }
 
-                // Prune history based on number of backup
-                if (historyFileCreated) {
-                    // The new version is not in the history, so we keep that in any case. That
-                    // means we need to keep one less.
-                    int toKeep = Math.max(backupKeepNumber - 1, 0);
-                    if ((backupKeepNumber > 0) && (toKeep < history.length)) {
-                        // Copy the oldest files to a new array
-                        File[] toRemove = new File[history.length - toKeep];
-                        System.arraycopy(history, 0, toRemove, 0, toRemove.length);
-
-                        // Restrict the history to what is left
-                        File[] newHistory = new File[toKeep];
-                        if (toKeep > 0) {
-                            System.arraycopy(history, toRemove.length, newHistory, 0,
-                                    newHistory.length);
-                        }
-                        history = newHistory;
-
-                        // Remove these old files
-                        for (File file : toRemove) {
+                // Prune history based on time
+                if (backupKeepTime > 0) {
+                    for (File file : history) {
+                        if ((file.lastModified() + backupKeepTime) < now) {
                             FileUtils.forceDelete(file);
 
                             try (MDC.MDCCloseable closable = MDC.putCloseable(
                                     Logging.KEY_PROJECT_ID, String.valueOf(aProject.getId()))) {
                                 log.info(
-                                        "Removed surplus history file [{}] of user [{}] for "
+                                        "Removed outdated history file [{}] of user [{}] for "
                                                 + "document [{}]({}) in project [{}]({})",
                                         file.getName(), aUserName, aDocumentName, aDocumentId,
                                         aProject.getName(), aProject.getId());
-                            }
-                        }
-                    }
-
-                    // Prune history based on time
-                    if (backupKeepTime > 0) {
-                        for (File file : history) {
-                            if ((file.lastModified() + backupKeepTime) < now) {
-                                FileUtils.forceDelete(file);
-
-                                try (MDC.MDCCloseable closable = MDC.putCloseable(
-                                        Logging.KEY_PROJECT_ID, String.valueOf(aProject.getId()))) {
-                                    log.info(
-                                            "Removed outdated history file [{}] of user [{}] for "
-                                                    + "document [{}]({}) in project [{}]({})",
-                                            file.getName(), aUserName, aDocumentName, aDocumentId,
-                                            aProject.getName(), aProject.getId());
-                                }
                             }
                         }
                     }
@@ -320,15 +331,6 @@ public class CasStorageServiceImpl
         }
     }
 
-    /**
-     * For a given {@link SourceDocument}, return the {@link AnnotationDocument} for the user or for
-     * the CURATION_USER
-     *
-     * @param aDocument
-     *            the {@link SourceDocument}
-     * @param aUsername
-     *            the {@link User} who annotates the {@link SourceDocument} or the CURATION_USER
-     */
     @Override
     public JCas readCas(SourceDocument aDocument, String aUsername)
         throws IOException
@@ -340,22 +342,52 @@ public class CasStorageServiceImpl
     public JCas readCas(SourceDocument aDocument, String aUsername, boolean aAnalyzeAndRepair)
         throws IOException
     {
+        return readOrCreateCas(aDocument, aUsername, true, null);
+    }
+    
+    @Override
+    public JCas readOrCreateCas(SourceDocument aDocument, String aUsername,
+            boolean aAnalyzeAndRepair, JCasProvider aSupplier)
+        throws IOException
+    {
         synchronized (lock) {
-            JCas jcas = null;
-            
             // Check if we have the CAS in the cache
             if (isCacheEnabled()) {
                 JCasCacheEntry entry = getCache().get(JCasCacheKey.of(aDocument, aUsername));
                 if (entry != null) {
                     log.debug("Fetched CAS [{},{}] from cache", aDocument.getId(), aUsername);
                     entry.reads++;
-                    jcas = entry.jcas;
+                    return entry.jcas;
                 }
             }
             
             // If the CAS is not in the cache, load it from disk
-            if (jcas == null) {
+            JCas jcas;
+            String source;
+            if (getCasFile(aDocument, aUsername).exists()) {
                 jcas = realReadCas(aDocument, aUsername, aAnalyzeAndRepair);
+                source = "disk";
+            }
+            else if (aSupplier != null) {
+                jcas = aSupplier.get();
+                source = "importer";
+            }
+            else {
+                throw new FileNotFoundException(
+                        "CAS [{},{}] does not exist and no initializer is specified.");
+            }
+            
+            // Update the cache
+            if (isCacheEnabled()) {
+                JCasCacheEntry entry = new JCasCacheEntry();
+                entry.jcas = jcas;
+                entry.reads++;
+                getCache().put(JCasCacheKey.of(aDocument, aUsername), entry);
+                log.debug("Loaded CAS [{},{}] from {} and stored in cache", aDocument.getId(),
+                        aUsername, source);
+            }
+            else {
+                log.debug("Loaded CAS [{},{}] from {}", aDocument.getId(), aUsername, source);
             }
             
             return jcas;
@@ -369,14 +401,12 @@ public class CasStorageServiceImpl
                 aDocument.getName(), aDocument.getId(), aUsername, aDocument.getProject().getName(),
                 aDocument.getProject().getId());
         
-        File annotationFolder = getAnnotationFolder(aDocument);
         
-        String file = aUsername + ".ser";
-
+        File serializedCasFile = getCasFile(aDocument, aUsername);
+        
         JCas jcas;
         try {
             CAS cas = CasCreationUtils.createCas((TypeSystemDescription) null, null, null);
-            File serializedCasFile = new File(annotationFolder, file);
             if (!serializedCasFile.exists()) {
                 throw new FileNotFoundException("Annotation document of user [" + aUsername
                         + "] for source document [" + aDocument.getName() + "] ("
@@ -397,30 +427,20 @@ public class CasStorageServiceImpl
             throw new DataRetrievalFailureException("Unable to parse annotation", e);
         }
         
-        // Update the cache
-        if (isCacheEnabled()) {
-            JCasCacheEntry entry = new JCasCacheEntry();
-            entry.jcas = jcas;
-            entry.reads++;
-            getCache().put(JCasCacheKey.of(aDocument, aUsername), entry);
-            log.debug("Loaded CAS [{},{}] from disk and stored in cache", aDocument.getId(),
-                    aUsername);
-        }
-        else {
-            log.debug("Loaded CAS [{},{}] from disk", aDocument.getId(), aUsername);
-        }
-        
         return jcas;
     }
     
     @Override
     public boolean deleteCas(SourceDocument aDocument, String aUsername) throws IOException
     {
-        if (isCacheEnabled()) {
-            getCache().remove(JCasCacheKey.of(aDocument, aUsername));
+        synchronized (lock) {
+
+            if (isCacheEnabled()) {
+                getCache().remove(JCasCacheKey.of(aDocument, aUsername));
+            }
+
+            return new File(getAnnotationFolder(aDocument), aUsername + ".ser").delete();
         }
-        
-        return new File(getAnnotationFolder(aDocument), aUsername + ".ser").delete();
     }
     
     @Override
@@ -476,6 +496,31 @@ public class CasStorageServiceImpl
             }
         }
     }
+    
+    @Override
+    public File getCasFile(SourceDocument aDocument, String aUser) throws IOException
+    {
+        Validate.notNull(aDocument, "Source document must be specified");
+        Validate.notBlank(aUser, "User must be specified");
+
+        return new File(getAnnotationFolder(aDocument), aUser + ".ser");
+    }
+    
+    @Override
+    public boolean existsCas(SourceDocument aDocument, String aUser)
+        throws IOException
+    {
+        Validate.notNull(aDocument, "Source document must be specified");
+        Validate.notBlank(aUser, "User must be specified");
+        
+        // Ensure that the CAS is not being re-written and temporarily unavailable while we check
+        // for its existence
+        synchronized (lock) {
+            return getCasFile(aDocument, aUser).exists();
+        }
+    }
+
+    
     /**
      * Get the folder where the annotations are stored. Creates the folder if necessary.
      *

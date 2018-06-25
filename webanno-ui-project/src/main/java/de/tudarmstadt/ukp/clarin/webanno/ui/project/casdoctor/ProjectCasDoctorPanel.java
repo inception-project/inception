@@ -153,15 +153,7 @@ public class ProjectCasDoctorPanel
         for (SourceDocument sd : documentService.listSourceDocuments(project)) {
             {
                 LogMessageSet messageSet = new LogMessageSet(sd.getName() + " [INITIAL]");
-                JCas initialCas;
-                if (documentService.existsInitialCas(sd)) {
-                    initialCas = documentService.readInitialCas(sd, false);
-                }
-                else {
-                    messageSet.messages.add(new LogMessage(getClass(), LogLevel.INFO,
-                            "Created initial CAS for [" + sd.getName() + "]"));
-                    initialCas = documentService.createInitialCas(sd, false);
-                }
+                JCas initialCas = documentService.createOrReadInitialCas(sd, false);
                 casDoctor.repair(project, initialCas.getCas(), messageSet.messages);
                 CasPersistenceUtils.writeSerializedCas(initialCas,
                         documentService.getCasFile(sd, INITIAL_CAS_PSEUDO_USER));
@@ -173,7 +165,7 @@ public class ProjectCasDoctorPanel
                 if (documentService.existsAnnotationCas(ad)) {
                     LogMessageSet messageSet = new LogMessageSet(
                             sd.getName() + " [" + ad.getUser() + "]");
-                    JCas userCas = documentService.readAnnotationCas(ad, false);
+                    JCas userCas = casStorageService.readCas(ad.getDocument(), ad.getUser(), false);
                     casDoctor.repair(project, userCas.getCas(), messageSet.messages);
                     CasPersistenceUtils.writeSerializedCas(userCas,
                             documentService.getCasFile(ad.getDocument(), ad.getUser()));
@@ -203,16 +195,8 @@ public class ProjectCasDoctorPanel
         for (SourceDocument sd : documentService.listSourceDocuments(project)) {
             {
                 LogMessageSet messageSet = new LogMessageSet(sd.getName() + " [INITIAL]");
-                JCas initialCas;
                 try {
-                    if (documentService.existsInitialCas(sd)) {
-                        initialCas = documentService.readInitialCas(sd, false);
-                    }
-                    else {
-                        messageSet.messages.add(new LogMessage(getClass(), LogLevel.INFO,
-                                "No initial CAS for [" + sd.getName() + "]"));
-                        initialCas = documentService.createInitialCas(sd, false);
-                    }
+                    JCas initialCas = documentService.createOrReadInitialCas(sd, false);
                     casDoctor.analyze(project, initialCas.getCas(), messageSet.messages);
                 }
                 catch (Exception e) {
@@ -229,7 +213,7 @@ public class ProjectCasDoctorPanel
                 if (documentService.existsAnnotationCas(ad)) {
                     LogMessageSet messageSet = new LogMessageSet(
                             sd.getName() + " [" + ad.getUser() + "]");
-                    JCas userCas = documentService.readAnnotationCas(ad, false);
+                    JCas userCas = casStorageService.readCas(ad.getDocument(), ad.getUser(), false);
                     casDoctor.analyze(project, userCas.getCas(), messageSet.messages);
                     noticeIfThereAreNoMessages(messageSet);
                     formModel.messageSets.add(messageSet);
