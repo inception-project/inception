@@ -31,18 +31,18 @@ public class StringMatchingNerClassificationTool
     public StringMatchingNerClassificationTool()
     {
         super(-1, StringMatchingNerClassificationTool.class.getName(),
-                new StringMatchingNerTrainer(new ClassifierConfiguration<>()),
-                new StringMatchingNerClassifier(new ClassifierConfiguration<>()),
-                new NerAnnotationObjectLoader(), false);
+            new StringMatchingNerTrainer(new ClassifierConfiguration<>()),
+            new StringMatchingNerClassifier(new ClassifierConfiguration<>()),
+            new NerAnnotationObjectLoader(), false);
     }
-    
+
     public StringMatchingNerClassificationTool(long recommenderId, String feature,
         AnnotationLayer aLayer)
     {
         super(recommenderId, StringMatchingNerClassificationTool.class.getName(),
-                new StringMatchingNerTrainer(new ClassifierConfiguration<>(feature)),
-                new StringMatchingNerClassifier(new ClassifierConfiguration<>(feature)),
-                new NerAnnotationObjectLoader(aLayer, feature), false);
+            new StringMatchingNerTrainer(new ClassifierConfiguration<>(feature, recommenderId)),
+            new StringMatchingNerClassifier(new ClassifierConfiguration<>(feature, recommenderId)),
+            new NerAnnotationObjectLoader(aLayer, feature), false);
     }
 
 }

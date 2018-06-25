@@ -53,9 +53,10 @@ public class BaseConfiguration
         this.setParams(params);
     }
     
-    public BaseConfiguration(String feature)
+    public BaseConfiguration(String feature, long recommenderId)
     {        
         this();
         setFeature(feature);
+        setRecommenderId(recommenderId);
     }
 }
