@@ -38,6 +38,7 @@ import org.apache.commons.compress.compressors.CompressorException;
 import org.apache.commons.compress.compressors.CompressorStreamFactory;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
@@ -313,23 +314,20 @@ public class KnowledgeBaseServiceImpl
             return new KBHandle(identifier, aConcept.getName());
         });
     }
-
+    
     @Override
     public Optional<KBConcept> readConcept(KnowledgeBase kb, String aIdentifier)
         throws QueryEvaluationException
     {
         return read(kb, (conn) -> {
             ValueFactory vf = conn.getValueFactory();
-            try (RepositoryResult<Statement> stmts = RdfUtils.getStatements(conn,
-                    vf.createIRI(aIdentifier), kb.getTypeIri(), kb.getClassIri(), true)) {
-                if (stmts.hasNext()) {
-                    Statement conceptStmt = stmts.next();
-                    KBConcept kbConcept = KBConcept.read(conn, conceptStmt, kb);
-                    return Optional.of(kbConcept);
-                }
-                else {
-                    return Optional.empty();
-                }
+            Resource subject = vf.createIRI(aIdentifier);
+            if (RdfUtils.existsStatementsWithSubject(conn, subject, false)) {
+                KBConcept kbConcept = KBConcept.read(conn, vf.createIRI(aIdentifier),kb);
+                return Optional.of(kbConcept);
+            }
+            else {
+                return Optional.empty();
             }
         });
     }
@@ -457,7 +455,7 @@ public class KnowledgeBaseServiceImpl
             // Try to figure out the type of the instance - we ignore the inferred types here
             // and only make use of the explicitly asserted types
             RepositoryResult<Statement> conceptStmts = RdfUtils.getStatementsSparql(conn,
-                    vf.createIRI(aIdentifier), kb.getTypeIri(), null, false);
+                    vf.createIRI(aIdentifier), kb.getTypeIri(), null, 1000, false, null);
 
             String conceptIdentifier = null;
             while (conceptStmts.hasNext() && conceptIdentifier == null) {
@@ -653,17 +651,17 @@ public class KnowledgeBaseServiceImpl
         List<KBHandle> resultList = read(kb, (conn) -> {
             String QUERY = String.join("\n"
                 , "SELECT DISTINCT ?s ?l WHERE { "
-                , " { ?s ?pTYPE ?oCLASS . } "
-                , "UNION { ?someSubClass ?pSUBCLASS ?s . } ."
-                , "FILTER NOT EXISTS { "
-                , " ?s ?pSUBCLASS ?otherSub . "
-                , " FILTER (?s != ?otherSub) }"
-                , "FILTER NOT EXISTS { "
-                , "  ?s owl:intersectionOf ?list . "
-                , "} OPTIONAL { "
-                , "     ?s ?pLABEL ?l . "
-                , "    FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\")) "
-                , "  } "
+                , "     { ?s ?pTYPE ?oCLASS . } "
+                , "     UNION { ?someSubClass ?pSUBCLASS ?s . } ."
+                , "     FILTER NOT EXISTS { "
+                , "         ?s ?pSUBCLASS ?otherSub . "
+                , "         FILTER (?s != ?otherSub) }"
+                , "     FILTER NOT EXISTS { "
+                , "         ?s owl:intersectionOf ?list . }"
+                , "     OPTIONAL { "
+                , "         ?s ?pLABEL ?l . "
+                , "         FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\")) "
+                , "     } "
                 , "} "
                 , "LIMIT 10000" );
             TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
@@ -708,14 +706,14 @@ public class KnowledgeBaseServiceImpl
         List<KBHandle> resultList = read(aKB, (conn) -> {
             String QUERY = String.join("\n"
                 , "SELECT DISTINCT ?s ?l WHERE { "
-                , "{?s ?pSUBCLASS ?oPARENT . }" 
-                , "UNION { ?s ?pTYPE ?oCLASS ."
-                , "?s owl:intersectionOf ?list . "
-                , "FILTER EXISTS { ?list rdf:rest*/rdf:first ?oPARENT} }"
-                , "  OPTIONAL { "
-                , "    ?s ?pLABEL ?l . "
-                , "    FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\")) "
-                , "  } "
+                , "     {?s ?pSUBCLASS ?oPARENT . }" 
+                , "     UNION { ?s ?pTYPE ?oCLASS ."
+                , "         ?s owl:intersectionOf ?list . "
+                , "         FILTER EXISTS { ?list rdf:rest*/rdf:first ?oPARENT} }"
+                , "     OPTIONAL { "
+                , "         ?s ?pLABEL ?l . "
+                , "         FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\")) "
+                , "     } "
                 , "} "
                 , "LIMIT " + aLimit);
             ValueFactory vf = SimpleValueFactory.getInstance();
@@ -756,7 +754,9 @@ public class KnowledgeBaseServiceImpl
             if (label != null) {
                 handle.setName(label.getValue().stringValue());
             }
-
+            else {
+                handle.setName(handle.getUiLabel());
+            }
             handles.add(handle);
         }
         return handles;
