@@ -150,7 +150,8 @@ public class KnowledgeBase
      * A List of explicitly defined root concepts that can be used if auto detection takes too long
      */
     @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name = "knowledgebase_explicitly_defined_root_concepts")
+    @CollectionTable(name = "knowledgebase_root_classes")
+    @Column(name = "name")
     private List<IRI> explicitlyDefinedRootConcepts = new ArrayList<>();
     
     public String getRepositoryId() {

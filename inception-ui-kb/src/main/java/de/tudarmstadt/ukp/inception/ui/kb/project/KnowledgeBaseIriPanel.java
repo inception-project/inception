@@ -316,6 +316,7 @@ public class KnowledgeBaseIriPanel
             IRI concept = vf.createIRI(newConceptIRIString.getObject());
             if (isConceptValid(kbModel.getObject().getKb(), concept, true)) {
                 concepts.add(concept);
+                newConceptIRIString.setObject("");
             }
             else {
                 error("Concept does not exist or has already been specified");
