@@ -359,20 +359,6 @@ public interface DocumentService
         throws IOException;
 
     /**
-     * Read the initial CAS for the given document. If the CAS does not exist then it is created. 
-     * 
-     * @param aDocument
-     *            the source document.
-     * @param aAnalyzeAndRepair
-     *            whether to apply CAS doctor.
-     * @return the CAS.
-     * @throws IOException
-     *             if there was a problem loading the CAS.
-     */
-    JCas createOrReadInitialCas(SourceDocument aDocument, boolean aAnalyzeAndRepair)
-        throws IOException;
-
-    /**
      * List all the {@link AnnotationDocument}s, if available for a given {@link SourceDocument} in
      * the {@link Project}. Returns list of {@link AnnotationDocument}s for all {@link User}s in the
      * {@link Project} that has already annotated the {@link SourceDocument}

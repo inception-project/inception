@@ -82,16 +82,13 @@ public interface CasStorageService
      *            the document.
      * @param aUsername
      *            the user.
-     * @param aAnalyzeAndRepair
-     *            whether to apply the CAS doctor.
      * @param aSupplier
      *            a function to create a new CAS if there is none yet.
      * @return the CAS.
      * @throws IOException
      *             if there was a problem loading or creating the CAS.
      */
-    JCas readOrCreateCas(SourceDocument aDocument, String aUsername, boolean aAnalyzeAndRepair,
-            JCasProvider aSupplier)
+    JCas readOrCreateCas(SourceDocument aDocument, String aUsername, JCasProvider aSupplier)
         throws IOException;
 
     boolean deleteCas(SourceDocument aDocument, String aUsername) throws IOException;

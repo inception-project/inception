@@ -50,9 +50,7 @@ import org.apache.uima.jcas.JCas;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -84,32 +82,39 @@ import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 
 @Component(DocumentService.SERVICE_NAME)
 public class DocumentServiceImpl
-    implements DocumentService, InitializingBean
+    implements DocumentService
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     @PersistenceContext
     private EntityManager entityManager;
 
-    private @Autowired UserDao userRepository;
-    private @Autowired CasStorageService casStorageService;
-    private @Autowired ImportExportService importExportService;
-    private @Autowired ProjectService projectService;
-    private @Autowired ApplicationEventPublisher applicationEventPublisher;
-    
-    @Value(value = "${repository.path}")
-    private File dir;
+    private final UserDao userRepository;
+    private final CasStorageService casStorageService;
+    private final ImportExportService importExportService;
+    private final ProjectService projectService;
+    private final ApplicationEventPublisher applicationEventPublisher;
+    private final RepositoryProperties repositoryProperties;
 
-    @Override
-    public void afterPropertiesSet()
+    @Autowired
+    public DocumentServiceImpl(RepositoryProperties aRepositoryProperties, UserDao aUserRepository,
+            CasStorageService aCasStorageService, ImportExportService aImportExportService,
+            ProjectService aProjectService, ApplicationEventPublisher aApplicationEventPublisher)
     {
-        log.info("Document repository path: " + dir);
+        repositoryProperties = aRepositoryProperties;
+        log.info("Document repository path: " + repositoryProperties.getPath());
+        
+        userRepository = aUserRepository;
+        casStorageService = aCasStorageService;
+        importExportService = aImportExportService;
+        projectService = aProjectService;
+        applicationEventPublisher = aApplicationEventPublisher;
     }
     
     @Override
     public File getDir()
     {
-        return dir;
+        return repositoryProperties.getPath();
     }
     
     @Override
@@ -118,8 +123,9 @@ public class DocumentServiceImpl
     {
         Validate.notNull(aDocument, "Source document must be specified");
         
-        File sourceDocFolder = new File(dir, "/" + PROJECT_FOLDER + "/" + aDocument.getProject().getId() + "/" + DOCUMENT_FOLDER + "/"
-                + aDocument.getId() + "/" + SOURCE_FOLDER);
+        File sourceDocFolder = new File(repositoryProperties.getPath(),
+                "/" + PROJECT_FOLDER + "/" + aDocument.getProject().getId() + "/" + DOCUMENT_FOLDER
+                        + "/" + aDocument.getId() + "/" + SOURCE_FOLDER);
         FileUtils.forceMkdir(sourceDocFolder);
         return sourceDocFolder;
     }
@@ -230,9 +236,10 @@ public class DocumentServiceImpl
     {
         Validate.notNull(aDocument, "Source document must be specified");
         
-        File documentUri = new File(
-                dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/" + aDocument.getProject().getId()
-                        + "/" + DOCUMENT_FOLDER + "/" + aDocument.getId() + "/" + SOURCE_FOLDER);
+        File documentUri = new File(repositoryProperties.getPath().getAbsolutePath() + "/"
+                + PROJECT_FOLDER + "/" + aDocument.getProject().getId() + "/" + DOCUMENT_FOLDER
+                + "/" + aDocument.getId() + "/" + SOURCE_FOLDER);
+        
         return new File(documentUri, aDocument.getName());
     }
 
@@ -464,8 +471,9 @@ public class DocumentServiceImpl
         entityManager.remove(
                 entityManager.contains(aDocument) ? aDocument : entityManager.merge(aDocument));
 
-        String path = dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/" + aDocument.getProject().getId() + "/" + DOCUMENT_FOLDER + "/"
-                + aDocument.getId();
+        String path = repositoryProperties.getPath().getAbsolutePath() + "/" + PROJECT_FOLDER + "/"
+                + aDocument.getProject().getId() + "/" + DOCUMENT_FOLDER + "/" + aDocument.getId();
+        
         // remove from file both source and related annotation file
         if (new File(path).exists()) {
             FileUtils.forceDelete(new File(path));
@@ -546,33 +554,25 @@ public class DocumentServiceImpl
     public JCas createOrReadInitialCas(SourceDocument aDocument)
         throws IOException
     {
-        return createOrReadInitialCas(aDocument, true);
-    }
-        
-    @Override
-    public JCas createOrReadInitialCas(SourceDocument aDocument, boolean aAnalyzeAndRepair)
-        throws IOException
-    {
         Validate.notNull(aDocument, "Source document must be specified");
         
         log.info("Loading initial CAS for source document " + "[{}]({}) in project [{}]({})",
                 aDocument.getName(), aDocument.getId(), aDocument.getProject().getName(),
                 aDocument.getProject().getId());
         
-        return casStorageService.readOrCreateCas(aDocument, INITIAL_CAS_PSEUDO_USER,
-                aAnalyzeAndRepair, () -> {
-                // Normally, the initial CAS should be created on document import, but after
-                // adding this feature, the existing projects do not yet have initial CASes, so
-                // we create them here lazily
-                try {
-                    return importExportService.importCasFromFile(
-                            getSourceDocumentFile(aDocument), aDocument.getProject(),
-                            aDocument.getFormat());
-                }
-                catch (UIMAException e) {
-                    throw new IOException("Unable to create CAS: " + e.getMessage(), e);
-                }
-            });
+        return casStorageService.readOrCreateCas(aDocument, INITIAL_CAS_PSEUDO_USER, () -> {
+            // Normally, the initial CAS should be created on document import, but after
+            // adding this feature, the existing projects do not yet have initial CASes, so
+            // we create them here lazily
+            try {
+                return importExportService.importCasFromFile(
+                        getSourceDocumentFile(aDocument), aDocument.getProject(),
+                        aDocument.getFormat());
+            }
+            catch (UIMAException e) {
+                throw new IOException("Unable to create CAS: " + e.getMessage(), e);
+            }
+        });
     }
     
     @Override
@@ -602,9 +602,9 @@ public class DocumentServiceImpl
         String user = aAnnotationDocument.getUser();
         
         // If there is no CAS yet for the annotation document, create one.
-        JCas jcas  = casStorageService.readOrCreateCas(aDocument, user, true, () -> {
+        JCas jcas  = casStorageService.readOrCreateCas(aDocument, user, () -> {
             // Convert the source file into an annotation CAS
-            return createOrReadInitialCas(aDocument, true);
+            return createOrReadInitialCas(aDocument);
         });
         
         // We intentionally do not upgrade the CAS here because in general the IDs

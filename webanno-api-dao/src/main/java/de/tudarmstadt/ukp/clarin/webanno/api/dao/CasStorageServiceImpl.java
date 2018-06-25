@@ -46,9 +46,7 @@ import org.apache.wicket.request.cycle.RequestCycle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.stereotype.Component;
 
@@ -63,7 +61,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 
 @Component(CasStorageService.SERVICE_NAME)
 public class CasStorageServiceImpl
-    implements CasStorageService, InitializingBean
+    implements CasStorageService
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -80,30 +78,29 @@ public class CasStorageServiceImpl
         private static final long serialVersionUID = -624612695417652879L;
     };
 
-    @Value(value = "${repository.path}")
-    private File dir;
+    private final CasDoctor casDoctor;
+    private final RepositoryProperties repositoryProperties;
+    private final BackupProperties backupProperties;
     
-    @Value(value = "${backup.keep.time:0}")
-    private long backupKeepTime;
-
-    @Value(value = "${backup.interval:0}")
-    private long backupInterval;
-
-    @Value(value = "${backup.keep.number:0}")
-    private int backupKeepNumber;
-    
-    private @Autowired(required = false) CasDoctor casDoctor;
-    
-    public CasStorageServiceImpl()
+    public CasStorageServiceImpl(@Autowired(required = false) CasDoctor aCasDoctor,
+            @Autowired RepositoryProperties aRepositoryProperties,
+            @Autowired BackupProperties aBackupProperties)
     {
-        // Nothing to do
-    }
-    
-    @Override
-    public void afterPropertiesSet() throws Exception
-    {
+        casDoctor = aCasDoctor;
+        repositoryProperties = aRepositoryProperties;
+        backupProperties = aBackupProperties;
+        
         if (casDoctor == null) {
             log.info("CAS doctor not available - unable to check/repair CASes");
+        }
+
+        if (backupProperties.getInterval() > 0) {
+            log.info("CAS backups enabled - interval: {}  max-backups: {}  max-age: {}",
+                    backupProperties.getInterval(), backupProperties.getKeep().getNumber(),
+                    backupProperties.getKeep().getTime());
+        }
+        else {
+            log.info("CAS backups disabled");
         }
     }
 
@@ -148,10 +145,7 @@ public class CasStorageServiceImpl
         }
         
         synchronized (lock) {
-            File annotationFolder = getAnnotationFolder(aDocument);
-            File targetPath = getAnnotationFolder(aDocument);
-            realWriteCas(aDocument.getProject(), aDocument.getName(), aDocument.getId(), aJcas,
-                    aUserName, annotationFolder, targetPath);
+            realWriteCas(aDocument, aUserName, aJcas);
     
             // Update the CAS in the cache
             if (isCacheEnabled()) {
@@ -167,21 +161,21 @@ public class CasStorageServiceImpl
         }
     }
     
-    private void realWriteCas(Project aProject, String aDocumentName, long aDocumentId, JCas aJcas,
-            String aUserName, File aAnnotationFolder, File aTargetPath)
+    private void realWriteCas(SourceDocument aDocument, String aUserName, JCas aJcas)
         throws IOException
     {
-        log.debug("Writing annotation document [{}]({}) for user [{}] in project [{}]({})",
-                aDocumentName, aDocumentId, aUserName, aProject.getName(), aProject.getId());
+        log.debug("Preparing to update annotations for user [{}] on document [{}]({}) in project [{}]({})",
+                aUserName, aDocument.getName(), aDocument.getId(), aDocument.getProject().getName(),
+                aDocument.getProject().getId());
         // DebugUtils.smallStack();
 
-        // File annotationFolder = getAnnotationFolder(aDocument);
-        FileUtils.forceMkdir(aAnnotationFolder);
+        File annotationFolder = getAnnotationFolder(aDocument);
+        FileUtils.forceMkdir(annotationFolder);
 
         final String username = aUserName;
 
-        File currentVersion = new File(aAnnotationFolder, username + ".ser");
-        File oldVersion = new File(aAnnotationFolder, username + ".ser.old");
+        File currentVersion = new File(annotationFolder, username + ".ser");
+        File oldVersion = new File(annotationFolder, username + ".ser.old");
 
         // Save current version
         try {
@@ -200,24 +194,24 @@ public class CasStorageServiceImpl
             }
             md.setDocumentId(aUserName);
 
-            // File targetPath = getAnnotationFolder(aDocument);
             CasPersistenceUtils.writeSerializedCas(aJcas,
-                    new File(aTargetPath, aUserName + ".ser"));
+                    new File(annotationFolder, aUserName + ".ser"));
 
             try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
-                    String.valueOf(aProject.getId()))) {
+                    String.valueOf(aDocument.getProject().getId()))) {
                 log.info(
                         "Updated annotations for user [{}] on document [{}]({}) in project [{}]({})",
-                        aUserName, aDocumentName, aDocumentId, aProject.getName(),
-                        aProject.getId());
+                        aUserName, aDocument.getName(), aDocument.getId(),
+                        aDocument.getProject().getName(), aDocument.getProject().getId());
             }
 
             if (currentVersion.length() < oldVersion.length()) {
                 log.info(
                         "Annotations truncated for user [{}] on document [{}]({}) in project "
-                        + "[{}]({}): {} -> {} bytes ({} bytes removed)",
-                        aUserName, aDocumentName, aDocumentId, aProject.getName(),
-                        aProject.getId(), oldVersion.length(), currentVersion.length(), 
+                                + "[{}]({}): {} -> {} bytes ({} bytes removed)",
+                        aUserName, aDocument.getName(), aDocument.getId(),
+                        aDocument.getProject().getName(), aDocument.getProject().getId(),
+                        oldVersion.length(), currentVersion.length(),
                         currentVersion.length() - oldVersion.length());
             }
             
@@ -238,12 +232,12 @@ public class CasStorageServiceImpl
         }
 
         // Manage history
-        if (backupInterval > 0) {
+        if (backupProperties.getInterval() > 0) {
             // Determine the reference point in time based on the current version
             long now = currentVersion.lastModified();
 
             // Get all history files for the current user
-            File[] history = aAnnotationFolder.listFiles(new FileFilter()
+            File[] history = annotationFolder.listFiles(new FileFilter()
             {
                 private final Matcher matcher = Pattern
                         .compile(Pattern.quote(username) + "\\.ser\\.[0-9]+\\.bak").matcher("");
@@ -261,7 +255,7 @@ public class CasStorageServiceImpl
 
             // Check if we need to make a new history file
             boolean historyFileCreated = false;
-            File historyFile = new File(aAnnotationFolder, username + ".ser." + now + ".bak");
+            File historyFile = new File(annotationFolder, username + ".ser." + now + ".bak");
             if (history.length == 0) {
                 // If there is no history yet but we should keep history, then we create a
                 // history file in any case.
@@ -271,7 +265,7 @@ public class CasStorageServiceImpl
             else {
                 // Check if the newest history file is significantly older than the current one
                 File latestHistory = history[history.length - 1];
-                if (latestHistory.lastModified() + backupInterval < now) {
+                if (latestHistory.lastModified() + backupProperties.getInterval() < now) {
                     FileUtils.copyFile(currentVersion, historyFile);
                     historyFileCreated = true;
                 }
@@ -281,8 +275,8 @@ public class CasStorageServiceImpl
             if (historyFileCreated) {
                 // The new version is not in the history, so we keep that in any case. That
                 // means we need to keep one less.
-                int toKeep = Math.max(backupKeepNumber - 1, 0);
-                if ((backupKeepNumber > 0) && (toKeep < history.length)) {
+                int toKeep = Math.max(backupProperties.getKeep().getNumber() - 1, 0);
+                if ((backupProperties.getKeep().getNumber() > 0) && (toKeep < history.length)) {
                     // Copy the oldest files to a new array
                     File[] toRemove = new File[history.length - toKeep];
                     System.arraycopy(history, 0, toRemove, 0, toRemove.length);
@@ -299,30 +293,33 @@ public class CasStorageServiceImpl
                     for (File file : toRemove) {
                         FileUtils.forceDelete(file);
 
-                        try (MDC.MDCCloseable closable = MDC.putCloseable(
-                                Logging.KEY_PROJECT_ID, String.valueOf(aProject.getId()))) {
+                        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
+                                String.valueOf(aDocument.getProject().getId()))) {
                             log.info(
                                     "Removed surplus history file [{}] of user [{}] for "
                                             + "document [{}]({}) in project [{}]({})",
-                                    file.getName(), aUserName, aDocumentName, aDocumentId,
-                                    aProject.getName(), aProject.getId());
+                                    file.getName(), aUserName, aDocument.getName(),
+                                    aDocument.getId(), aDocument.getProject().getName(),
+                                    aDocument.getProject().getId());
                         }
                     }
                 }
 
                 // Prune history based on time
-                if (backupKeepTime > 0) {
+                if (backupProperties.getKeep().getTime() > 0) {
                     for (File file : history) {
-                        if ((file.lastModified() + backupKeepTime) < now) {
+                        if ((file.lastModified() + backupProperties.getKeep().getTime()) < now) {
                             FileUtils.forceDelete(file);
 
                             try (MDC.MDCCloseable closable = MDC.putCloseable(
-                                    Logging.KEY_PROJECT_ID, String.valueOf(aProject.getId()))) {
+                                    Logging.KEY_PROJECT_ID,
+                                    String.valueOf(aDocument.getProject().getId()))) {
                                 log.info(
                                         "Removed outdated history file [{}] of user [{}] for "
                                                 + "document [{}]({}) in project [{}]({})",
-                                        file.getName(), aUserName, aDocumentName, aDocumentId,
-                                        aProject.getName(), aProject.getId());
+                                        file.getName(), aUserName, aDocument.getName(),
+                                        aDocument.getId(), aDocument.getProject().getName(),
+                                        aDocument.getProject().getId());
                             }
                         }
                     }
@@ -335,18 +332,24 @@ public class CasStorageServiceImpl
     public JCas readCas(SourceDocument aDocument, String aUsername)
         throws IOException
     {
-        return readCas(aDocument, aUsername, true);
+        return readOrCreateCas(aDocument, aUsername, true, null);
     }
     
     @Override
     public JCas readCas(SourceDocument aDocument, String aUsername, boolean aAnalyzeAndRepair)
         throws IOException
     {
-        return readOrCreateCas(aDocument, aUsername, true, null);
+        return readOrCreateCas(aDocument, aUsername, aAnalyzeAndRepair, null);
     }
-    
+
     @Override
-    public JCas readOrCreateCas(SourceDocument aDocument, String aUsername,
+    public JCas readOrCreateCas(SourceDocument aDocument, String aUsername, JCasProvider aSupplier)
+        throws IOException
+    {
+        return readOrCreateCas(aDocument, aUsername, true, aSupplier);
+    }
+
+    private JCas readOrCreateCas(SourceDocument aDocument, String aUsername,
             boolean aAnalyzeAndRepair, JCasProvider aSupplier)
         throws IOException
     {
@@ -371,6 +374,7 @@ public class CasStorageServiceImpl
             else if (aSupplier != null) {
                 jcas = aSupplier.get();
                 source = "importer";
+                realWriteCas(aDocument, aUsername, jcas);
             }
             else {
                 throw new FileNotFoundException(
@@ -381,7 +385,7 @@ public class CasStorageServiceImpl
             if (isCacheEnabled()) {
                 JCasCacheEntry entry = new JCasCacheEntry();
                 entry.jcas = jcas;
-                entry.reads++;
+                entry.writes++;
                 getCache().put(JCasCacheKey.of(aDocument, aUsername), entry);
                 log.debug("Loaded CAS [{},{}] from {} and stored in cache", aDocument.getId(),
                         aUsername, source);
@@ -531,8 +535,9 @@ public class CasStorageServiceImpl
     public File getAnnotationFolder(SourceDocument aDocument)
         throws IOException
     {
-        File annotationFolder = new File(dir, "/" + PROJECT_FOLDER + "/" + aDocument.getProject().getId() + "/" + DOCUMENT_FOLDER + "/"
-                + aDocument.getId() + "/" + ANNOTATION_FOLDER);
+        File annotationFolder = new File(repositoryProperties.getPath(),
+                "/" + PROJECT_FOLDER + "/" + aDocument.getProject().getId() + "/" + DOCUMENT_FOLDER
+                        + "/" + aDocument.getId() + "/" + ANNOTATION_FOLDER);
         FileUtils.forceMkdir(annotationFolder);
         return annotationFolder;
     }

@@ -43,6 +43,7 @@ import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.CasPersistenceUtils;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor.LogLevel;
@@ -67,6 +68,7 @@ public class ProjectCasDoctorPanel
 
     private @SpringBean DocumentService documentService;
     private @SpringBean CasStorageService casStorageService;
+    private @SpringBean ImportExportService importExportService;
 
     // Data properties
     private FormModel formModel = new FormModel();
@@ -153,10 +155,19 @@ public class ProjectCasDoctorPanel
         for (SourceDocument sd : documentService.listSourceDocuments(project)) {
             {
                 LogMessageSet messageSet = new LogMessageSet(sd.getName() + " [INITIAL]");
-                JCas initialCas = documentService.createOrReadInitialCas(sd, false);
-                casDoctor.repair(project, initialCas.getCas(), messageSet.messages);
-                CasPersistenceUtils.writeSerializedCas(initialCas,
-                        documentService.getCasFile(sd, INITIAL_CAS_PSEUDO_USER));
+                
+                try {
+                    JCas initialCas = createOrReadInitialCasWithoutSaving(sd, messageSet);
+                    casDoctor.repair(project, initialCas.getCas(), messageSet.messages);
+                    casStorageService.writeCas(sd, initialCas, INITIAL_CAS_PSEUDO_USER);
+                }
+                catch (Exception e) {
+                    messageSet.messages.add(new LogMessage(getClass(), LogLevel.ERROR,
+                            "Error repairing initial CAS for [" + sd.getName() + "]: "
+                                    + e.getMessage()));
+                    LOG.error("Error repairing initial CAS for [{}]",  sd.getName(), e);
+                }
+                
                 noticeIfThereAreNoMessages(messageSet);
                 formModel.messageSets.add(messageSet);
             }
@@ -165,10 +176,20 @@ public class ProjectCasDoctorPanel
                 if (documentService.existsAnnotationCas(ad)) {
                     LogMessageSet messageSet = new LogMessageSet(
                             sd.getName() + " [" + ad.getUser() + "]");
-                    JCas userCas = casStorageService.readCas(ad.getDocument(), ad.getUser(), false);
-                    casDoctor.repair(project, userCas.getCas(), messageSet.messages);
-                    CasPersistenceUtils.writeSerializedCas(userCas,
-                            documentService.getCasFile(ad.getDocument(), ad.getUser()));
+                    try {
+                        JCas userCas = casStorageService.readCas(ad.getDocument(), ad.getUser(),
+                                false);
+                        casDoctor.repair(project, userCas.getCas(), messageSet.messages);
+                        CasPersistenceUtils.writeSerializedCas(userCas,
+                                documentService.getCasFile(ad.getDocument(), ad.getUser()));
+                    }
+                    catch (Exception e) {
+                        messageSet.messages.add(new LogMessage(getClass(), LogLevel.ERROR,
+                                "Error repairing annotations of user [" + ad.getUser() + "] for ["
+                                        + sd.getName() + "]: " + e.getMessage()));
+                        LOG.error("Error repairing annotations of user [{}] for [{}]", ad.getUser(),
+                                sd.getName(), e);
+                    }
                     noticeIfThereAreNoMessages(messageSet);
                     formModel.messageSets.add(messageSet);
                 }
@@ -195,16 +216,18 @@ public class ProjectCasDoctorPanel
         for (SourceDocument sd : documentService.listSourceDocuments(project)) {
             {
                 LogMessageSet messageSet = new LogMessageSet(sd.getName() + " [INITIAL]");
+                
                 try {
-                    JCas initialCas = documentService.createOrReadInitialCas(sd, false);
+                    JCas initialCas = createOrReadInitialCasWithoutSaving(sd, messageSet);
                     casDoctor.analyze(project, initialCas.getCas(), messageSet.messages);
                 }
                 catch (Exception e) {
                     messageSet.messages.add(new LogMessage(getClass(), LogLevel.ERROR,
-                            "Error reading initial CAS for [" + sd.getName() + "]: "
+                            "Error checking initial CAS for [" + sd.getName() + "]: "
                                     + e.getMessage()));
-                    LOG.error("Error reading initial CAS for [" + sd.getName() + "]", e);
+                    LOG.error("Error checking initial CAS for [{}]", sd.getName(), e);
                 }
+                
                 noticeIfThereAreNoMessages(messageSet);
                 formModel.messageSets.add(messageSet);
             }
@@ -213,8 +236,19 @@ public class ProjectCasDoctorPanel
                 if (documentService.existsAnnotationCas(ad)) {
                     LogMessageSet messageSet = new LogMessageSet(
                             sd.getName() + " [" + ad.getUser() + "]");
-                    JCas userCas = casStorageService.readCas(ad.getDocument(), ad.getUser(), false);
-                    casDoctor.analyze(project, userCas.getCas(), messageSet.messages);
+                    try {
+                        JCas userCas = casStorageService.readCas(ad.getDocument(), ad.getUser(),
+                                false);
+                        casDoctor.analyze(project, userCas.getCas(), messageSet.messages);
+                    }
+                    catch (Exception e) {
+                        messageSet.messages.add(new LogMessage(getClass(), LogLevel.ERROR,
+                                "Error checking annotations of user [" + ad.getUser() + "] for ["
+                                        + sd.getName() + "]: " + e.getMessage()));
+                        LOG.error("Error checking annotations of user [{}] for [{}]", ad.getUser(),
+                                sd.getName(), e);
+                    }
+                        
                     noticeIfThereAreNoMessages(messageSet);
                     formModel.messageSets.add(messageSet);
                 }
@@ -224,6 +258,24 @@ public class ProjectCasDoctorPanel
         aTarget.add(this);
     }
     
+    private JCas createOrReadInitialCasWithoutSaving(SourceDocument aDocument,
+            LogMessageSet aMessageSet)
+        throws IOException, UIMAException
+    {
+        JCas cas;
+        if (casStorageService.existsCas(aDocument, INITIAL_CAS_PSEUDO_USER)) {
+            cas = casStorageService.readCas(aDocument, INITIAL_CAS_PSEUDO_USER, false);
+        }
+        else {
+            cas = importExportService.importCasFromFile(
+                    documentService.getSourceDocumentFile(aDocument), aDocument.getProject(),
+                    aDocument.getFormat());
+            aMessageSet.messages.add(new LogMessage(getClass(), LogLevel.INFO,
+                    "Created initial CAS for [" + aDocument.getName() + "]"));
+        }
+        return cas;
+    }
+
     private void noticeIfThereAreNoMessages(LogMessageSet aSet)
     {
         if (aSet.messages.isEmpty()) {
