@@ -312,7 +312,7 @@
     </addColumn>
   </changeSet>
 
-  <changeSet author="INCEpTION Team" id="20180511-01">
+  <changeSet author="INCEpTION Team" id="20180511">
     <preConditions onFail="MARK_RAN">
       <columnExists tableName="recommender" columnName="classifierId" />
     </preConditions>
@@ -340,8 +340,8 @@
       </preConditions>
       <addForeignKeyConstraint baseColumnNames="annotationFeature"
                                baseTableName="learning_record" constraintName="FK_annotationFeature_learningRecord"
-                               deferrable="false" initiallyDeferred="false" onDelete="NO ACTION"
-                               onUpdate="NO ACTION" referencedColumnNames="id"
+                               deferrable="false" initiallyDeferred="false" onDelete="CASCADE"
+                               onUpdate="CASCADE" referencedColumnNames="id"
                                referencedTableName="annotation_feature" />
   </changeSet>
 </databaseChangeLog>
