@@ -60,9 +60,10 @@ public class BaseConfiguration
         this.setTrainingSetStartSize(3);
     }
     
-    public BaseConfiguration(String feature)
+    public BaseConfiguration(String aFeature, long aRecommenderId)
     {
         this();
-        setFeature(feature);
+        setFeature(aFeature);
+        setRecommenderId(aRecommenderId);
     }
 }

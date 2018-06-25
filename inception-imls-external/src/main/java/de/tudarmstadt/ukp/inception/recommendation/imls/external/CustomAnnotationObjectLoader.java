@@ -43,7 +43,7 @@ public class CustomAnnotationObjectLoader
     }
 
     @Override
-    public List<List<AnnotationObject>> loadAnnotationObjects(JCas aJCas)
+    public List<List<AnnotationObject>> loadAnnotationObjects(JCas aJCas, long aRecommenderId)
     {
         List<List<AnnotationObject>> result = new LinkedList<>();
 
@@ -54,14 +54,15 @@ public class CustomAnnotationObjectLoader
         CAS cas = aJCas.getCas();
         Type annotationType = org.apache.uima.fit.util.CasUtil.getType(cas , typeName);
         Feature feature = annotationType.getFeatureByBaseName(featureName);
-        
-        result = CasUtil.loadCustomAnnotatedSentences(aJCas, annotationType, feature);
+
+        result = CasUtil
+            .loadCustomAnnotatedSentences(aJCas, annotationType, feature, aRecommenderId);
 
         return result;
     }
 
     @Override
-    public List<List<AnnotationObject>> loadAnnotationObjectsForTesting(JCas aJCas)
+    public List<List<AnnotationObject>> loadAnnotationObjectsForEvaluation(JCas aJCas)
     {
         throw new UnsupportedOperationException("Write unit tests please!");
     }
