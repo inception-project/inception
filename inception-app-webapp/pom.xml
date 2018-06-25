@@ -107,11 +107,21 @@
     <!-- INCEPTION - IN-PROJECT SEARCH FUNCTIONALITY -->
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-app-ui-search</artifactId>
+      <artifactId>inception-ui-search</artifactId>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-search-mtas</artifactId>
+    </dependency>
+
+    <!-- INCEPTION - IN-PROJECT SEARCH FUNCTIONALITY -->
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-ui-external-search</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-external-search-elastic</artifactId>
     </dependency>
 
     <!-- INCEPTION - EVENT LOG -->
