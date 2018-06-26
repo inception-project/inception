@@ -107,7 +107,7 @@ public class PredictionTask
                 });
       
                 // Tell the predictions who created them
-                predictions.forEach(token -> token.setRecommenderId(ct.getId()));
+                predictions.forEach(token -> token.setRecommenderId(recommender.getId()));
 
                 if (predictions.isEmpty()) {
                     log.info("[{}][{}]: No prediction data.", user.getUsername(),
