@@ -30,7 +30,6 @@ import java.util.Set;
 import java.util.TreeMap;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.cas.impl.XmiCasDeserializer;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.factory.TypeSystemDescriptionFactory;
@@ -320,45 +319,6 @@ public class MtasUimaParser extends MtasParser {
         return labelStr.toString();
     }
     
-    class SimpleAnnotationLayer {
-        private ArrayList<Pair<String, String>> features;
-        private String LayerName;
-        private String LayerUiName;
-        private String LayerShorName;
-
-        public ArrayList<Pair<String, String>> getFeatures() {
-            return features;
-        }
-
-        public void setFeatures(ArrayList<Pair<String, String>> features) {
-            this.features = features;
-        }
-
-        public String getLayerName() {
-            return LayerName;
-        }
-
-        public void setLayerName(String layerName) {
-            LayerName = layerName;
-        }
-
-        public String getLayerUiName() {
-            return LayerUiName;
-        }
-
-        public void setLayerUiName(String layerUiName) {
-            LayerUiName = layerUiName;
-        }
-
-        public String getLayerShorName() {
-            return LayerShorName;
-        }
-
-        public void setLayerShorName(String layerShorName) {
-            LayerShorName = layerShorName;
-        }
-    }
-
     @Override
     public String printConfig()
     {
