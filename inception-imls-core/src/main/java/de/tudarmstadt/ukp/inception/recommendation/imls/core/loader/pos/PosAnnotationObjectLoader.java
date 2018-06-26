@@ -45,14 +45,14 @@ public class PosAnnotationObjectLoader implements AnnotationObjectLoader
 
     @Deprecated
     @Override
-    public List<List<AnnotationObject>> loadAnnotationObjectsForTesting(JCas jCas)
+    public List<List<AnnotationObject>> loadAnnotationObjectsForEvaluation(JCas jCas)
     {
         return CasUtil.loadAnnotatedSentences(jCas, POS.class, "PosValue", POS::getPosValue);
     }
 
     @Override
-    public List<List<AnnotationObject>> loadAnnotationObjects(JCas jCas)
+    public List<List<AnnotationObject>> loadAnnotationObjects(JCas jCas, long aRecommenderId)
     {
-        return CasUtil.loadAnnotatedSentences(jCas, layer, feature);
+        return CasUtil.loadAnnotatedSentences(jCas, aRecommenderId, layer, feature);
     }
 }

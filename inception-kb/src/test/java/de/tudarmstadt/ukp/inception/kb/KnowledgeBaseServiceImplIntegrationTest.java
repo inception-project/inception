@@ -1155,7 +1155,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
                 .map(KBHandle::getName);
 
         String[] expectedLabels = {
-            "Adaptation", "Animal Intelligence","Collection", "Conservation Status", "Ecozone",
+            "Adaptation", "Animal Intelligence", "Collection", "Conservation Status", "Ecozone",
             "Habitat", "Red List Status", "Taxon Name", "Taxonomic Rank"
         };
         assertThat(rootConcepts)
@@ -1279,6 +1279,28 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         assertFalse(sut.statementsMatchSPO(kb, mockStatement));
     }
 
+    @Test
+    public void readFirst()
+    {
+        KBInstance germanInstance = buildInstanceWithLanguage("de");
+        KBInstance englishInstance = buildInstanceWithLanguage("en");
+
+        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
+        KBHandle germanHandle = sut.createInstance(kb, germanInstance);
+
+        // Create English instance and ensure that both have the same identifier
+        KBHandle englishHandle = sut.update(kb, (conn) -> {
+            englishInstance.setIdentifier(germanHandle.getIdentifier());
+            englishInstance.write(conn, kb);
+            return new KBHandle(germanHandle.getIdentifier(), englishInstance.getName());
+        });
+
+        KBInstance firstInstance = sut.readInstance(kb, germanHandle.getIdentifier()).get();
+        assertThat(firstInstance.getLanguage())
+            .as("Check that the English instance is retrieved.")
+            .isEqualTo("en");
+    }
+
     // Helper
 
     private Project createProject(String name) {
@@ -1299,6 +1321,10 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
 
     private KBInstance buildInstance() {
         return testFixtures.buildInstance();
+    }
+
+    private KBInstance buildInstanceWithLanguage(String aLanguage) {
+        return testFixtures.buildInstanceWithLanguage(aLanguage);
     }
 
     private KBStatement buildStatement(KnowledgeBase knowledgeBase, KBHandle conceptHandle,
