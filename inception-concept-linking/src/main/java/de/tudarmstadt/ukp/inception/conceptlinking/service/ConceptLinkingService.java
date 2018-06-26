@@ -47,6 +47,7 @@ import org.eclipse.rdf4j.query.TupleQueryResult;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
@@ -60,6 +61,7 @@ import de.tudarmstadt.ukp.inception.conceptlinking.util.FileUtils;
 import de.tudarmstadt.ukp.inception.conceptlinking.util.LRUCache;
 import de.tudarmstadt.ukp.inception.conceptlinking.util.QueryUtil;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
+import de.tudarmstadt.ukp.inception.kb.event.IriChangeEvent;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
@@ -466,6 +468,13 @@ public class ConceptLinkingService
             .limit(properties.getCandidateDisplayLimit())
             .filter(h -> h.getIdentifier().contains(":"))
             .collect(Collectors.toList());
+    }
+
+    @EventListener
+    public void onIriChangeEvent(IriChangeEvent aEvent)
+    {
+        candidateCache.clear();
+        semanticSignatureCache.clear();
     }
 
 }
