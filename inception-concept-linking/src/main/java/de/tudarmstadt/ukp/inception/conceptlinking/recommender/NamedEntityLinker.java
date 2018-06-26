@@ -195,8 +195,8 @@ public class NamedEntityLinker
 
         return handles.stream()
             .limit(conf.getNumPredictions())
-            .map(h -> new AnnotationObject(token, h.getIdentifier(), h.getDescription(),
-                    tokenId++, feature, "NamedEntityLinker"))
+            .map(h -> new AnnotationObject(token, h.getIdentifier(), h.getDescription(), tokenId++,
+                feature, "NamedEntityLinker", conf.getRecommenderId()))
             .collect(Collectors.toList());
     }
 

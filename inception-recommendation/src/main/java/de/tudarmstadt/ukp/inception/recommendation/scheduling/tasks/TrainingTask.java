@@ -145,7 +145,8 @@ public class TrainingTask
                 continue;
             }
 
-            List<List<AnnotationObject>> annotatedSentences = loader.loadAnnotationObjects(jCas);
+            List<List<AnnotationObject>> annotatedSentences = loader.loadAnnotationObjects(jCas,
+                tool.getId());
 
             if (tool.isTrainOnCompleteSentences()) {
                 for (List<AnnotationObject> sentence : annotatedSentences) {

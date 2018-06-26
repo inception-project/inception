@@ -38,8 +38,8 @@ public class MiraPosClassificationTool
     public MiraPosClassificationTool(long recommenderId, String feature, AnnotationLayer aLayer)
     {
         super(recommenderId, MiraPosClassificationTool.class.getName(),
-                new MiraPosTrainer(new BaseConfiguration()),
-                new MiraPosClassifier(new BaseConfiguration(feature)),
+                new MiraPosTrainer(new BaseConfiguration(feature, recommenderId)),
+                new MiraPosClassifier(new BaseConfiguration(feature, recommenderId)),
                 new PosAnnotationObjectLoader(aLayer, feature), true);
     }
 }
