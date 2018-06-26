@@ -65,11 +65,11 @@
     <spring.boot.version>1.5.13.RELEASE</spring.boot.version>
     <wicket.version>7.10.0</wicket.version>
     <wicket-jquery-ui.version>7.10.1</wicket-jquery-ui.version>
-    <lucene.version>7.1.0</lucene.version>
-    <solr.version>7.1.0</solr.version>
+    <lucene.version>7.3.1</lucene.version>
+    <solr.version>7.3.1</solr.version>
     <dkpro.lab.version>0.14.0</dkpro.lab.version>
     <dl4j.version>0.9.1</dl4j.version>
-    <rdf4j.version>2.2.4</rdf4j.version>
+    <rdf4j.version>2.3.2</rdf4j.version>
     <mockito.version>2.18.3</mockito.version>
     <assertj.version>3.10.0</assertj.version>
   </properties>
@@ -437,6 +437,11 @@
       <dependency>
         <groupId>org.apache.lucene</groupId>
         <artifactId>lucene-spatial</artifactId>
+        <version>${lucene.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.lucene</groupId>
+        <artifactId>lucene-spatial-extras</artifactId>
         <version>${lucene.version}</version>
       </dependency>
       <dependency>

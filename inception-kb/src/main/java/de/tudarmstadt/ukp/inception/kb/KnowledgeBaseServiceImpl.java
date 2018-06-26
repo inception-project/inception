@@ -222,8 +222,10 @@ public class KnowledgeBaseServiceImpl
         // See #221 - Disabled because it is too slow during import
         // return new SailRepositoryConfig(
         //   new ForwardChainingRDFSInferencerConfig(new NativeStoreConfig()));
-        
-        return new SailRepositoryConfig(new LuceneSailConfig(new NativeStoreConfig()));
+
+        LuceneSailConfig config = new LuceneSailConfig(new NativeStoreConfig());
+        config.setIndexDir("indexDir");
+        return new SailRepositoryConfig(config);
     }
 
     @Override
