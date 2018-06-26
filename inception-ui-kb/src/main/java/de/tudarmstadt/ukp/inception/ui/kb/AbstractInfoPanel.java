@@ -159,12 +159,11 @@ public abstract class AbstractInfoPanel<T extends KBObject> extends Panel {
         public ViewMode(String id, CompoundPropertyModel<KBHandle> compoundModel,
                 StatementDetailPreference aDetailPreference) {
             super(id, "viewMode", AbstractInfoPanel.this);
-
             Label uiLabel = new Label("uiLabel", compoundModel.bind("uiLabel"));
-            uiLabel.add(new TooltipBehavior(compoundModel.bind("identifier")));
+            uiLabel.add(new TooltipBehavior(compoundModel.bind("identifier")).setOption("autoHide",
+                    false));
             add(uiLabel);
             add(new Label("typeLabel", new ResourceModel(getTypeLabelResourceKey())));
-
             // button for deleting the KBObject
             LambdaAjaxLink deleteButton = new LambdaAjaxLink("delete",
                     AbstractInfoPanel.this::confirmActionDelete).onConfigure((_this) -> {
