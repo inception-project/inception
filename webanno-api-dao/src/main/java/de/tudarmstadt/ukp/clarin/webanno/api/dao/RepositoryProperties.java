@@ -37,7 +37,8 @@ public class RepositoryProperties
         }
         
         return new File(System.getProperty(SettingsUtil.getPropApplicationHome(),
-                System.getProperty("user.home") + SettingsUtil.getApplicationUserHomeSubdir()),
+                System.getProperty("user.home") + "/"
+                        + SettingsUtil.getApplicationUserHomeSubdir()),
                 "repository");
     }
 
