@@ -57,11 +57,9 @@ import org.apache.lucene.search.spans.SpanWeight;
 import org.apache.lucene.search.spans.Spans;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
-import org.apache.uima.cas.CASException;
 import org.apache.uima.cas.TypeSystem;
 import org.apache.uima.cas.impl.XmiCasSerializer;
 import org.apache.uima.jcas.JCas;
-import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.wicket.ajax.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -688,9 +686,9 @@ public class MtasDocumentIndex
         log.info("Indexing all source documents of project {}", project.getName());
         for (SourceDocument document : documentService.listSourceDocuments(project)) {
             try {
-                indexDocument(document, documentService.readInitialCas(document));
+                indexDocument(document, documentService.createOrReadInitialCas(document));
             }
-            catch (IOException | CASException | ResourceInitializationException e) {
+            catch (IOException e) {
                 log.error("Unable to index source document", e);
             }
         }
