@@ -134,8 +134,8 @@ public class SelectionTask
                             recommender, user.getUsername(), result,
                             System.currentTimeMillis() - start));
                 }
-                catch (Exception e) {
-                    log.error("An error occured", e);
+                catch (Throwable e) {
+                    log.error("[{}][{}]: Failed", user.getUsername(), recommender.getName(), e);
                 }
             }
     
