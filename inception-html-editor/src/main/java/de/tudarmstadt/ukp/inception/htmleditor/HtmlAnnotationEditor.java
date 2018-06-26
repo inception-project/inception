@@ -48,9 +48,9 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.JCasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.JCasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
@@ -266,7 +266,7 @@ public class HtmlAnnotationEditor
         private void create(AjaxRequestTarget aTarget, String payload)
             throws JsonParseException, JsonMappingException, IOException
         {
-            Annotation anno = JSONUtil.getJsonConverter().getObjectMapper().readValue(payload,
+            Annotation anno = JSONUtil.getObjectMapper().readValue(payload,
                     Annotation.class);
 
             if (anno.getRanges().isEmpty()) {

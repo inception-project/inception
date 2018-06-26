@@ -31,17 +31,17 @@ public class StringMatchingPosClassificationTool
     public StringMatchingPosClassificationTool()
     {
         super(-1, StringMatchingPosClassificationTool.class.getName(),
-                new StringMatchingPosTrainer(new ClassifierConfiguration<>()),
-                new StringMatchingPosClassifier(new ClassifierConfiguration<>()),
-                new PosAnnotationObjectLoader(), false);
+            new StringMatchingPosTrainer(new ClassifierConfiguration<>()),
+            new StringMatchingPosClassifier(new ClassifierConfiguration<>()),
+            new PosAnnotationObjectLoader(), false);
     }
 
     public StringMatchingPosClassificationTool(long recommenderId, String feature,
         AnnotationLayer aLayer)
     {
         super(recommenderId, StringMatchingPosClassificationTool.class.getName(),
-                new StringMatchingPosTrainer(new ClassifierConfiguration<>(feature)),
-                new StringMatchingPosClassifier(new ClassifierConfiguration<>(feature)),
-                new PosAnnotationObjectLoader(aLayer, feature), false);
+            new StringMatchingPosTrainer(new ClassifierConfiguration<>(feature, recommenderId)),
+            new StringMatchingPosClassifier(new ClassifierConfiguration<>(feature, recommenderId)),
+            new PosAnnotationObjectLoader(aLayer, feature), false);
     }
 }

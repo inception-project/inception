@@ -41,10 +41,11 @@ in the sidebar, and the central annotation editor will jump to its corresponding
 could sometimes be in another document).
 
 The learning history contains a log of all the actions that were taken by the user regarding the
-suggestions given by the recommenders (acceptances, rejections and skippings). Any entry in the
-learning history can be deleted by clicking the corresponding trash bin icon. If this learning
-history is a valid acceptance, after the learning record is deleted, a confirmation dialogue box
-pops up to confirm whether to delete the annotation too.
+suggestions given by the recommenders (acceptances, rejections and skippings). Clicking on an item
+of the learning history will make the central editor jump to the corresponding place in the document
+. Any entry in the learning history can be deleted by clicking the corresponding trash bin icon. If
+this learning history is a valid acceptance, after the learning record is deleted, a confirmation
+dialogue box pops up to confirm whether to delete the annotation too.
 
 The user may finish the current active learning session whenever he wants. If there are pending
 suggestions, they might be shown in the next active learning session that he starts. +
