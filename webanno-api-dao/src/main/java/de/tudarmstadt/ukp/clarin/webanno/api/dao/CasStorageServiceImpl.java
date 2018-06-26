@@ -106,6 +106,15 @@ public class CasStorageServiceImpl
             log.info("CAS doctor not available - unable to check/repair CASes");
         }
     }
+    
+    @Override
+    public boolean existsCas(SourceDocument aSourceDocument, String aUsername)
+        throws IOException
+    {
+        synchronized (lock) {
+            return new File(getAnnotationFolder(aSourceDocument), aUsername + ".ser").exists();
+        }
+    }
 
     /**
      * Creates an annotation document (either user's annotation document or CURATION_USER's

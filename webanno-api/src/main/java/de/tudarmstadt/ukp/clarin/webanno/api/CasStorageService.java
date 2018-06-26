@@ -31,6 +31,8 @@ public interface CasStorageService
 {
     String SERVICE_NAME = "casStorageService";
     
+    boolean existsCas(SourceDocument aSourceDocument, String aUsername) throws IOException;
+
     /**
      * Creates an annotation document (either user's annotation document or CURATION_USER's
      * annotation document)

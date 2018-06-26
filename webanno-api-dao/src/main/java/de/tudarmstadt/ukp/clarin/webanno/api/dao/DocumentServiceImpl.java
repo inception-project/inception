@@ -187,7 +187,7 @@ public class DocumentServiceImpl
     public boolean existsCas(SourceDocument aSourceDocument, String aUsername)
         throws IOException
     {
-        return getCasFile(aSourceDocument, aUsername).exists();
+        return casStorageService.existsCas(aSourceDocument, aUsername);
     }
 
     @Override
