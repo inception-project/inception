@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.recommendation.api.model;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -160,6 +161,11 @@ public class Recommender
         return alwaysSelected;
     }
 
+    public void setAlwaysSelected(boolean aAlwaysSelected)
+    {
+        alwaysSelected = aAlwaysSelected;
+    }
+
     
     public boolean isEnabled()
     {
@@ -180,46 +186,35 @@ public class Recommender
     {
         traits = aTraits;
     }
-    
+
     @Override
-    public int hashCode()
-    {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((id == null) ? 0 : id.hashCode());
-        result = prime * result + ((name == null) ? 0 : name.hashCode());
-        return result;
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Recommender that = (Recommender) o;
+        return Objects.equals(id, that.id) &&
+                Objects.equals(name, that.name);
     }
 
     @Override
-    public boolean equals(Object obj)
-    {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        Recommender other = (Recommender) obj;
-        if (id == null) {
-            if (other.id != null) {
-                return false;
-            }
-        }
-        else if (!id.equals(other.id)) {
-            return false;
-        }
-        if (name == null) {
-            if (other.name != null) {
-                return false;
-            }
-        }
-        else if (!name.equals(other.name)) {
-            return false;
-        }
-        return true;
+    public int hashCode() {
+        return Objects.hash(id, name);
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("Recommender{");
+        sb.append("id=").append(id);
+        sb.append(", project=").append(project);
+        sb.append(", layer=").append(layer);
+        sb.append(", feature='").append(feature).append('\'');
+        sb.append(", name='").append(name).append('\'');
+        sb.append(", tool='").append(tool).append('\'');
+        sb.append(", threshold=").append(threshold);
+        sb.append(", alwaysSelected=").append(alwaysSelected);
+        sb.append(", enabled=").append(enabled);
+        sb.append(", traits='").append(traits).append('\'');
+        sb.append('}');
+        return sb.toString();
     }
 }

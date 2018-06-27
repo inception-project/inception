@@ -14,10 +14,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-= {product.name} Developer Guide
-The {product.name} Team
+= {product-name} Developer Guide
+The {product-name} Team
 
-This document targets developers working on {product.name}.
+This document targets developers working on {product-name}.
 
 include::{include-dir}setup.adoc[]
 
@@ -32,3 +32,9 @@ include::{include-dir}database.adoc[]
 <<<
 
 include::{include-dir}systemproperties.adoc[]
+
+<<<
+
+include::{include-dir}search-core.adoc[]
+
+include::{include-dir}search-mtas.adoc[]

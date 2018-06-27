@@ -132,7 +132,7 @@ public class NamedEntityLinker
     {
         List<List<List<AnnotationObject>>> result = new ArrayList<>();
 
-        inputData.parallelStream().forEach(sentence -> {
+        inputData.parallelStream().forEachOrdered(sentence -> {
             List<List<AnnotationObject>> annotatedSentence = new ArrayList<>();
             int sentenceIndex = 0;
             while (sentenceIndex < sentence.size() - 1) {
@@ -195,16 +195,17 @@ public class NamedEntityLinker
 
         return handles.stream()
             .limit(conf.getNumPredictions())
-            .map(h -> new AnnotationObject(token, h.getIdentifier(), h.getDescription(),
-                    tokenId++, feature, "NamedEntityLinker"))
+            .map(h -> new AnnotationObject(token, h.getIdentifier(), h.getDescription(), tokenId++,
+                feature, "NamedEntityLinker", conf.getRecommenderId()))
             .collect(Collectors.toList());
     }
 
     private boolean isNamedEntity(TokenObject token)
     {
         return nerAnnotations.stream()
-            .map(AnnotationObject::getOffset)
-            .anyMatch(t -> t.equals(token.getOffset()));
+            .map(AnnotationObject::getTokenObject)
+            .anyMatch(t -> t.getOffset().equals(token.getOffset())
+                   && t.getDocumentURI().equals(token.getDocumentURI()));
     }
 
     private List<KBHandle> readCandidates(KnowledgeBase kb, TokenObject token) {

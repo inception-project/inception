@@ -55,14 +55,16 @@ public class ExternalClassifier
     private final Logger log = LoggerFactory.getLogger(getClass());
     private CustomAnnotationObjectLoader loader;
     private ExternalClassifierTraits traits;
+    private long recommenderId;
 
     public ExternalClassifier(ClassifierConfiguration<Object> aConfiguration,
                               CustomAnnotationObjectLoader aLoader,
-                              ExternalClassifierTraits aTraits)
+                              ExternalClassifierTraits aTraits, long aRecommenderId)
     {
         super(aConfiguration);
         loader = aLoader;
         traits = aTraits;
+        recommenderId = aRecommenderId;
     }
 
     @Override
@@ -108,9 +110,8 @@ public class ExternalClassifier
         }
         
         //Contruct Http Request
-        // TODO: Use traits url
-        String remoteUrl = "http://localhost:12889/tag";
-        // String remoteUrl = traits.getRemoteUrl();
+        String remoteUrl = traits.getRemoteUrl();
+
         CloseableHttpClient httpclient = HttpClients.createDefault();
         HttpPost httpPost = new HttpPost(remoteUrl);
         httpPost.addHeader("content-type", "application/json");
@@ -120,8 +121,9 @@ public class ExternalClassifier
         //i.e. JSON with Base64 encoded bytestreams of Typesystem-XML and CAS-XMI
         try {
             String jsonString = new JSONObject()
-                    .put("CAS", new String(Base64.getEncoder().encode(casOS.toByteArray()), "utf-8"))
-                    .put("Typesystem", new String(Base64.getEncoder().encode(typeOS.toByteArray()), "utf-8"))
+                    .put("CAS", new String(Base64.getEncoder().encode(casOS.toByteArray()),
+                        "utf-8")).put("Typesystem",
+                    new String(Base64.getEncoder().encode(typeOS.toByteArray()), "utf-8"))
                     .put("Layer", new String(layer.getName()))
                     .toString();
             httpPost.setEntity(new StringEntity(jsonString, "utf-8"));
@@ -144,9 +146,9 @@ public class ExternalClassifier
         catch (UnsupportedOperationException | SAXException | IOException e) {
             log.error("Error while sending request!", e);
         }
-        
 
-        List<List<AnnotationObject>> annotatedSentences = loader.loadAnnotationObjects(aJCas);
+        List<List<AnnotationObject>> annotatedSentences = loader.loadAnnotationObjects(aJCas,
+            recommenderId);
         List<List<List<AnnotationObject>>> wrappedSents = new LinkedList<>();
         for (List<AnnotationObject> sentence : annotatedSentences) {
             List<List<AnnotationObject>> sentenceList = new LinkedList<>();
