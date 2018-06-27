@@ -148,7 +148,6 @@ public class ActiveLearningSidebar
     private LearningRecord selectedRecord;
     private Date learnSkippedRecommendationTime;
     private ConfirmationDialog confirmationDialog;
-    private JCas jCas;
 
     public ActiveLearningSidebar(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, JCasProvider aJCasProvider,
@@ -437,7 +436,7 @@ public class ActiveLearningSidebar
                 currentRecommendation.getDocumentName());
         AnnotationDocument annoDoc = documentService.createOrGetAnnotationDocument(sourceDoc,
                 state.getUser());
-        jCas = documentService.readAnnotationCas(annoDoc);
+        JCas jCas = documentService.readAnnotationCas(annoDoc);
 
         // Create annotation from recommendation
         SpanAdapter adapter = (SpanAdapter) annotationService.getAdapter(selectedLayer.getObject());
@@ -530,7 +529,7 @@ public class ActiveLearningSidebar
     {
         actionShowSelectedDocument(aTarget, record.getSourceDocument(),
             record.getOffsetCharacterBegin());
-        jCas = this.getJCasProvider().get();
+        JCas jCas = this.getJCasProvider().get();
 
         if (record.getUserAction().equals(LearningRecordUserAction.REJECTED)) {
             highlightTextAndDisplayMessage(aTarget, record);
@@ -596,12 +595,16 @@ public class ActiveLearningSidebar
         learningRecordService.delete(aRecord);
         learningRecords.detach();
         if (aRecord.getUserAction().equals(LearningRecordUserAction.ACCEPTED)) {
+            // IMPORTANT: we must jump to the document which contains the annotation that is to
+            // be deleted because deleteAnnotationByHistory will delete the annotation via the
+            // methods provided by the AnnotationActionHandler and these operate ONLY on the
+            // currently visible/selected document.
             actionShowSelectedDocument(aTarget, aRecord.getSourceDocument(),
                 aRecord.getOffsetCharacterBegin());
             AnnotationDocument annoDoc = documentService
                 .createOrGetAnnotationDocument(aRecord.getSourceDocument(),
                     userDao.get(aRecord.getUser()));
-            jCas = documentService.readAnnotationCas(annoDoc);
+            JCas jCas = documentService.readAnnotationCas(annoDoc);
             if (isAnnotatedInCas(aRecord, jCas)) {
                 confirmationDialog.setTitleModel(
                     new StringResourceModel("alSidebar.history.delete.confirmation.title", this));
@@ -618,6 +621,7 @@ public class ActiveLearningSidebar
     private void deleteAnnotationByHistory(AjaxRequestTarget aTarget, LearningRecord aRecord)
         throws IOException, AnnotationException
     {
+        JCas jCas = this.getJCasProvider().get();
         this.getModelObject().getSelection()
             .selectSpan(highlightVID, jCas, aRecord.getOffsetCharacterBegin(),
                 aRecord.getOffsetCharacterEnd());
