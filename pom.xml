@@ -57,7 +57,7 @@
     <maven>3.0.5</maven>
   </prerequisites>
   <properties>
-    <webanno.version>3.4.4-SNAPSHOT</webanno.version>
+    <webanno.version>3.4.4</webanno.version>
     <dkpro.version>1.9.1</dkpro.version>
     <spring.version>5.0.4.RELEASE </spring.version>
     <spring.boot.version>1.5.10.RELEASE</spring.boot.version>
