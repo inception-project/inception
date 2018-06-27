@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
     <artifactId>webanno</artifactId>
-    <version>3.4.4-SNAPSHOT</version>
+    <version>3.4.4</version>
   </parent>
   <artifactId>webanno-io-xmi</artifactId>
   <name>WebAnno - IO - XMI</name>
