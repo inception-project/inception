@@ -600,13 +600,18 @@ public class ActiveLearningSidebar
             protected void populateItem(ListItem<LearningRecord> item)
             {
                 LearningRecord rec = item.getModelObject();
+                AnnotationFeature recAnnotationFeature = rec.getAnnotationFeature();
+                FeatureSupport featureSupport = featureSupportRegistry
+                    .getFeatureSupport(recAnnotationFeature);
+                String recFeatureValue = featureSupport
+                    .renderFeatureValue(recAnnotationFeature, rec.getAnnotation());
                 
                 LambdaAjaxLink textLink = new LambdaAjaxLink(CID_JUMP_TO_ANNOTATION,t -> 
                         jumpAndHighlightFromLearningHistory(t, item.getModelObject()));
                 textLink.setBody(LambdaModel.of(rec::getTokenText));
                 item.add(textLink);
                 
-                item.add(new Label(CID_RECOMMENDED_ANNOTATION, rec.getAnnotation()));
+                item.add(new Label(CID_RECOMMENDED_ANNOTATION, recFeatureValue));
                 item.add(new Label(CID_USER_ACTION, rec.getUserAction()));
                 item.add(new LambdaAjaxLink(CID_REMOVE_RECORD, t -> 
                         actionRemoveHistoryItem(t, rec)));
