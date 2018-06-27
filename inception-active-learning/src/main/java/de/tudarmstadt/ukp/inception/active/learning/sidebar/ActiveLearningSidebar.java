@@ -22,6 +22,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
@@ -128,6 +129,7 @@ public class ActiveLearningSidebar
     private @SpringBean ApplicationEventPublisherHolder applicationEventPublisherHolder;
     private @SpringBean FeatureSupportRegistry fsRegistry;
     private @SpringBean CasStorageService casStorageService;
+    private @SpringBean UserDao userDao;
 
     private IModel<AnnotationLayer> selectedLayer;
     private IModel<List<LearningRecord>> learningRecords;
@@ -597,7 +599,10 @@ public class ActiveLearningSidebar
         if (aRecord.getUserAction().equals(LearningRecordUserAction.ACCEPTED)) {
             actionShowSelectedDocument(aTarget, aRecord.getSourceDocument(),
                 aRecord.getOffsetCharacterBegin());
-            JCas aJcas = casStorageService.readCas(aRecord.getSourceDocument(), aRecord.getUser());
+            AnnotationDocument annoDoc = documentService
+                .createOrGetAnnotationDocument(aRecord.getSourceDocument(),
+                    userDao.get(aRecord.getUser()));
+            JCas aJcas = documentService.readAnnotationCas(annoDoc);
             if (isAnnotatedInCas(aRecord, aJcas)) {
                 confirmationDialog.setTitleModel(
                     new StringResourceModel("alSidebar.history.delete.confirmation.title", this));
@@ -614,7 +619,10 @@ public class ActiveLearningSidebar
     private void deleteAnnotationByHistory(AjaxRequestTarget aTarget, LearningRecord aRecord)
         throws IOException, AnnotationException
     {
-        JCas aJcas = casStorageService.readCas(aRecord.getSourceDocument(), aRecord.getUser());
+        AnnotationDocument annoDoc = documentService
+            .createOrGetAnnotationDocument(aRecord.getSourceDocument(),
+                userDao.get(aRecord.getUser()));
+        JCas aJcas = documentService.readAnnotationCas(annoDoc);
         this.getModelObject().getSelection()
             .selectSpan(highlightVID, aJcas, aRecord.getOffsetCharacterBegin(),
                 aRecord.getOffsetCharacterEnd());
