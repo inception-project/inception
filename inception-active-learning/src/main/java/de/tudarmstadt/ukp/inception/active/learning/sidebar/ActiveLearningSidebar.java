@@ -588,7 +588,7 @@ public class ActiveLearningSidebar
     }
 
     private void actionRemoveHistoryItem(AjaxRequestTarget aTarget, LearningRecord aRecord)
-        throws IOException, AnnotationException
+        throws IOException
     {
         aTarget.add(mainContainer);
         annotationPage.actionRefreshDocument(aTarget);
@@ -606,15 +606,15 @@ public class ActiveLearningSidebar
                         null));
                 confirmationDialog.show(aTarget);
                 confirmationDialog
-                    .setConfirmAction(t -> deleteAnnotationByHistory(t, aRecord, aJcas));
+                    .setConfirmAction(t -> deleteAnnotationByHistory(t, aRecord));
             }
         }
     }
 
-    private void deleteAnnotationByHistory(AjaxRequestTarget aTarget, LearningRecord aRecord,
-        JCas aJcas)
+    private void deleteAnnotationByHistory(AjaxRequestTarget aTarget, LearningRecord aRecord)
         throws IOException, AnnotationException
     {
+        JCas aJcas = casStorageService.readCas(aRecord.getSourceDocument(), aRecord.getUser());
         this.getModelObject().getSelection()
             .selectSpan(highlightVID, aJcas, aRecord.getOffsetCharacterBegin(),
                 aRecord.getOffsetCharacterEnd());
