@@ -203,8 +203,9 @@ public class NamedEntityLinker
     private boolean isNamedEntity(TokenObject token)
     {
         return nerAnnotations.stream()
-            .map(AnnotationObject::getOffset)
-            .anyMatch(t -> t.equals(token.getOffset()));
+            .map(AnnotationObject::getTokenObject)
+            .anyMatch(t -> t.getOffset().equals(token.getOffset())
+                   && t.getDocumentURI().equals(token.getDocumentURI()));
     }
 
     private List<KBHandle> readCandidates(KnowledgeBase kb, TokenObject token) {
