@@ -258,7 +258,6 @@ public class SearchServiceImpl
             }
 
         }
-
         return results;
     }
 
