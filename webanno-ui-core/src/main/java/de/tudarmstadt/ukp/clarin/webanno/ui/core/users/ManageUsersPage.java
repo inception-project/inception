@@ -232,6 +232,8 @@ public class ManageUsersPage
     private void actionCancel(AjaxRequestTarget aTarget) {
         if (isAdmin()) {
             selectedUser.setObject(null);
+            aTarget.add(detailForm);
+            aTarget.add(users);
         }
         else {
             setResponsePage(getApplication().getHomePage());
