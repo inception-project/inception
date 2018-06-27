@@ -22,7 +22,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
-import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
@@ -45,7 +44,6 @@ import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.JCasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
@@ -63,6 +61,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
@@ -128,7 +127,6 @@ public class ActiveLearningSidebar
     private @SpringBean DocumentService documentService;
     private @SpringBean ApplicationEventPublisherHolder applicationEventPublisherHolder;
     private @SpringBean FeatureSupportRegistry fsRegistry;
-    private @SpringBean CasStorageService casStorageService;
     private @SpringBean UserDao userDao;
 
     private IModel<AnnotationLayer> selectedLayer;
@@ -150,6 +148,7 @@ public class ActiveLearningSidebar
     private LearningRecord selectedRecord;
     private Date learnSkippedRecommendationTime;
     private ConfirmationDialog confirmationDialog;
+    private JCas jCas;
 
     public ActiveLearningSidebar(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, JCasProvider aJCasProvider,
@@ -438,7 +437,7 @@ public class ActiveLearningSidebar
                 currentRecommendation.getDocumentName());
         AnnotationDocument annoDoc = documentService.createOrGetAnnotationDocument(sourceDoc,
                 state.getUser());
-        JCas jCas = documentService.readAnnotationCas(annoDoc);
+        jCas = documentService.readAnnotationCas(annoDoc);
 
         // Create annotation from recommendation
         SpanAdapter adapter = (SpanAdapter) annotationService.getAdapter(selectedLayer.getObject());
@@ -531,7 +530,7 @@ public class ActiveLearningSidebar
     {
         actionShowSelectedDocument(aTarget, record.getSourceDocument(),
             record.getOffsetCharacterBegin());
-        JCas aJcas = this.getJCasProvider().get();
+        jCas = this.getJCasProvider().get();
 
         if (record.getUserAction().equals(LearningRecordUserAction.REJECTED)) {
             highlightTextAndDisplayMessage(aTarget, record);
@@ -545,7 +544,7 @@ public class ActiveLearningSidebar
         // if the suggestion doesn't exit -> if that suggestion is accepted and annotated,
         // highlight the annotation.
         // else, highlight the text.
-        else if (!isAnnotatedInCas(record, aJcas)) {
+        else if (!isAnnotatedInCas(record, jCas)) {
             highlightTextAndDisplayMessage(aTarget, record);
         }
     }
@@ -602,8 +601,8 @@ public class ActiveLearningSidebar
             AnnotationDocument annoDoc = documentService
                 .createOrGetAnnotationDocument(aRecord.getSourceDocument(),
                     userDao.get(aRecord.getUser()));
-            JCas aJcas = documentService.readAnnotationCas(annoDoc);
-            if (isAnnotatedInCas(aRecord, aJcas)) {
+            jCas = documentService.readAnnotationCas(annoDoc);
+            if (isAnnotatedInCas(aRecord, jCas)) {
                 confirmationDialog.setTitleModel(
                     new StringResourceModel("alSidebar.history.delete.confirmation.title", this));
                 confirmationDialog.setContentModel(
@@ -619,12 +618,8 @@ public class ActiveLearningSidebar
     private void deleteAnnotationByHistory(AjaxRequestTarget aTarget, LearningRecord aRecord)
         throws IOException, AnnotationException
     {
-        AnnotationDocument annoDoc = documentService
-            .createOrGetAnnotationDocument(aRecord.getSourceDocument(),
-                userDao.get(aRecord.getUser()));
-        JCas aJcas = documentService.readAnnotationCas(annoDoc);
         this.getModelObject().getSelection()
-            .selectSpan(highlightVID, aJcas, aRecord.getOffsetCharacterBegin(),
+            .selectSpan(highlightVID, jCas, aRecord.getOffsetCharacterBegin(),
                 aRecord.getOffsetCharacterEnd());
         getActionHandler().actionDelete(aTarget);
     }
