@@ -50,6 +50,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
 
+import com.googlecode.wicket.kendo.ui.widget.tooltip.TooltipBehavior;
+
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
@@ -195,11 +197,13 @@ public class StatementGroupPanel extends Panel {
             super(aId, "existingStatementGroup", StatementGroupPanel.this, groupModel);
                         
             Form<StatementGroupBean> form = new Form<StatementGroupBean>("form");
-            
             LambdaAjaxLink propertyLink = new LambdaAjaxLink("propertyLink",
                     this::actionPropertyLinkClicked);
             propertyLink.add(new Label("property", groupModel.bind("property.uiLabel")));
+            propertyLink.add(new TooltipBehavior(groupModel.bind("property.identifier"))
+                    .setOption("autoHide", false));
             form.add(propertyLink);
+
 
             // TODO what about handling type intersection when multiple range statements are
             // present?

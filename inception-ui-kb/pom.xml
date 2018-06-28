@@ -75,6 +75,10 @@
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-concept-linking</artifactId>
     </dependency>
+     <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-search-core</artifactId>
+    </dependency>
     
     <dependency>
       <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
@@ -170,7 +174,7 @@
       <groupId>com.googlecode.wicket-jquery-ui</groupId>
       <artifactId>wicket-kendo-ui</artifactId>
     </dependency>
-
+	
     <dependency>
       <groupId>org.hibernate.javax.persistence</groupId>
       <artifactId>hibernate-jpa-2.1-api</artifactId>

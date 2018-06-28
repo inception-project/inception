@@ -31,18 +31,17 @@ public class OpenNlpPosClassificationTool
     public OpenNlpPosClassificationTool()
     {
         super(-1, OpenNlpPosClassificationTool.class.getName(),
-                new OpenNlpPosTrainer(new BaseConfiguration()),
-                new OpenNlpPosClassifier(new BaseConfiguration()),
-                new PosAnnotationObjectLoader(),
-                true);
+            new OpenNlpPosTrainer(new BaseConfiguration()),
+            new OpenNlpPosClassifier(new BaseConfiguration()), new PosAnnotationObjectLoader(),
+            true);
     }
 
     public OpenNlpPosClassificationTool(long recommenderId, int beamSize, String feature,
         AnnotationLayer aLayer)
     {
         super(recommenderId, OpenNlpPosClassificationTool.class.getName(),
-                new OpenNlpPosTrainer(new CustomConfiguration(beamSize, feature)),
-                new OpenNlpPosClassifier(new CustomConfiguration(beamSize, feature)),
-                new PosAnnotationObjectLoader(aLayer, feature), true);
+            new OpenNlpPosTrainer(new CustomConfiguration(beamSize, feature, recommenderId)),
+            new OpenNlpPosClassifier(new CustomConfiguration(beamSize, feature, recommenderId)),
+            new PosAnnotationObjectLoader(aLayer, feature), true);
     }
 }

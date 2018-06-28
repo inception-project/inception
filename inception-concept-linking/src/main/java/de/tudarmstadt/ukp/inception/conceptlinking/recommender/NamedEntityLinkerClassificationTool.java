@@ -44,9 +44,9 @@ public class NamedEntityLinkerClassificationTool
         FeatureSupportRegistry fsRegistry)
     {
         super(recommenderId, NamedEntityLinkerClassificationToolFactory.class.getName(),
-            new NamedEntityTrainer(new ClassifierConfiguration<>(feature)),
-            new NamedEntityLinker(new ClassifierConfiguration<>(feature), kbService, clService,
-                docService, annoService, fsRegistry),
+            new NamedEntityTrainer(new ClassifierConfiguration<>(feature, recommenderId)),
+            new NamedEntityLinker(new ClassifierConfiguration<>(feature, recommenderId), kbService,
+                clService, docService, annoService, fsRegistry),
             new NerAnnotationObjectLoader(aLayer, NAMED_ENTITY_CLASSIFICATION_FEATURE), false);
     }
 
