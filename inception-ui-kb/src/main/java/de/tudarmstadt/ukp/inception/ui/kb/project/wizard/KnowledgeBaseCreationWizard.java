@@ -17,9 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.project.wizard;
 
-import static de.tudarmstadt.ukp.inception.kb.KnowledgeBases.KNOWLEDGE_BASES;
-
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -56,6 +55,9 @@ import org.apache.wicket.validation.ValidationError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+
 import de.agilecoders.wicket.core.markup.html.bootstrap.button.Buttons;
 import de.agilecoders.wicket.core.markup.html.bootstrap.form.radio.BootstrapRadioGroup;
 import de.agilecoders.wicket.core.markup.html.bootstrap.form.radio.EnumRadioChoiceRenderer;
@@ -67,6 +69,7 @@ import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 import de.tudarmstadt.ukp.inception.kb.io.FileUploadHelper;
 import de.tudarmstadt.ukp.inception.kb.reification.Reification;
+import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 import de.tudarmstadt.ukp.inception.ui.kb.project.KnowledgeBaseIriPanel;
 import de.tudarmstadt.ukp.inception.ui.kb.project.KnowledgeBaseListPanel;
 import de.tudarmstadt.ukp.inception.ui.kb.project.KnowledgeBaseWrapper;
@@ -284,9 +287,11 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
             urlField.add(Validators.URL_VALIDATOR);
             add(urlField);
             
+            HashMap<String, KnowledgeBaseProfile> profiles = readKnowledgeBaseProfiles("knowledgebaseProfiles.yaml");
+            
             // for up to MAXIMUM_REMOTE_REPO_SUGGESTIONS of knowledge bases, create a link which
             // directly fills in the URL field (convenient for both developers AND users :))
-            List<String> suggestions = new ArrayList<>(KNOWLEDGE_BASES.keySet());
+            List<String> suggestions = new ArrayList<>(profiles.keySet());
             suggestions = suggestions.subList(0,
                     Math.min(suggestions.size(), MAXIMUM_REMOTE_REPO_SUGGESTIONS));
             add(new ListView<String>("suggestions", suggestions) {
@@ -297,7 +302,22 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
                 protected void populateItem(ListItem<String> item) {
                     // add a link for one knowledge base with proper label
                     LambdaAjaxLink link = new LambdaAjaxLink("suggestionLink", t -> {
-                        model.getObject().setUrl(KNOWLEDGE_BASES.get(item.getModelObject()));
+                        // set all the fields according to the chosen profile
+                        model.getObject()
+                                .setUrl(profiles.get(item.getModelObject()).getSparqlUrl());
+                        model.getObject().getKb().setClassIri(
+                                profiles.get(item.getModelObject()).getMapping().getClassIri());
+                        model.getObject().getKb().setSubclassIri(
+                                profiles.get(item.getModelObject()).getMapping().getSubclassIri());
+                        model.getObject().getKb().setTypeIri(
+                                profiles.get(item.getModelObject()).getMapping().getTypeIri());
+                        model.getObject().getKb().setDescriptionIri(profiles
+                                .get(item.getModelObject()).getMapping().getDescriptionIri());
+                        model.getObject().getKb().setPropertyTypeIri(profiles
+                                .get(item.getModelObject()).getMapping().getPropertyTypeIri());
+                        model.getObject().getKb().setLabelIri(
+                                profiles.get(item.getModelObject()).getMapping().getLabelIri());
+
                         t.add(urlField);
                     });
                     link.add(new Label("suggestionLabel", item.getModelObject()));
@@ -323,6 +343,34 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
         @Override
         public IDynamicWizardStep next() {
             return new SchemaConfigurationStep(this, model);
+        }
+        
+        /**
+         * Reads the knowledgebase profiles from a file and stores them in a HashMap with the
+         * name of the knowledgebase as key and the profile object as value
+         * @param yamlFilePath path to the YAML file that defines a list a profiles 
+         * @return a HashMap with the knowledgebase profiles
+         */
+        private HashMap<String, KnowledgeBaseProfile> readKnowledgeBaseProfiles(String yamlFilePath)
+        {
+            ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+
+            String fileName = KnowledgeBaseProfile.class.getResource(yamlFilePath).getFile();
+
+            List<KnowledgeBaseProfile> profiles = new ArrayList<>();
+            try {
+                profiles = mapper.readValue(new File(fileName), mapper.getTypeFactory()
+                        .constructCollectionType(List.class, KnowledgeBaseProfile.class));
+            }
+            catch (IOException e) {
+                error("Unable to read knowledge base profiles");
+                log.error("Unable to read knowledge base profiles", e);
+            }
+            
+            // store the profiles in a HashMap for easier lookup
+            HashMap<String, KnowledgeBaseProfile> profilesMap = new HashMap<>();
+            profiles.stream().forEach(x -> profilesMap.put(x.getName(), x));
+            return profilesMap;
         }
     }
 
