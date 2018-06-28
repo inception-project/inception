@@ -62,15 +62,19 @@ import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
+import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxDownloadLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.TempFileResource;
 import de.tudarmstadt.ukp.inception.app.bootstrap.DisabledBootstrapCheckbox;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
+import de.tudarmstadt.ukp.inception.kb.event.KnowledgeBaseConfigurationChangedEvent;
 import de.tudarmstadt.ukp.inception.kb.io.FileUploadHelper;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 public class KnowledgeBaseDetailsPanel extends Panel {
+
+    private @SpringBean ApplicationEventPublisherHolder applicationEventPublisherHolder;
 
     private static final long serialVersionUID = -3550082954966752196L;
     private static final Logger log = LoggerFactory.getLogger(KnowledgeBaseDetailsPanel.class);
@@ -219,6 +223,8 @@ public class KnowledgeBaseDetailsPanel extends Panel {
                 // submitted after actionSave is called
                 KnowledgeBaseDetailsPanel.this.actionSave(target,
                         (Form<KnowledgeBaseWrapper>) form);
+                applicationEventPublisherHolder.get()
+                    .publishEvent(new KnowledgeBaseConfigurationChangedEvent(this));
             }
         });
         form.add(new LambdaAjaxLink("cancel", KnowledgeBaseDetailsPanel.this::stopEditing) {

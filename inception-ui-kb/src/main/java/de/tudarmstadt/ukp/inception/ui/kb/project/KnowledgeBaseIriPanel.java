@@ -27,7 +27,6 @@ import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 
@@ -40,9 +39,7 @@ import de.agilecoders.wicket.core.markup.html.bootstrap.form.radio.EnumRadioChoi
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.inception.kb.IriConstants;
-import de.tudarmstadt.ukp.inception.kb.event.IriChangeEvent;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.ui.kb.project.wizard.SchemaProfile;
 
@@ -53,8 +50,6 @@ public class KnowledgeBaseIriPanel
     private static final long serialVersionUID = -7189344732710228206L;
     private final IModel<SchemaProfile> selectedSchemaProfile;
     private final CompoundPropertyModel<KnowledgeBaseWrapper> kbModel;
-
-    private @SpringBean ApplicationEventPublisherHolder applicationEventPublisherHolder;
 
     public KnowledgeBaseIriPanel(String id, CompoundPropertyModel<KnowledgeBaseWrapper> aModel)
     {
@@ -160,7 +155,7 @@ public class KnowledgeBaseIriPanel
         comboBox.setRequired(true);
         comboBox.add(Validators.IRI_VALIDATOR);
         comboBox.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> {
-            applicationEventPublisherHolder.get().publishEvent(new IriChangeEvent(this));
+
         }));
         return comboBox;
     }

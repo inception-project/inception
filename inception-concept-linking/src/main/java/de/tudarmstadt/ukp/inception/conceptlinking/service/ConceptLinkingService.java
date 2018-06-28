@@ -61,7 +61,7 @@ import de.tudarmstadt.ukp.inception.conceptlinking.util.FileUtils;
 import de.tudarmstadt.ukp.inception.conceptlinking.util.LRUCache;
 import de.tudarmstadt.ukp.inception.conceptlinking.util.QueryUtil;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
-import de.tudarmstadt.ukp.inception.kb.event.IriChangeEvent;
+import de.tudarmstadt.ukp.inception.kb.event.KnowledgeBaseConfigurationChangedEvent;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
@@ -471,7 +471,8 @@ public class ConceptLinkingService
     }
 
     @EventListener
-    public void onIriChangeEvent(IriChangeEvent aEvent)
+    public void onKnowledgeBaseConfigurationChangedEvent(
+        KnowledgeBaseConfigurationChangedEvent aEvent)
     {
         candidateCache.clear();
         semanticSignatureCache.clear();

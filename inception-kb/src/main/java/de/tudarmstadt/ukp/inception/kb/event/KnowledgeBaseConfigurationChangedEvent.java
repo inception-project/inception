@@ -20,12 +20,12 @@ package de.tudarmstadt.ukp.inception.kb.event;
 
 import org.springframework.context.ApplicationEvent;
 
-public class IriChangeEvent
+public class KnowledgeBaseConfigurationChangedEvent
     extends ApplicationEvent
 {
     private static final long serialVersionUID = -2741267700429534514L;
 
-    public IriChangeEvent(Object aSource)
+    public KnowledgeBaseConfigurationChangedEvent(Object aSource)
     {
         super(aSource);
     }
