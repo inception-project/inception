@@ -602,22 +602,23 @@ public class ActiveLearningSidebar
                 AnnotationFeature recAnnotationFeature = rec.getAnnotationFeature();
                 String recFeatureValue;
                 if (recAnnotationFeature != null) {
-                    FeatureSupport featureSupport = featureSupportRegistry.getFeatureSupport(recAnnotationFeature);
+                    FeatureSupport featureSupport = featureSupportRegistry
+                        .getFeatureSupport(recAnnotationFeature);
                     recFeatureValue = featureSupport
                         .renderFeatureValue(recAnnotationFeature, rec.getAnnotation());
                 }
                 else {
                     recFeatureValue = rec.getAnnotation();
                 }
-                LambdaAjaxLink textLink = new LambdaAjaxLink(CID_JUMP_TO_ANNOTATION,t ->
-                        jumpAndHighlightFromLearningHistory(t, item.getModelObject()));
+                LambdaAjaxLink textLink = new LambdaAjaxLink(CID_JUMP_TO_ANNOTATION,
+                    t -> jumpAndHighlightFromLearningHistory(t, item.getModelObject()));
                 textLink.setBody(LambdaModel.of(rec::getTokenText));
                 item.add(textLink);
 
                 item.add(new Label(CID_RECOMMENDED_ANNOTATION, recFeatureValue));
                 item.add(new Label(CID_USER_ACTION, rec.getUserAction()));
-                item.add(new LambdaAjaxLink(CID_REMOVE_RECORD, t ->
-                        actionRemoveHistoryItem(t, rec)));
+                item.add(
+                    new LambdaAjaxLink(CID_REMOVE_RECORD, t -> actionRemoveHistoryItem(t, rec)));
             }
         };
         learningRecords = LambdaModel.of(this::listLearningRecords);
