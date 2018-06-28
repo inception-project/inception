@@ -70,8 +70,8 @@ public class LabelResult implements Serializable
                         + "is something wrong.";
             
             for (int i = 0; i < actualSentence.size(); i++) {
-                String aoGenerated = actualSentence.get(i).getAnnotation();
-                String aoExpected = expectedSentence.get(i).getAnnotation();
+                String aoGenerated = actualSentence.get(i).getLabel();
+                String aoExpected = expectedSentence.get(i).getLabel();
     
                 if (aoGenerated != null && !aoGenerated.isEmpty()) {
                     totalGenerated[getId(aoGenerated)]++;

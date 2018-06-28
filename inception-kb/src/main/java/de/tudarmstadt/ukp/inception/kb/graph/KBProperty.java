@@ -29,7 +29,6 @@ import java.util.Optional;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.ValueFactory;
-import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.eclipse.rdf4j.model.vocabulary.XMLSchema;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
@@ -130,19 +129,20 @@ public class KBProperty
 
         originalStatements.clear();
 
-        Statement typeStmt = vf.createStatement(subject, kb.getTypeIri(), RDF.PROPERTY);
+        Statement typeStmt = vf.createStatement(subject, kb.getTypeIri(), kb.getPropertyTypeIri());
         originalStatements.add(typeStmt);
         aConn.add(typeStmt);
 
         if (isNotBlank(name)) {
-            Statement nameStmt = vf.createStatement(subject, RDFS.LABEL, vf.createLiteral(name));
+            Statement nameStmt = vf.createStatement(subject, kb.getLabelIri(),
+                    vf.createLiteral(name));
             originalStatements.add(nameStmt);
             aConn.add(nameStmt);
         }
 
         if (isNotBlank(description)) {
             Statement descStmt = vf
-                .createStatement(subject, RDFS.COMMENT, vf.createLiteral(description));
+                .createStatement(subject, kb.getDescriptionIri(), vf.createLiteral(description));
             originalStatements.add(descStmt);
             aConn.add(descStmt);
         }
@@ -162,18 +162,18 @@ public class KBProperty
         }
     }
 
-    public static KBProperty read(RepositoryConnection aConn, Statement aStmt)
+    public static KBProperty read(RepositoryConnection aConn, Statement aStmt, KnowledgeBase kb)
     {
         KBProperty kbProp = new KBProperty();
         kbProp.setIdentifier(aStmt.getSubject().stringValue());
         kbProp.originalStatements.add(aStmt);
 
-        readFirst(aConn, aStmt.getSubject(), RDFS.LABEL, null).ifPresent((stmt) -> {
+        readFirst(aConn, aStmt.getSubject(), kb.getLabelIri(), null).ifPresent((stmt) -> {
             kbProp.setName(stmt.getObject().stringValue());
             kbProp.originalStatements.add(stmt);
         });
 
-        readFirst(aConn, aStmt.getSubject(), RDFS.COMMENT, null).ifPresent((stmt) -> {
+        readFirst(aConn, aStmt.getSubject(), kb.getDescriptionIri(), null).ifPresent((stmt) -> {
             kbProp.setDescription(stmt.getObject().stringValue());
             kbProp.originalStatements.add(stmt);
         });

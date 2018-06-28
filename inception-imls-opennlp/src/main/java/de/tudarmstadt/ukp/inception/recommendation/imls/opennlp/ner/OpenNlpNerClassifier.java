@@ -102,15 +102,15 @@ public class OpenNlpNerClassifier extends Classifier<TrainingParameters>
             for (int i = 0; i < sentence.size(); i++) {
                 T t = sentence.get(i);
                 List<AnnotationObject> word = new LinkedList<>();
-                word.add(new AnnotationObject(null, t, sentence, id, feature,
-                        "OpenNlpNerClassifier", confidence[i]));
+                word.add(new AnnotationObject(t, id, feature,
+                        "OpenNlpNerClassifier", confidence[i], conf.getRecommenderId()));
                 id++;
                 annotatedSentence.add(word);
             }
 
             for (Span span : generatedNames) {
                 for (int index = span.getStart(); index < span.getEnd(); index++) {
-                    annotatedSentence.get(index).get(0).setAnnotation(span.getType());
+                    annotatedSentence.get(index).get(0).setLabel(span.getType());
                 }
             }
             result.add(annotatedSentence);

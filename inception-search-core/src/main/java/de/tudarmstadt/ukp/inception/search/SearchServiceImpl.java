@@ -22,12 +22,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
+import javax.persistence.PersistenceContext;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
@@ -41,24 +46,32 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.inception.search.index.Index;
-import de.tudarmstadt.ukp.inception.search.index.IndexFactory;
-import de.tudarmstadt.ukp.inception.search.index.IndexRegistry;
+import de.tudarmstadt.ukp.inception.search.index.PhysicalIndex;
+import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexFactory;
+import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexRegistry;
+import de.tudarmstadt.ukp.inception.search.model.Index;
+import de.tudarmstadt.ukp.inception.search.scheduling.IndexScheduler;
+
 
 @Component(SearchService.SERVICE_NAME)
+@Transactional
 public class SearchServiceImpl
     implements SearchService
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
+    @PersistenceContext
+    private EntityManager entityManager;
+
     private @Autowired AnnotationSchemaService annotationSchemaService;
     private @Autowired DocumentService documentService;
     private @Autowired ProjectService projectService;
-    private @Autowired IndexRegistry indexRegistry;
+    private @Autowired PhysicalIndexRegistry physicalIndexRegistry;
+    private @Autowired IndexScheduler indexScheduler;
 
     // Index factory
-    private IndexFactory indexFactory;
-    private String indexFactoryName = "mtasDocumentIndexFactory";
+    private PhysicalIndexFactory physicalIndexFactory;
+    private String physicalIndexFactoryName = "mtasDocumentIndexFactory";
 
     // The indexes for each project
     private static Map<Long, Index> indexes;
@@ -71,29 +84,68 @@ public class SearchServiceImpl
         indexes = new HashMap<>();
     }
 
-    private Index getIndexByProject(Project aProject)
+    /** 
+     * Get an index entry from the memory map
+     * @param aProject The project
+     * @return The index
+     */
+    private Index getIndexFromMemory(Project aProject)
     {
+        // Search index entry in the memory map
         if (!indexes.containsKey(aProject.getId())) {
-            indexFactory = indexRegistry.getIndexFactory(indexFactoryName);
+            // Not found. Search index entry in the database
+            Index index = getIndex(aProject);
+            
+            if (index == null) {
+                // Not found in the DB, create new index instance and store it in DB
+                index = new Index();
+                index.setInvalid(false);
+                index.setProject(aProject);
+                index.setPhysicalProvider(physicalIndexFactoryName);
+                createIndex(index);
+                updateIndex(index);
+            }
+            
+            // Get physical index object
+            physicalIndexFactory = physicalIndexRegistry.getIndexFactory(physicalIndexFactoryName);
 
-            indexes.put(aProject.getId(), indexFactory.getNewIndex(aProject,
-                    annotationSchemaService, documentService, projectService, dir));
+            PhysicalIndex physicalIndex = physicalIndexFactory.getNewIndex(aProject,
+                    annotationSchemaService, documentService, projectService, dir);
+            
+            // Set physical index object
+            index.setPhysicalIndex(physicalIndex);
+
+            // Add index entry to the memory map
+            indexes.put(aProject.getId(), index);
+            
         }
 
         return indexes.get(aProject.getId());
     }
 
+    /** 
+     * beforeProjectRemove event. Triggered before a project is removed
+     * @param aEvent The BeforeProjectRemovedEvent event
+     * @throws Exception
+     */
     @EventListener
     public void beforeProjectRemove(BeforeProjectRemovedEvent aEvent) throws Exception
     {
-        Index index = getIndexByProject(aEvent.getProject());
+        Project project = aEvent.getProject();
+        
+        // Retrieve index entry for the project
+        Index index = getIndexFromMemory(project);
 
-        if (index.isIndexCreated()) {
-            // Index exists, drop it
-            index.dropIndex();
+        if (index.getPhysicalIndex().isCreated()) {
+            // Physical index exists, drop it
+            index.getPhysicalIndex().dropPhysicalIndex();
         }
 
-        indexes.remove(aEvent.getProject().getId());
+        // Remove the index entry from the memory map
+        indexes.remove(project.getId());
+        
+        // Delete the index entry from the DB
+        deleteIndexByProject(project);
     }
 
     @EventListener
@@ -101,23 +153,26 @@ public class SearchServiceImpl
     {
         SourceDocument document = aEvent.getDocument();
 
-        Index index = getIndexByProject(document.getProject());
+        Project project = document.getProject();
+        
+        // Retrieve index entry for the project
+        Index index = getIndexFromMemory(project);
 
-        if (index.isIndexCreated()) {
-            // Index exists.
+        if (index.getPhysicalIndex().isCreated()) {
+            // Physical index exists.
 
-            if (!index.isIndexOpen()) {
-                // Index is not open. Open it.
-                index.openIndex();
+            if (!index.getPhysicalIndex().isOpen()) {
+                // Physical index is not open. Open it.
+                index.getPhysicalIndex().openPhysicalIndex();
             }
 
             // Remove source document from the index
-            index.deindexDocument(document);
+            index.getPhysicalIndex().deindexDocument(document);
 
             // Remove related annotation documents from the index
             for (AnnotationDocument annotationDocument : documentService
                     .listAnnotationDocuments(document)) {
-                index.deindexDocument(annotationDocument);
+                index.getPhysicalIndex().deindexDocument(annotationDocument);
             }
         }
     }
@@ -127,25 +182,34 @@ public class SearchServiceImpl
     {
         AnnotationDocument document = aEvent.getDocument();
 
-        Index index = getIndexByProject(document.getProject());
+        Project project = document.getProject();
+        
+        // Retrieve index entry for the project
+        Index index = getIndexFromMemory(project);
 
-        if (!index.isIndexCreated()) {
-            // Index does not exist. Create it. The creation will already index this document.
-            index.createIndex();
+        if (!index.getPhysicalIndex().isCreated()) {
+            // Physical index does not exist. 
+            
+            // Set the invalid flag
+            index.setInvalid(true);
+            updateIndex(index);
+
+            // Schedule new reindex process
+            indexScheduler.enqueueReindexTask(project);
         }
         else {
-            // Index exists
+            // Physical index already exists
 
-            if (!index.isIndexOpen()) {
-                // Index is not open. Open it.
-                index.openIndex();
+            if (!index.getPhysicalIndex().isOpen()) {
+                // Physical index is not open. Open it.
+                index.getPhysicalIndex().openPhysicalIndex();
             }
 
             // Remove annotation document from index.
-            index.deindexDocument(document);
+            index.getPhysicalIndex().deindexDocument(document);
 
-            // Add document to the index again
-            index.indexDocument(document, aEvent.getJCas());
+            // Add annotation document to the index again
+            index.getPhysicalIndex().indexDocument(document, aEvent.getJCas());
         }
     }
 
@@ -153,29 +217,47 @@ public class SearchServiceImpl
     public List<SearchResult> query(User aUser, Project aProject, String aQuery)
         throws IOException, ExecutionException
     {
-        Index index = getIndexByProject(aProject);
+        List<SearchResult> results = null;
 
-        if (!index.isIndexCreated()) {
-            // Index does not exist. Create it.
-            index.createIndex();
+        Index index = getIndexFromMemory(aProject);
+
+        if (index.getInvalid()) {
+            // Index is invalid, schedule a new index rebuild
+            indexScheduler.enqueueReindexTask(aProject);
+
+            // Throw execution exception so that the user knows the query was not run
+            throw (new ExecutionException("Query not executed because index is in invalid state. Try again later."));
         }
         else {
-            // Index exists
+            // Index is valid, try to execute the query
 
-            if (!index.isIndexOpen()) {
-                // Index is not open. Open it.
-                index.openIndex();
+            if (!index.getPhysicalIndex().isCreated()) {
+                // Physical index does not exist.
+
+                // Set the invalid flag
+                index.setInvalid(true);
+                updateIndex(index);
+
+                // Schedule new reindexing process
+                indexScheduler.enqueueReindexTask(aProject);
+
+                // Throw execution exception so that the user knows the query was not run
+                throw (new ExecutionException("Query not executed because index is in invalid state. Try again later."));
             }
+            else {
+                // Physical index exists
+
+                if (!index.getPhysicalIndex().isOpen()) {
+                    // Physical index is not open. Open it.
+                    index.getPhysicalIndex().openPhysicalIndex();
+                }
+
+                log.debug("Running query: {}", aQuery);
+
+                results = index.getPhysicalIndex().executeQuery(aUser, aQuery, null, (String) null);
+            }
+
         }
-
-        log.debug("Running query: {}", aQuery);
-        
-        List<SearchResult> results = index.executeQuery(aUser, aQuery, null, null);
-
-        for (SearchResult result : results) {
-            String title = result.getDocumentTitle();
-        }
-
         return results;
     }
 
@@ -184,53 +266,109 @@ public class SearchServiceImpl
     {
         SourceDocument document = aEvent.getDocument();
 
-        Index index = getIndexByProject(document.getProject());
+        Project project = document.getProject();
 
-        if (!index.isIndexCreated()) {
-            // Index does not exist. Create it. It will also index the new document
-            index.createIndex();
+        Index index = getIndexFromMemory(project);
+
+        if (!index.getPhysicalIndex().isCreated()) {
+            // Set the invalid flag
+            index.setInvalid(true);
+            updateIndex(index);
+
+            // Schedule reindexing of the physical index
+            indexScheduler.enqueueReindexTask(project);
         }
         else {
-            // Index exists
-
-            if (!index.isIndexOpen()) {
-                // Index is not open. Open it.
-                index.openIndex();
+            // Physical index exists
+            if (!index.getPhysicalIndex().isOpen()) {
+                // Physical index is not open. Open it.
+                index.getPhysicalIndex().openPhysicalIndex();
             }
 
             // Index the new document
-            index.indexDocument(document, aEvent.getJcas());
-
+            index.getPhysicalIndex().indexDocument(document, aEvent.getJcas());
         }
-
     }
 
     @EventListener
     public void beforeLayerConfigurationChanged(LayerConfigurationChangedEvent aEvent)
         throws Exception
     {
-        Index index = getIndexByProject(aEvent.getProject());
+        Project project = aEvent.getProject();
 
-        if (index.isIndexCreated()) {
-            // Index already exists, drop it
-            index.dropIndex();
-        }
-        // Recreate index and indexes all project documents
-        index.createIndex();
+        Index index = getIndexFromMemory(project);
+
+        // Set the invalid flag
+        index.setInvalid(true);
+        updateIndex(index);
+
+        // Schedule reindexing of the physical index
+        indexScheduler.enqueueReindexTask(aEvent.getProject());
     }
 
+    /** 
+     * Reindex the project. If there is not a physical index, create a new one.
+     */
     @Override
     public void reindex(Project aProject) throws IOException
     {
         log.info("Reindexing project " + aProject.getName());
-        Index index = getIndexByProject(aProject);
+        
+        Index index = getIndexFromMemory(aProject);
 
-        if (index.isIndexCreated()) {
-            // Index already exists, drop it
-            index.dropIndex();
+        if (index.getPhysicalIndex().isCreated()) {
+            // Physical index already exists, drop it
+            index.getPhysicalIndex().dropPhysicalIndex();
         }
 
-        // Recreate index and indexes all project documents
-        index.createIndex();
+        // Create physical index and index all project documents
+        index.getPhysicalIndex().createPhysicalIndex();
+        
+        // After reindexing, reset the invalid flag
+        index.setInvalid(false);
+        updateIndex(index);
+    }
+    
+    @Override
+    public Index getIndex(Project aProject)
+    {
+        Index indexObject = null;
+        String sql = "FROM " + Index.class.getName() + " i where i.project= :project";
+        try {
+            indexObject = entityManager.createQuery(sql, Index.class)
+                    .setParameter("project", aProject).getSingleResult();
+        }
+        catch (NoResultException e) {
+            indexObject = null;
+        }
+        return indexObject;
+    }
+
+    public void createIndex(Index aIndexObject)
+    {
+        entityManager.persist(aIndexObject);
+        entityManager.flush();
+    }
+
+    @Override
+    public void updateIndex(Index aIndexObject)
+    {
+        entityManager.merge(aIndexObject);
+        entityManager.flush();
+    }
+
+    public void deleteIndex(Index aIndexObject)
+    {
+        entityManager.remove(entityManager.contains(aIndexObject) ? aIndexObject
+                : entityManager.merge(aIndexObject));
+    }
+
+    public void deleteIndexByProject(Project aProject)
+    {
+        Index indexObject = this.getIndex(aProject);
+
+        if (indexObject != null) {
+            this.deleteIndex(indexObject);
+        }
     }
 }

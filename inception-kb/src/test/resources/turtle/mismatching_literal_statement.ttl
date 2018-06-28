@@ -3,7 +3,7 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-<#cat> rdfs:type rdfs:Class ;
+<#cat> rdf:type rdfs:Class ;
    	rdfs:label "Cat" .
 
 <#character> rdf:type rdfs:Class ;
@@ -12,7 +12,7 @@
 <#malicious> rdf:type <#character> ;
     rdfs:label "malicious" .
 
-<#has-character> rdf:type rdfs:Property ;
+<#has-character> rdf:type rdf:Property ;
     rdfs:domain <#cat> ;
     rdfs:range <#character> ;
     rdfs:label "Has Character" .

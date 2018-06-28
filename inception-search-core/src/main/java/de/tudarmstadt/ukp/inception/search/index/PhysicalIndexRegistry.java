@@ -17,20 +17,13 @@
  */
 package de.tudarmstadt.ukp.inception.search.index;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import java.util.List;
 
-public interface IndexFactory
+public interface PhysicalIndexRegistry
 {
-    /**
-     * @return get the bean name.
-     */
-    String getBeanName();
+    List<PhysicalIndexFactory> getIndexFactories();
 
-    String getDisplayName();
+    PhysicalIndexFactory getIndexFactory(String aId);
 
-    Index getNewIndex(Project aProject, AnnotationSchemaService aAnnotationSchemaService,
-            DocumentService aDocumentService, ProjectService aProjectService, String aDir);
+    PhysicalIndexFactory getDefaultIndexFactory();
 }

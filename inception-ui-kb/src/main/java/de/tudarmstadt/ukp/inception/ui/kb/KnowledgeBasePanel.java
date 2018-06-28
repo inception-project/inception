@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.ui.kb;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.wicket.Component;
 import org.apache.wicket.feedback.IFeedback;
@@ -188,8 +189,18 @@ public class KnowledgeBasePanel
         else {
             // TODO: Fix this Optional get() to actual checking
             try {
-                KBConcept selectedConcept = kbService.readConcept(kbModel.getObject(),
-                        selectedConceptHandle.getObject().getIdentifier()).get();
+                Optional<KBConcept> concept = kbService.readConcept(kbModel.getObject(),
+                        selectedConceptHandle.getObject().getIdentifier());
+                KBConcept selectedConcept;
+                if (concept.isPresent()) {
+                    selectedConcept = kbService.readConcept(kbModel.getObject(),
+                            selectedConceptHandle.getObject().getIdentifier()).get();
+                }
+                else {
+                    selectedConcept = new KBConcept();
+                    selectedConcept
+                            .setIdentifier(selectedConceptHandle.getObject().getIdentifier());
+                }
                 replacementPanel = new ConceptInstancePanel(DETAILS_MARKUP_ID, kbModel,
                         selectedConceptHandle, Model.of(selectedConcept));
             }

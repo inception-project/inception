@@ -52,7 +52,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.TokenObject;
 
 /**
  * Render spans.
@@ -118,7 +117,7 @@ public class RecommendationSpanRenderer
             // For recommendations with the same label by the same classifier,
             // show only the confidence of the highest one
             for (AnnotationObject ao: token) {
-                boolean hasNoAnnotation = ao.getAnnotation() == null;
+                boolean hasNoAnnotation = ao.getLabel() == null;
                 boolean isOverlappingForFeature = isOverlappingForFeature(
                     vspansWithoutRecommendations, ao.getOffset(), windowBegin, ao.getFeature());
                 boolean isRejected = isRejected(recordedAnnotations, ao);
@@ -127,21 +126,21 @@ public class RecommendationSpanRenderer
                     continue;
                 }
 
-                if (!labelMap.containsKey(ao.getAnnotation())
-                        || !labelMap.get(ao.getAnnotation())
+                if (!labelMap.containsKey(ao.getLabel())
+                        || !labelMap.get(ao.getLabel())
                                 .containsKey(ao.getRecommenderId())
-                        || labelMap.get(ao.getAnnotation()).get(ao.getRecommenderId())
+                        || labelMap.get(ao.getLabel()).get(ao.getRecommenderId())
                                 .getConfidence() < ao.getConfidence()) {
 
                     Map<Long, AnnotationObject> confidencePerClassifier;
-                    if (labelMap.get(ao.getAnnotation()) == null) {
+                    if (labelMap.get(ao.getLabel()) == null) {
                         confidencePerClassifier = new HashMap<>();
                     } else {
-                        confidencePerClassifier = labelMap.get(ao.getAnnotation());
+                        confidencePerClassifier = labelMap.get(ao.getLabel());
                     }
 
                     confidencePerClassifier.put(ao.getRecommenderId(), ao);
-                    labelMap.put(ao.getAnnotation(), confidencePerClassifier);
+                    labelMap.put(ao.getLabel(), confidencePerClassifier);
                 }
             }
             
@@ -171,8 +170,8 @@ public class RecommendationSpanRenderer
 
                 // Create VID using the recommendation with the lowest recommendationId
                 AnnotationObject prediction = token.stream()
-                        .filter(p -> p.getAnnotation().equals(label))
-                        .max(Comparator.comparingInt(TokenObject::getId)).orElse(null);
+                        .filter(p -> p.getLabel().equals(label))
+                        .max(Comparator.comparingInt(AnnotationObject::getId)).orElse(null);
 
                 if (prediction == null) {
                     continue;
@@ -193,7 +192,7 @@ public class RecommendationSpanRenderer
                             .getFeature(ao.getFeature(), layer);
                         // Retrieve the UI display label for the given feature value
                         String annotation = aFsRegistry.getFeatureSupport(feature)
-                            .renderFeatureValue(feature, ao.getAnnotation());
+                            .renderFeatureValue(feature, ao.getLabel());
 
                         Map<String, String> featureAnnotation = new HashMap<>();
                         featureAnnotation.put(ao.getFeature(), annotation);
@@ -205,14 +204,14 @@ public class RecommendationSpanRenderer
                         vdoc.add(v);
                         first = false;
                     }
-                    vdoc.add(new VComment(vid, VCommentType.INFO, ao.getClassifier()));
+                    vdoc.add(new VComment(vid, VCommentType.INFO, ao.getSource()));
                     if (ao.getConfidence() != -1) {
                         vdoc.add(new VComment(vid, VCommentType.INFO,
                             String.format("Confidence: %.2f", ao.getConfidence())));
                     }
-                    if (ao.getDescription() != null && !ao.getDescription().isEmpty()) {
+                    if (ao.getUiLabel() != null && !ao.getUiLabel().isEmpty()) {
                         vdoc.add(new VComment(vid, VCommentType.INFO,
-                            "Description: " + ao.getDescription()));
+                            "Description: " + ao.getUiLabel()));
                     }
                 }
             }
@@ -258,7 +257,7 @@ public class RecommendationSpanRenderer
         for (LearningRecord record : recordedRecommendations) {
             if (record.getOffsetCharacterBegin() == ao.getOffset().getBeginCharacter()
                     && record.getOffsetCharacterEnd() == ao.getOffset().getEndCharacter()
-                    && record.getAnnotation().equals(ao.getAnnotation())
+                    && record.getAnnotation().equals(ao.getLabel())
                     && record.getUserAction().equals(LearningRecordUserAction.REJECTED)) {
                 return true;
             }

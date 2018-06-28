@@ -52,7 +52,7 @@ public class NamedEntityTrainer
         Set<AnnotationObject> annotations = new HashSet<>();
         trainingDataIncrement.forEach(annotations::addAll);
         return annotations.stream()
-            .filter(a -> a.getAnnotation() != null)
+            .filter(a -> a.getLabel() != null)
             .filter(a -> a.getFeature().equals("value"))
             .collect(Collectors.toSet());
     }

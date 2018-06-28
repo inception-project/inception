@@ -17,13 +17,29 @@
  */
 package de.tudarmstadt.ukp.inception.search.index;
 
-import java.util.List;
+import org.springframework.beans.factory.BeanNameAware;
+import org.springframework.core.Ordered;
 
-public interface IndexRegistry
+public abstract class PhysicalIndexFactoryImplBase
+    implements BeanNameAware, Ordered, PhysicalIndexFactory
 {
-    List<IndexFactory> getIndexFactories();
+    private String beanName;
 
-    IndexFactory getIndexFactory(String aId);
+    @Override
+    public void setBeanName(String aName)
+    {
+        beanName = aName;
+    }
 
-    IndexFactory getDefaultIndexFactory();
+    @Override
+    public String getBeanName()
+    {
+        return beanName;
+    }
+
+    @Override
+    public int getOrder()
+    {
+        return Ordered.LOWEST_PRECEDENCE;
+    }
 }

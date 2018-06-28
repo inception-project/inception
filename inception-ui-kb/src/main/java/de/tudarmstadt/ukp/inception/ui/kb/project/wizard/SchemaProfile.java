@@ -26,27 +26,33 @@ import de.tudarmstadt.ukp.inception.kb.IriConstants;
 
 public enum SchemaProfile
 {
-    RDFSCHEMA(RDFS.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT),
+    RDFSCHEMA(RDFS.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT, RDFS.LABEL, RDF.PROPERTY),
 
     WIKIDATASCHEMA(IriConstants.WIKIDATA_CLASS, IriConstants.WIKIDATA_SUBCLASS,
-            IriConstants.WIKIDATA_TYPE, RDFS.COMMENT),
+            IriConstants.WIKIDATA_TYPE, RDFS.COMMENT, RDFS.LABEL,
+            IriConstants.WIKIDATA_PROPERTY_TYPE),
 
-    OWLSCHEMA(OWL.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT),
+    OWLSCHEMA(OWL.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT, RDFS.LABEL, RDF.PROPERTY),
 
-    CUSTOMSCHEMA(RDFS.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT);
+    CUSTOMSCHEMA(RDFS.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT, RDFS.LABEL, RDF.PROPERTY);
 
     private final IRI classIri;
     private final IRI subclassIri;
     private final IRI typeIri;
     private final IRI descriptionIri;
+    private final IRI labelIri;
+    private final IRI propertyTypeIri;
 
 
-    private SchemaProfile(IRI aClassIri, IRI aSubclassIri, IRI aTypeIri, IRI aDescriptionIri)
+    private SchemaProfile(IRI aClassIri, IRI aSubclassIri, IRI aTypeIri, IRI aDescriptionIri,
+            IRI aLabelIri, IRI aPropertyTypeIri)
     {
         classIri = aClassIri;
         subclassIri = aSubclassIri;
         typeIri = aTypeIri;
         descriptionIri = aDescriptionIri;
+        labelIri = aLabelIri;
+        propertyTypeIri = aPropertyTypeIri;
     }
 
     public IRI getClassIri()
@@ -68,4 +74,15 @@ public enum SchemaProfile
     {
         return descriptionIri;
     }
+
+    public IRI getLabelIri()
+    {
+        return labelIri;
+    }
+
+    public IRI getPropertyTypeIri()
+    {
+        return propertyTypeIri;
+    }
+    
 }

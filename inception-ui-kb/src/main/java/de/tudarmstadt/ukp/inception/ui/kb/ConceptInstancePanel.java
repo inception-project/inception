@@ -58,22 +58,31 @@ public class ConceptInstancePanel
     private IModel<KBHandle> selectedConceptHandle;
 
     private Component instanceInfoPanel;
+    private Component annotatedSearchPanel;
+    
 
     public ConceptInstancePanel(String aId, IModel<KnowledgeBase> aKbModel,
             IModel<KBHandle> selectedConceptHandle, IModel<KBConcept> selectedConceptModel)
     {
         super(aId, selectedConceptModel);
-
         setOutputMarkupId(true);
-
         kbModel = aKbModel;
         selectedInstanceHandle = Model.of();
         this.selectedConceptHandle = selectedConceptHandle;
-
         add(new ConceptInfoPanel("info", kbModel, selectedConceptHandle, selectedConceptModel));
         add(new InstanceListPanel("instances", kbModel, selectedConceptHandle,
                 selectedInstanceHandle));
-
+        if (selectedConceptHandle.getObject() != null) {
+            annotatedSearchPanel = new AnnotatedListIdentifiers("annotatedResultGroups", kbModel,
+                    selectedConceptHandle, selectedInstanceHandle);
+            add(annotatedSearchPanel);
+        }
+        else {
+            annotatedSearchPanel = new EmptyPanel("annotatedResultGroups")
+                    .setVisibilityAllowed(false);
+            add(annotatedSearchPanel);
+        }
+        
         instanceInfoPanel = new EmptyPanel(INSTANCE_INFO_MARKUP_ID).setVisibilityAllowed(false);
         add(instanceInfoPanel);
     }
@@ -115,6 +124,7 @@ public class ConceptInstancePanel
         // if the instance handle is not null, an existing instance was selected, otherwise it's a
         // deselection
         Component replacementPanel;
+        Component replacementSearch;
         if (selectedInstanceHandle.getObject() != null) {
             // load the full KBInstance and display its details in an InstanceInfoPanel
             String identifier = selectedInstanceHandle.getObject().getIdentifier();
@@ -125,9 +135,15 @@ public class ConceptInstancePanel
                             return new InstanceInfoPanel(INSTANCE_INFO_MARKUP_ID, kbModel,
                                     selectedInstanceHandle, model);
                         }).orElse(emptyPanel());
+                
+                replacementSearch = new AnnotatedListIdentifiers("annotatedResultGroups", 
+                        kbModel, selectedConceptHandle, selectedInstanceHandle);
+                
+                
             }
             catch (QueryEvaluationException e) {
                 replacementPanel = emptyPanel();
+                replacementSearch = emptyPanel();
                 error("Unable to read instance: " + e.getLocalizedMessage()); 
                 LOG.error("Unable to read instance.", e);
                 event.getTarget().addChildren(getPage(), IFeedback.class);
@@ -135,7 +151,9 @@ public class ConceptInstancePanel
         }
         else {
             replacementPanel = emptyPanel();
+            replacementSearch = emptyPanel();
         }
+        annotatedSearchPanel = annotatedSearchPanel.replaceWith(replacementSearch);
         instanceInfoPanel = instanceInfoPanel.replaceWith(replacementPanel);
         event.getTarget().add(this);
     }

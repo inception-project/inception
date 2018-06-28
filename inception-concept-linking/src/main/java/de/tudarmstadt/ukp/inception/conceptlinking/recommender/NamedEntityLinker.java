@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.uima.jcas.JCas;
 import org.slf4j.Logger;
@@ -131,7 +132,7 @@ public class NamedEntityLinker
     {
         List<List<List<AnnotationObject>>> result = new ArrayList<>();
 
-        inputData.parallelStream().forEach(sentence -> {
+        inputData.parallelStream().forEachOrdered(sentence -> {
             List<List<AnnotationObject>> annotatedSentence = new ArrayList<>();
             int sentenceIndex = 0;
             while (sentenceIndex < sentence.size() - 1) {
@@ -192,23 +193,19 @@ public class NamedEntityLinker
             }
         }
 
-        List<AnnotationObject> predictions = new ArrayList<>();
-
-        handles.stream()
+        return handles.stream()
             .limit(conf.getNumPredictions())
-            .forEach(h -> predictions.add(
-            new AnnotationObject(h.getIdentifier(), h.getDescription(), token, null, tokenId++,
-                feature, "NamedEntityLinker")));
-
-        return predictions;
-
+            .map(h -> new AnnotationObject(token, h.getIdentifier(), h.getDescription(), tokenId++,
+                feature, "NamedEntityLinker", conf.getRecommenderId()))
+            .collect(Collectors.toList());
     }
 
     private boolean isNamedEntity(TokenObject token)
     {
         return nerAnnotations.stream()
-            .map(TokenObject::getOffset)
-            .anyMatch(t -> t.equals(token.getOffset()));
+            .map(AnnotationObject::getTokenObject)
+            .anyMatch(t -> t.getOffset().equals(token.getOffset())
+                   && t.getDocumentURI().equals(token.getDocumentURI()));
     }
 
     private List<KBHandle> readCandidates(KnowledgeBase kb, TokenObject token) {

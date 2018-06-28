@@ -28,21 +28,21 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.search.ExecutionException;
 import de.tudarmstadt.ukp.inception.search.SearchResult;
 
-public interface Index
+public interface PhysicalIndex
 {
     public boolean connect(String aUrl, String aUser, String aPassword);
 
-    void createIndex();
+    void createPhysicalIndex();
 
-    void dropIndex() throws IOException;
+    void dropPhysicalIndex() throws IOException;
 
-    void openIndex();
+    void openPhysicalIndex();
 
-    void closeIndex();
+    void closePhysicalIndex();
 
-    boolean isIndexCreated();
+    boolean isCreated();
 
-    boolean isIndexOpen();
+    boolean isOpen();
 
     public List<SearchResult> executeQuery(User aUser, String aQuery, String aSortOrder,
             String... sResultField)

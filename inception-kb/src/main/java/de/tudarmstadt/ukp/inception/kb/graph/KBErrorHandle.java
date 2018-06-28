@@ -15,31 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.search.index;
+package de.tudarmstadt.ukp.inception.kb.graph;
 
-import org.springframework.beans.factory.BeanNameAware;
-import org.springframework.core.Ordered;
-
-public abstract class IndexFactoryImplBase
-    implements BeanNameAware, Ordered, IndexFactory
+public class KBErrorHandle
+    extends KBHandle
 {
-    private String beanName;
+    private static final long serialVersionUID = -8652032926731915418L;
 
-    @Override
-    public void setBeanName(String aName)
-    {
-        beanName = aName;
-    }
+    public static final String ERROR_ID = "<<<ERROR>>>";
 
-    @Override
-    public String getBeanName()
+    public KBErrorHandle(String aMessage, Throwable aException)
     {
-        return beanName;
-    }
-
-    @Override
-    public int getOrder()
-    {
-        return Ordered.LOWEST_PRECEDENCE;
+        super(ERROR_ID, "Error: " + aMessage, aMessage);
     }
 }

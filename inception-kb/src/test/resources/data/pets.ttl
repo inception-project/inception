@@ -7,11 +7,11 @@
     rdfs:label "Animal" .
 
 <#cat> rdf:type rdfs:Class ;
-	rdfs:subClassOf <#animal> ;
+    rdfs:subClassOf <#animal> ;
     rdfs:label "Cat" .
 
 <#dog> rdf:type rdfs:Class ;
-	rdfs:subClassOf <#animal> ;
+    rdfs:subClassOf <#animal> ;
     rdfs:label "Dog" .
 
 <#character> rdf:type rdfs:Class ;
@@ -26,22 +26,22 @@
 <#wild> rdf:type <#character> ;
     rdfs:label "wild" .
 
-<#has-character> rdf:type rdfs:Property ;
+<#has-character> rdf:type rdf:Property ;
     rdfs:domain <#animal> ;
     rdfs:range <#character> ;
     rdfs:label "Has Character" .
 
-<#yob> rdf:type rdfs:Property ;
+<#yob> rdf:type rdf:Property ;
     rdfs:domain <#animal> ;
     rdfs:range xsd:gYear ;
     rdfs:label "Year Of Birth" .
 
-<#loves> rdf:type rdfs:Property ;
+<#loves> rdf:type rdf:Property ;
     rdfs:domain <#animal> ;
     rdfs:range <#animal> ;
     rdfs:label "Loves" .
 
-<#hates> rdf:type rdfs:Property ;
+<#hates> rdf:type rdf:Property ;
     rdfs:domain <#animal> ;
     rdfs:range <#animal> ;
     rdfs:label "Hates" .

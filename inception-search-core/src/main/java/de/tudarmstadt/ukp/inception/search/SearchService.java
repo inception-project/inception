@@ -22,6 +22,7 @@ import java.util.List;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.search.model.Index;
 
 public interface SearchService
 {
@@ -31,4 +32,9 @@ public interface SearchService
         throws IOException, ExecutionException;
 
     void reindex(Project aproject) throws IOException;
+
+    public Index getIndex(Project aProject);
+
+    public void updateIndex(Index aIndexObject);
+
 }

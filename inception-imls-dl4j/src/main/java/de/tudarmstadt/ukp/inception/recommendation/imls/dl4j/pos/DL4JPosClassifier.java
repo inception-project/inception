@@ -144,7 +144,8 @@ public class DL4JPosClassifier
             try {
                 evaluationData = 
                         vectorizer.vectorize(CasUtil.transformToAnnotationObjects
-                                (Arrays.asList(inputData.get(s)), "PosValue", "DL4JPosClassifier"), 
+                                (Arrays.asList(inputData.get(s)), "PosValue", "DL4JPosClassifier",
+                                    conf.getRecommenderId()),
                                 params.getWordVectors(),
                         params.getTruncateLength(), params.getMaxTagsetSize(), true);
             }
@@ -170,8 +171,8 @@ public class DL4JPosClassifier
             for (int i = 0; i < sentence.size(); i++) {
                 int tagIdx = argMax.getInt(i);
                 T t = sentence.get(i);
-                AnnotationObject ao = new AnnotationObject(tagset.get(tagIdx), t, sentence, 
-                        id, feature, "DL4JPosClassifier");
+                AnnotationObject ao = new AnnotationObject(tagset.get(tagIdx), t,
+                        id, feature, "DL4JPosClassifier", conf.getRecommenderId());
                 List<AnnotationObject> word = new LinkedList<>();
                 word.add(ao);
                 generatedSentence.add(word);

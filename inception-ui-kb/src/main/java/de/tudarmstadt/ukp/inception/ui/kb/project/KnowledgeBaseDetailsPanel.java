@@ -46,8 +46,6 @@ import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.resource.IResourceStream;
-import org.eclipse.rdf4j.model.IRI;
-import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.repository.RepositoryException;
 import org.eclipse.rdf4j.repository.config.RepositoryConfigException;
 import org.eclipse.rdf4j.repository.config.RepositoryImplConfig;
@@ -64,7 +62,6 @@ import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxDownloadLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.TempFileResource;
 import de.tudarmstadt.ukp.inception.app.bootstrap.DisabledBootstrapCheckbox;
@@ -443,27 +440,6 @@ public class KnowledgeBaseDetailsPanel extends Panel {
             addDisabledUrlField(wmc, "url");
         }
 
-        private void addDisabledIriField(WebMarkupContainer wmc, String id, IModel<IRI> model)
-        {
-            TextField<IRI> textField = new RequiredTextField<IRI>(id, model)
-            {
-                private static final long serialVersionUID = 5886070596284072382L;
-
-                @Override
-                protected String getModelValue()
-                {
-                    return getModelObject().stringValue();
-                }
-
-                @Override
-                protected void onConfigure()
-                {
-                    setEnabled(false);
-                }
-            };
-            wmc.add(textField);
-        }
-
         private void addDisabledUrlField(WebMarkupContainer wmc, String id)
         {
             TextField<String> textField = new RequiredTextField<String>(id);
@@ -525,15 +501,6 @@ public class KnowledgeBaseDetailsPanel extends Panel {
         protected void setUpRemoteKnowledgeBaseComponents(WebMarkupContainer wmc) {
             // this text field allows for _editing_the location for remote repositories
             addUrlField(wmc, "url");
-        }
-
-        private void addIriField(WebMarkupContainer wmc, String id, IModel<IRI> model) {
-            IModel<String> adapter = new LambdaModelAdapter<String>(
-                () -> model.getObject().stringValue(),
-                str -> model.setObject(SimpleValueFactory.getInstance().createIRI(str)));
-            TextField<String> textField = new RequiredTextField<String>(id, adapter);
-            textField.add(Validators.IRI_VALIDATOR);
-            wmc.add(textField);
         }
 
         private void addUrlField(WebMarkupContainer wmc, String id)

@@ -31,6 +31,7 @@ import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
+import org.eclipse.rdf4j.model.vocabulary.SKOS;
 import org.eclipse.rdf4j.model.vocabulary.XMLSchema;
 
 public class IriConstants
@@ -65,6 +66,11 @@ public class IriConstants
      * https://www.wikidata.org/wiki/Property:P31
      */
     public static final IRI WIKIDATA_TYPE;
+    
+    /**
+     * https://www.wikidata.org/wiki/Q18616576
+     */
+    public static final IRI WIKIDATA_PROPERTY_TYPE;
 
     /**
      * http://www.schema.org/description
@@ -75,18 +81,23 @@ public class IriConstants
     public static final List<IRI> SUBCLASS_IRIS;
     public static final List<IRI> TYPE_IRIS;
     public static final List<IRI> DESCRIPTION_IRIS;
+    public static final List<IRI> LABEL_IRIS;
+    public static final List<IRI> PROPERTY_TYPE_IRIS;
 
     static {
         ValueFactory vf = SimpleValueFactory.getInstance();
-
+        
         WIKIDATA_CLASS = vf.createIRI(PREFIX_WIKIDATA_ENTITY, "Q35120");
         WIKIDATA_SUBCLASS = vf.createIRI(PREFIX_WIKIDATA_DIRECT, "P279");
         WIKIDATA_TYPE = vf.createIRI(PREFIX_WIKIDATA_DIRECT, "P31");
+        WIKIDATA_PROPERTY_TYPE =  vf.createIRI(PREFIX_WIKIDATA_ENTITY, "Q18616576");
         SCHEMA_DESCRIPTION = vf.createIRI(PREFIX_SCHEMA, "description");
 
-        CLASS_IRIS = asList(RDFS.CLASS, OWL.CLASS, WIKIDATA_CLASS);
-        SUBCLASS_IRIS = asList(RDFS.SUBCLASSOF, WIKIDATA_SUBCLASS);
+        CLASS_IRIS = asList(RDFS.CLASS, OWL.CLASS, WIKIDATA_CLASS, SKOS.CONCEPT);
+        SUBCLASS_IRIS = asList(RDFS.SUBCLASSOF, WIKIDATA_SUBCLASS, SKOS.BROADER);
         TYPE_IRIS = asList(RDF.TYPE, WIKIDATA_TYPE);
         DESCRIPTION_IRIS = asList(RDFS.COMMENT, SCHEMA_DESCRIPTION);
+        LABEL_IRIS = asList(RDFS.LABEL);
+        PROPERTY_TYPE_IRIS = asList(RDF.PROPERTY, WIKIDATA_PROPERTY_TYPE);
     }
 }

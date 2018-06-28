@@ -25,12 +25,12 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.inception.search.index.Index;
-import de.tudarmstadt.ukp.inception.search.index.IndexFactoryImplBase;
+import de.tudarmstadt.ukp.inception.search.index.PhysicalIndex;
+import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexFactoryImplBase;
 
 @Component("mtasDocumentIndexFactory")
 public class MtasDocumentIndexFactory
-    extends IndexFactoryImplBase
+    extends PhysicalIndexFactoryImplBase
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
     
@@ -41,10 +41,11 @@ public class MtasDocumentIndexFactory
     }
 
     @Override
-    public Index getNewIndex(Project aProject, AnnotationSchemaService aAnnotationSchemaService,
-            DocumentService aDocumentService, ProjectService aProjectService, String aDir)
+    public PhysicalIndex getNewIndex(Project aProject,
+            AnnotationSchemaService aAnnotationSchemaService, DocumentService aDocumentService,
+            ProjectService aProjectService, String aDir)
     {
-        Index indexBase = null;
+        PhysicalIndex indexBase = null;
         try {
             indexBase = new MtasDocumentIndex(aProject, aAnnotationSchemaService, aDocumentService,
                     aProjectService, aDir);
