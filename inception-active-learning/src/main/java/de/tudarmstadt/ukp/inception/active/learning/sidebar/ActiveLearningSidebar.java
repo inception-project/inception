@@ -638,10 +638,9 @@ public class ActiveLearningSidebar
             highlightRecommendation(aTarget, record.getOffsetCharacterBegin(),
                     record.getOffsetCharacterEnd(), record.getTokenText(), record.getAnnotation());
         }
-        // if the suggestion doesn't exit -> if that suggestion is annotated,
-        // highlight the annotation.
-        // else, highlight the text.
+        // else if that suggestion is annotated, highlight the annotation.
         else if (!isAnnotatedInCas(record, aJcas)) {
+            // else, highlight the text.
             highlightTextAndDisplayMessage(aTarget, record);
         }
     }
