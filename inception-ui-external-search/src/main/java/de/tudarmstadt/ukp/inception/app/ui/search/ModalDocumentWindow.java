@@ -1,5 +1,5 @@
 /*
- * Copyright 2017
+ * Copyright 2018
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  *
@@ -15,23 +15,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.externalsearch;
 
-import java.util.List;
+package de.tudarmstadt.ukp.inception.app.ui.search;
 
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.panel.Panel;
 
-public interface ExternalSearchProvider
+public class ModalDocumentWindow
+    extends Panel
 {
-    public boolean connect(String aUrl, String aUser, String aPassword);
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
 
-    void disconnect();
-
-    public boolean isConnected();
-
-    public List<ExternalSearchResult> executeQuery(User aUser, String aQuery, String aSortOrder,
-            String... sResultField);
-
-    public ExternalSearchResult getDocumentById(String aId);
+    /**
+     * @param aId
+     */
+    public ModalDocumentWindow(String aId, String aText)
+    {
+        super(aId);
+        add(new Label("text", aText));
+    }
 
 }

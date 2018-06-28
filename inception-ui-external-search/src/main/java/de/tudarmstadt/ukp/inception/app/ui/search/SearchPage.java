@@ -17,9 +17,17 @@
  */
 package de.tudarmstadt.ukp.inception.app.ui.search;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.uima.UIMAException;
+import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.ajax.markup.html.AjaxLink;
+import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
@@ -40,8 +48,10 @@ import org.slf4j.LoggerFactory;
 import org.wicketstuff.annotation.mount.MountPath;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
@@ -59,9 +69,12 @@ public class SearchPage extends ApplicationPageBase
     private @SpringBean ProjectService projectService;
     private @SpringBean ExternalSearchService externalSearchService;
     private @SpringBean UserDao userRepository;
+    private @SpringBean ImportExportService importExportService;
 
     final WebMarkupContainer mainContainer = new WebMarkupContainer("mainContainer");
 
+    final String PLAIN_TEXT = "Plain text";
+    
     private ListView<ExternalSearchResult> resultList;
     private ArrayList<ExternalSearchResult> results = new ArrayList<ExternalSearchResult>();
 
@@ -86,6 +99,29 @@ public class SearchPage extends ApplicationPageBase
         else {
             currentProject = null;
         }
+
+        final ModalWindow modalDocumentWindow;
+
+        modalDocumentWindow = new ModalWindow("modalDocumentWindow");
+
+        add(modalDocumentWindow);
+
+        modalDocumentWindow.setCloseButtonCallback(new ModalWindow.CloseButtonCallback()
+        {
+            @Override
+            public boolean onCloseButtonClicked(AjaxRequestTarget target)
+            {
+                return true;
+            }
+        });
+
+        modalDocumentWindow.setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
+        {
+            @Override
+            public void onClose(AjaxRequestTarget target)
+            {
+            }
+        });
 
         projectsModel = new LoadableDetachableModel<ArrayList<Project>>()
         {
@@ -122,23 +158,38 @@ public class SearchPage extends ApplicationPageBase
             @Override
             protected void populateItem(ListItem<ExternalSearchResult> item)
             {
-//                AjaxLink<Void> documentId = new AjaxLink<Void>("documentId")
-//                {
-//                    /**
-//                     * 
-//                     */
-//                    private static final long serialVersionUID = 1L;
-//
-//                    @Override
-//                    public void onClick(AjaxRequestTarget target)
-//                    {
-//                        target.appendJavaScript(
-//                                "alert('" + item.getModel().getObject().getDocumentId() + "');");
-//                    }
-//                };
-//                item.add(documentId);
-                item.add(
-                        new Label("documentId", item.getModel().getObject().getDocumentId()));
+                AjaxLink<Void> documentId = new AjaxLink<Void>("documentId")
+                {
+                    /**
+                     * 
+                     */
+                    private static final long serialVersionUID = 1L;
+
+                    @Override
+                    public void onClick(AjaxRequestTarget target)
+                    {
+                        modalDocumentWindow.setContent(new ModalDocumentWindow(
+                                "content",
+                                item.getModel().getObject().getText()));
+                        modalDocumentWindow.setTitle(item.getModel().getObject().getDocumentId());
+                        modalDocumentWindow.show(target);
+
+                        if (documentService.existsSourceDocument(currentProject,
+                                item.getModel().getObject().getDocumentId())) {
+                            error("Document " + item.getModel().getObject().getDocumentId()
+                                    + " already uploaded ! Delete "
+                                    + "the document if you want to upload again");
+                        }
+                        else {
+                            importDocument(item.getModel().getObject().getDocumentId(),
+                                    item.getModel().getObject().getText());
+                        }
+
+                    }
+                };
+                documentId.add(new Label("text", item.getModel().getObject().getDocumentId()));
+
+                item.add(documentId);
 
                 item.add(
                         new Label("documentTitle", item.getModel().getObject().getDocumentTitle()));
@@ -149,8 +200,33 @@ public class SearchPage extends ApplicationPageBase
         mainContainer.add(searchForm);
 
         mainContainer.setOutputMarkupId(true);
+
     }
 
+    private void importDocument(String aFileName, String aText) 
+    {
+        InputStream stream = new ByteArrayInputStream(
+                aText.getBytes(StandardCharsets.UTF_8));
+        
+        SourceDocument document = new SourceDocument();
+        document.setName(aFileName);
+        document.setProject(currentProject);
+        document.setFormat(importExportService.getReadableFormatId(PLAIN_TEXT));
+        
+        try (InputStream is = stream) {
+            documentService.uploadSourceDocument(is, document);
+        }
+        catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        catch (UIMAException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+    }
+    
     private class SearchForm
         extends Form
     {

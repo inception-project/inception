@@ -33,8 +33,14 @@ public class ElasticSearchProvider
     implements ExternalSearchProvider
 {
 
-    private String server = "http://xxx";
-    private String connectionString = server + "/_search";
+    // private String serverUrl = "http://xxx";
+    private String serverUrl = "http://bart:9200";
+
+    //    private String indexName = "index";
+    private String indexName = "common-crawl-en";
+    
+    private String SEARCH = "_search";
+    private String objectType = "texts";
 
     @Override
     public boolean connect(String aUrl, String aUser, String aPassword)
@@ -76,8 +82,11 @@ public class ElasticSearchProvider
         // Set http entity
         HttpEntity<String> entity = new HttpEntity<String>(body, headers);
 
+        // Prepare search URL
+        String searchUrl = serverUrl + "/" + indexName + "/" + SEARCH;
+        
         // Send post query
-        queryResult = restTemplate.postForObject(connectionString, entity,
+        queryResult = restTemplate.postForObject(searchUrl, entity,
                 ElasticSearchResult.class);
 
         for (ElasticSearchHit hit : queryResult.getHits().getHits()) {
@@ -89,6 +98,23 @@ public class ElasticSearchProvider
         }
 
         return results;
+    }
+
+    public ExternalSearchResult getDocumentById(String aId)
+    {
+        RestTemplate restTemplate = new RestTemplate();
+
+        String getUrl = serverUrl + "/" + indexName + "/" + objectType + "/" + aId;
+
+        // Send get query
+        ElasticSearchHit document = restTemplate.getForObject(getUrl, ElasticSearchHit.class);
+
+        ExternalSearchResult result = new ExternalSearchResult();
+        
+        result.setDocumentId(aId);
+        result.setText(document.get_source().getDoc().getText());
+        
+        return result;
     }
 
 }
