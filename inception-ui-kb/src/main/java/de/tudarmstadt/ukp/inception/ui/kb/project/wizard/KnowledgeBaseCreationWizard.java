@@ -55,6 +55,7 @@ import org.apache.wicket.validation.ValidationError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
@@ -287,40 +288,38 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
             urlField.add(Validators.URL_VALIDATOR);
             add(urlField);
             
-            HashMap<String, KnowledgeBaseProfile> profiles = readKnowledgeBaseProfiles("knowledgebaseProfiles.yaml");
-            
+            Map<String, KnowledgeBaseProfile> profiles = readKnowledgeBaseProfiles("knowledgebaseProfiles.yaml");
             // for up to MAXIMUM_REMOTE_REPO_SUGGESTIONS of knowledge bases, create a link which
             // directly fills in the URL field (convenient for both developers AND users :))
-            List<String> suggestions = new ArrayList<>(profiles.keySet());
+            List<KnowledgeBaseProfile> suggestions = new ArrayList<>(profiles.values());
             suggestions = suggestions.subList(0,
                     Math.min(suggestions.size(), MAXIMUM_REMOTE_REPO_SUGGESTIONS));
-            add(new ListView<String>("suggestions", suggestions) {
+            add(new ListView<KnowledgeBaseProfile>("suggestions", suggestions) {
 
                 private static final long serialVersionUID = 4179629475064638272L;
 
                 @Override
-                protected void populateItem(ListItem<String> item) {
+                protected void populateItem(ListItem<KnowledgeBaseProfile> item) {
                     // add a link for one knowledge base with proper label
                     LambdaAjaxLink link = new LambdaAjaxLink("suggestionLink", t -> {
                         // set all the fields according to the chosen profile
-                        model.getObject()
-                                .setUrl(profiles.get(item.getModelObject()).getSparqlUrl());
-                        model.getObject().getKb().setClassIri(
-                                profiles.get(item.getModelObject()).getMapping().getClassIri());
+                        model.getObject().setUrl(item.getModelObject().getSparqlUrl());
+                        model.getObject().getKb()
+                                .setClassIri(item.getModelObject().getMapping().getClassIri());
                         model.getObject().getKb().setSubclassIri(
-                                profiles.get(item.getModelObject()).getMapping().getSubclassIri());
-                        model.getObject().getKb().setTypeIri(
-                                profiles.get(item.getModelObject()).getMapping().getTypeIri());
-                        model.getObject().getKb().setDescriptionIri(profiles
-                                .get(item.getModelObject()).getMapping().getDescriptionIri());
-                        model.getObject().getKb().setPropertyTypeIri(profiles
-                                .get(item.getModelObject()).getMapping().getPropertyTypeIri());
-                        model.getObject().getKb().setLabelIri(
-                                profiles.get(item.getModelObject()).getMapping().getLabelIri());
+                                item.getModelObject().getMapping().getSubclassIri());
+                        model.getObject().getKb()
+                                .setTypeIri(item.getModelObject().getMapping().getTypeIri());
+                        model.getObject().getKb().setDescriptionIri(
+                                item.getModelObject().getMapping().getDescriptionIri());
+                        model.getObject().getKb().setPropertyTypeIri(
+                                item.getModelObject().getMapping().getPropertyTypeIri());
+                        model.getObject().getKb()
+                                .setLabelIri(item.getModelObject().getMapping().getLabelIri());
 
                         t.add(urlField);
                     });
-                    link.add(new Label("suggestionLabel", item.getModelObject()));
+                    link.add(new Label("suggestionLabel", item.getModelObject().getName()));
                     item.add(link);
                 }
             });
@@ -348,29 +347,26 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
         /**
          * Reads the knowledgebase profiles from a file and stores them in a HashMap with the
          * name of the knowledgebase as key and the profile object as value
-         * @param yamlFilePath path to the YAML file that defines a list a profiles 
+         * @param yamlFilePath path to the YAML file that defines the profiles 
          * @return a HashMap with the knowledgebase profiles
          */
-        private HashMap<String, KnowledgeBaseProfile> readKnowledgeBaseProfiles(String yamlFilePath)
+        private Map<String, KnowledgeBaseProfile> readKnowledgeBaseProfiles(String yamlFilePath)
         {
             ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 
             String fileName = KnowledgeBaseProfile.class.getResource(yamlFilePath).getFile();
 
-            List<KnowledgeBaseProfile> profiles = new ArrayList<>();
+            Map<String, KnowledgeBaseProfile> profiles = new HashMap<>();
             try {
-                profiles = mapper.readValue(new File(fileName), mapper.getTypeFactory()
-                        .constructCollectionType(List.class, KnowledgeBaseProfile.class));
+                profiles = mapper.readValue(new File(fileName),
+                        new TypeReference<HashMap<String, KnowledgeBaseProfile>>(){});
             }
             catch (IOException e) {
-                error("Unable to read knowledge base profiles");
+                error("Unable to read knowledge base profiles" + e.getMessage());
                 log.error("Unable to read knowledge base profiles", e);
             }
             
-            // store the profiles in a HashMap for easier lookup
-            HashMap<String, KnowledgeBaseProfile> profilesMap = new HashMap<>();
-            profiles.stream().forEach(x -> profilesMap.put(x.getName(), x));
-            return profilesMap;
+            return profiles;
         }
     }
 
