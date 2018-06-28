@@ -23,9 +23,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
-import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
-import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
-import de.tudarmstadt.ukp.inception.ui.kb.feature.FactLinkingService;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
@@ -136,7 +133,6 @@ public class ActiveLearningSidebar
     private @SpringBean FeatureSupportRegistry fsRegistry;
     private @SpringBean CasStorageService casStorageService;
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
-    private @SpringBean FactLinkingService factService;
 
     private IModel<AnnotationLayer> selectedLayer;
     private IModel<List<LearningRecord>> learningRecords;
@@ -268,7 +264,7 @@ public class ActiveLearningSidebar
 
             try {
                 // create AnnotationFeature and FeatureSupport
-                AnnotationFeature annotationFeature = annotationService
+                annotationFeature = annotationService
                     .getFeature(currentRecommendation.getFeature(), selectedLayer.getObject());
                 FeatureSupport featureSupport = featureSupportRegistry
                     .getFeatureSupport(annotationFeature);
@@ -396,21 +392,31 @@ public class ActiveLearningSidebar
         recommendationForm.add(LambdaBehavior.onConfigure(component -> component.setVisible
             (sessionActive && hasUnseenRecommendation)));
         recommendationForm.setOutputMarkupPlaceholderTag(true);
-        
+
         recommendationForm.add(createRecommendationCoveredTextLink());
-        recommendationForm.add(new Label(CID_RECOMMENDED_PREDITION, LambdaModel.of(() -> 
-                currentRecommendation != null ? currentRecommendation.getLabel() : null)));
-        recommendationForm.add(new Label(CID_RECOMMENDED_CONFIDENCE, LambdaModel.of(() -> 
+        recommendationForm.add(new Label(CID_RECOMMENDED_PREDITION, LambdaModel.of(() ->
+                currentRecommendation != null ? this.getRecommendationLabelValue() : null)));
+        recommendationForm.add(new Label(CID_RECOMMENDED_CONFIDENCE, LambdaModel.of(() ->
                 currentRecommendation != null ? currentRecommendation.getConfidence() : 0.0)));
-        recommendationForm.add(new Label(CID_RECOMMENDED_DIFFERENCE, LambdaModel.of(() -> 
+        recommendationForm.add(new Label(CID_RECOMMENDED_DIFFERENCE, LambdaModel.of(() ->
                 currentDifference != null ? currentDifference.getDifference() : 0.0)));
         recommendationForm.add(createFeatureEditor());
 
         recommendationForm.add(new LambdaAjaxButton<>(CID_ANNOTATE_BUTTON, this::actionAnnotate));
         recommendationForm.add(new LambdaAjaxLink(CID_SKIP_BUTTON, this::actionSkip));
         recommendationForm.add(new LambdaAjaxLink(CID_REJECT_BUTTON, this::actionReject));
-        
+
         return recommendationForm;
+    }
+
+    private String getRecommendationLabelValue()
+    {
+        annotationFeature = annotationService
+            .getFeature(currentRecommendation.getFeature(), selectedLayer.getObject());
+        FeatureSupport featureSupport = featureSupportRegistry.getFeatureSupport(annotationFeature);
+        String labelValue = featureSupport
+            .renderFeatureValue(annotationFeature, currentRecommendation.getLabel());
+        return labelValue;
     }
 
     private LambdaAjaxLink createRecommendationCoveredTextLink()
@@ -450,9 +456,6 @@ public class ActiveLearningSidebar
         editor = featureSupport
             .createEditor("editor", mainContainer, this.getActionHandler(), this.getModel(),
                 aFeatureStateModel);
-        //            editor.add(LambdaBehavior.onConfigure(
-        //                component -> component.setVisible(sessionActive &&
-        // hasUnseenRecommendation)));
         return editor;
     }
 
@@ -508,11 +511,8 @@ public class ActiveLearningSidebar
     {
         aTarget.add(mainContainer);
 
-        // Create AnnotationFeature and FeatureSupport
-        AnnotationFeature annotationFeature = annotationService
-            .getFeature(currentRecommendation.getFeature(), selectedLayer.getObject());
-        FeatureSupport featureSupport = featureSupportRegistry
-            .getFeatureSupport(annotationFeature);
+        // Create FeatureSupport
+        FeatureSupport featureSupport = featureSupportRegistry.getFeatureSupport(annotationFeature);
         // Load CAS in which to create the annotation
         AnnotatorState state = ActiveLearningSidebar.this.getModelObject();
         SourceDocument sourceDoc = documentService
@@ -521,8 +521,8 @@ public class ActiveLearningSidebar
             .createOrGetAnnotationDocument(sourceDoc, state.getUser());
         JCas jCas = documentService.readAnnotationCas(annoDoc);
 
-        String selectedValue = (String) featureSupport.unwrapFeatureValue(annotationFeature, jCas.getCas()
-            , featureState.value);
+        String selectedValue = (String) featureSupport
+            .unwrapFeatureValue(annotationFeature, jCas.getCas(), featureState.value);
         if (selectedValue.equals(currentRecommendation.getLabel())) {
             writeLearningRecordInDatabaseAndEventLog(LearningRecordUserAction.ACCEPTED);
         }
@@ -535,10 +535,9 @@ public class ActiveLearningSidebar
 
         SpanAdapter adapter = (SpanAdapter) annotationService.getAdapter(selectedLayer.getObject());
         int id = adapter.add(state, jCas, begin, end);
-        annotationFeature = annotationService.getFeature(currentRecommendation.getFeature(),
-                selectedLayer.getObject());
-        recommendationService.setFeatureValue(annotationFeature, currentRecommendation.getLabel(),
-                adapter, state, jCas, id);
+        recommendationService
+            .setFeatureValue(annotationFeature, currentRecommendation.getLabel(), adapter, state,
+                jCas, id);
 
         // Save CAS after annotation has been created
         documentService.writeAnnotationCas(jCas, annoDoc, true);
@@ -605,15 +604,15 @@ public class ActiveLearningSidebar
                     .getFeatureSupport(recAnnotationFeature);
                 String recFeatureValue = featureSupport
                     .renderFeatureValue(recAnnotationFeature, rec.getAnnotation());
-                
-                LambdaAjaxLink textLink = new LambdaAjaxLink(CID_JUMP_TO_ANNOTATION,t -> 
+
+                LambdaAjaxLink textLink = new LambdaAjaxLink(CID_JUMP_TO_ANNOTATION,t ->
                         jumpAndHighlightFromLearningHistory(t, item.getModelObject()));
                 textLink.setBody(LambdaModel.of(rec::getTokenText));
                 item.add(textLink);
-                
+
                 item.add(new Label(CID_RECOMMENDED_ANNOTATION, recFeatureValue));
                 item.add(new Label(CID_USER_ACTION, rec.getUserAction()));
-                item.add(new LambdaAjaxLink(CID_REMOVE_RECORD, t -> 
+                item.add(new LambdaAjaxLink(CID_REMOVE_RECORD, t ->
                         actionRemoveHistoryItem(t, rec)));
             }
         };
