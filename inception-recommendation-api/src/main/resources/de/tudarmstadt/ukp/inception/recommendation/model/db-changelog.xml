@@ -318,4 +318,17 @@
     </preConditions>
     <dropColumn tableName="recommender" columnName="classifierId" />
   </changeSet>
+
+  <changeSet author="INCEpTION Team" id="20180628">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="recommender" columnName="skipEvaluation" />
+      </not>
+    </preConditions>
+    <addColumn tableName="recommender">
+      <column name="skipEvaluation" type="BOOLEAN" defaultValueBoolean="false">
+        <constraints nullable="false" />
+      </column>
+    </addColumn>
+  </changeSet>
 </databaseChangeLog>

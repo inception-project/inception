@@ -93,8 +93,8 @@ public class SelectionTask
                         continue;
                     }
                     
-                    if (recommender.isAlwaysSelected()) {
-                        log.info("[{}][{}]: Always active", user.getUsername(), ct.getId());
+                    if (recommender.isAlwaysSelected() || recommender.isSkipEvaluation()) {
+                        log.info("[{}][{}]: Skipping evaluation", user.getUsername(), ct.getId());
                         activeRecommenders.add(recommender);
                         continue;
                     }
