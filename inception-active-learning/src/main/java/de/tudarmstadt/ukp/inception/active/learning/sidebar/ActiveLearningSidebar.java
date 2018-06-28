@@ -600,11 +600,15 @@ public class ActiveLearningSidebar
             {
                 LearningRecord rec = item.getModelObject();
                 AnnotationFeature recAnnotationFeature = rec.getAnnotationFeature();
-                FeatureSupport featureSupport = featureSupportRegistry
-                    .getFeatureSupport(recAnnotationFeature);
-                String recFeatureValue = featureSupport
-                    .renderFeatureValue(recAnnotationFeature, rec.getAnnotation());
-
+                String recFeatureValue;
+                if (recAnnotationFeature != null) {
+                    FeatureSupport featureSupport = featureSupportRegistry.getFeatureSupport(recAnnotationFeature);
+                    recFeatureValue = featureSupport
+                        .renderFeatureValue(recAnnotationFeature, rec.getAnnotation());
+                }
+                else {
+                    recFeatureValue = rec.getAnnotation();
+                }
                 LambdaAjaxLink textLink = new LambdaAjaxLink(CID_JUMP_TO_ANNOTATION,t ->
                         jumpAndHighlightFromLearningHistory(t, item.getModelObject()));
                 textLink.setBody(LambdaModel.of(rec::getTokenText));
