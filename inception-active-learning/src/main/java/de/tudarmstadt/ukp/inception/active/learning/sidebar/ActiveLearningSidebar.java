@@ -473,6 +473,8 @@ public class ActiveLearningSidebar
 
         SourceDocument sourceDoc = documentService.getSourceDocument(state.getProject(),
             currentRecommendation.getDocumentName());
+        annotationFeature = annotationService
+            .getFeature(currentRecommendation.getFeature(), selectedLayer.getObject());
 
         LearningRecord record = new LearningRecord();
         record.setUser(state.getUser().getUsername());
@@ -511,7 +513,9 @@ public class ActiveLearningSidebar
     {
         aTarget.add(mainContainer);
 
-        // Create FeatureSupport
+        // Create AnnotationFeature and FeatureSupport
+        annotationFeature = annotationService
+            .getFeature(currentRecommendation.getFeature(), selectedLayer.getObject());
         FeatureSupport featureSupport = featureSupportRegistry.getFeatureSupport(annotationFeature);
         // Load CAS in which to create the annotation
         AnnotatorState state = ActiveLearningSidebar.this.getModelObject();
