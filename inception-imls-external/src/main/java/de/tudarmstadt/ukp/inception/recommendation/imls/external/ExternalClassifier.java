@@ -38,6 +38,8 @@ import org.apache.uima.jcas.JCas;
 import org.apache.uima.util.TypeSystemUtil;
 import org.apache.wicket.ajax.json.JSONException;
 import org.apache.wicket.ajax.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -50,9 +52,19 @@ public class ExternalClassifier
     extends Classifier<Object>
 {
 
-    public ExternalClassifier(ClassifierConfiguration<Object> conf)
+    private final Logger log = LoggerFactory.getLogger(getClass());
+    private CustomAnnotationObjectLoader loader;
+    private ExternalClassifierTraits traits;
+    private long recommenderId;
+
+    public ExternalClassifier(ClassifierConfiguration<Object> aConfiguration,
+                              CustomAnnotationObjectLoader aLoader,
+                              ExternalClassifierTraits aTraits, long aRecommenderId)
     {
-        super(conf);
+        super(aConfiguration);
+        loader = aLoader;
+        traits = aTraits;
+        recommenderId = aRecommenderId;
     }
 
     @Override
@@ -72,24 +84,20 @@ public class ExternalClassifier
     @Override
     public void reconfigure()
     {
-        // TODO Auto-generated method stub
-
+        // Nothing to do here
     }
 
     @Override
     public <T extends TokenObject> List<AnnotationObject> predict(JCas aJCas, AnnotationLayer layer)
     {
-        
         //serialize Typesystem
         ByteArrayOutputStream typeOS = new ByteArrayOutputStream();
         try {
             TypeSystemUtil.typeSystem2TypeSystemDescription(aJCas.getTypeSystem()).toXML(typeOS);
         }
-        catch (CASRuntimeException | SAXException | IOException e1) {
-            // TODO Auto-generated catch block
-            e1.printStackTrace();
+        catch (CASRuntimeException | SAXException | IOException e) {
+            log.error("Error while serializing type system!", e);
         }
-        
 
         //Serialize the JCas to XMI and sent it to the Python webservice. 
         ByteArrayOutputStream casOS = new ByteArrayOutputStream();
@@ -98,13 +106,14 @@ public class ExternalClassifier
             casOS.close();
         }
         catch (SAXException | IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            log.error("Error while serializing CAS!", e);
         }
         
         //Contruct Http Request
+        String remoteUrl = traits.getRemoteUrl();
+
         CloseableHttpClient httpclient = HttpClients.createDefault();
-        HttpPost httpPost = new HttpPost("http://localhost:12889/tag"); //TODO: pass URL in parameter
+        HttpPost httpPost = new HttpPost(remoteUrl);
         httpPost.addHeader("content-type", "application/json");
         httpPost.addHeader("charset", "utf-8");
         
@@ -112,38 +121,34 @@ public class ExternalClassifier
         //i.e. JSON with Base64 encoded bytestreams of Typesystem-XML and CAS-XMI
         try {
             String jsonString = new JSONObject()
-                    .put("CAS", new String(Base64.getEncoder().encode(casOS.toByteArray()), "utf-8"))
-                    .put("Typesystem", new String(Base64.getEncoder().encode(typeOS.toByteArray()), "utf-8"))
+                    .put("CAS", new String(Base64.getEncoder().encode(casOS.toByteArray()),
+                        "utf-8")).put("Typesystem",
+                    new String(Base64.getEncoder().encode(typeOS.toByteArray()), "utf-8"))
                     .put("Layer", new String(layer.getName()))
                     .toString();
             httpPost.setEntity(new StringEntity(jsonString, "utf-8"));
         }
-        catch (JSONException | UnsupportedEncodingException e1) {
-            // TODO Auto-generated catch block
-            e1.printStackTrace();
+        catch (JSONException | UnsupportedEncodingException e) {
+            log.error("Error while creating request!", e);
         }
         
         //Send Query and wait for the results
         try (CloseableHttpResponse response = httpclient.execute(httpPost);) {
             System.out.println(response.getStatusLine());
-            HttpEntity entity2 = response.getEntity();
+            HttpEntity entity = response.getEntity();
             
             //extract the results 
-            XmiCasDeserializer.deserialize(entity2.getContent(), aJCas.getCas());
+            XmiCasDeserializer.deserialize(entity.getContent(), aJCas.getCas());
 
             // ensure request is fully consumed
-            EntityUtils.consume(entity2);
+            EntityUtils.consume(entity);
         }
         catch (UnsupportedOperationException | SAXException | IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            log.error("Error while sending request!", e);
         }
-        
-        
-        //TODO: Pass FeatureName as Parameter
-        
-        CustomAnnotationObjectLoader loader = new CustomAnnotationObjectLoader();
-        List<List<AnnotationObject>> annotatedSentences = loader.loadAnnotationObjects(aJCas, "ArgF");
+
+        List<List<AnnotationObject>> annotatedSentences = loader.loadAnnotationObjects(aJCas,
+            recommenderId);
         List<List<List<AnnotationObject>>> wrappedSents = new LinkedList<>();
         for (List<AnnotationObject> sentence : annotatedSentences) {
             List<List<AnnotationObject>> sentenceList = new LinkedList<>();

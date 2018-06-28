@@ -19,28 +19,18 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.external;
 
 import de.tudarmstadt.ukp.inception.recommendation.api.ClassificationTool;
 
-
-//TODO: Assign meaningful ids
-
 public class ExternalClassificationTool
     extends ClassificationTool<Object>
 
 {
-    public ExternalClassificationTool()
-    {
-        super(-1, ExternalClassificationTool.class.getName(),
-                new ExternalTrainer(new BaseConfiguration()),
-                new ExternalClassifier(new BaseConfiguration()), 
-                new CustomAnnotationObjectLoader(),
-                true);
-    }
-
-    public ExternalClassificationTool(long recommenderId, String feature)
+    public ExternalClassificationTool(long recommenderId, String feature, String type,
+        ExternalClassifierTraits traits)
     {
         super(recommenderId, ExternalClassificationTool.class.getName(),
-                new ExternalTrainer(new BaseConfiguration()),
-                new ExternalClassifier(new BaseConfiguration(feature)),
-                new CustomAnnotationObjectLoader(), true);
+            new ExternalTrainer(new BaseConfiguration()),
+            new ExternalClassifier(new BaseConfiguration(feature),
+                new CustomAnnotationObjectLoader(feature, type), traits, recommenderId),
+            new CustomAnnotationObjectLoader(feature, type), true);
     }
 
 }

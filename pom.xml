@@ -59,10 +59,10 @@
     <maven>3.0.5</maven>
   </prerequisites>
   <properties>
-    <webanno.version>3.4.0-SNAPSHOT</webanno.version>
-    <dkpro.version>1.9.1</dkpro.version>
+    <webanno.version>3.5.0-SNAPSHOT</webanno.version>
+    <dkpro.version>1.9.2</dkpro.version>
     <spring.version>5.0.4.RELEASE </spring.version>
-    <spring.boot.version>1.5.10.RELEASE</spring.boot.version>
+    <spring.boot.version>1.5.13.RELEASE</spring.boot.version>
     <wicket.version>7.10.0</wicket.version>
     <wicket-jquery-ui.version>7.10.1</wicket-jquery-ui.version>
     <lucene.version>7.1.0</lucene.version>
@@ -70,12 +70,13 @@
     <dkpro.lab.version>0.14.0</dkpro.lab.version>
     <dl4j.version>0.9.1</dl4j.version>
     <rdf4j.version>2.2.4</rdf4j.version>
+    <mockito.version>2.18.3</mockito.version>
+    <assertj.version>3.10.0</assertj.version>
   </properties>
   <modules>
     <module>inception-build</module>
     <module>inception-app-webapp</module>
-    <module>inception-ui-search</module>
-    <module>inception-ui-external-search</module>
+    <module>inception-app-ui-search</module>
     <module>inception-search-core</module>
     <!-- >module>inception-search-mimir</module -->
     <module>inception-search-mtas</module>
@@ -93,12 +94,10 @@
     <!-- module>inception-imls-mira</module -->
     <module>inception-imls-opennlp</module>
     <module>inception-imls-stringmatch</module>
-    <module>inception-imls-dl4j</module>
+    <!-- module>inception-imls-dl4j</module -->
     <module>inception-imls-external</module>
     <module>inception-log</module>
     <module>inception-support</module>
-    <module>inception-external-search-core</module>
-    <module>inception-external-search-elastic</module>
     <!-- Documentation -->
     <module>inception-doc</module>
 
@@ -197,12 +196,7 @@
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>inception-ui-search</artifactId>
-        <version>0.4.0-SNAPSHOT</version>
-      </dependency>
-      <dependency>
-        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>inception-ui-external-search</artifactId>
+        <artifactId>inception-app-ui-search</artifactId>
         <version>0.4.0-SNAPSHOT</version>
       </dependency>
       <dependency>
@@ -296,10 +290,22 @@
         <version>0.4.0-SNAPSHOT</version>
       </dependency>
 
+      <!-- Testing -->
+
       <dependency>
         <groupId>junit</groupId>
         <artifactId>junit</artifactId>
         <version>4.12</version>
+      </dependency>
+      <dependency>
+        <groupId>org.mockito</groupId>
+        <artifactId>mockito-core</artifactId>
+        <version>${mockito.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.assertj</groupId>
+        <artifactId>assertj-core</artifactId>
+        <version>${assertj.version}</version>
       </dependency>
 
       <!-- Wicket jQuery -->
@@ -688,16 +694,6 @@
         <version>${rdf4j.version}</version>
         <type>pom</type>
         <scope>import</scope>
-      </dependency>
-      <dependency>
-      	<groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      	<artifactId>inception-external-search-core</artifactId>
-      	<version>0.4.0-SNAPSHOT</version>
-      </dependency>
-      <dependency>
-      	<groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      	<artifactId>inception-external-search-elastic</artifactId>
-      	<version>0.4.0-SNAPSHOT</version>
       </dependency>
     </dependencies>
   </dependencyManagement>

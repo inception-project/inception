@@ -20,54 +20,51 @@
 <html xmlns:wicket="http://wicket.apache.org">
 <body>
   <wicket:panel>
+    <form wicket:id="form" class="flex-content panel panel-default panel-flex">
+      <div class="panel-heading">
+        <wicket:container wicket:id="title"></wicket:container>
+      </div>
+
+      <div class="scrolling panel-body form-horizontal">
+        <div class="form-group">
+          <label class="col-sm-2 control-label">
+            <wicket:message key="kb.type" />
+          </label>
+          <div wicket:id="type" class="col-sm-10"></div>
+        </div>
+        
+        <div class="form-group">
+          <label class="col-sm-2 control-label">
+            <wicket:message key="kb.reification" />
+          </label>
+          <div class="col-sm-2">
+            <span class="form-control" wicket:id="reification" disabled="disabled"></span>
+          </div>
+        </div>
+
+        <hr />
+        <wicket:container wicket:id="content"></wicket:container>
+      </div>
+
+      <div class="panel-footer">
+        <div class="pull-left">
+          <a wicket:id="delete" class="btn btn-danger" href="#" role="button">
+            <!-- <i class="fa fa-trash"></i> --> <wicket:message
+              key="kb.delete" />
+          </a>
+        </div>
+        <div class="pull-right">
+          <a wicket:id="edit" class="btn btn-default" href="#" role="button">
+            <!-- <i class="fa fa-pencil"></i> --> <wicket:message
+              key="kb.edit" />
+          </a>
+          <input type="submit" wicket:id="save" class="btn btn-primary" wicket:message="value:kb.save" />
+          <input type="button" wicket:id="cancel" class="btn btn-default" wicket:message="value:kb.cancel" />
+        </div>
+      </div>
+    </form>
     <div wicket:id="confirmationDialog"></div>
-    <div class="panel panel-default panel-flex">
-      <form wicket:id="form" class="panel-flex panel-default">
-        <div class="panel-heading">
-          <wicket:container wicket:id="title"></wicket:container>
-        </div>
-
-        <div class="panel-body form-horizontal">
-          <div class="form-group">
-            <label class="col-sm-2 control-label">
-              <wicket:message key="kb.type" />
-            </label>
-            <div wicket:id="type" class="col-sm-10"></div>
-          </div>
-          
-          <div class="form-group">
-            <label class="col-sm-2 control-label">
-              <wicket:message key="kb.reification" />
-            </label>
-            <div class="col-sm-2">
-              <span class="form-control" wicket:id="reification" disabled="disabled"></span>
-            </div>
-          </div>
-
-          <hr />
-          <wicket:container wicket:id="content"></wicket:container>
-        </div>
-
-        <div class="panel-footer">
-          <div class="pull-left">
-            <a wicket:id="delete" class="btn btn-danger" href="#" role="button">
-              <!-- <i class="fa fa-trash"></i> --> <wicket:message
-                key="kb.delete" />
-            </a>
-          </div>
-          <div class="pull-right">
-            <a wicket:id="edit" class="btn btn-default" href="#" role="button">
-              <!-- <i class="fa fa-pencil"></i> --> <wicket:message
-                key="kb.edit" />
-            </a>
-            <input type="submit" wicket:id="save" class="btn btn-primary" wicket:message="value:kb.save" />
-            <input type="button" wicket:id="cancel" class="btn btn-default" wicket:message="value:kb.cancel" />
-          </div>
-        </div>
-      </form>
-    </div>
   </wicket:panel>
-  
   
   <wicket:fragment wicket:id="viewModeTitle">
     <h3 wicket:id="name" class="panel-title"></h3>
@@ -110,47 +107,8 @@
       </div>
     </wicket:container>
     <wicket:container wicket:id="common-content">
-      <div class="form-group row">
-        <label class="col-sm-2 control-label">
-          <wicket:message key="kb.iri" />
-        </label>
-        <div class="col-sm-10">
-          <div class="form-group row">
-            <span class="col-sm-2 control-label">
-              <wicket:message key="kb.iri.classIri" />
-            </span>
-            <div class="col-sm-10">
-              <input type="text" wicket:id="classIri" class="form-control" />
-            </div>
-          </div>
-          <div class="form-group row">
-            <span class="col-sm-2 control-label">
-              <wicket:message key="kb.iri.subclassIri" />
-            </span>
-            <div class="col-sm-10">
-              <input type="text" wicket:id="subclassIri" class="form-control" />
-            </div>
-          </div>
-          <div class="form-group row">
-            <span class="col-sm-2 control-label">
-              <wicket:message key="kb.iri.typeIri" />
-            </span>
-            <div class="col-sm-10">
-              <input type="text" wicket:id="typeIri" class="form-control" />
-            </div>            
-          </div>
-          <div class="form-group row">
-            <span class="col-sm-2 control-label">
-              <wicket:message key="kb.iri.descriptionIri" />
-            </span>
-            <div class="col-sm-10">
-              <input type="text" wicket:id="descriptionIri" class="form-control" />
-            </div>
-          </div>
-        </div>        
-      </div>
       <div class="form-group">
-        <div class="col-sm-offset-4 col-sm-8">
+        <div class="col-sm-offset-2 col-sm-10">
           <div class="checkbox">
             <label wicket:for="enabled">
               <input wicket:id="enabled" type="checkbox" /> <wicket:label key="enabled" />
@@ -163,6 +121,14 @@
             </label>
           </div>
         </div>
+      </div>
+      <div class="form-group row">
+        <label class="col-sm-2 control-label">
+          <wicket:message key="kb.iri" />
+        </label>
+        <div class="col-sm-10">
+          <span wicket:id="iriPanel"></span>
+        </div>        
       </div>
     </wicket:container>
   </wicket:fragment>
@@ -222,47 +188,8 @@
       </div>
     </wicket:container>
     <wicket:container wicket:id="common-content">
-      <div class="form-group row">
-        <label class="col-sm-2 control-label">
-          <wicket:message key="kb.iri" />
-        </label>
-        <div class="col-sm-10">
-          <div class="form-group row">
-            <span class="col-sm-2 control-label">
-              <wicket:message key="kb.iri.classIri" />
-            </span>
-            <div class="col-sm-10">
-              <input type="text" wicket:id="classIri" class="form-control" />
-            </div>
-          </div>
-          <div class="form-group row">
-            <span class="col-sm-2 control-label">
-              <wicket:message key="kb.iri.subclassIri" />
-            </span>
-            <div class="col-sm-10">
-              <input type="text" wicket:id="subclassIri" class="form-control" />
-            </div>
-          </div>
-          <div class="form-group row">
-            <span class="col-sm-2 control-label">
-              <wicket:message key="kb.iri.typeIri" />
-            </span>
-            <div class="col-sm-10">
-              <input type="text" wicket:id="typeIri" class="form-control" />
-            </div>            
-          </div>
-          <div class="form-group row">
-            <span class="col-sm-2 control-label">
-              <wicket:message key="kb.iri.descriptionIri" />
-            </span>
-            <div class="col-sm-10">
-              <input type="text" wicket:id="descriptionIri" class="form-control" />
-            </div>
-          </div>
-        </div>
-      </div>
       <div class="form-group">
-        <div class="col-sm-offset-4 col-sm-8">
+        <div class="col-sm-offset-2 col-sm-10">
           <div class="checkbox">
             <label wicket:for="enabled">
               <input wicket:id="enabled" type="checkbox" /> <wicket:label key="enabled" />
@@ -274,6 +201,14 @@
                 <wicket:label key="supportConceptLinking" />
             </label>
           </div>
+        </div>
+      </div>
+      <div class="form-group row">
+        <label class="col-sm-2 control-label">
+          <wicket:message key="kb.iri" />
+        </label>
+        <div class="col-sm-10">
+          <span wicket:id="iriPanel"></span>    
         </div>
       </div>
     </wicket:container>

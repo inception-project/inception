@@ -7,25 +7,25 @@
 	rdfs:label "Animal" .
 
 <#classis> rdf:type rdfs:Class ;
-	rdfs:label "Biological class" .
+    rdfs:label "Biological class" .
 
 <#mammalia> rdf:type <#classis> ;
-	rdfs:label "Mammalia" .
+    rdfs:label "Mammalia" .
 
 <#reptilia> rdf:type <#classis> ;
-	rdfs:label "Reptilia" .
+    rdfs:label "Reptilia" .
 
-<#has-class> rdf:type rdfs:Property ;
-	rdfs:domain <#animal> ;
-	rdfs:range <#classis> ;
-	rdfs:label "Has biological class" .
+<#has-class> rdf:type rdf:Property ;
+    rdfs:domain <#animal> ;
+    rdfs:range <#classis> ;
+    rdfs:label "Has biological class" .
 
 <#manatee> rdf:type rdfs:Class ;
-	rdfs:subClassOf <#animal> ;
-	rdfs:label "Manatee" ;
+    rdfs:subClassOf <#animal> ;
+    rdfs:label "Manatee" ;
     <#has-class> <#mammalia> .
 
 <#turtle> rdf:type rdfs:Class ;
-	rdfs:subClassOf <#animal> ;
+    rdfs:subClassOf <#animal> ;
     rdfs:label "Turtle" ;
     <#has-class> <#reptilia> .

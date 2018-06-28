@@ -43,6 +43,7 @@ public class ClassifierConfiguration<T>
     private String language = "en";
     private File modelFile = new File("target/models", "model.bin");
     private String feature;
+    private long recommenderId;
 
     /**
      * The number of predictions that should be displayed
@@ -54,9 +55,10 @@ public class ClassifierConfiguration<T>
         
     }
     
-    public ClassifierConfiguration(String feature) 
+    public ClassifierConfiguration(String aFeature, long aRecommenderId)
     {
-        this.feature = feature;
+        feature = aFeature;
+        recommenderId = aRecommenderId;
     }
     
     public int getTrainingSetStartSize()
@@ -122,5 +124,15 @@ public class ClassifierConfiguration<T>
     public void setFeature(String feature)
     {
         this.feature = feature;
+    }
+
+    public long getRecommenderId()
+    {
+        return recommenderId;
+    }
+
+    public void setRecommenderId(long aRecommenderId)
+    {
+        recommenderId = aRecommenderId;
     }
 }

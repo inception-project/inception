@@ -2,7 +2,7 @@
  * Copyright 2017
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,141 +18,132 @@
 package de.tudarmstadt.ukp.inception.recommendation.api.model;
 
 import java.io.Serializable;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.Objects;
 
 public class AnnotationObject
-    extends TokenObject implements Serializable
+    implements Serializable
 {
-    private static final long serialVersionUID = -1145787227041121430L;
-    
-    private List<TokenObject> sentenceTokens;
-    private String annotation;
-    private String description;
-    private final String feature;
-    private final String classifier;
-    private final double confidence;
+    private static final long serialVersionUID = -1145787227041121442L;
+    private static final double DEFAULT_CONFIDENCE = 1.0;
+
+    private TokenObject token;
+    private int id;
+    private String label;
+    private String uiLabel;
+    private String feature;
+    private String source;
+    private double confidence;
     private long recommenderId;
-    
-    public <T extends TokenObject> AnnotationObject(String annotation, String description,
-        String documentURI, String documentName, String coveredText, Offset offset,
-        List<T> sentenceTokens, int id, String aFeature, String classifier, double confidence)
+
+    public AnnotationObject(TokenObject aToken, String aLabel, String aUiLabel, int aId,
+        String aFeature, String aSource, double aConfidence, long aRecommenderId)
     {
-        this.annotation = annotation;
-        this.description = description;
-        this.documentURI = documentURI;
-        this.documentName = documentName;
-        this.coveredText = coveredText;
-        this.offset = offset;
-        this.id = id;
-        this.feature = aFeature;
-        this.classifier = classifier;
-        this.confidence = confidence;
-        
-        // we have to strip the tokenObject out of the given object to ensure equality
-        this.sentenceTokens = new LinkedList<>();
-        if (sentenceTokens == null) {
-            return;
-        }
-        for (int i = 0; i < sentenceTokens.size(); i++) {
-            T t = sentenceTokens.get(i);
-            this.sentenceTokens.add(new TokenObject(t.getOffset(), t.getCoveredText(), 
-                t.getDocumentURI(),  t.getDocumentName(), i));
-        }
+        token = aToken;
+        label = aLabel;
+        uiLabel = aUiLabel;
+        id = aId;
+        feature = aFeature;
+        source = aSource;
+        confidence = aConfidence;
+        recommenderId = aRecommenderId;
     }
 
-    public <T extends TokenObject> AnnotationObject(String annotation, String documentURI,
-        String documentName, String coveredText, Offset offset, List<T> sentenceTokens,
-        int id, String aFeature, String classifier, double confidence)
+    /**
+     * Creates an AnnotationObject with default confidence
+     */
+    public AnnotationObject(TokenObject aToken, String aLabel, String aUiLabel, int aId,
+                            String aFeature, String aSource, long aRecommenderId)
     {
-        this(annotation, null, documentURI, documentName, coveredText, offset, sentenceTokens, id,
-            aFeature, classifier, confidence);
+        this(aToken, aLabel, aUiLabel, aId, aFeature, aSource, DEFAULT_CONFIDENCE, aRecommenderId);
     }
 
-    public <T extends TokenObject> AnnotationObject(String annotation, T token,
-            List<T> sentenceTokens, int id, String aFeature, String classifier, double confidence)
+    /**
+     * Creates an AnnotationObject with null label and uiLabel
+     */
+    public AnnotationObject(TokenObject aToken, int aId, String aFeature,
+                            String aSource, double aConfidence, long aRecommenderId)
     {
-        this(annotation, token.getDocumentURI(), token.getDocumentName(), token.getCoveredText(), 
-        token.getOffset(), sentenceTokens, id, aFeature, classifier, confidence);
+        this(aToken, null, null, aId, aFeature, aSource, aConfidence, aRecommenderId);
     }
 
-    public <T extends TokenObject> AnnotationObject(String annotation, T token,
-            List<T> sentenceTokens, int id, String aFeature, String classifier)
+    /**
+     * Creates an AnnotationObject with default confidence and null label and uiLabel
+     */
+    public AnnotationObject(TokenObject aToken, int aId, String aFeature, String aSource,
+        long aRecommenderId)
     {
-        this(annotation, token.getDocumentURI(), token.getDocumentName(), token.getCoveredText(), 
-        token.getOffset(), sentenceTokens, id, aFeature, classifier, -1);
+        this(aToken, null, null, aId, aFeature, aSource, aRecommenderId);
     }
 
-    public <T extends TokenObject> AnnotationObject(String annotation, String description, T token,
-        List<T> sentenceTokens, int id, String aFeature, String classifier)
+    /**
+     * Creates an AnnotationObject with default confidence and null label, uiLabel and source
+     */
+    public AnnotationObject(TokenObject aToken, int aId, String aFeature, long aRecommenderId)
     {
-        this(annotation, description, token.getDocumentURI(), token.getDocumentName(),
-            token.getCoveredText(), token.getOffset(), sentenceTokens, id, aFeature, classifier,
-            -1);
-    }
-    
-    public AnnotationObject(AnnotationObject ao, int id, String aFeature, String classifier)
-    {
-        this(ao.getAnnotation(), ao.getDocumentURI(), ao.getDocumentName(), ao.getCoveredText(), 
-            ao.getOffset(), ao.getSentenceTokens(), id, aFeature, classifier, -1);
-    }
-    
-    public <T extends TokenObject> AnnotationObject(String annotation, T token,
-            List<T> sentenceTokens, int id, String aFeature)
-    {
-        this(annotation, token.getDocumentURI(), token.getDocumentName(), token.getCoveredText(),
-            token.getOffset(), sentenceTokens, id, aFeature, null, -1);
+        this(aToken, null, null, aId, aFeature, null, aRecommenderId);
     }
 
-    public AnnotationObject(AnnotationObject ao, int id, String aFeature)
+    /**
+     * Copy constructor.
+     *
+     * @param ao The annotationObject to copy
+     */
+    public AnnotationObject(AnnotationObject ao)
     {
-        this(ao.getAnnotation(), ao.getDocumentURI(), ao.getDocumentName(), ao.getCoveredText(), 
-            ao.getOffset(), ao.getSentenceTokens(), id, aFeature, null, -1);
+        this(ao.token, ao.label, ao.uiLabel, ao.id, ao.feature, ao.source, ao.confidence,
+            ao.recommenderId);
     }
 
-    public List<TokenObject> getSentenceTokens()
+    // Getter and setter
+
+    public Offset getOffset()
     {
-        return sentenceTokens;
+        return token.offset;
     }
 
-    public String[] getSentenceTokensAsStringArray()
+    public void setOffset(Offset aOffset)
     {
-        String[] sentenceStringTokens = new String[sentenceTokens.size()];
-        for (int i = 0; i < sentenceStringTokens.length; i++) {
-            sentenceStringTokens[i] = sentenceTokens.get(i).getCoveredText();
-        }
-        return sentenceStringTokens;
+        token.setOffset(aOffset);
     }
 
-    public String getAnnotation()
+    public String getCoveredText()
     {
-        return annotation;
+        return token.getCoveredText();
     }
 
-    public String getDescription()
+    public void setCoveredText(String aCoveredText)
     {
-        return description;
+        token.setCoveredText(aCoveredText);
     }
 
-    public void setDescription(String aDescription)
+    public int getId()
     {
-        this.description = aDescription;
+        return id;
     }
 
-    public double getConfidence()
+    public void setId(int aId)
     {
-        return confidence;
-    }
-    
-    @Override
-    public String getDocumentURI()
-    {
-        return documentURI;
+        id = aId;
     }
 
-    public String getClassifier()
+    public String getLabel()
     {
-        return classifier;
+        return label;
+    }
+
+    public void setLabel(String aLabel)
+    {
+        label = aLabel;
+    }
+
+    public String getUiLabel()
+    {
+        return uiLabel;
+    }
+
+    public void setUiLabel(String aUiLabel)
+    {
+        uiLabel = aUiLabel;
     }
 
     public String getFeature()
@@ -160,97 +151,82 @@ public class AnnotationObject
         return feature;
     }
 
-    public void setSentenceTokens(List<TokenObject> sentenceTokens)
+    public void setFeature(String aFeature)
     {
-        this.sentenceTokens = sentenceTokens;
+        feature = aFeature;
     }
 
-    public void setSentenceTokensFromCAS(
-            List<de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token> sentenceTokens,
-            String documentURI)
+    public String getSource()
     {
-        if (this.sentenceTokens == null) {
-            this.sentenceTokens = new LinkedList<>();
-        }
-        
-        for (int i = 0; i < sentenceTokens.size(); i++) {
-            de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token casToken = 
-                    sentenceTokens.get(i);
-
-            Offset offset = new Offset(casToken.getBegin(), casToken.getEnd(), i, i);
-
-            this.sentenceTokens
-                    .add(new TokenObject(offset, casToken.getCoveredText(), documentURI, 
-                        "N/A", id));
-        }
+        return source;
     }
 
-    public void setAnnotation(String tag)
+    public void setSource(String aSource)
     {
-        this.annotation = tag;
+        source = aSource;
     }
 
-    public void setId(int id) {
-        this.id = id;
-    }
-    
-    public void setRecommenderId(long recommendationId)
+    public double getConfidence()
     {
-        this.recommenderId = recommendationId;
-    }  
-    
-    public long getRecommenderId() {
+        return confidence;
+    }
+
+    public void setConfidence(double aConfidence)
+    {
+        confidence = aConfidence;
+    }
+
+    public long getRecommenderId()
+    {
         return recommenderId;
     }
-    
-    @Override
-    public String toString()
+
+    public void setRecommenderId(long aRecommenderId)
     {
-        return "Annotation: " + annotation + " - CoveredText: " + coveredText + " - Offset: "
-                + offset.toString() + " - DocumentURI: " + documentURI + " - DocumentName: " 
-                + documentName +  " - ID: " + id;
+        recommenderId = aRecommenderId;
+    }
+
+    public TokenObject getTokenObject()
+    {
+        return token;
+    }
+
+    public String getDocumentName()
+    {
+        return token.documentName;
+    }
+
+    @Override
+    public boolean equals(Object o)
+    {
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
+        AnnotationObject that = (AnnotationObject) o;
+        return id == that.id && recommenderId == that.recommenderId
+            && token.documentURI.equals(that.getDocumentName());
     }
 
     @Override
     public int hashCode()
     {
-        final int prime = 31;
-        int result = super.hashCode();
-        result = prime * result + ((annotation == null) ? 0 : annotation.hashCode());
-        result = prime * result + ((sentenceTokens == null) ? 0 : sentenceTokens.hashCode());
-        return result;
+        return Objects.hash(id, recommenderId, token.documentURI);
     }
 
     @Override
-    public boolean equals(Object obj)
-    {
-        if (this == obj) {
-            return true;
-        }
-        if (!super.equals(obj)) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        AnnotationObject other = (AnnotationObject) obj;
-        if (annotation == null) {
-            if (other.annotation != null) {
-                return false;
-            }
-        }
-        else if (!annotation.equals(other.annotation)) {
-            return false;
-        }
-        if (sentenceTokens == null) {
-            if (other.sentenceTokens != null) {
-                return false;
-            }
-        }
-        else if (!sentenceTokens.equals(other.sentenceTokens)) {
-            return false;
-        }
-        return true;
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("AnnotationObject{");
+        sb.append("token=").append(token);
+        sb.append(", id=").append(id);
+        sb.append(", label='").append(label).append('\'');
+        sb.append(", uiLabel='").append(uiLabel).append('\'');
+        sb.append(", feature='").append(feature).append('\'');
+        sb.append(", source='").append(source).append('\'');
+        sb.append(", confidence=").append(confidence);
+        sb.append(", recommenderId=").append(recommenderId);
+        sb.append(", documentUri=").append(token.documentURI);
+        sb.append('}');
+        return sb.toString();
     }
-
 }

@@ -110,7 +110,7 @@ public class ConceptListPanel extends Panel {
     private void actionPreferenceChanged(AjaxRequestTarget aTarget) {
         if (!preferences.getObject().showAllConcepts && selectedConcept.getObject() != null
                 && RdfUtils.isFromImplicitNamespace(selectedConcept.getObject())) {
-            send(getPage(), Broadcast.BREADTH, new AjaxConceptSelectionEvent(aTarget, null));
+            send(getPage(), Broadcast.BREADTH, new AjaxConceptSelectionEvent(aTarget, null, true));
         } else {
             aTarget.add(this);
         }

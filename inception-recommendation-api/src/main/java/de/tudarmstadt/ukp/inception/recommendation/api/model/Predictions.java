@@ -41,6 +41,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 /**
@@ -196,15 +197,16 @@ public class Predictions
     }
 
     /**
-     * Returns the first one that matches recommendationId and recommenderId
-     * @return
+     * Returns the first prediction that matches recommendationId and recommenderId
+     * in the given document.
      */
-    public AnnotationObject getPredictionByVID(VID aVID) 
+    public Optional<AnnotationObject> getPredictionByVID(SourceDocument document, VID aVID)
     {
         return predictions.values().stream()
+                .filter(f -> f.getDocumentName().equals(document.getName()))
                 .filter(f -> f.getId() == aVID.getSubId())
                 .filter(f -> f.getRecommenderId() == aVID.getId())
-                .collect(Collectors.toList()).get(0);
+                .findFirst();
     }
 
     /**
@@ -215,8 +217,8 @@ public class Predictions
         return predictions.values().stream()
                 .filter(f -> f.getOffset().getBeginCharacter() == aBegin
                         && f.getOffset().getEndCharacter() == aEnd)
-                .filter(f -> f.getAnnotation().equals(aLabel))
-                .max((p1, p2) -> Integer.compare(p1.getId(), p2.getId()));
+                .filter(f -> f.getLabel().equals(aLabel))
+                .max(Comparator.comparingInt(AnnotationObject::getId));
     }
     
     /**
@@ -227,7 +229,7 @@ public class Predictions
     public void putPredictions(long aLayerId, List<AnnotationObject> aPredictions)
     {
         aPredictions.forEach(prediction -> {
-            if (prediction.getAnnotation() != null) {
+            if (prediction.getLabel() != null) {
                 predictions.put(new ExtendedId(user.getUsername(), project.getId(),
                         prediction.getDocumentName(), aLayerId, prediction.getOffset(),
                         prediction.getRecommenderId(), prediction.getId(), -1), prediction);

@@ -86,8 +86,8 @@ public class StringMatchingNerClassifier
             List<List<AnnotationObject>> annotatedSentence = new ArrayList<>();
             for (T token : sentence) {
                 List<AnnotationObject> word = new ArrayList<>();
-                word.add(new AnnotationObject(null, token, sentence, tokenId, feature,
-                        "StringMatchingNerClassifier"));
+                word.add(new AnnotationObject(token, tokenId, feature,
+                        "StringMatchingNerClassifier", conf.getRecommenderId()));
                 tokenId++;
                 annotatedSentence.add(word);
             }
@@ -118,7 +118,7 @@ public class StringMatchingNerClassifier
 
                 if (hit) {
                     for (int j = 0; j < neTokens.size(); j++) {
-                        sentence.get(i + j).get(0).setAnnotation(entry.getValue());
+                        sentence.get(i + j).get(0).setLabel(entry.getValue());
                     }
                 }
             }

@@ -24,9 +24,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.ValueFactory;
-import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
@@ -157,14 +157,15 @@ public class KBConcept
         aConn.add(typeStmt);
 
         if (isNotBlank(name)) {
-            Statement nameStmt = vf.createStatement(subject, RDFS.LABEL, vf.createLiteral(name));
+            Statement nameStmt = vf.createStatement(subject, kb.getLabelIri(),
+                    vf.createLiteral(name));
             originalStatements.add(nameStmt);
             aConn.add(nameStmt);
         }
 
         if (isNotBlank(description)) {
             Statement descStmt = vf
-                .createStatement(subject, RDFS.COMMENT, vf.createLiteral(description));
+                .createStatement(subject, kb.getDescriptionIri(), vf.createLiteral(description));
             originalStatements.add(descStmt);
             aConn.add(descStmt);
         }
@@ -180,19 +181,18 @@ public class KBConcept
         aConn.add(abstractStmt);
         */
     }
-
-    public static KBConcept read(RepositoryConnection aConn, Statement aStmt)
+    
+    public static KBConcept read(RepositoryConnection aConn, Resource aSubject, KnowledgeBase kb)
     {
         KBConcept kbConcept = new KBConcept();
-        kbConcept.setIdentifier(aStmt.getSubject().stringValue());
-        kbConcept.originalStatements.add(aStmt);
+        kbConcept.setIdentifier(aSubject.stringValue());
 
-        readFirst(aConn, aStmt.getSubject(), RDFS.LABEL, null).ifPresent((stmt) -> {
+        readFirst(aConn, aSubject,  kb.getLabelIri(), null).ifPresent((stmt) -> {
             kbConcept.setName(stmt.getObject().stringValue());
             kbConcept.originalStatements.add(stmt);
         });
 
-        readFirst(aConn, aStmt.getSubject(), RDFS.COMMENT, null).ifPresent((stmt) -> {
+        readFirst(aConn, aSubject, kb.getDescriptionIri(), null).ifPresent((stmt) -> {
             kbConcept.setDescription(stmt.getObject().stringValue());
             kbConcept.originalStatements.add(stmt);
         });
@@ -202,7 +202,6 @@ public class KBConcept
             kbConcept.setClosed(((Literal) stmt.getObject()).booleanValue());
             kbConcept.originalStatements.add(stmt);
         });
-
         readFirst(aConn, aStmt.getSubject(), ABSTRACT, null).ifPresent((stmt) -> {
             kbConcept.setAbstract(((Literal) stmt.getObject()).booleanValue());
             kbConcept.originalStatements.add(stmt);

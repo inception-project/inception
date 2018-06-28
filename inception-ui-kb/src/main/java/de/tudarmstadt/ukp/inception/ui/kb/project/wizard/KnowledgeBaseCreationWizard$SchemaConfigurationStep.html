@@ -20,42 +20,7 @@
 <html xmlns:wicket="http://wicket.apache.org">
 <body>
   <wicket:panel>
-    <div class="form-group col-xs-12">
-      <label class="control-label">
-        <wicket:message key="kb.iri.iriSchema" />
-      </label>
-      <div wicket:id="iriSchema"></div>
-    </div>
-    
-    <div wicket:id="comboBoxWrapper">
-      <div class="form-group col-xs-12">
-        <label class="control-label">
-          <wicket:message key="kb.iri.classIri" />
-        </label>
-        <input type="text" wicket:id="classIri" class="form-control"/>
-      </div>
-    
-      <div class="form-group col-xs-12">
-        <label class="control-label">
-          <wicket:message key="kb.iri.subclassIri" />
-        </label>
-        <input type="text" wicket:id="subclassIri" class="form-control"/>
-      </div>
-    
-      <div class="form-group col-xs-12">
-        <label class="control-label">
-          <wicket:message key="kb.iri.typeIri" />
-        </label>
-        <input type="text" wicket:id="typeIri" class="form-control"/>
-      </div>
-    </div>
-
-    <div class="form-group col-xs-12">
-      <label class="control-label">
-        <wicket:message key="kb.iri.descriptionIri" />
-      </label>
-      <input type="text" wicket:id="descriptionIri" class="form-control"/>
-  </div>
+    <span wicket:id="iriPanel"></span>
   </wicket:panel>
 </body>
 </html>

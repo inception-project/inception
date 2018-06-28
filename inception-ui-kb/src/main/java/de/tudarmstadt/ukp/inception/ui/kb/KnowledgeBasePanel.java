@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.ui.kb;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.wicket.Component;
 import org.apache.wicket.feedback.IFeedback;
@@ -188,8 +189,18 @@ public class KnowledgeBasePanel
         else {
             // TODO: Fix this Optional get() to actual checking
             try {
-                KBConcept selectedConcept = kbService.readConcept(kbModel.getObject(),
-                        selectedConceptHandle.getObject().getIdentifier()).get();
+                Optional<KBConcept> concept = kbService.readConcept(kbModel.getObject(),
+                        selectedConceptHandle.getObject().getIdentifier());
+                KBConcept selectedConcept;
+                if (concept.isPresent()) {
+                    selectedConcept = kbService.readConcept(kbModel.getObject(),
+                            selectedConceptHandle.getObject().getIdentifier()).get();
+                }
+                else {
+                    selectedConcept = new KBConcept();
+                    selectedConcept
+                            .setIdentifier(selectedConceptHandle.getObject().getIdentifier());
+                }
                 replacementPanel = new ConceptInstancePanel(DETAILS_MARKUP_ID, kbModel,
                         selectedConceptHandle, Model.of(selectedConcept));
             }
@@ -201,8 +212,11 @@ public class KnowledgeBasePanel
             }
         }
         details = details.replaceWith(replacementPanel);
-
-        event.getTarget().add(conceptTreePanel, propertyListPanel, detailContainer);
+        
+        if (event.isRedrawConceptandPropertyListPanels()) {
+            event.getTarget().add(conceptTreePanel, propertyListPanel);
+        }
+        event.getTarget().add(detailContainer);
         event.getTarget().addChildren(getPage(), IFeedback.class);
     }
 
@@ -227,7 +241,7 @@ public class KnowledgeBasePanel
         // cancel selection of concept
         selectedConceptHandle.setObject(null);
         selectedPropertyHandle.setObject(event.getSelection());
-
+        
         // replace detail view: empty panel if a deselection took place (see lengthy explanation
         // above)
         Component replacementPanel;
@@ -251,7 +265,11 @@ public class KnowledgeBasePanel
             }
         }
         details = details.replaceWith(replacementPanel);
-        event.getTarget().add(conceptTreePanel, propertyListPanel, detailContainer);
+        
+        if (event.isRedrawConceptandPropertyListPanels()) {
+            event.getTarget().add(propertyListPanel, conceptTreePanel);
+        }
+        event.getTarget().add(detailContainer);
         event.getTarget().addChildren(getPage(), IFeedback.class);
     }
 
@@ -266,7 +284,6 @@ public class KnowledgeBasePanel
         Component replacement = new PropertyPanel(DETAILS_MARKUP_ID, kbModel,
                 selectedPropertyHandle, Model.of(new KBProperty()));
         details = details.replaceWith(replacement);
-
         event.getTarget().add(KnowledgeBasePanel.this);
     }
 }

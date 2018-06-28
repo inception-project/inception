@@ -61,6 +61,8 @@ public class TestFixtures
         kb.setClassIri(RDFS.CLASS);
         kb.setSubclassIri(RDFS.SUBCLASSOF);
         kb.setTypeIri(RDF.TYPE);
+        kb.setLabelIri(RDFS.LABEL);
+        kb.setPropertyTypeIri(RDF.PROPERTY);
         kb.setDescriptionIri(RDFS.COMMENT);
 
         kb.setReification(reification);
@@ -91,6 +93,14 @@ public class TestFixtures
         instance.setName("Instance name");
         instance.setDescription("Instance description");
         instance.setType(URI.create("https://test.schema.com/#type"));
+        instance.setLanguage("en");
+        return instance;
+    }
+
+    public KBInstance buildInstanceWithLanguage(String aLanguage)
+    {
+        KBInstance instance = buildInstance();
+        instance.setLanguage(aLanguage);
         return instance;
     }
 

@@ -25,7 +25,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxEventBehavior;
@@ -38,7 +37,6 @@ import org.apache.wicket.extensions.wizard.IWizardStep;
 import org.apache.wicket.extensions.wizard.dynamic.DynamicWizardModel;
 import org.apache.wicket.extensions.wizard.dynamic.DynamicWizardStep;
 import org.apache.wicket.extensions.wizard.dynamic.IDynamicWizardStep;
-import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.DropDownChoice;
@@ -51,34 +49,25 @@ import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.Model;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.validation.IValidator;
 import org.apache.wicket.validation.ValidationError;
-import org.eclipse.rdf4j.model.IRI;
-import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.googlecode.wicket.kendo.ui.form.combobox.ComboBox;
-
 import de.agilecoders.wicket.core.markup.html.bootstrap.button.Buttons;
 import de.agilecoders.wicket.core.markup.html.bootstrap.form.radio.BootstrapRadioGroup;
-import de.agilecoders.wicket.core.markup.html.bootstrap.form.radio.BootstrapRadioGroup.ISelectionChangeHandler;
 import de.agilecoders.wicket.core.markup.html.bootstrap.form.radio.EnumRadioChoiceRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.inception.app.bootstrap.BootstrapWizard;
 import de.tudarmstadt.ukp.inception.app.bootstrap.BootstrapWizardButtonBar;
-import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 import de.tudarmstadt.ukp.inception.kb.io.FileUploadHelper;
 import de.tudarmstadt.ukp.inception.kb.reification.Reification;
+import de.tudarmstadt.ukp.inception.ui.kb.project.KnowledgeBaseIriPanel;
 import de.tudarmstadt.ukp.inception.ui.kb.project.KnowledgeBaseListPanel;
 import de.tudarmstadt.ukp.inception.ui.kb.project.KnowledgeBaseWrapper;
 import de.tudarmstadt.ukp.inception.ui.kb.project.Validators;
@@ -110,12 +99,9 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
     private final IModel<Project> projectModel;
     private final DynamicWizardModel wizardModel;
     private final CompoundPropertyModel<KnowledgeBaseWrapper> wizardDataModel;
-    private final IModel<SchemaProfile> selectedSchemaProfile;
 
     public KnowledgeBaseCreationWizard(String id, IModel<Project> aProjectModel) {
         super(id);
-
-        selectedSchemaProfile = Model.of(SchemaProfile.RDFSCHEMA);
         
         uploadedFiles = new HashMap<>();
 
@@ -356,72 +342,9 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
             super(previousStep, "", "", aModel);
             model = aModel;
 
-            // RadioGroup to select the IriSchemaType
-            BootstrapRadioGroup<SchemaProfile> iriSchemaChoice = new BootstrapRadioGroup<>(
-                    "iriSchema", selectedSchemaProfile, Arrays.asList(SchemaProfile.values()),
-                    new EnumRadioChoiceRenderer<>(Buttons.Type.Default, this));
-            iriSchemaChoice.setOutputMarkupId(true);
-            
-            // The Kendo comboboxes do not redraw properly when added directly to an
-            // AjaxRequestTarget (for each combobox, a text field and a dropdown will be shown).
-            // Instead, wrap all of them in a WMC and redraw that. 
-            WebMarkupContainer comboBoxWrapper = new WebMarkupContainer("comboBoxWrapper");
-            comboBoxWrapper.setOutputMarkupId(true);
-            add(comboBoxWrapper);
-
-            // Add text fields for classIri, subclassIri, typeIri and descriptionIri
-            ComboBox<String> classField = buildComboBox("classIri", model.bind("kb.classIri"),
-                    IriConstants.CLASS_IRIS);
-            ComboBox<String> subclassField = buildComboBox("subclassIri",
-                    model.bind("kb.subclassIri"), IriConstants.SUBCLASS_IRIS);
-            ComboBox<String> typeField = buildComboBox("typeIri", model.bind("kb.typeIri"),
-                    IriConstants.TYPE_IRIS);
-            ComboBox<String> descriptionField = buildComboBox("descriptionIri",
-                model.bind("kb.descriptionIri"), IriConstants.DESCRIPTION_IRIS);
-            add(descriptionField);
-            comboBoxWrapper.add(classField, subclassField, typeField);
-
-            // OnChange update the model with corresponding iris
-            iriSchemaChoice.setChangeHandler(new ISelectionChangeHandler<SchemaProfile>()
-            {
-                private static final long serialVersionUID = 1653808650286121732L;
-
-                @Override
-                public void onSelectionChanged(AjaxRequestTarget target, SchemaProfile bean)
-                {
-                    classField.setModelObject(bean.getClassIri().stringValue());
-                    subclassField.setModelObject(bean.getSubclassIri().stringValue());
-                    typeField.setModelObject(bean.getTypeIri().stringValue());
-                    descriptionField.setModelObject(bean.getDescriptionIri().stringValue());
-                    target.add(comboBoxWrapper, iriSchemaChoice);
-                }
-            });
-
-            add(iriSchemaChoice);
+            add(new KnowledgeBaseIriPanel("iriPanel", model));
         }
 
-        private ComboBox<String> buildComboBox(String id, IModel<IRI> model, List<IRI> iris)
-        {
-            model.setObject(iris.get(0));
-
-            List<String> choices = iris.stream().map(IRI::stringValue).collect(Collectors.toList());
-
-            IModel<String> adapter = new LambdaModelAdapter<String>(
-                () -> model.getObject().stringValue(),
-                str -> model.setObject(SimpleValueFactory.getInstance().createIRI(str)));
-
-            ComboBox<String> comboBox = new ComboBox<String>(id, adapter, choices);
-            comboBox.add(LambdaBehavior.onConfigure(cb -> cb.setEnabled(
-                    SchemaProfile.CUSTOMSCHEMA.equals(selectedSchemaProfile.getObject()))));
-            comboBox.setOutputMarkupId(true);
-            comboBox.setRequired(true);
-            comboBox.add(Validators.IRI_VALIDATOR);
-            comboBox.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> {
-                // Do nothing just update the model values
-            }));
-            return comboBox;
-        }
-        
         @Override
         public void applyState()
         {   

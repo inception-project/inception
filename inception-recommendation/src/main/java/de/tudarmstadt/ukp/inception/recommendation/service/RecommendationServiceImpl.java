@@ -29,6 +29,7 @@ import javax.persistence.PersistenceContext;
 import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.multimap.HashSetValuedHashMap;
+import org.apache.uima.jcas.JCas;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,7 +42,9 @@ import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.DocumentOpenedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterAnnotationUpdateEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentResetEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -129,21 +132,21 @@ public class RecommendationServiceImpl
 
     @Override
     @Transactional
-    public void createOrUpdateRecommender(Recommender aSettings)
+    public void createOrUpdateRecommender(Recommender aRecommender)
     {
-        if (aSettings.getId() == null) {
-            entityManager.persist(aSettings);
+        if (aRecommender.getId() == null) {
+            entityManager.persist(aRecommender);
         }
         else {
-            entityManager.merge(aSettings);
+            entityManager.merge(aRecommender);
         }
     }
 
     @Override
     @Transactional
-    public void deleteRecommender(Recommender aSettings)
+    public void deleteRecommender(Recommender aRecommender)
     {
-        Recommender settings = aSettings;
+        Recommender settings = aRecommender;
 
         if (!entityManager.contains(settings)) {
             settings = entityManager.merge(settings);
@@ -314,6 +317,13 @@ public class RecommendationServiceImpl
                 state.clearIncomingPredictions(aProject);
             }
         }
+    }
+
+    @Override
+    public void setFeatureValue(AnnotationFeature aFeature, String aPredictedValue,
+        SpanAdapter aAdapter, AnnotatorState aState, JCas aJcas, int aAddress)
+    {
+        aAdapter.setFeatureValue(aState, aJcas, aAddress, aFeature, aPredictedValue);
     }
 
     /**

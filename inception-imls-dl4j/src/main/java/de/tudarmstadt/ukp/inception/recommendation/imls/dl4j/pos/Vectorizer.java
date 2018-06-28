@@ -93,7 +93,7 @@ public class Vectorizer
                 featuresMask.putScalar(new int[] { s, t }, 1.0);
 
                 if (includeLabels) {
-                    String pos = ao.getAnnotation();
+                    String pos = ao.getLabel();
                     if (!tagset.containsKey(pos)) {
                         tagset.put(pos, tagset.size());
                     }

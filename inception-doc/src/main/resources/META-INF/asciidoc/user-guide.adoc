@@ -76,6 +76,11 @@ include::{include-dir}menu.adoc[]
 <<<
 
 include::{include-dir}annotation.adoc[]
+include::{include-dir}annotation_concept-linking.adoc[]
+include::{include-dir}annotation_recommendation.adoc[]
+include::{include-dir}search-core.adoc[]
+include::{include-dir}search-mtas.adoc[]
+include::{include-dir}annotation_activeLearning.adoc[]
 
 <<<
 
@@ -88,6 +93,8 @@ include::{include-dir}monitoring.adoc[]
 <<<
 
 include::{include-dir}projects.adoc[]
+include::{include-dir}projects_concept-linking.adoc[]
+include::{include-dir}projects_recommendation.adoc[]
 
 <<<
 
@@ -108,3 +115,8 @@ include::{include-dir}webannotsv.adoc[]
 <<<
 
 include::{include-dir}troubleshooting.adoc[]
+
+<<<
+
+include::{include-dir}settings.adoc[]
+include::{include-dir}settings_concept-linking.adoc[]

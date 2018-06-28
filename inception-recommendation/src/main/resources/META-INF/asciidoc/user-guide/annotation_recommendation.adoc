@@ -1,0 +1,17 @@
+[[sect_annotation_recommendation]]
+=== Recommendation
+If you have configured one or more recommenders in the <<sect_projects_recommendation, Project Settings>>,
+you will see recommendations like in the screenshot below.
+Clicking *Reset* in the _Workflow_ area will remove all predictions,
+however it will also remove all hand-made annotations.
+Predictions made by a specific recommender can be deleted by removing
+the corresponding recommender in the <<sect_projects_recommendation, Project Settings>> .
+
+image::recommendation1.png[align="center"]
+
+==== Recommendation Sidebar
+Clicking the speech bubble on the left opens the recommendation sidebar.
+There you can set the maximum number of recommendations for each token.
+Don't forget to click on *Submit*.
+
+image::recommendation3.png[align="center"]

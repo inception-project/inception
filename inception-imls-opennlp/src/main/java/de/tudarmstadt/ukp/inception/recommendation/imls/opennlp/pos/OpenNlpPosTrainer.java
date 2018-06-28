@@ -85,7 +85,7 @@ public class OpenNlpPosTrainer
             for (int i = 0; i < sentence.size(); i++) {
                 AnnotationObject ao = sentence.get(i);
                 tokens[i] = ao.getCoveredText();
-                tags[i] = ao.getAnnotation();
+                tags[i] = ao.getLabel();
             }
 
             result.add(new POSSample(tokens, tags));

@@ -41,6 +41,7 @@ import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.eclipse.rdf4j.model.Value;
 import org.eclipse.rdf4j.query.BindingSet;
+import org.eclipse.rdf4j.query.QueryEvaluationException;
 import org.eclipse.rdf4j.query.TupleQuery;
 import org.eclipse.rdf4j.query.TupleQueryResult;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
@@ -89,10 +90,6 @@ public class ConceptLinkingService
         (value = "${repository.path}/resources/properties_with_labels.txt")
     private File propertyWithLabelsFile;
     private Map<String, Property> propertyWithLabels;
-
-    private final String[] PUNCTUATION_VALUES
-        = new String[] { "``", "''", "(", ")", ",", ".", ":", "--" };
-    private final Set<String> punctuations = new HashSet<>(Arrays.asList(PUNCTUATION_VALUES));
 
     private Set<String> typeBlacklist = new HashSet<>(Arrays
         .asList("commonsmedia", "external-id", "globe-coordinate", "math", "monolingualtext",
@@ -147,27 +144,28 @@ public class ConceptLinkingService
         }
 
         Set<CandidateEntity> candidates = new HashSet<>();
-        List<String> mentionArray = Arrays.asList(aMention.split(" "));
+        List<String> mentionList = Arrays.asList(aMention.split(" "));
 
-        mentionArray = mentionArray.stream().filter(m -> !punctuations.contains(m))
+        // Remove any character that is not a letter
+        mentionList = mentionList.stream().map(m -> m.replaceAll("[^\\p{L}^\\d]", ""))
             .collect(Collectors.toList());
 
         if (stopwords != null) {
-            if (mentionArray.stream().allMatch(m -> stopwords.contains(m))) {
+            if (stopwords.containsAll(mentionList)) {
                 logger.error("Mention [{}] consists of stopwords only - returning.", aMention);
                 return Collections.emptySet();
             }
         }
 
-        if (mentionArray.isEmpty()) {
+        String processedMention = String.join(" ", mentionList);
+        if (processedMention.isEmpty()) {
             logger.error("Mention is empty!");
             return Collections.emptySet();
         }
 
         try (RepositoryConnection conn = kbService.getConnection(aKB)) {
-            TupleQuery query = QueryUtil
-                .generateCandidateQuery(conn, mentionArray, properties.getCandidateQueryLimit(),
-                    aKB.getDescriptionIri());
+            TupleQuery query = QueryUtil.generateCandidateQuery(conn, processedMention,
+                properties.getCandidateQueryLimit(), aKB.getDescriptionIri());
             try (TupleQueryResult entityResult = query.evaluate()) {
                 while (entityResult.hasNext()) {
                     BindingSet solution = entityResult.next();
@@ -186,9 +184,12 @@ public class ConceptLinkingService
                 }
             }
         }
+        catch (QueryEvaluationException e) {
+            logger.error("Query evaluation was unsuccessful: ", e);
+        }
 
         if (candidates.isEmpty()) {
-            String[] split = aMention.split(" ");
+            String[] split = processedMention.split(" ");
             if (split.length > 1) {
                 for (String s : split) {
                     candidates.addAll(generateCandidates(aKB, s));
@@ -196,7 +197,7 @@ public class ConceptLinkingService
             }
         }
 
-        candidateCache.put(aMention, candidates);
+        candidateCache.put(processedMention, candidates);
         return candidates;
     }
 
