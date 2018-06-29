@@ -34,6 +34,7 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
@@ -50,18 +51,18 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.AnnotationSchemaServiceImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.BackupProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.CasStorageServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.DocumentServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.ImportExportServiceImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.RepositoryProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.export.ProjectExportServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.initializers.NamedEntityLayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.initializers.PartOfSpeechLayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.initializers.TokenLayerInitializer;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportService;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentServiceImpl;
-import de.tudarmstadt.ukp.clarin.webanno.export.ExportService;
-import de.tudarmstadt.ukp.clarin.webanno.export.ExportServiceImpl;
-import de.tudarmstadt.ukp.clarin.webanno.export.ImportService;
-import de.tudarmstadt.ukp.clarin.webanno.export.ImportServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.project.ProjectServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -77,10 +78,6 @@ import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchService;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchServiceImpl;
 import de.tudarmstadt.ukp.inception.search.SearchService;
 import de.tudarmstadt.ukp.inception.search.SearchServiceImpl;
-import de.tudarmstadt.ukp.inception.search.index.IndexFactory;
-import de.tudarmstadt.ukp.inception.search.index.IndexRegistry;
-import de.tudarmstadt.ukp.inception.search.index.IndexRegistryImpl;
-
 /**
  * The Class TestElasticSearch.
  */
@@ -146,6 +143,8 @@ public class ElasticSearchTest
     @Configuration
     public static class TestContext
     {
+        @Autowired ApplicationEventPublisher applicationEventPublisher;
+
         @Bean
         public ProjectService projectService()
         {
@@ -182,14 +181,6 @@ public class ElasticSearchTest
             return new TokenLayerInitializer(aAnnotationSchemaService);
         }
 
-        @Lazy
-        @Bean
-        public IndexRegistry indexRegistry(
-                @Lazy @Autowired(required = false) List<IndexFactory> aExtensions)
-        {
-            return new IndexRegistryImpl(aExtensions);
-        }
-
         @Bean
         public SearchService searchService()
         {
@@ -219,7 +210,9 @@ public class ElasticSearchTest
         @Bean
         public DocumentService documentService()
         {
-            return new DocumentServiceImpl();
+            return new DocumentServiceImpl(repositoryProperties(), userRepository(),
+                    casStorageService(), importExportService(), projectService(),
+                    applicationEventPublisher);
         }
 
         @Bean
@@ -237,13 +230,7 @@ public class ElasticSearchTest
         @Bean
         public CasStorageService casStorageService()
         {
-            return new CasStorageServiceImpl();
-        }
-
-        @Bean
-        public ImportExportService importExportService()
-        {
-            return new ImportExportServiceImpl();
+            return new CasStorageServiceImpl(null, repositoryProperties(), backupProperties());
         }
 
         @Bean
@@ -253,16 +240,29 @@ public class ElasticSearchTest
         }
 
         @Bean
-        public ImportService importService()
+        public ImportExportService importExportService()
         {
-            return new ImportServiceImpl();
+            return new ImportExportServiceImpl();
         }
 
         @Bean
-        public ExportService exportService()
+        public ProjectExportService exportService()
         {
-            return new ExportServiceImpl();
+            return new ProjectExportServiceImpl(null, projectService());
         }
+        
+        @Bean
+        public RepositoryProperties repositoryProperties()
+        {
+            return new RepositoryProperties();
+        }
+
+        @Bean
+        public BackupProperties backupProperties()
+        {
+            return new BackupProperties();
+        }
+
 
         @Bean
         public Properties formats()

@@ -76,10 +76,12 @@
   <modules>
     <module>inception-build</module>
     <module>inception-app-webapp</module>
-    <module>inception-app-ui-search</module>
+    <module>inception-ui-search</module>
     <module>inception-search-core</module>
     <!-- >module>inception-search-mimir</module -->
     <module>inception-search-mtas</module>
+    <module>inception-external-search-core</module>
+    <module>inception-ui-external-search-elastic</module>
     <module>inception-kb</module>
     <module>inception-ui-core</module>
     <module>inception-ui-kb</module>
@@ -196,7 +198,7 @@
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>inception-app-ui-search</artifactId>
+        <artifactId>inception-ui-search</artifactId>
         <version>0.4.0-SNAPSHOT</version>
       </dependency>
       <dependency>
@@ -610,6 +612,21 @@
         <artifactId>inception-search-mtas</artifactId>
         <version>0.4.0-SNAPSHOT</version>
       </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-external-search-core</artifactId>
+        <version>0.4.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-external-search-elastic</artifactId>
+        <version>0.4.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-ui-external-search</artifactId>
+        <version>0.4.0-SNAPSHOT</version>
+      </dependency>
       <!--  
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -617,6 +634,11 @@
         <version>0.4.0-SNAPSHOT</version>
       </dependency>
       -->
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-search-core</artifactId>
+        <version>0.4.0-SNAPSHOT</version>
+      </dependency>
 
       <!-- JAXB DEPENDENCIES -->
       <dependency>
