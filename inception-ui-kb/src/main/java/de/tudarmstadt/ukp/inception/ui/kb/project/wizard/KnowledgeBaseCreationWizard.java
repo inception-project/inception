@@ -55,10 +55,6 @@ import org.apache.wicket.validation.ValidationError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-
 import de.agilecoders.wicket.core.markup.html.bootstrap.button.Buttons;
 import de.agilecoders.wicket.core.markup.html.bootstrap.form.radio.BootstrapRadioGroup;
 import de.agilecoders.wicket.core.markup.html.bootstrap.form.radio.EnumRadioChoiceRenderer;
@@ -288,7 +284,14 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
             urlField.add(Validators.URL_VALIDATOR);
             add(urlField);
             
-            Map<String, KnowledgeBaseProfile> profiles = readKnowledgeBaseProfiles("knowledgebaseProfiles.yaml");
+            Map<String, KnowledgeBaseProfile> profiles = new HashMap<>();
+            try {
+                profiles = kbService.readKnowledgeBaseProfiles();
+            }
+            catch (IOException e) {
+                error("Unable to read knowledge base profiles" + e.getMessage());
+                log.error("Unable to read knowledge base profiles", e);
+            }
             // for up to MAXIMUM_REMOTE_REPO_SUGGESTIONS of knowledge bases, create a link which
             // directly fills in the URL field (convenient for both developers AND users :))
             List<KnowledgeBaseProfile> suggestions = new ArrayList<>(profiles.values());
@@ -342,31 +345,6 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
         @Override
         public IDynamicWizardStep next() {
             return new SchemaConfigurationStep(this, model);
-        }
-        
-        /**
-         * Reads the knowledgebase profiles from a file and stores them in a HashMap with the
-         * name of the knowledgebase as key and the profile object as value
-         * @param yamlFilePath path to the YAML file that defines the profiles 
-         * @return a HashMap with the knowledgebase profiles
-         */
-        private Map<String, KnowledgeBaseProfile> readKnowledgeBaseProfiles(String yamlFilePath)
-        {
-            ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-
-            String fileName = KnowledgeBaseProfile.class.getResource(yamlFilePath).getFile();
-
-            Map<String, KnowledgeBaseProfile> profiles = new HashMap<>();
-            try {
-                profiles = mapper.readValue(new File(fileName),
-                        new TypeReference<HashMap<String, KnowledgeBaseProfile>>(){});
-            }
-            catch (IOException e) {
-                error("Unable to read knowledge base profiles" + e.getMessage());
-                log.error("Unable to read knowledge base profiles", e);
-            }
-            
-            return profiles;
         }
     }
 

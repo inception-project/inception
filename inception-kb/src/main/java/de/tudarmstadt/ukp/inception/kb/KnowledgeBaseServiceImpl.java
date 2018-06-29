@@ -25,7 +25,9 @@ import java.io.OutputStream;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -70,6 +72,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
@@ -83,6 +89,7 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.reification.NoReification;
 import de.tudarmstadt.ukp.inception.kb.reification.ReificationStrategy;
 import de.tudarmstadt.ukp.inception.kb.reification.WikiDataReification;
+import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 
 @Component(KnowledgeBaseService.SERVICE_NAME)
 public class KnowledgeBaseServiceImpl
@@ -811,5 +818,22 @@ public class KnowledgeBaseServiceImpl
     public boolean statementsMatchSPO(KnowledgeBase akb, KBStatement mockStatement)
     {
         return getReificationStrategy(akb).statementsMatchSPO(akb, mockStatement);
+    }
+
+    @Override
+    public Map<String, KnowledgeBaseProfile> readKnowledgeBaseProfiles()
+        throws IOException
+    {
+        ClassLoader classLoader = getClass().getClassLoader();
+        String fileName = classLoader
+                .getResource("de/tudarmstadt/ukp/inception/kb/knowledgebaseProfiles.yaml")
+                .getFile();
+        
+        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+
+        Map<String, KnowledgeBaseProfile> profiles = mapper.readValue(new File(fileName),
+                new TypeReference<HashMap<String, KnowledgeBaseProfile>>(){});
+
+        return profiles;
     }
 }

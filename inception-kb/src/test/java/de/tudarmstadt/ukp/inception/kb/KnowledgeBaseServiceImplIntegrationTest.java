@@ -25,12 +25,14 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -67,6 +69,7 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 import de.tudarmstadt.ukp.inception.kb.util.TestFixtures;
+import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 
 @RunWith(Parameterized.class)
 @SpringBootTest(classes = SpringConfig.class)
@@ -1299,6 +1302,18 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         assertThat(firstInstance.getLanguage())
             .as("Check that the English instance is retrieved.")
             .isEqualTo("en");
+    }
+    
+    @Test
+    public void readKnowledgeBaseProfiles_ShouldReturnValidHashMapWithProfiles() throws IOException {
+        Map<String, KnowledgeBaseProfile> profiles = sut.readKnowledgeBaseProfiles();
+        
+        assertThat(profiles)
+            .allSatisfy((key, profile) -> {
+                assertThat(key).isNotNull();
+                assertThat(profile).hasNoNullFieldsOrProperties();
+            });
+
     }
 
     // Helper
