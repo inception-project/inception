@@ -466,8 +466,7 @@ public class ActiveLearningSidebar
     }
 
     private void writeLearningRecordInDatabaseAndEventLog(LearningRecordUserAction userAction,
-        String
-        annotationValue)
+        String annotationValue)
     {
         AnnotatorState state = ActiveLearningSidebar.this.getModelObject();
 
@@ -518,6 +517,7 @@ public class ActiveLearningSidebar
             .getFeature(currentRecommendation.getFeature(), selectedLayer.getObject());
         FeatureSupport featureSupport = featureSupportRegistry.getFeatureSupport(annotationFeature);
         // Load CAS in which to create the annotation
+
         AnnotatorState state = ActiveLearningSidebar.this.getModelObject();
         SourceDocument sourceDoc = documentService
             .getSourceDocument(state.getProject(), currentRecommendation.getDocumentName());
