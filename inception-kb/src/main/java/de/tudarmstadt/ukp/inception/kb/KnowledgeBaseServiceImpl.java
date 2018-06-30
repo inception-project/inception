@@ -21,7 +21,10 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.Reader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -95,6 +98,8 @@ import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 public class KnowledgeBaseServiceImpl
     implements KnowledgeBaseService, DisposableBean
 {
+    private static final String KNOWLEDGEBASE_PROFILES_YAML = "knowledgebase-profiles.yaml";
+
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private @PersistenceContext EntityManager entityManager;
@@ -824,16 +829,12 @@ public class KnowledgeBaseServiceImpl
     public Map<String, KnowledgeBaseProfile> readKnowledgeBaseProfiles()
         throws IOException
     {
-        ClassLoader classLoader = getClass().getClassLoader();
-        String fileName = classLoader
-                .getResource("de/tudarmstadt/ukp/inception/kb/knowledgebaseProfiles.yaml")
-                .getFile();
-        
-        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-
-        Map<String, KnowledgeBaseProfile> profiles = mapper.readValue(new File(fileName),
-                new TypeReference<HashMap<String, KnowledgeBaseProfile>>(){});
-
-        return profiles;
+        try (Reader r = new InputStreamReader(
+                getClass().getResourceAsStream(KNOWLEDGEBASE_PROFILES_YAML),
+                StandardCharsets.UTF_8)) {
+            ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+            return mapper.readValue(r, 
+                    new TypeReference<HashMap<String, KnowledgeBaseProfile>>(){});
+        }
     }
 }
