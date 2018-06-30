@@ -659,33 +659,43 @@ public class KnowledgeBaseServiceImpl
     public List<KBHandle> listRootConcepts(KnowledgeBase kb, boolean aAll)
         throws QueryEvaluationException
     {
-        
-        List<KBHandle> resultList = read(kb, (conn) -> {
-            String QUERY = String.join("\n"
-                , "SELECT DISTINCT ?s ?l WHERE { "
-                , "     { ?s ?pTYPE ?oCLASS . } "
-                , "     UNION { ?someSubClass ?pSUBCLASS ?s . } ."
-                , "     FILTER NOT EXISTS { "
-                , "         ?s ?pSUBCLASS ?otherSub . "
-                , "         FILTER (?s != ?otherSub) }"
-                , "     FILTER NOT EXISTS { "
-                , "         ?s owl:intersectionOf ?list . }"
-                , "     OPTIONAL { "
-                , "         ?s ?pLABEL ?l . "
-                , "         FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\")) "
-                , "     } "
-                , "} "
-                , "LIMIT 10000" );
-            TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
-            tupleQuery.setBinding("pTYPE", kb.getTypeIri());
-            tupleQuery.setBinding("oCLASS", kb.getClassIri());
-            tupleQuery.setBinding("pSUBCLASS", kb.getSubclassIri());
-            tupleQuery.setBinding("pLABEL", kb.getLabelIri());
-            tupleQuery.setIncludeInferred(false);
+        List<KBHandle> resultList = new ArrayList<>();
 
-            return evaluateListQuery(tupleQuery, aAll);
-        });
-
+        if (!kb.getExplicitlyDefinedRootConcepts().isEmpty()) {
+            for (IRI conceptIRI : kb.getExplicitlyDefinedRootConcepts()) {
+                KBConcept concept = readConcept(kb, conceptIRI.stringValue()).get();
+                KBHandle conceptHandle = new KBHandle(concept.getIdentifier(), concept.getName(),
+                        concept.getDescription());
+                resultList.add(conceptHandle);
+            }
+        }
+        else {
+            resultList = read(kb, (conn) -> {
+                String QUERY = String.join("\n"
+                    , "SELECT DISTINCT ?s ?l WHERE { "
+                    , "     { ?s ?pTYPE ?oCLASS . } "
+                    , "     UNION { ?someSubClass ?pSUBCLASS ?s . } ."
+                    , "     FILTER NOT EXISTS { "
+                    , "         ?s ?pSUBCLASS ?otherSub . "
+                    , "         FILTER (?s != ?otherSub) }"
+                    , "     FILTER NOT EXISTS { "
+                    , "         ?s owl:intersectionOf ?list . }"
+                    , "     OPTIONAL { "
+                    , "         ?s ?pLABEL ?l . "
+                    , "         FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\")) "
+                    , "     } "
+                    , "} "
+                    , "LIMIT 10000" );
+                TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
+                tupleQuery.setBinding("pTYPE", kb.getTypeIri());
+                tupleQuery.setBinding("oCLASS", kb.getClassIri());
+                tupleQuery.setBinding("pSUBCLASS", kb.getSubclassIri());
+                tupleQuery.setBinding("pLABEL", kb.getLabelIri());
+                tupleQuery.setIncludeInferred(false);
+    
+                return evaluateListQuery(tupleQuery, aAll);
+            });
+        }
         resultList.sort(Comparator.comparing(KBObject::getUiLabel));
         return resultList;
     }

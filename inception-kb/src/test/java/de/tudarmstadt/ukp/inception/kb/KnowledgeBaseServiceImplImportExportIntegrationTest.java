@@ -24,6 +24,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -247,6 +248,7 @@ public class KnowledgeBaseServiceImplImportExportIntegrationTest {
         kb.setDescriptionIri(RDFS.COMMENT);
         kb.setLabelIri(RDFS.LABEL);
         kb.setPropertyTypeIri(RDF.PROPERTY);
+        kb.setExplicitlyDefinedRootConcepts(new ArrayList<>());
         return kb;
     }
 
