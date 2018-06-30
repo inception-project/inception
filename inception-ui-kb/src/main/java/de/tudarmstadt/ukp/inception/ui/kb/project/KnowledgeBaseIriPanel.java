@@ -268,7 +268,7 @@ public class KnowledgeBaseIriPanel
         private static final long serialVersionUID = 1161350402387498209L;
         private final CompoundPropertyModel<KnowledgeBaseWrapper> kbModel;
         private final List<IRI> concepts;
-        private final IModel<String> newConceptIRIString = new Model<String>("");
+        private final IModel<String> newConceptIRIString = Model.of();
         
         public AdvancedIriSettingsPanel(String id,
                 CompoundPropertyModel<KnowledgeBaseWrapper> aModel)
@@ -316,7 +316,7 @@ public class KnowledgeBaseIriPanel
             IRI concept = vf.createIRI(newConceptIRIString.getObject());
             if (isConceptValid(kbModel.getObject().getKb(), concept, true)) {
                 concepts.add(concept);
-                newConceptIRIString.setObject("");
+                newConceptIRIString.setObject(null);
             }
             else {
                 error("Concept does not exist or has already been specified");
