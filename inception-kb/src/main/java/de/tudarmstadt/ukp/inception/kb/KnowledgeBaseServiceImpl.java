@@ -21,11 +21,16 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.Reader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -70,6 +75,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
@@ -83,11 +92,14 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.reification.NoReification;
 import de.tudarmstadt.ukp.inception.kb.reification.ReificationStrategy;
 import de.tudarmstadt.ukp.inception.kb.reification.WikiDataReification;
+import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 
 @Component(KnowledgeBaseService.SERVICE_NAME)
 public class KnowledgeBaseServiceImpl
     implements KnowledgeBaseService, DisposableBean
 {
+    private static final String KNOWLEDGEBASE_PROFILES_YAML = "knowledgebase-profiles.yaml";
+
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private @PersistenceContext EntityManager entityManager;
@@ -811,5 +823,18 @@ public class KnowledgeBaseServiceImpl
     public boolean statementsMatchSPO(KnowledgeBase akb, KBStatement mockStatement)
     {
         return getReificationStrategy(akb).statementsMatchSPO(akb, mockStatement);
+    }
+
+    @Override
+    public Map<String, KnowledgeBaseProfile> readKnowledgeBaseProfiles()
+        throws IOException
+    {
+        try (Reader r = new InputStreamReader(
+                getClass().getResourceAsStream(KNOWLEDGEBASE_PROFILES_YAML),
+                StandardCharsets.UTF_8)) {
+            ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+            return mapper.readValue(r, 
+                    new TypeReference<HashMap<String, KnowledgeBaseProfile>>(){});
+        }
     }
 }

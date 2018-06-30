@@ -17,9 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.project.wizard;
 
-import static de.tudarmstadt.ukp.inception.kb.KnowledgeBases.KNOWLEDGE_BASES;
-
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -67,6 +66,7 @@ import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 import de.tudarmstadt.ukp.inception.kb.io.FileUploadHelper;
 import de.tudarmstadt.ukp.inception.kb.reification.Reification;
+import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 import de.tudarmstadt.ukp.inception.ui.kb.project.KnowledgeBaseIriPanel;
 import de.tudarmstadt.ukp.inception.ui.kb.project.KnowledgeBaseListPanel;
 import de.tudarmstadt.ukp.inception.ui.kb.project.KnowledgeBaseWrapper;
@@ -284,23 +284,45 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
             urlField.add(Validators.URL_VALIDATOR);
             add(urlField);
             
+            Map<String, KnowledgeBaseProfile> profiles = new HashMap<>();
+            try {
+                profiles = kbService.readKnowledgeBaseProfiles();
+            }
+            catch (IOException e) {
+                error("Unable to read knowledge base profiles" + e.getMessage());
+                log.error("Unable to read knowledge base profiles", e);
+            }
             // for up to MAXIMUM_REMOTE_REPO_SUGGESTIONS of knowledge bases, create a link which
             // directly fills in the URL field (convenient for both developers AND users :))
-            List<String> suggestions = new ArrayList<>(KNOWLEDGE_BASES.keySet());
+            List<KnowledgeBaseProfile> suggestions = new ArrayList<>(profiles.values());
             suggestions = suggestions.subList(0,
                     Math.min(suggestions.size(), MAXIMUM_REMOTE_REPO_SUGGESTIONS));
-            add(new ListView<String>("suggestions", suggestions) {
+            add(new ListView<KnowledgeBaseProfile>("suggestions", suggestions) {
 
                 private static final long serialVersionUID = 4179629475064638272L;
 
                 @Override
-                protected void populateItem(ListItem<String> item) {
+                protected void populateItem(ListItem<KnowledgeBaseProfile> item) {
                     // add a link for one knowledge base with proper label
                     LambdaAjaxLink link = new LambdaAjaxLink("suggestionLink", t -> {
-                        model.getObject().setUrl(KNOWLEDGE_BASES.get(item.getModelObject()));
+                        // set all the fields according to the chosen profile
+                        model.getObject().setUrl(item.getModelObject().getSparqlUrl());
+                        model.getObject().getKb()
+                                .setClassIri(item.getModelObject().getMapping().getClassIri());
+                        model.getObject().getKb().setSubclassIri(
+                                item.getModelObject().getMapping().getSubclassIri());
+                        model.getObject().getKb()
+                                .setTypeIri(item.getModelObject().getMapping().getTypeIri());
+                        model.getObject().getKb().setDescriptionIri(
+                                item.getModelObject().getMapping().getDescriptionIri());
+                        model.getObject().getKb().setPropertyTypeIri(
+                                item.getModelObject().getMapping().getPropertyTypeIri());
+                        model.getObject().getKb()
+                                .setLabelIri(item.getModelObject().getMapping().getLabelIri());
+
                         t.add(urlField);
                     });
-                    link.add(new Label("suggestionLabel", item.getModelObject()));
+                    link.add(new Label("suggestionLabel", item.getModelObject().getName()));
                     item.add(link);
                 }
             });
