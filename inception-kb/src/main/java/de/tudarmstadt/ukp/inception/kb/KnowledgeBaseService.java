@@ -50,10 +50,9 @@ public interface KnowledgeBaseService
      * Reads knowledgebase profiles from a YAML file and stores them in a HashMap with the key that
      * is defined in the file and a corresponding {@link KnowledgeBaseProfile} object as value
      * 
-     * @param yamlFilePath
-     *            path to the YAML file that defines the profiles
      * @return a HashMap with the knowledgebase profiles
-     * @throws IOException if an error occurs when reading the file
+     * @throws IOException
+     *             if an error occurs when reading the file
      */
     Map<String, KnowledgeBaseProfile> readKnowledgeBaseProfiles() throws IOException;
 
