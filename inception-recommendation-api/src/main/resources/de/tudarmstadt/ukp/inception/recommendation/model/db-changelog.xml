@@ -319,16 +319,29 @@
     <dropColumn tableName="recommender" columnName="classifierId" />
   </changeSet>
 
-  <changeSet author="INCEpTION Team" id="20180628">
-    <preConditions onFail="MARK_RAN">
-      <not>
-        <columnExists tableName="recommender" columnName="skipEvaluation" />
-      </not>
-    </preConditions>
-    <addColumn tableName="recommender">
-      <column name="skipEvaluation" type="BOOLEAN" defaultValueBoolean="false">
-        <constraints nullable="false" />
-      </column>
-    </addColumn>
+  <changeSet author="INCEpTION Team" id="20180615-01">
+      <preConditions onFail="MARK_RAN">
+          <not>
+              <columnExists tableName="learning_record" columnName="annotationFeature"/>
+          </not>
+      </preConditions>
+      <addColumn tableName="learning_record">
+          <column name="annotationFeature" type="BIGINT"/>
+      </addColumn>
+  </changeSet>
+
+  <changeSet author="INCEpTION Team" id="20180615-02">
+      <preConditions onFail="MARK_RAN">
+          <not>
+              <foreignKeyConstraintExists
+                  foreignKeyTableName="learning_record"
+                  foreignKeyName="FK_annotationFeature_learningRecord" />
+          </not>
+      </preConditions>
+      <addForeignKeyConstraint baseColumnNames="annotationFeature"
+                               baseTableName="learning_record" constraintName="FK_annotationFeature_learningRecord"
+                               deferrable="false" initiallyDeferred="false" onDelete="CASCADE"
+                               onUpdate="CASCADE" referencedColumnNames="id"
+                               referencedTableName="annotation_feature" />
   </changeSet>
 </databaseChangeLog>
