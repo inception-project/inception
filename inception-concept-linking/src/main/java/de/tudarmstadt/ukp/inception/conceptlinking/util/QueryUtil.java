@@ -76,12 +76,23 @@ public class QueryUtil
     public static TupleQuery generateCandidateQuery(RepositoryConnection conn, String tokens,
         int limit, IRI aDescriptionIri)
     {
-        String query = String.join("\n",
-            "DEFINE input:inference 'instances'",
-            SPARQL_PREFIX,
-            "SELECT DISTINCT ?e2 ?altLabel ?label ?description WHERE",
-            "{",
-            "  {",
+        String exactMatching = String.join("\n",
+            "SELECT DISTINCT ?e2 ?description WHERE",
+            "    {",
+            "     VALUES ?labelpredicate {rdfs:label skos:altLabel}",
+            "      GRAPH " + TERMS,
+            "      {",
+            "        ?e2 ?labelpredicate '?entityLabel' @en .",
+            "        OPTIONAL",
+            "        {",
+            "          ?e2 ?descriptionIri ?description.",
+            "          FILTER ( lang(?description) = \"en\" )",
+            "        }",
+            "      }",
+            "    }");
+
+        String partialMatching = String.join("\n",
+            "SELECT DISTINCT ?e2 ?altLabel ?description WHERE",
             "    {",
             "      VALUES ?labelpredicate {rdfs:label skos:altLabel}",
             "      GRAPH " + TERMS,
@@ -95,6 +106,17 @@ public class QueryUtil
             "        }",
             "      }",
             "    }",
+            "LIMIT " + limit);
+
+        String query = String.join("\n",
+            "DEFINE input:inference 'instances'",
+            SPARQL_PREFIX,
+            "SELECT DISTINCT ?e2 ?altLabel ?label ?description WHERE",
+            "{",
+            "  {",
+                 exactMatching,
+            "    UNION",
+                 partialMatching,
             "  }",
             "  FILTER EXISTS { GRAPH " + STATEMENTS + " { ?e2 ?p ?v }}",
             "  FILTER NOT EXISTS ",
@@ -111,8 +133,7 @@ public class QueryUtil
             "    GRAPH " + TERMS + " { ?e2 rdfs:label ?label. }",
             "    FILTER ( lang(?label) = \"en\" )",
             "  }",
-            "}",
-            "LIMIT " + limit);
+            "}");
 
         ValueFactory vf = SimpleValueFactory.getInstance();
         Literal tokensJoined = vf.createLiteral(String.join(" ",tokens));
