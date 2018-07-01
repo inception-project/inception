@@ -163,7 +163,8 @@ public class ConceptLinkingService
             return Collections.emptySet();
         }
 
-        ImmutablePair<Project, String> pair = new ImmutablePair<>(aKB.getProject(), processedMention);
+        ImmutablePair<Project, String> pair = new ImmutablePair<>(aKB.getProject(),
+            processedMention);
         if (candidateCache.containsKey(pair)) {
             return candidateCache.get(pair);
         }
