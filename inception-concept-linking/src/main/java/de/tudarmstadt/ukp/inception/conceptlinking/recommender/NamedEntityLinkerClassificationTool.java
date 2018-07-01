@@ -47,7 +47,7 @@ public class NamedEntityLinkerClassificationTool
             new NamedEntityTrainer(new ClassifierConfiguration<>(feature, recommenderId)),
             new NamedEntityLinker(new ClassifierConfiguration<>(feature, recommenderId), kbService,
                 clService, docService, annoService, fsRegistry),
-            new NerAnnotationObjectLoader(aLayer, NAMED_ENTITY_CLASSIFICATION_FEATURE), false);
+            new NerAnnotationObjectLoader(aLayer, NAMED_ENTITY_CLASSIFICATION_FEATURE), false, false);
     }
 
 }

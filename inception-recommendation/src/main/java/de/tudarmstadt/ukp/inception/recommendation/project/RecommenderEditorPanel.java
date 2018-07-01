@@ -279,17 +279,6 @@ public class RecommenderEditorPanel
         }
     }
 
-    private Recommender setSkipEvaluation(Recommender aRecommender)
-    {
-        if (aRecommender.getName().endsWith("NamedEntityLinkerClassificationTool")) {
-            aRecommender.setSkipEvaluation(true);
-        }
-        else {
-            aRecommender.setSkipEvaluation(false);
-        }
-        return aRecommender;
-    }
-
     private void actionSave(AjaxRequestTarget aTarget, Form<Recommender> aForm) {
         Recommender recommender = aForm.getModelObject();
         recommender.setName(String.format(Locale.US, "[%s@%s] %s (%.2f)",
@@ -297,7 +286,6 @@ public class RecommenderEditorPanel
                 StringUtils.substringAfterLast(recommender.getTool(), "."),
                 recommender.getThreshold()));
         recommender.setProject(recommender.getLayer().getProject());
-        setSkipEvaluation(recommender);
         recommendationService.createOrUpdateRecommender(recommender);
         
         // causes deselection after saving

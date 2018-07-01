@@ -93,7 +93,7 @@ public class SelectionTask
                         continue;
                     }
                     
-                    if (recommender.isAlwaysSelected() || recommender.isSkipEvaluation()) {
+                    if (recommender.isAlwaysSelected() || !ct.isEvaluable()) {
                         log.info("[{}][{}]: Skipping evaluation", user.getUsername(), ct.getId());
                         activeRecommenders.add(recommender);
                         continue;
