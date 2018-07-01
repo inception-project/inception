@@ -47,7 +47,7 @@ this dropdown field is a list of properties in the knowledge base.
 
 image::factExtraction5.png[align="center"]
 
-To annotate the subject mention of a fact, one needs to click "<Click to activate>" in the subject
+To annotate the subject mention of a fact, one needs to click *<Click to activate>* in the subject
 feature editor. After this input field turns orange, one can now mark the subject mention _Obama_of
 a fact. One can then choose _Barack Obama_ in the dropdown field of the subject feature editor to
 link the mention of this subject to the instance in the knowledge base. The candidate list of this
@@ -63,8 +63,8 @@ If this fact is already saved in the knowledge base, the label in the predicate 
 
 To extract a qualifier, one needs to choose the qualifier name from the drop-down field in front of
 the button *add* in the qualifier feature editor. The list of candidates for the qualifier name is a
- list of properties from the knowledge base. After clicking *add*, a mention input eld and a
- dropdown eld appear to collect this qualier value information. In the screenshot below, the
+ list of properties from the knowledge base. After clicking *add*, a mention input field and a
+ dropdown field appear to collect this qualifier value information. In the screenshot below, the
  qualifier name is _start-date_.
 
 image::factExtraction7.png[align="center"]
