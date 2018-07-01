@@ -213,7 +213,7 @@ public class KnowledgeBaseIriPanel
         comboBox.setRequired(true);
         comboBox.add(Validators.IRI_VALIDATOR);
         comboBox.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> {
-
+            // Do nothing just update the model values
         }));
         return comboBox;
     }

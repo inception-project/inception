@@ -20,13 +20,28 @@ package de.tudarmstadt.ukp.inception.kb.event;
 
 import org.springframework.context.ApplicationEvent;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+
 public class KnowledgeBaseConfigurationChangedEvent
     extends ApplicationEvent
 {
     private static final long serialVersionUID = -2741267700429534514L;
 
-    public KnowledgeBaseConfigurationChangedEvent(Object aSource)
+    private Project project;
+
+    public KnowledgeBaseConfigurationChangedEvent(Object aSource, Project aProject)
     {
         super(aSource);
+        project = aProject;
+    }
+
+    public Project getProject()
+    {
+        return project;
+    }
+
+    public void setProject(Project aProject)
+    {
+        project = aProject;
     }
 }
