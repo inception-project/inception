@@ -39,6 +39,7 @@ public class KBConcept
     private String identifier;
     private String name;
     private String description;
+    private String language;
 
     /* Commented out until the functionality which uses them is actually implemented
     private static final IRI CLOSED;
@@ -138,6 +139,18 @@ public class KBConcept
     public void setDescription(String aDescription)
     {
         description = aDescription;
+    }
+
+    @Override
+    public String getLanguage()
+    {
+        return language;
+    }
+
+    @Override
+    public void setLanguage(String aLanguage)
+    {
+        language = aLanguage;
     }
 
     public List<Statement> getOriginalStatements()

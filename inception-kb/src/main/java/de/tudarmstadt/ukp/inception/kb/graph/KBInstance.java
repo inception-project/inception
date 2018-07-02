@@ -31,6 +31,7 @@ import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.ValueFactory;
+import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
@@ -145,14 +146,14 @@ public class KBInstance
         }
     }
 
-    public static KBInstance read(RepositoryConnection aConn, Statement aStmt, KnowledgeBase kb)
+    public static KBInstance read(RepositoryConnection aConn, Statement aStmt, KnowledgeBase aKb)
     {
         KBInstance kbInst = new KBInstance();
         kbInst.setType(URI.create(aStmt.getObject().stringValue()));
         kbInst.setIdentifier(aStmt.getSubject().stringValue());
         kbInst.originalStatements.add(aStmt);
 
-        readFirst(aConn, aStmt.getSubject(), kb.getLabelIri(), null, ENGLISH).ifPresent((stmt) -> {
+        readFirst(aConn, aStmt.getSubject(), RDFS.LABEL, null, aKb.getLanguage()).ifPresent((stmt) -> {
             kbInst.setName(stmt.getObject().stringValue());
             kbInst.originalStatements.add(stmt);
             if (stmt.getObject() instanceof Literal) {
@@ -162,16 +163,15 @@ public class KBInstance
             }
         });
 
-        readFirst(aConn, aStmt.getSubject(), kb.getDescriptionIri(), null, ENGLISH)
-                .ifPresent((stmt) -> {
-                    kbInst.setDescription(stmt.getObject().stringValue());
-                    kbInst.originalStatements.add(stmt);
-                    if (stmt.getObject() instanceof Literal) {
-                        Literal literal = (Literal) stmt.getObject();
-                        Optional<String> language = literal.getLanguage();
-                        language.ifPresent(kbInst::setLanguage);
-                    }
-                });
+        readFirst(aConn, aStmt.getSubject(), RDFS.COMMENT, null, aKb.getLanguage()).ifPresent((stmt) -> {
+            kbInst.setDescription(stmt.getObject().stringValue());
+            kbInst.originalStatements.add(stmt);
+            if (stmt.getObject() instanceof Literal) {
+                Literal literal = (Literal) stmt.getObject();
+                Optional<String> language = literal.getLanguage();
+                language.ifPresent(kbInst::setLanguage);
+            }
+        });
 
         return kbInst;
     }

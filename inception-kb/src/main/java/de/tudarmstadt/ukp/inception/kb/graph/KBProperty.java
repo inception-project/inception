@@ -48,6 +48,7 @@ public class KBProperty
     private String name;
     private String description;
     private URI domain;
+    private String language;
     /**
      * Declares the class or data type of the object in a triple whose predicate is that property.
      */
@@ -115,6 +116,18 @@ public class KBProperty
     public void setRange(URI aRange)
     {
         range = aRange;
+    }
+
+    @Override
+    public String getLanguage()
+    {
+        return language;
+    }
+
+    @Override
+    public void setLanguage(String aLanguage)
+    {
+        language = aLanguage;
     }
 
     public List<Statement> getOriginalStatements()

@@ -275,4 +275,18 @@
     </createTable>
   </changeSet>
 
+  <changeSet author="INCEpTION Team" id="20180611">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="knowledgebase" columnName="language"/>
+      </not>
+    </preConditions>
+
+    <addColumn tableName="knowledgebase">
+      <column name="language"
+              type="VARCHAR(255)">
+      </column>
+    </addColumn>
+  </changeSet>
+
 </databaseChangeLog>

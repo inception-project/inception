@@ -50,6 +50,16 @@ public interface KBObject
     void setName(String label);
 
     /**
+     * Returns the language (e.g. of label and description) of this element.
+     */
+    String getLanguage();
+
+    /**
+     * Sets the language (e.g. of label and description) of this element.
+     */
+    void setLanguage(String language);
+
+    /**
      * Returns a UI-friendly representation of this {@code KBObject}.
      * 
      * @return the name of the {@code KBObject} if available, otherwise return the local name of its

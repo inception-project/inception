@@ -46,6 +46,7 @@ import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.resource.IResourceStream;
+import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.repository.RepositoryException;
 import org.eclipse.rdf4j.repository.config.RepositoryConfigException;
 import org.eclipse.rdf4j.repository.config.RepositoryImplConfig;
@@ -169,7 +170,18 @@ public class KnowledgeBaseDetailsPanel extends Panel {
             }
         };
         add(form);
-        
+
+//        IModel<String> adapter = new LambdaModelAdapter<String>(kbwModel.bind("kb.language")::getObject,
+//                    kbwModel.bind("kb.language")::setObject);
+
+//        ComboBox<String> comboBox = new ComboBox<String>("language",
+//            new ArrayList<>(Arrays.asList(kbw.getKb().getLanguage(), "ger")));
+//        comboBox.setOutputMarkupId(true);
+//        comboBox.setRequired(true);
+//        comboBox.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> {}));
+//        form.add(comboBox);
+
+
         // add (disabled) radio choice for local/remote repository
         form.add(new BootstrapRadioGroup<RepositoryType>("type", kbwModel.bind("kb.type"),
                 Arrays.asList(RepositoryType.values()),
@@ -394,6 +406,7 @@ public class KnowledgeBaseDetailsPanel extends Panel {
             Component iriPanel = new KnowledgeBaseIriPanel("iriPanel", model,
                     KnowledgeBaseIriPanelMode.PROJECTSETTINGS)
                             .add(LambdaBehavior.onConfigure(it -> it.setEnabled(false)));
+//            addDisabledTextField(wmc, "language");
             // don't show radio group in view mode 
             iriPanel.get("iriSchema").setVisible(false);
             wmc.add(iriPanel);
@@ -438,10 +451,31 @@ public class KnowledgeBaseDetailsPanel extends Panel {
 
         @Override
         protected void setUpRemoteKnowledgeBaseComponents(WebMarkupContainer wmc) {
-            addDisabledUrlField(wmc, "url");
+            addDisabledTextField(wmc, "url");
         }
 
-        private void addDisabledUrlField(WebMarkupContainer wmc, String id)
+        private void addDisabledIriField(WebMarkupContainer wmc, String id, IModel<IRI> model)
+        {
+            TextField<IRI> textField = new RequiredTextField<IRI>(id, model)
+            {
+                private static final long serialVersionUID = 5886070596284072382L;
+
+                @Override
+                protected String getModelValue()
+                {
+                    return getModelObject().stringValue();
+                }
+
+                @Override
+                protected void onConfigure()
+                {
+                    setEnabled(false);
+                }
+            };
+            wmc.add(textField);
+        }
+
+        private void addDisabledTextField(WebMarkupContainer wmc, String id)
         {
             TextField<String> textField = new RequiredTextField<String>(id);
             textField.add(LambdaBehavior.onConfigure(tf -> tf.setEnabled(false)));
