@@ -82,4 +82,10 @@ public class NamedEntityLinkerClassificationToolFactory
             && !aLayer.isCrossSentence() && "span".equals(aLayer.getType())
             && (CAS.TYPE_NAME_STRING.equals(aFeature.getType()) || aFeature.isVirtualFeature());
     }
+
+    @Override
+    public boolean isSupported(AnnotationFeature aFeature)
+    {
+        return aFeature.getName().equals("identifier");
+    }
 }

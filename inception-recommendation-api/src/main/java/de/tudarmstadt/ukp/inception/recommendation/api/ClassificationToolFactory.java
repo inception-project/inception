@@ -91,4 +91,8 @@ public interface ClassificationToolFactory<C, T>
     {
         aRecommender.setTraits(null);
     }
+
+    default boolean isSupported(AnnotationFeature aFeature){
+        return true;
+    }
 }

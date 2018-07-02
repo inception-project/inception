@@ -271,6 +271,7 @@ public class RecommenderEditorPanel
             AnnotationFeature feature = annotationSchemaService
                     .getFeature(recommenderModel.getObject().getFeature(), layer);
             return toolRegistry.getTools(layer, feature).stream()
+                    .filter(tool -> tool.isSupported(feature))
                     .map(f -> Pair.of(f.getId(), f.getName()))
                     .collect(Collectors.toList());
         }
