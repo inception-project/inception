@@ -21,6 +21,7 @@ import java.util.List;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
 
 /*
  * External search service interface
@@ -31,4 +32,10 @@ public interface ExternalSearchService
     static final String SERVICE_NAME = "externalSearchService";
 
     List<ExternalSearchResult> query(User aUser, Project aProject, String aQuery);
+
+    List<DocumentRepository> listDocumentRepositories(Project aProject);
+
+    void createOrUpdateDocumentRepository(DocumentRepository aDocumentRepository);
+
+    void deleteDocumentRepository(DocumentRepository object);
 }

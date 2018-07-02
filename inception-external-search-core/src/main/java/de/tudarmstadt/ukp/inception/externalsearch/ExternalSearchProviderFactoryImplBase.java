@@ -17,11 +17,16 @@
  */
 package de.tudarmstadt.ukp.inception.externalsearch;
 
+import org.apache.wicket.markup.html.panel.EmptyPanel;
+import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.model.IModel;
 import org.springframework.beans.factory.BeanNameAware;
 import org.springframework.core.Ordered;
 
+import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
+
 public abstract class ExternalSearchProviderFactoryImplBase
-    implements BeanNameAware, Ordered, ExternalSearchProviderFactory
+    implements BeanNameAware, Ordered, ExternalSearchProviderFactory<Object>
 {
     private String beanName;
 
@@ -42,4 +47,56 @@ public abstract class ExternalSearchProviderFactoryImplBase
     {
         return Ordered.LOWEST_PRECEDENCE;
     }
+    
+    /**
+     * Returns a Wicket component to configure the specific traits of this provider. 
+     * Every {@link ExternalSearchProviderFactory} has to return a <b>different class</b> here. 
+     * It is not possible to simple return a Wicket {@link Panel} here, but it must be a subclass 
+     * If this is not done, then the properties editor in the UI will not be correctly updated. 
+     * 
+     * @param aId
+     *            a markup ID.
+     * @param aDocumentRepository
+     *            a model holding the document repository for which the properties editor should be 
+     *            created.
+     * @return the properties editor component .
+     */
+    @Override
+    public Panel createPropertiesEditor(String aId, IModel<DocumentRepository> aDocumentRepository)
+    {
+        return new EmptyPanel(aId);
+    }
+    
+    /**
+     * Read the properties for the given {@link DocumentRepository}. If properties are 
+     * supported, then this method must be overwritten. A typical implementation would read the 
+     * traits from a JSON string stored {@link DocumentRepository#getProperties}, but it would also 
+     * be possible to load the traits from a database table.
+     * 
+     * @param aDocumentRepository
+     *            the repository whose properties should be obtained.
+     * @return the properties.
+     */
+    public Object readProperties(DocumentRepository aDocumentRepository)
+    {
+        return null;
+    }
+
+    /**
+     * Write the properties for the given {@link DocumentRepository}. If properties are supported,
+     * then this method must be overwritten. A typical implementation would write the properties 
+     * to the JSON string stored in {@link DocumentRepository#setProperties}, but it would also be
+     * possible to store the traits into a database table.
+     * 
+     * @param aDocumentRepository
+     *            the repository whose properties should be written.
+     * @param aProperties
+     *            the properties.
+     */
+    public void writeProperties(DocumentRepository aDocumentRepository, Object aProperties)
+    {
+        aDocumentRepository.setProperties(null);
+    }
+
+
 }

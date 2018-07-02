@@ -17,12 +17,16 @@
  */
 package de.tudarmstadt.ukp.inception.externalsearch;
 
+import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.model.IModel;
+
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
 
-public interface ExternalSearchProviderFactory
+public interface ExternalSearchProviderFactory<P>
 {
     /**
      * @return get the bean name.
@@ -34,4 +38,10 @@ public interface ExternalSearchProviderFactory
     ExternalSearchProvider getNewExternalSearchProvider(Project aProject,
             AnnotationSchemaService aAnnotationSchemaService, DocumentService aDocumentService,
             ProjectService aProjectService, String aDir);
+
+    Panel createPropertiesEditor(String aId, IModel<DocumentRepository> aDocumentRepository);
+
+    P readProperties(DocumentRepository aDocumentRepository);
+
+    void writeProperties(DocumentRepository aDocumentRepository, P aProperties);
 }

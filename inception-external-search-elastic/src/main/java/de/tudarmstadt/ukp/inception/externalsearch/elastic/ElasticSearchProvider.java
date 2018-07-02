@@ -34,12 +34,12 @@ public class ElasticSearchProvider
 {
 
     // private String serverUrl = "http://xxx";
-    private String serverUrl = "http://bart:9200";
+    private String remoteUrl = "http://bart:9200";
 
     //    private String indexName = "index";
     private String indexName = "common-crawl-en";
     
-    private String SEARCH = "_search";
+    private String searchPath = "_search";
     private String objectType = "texts";
 
     @Override
@@ -83,7 +83,7 @@ public class ElasticSearchProvider
         HttpEntity<String> entity = new HttpEntity<String>(body, headers);
 
         // Prepare search URL
-        String searchUrl = serverUrl + "/" + indexName + "/" + SEARCH;
+        String searchUrl = remoteUrl + "/" + indexName + "/" + searchPath;
         
         // Send post query
         queryResult = restTemplate.postForObject(searchUrl, entity,
@@ -104,7 +104,7 @@ public class ElasticSearchProvider
     {
         RestTemplate restTemplate = new RestTemplate();
 
-        String getUrl = serverUrl + "/" + indexName + "/" + objectType + "/" + aId;
+        String getUrl = remoteUrl + "/" + indexName + "/" + objectType + "/" + aId;
 
         // Send get query
         ElasticSearchHit document = restTemplate.getForObject(getUrl, ElasticSearchHit.class);

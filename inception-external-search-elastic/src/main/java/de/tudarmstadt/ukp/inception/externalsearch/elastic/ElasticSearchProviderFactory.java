@@ -17,8 +17,17 @@
  */
 package de.tudarmstadt.ukp.inception.externalsearch.elastic;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.fromJsonString;
+import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.toJsonString;
+
+import java.io.IOException;
+
+import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.model.IModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.BeanNameAware;
+import org.springframework.core.Ordered;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
@@ -26,24 +35,40 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchProvider;
-import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchProviderFactoryImplBase;
+import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchProviderFactory;
+import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
 
 @Component("ElasticSearchProviderFactory")
 public class ElasticSearchProviderFactory
-    extends ExternalSearchProviderFactoryImplBase
+    implements BeanNameAware, Ordered,
+    ExternalSearchProviderFactory<ElasticSearchProviderProperties>
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
+    private String beanName;
+
     @Override
-    public String getDisplayName()
+    public void setBeanName(String aName)
     {
-        return "ElasticSearchProviderFactory";
+        beanName = aName;
+    }
+
+    @Override
+    public String getBeanName()
+    {
+        return beanName;
     }
 
     @Override
     public int getOrder()
     {
-        return 0;
+        return Ordered.LOWEST_PRECEDENCE;
+    }
+
+    @Override
+    public String getDisplayName()
+    {
+        return "ElasticSearchProviderFactory";
     }
 
     @Override
@@ -59,6 +84,44 @@ public class ElasticSearchProviderFactory
             log.error("Unable to get Elastic Search provider", e);
         }
         return provider;
+    }
+
+    @Override
+    public Panel createPropertiesEditor(String aId, IModel<DocumentRepository> aDocumentRepository)
+    {
+        return new ElasticSearchProviderPropertiesEditor(aId, aDocumentRepository);
+    }
+
+    @Override
+    public ElasticSearchProviderProperties readProperties(DocumentRepository aDocumentRepository)
+    {
+        ElasticSearchProviderProperties properties = null;
+        try {
+            properties = fromJsonString(ElasticSearchProviderProperties.class,
+                    aDocumentRepository.getProperties());
+        }
+        catch (IOException e) {
+            log.error("Error while reading traits", e);
+        }
+
+        if (properties == null) {
+            properties = new ElasticSearchProviderProperties();
+        }
+
+        return properties;
+    }
+
+    @Override
+    public void writeProperties(DocumentRepository aDocumentRepository,
+            ElasticSearchProviderProperties aProperties)
+    {
+        try {
+            String json = toJsonString(aProperties);
+            aDocumentRepository.setProperties(json);
+        }
+        catch (IOException e) {
+            log.error("Error while writing traits", e);
+        }
     }
 
 }

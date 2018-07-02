@@ -21,23 +21,30 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
 
 @Component(ExternalSearchService.SERVICE_NAME)
 public class ExternalSearchServiceImpl
     implements ExternalSearchService
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
+
+    private @PersistenceContext EntityManager entityManager;
 
     private @Autowired AnnotationSchemaService annotationSchemaService;
     private @Autowired DocumentService documentService;
@@ -93,6 +100,42 @@ public class ExternalSearchServiceImpl
             return null;
         }
 
+    }
+
+    @Override
+    @Transactional
+    public List<DocumentRepository> listDocumentRepositories(Project aProject)
+    {
+        List<DocumentRepository> settings = entityManager
+                .createQuery("FROM DocumentRepository WHERE project = :project ORDER BY name ASC",
+                        DocumentRepository.class)
+                .setParameter("project", aProject).getResultList();
+        return settings;
+    }
+
+    @Override
+    @Transactional
+    public void createOrUpdateDocumentRepository(DocumentRepository aDocumentRepository)
+    {
+        if (aDocumentRepository.getId() == null) {
+            entityManager.persist(aDocumentRepository);
+        }
+        else {
+            entityManager.merge(aDocumentRepository);
+        }        
+    }
+
+    @Override
+    @Transactional
+    public void deleteDocumentRepository(DocumentRepository aDocumentRepository)
+    {
+        DocumentRepository settings = aDocumentRepository;
+
+        if (!entityManager.contains(settings)) {
+            settings = entityManager.merge(settings);
+        }
+
+        entityManager.remove(settings);
     }
 
 }
