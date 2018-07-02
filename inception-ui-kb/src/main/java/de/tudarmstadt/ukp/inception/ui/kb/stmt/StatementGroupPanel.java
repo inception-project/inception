@@ -198,7 +198,7 @@ public class StatementGroupPanel extends Panel {
                     this::actionPropertyLinkClicked);
             propertyLink.add(new Label("property", groupModel.bind("property.uiLabel")));
             propertyLink.add(new TooltipBehavior(groupModel.bind("property.identifier"))
-                    .setOption("autoHide", false));
+                    .setOption("showAfter", 2000).setOption("autoHide", false));
             form.add(propertyLink);
             RefreshingView<KBStatement> statementList = new RefreshingView<KBStatement>(
                     "statementList") {

@@ -160,8 +160,8 @@ public abstract class AbstractInfoPanel<T extends KBObject> extends Panel {
                 StatementDetailPreference aDetailPreference) {
             super(id, "viewMode", AbstractInfoPanel.this);
             Label uiLabel = new Label("uiLabel", compoundModel.bind("uiLabel"));
-            uiLabel.add(new TooltipBehavior(compoundModel.bind("identifier")).setOption("autoHide",
-                    false));
+            uiLabel.add(new TooltipBehavior(compoundModel.bind("identifier"))
+                    .setOption("showAfter", 2000).setOption("autoHide", false));
             add(uiLabel);
             add(new Label("typeLabel", new ResourceModel(getTypeLabelResourceKey())));
             // button for deleting the KBObject
