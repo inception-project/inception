@@ -29,9 +29,9 @@ public interface ExternalSearchProvider
 
     public boolean isConnected();
 
-    public List<ExternalSearchResult> executeQuery(User aUser, String aQuery, String aSortOrder,
-            String... sResultField);
+    public List<ExternalSearchResult> executeQuery(Object aProperties, User aUser, String aQuery,
+            String aSortOrder, String... sResultField);
 
-    public ExternalSearchResult getDocumentById(String aId);
+    public ExternalSearchResult getDocumentById(Object aProperties, String aId);
 
 }

@@ -81,15 +81,20 @@ public class ExternalSearchServiceImpl
     }
 
     @Override
-    public List<ExternalSearchResult> query(User aUser, Project aProject, String aQuery)
+    public List<ExternalSearchResult> query(User aUser, DocumentRepository aDocumentRepository,
+            String aQuery)
     {
-        ExternalSearchProvider provider = getExternalSearchProviderByProject(aProject);
+        ExternalSearchProvider provider = getExternalSearchProviderByProject(
+                aDocumentRepository.getProject());
 
         if (provider.isConnected()) {
 
             log.debug("Running query: {}", aQuery);
 
-            List<ExternalSearchResult> results = provider.executeQuery(aUser, aQuery, null, null);
+            Object properties = externalSearchProviderFactory.readProperties(aDocumentRepository);
+
+            List<ExternalSearchResult> results = provider.executeQuery(properties, aUser,
+                    aQuery, null, null);
 
             for (ExternalSearchResult result : results) {
                 String title = result.getDocumentTitle();

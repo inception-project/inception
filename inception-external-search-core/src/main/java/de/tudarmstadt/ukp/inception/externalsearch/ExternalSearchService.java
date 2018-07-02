@@ -31,7 +31,8 @@ public interface ExternalSearchService
 {
     static final String SERVICE_NAME = "externalSearchService";
 
-    List<ExternalSearchResult> query(User aUser, Project aProject, String aQuery);
+    List<ExternalSearchResult> query(User aUser, DocumentRepository aDocumentRepository,
+            String aQuery);
 
     List<DocumentRepository> listDocumentRepositories(Project aProject);
 

@@ -63,8 +63,8 @@ public class ElasticSearchProvider
     }
 
     @Override
-    public List<ExternalSearchResult> executeQuery(User aUser, String aQuery, String aSortOrder,
-            String... sResultField)
+    public List<ExternalSearchResult> executeQuery(Object aProperties,
+            User aUser, String aQuery, String aSortOrder, String... sResultField)
     {
         List<ExternalSearchResult> results = new ArrayList<ExternalSearchResult>();
 
@@ -72,6 +72,12 @@ public class ElasticSearchProvider
 
         ElasticSearchResult queryResult;
 
+        ElasticSearchProviderProperties properties = (ElasticSearchProviderProperties) aProperties; 
+
+        remoteUrl = properties.getRemoteUrl();
+        indexName = properties.getIndexName();
+        searchPath = properties.getSearchPath();
+        
         // Set headers
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -100,8 +106,14 @@ public class ElasticSearchProvider
         return results;
     }
 
-    public ExternalSearchResult getDocumentById(String aId)
+    public ExternalSearchResult getDocumentById(Object aProperties, String aId)
     {
+        ElasticSearchProviderProperties properties = (ElasticSearchProviderProperties) aProperties; 
+
+        remoteUrl = properties.getRemoteUrl();
+        indexName = properties.getIndexName();
+        objectType = properties.getObjectType();
+
         RestTemplate restTemplate = new RestTemplate();
 
         String getUrl = remoteUrl + "/" + indexName + "/" + objectType + "/" + aId;

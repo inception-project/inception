@@ -137,7 +137,8 @@ public class ElasticSearchTest
         User user = new User();
         String query = "merck";
 
-        externalSearchService.query(user, project, query);
+        // TODO: put the proper argument instead of null
+        externalSearchService.query(user, null, query);
     }
 
     @Configuration

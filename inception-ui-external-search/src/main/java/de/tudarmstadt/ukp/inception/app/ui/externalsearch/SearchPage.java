@@ -25,6 +25,8 @@ import java.util.ArrayList;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
+import org.apache.wicket.RestartResponseException;
+import org.apache.wicket.Session;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
@@ -55,8 +57,10 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
+import de.tudarmstadt.ukp.inception.app.session.SessionMetaData;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchService;
+import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
 
 @MountPath("/search.html")
 public class SearchPage extends ApplicationPageBase
@@ -80,24 +84,31 @@ public class SearchPage extends ApplicationPageBase
 
     Model<String> targetQuery = Model.of("");
 
-    private IModel<ArrayList<Project>> projectsModel;
+    private IModel<ArrayList<DocumentRepository>> repositoriesModel;
 
-    private Project currentProject;
+    private DocumentRepository currentRepository;
     private User currentUser;
+    private Project project;
 
     public SearchPage(PageParameters aParameters)
     {
+        project = Session.get().getMetaData(SessionMetaData.CURRENT_PROJECT);
+        if (project == null) {
+            abort();
+        }
+
         currentUser = userRepository.getCurrentUser();
 
-        ArrayList<Project> projects;
+        ArrayList<DocumentRepository> repositories;
 
-        projects = (ArrayList<Project>) projectService.listAccessibleProjects(currentUser);
+        repositories = (ArrayList<DocumentRepository>) externalSearchService
+                .listDocumentRepositories(project);
 
-        if (projects.size() > 0) {
-            currentProject = projects.get(0);
+        if (repositories.size() > 0) {
+            currentRepository = repositories.get(0);
         }
         else {
-            currentProject = null;
+            currentRepository = null;
         }
 
         final ModalWindow modalDocumentWindow;
@@ -123,7 +134,7 @@ public class SearchPage extends ApplicationPageBase
             }
         });
 
-        projectsModel = new LoadableDetachableModel<ArrayList<Project>>()
+        repositoriesModel = new LoadableDetachableModel<ArrayList<DocumentRepository>>()
         {
             /**
              * 
@@ -131,19 +142,20 @@ public class SearchPage extends ApplicationPageBase
             private static final long serialVersionUID = 1L;
 
             @Override
-            protected ArrayList<Project> load()
+            protected ArrayList<DocumentRepository> load()
             {
-                ArrayList<Project> projects;
+                ArrayList<DocumentRepository> documentRepositories;
                 // Load user's projects
-                projects = (ArrayList<Project>) projectService.listAccessibleProjects(currentUser);
-                return projects;
+                documentRepositories = (ArrayList<DocumentRepository>) externalSearchService
+                        .listDocumentRepositories(project);
+                return documentRepositories;
             }
         };
 
         add(mainContainer);
 
-        ProjectSelectionForm projectSelectionForm = new ProjectSelectionForm(
-                "projectSelectionForm");
+        DocumentRepositorySelectionForm projectSelectionForm = new DocumentRepositorySelectionForm(
+                "repositorySelectionForm");
         mainContainer.add(projectSelectionForm);
 
         SearchForm searchForm = new SearchForm("searchForm");
@@ -174,7 +186,7 @@ public class SearchPage extends ApplicationPageBase
                         modalDocumentWindow.setTitle(item.getModel().getObject().getDocumentId());
                         modalDocumentWindow.show(target);
 
-                        if (documentService.existsSourceDocument(currentProject,
+                        if (documentService.existsSourceDocument(project,
                                 item.getModel().getObject().getDocumentId())) {
                             error("Document " + item.getModel().getObject().getDocumentId()
                                     + " already uploaded ! Delete "
@@ -210,7 +222,7 @@ public class SearchPage extends ApplicationPageBase
         
         SourceDocument document = new SourceDocument();
         document.setName(aFileName);
-        document.setProject(currentProject);
+        document.setProject(project);
         document.setFormat(importExportService.getReadableFormatId(PLAIN_TEXT));
         
         try (InputStream is = stream) {
@@ -265,7 +277,7 @@ public class SearchPage extends ApplicationPageBase
 
         try {
             for (ExternalSearchResult result : externalSearchService.query(currentUser,
-                    currentProject, aQuery)) {
+                    currentRepository, aQuery)) {
                 results.add(result);
             }
         }
@@ -275,28 +287,31 @@ public class SearchPage extends ApplicationPageBase
         }
     }
 
-    private class ProjectSelectionForm
+    private class DocumentRepositorySelectionForm
         extends
-        Form<Project>
+        Form<DocumentRepository>
     {
-        public ProjectSelectionForm(String aId)
+        public DocumentRepositorySelectionForm(String aId)
         {
             super(aId);
 
-            DropDownChoice<Project> projectCombo = new DropDownChoice<Project>("projectCombo",
-                    new PropertyModel<Project>(SearchPage.this, "currentProject"), projectsModel)
+            DropDownChoice<DocumentRepository> repositoryCombo = 
+                    new DropDownChoice<DocumentRepository>(
+                    "repositoryCombo",
+                    new PropertyModel<DocumentRepository>(SearchPage.this, "currentRepository"),
+                    repositoriesModel)
             {
                 private static final long serialVersionUID = 1L;
 
                 {
-                    setChoiceRenderer(new ChoiceRenderer<Project>("name"));
+                    setChoiceRenderer(new ChoiceRenderer<DocumentRepository>("name"));
                     setNullValid(false);
                 }
 
                 @Override
-                protected void onSelectionChanged(Project aNewSelection)
+                protected void onSelectionChanged(DocumentRepository aNewSelection)
                 {
-                    SearchPage.this.currentProject = aNewSelection;
+                    SearchPage.this.currentRepository = aNewSelection;
                 }
 
                 @Override
@@ -311,10 +326,14 @@ public class SearchPage extends ApplicationPageBase
                     return "";
                 }
             };
-            add(projectCombo);
+            add(repositoryCombo);
 
         }
 
         private static final long serialVersionUID = -1L;
+    }
+
+    private void abort() {
+        throw new RestartResponseException(getApplication().getHomePage());
     }
 }
