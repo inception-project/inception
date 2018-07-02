@@ -40,6 +40,8 @@ public class NamedEntityLinkerClassificationToolFactory
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
+    private String FEATURE_IDENTIFIER = "identifier";
+
     @Autowired KnowledgeBaseService kbService;
     @Autowired ConceptLinkingService clService;
     @Autowired DocumentService docService;
@@ -80,12 +82,7 @@ public class NamedEntityLinkerClassificationToolFactory
 
         return (aLayer.isLockToTokenOffset() || aLayer.isMultipleTokens())
             && !aLayer.isCrossSentence() && "span".equals(aLayer.getType())
-            && (CAS.TYPE_NAME_STRING.equals(aFeature.getType()) || aFeature.isVirtualFeature());
-    }
-
-    @Override
-    public boolean isSupported(AnnotationFeature aFeature)
-    {
-        return aFeature.getName().equals("identifier");
+            && (CAS.TYPE_NAME_STRING.equals(aFeature.getType()) || aFeature.isVirtualFeature())
+            && aFeature.getName().equals(FEATURE_IDENTIFIER);
     }
 }
