@@ -17,11 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.api.model;
 
-import org.junit.Test;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Arrays;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.Test;
 
 public class LearningRecordTest {
 
