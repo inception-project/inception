@@ -377,8 +377,8 @@ public class CasStorageServiceImpl
                 realWriteCas(aDocument, aUsername, jcas);
             }
             else {
-                throw new FileNotFoundException(
-                        "CAS [{},{}] does not exist and no initializer is specified.");
+                throw new FileNotFoundException("CAS [" + aDocument.getId() + "," + aUsername
+                        + "] does not exist and no initializer is specified.");
             }
             
             // Update the cache
