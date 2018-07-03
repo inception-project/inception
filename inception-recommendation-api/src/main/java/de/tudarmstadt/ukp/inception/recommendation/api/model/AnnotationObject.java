@@ -34,6 +34,7 @@ public class AnnotationObject
     private String source;
     private double confidence;
     private long recommenderId;
+    private boolean visible = false;
 
     public AnnotationObject(TokenObject aToken, String aLabel, String aUiLabel, int aId,
         String aFeature, String aSource, double aConfidence, long aRecommenderId)
@@ -196,6 +197,10 @@ public class AnnotationObject
         return token.documentName;
     }
 
+    public void setVisible(boolean aVisible) { visible = aVisible; }
+
+    public boolean getVisible() { return visible; }
+
     @Override
     public boolean equals(Object o)
     {
@@ -226,6 +231,7 @@ public class AnnotationObject
         sb.append(", confidence=").append(confidence);
         sb.append(", recommenderId=").append(recommenderId);
         sb.append(", documentUri=").append(token.documentURI);
+        sb.append(", visible=").append(visible);
         sb.append('}');
         return sb.toString();
     }

@@ -123,7 +123,10 @@ public class RecommendationSpanRenderer
                 boolean isRejected = isRejected(recordedAnnotations, ao);
 
                 if (hasNoAnnotation || isOverlappingForFeature || isRejected) {
+                    ao.setVisible(false);
                     continue;
+                } else {
+                    ao.setVisible(true);
                 }
 
                 if (!labelMap.containsKey(ao.getLabel())
