@@ -400,7 +400,9 @@ public class ActiveLearningSidebar
                 currentRecommendation != null ? currentRecommendation.getConfidence() : 0.0)));
         recommendationForm.add(new Label(CID_RECOMMENDED_DIFFERENCE, LambdaModel.of(() ->
                 currentDifference != null ? currentDifference.getDifference() : 0.0)));
-        recommendationForm.add(createFeatureEditor());
+        recommendationForm.add(
+            (selectedLayer.getObject() != null && currentRecommendation != null) ?
+                createFeatureEditor() : new Label("editor").setVisible(false));
 
         recommendationForm.add(new LambdaAjaxButton<>(CID_ANNOTATE_BUTTON, this::actionAnnotate));
         recommendationForm.add(new LambdaAjaxLink(CID_SKIP_BUTTON, this::actionSkip));
@@ -440,14 +442,11 @@ public class ActiveLearningSidebar
 
     private FeatureEditor createFeatureEditor()
     {
-        if (currentRecommendation != null) {
-            annotationFeature = annotationService
-                .getFeature(currentRecommendation.getFeature(), selectedLayer.getObject());
-        }
-        else {
-            annotationFeature = annotationService
-                .listAnnotationFeature(selectedLayer.getObject()).get(0);
-        }
+        annotationFeature = annotationService
+            .getFeature(currentRecommendation.getFeature(), selectedLayer.getObject());
+
+        annotationFeature = annotationService.listAnnotationFeature(selectedLayer.getObject())
+            .get(0);
         FeatureSupport featureSupport = featureSupportRegistry.getFeatureSupport(annotationFeature);
 
         featureState = new FeatureState(annotationFeature, null);
