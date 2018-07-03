@@ -1,24 +1,25 @@
 [[sect_annotation_fact-extraction]]
 === Fact Extraction
 Fact extraction is the task of extracting facts from documents. It is defined that a fact consists
-of a subject, a predicate, an object and qualifiers. Fact extraction in INCEpTION includes
+of a subject, a predicate, an object and qualifiers. Fact extraction in {product-name} includes
 annotating the mentions for each fact component, and linking these mentions to instances of concept
 classes or properties from the knowledge base.
 
-This document briefly describes how to use the fact extraction functionality in INCEpTION alongside
-a running example. The example covers creating a local knowledge base supporting qualifiers in
-projects settings, managing qualifiers in the knowledge base, and extracting a fact in the annotation page.
+This section briefly describes how to use the fact extraction functionality in {product-name}
+alongside a running example. The example covers creating a local knowledge base supporting
+qualifiers in the *Projects Settings*, managing qualifiers in the *Knowledge Base*, and extracting a
+ fact in the *Annotation* page.
 
 ==== A local knowledge base supporting qualifiers
-In projects settings, switch to the *Knowledge Bases* tab, then click *New…* on the bottom and a
-dialogue box shows as in the figure below.
+In the *Projects Settings*, switch to the *Knowledge Bases* tab, then click *New…* on the bottom
+ and a dialogue box shows as in the figure below.
 
 image::factExtraction1.png[align="center"]
 
-To create a local knowledge base supporting qualifiers, one needs to choose *Local* for the type and
- to choose *WIKIDATA* for the Reification. One can then follow the wizard to finish the setting.
-
-If *NONE* is chosen for the Reification, one cannot add or view qualifiers in the knowledge base.
+To create a local knowledge base, one needs to choose *Local* for the type. For the reification,
+*NONE* is the defaut case, but one cannot add or view qualifiers in the knowledge base with *NONE*.
+So, to support qualifiers, one needs to choose *WIKIDATA* for the Reification. One can then follow
+the wizard to finish the setting.
 
 ==== Managing qualifiers in the knowledge base
 Assuming one has already created concepts, properties, instances and a statement about instance
@@ -33,14 +34,14 @@ image::factExtraction3.png[align="center"]
 
 One can click the pencil icon on the same line as this qualifer to edit and delete this qualifier.
 
-==== Extracting a fact in the annotation page
+==== Linking a fact in the annotation page
 Assuming the project contains documents for annotation, one can now switch to the annotation page
 and choose the fact layer:
 
 image::factExtraction4.png[align="center"]
 
-One can now mark the predicate mention of a fact. In the screenshot below, _enrolled in_ is selected
-. The right sidebar shows feature editors for the predicate, the subject, the object and the
+One can now mark the predicate mention of a fact. In the screenshot below, _enrolled in_ is selected.
+The right sidebar shows feature editors for the predicate, the subject, the object and the
 qualifiers. One can then choose _educated-at_ in the dropdown field of the predicate feature editor
 to link the mention of this predicate to the property in the knowledge base. The candidate list of
 this dropdown field is a list of properties in the knowledge base.
@@ -51,8 +52,10 @@ To annotate the subject mention of a fact, one needs to click *<Click to activat
 feature editor. After this input field turns orange, one can now mark the subject mention _Obama_of
 a fact. One can then choose _Barack Obama_ in the dropdown field of the subject feature editor to
 link the mention of this subject to the instance in the knowledge base. The candidate list of this
-dropdown field is a list of instances in the knowledge base. In the main editor, there is an arrow
-from the label above the predicate to the label above the subject, with a name _subject_.
+dropdown field is a list of instances in the knowledge base. The default setting returns all the
+instances from all the knowledge base in this project. See <<Fact linking with multiple knowledge bases>> to select a specific
+knowledge base. After linking the subject to the knowledge base instance, in the main editor, there
+is an arrow from the label above the predicate to the label above the subject, with a name _subject_.
 
 image::factExtraction6.png[align="center"]
 
@@ -79,12 +82,14 @@ After annotating this qualifer, in the main editor, there is an arrow from the l
 predicate to the label above the qualifier value, with the qualifier name _start-date_.
 
 So, a fact (Barack Obama, educated-at, Harvard Law School, Start-date: 1988) with its mentions is
-extracted in this example.
+linked in this example.
 
+==== Fact linking with multiple knowledge bases
 If a project has multiple knowledge bases, a user can choose to link the mention to a certain
-knowledge base or to all knowledge bases. This configuration is done in projects settings. One needs
- to switch to the *Layers* tab first, then to choose the *Named entity* layer and the *identifier*
- feature. After that one can configure the linked knowledge base information in *Feature Details* as
- shown in the figure below.
+knowledge base or to all knowledge bases. This configuration is done in the *Projects Settings*. One
+ needs to switch to the *Layers* tab first, then to choose the *Named entity* layer and the
+ *identifier* feature. After that one can configure the linked knowledge base information in
+ *Feature Details*, choose the desired knowledge base from the dropdown list of the field *Knowledge
+ base* as shown in the figure below.
 
 image::factExtraction9.png[align="center"]
