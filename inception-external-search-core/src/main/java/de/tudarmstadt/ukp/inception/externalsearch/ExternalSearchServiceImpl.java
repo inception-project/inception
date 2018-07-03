@@ -143,4 +143,24 @@ public class ExternalSearchServiceImpl
         entityManager.remove(settings);
     }
 
+    @Override
+    public ExternalSearchResult getDocumentById(User aUser, DocumentRepository aDocumentRepository,
+            String aId)
+    {
+        ExternalSearchProvider provider = getExternalSearchProviderByProject(
+                aDocumentRepository.getProject());
+
+        if (provider.isConnected()) {
+
+            Object properties = externalSearchProviderFactory.readProperties(aDocumentRepository);
+
+            ExternalSearchResult result = provider.getDocumentById(properties, aId);
+            
+            return result;
+        }
+        else {
+            return null;
+        }
+    }
+
 }

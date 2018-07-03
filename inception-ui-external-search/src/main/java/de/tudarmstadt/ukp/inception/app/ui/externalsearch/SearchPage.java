@@ -180,21 +180,21 @@ public class SearchPage extends ApplicationPageBase
                     @Override
                     public void onClick(AjaxRequestTarget target)
                     {
-                        modalDocumentWindow.setContent(new ModalDocumentWindow(
-                                "content",
-                                item.getModel().getObject().getText()));
-                        modalDocumentWindow.setTitle(item.getModel().getObject().getDocumentId());
+                        String documentId = item.getModel().getObject().getDocumentId();
+                        String text = externalSearchService.getDocumentById(currentUser, 
+                                currentRepository, documentId).getText();
+
+                        modalDocumentWindow.setContent(new ModalDocumentWindow("content", text));
+                        modalDocumentWindow.setTitle(documentId);
+                        
                         modalDocumentWindow.show(target);
 
-                        if (documentService.existsSourceDocument(project,
-                                item.getModel().getObject().getDocumentId())) {
-                            error("Document " + item.getModel().getObject().getDocumentId()
-                                    + " already uploaded ! Delete "
+                        if (documentService.existsSourceDocument(project, documentId)) {
+                            error("Document " + documentId + " already uploaded ! Delete "
                                     + "the document if you want to upload again");
                         }
                         else {
-                            importDocument(item.getModel().getObject().getDocumentId(),
-                                    item.getModel().getObject().getText());
+                            importDocument(documentId, text);
                         }
 
                     }
@@ -217,23 +217,20 @@ public class SearchPage extends ApplicationPageBase
 
     private void importDocument(String aFileName, String aText) 
     {
-        InputStream stream = new ByteArrayInputStream(
-                aText.getBytes(StandardCharsets.UTF_8));
-        
+        InputStream stream = new ByteArrayInputStream(aText.getBytes(StandardCharsets.UTF_8));
+
         SourceDocument document = new SourceDocument();
         document.setName(aFileName);
         document.setProject(project);
         document.setFormat(importExportService.getReadableFormatId(PLAIN_TEXT));
-        
+
         try (InputStream is = stream) {
             documentService.uploadSourceDocument(is, document);
         }
-        catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-        catch (UIMAException e) {
-            // TODO Auto-generated catch block
+        catch (IOException | UIMAException e) {
+            LOG.error("Unable to retrieve document " + aFileName, e);
+            error("Unable to retrieve document " + aFileName + " - "
+                    + ExceptionUtils.getRootCauseMessage(e));
             e.printStackTrace();
         }
 

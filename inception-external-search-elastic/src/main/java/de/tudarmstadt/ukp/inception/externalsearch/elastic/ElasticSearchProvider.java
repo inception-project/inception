@@ -28,6 +28,7 @@ import org.springframework.web.client.RestTemplate;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchProvider;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
+import de.tudarmstadt.ukp.inception.externalsearch.elastic.configuration.ElasticSearchProviderProperties;
 
 public class ElasticSearchProvider
     implements ExternalSearchProvider
@@ -41,6 +42,9 @@ public class ElasticSearchProvider
     
     private String searchPath = "_search";
     private String objectType = "texts";
+    
+    // Number of results retrieved from the server
+    private int resultSize = 1000;
 
     @Override
     public boolean connect(String aUrl, String aUser, String aPassword)
@@ -83,7 +87,8 @@ public class ElasticSearchProvider
         headers.setContentType(MediaType.APPLICATION_JSON);
 
         // Set body
-        String body = "{\"query\": {\"match\" : {\"doc.text\":\"" + aQuery + "\"}}}";
+        String body = String.format("{\"size\":\"%d\",\"_source\":\"false\",\"query\":{\"match\" : "
+                + "{\"doc.text\":\"%s\"}}}", resultSize, aQuery);
 
         // Set http entity
         HttpEntity<String> entity = new HttpEntity<String>(body, headers);
@@ -99,7 +104,11 @@ public class ElasticSearchProvider
             ExternalSearchResult result = new ExternalSearchResult();
 
             result.setDocumentId(hit.get_id());
-            result.setText(hit.get_source().getDoc().getText());
+            if (hit.get_source() != null) {
+                if (hit.get_source().getDoc() != null) {
+                    result.setText(hit.get_source().getDoc().getText());
+                }
+            }
             results.add(result);
         }
 
