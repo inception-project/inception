@@ -21,6 +21,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.uima.cas.Feature;
+import org.apache.uima.cas.Type;
+import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,16 +32,22 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.recommendation.api.ClassificationTool;
 import de.tudarmstadt.ukp.inception.recommendation.api.Classifier;
+import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.imls.util.ListUtil;
 
 /**
  * This consumer predicts new annotations for a given annotation layer, if a classification tool for
@@ -51,6 +61,7 @@ public class PredictionTask
     private @Autowired AnnotationSchemaService annoService;
     private @Autowired RecommendationService recommendationService;
     private @Autowired DocumentService documentService;
+    private @Autowired LearningRecordService learningRecordService;
     
     public PredictionTask(User aUser, Project aProject)
     {
@@ -97,14 +108,19 @@ public class PredictionTask
                 List<AnnotationDocument> docs = documentService
                         .listAnnotationDocuments(layer.getProject(), user);
 
-                docs.forEach(doc -> {
+                // TODO Reading the CAS is time-intensive, better parallelize it.
+                for (AnnotationDocument doc : docs) {
                     try {
                         JCas jcas = documentService.readAnnotationCas(doc);
-                        predictions.addAll(classifier.predict(jcas, layer));
-                    } catch (IOException e) {
+                        List<AnnotationObject> documentPredictions = filterPredictions(jcas, doc,
+                            layer, classifier);
+
+                        predictions.addAll(documentPredictions);
+                    }
+                    catch (IOException e) {
                         log.error("Cannot read annotation CAS.", e);
                     }
-                });
+                }
       
                 // Tell the predictions who created them
                 predictions.forEach(token -> token.setRecommenderId(recommender.getId()));
@@ -123,5 +139,61 @@ public class PredictionTask
         }
         
         recommendationService.putIncomingPredictions(getUser(), getProject(), model);
+    }
+
+    private List<AnnotationObject> filterPredictions(JCas aJcas, AnnotationDocument aDoc,
+        AnnotationLayer aLayer, Classifier aClassifier)
+    {
+        List<List<AnnotationObject>> recommendations = Predictions.getPredictions(
+            aClassifier.predict(aJcas, aLayer));
+
+        List<LearningRecord> recordedAnnotations = learningRecordService
+            .getAllRecordsByDocumentAndUserAndLayer(aDoc.getDocument(), getUser().getUsername(),
+                aLayer);
+
+        for (List<AnnotationObject> token : recommendations) {
+            for (AnnotationObject ao : token) {
+                boolean hasNoAnnotation = ao.getLabel() == null;
+                boolean isOverlappingForFeature = isOverlappingForFeature(ao.getOffset(),
+                    ao.getFeature(), aJcas, aLayer);
+                boolean isRejected = isRejected(recordedAnnotations, ao);
+
+                if (hasNoAnnotation || isOverlappingForFeature || isRejected) {
+                    ao.setVisible(false);
+                }
+                else {
+                    ao.setVisible(true);
+                }
+            }
+        }
+
+        return ListUtil.flattenList(recommendations);
+    }
+
+    /**
+     * Check if there is already an existing annotation overlapping the prediction
+     *
+     */
+    private boolean isOverlappingForFeature(Offset aOffset, String aFeatureName, JCas aJcas,
+        AnnotationLayer aLayer)
+    {
+        Type type = CasUtil.getType(aJcas.getCas(), aLayer.getName());
+        AnnotationFS annoFS = WebAnnoCasUtil.selectSingleFsAt(aJcas,
+            type, aOffset.getBeginCharacter(), aOffset.getEndCharacter());
+        Feature feature = type.getFeatureByBaseName(aFeatureName);
+        return annoFS.getFeatureValue(feature) != null;
+    }
+
+    private boolean isRejected(List<LearningRecord> recordedRecommendations, AnnotationObject ao)
+    {
+        for (LearningRecord record : recordedRecommendations) {
+            if (record.getOffsetCharacterBegin() == ao.getOffset().getBeginCharacter()
+                && record.getOffsetCharacterEnd() == ao.getOffset().getEndCharacter()
+                && record.getAnnotation().equals(ao.getLabel())
+                && record.getUserAction().equals(LearningRecordUserAction.REJECTED)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
