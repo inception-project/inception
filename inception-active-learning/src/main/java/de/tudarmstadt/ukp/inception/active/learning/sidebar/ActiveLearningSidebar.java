@@ -445,8 +445,6 @@ public class ActiveLearningSidebar
         annotationFeature = annotationService
             .getFeature(currentRecommendation.getFeature(), selectedLayer.getObject());
 
-        annotationFeature = annotationService.listAnnotationFeature(selectedLayer.getObject())
-            .get(0);
         FeatureSupport featureSupport = featureSupportRegistry.getFeatureSupport(annotationFeature);
 
         featureState = new FeatureState(annotationFeature, null);
