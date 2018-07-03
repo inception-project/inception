@@ -89,7 +89,7 @@ public final class SourceDocumentStateStats
         }
         else {
             // This should actually never happen...
-            throw new IllegalStateException("Unable to determine project state.");
+            throw new IllegalStateException("Unable to determine project state from " + toString());
         }
     }
 
