@@ -160,10 +160,76 @@ public abstract class AbstractInfoPanel<T extends KBObject> extends Panel {
                 StatementDetailPreference aDetailPreference) {
             super(id, "viewMode", AbstractInfoPanel.this);
             Label uiLabel = new Label("uiLabel", compoundModel.bind("uiLabel"));
-            uiLabel.add(new TooltipBehavior(compoundModel.bind("identifier"))
-                    .setOption("showAfter", 2000).setOption("autoHide", false));
             add(uiLabel);
+            
+            // Exploring options for TT
+
+            // Label identifier = new Label("identifier")
+            // {
+            // /**
+            // *
+            // */
+            // private static final long serialVersionUID = 1L;
+            //
+            // public void onClick()
+            // {
+            // add(new
+            // TooltipBehavior(compoundModel.bind("identifier")).setOption("autoHide",false));
+            // }
+            // };            
+            
+            //identifier.add(new TooltipBehavior(compoundModel.bind("identifier")));
+            
+            // uiLabel.add(new TooltipBehavior(compoundModel.bind("identifier"))
+            // .setOption("showAfter", 2000).setOption("autoHide", false));
+            //
+            // Component info = new WebMarkupContainer("icon").add(AttributeAppender.append("class",
+            // "fa fa-info-circle"));
+
+            // add(identifier);            
+            
+            
+            
             add(new Label("typeLabel", new ResourceModel(getTypeLabelResourceKey())));
+            
+            
+            // Link infoButton = new LambdaAjaxLink("identifier", AbstractInfoPanel.this::onEvent);
+            // infoButton.add(new Label("label", new ResourceModel(getDeleteButtonResourceKey())));
+            // infoButton.add(new WriteProtectionBehavior(kbModel));
+            // add(infoButton);
+
+            // Label identifier = new Label("identifier");
+            // Link linktext = new Link("idtext") {
+            // @Override
+            // public void onClick() {
+            // identifier.add(new
+            // TooltipBehavior(compoundModel.bind("identifier")).setOption("autoHide",false));
+            // }
+            // };
+            // linktext.add(identifier);
+            // add(linktext);            
+          
+            // Label identifier = new Label("x");
+            // identifier.add(new TooltipBehavior(compoundModel.bind("identifier"))
+            // .setOption("autoHide", false));
+            // LambdaAjaxLink infoButton = new LambdaAjaxLink("idtext", t );
+            //
+            // infoButton.add(new TooltipBehavior(compoundModel.bind("identifier"))
+            // .setOption("autoHide", false));
+            // add(infoButton);
+                        
+            //compoundModel.bind("uiLabel")
+            //Component info =  new WebMarkupContainer("icon").add(AttributeAppender.append("value", compoundModel.bind("uiLabel")));
+           // compoundModel.bind("identifier") 
+            
+            Label identifier = new Label("idtext"); 
+            TooltipBehavior tip = new TooltipBehavior();
+            tip.setOption("autoHide", false);
+            tip.setOption("content",compoundModel.bind("identifier"));
+            tip.setOption("showOn", "click");
+            identifier.add(tip);
+            add(identifier);
+            
             // button for deleting the KBObject
             LambdaAjaxLink deleteButton = new LambdaAjaxLink("delete",
                     AbstractInfoPanel.this::confirmActionDelete).onConfigure((_this) -> {

@@ -17,7 +17,10 @@
  - limitations under the License.
 -->
 
+
+
 <html xmlns:wicket="http://wicket.apache.org">
+
 <body>
   <wicket:panel>
     <div wicket:id="confirmationDialog"></div>
@@ -30,6 +33,9 @@
        <div class="kb-object-headline-uilabel-wrapper">
          <h2 wicket:id="uiLabel"></h2>
        </div>
+       
+       <button wicket:id="idtext" class="fa fa-info-circle"></button>
+       
 	   <button wicket:id="delete" type="button" class="btn btn-outline-danger pull-right"><i class="fa fa-trash" aria-hidden="true"></i> <wicket:container wicket:id="label"></wicket:container></button>
        <button wicket:id="createSubclass" type="button" class="btn btn-outline-primary btn pull-right" style="margin-right :5px"><i class="fa fa-plus" aria-hidden="true"></i> <wicket:container wicket:id="subclassLabel"></wicket:container></button>
        <h5>
@@ -38,6 +44,8 @@
        <hr />
     </div>
     <div class="flex-content flex-v-container" wicket:id="statements"></div> 
+    
+  
   </wicket:fragment>  
   
   <wicket:fragment wicket:id="editMode">
