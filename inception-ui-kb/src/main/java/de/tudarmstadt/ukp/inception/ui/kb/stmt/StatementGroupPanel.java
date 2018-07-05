@@ -203,7 +203,7 @@ public class StatementGroupPanel extends Panel {
             // propertyLink.add(new TooltipBehavior(groupModel.bind("property.identifier"))
             // .setOption("showAfter", 2000).setOption("autoHide", false));
             form.add(propertyLink);
-            Label statementIdentifier = new Label("statementIdtext"); 
+            WebMarkupContainer statementIdentifier = new WebMarkupContainer("statementIdtext"); 
             TooltipBehavior tip = new TooltipBehavior();
             tip.setOption("autoHide", false);
             tip.setOption("content",
