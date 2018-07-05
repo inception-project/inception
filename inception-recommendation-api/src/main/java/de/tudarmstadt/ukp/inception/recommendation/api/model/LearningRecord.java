@@ -42,6 +42,7 @@ public class LearningRecord
     implements Serializable
 {
     private static final long serialVersionUID = -8487663728083806672L;
+    private static final int TOKEN_TEXT_LENGTH = 255;
     
     @Id
     @GeneratedValue
@@ -63,6 +64,7 @@ public class LearningRecord
     private int offsetTokenEnd;
     private int offsetCharacterBegin;
     private int offsetCharacterEnd;
+
     private String tokenText;
     private String annotation;
     
@@ -135,7 +137,9 @@ public class LearningRecord
     }
 
     public void setTokenText(String tokenText) {
-        this.tokenText = tokenText;
+        // Truncate the token text if it is too long
+        int targetLength = Math.min(tokenText.length(), TOKEN_TEXT_LENGTH);
+        this.tokenText = tokenText.substring(0, targetLength);
     }
 
     public String getAnnotation() {
