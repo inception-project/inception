@@ -76,7 +76,7 @@ public class ExternalClassifier
     }
 
     @Override
-    public List predictSentences(List inputData)
+    public List<List<List<AnnotationObject>>> predictSentences(List inputData)
     {
         throw new UnsupportedOperationException("Currently not implemented.");
     }
@@ -122,9 +122,11 @@ public class ExternalClassifier
         try {
             String jsonString = new JSONObject()
                     .put("CAS", new String(Base64.getEncoder().encode(casOS.toByteArray()),
-                        "utf-8")).put("Typesystem",
+                        "utf-8"))
+                    .put("Typesystem",
                     new String(Base64.getEncoder().encode(typeOS.toByteArray()), "utf-8"))
-                    .put("Layer", new String(layer.getName()))
+                    .put("Layer", layer.getName())
+                    .put("Feature", conf.getFeature())
                     .toString();
             httpPost.setEntity(new StringEntity(jsonString, "utf-8"));
         }
@@ -133,8 +135,7 @@ public class ExternalClassifier
         }
         
         //Send Query and wait for the results
-        try (CloseableHttpResponse response = httpclient.execute(httpPost);) {
-            System.out.println(response.getStatusLine());
+        try (CloseableHttpResponse response = httpclient.execute(httpPost)) {
             HttpEntity entity = response.getEntity();
             
             //extract the results 
@@ -160,8 +161,6 @@ public class ExternalClassifier
             wrappedSents.add(sentenceList);
         }
         
-        List<AnnotationObject> result = mergeAdjacentTokensWithSameLabel(wrappedSents, layer);
-
-        return result;
+        return mergeAdjacentTokensWithSameLabel(wrappedSents, layer);
     }
 }
