@@ -37,6 +37,7 @@ import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.cycle.RequestCycle;
 
+import com.googlecode.wicket.jquery.core.Options;
 import com.googlecode.wicket.kendo.ui.widget.tooltip.TooltipBehavior;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
@@ -225,8 +226,8 @@ public abstract class AbstractInfoPanel<T extends KBObject> extends Panel {
             Label identifier = new Label("idtext"); 
             TooltipBehavior tip = new TooltipBehavior();
             tip.setOption("autoHide", false);
-            tip.setOption("content",compoundModel.bind("identifier"));
-            tip.setOption("showOn", "click");
+            tip.setOption("content", Options.asString(compoundModel.bind("identifier")));
+            tip.setOption("showOn", Options.asString("click"));
             identifier.add(tip);
             add(identifier);
             
