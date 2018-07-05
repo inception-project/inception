@@ -389,10 +389,13 @@ public class KnowledgeBaseDetailsPanel extends Panel {
 
         @Override
         protected void setUpCommonComponents(WebMarkupContainer wmc) {
-            // Schema configuration
+            wmc.add(new DisabledBootstrapCheckbox("writeprotection", model.bind("kb.readOnly"),
+                    new StringResourceModel("kb.details.permissions.writeprotection")));
             
-            Component iriPanel = new KnowledgeBaseIriPanel("iriPanel", model)
-                    .add(LambdaBehavior.onConfigure(it -> it.setEnabled(false)));
+            // Schema configuration
+            Component iriPanel = new KnowledgeBaseIriPanel("iriPanel", model,
+                    KnowledgeBaseIriPanelMode.PROJECTSETTINGS)
+                            .add(LambdaBehavior.onConfigure(it -> it.setEnabled(false)));
             // don't show radio group in view mode 
             iriPanel.get("iriSchema").setVisible(false);
             wmc.add(iriPanel);
@@ -430,9 +433,6 @@ public class KnowledgeBaseDetailsPanel extends Panel {
                 }
             };
             wmc.add(lv);
-            
-            wmc.add(new DisabledBootstrapCheckbox("writeprotection", model.bind("kb.readOnly"),
-                    new StringResourceModel("kb.details.local.permissions.writeprotection")));
         }
 
         @Override
@@ -469,7 +469,8 @@ public class KnowledgeBaseDetailsPanel extends Panel {
         @Override
         protected void setUpCommonComponents(WebMarkupContainer wmc) {
             // Schema configuration
-            wmc.add(new KnowledgeBaseIriPanel("iriPanel", model));
+            wmc.add(new KnowledgeBaseIriPanel("iriPanel", model,
+                    KnowledgeBaseIriPanelMode.PROJECTSETTINGS));
             wmc.add(new CheckBox("enabled", model.bind("kb.enabled")));
             wmc.add(new CheckBox("supportConceptLinking", model.bind("kb.supportConceptLinking")));
         }
@@ -494,13 +495,18 @@ public class KnowledgeBaseDetailsPanel extends Panel {
             wmc.add(clearLink);
             
             wmc.add(new BootstrapCheckbox("writeprotection", model.bind("kb.readOnly"),
-                    new StringResourceModel("kb.details.local.permissions.writeprotection")));
+                    new StringResourceModel("kb.details.permissions.writeprotection")));
         }
 
         @Override
         protected void setUpRemoteKnowledgeBaseComponents(WebMarkupContainer wmc) {
             // this text field allows for _editing_the location for remote repositories
             addUrlField(wmc, "url");
+            
+            // add "readonly"-checkbox that is always disabled
+            wmc.add(new BootstrapCheckbox("writeprotection", model.bind("kb.readOnly"),
+                    new StringResourceModel("kb.details.permissions.writeprotection"))
+                            .add(LambdaBehavior.onConfigure(cb -> cb.setEnabled(false))));
         }
 
         private void addUrlField(WebMarkupContainer wmc, String id)
