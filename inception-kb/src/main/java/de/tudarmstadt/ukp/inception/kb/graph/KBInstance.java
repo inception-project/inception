@@ -146,10 +146,10 @@ public class KBInstance
         if (isNotBlank(description)) {
             Literal descriptionLiteral;
             if (language == null) {
-                descriptionLiteral = vf.createLiteral(name);
+                descriptionLiteral = vf.createLiteral(description);
             }
             else {
-                descriptionLiteral = vf.createLiteral(name, language);
+                descriptionLiteral = vf.createLiteral(description, language);
             }
             Statement descStmt = vf
                 .createStatement(subject, kb.getDescriptionIri(), descriptionLiteral);
