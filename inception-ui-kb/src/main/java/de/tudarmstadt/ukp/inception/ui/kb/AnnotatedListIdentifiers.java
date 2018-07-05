@@ -42,6 +42,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.wicket.OverviewListChoice;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
+import de.tudarmstadt.ukp.inception.search.ExecutionException;
 import de.tudarmstadt.ukp.inception.search.SearchResult;
 import de.tudarmstadt.ukp.inception.search.SearchService;
 
@@ -133,9 +134,11 @@ public class AnnotatedListIdentifiers
             currentProject = kbModel.getObject().getProject();
             return searchService.query(currentUser, currentProject, targetQuery.getObject());
         }
+        catch (ExecutionException e) {
+            return Collections.emptyList();
+        }
         catch (Exception e) {
             LOG.debug("Error in the query.", e);
-            error("Error in the query: " + e.getMessage());
             return Collections.emptyList();
         }
     }

@@ -223,10 +223,10 @@ public class MtasUimaParser extends MtasParser {
                                 // feature type is associated with KB and feature value is not null
                                 String labelStr = null;
                                 if (feature.getType().contains(IndexingConstants.KB)
-                                        && (!featureValue.equals("null"))) {
+                                        && (featureValue != null)) {
                                     labelStr = getUILabel(featureValue);
                                 }
-                                if (!labelStr.isEmpty()) {
+                                if (labelStr != null) {
                                     String[] kbValues = labelStr.split(MtasToken.DELIMITER);
                                     
                                     if (IndexingConstants.KBCONCEPT.equals(kbValues[0])) {
@@ -310,7 +310,6 @@ public class MtasUimaParser extends MtasParser {
      */
     public String getUILabel(String aIRI) {
         StringBuilder labelStr = new StringBuilder();
-        System.out.println();
         Optional<KBObject> kbObject = KBUtility.readKBIdentifier(kbService,project, aIRI);
         if (kbObject.isPresent()) {
             labelStr.append(kbObject.get().getClass().getSimpleName())
