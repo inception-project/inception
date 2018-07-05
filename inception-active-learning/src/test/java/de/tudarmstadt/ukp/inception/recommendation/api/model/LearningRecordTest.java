@@ -15,11 +15,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.search.index.mtas;
+package de.tudarmstadt.ukp.inception.recommendation.api.model;
 
-public class IndexingConstants
-{
-    public static final String KB_ENTITY = "KB.Entity";
-    public static final String INDEX_KB_CONCEPT = "class";
-    public static final String INDEX_KB_INSTANCE = "instance";
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.util.Arrays;
+
+import org.junit.Test;
+
+public class LearningRecordTest {
+
+    @Test
+    public void thatTokenTextIsTruncated() {
+        char[] charArray = new char[300];
+        Arrays.fill(charArray, 'X');
+        String longTokenText = new String(charArray);
+
+        LearningRecord sut = new LearningRecord();
+        sut.setTokenText(longTokenText);
+
+        assertThat(sut.getTokenText())
+            .as("TokenText has been truncated")
+            .hasSize(255);
+    }
 }
