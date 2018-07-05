@@ -531,7 +531,7 @@ public class ActiveLearningSidebar
             writeLearningRecordInDatabaseAndEventLog(LearningRecordUserAction.ACCEPTED);
         }
         else {
-            writeLearningRecordInDatabaseAndEventLog(LearningRecordUserAction.CORRECTED);
+            writeLearningRecordInDatabaseAndEventLog(LearningRecordUserAction.CORRECTED, selectedValue);
         }
 
         int begin = currentRecommendation.getOffset().getBeginCharacter();
@@ -540,7 +540,7 @@ public class ActiveLearningSidebar
         SpanAdapter adapter = (SpanAdapter) annotationService.getAdapter(selectedLayer.getObject());
         int id = adapter.add(state, jCas, begin, end);
         recommendationService
-            .setFeatureValue(annotationFeature, currentRecommendation.getLabel(), adapter, state,
+            .setFeatureValue(annotationFeature, selectedValue, adapter, state,
                 jCas, id);
 
         // Save CAS after annotation has been created
