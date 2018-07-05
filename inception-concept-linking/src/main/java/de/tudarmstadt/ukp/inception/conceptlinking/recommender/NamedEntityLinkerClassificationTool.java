@@ -46,7 +46,7 @@ public class NamedEntityLinkerClassificationTool
         super(recommenderId, NamedEntityLinkerClassificationToolFactory.class.getName(),
             new NamedEntityTrainer(new ClassifierConfiguration<>(feature, recommenderId)),
             new NamedEntityLinker(new ClassifierConfiguration<>(feature, recommenderId), kbService,
-                clService, docService, annoService, fsRegistry),
+                clService, docService, annoService, fsRegistry, feature),
             new NerAnnotationObjectLoader(aLayer, NAMED_ENTITY_CLASSIFICATION_FEATURE), false);
     }
 
