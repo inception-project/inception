@@ -198,10 +198,6 @@ public class StatementGroupPanel extends Panel {
             LambdaAjaxLink propertyLink = new LambdaAjaxLink("propertyLink",
                     this::actionPropertyLinkClicked);
             propertyLink.add(new Label("property", groupModel.bind("property.uiLabel")));
-            LOG.debug(groupModel.bind("property.uiLabel").getObject() + ":::"
-                    + groupModel.bind("property.identifier").getObject());
-            // propertyLink.add(new TooltipBehavior(groupModel.bind("property.identifier"))
-            // .setOption("showAfter", 2000).setOption("autoHide", false));
             form.add(propertyLink);
             WebMarkupContainer statementIdentifier = new WebMarkupContainer("statementIdtext"); 
             TooltipBehavior tip = new TooltipBehavior();
