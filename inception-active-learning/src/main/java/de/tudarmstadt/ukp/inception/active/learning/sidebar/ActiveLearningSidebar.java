@@ -120,6 +120,7 @@ public class ActiveLearningSidebar
     private static final String CID_USER_ACTION = "userAction";
     private static final String CID_RECOMMENDED_ANNOTATION = "recommendedAnnotation";
     private static final String CID_JUMP_TO_ANNOTATION = "jumpToAnnotation";
+    private static final String CID_NO_RECOMMENDERS = "noRecommenders";
     
     private static final String ANNOTATION_MARKER = "VAnnotationMarker";
     private static final String TEXT_MARKER = "VTextMarker";
@@ -143,6 +144,7 @@ public class ActiveLearningSidebar
     private boolean sessionActive = false;
     private boolean hasUnseenRecommendation = false;
     private boolean hasSkippedRecommendation = false;
+    private boolean doExistRecommenders = true;
     
     private ActiveLearningRecommender activeLearningRecommender;
     private AnnotationObject currentRecommendation;
@@ -170,6 +172,7 @@ public class ActiveLearningSidebar
         
         mainContainer = new WebMarkupContainer(CID_MAIN_CONTAINER);
         mainContainer.setOutputMarkupId(true);
+        mainContainer.add(createNoRecommendersMessage());
         mainContainer.add(createSessionControlForm());
         mainContainer.add(createNoRecommendationLabel());
         mainContainer.add(createLearnFromSkippedRecommendationForm());
@@ -180,7 +183,7 @@ public class ActiveLearningSidebar
         add(confirmationDialog);
     }
 
-    private Form<?> createSessionControlForm()
+    private Label createNoRecommendersMessage()
     {
         // Use the currently selected layer from the annotation detail editor panel as the
         // default choice in the active learning mode.
@@ -192,15 +195,24 @@ public class ActiveLearningSidebar
         else if (!layersWithRecommenders.isEmpty()) {
             selectedLayer = Model.of(layersWithRecommenders.get(0));
         }
-        // If there are no layers with recommenders, then choose nothing.
+        // If there are no layers with recommenders, then choose nothing and show no recommenders
+        // message.
         else {
-            // FIXME: in this case, we might display a nice message saying that none of the layers
-            // have any recommenders configured.
             selectedLayer = Model.of();
+            doExistRecommenders = false;
         }
-        
+        Label noRecommendersMessage = new Label(CID_NO_RECOMMENDERS, "None of the layers have any "
+            + "recommenders configured. Please set the recommenders first in the Project "
+            + "Settings.");
+        noRecommendersMessage.add(LambdaBehavior.onConfigure(component -> component.setVisible
+            (!doExistRecommenders)));
+        return noRecommendersMessage;
+    }
+
+    private Form<?> createSessionControlForm()
+    {
         Form<?> form = new Form<Void>(CID_SESSION_CONTROL_FORM);
-        
+
         DropDownChoice<AnnotationLayer> layersDropdown = new DropDownChoice<>(CID_SELECT_LAYER);
         layersDropdown.setModel(selectedLayer);
         layersDropdown.setChoices(LambdaModel.of(this::listLayersWithRecommenders));
@@ -214,6 +226,8 @@ public class ActiveLearningSidebar
                 CID_LAYER_SELECTION_BUTTON, this::actionStartStopTraining);
         startStopButton.setModel(LambdaModel.of(() -> sessionActive ? "Terminate" : "Start"));
         form.add(startStopButton);
+        form.add(
+            LambdaBehavior.onConfigure(component -> component.setVisible(doExistRecommenders)));
 
         return form;
     }
@@ -400,7 +414,9 @@ public class ActiveLearningSidebar
                 currentRecommendation != null ? currentRecommendation.getConfidence() : 0.0)));
         recommendationForm.add(new Label(CID_RECOMMENDED_DIFFERENCE, LambdaModel.of(() ->
                 currentDifference != null ? currentDifference.getDifference() : 0.0)));
-        recommendationForm.add(createFeatureEditor());
+        recommendationForm.add(
+            (selectedLayer.getObject() != null && currentRecommendation != null) ?
+                createFeatureEditor() : new Label("editor").setVisible(false));
 
         recommendationForm.add(new LambdaAjaxButton<>(CID_ANNOTATE_BUTTON, this::actionAnnotate));
         recommendationForm.add(new LambdaAjaxLink(CID_SKIP_BUTTON, this::actionSkip));
@@ -440,14 +456,9 @@ public class ActiveLearningSidebar
 
     private FeatureEditor createFeatureEditor()
     {
-        if (currentRecommendation != null) {
-            annotationFeature = annotationService
-                .getFeature(currentRecommendation.getFeature(), selectedLayer.getObject());
-        }
-        else {
-            annotationFeature = annotationService
-                .listAnnotationFeature(selectedLayer.getObject()).get(0);
-        }
+        annotationFeature = annotationService
+            .getFeature(currentRecommendation.getFeature(), selectedLayer.getObject());
+
         FeatureSupport featureSupport = featureSupportRegistry.getFeatureSupport(annotationFeature);
 
         featureState = new FeatureState(annotationFeature, null);
