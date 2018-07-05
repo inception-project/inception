@@ -32,22 +32,21 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.core.loader.ner.NerAnnot
  * The named entity linker loads annotations of the <b>value</b> feature and predicts on the
  * <b>identifier</b> feature of the Named Entity layer.
  **/
-
 public class NamedEntityLinkerClassificationTool
     extends ClassificationTool<Object>
 {
     private static final String NAMED_ENTITY_CLASSIFICATION_FEATURE = "value";
 
     public NamedEntityLinkerClassificationTool(long recommenderId, String feature,
-        AnnotationLayer aLayer, KnowledgeBaseService kbService, ConceptLinkingService clService,
-        DocumentService docService, AnnotationSchemaService annoService,
-        FeatureSupportRegistry fsRegistry)
+            AnnotationLayer aLayer, KnowledgeBaseService kbService, ConceptLinkingService clService,
+            DocumentService docService, AnnotationSchemaService annoService,
+            FeatureSupportRegistry fsRegistry)
     {
         super(recommenderId, NamedEntityLinkerClassificationToolFactory.class.getName(),
-            new NamedEntityTrainer(new ClassifierConfiguration<>(feature, recommenderId)),
-            new NamedEntityLinker(new ClassifierConfiguration<>(feature, recommenderId), kbService,
-                clService, docService, annoService, fsRegistry, feature),
-            new NerAnnotationObjectLoader(aLayer, NAMED_ENTITY_CLASSIFICATION_FEATURE), false);
+                new NamedEntityTrainer(new ClassifierConfiguration<>(feature, recommenderId)),
+                new NamedEntityLinker(new ClassifierConfiguration<>(feature, recommenderId),
+                        kbService, clService, docService, annoService, fsRegistry, feature),
+                new NerAnnotationObjectLoader(aLayer, NAMED_ENTITY_CLASSIFICATION_FEATURE), false,
+                false);
     }
-
 }
