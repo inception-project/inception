@@ -19,9 +19,11 @@ package de.tudarmstadt.ukp.inception.active.learning.sidebar;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
@@ -65,6 +67,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
@@ -279,7 +282,35 @@ public class ActiveLearningSidebar
                 featureState = new FeatureState(annotationFeature, (Serializable) featureSupport
                     .wrapFeatureValue(annotationFeature, jCas.getCas(),
                         currentRecommendation.getLabel()));
-                featureState.tagset = annotationService.listTags(annotationFeature.getTagset());
+                List<Tag> tagList = annotationService.listTags(annotationFeature.getTagset());
+                List<Tag> reorderedTagList = new ArrayList<>();
+                if (tagList.size() > 0) {
+                    model = recommendationService
+                        .getPredictions(state.getUser(), state.getProject());
+                    // get all the predictions
+                    List<AnnotationObject> otherRecommendations = model
+                        .getPredictionsByTokenAndFeature(currentRecommendation.getDocumentName(),
+                            selectedLayer.getObject(),
+                            currentRecommendation.getOffset().getBeginCharacter(),
+                            currentRecommendation.getOffset().getEndCharacter(),
+                            currentRecommendation.getFeature());
+                    // get all the label of the predictions (e.g. "NN")
+                    List<String> otherRecommendationsLabel = otherRecommendations.stream()
+                        .map(ao -> ao.getLabel()).collect(Collectors.toList());
+                    for (Tag tag : tagList) {
+                        // add the tags which contain the prediction-labels to the beginning of a
+                        // tagset
+                        if (otherRecommendationsLabel.contains(tag.getName())) {
+                            tag.setReordered(true);
+                            reorderedTagList.add(tag);
+                        }
+                    }
+                    // remove these tags containing the prediction-labels
+                    tagList.removeAll(reorderedTagList);
+                    // add the rest tags to the tagset after these
+                    reorderedTagList.addAll(tagList);
+                }
+                featureState.tagset = reorderedTagList;
                 aFeatureStateModel = Model.of(featureState);
                 // update feature editor with the recommendation value
                 editor = featureSupport
@@ -531,7 +562,8 @@ public class ActiveLearningSidebar
             writeLearningRecordInDatabaseAndEventLog(LearningRecordUserAction.ACCEPTED);
         }
         else {
-            writeLearningRecordInDatabaseAndEventLog(LearningRecordUserAction.CORRECTED, selectedValue);
+            writeLearningRecordInDatabaseAndEventLog(LearningRecordUserAction.CORRECTED,
+                selectedValue);
         }
 
         int begin = currentRecommendation.getOffset().getBeginCharacter();
