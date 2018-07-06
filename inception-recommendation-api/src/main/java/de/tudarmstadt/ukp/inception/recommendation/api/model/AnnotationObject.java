@@ -245,6 +245,28 @@ public class AnnotationObject
         if (this.equals(aAo)) {
             return 0;
         }
-        return this.getOffset().compareTo(aAo.getOffset());
+        if (this.getOffset().compareTo(aAo.getOffset()) != 0) {
+            return this.getOffset().compareTo(aAo.getOffset());
+        }
+        if (this.getId() < aAo.getId()) {
+            return -1;
+        }
+        if (this.getId() > aAo.getId()) {
+            return 1;
+        }
+        if (this.getRecommenderId() < aAo.getId()) {
+            return -1;
+        }
+        if (this.getRecommenderId() > aAo.getId()) {
+            return 1;
+        }
+        if (this.getDocumentName().hashCode() < aAo.getDocumentName().hashCode()) {
+            return -1;
+        }
+        if (this.getDocumentName().hashCode() > aAo.getDocumentName().hashCode()) {
+            return 1;
+        }
+
+        return 0;
     }
 }
