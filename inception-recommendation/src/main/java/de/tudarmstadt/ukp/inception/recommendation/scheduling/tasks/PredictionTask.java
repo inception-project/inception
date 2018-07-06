@@ -127,7 +127,7 @@ public class PredictionTask
                 if (predictions.isEmpty()) {
                     log.info("[{}][{}]: No prediction data.", user.getUsername(),
                             recommender.getName());
-                    return;
+                    continue;
                 }
                 
                 model.putPredictions(layer.getId(), predictions);
