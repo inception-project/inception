@@ -76,7 +76,7 @@ public interface Renderer
             
             Feature labelFeature = aFs.getType().getFeatureByBaseName(feature.getName());
             String label = defaultString(
-                    fsr.getFeatureSupport(feature).renderFeatureValue(feature, aFs, labelFeature));
+                    fsr.getFeatureSupport(feature).renderFeatureValue(feature, aFs));
             
             features.put(feature.getName(), label);
         }
@@ -101,7 +101,7 @@ public interface Renderer
             
             Feature labelFeature = aFs.getType().getFeatureByBaseName(feature.getName());
             String text = defaultString(
-                    fsr.getFeatureSupport(feature).renderFeatureValue(feature, aFs, labelFeature));
+                    fsr.getFeatureSupport(feature).renderFeatureValue(feature, aFs));
             
             hoverfeatures.put(feature.getName(), text);
         }
