@@ -30,7 +30,7 @@ public class ExternalClassificationTool
             new ExternalTrainer(new BaseConfiguration()),
             new ExternalClassifier(new BaseConfiguration(feature),
                 new CustomAnnotationObjectLoader(feature, type), traits, recommenderId),
-            new CustomAnnotationObjectLoader(feature, type), true);
+            new CustomAnnotationObjectLoader(feature, type), true, false);
     }
 
 }

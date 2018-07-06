@@ -33,7 +33,7 @@ public class StringMatchingPosClassificationTool
         super(-1, StringMatchingPosClassificationTool.class.getName(),
             new StringMatchingPosTrainer(new ClassifierConfiguration<>()),
             new StringMatchingPosClassifier(new ClassifierConfiguration<>()),
-            new PosAnnotationObjectLoader(), false);
+            new PosAnnotationObjectLoader(), false, true);
     }
 
     public StringMatchingPosClassificationTool(long recommenderId, String feature,
@@ -42,6 +42,6 @@ public class StringMatchingPosClassificationTool
         super(recommenderId, StringMatchingPosClassificationTool.class.getName(),
             new StringMatchingPosTrainer(new ClassifierConfiguration<>(feature, recommenderId)),
             new StringMatchingPosClassifier(new ClassifierConfiguration<>(feature, recommenderId)),
-            new PosAnnotationObjectLoader(aLayer, feature), false);
+            new PosAnnotationObjectLoader(aLayer, feature), false, true);
     }
 }

@@ -15,11 +15,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.search.index.mtas;
 
-public class IndexingConstants
+package de.tudarmstadt.ukp.inception.kb.event;
+
+import org.springframework.context.ApplicationEvent;
+
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+
+public class KnowledgeBaseConfigurationChangedEvent
+    extends ApplicationEvent
 {
-    public static final String KB_ENTITY = "KB.Entity";
-    public static final String INDEX_KB_CONCEPT = "class";
-    public static final String INDEX_KB_INSTANCE = "instance";
+    private static final long serialVersionUID = -2741267700429534514L;
+
+    private Project project;
+
+    public KnowledgeBaseConfigurationChangedEvent(Object aSource, Project aProject)
+    {
+        super(aSource);
+        project = aProject;
+    }
+
+    public Project getProject()
+    {
+        return project;
+    }
+
+    public void setProject(Project aProject)
+    {
+        project = aProject;
+    }
 }
