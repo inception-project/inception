@@ -35,8 +35,7 @@ public class QueryUtil
             "PREFIX e:<http://www.wikidata.org/entity/>",
             "PREFIX rdfs:<http://www.w3.org/2000/01/rdf-schema#>",
             "PREFIX skos:<http://www.w3.org/2004/02/skos/core#>",
-            "PREFIX base:<http://www.wikidata.org/ontology#>",
-            "PREFIX schema: <http://schema.org/>");
+            "PREFIX base:<http://www.wikidata.org/ontology#>");
 
     private static final String INSTANCES = "<http://wikidata.org/instances>";
     private static final String STATEMENTS = "<http://wikidata.org/statements>";
@@ -77,7 +76,7 @@ public class QueryUtil
         int limit, IRI aDescriptionIri)
     {
         String exactMatching = String.join("\n",
-            "SELECT DISTINCT ?e2 ?description WHERE",
+            "    SELECT DISTINCT ?e2 ?description WHERE",
             "    {",
             "     VALUES ?labelpredicate {rdfs:label skos:altLabel}",
             "      GRAPH " + TERMS,
@@ -92,7 +91,7 @@ public class QueryUtil
             "    }");
 
         String partialMatching = String.join("\n",
-            "SELECT DISTINCT ?e2 ?altLabel ?description WHERE",
+            "    SELECT DISTINCT ?e2 ?altLabel ?description WHERE",
             "    {",
             "      VALUES ?labelpredicate {rdfs:label skos:altLabel}",
             "      GRAPH " + TERMS,
@@ -106,7 +105,7 @@ public class QueryUtil
             "        }",
             "      }",
             "    }",
-            "LIMIT " + limit);
+            "    LIMIT " + limit);
 
         String query = String.join("\n",
             "DEFINE input:inference 'instances'",
@@ -115,7 +114,9 @@ public class QueryUtil
             "{",
             "  {",
                  exactMatching,
-            "    UNION",
+            "  } ",
+            "  UNION",
+            "  {",
                  partialMatching,
             "  }",
             "  FILTER EXISTS { GRAPH " + STATEMENTS + " { ?e2 ?p ?v }}",
@@ -179,22 +180,6 @@ public class QueryUtil
 
         TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, query);
         tupleQuery.setBinding("e2", iri);
-        return tupleQuery;
-    }
-
-    public static TupleQuery getDescription (RepositoryConnection conn, String IRI)
-    {
-        ValueFactory vf = SimpleValueFactory.getInstance();
-
-        String query = String.join("\n",
-            "SELECT ?itemDescription",
-            "WHERE {",
-            "  VALUES (?item) {( ?e )}",
-            "  SERVICE wikibase:label { bd:serviceParam wikibase:language \"en\"",
-            "  }",
-            "}");
-        TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, query);
-        tupleQuery.setBinding("e", vf.createIRI(IRI));
         return tupleQuery;
     }
 }
