@@ -21,7 +21,7 @@ import java.io.Serializable;
 import java.util.Objects;
 
 public class AnnotationObject
-    implements Serializable
+    implements Serializable, Comparable<AnnotationObject>
 {
     private static final long serialVersionUID = -1145787227041121442L;
     private static final double DEFAULT_CONFIDENCE = 1.0;
@@ -199,7 +199,7 @@ public class AnnotationObject
 
     public void setVisible(boolean aVisible) { visible = aVisible; }
 
-    public boolean getVisible() { return visible; }
+    public boolean isVisible() { return visible; }
 
     @Override
     public boolean equals(Object o)
@@ -234,5 +234,17 @@ public class AnnotationObject
         sb.append(", visible=").append(visible);
         sb.append('}');
         return sb.toString();
+    }
+
+    @Override
+    public int compareTo(AnnotationObject aAo)
+    {
+        if (aAo == null) {
+            return 1;
+        }
+        if (this.equals(aAo)) {
+            return 0;
+        }
+        return this.getOffset().compareTo(aAo.getOffset());
     }
 }
