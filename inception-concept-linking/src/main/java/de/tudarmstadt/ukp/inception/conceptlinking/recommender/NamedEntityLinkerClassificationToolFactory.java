@@ -18,9 +18,6 @@
 
 package de.tudarmstadt.ukp.inception.conceptlinking.recommender;
 
-import org.apache.uima.cas.CAS;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -38,13 +35,13 @@ import de.tudarmstadt.ukp.inception.recommendation.api.ClassificationToolFactory
 public class NamedEntityLinkerClassificationToolFactory
     implements ClassificationToolFactory<Object, Void>
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    public static final String PREFIX = "kb:";
 
-    @Autowired KnowledgeBaseService kbService;
-    @Autowired ConceptLinkingService clService;
-    @Autowired DocumentService docService;
-    @Autowired AnnotationSchemaService annoService;
-    @Autowired FeatureSupportRegistry fsRegistry;
+    private @Autowired KnowledgeBaseService kbService;
+    private @Autowired ConceptLinkingService clService;
+    private @Autowired DocumentService docService;
+    private @Autowired AnnotationSchemaService annoService;
+    private @Autowired FeatureSupportRegistry fsRegistry;
 
     // This is a string literal so we can rename/refactor the class without it changing its ID
     // and without the database starting to refer to non-existing recommendation tools.
@@ -77,9 +74,9 @@ public class NamedEntityLinkerClassificationToolFactory
         if (aLayer == null || aFeature == null) {
             return false;
         }
-
+        
         return (aLayer.isLockToTokenOffset() || aLayer.isMultipleTokens())
             && !aLayer.isCrossSentence() && "span".equals(aLayer.getType())
-            && (CAS.TYPE_NAME_STRING.equals(aFeature.getType()) || aFeature.isVirtualFeature());
+            && aFeature.getType().startsWith(PREFIX);
     }
 }

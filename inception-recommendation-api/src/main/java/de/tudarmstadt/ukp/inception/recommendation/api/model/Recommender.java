@@ -67,7 +67,9 @@ public class Recommender
     private double threshold;
     
     private boolean alwaysSelected;
-    
+
+    private boolean skipEvaluation;
+
     private boolean enabled = true;
     
     @Lob
@@ -166,7 +168,16 @@ public class Recommender
         alwaysSelected = aAlwaysSelected;
     }
 
-    
+    public boolean isSkipEvaluation()
+    {
+        return skipEvaluation;
+    }
+
+    public void setSkipEvaluation(boolean skipEvaluation)
+    {
+        this.skipEvaluation = skipEvaluation;
+    }
+
     public boolean isEnabled()
     {
         return enabled;
