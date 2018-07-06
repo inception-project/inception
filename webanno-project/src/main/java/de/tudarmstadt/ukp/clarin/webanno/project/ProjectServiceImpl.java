@@ -17,6 +17,11 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.project;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_IN_PROGRESS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.NEW;
 import static java.util.Comparator.comparingInt;
 import static org.apache.commons.io.IOUtils.closeQuietly;
 import static org.apache.commons.io.IOUtils.copyLarge;
@@ -64,6 +69,7 @@ import org.springframework.context.SmartLifecycle;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
@@ -79,7 +85,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Authority;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -142,7 +147,7 @@ public class ProjectServiceImpl
     }
     
     @Override
-    @Transactional
+    @Transactional(isolation = Isolation.READ_UNCOMMITTED)
     public void recalculateProjectState(Project aProject)
     {
         Project project;
@@ -156,25 +161,47 @@ public class ProjectServiceImpl
             return;
         }
         
+        // This query is better because we do not inject strings into the query string, but it
+        // does not work on HSQLDB (on MySQL it seems to work).
+        // See: https://github.com/webanno/webanno/issues/1011
+//        String query = 
+//                "SELECT new " + SourceDocumentStateStats.class.getName() + "(" +
+//                "COUNT(*) AS num, " +
+//                "SUM(CASE WHEN state = :an  THEN 1 ELSE 0 END), " +
+//                "SUM(CASE WHEN (state = :aip OR state is NULL) THEN 1 ELSE 0 END), " +
+//                "SUM(CASE WHEN state = :af  THEN 1 ELSE 0 END), " +
+//                "SUM(CASE WHEN state = :cip THEN 1 ELSE 0 END), " +
+//                "SUM(CASE WHEN state = :cf  THEN 1 ELSE 0 END)) " +
+//                "FROM SourceDocument " + 
+//                "WHERE project = :project";
+//        
+//        SourceDocumentStateStats stats = entityManager.createQuery(
+//                        query, SourceDocumentStateStats.class)
+//                .setParameter("project", aProject)
+//                .setParameter("an", SourceDocumentState.NEW)
+//                .setParameter("aip", SourceDocumentState.ANNOTATION_IN_PROGRESS)
+//                .setParameter("af", SourceDocumentState.ANNOTATION_FINISHED)
+//                .setParameter("cip", SourceDocumentState.CURATION_IN_PROGRESS)
+//                .setParameter("cf", SourceDocumentState.CURATION_FINISHED)
+//                .getSingleResult();
+        
         String query = 
                 "SELECT new " + SourceDocumentStateStats.class.getName() + "(" +
                 "COUNT(*), " +
-                "SUM(CASE WHEN state = :an  THEN 1 ELSE 0 END), " +
-                "SUM(CASE WHEN (state = :aip OR state is NULL) THEN 1 ELSE 0 END), " +
-                "SUM(CASE WHEN state = :af  THEN 1 ELSE 0 END), " +
-                "SUM(CASE WHEN state = :cip THEN 1 ELSE 0 END), " +
-                "SUM(CASE WHEN state = :cf  THEN 1 ELSE 0 END)) " +
+                "SUM(CASE WHEN state = '" + NEW.getId() + "'  THEN 1 ELSE 0 END), " +
+                "SUM(CASE WHEN (state = '" + ANNOTATION_IN_PROGRESS.getId() + 
+                        "' OR state is NULL) THEN 1 ELSE 0 END), " +
+                "SUM(CASE WHEN state = '" + ANNOTATION_FINISHED.getId() + 
+                        "'  THEN 1 ELSE 0 END), " +
+                "SUM(CASE WHEN state = '" + CURATION_IN_PROGRESS.getId() + 
+                        "' THEN 1 ELSE 0 END), " +
+                "SUM(CASE WHEN state = '" + CURATION_FINISHED.getId() + "'  THEN 1 ELSE 0 END)) " +
                 "FROM SourceDocument " + 
                 "WHERE project = :project";
         
         SourceDocumentStateStats stats = entityManager.createQuery(
                         query, SourceDocumentStateStats.class)
                 .setParameter("project", aProject)
-                .setParameter("an", SourceDocumentState.NEW)
-                .setParameter("aip", SourceDocumentState.ANNOTATION_IN_PROGRESS)
-                .setParameter("af", SourceDocumentState.ANNOTATION_FINISHED)
-                .setParameter("cip", SourceDocumentState.CURATION_IN_PROGRESS)
-                .setParameter("cf", SourceDocumentState.CURATION_FINISHED)
                 .getSingleResult();
         
         ProjectState oldState = project.getState();
