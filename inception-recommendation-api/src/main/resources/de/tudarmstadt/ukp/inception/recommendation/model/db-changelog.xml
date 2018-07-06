@@ -344,4 +344,17 @@
                                onUpdate="CASCADE" referencedColumnNames="id"
                                referencedTableName="annotation_feature" />
   </changeSet>
+  
+  <changeSet author="INCEpTION Team" id="20180705-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="recommender" columnName="skipEvaluation" />
+      </not>
+    </preConditions>
+    <addColumn tableName="recommender">
+      <column name="skipEvaluation" type="BOOLEAN" defaultValueBoolean="false">
+        <constraints nullable="false" />
+      </column>
+    </addColumn>
+  </changeSet>
 </databaseChangeLog>

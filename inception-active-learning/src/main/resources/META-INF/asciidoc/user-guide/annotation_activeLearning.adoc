@@ -1,4 +1,4 @@
-[[sect_annotation_recommendation]]
+[[sect_annotation_activeLearning]]
 === Active Learning
 Active learning is a family of methods which seeks to optimize the learning rate of classification
 algorithms by intelligently soliciting labels from a human user for which the system only has low
