@@ -23,6 +23,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
+import de.tudarmstadt.ukp.inception.recommendation.event.PredictionsSwitchedEvent;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
@@ -887,5 +888,14 @@ public class ActiveLearningSidebar
                 }
             }
         }
+
+        if (currentRecommendation!= null && !currentRecommendation.isVisible()) {
+            moveToNextRecommendation((AjaxRequestTarget) aEvent.getRequestHandler());
+        }
+    }
+
+    @OnEvent
+    public void onPredictionsSwitchedEvent(PredictionsSwitchedEvent aEvent) {
+
     }
 }
