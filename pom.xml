@@ -57,9 +57,9 @@
     <jackson.version>2.9.4</jackson.version>
     <uima.version>2.10.2</uima.version>
     <uimafit.version>2.4.0</uimafit.version>
-    <spring.version>5.0.4.RELEASE </spring.version>
-    <spring.boot.version>1.5.13.RELEASE</spring.boot.version>
-    <spring.security.version>4.2.6.RELEASE</spring.security.version>
+    <spring.version>5.0.7.RELEASE </spring.version>
+    <spring.boot.version>1.5.14.RELEASE</spring.boot.version>
+    <spring.security.version>4.2.7.RELEASE</spring.security.version>
     <slf4j.version>1.7.25</slf4j.version>
     <log4j.version>2.7</log4j.version>
     <jboss.logging.version>3.3.1.Final</jboss.logging.version>
@@ -69,7 +69,7 @@
     <wicket-bootstrap.version>0.10.17</wicket-bootstrap.version>
     <wicket-webjars.version>0.5.6</wicket-webjars.version>    
     <wicket-spring-boot.version>1.0.12</wicket-spring-boot.version>
-    <hibernate.version>5.2.13.Final</hibernate.version>
+    <hibernate.version>5.3.2.Final</hibernate.version>
     <maven.build.timestamp.format>yyyy-MM-dd HH:mm</maven.build.timestamp.format>
     <dkpro.version>1.7.0</dkpro.version>
     <springfox.version>2.7.0</springfox.version>
@@ -713,9 +713,9 @@
         <version>5.3.5.Final</version>
       </dependency>
       <dependency>
-        <groupId>org.hibernate.javax.persistence</groupId>
-        <artifactId>hibernate-jpa-2.1-api</artifactId>
-        <version>1.0.0.Final</version>
+        <groupId>javax.persistence</groupId>
+        <artifactId>javax.persistence-api</artifactId>
+        <version>2.2</version>
       </dependency>
       <dependency>
         <groupId>org.javassist</groupId>
@@ -815,7 +815,7 @@
       <dependency>
         <groupId>org.hsqldb</groupId>
         <artifactId>hsqldb</artifactId>
-        <version>2.4.0</version>
+        <version>2.4.1</version>
       </dependency>
       <!--  
       <dependency>
