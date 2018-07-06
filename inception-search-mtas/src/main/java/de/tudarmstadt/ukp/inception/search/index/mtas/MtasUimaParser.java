@@ -127,7 +127,7 @@ public class MtasUimaParser
         throws MtasParserException, MtasConfigException
     {
         long start = System.currentTimeMillis();
-        
+
         tokenCollection = new MtasTokenCollection();
         if (project == null) {
             return tokenCollection;
@@ -197,7 +197,8 @@ public class MtasUimaParser
                     mtasSentence.setOffset(annotation.getBegin(), annotation.getEnd());
                     mtasSentence.addPositionRange(beginToken, endToken);
                     tokenCollection.add(mtasSentence);
-                } else {
+                }
+                else {
                     // Other annotation types - annotate the features
                     if (layers.get(annotationName) != null) {
                         // Add the UI annotation name to the index as an annotation.
@@ -208,7 +209,7 @@ public class MtasUimaParser
                         mtasAnnotation.setOffset(annotation.getBegin(), annotation.getEnd());
                         mtasAnnotation.addPositionRange(beginToken, endToken);
                         tokenCollection.add(mtasAnnotation);
-                        
+
                         // Get features for this annotation, if it is indexed. First comes the
                         // internal feature name, then the UI feature name
                         for (AnnotationFeature feature : layerFeatures.get(annotationName)) {
@@ -216,10 +217,9 @@ public class MtasUimaParser
                             if (!WebAnnoCasUtil.isPrimitiveFeature(annotation, feature.getName())) {
                                 continue;
                             }
-                            
                             mtasId = indexFeatureValue(tokenCollection, feature, annotation,
                                     beginToken, endToken, mtasId, annotationUiName);
-                            
+
                             if (feature.getType().startsWith("kb:")) {
                                 mtasId = indexConcept(tokenCollection, feature, annotation,
                                         beginToken, endToken, mtasId, annotationUiName);
@@ -228,12 +228,13 @@ public class MtasUimaParser
                     }
                 }
             }
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             log.error("Unable to index document", e);
         }
-        
+
         log.debug("Created token collection in {}ms", (System.currentTimeMillis() - start));
-        
+
         return tokenCollection;
     }
 
