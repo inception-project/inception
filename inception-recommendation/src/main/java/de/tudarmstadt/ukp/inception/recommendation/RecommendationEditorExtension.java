@@ -34,6 +34,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtension;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
@@ -78,6 +79,7 @@ public class RecommendationEditorExtension
     private @Autowired LearningRecordService learningRecordService;
     private @Autowired ApplicationEventPublisher applicationEventPublisher;
     private @Autowired FeatureSupportRegistry fsRegistry;
+    private @Autowired DocumentService documentService;
 
     @Override
     public String getBeanName()
@@ -214,6 +216,6 @@ public class RecommendationEditorExtension
     {
         recommendationService.switchPredictions(aState.getUser(), aState.getProject());
         RecommendationRenderer.render(vdoc, aState, jCas, annotationService, recommendationService, 
-                learningRecordService, fsRegistry);
+                learningRecordService, fsRegistry, documentService);
     }
 }
