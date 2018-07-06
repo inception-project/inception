@@ -214,14 +214,12 @@ public interface FeatureSupport<T>
      *            the feature to be rendered.
      * @param aFs
      *            the feature structure from which to obtain the label.
-     * @param aLabelFeature
-     *            the feature which holds the label.
      * @return the UI label.
      */
-    default String renderFeatureValue(AnnotationFeature aFeature, AnnotationFS aFs,
-            Feature aLabelFeature)
+    default String renderFeatureValue(AnnotationFeature aFeature, AnnotationFS aFs)
     {
-        return renderFeatureValue(aFeature, aFs.getFeatureValueAsString(aLabelFeature));
+        Feature labelFeature = aFs.getType().getFeatureByBaseName(aFeature.getName());
+        return renderFeatureValue(aFeature, aFs.getFeatureValueAsString(labelFeature));
     }
 
     /**
