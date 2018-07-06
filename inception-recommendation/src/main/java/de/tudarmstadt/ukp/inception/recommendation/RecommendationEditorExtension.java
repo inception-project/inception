@@ -60,6 +60,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.event.AjaxRecommendationAcceptedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.AjaxRecommendationRejectedEvent;
+import de.tudarmstadt.ukp.inception.recommendation.event.PredictionsSwitchedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommendationAcceptedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommendationRejectedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.render.RecommendationRenderer;
@@ -217,5 +218,7 @@ public class RecommendationEditorExtension
         recommendationService.switchPredictions(aState.getUser(), aState.getProject());
         RecommendationRenderer.render(vdoc, aState, jCas, annotationService, recommendationService, 
                 learningRecordService, fsRegistry, documentService);
+        applicationEventPublisher.publishEvent(
+            new PredictionsSwitchedEvent(this, aState.getUser(), aState.getProject()));
     }
 }
