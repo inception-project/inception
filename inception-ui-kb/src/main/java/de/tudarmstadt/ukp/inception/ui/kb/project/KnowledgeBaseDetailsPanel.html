@@ -85,16 +85,6 @@
           </div>
         </div>
       </div>
-      
-      <!-- Permissions -->
-      <div class="form-group row">
-        <label class="col-sm-2 control-label">
-          <wicket:message key="kb.details.local.permissions" />
-        </label>
-        <div class="col-sm-10">
-          <div wicket:id="writeprotection" class="col-sm-offset-2" disabled="disabled"></div>
-        </div>
-      </div>
     </wicket:container>
     <wicket:container wicket:id="remote">
       <div class="form-group row">
@@ -107,6 +97,14 @@
       </div>
     </wicket:container>
     <wicket:container wicket:id="common-content">
+      <div class="form-group row">
+        <label class="col-sm-2 control-label">
+          <wicket:message key="kb.details.contents.permissions" />
+        </label>
+        <div class="col-sm-10">
+          <div wicket:id="writeprotection" class="col-sm-offset-2"></div>
+        </div>
+      </div>
       <div class="form-group">
         <div class="col-sm-offset-2 col-sm-10">
           <div class="checkbox">
@@ -147,6 +145,14 @@
           <input wicket:id="url" type="text" class="form-control" />
         </div>
       </div>
+      <div class="form-group row">
+        <label class="col-sm-2 control-label">
+          <wicket:message key="kb.details.contents.permissions" />
+        </label>
+        <div class="col-sm-10">
+          <div wicket:id="writeprotection" class="col-sm-offset-2"></div>
+        </div>
+      </div>
     </wicket:container>
     <wicket:container wicket:id="local">
       <!-- Contents -->
@@ -180,7 +186,7 @@
       <!-- Permissions -->
       <div class="form-group row">
         <label class="col-sm-2 control-label">
-          <wicket:message key="kb.details.local.permissions" />
+          <wicket:message key="kb.details.contents.permissions" />
         </label>
         <div class="col-sm-10">
           <div wicket:id="writeprotection"></div>

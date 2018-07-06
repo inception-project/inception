@@ -259,6 +259,21 @@
       </column>
     </addColumn>
   </changeSet>
+  
+  <changeSet author="INCEpTION Team" id="20180616-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="knowledgebase_root_classes"/>
+      </not>
+    </preConditions>
+    <createTable tableName="knowledgebase_root_classes">
+      <column name="knowledgebase_repositoryId" type="VARCHAR(255)">
+        <constraints nullable="false" />
+      </column>
+      <column name="name" type="VARCHAR(255)">
+      </column>
+    </createTable>
+  </changeSet>
 
   <changeSet author="INCEpTION Team" id="20180503">
     <preConditions onFail="MARK_RAN">

@@ -36,6 +36,7 @@ import javax.annotation.Resource;
 
 import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.builder.CompareToBuilder;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.text.similarity.LevenshteinDistance;
 import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
@@ -47,9 +48,11 @@ import org.eclipse.rdf4j.query.TupleQueryResult;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.conceptlinking.config.EntityLinkingProperties;
@@ -60,6 +63,7 @@ import de.tudarmstadt.ukp.inception.conceptlinking.util.FileUtils;
 import de.tudarmstadt.ukp.inception.conceptlinking.util.LRUCache;
 import de.tudarmstadt.ukp.inception.conceptlinking.util.QueryUtil;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
+import de.tudarmstadt.ukp.inception.kb.event.KnowledgeBaseConfigurationChangedEvent;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
@@ -100,8 +104,8 @@ public class ConceptLinkingService
     private static final String POS_NOUN_PREFIX = "N";
     private static final String POS_ADJECTIVE_PREFIX = "J";
 
-    private Map<String, Set<CandidateEntity>> candidateCache;
-    private Map<String, SemanticSignature> semanticSignatureCache;
+    private Map<ImmutablePair<Project, String>, Set<CandidateEntity>> candidateCache;
+    private Map<ImmutablePair<Project, String>, SemanticSignature> semanticSignatureCache;
 
     @PostConstruct
     public void init()
@@ -139,10 +143,6 @@ public class ConceptLinkingService
             return Collections.emptySet();
         }
 
-        if (candidateCache.containsKey(aMention)) {
-            return candidateCache.get(aMention);
-        }
-
         Set<CandidateEntity> candidates = new HashSet<>();
         List<String> mentionList = Arrays.asList(aMention.split(" "));
 
@@ -162,6 +162,13 @@ public class ConceptLinkingService
             logger.error("Mention is empty!");
             return Collections.emptySet();
         }
+
+        ImmutablePair<Project, String> pair = new ImmutablePair<>(aKB.getProject(),
+            processedMention);
+        if (candidateCache.containsKey(pair)) {
+            return candidateCache.get(pair);
+        }
+
 
         try (RepositoryConnection conn = kbService.getConnection(aKB)) {
             TupleQuery query = QueryUtil
@@ -198,7 +205,7 @@ public class ConceptLinkingService
             }
         }
 
-        candidateCache.put(processedMention, candidates);
+        candidateCache.put(pair, candidates);
         return candidates;
     }
 
@@ -375,8 +382,10 @@ public class ConceptLinkingService
      */
     private SemanticSignature getSemanticSignature(KnowledgeBase aKB, String aWikidataId)
     {
-        if (semanticSignatureCache.containsKey(aWikidataId)) {
-            return semanticSignatureCache.get(aWikidataId);
+        ImmutablePair<Project, String> pair = new ImmutablePair<>(aKB.getProject(), aWikidataId);
+
+        if (semanticSignatureCache.containsKey(pair)) {
+            return semanticSignatureCache.get(pair);
         }
 
         Set<String> relatedRelations = new HashSet<>();
@@ -412,7 +421,7 @@ public class ConceptLinkingService
         }
 
         SemanticSignature ss = new SemanticSignature(relatedEntities, relatedRelations);
-        semanticSignatureCache.put(aWikidataId, ss);
+        semanticSignatureCache.put(pair, ss);
         return ss;
     }
 
@@ -467,6 +476,29 @@ public class ConceptLinkingService
             .limit(properties.getCandidateDisplayLimit())
             .filter(h -> h.getIdentifier().contains(":"))
             .collect(Collectors.toList());
+    }
+
+    /**
+     * Remove all cache entries of a specific project
+     * @param aEvent
+     *            The event containing the project
+     */
+    @EventListener
+    public void onKnowledgeBaseConfigurationChangedEvent(
+        KnowledgeBaseConfigurationChangedEvent aEvent)
+    {
+        for (Map.Entry<ImmutablePair<Project, String>, Set<CandidateEntity>> pair :
+            candidateCache.entrySet()) {
+            if (pair.getKey().getLeft().equals(aEvent.getProject())) {
+                candidateCache.remove(pair.getKey());
+            }
+        }
+        for (Map.Entry<ImmutablePair<Project, String>, SemanticSignature> pair :
+            semanticSignatureCache.entrySet()) {
+            if (pair.getKey().getLeft().equals(aEvent.getProject())) {
+                semanticSignatureCache.remove(pair.getKey());
+            }
+        }
     }
 
 }

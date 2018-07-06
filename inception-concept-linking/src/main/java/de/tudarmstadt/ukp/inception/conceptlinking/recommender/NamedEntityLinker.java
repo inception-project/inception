@@ -60,7 +60,7 @@ public class NamedEntityLinker
     private int tokenId = 0;
     private User user;
     private Project project;
-    private final String feature = "identifier";
+    private String feature;
 
     // Annotations in the project marked as NamedEntity
     private Set<AnnotationObject> nerAnnotations = new HashSet<>();
@@ -75,7 +75,7 @@ public class NamedEntityLinker
 
     public NamedEntityLinker(ClassifierConfiguration<Object> aConf, KnowledgeBaseService aKbService,
         ConceptLinkingService aClService, DocumentService aDocService,
-        AnnotationSchemaService aAnnoService, FeatureSupportRegistry aFsRegistry)
+        AnnotationSchemaService aAnnoService, FeatureSupportRegistry aFsRegistry, String aFeature)
     {
         super(aConf);
         kbService = aKbService;
@@ -84,6 +84,7 @@ public class NamedEntityLinker
         annoService = aAnnoService;
         fsRegistry = aFsRegistry;
         conf.setNumPredictions(numPredictions);
+        feature = aFeature;
     }
 
     @Override
@@ -203,8 +204,9 @@ public class NamedEntityLinker
     private boolean isNamedEntity(TokenObject token)
     {
         return nerAnnotations.stream()
-            .map(AnnotationObject::getOffset)
-            .anyMatch(t -> t.equals(token.getOffset()));
+            .map(AnnotationObject::getTokenObject)
+            .anyMatch(t -> t.getOffset().equals(token.getOffset())
+                   && t.getDocumentURI().equals(token.getDocumentURI()));
     }
 
     private List<KBHandle> readCandidates(KnowledgeBase kb, TokenObject token) {
