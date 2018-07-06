@@ -119,8 +119,13 @@ public class RecommendationEditorExtension
             return;
         }
 
+        AnnotationObject ao = prediction.get();
+
+        // Remove from view
+        ao.setVisible(false);
+
         // Obtain the predicted label
-        String predictedValue = prediction.get().getLabel();
+        String predictedValue = ao.getLabel();
         
         Recommender recommender = recommendationService.getRecommender(aVID.getId());
         AnnotationLayer layer = annotationService.getLayer(aVID.getLayerId());
@@ -186,6 +191,10 @@ public class RecommendationEditorExtension
 
         AnnotationObject prediction = oPrediction.get();
         String predictedValue = prediction.getLabel();
+
+        // Remove from view
+        prediction.setVisible(false);
+
         String tokenText = aJCas.getDocumentText().substring(aBegin, aEnd);
         
         LearningRecord record = new LearningRecord();
