@@ -204,7 +204,7 @@ public class StatementEditor extends Panel
 
             CompoundPropertyModel<KBStatement> model = new CompoundPropertyModel<>(
                     aStatement);
-
+            
             WebMarkupContainer presenter = valueTypeRegistry
                     .getValueSupport(aStatement.getObject(), property.getObject())
                     .createPresenter("value", model, property);

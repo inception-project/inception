@@ -104,8 +104,10 @@ public class ValueTypeSupportRegistryImpl
             datatype = type != null ? type.stringValue() : null;
         }
         
-        if (datatype == null && aProperty.getRange() != null) {
-            return aProperty.getRange();
+        if (datatype == null && aProperty != null) {
+            if (aProperty.getRange() != null) {
+                return aProperty.getRange();
+            }
         }
         
         if (datatype == null) {

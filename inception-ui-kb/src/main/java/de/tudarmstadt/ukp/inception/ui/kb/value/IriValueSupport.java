@@ -58,8 +58,13 @@ public class IriValueSupport
 
     @Override
     public boolean accepts(KBStatement aStatement, KBProperty aProperty)
-    {
-        return aStatement.getValue() instanceof IRI;
+    {   
+        if (aStatement.getValue() != null) {
+            return aStatement.getValue() instanceof IRI;
+        }
+        else {
+            return aStatement.getInstance() instanceof IRI; 
+        }
     }
 
     @Override
