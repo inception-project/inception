@@ -135,6 +135,7 @@ public class AnnotatedListIdentifiers
         }
         catch (Exception e) {
             LOG.debug("Error in the query.", e);
+            error("Error in the query: " + e.getMessage());
             return Collections.emptyList();
         }
     }
