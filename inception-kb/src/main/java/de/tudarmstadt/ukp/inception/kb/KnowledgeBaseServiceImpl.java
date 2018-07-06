@@ -631,7 +631,6 @@ public class KnowledgeBaseServiceImpl
     public List<KBHandle> list(KnowledgeBase kb, IRI aType, boolean aIncludeInferred, boolean aAll)
         throws QueryEvaluationException
     {
-        System.out.println(aType);
         List<KBHandle> resultList = read(kb, (conn) -> {
             String QUERY = String.join("\n"
                          , "SELECT DISTINCT ?s ?l WHERE {"
