@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -46,6 +47,7 @@ import java.util.zip.ZipFile;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -76,6 +78,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectState;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Authority;
@@ -176,7 +179,28 @@ public class ProjectServiceImpl
         
         ProjectState oldState = project.getState();
 
-        project.setState(stats.getProjectState());
+        // We had some strange reports about being unable to calculate the project state, so to
+        // be better able to debug this, we add some more detailed information to the exception
+        // message here.
+        try {
+            project.setState(stats.getProjectState());
+        }
+        catch (IllegalStateException e) {
+            StringBuilder sb = new StringBuilder();
+            sb.append("\nDetailed document states in project [" + aProject.getName() + "]("
+                    + aProject.getId() + "):\n");
+            String detailQuery = "SELECT id, name, state FROM " + SourceDocument.class.getName()
+                    + " WHERE project = :project";
+            Query q = entityManager.createQuery(detailQuery).setParameter("project", aProject);
+            for (Object res : q.getResultList()) {
+                sb.append("- ");
+                sb.append(Arrays.toString((Object[]) res));
+                sb.append('\n');
+            }
+            IllegalStateException ne = new IllegalStateException(e.getMessage() + sb, e.getCause());
+            ne.setStackTrace(e.getStackTrace());
+            throw ne;
+        }
         
         if (!Objects.equals(oldState, project.getState())) {
             applicationEventPublisher.publishEvent(
