@@ -557,8 +557,7 @@ public class CorrectionPage
     {
         AnnotatorState state = getModelObject();
         JCas editorCas = documentService.createOrReadInitialCas(state.getDocument());
-        editorCas = BratAnnotatorUtility.clearJcasAnnotations(editorCas, state.getDocument(),
-                state.getUser(), documentService);
+        editorCas = BratAnnotatorUtility.clearJcasAnnotations(editorCas);
         documentService.writeAnnotationCas(editorCas, state.getDocument(), state.getUser(), false);
         actionLoadDocument(aTarget);
     }
@@ -620,8 +619,8 @@ public class CorrectionPage
             }
             else {
                 editorCas = documentService.createOrReadInitialCas(state.getDocument());
-                editorCas = BratAnnotatorUtility.clearJcasAnnotations(editorCas,
-                        state.getDocument(), user, documentService);
+                editorCas = BratAnnotatorUtility.clearJcasAnnotations(editorCas);
+                documentService.writeAnnotationCas(editorCas, state.getDocument(), user, false);
             }
 
             // Update the CASes
