@@ -210,7 +210,7 @@ public class AnnotationObject
             return false;
         AnnotationObject that = (AnnotationObject) o;
         return id == that.id && recommenderId == that.recommenderId
-            && token.documentURI.equals(that.getDocumentName());
+            && token.documentName.equals(that.getDocumentName());
     }
 
     @Override
