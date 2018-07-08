@@ -113,7 +113,8 @@ public class PredictionTask
                         JCas jcas = documentService.readAnnotationCas(doc);
                         List<List<AnnotationObject>> documentPredictions = setVisibility(
                             learningRecordService, jcas, getUser().getUsername(), doc, layer,
-                            Predictions.getPredictions(classifier.predict(jcas, layer)));
+                            Predictions.getPredictions(classifier.predict(jcas, layer)), 0,
+                            jcas.getDocumentText().length() - 1);
                         documentPredictions.forEach(predictions::addAll);
                     }
                     catch (IOException e) {
@@ -146,7 +147,7 @@ public class PredictionTask
     public static List<List<AnnotationObject>> setVisibility(
         LearningRecordService aLearningRecordService, JCas aJcas, String aUser,
         AnnotationDocument aDoc, AnnotationLayer aLayer,
-        List<List<AnnotationObject>> aRecommendations)
+        List<List<AnnotationObject>> aRecommendations, int aWindowBegin, int aWindowEnd)
     {
         List<LearningRecord> recordedAnnotations = aLearningRecordService
             .getAllRecordsByDocumentAndUserAndLayer(aDoc.getDocument(), aUser, aLayer);
@@ -158,7 +159,12 @@ public class PredictionTask
         // Remove the predictions for which an annotation with the same feature already exists
         // Also check whether it has an annotation and is not rejected
         Type type = CasUtil.getType(aJcas.getCas(), aLayer.getName());
-        for (AnnotationFS fs : CasUtil.select(aJcas.getCas(), type)) {
+        Collection<AnnotationFS> existingAnnotations = CasUtil.select(aJcas.getCas(), type)
+            .stream()
+            .filter(fs -> fs.getBegin() >= aWindowBegin && fs.getEnd() <= aWindowEnd)
+            .collect(Collectors.toList());
+
+        for (AnnotationFS fs : existingAnnotations) {
             if (!remainingRecommendations.isEmpty()) {
                 AnnotationObject ao;
 
