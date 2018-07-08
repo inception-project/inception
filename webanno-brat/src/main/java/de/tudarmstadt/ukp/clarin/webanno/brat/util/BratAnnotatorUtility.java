@@ -33,8 +33,10 @@ import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
@@ -48,27 +50,26 @@ public class BratAnnotatorUtility
     public static boolean isDocumentFinished(DocumentService aRepository,
             AnnotatorState aBratAnnotatorModel)
     {
-        // if annotationDocument is finished, disable editing
-        boolean finished = false;
         try {
             if (aBratAnnotatorModel.getMode().equals(Mode.CURATION)) {
-                if (aBratAnnotatorModel.getDocument().getState()
-                        .equals(SourceDocumentState.CURATION_FINISHED)) {
-                    finished = true;
-                }
+                // Load document freshly from DB so we get the latest state. The document state
+                // in the annotator state might be stale.
+                SourceDocument doc = aRepository.getSourceDocument(
+                        aBratAnnotatorModel.getDocument().getProject().getId(),
+                        aBratAnnotatorModel.getDocument().getId());
+                return doc.getState().equals(SourceDocumentState.CURATION_FINISHED);
             }
-            else if (aRepository
-                    .getAnnotationDocument(aBratAnnotatorModel.getDocument(),
-                            aBratAnnotatorModel.getUser()).getState()
-                    .equals(AnnotationDocumentState.FINISHED)) {
-                finished = true;
+            else {
+                // if annotationDocument is finished, disable editing
+                AnnotationDocument adoc = aRepository.getAnnotationDocument(
+                        aBratAnnotatorModel.getDocument(), aBratAnnotatorModel.getUser());
+                
+                return adoc.getState().equals(AnnotationDocumentState.FINISHED);
             }
         }
         catch (Exception e) {
-            finished = false;
+            return false;
         }
-
-        return finished;
     }
 
     public static JCas clearJcasAnnotations(JCas aJCas)
