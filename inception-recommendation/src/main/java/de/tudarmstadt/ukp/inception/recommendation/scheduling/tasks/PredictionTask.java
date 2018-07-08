@@ -19,9 +19,11 @@ package de.tudarmstadt.ukp.inception.recommendation.scheduling.tasks;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.NavigableSet;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
@@ -46,7 +48,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
-import de.tudarmstadt.ukp.inception.recommendation.imls.util.ListUtil;
 
 /**
  * This consumer predicts new annotations for a given annotation layer, if a classification tool for
@@ -152,12 +153,10 @@ public class PredictionTask
         List<LearningRecord> recordedAnnotations = aLearningRecordService
             .getAllRecordsByDocumentAndUserAndLayer(aDoc.getDocument(), aUser, aLayer);
 
-        // Recommendations sorted by begin offset
-        NavigableSet<AnnotationObject> remainingRecommendations = new TreeSet<>(
-            ListUtil.flattenList(aRecommendations));
+        // Recommendations sorted by Offset, Id, RecommenderId, DocumentName.hashCode (descending)
+        NavigableSet<AnnotationObject> remainingRecommendations = new TreeSet<>();
+        aRecommendations.forEach(remainingRecommendations::addAll);
 
-        // Remove the predictions for which an annotation with the same feature already exists
-        // Also check whether it has an annotation and is not rejected
         Type type = CasUtil.getType(aJcas.getCas(), aLayer.getName());
         Collection<AnnotationFS> existingAnnotations = CasUtil.select(aJcas.getCas(), type)
             .stream()
@@ -166,22 +165,27 @@ public class PredictionTask
 
         for (AnnotationFS fs : existingAnnotations) {
             if (!remainingRecommendations.isEmpty()) {
-                AnnotationObject ao;
+                AnnotationObject ao = remainingRecommendations.pollFirst();
 
                 // Go to the next token for which an annotation exists
-                do {
-                    ao = remainingRecommendations.pollFirst();
-                    setVisibility(recordedAnnotations, ao);
-                }
                 while (ao.getOffset().getBeginCharacter() != fs.getBegin()
-                    && !remainingRecommendations.isEmpty());
+                    && !remainingRecommendations.isEmpty()) {
 
-                boolean isOverlappingForFeature =
-                    fs.getBegin() == ao.getOffset().getBeginCharacter();
-                if (isOverlappingForFeature) {
-                    ao.setVisible(false);
-                } else {
                     setVisibility(recordedAnnotations, ao);
+                    ao = remainingRecommendations.pollFirst();
+                }
+
+                // For tokens with annotations also check whether the annotation is for the same
+                // feature as the predicted label
+                while (ao.getOffset().getBeginCharacter() == fs.getBegin()
+                    && !remainingRecommendations.isEmpty()) {
+
+                    if (isOverlappingForFeature(fs, ao)) {
+                        ao.setVisible(false);
+                    } else {
+                        setVisibility(recordedAnnotations, ao);
+                    }
+                    ao = remainingRecommendations.pollFirst();
                 }
             }
         }
@@ -193,6 +197,11 @@ public class PredictionTask
         }
 
         return aRecommendations;
+    }
+
+    private static boolean isOverlappingForFeature(AnnotationFS aFs, AnnotationObject aAo)
+    {
+        return aFs.getBegin() == aAo.getOffset().getBeginCharacter();
     }
 
     /**
