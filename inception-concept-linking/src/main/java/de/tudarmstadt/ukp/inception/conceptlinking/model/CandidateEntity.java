@@ -58,6 +58,11 @@ public class CandidateEntity
     private int levContext;
 
     /**
+     * edit distance between typed string and candidate entity label
+     */
+    private int levTypedString;
+
+    /**
      * set of directly related entities as IRI Strings
      */
     private Set<String> signatureOverlap;
@@ -170,6 +175,19 @@ public class CandidateEntity
     public int getLevContext()
     {
         return levContext;
+    }
+
+    /**
+     * @param levTypedString edit distance between typed string and candidate entity label
+     */
+    public void setLevTypedString(int levTypedString)
+    {
+        this.levTypedString = levTypedString;
+    }
+
+    public int getLevTypedString()
+    {
+        return levTypedString;
     }
 
     /**

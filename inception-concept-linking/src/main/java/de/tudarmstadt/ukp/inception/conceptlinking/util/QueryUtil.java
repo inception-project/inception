@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.conceptlinking.util;
 
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.rdf4j.model.IRI;
-import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.query.QueryLanguage;
@@ -66,22 +66,15 @@ public class QueryUtil
     private static final String WIKIMEDIA_NEWS_ARTICLE = "e:Q17633526";
 
     private static final String WIKIMEDIA_NAVIGATIONAL_TEMPLATE = "e:Q11753321";
-    /**
-     *
-     * @param tokens the words spanned by the mention
-     * @param limit maximum number of results
-     * @return a query to retrieve candidate entities
-     */
-    public static TupleQuery generateCandidateQuery(RepositoryConnection conn, String tokens,
-        int limit, IRI aDescriptionIri)
+
+    private static String getExactMatchingQueryPart(String aString)
     {
-        String exactMatching = String.join("\n",
+        return String.join("\n",
             "    SELECT DISTINCT ?e2 ?description WHERE",
             "    {",
             "     VALUES ?labelpredicate {rdfs:label skos:altLabel}",
-            "      GRAPH " + TERMS,
             "      {",
-            "        ?e2 ?labelpredicate '?entityLabel' @en .",
+            "        ?e2 ?labelpredicate ?" + aString + " @en .",
             "        OPTIONAL",
             "        {",
             "          ?e2 ?descriptionIri ?description.",
@@ -89,12 +82,37 @@ public class QueryUtil
             "        }",
             "      }",
             "    }");
+    }
+    /**
+     *
+     * This query retrieves candidates via exact matching of their labels and full-text-search
+     *
+     * @param aTypedString the unprocessed raw string the user searched for or
+     * @param aMention the words spanned by the mention, pre-processed
+     * @param aLimit maximum number of results
+     * @param aDescriptionIri KB-specific IRI that indicates a description
+     * @return a query to retrieve candidate entities
+     */
+    public static TupleQuery generateCandidateQuery(RepositoryConnection conn, String aTypedString,
+        String aMention, int aLimit, IRI aDescriptionIri)
+    {
+        // Matching user input exactly
+        String exactMatchingTypedString = getExactMatchingQueryPart("exactTyped");
 
-        String partialMatching = String.join("\n",
+        // Usually users are lazy and don't capitalize words,
+        // but then the exact matching wouldn't find anything.
+        String exactMatchingTypedStringCapitalized = getExactMatchingQueryPart("exactTypedCapitalized");
+
+        // Do the same for the mention
+        String exactMatchingMention = getExactMatchingQueryPart("exactMention");
+
+        String exactMatchingMentionCapitalized = getExactMatchingQueryPart("exactMentionCapitalized");
+
+        // Using full-text search capabilities
+        String fullTextMatching = String.join("\n",
             "    SELECT DISTINCT ?e2 ?altLabel ?description WHERE",
             "    {",
             "      VALUES ?labelpredicate {rdfs:label skos:altLabel}",
-            "      GRAPH " + TERMS,
             "      {",
             "        ?e2 ?labelpredicate ?altLabel.",
             "        ?altLabel bif:contains '?entityLabel'. ",
@@ -105,7 +123,8 @@ public class QueryUtil
             "        }",
             "      }",
             "    }",
-            "    LIMIT " + limit);
+            "    LIMIT " + aLimit);
+
 
         String query = String.join("\n",
             "DEFINE input:inference 'instances'",
@@ -113,13 +132,25 @@ public class QueryUtil
             "SELECT DISTINCT ?e2 ?altLabel ?label ?description WHERE",
             "{",
             "  {",
-                 exactMatching,
+                 exactMatchingTypedString,
             "  } ",
             "  UNION",
             "  {",
-                 partialMatching,
+                 exactMatchingTypedStringCapitalized,
             "  }",
-            "  FILTER EXISTS { GRAPH " + STATEMENTS + " { ?e2 ?p ?v }}",
+            "  UNION",
+            "  {",
+                 exactMatchingMention,
+            "  }",
+            "  UNION",
+            "  {",
+                 exactMatchingMentionCapitalized,
+            "  }",
+            "  UNION",
+            "  {",
+                 fullTextMatching,
+            "  }",
+            "  FILTER EXISTS { ?e2 ?p ?v }",
             "  FILTER NOT EXISTS ",
             "  {",
             "    VALUES ?topic {" + String.join(" ", WIKIMEDIA_INTERNAL,
@@ -127,20 +158,24 @@ public class QueryUtil
                 WIKIMEDIA_LIST_ARTICLE, WIKIMEDIA_TEMPLATE, WIKIMEDIA_NEWS_ARTICLE,
                 WIKIMEDIA_NAVIGATIONAL_TEMPLATE) +
                 "}",
-            "    GRAPH " + INSTANCES + " {?e2 rdf:type ?topic}",
+            "    ?e2 rdf:type ?topic",
             "  }",
-            "  BIND (STRLEN(?altLabel) as ?len)",
-            "  {",
-            "    GRAPH " + TERMS + " { ?e2 rdfs:label ?label. }",
-            "    FILTER ( lang(?label) = \"en\" )",
-            "  }",
+            "  ?e2 rdfs:label ?label.",
+            "  FILTER ( lang(?label) = \"en\" )",
             "}");
 
         ValueFactory vf = SimpleValueFactory.getInstance();
-        Literal tokensJoined = vf.createLiteral(String.join(" ",tokens));
 
         TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, query);
-        tupleQuery.setBinding("entityLabel", tokensJoined);
+        tupleQuery.setBinding("entityLabel", vf.createLiteral(aMention));
+
+        tupleQuery.setBinding("exactTyped", vf.createLiteral(aTypedString));
+        tupleQuery.setBinding("exactTypedCapitalized",
+                vf.createLiteral(StringUtils.capitalize(aTypedString)));
+        tupleQuery.setBinding("exactMention", vf.createLiteral(aMention));
+        tupleQuery.setBinding("exactMentionCapitalized",
+            vf.createLiteral(StringUtils.capitalize(aMention)));
+
         tupleQuery.setBinding("descriptionIri", aDescriptionIri);
         return tupleQuery;
     }

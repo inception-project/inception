@@ -133,16 +133,18 @@ public class ConceptLinkingService
         return WebAnnoCasUtil.getSentence(aJcas, aBegin);
     }    
 
-    /*
+    /**
      * Generate a set of candidate entities from a Knowledge Base for a mention.
      * It only contains entities which are instances of a pre-defined concept.
+     * May lead to recursive calls if first search does not yield any results.
+     *
+     * @param aKB the Knowledge Base in which to search.
+     * @param aTypedString typed string from the user, is not modified in this method.
+     * @param aMention the marked surface form, which is pre-processed first.
      */
-    private Set<CandidateEntity> generateCandidates(KnowledgeBase aKB, String aMention)
+    private Set<CandidateEntity> generateCandidates(KnowledgeBase aKB, String aTypedString,
+        String aMention)
     {
-        if (aMention == null || aMention.isEmpty()) {
-            return Collections.emptySet();
-        }
-
         Set<CandidateEntity> candidates = new HashSet<>();
         List<String> mentionList = Arrays.asList(aMention.split(" "));
 
@@ -171,8 +173,9 @@ public class ConceptLinkingService
 
 
         try (RepositoryConnection conn = kbService.getConnection(aKB)) {
-            TupleQuery query = QueryUtil.generateCandidateQuery(conn, processedMention,
-                properties.getCandidateQueryLimit(), aKB.getDescriptionIri());
+            TupleQuery query = QueryUtil
+                .generateCandidateQuery(conn, aTypedString, processedMention,
+                    properties.getCandidateQueryLimit(), aKB.getDescriptionIri());
             try (TupleQueryResult entityResult = query.evaluate()) {
                 while (entityResult.hasNext()) {
                     BindingSet solution = entityResult.next();
@@ -199,12 +202,13 @@ public class ConceptLinkingService
             String[] split = processedMention.split(" ");
             if (split.length > 1) {
                 for (String s : split) {
-                    candidates.addAll(generateCandidates(aKB, s));
+                    candidates.addAll(generateCandidates(aKB, s, aTypedString));
                 }
             }
         }
 
-        candidateCache.put(pair, candidates);
+        // TODO Reactivate Caching
+        // candidateCache.put(pair, candidates);
         return candidates;
     }
 
@@ -265,8 +269,8 @@ public class ConceptLinkingService
      * This method does the actual ranking of the candidate entity set.
      * It returns the candidates by descending probability.
      */
-    private List<CandidateEntity> rankCandidates(KnowledgeBase aKB, String mention,
-            Set<CandidateEntity> candidates, JCas aJCas, int aBegin)
+    private List<CandidateEntity> rankCandidates(KnowledgeBase aKB, String aTypedString,
+        String mention, Set<CandidateEntity> candidates, JCas aJCas, int aBegin)
     {
         long startTime = System.currentTimeMillis();
 
@@ -310,6 +314,7 @@ public class ConceptLinkingService
             LevenshteinDistance lev = new LevenshteinDistance();
             l.setLevMatchLabel(lev.apply(mention, altLabel));
             l.setLevContext(lev.apply(tokensToString(mentionContext), altLabel));
+            l.setLevTypedString(lev.apply(aTypedString, altLabel));
 
             SemanticSignature sig = getSemanticSignature(aKB, wikidataId);
             Set<String> relatedEntities = sig.getRelatedEntities();
@@ -355,6 +360,7 @@ public class ConceptLinkingService
     private List<CandidateEntity> sortCandidates(List<CandidateEntity> candidates)
     {
         candidates.sort((e1, e2) -> new CompareToBuilder()
+            .append(e1.getLevTypedString(), e2.getLevTypedString())
             .append(e2.getSignatureOverlapScore(), e1.getSignatureOverlapScore())
             .append(e1.getLevContext() + e1.getLevMatchLabel(),
                 e2.getLevContext() + e2.getLevMatchLabel())
@@ -431,8 +437,7 @@ public class ConceptLinkingService
      *
      * @param aKB the KB used to generate candidates
      * @param aTypedString What the user has typed so far in the text field. Might be null.
-     * @param aMention AnnotatorState, used to get information about what surface form was
-     *                     marked
+     * @param aMention Marked Surface form of an entity to be linked
      * @param aMentionBeginOffset the offset where the mention begins in the text
      * @param aJcas used to extract information about mention sentence
      *                       tokens
@@ -443,31 +448,16 @@ public class ConceptLinkingService
     {
         long startTime = System.currentTimeMillis();
 
-        Set<CandidateEntity> candidates = new HashSet<>();
-
         aMention = aMention.toLowerCase(Locale.ENGLISH);
+        aTypedString = aTypedString.toLowerCase(Locale.ENGLISH);
+        Set<CandidateEntity> candidates = new HashSet<>(
+            generateCandidates(aKB, aTypedString, aMention));
+        logger
+            .debug("It took [{}] ms to retrieve candidates for mention [{}] and typed string [{}]",
+                System.currentTimeMillis() - startTime, aMention);
 
-        if (aTypedString != null) {
-            aTypedString = aTypedString.toLowerCase(Locale.ENGLISH);
-            if (!aMention.startsWith(aTypedString)) {
-                candidates.addAll(generateCandidates(aKB, aTypedString));
-                logger.debug("It took [{}] ms to retrieve candidates for typed string [{}]", System
-                    .currentTimeMillis() - startTime, aTypedString);
-            }
-            else {
-                candidates.addAll(generateCandidates(aKB, aMention));
-                logger.debug("It took [{}] ms to retrieve candidates for mention [{}]", System
-                    .currentTimeMillis() - startTime, aMention);
-            }
-        }
-        else {
-            candidates.addAll(generateCandidates(aKB, aMention));
-            logger.debug("It took [{}] ms to retrieve candidates for mention [{}]", System
-                .currentTimeMillis() - startTime, aMention);
-        }
-        
-        List<CandidateEntity> rankedCandidates = rankCandidates(aKB, aMention, candidates, aJcas,
-            aMentionBeginOffset);
+        List<CandidateEntity> rankedCandidates = rankCandidates(aKB, aTypedString, aMention,
+            candidates, aJcas, aMentionBeginOffset);
 
         return rankedCandidates.stream()
             .map(c -> new KBHandle(c.getIRI(), c.getLabel(), c.getDescription()))
