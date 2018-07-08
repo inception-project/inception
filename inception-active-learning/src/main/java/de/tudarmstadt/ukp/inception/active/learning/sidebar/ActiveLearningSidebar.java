@@ -887,5 +887,10 @@ public class ActiveLearningSidebar
                 }
             }
         }
+
+        if (currentRecommendation != null && !currentRecommendation.isVisible()) {
+            moveToNextRecommendation((AjaxRequestTarget) aEvent.getRequestHandler());
+        }
     }
+
 }

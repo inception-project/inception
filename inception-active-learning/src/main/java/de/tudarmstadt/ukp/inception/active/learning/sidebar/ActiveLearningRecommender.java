@@ -77,7 +77,7 @@ public class ActiveLearningRecommender
         // remove rejected recommendations
         removeRejectedOrSkippedAnnotations(aRecordService, true, learnSkippedRecommendationTime);
 
-        return calculateDifferencesAndReturnLowestDifference(listOfRecommendationsForEachToken);
+        return calculateDifferencesAndReturnLowestVisibleDifference(listOfRecommendationsForEachToken);
     }
 
     public boolean hasRecommendationWhichIsSkipped(LearningRecordService aRecordService,
@@ -186,7 +186,7 @@ public class ActiveLearningRecommender
         return learnSkippedTime == null || learnSkippedTime.compareTo(record.getActionDate()) <= 0;
     }
 
-    private static RecommendationDifference calculateDifferencesAndReturnLowestDifference(
+    private static RecommendationDifference calculateDifferencesAndReturnLowestVisibleDifference(
             List<List<AnnotationObject>> aListOfRecommendationsForEachToken)
     {
         // create list of recommendationsList, each recommendationsList contains all
@@ -199,7 +199,7 @@ public class ActiveLearningRecommender
             createDifferencesSortedAscendingly(
             listOfRecommendationsPerTokenPerClassifier);
         Optional<RecommendationDifference> recommendationDifference = recommendationDifferences
-            .stream().findFirst();
+            .stream().filter(rd -> rd.getRecommendation1().isVisible()).findFirst();
         if (recommendationDifference.isPresent()) {
             return recommendationDifference.get();
         }
