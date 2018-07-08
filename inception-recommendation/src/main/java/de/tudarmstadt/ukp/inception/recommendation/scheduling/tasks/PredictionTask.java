@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.recommendation.scheduling.tasks;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.NavigableSet;
 import java.util.TreeSet;
@@ -150,6 +151,11 @@ public class PredictionTask
         AnnotationDocument aDoc, AnnotationLayer aLayer,
         List<List<AnnotationObject>> aRecommendations, int aWindowBegin, int aWindowEnd)
     {
+        // No recommendations
+        if (aRecommendations == null || aRecommendations.isEmpty()) {
+            return Collections.emptyList();
+        }
+
         List<LearningRecord> recordedAnnotations = aLearningRecordService
             .getAllRecordsByDocumentAndUserAndLayer(aDoc.getDocument(), aUser, aLayer);
 
@@ -163,30 +169,33 @@ public class PredictionTask
             .filter(fs -> fs.getBegin() >= aWindowBegin && fs.getEnd() <= aWindowEnd)
             .collect(Collectors.toList());
 
+        AnnotationObject swap = remainingRecommendations.pollFirst();
+
         for (AnnotationFS fs : existingAnnotations) {
-            if (!remainingRecommendations.isEmpty()) {
-                AnnotationObject ao = remainingRecommendations.pollFirst();
 
-                // Go to the next token for which an annotation exists
-                while (ao.getOffset().getBeginCharacter() != fs.getBegin()
-                    && !remainingRecommendations.isEmpty()) {
+            AnnotationObject ao = swap;
 
+            // Go to the next token for which an annotation exists
+            while (ao.getOffset().getBeginCharacter() != fs.getBegin()
+                && !remainingRecommendations.isEmpty()) {
+
+                setVisibility(recordedAnnotations, ao);
+                ao = remainingRecommendations.pollFirst();
+                swap = ao;
+            }
+
+            // For tokens with annotations also check whether the annotation is for the same
+            // feature as the predicted label
+            while (ao.getOffset().getBeginCharacter() == fs.getBegin()
+                && !remainingRecommendations.isEmpty()) {
+
+                if (isOverlappingForFeature(fs, ao)) {
+                    ao.setVisible(false);
+                } else {
                     setVisibility(recordedAnnotations, ao);
-                    ao = remainingRecommendations.pollFirst();
                 }
-
-                // For tokens with annotations also check whether the annotation is for the same
-                // feature as the predicted label
-                while (ao.getOffset().getBeginCharacter() == fs.getBegin()
-                    && !remainingRecommendations.isEmpty()) {
-
-                    if (isOverlappingForFeature(fs, ao)) {
-                        ao.setVisible(false);
-                    } else {
-                        setVisibility(recordedAnnotations, ao);
-                    }
-                    ao = remainingRecommendations.pollFirst();
-                }
+                ao = remainingRecommendations.pollFirst();
+                swap = ao;
             }
         }
 
