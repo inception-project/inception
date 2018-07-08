@@ -117,10 +117,18 @@ public class BratRenderer
         
         // Render visible (custom) layers
         Map<String[], Queue<String>> colorQueues = new HashMap<>();
-        for (AnnotationLayer layer : aVDoc.getAnnotationLayers()) {
+        for (AnnotationLayer layer : aAnnotationService.listAnnotationLayer(aState.getProject())) {
             ColoringStrategy coloringStrategy = aColoringStrategy != null ? aColoringStrategy
                     : ColoringStrategy.getStrategy(aAnnotationService, layer,
                             aState.getPreferences(), colorQueues);
+            
+            // If the layer is not included in the rendering, then we skip here - but only after
+            // we have obtained a coloring strategy for this layer and thus secured the layer
+            // color. This ensures that the layer colors do not change depending on the number
+            // of visible layers.
+            if (!aVDoc.getAnnotationLayers().contains(layer)) {
+                continue;
+            }
 
             TypeAdapter typeAdapter = aAnnotationService.getAdapter(layer);
             
