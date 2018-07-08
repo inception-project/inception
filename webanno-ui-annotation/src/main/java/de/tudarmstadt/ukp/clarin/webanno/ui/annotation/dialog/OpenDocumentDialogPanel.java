@@ -30,8 +30,6 @@ import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.OnChangeAjaxBehavior;
-import org.apache.wicket.ajax.markup.html.AjaxLink;
-import org.apache.wicket.ajax.markup.html.form.AjaxSubmitLink;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.extensions.markup.html.form.select.Select;
 import org.apache.wicket.extensions.markup.html.form.select.SelectOption;
@@ -57,6 +55,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
 
 /**
@@ -89,12 +89,15 @@ public class OpenDocumentDialogPanel
     private final AnnotatorState bModel;
     
     private IModel<List<DecoratedObject<Project>>> projects;
-
+    
+    private final ModalWindow modalWindow;
+    
     public OpenDocumentDialogPanel(String aId, AnnotatorState aBModel, ModalWindow aModalWindow,
             IModel<List<DecoratedObject<Project>>> aProjects)
     {
         super(aId);
         
+        modalWindow = aModalWindow;
         bModel = aBModel;
         user = userRepository.getCurrentUser();
         projects = aProjects;
@@ -171,6 +174,7 @@ public class OpenDocumentDialogPanel
                     // Remove selected document from other project
                     selectedDocument = null;
                     documentSelection.setModelObject(selectedDocument);
+                    aTarget.add(buttonsForm);
                     aTarget.add(documentSelection);
                 }
             }).add(new AjaxEventBehavior("dblclick")
@@ -256,6 +260,7 @@ public class OpenDocumentDialogPanel
                 protected void onUpdate(AjaxRequestTarget aTarget)
                 {
                     selectedDocument = getModelObject().documentSelection;
+                    aTarget.add(buttonsForm);
                 }
             }).add(new AjaxEventBehavior("dblclick")
             {
@@ -338,67 +343,37 @@ public class OpenDocumentDialogPanel
         public ButtonsForm(String id, final ModalWindow modalWindow)
         {
             super(id);
-            add(new AjaxSubmitLink("openButton")
-            {
-                private static final long serialVersionUID = -755759008587787147L;
+            
+            add(new LambdaAjaxLink("openButton", this::actionOpenDocument)
+                    .add(LambdaBehavior.onConfigure(c -> c.setEnabled(selectedDocument != null))));
 
-                @Override
-                protected void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
-                {
-                    if (selectedProject == null) {
-                        aTarget.appendJavaScript("alert('No project is selected!')"); // If there is
-                                                                                      // no project
-                                                                                      // at all
-                    }
-                    else if (selectedDocument == null) {
-                        if (documentService.existsFinishedAnnotation(selectedProject)) {
-                            aTarget.appendJavaScript("alert('Please select a document for project: "
-                                    + selectedProject.getName() + "')");
-                        }
-                        else {
-                            aTarget.appendJavaScript("alert('There is no document that is ready for curation yet for project: "
-                                    + selectedProject.getName() + "')");
-                        }
-                    }
-                    else {
-                        // do not use this default layer in that other project
-                        if (bModel.getProject() != null) {
-                            if (!bModel.getProject().equals(selectedProject)) {
-                                bModel.setDefaultAnnotationLayer(null);
-                            }
-                        }
-                        
-                        bModel.setProject(selectedProject);
-                        bModel.setDocument(selectedDocument,
-                                documentSelectionForm.lv.getModelObject().stream().map(t -> t.get())
-                                        .collect(Collectors.toList()));
-                        modalWindow.close(aTarget);
-                    }
+            add(new LambdaAjaxLink("cancelButton", this::actionCancel));
+        }
+        
+        private void actionOpenDocument(AjaxRequestTarget aTarget)
+        {
+            if (bModel.getProject() != null) {
+                if (!bModel.getProject().equals(selectedProject)) {
+                    bModel.setDefaultAnnotationLayer(null);
                 }
-
-                @Override
-                protected void onError(AjaxRequestTarget aTarget, Form<?> aForm)
-                {
-
-                }
-            });
-
-            add(new AjaxLink<Void>("cancelButton")
-            {
-                private static final long serialVersionUID = 7202600912406469768L;
-
-                @Override
-                public void onClick(AjaxRequestTarget aTarget)
-                {
-                    projectSelectionForm.detach();
-                    documentSelectionForm.detach();
-                    if (Mode.CURATION.equals(bModel.getMode())) {
-                        bModel.setDocument(null, null); // on cancel, go welcomePage
-                    }
-                    onCancel(aTarget);
-                    modalWindow.close(aTarget);
-                }
-            });
+            }
+            
+            bModel.setProject(selectedProject);
+            bModel.setDocument(selectedDocument,
+                    documentSelectionForm.lv.getModelObject().stream().map(t -> t.get())
+                            .collect(Collectors.toList()));
+            modalWindow.close(aTarget);
+        }
+        
+        private void actionCancel(AjaxRequestTarget aTarget)
+        {
+            projectSelectionForm.detach();
+            documentSelectionForm.detach();
+            if (Mode.CURATION.equals(bModel.getMode())) {
+                bModel.setDocument(null, null); // on cancel, go welcomePage
+            }
+            onCancel(aTarget);
+            modalWindow.close(aTarget);
         }
     }
 
