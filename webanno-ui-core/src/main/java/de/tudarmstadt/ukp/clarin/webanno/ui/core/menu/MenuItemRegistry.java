@@ -18,10 +18,15 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.core.menu;
 
 import java.util.List;
+import java.util.Optional;
+
+import org.apache.wicket.Page;
 
 public interface MenuItemRegistry
 {
     String SERVICE_NAME = "menuItemService";
 
+    Optional<MenuItem> getMenuItem(Class<? extends Page> aClass);
+    
     List<MenuItem> getMenuItems();
 }

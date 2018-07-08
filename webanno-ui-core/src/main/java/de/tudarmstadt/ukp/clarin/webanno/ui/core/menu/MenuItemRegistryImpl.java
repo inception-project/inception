@@ -20,8 +20,10 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.core.menu;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.commons.lang3.ClassUtils;
+import org.apache.wicket.Page;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -68,7 +70,13 @@ public class MenuItemRegistryImpl
         
         extensions = Collections.unmodifiableList(exts);
     }    
-        
+    
+    @Override
+    public Optional<MenuItem> getMenuItem(Class<? extends Page> aClass)
+    {
+        return extensions.stream().filter(mi -> mi.getPageClass().equals(aClass)).findFirst();
+    }
+    
     @Override
     public List<MenuItem> getMenuItems()
     {
