@@ -22,8 +22,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -219,48 +221,34 @@ public class ActiveLearningRecommender
                 listOfRecommendationsPerTokenPerClassifier.add(recommendationsPerToken);
             }
             else {
-                if (fromMoreThanOneClassifier(recommendationsPerToken)) {
-                    splitRecommendationsWithRegardToClassifier(
-                        listOfRecommendationsPerTokenPerClassifier, recommendationsPerToken);
+                // split the list of recommendations with different classifiers for each token
+                // into different lists of recommendations with same token same classifier
+                Map<String, List<AnnotationObject>> recommendtionsPerTokenPerClassifier = new
+                    HashMap<>();
+                for (AnnotationObject recommendation : recommendationsPerToken) {
+                    String classifier = recommendation.getSource();
+                    if (recommendtionsPerTokenPerClassifier.containsKey(classifier)) {
+                        List<AnnotationObject> oldListForThisTokenThisClassifier =
+                            recommendtionsPerTokenPerClassifier
+                            .get(classifier);
+                        oldListForThisTokenThisClassifier.add(recommendation);
+                        recommendtionsPerTokenPerClassifier
+                            .put(classifier, oldListForThisTokenThisClassifier);
+                    }
+                    else {
+                        List<AnnotationObject> newListForThisTokenThisClassifier = new
+                            ArrayList<>();
+                        newListForThisTokenThisClassifier.add(recommendation);
+                        recommendtionsPerTokenPerClassifier
+                            .put(classifier, newListForThisTokenThisClassifier);
+                    }
                 }
-                else {
-                    listOfRecommendationsPerTokenPerClassifier.add(recommendationsPerToken);
-                }
+                listOfRecommendationsPerTokenPerClassifier.addAll(
+                    recommendtionsPerTokenPerClassifier.values().stream()
+                        .collect(Collectors.toList()));
             }
         }
         return listOfRecommendationsPerTokenPerClassifier;
-    }
-
-    private static boolean fromMoreThanOneClassifier(
-            List<AnnotationObject> recommendationListPerToken)
-    {
-        int numberOfStringMatchingClassifer = 0;
-        int numberOfOpenNLPClassifier = 0;
-        for (AnnotationObject recommendation : recommendationListPerToken) {
-            if (recommendation.getSource().contains("StringMatching")) {
-                numberOfStringMatchingClassifer++;
-            }
-            if (recommendation.getSource().contains("OpenNlp")) {
-                numberOfOpenNLPClassifier++;
-            }
-        }
-        return numberOfOpenNLPClassifier >= 1 && numberOfStringMatchingClassifer >= 1;
-    }
-
-    private static void splitRecommendationsWithRegardToClassifier(
-            List<List<AnnotationObject>> listOfRecommendationsPerTokenPerClassifier,
-            List<AnnotationObject> recommendationsPerToken)
-    {
-        List<AnnotationObject> stringMatchingClassifierAnnotationObject = new ArrayList<>();
-        for (AnnotationObject recommendation : recommendationsPerToken) {
-            if (recommendation.getSource().contains("StringMatching")) {
-                stringMatchingClassifierAnnotationObject.add(recommendation);
-            }
-        }
-        recommendationsPerToken.removeIf(recommendation -> recommendation.getSource()
-            .contains("StringMatching"));
-        listOfRecommendationsPerTokenPerClassifier.add(recommendationsPerToken);
-        listOfRecommendationsPerTokenPerClassifier.add(stringMatchingClassifierAnnotationObject);
     }
 
     private static List<RecommendationDifference> createDifferencesSortedAscendingly(
