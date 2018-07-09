@@ -24,6 +24,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -217,7 +218,7 @@ public class KnowledgeBaseServiceImplImportExportIntegrationTest {
     public void exportData_WithRemoteKnowledgeBase_ShouldDoNothing() throws Exception {
         File outputFile = temporaryFolder.newFile();
         kb.setType(RepositoryType.REMOTE);
-        sut.registerKnowledgeBase(kb, sut.getRemoteConfig(KnowledgeBases.BABELNET.url));
+        sut.registerKnowledgeBase(kb, sut.getRemoteConfig(sut.readKnowledgeBaseProfiles().get("babel_net").getSparqlUrl()));
 
         try (OutputStream os = new FileOutputStream(outputFile)) {
             sut.exportData(kb, RDFFormat.TURTLE, os);
@@ -247,6 +248,7 @@ public class KnowledgeBaseServiceImplImportExportIntegrationTest {
         kb.setDescriptionIri(RDFS.COMMENT);
         kb.setLabelIri(RDFS.LABEL);
         kb.setPropertyTypeIri(RDF.PROPERTY);
+        kb.setExplicitlyDefinedRootConcepts(new ArrayList<>());
         return kb;
     }
 

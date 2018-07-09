@@ -43,6 +43,7 @@ public class ClassificationTool<C>
     private Classifier<C> classifier;
     private AnnotationObjectLoader loader;
     private boolean trainOnCompleteSentences;
+    private boolean isEvaluable;
 
     protected ClassificationTool()
     {
@@ -65,9 +66,12 @@ public class ClassificationTool<C>
      * @param trainOnCompleteSentences
      *            true, if sentences have to be fully annotated, i.e. every token needs an
      *            annotation label != null, to be used for training.
+     * @param isEvaluable
+     *            Some classification tools should be skipped during evaluation, since they do not
+     *            train or are trained externally. true, if the classifier is locally evaluable.
      */
     protected ClassificationTool(long id, String name, Trainer<C> trainer, Classifier<C> classifier,
-            AnnotationObjectLoader loader, boolean trainOnCompleteSentences)
+            AnnotationObjectLoader loader, boolean trainOnCompleteSentences, boolean isEvaluable)
     {
         super();
         this.id = id;
@@ -76,6 +80,7 @@ public class ClassificationTool<C>
         this.classifier = classifier;
         this.loader = loader;
         this.trainOnCompleteSentences = trainOnCompleteSentences;
+        this.isEvaluable = isEvaluable;
     }
 
     public String getName()
@@ -118,24 +123,44 @@ public class ClassificationTool<C>
         return trainOnCompleteSentences;
     }
 
-    protected void setTrainer(Trainer<C> trainer)
+    public void setTrainer(Trainer<C> trainer)
     {
         this.trainer = trainer;
     }
 
-    protected void setClassifier(Classifier<C> classifier)
+    public void setClassifier(Classifier<C> classifier)
     {
         this.classifier = classifier;
     }
 
-    protected void setLoader(AnnotationObjectLoader loader)
+    public void setLoader(AnnotationObjectLoader loader)
     {
         this.loader = loader;
     }
 
-    protected void setTrainOnCompleteSentences(boolean trainOnCompleteSentences)
+    public void setTrainOnCompleteSentences(boolean trainOnCompleteSentences)
     {
         this.trainOnCompleteSentences = trainOnCompleteSentences;
+    }
+
+    /**
+     * Some classification tools should be skipped during evaluation, since they do not
+     * train or are trained externally.
+     * @return true, if the classifier is locally evaluable.
+     */
+    public boolean isEvaluable()
+    {
+        return isEvaluable;
+    }
+
+    /**
+     * @param evaluable
+     *            Some classification tools should be skipped during evaluation, since they do not
+     *            train or are trained externally. true, if the classifier is locally evaluable.
+     */
+    public void setEvaluable(boolean evaluable)
+    {
+        isEvaluable = evaluable;
     }
 
     /**

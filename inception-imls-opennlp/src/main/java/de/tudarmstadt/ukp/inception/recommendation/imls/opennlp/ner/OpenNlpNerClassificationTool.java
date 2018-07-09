@@ -33,7 +33,7 @@ public class OpenNlpNerClassificationTool
         super(-1, OpenNlpNerClassificationTool.class.getName(),
             new OpenNlpNerTrainer(new BaseConfiguration()),
             new OpenNlpNerClassifier(new BaseConfiguration()), new NerAnnotationObjectLoader(),
-            false);
+            false, true);
     }
 
     public OpenNlpNerClassificationTool(long recommenderId, String feature, AnnotationLayer aLayer)
@@ -41,6 +41,6 @@ public class OpenNlpNerClassificationTool
         super(recommenderId, OpenNlpNerClassificationTool.class.getName(),
             new OpenNlpNerTrainer(new BaseConfiguration(feature, recommenderId)),
             new OpenNlpNerClassifier(new BaseConfiguration(feature, recommenderId)),
-            new NerAnnotationObjectLoader(aLayer, feature), false);
+            new NerAnnotationObjectLoader(aLayer, feature), false, true);
     }
 }
