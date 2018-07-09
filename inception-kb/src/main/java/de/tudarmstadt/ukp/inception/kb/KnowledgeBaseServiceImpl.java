@@ -649,27 +649,8 @@ public class KnowledgeBaseServiceImpl
             boolean aAll)
         throws QueryEvaluationException
     {
-        System.out.println(kb.getTypeIri());
-        System.out.println(aType);
-        System.out.println(kb.getLabelIri());
-        
-        
         List<KBHandle> resultList = read(kb, (conn) -> {
-            String QUERY = String.join("\n"
-                         , InferencerVariableStore.RDF_PREFIX
-                         , InferencerVariableStore.RDFS_PREFIX
-                         , InferencerVariableStore.OWL_PREFIX
-                         , "SELECT DISTINCT ?s ?l WHERE {"
-                         , "  { ?s ?pTYPE ?oPROPERTY .}"
-                         , "  UNION "
-                         , "  { ?s a owl:ObjectProperty"
-                         , "    }"
-                         , "  OPTIONAL {"
-                         , "    ?s ?pLABEL ?l ."
-                         , "    FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\"))"
-                         , "  }"
-                         , "}"
-                         , "LIMIT 10000");
+            String QUERY = getPropertyListQuery(kb);
             TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
             tupleQuery.setBinding("pTYPE", kb.getTypeIri());
             tupleQuery.setBinding("oPROPERTY", aType);
@@ -684,7 +665,20 @@ public class KnowledgeBaseServiceImpl
         return resultList;
     }
     
-    
+    public String getPropertyListQuery(KnowledgeBase kb) {
+        
+        if (kb.getClassIri().toString().contains("wikidata")) {
+            return SPARQLQueryStore.PROPERTYLIST_WIKIDATA_QUERY;
+        }
+        else if (kb.getClassIri().toString().contains("rdf")) {
+            return SPARQLQueryStore.PROPERTYLIST_RDF_QUERY;
+        }
+        // More KB Profiles to be added for SKOS, etc
+        else {
+            return SPARQLQueryStore.PROPERTYLIST_RDF_QUERY;
+        }
+        
+    }
     
     @Override
     public List<KBHandle> listRootConcepts(KnowledgeBase kb, boolean aAll)
