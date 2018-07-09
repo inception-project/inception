@@ -17,14 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.search.index.mtas;
 
-
-public class IndexingConstants {
-    public static final String KB = "kb";
-    public static final String KBENTITY = "KB.Entity";
-    public static final String KBCONCEPT = "KBConcept";
-    public static final String KBINSTANCE = "KBInstance";
-    public static final String INDEXKBCONCEPT = "class";
-    public static final String INDEXKBINSTANCE = "instance";  
+public class IndexingConstants
+{
+    public static final String KB_ENTITY = "KB.Entity";
+    public static final String INDEX_KB_CONCEPT = "class";
+    public static final String INDEX_KB_INSTANCE = "instance";
 }
-
-

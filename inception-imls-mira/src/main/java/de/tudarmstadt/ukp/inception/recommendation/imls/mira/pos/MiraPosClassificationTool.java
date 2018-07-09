@@ -32,7 +32,7 @@ public class MiraPosClassificationTool
         super(-1, MiraPosClassificationTool.class.getName(),
                 new MiraPosTrainer(new BaseConfiguration()),
                 new MiraPosClassifier(new BaseConfiguration()),
-                new PosAnnotationObjectLoader(), true);
+                new PosAnnotationObjectLoader(), true, true);
     }
     
     public MiraPosClassificationTool(long recommenderId, String feature, AnnotationLayer aLayer)
@@ -40,6 +40,6 @@ public class MiraPosClassificationTool
         super(recommenderId, MiraPosClassificationTool.class.getName(),
                 new MiraPosTrainer(new BaseConfiguration(feature, recommenderId)),
                 new MiraPosClassifier(new BaseConfiguration(feature, recommenderId)),
-                new PosAnnotationObjectLoader(aLayer, feature), true);
+                new PosAnnotationObjectLoader(aLayer, feature), true, true);
     }
 }

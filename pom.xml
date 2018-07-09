@@ -26,7 +26,7 @@
   </parent>
   <groupId>de.tudarmstadt.ukp.inception.app</groupId>
   <artifactId>inception-app</artifactId>
-  <version>0.4.0-SNAPSHOT</version>
+  <version>0.5.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>INCEpTION</name>
   <description>Towards an Infrastructure for the Distributed Exploration and Annotation of Large Corpora and Knowledge Bases</description>
@@ -192,102 +192,102 @@
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-doc</artifactId>
-        <version>0.4.0-SNAPSHOT</version>
+        <version>0.5.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-app-ui-search</artifactId>
-        <version>0.4.0-SNAPSHOT</version>
+        <version>0.5.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-kb</artifactId>
-        <version>0.4.0-SNAPSHOT</version>
+        <version>0.5.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-ui-dashboard</artifactId>
-        <version>0.4.0-SNAPSHOT</version>
+        <version>0.5.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-html-editor</artifactId>
-        <version>0.4.0-SNAPSHOT</version>
+        <version>0.5.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-pdf-editor</artifactId>
-        <version>0.4.0-SNAPSHOT</version>
+        <version>0.5.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-recommendation</artifactId>
-        <version>0.4.0-SNAPSHOT</version>
+        <version>0.5.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-recommendation-api</artifactId>
-        <version>0.4.0-SNAPSHOT</version>
+        <version>0.5.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-active-learning</artifactId>
-        <version>0.4.0-SNAPSHOT</version>
+        <version>0.5.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-ui-core</artifactId>
-        <version>0.4.0-SNAPSHOT</version>
+        <version>0.5.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-ui-kb</artifactId>
-        <version>0.4.0-SNAPSHOT</version>
+        <version>0.5.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-concept-linking</artifactId>
-        <version>0.4.0-SNAPSHOT</version>
+        <version>0.5.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-imls-core</artifactId>
-        <version>0.4.0-SNAPSHOT</version>
+        <version>0.5.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-imls-opennlp</artifactId>
-        <version>0.4.0-SNAPSHOT</version>
+        <version>0.5.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-imls-dl4j</artifactId>
-        <version>0.4.0-SNAPSHOT</version>
+        <version>0.5.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-imls-mira</artifactId>
-        <version>0.4.0-SNAPSHOT</version>
+        <version>0.5.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-imls-stringmatch</artifactId>
-        <version>0.4.0-SNAPSHOT</version>
+        <version>0.5.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-imls-external</artifactId>
-        <version>0.4.0-SNAPSHOT</version>
+        <version>0.5.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-log</artifactId>
-        <version>0.4.0-SNAPSHOT</version>
+        <version>0.5.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-support</artifactId>
-        <version>0.4.0-SNAPSHOT</version>
+        <version>0.5.0-SNAPSHOT</version>
       </dependency>
 
       <!-- Testing -->
@@ -603,18 +603,18 @@
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-search-core</artifactId>
-        <version>0.4.0-SNAPSHOT</version>
+        <version>0.5.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-search-mtas</artifactId>
-        <version>0.4.0-SNAPSHOT</version>
+        <version>0.5.0-SNAPSHOT</version>
       </dependency>
       <!--  
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-search-mimir</artifactId>
-        <version>0.4.0-SNAPSHOT</version>
+        <version>0.5.0-SNAPSHOT</version>
       </dependency>
       -->
 
