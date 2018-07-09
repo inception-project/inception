@@ -890,6 +890,24 @@ public class ActiveLearningSidebar
 
         if (currentRecommendation != null && !currentRecommendation.isVisible()) {
             moveToNextRecommendation((AjaxRequestTarget) aEvent.getRequestHandler());
+            currentDifference = activeLearningRecommender
+                .generateRecommendationWithLowestDifference(learningRecordService,
+                    activeLearningService, learnSkippedRecommendationTime);
+            if (currentDifference != null) {
+                hasUnseenRecommendation = true;
+                currentRecommendation = currentDifference.getRecommendation1();
+                setShowingRecommendation();
+                highlightCurrentRecommendation((AjaxRequestTarget) aEvent.getRequestHandler());
+            }
+            else if (learnSkippedRecommendationTime == null) {
+                hasUnseenRecommendation = false;
+                hasSkippedRecommendation = activeLearningRecommender
+                    .hasRecommendationWhichIsSkipped(learningRecordService, activeLearningService);
+            }
+            else {
+                hasUnseenRecommendation = false;
+                hasSkippedRecommendation = false;
+            }
         }
     }
 
