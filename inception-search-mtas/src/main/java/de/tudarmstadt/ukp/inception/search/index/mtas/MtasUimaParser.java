@@ -243,9 +243,9 @@ public class MtasUimaParser
             String annotationUiName)
     {
         int mtasId = aMtasId;
-        
-        String featureValue = WebAnnoCasUtil.getFeature(aAnnotation, aFeature.getName());
-
+        FeatureSupport<?> featSup = featureSupportRegistry.getFeatureSupport(aFeature);
+        String featureValue = featSup.renderFeatureValue(aFeature, aAnnotation,
+                aAnnotation.getType().getFeatureByBaseName(aFeature.getName()));
         // Add the UI annotation.feature name to the index as an annotation.
         // Replace spaces with underscore in the UI name.
         addToIndex(aTokenCollection, annotationUiName + "." + aFeature.getUiName(), featureValue,
