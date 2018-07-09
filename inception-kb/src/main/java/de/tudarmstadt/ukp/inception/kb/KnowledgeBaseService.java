@@ -320,6 +320,9 @@ public interface KnowledgeBaseService
 
     List<KBHandle> list(KnowledgeBase kb, IRI aType, boolean aIncludeInferred, boolean
         aAll);
+    
+    List<KBHandle> listProperties(KnowledgeBase kb, IRI aType, boolean aIncludeInferred, boolean
+            aAll);
 
     /**
      * Adds a new qualifier in the given knowledge base. Does
@@ -337,6 +340,7 @@ public interface KnowledgeBaseService
      */
     void deleteQualifier(KnowledgeBase kb, KBQualifier oldQualifier);
 
+    
     /**
      * Updates a qualifier or inserts a new one. If the qualifier has an original qualifier,
      * that old one is deleted before inserting the new one. Does nothing if the knowledge base is
