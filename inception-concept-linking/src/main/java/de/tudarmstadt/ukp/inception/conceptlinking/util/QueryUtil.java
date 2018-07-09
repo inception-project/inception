@@ -83,18 +83,9 @@ public class QueryUtil
             "      }",
             "    }");
     }
-    /**
-     *
-     * This query retrieves candidates via exact matching of their labels and full-text-search
-     *
-     * @param aTypedString the unprocessed raw string the user searched for or
-     * @param aMention the words spanned by the mention, pre-processed
-     * @param aLimit maximum number of results
-     * @param aDescriptionIri KB-specific IRI that indicates a description
-     * @return a query to retrieve candidate entities
-     */
-    public static TupleQuery generateCandidateQuery(RepositoryConnection conn, String aTypedString,
-        String aMention, int aLimit, IRI aDescriptionIri)
+
+    public static TupleQuery generateCandidateExactQuery(RepositoryConnection conn,
+        String aTypedString, String aMention, IRI aDescriptionIri)
     {
         // Matching user input exactly
         String exactMatchingTypedString = getExactMatchingQueryPart("exactTyped");
@@ -107,6 +98,68 @@ public class QueryUtil
         String exactMatchingMention = getExactMatchingQueryPart("exactMention");
 
         String exactMatchingMentionCapitalized = getExactMatchingQueryPart("exactMentionCapitalized");
+
+        String query = String.join("\n",
+            "DEFINE input:inference 'instances'",
+            SPARQL_PREFIX,
+            "SELECT DISTINCT ?e2 ?altLabel ?label ?description WHERE",
+            "{",
+            "  {",
+            exactMatchingTypedString,
+            "  } ",
+            "  UNION",
+            "  {",
+            exactMatchingTypedStringCapitalized,
+            "  }",
+            "  UNION",
+            "  {",
+            exactMatchingMention,
+            "  }",
+            "  UNION",
+            "  {",
+            exactMatchingMentionCapitalized,
+            "  }",
+            "  FILTER EXISTS { ?e2 ?p ?v }",
+            "  FILTER NOT EXISTS ",
+            "  {",
+            "    VALUES ?topic {" + String.join(" ", WIKIMEDIA_INTERNAL,
+                WIKIMEDIA_PROJECT_PAGE, WIKIMEDIA_CATEGORY, WIKIMEDIA_DISAMBIGUATION_PAGE,
+                WIKIMEDIA_LIST_ARTICLE, WIKIMEDIA_TEMPLATE, WIKIMEDIA_NEWS_ARTICLE,
+                WIKIMEDIA_NAVIGATIONAL_TEMPLATE) +
+                "}",
+            "    ?e2 rdf:type ?topic",
+            "  }",
+            "  ?e2 rdfs:label ?label.",
+            "  FILTER ( lang(?label) = \"en\" )",
+            "}");
+
+        ValueFactory vf = SimpleValueFactory.getInstance();
+
+        TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, query);
+        tupleQuery.setBinding("exactTyped", vf.createLiteral(aTypedString));
+        tupleQuery.setBinding("exactTypedCapitalized",
+            vf.createLiteral(StringUtils.capitalize(aTypedString)));
+        tupleQuery.setBinding("exactMention", vf.createLiteral(aMention));
+        tupleQuery.setBinding("exactMentionCapitalized",
+            vf.createLiteral(StringUtils.capitalize(aMention)));
+
+        tupleQuery.setBinding("descriptionIri", aDescriptionIri);
+        return tupleQuery;
+    }
+
+    /**
+     *
+     * This query retrieves candidates via exact matching of their labels and full-text-search
+     *
+     * @param aTypedString the unprocessed raw string the user searched for or
+     * @param aMention the words spanned by the mention, pre-processed
+     * @param aLimit maximum number of results
+     * @param aDescriptionIri KB-specific IRI that indicates a description
+     * @return a query to retrieve candidate entities
+     */
+    public static TupleQuery generateCandidateFullTextQuery(RepositoryConnection conn,
+        String aTypedString, String aMention, int aLimit, IRI aDescriptionIri)
+    {
 
         // Using full-text search capabilities
         String fullTextMatching = String.join("\n",
@@ -132,22 +185,6 @@ public class QueryUtil
             "SELECT DISTINCT ?e2 ?altLabel ?label ?description WHERE",
             "{",
             "  {",
-                 exactMatchingTypedString,
-            "  } ",
-            "  UNION",
-            "  {",
-                 exactMatchingTypedStringCapitalized,
-            "  }",
-            "  UNION",
-            "  {",
-                 exactMatchingMention,
-            "  }",
-            "  UNION",
-            "  {",
-                 exactMatchingMentionCapitalized,
-            "  }",
-            "  UNION",
-            "  {",
                  fullTextMatching,
             "  }",
             "  FILTER EXISTS { ?e2 ?p ?v }",
@@ -168,13 +205,6 @@ public class QueryUtil
 
         TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, query);
         tupleQuery.setBinding("entityLabel", vf.createLiteral(aMention));
-
-        tupleQuery.setBinding("exactTyped", vf.createLiteral(aTypedString));
-        tupleQuery.setBinding("exactTypedCapitalized",
-                vf.createLiteral(StringUtils.capitalize(aTypedString)));
-        tupleQuery.setBinding("exactMention", vf.createLiteral(aMention));
-        tupleQuery.setBinding("exactMentionCapitalized",
-            vf.createLiteral(StringUtils.capitalize(aMention)));
 
         tupleQuery.setBinding("descriptionIri", aDescriptionIri);
         return tupleQuery;

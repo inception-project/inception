@@ -146,6 +146,8 @@ public class ConceptLinkingService
         String aMention)
     {
         Set<CandidateEntity> candidates = new HashSet<>();
+        Set<CandidateEntity> candidatesFullText = new HashSet<>();
+
         List<String> mentionList = Arrays.asList(aMention.split(" "));
 
         // Remove any character that is not a letter
@@ -164,41 +166,30 @@ public class ConceptLinkingService
             logger.error("Mention is empty!");
             return Collections.emptySet();
         }
-
         ImmutablePair<Project, String> pair = new ImmutablePair<>(aKB.getProject(),
             processedMention);
-        if (candidateCache.containsKey(pair)) {
-            return candidateCache.get(pair);
-        }
-
 
         try (RepositoryConnection conn = kbService.getConnection(aKB)) {
-            TupleQuery query = QueryUtil
-                .generateCandidateQuery(conn, aTypedString, processedMention,
-                    properties.getCandidateQueryLimit(), aKB.getDescriptionIri());
-            try (TupleQueryResult entityResult = query.evaluate()) {
-                while (entityResult.hasNext()) {
-                    BindingSet solution = entityResult.next();
-                    Value e2 = solution.getValue("e2");
-                    Value label = solution.getValue("label");
-                    Value altLabel = solution.getValue("altLabel");
-                    Value description = solution.getValue("description");
-
-                    CandidateEntity newEntity = new CandidateEntity(
-                        (e2 != null) ? e2.stringValue() : "",
-                        (label != null) ? label.stringValue() : "",
-                        (altLabel != null) ? altLabel.stringValue() : "",
-                        (description != null) ? description.stringValue() : "");
-
-                    candidates.add(newEntity);
-                }
+            if (candidateCache.containsKey(pair)) {
+                candidatesFullText.addAll(candidateCache.get(pair));
             }
+            else {
+                TupleQuery fullTextQuery = QueryUtil
+                    .generateCandidateFullTextQuery(conn, aTypedString, processedMention,
+                        properties.getCandidateQueryLimit(), aKB.getDescriptionIri());
+                candidatesFullText.addAll(processQuery(fullTextQuery));
+            }
+
+            TupleQuery exactQuery = QueryUtil
+                .generateCandidateExactQuery(conn, aTypedString, processedMention,
+                    aKB.getDescriptionIri());
+            candidates.addAll(processQuery(exactQuery));
         }
         catch (QueryEvaluationException e) {
             logger.error("Query evaluation was unsuccessful: ", e);
         }
 
-        if (candidates.isEmpty()) {
+        if (candidatesFullText.isEmpty()) {
             String[] split = processedMention.split(" ");
             if (split.length > 1) {
                 for (String s : split) {
@@ -207,8 +198,31 @@ public class ConceptLinkingService
             }
         }
 
-        // TODO Reactivate Caching
-        // candidateCache.put(pair, candidates);
+        candidateCache.put(pair, candidatesFullText);
+        candidates.addAll(candidatesFullText);
+        return candidates;
+    }
+
+    private Set<CandidateEntity> processQuery(TupleQuery aTupleQuery)
+    {
+        Set<CandidateEntity> candidates = new HashSet<>();
+        try (TupleQueryResult entityResult = aTupleQuery.evaluate()) {
+            while (entityResult.hasNext()) {
+                BindingSet solution = entityResult.next();
+                Value e2 = solution.getValue("e2");
+                Value label = solution.getValue("label");
+                Value altLabel = solution.getValue("altLabel");
+                Value description = solution.getValue("description");
+
+                CandidateEntity newEntity = new CandidateEntity(
+                    (e2 != null) ? e2.stringValue() : "",
+                    (label != null) ? label.stringValue() : "",
+                    (altLabel != null) ? altLabel.stringValue() : "",
+                    (description != null) ? description.stringValue() : "");
+
+                candidates.add(newEntity);
+            }
+        }
         return candidates;
     }
 
