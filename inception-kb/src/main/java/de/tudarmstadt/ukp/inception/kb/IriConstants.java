@@ -53,22 +53,22 @@ public class IriConstants
             Arrays.asList(RDFS.SUBCLASSOF.stringValue()));
 
     /**
-     * https://www.wikidata.org/wiki/Q35120
+     * http://www.wikidata.org/entity/Q35120
      */
     public static final IRI WIKIDATA_CLASS;
 
     /**
-     * https://www.wikidata.org/wiki/Property:P279
+     * http://www.wikidata.org/prop/direct/P279
      */
     public static final IRI WIKIDATA_SUBCLASS;
 
     /**
-     * https://www.wikidata.org/wiki/Property:P31
+     * http://www.wikidata.org/prop/direct/P31
      */
     public static final IRI WIKIDATA_TYPE;
     
     /**
-     * https://www.wikidata.org/wiki/Q18616576
+     * http://www.wikidata.org/entity/Q18616576
      */
     public static final IRI WIKIDATA_PROPERTY_TYPE;
 

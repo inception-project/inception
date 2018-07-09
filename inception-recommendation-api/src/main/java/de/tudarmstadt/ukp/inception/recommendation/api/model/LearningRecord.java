@@ -32,6 +32,7 @@ import javax.persistence.TemporalType;
 
 import org.hibernate.annotations.Type;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
@@ -41,6 +42,7 @@ public class LearningRecord
     implements Serializable
 {
     private static final long serialVersionUID = -8487663728083806672L;
+    private static final int TOKEN_TEXT_LENGTH = 255;
     
     @Id
     @GeneratedValue
@@ -54,10 +56,15 @@ public class LearningRecord
     @JoinColumn(name = "layer")
     private AnnotationLayer layer;
 
+    @ManyToOne
+    @JoinColumn(name = "annotationFeature")
+    private AnnotationFeature annotationFeature;
+
     private int offsetTokenBegin;
     private int offsetTokenEnd;
     private int offsetCharacterBegin;
     private int offsetCharacterEnd;
+
     private String tokenText;
     private String annotation;
     
@@ -130,7 +137,9 @@ public class LearningRecord
     }
 
     public void setTokenText(String tokenText) {
-        this.tokenText = tokenText;
+        // Truncate the token text if it is too long
+        int targetLength = Math.min(tokenText.length(), TOKEN_TEXT_LENGTH);
+        this.tokenText = tokenText.substring(0, targetLength);
     }
 
     public String getAnnotation() {
@@ -173,6 +182,16 @@ public class LearningRecord
         this.changeLocation = changeLocation;
     }
 
+    public AnnotationFeature getAnnotationFeature()
+    {
+        return annotationFeature;
+    }
+
+    public void setAnnotationFeature(AnnotationFeature anAnnotationFeature)
+    {
+        annotationFeature = anAnnotationFeature;
+    }
+
     @Temporal(TemporalType.TIMESTAMP)
     @Column(nullable = false)
     private Date actionDate = new Date();
@@ -204,6 +223,10 @@ public class LearningRecord
         if (annotation != null ? !annotation.equals(that.annotation) : that.annotation != null) {
             return false;
         }
+        if (annotationFeature != null ? !annotationFeature.equals(that.annotationFeature) :
+            that.annotationFeature != null) {
+            return false;
+        }
         return user != null ? user.equals(that.user) : that.user == null;
     }
 
@@ -211,6 +234,7 @@ public class LearningRecord
     public int hashCode() {
         int result = sourceDocument != null ? sourceDocument.hashCode() : 0;
         result = 31 * result + (layer != null ? layer.hashCode() : 0);
+        result = 31 * result + (annotationFeature != null ? annotationFeature.hashCode() : 0);
         result = 31 * result + offsetCharacterBegin;
         result = 31 * result + offsetCharacterEnd;
         result = 31 * result + (annotation != null ? annotation.hashCode() : 0);
