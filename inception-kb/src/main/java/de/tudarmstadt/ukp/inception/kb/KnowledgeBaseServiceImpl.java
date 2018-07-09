@@ -619,6 +619,10 @@ public class KnowledgeBaseServiceImpl
     public List<KBHandle> list(KnowledgeBase kb, IRI aType, boolean aIncludeInferred, boolean aAll)
         throws QueryEvaluationException
     {
+        System.out.println(kb.getTypeIri());
+        System.out.println(aType);
+        System.out.println(kb.getLabelIri());
+        
         List<KBHandle> resultList = read(kb, (conn) -> {
             String QUERY = String.join("\n"
                          , "SELECT DISTINCT ?s ?l WHERE {"
@@ -643,6 +647,37 @@ public class KnowledgeBaseServiceImpl
         return resultList;
     }
 
+    @Override
+    public List<KBHandle> listProperty(KnowledgeBase kb, IRI aType, boolean aIncludeInferred,
+            boolean aAll)
+        throws QueryEvaluationException
+    {
+        List<KBHandle> resultList = read(kb, (conn) -> {
+            String QUERY = String.join("\n"
+                         , "SELECT DISTINCT ?s ?l WHERE {"
+                         , "  ?s ?pTYPE ?oPROPERTY ."
+                         , "  OPTIONAL {"
+                         , "    ?s ?pLABEL ?l ."
+                         , "    FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\"))"
+                         , "  }"
+                         , "}"
+                         , "LIMIT 10000");
+            TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
+            tupleQuery.setBinding("pTYPE", kb.getTypeIri());
+            tupleQuery.setBinding("oPROPERTY", aType);
+            tupleQuery.setBinding("pLABEL", kb.getLabelIri());
+            tupleQuery.setIncludeInferred(aIncludeInferred);
+
+            return evaluateListQuery(tupleQuery, aAll);
+        });
+
+        resultList.sort(Comparator.comparing(KBObject::getUiLabel));
+
+        return resultList;
+    }
+    
+    
+    
     @Override
     public List<KBHandle> listRootConcepts(KnowledgeBase kb, boolean aAll)
         throws QueryEvaluationException
