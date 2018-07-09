@@ -427,7 +427,7 @@ public class KnowledgeBaseServiceImpl
     @Override
     public List<KBHandle> listProperties(KnowledgeBase kb, boolean aAll)
     {
-        return list(kb, kb.getPropertyTypeIri(), true, aAll);
+        return listProperties(kb, kb.getPropertyTypeIri(), true, aAll);
     }
 
     @Override
@@ -619,10 +619,6 @@ public class KnowledgeBaseServiceImpl
     public List<KBHandle> list(KnowledgeBase kb, IRI aType, boolean aIncludeInferred, boolean aAll)
         throws QueryEvaluationException
     {
-        System.out.println(kb.getTypeIri());
-        System.out.println(aType);
-        System.out.println(kb.getLabelIri());
-        
         List<KBHandle> resultList = read(kb, (conn) -> {
             String QUERY = String.join("\n"
                          , "SELECT DISTINCT ?s ?l WHERE {"
@@ -648,14 +644,25 @@ public class KnowledgeBaseServiceImpl
     }
 
     @Override
-    public List<KBHandle> listProperty(KnowledgeBase kb, IRI aType, boolean aIncludeInferred,
+    public List<KBHandle> listProperties(KnowledgeBase kb, IRI aType, boolean aIncludeInferred,
             boolean aAll)
         throws QueryEvaluationException
     {
+        System.out.println(kb.getTypeIri());
+        System.out.println(aType);
+        System.out.println(kb.getLabelIri());
+        
+        
         List<KBHandle> resultList = read(kb, (conn) -> {
             String QUERY = String.join("\n"
+                         , InferencerVariableStore.RDF_PREFIX
+                         , InferencerVariableStore.RDFS_PREFIX
+                         , InferencerVariableStore.OWL_PREFIX
                          , "SELECT DISTINCT ?s ?l WHERE {"
-                         , "  ?s ?pTYPE ?oPROPERTY ."
+                         , "  { ?s ?pTYPE ?oPROPERTY .}"
+                         , "  UNION "
+                         , "  { ?s a owl:ObjectProperty"
+                         , "    }"
                          , "  OPTIONAL {"
                          , "    ?s ?pLABEL ?l ."
                          , "    FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\"))"

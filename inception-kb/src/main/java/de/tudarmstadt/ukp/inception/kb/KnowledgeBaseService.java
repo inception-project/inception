@@ -309,7 +309,7 @@ public interface KnowledgeBaseService
     List<KBHandle> list(KnowledgeBase kb, IRI aType, boolean aIncludeInferred, boolean
         aAll);
     
-    List<KBHandle> listProperty(KnowledgeBase kb, IRI aType, boolean aIncludeInferred, boolean
+    List<KBHandle> listProperties(KnowledgeBase kb, IRI aType, boolean aIncludeInferred, boolean
             aAll);
 
     /**

@@ -148,6 +148,63 @@ public class RdfUtils
         return new RepositoryResult<Statement>(i2);
     }
     
+    public static RepositoryResult<Statement> getPropertyStatementsSparql(RepositoryConnection conn,
+            Resource subj, IRI pred, Value obj, int aLimit, boolean includeInferred,
+            String language)
+        throws QueryEvaluationException
+    {
+        String filter = "";
+        if (language != null) {
+            filter = "FILTER(LANG(?o) = \"\" || LANGMATCHES(LANG(?o), \"" + NTriplesUtil
+                .escapeString(language) + "\")).";
+        }
+        String QUERY = String.join("\n",
+            "SELECT * WHERE { ",
+            "?s ?p ?o",
+            filter,
+            "} LIMIT 1000");
+        
+        TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
+        if (subj != null) {
+            tupleQuery.setBinding("s", subj);
+        }
+        if (pred != null) {
+            tupleQuery.setBinding("p", pred);
+        }
+        if (obj != null) {
+            tupleQuery.setBinding("o", obj);
+        }
+        tupleQuery.setIncludeInferred(includeInferred);
+        TupleQueryResult result = tupleQuery.evaluate();
+        Iteration<Statement, QueryEvaluationException> i1 = 
+                new ConvertingIteration<BindingSet, Statement, QueryEvaluationException>(result)
+        {
+            @Override
+            protected Statement convert(BindingSet b) throws QueryEvaluationException
+            {
+                Resource s = subj == null ? (Resource) b.getValue("s") : subj;
+                IRI p = pred == null ? (IRI) b.getValue("p") : pred;
+                Value o = obj == null ? b.getValue("o") : obj;
+
+                return SimpleValueFactory.getInstance().createStatement(s, p, o);
+            }
+        };
+        
+        ExceptionConvertingIteration<Statement, RepositoryException> i2 = 
+                new ExceptionConvertingIteration<Statement, RepositoryException>(i1)
+        {
+            @Override
+            protected RepositoryException convert(Exception aE)
+            {
+                return new RepositoryException(aE);
+            }
+        };
+        
+        return new RepositoryResult<Statement>(i2);
+    }
+    
+    
+    
     public static boolean existsStatementsWithSubject(
             RepositoryConnection conn, Resource subj, boolean includeInferred)
     {
