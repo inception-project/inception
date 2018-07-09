@@ -37,6 +37,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -114,8 +115,8 @@ public class PredictionTask
                     try {
                         JCas jcas = documentService.readAnnotationCas(doc);
                         List<List<AnnotationObject>> documentPredictions = setVisibility(
-                            learningRecordService, jcas, getUser().getUsername(), doc, layer,
-                            Predictions.getPredictions(classifier.predict(jcas, layer)), 0,
+                            learningRecordService, annoService, jcas, getUser().getUsername(), doc,
+                            layer, Predictions.getPredictions(classifier.predict(jcas, layer)), 0,
                             jcas.getDocumentText().length() - 1);
                         documentPredictions.forEach(predictions::addAll);
                     }
@@ -147,8 +148,8 @@ public class PredictionTask
      * Goes through all AnnotationObjects and determines the visibility of each one
      */
     public static List<List<AnnotationObject>> setVisibility(
-        LearningRecordService aLearningRecordService, JCas aJcas, String aUser,
-        AnnotationDocument aDoc, AnnotationLayer aLayer,
+        LearningRecordService aLearningRecordService, AnnotationSchemaService aAnnotationService,
+        JCas aJcas, String aUser, AnnotationDocument aDoc, AnnotationLayer aLayer,
         List<List<AnnotationObject>> aRecommendations, int aWindowBegin, int aWindowEnd)
     {
         // No recommendations
@@ -171,32 +172,36 @@ public class PredictionTask
 
         AnnotationObject swap = remainingRecommendations.pollFirst();
 
-        for (AnnotationFS fs : existingAnnotations) {
+        for (AnnotationFeature feature: aAnnotationService.listAnnotationFeature(aLayer)) {
 
-            AnnotationObject ao = swap;
+            for (AnnotationFS fs : existingAnnotations) {
 
-            // Go to the next token for which an annotation exists
-            while (ao.getOffset().getBeginCharacter() != fs.getBegin()
-                && !remainingRecommendations.isEmpty()) {
+                AnnotationObject ao = swap;
 
-                setVisibility(recordedAnnotations, ao);
-                ao = remainingRecommendations.pollFirst();
-                swap = ao;
-            }
+                // Go to the next token for which an annotation exists
+                while (ao.getOffset().getBeginCharacter() != fs.getBegin()
+                    && !remainingRecommendations.isEmpty()) {
 
-            // For tokens with annotations also check whether the annotation is for the same
-            // feature as the predicted label
-            while (ao.getOffset().getBeginCharacter() == fs.getBegin()
-                && !remainingRecommendations.isEmpty()) {
-
-                if (isOverlappingForFeature(fs, ao)) {
-                    ao.setVisible(false);
-                } else {
                     setVisibility(recordedAnnotations, ao);
+                    ao = remainingRecommendations.pollFirst();
+                    swap = ao;
                 }
-                ao = remainingRecommendations.pollFirst();
-                swap = ao;
+
+                // For tokens with annotations also check whether the annotation is for the same
+                // feature as the predicted label
+                while (ao.getOffset().getBeginCharacter() == fs.getBegin()
+                    && !remainingRecommendations.isEmpty()) {
+
+                    if (isOverlappingForFeature(fs, ao, feature)) {
+                        ao.setVisible(false);
+                    } else {
+                        setVisibility(recordedAnnotations, ao);
+                    }
+                    ao = remainingRecommendations.pollFirst();
+                    swap = ao;
+                }
             }
+
         }
 
         // Check for the remaining AnnotationObjects whether they have an annotation
@@ -208,9 +213,20 @@ public class PredictionTask
         return aRecommendations;
     }
 
-    private static boolean isOverlappingForFeature(AnnotationFS aFs, AnnotationObject aAo)
+    private static boolean isOverlappingForFeature(AnnotationFS aFs, AnnotationObject aAo,
+        AnnotationFeature aFeature)
     {
-        return aFs.getBegin() == aAo.getOffset().getBeginCharacter();
+        return aFeature.getName().equals(aAo.getFeature()) &&
+            ((aFs.getBegin() <= aAo.getOffset().getBeginCharacter())
+                && (aFs.getEnd() >= aAo.getOffset().getEndCharacter())
+            || (aFs.getBegin() >= aAo.getOffset().getBeginCharacter())
+                && (aFs.getEnd() <= aAo.getOffset().getEndCharacter())
+            || (aFs.getBegin() >= aAo.getOffset().getBeginCharacter())
+                && (aFs.getEnd() >= aAo.getOffset().getEndCharacter())
+                && (aFs.getBegin() < aAo.getOffset().getEndCharacter())
+            || (aFs.getBegin() <= aAo.getOffset().getBeginCharacter())
+                && (aFs.getEnd() <= aAo.getOffset().getEndCharacter())
+                && (aFs.getEnd() > aAo.getOffset().getBeginCharacter()));
     }
 
     /**
