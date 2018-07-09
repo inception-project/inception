@@ -598,7 +598,7 @@ public class MtasDocumentIndex
                 log.info("Opening index for project " + project.getName());
 
                 indexWriter = openLuceneIndex(getIndexDir());
-
+                indexWriter.commit();
                 log.info("Index has been opened for project " + project.getName());
             }
             catch (Exception e) {
