@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.recommendation.adapter;
 import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
@@ -50,5 +51,6 @@ public interface RecommendationTypeRenderer
     void render(JCas aJcas, VDocument aVdoc, AnnotatorState aBratAnnotatorModel,
         ColoringStrategy aColoringStrategy, AnnotationLayer aLayer,
         RecommendationService aRecService, LearningRecordService aLearningRecordService,
-        AnnotationSchemaService aAnnotationService, FeatureSupportRegistry aFsRegistry);
+        AnnotationSchemaService aAnnotationService, FeatureSupportRegistry aFsRegistry,
+        DocumentService aDocumentService);
 }

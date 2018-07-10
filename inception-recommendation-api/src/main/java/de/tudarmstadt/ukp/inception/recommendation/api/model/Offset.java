@@ -149,17 +149,14 @@ public class Offset
         if (this.getBeginCharacter() < o.getBeginCharacter()) {
             return -1;
         }
-        if (this.getBeginToken() < o.getBeginToken()) {
+        else if (this.getBeginCharacter() == o.getBeginCharacter()
+            && this.getEndCharacter() < o.getEndCharacter()) {
             return -1;
         }
-        if (this.getBeginCharacter() == o.getBeginCharacter()
-                && this.getEndCharacter() < o.getEndCharacter()) {
-            return -1;
-        }
-        if (this.getBeginToken() == o.getBeginToken() && this.getEndToken() < this.getEndToken()) {
-            return -1;
+        else if (this.getBeginCharacter() > o.getBeginCharacter()) {
+            return 1;
         }
 
-        return 1;
+        return 0;
     }
 }

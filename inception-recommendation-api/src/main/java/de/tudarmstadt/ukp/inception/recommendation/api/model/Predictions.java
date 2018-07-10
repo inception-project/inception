@@ -125,8 +125,13 @@ public class Predictions
     {
         List<AnnotationObject> p = getFlattenedPredictions(aDocumentName, aLayer, aWindowBegin,
             aWindowEnd, aJcas, aFilterExisting);
+        return Predictions.getPredictions(p);
+    }
+
+    public static List<List<AnnotationObject>> getPredictions(List<AnnotationObject> p)
+    {
         Iterator<AnnotationObject> it = p.iterator();
-        
+
         List<List<AnnotationObject>> result = new ArrayList<>();
         if (!it.hasNext()) {
             // No predictions
@@ -135,7 +140,7 @@ public class Predictions
 
         List<AnnotationObject> predictionsForCurrentToken = new ArrayList<>();
         AnnotationObject prev = null;
-        
+
         while (it.hasNext()) {
             AnnotationObject current = it.next();
             if (prev == null || current.getOffset().equals(prev.getOffset())) {
@@ -149,7 +154,7 @@ public class Predictions
             }
             prev = current;
         }
-        
+
         // Close final token
         result.add(predictionsForCurrentToken);
 

@@ -21,7 +21,7 @@ import java.io.Serializable;
 import java.util.Objects;
 
 public class AnnotationObject
-    implements Serializable
+    implements Serializable, Comparable<AnnotationObject>
 {
     private static final long serialVersionUID = -1145787227041121442L;
     private static final double DEFAULT_CONFIDENCE = 1.0;
@@ -34,6 +34,7 @@ public class AnnotationObject
     private String source;
     private double confidence;
     private long recommenderId;
+    private boolean visible = false;
 
     public AnnotationObject(TokenObject aToken, String aLabel, String aUiLabel, int aId,
         String aFeature, String aSource, double aConfidence, long aRecommenderId)
@@ -196,6 +197,10 @@ public class AnnotationObject
         return token.documentName;
     }
 
+    public void setVisible(boolean aVisible) { visible = aVisible; }
+
+    public boolean isVisible() { return visible; }
+
     @Override
     public boolean equals(Object o)
     {
@@ -205,7 +210,7 @@ public class AnnotationObject
             return false;
         AnnotationObject that = (AnnotationObject) o;
         return id == that.id && recommenderId == that.recommenderId
-            && token.documentURI.equals(that.getDocumentName());
+            && token.documentName.equals(that.getDocumentName());
     }
 
     @Override
@@ -226,7 +231,42 @@ public class AnnotationObject
         sb.append(", confidence=").append(confidence);
         sb.append(", recommenderId=").append(recommenderId);
         sb.append(", documentUri=").append(token.documentURI);
+        sb.append(", visible=").append(visible);
         sb.append('}');
         return sb.toString();
+    }
+
+    @Override
+    public int compareTo(AnnotationObject aAo)
+    {
+        if (aAo == null) {
+            return 1;
+        }
+        if (this.equals(aAo)) {
+            return 0;
+        }
+        if (this.getOffset().compareTo(aAo.getOffset()) != 0) {
+            return this.getOffset().compareTo(aAo.getOffset());
+        }
+        if (this.getId() < aAo.getId()) {
+            return -1;
+        }
+        if (this.getId() > aAo.getId()) {
+            return 1;
+        }
+        if (this.getRecommenderId() < aAo.getId()) {
+            return -1;
+        }
+        if (this.getRecommenderId() > aAo.getId()) {
+            return 1;
+        }
+        if (this.getDocumentName().hashCode() < aAo.getDocumentName().hashCode()) {
+            return -1;
+        }
+        if (this.getDocumentName().hashCode() > aAo.getDocumentName().hashCode()) {
+            return 1;
+        }
+
+        return 0;
     }
 }

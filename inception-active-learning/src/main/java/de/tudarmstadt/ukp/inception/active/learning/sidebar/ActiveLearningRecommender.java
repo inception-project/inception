@@ -54,7 +54,7 @@ public class ActiveLearningRecommender
     private AnnotatorState annotatorState;
     private AnnotationLayer selectedLayer;
     private static final Logger LOG = LoggerFactory.getLogger(ActiveLearningRecommender.class);
-    
+
     public ActiveLearningRecommender(AnnotatorState aState, AnnotationLayer aLayer)
     {
         annotatorState = aState;
@@ -88,15 +88,14 @@ public class ActiveLearningRecommender
         long removeDuplicateRecommendation = System.currentTimeMillis();
         LOG.debug("Removing duplicate recommendations costs {}ms.",
             (removeDuplicateRecommendation - removeNullRecommendation));
-        
+
         // remove rejected recommendations
         removeRejectedOrSkippedAnnotations(aRecordService, true, learnSkippedRecommendationTime);
         long removeRejectedSkippedRecommendation = System.currentTimeMillis();
         LOG.debug("Removing rejected or skipped ones costs {}ms.",
             (removeRejectedSkippedRecommendation - removeDuplicateRecommendation));
 
-        return calculateDifferencesAndReturnLowestDifference
-        (listOfRecommendationsForEachToken);
+        return calculateDifferencesAndReturnLowestVisibleDifference(listOfRecommendationsForEachToken);
     }
 
     public boolean hasRecommendationWhichIsSkipped(LearningRecordService aRecordService,
@@ -205,7 +204,7 @@ public class ActiveLearningRecommender
         return learnSkippedTime == null || learnSkippedTime.compareTo(record.getActionDate()) <= 0;
     }
 
-    private static RecommendationDifference calculateDifferencesAndReturnLowestDifference(
+    private static RecommendationDifference calculateDifferencesAndReturnLowestVisibleDifference(
             List<List<AnnotationObject>> aListOfRecommendationsForEachToken)
     {
         long startTimer = System.currentTimeMillis();
@@ -224,7 +223,7 @@ public class ActiveLearningRecommender
         LOG.debug("Ranking difference costs {}ms.", (rankingDifferenceTimer - splitingListTimer));
 
         Optional<RecommendationDifference> recommendationDifference = recommendationDifferences
-            .stream().findFirst();
+            .stream().filter(rd -> rd.getRecommendation1().isVisible()).findFirst();
         if (recommendationDifference.isPresent()) {
             return recommendationDifference.get();
         }
