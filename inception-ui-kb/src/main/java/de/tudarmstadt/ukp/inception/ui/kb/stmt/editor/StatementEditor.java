@@ -312,7 +312,7 @@ public class StatementEditor extends Panel
             CompoundPropertyModel<KBStatement> model = CompoundPropertyModel.of(aStatement);
             Form<KBStatement> form = new Form<>("form", model);
             
-            valueType = new DropDownChoice<ValueType>("valueType", valueTypeRegistry.getAllTypes());
+            valueType = new DropDownChoice<>("valueType", valueTypeRegistry.getAllTypes());
             valueType.setChoiceRenderer(new ChoiceRenderer<>("uiName"));
             valueType.setModel(Model.of(
                     valueTypeRegistry.getValueType(aStatement.getObject(), property.getObject())));

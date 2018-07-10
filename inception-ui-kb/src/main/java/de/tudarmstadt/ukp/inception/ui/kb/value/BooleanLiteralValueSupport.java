@@ -67,14 +67,8 @@ public class BooleanLiteralValueSupport
             return false;
         }
         
-        IRI iri;
-        try {
-            iri = DefaultDatatypeMapper.getDatatypeURI((aStatement.getValue()).getClass());
-        }
-        catch (ClassCastException e) {
-            return false;
-        }
-        
+        IRI iri = DefaultDatatypeMapper.getDatatypeURI((aStatement.getValue()).getClass());
+
         return iri != null && XMLSchema.BOOLEAN.equals(iri);        
     }
 
