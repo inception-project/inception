@@ -33,6 +33,8 @@ import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -51,6 +53,7 @@ public class ActiveLearningRecommender
     private List<List<AnnotationObject>> listOfRecommendationsForEachToken;
     private AnnotatorState annotatorState;
     private AnnotationLayer selectedLayer;
+    private static final Logger LOG = LoggerFactory.getLogger(ActiveLearningRecommender.class);
     
     public ActiveLearningRecommender(AnnotatorState aState, AnnotationLayer aLayer)
     {
@@ -62,24 +65,38 @@ public class ActiveLearningRecommender
             LearningRecordService aRecordService, ActiveLearningService aActiveLearningService,
             Date learnSkippedRecommendationTime)
     {
+        long startTimer = System.currentTimeMillis();
         listOfRecommendationsForEachToken = aActiveLearningService
                 .getRecommendationFromRecommendationModel(annotatorState, selectedLayer);
+        long getRecommendationsFromRecommendationService = System.currentTimeMillis();
+        LOG.debug("Getting recommendations from recommender system costs {}ms.",
+            (getRecommendationsFromRecommendationService - startTimer));
 
         // remove recommendations with Null Annotation
         listOfRecommendationsForEachToken.forEach(recommendationList -> 
                 removeRecommendationsWithNullAnnotation(recommendationList));
         listOfRecommendationsForEachToken.removeIf(recommendationList -> 
                 recommendationList.isEmpty());
+        long removeNullRecommendation = System.currentTimeMillis();
+        LOG.debug("Removing recommendations with Null Annotation costs {}ms.",
+            (removeNullRecommendation - getRecommendationsFromRecommendationService));
 
         // remove duplicate recommendations
         listOfRecommendationsForEachToken = listOfRecommendationsForEachToken.stream()
                 .map(it -> removeDuplicateRecommendations(it))
                 .collect(Collectors.toList());
+        long removeDuplicateRecommendation = System.currentTimeMillis();
+        LOG.debug("Removing duplicate recommendations costs {}ms.",
+            (removeDuplicateRecommendation - removeNullRecommendation));
         
         // remove rejected recommendations
         removeRejectedOrSkippedAnnotations(aRecordService, true, learnSkippedRecommendationTime);
+        long removeRejectedSkippedRecommendation = System.currentTimeMillis();
+        LOG.debug("Removing rejected or skipped ones costs {}ms.",
+            (removeRejectedSkippedRecommendation - removeDuplicateRecommendation));
 
-        return calculateDifferencesAndReturnLowestDifference(listOfRecommendationsForEachToken);
+        return calculateDifferencesAndReturnLowestDifference
+        (listOfRecommendationsForEachToken);
     }
 
     public boolean hasRecommendationWhichIsSkipped(LearningRecordService aRecordService,
@@ -191,15 +208,21 @@ public class ActiveLearningRecommender
     private static RecommendationDifference calculateDifferencesAndReturnLowestDifference(
             List<List<AnnotationObject>> aListOfRecommendationsForEachToken)
     {
+        long startTimer = System.currentTimeMillis();
         // create list of recommendationsList, each recommendationsList contains all
         // recommendations from one classifer for one token
         List<List<AnnotationObject>> listOfRecommendationsPerTokenPerClassifier =
             createRecommendationListsPerTokenPerClassifier(aListOfRecommendationsForEachToken);
+        long splitingListTimer = System.currentTimeMillis();
+        LOG.debug("Splitting time costs {}ms.", (splitingListTimer - startTimer));
 
         // get a list of differences, sorted ascendingly
         List<RecommendationDifference> recommendationDifferences =
             createDifferencesSortedAscendingly(
             listOfRecommendationsPerTokenPerClassifier);
+        long rankingDifferenceTimer = System.currentTimeMillis();
+        LOG.debug("Ranking difference costs {}ms.", (rankingDifferenceTimer - splitingListTimer));
+
         Optional<RecommendationDifference> recommendationDifference = recommendationDifferences
             .stream().findFirst();
         if (recommendationDifference.isPresent()) {
