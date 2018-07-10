@@ -22,19 +22,20 @@ import static java.util.Arrays.asList;
 import java.util.List;
 
 import org.apache.wicket.model.IModel;
-import org.eclipse.rdf4j.model.IRI;
+import org.cyberborean.rdfbeans.datatype.DefaultDatatypeMapper;
+import org.eclipse.rdf4j.model.vocabulary.XMLSchema;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
-import de.tudarmstadt.ukp.inception.ui.kb.value.editor.IRIValueEditor;
-import de.tudarmstadt.ukp.inception.ui.kb.value.editor.IRIValuePresenter;
+import de.tudarmstadt.ukp.inception.ui.kb.value.editor.StringLiteralValueEditor;
+import de.tudarmstadt.ukp.inception.ui.kb.value.editor.StringLiteralValuePresenter;
 import de.tudarmstadt.ukp.inception.ui.kb.value.editor.ValueEditor;
 import de.tudarmstadt.ukp.inception.ui.kb.value.editor.ValuePresenter;
 
 @Component
-public class IriValueSupport
+public class StringLiteralValueSupport
     implements ValueTypeSupport
 {
     private String valueTypeSupportId;
@@ -54,31 +55,31 @@ public class IriValueSupport
     @Override
     public List<ValueType> getSupportedValueTypes()
     {
-        return asList(new ValueType("resource", "Resource", valueTypeSupportId));
+        return asList(
+                new ValueType(XMLSchema.STRING.stringValue(), "String", valueTypeSupportId));
     }
-
+    
     @Override
     public boolean accepts(KBStatement aStatement, KBProperty aProperty)
-    {   
-        if (aStatement.getValue() != null) {
-            return aStatement.getValue() instanceof IRI;
+    {
+        if (aStatement.getValue() == null) {
+            return false;
         }
-        else {
-            return aStatement.getInstance() instanceof IRI; 
-        }
+
+        return DefaultDatatypeMapper.getDatatypeURI(aStatement.getValue().getClass()) != null;
     }
 
     @Override
     public ValueEditor createEditor(String aId, IModel<KBStatement> aStatement,
             IModel<KBProperty> aProperty, IModel<KnowledgeBase> kbModel)
     {
-        return new IRIValueEditor(aId, aStatement, kbModel);
+        return new StringLiteralValueEditor(aId, aStatement);
     }
 
     @Override
     public ValuePresenter createPresenter(String aId, IModel<KBStatement> aStatement,
             IModel<KBProperty> aProperty)
     {
-        return new IRIValuePresenter(aId, aStatement);
+        return new StringLiteralValuePresenter(aId, aStatement);
     }
 }

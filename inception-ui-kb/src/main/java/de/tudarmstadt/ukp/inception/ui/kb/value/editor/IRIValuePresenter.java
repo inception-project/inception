@@ -54,6 +54,7 @@ public class IRIValuePresenter
         // TODO need to know what the IRI refers to - concept, property, both???
         KBStatement stmt = getModelObject();
         KBHandle selectedConcept = new KBHandle(((IRI) stmt.getValue()).toString());
-        send(getPage(), Broadcast.BREADTH, new AjaxConceptSelectionEvent(target, selectedConcept));
+        send(getPage(), Broadcast.BREADTH,
+                new AjaxConceptSelectionEvent(target, selectedConcept, true));
     }
 }

@@ -23,18 +23,20 @@ import java.util.List;
 
 import org.apache.wicket.model.IModel;
 import org.cyberborean.rdfbeans.datatype.DefaultDatatypeMapper;
+import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.vocabulary.XMLSchema;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
-import de.tudarmstadt.ukp.inception.ui.kb.value.editor.StringLiteralValueEditor;
-import de.tudarmstadt.ukp.inception.ui.kb.value.editor.StringLiteralValuePresenter;
+import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
+import de.tudarmstadt.ukp.inception.ui.kb.value.editor.BooleanLiteralValueEditor;
+import de.tudarmstadt.ukp.inception.ui.kb.value.editor.BooleanLiteralValuePresenter;
 import de.tudarmstadt.ukp.inception.ui.kb.value.editor.ValueEditor;
 import de.tudarmstadt.ukp.inception.ui.kb.value.editor.ValuePresenter;
 
 @Component
-public class LiteralValueSupport
+public class BooleanLiteralValueSupport
     implements ValueTypeSupport
 {
     private String valueTypeSupportId;
@@ -55,7 +57,7 @@ public class LiteralValueSupport
     public List<ValueType> getSupportedValueTypes()
     {
         return asList(
-                new ValueType(XMLSchema.STRING.stringValue(), "String", valueTypeSupportId));
+                new ValueType(XMLSchema.BOOLEAN.stringValue(), "Boolean", valueTypeSupportId));
     }
     
     @Override
@@ -64,21 +66,29 @@ public class LiteralValueSupport
         if (aStatement.getValue() == null) {
             return false;
         }
-
-        return DefaultDatatypeMapper.getDatatypeURI(aStatement.getValue().getClass()) != null;
+        
+        IRI iri;
+        try {
+            iri = DefaultDatatypeMapper.getDatatypeURI((aStatement.getValue()).getClass());
+        }
+        catch (ClassCastException e) {
+            return false;
+        }
+        
+        return iri != null && XMLSchema.BOOLEAN.equals(iri);        
     }
 
     @Override
     public ValueEditor createEditor(String aId, IModel<KBStatement> aStatement,
-            IModel<KBProperty> aProperty)
+            IModel<KBProperty> aProperty, IModel<KnowledgeBase> kbModel)
     {
-        return new StringLiteralValueEditor(aId, aStatement);
+        return new BooleanLiteralValueEditor(aId, aStatement);
     }
 
     @Override
     public ValuePresenter createPresenter(String aId, IModel<KBStatement> aStatement,
             IModel<KBProperty> aProperty)
     {
-        return new StringLiteralValuePresenter(aId, aStatement);
+        return new BooleanLiteralValuePresenter(aId, aStatement);
     }
 }

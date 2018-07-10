@@ -142,4 +142,24 @@ public class ValueTypeSupportRegistryImpl
         
         return support;
     }
+
+    @Override
+    public ValueTypeSupport getValueSupport(ValueType type)
+    {
+        ValueTypeSupport support = null;
+                
+        for (ValueTypeSupport s : getValueSupports()) {
+            if (s.getSupportedValueTypes().contains(type)) {
+                support = s;
+                break;
+            }
+        }
+        
+        if (support == null) {
+            throw new IllegalArgumentException(
+                    "Unsupported value type: [" + type.getUiName() + "]");
+        }
+        
+        return support;
+    }
 }

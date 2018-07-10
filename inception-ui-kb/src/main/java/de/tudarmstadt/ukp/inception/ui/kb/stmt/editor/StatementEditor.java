@@ -46,6 +46,7 @@ import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.inception.app.Focusable;
@@ -311,16 +312,28 @@ public class StatementEditor extends Panel
             CompoundPropertyModel<KBStatement> model = CompoundPropertyModel.of(aStatement);
             Form<KBStatement> form = new Form<>("form", model);
             
-            valueType = new DropDownChoice<>("valueType", valueTypeRegistry.getAllTypes());
+            valueType = new DropDownChoice<ValueType>("valueType", valueTypeRegistry.getAllTypes());
             valueType.setChoiceRenderer(new ChoiceRenderer<>("uiName"));
             valueType.setModel(Model.of(
                     valueTypeRegistry.getValueType(aStatement.getObject(), property.getObject())));
-            // TODO need to replace the editor when the choice here is changed
+            
+            // replace the editor when the choice is changed
+            valueType.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> {
+                
+                ValueEditor newEditor = valueTypeRegistry
+                        .getValueSupport(valueType.getModelObject())
+                        .createEditor("value", model, property, kbModel);
+                editor.setOutputMarkupId(true);
+                editor = (ValueEditor) editor.replaceWith(newEditor);
+                t.add(editor);
+            }));
+            
             form.add(valueType);
             
             // use the IRI to obtain the appropriate value editor
             editor = valueTypeRegistry.getValueSupport(aStatement.getObject(), property.getObject())
-                    .createEditor("value", model, property);
+                    .createEditor("value", model, property, kbModel);
+            editor.setOutputMarkupId(true);
             form.add(editor);
             
             form.add(new LambdaAjaxButton<>("save", StatementEditor.this::actionSave));

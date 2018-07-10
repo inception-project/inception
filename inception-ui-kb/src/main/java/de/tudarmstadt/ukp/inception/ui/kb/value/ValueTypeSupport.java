@@ -24,6 +24,7 @@ import org.springframework.beans.factory.BeanNameAware;
 
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
+import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.ui.kb.value.editor.ValueEditor;
 import de.tudarmstadt.ukp.inception.ui.kb.value.editor.ValuePresenter;
 
@@ -49,7 +50,8 @@ public interface ValueTypeSupport
      * 
      * @return a {@link ValueEditor} instance
      */
-    ValueEditor createEditor(String aId, IModel<KBStatement> aModel, IModel<KBProperty> aDatatype);
+    ValueEditor createEditor(String aId, IModel<KBStatement> aModel, IModel<KBProperty> aDatatype,
+            IModel<KnowledgeBase> kbModel);
 
     ValuePresenter createPresenter(String aId, IModel<KBStatement> aModel,
             IModel<KBProperty> aDatatype);

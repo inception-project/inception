@@ -46,4 +46,7 @@ public interface ValueTypeSupportRegistry
     List<ValueTypeSupport> getValueSupports();
 
     ValueTypeSupport getValueSupport(KBStatement aStatement, KBProperty aProperty);
+    
+    ValueTypeSupport getValueSupport(ValueType type);
+
 }
