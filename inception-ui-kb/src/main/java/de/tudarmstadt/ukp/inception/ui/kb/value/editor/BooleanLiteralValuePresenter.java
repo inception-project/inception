@@ -17,10 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.value.editor;
 
-import org.apache.wicket.markup.html.form.CheckBox;
+import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.model.IModel;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 
 public class BooleanLiteralValuePresenter extends ValuePresenter
@@ -31,11 +30,6 @@ public class BooleanLiteralValuePresenter extends ValuePresenter
     {
         super(aId, aModel);
         
-        add(new CheckBox("value")
-                .add(LambdaBehavior.onConfigure(it -> it.setEnabled(false))));
+        add(new Label("value"));
     }
-
-    
-    
-    
 }
