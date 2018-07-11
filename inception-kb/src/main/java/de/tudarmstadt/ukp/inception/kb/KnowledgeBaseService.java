@@ -36,6 +36,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
+import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBQualifier;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
@@ -355,4 +356,6 @@ public interface KnowledgeBaseService
     List<KBQualifier> listQualifiers(KnowledgeBase kb, KBStatement aStatement);
 
     boolean statementsMatchSPO(KnowledgeBase akb, KBStatement mockStatement);
+
+    Optional<KBObject> readKBIdentifier(Project aProject, String aIdentifier);
 }
