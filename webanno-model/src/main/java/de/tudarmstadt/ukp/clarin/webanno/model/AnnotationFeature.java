@@ -101,11 +101,11 @@ public class AnnotationFeature
 
     @Column(name = "multi_value_mode")
     @Type(type = "de.tudarmstadt.ukp.clarin.webanno.model.MultiValueModeType")
-    private MultiValueMode multiValueMode;
+    private MultiValueMode multiValueMode = MultiValueMode.NONE;
 
     @Column(name = "link_mode")
     @Type(type = "de.tudarmstadt.ukp.clarin.webanno.model.LinkModeType")
-    private LinkMode linkMode;
+    private LinkMode linkMode = LinkMode.NONE;
 
     @Column(name = "link_type_name")
     private String linkTypeName;
@@ -124,10 +124,21 @@ public class AnnotationFeature
     {
         // Nothing to do
     }
-    
+
     // Visible for testing
     public AnnotationFeature(String aName, String aType)
     {
+        name = aName;
+        uiName = aName;
+        type = aType;
+    }
+
+    // Visible for testing
+    public AnnotationFeature(long aId, AnnotationLayer aLayer, String aName, String aType)
+    {
+        id = aId;
+        layer = aLayer;
+        project = aLayer.getProject();
         name = aName;
         uiName = aName;
         type = aType;
