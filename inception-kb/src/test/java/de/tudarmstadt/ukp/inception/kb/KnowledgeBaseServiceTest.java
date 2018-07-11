@@ -110,7 +110,7 @@ public class KnowledgeBaseServiceTest
         setSchema(kb, OWL.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT, RDFS.LABEL, RDF.PROPERTY);
         importKnowledgeBase("data/wine-ontology.rdf");
         List<KBHandle> propertiesKBHandle = sut.listProperties(kb,  RDF.PROPERTY, true, true);
-        System.out.println("Size of List Properties OWL::::::::" + propertiesKBHandle.size());
+        System.out.println("\n \n Size of List Properties OWL::::::::" + propertiesKBHandle.size() + "\n \n");
         assertThat(propertiesKBHandle).as("Check that list is not empty").isNotEmpty();
 
     }
@@ -119,15 +119,15 @@ public class KnowledgeBaseServiceTest
     @Test
     public void testListPropertiesKnowledgeBaseIRI_WithWikidata() throws IOException
     {
-        String kbName = "wikidata";
-        KnowledgeBaseProfile  profile = sut.readKnowledgeBaseProfiles().get(kbName);
+        String kbProfile = "wikidata";
+        KnowledgeBaseProfile  profile = sut.readKnowledgeBaseProfiles().get(kbProfile);
         KnowledgeBaseMapping mapping = profile.getMapping();
-        kb = buildKnowledgeBase(project, KB_NAME.concat("-" + kbName));
+        kb = buildKnowledgeBase(project, KB_NAME.concat("-" + kbProfile));
         kb.setType(RepositoryType.REMOTE);
         sut.registerKnowledgeBase(kb, sut.getRemoteConfig(profile.getSparqlUrl()));
         setSchema(kb, mapping.getClassIri(), mapping.getSubclassIri(), mapping.getTypeIri(),mapping.getDescriptionIri(), mapping.getLabelIri(), mapping.getPropertyTypeIri());
         List<KBHandle> propertiesKBHandle = sut.listProperties(kb, mapping.getPropertyTypeIri(), true, true);
-        System.out.println("Size of List Properties Wikidata::::::::" + propertiesKBHandle.size());
+        System.out.println("\n \n Size of List Properties Wikidata::::::::" + propertiesKBHandle.size() + "\n \n");
         assertThat(propertiesKBHandle).as("Check that list is not empty").isNotEmpty();
 
     }
@@ -136,15 +136,15 @@ public class KnowledgeBaseServiceTest
     @Test
     public void testListPropertiesKnowledgeBaseIRI_WithUKPVirtuoso() throws IOException
     {
-        String kbName = "wikidata";
-        KnowledgeBaseProfile  profile = sut.readKnowledgeBaseProfiles().get(kbName);
+        String kbProfile = "wikidata";
+        KnowledgeBaseProfile  profile = sut.readKnowledgeBaseProfiles().get(kbProfile);
         KnowledgeBaseMapping mapping = profile.getMapping();
-        kb = buildKnowledgeBase(project, KB_NAME.concat("-UKP-" + kbName));
+        kb = buildKnowledgeBase(project, KB_NAME.concat("-UKP-" + kbProfile));
         kb.setType(RepositoryType.REMOTE);
         sut.registerKnowledgeBase(kb, sut.getRemoteConfig("http://knowledgebase.ukp.informatik.tu-darmstadt.de:8890/sparql"));
         setSchema(kb, mapping.getClassIri(), mapping.getSubclassIri(), mapping.getTypeIri(),mapping.getDescriptionIri(), mapping.getLabelIri(), mapping.getPropertyTypeIri());
         List<KBHandle> propertiesKBHandle = sut.listProperties(kb, mapping.getPropertyTypeIri(), true, true);
-        System.out.println("Size of List Properties UKPVirtuoso ::::::::" + propertiesKBHandle.size());
+        System.out.println("\n \n Size of List Properties UKPVirtuoso ::::::::" + propertiesKBHandle.size() + "\n \n");
         assertThat(propertiesKBHandle).as("Check that list is not empty").isNotEmpty();
 
     }
@@ -153,15 +153,15 @@ public class KnowledgeBaseServiceTest
     @Ignore
     public void testListPropertiesKnowledgeBaseIRI_WithBabbel() throws IOException
     {   
-        String kbName = "babel_net";
-        KnowledgeBaseProfile  profile = sut.readKnowledgeBaseProfiles().get(kbName);
+        String kbProfile = "babel_net";
+        KnowledgeBaseProfile  profile = sut.readKnowledgeBaseProfiles().get(kbProfile);
         KnowledgeBaseMapping mapping = profile.getMapping();
-        kb = buildKnowledgeBase(project, KB_NAME.concat("-" + kbName));
+        kb = buildKnowledgeBase(project, KB_NAME.concat("-" + kbProfile));
         kb.setType(RepositoryType.REMOTE);
         sut.registerKnowledgeBase(kb, sut.getRemoteConfig(profile.getSparqlUrl()));
         setSchema(kb, OWL.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT, RDFS.LABEL, RDF.PROPERTY);
         List<KBHandle> propertiesKBHandle = sut.listProperties(kb, mapping.getPropertyTypeIri(), true, true);
-        System.out.println("Size of List Properties Babbel::::::::" + propertiesKBHandle.size());
+        System.out.println("\n \n Size of List Properties Babbel::::::::" + propertiesKBHandle.size() + "\n \n");
         assertThat(propertiesKBHandle).as("Check that list is not empty").isNotEmpty();
 
     }
@@ -169,19 +169,35 @@ public class KnowledgeBaseServiceTest
     @Test
     public void testListPropertiesKnowledgeBaseIRI_WithDBPedia() throws IOException
     {   
-        String kbName = "db_pedia";
-        KnowledgeBaseProfile  profile = sut.readKnowledgeBaseProfiles().get(kbName);
+        String kbProfile = "db_pedia";
+        KnowledgeBaseProfile  profile = sut.readKnowledgeBaseProfiles().get(kbProfile);
         KnowledgeBaseMapping mapping = profile.getMapping();
-        kb = buildKnowledgeBase(project, KB_NAME.concat("-" + kbName));
+        kb = buildKnowledgeBase(project, KB_NAME.concat("-" + kbProfile));
         kb.setType(RepositoryType.REMOTE);
         sut.registerKnowledgeBase(kb, sut.getRemoteConfig(profile.getSparqlUrl()));
         setSchema(kb, OWL.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT, RDFS.LABEL, RDF.PROPERTY);
         List<KBHandle> propertiesKBHandle = sut.listProperties(kb, mapping.getPropertyTypeIri(), true, true);
-        System.out.println("Size of List Properties DBPedia ::::::::" + propertiesKBHandle.size());
+        System.out.println("\n \n Size of List Properties DBPedia ::::::::" + propertiesKBHandle.size() + "\n \n");
         assertThat(propertiesKBHandle).as("Check that list is not empty").isNotEmpty();
 
     }
 
+    @Test
+    public void testListPropertiesKnowledgeBaseIRI_WithYago() throws IOException
+    {   
+        String kbProfile = "yago";
+        KnowledgeBaseProfile  profile = sut.readKnowledgeBaseProfiles().get(kbProfile);
+        KnowledgeBaseMapping mapping = profile.getMapping();
+        kb = buildKnowledgeBase(project, KB_NAME.concat("-" + kbProfile));
+        kb.setType(RepositoryType.REMOTE);
+        sut.registerKnowledgeBase(kb, sut.getRemoteConfig(profile.getSparqlUrl()));
+        setSchema(kb, OWL.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT, RDFS.LABEL, RDF.PROPERTY);
+        List<KBHandle> propertiesKBHandle = sut.listProperties(kb, mapping.getPropertyTypeIri(), true, true);
+        System.out.println("\n \n Size of List Properties Yago ::::::::"
+                + propertiesKBHandle.size() + "\n \n");
+        assertThat(propertiesKBHandle).as("Check that list is not empty").isNotEmpty();
+
+    }
 
     // Helper
     

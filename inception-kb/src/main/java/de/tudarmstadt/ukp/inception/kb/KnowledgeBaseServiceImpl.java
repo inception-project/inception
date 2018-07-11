@@ -678,18 +678,7 @@ public class KnowledgeBaseServiceImpl
     }
     
     public String getPropertyListQuery(KnowledgeBase kb) {
-        
-        if (kb.getClassIri().toString().contains("wikidata")) {
-            return SPARQLQueryStore.PROPERTYLIST_WIKIDATA_QUERY;
-        }
-        else if (kb.getClassIri().toString().contains("rdf")) {
-            return SPARQLQueryStore.PROPERTYLIST_RDF_QUERY;
-        }
-        // More KB Profiles to be added for SKOS, etc
-        else {
-            return SPARQLQueryStore.PROPERTYLIST_RDF_QUERY;
-        }
-        
+        return SPARQLQueryStore.PROPERTYLIST_QUERY;
     }
     
     @Override
