@@ -216,9 +216,7 @@
 <!--     </dependency> -->
     <dependency>
     	<groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
-    	<artifactId>
-    		de.tudarmstadt.ukp.dkpro.core.io.text-asl
-    	</artifactId>
+    	<artifactId>de.tudarmstadt.ukp.dkpro.core.io.text-asl</artifactId>
     	<scope>test</scope>
     </dependency>
     <dependency>

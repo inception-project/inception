@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.search.index.mtas;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -197,12 +196,8 @@ public class MtasDocumentIndexTest
         ArrayList<SearchResult> expectedResults = new ArrayList<SearchResult>();
         expectedResults.add(expectedResult);
 
-        if (results != null) {
-            assertEquals(results.get(0), expectedResult);
-        }
-        else {
-            assertNotNull(results);
-        }
+        assertEquals(results.get(0), expectedResult);
+        assertEquals(results.size(), 1);
     }
 
 //    @Test
@@ -250,6 +245,7 @@ public class MtasDocumentIndexTest
         expectedResults.add(expectedResult);
 
         assertEquals(results.get(0), expectedResult);
+        assertEquals(results.size(), 1);
     }
 
     @Configuration
