@@ -25,6 +25,8 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
@@ -41,7 +43,6 @@ import de.tudarmstadt.ukp.inception.kb.util.TestFixtures;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseMapping;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 
-
 @RunWith(Parameterized.class)
 @SpringBootTest(classes = SpringConfig.class)
 @Transactional
@@ -49,13 +50,16 @@ import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 public class KnowledgeBaseServiceTest
 {
     private static final String PROJECT_NAME = "Test project";
-    private String KB_NAME = "TestKB";
+    private String ROOT_KB_NAME = "TestKB";
 
     private KnowledgeBaseServiceImpl sut;
     private Project project;
     private KnowledgeBase kb;
     private TestFixtures testFixtures;
     private Reification reification;
+
+    private final Logger log = LoggerFactory.getLogger(getClass());
+
     
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
@@ -68,13 +72,15 @@ public class KnowledgeBaseServiceTest
 
     @Rule
     public final SpringMethodRule springMethodRule = new SpringMethodRule();
-    
+
     @BeforeClass
-    public static void setUpOnce() {
+    public static void setUpOnce()
+    {
         System.setProperty("org.eclipse.rdf4j.repository.debug", "true");
     }
-    
-    public KnowledgeBaseServiceTest(Reification aReification) {
+
+    public KnowledgeBaseServiceTest(Reification aReification)
+    {
         reification = aReification;
     }
 
@@ -82,11 +88,12 @@ public class KnowledgeBaseServiceTest
     public static Collection<Object[]> data()
     {
         return Arrays.stream(Reification.values()).map(r -> new Object[] { r })
-            .collect(Collectors.toList());
+                .collect(Collectors.toList());
     }
-    
+
     @Before
-    public void setUp() throws Exception {
+    public void setUp() throws Exception
+    {
         EntityManager entityManager = testEntityManager.getEntityManager();
         testFixtures = new TestFixtures(testEntityManager);
         sut = new KnowledgeBaseServiceImpl(temporaryFolder.getRoot(), entityManager);
@@ -99,108 +106,153 @@ public class KnowledgeBaseServiceTest
         testEntityManager.clear();
         sut.destroy();
     }
-    
+
     @Test
-    public void testListPropertiesKnowledgeBaseIRI_WithLocalOWL() throws Exception
+    public void testKnowledgeBase_WithLocalOWL() throws Exception
     {
-        kb = buildKnowledgeBase(project, KB_NAME.concat("-" + "OWL"));
+        String kbName = String.join("_", ROOT_KB_NAME, "OWL");
+        kb = buildDefaultKnowledgeBase(project, kbName);
         kb.setType(RepositoryType.LOCAL);
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         setSchema(kb, OWL.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT, RDFS.LABEL, RDF.PROPERTY);
         importKnowledgeBase("data/wine-ontology.rdf");
-        List<KBHandle> propertiesKBHandle = sut.listProperties(kb,  RDF.PROPERTY, true, true);
-        System.out.println("\n \n Size of List Properties OWL::::::::" + propertiesKBHandle.size() + "\n \n");
+        List<KBHandle> propertiesKBHandle = sut.listProperties(kb, RDF.PROPERTY, true, true);
+        List<KBHandle> rootConceptKBHandle = sut.listRootConcepts(kb, true);
+        log.debug(
+                "\nSize of List Concept " + kbName + "::::::::" + +rootConceptKBHandle.size());
+        log.debug("Size of List Properties " + kbName + "::::::::"
+                + propertiesKBHandle.size() + "\n \n");
+        assertThat(rootConceptKBHandle).as("Check that root concept list is not empty")
+                .isNotEmpty();
         assertThat(propertiesKBHandle).as("Check that list is not empty").isNotEmpty();
 
     }
-    
-    
+
     @Test
-    public void testListPropertiesKnowledgeBaseIRI_WithWikidata() throws IOException
+    public void testKnowledgeBase_WithWikidata() throws IOException
     {
         String kbProfile = "wikidata";
-        KnowledgeBaseProfile  profile = sut.readKnowledgeBaseProfiles().get(kbProfile);
-        KnowledgeBaseMapping mapping = profile.getMapping();
-        kb = buildKnowledgeBase(project, KB_NAME.concat("-" + kbProfile));
+        String kbName = String.join("_", ROOT_KB_NAME, kbProfile);
+        kb = buildDefaultKnowledgeBase(project, kbName);
         kb.setType(RepositoryType.REMOTE);
+        KnowledgeBaseProfile profile = sut.readKnowledgeBaseProfiles().get(kbProfile);
+        KnowledgeBaseMapping mapping = profile.getMapping();
         sut.registerKnowledgeBase(kb, sut.getRemoteConfig(profile.getSparqlUrl()));
-        setSchema(kb, mapping.getClassIri(), mapping.getSubclassIri(), mapping.getTypeIri(),mapping.getDescriptionIri(), mapping.getLabelIri(), mapping.getPropertyTypeIri());
-        List<KBHandle> propertiesKBHandle = sut.listProperties(kb, mapping.getPropertyTypeIri(), true, true);
-        System.out.println("\n \n Size of List Properties Wikidata::::::::" + propertiesKBHandle.size() + "\n \n");
+        setSchema(kb, mapping);
+        List<KBHandle> propertiesKBHandle = sut.listProperties(kb, mapping.getPropertyTypeIri(),
+                true, true);
+        List<KBHandle> rootConceptKBHandle = sut.listRootConcepts(kb, true);
+        log.debug(
+                "\nSize of List Concept " + kbName + "::::::::" + +rootConceptKBHandle.size());
+        log.debug("Size of List Properties " + kbName + "::::::::"
+                + +propertiesKBHandle.size() + "\n \n");
+        assertThat(rootConceptKBHandle).as("Check that root concept list is not empty")
+                .isNotEmpty();
         assertThat(propertiesKBHandle).as("Check that list is not empty").isNotEmpty();
 
     }
 
-    
     @Test
-    public void testListPropertiesKnowledgeBaseIRI_WithUKPVirtuoso() throws IOException
+    public void testKnowledgeBase_WithUKPVirtuoso() throws IOException
     {
         String kbProfile = "wikidata";
-        KnowledgeBaseProfile  profile = sut.readKnowledgeBaseProfiles().get(kbProfile);
-        KnowledgeBaseMapping mapping = profile.getMapping();
-        kb = buildKnowledgeBase(project, KB_NAME.concat("-UKP-" + kbProfile));
+        String kbName = String.join("_", ROOT_KB_NAME, "UKP", kbProfile);
+        kb = buildDefaultKnowledgeBase(project, kbName);
         kb.setType(RepositoryType.REMOTE);
-        sut.registerKnowledgeBase(kb, sut.getRemoteConfig("http://knowledgebase.ukp.informatik.tu-darmstadt.de:8890/sparql"));
-        setSchema(kb, mapping.getClassIri(), mapping.getSubclassIri(), mapping.getTypeIri(),mapping.getDescriptionIri(), mapping.getLabelIri(), mapping.getPropertyTypeIri());
-        List<KBHandle> propertiesKBHandle = sut.listProperties(kb, mapping.getPropertyTypeIri(), true, true);
-        System.out.println("\n \n Size of List Properties UKPVirtuoso ::::::::" + propertiesKBHandle.size() + "\n \n");
+        KnowledgeBaseProfile profile = sut.readKnowledgeBaseProfiles().get(kbProfile);
+        KnowledgeBaseMapping mapping = profile.getMapping();
+        sut.registerKnowledgeBase(kb, sut.getRemoteConfig(
+                "http://knowledgebase.ukp.informatik.tu-darmstadt.de:8890/sparql"));
+        setSchema(kb, mapping);
+        List<KBHandle> propertiesKBHandle = sut.listProperties(kb, mapping.getPropertyTypeIri(),
+                true, true);
+        List<KBHandle> rootConceptKBHandle = sut.listRootConcepts(kb, true);
+        log.debug(
+                "\nSize of List Concept " + kbName + "::::::::" + +rootConceptKBHandle.size());
+        log.debug("Size of List Properties " + kbName + "::::::::"
+                + +propertiesKBHandle.size() + "\n \n");
+        assertThat(rootConceptKBHandle).as("Check that root concept list is not empty")
+                .isNotEmpty();
         assertThat(propertiesKBHandle).as("Check that list is not empty").isNotEmpty();
 
     }
-    
 
     @Ignore
-    public void testListPropertiesKnowledgeBaseIRI_WithBabbel() throws IOException
-    {   
+    public void testKnowledgeBase_WithBabbelNet() throws IOException
+    {
         String kbProfile = "babel_net";
-        KnowledgeBaseProfile  profile = sut.readKnowledgeBaseProfiles().get(kbProfile);
-        KnowledgeBaseMapping mapping = profile.getMapping();
-        kb = buildKnowledgeBase(project, KB_NAME.concat("-" + kbProfile));
+        String kbName = String.join("_", ROOT_KB_NAME, kbProfile);
+        kb = buildDefaultKnowledgeBase(project, kbName);
         kb.setType(RepositoryType.REMOTE);
+        KnowledgeBaseProfile profile = sut.readKnowledgeBaseProfiles().get(kbProfile);
+        KnowledgeBaseMapping mapping = profile.getMapping();
         sut.registerKnowledgeBase(kb, sut.getRemoteConfig(profile.getSparqlUrl()));
-        setSchema(kb, OWL.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT, RDFS.LABEL, RDF.PROPERTY);
-        List<KBHandle> propertiesKBHandle = sut.listProperties(kb, mapping.getPropertyTypeIri(), true, true);
-        System.out.println("\n \n Size of List Properties Babbel::::::::" + propertiesKBHandle.size() + "\n \n");
+        setSchema(kb, mapping);
+        List<KBHandle> propertiesKBHandle = sut.listProperties(kb, mapping.getPropertyTypeIri(),
+                true, true);
+        List<KBHandle> rootConceptKBHandle = sut.listRootConcepts(kb, true);
+        log.debug(
+                "\nSize of List Concept " + kbName + "::::::::" + +rootConceptKBHandle.size());
+        log.debug("Size of List Properties " + kbName + "::::::::"
+                + +propertiesKBHandle.size() + "\n \n");
+        assertThat(rootConceptKBHandle).as("Check that root concept list is not empty")
+                .isNotEmpty();
         assertThat(propertiesKBHandle).as("Check that list is not empty").isNotEmpty();
 
     }
-    
+
     @Test
-    public void testListPropertiesKnowledgeBaseIRI_WithDBPedia() throws IOException
-    {   
+    public void testKnowledgeBase_WithDBPedia() throws IOException
+    {
         String kbProfile = "db_pedia";
-        KnowledgeBaseProfile  profile = sut.readKnowledgeBaseProfiles().get(kbProfile);
-        KnowledgeBaseMapping mapping = profile.getMapping();
-        kb = buildKnowledgeBase(project, KB_NAME.concat("-" + kbProfile));
+        String kbName = String.join("_", ROOT_KB_NAME, kbProfile);
+        kb = buildDefaultKnowledgeBase(project, kbName);
         kb.setType(RepositoryType.REMOTE);
+        KnowledgeBaseProfile profile = sut.readKnowledgeBaseProfiles().get(kbProfile);
+        KnowledgeBaseMapping mapping = profile.getMapping();
         sut.registerKnowledgeBase(kb, sut.getRemoteConfig(profile.getSparqlUrl()));
-        setSchema(kb, OWL.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT, RDFS.LABEL, RDF.PROPERTY);
-        List<KBHandle> propertiesKBHandle = sut.listProperties(kb, mapping.getPropertyTypeIri(), true, true);
-        System.out.println("\n \n Size of List Properties DBPedia ::::::::" + propertiesKBHandle.size() + "\n \n");
-        assertThat(propertiesKBHandle).as("Check that list is not empty").isNotEmpty();
+        setSchema(kb, mapping);
+        List<KBHandle> propertiesKBHandle = sut.listProperties(kb, mapping.getPropertyTypeIri(),
+                true, true);
+        List<KBHandle> rootConceptKBHandle = sut.listRootConcepts(kb, true);
+        log.debug(
+                "\nSize of List Concept " + kbName + "::::::::" + +rootConceptKBHandle.size());
+        log.debug("Size of List Properties " + kbName + "::::::::"
+                + +propertiesKBHandle.size() + "\n \n");
+        assertThat(rootConceptKBHandle).as("Check that root concept list is not empty")
+                .isNotEmpty();
+        assertThat(propertiesKBHandle).as("Check that properties list is not empty").isNotEmpty();
 
     }
 
     @Test
-    public void testListPropertiesKnowledgeBaseIRI_WithYago() throws IOException
-    {   
+    public void testKnowledgeBase_WithYago() throws IOException
+    {
         String kbProfile = "yago";
-        KnowledgeBaseProfile  profile = sut.readKnowledgeBaseProfiles().get(kbProfile);
-        KnowledgeBaseMapping mapping = profile.getMapping();
-        kb = buildKnowledgeBase(project, KB_NAME.concat("-" + kbProfile));
+        String kbName = String.join("_", ROOT_KB_NAME, kbProfile);
+        kb = buildDefaultKnowledgeBase(project, kbName);
         kb.setType(RepositoryType.REMOTE);
+        KnowledgeBaseProfile profile = sut.readKnowledgeBaseProfiles().get(kbProfile);
+        KnowledgeBaseMapping mapping = profile.getMapping();
         sut.registerKnowledgeBase(kb, sut.getRemoteConfig(profile.getSparqlUrl()));
-        setSchema(kb, OWL.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT, RDFS.LABEL, RDF.PROPERTY);
-        List<KBHandle> propertiesKBHandle = sut.listProperties(kb, mapping.getPropertyTypeIri(), true, true);
-        System.out.println("\n \n Size of List Properties Yago ::::::::"
-                + propertiesKBHandle.size() + "\n \n");
+        setSchema(kb, mapping);
+        List<KBHandle> propertiesKBHandle = sut.listProperties(kb, mapping.getPropertyTypeIri(),
+                true, true);
+        List<KBHandle> rootConceptKBHandle = sut.listRootConcepts(kb, true);
+        log.debug(
+                "\nSize of List Concept " + kbName + "::::::::" + +rootConceptKBHandle.size());
+        log.debug("Size of List Properties " + kbName + "::::::::"
+                + +propertiesKBHandle.size() + "\n \n");
+        assertThat(rootConceptKBHandle).as("Check that root concept list is not empty")
+                .isNotEmpty();
         assertThat(propertiesKBHandle).as("Check that list is not empty").isNotEmpty();
 
     }
 
     // Helper
-    
-    private KnowledgeBase buildKnowledgeBase(Project project, String name) {
+
+    private KnowledgeBase buildDefaultKnowledgeBase(Project project, String name)
+    {
         KnowledgeBase kb = new KnowledgeBase();
         kb.setName(name);
         kb.setProject(project);
@@ -214,19 +266,21 @@ public class KnowledgeBaseServiceTest
 
         kb.setReification(reification);
         return kb;
-       
+
     }
 
-    private void importKnowledgeBase(String resourceName) throws Exception {
+    private void importKnowledgeBase(String resourceName) throws Exception
+    {
         ClassLoader classLoader = getClass().getClassLoader();
         String fileName = classLoader.getResource(resourceName).getFile();
         try (InputStream is = classLoader.getResourceAsStream(resourceName)) {
             sut.importData(kb, fileName, is);
         }
     }
-    
+
     private void setSchema(KnowledgeBase kb, IRI classIri, IRI subclassIri, IRI typeIri,
-        IRI descriptionIri, IRI labelIri, IRI propertyTypeIri) {
+            IRI descriptionIri, IRI labelIri, IRI propertyTypeIri)
+    {
         kb.setClassIri(classIri);
         kb.setSubclassIri(subclassIri);
         kb.setTypeIri(typeIri);
@@ -237,5 +291,16 @@ public class KnowledgeBaseServiceTest
         sut.updateKnowledgeBase(kb, sut.getKnowledgeBaseConfig(kb));
     }
     
-    
+    private void setSchema(KnowledgeBase kb, KnowledgeBaseMapping mapping)
+    {
+        kb.setClassIri(mapping.getClassIri());
+        kb.setSubclassIri(mapping.getSubclassIri());
+        kb.setTypeIri(mapping.getTypeIri());
+        kb.setDescriptionIri(mapping.getDescriptionIri());
+        kb.setLabelIri(mapping.getLabelIri());
+        kb.setPropertyTypeIri(mapping.getPropertyTypeIri());
+        kb.setReification(reification);
+        sut.updateKnowledgeBase(kb, sut.getKnowledgeBaseConfig(kb));
+    }
+
 }

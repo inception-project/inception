@@ -22,7 +22,7 @@ db_pedia:
   name: DBpedia
   sparql-url: http://dbpedia.org/sparql
   mapping:
-      class: http://www.w3.org/2000/01/rdf-schema#Class
+      class: http://www.w3.org/2002/07/owl#Class
       subclass-of: http://www.w3.org/2000/01/rdf-schema#subClassOf
       instance-of: http://www.w3.org/1999/02/22-rdf-syntax-ns#type
       label: http://www.w3.org/2000/01/rdf-schema#label
@@ -42,7 +42,7 @@ yago:
   name: YAGO
   sparql-url: https://linkeddata1.calcul.u-psud.fr/sparql
   mapping:
-      class: http://www.w3.org/2000/01/rdf-schema#Class
+      class: http://www.w3.org/2002/07/owl#Class
       subclass-of: http://www.w3.org/2000/01/rdf-schema#subClassOf
       instance-of: http://www.w3.org/1999/02/22-rdf-syntax-ns#type
       label: http://www.w3.org/2000/01/rdf-schema#label
