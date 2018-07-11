@@ -25,15 +25,17 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.tudarmstadt.ukp.inception.recommendation.api.Classifier;
+import de.tudarmstadt.ukp.inception.recommendation.api.Trainer;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.TokenObject;
 import de.tudarmstadt.ukp.inception.recommendation.imls.conf.EvaluationConfiguration;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.classifier.Classifier;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.AnnotationObject;
 import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.ExtendedResult;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.trainer.Trainer;
 import de.tudarmstadt.ukp.inception.recommendation.imls.util.DebugSupport;
 import de.tudarmstadt.ukp.inception.recommendation.imls.util.MathUtil;
 
@@ -185,7 +187,7 @@ public class IncrementalTrainingEvaluationSuite
 
         long classifyingStartTime = System.currentTimeMillis();
         List<List<AnnotationObject>> generatedData = flattenInner(
-                classifier.predictSentences(knownData));
+                classifier.predictSentences(toTokenObjects(knownData)));
         long classifyingEndTime = System.currentTimeMillis();
 
         if (conf.isDebug()) {
@@ -209,6 +211,12 @@ public class IncrementalTrainingEvaluationSuite
         result.setIterationNumber(currentIteration);
 
         return result;
+    }
+
+    private List<List<TokenObject>> toTokenObjects(List<List<AnnotationObject>> sentences) {
+        return sentences.stream()
+                .map(l -> l.stream().map(ao -> ao.getTokenObject()).collect(Collectors.toList()))
+                .collect(Collectors.toList());
     }
 
     /**
@@ -242,7 +250,7 @@ public class IncrementalTrainingEvaluationSuite
         long classifyingStartTime = System.currentTimeMillis();
         
         List<List<AnnotationObject>> predictedData = 
-                flattenInner(classifier.predictSentences(expectedData));
+                flattenInner(classifier.predictSentences(toTokenObjects(expectedData)));
             
         long classifyingEndTime = System.currentTimeMillis();
 
@@ -453,7 +461,7 @@ public class IncrementalTrainingEvaluationSuite
             boolean isComplete = true;
 
             for (AnnotationObject ao : sentence) {
-                if (ao.getAnnotation() == null) {
+                if (ao.getLabel() == null) {
                     isComplete = false;
                     break;
                 }

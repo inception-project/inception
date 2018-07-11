@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.dl4j.pos;
 
 import java.io.File;
 
-import de.tudarmstadt.ukp.inception.recommendation.imls.conf.ClassifierConfiguration;
+import de.tudarmstadt.ukp.inception.recommendation.api.ClassifierConfiguration;
 
 /**
  * The base configuration for the implemented DL4J classification tool. It sets up the path to the
@@ -31,11 +31,12 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.conf.ClassifierConfigura
 public class BaseConfiguration
     extends ClassifierConfiguration<DL4JConfigurationParameters>
 {
-    public BaseConfiguration()
+    public BaseConfiguration(long aRecommenderId)
     {
         DL4JConfigurationParameters params = new DL4JConfigurationParameters();
         params.setTagsetFile(new File(super.getModelFile().getParentFile(), "dl4j_tageset.bin"));
         this.setParams(params);
+        setRecommenderId(aRecommenderId);
     }
 
     @Override

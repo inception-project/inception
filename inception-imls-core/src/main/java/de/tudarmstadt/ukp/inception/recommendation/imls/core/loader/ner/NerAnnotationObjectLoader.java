@@ -23,9 +23,9 @@ import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.AnnotationObject;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.loader.AnnotationObjectLoader;
-import de.tudarmstadt.ukp.inception.recommendation.imls.util.CasUtil;
+import de.tudarmstadt.ukp.inception.recommendation.api.AnnotationObjectLoader;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
+import de.tudarmstadt.ukp.inception.recommendation.api.util.CasUtil;
 
 public class NerAnnotationObjectLoader implements AnnotationObjectLoader
 {
@@ -45,16 +45,16 @@ public class NerAnnotationObjectLoader implements AnnotationObjectLoader
 
     @Deprecated
     @Override
-    public List<List<AnnotationObject>> loadAnnotationObjectsForTesting(JCas jCas)
+    public List<List<AnnotationObject>> loadAnnotationObjectsForEvaluation(JCas jCas)
     {
         return CasUtil.loadAnnotatedSentences(jCas, NamedEntity.class, "value",
             NamedEntity::getValue);
     }
 
     @Override
-    public List<List<AnnotationObject>> loadAnnotationObjects(JCas jCas)
+    public List<List<AnnotationObject>> loadAnnotationObjects(JCas aJcas, long aRecommenderId)
     {
-        return CasUtil.loadAnnotatedSentences(jCas, layer, feature);
+        return CasUtil.loadAnnotatedSentences(aJcas, aRecommenderId, layer, feature);
     }
 
 }

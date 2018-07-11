@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.pos;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.classificationtool.ClassificationTool;
+import de.tudarmstadt.ukp.inception.recommendation.api.ClassificationTool;
 import de.tudarmstadt.ukp.inception.recommendation.imls.core.loader.pos.PosAnnotationObjectLoader;
 import opennlp.tools.util.TrainingParameters;
 
@@ -31,18 +31,17 @@ public class OpenNlpPosClassificationTool
     public OpenNlpPosClassificationTool()
     {
         super(-1, OpenNlpPosClassificationTool.class.getName(),
-                new OpenNlpPosTrainer(new BaseConfiguration()),
-                new OpenNlpPosClassifier(new BaseConfiguration()),
-                new PosAnnotationObjectLoader(),
-                true);
+            new OpenNlpPosTrainer(new BaseConfiguration()),
+            new OpenNlpPosClassifier(new BaseConfiguration()), new PosAnnotationObjectLoader(),
+            true, true);
     }
 
     public OpenNlpPosClassificationTool(long recommenderId, int beamSize, String feature,
         AnnotationLayer aLayer)
     {
         super(recommenderId, OpenNlpPosClassificationTool.class.getName(),
-                new OpenNlpPosTrainer(new CustomConfiguration(beamSize, feature)),
-                new OpenNlpPosClassifier(new CustomConfiguration(beamSize, feature)),
-                new PosAnnotationObjectLoader(aLayer, feature), true);
+            new OpenNlpPosTrainer(new CustomConfiguration(beamSize, feature, recommenderId)),
+            new OpenNlpPosClassifier(new CustomConfiguration(beamSize, feature, recommenderId)),
+            new PosAnnotationObjectLoader(aLayer, feature), true, true);
     }
 }

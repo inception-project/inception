@@ -25,11 +25,11 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.inception.recommendation.imls.conf.ClassifierConfiguration;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.classifier.Classifier;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.AnnotationObject;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.TokenObject;
-import de.tudarmstadt.ukp.inception.recommendation.imls.util.CasUtil;
+import de.tudarmstadt.ukp.inception.recommendation.api.Classifier;
+import de.tudarmstadt.ukp.inception.recommendation.api.ClassifierConfiguration;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.TokenObject;
+import de.tudarmstadt.ukp.inception.recommendation.api.util.CasUtil;
 
 /**
  * The implementation of a POS-Tagger using the Margin Infused Relaxed Algorithm (MIRA).

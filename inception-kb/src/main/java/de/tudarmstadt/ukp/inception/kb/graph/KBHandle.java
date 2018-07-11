@@ -29,6 +29,7 @@ public class KBHandle
     private static final long serialVersionUID = -4284462837460396185L;
     private String identifier;
     private String name;
+    private String description;
 
     public KBHandle()
     {
@@ -42,8 +43,24 @@ public class KBHandle
 
     public KBHandle(String aIdentifier, String aLabel)
     {
+        this(aIdentifier, aLabel, null);
+    }
+
+    public KBHandle(String aIdentifier, String aLabel, String aDescription)
+    {
         identifier = aIdentifier;
         name = aLabel;
+        description = aDescription;
+    }
+
+    public String getDescription()
+    {
+        return description;
+    }
+
+    public void setDescription(String description)
+    {
+        this.description = description;
     }
 
     @Override
@@ -77,8 +94,12 @@ public class KBHandle
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         KBHandle kbHandle = (KBHandle) o;
         return Objects.equals(identifier, kbHandle.identifier);
     }

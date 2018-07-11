@@ -18,8 +18,8 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.ner;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.inception.recommendation.imls.conf.ClassifierConfiguration;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.classificationtool.ClassificationTool;
+import de.tudarmstadt.ukp.inception.recommendation.api.ClassificationTool;
+import de.tudarmstadt.ukp.inception.recommendation.api.ClassifierConfiguration;
 import de.tudarmstadt.ukp.inception.recommendation.imls.core.loader.ner.NerAnnotationObjectLoader;
 
 /**
@@ -31,18 +31,18 @@ public class StringMatchingNerClassificationTool
     public StringMatchingNerClassificationTool()
     {
         super(-1, StringMatchingNerClassificationTool.class.getName(),
-                new StringMatchingNerTrainer(new ClassifierConfiguration<>()),
-                new StringMatchingNerClassifier(new ClassifierConfiguration<>()),
-                new NerAnnotationObjectLoader(), false);
+            new StringMatchingNerTrainer(new ClassifierConfiguration<>()),
+            new StringMatchingNerClassifier(new ClassifierConfiguration<>()),
+            new NerAnnotationObjectLoader(), false, true);
     }
-    
+
     public StringMatchingNerClassificationTool(long recommenderId, String feature,
         AnnotationLayer aLayer)
     {
         super(recommenderId, StringMatchingNerClassificationTool.class.getName(),
-                new StringMatchingNerTrainer(new ClassifierConfiguration<>(feature)),
-                new StringMatchingNerClassifier(new ClassifierConfiguration<>(feature)),
-                new NerAnnotationObjectLoader(aLayer, feature), false);
+            new StringMatchingNerTrainer(new ClassifierConfiguration<>(feature, recommenderId)),
+            new StringMatchingNerClassifier(new ClassifierConfiguration<>(feature, recommenderId)),
+            new NerAnnotationObjectLoader(aLayer, feature), false, true);
     }
 
 }

@@ -43,6 +43,11 @@ public class CandidateEntity
     private String alternativeLabel;
 
     /**
+     * A description for this entity
+     */
+    private String description;
+
+    /**
      * edit distance between mention and candidate entity label
      */
     private int levMatchLabel;
@@ -79,11 +84,12 @@ public class CandidateEntity
      */
     private int frequency;
 
-    public CandidateEntity(String IRI, String label, String alternativeLabel)
+    public CandidateEntity(String IRI, String label, String alternativeLabel, String description)
     {
         this.IRI = IRI;
         this.label = label;
         this.alternativeLabel = alternativeLabel;
+        this.description = description;
     }
 
     /**
@@ -108,6 +114,22 @@ public class CandidateEntity
     public String getAltLabel()
     {
         return alternativeLabel;
+    }
+
+    /**
+     * Get a description for this entity
+     */
+    public String getDescription()
+    {
+        return description;
+    }
+
+    /**
+     * Set a description for this entity
+     */
+    public void setDescription(String description)
+    {
+        this.description = description;
     }
 
     /**

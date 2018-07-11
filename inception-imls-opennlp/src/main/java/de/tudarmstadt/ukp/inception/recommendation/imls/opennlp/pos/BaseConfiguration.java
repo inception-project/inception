@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.pos;
 
-import de.tudarmstadt.ukp.inception.recommendation.imls.conf.ClassifierConfiguration;
+import de.tudarmstadt.ukp.inception.recommendation.api.ClassifierConfiguration;
 import opennlp.tools.ml.AbstractTrainer;
 import opennlp.tools.ml.EventTrainer;
 import opennlp.tools.util.TrainingParameters;
@@ -53,9 +53,10 @@ public class BaseConfiguration
         this.setParams(params);
     }
     
-    public BaseConfiguration(String feature)
+    public BaseConfiguration(String feature, long recommenderId)
     {        
         this();
         setFeature(feature);
+        setRecommenderId(recommenderId);
     }
 }

@@ -31,9 +31,9 @@ import de.tudarmstadt.ukp.inception.recommendation.scheduling.tasks.Task;
 public class TaskConsumer
     implements Runnable
 {
-    private Logger log = LoggerFactory.getLogger(getClass());
+    private static Logger log = LoggerFactory.getLogger(TaskConsumer.class);
     
-    private ApplicationContext applicationContext;
+    private final ApplicationContext applicationContext;
     private BlockingQueue<Task> queue;
  
     public TaskConsumer(ApplicationContext aApplicationContext, BlockingQueue<Task> aQueue)
@@ -62,7 +62,7 @@ public class TaskConsumer
                     
                     task.run();
                 }
-                catch (Exception e) {
+                catch (Throwable e) {
                     log.error("{} failed.", task, e);
                 }
 

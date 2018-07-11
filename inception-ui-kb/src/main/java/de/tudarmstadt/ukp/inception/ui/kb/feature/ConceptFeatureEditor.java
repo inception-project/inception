@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
+import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -30,6 +32,7 @@ import org.apache.wicket.Component;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.feedback.IFeedback;
+import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
@@ -38,19 +41,23 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.googlecode.wicket.jquery.core.JQueryBehavior;
 import com.googlecode.wicket.jquery.core.renderer.TextRenderer;
+import com.googlecode.wicket.jquery.core.template.IJQueryTemplate;
 import com.googlecode.wicket.kendo.ui.form.autocomplete.AutoCompleteTextField;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.JCasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.JCasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.FeatureEditor;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.KendoChoiceDescriptionScriptReference;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
+import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
@@ -65,9 +72,10 @@ public class ConceptFeatureEditor
 
     private static final String MID_FEATURE = "feature";
     private static final String MID_VALUE = "value";
-    private static int CANDIDATE_LIMIT = 20;
 
     private static final long serialVersionUID = 7763348613632105600L;
+    private static final Logger LOG = LoggerFactory.getLogger(ConceptFeatureEditor.class);
+
 
     private Component focusComponent;
 
@@ -83,6 +91,14 @@ public class ConceptFeatureEditor
         add(focusComponent = createAutoCompleteTextField(aStateModel.getObject(), aHandler));
     }
 
+    @Override
+    public void renderHead(IHeaderResponse aResponse)
+    {
+        super.renderHead(aResponse);
+        
+        aResponse.render(forReference(KendoChoiceDescriptionScriptReference.get()));
+    }
+    
     private AutoCompleteTextField<KBHandle> createAutoCompleteTextField(AnnotatorState
         aState, AnnotationActionHandler aHandler)
     {
@@ -96,12 +112,21 @@ public class ConceptFeatureEditor
             {
                 return listInstances(aState, aHandler, input);
             }
+
+            @Override
+            public void onConfigure(JQueryBehavior behavior)
+            {
+                super.onConfigure(behavior);
+                behavior.setOption("autoWidth", true);
+            }
+
+            @Override
+            protected IJQueryTemplate newTemplate()
+            {
+                return KendoChoiceDescriptionScriptReference.template();
+            }
         };
 
-        // Ensure that markup IDs of feature editor focus components remain constant across
-        // refreshes of the feature editor panel. This is required to restore the focus.
-        field.setOutputMarkupId(true);
-        field.setMarkupId(ID_PREFIX + getModelObject().feature.getId());
         return field;
     }
 
@@ -110,6 +135,8 @@ public class ConceptFeatureEditor
         return aHandler.getEditorCas();
     }
 
+    //TODO: (issue #122 )this method is similar to the method listInstances in
+    // SubjectObjectFeatureEditor and QualifierFeatureEditor. It should be refactored.
     private List<KBHandle> listInstances(AnnotatorState aState, AnnotationActionHandler aHandler,
         String aTypedString)
     {
@@ -149,7 +176,7 @@ public class ConceptFeatureEditor
             }
             else {
                 // If no specific KB is selected, collect instances from all KBs
-                for (KnowledgeBase kb : kbService.getKnowledgeBases(project)) {
+                for (KnowledgeBase kb : kbService.getEnabledKnowledgeBases(project)) {
                     if (kb.isSupportConceptLinking()) {
                         handles
                             .addAll(listLinkingInstances(kb, aState, () -> getEditorCas(aHandler),
@@ -196,14 +223,16 @@ public class ConceptFeatureEditor
         return focusComponent;
     }
 
+    //TODO: (issue #122 )this method is similar to the method listInstances in
+    // SubjectObjectFeatureEditor and QualifierFeatureEditor. It should be refactored.
     private List<KBHandle> listLinkingInstances(KnowledgeBase kb,
         AnnotatorState aState, JCasProvider aJCas, String aTypedString)
     {
         return kbService.read(kb, (conn) -> {
             try {
-                List<KBHandle> list = clService.disambiguate(kb, aTypedString, aState.getSelection()
+                return clService.disambiguate(kb, aTypedString, aState
+                    .getSelection()
                     .getText(), aState.getSelection().getBegin(), aJCas.get());
-                return (list.size() > CANDIDATE_LIMIT) ? list.subList(0, CANDIDATE_LIMIT) : list;
             }
             catch (IOException e) {
                 log.error("An error occurred while retrieving entity candidates.", e);

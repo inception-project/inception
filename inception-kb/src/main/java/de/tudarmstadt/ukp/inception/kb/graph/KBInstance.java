@@ -24,12 +24,13 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.ValueFactory;
-import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
@@ -44,6 +45,19 @@ public class KBInstance
     private String description;
     private URI type;
     private List<Statement> originalStatements = new ArrayList<>();
+    private String language;
+    private static String ENGLISH = "en";
+
+    public KBInstance()
+    {
+        // No-args constructor
+    }
+
+    public KBInstance(String aIdentifier, String aName)
+    {
+        identifier = aIdentifier;
+        name = aName;
+    }
 
     @Override
     public String getIdentifier()
@@ -94,6 +108,16 @@ public class KBInstance
         return originalStatements;
     }
 
+    public String getLanguage()
+    {
+        return language;
+    }
+
+    public void setLanguage(String aLanguage)
+    {
+        language = aLanguage;
+    }
+
     public void write(RepositoryConnection aConn, KnowledgeBase kb)
     {
         ValueFactory vf = aConn.getValueFactory();
@@ -107,35 +131,60 @@ public class KBInstance
         aConn.add(typeStmt);
 
         if (isNotBlank(name)) {
-            Statement nameStmt = vf.createStatement(subject, RDFS.LABEL, vf.createLiteral(name));
+            Literal nameLiteral;
+            if (language == null) {
+                nameLiteral = vf.createLiteral(name);
+            }
+            else {
+                nameLiteral = vf.createLiteral(name, language);
+            }
+            Statement nameStmt = vf.createStatement(subject, kb.getLabelIri(), nameLiteral);
             originalStatements.add(nameStmt);
             aConn.add(nameStmt);
         }
 
         if (isNotBlank(description)) {
-            Statement descStmt = vf.createStatement(subject, RDFS.COMMENT,
-                vf.createLiteral(description));
+            Literal descriptionLiteral;
+            if (language == null) {
+                descriptionLiteral = vf.createLiteral(description);
+            }
+            else {
+                descriptionLiteral = vf.createLiteral(description, language);
+            }
+            Statement descStmt = vf
+                .createStatement(subject, kb.getDescriptionIri(), descriptionLiteral);
             originalStatements.add(descStmt);
             aConn.add(descStmt);
         }
     }
 
-    public static KBInstance read(RepositoryConnection aConn, Statement aStmt)
+    public static KBInstance read(RepositoryConnection aConn, Statement aStmt, KnowledgeBase kb)
     {
         KBInstance kbInst = new KBInstance();
         kbInst.setType(URI.create(aStmt.getObject().stringValue()));
         kbInst.setIdentifier(aStmt.getSubject().stringValue());
         kbInst.originalStatements.add(aStmt);
 
-        readFirst(aConn, aStmt.getSubject(), RDFS.LABEL, null).ifPresent((stmt) -> {
+        readFirst(aConn, aStmt.getSubject(), kb.getLabelIri(), null, ENGLISH).ifPresent((stmt) -> {
             kbInst.setName(stmt.getObject().stringValue());
             kbInst.originalStatements.add(stmt);
+            if (stmt.getObject() instanceof Literal) {
+                Literal literal = (Literal) stmt.getObject();
+                Optional<String> language = literal.getLanguage();
+                language.ifPresent(kbInst::setLanguage);
+            }
         });
 
-        readFirst(aConn, aStmt.getSubject(), RDFS.COMMENT, null).ifPresent((stmt) -> {
-            kbInst.setDescription(stmt.getObject().stringValue());
-            kbInst.originalStatements.add(stmt);
-        });
+        readFirst(aConn, aStmt.getSubject(), kb.getDescriptionIri(), null, ENGLISH)
+                .ifPresent((stmt) -> {
+                    kbInst.setDescription(stmt.getObject().stringValue());
+                    kbInst.originalStatements.add(stmt);
+                    if (stmt.getObject() instanceof Literal) {
+                        Literal literal = (Literal) stmt.getObject();
+                        Optional<String> language = literal.getLanguage();
+                        language.ifPresent(kbInst::setLanguage);
+                    }
+                });
 
         return kbInst;
     }

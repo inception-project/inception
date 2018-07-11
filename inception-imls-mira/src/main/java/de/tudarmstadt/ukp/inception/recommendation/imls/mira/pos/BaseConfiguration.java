@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.mira.pos;
 
-import de.tudarmstadt.ukp.inception.recommendation.imls.conf.ClassifierConfiguration;
+import de.tudarmstadt.ukp.inception.recommendation.api.ClassifierConfiguration;
 
 /**
  * The base configuration for the implemented MIRA classification tool.

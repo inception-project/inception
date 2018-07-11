@@ -1,0 +1,51 @@
+[[sect_annotation_activeLearning]]
+=== Active Learning
+Active learning is a family of methods which seeks to optimize the learning rate of classification
+algorithms by intelligently soliciting labels from a human user for which the system only has low
+confidence. This means that recommenders can make better suggestions with less user interactions,
+allowing the user to perform quicker and more accurate annotations.
+
+Once the recommenders are set in the <<sect_projects_recommendation, Project Settings>>, and assuming
+the project contains documents for annotation and enough annotations for recommenders to generate
+recommendations, one can now switch to the annotation page. The recommendations should be shown above the tokens:
+
+image::activeLearning1.png[align="center"]
+
+One can now click the active learning icon on the left side and the Active Learning sidebar shows up
+. One can now select the layer like POS layer for annotation and click _Start_ for starting an
+active learning session:
+
+image::activeLearning2.png[select, 350, 350, align="center"]
+
+The Active Learning sidebar will then start showing recommendations, one by one, according to the
+_uncertainty sampling_ learning strategy. For every recommendation, it shows the related text, the
+suggested annotation, the confidence score and a delta that represents the difference between the
+given score and the closest score calculated for another suggestion made by the same recommender to
+that text. The recommendation is also highlighted in the central annotation editor.
+
+One can now _Accept_, _Reject_ or _Skip_ this recommendation in the Active Learning sidebar:
+
+image::activeLearning3.png[align="center"]
+
+The acceptance, rejection or skipping will be recorded and displayed in the learning history of the
+Active Learning sidebar. After a suggestion is accepted, the text is annotated with that recommended
+ annotation. If the user rejects a suggestion, the recommendation is deleted. Finally, if the user
+ skips a suggestion, that recommendation will continue being shown in the central annotation editor.
+Eventually, it could be shown again at the end of the active learning session, when there are no
+more undealt suggestions.
+
+image::activeLearning4.png[align="center"]
+
+After the user takes an action on the current suggestion, the next recommendation will then show up
+in the sidebar, and the central annotation editor will jump to its corresponding location (which
+could sometimes be in another document).
+
+The learning history contains a log of all the actions that were taken by the user regarding the
+suggestions given by the recommenders (acceptances, rejections and skippings). Clicking on an item
+of the learning history will make the central editor jump to the corresponding place in the document
+. Any entry in the learning history can be deleted by clicking the corresponding trash bin icon. If
+this learning history is a valid acceptance, after the learning record is deleted, a confirmation
+dialogue box pops up to confirm whether to delete the annotation too.
+
+The user may finish the current active learning session whenever he wants. If there are pending
+suggestions, they might be shown in the next active learning session that he starts. +

@@ -26,8 +26,10 @@ import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 
+import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.multimap.HashSetValuedHashMap;
+import org.apache.uima.jcas.JCas;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,19 +42,22 @@ import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.DocumentOpenedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterAnnotationUpdateEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentResetEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.classificationtool.ClassificationTool;
-import de.tudarmstadt.ukp.inception.recommendation.model.ClassificationToolRegistry;
-import de.tudarmstadt.ukp.inception.recommendation.model.Predictions;
-import de.tudarmstadt.ukp.inception.recommendation.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.ClassificationTool;
+import de.tudarmstadt.ukp.inception.recommendation.api.ClassificationToolRegistry;
+import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderDeletedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.scheduling.RecommendationScheduler;
 
 /**
@@ -67,8 +72,6 @@ public class RecommendationServiceImpl
     private @PersistenceContext EntityManager entityManager;
     
     private @Autowired SessionRegistry sessionRegistry;
-    private @Autowired AnnotationSchemaService annoService;
-    private @Autowired DocumentService docService;
     private @Autowired UserDao userRepository;
     private @Autowired ClassificationToolRegistry classificationToolRegistry;
     private @Autowired RecommendationScheduler scheduler;
@@ -129,21 +132,21 @@ public class RecommendationServiceImpl
 
     @Override
     @Transactional
-    public void createOrUpdateRecommender(Recommender aSettings)
+    public void createOrUpdateRecommender(Recommender aRecommender)
     {
-        if (aSettings.getId() == null) {
-            entityManager.persist(aSettings);
+        if (aRecommender.getId() == null) {
+            entityManager.persist(aRecommender);
         }
         else {
-            entityManager.merge(aSettings);
+            entityManager.merge(aRecommender);
         }
     }
 
     @Override
     @Transactional
-    public void deleteRecommender(Recommender aSettings)
+    public void deleteRecommender(Recommender aRecommender)
     {
-        Recommender settings = aSettings;
+        Recommender settings = aRecommender;
 
         if (!entityManager.contains(settings)) {
             settings = entityManager.merge(settings);
@@ -201,16 +204,24 @@ public class RecommendationServiceImpl
     }
 
     @EventListener
-    public void afterAnnotationUpdate(AfterAnnotationUpdateEvent aEvent) throws Exception
+    public void afterAnnotationUpdate(AfterAnnotationUpdateEvent aEvent)
     {
         triggerTrainingAndClassification(aEvent.getDocument().getUser(),
                 aEvent.getDocument().getProject());
     }
 
     @EventListener
-    public void onDocumentOpen(DocumentOpenedEvent aEvent) throws Exception
+    public void onDocumentOpen(DocumentOpenedEvent aEvent)
     {
         triggerTrainingAndClassification(aEvent.getUser(), aEvent.getDocument().getProject());
+    }
+
+    @EventListener
+    public void onRecommenderDelete(RecommenderDeletedEvent aEvent)
+    {
+        RecommendationUserState state = getState(aEvent.getUser());
+        state.removePredictions(aEvent.getRecommender());
+        triggerTrainingAndClassification(aEvent.getUser(), aEvent.getProject());
     }
     
     private void triggerTrainingAndClassification(String aUser, Project aProject)
@@ -231,7 +242,16 @@ public class RecommendationServiceImpl
             scheduler.stopAllTasksForUser(username);
         }
     }
-    
+
+    @EventListener
+    public void afterDocumentReset(AfterDocumentResetEvent aEvent)
+    {
+        String userName = aEvent.getDocument().getUser();
+        Project project = aEvent.getDocument().getProject();
+        clearState(userName);
+        triggerTrainingAndClassification(userName, project);
+    }
+
     @Override
     public void setMaxSuggestions(User aUser, int aMax)
     {
@@ -285,7 +305,6 @@ public class RecommendationServiceImpl
             states.remove(aUsername);
         }
     }
-        
     
     @Override
     public void switchPredictions(User aUser, Project aProject)
@@ -299,7 +318,18 @@ public class RecommendationServiceImpl
             }
         }
     }
-    
+
+    @Override
+    public void setFeatureValue(AnnotationFeature aFeature, Object aPredictedValue,
+        SpanAdapter aAdapter, AnnotatorState aState, JCas aJcas, int aAddress)
+    {
+        aAdapter.setFeatureValue(aState, aJcas, aAddress, aFeature, aPredictedValue);
+    }
+
+    /**
+     * We are assuming that the user is actively working on one project at a time.
+     * Otherwise, the RecommendationUserState might take up a lot of memory.
+     */
     private static class RecommendationUserState
     {
         private int maxPredictions = 3;
@@ -312,6 +342,12 @@ public class RecommendationServiceImpl
         public MultiValuedMap<AnnotationLayer, Recommender> getActiveRecommenders()
         {
             return activeRecommenders;
+        }
+
+        public void setActiveRecommenders(
+            MultiValuedMap<AnnotationLayer, Recommender> aActiveRecommenders)
+        {
+            activeRecommenders = aActiveRecommenders;
         }
         
         public void setMaxPredictions(int aMaxPredictions)
@@ -348,7 +384,7 @@ public class RecommendationServiceImpl
         {
             incomingPredictions.remove(aProject.getId());            
         }
-        
+
         public Object getTrainedModel(Recommender aRecommender)
         {
             return trainedModels.get(aRecommender.getId());
@@ -357,6 +393,43 @@ public class RecommendationServiceImpl
         public void putTrainedModel(Recommender aRecommender, Object aModel)
         {
             trainedModels.put(aRecommender.getId(), aModel);
+        }
+
+        public void removePredictions(Recommender aRecommender)
+        {
+            // Remove incoming predictions
+            Predictions incoming = incomingPredictions.get(aRecommender.getProject().getId());
+            if (incoming != null) {
+                incoming.removePredictions(aRecommender.getId());
+                incomingPredictions.put(aRecommender.getProject().getId(), incoming);
+            }
+
+            // Remove active predictions
+            Predictions active = activePredictions.get(aRecommender.getProject().getId());
+            if (active != null) {
+                active.removePredictions(aRecommender.getId());
+                activePredictions.put(aRecommender.getProject().getId(), active);
+            }
+
+            // Remove trainedModel
+            trainedModels.remove(aRecommender.getId());
+
+            // Remove from activeRecommenders map.
+            // We have to do this, otherwise training and prediction continues for the
+            // recommender when a new task is triggered.
+            MultiValuedMap<AnnotationLayer, Recommender> newActiveRecommenders
+                = new HashSetValuedHashMap<>();
+            MapIterator<AnnotationLayer, Recommender> it
+                = activeRecommenders.mapIterator();
+
+            while (it.hasNext()) {
+                AnnotationLayer layer = it.next();
+                Recommender rec = it.getValue();
+                if (!rec.equals(aRecommender)) {
+                    newActiveRecommenders.put(layer, rec);
+                }
+            }
+            setActiveRecommenders(newActiveRecommenders);
         }
     }
 }

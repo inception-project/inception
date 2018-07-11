@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.ner;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.classificationtool.ClassificationTool;
+import de.tudarmstadt.ukp.inception.recommendation.api.ClassificationTool;
 import de.tudarmstadt.ukp.inception.recommendation.imls.core.loader.ner.NerAnnotationObjectLoader;
 import opennlp.tools.util.TrainingParameters;
 
@@ -28,21 +28,19 @@ import opennlp.tools.util.TrainingParameters;
 public class OpenNlpNerClassificationTool
     extends ClassificationTool<TrainingParameters>
 {
-    public OpenNlpNerClassificationTool() 
-    { 
-        super(-1, OpenNlpNerClassificationTool.class.getName(), 
-                new OpenNlpNerTrainer(new BaseConfiguration()), 
-                new OpenNlpNerClassifier(new BaseConfiguration()),  
-                new NerAnnotationObjectLoader(),
-                false); 
-    } 
-    
+    public OpenNlpNerClassificationTool()
+    {
+        super(-1, OpenNlpNerClassificationTool.class.getName(),
+            new OpenNlpNerTrainer(new BaseConfiguration()),
+            new OpenNlpNerClassifier(new BaseConfiguration()), new NerAnnotationObjectLoader(),
+            false, true);
+    }
+
     public OpenNlpNerClassificationTool(long recommenderId, String feature, AnnotationLayer aLayer)
     {
         super(recommenderId, OpenNlpNerClassificationTool.class.getName(),
-                new OpenNlpNerTrainer(new BaseConfiguration(feature)),
-                new OpenNlpNerClassifier(new BaseConfiguration(feature)),
-                new NerAnnotationObjectLoader(aLayer, feature),
-                false);
+            new OpenNlpNerTrainer(new BaseConfiguration(feature, recommenderId)),
+            new OpenNlpNerClassifier(new BaseConfiguration(feature, recommenderId)),
+            new NerAnnotationObjectLoader(aLayer, feature), false, true);
     }
 }

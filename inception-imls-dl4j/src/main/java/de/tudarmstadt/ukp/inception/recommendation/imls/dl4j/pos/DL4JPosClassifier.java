@@ -37,11 +37,11 @@ import org.nd4j.linalg.factory.Nd4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.inception.recommendation.imls.conf.ClassifierConfiguration;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.classifier.Classifier;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.AnnotationObject;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.TokenObject;
-import de.tudarmstadt.ukp.inception.recommendation.imls.util.CasUtil;
+import de.tudarmstadt.ukp.inception.recommendation.api.Classifier;
+import de.tudarmstadt.ukp.inception.recommendation.api.ClassifierConfiguration;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.TokenObject;
+import de.tudarmstadt.ukp.inception.recommendation.api.util.CasUtil;
 
 /**
  * The implementation of a POS-Tagger using the DL4J library and a multi layer neural network. 
@@ -144,7 +144,8 @@ public class DL4JPosClassifier
             try {
                 evaluationData = 
                         vectorizer.vectorize(CasUtil.transformToAnnotationObjects
-                                (Arrays.asList(inputData.get(s)), "PosValue", "DL4JPosClassifier"), 
+                                (Arrays.asList(inputData.get(s)), "PosValue", "DL4JPosClassifier",
+                                    conf.getRecommenderId()),
                                 params.getWordVectors(),
                         params.getTruncateLength(), params.getMaxTagsetSize(), true);
             }
@@ -170,8 +171,8 @@ public class DL4JPosClassifier
             for (int i = 0; i < sentence.size(); i++) {
                 int tagIdx = argMax.getInt(i);
                 T t = sentence.get(i);
-                AnnotationObject ao = new AnnotationObject(tagset.get(tagIdx), t, sentence, 
-                        id, feature, "DL4JPosClassifier");
+                AnnotationObject ao = new AnnotationObject(tagset.get(tagIdx), t,
+                        id, feature, "DL4JPosClassifier", conf.getRecommenderId());
                 List<AnnotationObject> word = new LinkedList<>();
                 word.add(ao);
                 generatedSentence.add(word);

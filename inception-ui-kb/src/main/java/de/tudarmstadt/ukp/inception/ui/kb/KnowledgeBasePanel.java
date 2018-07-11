@@ -19,17 +19,23 @@ package de.tudarmstadt.ukp.inception.ui.kb;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.wicket.Component;
-import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.panel.EmptyPanel;
+import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
+import org.eclipse.rdf4j.query.QueryEvaluationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
@@ -48,13 +54,22 @@ import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxPropertySelectionEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxStatementChangedEvent;
 
 /**
- * Houses the UI for interacting with one knowledge base.
+ * Houses the UI for interacting with one knowledge base.<br>
+ * 
+ * A note on the use of the selection events: If a property is currently selected and the user
+ * selects a concept instead, only one event should be broadcast (concept selected), not two
+ * (concept selected and property deselected). However, there are cases when property/concept
+ * deselection events make sense, which is when a user creates a new property but then decides to
+ * cancel the creation process. In this case, neither a property nor a concept should be selected,
+ * hence a deselection makes sense to reset the UI.
  */
 public class KnowledgeBasePanel
-    extends EventListeningPanel
+    extends Panel
 {
 
     private static final long serialVersionUID = -3717326058176546655L;
+    
+    private static final Logger LOG = LoggerFactory.getLogger(KnowledgeBasePanel.class);
 
     private static final String DETAIL_CONTAINER_MARKUP_ID = "detailContainer";
     private static final String DETAILS_MARKUP_ID = "details";
@@ -99,6 +114,7 @@ public class KnowledgeBasePanel
         ddc.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> {
             details = details.replaceWith(new EmptyPanel(DETAILS_MARKUP_ID));
             t.add(KnowledgeBasePanel.this);
+            t.addChildren(getPage(), IFeedback.class);
         }));
         ddc.setModel(aKbModel);
         ddc.setChoiceRenderer(new ChoiceRenderer<>("name"));
@@ -107,23 +123,6 @@ public class KnowledgeBasePanel
         add(conceptTreePanel = new ConceptTreePanel("concepts", kbModel, selectedConceptHandle));
         add(propertyListPanel = new PropertyListPanel("properties", kbModel,
                 selectedPropertyHandle));
-
-        // Callbacks to property/concept selection events follow below. A note on the use of the
-        // selection events: If a property is currently selected and the user selects a concept
-        // instead, only one event should be broadcast (concept selected), not two (concept selected
-        // and property deselected). However, there are cases when property/concept deselection
-        // events make sense, which is when a user creates a new property but then decides to cancel
-        // the creation process. In this case, neither a property nor a concept should be selected,
-        // hence a deselection makes sense to reset the UI.
-        eventHandler.addCallback(AjaxPropertySelectionEvent.class,
-                this::actionPropertySelectionChanged);
-        eventHandler.addCallback(AjaxNewPropertyEvent.class, this::actionNewProperty);
-        eventHandler.addCallback(AjaxConceptSelectionEvent.class,
-                this::actionConceptSelectionChanged);
-        eventHandler.addCallback(AjaxNewConceptEvent.class, this::actionNewConcept);
-
-        // react to changing statements
-        eventHandler.addCallback(AjaxStatementChangedEvent.class, this::actionStatementChanged);
         
         detailContainer = new WebMarkupContainer(DETAIL_CONTAINER_MARKUP_ID);
         detailContainer.setOutputMarkupId(true);
@@ -142,10 +141,10 @@ public class KnowledgeBasePanel
      * statement change can have (transforming a property into a concept?), it is the simplest
      * working solution.
      *
-     * @param target
      * @param event
      */
-    private void actionStatementChanged(AjaxRequestTarget target, AjaxStatementChangedEvent event)
+    @OnEvent
+    public void actionStatementChanged(AjaxStatementChangedEvent event)
     {
         boolean isSchemaChangeEvent = RdfUtils
                 .isFromImplicitNamespace(event.getStatement().getProperty());
@@ -166,17 +165,17 @@ public class KnowledgeBasePanel
                     .getIdentifier().equals(statement.getInstance().getIdentifier()))
                     .forEach(model -> {
                         model.getObject().setName((String) statement.getValue());
-                        target.add(this);
+                        event.getTarget().add(this);
                     });
         }
         else {
-            target.add(getPage());
+            event.getTarget().add(getPage());
         }
     }
 
-    private void actionConceptSelectionChanged(AjaxRequestTarget target,
-            AjaxConceptSelectionEvent event)
-    {
+    @OnEvent
+    public void actionConceptSelectionChanged(AjaxConceptSelectionEvent event)
+    {        
         // cancel selection of property
         selectedPropertyHandle.setObject(null);
         selectedConceptHandle.setObject(event.getSelection());
@@ -189,19 +188,40 @@ public class KnowledgeBasePanel
         }
         else {
             // TODO: Fix this Optional get() to actual checking
-            KBConcept selectedConcept = kbService.readConcept(kbModel.getObject(),
-                    selectedConceptHandle.getObject().getIdentifier()).get();
-            replacementPanel = new ConceptInstancePanel(DETAILS_MARKUP_ID, kbModel,
-                    selectedConceptHandle, Model.of(selectedConcept));
+            try {
+                Optional<KBConcept> concept = kbService.readConcept(kbModel.getObject(),
+                        selectedConceptHandle.getObject().getIdentifier());
+                KBConcept selectedConcept;
+                if (concept.isPresent()) {
+                    selectedConcept = kbService.readConcept(kbModel.getObject(),
+                            selectedConceptHandle.getObject().getIdentifier()).get();
+                }
+                else {
+                    selectedConcept = new KBConcept();
+                    selectedConcept
+                            .setIdentifier(selectedConceptHandle.getObject().getIdentifier());
+                }
+                replacementPanel = new ConceptInstancePanel(DETAILS_MARKUP_ID, kbModel,
+                        selectedConceptHandle, Model.of(selectedConcept));
+            }
+            catch (QueryEvaluationException e) {
+                error("Unable to read concept: " + e.getLocalizedMessage());
+                LOG.error("Unable to read concept.", e);
+                replacementPanel = new EmptyPanel(DETAILS_MARKUP_ID);
+
+            }
         }
         details = details.replaceWith(replacementPanel);
-
-        target.add(conceptTreePanel);
-        target.add(propertyListPanel);
-        target.add(detailContainer);
+        
+        if (event.isRedrawConceptandPropertyListPanels()) {
+            event.getTarget().add(conceptTreePanel, propertyListPanel);
+        }
+        event.getTarget().add(detailContainer);
+        event.getTarget().addChildren(getPage(), IFeedback.class);
     }
 
-    private void actionNewConcept(AjaxRequestTarget target, AjaxNewConceptEvent event)
+    @OnEvent
+    public void actionNewConcept(AjaxNewConceptEvent event)
     {
         // cancel selections for concepts and properties
         selectedConceptHandle.setObject(null);
@@ -212,16 +232,16 @@ public class KnowledgeBasePanel
                 selectedConceptHandle, Model.of(new KBConcept()));
         details = details.replaceWith(replacement);
 
-        target.add(KnowledgeBasePanel.this);
+        event.getTarget().add(KnowledgeBasePanel.this);
     }
 
-    private void actionPropertySelectionChanged(AjaxRequestTarget target,
-            AjaxPropertySelectionEvent event)
+    @OnEvent
+    public void actionPropertySelectionChanged(AjaxPropertySelectionEvent event)
     {
         // cancel selection of concept
         selectedConceptHandle.setObject(null);
         selectedPropertyHandle.setObject(event.getSelection());
-
+        
         // replace detail view: empty panel if a deselection took place (see lengthy explanation
         // above)
         Component replacementPanel;
@@ -230,21 +250,31 @@ public class KnowledgeBasePanel
         }
         else {
             String identifier = selectedPropertyHandle.getObject().getIdentifier();
-            replacementPanel = kbService.readProperty(kbModel.getObject(), identifier)
-                    .<Component>map(selectedProperty -> {
-                        Model<KBProperty> model = Model.of(selectedProperty);
-                        return new PropertyPanel(DETAILS_MARKUP_ID, kbModel, selectedPropertyHandle,
-                                model);
-                    }).orElse(new EmptyPanel(DETAILS_MARKUP_ID));
+            try {
+                replacementPanel = kbService.readProperty(kbModel.getObject(), identifier)
+                        .<Component>map(selectedProperty -> {
+                            Model<KBProperty> model = Model.of(selectedProperty);
+                            return new PropertyPanel(DETAILS_MARKUP_ID, kbModel,
+                                    selectedPropertyHandle, model);
+                        }).orElse(new EmptyPanel(DETAILS_MARKUP_ID));
+            }
+            catch (QueryEvaluationException e) {
+                error("Unable to read property: " + e.getLocalizedMessage());
+                LOG.error("Unable to read property.", e);
+                replacementPanel = new EmptyPanel(DETAILS_MARKUP_ID);
+            }
         }
         details = details.replaceWith(replacementPanel);
-
-        target.add(conceptTreePanel);
-        target.add(propertyListPanel);
-        target.add(detailContainer);
+        
+        if (event.isRedrawConceptandPropertyListPanels()) {
+            event.getTarget().add(propertyListPanel, conceptTreePanel);
+        }
+        event.getTarget().add(detailContainer);
+        event.getTarget().addChildren(getPage(), IFeedback.class);
     }
 
-    private void actionNewProperty(AjaxRequestTarget target, AjaxNewPropertyEvent event)
+    @OnEvent
+    public void actionNewProperty(AjaxNewPropertyEvent event)
     {
         // cancel selections for concepts and properties
         selectedConceptHandle.setObject(null);
@@ -254,7 +284,6 @@ public class KnowledgeBasePanel
         Component replacement = new PropertyPanel(DETAILS_MARKUP_ID, kbModel,
                 selectedPropertyHandle, Model.of(new KBProperty()));
         details = details.replaceWith(replacement);
-
-        target.add(KnowledgeBasePanel.this);
+        event.getTarget().add(KnowledgeBasePanel.this);
     }
 }

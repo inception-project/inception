@@ -17,21 +17,18 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.setFeature;
 import static java.util.Arrays.asList;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.Objects;
 import java.util.Optional;
 
+import org.apache.commons.collections4.map.LRUMap;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.Feature;
-import org.apache.uima.cas.FeatureStructure;
-import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.wicket.MarkupContainer;
@@ -48,10 +45,10 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureType;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.FeatureEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
+import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
@@ -69,10 +66,17 @@ public class ConceptFeatureSupport
     public static final String ANY_CONCEPT = "<ANY>";
     public static final String TYPE_ANY_CONCEPT = PREFIX + ANY_CONCEPT;
 
-    private @Autowired KnowledgeBaseService kbService;
-    //private @PersistenceContext EntityManager entityManager;
+    private final KnowledgeBaseService kbService;
     
     private String featureSupportId;
+    private Map<ImmutablePair<AnnotationFeature, String>, String> renderValueCache = Collections
+        .synchronizedMap(new LRUMap<>(200));
+
+    @Autowired
+    public ConceptFeatureSupport(KnowledgeBaseService aKbService)
+    {
+        kbService = aKbService;
+    }
     
     @Override
     public String getId()
@@ -119,17 +123,18 @@ public class ConceptFeatureSupport
     }
 
     @Override
-    public String renderFeatureValue(AnnotationFeature aFeature, AnnotationFS aFs,
-        Feature aLabelFeature)
+    public String renderFeatureValue(AnnotationFeature aFeature, String aLabel)
     {
         try {
-            String value = aFs.getFeatureValueAsString(aLabelFeature);
-            String renderValue = null;
-
+            ImmutablePair<AnnotationFeature, String> pair = new ImmutablePair<>(aFeature, aLabel);
+            String renderValue = renderValueCache.get(pair);
+            if (renderValue != null) {
+                return renderValue;
+            }
             // FIXME Since this might be called very often during rendering, it *might* be
             // worth to set up an LRU cache instead of relying on the performance of the
             // underlying KB store.
-            if (value != null) {
+            if (aLabel != null) {
                 ConceptFeatureTraits t = readTraits(aFeature);
 
                 // Use the concept from a particular knowledge base
@@ -137,17 +142,17 @@ public class ConceptFeatureSupport
                 if (t.getRepositoryId() != null) {
                     instance = kbService
                             .getKnowledgeBaseById(aFeature.getProject(), t.getRepositoryId())
-                            .flatMap(kb -> kbService.readInstance(kb, value));
+                            .flatMap(kb -> kbService.readInstance(kb, aLabel));
                 }
                 // Use the concept from any knowledge base (leave KB unselected)
                 else {
-                    instance = kbService.readInstance(aFeature.getProject(), value);
+                    instance = kbService.readInstance(aFeature.getProject(), aLabel);
                 }
 
                 renderValue = instance.map(KBInstance::getUiLabel)
                         .orElseThrow(NoSuchElementException::new);
             }
-            
+            renderValueCache.put(pair, renderValue);
             return renderValue;
         }
         catch (Exception e) {
@@ -157,50 +162,59 @@ public class ConceptFeatureSupport
     }
 
     @Override
-    public void setFeatureValue(JCas aJcas, AnnotationFeature aFeature, int aAddress, Object aValue)
+    public String unwrapFeatureValue(AnnotationFeature aFeature, CAS aCAS, Object aValue)
     {
-        KBHandle kbInst = (KBHandle) aValue;
-        FeatureStructure fs = selectByAddr(aJcas, FeatureStructure.class, aAddress);
-        setFeature(fs, aFeature, kbInst != null ? kbInst.getIdentifier() : null);
-    }
-
-    @Override
-    public KBHandle getFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
-    {
-        Feature feature = aFS.getType().getFeatureByBaseName(aFeature.getName());
-        final String effectiveType = CAS.TYPE_NAME_STRING;
-        
-        // Sanity check
-        if (!Objects.equals(effectiveType, feature.getRange().getName())) {
-            throw new IllegalArgumentException("Actual feature type ["
-                    + feature.getRange().getName() + "] does not match expected feature type ["
-                    + effectiveType + "].");
+        // Normally, we get KBHandles back from the feature editors
+        if (aValue instanceof KBHandle) {
+            return ((KBHandle) aValue).getIdentifier();
         }
-
-        String value = (String) WebAnnoCasUtil.getFeature(aFS, aFeature.getName());
-        
-        if (value != null) {
-            ConceptFeatureTraits t = readTraits(aFeature);
-
-            // Use the concept from a particular knowledge base
-            Optional<KBInstance> instance;
-            if (t.getRepositoryId() != null) {
-                instance = kbService
-                        .getKnowledgeBaseById(aFeature.getProject(), t.getRepositoryId())
-                        .flatMap(kb -> kbService.readInstance(kb, value));
-            }
-            // Use the concept from any knowledge base (leave KB unselected)
-            else {
-                instance = kbService.readInstance(aFeature.getProject(), value);
-            }
-
-            return instance.map(i -> KBHandle.of(i)).orElseThrow(NoSuchElementException::new);
+        // When used in a recommendation context, we might get the concept identifier as a string
+        // value.
+        else if (aValue instanceof String || aValue == null) {
+            return (String) aValue;
         }
         else {
-            return null;
+            throw new IllegalArgumentException(
+                    "Unable to handle value [" + aValue + "] of type [" + aValue.getClass() + "]");
         }
     }
-
+    
+    @Override
+    public KBHandle wrapFeatureValue(AnnotationFeature aFeature, CAS aCAS, Object aValue)
+    {
+        if (aValue instanceof String) {
+            String identifier = (String) aValue;
+            return new KBHandle(identifier, renderFeatureValue(aFeature, identifier));
+            
+//            String identifier = (String) aValue;
+//            ConceptFeatureTraits t = readTraits(aFeature);
+//
+//            // Use the concept from a particular knowledge base
+//            Optional<KBInstance> instance;
+//            if (t.getRepositoryId() != null) {
+//                instance = kbService
+//                        .getKnowledgeBaseById(aFeature.getProject(), t.getRepositoryId())
+//                        .flatMap(kb -> kbService.readInstance(kb, identifier));
+//            }
+//            // Use the concept from any knowledge base (leave KB unselected)
+//            else {
+//                instance = kbService.readInstance(aFeature.getProject(), identifier);
+//            }
+//
+//            return instance.map(i -> KBHandle.of(i)).orElseThrow(NoSuchElementException::new);
+        }
+        else if (aValue instanceof KBHandle) {
+            return (KBHandle) aValue;
+        }
+        else if (aValue == null ) {
+            return null;
+        }
+        else {
+            throw new IllegalArgumentException(
+                    "Unable to handle value [" + aValue + "] of type [" + aValue.getClass() + "]");
+        }
+    }
+    
     @Override
     public Panel createTraitsEditor(String aId, IModel<AnnotationFeature> aFeatureModel)
     {
@@ -283,4 +297,5 @@ public class ConceptFeatureSupport
     {
         aTD.addFeature(aFeature.getName(), "", CAS.TYPE_NAME_STRING);
     }
+
 }

@@ -57,11 +57,9 @@ import org.apache.lucene.search.spans.SpanWeight;
 import org.apache.lucene.search.spans.Spans;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
-import org.apache.uima.cas.CASException;
 import org.apache.uima.cas.TypeSystem;
 import org.apache.uima.cas.impl.XmiCasSerializer;
 import org.apache.uima.jcas.JCas;
-import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.wicket.ajax.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -77,7 +75,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.search.ExecutionException;
 import de.tudarmstadt.ukp.inception.search.SearchResult;
-import de.tudarmstadt.ukp.inception.search.index.Index;
+import de.tudarmstadt.ukp.inception.search.index.PhysicalIndex;
 import mtas.analysis.token.MtasTokenString;
 import mtas.analysis.util.MtasTokenizerFactory;
 import mtas.codec.MtasCodec;
@@ -87,8 +85,13 @@ import mtas.parser.cql.MtasCQLParser;
 import mtas.parser.cql.ParseException;
 import mtas.search.spans.util.MtasSpanQuery;
 
+/**
+ * 
+ * The Mtas implementation for a physical index
+ *
+ */
 public class MtasDocumentIndex
-    implements Index
+    implements PhysicalIndex
 {
     private final String MTAS_PARSER = "de.tudarmstadt.ukp.inception.search.index.mtas.MtasUimaParser";
     private final String MTAS_TOKENIZER = "mtas";
@@ -172,9 +175,13 @@ public class MtasDocumentIndex
             MtasSpanQuery mtasSpanQuery = createQuery(FIELD_CONTENT, modifiedQuery);
             return doQuery(indexReader, aUser, FIELD_CONTENT, mtasSpanQuery, prefixes);
         }
+        catch (mtas.parser.cql.ParseException e) {
+            log.error("Mtas query syntax error", e);
+            throw(new ExecutionException(e.getMessage()));
+        }
         catch (Exception e) {
             log.error("Query execution error", e);
-            throw(new ExecutionException("Query execution error", e));
+            throw (new ExecutionException("Query execution error", e));
         }
     }
 
@@ -508,9 +515,14 @@ public class MtasDocumentIndex
      * @return True if the index is open. False otherwise.
      */
     @Override
-    public boolean isIndexOpen()
+    public boolean isOpen()
     {
-        return indexWriter != null;
+        boolean result = false;
+        
+        if (indexWriter != null) {
+            result = indexWriter.isOpen();
+        }
+        return result;
     }
 
     /**
@@ -524,19 +536,21 @@ public class MtasDocumentIndex
     }
 
     @Override
-    public void closeIndex()
+    public void closePhysicalIndex()
     {
-        try {
-            if (indexWriter != null) {
-                // Commit and close the index
-                indexWriter.commit();
-                indexWriter.close();
-            }
+        if (indexWriter != null) {
+            try {
+                if (indexWriter.isOpen()) {
+                    // Commit and close the index
+                    indexWriter.commit();
+                    indexWriter.close();
+                }
 
-            log.info("Index for project {} has been closed", project.getName());
-        }
-        catch (IOException e) {
-            log.error("Error closing index for project {}", project.getId());
+                log.info("Index for project {} has been closed", project.getName());
+            }
+            catch (IOException e) {
+                log.error("Error closing index for project {}", project.getId());
+            }
         }
     }
 
@@ -545,10 +559,11 @@ public class MtasDocumentIndex
      * 
      */
     @Override
-    public void dropIndex() throws IOException
+    public void dropPhysicalIndex() throws IOException
     {
-        // Close the index
-        closeIndex();
+        if (indexWriter != null) {
+            closePhysicalIndex();
+        }
 
         // Delete the index directory
         FileUtils.deleteDirectory(getIndexDir());
@@ -557,7 +572,7 @@ public class MtasDocumentIndex
     }
 
     @Override
-    public boolean isIndexCreated()
+    public boolean isCreated()
     {
         if (getIndexDir().isDirectory()) {
             return true;
@@ -567,42 +582,54 @@ public class MtasDocumentIndex
         }
     }
 
+    /**
+     * Open a Mtas physical index, setting indexWriter
+     */
     @Override
-    public void openIndex()
+    public void openPhysicalIndex()
     {
-        try {
-            indexWriter = openLuceneIndex(getIndexDir());
+        boolean isOpen;
+        
+        isOpen = (indexWriter == null) ? false : indexWriter.isOpen();
 
-            log.info("Index has been opened for project " + project.getName());
-        }
-        catch (Exception e) {
-            log.error("Unable to open index", e);
+        if (!isOpen) {
+            // Only open if it is not already open
+            try {
+                log.info("Opening index for project " + project.getName());
+
+                indexWriter = openLuceneIndex(getIndexDir());
+                indexWriter.commit();
+                log.info("Index has been opened for project " + project.getName());
+            }
+            catch (Exception e) {
+                log.error("Unable to open index", e);
+            }
         }
     }
 
+    /**
+     * Create, open and index all documents for a given project
+     */
     @Override
-    public void createIndex()
+    public void createPhysicalIndex()
     {
         File indexDir = getIndexDir();
 
         try {
             // Create the directory for the new index
+            log.info("Creating index directory for project " + project.getName());
             FileUtils.forceMkdir(indexDir);
-        }
-        catch (Exception e) {
-            log.error("Error creating index directory for project " + project.getName(), e);
-        }
 
-        try {
-            log.info("Creating index for project " + project.getName());
-            openIndex();
+            // Open the index
+            openPhysicalIndex();
 
             // Index all documents of the project
             log.info("Indexing all documents in the project " + project.getName());
             indexAllDocuments();
+            log.info("All documents have been indexed in the project " + project.getName());
         }
         catch (Exception e) {
-            log.error("Unable to create index", e);
+            log.error("Error creating index for project " + project.getName(), e);
         }
     }
 
@@ -659,9 +686,9 @@ public class MtasDocumentIndex
         log.info("Indexing all source documents of project {}", project.getName());
         for (SourceDocument document : documentService.listSourceDocuments(project)) {
             try {
-                indexDocument(document, documentService.readInitialCas(document));
+                indexDocument(document, documentService.createOrReadInitialCas(document));
             }
-            catch (IOException | CASException | ResourceInitializationException e) {
+            catch (IOException e) {
                 log.error("Unable to index source document", e);
             }
         }

@@ -19,13 +19,11 @@ package de.tudarmstadt.ukp.inception.recommendation.project;
 
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
-import de.tudarmstadt.ukp.inception.recommendation.model.Recommender;
-import de.tudarmstadt.ukp.inception.recommendation.service.RecommendationService;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 
 @ProjectSettingsPanel(label = "Recommenders", prio = 400)
 public class ProjectRecommendersPanel
@@ -33,12 +31,11 @@ public class ProjectRecommendersPanel
 {
     private static final long serialVersionUID = 3042218455285633439L;
 
-    private @Autowired RecommendationService recommendationService;
-
     private IModel<Project> projectModel;
     private IModel<Recommender> selectedRecommenderModel;
     
-    public ProjectRecommendersPanel(String aId, IModel<Project> aProject) {
+    public ProjectRecommendersPanel(String aId, IModel<Project> aProject)
+    {
         super(aId);
 
         selectedRecommenderModel = Model.of();
@@ -50,9 +47,14 @@ public class ProjectRecommendersPanel
 
         RecommenderListPanel recommenderListPanel = new RecommenderListPanel("recommenders",
                 projectModel, selectedRecommenderModel);
-        recommenderListPanel
-                .setCreateAction(t -> selectedRecommenderModel.setObject(new Recommender()));
-        recommenderListPanel.setChangeAction(t -> t.add(recommenderEditorPanel));
+        recommenderListPanel.setCreateAction(_target -> {
+            recommenderEditorPanel.modelChanged();
+            selectedRecommenderModel.setObject(new Recommender());
+        });
+        recommenderListPanel.setChangeAction(_target -> {
+            recommenderEditorPanel.modelChanged();
+            _target.add(recommenderEditorPanel);
+        });
         add(recommenderListPanel);
     }
 }

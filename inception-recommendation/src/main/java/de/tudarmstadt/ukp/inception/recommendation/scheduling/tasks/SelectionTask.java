@@ -34,14 +34,14 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.recommendation.api.ClassificationTool;
+import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderEvaluationResultEvent;
 import de.tudarmstadt.ukp.inception.recommendation.imls.conf.EvaluationConfiguration;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.classificationtool.ClassificationTool;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.AnnotationObject;
 import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.ExtendedResult;
 import de.tudarmstadt.ukp.inception.recommendation.imls.core.evaluation.EvaluationService;
-import de.tudarmstadt.ukp.inception.recommendation.model.Recommender;
-import de.tudarmstadt.ukp.inception.recommendation.service.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.util.EvaluationHelper;
 
 /**
@@ -93,8 +93,11 @@ public class SelectionTask
                         continue;
                     }
                     
-                    if (recommender.isAlwaysSelected()) {
-                        log.info("[{}][{}]: Always active", user.getUsername(), ct.getId());
+                    if (recommender.isAlwaysSelected() || !ct.isEvaluable()) {
+                        log.info(
+                                "[{}][{}]: Skipping evaluation (always selected: {}; evaluatable: {})",
+                                user.getUsername(), ct.getId(), recommender.isAlwaysSelected(),
+                                ct.isEvaluable());
                         activeRecommenders.add(recommender);
                         continue;
                     }
@@ -134,8 +137,8 @@ public class SelectionTask
                             recommender, user.getUsername(), result,
                             System.currentTimeMillis() - start));
                 }
-                catch (Exception e) {
-                    log.error("An error occured", e);
+                catch (Throwable e) {
+                    log.error("[{}][{}]: Failed", user.getUsername(), recommender.getName(), e);
                 }
             }
     
@@ -162,7 +165,7 @@ public class SelectionTask
                 continue;
             }
             
-            data.addAll(ct.getLoader().loadAnnotationObjects(jCas));
+            data.addAll(ct.getLoader().loadAnnotationObjectsForEvaluation(jCas));
         }
 
         return es.evaluate(data);

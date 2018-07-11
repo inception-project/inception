@@ -23,9 +23,9 @@ import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.AnnotationObject;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.loader.AnnotationObjectLoader;
-import de.tudarmstadt.ukp.inception.recommendation.imls.util.CasUtil;
+import de.tudarmstadt.ukp.inception.recommendation.api.AnnotationObjectLoader;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
+import de.tudarmstadt.ukp.inception.recommendation.api.util.CasUtil;
 
 public class PosAnnotationObjectLoader implements AnnotationObjectLoader
 {
@@ -45,14 +45,14 @@ public class PosAnnotationObjectLoader implements AnnotationObjectLoader
 
     @Deprecated
     @Override
-    public List<List<AnnotationObject>> loadAnnotationObjectsForTesting(JCas jCas)
+    public List<List<AnnotationObject>> loadAnnotationObjectsForEvaluation(JCas jCas)
     {
         return CasUtil.loadAnnotatedSentences(jCas, POS.class, "PosValue", POS::getPosValue);
     }
 
     @Override
-    public List<List<AnnotationObject>> loadAnnotationObjects(JCas jCas)
+    public List<List<AnnotationObject>> loadAnnotationObjects(JCas jCas, long aRecommenderId)
     {
-        return CasUtil.loadAnnotatedSentences(jCas, layer, feature);
+        return CasUtil.loadAnnotatedSentences(jCas, aRecommenderId, layer, feature);
     }
 }

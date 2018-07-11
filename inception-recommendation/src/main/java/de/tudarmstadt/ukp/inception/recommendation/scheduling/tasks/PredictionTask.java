@@ -32,14 +32,12 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.classificationtool.ClassificationTool;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.classifier.Classifier;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.AnnotationObject;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.TokenObject;
-import de.tudarmstadt.ukp.inception.recommendation.imls.util.CasUtil;
-import de.tudarmstadt.ukp.inception.recommendation.model.Predictions;
-import de.tudarmstadt.ukp.inception.recommendation.model.Recommender;
-import de.tudarmstadt.ukp.inception.recommendation.service.RecommendationService;
+import de.tudarmstadt.ukp.inception.recommendation.api.ClassificationTool;
+import de.tudarmstadt.ukp.inception.recommendation.api.Classifier;
+import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 
 /**
  * This consumer predicts new annotations for a given annotation layer, if a classification tool for
@@ -86,34 +84,36 @@ public class PredictionTask
                 ClassificationTool<?> ct = recommendationService.getTool(recommender,
                         recommendationService.getMaxSuggestions(user));
                 Classifier<?> classifier = ct.getClassifier();
-                
+
+                classifier.setUser(getUser());
+                classifier.setProject(getProject());
                 classifier.setModel(recommendationService.getTrainedModel(user, recommender));
     
-                List<List<TokenObject>> tokens = new ArrayList<>();
-                    
+                List<AnnotationObject> predictions = new ArrayList<>();
+                
+                log.info("[{}][{}]: Predicting labels...", user.getUsername(),
+                        recommender.getName());
+                
                 List<AnnotationDocument> docs = documentService
                         .listAnnotationDocuments(layer.getProject(), user);
+
                 docs.forEach(doc -> {
-                    JCas jcas;
                     try {
-                        jcas = documentService.readAnnotationCas(doc);
-                        tokens.addAll(CasUtil.loadTokenObjects(jcas, 0, 
-                                jcas.getDocumentText().length()));
+                        JCas jcas = documentService.readAnnotationCas(doc);
+                        predictions.addAll(classifier.predict(jcas, layer));
                     } catch (IOException e) {
                         log.error("Cannot read annotation CAS.", e);
                     }
                 });
       
-                if (tokens.isEmpty()) {
-                    log.info("[{}][{}]: No training data.", user.getUsername(),
+                // Tell the predictions who created them
+                predictions.forEach(token -> token.setRecommenderId(recommender.getId()));
+
+                if (predictions.isEmpty()) {
+                    log.info("[{}][{}]: No prediction data.", user.getUsername(),
                             recommender.getName());
                     return;
                 }
-                
-                log.info("[{}][{}]: Predicting labels...", user.getUsername(),
-                        recommender.getName());
-                List<AnnotationObject> predictions = classifier.predict(tokens, layer);
-                predictions.forEach(token -> token.setRecommenderId(ct.getId()));
                 
                 model.putPredictions(layer.getId(), predictions);
                 

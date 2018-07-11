@@ -22,8 +22,8 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.AnnotationObject;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.Offset;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
 
 /** 
  * A helper class to create an excel file containing debug information.
@@ -156,7 +156,7 @@ public class DebugSupport
         sb.append(delimiter);
         sb.append(offset.getBeginToken()).append("..").append(offset.getEndToken());
         sb.append(delimiter);
-        sb.append(ao.getAnnotation());
+        sb.append(ao.getLabel());
         sb.append(delimiter);
         sb.append(ao.getCoveredText());
     }
@@ -171,7 +171,7 @@ public class DebugSupport
         Offset offset = ao.getOffset();
         sb.append(ao.getCoveredText());
         sb.append(delimiter);
-        sb.append(ao.getAnnotation());
+        sb.append(ao.getLabel());
         sb.append(delimiter);
         sb.append(offset.getBeginToken()).append("..").append(offset.getEndToken());
         sb.append(delimiter);

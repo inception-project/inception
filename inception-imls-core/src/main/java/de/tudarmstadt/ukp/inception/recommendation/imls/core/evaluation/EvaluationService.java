@@ -25,13 +25,13 @@ import org.apache.uima.jcas.JCas;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.tudarmstadt.ukp.inception.recommendation.api.AnnotationObjectLoader;
+import de.tudarmstadt.ukp.inception.recommendation.api.ClassificationTool;
+import de.tudarmstadt.ukp.inception.recommendation.api.Classifier;
+import de.tudarmstadt.ukp.inception.recommendation.api.Trainer;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
 import de.tudarmstadt.ukp.inception.recommendation.imls.conf.EvaluationConfiguration;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.classificationtool.ClassificationTool;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.classifier.Classifier;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.AnnotationObject;
 import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.ExtendedResult;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.loader.AnnotationObjectLoader;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.trainer.Trainer;
 
 /**
  * The EvaluationService class performs a single evaluation run using a percentage of the given data
@@ -129,10 +129,10 @@ public class EvaluationService
         }
 
         if (conf.getFeature() != null) {
-            return evaluate(loader.loadAnnotationObjects(jCas));
+            return evaluate(loader.loadAnnotationObjectsForEvaluation(jCas));
         }
         else {
-            return evaluate(loader.loadAnnotationObjects(jCas));
+            return evaluate(loader.loadAnnotationObjectsForEvaluation(jCas));
         }
     }
 

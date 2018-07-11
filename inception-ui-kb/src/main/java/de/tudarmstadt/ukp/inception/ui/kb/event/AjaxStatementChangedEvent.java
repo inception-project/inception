@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.ui.kb.event;
 
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.wicketstuff.event.annotation.AbstractAjaxAwareEvent;
 
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 
@@ -26,7 +27,7 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
  * An {@code AjaxStatementChangedEvent} serves as an event object sent around whenever a statement
  * is saved/deleted.
  */
-public class AjaxStatementChangedEvent extends AjaxEvent {
+public class AjaxStatementChangedEvent extends AbstractAjaxAwareEvent {
 
     /**
      * Statement editor component of the changed statement.

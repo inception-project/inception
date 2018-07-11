@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<!--
+ - Copyright 2018
+ - Ubiquitous Knowledge Processing (UKP) Lab
+ - Technische Universität Darmstadt
+ - 
+ - Licensed under the Apache License, Version 2.0 (the "License");
+ - you may not use this file except in compliance with the License.
+ - You may obtain a copy of the License at
+ -  
+ - http://www.apache.org/licenses/LICENSE-2.0
+ - 
+ - Unless required by applicable law or agreed to in writing, software
+ - distributed under the License is distributed on an "AS IS" BASIS,
+ - WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ - See the License for the specific language governing permissions and
+ - limitations under the License.
+-->
+
+<html xmlns:wicket="http://wicket.apache.org">
+<body>
+  <wicket:panel>
+    <div class="form-group col-xs-12">
+        <wicket:enclosure child="basePrefix">
+          <label class="control-label">
+            <wicket:message key="kb.iri.basePrefix" />
+          </label>
+          <input type="text" wicket:id="basePrefix" class="form-control"/>
+        </wicket:enclosure>
+    </div>
+    <div class="form-group col-xs-12">
+      <label class="control-label">
+        <wicket:message key="kb.iri.iriSchema" />
+      </label>
+      <div wicket:id="iriSchema"></div>
+    </div>
+    <div wicket:id="comboBoxWrapper">
+      <div class="form-group col-xs-12">
+        <label class="control-label">
+          <wicket:message key="kb.iri.classIri" />
+        </label>
+        <input type="text" wicket:id="classIri" class="form-control"/>
+      </div>
+  
+      <div class="form-group col-xs-12">
+        <label class="control-label">
+          <wicket:message key="kb.iri.subclassIri" />
+        </label>
+        <input type="text" wicket:id="subclassIri" class="form-control"/>
+      </div>
+  
+      <div class="form-group col-xs-12">
+        <label class="control-label">
+          <wicket:message key="kb.iri.typeIri" />
+        </label>
+        <input type="text" wicket:id="typeIri" class="form-control"/>
+      </div>
+      
+      <div class="form-group col-xs-12">
+        <label class="control-label">
+          <wicket:message key="kb.iri.descriptionIri" />
+        </label>
+        <input type="text" wicket:id="descriptionIri" class="form-control"/>
+      </div>
+      
+      <div class="form-group col-xs-12">
+        <label class="control-label">
+          <wicket:message key="kb.iri.labelIri" />
+        </label>
+        <input type="text" wicket:id="labelIri" class="form-control"/>
+      </div>
+      
+      <div class="form-group col-xs-12">
+        <label class="control-label">
+          <wicket:message key="kb.iri.propertyTypeIri" />
+        </label>
+        <input type="text" wicket:id="propertyTypeIri" class="form-control"/>
+      </div>
+      
+    </div>
+    <button wicket:id="toggleAdvancedSettings" type="button" class="btn btn-outline-primary btn-sm"><wicket:container wicket:id="toggleAdvSettingsLabel"></wicket:container></button>
+    <div>
+      <div class="col-sm-10">
+        <span wicket:id="advancedSettings"></span>
+      </div> 
+    </div>
+  </wicket:panel>
+</body>
+</html>

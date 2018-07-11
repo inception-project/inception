@@ -73,7 +73,8 @@ public class PropertyPanel extends Panel {
             KBHandle handle = kbService.createProperty(kbModel.getObject(), prop);
 
             // select newly created property right away to show the statements
-            send(getPage(), Broadcast.BREADTH, new AjaxPropertySelectionEvent(aTarget, handle));
+            send(getPage(), Broadcast.BREADTH,
+                    new AjaxPropertySelectionEvent(aTarget, handle, true));
         }
 
         @Override
@@ -82,7 +83,7 @@ public class PropertyPanel extends Panel {
             kbObjectModel.setObject(null);
 
             // send deselection event
-            send(getPage(), Broadcast.BREADTH, new AjaxPropertySelectionEvent(aTarget, null));
+            send(getPage(), Broadcast.BREADTH, new AjaxPropertySelectionEvent(aTarget, null, true));
         }
 
         @Override

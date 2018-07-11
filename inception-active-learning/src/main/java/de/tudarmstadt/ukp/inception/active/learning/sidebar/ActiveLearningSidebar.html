@@ -18,12 +18,14 @@
 -->
 <html xmlns:wicket="http://wicket.apache.org">
 <wicket:panel>
+  <div wicket:id="confirmationDialog"></div>
   <div class="flex-content flex-v-container flex-gutter flex-only-internal-gutter">
     <div wicket:id="mainContainer" class="panel panel-default panel-flex flex-content">
       <div class="panel-heading">
         <h3 class="panel-title">Active Learning</h3>
       </div>
       <div class="panel-body flex-v-container">
+        <span class="col-sm-12" wicket:id="noRecommenders">no Recommenders</span>
         <form class="panel panel-default panel-small" wicket:id="sessionControlForm">
           <div class="panel-heading">
             <h3 class="panel-title">Session</h3>
@@ -85,9 +87,10 @@
                 <span class="form-control" wicket:id="recommendedDifference"></span>
               </div>
             </div>
+            <div wicket:id="editor"></div>
           </div>
           <div class="panel-footer text-right">
-            <input type="button" class="btn btn-success" wicket:id="acceptButton" value="Accept"/>
+            <input type="submit" class="btn btn-success" wicket:id="annotateButton" value="Annotate"/>
             <input type="button" class="btn btn-danger" wicket:id="rejectButton" value="Reject"/>
             <input type="button" class="btn btn-warning" wicket:id="skipButton" value="Skip"/>
           </div>

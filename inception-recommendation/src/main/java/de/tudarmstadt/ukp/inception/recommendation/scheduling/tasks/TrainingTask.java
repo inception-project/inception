@@ -33,13 +33,13 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.classificationtool.ClassificationTool;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.AnnotationObject;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.loader.AnnotationObjectLoader;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.trainer.Trainer;
-import de.tudarmstadt.ukp.inception.recommendation.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.AnnotationObjectLoader;
+import de.tudarmstadt.ukp.inception.recommendation.api.ClassificationTool;
+import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
+import de.tudarmstadt.ukp.inception.recommendation.api.Trainer;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.scheduling.RecommendationScheduler;
-import de.tudarmstadt.ukp.inception.recommendation.service.RecommendationService;
 
 /**
  * This consumer trains a new classifier model, if a classification tool was selected before.
@@ -81,27 +81,40 @@ public class TrainingTask
             for (Recommender recommender : recommenders) {
                 long startTime = System.currentTimeMillis();
 
-                ClassificationTool<?> classificationTool = recommendationService
-                        .getTool(recommender, recommendationService.getMaxSuggestions(user));
-
-                Trainer<?> trainer = classificationTool.getTrainer();
-
-                log.info("[{}][{}]: Extracting training data...", user.getUsername(),
-                        recommender.getName());
-                List<List<AnnotationObject>> trainingData = getTrainingData(classificationTool);
-
-                if (trainingData == null || trainingData.isEmpty()) {
-                    log.info("[{}][{}]: No training data.", user.getUsername(),
+                try {
+                    ClassificationTool<?> classificationTool = recommendationService
+                            .getTool(recommender, recommendationService.getMaxSuggestions(user));
+    
+                    Trainer<?> trainer = classificationTool.getTrainer();
+    
+                    log.info("[{}][{}]: Extracting training data...", user.getUsername(),
                             recommender.getName());
-                    continue;
+                    List<List<AnnotationObject>> trainingData = getTrainingData(classificationTool);
+    
+                    if (trainingData == null || trainingData.isEmpty()) {
+                        log.info("[{}][{}]: No training data.", user.getUsername(),
+                                recommender.getName());
+                        continue;
+                    }
+    
+                    log.info("[{}][{}]: Training model...", user.getUsername(),
+                            recommender.getName());
+                    Object model = trainer.train(trainingData);
+                    if (model != null) {
+                        recommendationService.storeTrainedModel(user, recommender, model);
+                    }
+                    else {
+                        log.info("[{}][{}]: Training produced no model", user.getUsername(),
+                                recommender.getName());
+                    }
+    
+                    log.info("[{}][{}]: Training complete ({} ms)", user.getUsername(),
+                            recommender.getName(), (System.currentTimeMillis() - startTime));
                 }
-
-                log.info("[{}][{}]: Training model...", user.getUsername(), recommender.getName());
-                Object model = trainer.train(trainingData);
-                recommendationService.storeTrainedModel(user, recommender, model);
-
-                log.info("[{}][{}]: Training complete ({} ms)", user.getUsername(),
-                        recommender.getName(), (System.currentTimeMillis() - startTime));
+                catch (Exception e) {
+                    log.info("[{}][{}]: Training failed ({} ms)", user.getUsername(),
+                            recommender.getName(), (System.currentTimeMillis() - startTime), e);
+                }
             }
         }
         
@@ -132,7 +145,8 @@ public class TrainingTask
                 continue;
             }
 
-            List<List<AnnotationObject>> annotatedSentences = loader.loadAnnotationObjects(jCas);
+            List<List<AnnotationObject>> annotatedSentences = loader.loadAnnotationObjects(jCas,
+                tool.getId());
 
             if (tool.isTrainOnCompleteSentences()) {
                 for (List<AnnotationObject> sentence : annotatedSentences) {
@@ -156,7 +170,7 @@ public class TrainingTask
         }
 
         for (AnnotationObject ao : sentence) {
-            if (ao.getAnnotation() == null) {
+            if (ao.getLabel() == null) {
                 return false;
             }
         }

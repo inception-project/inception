@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.ner;
 
-import de.tudarmstadt.ukp.inception.recommendation.imls.conf.ClassifierConfiguration;
+import de.tudarmstadt.ukp.inception.recommendation.api.ClassifierConfiguration;
 import opennlp.tools.ml.AbstractTrainer;
 import opennlp.tools.ml.BeamSearch;
 import opennlp.tools.ml.EventTrainer;
@@ -60,9 +60,10 @@ public class BaseConfiguration
         this.setTrainingSetStartSize(3);
     }
     
-    public BaseConfiguration(String feature)
+    public BaseConfiguration(String aFeature, long aRecommenderId)
     {
         this();
-        setFeature(feature);
+        setFeature(aFeature);
+        setRecommenderId(aRecommenderId);
     }
 }

@@ -23,10 +23,10 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.inception.recommendation.imls.conf.ClassifierConfiguration;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.classifier.Classifier;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.AnnotationObject;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.TokenObject;
+import de.tudarmstadt.ukp.inception.recommendation.api.Classifier;
+import de.tudarmstadt.ukp.inception.recommendation.api.ClassifierConfiguration;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.TokenObject;
 import opennlp.tools.namefind.NameFinderME;
 import opennlp.tools.namefind.TokenNameFinderModel;
 import opennlp.tools.util.Span;
@@ -102,15 +102,15 @@ public class OpenNlpNerClassifier extends Classifier<TrainingParameters>
             for (int i = 0; i < sentence.size(); i++) {
                 T t = sentence.get(i);
                 List<AnnotationObject> word = new LinkedList<>();
-                word.add(new AnnotationObject(null, t, sentence, id, feature,
-                        "OpenNlpNerClassifier", confidence[i]));
+                word.add(new AnnotationObject(t, id, feature,
+                        "OpenNlpNerClassifier", confidence[i], conf.getRecommenderId()));
                 id++;
                 annotatedSentence.add(word);
             }
 
             for (Span span : generatedNames) {
                 for (int index = span.getStart(); index < span.getEnd(); index++) {
-                    annotatedSentence.get(index).get(0).setAnnotation(span.getType());
+                    annotatedSentence.get(index).get(0).setLabel(span.getType());
                 }
             }
             result.add(annotatedSentence);

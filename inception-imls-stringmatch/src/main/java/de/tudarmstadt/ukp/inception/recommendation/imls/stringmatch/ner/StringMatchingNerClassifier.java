@@ -26,10 +26,10 @@ import java.util.Map.Entry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.inception.recommendation.imls.conf.ClassifierConfiguration;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.classifier.Classifier;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.AnnotationObject;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.TokenObject;
+import de.tudarmstadt.ukp.inception.recommendation.api.Classifier;
+import de.tudarmstadt.ukp.inception.recommendation.api.ClassifierConfiguration;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.TokenObject;
 
 /**
  * The implementation of a Named Entity Recognizer using simple String matching.
@@ -86,8 +86,8 @@ public class StringMatchingNerClassifier
             List<List<AnnotationObject>> annotatedSentence = new ArrayList<>();
             for (T token : sentence) {
                 List<AnnotationObject> word = new ArrayList<>();
-                word.add(new AnnotationObject(null, token, sentence, tokenId, feature,
-                        "StringMatchingNerClassifier"));
+                word.add(new AnnotationObject(token, tokenId, feature,
+                        "StringMatchingNerClassifier", conf.getRecommenderId()));
                 tokenId++;
                 annotatedSentence.add(word);
             }
@@ -118,7 +118,7 @@ public class StringMatchingNerClassifier
 
                 if (hit) {
                     for (int j = 0; j < neTokens.size(); j++) {
-                        sentence.get(i + j).get(0).setAnnotation(entry.getValue());
+                        sentence.get(i + j).get(0).setLabel(entry.getValue());
                     }
                 }
             }

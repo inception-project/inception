@@ -18,8 +18,8 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.pos;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.inception.recommendation.imls.conf.ClassifierConfiguration;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.classificationtool.ClassificationTool;
+import de.tudarmstadt.ukp.inception.recommendation.api.ClassificationTool;
+import de.tudarmstadt.ukp.inception.recommendation.api.ClassifierConfiguration;
 import de.tudarmstadt.ukp.inception.recommendation.imls.core.loader.pos.PosAnnotationObjectLoader;
 
 /**
@@ -31,17 +31,17 @@ public class StringMatchingPosClassificationTool
     public StringMatchingPosClassificationTool()
     {
         super(-1, StringMatchingPosClassificationTool.class.getName(),
-                new StringMatchingPosTrainer(new ClassifierConfiguration<>()),
-                new StringMatchingPosClassifier(new ClassifierConfiguration<>()),
-                new PosAnnotationObjectLoader(), false);
+            new StringMatchingPosTrainer(new ClassifierConfiguration<>()),
+            new StringMatchingPosClassifier(new ClassifierConfiguration<>()),
+            new PosAnnotationObjectLoader(), false, true);
     }
 
     public StringMatchingPosClassificationTool(long recommenderId, String feature,
         AnnotationLayer aLayer)
     {
         super(recommenderId, StringMatchingPosClassificationTool.class.getName(),
-                new StringMatchingPosTrainer(new ClassifierConfiguration<>(feature)),
-                new StringMatchingPosClassifier(new ClassifierConfiguration<>(feature)),
-                new PosAnnotationObjectLoader(aLayer, feature), false);
+            new StringMatchingPosTrainer(new ClassifierConfiguration<>(feature, recommenderId)),
+            new StringMatchingPosClassifier(new ClassifierConfiguration<>(feature, recommenderId)),
+            new PosAnnotationObjectLoader(aLayer, feature), false, true);
     }
 }

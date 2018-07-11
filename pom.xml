@@ -15,9 +15,7 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>org.dkpro</groupId>
@@ -26,7 +24,7 @@
   </parent>
   <groupId>de.tudarmstadt.ukp.inception.app</groupId>
   <artifactId>inception-app</artifactId>
-  <version>0.3.0-SNAPSHOT</version>
+  <version>0.4.1-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>INCEpTION</name>
   <description>Towards an Infrastructure for the Distributed Exploration and Annotation of Large Corpora and Knowledge Bases</description>
@@ -59,10 +57,10 @@
     <maven>3.0.5</maven>
   </prerequisites>
   <properties>
-    <webanno.version>3.4.0-SNAPSHOT</webanno.version>
-    <dkpro.version>1.9.1</dkpro.version>
-    <spring.version>5.0.4.RELEASE </spring.version>
-    <spring.boot.version>1.5.10.RELEASE</spring.boot.version>
+    <webanno.version>3.5.0-SNAPSHOT</webanno.version>
+    <dkpro.version>1.9.2</dkpro.version>
+    <spring.version>5.0.7.RELEASE</spring.version>
+    <spring.boot.version>1.5.14.RELEASE</spring.boot.version>
     <wicket.version>7.10.0</wicket.version>
     <wicket-jquery-ui.version>7.10.1</wicket-jquery-ui.version>
     <lucene.version>7.1.0</lucene.version>
@@ -70,6 +68,8 @@
     <dkpro.lab.version>0.14.0</dkpro.lab.version>
     <dl4j.version>0.9.1</dl4j.version>
     <rdf4j.version>2.2.4</rdf4j.version>
+    <mockito.version>2.18.3</mockito.version>
+    <assertj.version>3.10.0</assertj.version>
   </properties>
   <modules>
     <module>inception-build</module>
@@ -84,6 +84,7 @@
     <module>inception-ui-dashboard</module>
     <module>inception-html-editor</module>
     <module>inception-pdf-editor</module>
+    <module>inception-recommendation-api</module>
     <module>inception-recommendation</module>
     <module>inception-active-learning</module>
     <module>inception-concept-linking</module>
@@ -91,11 +92,13 @@
     <!-- module>inception-imls-mira</module -->
     <module>inception-imls-opennlp</module>
     <module>inception-imls-stringmatch</module>
-    <module>inception-imls-dl4j</module>
+    <!-- module>inception-imls-dl4j</module -->
+    <module>inception-imls-external</module>
     <module>inception-log</module>
     <module>inception-support</module>
     <!-- Documentation -->
     <module>inception-doc</module>
+
   </modules>
   <repositories>
     <!-- For RELEASEes of WebAnno / DKPro Core-->
@@ -187,98 +190,120 @@
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-doc</artifactId>
-        <version>0.3.0-SNAPSHOT</version>
+        <version>0.4.1-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-app-ui-search</artifactId>
-        <version>0.3.0-SNAPSHOT</version>
+        <version>0.4.1-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-kb</artifactId>
-        <version>0.3.0-SNAPSHOT</version>
+        <version>0.4.1-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-ui-dashboard</artifactId>
-        <version>0.3.0-SNAPSHOT</version>
+        <version>0.4.1-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-html-editor</artifactId>
-        <version>0.3.0-SNAPSHOT</version>
+        <version>0.4.1-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-pdf-editor</artifactId>
-        <version>0.3.0-SNAPSHOT</version>
+        <version>0.4.1-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-recommendation</artifactId>
-        <version>0.3.0-SNAPSHOT</version>
+        <version>0.4.1-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-recommendation-api</artifactId>
+        <version>0.4.1-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-active-learning</artifactId>
-        <version>0.3.0-SNAPSHOT</version>
+        <version>0.4.1-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-ui-core</artifactId>
-        <version>0.3.0-SNAPSHOT</version>
+        <version>0.4.1-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-ui-kb</artifactId>
-        <version>0.3.0-SNAPSHOT</version>
+        <version>0.4.1-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-concept-linking</artifactId>
-        <version>0.3.0-SNAPSHOT</version>
+        <version>0.4.1-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-imls-core</artifactId>
-        <version>0.3.0-SNAPSHOT</version>
+        <version>0.4.1-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-imls-opennlp</artifactId>
-        <version>0.3.0-SNAPSHOT</version>
+        <version>0.4.1-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-imls-dl4j</artifactId>
-        <version>0.3.0-SNAPSHOT</version>
+        <version>0.4.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-imls-mira</artifactId>
-        <version>0.3.0-SNAPSHOT</version>
+        <version>0.4.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-imls-stringmatch</artifactId>
-        <version>0.3.0-SNAPSHOT</version>
+        <version>0.4.1-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-imls-external</artifactId>
+        <version>0.4.1-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-log</artifactId>
-        <version>0.3.0-SNAPSHOT</version>
+        <version>0.4.1-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-support</artifactId>
-        <version>0.3.0-SNAPSHOT</version>
+        <version>0.4.1-SNAPSHOT</version>
       </dependency>
+
+      <!-- Testing -->
 
       <dependency>
         <groupId>junit</groupId>
         <artifactId>junit</artifactId>
         <version>4.12</version>
+      </dependency>
+      <dependency>
+        <groupId>org.mockito</groupId>
+        <artifactId>mockito-core</artifactId>
+        <version>${mockito.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.assertj</groupId>
+        <artifactId>assertj-core</artifactId>
+        <version>${assertj.version}</version>
       </dependency>
 
       <!-- Wicket jQuery -->
@@ -486,6 +511,16 @@
         <version>1.14</version>
       </dependency>
       <dependency>
+        <groupId>org.apache.httpcomponents</groupId>
+        <artifactId>httpclient</artifactId>
+        <version>4.5.3</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.httpcomponents</groupId>
+        <artifactId>httpcore</artifactId>
+        <version>4.4.9</version>
+      </dependency>
+      <dependency>
       <groupId>it.unimi.dsi</groupId>
         <artifactId>dsiutils</artifactId>
         <version>2.1.10</version>
@@ -566,18 +601,18 @@
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-search-core</artifactId>
-        <version>0.3.0-SNAPSHOT</version>
+        <version>0.4.1-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-search-mtas</artifactId>
-        <version>0.3.0-SNAPSHOT</version>
+        <version>0.4.1-SNAPSHOT</version>
       </dependency>
       <!--  
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-search-mimir</artifactId>
-        <version>0.3.0-SNAPSHOT</version>
+        <version>0.4.0-SNAPSHOT</version>
       </dependency>
       -->
 
@@ -718,6 +753,40 @@
   </build>
   <profiles>
     <profile>
+      <id>wicket-module</id>
+      <activation>
+        <file><exists>marker-wicket-module</exists></file>
+      </activation>
+      <build>
+        <resources>
+          <resource>
+            <filtering>false</filtering>
+            <directory>src/main/resources</directory>
+            <excludes>
+              <exclude>META-INF/version.properties</exclude>
+            </excludes>
+          </resource>
+          <resource>
+            <filtering>true</filtering>
+            <directory>src/main/resources</directory>
+            <includes>
+              <include>**</include>
+            </includes>
+          </resource>
+          <resource>
+            <filtering>false</filtering>
+            <directory>src/main/java</directory>
+            <includes>
+              <include>**</include>
+            </includes>
+            <excludes>
+              <exclude>**/*.java</exclude>
+            </excludes>
+          </resource>
+        </resources>
+      </build>
+    </profile>
+    <profile>
       <id>m2e</id>
       <activation>
         <property>
@@ -783,6 +852,8 @@
                   <excludes>
                     <exclude>.gitignore</exclude>
                     <exclude>.checkstyle</exclude>
+                    <exclude>suppressions.xml</exclude>
+                    <exclude>marker-*</exclude>
                     <!-- maven config files -->
                     <exclude>src/main/filter/**/*</exclude>
                     <!-- release generated artifact -->

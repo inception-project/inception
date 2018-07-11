@@ -17,14 +17,21 @@
  */
 package de.tudarmstadt.ukp.inception.kb.model;
 
+import static de.tudarmstadt.ukp.inception.kb.reification.Reification.NONE;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
+import javax.persistence.CollectionTable;
 import javax.persistence.Column;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
@@ -38,18 +45,21 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
+import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 
 @Entity
 @Table(name = "knowledgebase",
     uniqueConstraints = { @UniqueConstraint(columnNames = { "project", "name",  }) })
 @NamedQueries({
     @NamedQuery(name = "KnowledgeBase.getByProject",
-    query = "from KnowledgeBase kb where kb.project = :project"),
+    query = "from KnowledgeBase kb where kb.project = :project order by lower(kb.name)"),
     @NamedQuery(name = "KnowledgeBase.getByName",
         query = "from KnowledgeBase kb where kb.project = :project and kb.name = :name "),
     @NamedQuery(name = "KnowledgeBase.getByProjectWhereEnabledTrue",
-    query = "from KnowledgeBase kb where kb.project = :project and kb.enabled = true") 
+    query = "from KnowledgeBase kb where kb.project = :project and kb.enabled = true "
+            + "order by lower(kb.name)") 
 })
 public class KnowledgeBase
     implements Serializable
@@ -96,6 +106,24 @@ public class KnowledgeBase
     @Column(nullable = false)
     private IRI typeIri;
 
+    /**
+     * The IRI for a property describing B being a description of A, e.g. schema:description
+     */
+    @Column(nullable = false)
+    private IRI descriptionIri;
+    
+    /**
+     * The IRI for a property describing B being a label for A, e.g. rdfs:label 
+     */
+    @Column(nullable = false)
+    private IRI labelIri;
+    
+    /**
+     * The IRI for an object describing A is of type propertyType, e.g. rdf:Property 
+     */
+    @Column(nullable = false)
+    private IRI propertyTypeIri;
+
     @Column(nullable = false)
     private boolean readOnly;
 
@@ -104,10 +132,27 @@ public class KnowledgeBase
      */
     @Column(nullable = false)
     private boolean enabled = true;
-    
+
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private Reification reification = NONE;
     
     @Column(name = "supportConceptLinking", nullable = false)
     private boolean supportConceptLinking = false;
+    
+    /**
+     * All statements created in a local KB are prefixed with this string 
+     */
+    @Column(nullable = false)
+    private String basePrefix = IriConstants.INCEPTION_NAMESPACE;
+    
+    /**
+     * A List of explicitly defined root concepts that can be used if auto detection takes too long
+     */
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "knowledgebase_root_classes")
+    @Column(name = "name")
+    private List<IRI> explicitlyDefinedRootConcepts = new ArrayList<>();
     
     public String getRepositoryId() {
         return repositoryId;
@@ -178,6 +223,36 @@ public class KnowledgeBase
         typeIri = aTypeIri;
     }
 
+    public IRI getDescriptionIri()
+    {
+        return descriptionIri;
+    }
+
+    public void setDescriptionIri(IRI aDescriptionIri)
+    {
+        descriptionIri = aDescriptionIri;
+    }
+
+    public IRI getLabelIri()
+    {
+        return labelIri;
+    }
+
+    public void setLabelIri(IRI aLabelIri)
+    {
+        labelIri = aLabelIri;
+    }
+
+    public IRI getPropertyTypeIri()
+    {
+        return propertyTypeIri;
+    }
+
+    public void setPropertyTypeIri(IRI aPropertyTypeIri)
+    {
+        propertyTypeIri = aPropertyTypeIri;
+    }
+
     public boolean isReadOnly()
     {
         return readOnly;
@@ -198,6 +273,16 @@ public class KnowledgeBase
         enabled = isEnabled;
     }
 
+    public Reification getReification()
+    {
+        return reification;
+    }
+
+    public void setReification(Reification aReification)
+    {
+        reification = aReification;
+    }
+
     /**
      * @return {@code true} if this knowledge base has a repository id, i.e. it is conceptually
      *         linked to a {@link Project} and is managed by an RDF4J repository.
@@ -215,6 +300,26 @@ public class KnowledgeBase
         return supportConceptLinking;
     }
     
+    public String getBasePrefix()
+    {
+        return basePrefix;
+    }
+
+    public void setBasePrefix(String aBasePrefix)
+    {
+        basePrefix = aBasePrefix;
+    }
+    
+    public List<IRI> getExplicitlyDefinedRootConcepts()
+    {
+        return explicitlyDefinedRootConcepts;
+    }
+
+    public void setExplicitlyDefinedRootConcepts(List<IRI> aExplicitlyDefinedRootConcepts)
+    {
+        explicitlyDefinedRootConcepts = aExplicitlyDefinedRootConcepts;
+    }
+    
     @Override
     public String toString()
     {
@@ -225,7 +330,7 @@ public class KnowledgeBase
             builder.append(repositoryId);
         }
         else {
-            builder.append(project.toString());
+            builder.append(project);
             builder.append(", name=");
             builder.append(name);
         }

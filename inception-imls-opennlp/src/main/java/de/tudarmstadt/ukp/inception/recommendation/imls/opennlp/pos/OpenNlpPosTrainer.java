@@ -30,9 +30,9 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.inception.recommendation.imls.conf.ClassifierConfiguration;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.AnnotationObject;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.trainer.Trainer;
+import de.tudarmstadt.ukp.inception.recommendation.api.ClassifierConfiguration;
+import de.tudarmstadt.ukp.inception.recommendation.api.Trainer;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
 import opennlp.tools.postag.POSSample;
 import opennlp.tools.postag.POSTaggerFactory;
 import opennlp.tools.postag.POSTaggerME;
@@ -85,7 +85,7 @@ public class OpenNlpPosTrainer
             for (int i = 0; i < sentence.size(); i++) {
                 AnnotationObject ao = sentence.get(i);
                 tokens[i] = ao.getCoveredText();
-                tags[i] = ao.getAnnotation();
+                tags[i] = ao.getLabel();
             }
 
             result.add(new POSSample(tokens, tags));

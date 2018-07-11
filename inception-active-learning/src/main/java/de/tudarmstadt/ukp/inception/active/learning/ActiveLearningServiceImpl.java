@@ -29,9 +29,9 @@ import org.springframework.stereotype.Component;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.AnnotationObject;
-import de.tudarmstadt.ukp.inception.recommendation.model.Predictions;
-import de.tudarmstadt.ukp.inception.recommendation.service.RecommendationService;
+import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 
 @Component
 public class ActiveLearningServiceImpl
@@ -80,7 +80,7 @@ public class ActiveLearningServiceImpl
         List<List<AnnotationObject>> result = new ArrayList<>();
 
         Map<String, List<List<AnnotationObject>>> recommendationsMap = model
-                .getPredictionsForWholeProject(aLayer, documentService);
+            .getPredictionsForWholeProject(aLayer, documentService, true);
 
         Set<String> documentNameSet = recommendationsMap.keySet();
 
@@ -100,6 +100,6 @@ public class ActiveLearningServiceImpl
                 aState.getProject());
         // TODO #176 use the document Id once it it available in the CAS
         return model.getFlattenedPredictions(aState.getDocument().getName(), aSelectedLayer,
-                windowBegin, windowEnd, aJcas);
+            windowBegin, windowEnd, aJcas, true);
     }
 }

@@ -23,7 +23,7 @@ import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentResetEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.inception.recommendation.service.LearningRecordService;
+import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 
 @Component
 public class ActiveLearningEventAdapter {

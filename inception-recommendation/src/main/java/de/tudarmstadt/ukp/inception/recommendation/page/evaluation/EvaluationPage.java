@@ -65,15 +65,15 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.app.session.SessionMetaData;
+import de.tudarmstadt.ukp.inception.recommendation.api.AnnotationObjectLoader;
+import de.tudarmstadt.ukp.inception.recommendation.api.ClassificationTool;
+import de.tudarmstadt.ukp.inception.recommendation.api.ClassificationToolRegistry;
+import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.imls.conf.EvaluationConfiguration;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.classificationtool.ClassificationTool;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.AnnotationObject;
 import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.imls.core.evaluation.IncrementalEvaluationService;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.loader.AnnotationObjectLoader;
-import de.tudarmstadt.ukp.inception.recommendation.model.ClassificationToolRegistry;
-import de.tudarmstadt.ukp.inception.recommendation.model.Recommender;
-import de.tudarmstadt.ukp.inception.recommendation.service.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.util.EvaluationHelper;
 
 @MountPath("/RecommendationEvaluationPage.html")
@@ -361,7 +361,7 @@ public class EvaluationPage
                 if (jCas == null) {
                     continue;
                 }
-                annotatedData.addAll(loader.loadAnnotationObjects(jCas));
+                annotatedData.addAll(loader.loadAnnotationObjectsForEvaluation(jCas));
             }            
             
             EvaluationResult result = 

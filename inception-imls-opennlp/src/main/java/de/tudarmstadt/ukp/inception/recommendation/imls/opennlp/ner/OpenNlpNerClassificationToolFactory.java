@@ -23,13 +23,13 @@ import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.classificationtool.ClassificationTool;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.classificationtool.ClassificationToolFactory;
+import de.tudarmstadt.ukp.inception.recommendation.api.ClassificationTool;
+import de.tudarmstadt.ukp.inception.recommendation.api.ClassificationToolFactory;
 import opennlp.tools.util.TrainingParameters;
 
 @Component
 public class OpenNlpNerClassificationToolFactory
-    implements ClassificationToolFactory<TrainingParameters>
+    implements ClassificationToolFactory<TrainingParameters, Void>
 {
     private Logger log = LoggerFactory.getLogger(getClass());
 
@@ -66,6 +66,6 @@ public class OpenNlpNerClassificationToolFactory
         
         return (aLayer.isLockToTokenOffset() || aLayer.isMultipleTokens())
                 && !aLayer.isCrossSentence() && "span".equals(aLayer.getType())
-                && CAS.TYPE_NAME_STRING.equals(aFeature.getType());
+                && CAS.TYPE_NAME_STRING.equals(aFeature.getType()) || aFeature.isVirtualFeature();
     }
 }

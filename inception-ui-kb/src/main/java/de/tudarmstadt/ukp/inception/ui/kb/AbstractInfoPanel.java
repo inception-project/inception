@@ -25,29 +25,32 @@ import java.util.Comparator;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.panel.Fragment;
+import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.cycle.RequestCycle;
 
+import com.googlecode.wicket.jquery.core.Options;
 import com.googlecode.wicket.kendo.ui.widget.tooltip.TooltipBehavior;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.inception.app.Focusable;
+import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
-import de.tudarmstadt.ukp.inception.ui.kb.stmt.Focusable;
 import de.tudarmstadt.ukp.inception.ui.kb.stmt.StatementDetailPreference;
 import de.tudarmstadt.ukp.inception.ui.kb.stmt.StatementGroupBean;
 import de.tudarmstadt.ukp.inception.ui.kb.stmt.StatementsPanel;
-import de.tudarmstadt.ukp.inception.ui.kb.util.WriteProtectionBehavior;
 
 /**
  * An {@code AbstractInfoPanel} offers functionality to create, display and edit instances of a
@@ -58,7 +61,7 @@ import de.tudarmstadt.ukp.inception.ui.kb.util.WriteProtectionBehavior;
  *            the type of {@link KBObject} this {@code AbstractInfoPanel} specializes on
  *            (properties, concepts, instances, ...)
  */
-public abstract class AbstractInfoPanel<T extends KBObject> extends EventListeningPanel {
+public abstract class AbstractInfoPanel<T extends KBObject> extends Panel {
 
     private static final long serialVersionUID = -1413622323011843523L;
 
@@ -69,6 +72,7 @@ public abstract class AbstractInfoPanel<T extends KBObject> extends EventListeni
     protected IModel<KnowledgeBase> kbModel;
     
     private ConfirmationDialog confirmationDialog;
+    private ModalWindow modal;
     
 
     public AbstractInfoPanel(String aId, IModel<KnowledgeBase> aKbModel,
@@ -83,6 +87,9 @@ public abstract class AbstractInfoPanel<T extends KBObject> extends EventListeni
         // when creating a new KBObject, activate the form and obtain the AjaxRequestTarget to set
         // the focus to the name field
         Component content;
+        modal = new SubclassCreationDialog("createSubclass", kbModel, handleModel);
+        add(modal);
+
         boolean isNew = kbObjectModel.getObject() != null
                 && isEmpty(kbObjectModel.getObject().getIdentifier());
         if (isNew) {
@@ -153,12 +160,18 @@ public abstract class AbstractInfoPanel<T extends KBObject> extends EventListeni
         public ViewMode(String id, CompoundPropertyModel<KBHandle> compoundModel,
                 StatementDetailPreference aDetailPreference) {
             super(id, "viewMode", AbstractInfoPanel.this);
-
             Label uiLabel = new Label("uiLabel", compoundModel.bind("uiLabel"));
-            uiLabel.add(new TooltipBehavior(compoundModel.bind("identifier")));
             add(uiLabel);
             add(new Label("typeLabel", new ResourceModel(getTypeLabelResourceKey())));
-
+            Label identifier = new Label("idtext"); 
+            TooltipBehavior tip = new TooltipBehavior();
+            tip.setOption("autoHide", false);
+            tip.setOption("content",
+                    Options.asString((compoundModel.bind("identifier").getObject())));
+            tip.setOption("showOn", Options.asString("click"));
+            identifier.add(tip);
+            add(identifier);
+            
             // button for deleting the KBObject
             LambdaAjaxLink deleteButton = new LambdaAjaxLink("delete",
                     AbstractInfoPanel.this::confirmActionDelete).onConfigure((_this) -> {
@@ -167,7 +180,19 @@ public abstract class AbstractInfoPanel<T extends KBObject> extends EventListeni
                     });
             deleteButton.add(new Label("label", new ResourceModel(getDeleteButtonResourceKey())));
             deleteButton.add(new WriteProtectionBehavior(kbModel));
-            add(deleteButton);            
+            add(deleteButton);
+            
+            // button for creating a new subclass that is only visible for concepts  
+            LambdaAjaxLink createSubclassButton = new LambdaAjaxLink("createSubclass",
+                    AbstractInfoPanel.this::actionCreateSubclass).onConfigure((_this) -> {
+                        _this.setVisible(kbObjectModel.getObject() != null
+                                && isNotEmpty(kbObjectModel.getObject().getIdentifier())
+                                && kbObjectModel.getObject() instanceof KBConcept);
+                    });
+            createSubclassButton.add(new Label("subclassLabel",
+                    new ResourceModel(getCreateSubclassButtonResourceKey())));
+            createSubclassButton.add(new WriteProtectionBehavior(kbModel));
+            add(createSubclassButton);
 
             // show statements about this KBObject
             StatementsPanel statementsPanel = new StatementsPanel("statements", kbModel,
@@ -184,6 +209,11 @@ public abstract class AbstractInfoPanel<T extends KBObject> extends EventListeni
         return null;
     }
     
+    public String getCreateSubclassButtonResourceKey()
+    {
+        return "createSubclass";
+    }
+
     protected String getCreateButtonResourceKey() {
         return "create";
     }
@@ -225,6 +255,10 @@ public abstract class AbstractInfoPanel<T extends KBObject> extends EventListeni
                 "kbobject.delete.confirmation.content", this, handleModel));
         confirmationDialog.show(aTarget);
         confirmationDialog.setConfirmAction(this::actionDelete);
+    }
+    
+    private void actionCreateSubclass(AjaxRequestTarget aTarget) {
+        modal.show(aTarget);
     }
     
     protected abstract void actionDelete(AjaxRequestTarget aTarget);

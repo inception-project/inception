@@ -31,7 +31,7 @@
       constraintName="FK_4pfd2vykcbrnyvg6v71rhtimf" deferrable="false" initiallyDeferred="false"
       onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="project" />
   </changeSet>
-  
+
   <changeSet author="INCEpTION Team" id="20180204-1">
     <preConditions onFail="MARK_RAN">
       <not>
@@ -44,7 +44,7 @@
       </column>
     </addColumn>
   </changeSet>
-  
+
   <changeSet author="INCEpTION Team" id="20180204-2-4">
     <preConditions onFail="MARK_RAN">
       <columnExists tableName="knowledgebase" columnName="modelingLanguage"/>
@@ -53,7 +53,7 @@
       We had a brief period where a "modelingLanguage" was maintained in the KB, but it was
       replaced by the various "Iri" columns. This change set just cleans up the DB by removing
       the "modelingLanguage" column if it still exists.
-    </comment> 
+    </comment>
     <dropColumn tableName="knowledgebase" columnName="modelingLanguage"/>
   </changeSet>
 
@@ -179,4 +179,100 @@
       deferrable="false" initiallyDeferred="false" onDelete="CASCADE"
       onUpdate="CASCADE" referencedColumnNames="id" referencedTableName="project" />
   </changeSet>
+
+  <changeSet author="INCEpTION Team" id="20180409-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="knowledgebase" columnName="reification"/>
+      </not>
+    </preConditions>
+
+    <addColumn tableName="knowledgebase">
+      <column name="reification"
+              type="VARCHAR(255)"
+              defaultValue="NONE">
+          <constraints nullable="false" />
+      </column>
+    </addColumn>
+  </changeSet>
+  
+  <changeSet author="INCEpTION Team" id="20180503-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="knowledgebase" columnName="basePrefix"/>
+      </not>
+    </preConditions>
+
+    <addColumn tableName="knowledgebase">
+      <column name="basePrefix"
+              type="VARCHAR(255)"
+              defaultValue="http://www.ukp.informatik.tu-darmstadt.de/inception/1.0#">
+        <constraints nullable="false" />
+      </column>
+    </addColumn>
+  </changeSet>
+
+  <changeSet author="INCEpTION Team" id="20180503">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="knowledgebase" columnName="descriptionIri"/>
+      </not>
+    </preConditions>
+
+    <addColumn tableName="knowledgebase">
+      <column name="descriptionIri"
+              type="VARCHAR(255)"
+              defaultValue="http://www.w3.org/2000/01/rdf-schema#comment">
+        <constraints nullable="false" />
+      </column>
+    </addColumn>
+  </changeSet>
+  
+  <changeSet author="INCEpTION Team" id="20180515-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="knowledgebase" columnName="labelIri"/>
+      </not>
+    </preConditions>
+
+    <addColumn tableName="knowledgebase">
+      <column name="labelIri"
+              type="VARCHAR(255)"
+              defaultValue="http://www.w3.org/2000/01/rdf-schema#label">
+        <constraints nullable="false" />
+      </column>
+    </addColumn>
+  </changeSet>
+  
+  <changeSet author="INCEpTION Team" id="20180515-2">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="knowledgebase" columnName="propertyTypeIri"/>
+      </not>
+    </preConditions>
+
+    <addColumn tableName="knowledgebase">
+      <column name="propertyTypeIri"
+              type="VARCHAR(255)"
+              defaultValue="http://www.w3.org/1999/02/22-rdf-syntax-ns#Property">
+        <constraints nullable="false" />
+      </column>
+    </addColumn>
+  </changeSet>
+  
+  <changeSet author="INCEpTION Team" id="20180616-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="knowledgebase_root_classes"/>
+      </not>
+    </preConditions>
+    <createTable tableName="knowledgebase_root_classes">
+      <column name="knowledgebase_repositoryId" type="VARCHAR(255)">
+        <constraints nullable="false" />
+      </column>
+      <column name="name" type="VARCHAR(255)">
+      </column>
+    </createTable>
+  </changeSet>
+
 </databaseChangeLog>

@@ -26,9 +26,10 @@ import org.slf4j.LoggerFactory;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.datasets.Dataset;
 import de.tudarmstadt.ukp.dkpro.core.api.datasets.DatasetFactory;
-import de.tudarmstadt.ukp.inception.recommendation.imls.conf.ClassifierConfiguration;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.classificationtool.ClassificationTool;
+import de.tudarmstadt.ukp.inception.recommendation.api.ClassificationTool;
+import de.tudarmstadt.ukp.inception.recommendation.api.ClassifierConfiguration;
 import de.tudarmstadt.ukp.inception.recommendation.imls.core.loader.pos.PosAnnotationObjectLoader;
+import de.tudarmstadt.ukp.inception.recommendation.imls.dl4j.pos.BaseConfiguration;
 
 /**
  * Implementation of POS-Tagging using the DL4J library to build a multi-Layer neural net. 
@@ -39,11 +40,11 @@ public class DL4JPosClassificationTool
     private static final Logger logger = LoggerFactory.getLogger(DL4JPosClassificationTool.class);
 
     public DL4JPosClassificationTool(long aRecommenderId, String feature) {
-        this(getCache(), feature, null);
+        this(aRecommenderId, getCache(), feature, null);
     }
 
     public DL4JPosClassificationTool(long aRecommenderId, String feature, AnnotationLayer aLayer) {
-        this(getCache(), feature, aLayer);
+        this(aRecommenderId, getCache(), feature, aLayer);
     }
     
     public static File getCache() {
@@ -52,13 +53,14 @@ public class DL4JPosClassificationTool
         return folder;
     }
             
-    public DL4JPosClassificationTool(File aCache, String feature, AnnotationLayer aLayer)
+    public DL4JPosClassificationTool(long aRecommenderId, File aCache, String feature,
+        AnnotationLayer aLayer)
     {
         super();
         DatasetFactory loader = new DatasetFactory(aCache);
         Dataset ds = null;
-        ClassifierConfiguration<DL4JConfigurationParameters> conf = 
-                new de.tudarmstadt.ukp.inception.recommendation.imls.dl4j.pos.BaseConfiguration();
+        ClassifierConfiguration<DL4JConfigurationParameters> conf = new BaseConfiguration(
+            aRecommenderId);
         try {
             ds = loader.load("glove.6B.50d.dl4jw2v");
             // ds = loader.load("glove.6B.100d.dl4jw2v");

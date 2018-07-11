@@ -27,8 +27,34 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
  */
 public class AjaxPropertySelectionEvent extends AjaxSelectionEvent {
 
-    public AjaxPropertySelectionEvent(AjaxRequestTarget aTarget, KBHandle newSelection) {
+    boolean redrawConceptandPropertyListPanels;
+    
+    public AjaxPropertySelectionEvent(AjaxRequestTarget aTarget, KBHandle newSelection)
+    {
+        this(aTarget, newSelection, false);
+    }
+    
+    public AjaxPropertySelectionEvent(AjaxRequestTarget aTarget, KBHandle newSelection,
+            boolean aRedrawConceptandPropertyListPanels)
+    {
         super(aTarget, newSelection);
-    }   
+        redrawConceptandPropertyListPanels = aRedrawConceptandPropertyListPanels;
+    }
+
+    public boolean isRedrawConceptandPropertyListPanels()
+    {
+        return redrawConceptandPropertyListPanels;
+    }
+
+    public void setRedrawConceptandPropertyListPanels(boolean aRedrawConceptandPropertyListPanels)
+    {
+        redrawConceptandPropertyListPanels = aRedrawConceptandPropertyListPanels;
+    }
+
+    
+
+    
+
+    
 
 }

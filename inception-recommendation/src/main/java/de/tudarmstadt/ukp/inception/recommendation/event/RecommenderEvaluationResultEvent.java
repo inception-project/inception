@@ -19,8 +19,8 @@ package de.tudarmstadt.ukp.inception.recommendation.event;
 
 import org.springframework.context.ApplicationEvent;
 
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.ExtendedResult;
-import de.tudarmstadt.ukp.inception.recommendation.model.Recommender;
 
 public class RecommenderEvaluationResultEvent extends ApplicationEvent
 {

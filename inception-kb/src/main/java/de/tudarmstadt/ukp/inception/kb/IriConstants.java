@@ -18,10 +18,12 @@
 
 package de.tudarmstadt.ukp.inception.kb;
 
-import java.util.ArrayList;
+import static java.util.Arrays.asList;
+
 import java.util.Arrays;
-import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.ValueFactory;
@@ -29,43 +31,73 @@ import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
+import org.eclipse.rdf4j.model.vocabulary.SKOS;
+import org.eclipse.rdf4j.model.vocabulary.XMLSchema;
 
 public class IriConstants
 {
+    public static final String INCEPTION_SCHEMA_NAMESPACE = "http://www.ukp.informatik.tu-darmstadt.de/inception/schema-1.0#";
+    public static final String INCEPTION_NAMESPACE = "http://www.ukp.informatik.tu-darmstadt.de/inception/1.0#";
 
-    public static final String WIKIDATA_NAMESPACE = "https://www.wikidata.org/wiki/";
+    public static final String PREFIX_WIKIDATA_ENTITY = "http://www.wikidata.org/entity/";
+    public static final String PREFIX_WIKIDATA_DIRECT = "http://www.wikidata.org/prop/direct/";
+    public static final String PREFIX_SCHEMA = "http://schema.org/";
+
+    public static final Set<String> IMPLICIT_NAMESPACES = new HashSet<>(Arrays.asList(RDF.NAMESPACE,
+            RDFS.NAMESPACE, XMLSchema.NAMESPACE, OWL.NAMESPACE, INCEPTION_SCHEMA_NAMESPACE));
 
     /**
-     * https://www.wikidata.org/wiki/Q35120
+     * Define "important" URIs to allow for importance-based sorting of statements.
+     */
+    public static final Set<String> IMPORTANT_CONCEPT_URIS = new HashSet<>(
+            Arrays.asList(RDFS.SUBCLASSOF.stringValue()));
+
+    /**
+     * http://www.wikidata.org/entity/Q35120
      */
     public static final IRI WIKIDATA_CLASS;
+
     /**
-     * https://www.wikidata.org/wiki/Property:P279
+     * http://www.wikidata.org/prop/direct/P279
      */
     public static final IRI WIKIDATA_SUBCLASS;
+
     /**
-     * https://www.wikidata.org/wiki/Property:P31
+     * http://www.wikidata.org/prop/direct/P31
      */
     public static final IRI WIKIDATA_TYPE;
+    
+    /**
+     * http://www.wikidata.org/entity/Q18616576
+     */
+    public static final IRI WIKIDATA_PROPERTY_TYPE;
+
+    /**
+     * http://www.schema.org/description
+     */
+    public static final IRI SCHEMA_DESCRIPTION;
 
     public static final List<IRI> CLASS_IRIS;
     public static final List<IRI> SUBCLASS_IRIS;
     public static final List<IRI> TYPE_IRIS;
+    public static final List<IRI> DESCRIPTION_IRIS;
+    public static final List<IRI> LABEL_IRIS;
+    public static final List<IRI> PROPERTY_TYPE_IRIS;
 
     static {
         ValueFactory vf = SimpleValueFactory.getInstance();
-        WIKIDATA_CLASS = vf.createIRI(WIKIDATA_NAMESPACE, "Q35120");
-        WIKIDATA_SUBCLASS = vf.createIRI(WIKIDATA_NAMESPACE, "Property:P279");
-        WIKIDATA_TYPE = vf.createIRI(WIKIDATA_NAMESPACE, "Property:P31");
+        
+        WIKIDATA_CLASS = vf.createIRI(PREFIX_WIKIDATA_ENTITY, "Q35120");
+        WIKIDATA_SUBCLASS = vf.createIRI(PREFIX_WIKIDATA_DIRECT, "P279");
+        WIKIDATA_TYPE = vf.createIRI(PREFIX_WIKIDATA_DIRECT, "P31");
+        WIKIDATA_PROPERTY_TYPE =  vf.createIRI(PREFIX_WIKIDATA_ENTITY, "Q18616576");
+        SCHEMA_DESCRIPTION = vf.createIRI(PREFIX_SCHEMA, "description");
 
-        CLASS_IRIS = buildImmutableList(RDFS.CLASS, OWL.CLASS, WIKIDATA_CLASS);
-        SUBCLASS_IRIS = buildImmutableList(RDFS.SUBCLASSOF, WIKIDATA_SUBCLASS);
-        TYPE_IRIS = buildImmutableList(RDF.TYPE, WIKIDATA_TYPE);
-    }
-
-    private static <T> List<T> buildImmutableList(T... items)
-    {
-        List<T> list = new ArrayList(Arrays.asList(items));
-        return Collections.unmodifiableList(list);
+        CLASS_IRIS = asList(RDFS.CLASS, OWL.CLASS, WIKIDATA_CLASS, SKOS.CONCEPT);
+        SUBCLASS_IRIS = asList(RDFS.SUBCLASSOF, WIKIDATA_SUBCLASS, SKOS.BROADER);
+        TYPE_IRIS = asList(RDF.TYPE, WIKIDATA_TYPE);
+        DESCRIPTION_IRIS = asList(RDFS.COMMENT, SCHEMA_DESCRIPTION);
+        LABEL_IRIS = asList(RDFS.LABEL);
+        PROPERTY_TYPE_IRIS = asList(RDF.PROPERTY, WIKIDATA_PROPERTY_TYPE);
     }
 }

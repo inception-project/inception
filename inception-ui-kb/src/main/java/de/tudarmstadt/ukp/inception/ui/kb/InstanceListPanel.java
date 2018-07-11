@@ -31,6 +31,9 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.eclipse.rdf4j.query.QueryEvaluationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
@@ -41,10 +44,10 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxInstanceSelectionEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxNewInstanceEvent;
-import de.tudarmstadt.ukp.inception.ui.kb.util.WriteProtectionBehavior;
 
 public class InstanceListPanel extends Panel {
     private static final long serialVersionUID = -2431507947235476294L;
+    private static final Logger LOG = LoggerFactory.getLogger(InstanceListPanel.class);
 
     private @SpringBean KnowledgeBaseService kbService;
 
@@ -116,8 +119,15 @@ public class InstanceListPanel extends Panel {
 
     private List<KBHandle> getInstances() {
         if (conceptModel.getObject() != null) {
-            return kbService.listInstances(kbModel.getObject(),
-                    conceptModel.getObject().getIdentifier(), showAll.getObject());
+            try {
+                return kbService.listInstances(kbModel.getObject(),
+                        conceptModel.getObject().getIdentifier(), showAll.getObject());
+            }
+            catch (QueryEvaluationException e) {
+                error("Unable to list instances: " + e.getLocalizedMessage());
+                LOG.error("Unable to list instances.",e);
+                return Collections.emptyList();
+            }
         } else {
             return Collections.emptyList();
         }

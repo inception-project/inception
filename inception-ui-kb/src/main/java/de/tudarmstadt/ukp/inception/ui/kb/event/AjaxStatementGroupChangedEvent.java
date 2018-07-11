@@ -18,10 +18,11 @@
 package de.tudarmstadt.ukp.inception.ui.kb.event;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.wicketstuff.event.annotation.AbstractAjaxAwareEvent;
 
 import de.tudarmstadt.ukp.inception.ui.kb.stmt.StatementGroupBean;
 
-public class AjaxStatementGroupChangedEvent extends AjaxEvent {
+public class AjaxStatementGroupChangedEvent extends AbstractAjaxAwareEvent {
     
     private boolean deleted;
     

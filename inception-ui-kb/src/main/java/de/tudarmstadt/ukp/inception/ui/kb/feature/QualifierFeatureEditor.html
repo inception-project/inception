@@ -35,13 +35,15 @@
               <span wicket:id="label" class="form-control text-nowrap feature-editor-slot-label"></span>
             </div>
               <div class="col-sm-12">
-                  <select style="width: 100%;" wicket:id="value"></select>
+                  <input style="width: 100%;" wicket:id="value" type="text"
+                      wicket:message="placeholder:value.null.placeholder"></input>
               </div>
           </div>
         </div>
         <div style="display: table;">
           <div style="display: table-cell; width: 100%;">
-            <select wicket:id="newRole" style="width: 100%;"></select>
+              <input style="width: 100%;" wicket:id="newRole" type="text"
+                  wicket:message="placeholder:newRole.null.placeholder"></input>
           </div>
           <div class="text-nowrap" style="display: table-cell; padding-left: 15px;">
             <button wicket:id="add" type = "submit" class="btn btn-xs">Add</button>

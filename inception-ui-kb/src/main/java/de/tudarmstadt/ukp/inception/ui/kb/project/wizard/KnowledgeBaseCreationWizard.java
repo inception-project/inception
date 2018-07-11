@@ -17,15 +17,13 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.project.wizard;
 
-import static de.tudarmstadt.ukp.inception.kb.KnowledgeBases.KNOWLEDGE_BASES;
-
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxEventBehavior;
@@ -40,6 +38,7 @@ import org.apache.wicket.extensions.wizard.dynamic.DynamicWizardStep;
 import org.apache.wicket.extensions.wizard.dynamic.IDynamicWizardStep;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
+import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.RadioGroup;
 import org.apache.wicket.markup.html.form.RequiredTextField;
 import org.apache.wicket.markup.html.form.TextField;
@@ -49,29 +48,30 @@ import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.validation.IValidator;
 import org.apache.wicket.validation.ValidationError;
-import org.eclipse.rdf4j.model.IRI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.googlecode.wicket.kendo.ui.form.combobox.ComboBox;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.button.Buttons;
 import de.agilecoders.wicket.core.markup.html.bootstrap.form.radio.BootstrapRadioGroup;
 import de.agilecoders.wicket.core.markup.html.bootstrap.form.radio.EnumRadioChoiceRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.inception.kb.IriConstants;
+import de.tudarmstadt.ukp.inception.app.bootstrap.BootstrapWizard;
+import de.tudarmstadt.ukp.inception.app.bootstrap.BootstrapWizardButtonBar;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 import de.tudarmstadt.ukp.inception.kb.io.FileUploadHelper;
-import de.tudarmstadt.ukp.inception.ui.kb.project.EnrichedKnowledgeBase;
-import de.tudarmstadt.ukp.inception.ui.kb.project.EnrichedKnowledgeBaseUtils;
+import de.tudarmstadt.ukp.inception.kb.reification.Reification;
+import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
+import de.tudarmstadt.ukp.inception.ui.kb.project.KnowledgeBaseIriPanel;
+import de.tudarmstadt.ukp.inception.ui.kb.project.KnowledgeBaseIriPanelMode;
 import de.tudarmstadt.ukp.inception.ui.kb.project.KnowledgeBaseListPanel;
+import de.tudarmstadt.ukp.inception.ui.kb.project.KnowledgeBaseWrapper;
+import de.tudarmstadt.ukp.inception.ui.kb.project.Validators;
 
 /**
  * Wizard for registering a new knowledge base for a project.
@@ -99,15 +99,15 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
     private final Map<String, File> uploadedFiles;
     private final IModel<Project> projectModel;
     private final DynamicWizardModel wizardModel;
-    private final CompoundPropertyModel<EnrichedKnowledgeBase> wizardDataModel;
-    
+    private final CompoundPropertyModel<KnowledgeBaseWrapper> wizardDataModel;
+
     public KnowledgeBaseCreationWizard(String id, IModel<Project> aProjectModel) {
         super(id);
-
+        
         uploadedFiles = new HashMap<>();
 
         projectModel = aProjectModel;
-        wizardDataModel = new CompoundPropertyModel<>(new EnrichedKnowledgeBase());
+        wizardDataModel = new CompoundPropertyModel<>(new KnowledgeBaseWrapper());
 
         wizardModel = new DynamicWizardModel(new TypeStep(null, wizardDataModel));
         wizardModel.setLastVisible(false);
@@ -121,15 +121,26 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
 
         private static final long serialVersionUID = 2632078392967948962L;
         
-        private CompoundPropertyModel<EnrichedKnowledgeBase> model;
+        private CompoundPropertyModel<KnowledgeBaseWrapper> model;
 
         public TypeStep(IDynamicWizardStep previousStep,
-                CompoundPropertyModel<EnrichedKnowledgeBase> model) {
+                CompoundPropertyModel<KnowledgeBaseWrapper> model) {
             super(previousStep, "", "", model);
             this.model = model;
 
             add(nameField("name", "kb.name"));
             add(repositoryTypeRadioButtons("type", "kb.type"));
+            add(selectReificationStrategy("reification", "kb.reification"));
+        }
+
+        private DropDownChoice<Reification> selectReificationStrategy(String id, String property)
+        {
+            final List<Reification> reificationList = Arrays.asList(Reification.values());
+
+            DropDownChoice<Reification> reificationDropDownChoice = new DropDownChoice<>(id,
+                    model.bind(property), reificationList);
+            reificationDropDownChoice.setRequired(true);
+            return reificationDropDownChoice;
         }
 
         @Override
@@ -196,12 +207,12 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
 
         private static final long serialVersionUID = 8212277960059805657L;
         
-        private CompoundPropertyModel<EnrichedKnowledgeBase> model;
+        private CompoundPropertyModel<KnowledgeBaseWrapper> model;
         private FileUploadField fileUpload;
         private boolean completed;
 
         public LocalRepositoryStep(IDynamicWizardStep previousStep,
-                CompoundPropertyModel<EnrichedKnowledgeBase> model) {
+                CompoundPropertyModel<KnowledgeBaseWrapper> model) {
             super(previousStep);
             this.model = model;
             completed = true;
@@ -263,39 +274,60 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
 
         private static final long serialVersionUID = -707885872360370015L;
 
-        private CompoundPropertyModel<EnrichedKnowledgeBase> model;
+        private CompoundPropertyModel<KnowledgeBaseWrapper> model;
 
         public RemoteRepositoryStep(IDynamicWizardStep previousStep,
-                CompoundPropertyModel<EnrichedKnowledgeBase> model) {
+                CompoundPropertyModel<KnowledgeBaseWrapper> model) {
             super(previousStep, "", "", model);
             this.model = model;
             
             RequiredTextField<String> urlField = new RequiredTextField<>("url");
-            urlField.add(EnrichedKnowledgeBaseUtils.URL_VALIDATOR);
+            urlField.add(Validators.URL_VALIDATOR);
             add(urlField);
             
+            Map<String, KnowledgeBaseProfile> profiles = new HashMap<>();
+            try {
+                profiles = kbService.readKnowledgeBaseProfiles();
+            }
+            catch (IOException e) {
+                error("Unable to read knowledge base profiles" + e.getMessage());
+                log.error("Unable to read knowledge base profiles", e);
+            }
             // for up to MAXIMUM_REMOTE_REPO_SUGGESTIONS of knowledge bases, create a link which
             // directly fills in the URL field (convenient for both developers AND users :))
-            List<String> suggestions = new ArrayList<>(KNOWLEDGE_BASES.keySet());
+            List<KnowledgeBaseProfile> suggestions = new ArrayList<>(profiles.values());
             suggestions = suggestions.subList(0,
                     Math.min(suggestions.size(), MAXIMUM_REMOTE_REPO_SUGGESTIONS));
-            add(new ListView<String>("suggestions", suggestions) {
+            add(new ListView<KnowledgeBaseProfile>("suggestions", suggestions) {
 
                 private static final long serialVersionUID = 4179629475064638272L;
 
                 @Override
-                protected void populateItem(ListItem<String> item) {
+                protected void populateItem(ListItem<KnowledgeBaseProfile> item) {
                     // add a link for one knowledge base with proper label
                     LambdaAjaxLink link = new LambdaAjaxLink("suggestionLink", t -> {
-                        model.getObject().setUrl(KNOWLEDGE_BASES.get(item.getModelObject()));
+                        // set all the fields according to the chosen profile
+                        model.getObject().setUrl(item.getModelObject().getSparqlUrl());
+                        model.getObject().getKb()
+                                .setClassIri(item.getModelObject().getMapping().getClassIri());
+                        model.getObject().getKb().setSubclassIri(
+                                item.getModelObject().getMapping().getSubclassIri());
+                        model.getObject().getKb()
+                                .setTypeIri(item.getModelObject().getMapping().getTypeIri());
+                        model.getObject().getKb().setDescriptionIri(
+                                item.getModelObject().getMapping().getDescriptionIri());
+                        model.getObject().getKb().setPropertyTypeIri(
+                                item.getModelObject().getMapping().getPropertyTypeIri());
+                        model.getObject().getKb()
+                                .setLabelIri(item.getModelObject().getMapping().getLabelIri());
+
                         t.add(urlField);
                     });
-                    link.add(new Label("suggestionLabel", item.getModelObject()));
+                    link.add(new Label("suggestionLabel", item.getModelObject().getName()));
                     item.add(link);
                 }
             });
-            add(new CheckBox("supportConceptLinking",
-                    new PropertyModel<Boolean>(model, "supportConceptLinking")));
+            add(new CheckBox("supportConceptLinking", model.bind("kb.supportConceptLinking")));
         }
         
         @Override
@@ -320,54 +352,40 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
     /**
      * Wizard step asking for the knowledge base schema
      */
-    private final class SchemaConfigurationStep extends DynamicWizardStep {
+    private final class SchemaConfigurationStep
+        extends DynamicWizardStep
+    {
         private static final long serialVersionUID = -12355235971946712L;
 
-        private final CompoundPropertyModel<EnrichedKnowledgeBase> model;
-        private boolean completed;
+        private final CompoundPropertyModel<KnowledgeBaseWrapper> model;
 
         public SchemaConfigurationStep(IDynamicWizardStep previousStep,
-                                       CompoundPropertyModel<EnrichedKnowledgeBase> aModel)
+                CompoundPropertyModel<KnowledgeBaseWrapper> aModel)
         {
             super(previousStep, "", "", aModel);
             model = aModel;
-            completed = true;
 
-            add(buildComboBox("classIri", model, IriConstants.CLASS_IRIS));
-            add(buildComboBox("subclassIri", model, IriConstants.SUBCLASS_IRIS));
-            add(buildComboBox("typeIri", model, IriConstants.TYPE_IRIS));
-        }
-
-        private ComboBox<String> buildComboBox(String name,
-                                               CompoundPropertyModel<EnrichedKnowledgeBase> model,
-                                               List<IRI> iris) {
-            List<String> choices = iris.stream()
-                .map(IRI::stringValue)
-                .collect(Collectors.toList());
-            ComboBox<String> comboBox = new ComboBox<>(name, model.bind(name), choices);
-            comboBox.setRequired(true);
-            comboBox.add(EnrichedKnowledgeBaseUtils.URL_VALIDATOR);
-            comboBox.setDefaultModelObject(choices.get(0));
-            return comboBox;
+            add(new KnowledgeBaseIriPanel("iriPanel", model, KnowledgeBaseIriPanelMode.WIZARD));
         }
 
         @Override
         public void applyState()
-        {
-            EnrichedKnowledgeBase ekb = wizardDataModel.getObject();
-            ekb.getKb().setProject(projectModel.getObject());
+        {   
+            KnowledgeBaseWrapper wrapper = wizardDataModel.getObject();
+            wrapper.getKb().setProject(projectModel.getObject());
        
             try {
-                EnrichedKnowledgeBaseUtils.registerEkb(ekb, kbService);
+                KnowledgeBaseWrapper.registerKb(wrapper, kbService);
             } catch (Exception e) {
                 error(e.getMessage());
+                
             }
         }
 
         @Override
         public boolean isComplete()
         {
-            return completed;
+            return true;
         }
 
         @Override
@@ -400,7 +418,7 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
                     public void onAfterSubmit() {
                         // update the list panel and close the dialog - this must be done in
                         // onAfterSubmit, otherwise it cancels out the call to onFinish()
-
+                        
                         IWizardStep step = wizardModel.getActiveStep();
                         if (step.isComplete()) {
                             AjaxRequestTarget target = RequestCycle.get()
@@ -430,6 +448,4 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
         };
         return buttonBar;
     }
-
-
 }
