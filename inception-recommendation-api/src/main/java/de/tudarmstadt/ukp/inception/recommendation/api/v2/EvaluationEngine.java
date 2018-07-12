@@ -1,4 +1,4 @@
-package de.tudarmstadt.ukp.inception.recommendation.api.foo;
+package de.tudarmstadt.ukp.inception.recommendation.api.v2;
 
 import org.apache.uima.jcas.JCas;
 

@@ -1,4 +1,4 @@
-package de.tudarmstadt.ukp.inception.recommendation.api.foo;
+package de.tudarmstadt.ukp.inception.recommendation.api.v2;
 
 public interface EvaluationStrategy {
     void setTotal(int aTotal);

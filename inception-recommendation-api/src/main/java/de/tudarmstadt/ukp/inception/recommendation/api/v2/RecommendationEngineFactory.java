@@ -1,8 +1,8 @@
-package de.tudarmstadt.ukp.inception.recommendation.api.foo;
+package de.tudarmstadt.ukp.inception.recommendation.api.v2;
 
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 
-public interface RecommondationEngineFactory {
+public interface RecommendationEngineFactory {
     RecommendationEngine build(Recommender aRecommender);
     String getEvaluationUnit();
     String getName();
