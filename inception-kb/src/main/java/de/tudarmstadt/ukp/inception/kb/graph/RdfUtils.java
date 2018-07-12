@@ -171,7 +171,6 @@ public class RdfUtils
             "    VALUES ?prop { rdf:Property owl:ObjectProperty owl:DatatypeProperty owl:AnnotationProperty} }",
             filter,
             "} LIMIT 1000");
-        System.out.println(QUERY);
         TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
         if (subj != null) {
             tupleQuery.setBinding("s", subj);
