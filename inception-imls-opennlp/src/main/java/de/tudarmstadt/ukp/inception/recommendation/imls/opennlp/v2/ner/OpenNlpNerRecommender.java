@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.type.PredictedSpan;
 import de.tudarmstadt.ukp.inception.recommendation.api.v2.EvaluationStrategy;
 import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommenderContext;
@@ -73,12 +74,12 @@ public class OpenNlpNerRecommender
         TokenNameFinderModel model = aContext.get(KEY_MODEL);
         NameFinderME finder = new NameFinderME(model);
 
-        Type tokenType = CasUtil.getType(aCas, Sentence.class);
-        Type predictionType = CasUtil.getAnnotationType(aCas, "Prediction");
-        Feature confidenceFeature = predictionType.getFeatureByBaseName("confidence");
+        Type sentenceType = CasUtil.getType(aCas, Sentence.class);
+        Type predictionType = CasUtil.getAnnotationType(aCas, PredictedSpan.class);
+        Feature confidenceFeature = predictionType.getFeatureByBaseName("score");
         Feature labelFeature = predictionType.getFeatureByBaseName("label");
 
-        for (AnnotationFS sentence : CasUtil.select(aCas, tokenType)) {
+        for (AnnotationFS sentence : CasUtil.select(aCas, sentenceType)) {
             List<AnnotationFS> tokenAnnotations = extractTokens(aCas, sentence);
             String[] tokens = tokenAnnotations.stream()
                 .map(AnnotationFS::getCoveredText)
@@ -88,7 +89,7 @@ public class OpenNlpNerRecommender
 
             for (Span prediction : predictions) {
                 int begin = tokenAnnotations.get(prediction.getStart()).getBegin();
-                int end = tokenAnnotations.get(prediction.getEnd()).getEnd();
+                int end = tokenAnnotations.get(prediction.getEnd() - 1).getEnd();
                 AnnotationFS annotation = aCas.createAnnotation(predictionType, begin, end);
                 annotation.setDoubleValue(confidenceFeature, prediction.getProb());
                 annotation.setStringValue(labelFeature, prediction.getType());
