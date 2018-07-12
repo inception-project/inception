@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.ui.kb.value.editor;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -26,10 +25,7 @@ import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
-import org.eclipse.rdf4j.sail.memory.model.MemIRI;
-import org.eclipse.rdf4j.sail.memory.model.MemValueFactory;
 
 import com.googlecode.wicket.jquery.core.JQueryBehavior;
 import com.googlecode.wicket.jquery.core.renderer.TextRenderer;
@@ -38,7 +34,6 @@ import com.googlecode.wicket.kendo.ui.form.autocomplete.AutoCompleteTextField;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.KendoChoiceDescriptionScriptReference;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
@@ -66,11 +61,12 @@ public class IRIValueEditor
             {
                 List<KBHandle> concepts = kbService.listConcepts(kbModel.getObject(), true);
                 /*
-                SimpleValueFactory vf = SimpleValueFactory.getInstance();
-                MemValueFactory mvf = new MemValueFactory();
-                List<KBHandle> concepts = kbService.listConcepts(kbModel.getObject(), true);
-                List<MemIRI> choices = concepts.stream().map(c -> (MemIRI)mvf.createIRI(c.getIdentifier()))
-                        .collect(Collectors.toList());*/
+                 * SimpleValueFactory vf = SimpleValueFactory.getInstance(); MemValueFactory mvf =
+                 * new MemValueFactory(); List<KBHandle> concepts =
+                 * kbService.listConcepts(kbModel.getObject(), true); List<MemIRI> choices =
+                 * concepts.stream().map(c -> (MemIRI)mvf.createIRI(c.getIdentifier()))
+                 * .collect(Collectors.toList());
+                 */
                 return concepts;
             }
             

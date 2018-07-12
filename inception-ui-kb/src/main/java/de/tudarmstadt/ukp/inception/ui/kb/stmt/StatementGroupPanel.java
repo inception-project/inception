@@ -50,6 +50,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
 
+import com.googlecode.wicket.jquery.core.Options;
 import com.googlecode.wicket.kendo.ui.widget.tooltip.TooltipBehavior;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
@@ -200,10 +201,7 @@ public class StatementGroupPanel extends Panel {
             LambdaAjaxLink propertyLink = new LambdaAjaxLink("propertyLink",
                     this::actionPropertyLinkClicked);
             propertyLink.add(new Label("property", groupModel.bind("property.uiLabel")));
-            propertyLink.add(new TooltipBehavior(groupModel.bind("property.identifier"))
-                    .setOption("autoHide", false));
             form.add(propertyLink);
-
 
             // TODO what about handling type intersection when multiple range statements are
             // present?
@@ -212,6 +210,14 @@ public class StatementGroupPanel extends Panel {
                     groupModel.getObject().getProperty().getIdentifier());
             IModel<KBProperty> propertyModel = Model.of(property.orElse(null));
 
+            WebMarkupContainer statementIdentifier = new WebMarkupContainer("statementIdtext"); 
+            TooltipBehavior tip = new TooltipBehavior();
+            tip.setOption("autoHide", false);
+            tip.setOption("content",
+                    Options.asString((groupModel.bind("property.identifier").getObject())));
+            tip.setOption("showOn", Options.asString("click"));
+            statementIdentifier.add(tip);
+            form.add(statementIdentifier);
             RefreshingView<KBStatement> statementList = new RefreshingView<KBStatement>(
                     "statementList") {
                 private static final long serialVersionUID = 5811425707843441458L;
