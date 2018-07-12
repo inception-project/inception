@@ -167,7 +167,8 @@ public class RdfUtils
             "SELECT * WHERE { ",
             " {?s ?p ?o .}",
             " UNION ",
-            " {?s a owl:ObjectProperty .}",
+            " {?s a ?prop .",
+            "    VALUES ?prop { rdf:Property owl:ObjectProperty owl:DatatypeProperty owl:AnnotationProperty} }",
             filter,
             "} LIMIT 1000");
         System.out.println(QUERY);
