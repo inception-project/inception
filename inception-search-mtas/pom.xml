@@ -254,5 +254,11 @@
     	<artifactId>spring-boot-starter-web</artifactId>
     	<scope>test</scope>
     </dependency>
+    <dependency>
+    	<groupId>net.jodah</groupId>
+    	<artifactId>concurrentunit</artifactId>
+    	<version>0.4.3</version>
+    	<scope>test</scope>
+    </dependency>
   </dependencies>  
 </project>

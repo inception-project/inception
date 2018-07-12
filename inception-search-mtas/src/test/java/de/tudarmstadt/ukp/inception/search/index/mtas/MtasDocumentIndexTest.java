@@ -18,9 +18,11 @@
 package de.tudarmstadt.ukp.inception.search.index.mtas;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -28,11 +30,14 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 
+import org.apache.uima.UIMAException;
 import org.junit.Before;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
@@ -77,7 +82,8 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
 import de.tudarmstadt.ukp.dkpro.core.io.text.TextReader;
 import de.tudarmstadt.ukp.dkpro.core.io.text.TextWriter;
-import de.tudarmstadt.ukp.inception.search.ExecutionException;
+import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
+import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseServiceImpl;
 import de.tudarmstadt.ukp.inception.search.SearchResult;
 import de.tudarmstadt.ukp.inception.search.SearchService;
 import de.tudarmstadt.ukp.inception.search.SearchServiceImpl;
@@ -85,6 +91,7 @@ import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexFactory;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexRegistry;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexRegistryImpl;
 import de.tudarmstadt.ukp.inception.search.scheduling.IndexScheduler;
+import net.jodah.concurrentunit.Waiter;
 
 /**
  * The Class MtasDocumentIndexTest.
@@ -93,7 +100,6 @@ import de.tudarmstadt.ukp.inception.search.scheduling.IndexScheduler;
 @RunWith(SpringRunner.class)
 @EnableAutoConfiguration
 @SpringBootTest(webEnvironment = WebEnvironment.MOCK)
-//@EnableWebSecurity
 @EntityScan({ "de.tudarmstadt.ukp.clarin.webanno.model",
         "de.tudarmstadt.ukp.inception.search.model",
         "de.tudarmstadt.ukp.clarin.webanno.security.model" })
@@ -103,8 +109,14 @@ import de.tudarmstadt.ukp.inception.search.scheduling.IndexScheduler;
 @Transactional
 public class MtasDocumentIndexTest
 {
-//    @Rule
-//    public TemporaryFolder temporaryFolder = new TemporaryFolder();
+    private final Logger log = LoggerFactory.getLogger(getClass());
+    
+    // Number of miliseconds to wait for the indexing to finish. This time must be enough
+    // to allow the index be built before the query is made. Otherwise, it could affect the
+    // test results. If this happens, a largest value could allow the test to pass.
+    private final int WAIT_TIME = 3000;
+
+    private final String temporaryFolderPath = "target/MtasDocumentIndexTest";
 
     private @Autowired UserDao userRepository;
 
@@ -112,43 +124,40 @@ public class MtasDocumentIndexTest
     private @Autowired DocumentService documentService;
     private @Autowired SearchService searchService;
     private @Autowired AnnotationSchemaService annotationSchemaService;
-
-//    @Autowired
-//    private TestEntityManager testEntityManager;
-
-    // If this is not static, for some reason the value is re-set to false before a
-    // test method is invoked. However, the DB is not reset - and it should not be.
-    // So we need to make this static to ensure that we really only create the user
-    // in the DB and clean the test repository once!
-    private static boolean initialized = false;
-
-//    private SearchServiceImpl ssi;
     
     @Before
     public void setUp()
     {
-        if (!initialized) {
-            userRepository.create(new User("admin", Role.ROLE_ADMIN));
-            initialized = true;
+        userRepository.create(new User("admin", Role.ROLE_ADMIN));
 
-//            EntityManager entityManager = testEntityManager.getEntityManager();
-
-//            ssi = new SearchServiceImpl(temporaryFolder.getRoot(), entityManager);
-            
-            FileSystemUtils.deleteRecursively(new File("target/MtasDocumentIndexTest"));
-        }
+        FileSystemUtils.deleteRecursively(new File(temporaryFolderPath));
     }
 
     @Test
     public void testSimpleQuery() throws Exception
     {
-        Project project = new Project();
+        log.info("Entered testSimpleQuery");
 
+        Project project = new Project();
         project.setName("TestSimpleQuery");
 
-        projectService.createProject(project);
-
-        annotationSchemaService.initializeProject(project);
+        Waiter createProjectWaiter = new Waiter();
+        
+        // Start thread to create and initialize project
+        new Thread(() -> {
+            try {
+                projectService.createProject(project);
+                annotationSchemaService.initializeProject(project);
+            }
+            catch (IOException e) {
+                e.printStackTrace();
+            }
+            createProjectWaiter.assertTrue(true);
+            createProjectWaiter.resume();
+        }).start();
+        
+        // Wait for thread to complete
+        createProjectWaiter.await();
 
         SourceDocument sourceDocument = new SourceDocument();
 
@@ -161,27 +170,50 @@ public class MtasDocumentIndexTest
         InputStream fileStream = new ByteArrayInputStream(
                 fileContent.getBytes(StandardCharsets.UTF_8));
 
+        Waiter uploadWaiter = new Waiter();
+
+        // Start thread to upload the document
+        new Thread(() -> {
+            try {
+                documentService.uploadSourceDocument(fileStream, sourceDocument);
+            }
+            catch (UIMAException | IOException e) {
+                e.printStackTrace();
+            }
+            
+            try {
+                // Wait some time so that the document can be indexed
+                Thread.sleep(WAIT_TIME);
+                
+                // Test if the index has been created
+                if (searchService.isIndexValid(project)) {
+                    log.info("**************** Index is valid");
+                    uploadWaiter.assertTrue(true);
+                } else {
+                    log.info("**************** Index is NOT valid");
+                    uploadWaiter.assertTrue(false);
+                }
+            }
+            catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            
+            uploadWaiter.resume();
+        }).start();
+
+        // Wait for thread to complete
+        uploadWaiter.await();
+
         User user = userRepository.get("admin");
-
-        documentService.uploadSourceDocument(fileStream, sourceDocument);
-
+        
         String query = "Galicia";
 
         List<SearchResult> results = null;
-        
-        int i = 0;
-        Thread.sleep(2000);
-        while (i < 1) {
-            try {
-                results = (ArrayList<SearchResult>) searchService.query(user,
-                        project, query);
-            }
-            catch (ExecutionException e) {
-                i++;
-//                Thread.sleep(5000);
-            }
-        }
+    
+        // Execute query
+        results = (ArrayList<SearchResult>) searchService.query(user, project, query);
 
+        // Test results
         SearchResult expectedResult = new SearchResult();
         expectedResult.setDocumentId(sourceDocument.getId());
         expectedResult.setDocumentTitle("test");
@@ -196,20 +228,37 @@ public class MtasDocumentIndexTest
         ArrayList<SearchResult> expectedResults = new ArrayList<SearchResult>();
         expectedResults.add(expectedResult);
 
-        assertEquals(results.get(0), expectedResult);
-        assertEquals(results.size(), 1);
+        assertNotNull(results);
+        if (results != null) {
+            assertEquals(1, results.size());
+            assertEquals(expectedResult, results.get(0));
+        }
     }
 
-//    @Test
+    @Test
     public void testAnnotationQuery() throws Exception
     {
         Project project = new Project();
 
         project.setName("TestAnnotationQuery");
 
-        projectService.createProject(project);
-
-        annotationSchemaService.initializeProject(project);
+        Waiter createProjectWaiter = new Waiter();
+        
+        // Start thread to create and initialize project
+        new Thread(() -> {
+            try {
+                projectService.createProject(project);
+                annotationSchemaService.initializeProject(project);
+            }
+            catch (IOException e) {
+                e.printStackTrace();
+            }
+            createProjectWaiter.assertTrue(true);
+            createProjectWaiter.resume();
+        }).start();
+        
+        // Wait for thread to complete
+        createProjectWaiter.await();
 
         SourceDocument sourceDocument = new SourceDocument();
 
@@ -222,13 +271,50 @@ public class MtasDocumentIndexTest
         InputStream fileStream = new ByteArrayInputStream(
                 fileContent.getBytes(StandardCharsets.UTF_8));
 
+        Waiter uploadWaiter = new Waiter();
+
+        // Start thread to upload the document
+        new Thread(() -> {
+            try {
+                documentService.uploadSourceDocument(fileStream, sourceDocument);
+            }
+            catch (UIMAException | IOException e) {
+                e.printStackTrace();
+            }
+
+            try {
+                // Wait some time so that the document can be indexed
+                Thread.sleep(WAIT_TIME);
+                
+                // Test if the index has been created
+                if (searchService.isIndexValid(project)) {
+                    log.info("**************** Index is valid");
+                    uploadWaiter.assertTrue(true);
+                } else {
+                    log.info("**************** Index is NOT valid");
+                    uploadWaiter.assertTrue(false);
+                }
+            }
+            catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            
+            uploadWaiter.resume();
+        }).start();
+
+        // Wait for thread to complete
+        uploadWaiter.await();
+
         User user = userRepository.get("admin");
         String query = "Galicia";
 
-        documentService.uploadSourceDocument(fileStream, sourceDocument);
-
+//        AnnotationDocument annotationDocument = documentService
+//                .createOrGetAnnotationDocument(sourceDocument, user);
+        
         ArrayList<SearchResult> results = (ArrayList<SearchResult>) searchService.query(user,
                 project, query);
+
+        // Test results
 
         SearchResult expectedResult = new SearchResult();
         expectedResult.setDocumentId(sourceDocument.getId());
@@ -252,6 +338,7 @@ public class MtasDocumentIndexTest
     public static class TestContext
     {
         @Autowired ApplicationEventPublisher applicationEventPublisher;
+        private final String temporaryFolderPath = "target/MtasDocumentIndexTest";
 
         @Bean
         public ProjectService projectService()
@@ -308,6 +395,12 @@ public class MtasDocumentIndexTest
         public UserDao userRepository()
         {
             return new UserDaoImpl();
+        }
+
+        @Bean
+        public KnowledgeBaseService knowledgeBaseService()
+        {
+            return new KnowledgeBaseServiceImpl(new File(temporaryFolderPath));
         }
 
         @Bean

@@ -595,15 +595,18 @@ public class MtasDocumentIndex
         if (!isOpen) {
             // Only open if it is not already open
             try {
-                log.info("Opening index for project " + project.getName());
+                log.info("indexWriter was not open. Opening it for project " + project.getName());
 
                 indexWriter = openLuceneIndex(getIndexDir());
                 indexWriter.commit();
-                log.info("Index has been opened for project " + project.getName());
+
+                log.info("indexWriter has been opened for project " + project.getName());
             }
             catch (Exception e) {
-                log.error("Unable to open index", e);
+                log.error("Unable to open indexWriter", e);
             }
+        } else {
+            log.info("indexWriter is already open for project " + project.getName());
         }
     }
 
@@ -621,12 +624,17 @@ public class MtasDocumentIndex
             FileUtils.forceMkdir(indexDir);
 
             // Open the index
+            log.info("Opening index for project " + project.getName());
             openPhysicalIndex();
-
-            // Index all documents of the project
-            log.info("Indexing all documents in the project " + project.getName());
-            indexAllDocuments();
-            log.info("All documents have been indexed in the project " + project.getName());
+            
+            if (isOpen()) {
+                // Index all documents of the project
+                log.info("Indexing all documents in the project " + project.getName());
+                indexAllDocuments();
+                log.info("All documents have been indexed in the project " + project.getName());
+            } else {
+                log.info("Index has not been opened. No documents have been indexed.");
+            }
         }
         catch (Exception e) {
             log.error("Error creating index for project " + project.getName(), e);

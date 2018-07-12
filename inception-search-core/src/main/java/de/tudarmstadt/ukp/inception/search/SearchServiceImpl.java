@@ -382,4 +382,16 @@ public class SearchServiceImpl
             this.deleteIndex(indexObject);
         }
     }
+    
+    @Override
+    public boolean isIndexValid(Project aProject)
+    {
+        if (indexes.containsKey(aProject.getId())) {
+            return !indexes.get(aProject.getId()).getInvalid();
+        }
+        else {
+            return false;
+        }
+    }
+
 }
