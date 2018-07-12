@@ -59,8 +59,8 @@
   <properties>
     <webanno.version>3.5.0-SNAPSHOT</webanno.version>
     <dkpro.version>1.9.2</dkpro.version>
-    <spring.version>5.0.4.RELEASE </spring.version>
-    <spring.boot.version>1.5.13.RELEASE</spring.boot.version>
+    <spring.version>5.0.7.RELEASE</spring.version>
+    <spring.boot.version>1.5.14.RELEASE</spring.boot.version>
     <wicket.version>7.10.0</wicket.version>
     <wicket-jquery-ui.version>7.10.1</wicket-jquery-ui.version>
     <lucene.version>7.1.0</lucene.version>
