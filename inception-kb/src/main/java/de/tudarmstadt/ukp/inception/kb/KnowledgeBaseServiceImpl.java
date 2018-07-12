@@ -682,6 +682,26 @@ public class KnowledgeBaseServiceImpl
     }
     
     @Override
+    public List<KBHandle> listDomainProperties(KnowledgeBase kb, String aDomain,
+            boolean aIncludeInferred, boolean aAll)
+        throws QueryEvaluationException
+    {
+        List<KBHandle> resultList = read(kb, (conn) -> {
+            ValueFactory vf = conn.getValueFactory();
+            String QUERY = SPARQLQueryStore.PROPERTYLIST_DOMAIN_DEPENDENT;
+            TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
+            tupleQuery.setBinding("aDomain", vf.createIRI(aDomain));
+            tupleQuery.setBinding("pLABEL", kb.getLabelIri());
+            tupleQuery.setIncludeInferred(aIncludeInferred);
+
+            return evaluateListQuery(tupleQuery, aAll);
+        });
+        
+        resultList.sort(Comparator.comparing(KBObject::getUiLabel));
+        return resultList;
+    }
+    
+    @Override
     public List<KBHandle> listRootConcepts(KnowledgeBase kb, boolean aAll)
         throws QueryEvaluationException
     {

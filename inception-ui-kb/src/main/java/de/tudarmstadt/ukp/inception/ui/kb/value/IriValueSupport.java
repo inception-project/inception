@@ -25,6 +25,7 @@ import org.apache.wicket.model.IModel;
 import org.eclipse.rdf4j.model.IRI;
 import org.springframework.stereotype.Component;
 
+import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
@@ -64,7 +65,8 @@ public class IriValueSupport
             return aStatement.getValue() instanceof IRI;
         }
         else {
-            return aStatement.getInstance() instanceof IRI; 
+            return aStatement.getInstance() instanceof IRI
+                    || aStatement.getInstance() instanceof KBHandle;
         }
     }
 

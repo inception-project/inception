@@ -170,7 +170,6 @@ public class RdfUtils
             " {?s a owl:ObjectProperty .}",
             filter,
             "} LIMIT 1000");
-        System.out.println(QUERY);
         TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
         if (subj != null) {
             tupleQuery.setBinding("s", subj);

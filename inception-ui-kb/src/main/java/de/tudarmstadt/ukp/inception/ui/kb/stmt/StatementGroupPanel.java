@@ -171,8 +171,13 @@ public class StatementGroupPanel extends Panel {
 
             List<KBHandle> properties = new ArrayList<>();
             try {
-                properties = kbService.listProperties(groupModel.getObject().getKb(),
-                        detailPreference == StatementDetailPreference.ALL);
+                properties = kbService.listDomainProperties(groupModel.getObject().getKb(),
+                        bean.getInstance().getIdentifier(), true, true);
+                // Kept here to avoid fail case scenario for WikiData
+                if (properties.isEmpty()) {
+                    properties = kbService.listProperties(groupModel.getObject().getKb(),
+                            detailPreference == StatementDetailPreference.ALL);
+                }                
             }
             catch (QueryEvaluationException e) {
                 error("Unable to list properties: " + e.getLocalizedMessage());

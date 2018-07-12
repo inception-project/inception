@@ -324,6 +324,9 @@ public interface KnowledgeBaseService
     List<KBHandle> listProperties(KnowledgeBase kb, IRI aType, boolean aIncludeInferred, boolean
             aAll);
 
+    List<KBHandle> listDomainProperties(KnowledgeBase kb, String aDomain, boolean aIncludeInferred,
+            boolean aAll);
+    
     /**
      * Adds a new qualifier in the given knowledge base. Does
      * nothing if the knowledge base is read only.
