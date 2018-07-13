@@ -50,13 +50,13 @@ import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 public class KnowledgeBaseServiceTest
 {
     private static final String PROJECT_NAME = "Test project";
-    private String ROOT_KB_NAME = "TestKB";
+    private static String ROOT_KB_NAME = "TestKB";
 
-    private KnowledgeBaseServiceImpl sut;
-    private Project project;
-    private KnowledgeBase kb;
+    private static KnowledgeBaseServiceImpl sut;
+    private static Project project;
+    private static KnowledgeBase kb;
     private TestFixtures testFixtures;
-    private Reification reification;
+    private static Reification reification;
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -90,6 +90,52 @@ public class KnowledgeBaseServiceTest
         return Arrays.stream(Reification.values()).map(r -> new Object[] { r })
                 .collect(Collectors.toList());
     }
+    
+    
+    @Parameterized.Parameters(name = "Reification = {0}")
+    public static Collection<Object[]> dataKBSettings()
+    {
+        
+        String kbProfile = "wikidata";
+        String kbName = String.join("_", ROOT_KB_NAME, "OWL");
+        kb = buildDefaultKnowledgeBase(project, kbName);
+        kb.setType(RepositoryType.LOCAL);
+        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
+        if (kb.getType() == RepositoryType.LOCAL) {
+            setSchema(kb, OWL.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT, RDFS.LABEL, RDF.PROPERTY);
+            importKnowledgeBase("data/wine-ontology.rdf");
+        }
+        else {
+            
+        }
+       
+        List<KBHandle> propertiesKBHandle = sut.listProperties(kb, RDF.PROPERTY, true, true);
+        List<KBHandle> rootConceptKBHandle = sut.listRootConcepts(kb, true);
+        log.debug(
+                "\nSize of List Concept " + kbName + "::::::::" + +rootConceptKBHandle.size());
+        log.debug("Size of List Properties " + kbName + "::::::::"
+                + propertiesKBHandle.size() + "\n \n");
+        assertThat(rootConceptKBHandle).as("Check that root concept list is not empty")
+                .isNotEmpty();
+        assertThat(propertiesKBHandle).as("Check that list is not empty").isNotEmpty();
+
+    
+        
+        return Arrays.stream(Reification.values()).map(r -> new Object[] { r })
+                .collect(Collectors.toList());
+    }
+    
+    
+    
+    
+    
+//    @Parameterized.Parameters(name = "Reification = {0}")
+//    public static Collection<Object[]> data()
+//    {
+//        return Arrays.stream(Reification.values()).map(r -> new Object[] { r })
+//                .collect(Collectors.toList());
+//    }
+    
 
     @Before
     public void setUp() throws Exception
@@ -251,7 +297,7 @@ public class KnowledgeBaseServiceTest
 
     // Helper
 
-    private KnowledgeBase buildDefaultKnowledgeBase(Project project, String name)
+    private static KnowledgeBase buildDefaultKnowledgeBase(Project project, String name)
     {
         KnowledgeBase kb = new KnowledgeBase();
         kb.setName(name);
@@ -269,7 +315,7 @@ public class KnowledgeBaseServiceTest
 
     }
 
-    private void importKnowledgeBase(String resourceName) throws Exception
+    private static void importKnowledgeBase(String resourceName) throws Exception
     {
         ClassLoader classLoader = getClass().getClassLoader();
         String fileName = classLoader.getResource(resourceName).getFile();
@@ -278,7 +324,7 @@ public class KnowledgeBaseServiceTest
         }
     }
 
-    private void setSchema(KnowledgeBase kb, IRI classIri, IRI subclassIri, IRI typeIri,
+    private static void setSchema(KnowledgeBase kb, IRI classIri, IRI subclassIri, IRI typeIri,
             IRI descriptionIri, IRI labelIri, IRI propertyTypeIri)
     {
         kb.setClassIri(classIri);
