@@ -61,6 +61,20 @@ public class ActiveLearningRecommender
         selectedLayer = aLayer;
     }
 
+    public void getUpdatedRecommendations(ActiveLearningService aActiveLearningService)
+    {
+        listOfRecommendationsForEachToken = aActiveLearningService
+            .getRecommendationFromRecommendationModel(annotatorState, selectedLayer);
+        listOfRecommendationsForEachToken.forEach(recommendationList ->
+            removeRecommendationsWithNullAnnotation(recommendationList));
+        listOfRecommendationsForEachToken.removeIf(recommendationList ->
+            recommendationList.isEmpty());
+        listOfRecommendationsForEachToken = listOfRecommendationsForEachToken.stream()
+            .map(it -> removeDuplicateRecommendations(it))
+            .collect(Collectors.toList());
+
+    }
+
     public RecommendationDifference generateRecommendationWithLowestDifference(
             LearningRecordService aRecordService, ActiveLearningService aActiveLearningService,
             Date learnSkippedRecommendationTime)
