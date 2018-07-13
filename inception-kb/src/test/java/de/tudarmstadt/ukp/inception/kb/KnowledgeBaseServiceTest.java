@@ -26,6 +26,8 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
@@ -57,6 +59,9 @@ public class KnowledgeBaseServiceTest
     private KnowledgeBase kb;
     private TestFixtures testFixtures;
     private Reification reification;
+    
+    private final Logger log = LoggerFactory.getLogger(getClass());
+
     
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
@@ -110,7 +115,7 @@ public class KnowledgeBaseServiceTest
         setSchema(kb, OWL.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT, RDFS.LABEL, RDF.PROPERTY);
         importKnowledgeBase("data/wine-ontology.rdf");
         List<KBHandle> propertiesKBHandle = sut.listProperties(kb,  RDF.PROPERTY, true, true);
-        System.out.println("\n \n Size of List Properties OWL::::::::" + propertiesKBHandle.size() + "\n \n");
+        log.debug("\n \n Size of List Properties OWL::::::::" + propertiesKBHandle.size() + "\n \n");
         assertThat(propertiesKBHandle).as("Check that list is not empty").isNotEmpty();
 
     }
@@ -127,7 +132,7 @@ public class KnowledgeBaseServiceTest
         sut.registerKnowledgeBase(kb, sut.getRemoteConfig(profile.getSparqlUrl()));
         setSchema(kb, mapping.getClassIri(), mapping.getSubclassIri(), mapping.getTypeIri(),mapping.getDescriptionIri(), mapping.getLabelIri(), mapping.getPropertyTypeIri());
         List<KBHandle> propertiesKBHandle = sut.listProperties(kb, mapping.getPropertyTypeIri(), true, true);
-        System.out.println("\n \n Size of List Properties Wikidata::::::::" + propertiesKBHandle.size() + "\n \n");
+        log.debug("\n \n Size of List Properties Wikidata::::::::" + propertiesKBHandle.size() + "\n \n");
         assertThat(propertiesKBHandle).as("Check that list is not empty").isNotEmpty();
 
     }
@@ -144,7 +149,7 @@ public class KnowledgeBaseServiceTest
         sut.registerKnowledgeBase(kb, sut.getRemoteConfig("http://knowledgebase.ukp.informatik.tu-darmstadt.de:8890/sparql"));
         setSchema(kb, mapping.getClassIri(), mapping.getSubclassIri(), mapping.getTypeIri(),mapping.getDescriptionIri(), mapping.getLabelIri(), mapping.getPropertyTypeIri());
         List<KBHandle> propertiesKBHandle = sut.listProperties(kb, mapping.getPropertyTypeIri(), true, true);
-        System.out.println("\n \n Size of List Properties UKPVirtuoso ::::::::" + propertiesKBHandle.size() + "\n \n");
+        log.debug("\n \n Size of List Properties UKPVirtuoso ::::::::" + propertiesKBHandle.size() + "\n \n");
         assertThat(propertiesKBHandle).as("Check that list is not empty").isNotEmpty();
 
     }
@@ -161,7 +166,7 @@ public class KnowledgeBaseServiceTest
         sut.registerKnowledgeBase(kb, sut.getRemoteConfig(profile.getSparqlUrl()));
         setSchema(kb, OWL.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT, RDFS.LABEL, RDF.PROPERTY);
         List<KBHandle> propertiesKBHandle = sut.listProperties(kb, mapping.getPropertyTypeIri(), true, true);
-        System.out.println("\n \n Size of List Properties Babbel::::::::" + propertiesKBHandle.size() + "\n \n");
+        log.debug("\n \n Size of List Properties Babbel::::::::" + propertiesKBHandle.size() + "\n \n");
         assertThat(propertiesKBHandle).as("Check that list is not empty").isNotEmpty();
 
     }
@@ -177,7 +182,7 @@ public class KnowledgeBaseServiceTest
         sut.registerKnowledgeBase(kb, sut.getRemoteConfig(profile.getSparqlUrl()));
         setSchema(kb, OWL.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT, RDFS.LABEL, RDF.PROPERTY);
         List<KBHandle> propertiesKBHandle = sut.listProperties(kb, mapping.getPropertyTypeIri(), true, true);
-        System.out.println("\n \n Size of List Properties DBPedia ::::::::" + propertiesKBHandle.size() + "\n \n");
+        log.debug("\n \n Size of List Properties DBPedia ::::::::" + propertiesKBHandle.size() + "\n \n");
         assertThat(propertiesKBHandle).as("Check that list is not empty").isNotEmpty();
 
     }
@@ -193,7 +198,7 @@ public class KnowledgeBaseServiceTest
         sut.registerKnowledgeBase(kb, sut.getRemoteConfig(profile.getSparqlUrl()));
         setSchema(kb, OWL.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT, RDFS.LABEL, RDF.PROPERTY);
         List<KBHandle> propertiesKBHandle = sut.listProperties(kb, mapping.getPropertyTypeIri(), true, true);
-        System.out.println("\n \n Size of List Properties Yago ::::::::"
+        log.debug("\n \n Size of List Properties Yago ::::::::"
                 + propertiesKBHandle.size() + "\n \n");
         assertThat(propertiesKBHandle).as("Check that list is not empty").isNotEmpty();
 
