@@ -41,6 +41,20 @@ public interface ValueTypeSupportRegistry
         return allTypes;
     }
     
+    default List<ValueType> getRangeTypes()
+    {
+        List<ValueType> allTypes = new ArrayList<>();
+
+        for (ValueTypeSupport valueSupport : getValueSupports()) {
+            List<ValueType> types = valueSupport.getSupportedValueTypes();
+            types.stream().forEach(allTypes::add);
+        }
+
+        allTypes.sort(comparing(ValueType::getUiName));
+
+        return allTypes;
+    }
+    
     ValueType getValueType(KBStatement aStatement, KBProperty aProperty);
     
     List<ValueTypeSupport> getValueSupports();
