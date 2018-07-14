@@ -55,11 +55,14 @@ import org.eclipse.rdf4j.rio.RDFFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.googlecode.wicket.kendo.ui.form.combobox.ComboBox;
+
 import de.agilecoders.wicket.core.markup.html.bootstrap.button.Buttons;
 import de.agilecoders.wicket.core.markup.html.bootstrap.form.BootstrapCheckbox;
 import de.agilecoders.wicket.core.markup.html.bootstrap.form.radio.BootstrapRadioGroup;
 import de.agilecoders.wicket.core.markup.html.bootstrap.form.radio.EnumRadioChoiceRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
@@ -178,17 +181,6 @@ public class KnowledgeBaseDetailsPanel
             }
         };
         add(form);
-
-//        IModel<String> adapter = new LambdaModelAdapter<String>(kbwModel.bind("kb.language")::getObject,
-//                    kbwModel.bind("kb.language")::setObject);
-
-//        ComboBox<String> comboBox = new ComboBox<String>("language",
-//            new ArrayList<>(Arrays.asList(kbw.getKb().getLanguage(), "ger")));
-//        comboBox.setOutputMarkupId(true);
-//        comboBox.setRequired(true);
-//        comboBox.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> {}));
-//        form.add(comboBox);
-
 
         // add (disabled) radio choice for local/remote repository
         form.add(new BootstrapRadioGroup<RepositoryType>("type", kbwModel.bind("kb.type"),
@@ -440,7 +432,11 @@ public class KnowledgeBaseDetailsPanel
             Component iriPanel = new KnowledgeBaseIriPanel("iriPanel", model,
                     KnowledgeBaseIriPanelMode.PROJECTSETTINGS)
                             .add(LambdaBehavior.onConfigure(it -> it.setEnabled(false)));
-//            addDisabledTextField(wmc, "language");
+
+            // add disabled language field
+            wmc.add(new Label("language", kbwModel.bind("kb.language"))
+                .add(LambdaBehavior.onConfigure(tf -> tf.setEnabled(false))));
+
             // don't show radio group in view mode 
             iriPanel.get("iriSchema").setVisible(false);
             wmc.add(iriPanel);
@@ -541,6 +537,16 @@ public class KnowledgeBaseDetailsPanel
 
         @Override protected void setUpCommonComponents(WebMarkupContainer wmc)
         {
+            ComboBox<String> comboBox = new ComboBox<String>("language",
+                kbwModel.bind("kb.language"),
+                Arrays.asList("en", "de"));
+            comboBox.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> {
+                // Do nothing just update the model values
+            }));
+            comboBox.setOutputMarkupId(true);
+            comboBox.setRequired(true);
+            wmc.add(comboBox);
+
             // Schema configuration
             wmc.add(new KnowledgeBaseIriPanel("iriPanel", model,
                 KnowledgeBaseIriPanelMode.PROJECTSETTINGS));
