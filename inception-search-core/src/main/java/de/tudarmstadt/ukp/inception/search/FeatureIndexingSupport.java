@@ -15,11 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.search.index.mtas;
+package de.tudarmstadt.ukp.inception.search;
 
-public class IndexingConstants
+import java.util.Map;
+
+import org.apache.uima.cas.text.AnnotationFS;
+import org.springframework.beans.factory.BeanNameAware;
+
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+
+public interface FeatureIndexingSupport
+    extends BeanNameAware
 {
-    public static final String KB_ENTITY = "KB.Entity";
-    public static final String INDEX_KB_CONCEPT = "class";
-    public static final String INDEX_KB_INSTANCE = "instance";
+    String getId();
+
+    boolean accepts(AnnotationFeature aFeature);
+
+    Map<String, String> indexFeatureValue(AnnotationFeature aFeature, AnnotationFS aAnnotation);
 }
