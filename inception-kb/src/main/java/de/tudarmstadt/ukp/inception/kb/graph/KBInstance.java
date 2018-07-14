@@ -132,15 +132,28 @@ public class KBInstance
         aConn.add(typeStmt);
 
         if (isNotBlank(name)) {
-            Statement nameStmt = vf.createStatement(subject, kb.getLabelIri(),
-                    vf.createLiteral(name, language));
+            Literal nameLiteral;
+            if (language == null) {
+                nameLiteral = vf.createLiteral(name);
+            }
+            else {
+                nameLiteral = vf.createLiteral(name, language);
+            }
+            Statement nameStmt = vf.createStatement(subject, kb.getLabelIri(), nameLiteral);
             originalStatements.add(nameStmt);
             aConn.add(nameStmt);
         }
 
         if (isNotBlank(description)) {
-            Statement descStmt = vf.createStatement(subject, kb.getDescriptionIri(),
-                vf.createLiteral(description, language));
+            Literal descriptionLiteral;
+            if (language == null) {
+                descriptionLiteral = vf.createLiteral(description);
+            }
+            else {
+                descriptionLiteral = vf.createLiteral(description, language);
+            }
+            Statement descStmt = vf
+                .createStatement(subject, kb.getDescriptionIri(), descriptionLiteral);
             originalStatements.add(descStmt);
             aConn.add(descStmt);
         }

@@ -63,15 +63,21 @@ import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
+import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxDownloadLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.TempFileResource;
 import de.tudarmstadt.ukp.inception.app.bootstrap.DisabledBootstrapCheckbox;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
+import de.tudarmstadt.ukp.inception.kb.event.KnowledgeBaseConfigurationChangedEvent;
 import de.tudarmstadt.ukp.inception.kb.io.FileUploadHelper;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
-public class KnowledgeBaseDetailsPanel extends Panel {
+public class KnowledgeBaseDetailsPanel
+    extends Panel
+{
+
+    private @SpringBean ApplicationEventPublisherHolder applicationEventPublisherHolder;
 
     private static final long serialVersionUID = -3550082954966752196L;
     private static final Logger log = LoggerFactory.getLogger(KnowledgeBaseDetailsPanel.class);
@@ -82,39 +88,39 @@ public class KnowledgeBaseDetailsPanel extends Panel {
     private static final String LOCAL_WEBMARKUPCONTAINER_MARKUP_ID = "local";
     private static final String REMOTE_WEBMARKUPCONTAINER_MARKUP_ID = "remote";
     private static final String FILE_UPLOAD_FIELD_MARKUP_ID = "upload";
-    
+
     /**
      * Given the default file extension of an RDF format, returns the corresponding
      * {@link RDFFormat}. This factory method detour is necessary because {@link RDFFormat} should
      * be used as a model, but is not serializable.
-     * 
+     *
      * @param fileExt
      * @return an {@link RDFFormat}
      */
-    private static final RDFFormat getRdfFormatForFileExt(String fileExt) {
-        return EXPORT_FORMATS.stream()
-                .filter(f -> f.getDefaultFileExtension().equals(fileExt))
-                .findAny()
-                .get();
+    private static final RDFFormat getRdfFormatForFileExt(String fileExt)
+    {
+        return EXPORT_FORMATS.stream().filter(f -> f.getDefaultFileExtension().equals(fileExt))
+            .findAny().get();
     }
-    private static final List<RDFFormat> EXPORT_FORMATS = Arrays.asList(RDFFormat.RDFXML,
-            RDFFormat.NTRIPLES, RDFFormat.TURTLE);
+
+    private static final List<RDFFormat> EXPORT_FORMATS = Arrays
+        .asList(RDFFormat.RDFXML, RDFFormat.NTRIPLES, RDFFormat.TURTLE);
     private static final List<String> EXPORT_FORMAT_FILE_EXTENSIONS = EXPORT_FORMATS.stream()
-            .map(f -> f.getDefaultFileExtension())
-            .collect(Collectors.toList());
+        .map(f -> f.getDefaultFileExtension()).collect(Collectors.toList());
 
     private @SpringBean KnowledgeBaseService kbService;
 
     private final IModel<KnowledgeBase> kbModel;
     private final CompoundPropertyModel<KnowledgeBaseWrapper> kbwModel;
-    
+
     private Component title;
     private Component content;
     private boolean isEditing;
-    
+
     private ConfirmationDialog confirmationDialog;
 
-    public KnowledgeBaseDetailsPanel(String aId, IModel<KnowledgeBase> aKbModel) {
+    public KnowledgeBaseDetailsPanel(String aId, IModel<KnowledgeBase> aKbModel)
+    {
         super(aId, null);
         setOutputMarkupPlaceholderTag(true);
 
@@ -136,7 +142,8 @@ public class KnowledgeBaseDetailsPanel extends Panel {
 
         // this form contains all the wicket components in this panel; not only the components used
         // for editing, but also the ones for showing information about a KB (when in ViewMode)
-        Form<KnowledgeBaseWrapper> form = new Form<KnowledgeBaseWrapper>("form", kbwModel) {
+        Form<KnowledgeBaseWrapper> form = new Form<KnowledgeBaseWrapper>("form", kbwModel)
+        {
             private static final long serialVersionUID = -4253347478525087385L;
 
             /**
@@ -145,10 +152,10 @@ public class KnowledgeBaseDetailsPanel extends Panel {
              * form (we might be in view mode after all). Therefore, cheekily obtain the FUF when
              * submitting.
              */
-            @Override
-            protected void onSubmit() {
+            @Override protected void onSubmit()
+            {
                 Component c = get(CONTENT_MARKUP_ID + ":" + LOCAL_WEBMARKUPCONTAINER_MARKUP_ID + ":"
-                        + FILE_UPLOAD_FIELD_MARKUP_ID);
+                    + FILE_UPLOAD_FIELD_MARKUP_ID);
                 if (c == null) {
                     log.error("Could not find file upload component!");
                     return;
@@ -163,7 +170,8 @@ public class KnowledgeBaseDetailsPanel extends Panel {
                         fileUploads.add(tmpFile);
                     }
                     kbwModel.getObject().setFiles(fileUploads);
-                } catch (Exception e) {
+                }
+                catch (Exception e) {
                     log.error("Error while uploading files", e);
                     error("Could not upload files");
                 }
@@ -184,15 +192,16 @@ public class KnowledgeBaseDetailsPanel extends Panel {
 
         // add (disabled) radio choice for local/remote repository
         form.add(new BootstrapRadioGroup<RepositoryType>("type", kbwModel.bind("kb.type"),
-                Arrays.asList(RepositoryType.values()),
-                new EnumRadioChoiceRenderer<RepositoryType>(Buttons.Type.Default, this) {
-                    private static final long serialVersionUID = 1073440402072678330L;
+            Arrays.asList(RepositoryType.values()),
+            new EnumRadioChoiceRenderer<RepositoryType>(Buttons.Type.Default, this)
+            {
+                private static final long serialVersionUID = 1073440402072678330L;
 
-                    @Override
-                    public String getButtonClass(RepositoryType option) {
-                        return super.getButtonClass(option) + " disabled";
-                    }
-                }));
+                @Override public String getButtonClass(RepositoryType option)
+                {
+                    return super.getButtonClass(option) + " disabled";
+                }
+            }));
 
         // add (disabled) reification strategy
         form.add(new Label("reification", kbwModel.bind("kb.reification")));
@@ -206,39 +215,45 @@ public class KnowledgeBaseDetailsPanel extends Panel {
         // set up form buttons: edit button only visible when not editing, cancel/save buttons only
         // visible when editing
         form.add(new LambdaAjaxLink("delete", KnowledgeBaseDetailsPanel.this::actionDelete));
-        form.add(new LambdaAjaxLink("edit", KnowledgeBaseDetailsPanel.this::startEditing) {
-            
+        form.add(new LambdaAjaxLink("edit", KnowledgeBaseDetailsPanel.this::startEditing)
+        {
+
             private static final long serialVersionUID = -2013888340002855855L;
 
-            @Override
-            public boolean isVisible() {
+            @Override public boolean isVisible()
+            {
                 return !isEditing;
             }
         });
-        form.add(new AjaxButton("save", form) {
+        form.add(new AjaxButton("save", form)
+        {
 
             private static final long serialVersionUID = 3393631640806116694L;
-            
-            @Override
-            public boolean isVisible() {
+
+            @Override public boolean isVisible()
+            {
                 return isEditing;
             }
 
-            @SuppressWarnings("unchecked")
-            @Override
-            protected void onAfterSubmit(AjaxRequestTarget target, Form<?> form) {
+            @SuppressWarnings("unchecked") @Override protected void onAfterSubmit(
+                AjaxRequestTarget target, Form<?> form)
+            {
                 // the call needs to occur in onAfterSubmit, otherwise the file uploads are
                 // submitted after actionSave is called
-                KnowledgeBaseDetailsPanel.this.actionSave(target,
-                        (Form<KnowledgeBaseWrapper>) form);
+                KnowledgeBaseDetailsPanel.this
+                    .actionSave(target, (Form<KnowledgeBaseWrapper>) form);
+                applicationEventPublisherHolder.get().publishEvent(
+                    new KnowledgeBaseConfigurationChangedEvent(this,
+                        aKbModel.getObject().getProject()));
             }
         });
-        form.add(new LambdaAjaxLink("cancel", KnowledgeBaseDetailsPanel.this::stopEditing) {
+        form.add(new LambdaAjaxLink("cancel", KnowledgeBaseDetailsPanel.this::stopEditing)
+        {
 
             private static final long serialVersionUID = -6654306757363572019L;
 
-            @Override
-            public boolean isVisible() {
+            @Override public boolean isVisible()
+            {
                 return isEditing;
             }
         });
@@ -246,15 +261,15 @@ public class KnowledgeBaseDetailsPanel extends Panel {
         confirmationDialog = new ConfirmationDialog("confirmationDialog");
         add(confirmationDialog);
     }
-    
-    @Override
-    protected void onConfigure() {
+
+    @Override protected void onConfigure()
+    {
         super.onConfigure();
         setVisible(kbModel != null && kbModel.getObject() != null);
     }
 
-    @Override
-    protected void onModelChanged() {
+    @Override protected void onModelChanged()
+    {
         // propagate the changes to the original knowledge base model
         kbModel.setObject(kbwModel.getObject().getKb());
     }
@@ -285,12 +300,14 @@ public class KnowledgeBaseDetailsPanel extends Panel {
         }
     }
 
-    private void actionDelete(AjaxRequestTarget aTarget) {
+    private void actionDelete(AjaxRequestTarget aTarget)
+    {
         // delete only if user confirms deletion
-        confirmationDialog.setTitleModel(
-                new StringResourceModel("kb.details.delete.confirmation.title", this));
-        confirmationDialog.setContentModel(new StringResourceModel(
-                "kb.details.delete.confirmation.content", this, kbwModel.bind("kb")));
+        confirmationDialog
+            .setTitleModel(new StringResourceModel("kb.details.delete.confirmation.title", this));
+        confirmationDialog.setContentModel(
+            new StringResourceModel("kb.details.delete.confirmation.content", this,
+                kbwModel.bind("kb")));
         confirmationDialog.show(aTarget);
         confirmationDialog.setConfirmAction((t) -> {
             KnowledgeBase kb = kbwModel.getObject().getKb();
@@ -302,61 +319,68 @@ public class KnowledgeBaseDetailsPanel extends Panel {
             catch (RepositoryException | RepositoryConfigException e) {
                 error("Unable to remove knowledge base: " + e.getLocalizedMessage());
                 log.error("Unable to remove knowledge base.", e);
-                
+
             }
             t.add(this);
             t.add(findParentWithAssociatedMarkup());
         });
     }
 
-    private void actionClear(AjaxRequestTarget aTarget) {
+    private void actionClear(AjaxRequestTarget aTarget)
+    {
         try {
             kbService.clear(kbwModel.getObject().getKb());
             info(new StringResourceModel("kb.details.local.contents.clear.feedback",
-                    kbwModel.bind("kb")));
+                kbwModel.bind("kb")));
             aTarget.add(this);
-        } catch (RepositoryException e) {
+        }
+        catch (RepositoryException e) {
             error(e);
         }
     }
-    
-    private IResourceStream actionExport(String rdfFormatFileExt) {
-        return new TempFileResource((os) -> kbService.exportData(kbModel.getObject(),
-                getRdfFormatForFileExt(rdfFormatFileExt), os));
+
+    private IResourceStream actionExport(String rdfFormatFileExt)
+    {
+        return new TempFileResource((os) -> kbService
+            .exportData(kbModel.getObject(), getRdfFormatForFileExt(rdfFormatFileExt), os));
     }
 
-    private void startEditing(AjaxRequestTarget aTarget) {
+    private void startEditing(AjaxRequestTarget aTarget)
+    {
         title = title.replaceWith(new EditModeTitle(TITLE_MARKUP_ID, kbwModel));
         content = content.replaceWith(new EditMode(CONTENT_MARKUP_ID, kbwModel));
         aTarget.add(this);
         isEditing = true;
     }
-    
-    private void stopEditing(AjaxRequestTarget aTarget) {
+
+    private void stopEditing(AjaxRequestTarget aTarget)
+    {
         title = title.replaceWith(new ViewModeTitle(TITLE_MARKUP_ID, kbwModel));
         content = content.replaceWith(new ViewMode(CONTENT_MARKUP_ID, kbwModel));
         aTarget.add(this);
         isEditing = false;
     }
-    
+
     /**
      * Fragment for viewing/editing knowledge bases, with built-in separation for form components
      * relevant to only local or remote knowledge bases.
      */
-    private abstract class DetailFragment extends Fragment {
+    private abstract class DetailFragment
+        extends Fragment
+    {
 
         private static final long serialVersionUID = 4325217938170626840L;
-        
+
         protected CompoundPropertyModel<KnowledgeBaseWrapper> model;
-        
+
         public DetailFragment(String id, String markupId,
-                CompoundPropertyModel<KnowledgeBaseWrapper> model) {
+            CompoundPropertyModel<KnowledgeBaseWrapper> model)
+        {
             super(id, markupId, KnowledgeBaseDetailsPanel.this, model);
-            
+
             this.model = model;
-            boolean isHandlingLocalRepository = model.getObject()
-                    .getKb()
-                    .getType() == RepositoryType.LOCAL;
+            boolean isHandlingLocalRepository =
+                model.getObject().getKb().getType() == RepositoryType.LOCAL;
 
             // container for form components common to both local and remote KBs
             WebMarkupContainer common = new WebMarkupContainer(COMMON_WEBMARKUPCONTAINER_MARKUP_ID);
@@ -377,32 +401,42 @@ public class KnowledgeBaseDetailsPanel extends Panel {
         }
 
         protected abstract void setUpCommonComponents(WebMarkupContainer wmc);
+
         protected abstract void setUpLocalKnowledgeBaseComponents(WebMarkupContainer wmc);
+
         protected abstract void setUpRemoteKnowledgeBaseComponents(WebMarkupContainer wmc);
     }
 
-    private class ViewModeTitle extends Fragment {
+    private class ViewModeTitle
+        extends Fragment
+    {
 
         private static final long serialVersionUID = -346255717342200090L;
 
-        public ViewModeTitle(String id, CompoundPropertyModel<KnowledgeBaseWrapper> model) {
+        public ViewModeTitle(String id, CompoundPropertyModel<KnowledgeBaseWrapper> model)
+        {
             super(id, "viewModeTitle", KnowledgeBaseDetailsPanel.this, model);
             add(new Label("name", model.bind("kb.name")));
         }
     }
 
-    private class ViewMode extends DetailFragment {
+    private class ViewMode
+        extends DetailFragment
+    {
 
         private static final long serialVersionUID = -6584701320032256335L;
 
-        public ViewMode(String id, CompoundPropertyModel<KnowledgeBaseWrapper> model) {
+        public ViewMode(String id, CompoundPropertyModel<KnowledgeBaseWrapper> model)
+        {
             super(id, "viewModeContent", model);
         }
 
         @Override
         protected void setUpCommonComponents(WebMarkupContainer wmc) {
-            // Schema configuration
+            wmc.add(new DisabledBootstrapCheckbox("writeprotection", model.bind("kb.readOnly"),
+                    new StringResourceModel("kb.details.permissions.writeprotection")));
             
+            // Schema configuration
             Component iriPanel = new KnowledgeBaseIriPanel("iriPanel", model,
                     KnowledgeBaseIriPanelMode.PROJECTSETTINGS)
                             .add(LambdaBehavior.onConfigure(it -> it.setEnabled(false)));
@@ -410,43 +444,41 @@ public class KnowledgeBaseDetailsPanel extends Panel {
             // don't show radio group in view mode 
             iriPanel.get("iriSchema").setVisible(false);
             wmc.add(iriPanel);
-            
+
             wmc.add(new CheckBox("enabled", model.bind("kb.enabled"))
                 .add(LambdaBehavior.onConfigure(it -> it.setEnabled(false))));
             wmc.add(new CheckBox("supportConceptLinking", model.bind("kb.supportConceptLinking"))
                 .add(LambdaBehavior.onConfigure(it -> it.setEnabled(false))));
         }
 
-        @Override
-        protected void setUpLocalKnowledgeBaseComponents(WebMarkupContainer wmc) {
+        @Override protected void setUpLocalKnowledgeBaseComponents(WebMarkupContainer wmc)
+        {
             // creates a list of export buttons, one for each viable RDF format
             // MB 2018-01: would've been nicer to go for a split button with one recommended format
             // and several others to choose from, but SplitButton in wicket-bootstrap 0.10.16 is
             // totally broken, so we're doing this instead
             ListView<String> lv = new ListView<String>("exportButtons",
-                    EXPORT_FORMAT_FILE_EXTENSIONS) {
+                EXPORT_FORMAT_FILE_EXTENSIONS)
+            {
 
                 private static final long serialVersionUID = -1869762759620557362L;
 
-                @Override
-                protected void populateItem(ListItem<String> item) {
+                @Override protected void populateItem(ListItem<String> item)
+                {
                     // creates an appropriately labeled {@link AjaxDownloadLink} which triggers the
                     // download of the contents of the current KB in the given format
                     String fileExtension = item.getModelObject();
                     Model<String> exportFileNameModel = Model
-                            .of(kbModel.getObject().getName() + "." + fileExtension);
+                        .of(kbModel.getObject().getName() + "." + fileExtension);
                     AjaxDownloadLink exportLink = new AjaxDownloadLink("link", exportFileNameModel,
-                            LambdaModel.of(() -> KnowledgeBaseDetailsPanel.this
-                                    .actionExport(fileExtension)));
-                    exportLink.add(
-                            new Label("label", new ResourceModel("kb.export." + fileExtension)));
+                        LambdaModel
+                            .of(() -> KnowledgeBaseDetailsPanel.this.actionExport(fileExtension)));
+                    exportLink
+                        .add(new Label("label", new ResourceModel("kb.export." + fileExtension)));
                     item.add(exportLink);
                 }
             };
             wmc.add(lv);
-            
-            wmc.add(new DisabledBootstrapCheckbox("writeprotection", model.bind("kb.readOnly"),
-                    new StringResourceModel("kb.details.local.permissions.writeprotection")));
         }
 
         @Override
@@ -483,60 +515,71 @@ public class KnowledgeBaseDetailsPanel extends Panel {
         }
     }
 
-    private class EditModeTitle extends Fragment {
+    private class EditModeTitle
+        extends Fragment
+    {
 
         private static final long serialVersionUID = -5459222108913316798L;
 
-        public EditModeTitle(String id, CompoundPropertyModel<KnowledgeBaseWrapper> model) {
+        public EditModeTitle(String id, CompoundPropertyModel<KnowledgeBaseWrapper> model)
+        {
             super(id, "editModeTitle", KnowledgeBaseDetailsPanel.this, model);
             add(new RequiredTextField<>("name", model.bind("kb.name")));
         }
     }
 
-    private class EditMode extends DetailFragment {
+    private class EditMode
+        extends DetailFragment
+    {
 
         private static final long serialVersionUID = 7838564354437836375L;
 
-        public EditMode(String id, CompoundPropertyModel<KnowledgeBaseWrapper> model) {
+        public EditMode(String id, CompoundPropertyModel<KnowledgeBaseWrapper> model)
+        {
             super(id, "editModeContent", model);
         }
 
-        @Override
-        protected void setUpCommonComponents(WebMarkupContainer wmc) {
+        @Override protected void setUpCommonComponents(WebMarkupContainer wmc)
+        {
             // Schema configuration
             wmc.add(new KnowledgeBaseIriPanel("iriPanel", model,
-                    KnowledgeBaseIriPanelMode.PROJECTSETTINGS));
+                KnowledgeBaseIriPanelMode.PROJECTSETTINGS));
             wmc.add(new CheckBox("enabled", model.bind("kb.enabled")));
             wmc.add(new CheckBox("supportConceptLinking", model.bind("kb.supportConceptLinking")));
         }
 
-        @Override
-        protected void setUpLocalKnowledgeBaseComponents(WebMarkupContainer wmc) {
-            wmc.add(new FileUploadField(FILE_UPLOAD_FIELD_MARKUP_ID,
-                    Model.of()));
-            
+        @Override protected void setUpLocalKnowledgeBaseComponents(WebMarkupContainer wmc)
+        {
+            wmc.add(new FileUploadField(FILE_UPLOAD_FIELD_MARKUP_ID, Model.of()));
+
             // add link for clearing the knowledge base contents, enabled only, if there is
             // something to clear            
             AjaxLink<Void> clearLink = new LambdaAjaxLink("clear",
-                    KnowledgeBaseDetailsPanel.this::actionClear) {
+                KnowledgeBaseDetailsPanel.this::actionClear)
+            {
 
                 private static final long serialVersionUID = -6272361381689154558L;
 
-                @Override
-                public boolean isEnabled() {
+                @Override public boolean isEnabled()
+                {
                     return kbService.isEmpty(model.getObject().getKb());
                 }
             };
             wmc.add(clearLink);
-            
+
             wmc.add(new BootstrapCheckbox("writeprotection", model.bind("kb.readOnly"),
-                    new StringResourceModel("kb.details.local.permissions.writeprotection")));
+                    new StringResourceModel("kb.details.permissions.writeprotection")));
         }
 
-        @Override
-        protected void setUpRemoteKnowledgeBaseComponents(WebMarkupContainer wmc) {
+        @Override protected void setUpRemoteKnowledgeBaseComponents(WebMarkupContainer wmc)
+        {
             // this text field allows for _editing_the location for remote repositories
             addUrlField(wmc, "url");
+            
+            // add "readonly"-checkbox that is always disabled
+            wmc.add(new BootstrapCheckbox("writeprotection", model.bind("kb.readOnly"),
+                    new StringResourceModel("kb.details.permissions.writeprotection"))
+                            .add(LambdaBehavior.onConfigure(cb -> cb.setEnabled(false))));
         }
 
         private void addUrlField(WebMarkupContainer wmc, String id)
