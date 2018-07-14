@@ -178,11 +178,11 @@ public class CandidateEntity
     }
 
     /**
-     * @param levTypedString edit distance between typed string and candidate entity label
+     * @param aLevTypedString edit distance between typed string and candidate entity label
      */
-    public void setLevTypedString(int levTypedString)
+    public void setLevTypedString(int aLevTypedString)
     {
-        this.levTypedString = levTypedString;
+        levTypedString = aLevTypedString;
     }
 
     public int getLevTypedString()

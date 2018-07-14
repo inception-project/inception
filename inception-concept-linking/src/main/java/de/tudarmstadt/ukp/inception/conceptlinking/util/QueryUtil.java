@@ -23,6 +23,7 @@ import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.query.QueryLanguage;
 import org.eclipse.rdf4j.query.TupleQuery;
+import org.eclipse.rdf4j.queryrender.RenderUtils;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 
 /**
@@ -74,7 +75,7 @@ public class QueryUtil
             "    {",
             "     VALUES ?labelpredicate {rdfs:label skos:altLabel}",
             "      {",
-            "        ?e2 ?labelpredicate ?" + aString + " @en .",
+            "        ?e2 ?labelpredicate ?" + RenderUtils.escape(aString) + " @en .",
             "        OPTIONAL",
             "        {",
             "          ?e2 ?descriptionIri ?description.",
@@ -147,6 +148,24 @@ public class QueryUtil
         return tupleQuery;
     }
 
+    private static String getFullTextMatchingQueryPart(String aString, int aLimit) {
+        return  String.join("\n",
+            "    SELECT DISTINCT ?e2 ?altLabel ?description WHERE",
+            "    {",
+            "      VALUES ?labelpredicate {rdfs:label skos:altLabel}",
+            "      {",
+            "        ?e2 ?labelpredicate ?altLabel.",
+            "        ?altLabel bif:contains '" + RenderUtils.escape(aString) + "'. ",
+            "        OPTIONAL",
+            "        {",
+            "          ?e2 ?descriptionIri ?description.",
+            "          FILTER ( lang(?description) = \"en\" )",
+            "        }",
+            "      }",
+            "    }",
+            "    LIMIT " + aLimit);
+
+    }
     /**
      *
      * This query retrieves candidates via exact matching of their labels and full-text-search
@@ -161,23 +180,8 @@ public class QueryUtil
         String aTypedString, String aMention, int aLimit, IRI aDescriptionIri)
     {
 
-        // Using full-text search capabilities
-        String fullTextMatching = String.join("\n",
-            "    SELECT DISTINCT ?e2 ?altLabel ?description WHERE",
-            "    {",
-            "      VALUES ?labelpredicate {rdfs:label skos:altLabel}",
-            "      {",
-            "        ?e2 ?labelpredicate ?altLabel.",
-            "        ?altLabel bif:contains '?entityLabel'. ",
-            "        OPTIONAL",
-            "        {",
-            "          ?e2 ?descriptionIri ?description.",
-            "          FILTER ( lang(?description) = \"en\" )",
-            "        }",
-            "      }",
-            "    }",
-            "    LIMIT " + aLimit);
-
+        String fullTextMatchingMention = getFullTextMatchingQueryPart("mention", aLimit);
+        String fullTextMatchingTypedString = getFullTextMatchingQueryPart("typedString", aLimit);
 
         String query = String.join("\n",
             "DEFINE input:inference 'instances'",
@@ -185,7 +189,11 @@ public class QueryUtil
             "SELECT DISTINCT ?e2 ?altLabel ?label ?description WHERE",
             "{",
             "  {",
-                 fullTextMatching,
+                 fullTextMatchingMention,
+            "  }",
+            "  UNION",
+            "  {",
+                 fullTextMatchingTypedString,
             "  }",
             "  FILTER EXISTS { ?e2 ?p ?v }",
             "  FILTER NOT EXISTS ",
@@ -204,8 +212,8 @@ public class QueryUtil
         ValueFactory vf = SimpleValueFactory.getInstance();
 
         TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, query);
-        tupleQuery.setBinding("entityLabel", vf.createLiteral(aMention));
-
+        tupleQuery.setBinding("mention", vf.createLiteral(aMention));
+        tupleQuery.setBinding("typedString", vf.createLiteral(aTypedString));
         tupleQuery.setBinding("descriptionIri", aDescriptionIri);
         return tupleQuery;
     }
