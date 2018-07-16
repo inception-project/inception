@@ -15,14 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.v2.ner;
+package de.tudarmstadt.ukp.inception.recommendation.api.v2;
 
-import opennlp.tools.util.TrainingParameters;
-
-public class OpenNlpNerRecommenderTraits {
-
-    public TrainingParameters getParameters() {
-        TrainingParameters parameters = TrainingParameters.defaultParams();
-        return parameters;
-    }
+public interface DataSplitter {
+    void setTotal(int aTotal);
+    boolean belongsToTrainingSet(Object aObject);
 }
