@@ -477,11 +477,12 @@ public class MtasDocumentIndex
     private void deindexDocument(long aSourceDocumentId, long aAnnotationDocumentId, String aUser)
         throws IOException
     {
-        indexWriter.deleteDocuments(new Term(FIELD_ID,
-                String.valueOf(aSourceDocumentId) + "/" + String.valueOf(aAnnotationDocumentId)));
+        if (indexWriter != null) {
+            indexWriter.deleteDocuments(new Term(FIELD_ID, String.valueOf(aSourceDocumentId) + "/"
+                    + String.valueOf(aAnnotationDocumentId)));
 
-        indexWriter.commit();
-
+            indexWriter.commit();
+        }
         return;
     }
 
@@ -679,11 +680,17 @@ public class MtasDocumentIndex
     {
         log.info("Indexing all annotation documents of project {}", project.getName());
 
+        int u = 0;
+        int ad = 0;
+        int sd = 0;
+        
         for (User user : projectService.listProjectUsersWithPermissions(project)) {
+            u++;
             for (AnnotationDocument document : documentService.listAnnotationDocuments(project,
                     user)) {
                 try {
                     indexDocument(document, documentService.readAnnotationCas(document));
+                    ad++;
                 }
                 catch (IOException e) {
                     log.error("Unable to index annotation document", e);
@@ -695,11 +702,16 @@ public class MtasDocumentIndex
         for (SourceDocument document : documentService.listSourceDocuments(project)) {
             try {
                 indexDocument(document, documentService.createOrReadInitialCas(document));
+                sd++;
             }
             catch (IOException e) {
                 log.error("Unable to index source document", e);
             }
         }
+        
+        log.info(String.format(
+                "Indexing results: %d source doc(s), %d annotation doc(s) for %d user(s)", sd, ad,
+                u));
     }
 
     private String getShortName(String aName)

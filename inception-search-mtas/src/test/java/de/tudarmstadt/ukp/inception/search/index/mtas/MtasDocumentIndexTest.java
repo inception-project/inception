@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Properties;
 
 import org.apache.uima.UIMAException;
+import org.apache.uima.jcas.JCas;
 import org.junit.Before;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
@@ -72,6 +73,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.dao.initializers.PartOfSpeechLayerI
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.initializers.TokenLayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentServiceImpl;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.project.ProjectServiceImpl;
@@ -110,7 +112,7 @@ import net.jodah.concurrentunit.Waiter;
 public class MtasDocumentIndexTest
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
+
     // Number of miliseconds to wait for the indexing to finish. This time must be enough
     // to allow the index be built before the query is made. Otherwise, it could affect the
     // test results. If this happens, a largest value could allow the test to pass.
@@ -124,7 +126,10 @@ public class MtasDocumentIndexTest
     private @Autowired DocumentService documentService;
     private @Autowired SearchService searchService;
     private @Autowired AnnotationSchemaService annotationSchemaService;
-    
+    private @Autowired ImportExportService importExportService;
+
+    // private @Autowired @Qualifier("formats") Properties formats;
+
     @Before
     public void setUp()
     {
@@ -136,13 +141,11 @@ public class MtasDocumentIndexTest
     @Test
     public void testSimpleQuery() throws Exception
     {
-        log.info("Entered testSimpleQuery");
-
         Project project = new Project();
         project.setName("TestSimpleQuery");
 
         Waiter createProjectWaiter = new Waiter();
-        
+
         // Start thread to create and initialize project
         new Thread(() -> {
             try {
@@ -155,7 +158,7 @@ public class MtasDocumentIndexTest
             createProjectWaiter.assertTrue(true);
             createProjectWaiter.resume();
         }).start();
-        
+
         // Wait for thread to complete
         createProjectWaiter.await();
 
@@ -180,16 +183,17 @@ public class MtasDocumentIndexTest
             catch (UIMAException | IOException e) {
                 e.printStackTrace();
             }
-            
+
             try {
                 // Wait some time so that the document can be indexed
                 Thread.sleep(WAIT_TIME);
-                
+
                 // Test if the index has been created
                 if (searchService.isIndexValid(project)) {
                     log.info("**************** Index is valid");
                     uploadWaiter.assertTrue(true);
-                } else {
+                }
+                else {
                     log.info("**************** Index is NOT valid");
                     uploadWaiter.assertTrue(false);
                 }
@@ -197,7 +201,7 @@ public class MtasDocumentIndexTest
             catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            
+
             uploadWaiter.resume();
         }).start();
 
@@ -205,11 +209,11 @@ public class MtasDocumentIndexTest
         uploadWaiter.await();
 
         User user = userRepository.get("admin");
-        
+
         String query = "Galicia";
 
         List<SearchResult> results = null;
-    
+
         // Execute query
         results = (ArrayList<SearchResult>) searchService.query(user, project, query);
 
@@ -242,8 +246,10 @@ public class MtasDocumentIndexTest
 
         project.setName("TestAnnotationQuery");
 
+        User user = userRepository.get("admin");
+
         Waiter createProjectWaiter = new Waiter();
-        
+
         // Start thread to create and initialize project
         new Thread(() -> {
             try {
@@ -256,7 +262,7 @@ public class MtasDocumentIndexTest
             createProjectWaiter.assertTrue(true);
             createProjectWaiter.resume();
         }).start();
-        
+
         // Wait for thread to complete
         createProjectWaiter.await();
 
@@ -285,12 +291,13 @@ public class MtasDocumentIndexTest
             try {
                 // Wait some time so that the document can be indexed
                 Thread.sleep(WAIT_TIME);
-                
+
                 // Test if the index has been created
                 if (searchService.isIndexValid(project)) {
                     log.info("**************** Index is valid");
                     uploadWaiter.assertTrue(true);
-                } else {
+                }
+                else {
                     log.info("**************** Index is NOT valid");
                     uploadWaiter.assertTrue(false);
                 }
@@ -298,19 +305,59 @@ public class MtasDocumentIndexTest
             catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            
+
             uploadWaiter.resume();
         }).start();
 
         // Wait for thread to complete
         uploadWaiter.await();
 
-        User user = userRepository.get("admin");
-        String query = "Galicia";
+        Waiter annotationWaiter = new Waiter();
 
-//        AnnotationDocument annotationDocument = documentService
-//                .createOrGetAnnotationDocument(sourceDocument, user);
-        
+        // Start thread to annotate the document
+        new Thread(() -> {
+            try {
+                ClassLoader classLoader = getClass().getClassLoader();
+                File annotatedFile = new File(classLoader.getResource("galicia.conll").getFile());
+
+                JCas annotationCas = importExportService.importCasFromFile(annotatedFile, project,
+                        "conll2002");
+
+                AnnotationDocument annotationDocument = documentService
+                        .createOrGetAnnotationDocument(sourceDocument, user);
+
+                documentService.writeAnnotationCas(annotationCas, annotationDocument, false);
+            }
+            catch (IOException | UIMAException e) {
+                e.printStackTrace();
+            }
+
+            try {
+                // Wait some time so that the document can be indexed
+                Thread.sleep(WAIT_TIME);
+
+                // Test if the index has been created
+                if (searchService.isIndexValid(project)) {
+                    log.info("**************** Index is valid");
+                    uploadWaiter.assertTrue(true);
+                }
+                else {
+                    log.info("**************** Index is NOT valid");
+                    annotationWaiter.assertTrue(false);
+                }
+            }
+            catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            annotationWaiter.resume();
+        }).start();
+
+        // Wait for thread to complete
+        annotationWaiter.await();
+
+        String query = "<Named_entity.value=\"LOC\"/>";
+
         ArrayList<SearchResult> results = (ArrayList<SearchResult>) searchService.query(user,
                 project, query);
 
@@ -330,14 +377,18 @@ public class MtasDocumentIndexTest
         ArrayList<SearchResult> expectedResults = new ArrayList<SearchResult>();
         expectedResults.add(expectedResult);
 
-        assertEquals(results.get(0), expectedResult);
-        assertEquals(results.size(), 1);
+        assertNotNull(results);
+        if (results != null) {
+            assertEquals(1, results.size());
+            assertEquals(expectedResult, results.get(0));
+        }
     }
 
     @Configuration
     public static class TestContext
     {
-        @Autowired ApplicationEventPublisher applicationEventPublisher;
+        @Autowired
+        ApplicationEventPublisher applicationEventPublisher;
         private final String temporaryFolderPath = "target/MtasDocumentIndexTest";
 
         @Bean
@@ -388,7 +439,7 @@ public class MtasDocumentIndexTest
         public SearchService searchService()
         {
             return new SearchServiceImpl();
-//            return new SearchServiceImpl();
+            // return new SearchServiceImpl();
         }
 
         @Bean
@@ -446,7 +497,7 @@ public class MtasDocumentIndexTest
         {
             return new CurationDocumentServiceImpl();
         }
-        
+
         @Bean
         public RepositoryProperties repositoryProperties()
         {
@@ -466,6 +517,11 @@ public class MtasDocumentIndexTest
             props.put("text.label", "Plain text");
             props.put("text.reader", TextReader.class.getName());
             props.put("text.writer", TextWriter.class.getName());
+            props.put("conll2002.label", "CoNLL 2002");
+            props.put("conll2002.reader",
+                    de.tudarmstadt.ukp.dkpro.core.io.conll.Conll2002Reader.class.getName());
+            props.put("conll2002.writer",
+                    de.tudarmstadt.ukp.dkpro.core.io.conll.Conll2002Writer.class.getName());
             return props;
         }
 

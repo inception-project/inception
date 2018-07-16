@@ -260,5 +260,17 @@
     	<version>0.4.3</version>
     	<scope>test</scope>
     </dependency>
+    <dependency>
+    	<groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
+    	<artifactId>
+    		de.tudarmstadt.ukp.dkpro.core.io.conll-asl
+    	</artifactId>
+    	<scope>test</scope>
+    </dependency>
+    <dependency>
+    	<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+    	<artifactId>webanno-io-conll</artifactId>
+    	<scope>test</scope>
+    </dependency>
   </dependencies>  
 </project>
