@@ -21,7 +21,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.active.learning.sidebar.RecommendationDifference;
 import org.apache.uima.jcas.JCas;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -39,6 +43,8 @@ public class ActiveLearningServiceImpl
 {
     private final DocumentService documentService;
     private final RecommendationService recommendationService;
+
+    private Map<String, ActiveLearningUserState> states = new ConcurrentHashMap<>();
 
     @Autowired
     public ActiveLearningServiceImpl(DocumentService aDocumentService,
@@ -101,5 +107,278 @@ public class ActiveLearningServiceImpl
         // TODO #176 use the document Id once it it available in the CAS
         return model.getFlattenedPredictions(aState.getDocument().getName(), aSelectedLayer,
             windowBegin, windowEnd, aJcas, true);
+    }
+
+    @Override
+    public void putSessionActive(User aUser, boolean aSesscionActive)
+    {
+        ActiveLearningUserState state = getState(aUser.getUsername());
+        synchronized (state) {
+            state.setSessionActive(aSesscionActive);
+        }
+    }
+
+    @Override
+    public boolean getSessionActive(User aUser)
+    {
+        ActiveLearningUserState state = getState(aUser.getUsername());
+        boolean sessionActive;
+        synchronized (state) {
+            sessionActive = state.isSessionActive();
+        }
+        return sessionActive;
+    }
+
+    @Override
+    public void putHasUnseenRecommendation(User aUser, boolean aHasUnseenRecommendation)
+    {
+        ActiveLearningUserState state = getState(aUser.getUsername());
+        synchronized (state) {
+            state.setHasUnseenRecommendation(aHasUnseenRecommendation);
+        }
+    }
+
+    @Override
+    public boolean getHasUnseenRecommendation(User aUser)
+    {
+        ActiveLearningUserState state = getState(aUser.getUsername());
+        boolean hasUnseenRecommendation;
+        synchronized (state) {
+            hasUnseenRecommendation = state.isHasUnseenRecommendation();
+        }
+        return hasUnseenRecommendation;
+    }
+
+    @Override
+    public void putHasSkippedRecommendation(User aUser, boolean aHasSkippedRecommendation)
+    {
+        ActiveLearningUserState state = getState(aUser.getUsername());
+        synchronized (state) {
+            state.setHasSkippedRecommendation(aHasSkippedRecommendation);
+        }
+    }
+
+    @Override
+    public boolean getHasSkippedRecommendation(User aUser)
+    {
+        ActiveLearningUserState state = getState(aUser.getUsername());
+        boolean hasSkippedRecommendation;
+        synchronized (state) {
+            hasSkippedRecommendation = state.isHasSkippedRecommendation();
+        }
+        return hasSkippedRecommendation;
+    }
+
+    @Override
+    public void putDoExistRecommender(User aUser, boolean aDoExistRecommenders)
+    {
+        ActiveLearningUserState state = getState(aUser.getUsername());
+        synchronized (state) {
+            state.setDoExistRecommenders(aDoExistRecommenders);
+        }
+    }
+
+    @Override
+    public boolean getDoExistRecommenders(User aUser)
+    {
+        ActiveLearningUserState state = getState(aUser.getUsername());
+        boolean doExistRecommenders;
+        synchronized (state) {
+            doExistRecommenders = state.isDoExistRecommenders();
+        }
+        return doExistRecommenders;
+    }
+
+    @Override
+    public void putCurrentRecommendation(User aUser, AnnotationObject aCurrentRecommendation)
+    {
+        ActiveLearningUserState state = getState(aUser.getUsername());
+        synchronized (state) {
+            state.setCurrentRecommendation(aCurrentRecommendation);
+        }
+    }
+
+    @Override
+    public AnnotationObject getCurrentRecommendation(User aUser)
+    {
+        ActiveLearningUserState state = getState(aUser.getUsername());
+        AnnotationObject currentRecommendation;
+        synchronized (state) {
+            currentRecommendation = state.getCurrentRecommendation();
+        }
+        return currentRecommendation;
+    }
+
+    @Override
+    public void putCurrentDifference(User aUser, RecommendationDifference aCurrentDifference)
+    {
+        ActiveLearningUserState state = getState(aUser.getUsername());
+        synchronized (state) {
+            state.setCurrentDifference(aCurrentDifference);
+        }
+    }
+
+    @Override
+    public RecommendationDifference getCurrentDifference(User aUser)
+    {
+        ActiveLearningUserState state = getState(aUser.getUsername());
+        RecommendationDifference currentDifference;
+        synchronized (state) {
+            currentDifference = state.getCurrentDifference();
+        }
+        return currentDifference;
+    }
+
+    @Override
+    public void putSelectedLayer(User aUser, AnnotationLayer aSelectedLayer)
+    {
+        ActiveLearningUserState state = getState(aUser.getUsername());
+        synchronized (state) {
+            state.setSelectedLayer(aSelectedLayer);
+        }
+    }
+
+    @Override
+    public AnnotationLayer getAnnotationLayer(User aUser)
+    {
+        ActiveLearningUserState state = getState(aUser.getUsername());
+        AnnotationLayer selectedLayer;
+        synchronized (state) {
+            selectedLayer = state.getSelectedLayer();
+        }
+        return selectedLayer;
+    }
+
+    @Override
+    public void putFeatureState(User aUser, FeatureState aFeatureState)
+    {
+        ActiveLearningUserState state = getState(aUser.getUsername());
+        synchronized (state) {
+            state.setFeatureState(aFeatureState);
+        }
+    }
+
+    @Override
+    public FeatureState getFeatureState(User aUser)
+    {
+        ActiveLearningUserState state = getState(aUser.getUsername());
+        FeatureState featureState;
+        synchronized (state) {
+            featureState = state.getFeatureState();
+        }
+        return featureState;
+    }
+
+    private ActiveLearningUserState getState(String aUsername)
+    {
+        synchronized (states) {
+            ActiveLearningUserState state;
+            state = states.get(aUsername);
+            if (state ==null) {
+                state = new ActiveLearningUserState();
+                states.put(aUsername, state);
+            }
+            return state;
+        }
+    }
+
+    private void clearState(String aUsername)
+    {
+        synchronized (states) {
+            states.remove(aUsername);
+        }
+    }
+
+    private static class ActiveLearningUserState
+    {
+        //TODO: change them to Map for multiple projects
+        private boolean sessionActive = false;
+        private boolean hasUnseenRecommendation = false;
+        private boolean hasSkippedRecommendation = false;
+        private boolean doExistRecommenders = true;
+        private AnnotationObject currentRecommendation;
+        private RecommendationDifference currentDifference;
+        private AnnotationLayer selectedLayer;
+        private FeatureState featureState;
+
+        public boolean isSessionActive()
+        {
+            return sessionActive;
+        }
+
+        public void setSessionActive(boolean sessionActive)
+        {
+            this.sessionActive = sessionActive;
+        }
+
+        public boolean isHasUnseenRecommendation()
+        {
+            return hasUnseenRecommendation;
+        }
+
+        public void setHasUnseenRecommendation(boolean hasUnseenRecommendation)
+        {
+            this.hasUnseenRecommendation = hasUnseenRecommendation;
+        }
+
+        public boolean isHasSkippedRecommendation()
+        {
+            return hasSkippedRecommendation;
+        }
+
+        public void setHasSkippedRecommendation(boolean hasSkippedRecommendation)
+        {
+            this.hasSkippedRecommendation = hasSkippedRecommendation;
+        }
+
+        public boolean isDoExistRecommenders()
+        {
+            return doExistRecommenders;
+        }
+
+        public void setDoExistRecommenders(boolean doExistRecommenders)
+        {
+            this.doExistRecommenders = doExistRecommenders;
+        }
+
+        public AnnotationObject getCurrentRecommendation()
+        {
+            return currentRecommendation;
+        }
+
+        public void setCurrentRecommendation(AnnotationObject currentRecommendation)
+        {
+            this.currentRecommendation = currentRecommendation;
+        }
+
+        public RecommendationDifference getCurrentDifference()
+        {
+            return currentDifference;
+        }
+
+        public void setCurrentDifference(RecommendationDifference currentDifference)
+        {
+            this.currentDifference = currentDifference;
+        }
+
+        public AnnotationLayer getSelectedLayer()
+        {
+            return selectedLayer;
+        }
+
+        public void setSelectedLayer(AnnotationLayer selectedLayer)
+        {
+            this.selectedLayer = selectedLayer;
+        }
+
+        public FeatureState getFeatureState()
+        {
+            return featureState;
+        }
+
+        public void setFeatureState(FeatureState featureState)
+        {
+            this.featureState = featureState;
+        }
     }
 }

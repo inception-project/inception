@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
@@ -163,6 +164,7 @@ public class ActiveLearningSidebar
     private FeatureEditor editor;
     private Form<Void> recommendationForm;
     private AnnotationFeature annotationFeature;
+    private User user;
 
 
     public ActiveLearningSidebar(String aId, IModel<AnnotatorState> aModel,
@@ -172,6 +174,8 @@ public class ActiveLearningSidebar
         super(aId, aModel, aActionHandler, aJCasProvider, aAnnotationPage);
 
         annotationPage = aAnnotationPage;
+        user = aModel.getObject().getUser();
+        sessionActive = activeLearningService.getSessionActive(user);
         
         mainContainer = new WebMarkupContainer(CID_MAIN_CONTAINER);
         mainContainer.setOutputMarkupId(true);
@@ -227,7 +231,8 @@ public class ActiveLearningSidebar
         
         LambdaAjaxButton<Void> startStopButton = new LambdaAjaxButton<>(
                 CID_LAYER_SELECTION_BUTTON, this::actionStartStopTraining);
-        startStopButton.setModel(LambdaModel.of(() -> sessionActive ? "Terminate" : "Start"));
+        startStopButton.setModel(LambdaModel
+            .of(() -> sessionActive ? "Terminate" : "Start"));
         form.add(startStopButton);
         form.add(
             LambdaBehavior.onConfigure(component -> component.setVisible(doExistRecommenders)));
@@ -270,6 +275,8 @@ public class ActiveLearningSidebar
                     .publishEvent(new ActiveLearningSessionCompletedEvent(this,
                             annotatorState.getProject(), annotatorState.getUser().getUsername()));
         }
+
+        activeLearningService.putSessionActive(annotatorState.getUser(), sessionActive);
     }
     
     private void showAndHighlightRecommendationAndJumpToRecommendationLocation(

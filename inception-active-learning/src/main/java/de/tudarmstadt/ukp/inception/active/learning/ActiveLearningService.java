@@ -19,6 +19,9 @@ package de.tudarmstadt.ukp.inception.active.learning;
 
 import java.util.List;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.active.learning.sidebar.RecommendationDifference;
 import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
@@ -36,4 +39,36 @@ public interface ActiveLearningService
 
     List<AnnotationObject> getFlattenedRecommendationsFromRecommendationModel(JCas aJcas,
             AnnotatorState aState, AnnotationLayer aSelectedLayer);
+
+    void putSessionActive(User aUser, boolean aSesscionActive);
+
+    boolean getSessionActive(User aUser);
+
+    void putHasUnseenRecommendation(User aUser, boolean aHasUnseenRecommendation);
+
+    boolean getHasUnseenRecommendation(User aUser);
+
+    void putHasSkippedRecommendation(User aUser, boolean aHasSkippedRecommendation);
+
+    boolean getHasSkippedRecommendation(User aUser);
+
+    void putDoExistRecommender(User aUser, boolean aDoExistRecommenders);
+
+    boolean getDoExistRecommenders(User aUser);
+
+    void putCurrentRecommendation(User aUser, AnnotationObject aCurrentRecommendation);
+
+    AnnotationObject getCurrentRecommendation(User aUser);
+
+    void putCurrentDifference(User aUser, RecommendationDifference aCurrentDifference);
+
+    RecommendationDifference getCurrentDifference(User aUser);
+
+    void putSelectedLayer(User aUser, AnnotationLayer aSelectedLayer);
+
+    AnnotationLayer getAnnotationLayer(User aUser);
+
+    void putFeatureState(User aUser, FeatureState aFeatureState);
+
+    FeatureState getFeatureState(User aUser);
 }
