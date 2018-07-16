@@ -17,7 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.kb.reification;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Resource;
@@ -77,7 +81,7 @@ public class WikiDataReification
     }
 
     @Override
-    public List<Statement> reify(KnowledgeBase kb, KBStatement aStatement)
+    public Set<Statement> reify(KnowledgeBase kb, KBStatement aStatement)
     {
         String statementId = aStatement.getStatementId();
         KBHandle instance = aStatement.getInstance();
@@ -86,13 +90,17 @@ public class WikiDataReification
 
         IRI subject = vf.createIRI(instance.getIdentifier());
         IRI predicate = vf.createIRI(property.getIdentifier());
+        if (statementId == null) {
+            statementId = vf.createBNode().stringValue();
+        }
+
         Resource id = vf.createBNode(statementId);
 
         Statement root = vf.createStatement(subject, predicate, id);
         IRI valuePredicate = vf.createIRI(PREDICATE_NAMESPACE, predicate.getLocalName());
         Statement valueStatement = vf.createStatement(id, valuePredicate, value);
 
-        List<Statement> statements = new ArrayList<>();
+        Set<Statement> statements = new HashSet<>();
         statements.add(root);           // S    P   id
         statements.add(valueStatement); // id   p_s V
 
@@ -100,8 +108,6 @@ public class WikiDataReification
             Set<Statement> qualifierStatement = reifyQualifier(kb, aQualifier);
             aQualifier.setOriginalStatements(qualifierStatement);
         }
-
-        System.out.println(statements);
 
         return statements;
     }
@@ -176,7 +182,7 @@ public class WikiDataReification
 
                 IRI valuePredicate = vf.createIRI(ps.getValue().stringValue());
                 Statement valueStatement = vf.createStatement(idResource, valuePredicate, value);
-                List<Statement> originalStatements = new ArrayList<>();
+                Set<Statement> originalStatements = new HashSet<>();
 
                 originalStatements.add(root);
                 originalStatements.add(valueStatement);
@@ -289,7 +295,7 @@ public class WikiDataReification
             kbService.update(kb, (conn) -> {
                 conn.remove(getStatementsById(kb, statementId));
                 conn.remove(getQualifiersById(kb, statementId));
-                aStatement.setOriginalStatements(Collections.emptyList());
+                aStatement.setOriginalStatements(Collections.emptySet());
                 aStatement.setQualifiers(Collections.emptyList());
                 return null;
             });
@@ -323,7 +329,7 @@ public class WikiDataReification
             conn.add(valueStatement);
             aStatement.setStatementId(statementId);
 
-            List<Statement> statements = new ArrayList<>();
+            Set<Statement> statements = new HashSet<>();
             statements.add(root);
             statements.add(valueStatement);
             aStatement.setOriginalStatements(statements);
