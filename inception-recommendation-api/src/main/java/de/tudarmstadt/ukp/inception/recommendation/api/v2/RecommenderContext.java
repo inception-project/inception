@@ -38,20 +38,28 @@ public class RecommenderContext {
         return new RecommenderContext(aNameSpace, store);
     }
 
-    public <T> T get(String aKey) {
-        String key = buildKey(aKey);
+    @SuppressWarnings("unchecked")
+    public <T> T get(Key<T> aKey) {
+        String key = buildKey(aKey.name);
         if (!store.containsKey(key)) {
             String message = String.format("Value with key [%s] not found in context!", key);
             throw new NoSuchElementException(message);
         }
-
         return (T) store.get(key);
     }
-    public <T> void set(String aKey, T aValue) {
-        store.put(buildKey(aKey), aValue);
+    public <T> void put(Key<T> aKey, T aValue) {
+        store.put(buildKey(aKey.name), aValue);
     }
 
     private String buildKey(String aKey) {
         return nameSpace + ":" + aKey;
+    }
+
+    public static class Key<T> {
+        private final String name;
+
+        public Key(String aName) {
+            name = aName;
+        }
     }
 }

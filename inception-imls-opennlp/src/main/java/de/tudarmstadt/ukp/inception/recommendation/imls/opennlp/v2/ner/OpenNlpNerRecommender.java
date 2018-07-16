@@ -44,6 +44,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.type.PredictedSpan;
 import de.tudarmstadt.ukp.inception.recommendation.api.v2.DataSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommenderContext;
+import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommenderContext.Key;
 import de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.ner.NameSampleStream;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
@@ -60,8 +61,8 @@ import opennlp.tools.util.TrainingParameters;
 public class OpenNlpNerRecommender
     implements RecommendationEngine
 {
+    public static final Key<TokenNameFinderModel> KEY_MODEL = new Key<>("model");
     private static final Logger LOG = LoggerFactory.getLogger(OpenNlpNerRecommender.class);
-    private static final String KEY_MODEL = "model";
 
     private final String layerName;
     private final String featureName;
@@ -79,7 +80,7 @@ public class OpenNlpNerRecommender
     {
         List<NameSample> nameSamples = extractNameSamples(aCasses);
         TokenNameFinderModel model = train(nameSamples, traits.getParameters());
-        aContext.set(KEY_MODEL, model);
+        aContext.put(KEY_MODEL, model);
     }
 
     @Override
@@ -193,13 +194,11 @@ public class OpenNlpNerRecommender
         // Convert character offsets to token indices
         Int2ObjectMap<AnnotationFS> idxTokenOffset = new Int2ObjectOpenHashMap<>();
         Object2IntMap<AnnotationFS> idxToken = new Object2IntOpenHashMap<>();
-        String[] words = new String[aTokens.size()];
         int idx = 0;
         for (AnnotationFS t : aTokens) {
             idxTokenOffset.put(t.getBegin(), t);
             idxTokenOffset.put(t.getEnd() - 1, t);
             idxToken.put(t, idx);
-            words[idx] = t.getCoveredText();
             idx++;
         }
 

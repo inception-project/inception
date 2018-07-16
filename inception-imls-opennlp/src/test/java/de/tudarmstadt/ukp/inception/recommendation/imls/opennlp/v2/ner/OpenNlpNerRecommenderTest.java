@@ -72,7 +72,7 @@ public class OpenNlpNerRecommenderTest
 
         sut.train(context, asList(cas.getCas()));
 
-        assertThat(context.<Object>get("model"))
+        assertThat(context.get(OpenNlpNerRecommender.KEY_MODEL))
             .as("Model has been set")
             .isNotNull();
     }
