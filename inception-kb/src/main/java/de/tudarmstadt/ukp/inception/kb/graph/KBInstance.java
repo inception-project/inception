@@ -166,24 +166,26 @@ public class KBInstance
         kbInst.setIdentifier(aStmt.getSubject().stringValue());
         kbInst.originalStatements.add(aStmt);
 
-        readFirst(aConn, aStmt.getSubject(), RDFS.LABEL, null, aKb.getLanguage()).ifPresent((stmt) -> {
-            kbInst.setName(stmt.getObject().stringValue());
-            kbInst.originalStatements.add(stmt);
-            if (stmt.getObject() instanceof Literal) {
-                Literal literal = (Literal) stmt.getObject();
-                Optional<String> language = literal.getLanguage();
-                language.ifPresent(kbInst::setLanguage);
-            }
-        });
+        readFirst(aConn, aStmt.getSubject(), RDFS.LABEL, null, aKb.getLanguage())
+            .ifPresent((stmt) -> {
+                kbInst.setName(stmt.getObject().stringValue());
+                kbInst.originalStatements.add(stmt);
+                if (stmt.getObject() instanceof Literal) {
+                    Literal literal = (Literal) stmt.getObject();
+                    Optional<String> language = literal.getLanguage();
+                    language.ifPresent(kbInst::setLanguage);
+                }
+            });
 
-        readFirst(aConn, aStmt.getSubject(), RDFS.COMMENT, null, aKb.getLanguage()).ifPresent((stmt) -> {
-            kbInst.setDescription(stmt.getObject().stringValue());
-            kbInst.originalStatements.add(stmt);
-            if (stmt.getObject() instanceof Literal) {
-                Literal literal = (Literal) stmt.getObject();
-                Optional<String> language = literal.getLanguage();
-                language.ifPresent(kbInst::setLanguage);
-            }
+        readFirst(aConn, aStmt.getSubject(), RDFS.COMMENT, null, aKb.getLanguage())
+            .ifPresent((stmt) -> {
+                kbInst.setDescription(stmt.getObject().stringValue());
+                kbInst.originalStatements.add(stmt);
+                if (stmt.getObject() instanceof Literal) {
+                    Literal literal = (Literal) stmt.getObject();
+                    Optional<String> language = literal.getLanguage();
+                    language.ifPresent(kbInst::setLanguage);
+                }
         });
 
         return kbInst;
