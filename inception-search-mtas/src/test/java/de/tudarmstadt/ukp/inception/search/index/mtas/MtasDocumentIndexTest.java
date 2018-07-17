@@ -26,7 +26,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 
@@ -43,7 +42,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-//import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.context.ApplicationEventPublisher;
@@ -60,8 +58,10 @@ import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistryImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.PrimitiveUimaFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.AnnotationSchemaServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.BackupProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.CasStorageServiceImpl;
@@ -86,6 +86,10 @@ import de.tudarmstadt.ukp.dkpro.core.io.text.TextReader;
 import de.tudarmstadt.ukp.dkpro.core.io.text.TextWriter;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseServiceImpl;
+import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupport;
+import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupportRegistry;
+import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupportRegistryImpl;
+import de.tudarmstadt.ukp.inception.search.PrimitiveUimaIndexingSupport;
 import de.tudarmstadt.ukp.inception.search.SearchResult;
 import de.tudarmstadt.ukp.inception.search.SearchService;
 import de.tudarmstadt.ukp.inception.search.SearchServiceImpl;
@@ -127,8 +131,6 @@ public class MtasDocumentIndexTest
     private @Autowired SearchService searchService;
     private @Autowired AnnotationSchemaService annotationSchemaService;
     private @Autowired ImportExportService importExportService;
-
-    // private @Autowired @Qualifier("formats") Properties formats;
 
     @Before
     public void setUp()
@@ -389,6 +391,7 @@ public class MtasDocumentIndexTest
     {
         @Autowired
         ApplicationEventPublisher applicationEventPublisher;
+
         private final String temporaryFolderPath = "target/MtasDocumentIndexTest";
 
         @Bean
@@ -401,6 +404,33 @@ public class MtasDocumentIndexTest
         public PhysicalIndexFactory mtasDocumentIndexFactory()
         {
             return new MtasDocumentIndexFactory();
+        }
+
+        @Bean
+        public FeatureSupport featureSupport()
+        {
+            return new PrimitiveUimaFeatureSupport();
+        }
+
+        @Bean
+        public FeatureSupportRegistry featureSupportRegistry(
+                @Lazy @Autowired List<FeatureSupport> aFeatureSupports)
+        {
+            return new FeatureSupportRegistryImpl(aFeatureSupports);
+        }
+
+        @Bean
+        public FeatureIndexingSupport primitiveUimaIndexingSupport(
+                @Autowired FeatureSupportRegistry aFeatureSupportRegistry)
+        {
+            return new PrimitiveUimaIndexingSupport(aFeatureSupportRegistry);
+        }
+
+        @Bean
+        public FeatureIndexingSupportRegistry featureIndexingSupportRegistry(
+                @Lazy @Autowired(required = false) List<FeatureIndexingSupport> aIndexingSupports)
+        {
+            return new FeatureIndexingSupportRegistryImpl(aIndexingSupports);
         }
 
         @Lazy
@@ -439,7 +469,6 @@ public class MtasDocumentIndexTest
         public SearchService searchService()
         {
             return new SearchServiceImpl();
-            // return new SearchServiceImpl();
         }
 
         @Bean
@@ -472,12 +501,6 @@ public class MtasDocumentIndexTest
         public AnnotationSchemaService annotationSchemaService()
         {
             return new AnnotationSchemaServiceImpl();
-        }
-
-        @Bean
-        public FeatureSupportRegistry featureSupportRegistry()
-        {
-            return new FeatureSupportRegistryImpl(Collections.emptyList());
         }
 
         @Bean
