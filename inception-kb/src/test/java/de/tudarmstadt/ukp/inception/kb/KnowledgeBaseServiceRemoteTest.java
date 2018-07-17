@@ -51,7 +51,7 @@ import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 @SpringBootTest(classes = SpringConfig.class)
 @Transactional
 @DataJpaTest
-public class KnowledgeBaseServiceTest
+public class KnowledgeBaseServiceRemoteTest
 {
     private static final String PROJECT_NAME = "Test project";
     
@@ -110,7 +110,7 @@ public class KnowledgeBaseServiceTest
         sut.destroy();
     }
 
-    public KnowledgeBaseServiceTest(KnowledgeBase akb, Reification aReification) throws Exception
+    public KnowledgeBaseServiceRemoteTest(KnowledgeBase akb, Reification aReification) throws Exception
     {
         reification = aReification;
         kb = akb;
@@ -131,69 +131,9 @@ public class KnowledgeBaseServiceTest
         return dataList;
     }
 
-    public static List<KnowledgeBase> addKBProfileSetup() throws Exception
-    {
-        List<KnowledgeBase> kbList = new ArrayList<KnowledgeBase>();
-
-        // Configuration for Local Ontology
-        String kbProfileName = "Wine";
-        kb = buildDefaultKnowledgeBase(kbProfileName);
-        kb.setType(RepositoryType.LOCAL);
-        // sut.registerKnowledgeBase(kb, sut.getNativeConfig());
-        setSchema(kb, OWL.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT, RDFS.LABEL, RDF.PROPERTY);
-        kbList.add(kb);
-
-        // Configurations for Remote KB
-        kbProfileMap = readKnowledgeBaseProfiles();
-
-        // Configuration for Wikidata official
-        kbProfileName = "wikidata";
-        kb = buildDefaultKnowledgeBase(kbProfileName);
-        kb.setType(RepositoryType.REMOTE);
-        KnowledgeBaseMapping mapping = kbProfileMap.get(kbProfileName).getMapping();
-        setSchema(kb, mapping);
-        kbList.add(kb);
-
-        // Configuration for Wikidata UKP Virtuoso
-        kbProfileName = "virtuoso";
-        kb = buildDefaultKnowledgeBase(kbProfileName);
-        kb.setType(RepositoryType.REMOTE);
-        mapping = kbProfileMap.get(kbProfileName).getMapping();
-        setSchema(kb, mapping);
-        kbList.add(kb);
-
-        // Configuration for Babbel net
-        // kbProfileName = "babel_net";
-        // kbName = String.join("_", ROOT_KB_NAME, kbProfileName);
-        // kb = buildDefaultKnowledgeBase(project, kbName);
-        // kb.setType(RepositoryType.REMOTE);
-        // mapping = kbProfileMap.get(kbProfileName).getMapping();
-        // setSchema(kb, mapping);
-        // kbList.add(kb);
-
-        // Configuration for DBPedia
-        kbProfileName = "db_pedia";
-        kb = buildDefaultKnowledgeBase(kbProfileName);
-        kb.setType(RepositoryType.REMOTE);
-        mapping = kbProfileMap.get(kbProfileName).getMapping();
-        setSchema(kb, mapping);
-        kbList.add(kb);
-
-        // Configuration for Yago
-        kbProfileName = "yago";
-        kb = buildDefaultKnowledgeBase(kbProfileName);
-        kb.setType(RepositoryType.REMOTE);
-        mapping = kbProfileMap.get(kbProfileName).getMapping();
-        setSchema(kb, mapping);
-        kbList.add(kb);
-
-        return kbList;
-    }
-
     @Test
     public void testRootConcept()
     {
-        kb.setReification(reification);
         List<KBHandle> rootConceptKBHandle = sut.listRootConcepts(kb, true);
         assertThat(rootConceptKBHandle).as("Check that root concept list is not empty")
                 .isNotEmpty();
@@ -202,18 +142,12 @@ public class KnowledgeBaseServiceTest
     @Test
     public void testPropertyList()
     {
-        kb.setReification(reification);
         List<KBHandle> propertiesKBHandle = sut.listProperties(kb, kb.getPropertyTypeIri(), true,
                 true);
         assertThat(propertiesKBHandle).as("Check that list is not empty").isNotEmpty();
     }
 
     // Helper
-    public static void setUpKB(KnowledgeBase kb)
-    {
-        sut.updateKnowledgeBase(kb, sut.getKnowledgeBaseConfig(kb));
-        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
-    }
 
     private static KnowledgeBase buildDefaultKnowledgeBase(String name)
     {
@@ -232,13 +166,43 @@ public class KnowledgeBaseServiceTest
 
     private static void importKnowledgeBase(String resourceName) throws Exception
     {
-        ClassLoader classLoader = KnowledgeBaseServiceTest.class.getClassLoader();
+        ClassLoader classLoader = KnowledgeBaseServiceRemoteTest.class.getClassLoader();
         String fileName = classLoader.getResource(resourceName).getFile();
         try (InputStream is = classLoader.getResourceAsStream(resourceName)) {
             sut.importData(kb, fileName, is);
         }
     }
 
+    public static List<KnowledgeBase> addKBProfileSetup() throws Exception
+    {
+        List<KnowledgeBase> kbList = new ArrayList<KnowledgeBase>();
+        // Configuration for Local Ontology
+        String kbProfileName = "Wine";
+        kb = buildDefaultKnowledgeBase(kbProfileName);
+        kb.setType(RepositoryType.LOCAL);
+        setSchema(kb, OWL.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT, RDFS.LABEL, RDF.PROPERTY);
+        kbList.add(kb);
+
+        // Configurations for Remote KB
+        kbProfileMap = readKnowledgeBaseProfiles();
+        //String[] kbProfileArray = { "wikidata", "virtuoso", "db_pedia", "yago" };
+        String[] kbProfileArray = { "wikidata", "db_pedia", "yago" };
+        for (String name : kbProfileArray) {
+            kbList.add(getParameterizedKB(name));
+        }
+
+        return kbList;
+    }
+    
+    public static KnowledgeBase getParameterizedKB(String kbProfileName) {
+        kb = buildDefaultKnowledgeBase(kbProfileName);
+        kb.setType(RepositoryType.REMOTE);
+        KnowledgeBaseMapping mapping = kbProfileMap.get(kbProfileName).getMapping();
+        setSchema(kb, mapping);
+        return kb;
+        
+    }
+    
     private static void setSchema(KnowledgeBase kb, IRI classIri, IRI subclassIri, IRI typeIri,
             IRI descriptionIri, IRI labelIri, IRI propertyTypeIri)
     {
@@ -266,7 +230,7 @@ public class KnowledgeBaseServiceTest
     public static Map<String, KnowledgeBaseProfile> readKnowledgeBaseProfiles() throws IOException
     {
         try (Reader r = new InputStreamReader(
-                KnowledgeBaseServiceTest.class.getResourceAsStream("knowledgebase-profiles.yaml"),
+                KnowledgeBaseServiceRemoteTest.class.getResourceAsStream("knowledgebase-profiles.yaml"),
                 StandardCharsets.UTF_8)) {
             ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
             return mapper.readValue(r, new TypeReference<HashMap<String, KnowledgeBaseProfile>>()
