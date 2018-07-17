@@ -519,6 +519,7 @@ public class CasUtil
                 AnnotationObject ao = new AnnotationObject(tObj, id, feature.getName(),
                     aRecommenderId);
                 ao.setLabel(annotationLabel);
+                result.add(ao);
                 id++;
             }
         }
