@@ -29,10 +29,12 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import de.tudarmstadt.ukp.inception.recommendation.event.PredictionsSwitchedEvent;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
+import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,11 +45,15 @@ import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.event.EventListener;
 
 public class ActiveLearningRecommender
     implements Serializable
 {
     private static final long serialVersionUID = -2308436775710912029L;
+
+    private @Autowired ActiveLearningService activeLearningService;
 
     private List<AnnotationObject> recommendations;
     private List<List<AnnotationObject>> listOfRecommendationsForEachToken;
@@ -61,18 +67,38 @@ public class ActiveLearningRecommender
         selectedLayer = aLayer;
     }
 
-    public void updateRecommendations(ActiveLearningService aActiveLearningService)
+    public RecommendationDifference updateRecommendations(LearningRecordService aRecordService,
+        Date learnSkippedRecommendationTime)
     {
-        listOfRecommendationsForEachToken = aActiveLearningService
+        //remove invisible recommendations
+        List<List<AnnotationObject>> filteredRecommendations = new ArrayList<>
+            (listOfRecommendationsForEachToken);
+        removeInvisibleAnnotations(filteredRecommendations);
+
+        // remove rejected recommendations
+        removeRejectedOrSkippedAnnotations(aRecordService, true, learnSkippedRecommendationTime,
+            filteredRecommendations);
+
+        return calculateDifferencesAndReturnLowestVisibleDifference(filteredRecommendations);
+
+    }
+
+    @EventListener
+    public void onPrecitionsSwitched(PredictionsSwitchedEvent aEvent)
+    {
+        annotatorState = aEvent.getAnnotatorState();
+        selectedLayer = annotatorState.getSelectedAnnotationLayer();
+        listOfRecommendationsForEachToken = activeLearningService
             .getRecommendationFromRecommendationModel(annotatorState, selectedLayer);
+        // remove recommendations with Null Annotation
         listOfRecommendationsForEachToken.forEach(recommendationList ->
             removeRecommendationsWithNullAnnotation(recommendationList));
         listOfRecommendationsForEachToken.removeIf(recommendationList ->
             recommendationList.isEmpty());
+        // remove duplicate recommendations
         listOfRecommendationsForEachToken = listOfRecommendationsForEachToken.stream()
             .map(it -> removeDuplicateRecommendations(it))
             .collect(Collectors.toList());
-
     }
 
     public RecommendationDifference generateRecommendationWithLowestDifference(
@@ -104,8 +130,9 @@ public class ActiveLearningRecommender
             (removeDuplicateRecommendation - removeNullRecommendation));
 
         //remove invisible recommendations
-        List<List<AnnotationObject>> filteredRecommendations = removeInvisibleAnnotations
+        List<List<AnnotationObject>> filteredRecommendations = new ArrayList<>
             (listOfRecommendationsForEachToken);
+        removeInvisibleAnnotations(filteredRecommendations);
 
         // remove rejected recommendations
         removeRejectedOrSkippedAnnotations(aRecordService, true, learnSkippedRecommendationTime,
@@ -117,14 +144,13 @@ public class ActiveLearningRecommender
         return calculateDifferencesAndReturnLowestVisibleDifference(filteredRecommendations);
     }
 
-    public List<List<AnnotationObject>> removeInvisibleAnnotations(
+    public void removeInvisibleAnnotations(
         List<List<AnnotationObject>> recommendationsWithInvisibleAnnotations)
     {
         for (List<AnnotationObject> listOfRecommendations :
             recommendationsWithInvisibleAnnotations) {
             listOfRecommendations.removeIf(recommendation -> !recommendation.isVisible());
         }
-        return recommendationsWithInvisibleAnnotations;
     }
 
     public boolean hasRecommendationWhichIsSkipped(LearningRecordService aRecordService,
@@ -178,7 +204,7 @@ public class ActiveLearningRecommender
         return false;
     }
 
-    private List<List<AnnotationObject>> removeRejectedOrSkippedAnnotations(
+    private void removeRejectedOrSkippedAnnotations(
         LearningRecordService aRecordService, boolean filterSkippedRecommendation,
         Date learnSkippedRecommendationTime,
         List<List<AnnotationObject>> recommendationsWithRejectedAndSkippedOnes)
@@ -193,7 +219,6 @@ public class ActiveLearningRecommender
         }
         recommendationsWithRejectedAndSkippedOnes
             .removeIf(recommendationsList -> recommendationsList.isEmpty());
-        return recommendationsWithRejectedAndSkippedOnes;
     }
 
     private static boolean doesContainRejectedOrSkippedRecord(List<LearningRecord> records,

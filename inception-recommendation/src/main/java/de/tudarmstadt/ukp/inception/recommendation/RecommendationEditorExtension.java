@@ -227,7 +227,6 @@ public class RecommendationEditorExtension
         recommendationService.switchPredictions(aState.getUser(), aState.getProject());
         RecommendationRenderer.render(vdoc, aState, jCas, annotationService, recommendationService, 
                 learningRecordService, fsRegistry, documentService);
-        applicationEventPublisher.publishEvent(
-            new PredictionsSwitchedEvent(this, aState.getUser(), aState.getProject()));
+        applicationEventPublisher.publishEvent(new PredictionsSwitchedEvent(this, aState));
     }
 }

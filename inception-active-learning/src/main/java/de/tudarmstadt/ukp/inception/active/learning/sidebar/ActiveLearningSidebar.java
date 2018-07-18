@@ -257,7 +257,10 @@ public class ActiveLearningSidebar
             activeLearningRecommender = new ActiveLearningRecommender(annotatorState,
                     selectedLayer.getObject());
 
-            moveToNextRecommendation(target);
+            currentDifference = activeLearningRecommender
+                .generateRecommendationWithLowestDifference(learningRecordService,
+                    activeLearningService, learnSkippedRecommendationTime);
+            showAndHighlightRecommendationAndJumpToRecommendationLocation(target);
 
             applicationEventPublisherHolder.get().publishEvent(
                     new ActiveLearningSessionStartedEvent(this, annotatorState.getProject(),
@@ -580,6 +583,7 @@ public class ActiveLearningSidebar
             .unwrapFeatureValue(annotationFeature, jCas.getCas(), featureState.value);
         if (selectedValue.equals(currentRecommendation.getLabel())) {
             writeLearningRecordInDatabaseAndEventLog(LearningRecordUserAction.ACCEPTED);
+//            currentRecommendation.setVisible(false);
         }
         else {
             writeLearningRecordInDatabaseAndEventLog(LearningRecordUserAction.CORRECTED,
@@ -629,8 +633,7 @@ public class ActiveLearningSidebar
 
         annotationPage.actionRefreshDocument(aTarget);
         currentDifference = activeLearningRecommender
-                .generateRecommendationWithLowestDifference(learningRecordService,
-                        activeLearningService, learnSkippedRecommendationTime);
+                .updateRecommendations(learningRecordService, learnSkippedRecommendationTime);
         LOG.debug("Get next Recommendation costs: {}ms.",
             (System.currentTimeMillis() - timerStart));
         showAndHighlightRecommendationAndJumpToRecommendationLocation(aTarget);
