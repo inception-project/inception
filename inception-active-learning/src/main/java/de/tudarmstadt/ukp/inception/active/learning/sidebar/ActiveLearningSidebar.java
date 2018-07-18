@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
@@ -67,9 +66,11 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
@@ -164,6 +165,7 @@ public class ActiveLearningSidebar
     private Form<Void> recommendationForm;
     private AnnotationFeature annotationFeature;
     private User user;
+    private Project project;
 
 
     public ActiveLearningSidebar(String aId, IModel<AnnotatorState> aModel,
@@ -173,19 +175,21 @@ public class ActiveLearningSidebar
         super(aId, aModel, aActionHandler, aJCasProvider, aAnnotationPage);
 
         annotationPage = aAnnotationPage;
+        project = aModel.getObject().getProject();
         user = aModel.getObject().getUser();
 
         //set the user states to the ActiveLearningSidebar fields
-        sessionActive = activeLearningService.getSessionActive(user);
-        hasUnseenRecommendation = activeLearningService.getHasUnseenRecommendation(user);
-        currentDifference = activeLearningService.getCurrentDifference(user);
-        currentRecommendation = activeLearningService.getCurrentRecommendation(user);
-        activeLearningRecommender = activeLearningService.getActiveLearningRecommender(user);
-        doExistRecommenders = activeLearningService.getDoExistRecommenders(user);
-        hasSkippedRecommendation = activeLearningService.getHasSkippedRecommendation(user);
-        selectedLayer = Model.of(activeLearningService.getSelectedLayer(user));
-        learnSkippedRecommendationTime = activeLearningService.getLearnSkippedRecommendationTime
-            (user);
+        sessionActive = activeLearningService.getSessionActive(user, project);
+        hasUnseenRecommendation = activeLearningService.getHasUnseenRecommendation(user, project);
+        currentDifference = activeLearningService.getCurrentDifference(user, project);
+        currentRecommendation = activeLearningService.getCurrentRecommendation(user, project);
+        activeLearningRecommender = activeLearningService
+            .getActiveLearningRecommender(user, project);
+        doExistRecommenders = activeLearningService.getDoExistRecommenders(user, project);
+        hasSkippedRecommendation = activeLearningService.getHasSkippedRecommendation(user, project);
+        selectedLayer = Model.of(activeLearningService.getSelectedLayer(user, project));
+        learnSkippedRecommendationTime = activeLearningService
+            .getLearnSkippedRecommendationTime(user, project);
         
         mainContainer = new WebMarkupContainer(CID_MAIN_CONTAINER);
         mainContainer.setOutputMarkupId(true);
@@ -213,9 +217,8 @@ public class ActiveLearningSidebar
             else if (!layersWithRecommenders.isEmpty()) {
                 selectedLayer = Model.of(layersWithRecommenders.get(0));
             }
-            // If there are no layers with recommenders, then choose nothing and show no recommenders
-
-            // message.
+            // If there are no layers with recommenders, then choose nothing and show no
+            // recommenders message.
             else {
                 selectedLayer = Model.of();
                 doExistRecommenders = false;
@@ -953,15 +956,18 @@ public class ActiveLearningSidebar
         }
     }
 
-    private void setUserState() {
-        activeLearningService.putSessionActive(user, sessionActive);
-        activeLearningService.putHasUnseenRecommendation(user, hasUnseenRecommendation);
-        activeLearningService.putHasSkippedRecommendation(user, hasSkippedRecommendation);
-        activeLearningService.putDoExistRecommender(user, doExistRecommenders);
-        activeLearningService.putCurrentDifference(user, currentDifference);
-        activeLearningService.putCurrentRecommendation(user, currentRecommendation);
-        activeLearningService.putSelectedLayer(user, selectedLayer.getObject());
-        activeLearningService.putActiveLearningRecommender(user, activeLearningRecommender);
-        activeLearningService.putLearnSkippedRecommendationTime(user, learnSkippedRecommendationTime);
+    private void setUserState()
+    {
+        activeLearningService.putSessionActive(user, project, sessionActive);
+        activeLearningService.putHasUnseenRecommendation(user, project, hasUnseenRecommendation);
+        activeLearningService.putHasSkippedRecommendation(user, project, hasSkippedRecommendation);
+        activeLearningService.putDoExistRecommender(user, project, doExistRecommenders);
+        activeLearningService.putCurrentDifference(user, project, currentDifference);
+        activeLearningService.putCurrentRecommendation(user, project, currentRecommendation);
+        activeLearningService.putSelectedLayer(user, project, selectedLayer.getObject());
+        activeLearningService
+            .putActiveLearningRecommender(user, project, activeLearningRecommender);
+        activeLearningService
+            .putLearnSkippedRecommendationTime(user, project, learnSkippedRecommendationTime);
     }
 }

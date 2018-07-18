@@ -20,14 +20,14 @@ package de.tudarmstadt.ukp.inception.active.learning;
 import java.util.Date;
 import java.util.List;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.inception.active.learning.sidebar.ActiveLearningRecommender;
-import de.tudarmstadt.ukp.inception.active.learning.sidebar.RecommendationDifference;
 import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.active.learning.sidebar.ActiveLearningRecommender;
+import de.tudarmstadt.ukp.inception.active.learning.sidebar.RecommendationDifference;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 
@@ -42,41 +42,44 @@ public interface ActiveLearningService
     List<AnnotationObject> getFlattenedRecommendationsFromRecommendationModel(JCas aJcas,
             AnnotatorState aState, AnnotationLayer aSelectedLayer);
 
-    void putSessionActive(User aUser, boolean aSesscionActive);
+    void putSessionActive(User aUser, Project aProject, boolean aSesscionActive);
 
-    boolean getSessionActive(User aUser);
+    boolean getSessionActive(User aUser, Project aProject);
 
-    void putHasUnseenRecommendation(User aUser, boolean aHasUnseenRecommendation);
+    void putHasUnseenRecommendation(User aUser, Project aProject, boolean aHasUnseenRecommendation);
 
-    boolean getHasUnseenRecommendation(User aUser);
+    boolean getHasUnseenRecommendation(User aUser, Project aProject);
 
-    void putHasSkippedRecommendation(User aUser, boolean aHasSkippedRecommendation);
+    void putHasSkippedRecommendation(User aUser, Project aProject,
+        boolean aHasSkippedRecommendation);
 
-    boolean getHasSkippedRecommendation(User aUser);
+    boolean getHasSkippedRecommendation(User aUser, Project aProject);
 
-    void putDoExistRecommender(User aUser, boolean aDoExistRecommenders);
+    void putDoExistRecommender(User aUser, Project aProject, boolean aDoExistRecommenders);
 
-    boolean getDoExistRecommenders(User aUser);
+    boolean getDoExistRecommenders(User aUser, Project aProject);
 
-    void putCurrentRecommendation(User aUser, AnnotationObject aCurrentRecommendation);
+    void putCurrentRecommendation(User aUser, Project aProject,
+        AnnotationObject aCurrentRecommendation);
 
-    AnnotationObject getCurrentRecommendation(User aUser);
+    AnnotationObject getCurrentRecommendation(User aUser, Project aProject);
 
-    void putCurrentDifference(User aUser, RecommendationDifference aCurrentDifference);
+    void putCurrentDifference(User aUser, Project aProject,
+        RecommendationDifference aCurrentDifference);
 
-    RecommendationDifference getCurrentDifference(User aUser);
+    RecommendationDifference getCurrentDifference(User aUser, Project aProject);
 
-    void putSelectedLayer(User aUser, AnnotationLayer aSelectedLayer);
+    void putSelectedLayer(User aUser, Project aProject, AnnotationLayer aSelectedLayer);
 
-    AnnotationLayer getSelectedLayer(User aUser);
+    AnnotationLayer getSelectedLayer(User aUser, Project aProject);
 
-    void putActiveLearningRecommender(User aUser,
+    void putActiveLearningRecommender(User aUser, Project aProject,
         ActiveLearningRecommender aActiveLearningRecommender);
 
-    ActiveLearningRecommender getActiveLearningRecommender(User aUser);
+    ActiveLearningRecommender getActiveLearningRecommender(User aUser, Project aProject);
 
-    void putLearnSkippedRecommendationTime(User aUser, Date
-        aLearnSkippedRecommendationTime);
+    void putLearnSkippedRecommendationTime(User aUser, Project aProject,
+        Date aLearnSkippedRecommendationTime);
 
-    Date getLearnSkippedRecommendationTime(User aUser);
+    Date getLearnSkippedRecommendationTime(User aUser, Project aProject);
 }

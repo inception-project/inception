@@ -17,22 +17,28 @@
  */
 package de.tudarmstadt.ukp.inception.active.learning;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.DocumentOpenedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningSessionCompletedEvent;
-import de.tudarmstadt.ukp.inception.active.learning.sidebar.ActiveLearningRecommender;
-import de.tudarmstadt.ukp.inception.active.learning.sidebar.RecommendationDifference;
 import org.apache.uima.jcas.JCas;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.DocumentOpenedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningSessionCompletedEvent;
+import de.tudarmstadt.ukp.inception.active.learning.sidebar.ActiveLearningRecommender;
+import de.tudarmstadt.ukp.inception.active.learning.sidebar.RecommendationDifference;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
@@ -110,194 +116,199 @@ public class ActiveLearningServiceImpl
     }
 
     @Override
-    public void putSessionActive(User aUser, boolean aSesscionActive)
+    public void putSessionActive(User aUser, Project aProject, boolean aSesscionActive)
     {
-        ActiveLearningUserState state = getState(aUser.getUsername());
+        ActiveLearningUserState state = getState(aUser.getUsername(), aProject);
         synchronized (state) {
-            state.setSessionActive(aSesscionActive);
+            state.setSessionActive(aProject, aSesscionActive);
         }
     }
 
     @Override
-    public boolean getSessionActive(User aUser)
+    public boolean getSessionActive(User aUser, Project aProject)
     {
-        ActiveLearningUserState state = getState(aUser.getUsername());
+        ActiveLearningUserState state = getState(aUser.getUsername(), aProject);
         boolean sessionActive;
         synchronized (state) {
-            sessionActive = state.isSessionActive();
+            sessionActive = state.isSessionActive(aProject);
         }
         return sessionActive;
     }
 
     @Override
-    public void putHasUnseenRecommendation(User aUser, boolean aHasUnseenRecommendation)
+    public void putHasUnseenRecommendation(User aUser, Project aProject,
+        boolean aHasUnseenRecommendation)
     {
-        ActiveLearningUserState state = getState(aUser.getUsername());
+        ActiveLearningUserState state = getState(aUser.getUsername(), aProject);
         synchronized (state) {
-            state.setHasUnseenRecommendation(aHasUnseenRecommendation);
+            state.setHasUnseenRecommendation(aProject, aHasUnseenRecommendation);
         }
     }
 
     @Override
-    public boolean getHasUnseenRecommendation(User aUser)
+    public boolean getHasUnseenRecommendation(User aUser, Project aProject)
     {
-        ActiveLearningUserState state = getState(aUser.getUsername());
+        ActiveLearningUserState state = getState(aUser.getUsername(), aProject);
         boolean hasUnseenRecommendation;
         synchronized (state) {
-            hasUnseenRecommendation = state.isHasUnseenRecommendation();
+            hasUnseenRecommendation = state.isHasUnseenRecommendation(aProject);
         }
         return hasUnseenRecommendation;
     }
 
     @Override
-    public void putHasSkippedRecommendation(User aUser, boolean aHasSkippedRecommendation)
+    public void putHasSkippedRecommendation(User aUser, Project aProject,
+        boolean aHasSkippedRecommendation)
     {
-        ActiveLearningUserState state = getState(aUser.getUsername());
+        ActiveLearningUserState state = getState(aUser.getUsername(), aProject);
         synchronized (state) {
-            state.setHasSkippedRecommendation(aHasSkippedRecommendation);
+            state.setHasSkippedRecommendation(aProject, aHasSkippedRecommendation);
         }
     }
 
     @Override
-    public boolean getHasSkippedRecommendation(User aUser)
+    public boolean getHasSkippedRecommendation(User aUser, Project aProject)
     {
-        ActiveLearningUserState state = getState(aUser.getUsername());
+        ActiveLearningUserState state = getState(aUser.getUsername(), aProject);
         boolean hasSkippedRecommendation;
         synchronized (state) {
-            hasSkippedRecommendation = state.isHasSkippedRecommendation();
+            hasSkippedRecommendation = state.isHasSkippedRecommendation(aProject);
         }
         return hasSkippedRecommendation;
     }
 
     @Override
-    public void putDoExistRecommender(User aUser, boolean aDoExistRecommenders)
+    public void putDoExistRecommender(User aUser, Project aProject, boolean aDoExistRecommenders)
     {
-        ActiveLearningUserState state = getState(aUser.getUsername());
+        ActiveLearningUserState state = getState(aUser.getUsername(), aProject);
         synchronized (state) {
-            state.setDoExistRecommenders(aDoExistRecommenders);
+            state.setDoExistRecommenders(aProject, aDoExistRecommenders);
         }
     }
 
     @Override
-    public boolean getDoExistRecommenders(User aUser)
+    public boolean getDoExistRecommenders(User aUser, Project aProject)
     {
-        ActiveLearningUserState state = getState(aUser.getUsername());
+        ActiveLearningUserState state = getState(aUser.getUsername(), aProject);
         boolean doExistRecommenders;
         synchronized (state) {
-            doExistRecommenders = state.isDoExistRecommenders();
+            doExistRecommenders = state.isDoExistRecommenders(aProject);
         }
         return doExistRecommenders;
     }
 
     @Override
-    public void putCurrentRecommendation(User aUser, AnnotationObject aCurrentRecommendation)
+    public void putCurrentRecommendation(User aUser, Project aProject,
+        AnnotationObject aCurrentRecommendation)
     {
-        ActiveLearningUserState state = getState(aUser.getUsername());
+        ActiveLearningUserState state = getState(aUser.getUsername(), aProject);
         synchronized (state) {
-            state.setCurrentRecommendation(aCurrentRecommendation);
+            state.setCurrentRecommendation(aProject, aCurrentRecommendation);
         }
     }
 
     @Override
-    public AnnotationObject getCurrentRecommendation(User aUser)
+    public AnnotationObject getCurrentRecommendation(User aUser, Project aProject)
     {
-        ActiveLearningUserState state = getState(aUser.getUsername());
+        ActiveLearningUserState state = getState(aUser.getUsername(), aProject);
         AnnotationObject currentRecommendation;
         synchronized (state) {
-            currentRecommendation = state.getCurrentRecommendation();
+            currentRecommendation = state.getCurrentRecommendation(aProject);
         }
         return currentRecommendation;
     }
 
     @Override
-    public void putCurrentDifference(User aUser, RecommendationDifference aCurrentDifference)
+    public void putCurrentDifference(User aUser, Project aProject,
+        RecommendationDifference aCurrentDifference)
     {
-        ActiveLearningUserState state = getState(aUser.getUsername());
+        ActiveLearningUserState state = getState(aUser.getUsername(), aProject);
         synchronized (state) {
-            state.setCurrentDifference(aCurrentDifference);
+            state.setCurrentDifference(aProject, aCurrentDifference);
         }
     }
 
     @Override
-    public RecommendationDifference getCurrentDifference(User aUser)
+    public RecommendationDifference getCurrentDifference(User aUser, Project aProject)
     {
-        ActiveLearningUserState state = getState(aUser.getUsername());
+        ActiveLearningUserState state = getState(aUser.getUsername(), aProject);
         RecommendationDifference currentDifference;
         synchronized (state) {
-            currentDifference = state.getCurrentDifference();
+            currentDifference = state.getCurrentDifference(aProject);
         }
         return currentDifference;
     }
 
     @Override
-    public void putSelectedLayer(User aUser, AnnotationLayer aSelectedLayer)
+    public void putSelectedLayer(User aUser, Project aProject, AnnotationLayer aSelectedLayer)
     {
-        ActiveLearningUserState state = getState(aUser.getUsername());
+        ActiveLearningUserState state = getState(aUser.getUsername(), aProject);
         synchronized (state) {
-            state.setSelectedLayer(aSelectedLayer);
+            state.setSelectedLayer(aProject, aSelectedLayer);
         }
     }
 
     @Override
-    public AnnotationLayer getSelectedLayer(User aUser)
+    public AnnotationLayer getSelectedLayer(User aUser, Project aProject)
     {
-        ActiveLearningUserState state = getState(aUser.getUsername());
+        ActiveLearningUserState state = getState(aUser.getUsername(), aProject);
         AnnotationLayer selectedLayer;
         synchronized (state) {
-            selectedLayer = state.getSelectedLayer();
+            selectedLayer = state.getSelectedLayer(aProject);
         }
         return selectedLayer;
     }
 
     @Override
-    public void putActiveLearningRecommender(User aUser, ActiveLearningRecommender
-        aActiveLearningRecommender)
+    public void putActiveLearningRecommender(User aUser, Project aProject,
+        ActiveLearningRecommender aActiveLearningRecommender)
     {
-        ActiveLearningUserState state = getState(aUser.getUsername());
+        ActiveLearningUserState state = getState(aUser.getUsername(), aProject);
         synchronized (state) {
-            state.setActiveLearningRecommender(aActiveLearningRecommender);
+            state.setActiveLearningRecommender(aProject, aActiveLearningRecommender);
         }
     }
 
     @Override
-    public ActiveLearningRecommender getActiveLearningRecommender(User aUser)
+    public ActiveLearningRecommender getActiveLearningRecommender(User aUser, Project aProject)
     {
-        ActiveLearningUserState state = getState(aUser.getUsername());
+        ActiveLearningUserState state = getState(aUser.getUsername(), aProject);
         ActiveLearningRecommender activeLearningRecommender;
         synchronized (state) {
-            activeLearningRecommender = state.getActiveLearningRecommender();
+            activeLearningRecommender = state.getActiveLearningRecommender(aProject);
         }
         return activeLearningRecommender;
     }
 
     @Override
-    public void putLearnSkippedRecommendationTime(User aUser, Date
-        aLearnSkippedRecommendationTime)
+    public void putLearnSkippedRecommendationTime(User aUser, Project aProject,
+        Date aLearnSkippedRecommendationTime)
     {
-        ActiveLearningUserState state = getState(aUser.getUsername());
+        ActiveLearningUserState state = getState(aUser.getUsername(), aProject);
         synchronized (state) {
-            state.setLearnSkippedRecommendationTime(aLearnSkippedRecommendationTime);
+            state.setLearnSkippedRecommendationTime(aProject, aLearnSkippedRecommendationTime);
         }
     }
 
     @Override
-    public Date getLearnSkippedRecommendationTime(User aUser)
+    public Date getLearnSkippedRecommendationTime(User aUser, Project aProject)
     {
-        ActiveLearningUserState state = getState(aUser.getUsername());
+        ActiveLearningUserState state = getState(aUser.getUsername(), aProject);
         Date learnSkippedRecommendationTime;
         synchronized (state) {
-            learnSkippedRecommendationTime = state.getLearnSkippedRecommendationTime();
+            learnSkippedRecommendationTime = state.getLearnSkippedRecommendationTime(aProject);
         }
         return learnSkippedRecommendationTime;
     }
 
-    private ActiveLearningUserState getState(String aUsername)
+    private ActiveLearningUserState getState(String aUsername, Project aProject)
     {
         synchronized (states) {
             ActiveLearningUserState state;
             state = states.get(aUsername);
-            if (state ==null) {
+            if (state == null) {
                 state = new ActiveLearningUserState();
+                state.initializeActiveLearningUserState(aProject);
                 states.put(aUsername, state);
             }
             return state;
@@ -325,106 +336,117 @@ public class ActiveLearningServiceImpl
 
     private static class ActiveLearningUserState
     {
-        //TODO: change them to Map for multiple projects
-        private boolean sessionActive = false;
-        private boolean hasUnseenRecommendation = false;
-        private boolean hasSkippedRecommendation = false;
-        private boolean doExistRecommenders = true;
-        private AnnotationObject currentRecommendation;
-        private RecommendationDifference currentDifference;
-        private AnnotationLayer selectedLayer;
-        private ActiveLearningRecommender activeLearningRecommender;
-        private Date learnSkippedRecommendationTime;
+        private Map<Long, Boolean> sessionActive = new HashMap<>();
+        private Map<Long, Boolean> hasUnseenRecommendation = new HashMap<>();
+        private Map<Long, Boolean> hasSkippedRecommendation = new HashMap<>();
+        private Map<Long, Boolean> doExistRecommenders = new HashMap<>();
+        private Map<Long, AnnotationObject> currentRecommendation = new HashMap<>();
+        private Map<Long, RecommendationDifference> currentDifference = new HashMap<>();
+        private Map<Long, AnnotationLayer> selectedLayer = new HashMap<>();
+        private Map<Long, ActiveLearningRecommender> activeLearningRecommender = new HashMap<>();
+        private Map<Long, Date> learnSkippedRecommendationTime = new HashMap<>();
 
-        private boolean isSessionActive()
+        private void initializeActiveLearningUserState(Project aProject)
         {
-            return sessionActive;
+            setSessionActive(aProject, false);
+            setHasUnseenRecommendation(aProject, false);
+            setHasSkippedRecommendation(aProject, false);
+            setDoExistRecommenders(aProject, true);
         }
 
-        private void setSessionActive(boolean sessionActive)
+        private boolean isSessionActive(Project aProject)
         {
-            this.sessionActive = sessionActive;
+            return sessionActive.get(aProject.getId());
         }
 
-        private boolean isHasUnseenRecommendation()
+        private void setSessionActive(Project aProject, boolean aSessionActive)
         {
-            return hasUnseenRecommendation;
+            sessionActive.put(aProject.getId(), aSessionActive);
         }
 
-        private void setHasUnseenRecommendation(boolean hasUnseenRecommendation)
+        private boolean isHasUnseenRecommendation(Project aProject)
         {
-            this.hasUnseenRecommendation = hasUnseenRecommendation;
+            return hasUnseenRecommendation.get(aProject.getId());
         }
 
-        private boolean isHasSkippedRecommendation()
+        private void setHasUnseenRecommendation(Project aProject, boolean aHasUnseenRecommendation)
         {
-            return hasSkippedRecommendation;
+            hasUnseenRecommendation.put(aProject.getId(), aHasUnseenRecommendation);
         }
 
-        private void setHasSkippedRecommendation(boolean hasSkippedRecommendation)
+        private boolean isHasSkippedRecommendation(Project aProject)
         {
-            this.hasSkippedRecommendation = hasSkippedRecommendation;
+            return hasSkippedRecommendation.get(aProject.getId());
         }
 
-        private boolean isDoExistRecommenders()
+        private void setHasSkippedRecommendation(Project aProject,
+            boolean aHasSkippedRecommendation)
         {
-            return doExistRecommenders;
+            hasSkippedRecommendation.put(aProject.getId(), aHasSkippedRecommendation);
         }
 
-        private void setDoExistRecommenders(boolean doExistRecommenders)
+        private boolean isDoExistRecommenders(Project aProject)
         {
-            this.doExistRecommenders = doExistRecommenders;
+            return doExistRecommenders.get(aProject.getId());
         }
 
-        private AnnotationObject getCurrentRecommendation()
+        private void setDoExistRecommenders(Project aProject, boolean aDoExistRecommenders)
         {
-            return currentRecommendation;
+            doExistRecommenders.put(aProject.getId(), aDoExistRecommenders);
         }
 
-        private void setCurrentRecommendation(AnnotationObject currentRecommendation)
+        private AnnotationObject getCurrentRecommendation(Project aProject)
         {
-            this.currentRecommendation = currentRecommendation;
+            return currentRecommendation.get(aProject.getId());
         }
 
-        private RecommendationDifference getCurrentDifference()
+        private void setCurrentRecommendation(Project aProject,
+            AnnotationObject aCurrentRecommendation)
         {
-            return currentDifference;
+            currentRecommendation.put(aProject.getId(), aCurrentRecommendation);
         }
 
-        private void setCurrentDifference(RecommendationDifference currentDifference)
+        private RecommendationDifference getCurrentDifference(Project aProject)
         {
-            this.currentDifference = currentDifference;
+            return currentDifference.get(aProject.getId());
         }
 
-        private AnnotationLayer getSelectedLayer()
+        private void setCurrentDifference(Project aProject,
+            RecommendationDifference aCurrentDifference)
         {
-            return selectedLayer;
+            currentDifference.put(aProject.getId(), aCurrentDifference);
         }
 
-        private void setSelectedLayer(AnnotationLayer selectedLayer)
+        private AnnotationLayer getSelectedLayer(Project aProject)
         {
-            this.selectedLayer = selectedLayer;
+            return selectedLayer.get(aProject.getId());
         }
 
-        private ActiveLearningRecommender getActiveLearningRecommender()
+        private void setSelectedLayer(Project aProject, AnnotationLayer aSelectedLayer)
         {
-            return activeLearningRecommender;
+            selectedLayer.put(aProject.getId(), aSelectedLayer);
         }
 
-        private void setActiveLearningRecommender(
-            ActiveLearningRecommender activeLearningRecommender)
+        private ActiveLearningRecommender getActiveLearningRecommender(Project aProject)
         {
-            this.activeLearningRecommender = activeLearningRecommender;
+            return activeLearningRecommender.get(aProject.getId());
         }
 
-        private Date getLearnSkippedRecommendationTime()
+        private void setActiveLearningRecommender(Project aProject,
+            ActiveLearningRecommender aActiveLearningRecommender)
         {
-            return learnSkippedRecommendationTime;
+            activeLearningRecommender.put(aProject.getId(), aActiveLearningRecommender);
         }
 
-        private void setLearnSkippedRecommendationTime(Date learnSkippedRecommendationTime)
+        private Date getLearnSkippedRecommendationTime(Project aProject)
         {
-            this.learnSkippedRecommendationTime = learnSkippedRecommendationTime;
+            return learnSkippedRecommendationTime.get(aProject.getId());
+        }
+
+        private void setLearnSkippedRecommendationTime(Project aProject,
+            Date aLearnSkippedRecommendationTime)
+        {
+            learnSkippedRecommendationTime.put(aProject.getId(), aLearnSkippedRecommendationTime);
         }
     }
 }
