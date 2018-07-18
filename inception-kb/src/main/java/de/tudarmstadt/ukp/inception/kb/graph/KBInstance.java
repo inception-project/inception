@@ -31,7 +31,6 @@ import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.ValueFactory;
-import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
@@ -166,7 +165,7 @@ public class KBInstance
         kbInst.setIdentifier(aStmt.getSubject().stringValue());
         kbInst.originalStatements.add(aStmt);
 
-        readFirst(aConn, aStmt.getSubject(), RDFS.LABEL, null, aKb.getLanguage())
+        readFirst(aConn, aStmt.getSubject(), aKb.getLabelIri(), null, aKb.getLanguage())
             .ifPresent((stmt) -> {
                 kbInst.setName(stmt.getObject().stringValue());
                 kbInst.originalStatements.add(stmt);
@@ -177,7 +176,7 @@ public class KBInstance
                 }
             });
 
-        readFirst(aConn, aStmt.getSubject(), RDFS.COMMENT, null, aKb.getLanguage())
+        readFirst(aConn, aStmt.getSubject(), aKb.getDescriptionIri(), null, aKb.getLanguage())
             .ifPresent((stmt) -> {
                 kbInst.setDescription(stmt.getObject().stringValue());
                 kbInst.originalStatements.add(stmt);
@@ -186,7 +185,7 @@ public class KBInstance
                     Optional<String> language = literal.getLanguage();
                     language.ifPresent(kbInst::setLanguage);
                 }
-        });
+            });
 
         return kbInst;
     }

@@ -1324,6 +1324,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         KBInstance germanInstance = buildInstanceWithLanguage("de");
         KBInstance englishInstance = buildInstanceWithLanguage("en");
 
+        kb.setLanguage("en");
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         KBHandle germanHandle = sut.createInstance(kb, germanInstance);
 
