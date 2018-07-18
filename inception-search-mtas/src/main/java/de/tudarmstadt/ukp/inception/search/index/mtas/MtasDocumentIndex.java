@@ -443,7 +443,7 @@ public class MtasDocumentIndex
             // commit
             indexWriter.commit();
 
-            log.info("Document indexed in project {}. sourceId: {}, annotationId: {}, user: {}",
+            log.info("Document indexed in project [{}]. sourceId: {}, annotationId: {}, user: {}",
                     project.getName(), aSourceDocumentId, aAnnotationDocumentId, aUser);
         }
         catch (SAXException e) {
@@ -478,8 +478,8 @@ public class MtasDocumentIndex
         throws IOException
     {
         if (indexWriter != null) {
-            indexWriter.deleteDocuments(new Term(FIELD_ID, String.valueOf(aSourceDocumentId) + "/"
-                    + String.valueOf(aAnnotationDocumentId)));
+            indexWriter.deleteDocuments(new Term(FIELD_ID,
+                    String.format("%d/%d", aSourceDocumentId, aAnnotationDocumentId)));
 
             indexWriter.commit();
         }
@@ -547,10 +547,10 @@ public class MtasDocumentIndex
                     indexWriter.close();
                 }
 
-                log.info("Index for project {} has been closed", project.getName());
+                log.info("Index for project [{}] has been closed", project.getName());
             }
             catch (IOException e) {
-                log.error("Error closing index for project {}", project.getId());
+                log.error("Error closing index for project [{}]", project.getId());
             }
         }
     }
@@ -569,7 +569,7 @@ public class MtasDocumentIndex
         // Delete the index directory
         FileUtils.deleteDirectory(getIndexDir());
 
-        log.info("Index for project {} has been deleted", project.getName());
+        log.info("Index for project [{}] has been deleted", project.getName());
     }
 
     @Override
@@ -596,18 +596,19 @@ public class MtasDocumentIndex
         if (!isOpen) {
             // Only open if it is not already open
             try {
-                log.info("indexWriter was not open. Opening it for project " + project.getName());
+                log.info("indexWriter was not open. Opening it for project [{}]",
+                        project.getName());
 
                 indexWriter = openLuceneIndex(getIndexDir());
                 indexWriter.commit();
 
-                log.info("indexWriter has been opened for project " + project.getName());
+                log.info("indexWriter has been opened for project [{}]", project.getName());
             }
             catch (Exception e) {
                 log.error("Unable to open indexWriter", e);
             }
         } else {
-            log.info("indexWriter is already open for project " + project.getName());
+            log.info("indexWriter is already open for project [{}]", project.getName());
         }
     }
 
@@ -621,24 +622,24 @@ public class MtasDocumentIndex
 
         try {
             // Create the directory for the new index
-            log.info("Creating index directory for project " + project.getName());
+            log.info("Creating index directory for project [{}]", project.getName());
             FileUtils.forceMkdir(indexDir);
 
             // Open the index
-            log.info("Opening index for project " + project.getName());
+            log.info("Opening index for project [{}]", project.getName());
             openPhysicalIndex();
             
             if (isOpen()) {
                 // Index all documents of the project
-                log.info("Indexing all documents in the project " + project.getName());
+                log.info("Indexing all documents in the project [{}]", project.getName());
                 indexAllDocuments();
-                log.info("All documents have been indexed in the project " + project.getName());
+                log.info("All documents have been indexed in the project [{}]", project.getName());
             } else {
                 log.info("Index has not been opened. No documents have been indexed.");
             }
         }
         catch (Exception e) {
-            log.error("Error creating index for project " + project.getName(), e);
+            log.error("Error creating index for project [{}]", project.getName(), e);
         }
     }
 
@@ -678,19 +679,19 @@ public class MtasDocumentIndex
 
     private void indexAllDocuments()
     {
-        log.info("Indexing all annotation documents of project {}", project.getName());
+        log.info("Indexing all annotation documents of project [{}]", project.getName());
 
-        int u = 0;
-        int ad = 0;
-        int sd = 0;
+        int users = 0;
+        int annotationDocs = 0;
+        int sourceDocs = 0;
         
         for (User user : projectService.listProjectUsersWithPermissions(project)) {
-            u++;
+            users++;
             for (AnnotationDocument document : documentService.listAnnotationDocuments(project,
                     user)) {
                 try {
                     indexDocument(document, documentService.readAnnotationCas(document));
-                    ad++;
+                    annotationDocs++;
                 }
                 catch (IOException e) {
                     log.error("Unable to index annotation document", e);
@@ -698,11 +699,11 @@ public class MtasDocumentIndex
             }
         }
 
-        log.info("Indexing all source documents of project {}", project.getName());
+        log.info("Indexing all source documents of project [{}]", project.getName());
         for (SourceDocument document : documentService.listSourceDocuments(project)) {
             try {
                 indexDocument(document, documentService.createOrReadInitialCas(document));
-                sd++;
+                sourceDocs++;
             }
             catch (IOException e) {
                 log.error("Unable to index source document", e);
@@ -710,8 +711,8 @@ public class MtasDocumentIndex
         }
         
         log.info(String.format(
-                "Indexing results: %d source doc(s), %d annotation doc(s) for %d user(s)", sd, ad,
-                u));
+                "Indexing results: %d source doc(s), %d annotation doc(s) for %d user(s)",
+                sourceDocs, annotationDocs, users));
     }
 
     private String getShortName(String aName)

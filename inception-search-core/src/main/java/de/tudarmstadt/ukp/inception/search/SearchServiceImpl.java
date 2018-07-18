@@ -85,22 +85,12 @@ public class SearchServiceImpl
         indexes = new HashMap<>();
     }
 
-//<<<<<<< HEAD
-//    public SearchServiceImpl(@Value("${data.path}") File aDir)
-//    {
-//        dir = aDir.getAbsolutePath();
-//        indexes = new HashMap<>();
-//    }
-//
-//    private Index getIndexByProject(Project aProject)
-//=======
     /** 
      * Get an index entry from the memory map
      * @param aProject The project
      * @return The index
      */
     private Index getIndexFromMemory(Project aProject)
-//>>>>>>> branch '0.4.x' of https://github.com/inception-project/inception.git
     {
         // Search index entry in the memory map
         if (!indexes.containsKey(aProject.getId())) {

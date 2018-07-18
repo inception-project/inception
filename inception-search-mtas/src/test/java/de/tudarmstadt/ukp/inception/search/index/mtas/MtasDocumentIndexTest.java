@@ -28,12 +28,16 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.TimeoutException;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.uima.UIMAException;
 import org.apache.uima.jcas.JCas;
 import org.junit.Before;
 import org.junit.FixMethodOrder;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
 import org.slf4j.Logger;
@@ -51,7 +55,6 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.FileSystemUtils;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
@@ -122,8 +125,6 @@ public class MtasDocumentIndexTest
     // test results. If this happens, a largest value could allow the test to pass.
     private final int WAIT_TIME = 3000;
 
-    private final String temporaryFolderPath = "target/MtasDocumentIndexTest";
-
     private @Autowired UserDao userRepository;
 
     private @Autowired ProjectService projectService;
@@ -136,23 +137,17 @@ public class MtasDocumentIndexTest
     public void setUp()
     {
         userRepository.create(new User("admin", Role.ROLE_ADMIN));
-
-        FileSystemUtils.deleteRecursively(new File(temporaryFolderPath));
     }
 
-    @Test
-    public void testSimpleQuery() throws Exception
+    private void createProject(Project aProject) throws TimeoutException
     {
-        Project project = new Project();
-        project.setName("TestSimpleQuery");
-
         Waiter createProjectWaiter = new Waiter();
 
         // Start thread to create and initialize project
         new Thread(() -> {
             try {
-                projectService.createProject(project);
-                annotationSchemaService.initializeProject(project);
+                projectService.createProject(aProject);
+                annotationSchemaService.initializeProject(aProject);
             }
             catch (IOException e) {
                 e.printStackTrace();
@@ -163,35 +158,27 @@ public class MtasDocumentIndexTest
 
         // Wait for thread to complete
         createProjectWaiter.await();
+    }
 
-        SourceDocument sourceDocument = new SourceDocument();
-
-        sourceDocument.setName("test");
-        sourceDocument.setProject(project);
-        sourceDocument.setFormat("text");
-
-        String fileContent = "The capital of Galicia is Santiago de Compostela.";
-
+    private void uploadDocument(Project aProject, String aFileContent,
+            SourceDocument aSourceDocument)
+        throws TimeoutException
+    {
         InputStream fileStream = new ByteArrayInputStream(
-                fileContent.getBytes(StandardCharsets.UTF_8));
+                aFileContent.getBytes(StandardCharsets.UTF_8));
 
         Waiter uploadWaiter = new Waiter();
 
         // Start thread to upload the document
         new Thread(() -> {
             try {
-                documentService.uploadSourceDocument(fileStream, sourceDocument);
-            }
-            catch (UIMAException | IOException e) {
-                e.printStackTrace();
-            }
+                documentService.uploadSourceDocument(fileStream, aSourceDocument);
 
-            try {
                 // Wait some time so that the document can be indexed
                 Thread.sleep(WAIT_TIME);
 
                 // Test if the index has been created
-                if (searchService.isIndexValid(project)) {
+                if (searchService.isIndexValid(aProject)) {
                     log.info("**************** Index is valid");
                     uploadWaiter.assertTrue(true);
                 }
@@ -200,7 +187,7 @@ public class MtasDocumentIndexTest
                     uploadWaiter.assertTrue(false);
                 }
             }
-            catch (InterruptedException e) {
+            catch (UIMAException | IOException | InterruptedException e) {
                 e.printStackTrace();
             }
 
@@ -209,15 +196,76 @@ public class MtasDocumentIndexTest
 
         // Wait for thread to complete
         uploadWaiter.await();
+    }
+
+    private void annotateDocument(Project aProject, User aUser, SourceDocument aSourceDocument)
+        throws TimeoutException
+    {
+        Waiter annotationWaiter = new Waiter();
+
+        // Start thread to annotate the document
+        new Thread(() -> {
+            try {
+                ClassLoader classLoader = getClass().getClassLoader();
+                File annotatedFile = new File(classLoader.getResource("galicia.conll").getFile());
+
+                JCas annotationCas = importExportService.importCasFromFile(annotatedFile, aProject,
+                        "conll2002");
+
+                AnnotationDocument annotationDocument = documentService
+                        .createOrGetAnnotationDocument(aSourceDocument, aUser);
+
+                documentService.writeAnnotationCas(annotationCas, annotationDocument, false);
+
+                // Wait some time so that the document can be indexed
+                Thread.sleep(WAIT_TIME);
+
+                // Test if the index has been created
+                if (searchService.isIndexValid(aProject)) {
+                    log.info("**************** Index is valid");
+                    annotationWaiter.assertTrue(true);
+                }
+                else {
+                    log.info("**************** Index is NOT valid");
+                    annotationWaiter.assertTrue(false);
+                }
+            }
+            catch (IOException | UIMAException | InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            annotationWaiter.resume();
+        }).start();
+
+        // Wait for thread to complete
+        annotationWaiter.await();
+    }
+
+    @Test
+    public void testSimpleQuery() throws Exception
+    {
+        Project project = new Project();
+        project.setName("TestSimpleQuery");
+
+        createProject(project);
+
+        SourceDocument sourceDocument = new SourceDocument();
+
+        sourceDocument.setName("Simple test");
+        sourceDocument.setProject(project);
+        sourceDocument.setFormat("text");
+
+        String fileContent = "The capital of Galicia is Santiago de Compostela.";
+
+        uploadDocument(project, fileContent, sourceDocument);
 
         User user = userRepository.get("admin");
 
         String query = "Galicia";
 
-        List<SearchResult> results = null;
-
         // Execute query
-        results = (ArrayList<SearchResult>) searchService.query(user, project, query);
+        List<SearchResult> results = (ArrayList<SearchResult>) searchService.query(user, project,
+                query);
 
         // Test results
         SearchResult expectedResult = new SearchResult();
@@ -230,9 +278,6 @@ public class MtasDocumentIndexTest
         expectedResult.setOffsetEnd(22);
         expectedResult.setTokenStart(3);
         expectedResult.setTokenLength(1);
-
-        ArrayList<SearchResult> expectedResults = new ArrayList<SearchResult>();
-        expectedResults.add(expectedResult);
 
         assertNotNull(results);
         if (results != null) {
@@ -250,121 +295,26 @@ public class MtasDocumentIndexTest
 
         User user = userRepository.get("admin");
 
-        Waiter createProjectWaiter = new Waiter();
-
-        // Start thread to create and initialize project
-        new Thread(() -> {
-            try {
-                projectService.createProject(project);
-                annotationSchemaService.initializeProject(project);
-            }
-            catch (IOException e) {
-                e.printStackTrace();
-            }
-            createProjectWaiter.assertTrue(true);
-            createProjectWaiter.resume();
-        }).start();
-
-        // Wait for thread to complete
-        createProjectWaiter.await();
+        createProject(project);
 
         SourceDocument sourceDocument = new SourceDocument();
 
-        sourceDocument.setName("test");
+        sourceDocument.setName("Annotation test");
         sourceDocument.setProject(project);
         sourceDocument.setFormat("text");
 
         String fileContent = "The capital of Galicia is Santiago de Compostela.";
 
-        InputStream fileStream = new ByteArrayInputStream(
-                fileContent.getBytes(StandardCharsets.UTF_8));
+        uploadDocument(project, fileContent, sourceDocument);
 
-        Waiter uploadWaiter = new Waiter();
-
-        // Start thread to upload the document
-        new Thread(() -> {
-            try {
-                documentService.uploadSourceDocument(fileStream, sourceDocument);
-            }
-            catch (UIMAException | IOException e) {
-                e.printStackTrace();
-            }
-
-            try {
-                // Wait some time so that the document can be indexed
-                Thread.sleep(WAIT_TIME);
-
-                // Test if the index has been created
-                if (searchService.isIndexValid(project)) {
-                    log.info("**************** Index is valid");
-                    uploadWaiter.assertTrue(true);
-                }
-                else {
-                    log.info("**************** Index is NOT valid");
-                    uploadWaiter.assertTrue(false);
-                }
-            }
-            catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-
-            uploadWaiter.resume();
-        }).start();
-
-        // Wait for thread to complete
-        uploadWaiter.await();
-
-        Waiter annotationWaiter = new Waiter();
-
-        // Start thread to annotate the document
-        new Thread(() -> {
-            try {
-                ClassLoader classLoader = getClass().getClassLoader();
-                File annotatedFile = new File(classLoader.getResource("galicia.conll").getFile());
-
-                JCas annotationCas = importExportService.importCasFromFile(annotatedFile, project,
-                        "conll2002");
-
-                AnnotationDocument annotationDocument = documentService
-                        .createOrGetAnnotationDocument(sourceDocument, user);
-
-                documentService.writeAnnotationCas(annotationCas, annotationDocument, false);
-            }
-            catch (IOException | UIMAException e) {
-                e.printStackTrace();
-            }
-
-            try {
-                // Wait some time so that the document can be indexed
-                Thread.sleep(WAIT_TIME);
-
-                // Test if the index has been created
-                if (searchService.isIndexValid(project)) {
-                    log.info("**************** Index is valid");
-                    uploadWaiter.assertTrue(true);
-                }
-                else {
-                    log.info("**************** Index is NOT valid");
-                    annotationWaiter.assertTrue(false);
-                }
-            }
-            catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-
-            annotationWaiter.resume();
-        }).start();
-
-        // Wait for thread to complete
-        annotationWaiter.await();
+        annotateDocument(project, user, sourceDocument);
 
         String query = "<Named_entity.value=\"LOC\"/>";
 
-        ArrayList<SearchResult> results = (ArrayList<SearchResult>) searchService.query(user,
-                project, query);
+        List<SearchResult> results = (ArrayList<SearchResult>) searchService.query(user, project,
+                query);
 
         // Test results
-
         SearchResult expectedResult = new SearchResult();
         expectedResult.setDocumentId(sourceDocument.getId());
         expectedResult.setDocumentTitle("test");
@@ -375,9 +325,6 @@ public class MtasDocumentIndexTest
         expectedResult.setOffsetEnd(22);
         expectedResult.setTokenStart(3);
         expectedResult.setTokenLength(1);
-
-        ArrayList<SearchResult> expectedResults = new ArrayList<SearchResult>();
-        expectedResults.add(expectedResult);
 
         assertNotNull(results);
         if (results != null) {
@@ -393,7 +340,21 @@ public class MtasDocumentIndexTest
         ApplicationEventPublisher applicationEventPublisher;
 
         private final String temporaryFolderPath = "target/MtasDocumentIndexTest";
+        private final File temporaryFolder;
 
+        @Rule TemporaryFolder folder;
+        
+        public TestContext()
+        {
+            try {
+                FileUtils.deleteDirectory(new File(temporaryFolderPath));
+            }
+            catch (IOException e) {
+                e.printStackTrace();
+            }
+            temporaryFolder = new File(temporaryFolderPath);
+        }
+        
         @Bean
         public ProjectService projectService()
         {
@@ -480,7 +441,7 @@ public class MtasDocumentIndexTest
         @Bean
         public KnowledgeBaseService knowledgeBaseService()
         {
-            return new KnowledgeBaseServiceImpl(new File(temporaryFolderPath));
+            return new KnowledgeBaseServiceImpl(temporaryFolder);
         }
 
         @Bean
