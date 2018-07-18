@@ -32,6 +32,8 @@ import java.util.concurrent.TimeoutException;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.uima.UIMAException;
+import org.apache.uima.fit.factory.JCasBuilder;
+import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
 import org.junit.Before;
 import org.junit.FixMethodOrder;
@@ -85,6 +87,8 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDaoImpl;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
+import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.io.text.TextReader;
 import de.tudarmstadt.ukp.dkpro.core.io.text.TextWriter;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
@@ -206,16 +210,42 @@ public class MtasDocumentIndexTest
         // Start thread to annotate the document
         new Thread(() -> {
             try {
-                ClassLoader classLoader = getClass().getClassLoader();
-                File annotatedFile = new File(classLoader.getResource("galicia.conll").getFile());
+                // Manually build annotated CAS
+                JCas jCas = JCasFactory.createJCas();
+                
+                JCasBuilder builder = new JCasBuilder(jCas);
 
-                JCas annotationCas = importExportService.importCasFromFile(annotatedFile, aProject,
-                        "conll2002");
-
+                builder.add("The", Token.class);
+                builder.add(" ");
+                builder.add("capital", Token.class);
+                builder.add(" ");
+                builder.add("of", Token.class);
+                builder.add(" ");
+                
+                int begin = builder.getPosition();
+                builder.add("Galicia", Token.class);
+                
+                NamedEntity ne = new NamedEntity(jCas, begin, builder.getPosition());
+                ne.setValue("LOC");
+                ne.addToIndexes();
+                
+                builder.add(" ");
+                builder.add("is", Token.class);
+                builder.add(" ");
+                builder.add("Santiago", Token.class);
+                builder.add(" ");
+                builder.add("de", Token.class);
+                builder.add(" ");
+                builder.add("Compostela", Token.class);
+                builder.add(" ");
+                builder.add(".", Token.class);
+                
+                // Create annotation document
                 AnnotationDocument annotationDocument = documentService
                         .createOrGetAnnotationDocument(aSourceDocument, aUser);
 
-                documentService.writeAnnotationCas(annotationCas, annotationDocument, false);
+                // Write annotated CAS to annotated document
+                documentService.writeAnnotationCas(jCas, annotationDocument, false);
 
                 // Wait some time so that the document can be indexed
                 Thread.sleep(WAIT_TIME);
