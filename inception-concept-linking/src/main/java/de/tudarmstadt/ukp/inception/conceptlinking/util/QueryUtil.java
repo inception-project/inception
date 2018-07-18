@@ -17,7 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.conceptlinking.util;
 
-import org.apache.commons.lang3.StringUtils;
+import java.util.Locale;
+
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
@@ -75,7 +76,7 @@ public class QueryUtil
             "    {",
             "     VALUES ?labelpredicate {rdfs:label skos:altLabel}",
             "      {",
-            "        ?e2 ?labelpredicate ?" + RenderUtils.escape(aString) + " @en .",
+            "        ?e2 ?labelpredicate ?" + aString + " @en .",
             "        OPTIONAL",
             "        {",
             "          ?e2 ?descriptionIri ?description.",
@@ -88,37 +89,26 @@ public class QueryUtil
     public static TupleQuery generateCandidateExactQuery(RepositoryConnection conn,
         String aTypedString, String aMention, IRI aDescriptionIri)
     {
+        aTypedString = RenderUtils.escape(aTypedString);
+        aMention = RenderUtils.escape(aMention);
+
         // Matching user input exactly
         String exactMatchingTypedString = getExactMatchingQueryPart("exactTyped");
 
-        // Usually users are lazy and don't capitalize words,
-        // but then the exact matching wouldn't find anything.
-        String exactMatchingTypedStringCapitalized = getExactMatchingQueryPart("exactTypedCapitalized");
-
-        // Do the same for the mention
+        // Match surface form exactly
         String exactMatchingMention = getExactMatchingQueryPart("exactMention");
-
-        String exactMatchingMentionCapitalized = getExactMatchingQueryPart("exactMentionCapitalized");
 
         String query = String.join("\n",
             "DEFINE input:inference 'instances'",
             SPARQL_PREFIX,
-            "SELECT DISTINCT ?e2 ?altLabel ?label ?description WHERE",
+            "SELECT DISTINCT ?e2 ?label ?description WHERE",
             "{",
             "  {",
             exactMatchingTypedString,
             "  } ",
             "  UNION",
             "  {",
-            exactMatchingTypedStringCapitalized,
-            "  }",
-            "  UNION",
-            "  {",
             exactMatchingMention,
-            "  }",
-            "  UNION",
-            "  {",
-            exactMatchingMentionCapitalized,
             "  }",
             "  FILTER EXISTS { ?e2 ?p ?v }",
             "  FILTER NOT EXISTS ",
@@ -138,11 +128,7 @@ public class QueryUtil
 
         TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, query);
         tupleQuery.setBinding("exactTyped", vf.createLiteral(aTypedString));
-        tupleQuery.setBinding("exactTypedCapitalized",
-            vf.createLiteral(StringUtils.capitalize(aTypedString)));
         tupleQuery.setBinding("exactMention", vf.createLiteral(aMention));
-        tupleQuery.setBinding("exactMentionCapitalized",
-            vf.createLiteral(StringUtils.capitalize(aMention)));
 
         tupleQuery.setBinding("descriptionIri", aDescriptionIri);
         return tupleQuery;
@@ -155,7 +141,7 @@ public class QueryUtil
             "      VALUES ?labelpredicate {rdfs:label skos:altLabel}",
             "      {",
             "        ?e2 ?labelpredicate ?altLabel.",
-            "        ?altLabel bif:contains '" + RenderUtils.escape(aString) + "'. ",
+            "        ?altLabel bif:contains '?" + aString + "'. ",
             "        OPTIONAL",
             "        {",
             "          ?e2 ?descriptionIri ?description.",
@@ -170,18 +156,17 @@ public class QueryUtil
      *
      * This query retrieves candidates via exact matching of their labels and full-text-search
      *
-     * @param aTypedString the unprocessed raw string the user searched for or
-     * @param aMention the words spanned by the mention, pre-processed
+     * @param aString String for which to perform full text search
      * @param aLimit maximum number of results
      * @param aDescriptionIri KB-specific IRI that indicates a description
      * @return a query to retrieve candidate entities
      */
     public static TupleQuery generateCandidateFullTextQuery(RepositoryConnection conn,
-        String aTypedString, String aMention, int aLimit, IRI aDescriptionIri)
+        String aString, int aLimit, IRI aDescriptionIri)
     {
+        aString = RenderUtils.escape(aString).toLowerCase(Locale.ENGLISH);
 
-        String fullTextMatchingMention = getFullTextMatchingQueryPart("mention", aLimit);
-        String fullTextMatchingTypedString = getFullTextMatchingQueryPart("typedString", aLimit);
+        String fullTextMatchingString = getFullTextMatchingQueryPart("string", aLimit);
 
         String query = String.join("\n",
             "DEFINE input:inference 'instances'",
@@ -189,11 +174,7 @@ public class QueryUtil
             "SELECT DISTINCT ?e2 ?altLabel ?label ?description WHERE",
             "{",
             "  {",
-                 fullTextMatchingMention,
-            "  }",
-            "  UNION",
-            "  {",
-                 fullTextMatchingTypedString,
+                 fullTextMatchingString,
             "  }",
             "  FILTER EXISTS { ?e2 ?p ?v }",
             "  FILTER NOT EXISTS ",
@@ -212,8 +193,7 @@ public class QueryUtil
         ValueFactory vf = SimpleValueFactory.getInstance();
 
         TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, query);
-        tupleQuery.setBinding("mention", vf.createLiteral(aMention));
-        tupleQuery.setBinding("typedString", vf.createLiteral(aTypedString));
+        tupleQuery.setBinding("string", vf.createLiteral(aString));
         tupleQuery.setBinding("descriptionIri", aDescriptionIri);
         return tupleQuery;
     }

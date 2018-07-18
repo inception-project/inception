@@ -139,7 +139,7 @@ public class ConceptLinkingService
      * May lead to recursive calls if first search does not yield any results.
      *
      * @param aKB the Knowledge Base in which to search.
-     * @param aTypedString typed string from the user, is not modified in this method.
+     * @param aTypedString typed string from the user
      * @param aMention the marked surface form, which is pre-processed first.
      */
     private Set<CandidateEntity> generateCandidates(KnowledgeBase aKB, String aTypedString,
@@ -166,19 +166,15 @@ public class ConceptLinkingService
             logger.error("Mention is empty!");
             return Collections.emptySet();
         }
-        ImmutablePair<Project, String> pair = new ImmutablePair<>(aKB.getProject(),
+        ImmutablePair<Project, String> mentionPair = new ImmutablePair<>(aKB.getProject(),
             processedMention);
 
+        ImmutablePair<Project, String> typedStringPair = new ImmutablePair<>(aKB.getProject(),
+            aTypedString);
+
         try (RepositoryConnection conn = kbService.getConnection(aKB)) {
-            if (candidateCache.containsKey(pair)) {
-                candidatesFullText.addAll(candidateCache.get(pair));
-            }
-            else {
-                TupleQuery fullTextQuery = QueryUtil
-                    .generateCandidateFullTextQuery(conn, aTypedString, processedMention,
-                        properties.getCandidateQueryLimit(), aKB.getDescriptionIri());
-                candidatesFullText.addAll(processQuery(fullTextQuery));
-            }
+            addFullTextCandidates(aKB, candidatesFullText, processedMention, mentionPair, conn);
+            addFullTextCandidates(aKB, candidatesFullText, aTypedString, typedStringPair, conn);
 
             TupleQuery exactQuery = QueryUtil
                 .generateCandidateExactQuery(conn, aTypedString, processedMention,
@@ -193,14 +189,29 @@ public class ConceptLinkingService
             String[] split = processedMention.split(" ");
             if (split.length > 1) {
                 for (String s : split) {
-                    candidates.addAll(generateCandidates(aKB, s, aTypedString));
+                    candidatesFullText.addAll(generateCandidates(aKB, s, aTypedString));
                 }
             }
         }
 
-        candidateCache.put(pair, candidatesFullText);
         candidates.addAll(candidatesFullText);
         return candidates;
+    }
+
+    private void addFullTextCandidates(KnowledgeBase aKB, Set<CandidateEntity> aFullTextCandidates,
+        String aString, ImmutablePair<Project, String> aPair,
+        RepositoryConnection aConn)
+    {
+        if (candidateCache.containsKey(aPair)) {
+            aFullTextCandidates.addAll(candidateCache.get(aPair));
+        }
+        else {
+            TupleQuery fullTextQueryMention = QueryUtil
+                .generateCandidateFullTextQuery(aConn, aString,
+                    properties.getCandidateQueryLimit(), aKB.getDescriptionIri());
+            aFullTextCandidates.addAll(processQuery(fullTextQueryMention));
+            candidateCache.put(aPair, aFullTextCandidates);
+        }
     }
 
     private Set<CandidateEntity> processQuery(TupleQuery aTupleQuery)
@@ -462,8 +473,6 @@ public class ConceptLinkingService
     {
         long startTime = System.currentTimeMillis();
 
-        aMention = aMention.toLowerCase(Locale.ENGLISH);
-        aTypedString = aTypedString.toLowerCase(Locale.ENGLISH);
         Set<CandidateEntity> candidates = new HashSet<>(
             generateCandidates(aKB, aTypedString, aMention));
         logger
