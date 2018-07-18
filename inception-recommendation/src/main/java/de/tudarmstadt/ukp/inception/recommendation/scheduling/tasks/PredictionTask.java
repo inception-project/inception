@@ -174,12 +174,17 @@ public class PredictionTask
 
         for (AnnotationFeature feature: aAnnotationService.listAnnotationFeature(aLayer)) {
 
-            for (AnnotationFS fs : existingAnnotations) {
+            // Keep only AnnotationFS that have at least one feature value set
+            List<AnnotationFS> annoFsForFeature = existingAnnotations.stream()
+                .filter(fs ->
+                    fs.getStringValue(fs.getType().getFeatureByBaseName(feature.getName())) != null)
+                .collect(Collectors.toList());
+            for (AnnotationFS fs : annoFsForFeature) {
 
                 AnnotationObject ao = swap;
 
                 // Go to the next token for which an annotation exists
-                while (ao.getOffset().getBeginCharacter() != fs.getBegin()
+                while (ao.getOffset().getBeginCharacter() < fs.getBegin()
                     && !remainingRecommendations.isEmpty()) {
 
                     setVisibility(recordedAnnotations, ao);
@@ -202,6 +207,15 @@ public class PredictionTask
                 }
             }
 
+            // Check last AnnotationObject
+            if (swap != null && !annoFsForFeature.isEmpty()) {
+                if (isOverlappingForFeature(annoFsForFeature.get(annoFsForFeature.size() - 1), swap, feature)) {
+                    swap.setVisible(false);
+                }
+                else {
+                    setVisibility(recordedAnnotations, swap);
+                }
+            }
         }
 
         // Check for the remaining AnnotationObjects whether they have an annotation
