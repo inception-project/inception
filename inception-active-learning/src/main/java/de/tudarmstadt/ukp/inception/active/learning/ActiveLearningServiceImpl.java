@@ -17,17 +17,17 @@
  */
 package de.tudarmstadt.ukp.inception.active.learning;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.DocumentOpenedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningSessionCompletedEvent;
+import de.tudarmstadt.ukp.inception.active.learning.sidebar.ActiveLearningRecommender;
 import de.tudarmstadt.ukp.inception.active.learning.sidebar.RecommendationDifference;
 import org.apache.uima.jcas.JCas;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
@@ -239,7 +239,7 @@ public class ActiveLearningServiceImpl
     }
 
     @Override
-    public AnnotationLayer getAnnotationLayer(User aUser)
+    public AnnotationLayer getSelectedLayer(User aUser)
     {
         ActiveLearningUserState state = getState(aUser.getUsername());
         AnnotationLayer selectedLayer;
@@ -250,23 +250,45 @@ public class ActiveLearningServiceImpl
     }
 
     @Override
-    public void putFeatureState(User aUser, FeatureState aFeatureState)
+    public void putActiveLearningRecommender(User aUser, ActiveLearningRecommender
+        aActiveLearningRecommender)
     {
         ActiveLearningUserState state = getState(aUser.getUsername());
         synchronized (state) {
-            state.setFeatureState(aFeatureState);
+            state.setActiveLearningRecommender(aActiveLearningRecommender);
         }
     }
 
     @Override
-    public FeatureState getFeatureState(User aUser)
+    public ActiveLearningRecommender getActiveLearningRecommender(User aUser)
     {
         ActiveLearningUserState state = getState(aUser.getUsername());
-        FeatureState featureState;
+        ActiveLearningRecommender activeLearningRecommender;
         synchronized (state) {
-            featureState = state.getFeatureState();
+            activeLearningRecommender = state.getActiveLearningRecommender();
         }
-        return featureState;
+        return activeLearningRecommender;
+    }
+
+    @Override
+    public void putLearnSkippedRecommendationTime(User aUser, Date
+        aLearnSkippedRecommendationTime)
+    {
+        ActiveLearningUserState state = getState(aUser.getUsername());
+        synchronized (state) {
+            state.setLearnSkippedRecommendationTime(aLearnSkippedRecommendationTime);
+        }
+    }
+
+    @Override
+    public Date getLearnSkippedRecommendationTime(User aUser)
+    {
+        ActiveLearningUserState state = getState(aUser.getUsername());
+        Date learnSkippedRecommendationTime;
+        synchronized (state) {
+            learnSkippedRecommendationTime = state.getLearnSkippedRecommendationTime();
+        }
+        return learnSkippedRecommendationTime;
     }
 
     private ActiveLearningUserState getState(String aUsername)
@@ -282,10 +304,22 @@ public class ActiveLearningServiceImpl
         }
     }
 
-    private void clearState(String aUsername)
+    @EventListener
+    public void onActiveLearningSessionCompleted(ActiveLearningSessionCompletedEvent aEvent)
+    {
+        clearState(aEvent.getUser());
+    }
+
+    @EventListener
+    public void onDocumentOpened(DocumentOpenedEvent aEvent)
+    {
+        clearState(aEvent.getUser());
+    }
+
+    private void clearState(String aUserName)
     {
         synchronized (states) {
-            states.remove(aUsername);
+            states.remove(aUserName);
         }
     }
 
@@ -299,86 +333,98 @@ public class ActiveLearningServiceImpl
         private AnnotationObject currentRecommendation;
         private RecommendationDifference currentDifference;
         private AnnotationLayer selectedLayer;
-        private FeatureState featureState;
+        private ActiveLearningRecommender activeLearningRecommender;
+        private Date learnSkippedRecommendationTime;
 
-        public boolean isSessionActive()
+        private boolean isSessionActive()
         {
             return sessionActive;
         }
 
-        public void setSessionActive(boolean sessionActive)
+        private void setSessionActive(boolean sessionActive)
         {
             this.sessionActive = sessionActive;
         }
 
-        public boolean isHasUnseenRecommendation()
+        private boolean isHasUnseenRecommendation()
         {
             return hasUnseenRecommendation;
         }
 
-        public void setHasUnseenRecommendation(boolean hasUnseenRecommendation)
+        private void setHasUnseenRecommendation(boolean hasUnseenRecommendation)
         {
             this.hasUnseenRecommendation = hasUnseenRecommendation;
         }
 
-        public boolean isHasSkippedRecommendation()
+        private boolean isHasSkippedRecommendation()
         {
             return hasSkippedRecommendation;
         }
 
-        public void setHasSkippedRecommendation(boolean hasSkippedRecommendation)
+        private void setHasSkippedRecommendation(boolean hasSkippedRecommendation)
         {
             this.hasSkippedRecommendation = hasSkippedRecommendation;
         }
 
-        public boolean isDoExistRecommenders()
+        private boolean isDoExistRecommenders()
         {
             return doExistRecommenders;
         }
 
-        public void setDoExistRecommenders(boolean doExistRecommenders)
+        private void setDoExistRecommenders(boolean doExistRecommenders)
         {
             this.doExistRecommenders = doExistRecommenders;
         }
 
-        public AnnotationObject getCurrentRecommendation()
+        private AnnotationObject getCurrentRecommendation()
         {
             return currentRecommendation;
         }
 
-        public void setCurrentRecommendation(AnnotationObject currentRecommendation)
+        private void setCurrentRecommendation(AnnotationObject currentRecommendation)
         {
             this.currentRecommendation = currentRecommendation;
         }
 
-        public RecommendationDifference getCurrentDifference()
+        private RecommendationDifference getCurrentDifference()
         {
             return currentDifference;
         }
 
-        public void setCurrentDifference(RecommendationDifference currentDifference)
+        private void setCurrentDifference(RecommendationDifference currentDifference)
         {
             this.currentDifference = currentDifference;
         }
 
-        public AnnotationLayer getSelectedLayer()
+        private AnnotationLayer getSelectedLayer()
         {
             return selectedLayer;
         }
 
-        public void setSelectedLayer(AnnotationLayer selectedLayer)
+        private void setSelectedLayer(AnnotationLayer selectedLayer)
         {
             this.selectedLayer = selectedLayer;
         }
 
-        public FeatureState getFeatureState()
+        private ActiveLearningRecommender getActiveLearningRecommender()
         {
-            return featureState;
+            return activeLearningRecommender;
         }
 
-        public void setFeatureState(FeatureState featureState)
+        private void setActiveLearningRecommender(
+            ActiveLearningRecommender activeLearningRecommender)
         {
-            this.featureState = featureState;
+            this.activeLearningRecommender = activeLearningRecommender;
+        }
+
+        private Date getLearnSkippedRecommendationTime()
+        {
+            return learnSkippedRecommendationTime;
+        }
+
+        private void setLearnSkippedRecommendationTime(Date learnSkippedRecommendationTime)
+        {
+            this.learnSkippedRecommendationTime = learnSkippedRecommendationTime;
         }
     }
 }

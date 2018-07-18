@@ -17,10 +17,12 @@
  */
 package de.tudarmstadt.ukp.inception.active.learning;
 
+import java.util.Date;
 import java.util.List;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.active.learning.sidebar.ActiveLearningRecommender;
 import de.tudarmstadt.ukp.inception.active.learning.sidebar.RecommendationDifference;
 import org.apache.uima.jcas.JCas;
 
@@ -66,9 +68,15 @@ public interface ActiveLearningService
 
     void putSelectedLayer(User aUser, AnnotationLayer aSelectedLayer);
 
-    AnnotationLayer getAnnotationLayer(User aUser);
+    AnnotationLayer getSelectedLayer(User aUser);
 
-    void putFeatureState(User aUser, FeatureState aFeatureState);
+    void putActiveLearningRecommender(User aUser,
+        ActiveLearningRecommender aActiveLearningRecommender);
 
-    FeatureState getFeatureState(User aUser);
+    ActiveLearningRecommender getActiveLearningRecommender(User aUser);
+
+    void putLearnSkippedRecommendationTime(User aUser, Date
+        aLearnSkippedRecommendationTime);
+
+    Date getLearnSkippedRecommendationTime(User aUser);
 }
