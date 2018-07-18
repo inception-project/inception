@@ -36,15 +36,15 @@ public class SPARQLQueryStore
             , "}"
             , "LIMIT 10000");
     
-    public static String PROPERTYLIST_WIKIDATA_QUERY = String.join("\n"
-            , "SELECT DISTINCT ?s ?l WHERE {"
-            , " ?s ?pTYPE ?oPROPERTY ."
-            , "  OPTIONAL {"
-            , "    ?s ?pLABEL ?l ."
-            , "    FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\"))"
-            , "  }"
-            , "}"
-            , "LIMIT 10000");
+    // public static String PROPERTYLIST_WIKIDATA_QUERY = String.join("\n"
+    // , "SELECT DISTINCT ?s ?l WHERE {"
+    // , " ?s ?pTYPE ?oPROPERTY ."
+    // , " OPTIONAL {"
+    // , " ?s ?pLABEL ?l ."
+    // , " FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\"))"
+    // , " }"
+    // , "}"
+    // , "LIMIT 10000");
     
     
 }

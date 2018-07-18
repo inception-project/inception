@@ -70,11 +70,11 @@ import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 @DataJpaTest
 public class KnowledgeBaseServiceRemoteTest
 {
-    private static final String PROJECT_NAME = "Test project";
+    private final String PROJECT_NAME = "Test project";
     
-    private static KnowledgeBaseServiceImpl sut;
-    private static Project project;
-    private static TestFixtures testFixtures;
+    private KnowledgeBaseServiceImpl sut;
+    private Project project;
+    private TestFixtures testFixtures;
 
     private static Reification reification;
     private static KnowledgeBase kb;
@@ -149,7 +149,7 @@ public class KnowledgeBaseServiceRemoteTest
     }
 
     @Test
-    public void testRootConcept()
+    public void thatRootConceptsCanBeRetrieved()
     {
         List<KBHandle> rootConceptKBHandle = sut.listRootConcepts(kb, true);
         assertThat(rootConceptKBHandle).as("Check that root concept list is not empty")
@@ -157,7 +157,7 @@ public class KnowledgeBaseServiceRemoteTest
     }
 
     @Test
-    public void testPropertyList()
+    public void thatPropertyListCanBeRetrieved()
     {
         List<KBHandle> propertiesKBHandle = sut.listProperties(kb, kb.getPropertyTypeIri(), true,
                 true);
@@ -181,7 +181,7 @@ public class KnowledgeBaseServiceRemoteTest
 
     }
 
-    private static void importKnowledgeBase(String resourceName) throws Exception
+    private void importKnowledgeBase(String resourceName) throws Exception
     {
         ClassLoader classLoader = KnowledgeBaseServiceRemoteTest.class.getClassLoader();
         String fileName = classLoader.getResource(resourceName).getFile();
@@ -235,13 +235,8 @@ public class KnowledgeBaseServiceRemoteTest
 
     private static void setSchema(KnowledgeBase kb, KnowledgeBaseMapping mapping)
     {
-        kb.setClassIri(mapping.getClassIri());
-        kb.setSubclassIri(mapping.getSubclassIri());
-        kb.setTypeIri(mapping.getTypeIri());
-        kb.setDescriptionIri(mapping.getDescriptionIri());
-        kb.setLabelIri(mapping.getLabelIri());
-        kb.setPropertyTypeIri(mapping.getPropertyTypeIri());
-        kb.setReification(reification);
+        setSchema(kb, mapping.getClassIri(), mapping.getSubclassIri(), mapping.getTypeIri(),
+                mapping.getDescriptionIri(), mapping.getLabelIri(), mapping.getPropertyTypeIri());
     }
 
     public static Map<String, KnowledgeBaseProfile> readKnowledgeBaseProfiles() throws IOException
