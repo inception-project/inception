@@ -242,16 +242,16 @@ public class MtasDocumentIndexTest
     }
 
     @Test
-    public void testSimpleQuery() throws Exception
+    public void testRawTextQuery() throws Exception
     {
         Project project = new Project();
-        project.setName("TestSimpleQuery");
+        project.setName("TestRawTextQuery");
 
         createProject(project);
 
         SourceDocument sourceDocument = new SourceDocument();
 
-        sourceDocument.setName("Simple test");
+        sourceDocument.setName("Raw text document");
         sourceDocument.setProject(project);
         sourceDocument.setFormat("text");
 
@@ -299,7 +299,7 @@ public class MtasDocumentIndexTest
 
         SourceDocument sourceDocument = new SourceDocument();
 
-        sourceDocument.setName("Annotation test");
+        sourceDocument.setName("Annotation document");
         sourceDocument.setProject(project);
         sourceDocument.setFormat("text");
 
