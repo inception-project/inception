@@ -679,37 +679,34 @@ public class MtasDocumentIndex
 
     private void indexAllDocuments()
     {
-        log.info("Indexing all annotation documents of project [{}]", project.getName());
 
         int users = 0;
         int annotationDocs = 0;
         int sourceDocs = 0;
-        
-        for (User user : projectService.listProjectUsersWithPermissions(project)) {
-            users++;
-            for (AnnotationDocument document : documentService.listAnnotationDocuments(project,
-                    user)) {
-                try {
+
+        try {
+            log.info("Indexing all annotation documents of project [{}]", project.getName());
+
+            for (User user : projectService.listProjectUsersWithPermissions(project)) {
+                users++;
+                for (AnnotationDocument document : documentService.listAnnotationDocuments(project,
+                        user)) {
                     indexDocument(document, documentService.readAnnotationCas(document));
                     annotationDocs++;
                 }
-                catch (IOException e) {
-                    log.error("Unable to index annotation document", e);
-                }
             }
-        }
 
-        log.info("Indexing all source documents of project [{}]", project.getName());
-        for (SourceDocument document : documentService.listSourceDocuments(project)) {
-            try {
+            log.info("Indexing all source documents of project [{}]", project.getName());
+
+            for (SourceDocument document : documentService.listSourceDocuments(project)) {
                 indexDocument(document, documentService.createOrReadInitialCas(document));
                 sourceDocs++;
             }
-            catch (IOException e) {
-                log.error("Unable to index source document", e);
-            }
         }
-        
+        catch (IOException e) {
+            log.error("Unable to index document", e);
+        }
+
         log.info(String.format(
                 "Indexing results: %d source doc(s), %d annotation doc(s) for %d user(s)",
                 sourceDocs, annotationDocs, users));
