@@ -18,6 +18,7 @@
 
 package de.tudarmstadt.ukp.inception.recommendation.event;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import org.springframework.context.ApplicationEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -26,23 +27,17 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 public class PredictionsSwitchedEvent
     extends ApplicationEvent
 {
-    private final User user;
-    private final Project project;
+    private static final long serialVersionUID = 8008652817225383181L;
+    private final AnnotatorState annotatorState;
 
-    public PredictionsSwitchedEvent(Object source, User aUser, Project aProject)
+    public PredictionsSwitchedEvent(Object source, AnnotatorState aState)
     {
         super(source);
-        user = aUser;
-        project = aProject;
+        annotatorState = aState;
     }
 
-    public User getUser()
+    public AnnotatorState getAnnotatorState()
     {
-        return user;
-    }
-
-    public Project getProject()
-    {
-        return project;
+        return annotatorState;
     }
 }
