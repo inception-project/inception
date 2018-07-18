@@ -33,7 +33,7 @@ public class StringMatchingNerClassificationTool
         super(-1, StringMatchingNerClassificationTool.class.getName(),
             new StringMatchingNerTrainer(new ClassifierConfiguration<>()),
             new StringMatchingNerClassifier(new ClassifierConfiguration<>()),
-            new NerAnnotationObjectLoader(), false);
+            new NerAnnotationObjectLoader(), false, true);
     }
 
     public StringMatchingNerClassificationTool(long recommenderId, String feature,
@@ -42,7 +42,7 @@ public class StringMatchingNerClassificationTool
         super(recommenderId, StringMatchingNerClassificationTool.class.getName(),
             new StringMatchingNerTrainer(new ClassifierConfiguration<>(feature, recommenderId)),
             new StringMatchingNerClassifier(new ClassifierConfiguration<>(feature, recommenderId)),
-            new NerAnnotationObjectLoader(aLayer, feature), false);
+            new NerAnnotationObjectLoader(aLayer, feature), false, true);
     }
 
 }
