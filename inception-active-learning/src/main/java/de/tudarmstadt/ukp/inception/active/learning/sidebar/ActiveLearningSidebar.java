@@ -284,56 +284,7 @@ public class ActiveLearningSidebar
             currentRecommendation = currentDifference.getRecommendation1();
 
             try {
-                // create AnnotationFeature and FeatureSupport
-                annotationFeature = annotationService
-                    .getFeature(currentRecommendation.getFeature(), selectedLayer.getObject());
-                FeatureSupport featureSupport = featureSupportRegistry
-                    .getFeatureSupport(annotationFeature);
-                // get Jcas
-                AnnotatorState state = ActiveLearningSidebar.this.getModelObject();
-                SourceDocument sourceDoc = documentService
-                    .getSourceDocument(state.getProject(), currentRecommendation.getDocumentName());
-                AnnotationDocument annoDoc = documentService
-                    .createOrGetAnnotationDocument(sourceDoc, state.getUser());
-                JCas jCas = documentService.readAnnotationCas(annoDoc);
-                // create FeatureState with the recommendation value (maybe a String or a KBHandle)
-                featureState = new FeatureState(annotationFeature, (Serializable) featureSupport
-                    .wrapFeatureValue(annotationFeature, jCas.getCas(),
-                        currentRecommendation.getLabel()));
-                List<Tag> tagList = annotationService.listTags(annotationFeature.getTagset());
-                List<Tag> reorderedTagList = new ArrayList<>();
-                if (tagList.size() > 0) {
-                    model = recommendationService
-                        .getPredictions(state.getUser(), state.getProject());
-                    // get all the predictions
-                    List<AnnotationObject> otherRecommendations = model
-                        .getPredictionsByTokenAndFeature(currentRecommendation.getDocumentName(),
-                            selectedLayer.getObject(),
-                            currentRecommendation.getOffset().getBeginCharacter(),
-                            currentRecommendation.getOffset().getEndCharacter(),
-                            currentRecommendation.getFeature());
-                    // get all the label of the predictions (e.g. "NN")
-                    List<String> otherRecommendationsLabel = otherRecommendations.stream()
-                        .map(ao -> ao.getLabel()).collect(Collectors.toList());
-                    for (Tag tag : tagList) {
-                        // add the tags which contain the prediction-labels to the beginning of a
-                        // tagset
-                        if (otherRecommendationsLabel.contains(tag.getName())) {
-                            tag.setReordered(true);
-                            reorderedTagList.add(tag);
-                        }
-                    }
-                    // remove these tags containing the prediction-labels
-                    tagList.removeAll(reorderedTagList);
-                    // add the rest tags to the tagset after these
-                    reorderedTagList.addAll(tagList);
-                }
-                featureState.tagset = reorderedTagList;
-                aFeatureStateModel = Model.of(featureState);
-                // update feature editor with the recommendation value
-                editor = featureSupport
-                    .createEditor("editor", mainContainer, this.getActionHandler(), this.getModel(),
-                        aFeatureStateModel);
+                createFeatureEditor();
                 recommendationForm.addOrReplace(editor);
                 aTarget.add(mainContainer);
 
@@ -457,7 +408,7 @@ public class ActiveLearningSidebar
                 currentDifference != null ? currentDifference.getDifference() : 0.0)));
         recommendationForm.add(
             (selectedLayer.getObject() != null && currentRecommendation != null) ?
-                createFeatureEditor() : new Label("editor").setVisible(false));
+                initializeFeatureEditor() : new Label("editor").setVisible(false));
 
         recommendationForm.add(new LambdaAjaxButton<>(CID_ANNOTATE_BUTTON, this::actionAnnotate));
         recommendationForm.add(new LambdaAjaxLink(CID_SKIP_BUTTON, this::actionSkip));
@@ -495,20 +446,71 @@ public class ActiveLearningSidebar
         highlightCurrentRecommendation(aTarget);
     }
 
-    private FeatureEditor createFeatureEditor()
+    private FeatureEditor initializeFeatureEditor()
     {
+        try {
+            createFeatureEditor();
+        }
+        catch (IOException e) {
+            LOG.error("Unable to switch to document : {} ", e.getMessage(), e);
+            error("Unable to switch to document : " + e.getMessage());
+        }
+        return editor;
+    }
+
+    private void createFeatureEditor()
+        throws IOException
+    {
+        // create AnnotationFeature and FeatureSupport
         annotationFeature = annotationService
             .getFeature(currentRecommendation.getFeature(), selectedLayer.getObject());
-
-        FeatureSupport featureSupport = featureSupportRegistry.getFeatureSupport(annotationFeature);
-
-        featureState = new FeatureState(annotationFeature, null);
-        featureState.tagset = annotationService.listTags(annotationFeature.getTagset());
+        FeatureSupport featureSupport = featureSupportRegistry
+            .getFeatureSupport(annotationFeature);
+        // get Jcas
+        AnnotatorState state = ActiveLearningSidebar.this.getModelObject();
+        SourceDocument sourceDoc = documentService
+            .getSourceDocument(state.getProject(), currentRecommendation.getDocumentName());
+        AnnotationDocument annoDoc = documentService
+            .createOrGetAnnotationDocument(sourceDoc, state.getUser());
+        JCas jCas = documentService.readAnnotationCas(annoDoc);
+        // create FeatureState with the recommendation value (maybe a String or a KBHandle)
+        featureState = new FeatureState(annotationFeature, (Serializable) featureSupport
+            .wrapFeatureValue(annotationFeature, jCas.getCas(),
+                currentRecommendation.getLabel()));
+        List<Tag> tagList = annotationService.listTags(annotationFeature.getTagset());
+        List<Tag> reorderedTagList = new ArrayList<>();
+        if (tagList.size() > 0) {
+            model = recommendationService
+                .getPredictions(state.getUser(), state.getProject());
+            // get all the predictions
+            List<AnnotationObject> otherRecommendations = model
+                .getPredictionsByTokenAndFeature(currentRecommendation.getDocumentName(),
+                    selectedLayer.getObject(),
+                    currentRecommendation.getOffset().getBeginCharacter(),
+                    currentRecommendation.getOffset().getEndCharacter(),
+                    currentRecommendation.getFeature());
+            // get all the label of the predictions (e.g. "NN")
+            List<String> otherRecommendationsLabel = otherRecommendations.stream()
+                .map(ao -> ao.getLabel()).collect(Collectors.toList());
+            for (Tag tag : tagList) {
+                // add the tags which contain the prediction-labels to the beginning of a
+                // tagset
+                if (otherRecommendationsLabel.contains(tag.getName())) {
+                    tag.setReordered(true);
+                    reorderedTagList.add(tag);
+                }
+            }
+            // remove these tags containing the prediction-labels
+            tagList.removeAll(reorderedTagList);
+            // add the rest tags to the tagset after these
+            reorderedTagList.addAll(tagList);
+        }
+        featureState.tagset = reorderedTagList;
         aFeatureStateModel = Model.of(featureState);
+        // update feature editor with the recommendation value
         editor = featureSupport
             .createEditor("editor", mainContainer, this.getActionHandler(), this.getModel(),
                 aFeatureStateModel);
-        return editor;
     }
 
     private void writeLearningRecordInDatabaseAndEventLog(LearningRecordUserAction
@@ -961,8 +963,16 @@ public class ActiveLearningSidebar
             if (currentDifference != null) {
                 hasUnseenRecommendation = true;
                 currentRecommendation = currentDifference.getRecommendation1();
-                setShowingRecommendation();
-                highlightCurrentRecommendation((AjaxRequestTarget) aEvent.getRequestHandler());
+                try {
+                    createFeatureEditor();
+                    recommendationForm.addOrReplace(editor);
+                    AjaxRequestTarget aTarget = (AjaxRequestTarget) aEvent.getRequestHandler();
+                    aTarget.add(mainContainer);
+                }
+                catch (IOException e) {
+                    LOG.error("Unable to switch to document : {} ", e.getMessage(), e);
+                    error("Unable to switch to document : " + e.getMessage());
+                }
             }
             else if (learnSkippedRecommendationTime == null) {
                 hasUnseenRecommendation = false;
