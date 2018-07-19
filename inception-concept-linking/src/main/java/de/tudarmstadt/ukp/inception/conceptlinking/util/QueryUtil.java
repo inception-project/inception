@@ -141,7 +141,7 @@ public class QueryUtil
             "      VALUES ?labelpredicate {rdfs:label skos:altLabel}",
             "      {",
             "        ?e2 ?labelpredicate ?altLabel.",
-            "        ?altLabel bif:contains '?" + aString + "'. ",
+            "        ?altLabel bif:contains '\"?" + aString + "\"'. ",
             "        OPTIONAL",
             "        {",
             "          ?e2 ?descriptionIri ?description.",
