@@ -430,7 +430,7 @@ public class KnowledgeBaseDetailsPanel
             
             // Schema configuration
             Component iriPanel = new KnowledgeBaseIriPanel("iriPanel", model,
-                    KnowledgeBaseIriPanelMode.PROJECTSETTINGS)
+                KnowledgeBaseIriPanelMode.PROJECTSETTINGS)
                             .add(LambdaBehavior.onConfigure(it -> it.setEnabled(false)));
 
             // add disabled language field

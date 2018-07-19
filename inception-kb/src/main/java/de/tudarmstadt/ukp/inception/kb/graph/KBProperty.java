@@ -179,7 +179,6 @@ public class KBProperty
     {
         KBProperty kbProp = new KBProperty();
         kbProp.setIdentifier(aStmt.getSubject().stringValue());
-        kbProp.setLanguage("");
         kbProp.originalStatements.add(aStmt);
 
         readFirst(aConn, aStmt.getSubject(), kb.getLabelIri(), null).ifPresent((stmt) -> {

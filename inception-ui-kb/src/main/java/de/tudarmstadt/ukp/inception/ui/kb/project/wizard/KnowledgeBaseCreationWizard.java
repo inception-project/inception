@@ -104,7 +104,7 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
     private final IModel<Project> projectModel;
     private final DynamicWizardModel wizardModel;
     private final CompoundPropertyModel<KnowledgeBaseWrapper> wizardDataModel;
-    private final List<String> languages = new ArrayList<>(Arrays.asList("en", "de"));
+    private final List<String> languages = Arrays.asList("en", "de");
 
     public KnowledgeBaseCreationWizard(String id, IModel<Project> aProjectModel) {
         super(id);

@@ -548,7 +548,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         KBProperty savedProperty = sut.readProperty(kb, handle.getIdentifier()).get();
         assertThat(savedProperty)
             .as("Check that property was created correctly")
-            .hasNoNullFieldsOrProperties()
+            .hasNoNullFieldsOrPropertiesExcept("language")
             .hasFieldOrPropertyWithValue("description", property.getDescription())
             .hasFieldOrPropertyWithValue("domain", property.getDomain())
             .hasFieldOrPropertyWithValue("name", property.getName())
@@ -611,7 +611,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
 
         assertThat(savedProperty)
             .as("Check that property was saved correctly")
-            .hasNoNullFieldsOrProperties()
+            .hasNoNullFieldsOrPropertiesExcept("language")
             .hasFieldOrPropertyWithValue("description", property.getDescription())
             .hasFieldOrPropertyWithValue("domain", property.getDomain())
             .hasFieldOrPropertyWithValue("name", property.getName())
