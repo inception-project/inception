@@ -64,9 +64,6 @@ public class OpenNlpNerRecommenderTest
     @Test
     public void thatTrainingWorks() throws Exception
     {
-        RecommenderContext context = new RecommenderContext();
-        Recommender recommender = buildRecommender();
-        OpenNlpNerRecommenderTraits traits = new OpenNlpNerRecommenderTraits();
         OpenNlpNerRecommender sut = new OpenNlpNerRecommender(recommender, traits);
         JCas cas = loadDevelopmentData();
 
@@ -124,7 +121,7 @@ public class OpenNlpNerRecommenderTest
         return cas;
     }
 
-    private Recommender buildRecommender()
+    private static Recommender buildRecommender()
     {
         AnnotationLayer layer = new AnnotationLayer();
         layer.setName(NamedEntity.class.getName());

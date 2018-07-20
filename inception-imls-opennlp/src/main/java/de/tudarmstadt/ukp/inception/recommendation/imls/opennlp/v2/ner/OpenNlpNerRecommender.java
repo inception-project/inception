@@ -96,11 +96,12 @@ public class OpenNlpNerRecommender
 
         Type sentenceType = getType(aCas, Sentence.class);
         Type predictionType = getAnnotationType(aCas, PredictedSpan.class);
+        Type tokenType = getType(aCas, Token.class);
         Feature confidenceFeature = predictionType.getFeatureByBaseName("score");
         Feature labelFeature = predictionType.getFeatureByBaseName("label");
 
         for (AnnotationFS sentence : select(aCas, sentenceType)) {
-            List<AnnotationFS> tokenAnnotations = extractTokens(aCas, sentence);
+            List<AnnotationFS> tokenAnnotations = selectCovered(tokenType, sentence);
             String[] tokens = tokenAnnotations.stream()
                 .map(AnnotationFS::getCoveredText)
                 .toArray(String[]::new);
@@ -139,7 +140,6 @@ public class OpenNlpNerRecommender
         }
 
         LOG.info("Training on [{}] items, predicting on [{}]", trainingSet.size(), testSet.size());
-        System.out.println(trainingSet.size() + " " + testSet.size());
 
         // Train model
         TokenNameFinderModel model = train(trainingSet, traits.getParameters());
@@ -182,11 +182,6 @@ public class OpenNlpNerRecommender
             .toArray(String[]::new);
         Span[] annotatedSpans = extractAnnotatedSpans(aCas, aSentence, aTokens);
         return new NameSample(tokenTexts, annotatedSpans, true);
-    }
-
-    private List<AnnotationFS> extractTokens(CAS aCas, AnnotationFS aSentence) {
-        Type tokenType = getType(aCas, Token.class);
-        return selectCovered(tokenType, aSentence);
     }
 
     private Span[] extractAnnotatedSpans(CAS aCas, AnnotationFS aSentence,

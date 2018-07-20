@@ -21,16 +21,17 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-public class PercentageBasedSplitter implements DataSplitter {
+import org.apache.commons.lang3.Validate;
 
+public class PercentageBasedSplitter
+    implements DataSplitter
+{
     private final double trainPercentage;
     private Map<Class<?>, Integer> counts;
     private Optional<Integer> total;
 
     public PercentageBasedSplitter(double aTrainPercentage) {
-        if (aTrainPercentage <= 0 || aTrainPercentage >= 1 ) {
-            throw new IllegalArgumentException("Percentage has to be in (0,1)");
-        }
+        Validate.inclusiveBetween(0, 1, aTrainPercentage, "Percentage has to be in (0,1)");
 
         trainPercentage = aTrainPercentage;
         counts = new HashMap<>();
