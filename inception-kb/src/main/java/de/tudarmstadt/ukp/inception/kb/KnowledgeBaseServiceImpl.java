@@ -458,7 +458,7 @@ public class KnowledgeBaseServiceImpl
             return new KBHandle(identifier, aInstance.getName());
         });
     }
-
+    
     @Override
     public Optional<KBInstance> readInstance(KnowledgeBase kb, String aIdentifier)
         throws QueryEvaluationException
@@ -702,6 +702,29 @@ public class KnowledgeBaseServiceImpl
     }
     
     @Override
+    public List<KBHandle> listPropertiesRangeValue(KnowledgeBase kb, String aProperty,
+            boolean aIncludeInferred, boolean aAll)
+        throws QueryEvaluationException
+    {
+        List<KBHandle> resultList = read(kb, (conn) -> {
+            ValueFactory vf = conn.getValueFactory();
+            String QUERY = SPARQLQueryStore.PROPERTY_SPECIFIC_RANGE;
+            TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
+            tupleQuery.setBinding("aProperty", vf.createIRI(aProperty));
+            tupleQuery.setBinding("pLABEL", kb.getLabelIri());
+            tupleQuery.setIncludeInferred(aIncludeInferred);
+
+            return evaluateListQuery(tupleQuery, aAll);
+        });
+        
+        resultList.sort(Comparator.comparing(KBObject::getUiLabel));
+        return resultList;
+    }
+    
+    
+    
+    
+    @Override
     public List<KBHandle> listRootConcepts(KnowledgeBase kb, boolean aAll)
         throws QueryEvaluationException
     {
@@ -892,5 +915,40 @@ public class KnowledgeBaseServiceImpl
             return mapper.readValue(r, 
                     new TypeReference<HashMap<String, KnowledgeBaseProfile>>(){});
         }
+    }
+    
+    
+    /**
+     * Read identifier IRI and return {@link Optional} of {@link KBObject}
+     * 
+     * @return {@link Optional} of {@link KBObject} of type {@link KBConcept} or {@link KBInstance}
+     */
+    @Override
+    public Optional<KBObject> readKBIdentifier(Project aProject, String aIdentifier)
+    {
+        for (KnowledgeBase kb : getKnowledgeBases(aProject)) {
+            try (RepositoryConnection conn = getConnection(kb)) {
+                ValueFactory vf = conn.getValueFactory();
+                RepositoryResult<Statement> stmts = RdfUtils.getStatements(conn,
+                        vf.createIRI(aIdentifier), kb.getTypeIri(), kb.getClassIri(), true);
+                if (stmts.hasNext()) {
+                    KBConcept kbConcept = KBConcept.read(conn, vf.createIRI(aIdentifier), kb);
+                    if (kbConcept != null) {
+                        return Optional.of(kbConcept);
+                    }
+                }
+                else if (!stmts.hasNext()) {
+                    Optional<KBInstance> kbInstance = readInstance(kb, aIdentifier);
+                    if (kbInstance.isPresent()) {
+                        return kbInstance.flatMap((p) -> Optional.of(p));
+                    }
+                }
+            }
+            catch (QueryEvaluationException e) {
+                log.error("Reading KB Entries failed.", e);
+                return Optional.empty();
+            }
+        }
+        return Optional.empty();
     }
 }

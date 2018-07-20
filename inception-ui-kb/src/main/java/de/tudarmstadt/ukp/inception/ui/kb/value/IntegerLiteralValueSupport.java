@@ -35,7 +35,7 @@ import de.tudarmstadt.ukp.inception.ui.kb.value.editor.ValueEditor;
 import de.tudarmstadt.ukp.inception.ui.kb.value.editor.ValuePresenter;
 
 @Component
-public class StringLiteralValueSupport
+public class IntegerLiteralValueSupport
     implements ValueTypeSupport
 {
     private String valueTypeSupportId;
@@ -56,7 +56,7 @@ public class StringLiteralValueSupport
     public List<ValueType> getSupportedValueTypes()
     {
         return asList(
-                new ValueType(XMLSchema.STRING.stringValue(), "String", valueTypeSupportId));
+                new ValueType(XMLSchema.INTEGER.stringValue(), "Integer", valueTypeSupportId));
     }
     
     @Override
@@ -68,17 +68,6 @@ public class StringLiteralValueSupport
 
         return DefaultDatatypeMapper.getDatatypeURI(aStatement.getValue().getClass()) != null;
     }
-    
-//    @Override
-//    public boolean accepts(String range)
-//    {
-//        if (aStatement.getValue() == null) {
-//            return false;
-//        }
-//
-//        return DefaultDatatypeMapper.getDatatypeURI(aStatement.getValue().getClass()) != null;
-//    }
-
 
     @Override
     public ValueEditor createEditor(String aId, IModel<KBStatement> aStatement,

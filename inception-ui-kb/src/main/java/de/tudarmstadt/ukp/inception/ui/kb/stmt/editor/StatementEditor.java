@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.inception.ui.kb.stmt.editor;
 
 import java.util.Iterator;
+import java.util.List;
+import java.util.Optional;
 
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -51,6 +53,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.inception.app.Focusable;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
+import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBQualifier;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
@@ -311,7 +314,21 @@ public class StatementEditor extends Panel
             super(aId, "editMode", StatementEditor.this, aStatement);
             CompoundPropertyModel<KBStatement> model = CompoundPropertyModel.of(aStatement);
             Form<KBStatement> form = new Form<>("form", model);
+            List<ValueType> valueTypes;
+            String rangeValue = property.getObject().getRange();
+            Optional<KBObject> rangeKBHandle = kbService.
+                    readKBIdentifier(kbModel.getObject().getProject(), rangeValue);
+            if (rangeValue == null) {
+                valueTypes = valueTypeRegistry.getAllTypes();
+            }
+            else if (rangeKBHandle.isPresent()) {
+               
+            }
             
+            
+            
+            
+            //valueTypes = valueTypeRegistry.getRangeTypes(property.getObject());
             valueType = new DropDownChoice<>("valueType", valueTypeRegistry.getAllTypes());
             valueType.setChoiceRenderer(new ChoiceRenderer<>("uiName"));
             valueType.setModel(Model.of(

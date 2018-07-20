@@ -71,6 +71,14 @@ public class BooleanLiteralValueSupport
 
         return iri != null && XMLSchema.BOOLEAN.equals(iri);        
     }
+    
+//    @Override
+//    public boolean accepts(String range)
+//    {
+//             
+//    }
+    
+    
 
     @Override
     public ValueEditor createEditor(String aId, IModel<KBStatement> aStatement,

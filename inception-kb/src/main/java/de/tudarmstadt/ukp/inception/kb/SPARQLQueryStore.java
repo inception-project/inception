@@ -43,5 +43,17 @@ public class SPARQLQueryStore
             , "}"
             , "LIMIT 10000");
     
+    public static String PROPERTY_SPECIFIC_RANGE = String.join("\n"
+            , InferencerVariableStore.RDF_PREFIX
+            , InferencerVariableStore.OWL_PREFIX
+            , "SELECT DISTINCT ?s ?l WHERE {"
+            , "  ?aProperty rdfs:range/(owl:unionOf/rdf:rest*/rdf:first)* ?s "
+            , "  OPTIONAL {"
+            , "    ?aProperty ?pLABEL ?l ."
+            , "    FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\"))"
+            , "  }"
+            , "}"
+            , "LIMIT 10000");
+    
     
 }

@@ -70,6 +70,12 @@ public class IriValueSupport
         }
     }
 
+//    @Override
+//    public boolean accepts(String range)
+//    {   
+//       
+//    }
+    
     @Override
     public ValueEditor createEditor(String aId, IModel<KBStatement> aStatement,
             IModel<KBProperty> aProperty, IModel<KnowledgeBase> kbModel)
