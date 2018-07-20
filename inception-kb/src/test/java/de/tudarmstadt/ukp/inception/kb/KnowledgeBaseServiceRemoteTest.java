@@ -31,7 +31,6 @@ import java.util.Map;
 
 import javax.persistence.EntityManager;
 
-import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
@@ -42,6 +41,7 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.junit.rules.TestWatcher;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,7 +61,6 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 import de.tudarmstadt.ukp.inception.kb.util.TestFixtures;
-import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseMapping;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 
 @RunWith(Parameterized.class)
@@ -71,16 +70,27 @@ import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 public class KnowledgeBaseServiceRemoteTest
 {
     private final String PROJECT_NAME = "Test project";
+
+    private static Map<String, KnowledgeBaseProfile> PROFILES;
+    
+    private final TestConfiguration sutConfig;
     
     private KnowledgeBaseServiceImpl sut;
+    
     private Project project;
     private TestFixtures testFixtures;
 
-    private static Reification reification;
-    private static KnowledgeBase kb;
-
-    private static Map<String, KnowledgeBaseProfile> kbProfileMap;
-
+    @Rule
+    public TestWatcher watcher = new TestWatcher()
+    {
+        @Override
+        protected void starting(org.junit.runner.Description aDescription)
+        {
+            String methodName = aDescription.getMethodName();
+            System.out.println("\n=== " + methodName + " =====================");
+        };
+    };
+    
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
@@ -94,7 +104,7 @@ public class KnowledgeBaseServiceRemoteTest
     public SpringMethodRule springMethodRule = new SpringMethodRule();
 
     @BeforeClass
-    public static void setUpOnce()
+    public static void setUpOnce() throws Exception
     {
         System.setProperty("org.eclipse.rdf4j.repository.debug", "true");
     }
@@ -102,6 +112,8 @@ public class KnowledgeBaseServiceRemoteTest
     @Before
     public void setUp() throws Exception
     {
+        KnowledgeBase kb = sutConfig.getKnowledgeBase();
+        
         EntityManager entityManager = testEntityManager.getEntityManager();
         testFixtures = new TestFixtures(testEntityManager);
         sut = new KnowledgeBaseServiceImpl(temporaryFolder.getRoot(), entityManager);
@@ -110,13 +122,14 @@ public class KnowledgeBaseServiceRemoteTest
         if (kb.getType() == RepositoryType.LOCAL) {
             sut.registerKnowledgeBase(kb, sut.getNativeConfig());
             sut.updateKnowledgeBase(kb, sut.getKnowledgeBaseConfig(kb));
-            importKnowledgeBase("data/wine-ontology.rdf");
+            importKnowledgeBase(sutConfig.getDataUrl());
         }
         else if (kb.getType() == RepositoryType.REMOTE) {
-            KnowledgeBaseProfile profile = kbProfileMap
-                    .get(kb.getName());
-            sut.registerKnowledgeBase(kb, sut.getRemoteConfig(profile.getSparqlUrl()));
+            sut.registerKnowledgeBase(kb, sut.getRemoteConfig(sutConfig.getDataUrl()));
             sut.updateKnowledgeBase(kb, sut.getKnowledgeBaseConfig(kb));
+        }
+        else {
+            throw new IllegalStateException("Unknown type: " + sutConfig.getKnowledgeBase().getType());
         }
     }
 
@@ -127,23 +140,84 @@ public class KnowledgeBaseServiceRemoteTest
         sut.destroy();
     }
 
-    public KnowledgeBaseServiceRemoteTest(KnowledgeBase akb, Reification aReification) throws Exception
+    public KnowledgeBaseServiceRemoteTest(TestConfiguration aConfig)
+        throws Exception
     {
-        reification = aReification;
-        kb = akb;
-
+        sutConfig = aConfig;
     }
 
-    @Parameterized.Parameters(name = "Reification = {1} : KB = {0}")
+    @Parameterized.Parameters(name = "KB = {0}")
     public static List<Object[]> data() throws Exception
     {
-        List<Object[]> dataList = new ArrayList<Object[]>();
-        List<KnowledgeBase> kbList = addKBProfileSetup();
-        for (KnowledgeBase kb : kbList) {
-            for (Reification r : Reification.values()) {
-                kb.setReification(r);
-                dataList.add(new Object[] { kb, r });
-            }
+        PROFILES = readKnowledgeBaseProfiles();
+
+        List<TestConfiguration> kbList = new ArrayList<>();
+        
+        { 
+            KnowledgeBase kb_wine = new KnowledgeBase();
+            kb_wine.setName("Wine ontology (OWL)");
+            kb_wine.setType(RepositoryType.LOCAL);
+            kb_wine.setReification(Reification.NONE);
+            kb_wine.setClassIri(OWL.CLASS);
+            kb_wine.setSubclassIri(RDFS.SUBCLASSOF);
+            kb_wine.setTypeIri(RDF.TYPE);
+            kb_wine.setLabelIri(RDFS.LABEL);
+            kb_wine.setPropertyTypeIri(RDF.PROPERTY);
+            kb_wine.setDescriptionIri(RDFS.COMMENT);
+            kbList.add(new TestConfiguration("data/wine-ontology.rdf", kb_wine));
+        }
+        
+        {
+            KnowledgeBase kb_wikidata_direct = new KnowledgeBase();
+            kb_wikidata_direct.setName("Wikidata (official/direct mapping)");
+            kb_wikidata_direct.setType(RepositoryType.REMOTE);
+            kb_wikidata_direct.setReification(Reification.NONE);
+            kb_wikidata_direct.applyMapping(PROFILES.get("wikidata").getMapping());
+            kbList.add(new TestConfiguration(PROFILES.get("wikidata").getSparqlUrl(),
+                    kb_wikidata_direct));
+        }
+
+        // This profile is yet incomplete and needs to be fixed
+//        {
+//            ValueFactory vf = SimpleValueFactory.getInstance();
+//            
+//            KnowledgeBase kb_wikidata_reified = new KnowledgeBase();
+//            kb_wikidata_reified.setName("Wikidata (official/reified)");
+//            kb_wikidata_reified.setType(RepositoryType.REMOTE);
+//            kb_wikidata_reified.setReification(Reification.WIKIDATA);
+//            kb_wikidata_reified.setClassIri(OWL.CLASS); // FIXME
+//            kb_wikidata_reified.setSubclassIri(vf.createIRI("http://www.wikidata.org/prop/P279"));
+//            kb_wikidata_reified.setTypeIri(vf.createIRI("http://www.wikidata.org/prop/P31"));
+//            kb_wikidata_reified.setLabelIri(RDFS.LABEL);
+//            kb_wikidata_reified.setPropertyTypeIri(RDF.PROPERTY); // FIXME
+//            kb_wikidata_reified.setDescriptionIri(vf.createIRI("http://schema.org/description"));
+//            kbList.add(kb_wikidata_reified);
+//        }
+
+        {
+            KnowledgeBase kb_dbpedia = new KnowledgeBase();
+            kb_dbpedia.setName("DKPedia (official)");
+            kb_dbpedia.setType(RepositoryType.REMOTE);
+            kb_dbpedia.setReification(Reification.NONE);
+            kb_dbpedia.applyMapping(PROFILES.get("db_pedia").getMapping());
+            kbList.add(new TestConfiguration(PROFILES.get("db_pedia").getSparqlUrl(),
+                    kb_dbpedia));
+        }
+       
+        {
+            KnowledgeBase kb_yago = new KnowledgeBase();
+            kb_yago.setName("Yago (official)");
+            kb_yago.setType(RepositoryType.REMOTE);
+            kb_yago.setReification(Reification.NONE);
+            kb_yago.applyMapping(PROFILES.get("yago").getMapping());
+            kbList.add(new TestConfiguration(PROFILES.get("yago").getSparqlUrl(),
+                    kb_yago));
+        }
+        
+        
+        List<Object[]> dataList = new ArrayList<>();
+        for (TestConfiguration kb : kbList) {
+            dataList.add(new Object[] { kb });
         }
         return dataList;
     }
@@ -151,7 +225,16 @@ public class KnowledgeBaseServiceRemoteTest
     @Test
     public void thatRootConceptsCanBeRetrieved()
     {
+        KnowledgeBase kb = sutConfig.getKnowledgeBase();
+        
+        long duration = System.currentTimeMillis();
         List<KBHandle> rootConceptKBHandle = sut.listRootConcepts(kb, true);
+        duration = System.currentTimeMillis() - duration;
+
+        System.out.printf("Root concepts retrieved : %d%n", rootConceptKBHandle.size());
+        System.out.printf("Time required           : %d ms%n", duration);
+        rootConceptKBHandle.stream().limit(10).forEach(h -> System.out.printf("   %s%n", h));
+        
         assertThat(rootConceptKBHandle).as("Check that root concept list is not empty")
                 .isNotEmpty();
     }
@@ -159,96 +242,67 @@ public class KnowledgeBaseServiceRemoteTest
     @Test
     public void thatPropertyListCanBeRetrieved()
     {
-        List<KBHandle> propertiesKBHandle = sut.listProperties(kb, kb.getPropertyTypeIri(), true,
-                true);
+        KnowledgeBase kb = sutConfig.getKnowledgeBase();
+        
+        long duration = System.currentTimeMillis();
+        List<KBHandle> propertiesKBHandle = sut.listProperties(kb, true);
+        duration = System.currentTimeMillis() - duration;
+
+        System.out.printf("Properties retrieved : %d%n", propertiesKBHandle.size());
+        System.out.printf("Time required        : %d ms%n", duration);
+        propertiesKBHandle.stream().limit(10).forEach(h -> System.out.printf("   %s%n", h));
+
         assertThat(propertiesKBHandle).as("Check that property list is not empty").isNotEmpty();
+
     }
 
     // Helper
-
-    private static KnowledgeBase buildDefaultKnowledgeBase(String name)
-    {
-        KnowledgeBase kb = new KnowledgeBase();
-        kb.setName(name);
-        kb.setType(RepositoryType.LOCAL);
-        kb.setClassIri(RDFS.CLASS);
-        kb.setSubclassIri(RDFS.SUBCLASSOF);
-        kb.setTypeIri(RDF.TYPE);
-        kb.setLabelIri(RDFS.LABEL);
-        kb.setPropertyTypeIri(RDF.PROPERTY);
-        kb.setDescriptionIri(RDFS.COMMENT);
-        return kb;
-
-    }
 
     private void importKnowledgeBase(String resourceName) throws Exception
     {
         ClassLoader classLoader = KnowledgeBaseServiceRemoteTest.class.getClassLoader();
         String fileName = classLoader.getResource(resourceName).getFile();
         try (InputStream is = classLoader.getResourceAsStream(resourceName)) {
-            sut.importData(kb, fileName, is);
+            sut.importData(sutConfig.getKnowledgeBase(), fileName, is);
         }
-    }
-
-    public static List<KnowledgeBase> addKBProfileSetup() throws Exception
-    {
-        List<KnowledgeBase> kbList = new ArrayList<KnowledgeBase>();
-        // Configuration for Local Ontology
-        String kbProfileName = "Wine";
-        kb = buildDefaultKnowledgeBase(kbProfileName);
-        kb.setType(RepositoryType.LOCAL);
-        setSchema(kb, OWL.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT, RDFS.LABEL, RDF.PROPERTY);
-        kbList.add(kb);
-
-        // Configurations for Remote KB
-        kbProfileMap = readKnowledgeBaseProfiles();
-        //String[] kbProfileArray = { "wikidata", "virtuoso", "db_pedia", "yago" };
-        String[] kbProfileArray = { "wikidata", "db_pedia", "yago" };
-        for (String name : kbProfileArray) {
-            kbList.add(getParameterizedKB(name));
-        }
-
-        return kbList;
-    }
-    
-    public static KnowledgeBase getParameterizedKB(String kbProfileName) {
-        kb = buildDefaultKnowledgeBase(kbProfileName);
-        kb.setType(RepositoryType.REMOTE);
-        KnowledgeBaseMapping mapping = kbProfileMap.get(kbProfileName).getMapping();
-        setSchema(kb, mapping);
-        return kb;
-        
-    }
-    
-    private static void setSchema(KnowledgeBase kb, IRI classIri, IRI subclassIri, IRI typeIri,
-            IRI descriptionIri, IRI labelIri, IRI propertyTypeIri)
-    {
-        kb.setClassIri(classIri);
-        kb.setSubclassIri(subclassIri);
-        kb.setTypeIri(typeIri);
-        kb.setDescriptionIri(descriptionIri);
-        kb.setLabelIri(labelIri);
-        kb.setPropertyTypeIri(propertyTypeIri);
-        kb.setReification(reification);
-        // sut.updateKnowledgeBase(kb, sut.getKnowledgeBaseConfig(kb));
-    }
-
-    private static void setSchema(KnowledgeBase kb, KnowledgeBaseMapping mapping)
-    {
-        setSchema(kb, mapping.getClassIri(), mapping.getSubclassIri(), mapping.getTypeIri(),
-                mapping.getDescriptionIri(), mapping.getLabelIri(), mapping.getPropertyTypeIri());
     }
 
     public static Map<String, KnowledgeBaseProfile> readKnowledgeBaseProfiles() throws IOException
     {
-        try (Reader r = new InputStreamReader(
-                KnowledgeBaseServiceRemoteTest.class.getResourceAsStream("knowledgebase-profiles.yaml"),
-                StandardCharsets.UTF_8)) {
+        try (Reader r = new InputStreamReader(KnowledgeBaseServiceRemoteTest.class
+                .getResourceAsStream("knowledgebase-profiles.yaml"), StandardCharsets.UTF_8)) {
             ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
             return mapper.readValue(r, new TypeReference<HashMap<String, KnowledgeBaseProfile>>()
             {
             });
         }
     }
+    
+    private static class TestConfiguration
+    {
+        private final String url;
+        private final KnowledgeBase kb;
+        public TestConfiguration(String aUrl, KnowledgeBase aKb)
+        {
+            super();
+            url = aUrl;
+            kb = aKb;
+        }
+        
+        public KnowledgeBase getKnowledgeBase()
+        {
+            return kb;
+        }
+        
+        public String getDataUrl()
+        {
+            return url;
+        }
 
+        @Override
+        public String toString()
+        {
+            return kb.getName();
+        }
+    }
 }

@@ -199,6 +199,8 @@ public interface KnowledgeBaseService
 
     List<KBHandle> listProperties(KnowledgeBase kb, boolean aAll) throws QueryEvaluationException;
 
+    List<KBHandle> listProperties(KnowledgeBase kb, boolean aIncludeInferred, boolean aAll);
+
     /**
      * Creates a new instance in the given knowledge base. Does nothing if the knowledge base is
      * read only.
@@ -322,9 +324,6 @@ public interface KnowledgeBaseService
     List<KBHandle> list(KnowledgeBase kb, IRI aType, boolean aIncludeInferred, boolean
         aAll);
     
-    List<KBHandle> listProperties(KnowledgeBase kb, IRI aType, boolean aIncludeInferred, boolean
-            aAll);
-
     /**
      * Adds a new qualifier in the given knowledge base. Does
      * nothing if the knowledge base is read only.

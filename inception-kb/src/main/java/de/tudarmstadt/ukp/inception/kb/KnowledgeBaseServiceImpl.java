@@ -440,7 +440,31 @@ public class KnowledgeBaseServiceImpl
     @Override
     public List<KBHandle> listProperties(KnowledgeBase kb, boolean aAll)
     {
-        return listProperties(kb, kb.getPropertyTypeIri(), true, aAll);
+        return listProperties(kb, true, aAll);
+    }
+
+    @Override
+    public List<KBHandle> listProperties(KnowledgeBase kb, boolean aIncludeInferred, boolean aAll)
+        throws QueryEvaluationException
+    {
+        List<KBHandle> resultList = read(kb, (conn) -> {
+            String QUERY = getPropertyListQuery(kb);
+            TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
+            tupleQuery.setBinding("pTYPE", kb.getTypeIri());
+            tupleQuery.setBinding("oPROPERTY", kb.getPropertyTypeIri());
+            tupleQuery.setBinding("pLABEL", kb.getLabelIri());
+            tupleQuery.setIncludeInferred(aIncludeInferred);
+
+            return evaluateListQuery(tupleQuery, aAll);
+        });
+
+        resultList.sort(Comparator.comparing(KBObject::getUiLabel));
+
+        return resultList;
+    }
+    
+    public String getPropertyListQuery(KnowledgeBase kb) {
+        return SPARQLQueryStore.PROPERTYLIST_QUERY;
     }
 
     @Override
@@ -657,31 +681,6 @@ public class KnowledgeBaseServiceImpl
     }
 
     @Override
-    public List<KBHandle> listProperties(KnowledgeBase kb, IRI aType, boolean aIncludeInferred,
-            boolean aAll)
-        throws QueryEvaluationException
-    {
-        List<KBHandle> resultList = read(kb, (conn) -> {
-            String QUERY = getPropertyListQuery(kb);
-            TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
-            tupleQuery.setBinding("pTYPE", kb.getTypeIri());
-            tupleQuery.setBinding("oPROPERTY", aType);
-            tupleQuery.setBinding("pLABEL", kb.getLabelIri());
-            tupleQuery.setIncludeInferred(aIncludeInferred);
-
-            return evaluateListQuery(tupleQuery, aAll);
-        });
-
-        resultList.sort(Comparator.comparing(KBObject::getUiLabel));
-
-        return resultList;
-    }
-    
-    public String getPropertyListQuery(KnowledgeBase kb) {
-        return SPARQLQueryStore.PROPERTYLIST_QUERY;
-    }
-    
-    @Override
     public List<KBHandle> listRootConcepts(KnowledgeBase kb, boolean aAll)
         throws QueryEvaluationException
     {
@@ -879,6 +878,7 @@ public class KnowledgeBaseServiceImpl
      * 
      * @return {@link Optional} of {@link KBObject} of type {@link KBConcept} or {@link KBInstance}
      */
+    @Override
     public Optional<KBObject> readKBIdentifier(Project aProject, String aIdentifier)
     {
         for (KnowledgeBase kb : getKnowledgeBases(aProject)) {
