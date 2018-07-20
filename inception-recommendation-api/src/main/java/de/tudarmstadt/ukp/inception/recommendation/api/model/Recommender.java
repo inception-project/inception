@@ -23,6 +23,7 @@ import java.util.Objects;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.Lob;
@@ -45,7 +46,7 @@ public class Recommender
     private static final long serialVersionUID = 7748907568404136301L;
     
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @OnDelete(action = OnDeleteAction.CASCADE)
@@ -200,8 +201,12 @@ public class Recommender
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         Recommender that = (Recommender) o;
         return Objects.equals(id, that.id) &&
                 Objects.equals(name, that.name);
