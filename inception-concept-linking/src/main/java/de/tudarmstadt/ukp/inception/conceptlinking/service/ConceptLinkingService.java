@@ -142,59 +142,50 @@ public class ConceptLinkingService
      * @param aTypedString typed string from the user
      * @param aMention the marked surface form, which is pre-processed first.
      */
-    private Set<CandidateEntity> generateCandidates(KnowledgeBase aKB, String aTypedString,
+    private Set<CandidateEntity> retrieveCandidatesFullText(KnowledgeBase aKB, String aTypedString,
         String aMention)
     {
-        Set<CandidateEntity> candidates = new HashSet<>();
         Set<CandidateEntity> candidatesFullText = new HashSet<>();
-
-        List<String> mentionList = Arrays.asList(aMention.split(" "));
-
-        // Remove any character that is not a letter
-        mentionList = mentionList.stream().map(m -> m.replaceAll("[^\\p{L}^\\d]", ""))
-            .collect(Collectors.toList());
-
-        if (stopwords != null) {
-            if (stopwords.containsAll(mentionList)) {
-                logger.error("Mention [{}] consists of stopwords only - returning.", aMention);
-                return Collections.emptySet();
-            }
-        }
-
-        String processedMention = String.join(" ", mentionList);
-        if (processedMention.isEmpty()) {
-            logger.error("Mention is empty!");
-            return Collections.emptySet();
-        }
+        
         ImmutablePair<Project, String> mentionPair = new ImmutablePair<>(aKB.getProject(),
-            processedMention);
+            aMention);
 
         ImmutablePair<Project, String> typedStringPair = new ImmutablePair<>(aKB.getProject(),
             aTypedString);
 
         try (RepositoryConnection conn = kbService.getConnection(aKB)) {
-            addFullTextCandidates(aKB, candidatesFullText, processedMention, mentionPair, conn);
+            addFullTextCandidates(aKB, candidatesFullText, aMention, mentionPair, conn);
             addFullTextCandidates(aKB, candidatesFullText, aTypedString, typedStringPair, conn);
-
-            TupleQuery exactQuery = QueryUtil
-                .generateCandidateExactQuery(conn, aTypedString, processedMention,
-                    aKB.getDescriptionIri());
-            candidates.addAll(processQuery(exactQuery));
         }
         catch (QueryEvaluationException e) {
             logger.error("Query evaluation was unsuccessful: ", e);
         }
 
         if (candidatesFullText.isEmpty()) {
-            String[] split = processedMention.split(" ");
+            String[] split = aMention.split(" ");
             if (split.length > 1) {
                 for (String s : split) {
-                    candidatesFullText.addAll(generateCandidates(aKB, s, aTypedString));
+                    candidatesFullText.addAll(retrieveCandidatesFullText(aKB, s, aTypedString));
                 }
             }
         }
 
-        candidates.addAll(candidatesFullText);
+        return candidatesFullText;
+    }
+
+    private Set<CandidateEntity> retrieveCandidatesExact(KnowledgeBase aKB, String aTypedString,
+        String aMention)
+    {
+        Set<CandidateEntity> candidates = new HashSet<>();
+
+        try (RepositoryConnection conn = kbService.getConnection(aKB)) {
+            TupleQuery exactQuery = QueryUtil
+                .generateCandidateExactQuery(conn, aTypedString, aMention, aKB.getDescriptionIri());
+            candidates.addAll(processQuery(exactQuery));
+        }
+        catch (QueryEvaluationException e) {
+            logger.error("Query evaluation was unsuccessful: ", e);
+        }
         return candidates;
     }
 
@@ -291,11 +282,11 @@ public class ConceptLinkingService
     }
 
     /*
-     * This method does the actual ranking of the candidate entity set.
-     * It returns the candidates by descending probability.
+     * This method does the actual ranking of the candidate entities by sorting after multiple keys
      */
     private List<CandidateEntity> rankCandidates(KnowledgeBase aKB, String aTypedString,
-        String mention, Set<CandidateEntity> candidates, JCas aJCas, int aBegin)
+        String mention, Set<CandidateEntity> aCandidatesExact,
+        Set<CandidateEntity> aCandidatesFullText, JCas aJCas, int aBegin)
     {
         long startTime = System.currentTimeMillis();
 
@@ -316,7 +307,8 @@ public class ConceptLinkingService
             }
         }
 
-        candidates.forEach(l -> {
+        // Set frequency
+        aCandidatesFullText.forEach(l -> {
             String wikidataId = l.getIRI().replace(WIKIDATA_PREFIX, "");
 
             if (entityFrequencyMap != null && entityFrequencyMap.get(wikidataId) != null) {
@@ -328,9 +320,15 @@ public class ConceptLinkingService
 
         });
 
-        List<CandidateEntity> result = sortByFrequency(new ArrayList<>(candidates)).stream()
-            .limit(properties.getCandidateFrequencyThreshold()).collect(Collectors.toList());
+        // Sort full-text matching candidates by frequency and do cutoff by a threshold
+        List<CandidateEntity> result = sortByFrequency(new ArrayList<>(aCandidatesFullText))
+            .stream().limit(properties.getCandidateFrequencyThreshold())
+            .collect(Collectors.toList());
 
+        // Add exact matching candidates
+        result.addAll(aCandidatesExact);
+
+        // Do the main ranking
         result.parallelStream().forEach(l -> {
             String wikidataId = l.getIRI().replace(WIKIDATA_PREFIX, "");
             
@@ -473,14 +471,17 @@ public class ConceptLinkingService
     {
         long startTime = System.currentTimeMillis();
 
-        Set<CandidateEntity> candidates = new HashSet<>(
-            generateCandidates(aKB, aTypedString, aMention));
+        Set<CandidateEntity> candidatesExact = retrieveCandidatesExact(aKB, aTypedString, aMention);
+
+        Set<CandidateEntity> candidatesFullText = retrieveCandidatesFullText(aKB, aTypedString,
+            aMention);
+
         logger
             .debug("It took [{}] ms to retrieve candidates for mention [{}] and typed string [{}]",
                 System.currentTimeMillis() - startTime, aMention);
 
         List<CandidateEntity> rankedCandidates = rankCandidates(aKB, aTypedString, aMention,
-            candidates, aJcas, aMentionBeginOffset);
+            candidatesExact, candidatesFullText, aJcas, aMentionBeginOffset);
 
         return rankedCandidates.stream()
             .map(c -> new KBHandle(c.getIRI(), c.getLabel(), c.getDescription()))
