@@ -181,7 +181,7 @@ public class ConceptLinkingService
         try (RepositoryConnection conn = kbService.getConnection(aKB)) {
             TupleQuery exactQuery = QueryUtil
                 .generateCandidateExactQuery(conn, aTypedString, aMention, aKB.getDescriptionIri());
-            candidates.addAll(processQuery(exactQuery));
+            candidates.addAll(processCandidateQuery(exactQuery));
         }
         catch (QueryEvaluationException e) {
             logger.error("Query evaluation was unsuccessful: ", e);
@@ -200,12 +200,12 @@ public class ConceptLinkingService
             TupleQuery fullTextQueryMention = QueryUtil
                 .generateCandidateFullTextQuery(aConn, aString,
                     properties.getCandidateQueryLimit(), aKB.getDescriptionIri());
-            aFullTextCandidates.addAll(processQuery(fullTextQueryMention));
+            aFullTextCandidates.addAll(processCandidateQuery(fullTextQueryMention));
             candidateCache.put(aPair, aFullTextCandidates);
         }
     }
 
-    private Set<CandidateEntity> processQuery(TupleQuery aTupleQuery)
+    private Set<CandidateEntity> processCandidateQuery(TupleQuery aTupleQuery)
     {
         Set<CandidateEntity> candidates = new HashSet<>();
         try (TupleQueryResult entityResult = aTupleQuery.evaluate()) {
@@ -219,7 +219,9 @@ public class ConceptLinkingService
                 CandidateEntity newEntity = new CandidateEntity(
                     (e2 != null) ? e2.stringValue() : "",
                     (label != null) ? label.stringValue() : "",
-                    (altLabel != null) ? altLabel.stringValue() : "",
+                    (altLabel != null) ? altLabel.stringValue() :
+                        // Exact matching does not use altLabel
+                        (label != null) ? label.stringValue() : "",
                     (description != null) ? description.stringValue() : "");
 
                 candidates.add(newEntity);
@@ -333,7 +335,8 @@ public class ConceptLinkingService
             String wikidataId = l.getIRI().replace(WIKIDATA_PREFIX, "");
             
             l.setIdRank(Math.log(Double.parseDouble(wikidataId.substring(1))));
-            String altLabel = l.getAltLabel().toLowerCase(Locale.ENGLISH);
+
+            String altLabel = l.getAltLabel();
             LevenshteinDistance lev = new LevenshteinDistance();
             l.setLevMatchLabel(lev.apply(mention, altLabel));
             l.setLevContext(lev.apply(tokensToString(mentionContext), altLabel));

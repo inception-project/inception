@@ -268,5 +268,11 @@ public class CandidateEntity
     {
         return frequency;
     }
-    
+
+    @Override
+    public String toString()
+    {
+        return "CandidateEntity{" + "label='" + label + '\'' + ", alternativeLabel='"
+            + alternativeLabel + '\'' + '}';
+    }
 }
