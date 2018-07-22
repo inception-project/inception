@@ -17,76 +17,109 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.api.v2;
 
+import static de.tudarmstadt.ukp.inception.recommendation.api.v2.DataSplitter.TargetSet.IGNORE;
+import static de.tudarmstadt.ukp.inception.recommendation.api.v2.DataSplitter.TargetSet.TEST;
+import static de.tudarmstadt.ukp.inception.recommendation.api.v2.DataSplitter.TargetSet.TRAIN;
+
 import java.util.Iterator;
-import java.util.Optional;
 
 import org.apache.commons.lang3.Validate;
 
 public class IncrementalSplitter
     implements DataSplitter, Iterator<DataSplitter>
 {
-    private final double trainPercentage;
+    private final int trainBatchSize;
+    private final int testBatchSize;
+    private final int lowSampleThreshold;
+    private int trainCount;
+    private int testCount;
+    private int ignoreCount;
+    
     private final int increment;
-    private int count;
     private int limit;
-    private Optional<Integer> total;
+    private boolean hitTheLimit = true;
 
-    public IncrementalSplitter(double aTrainPercentage, int aIncrement) {
+    public IncrementalSplitter(double aTrainPercentage, int aIncrement, int aLowSampleThreshold)
+    {
         Validate.inclusiveBetween(0, 1, aTrainPercentage, "Percentage has to be in (0,1)");
 
-        trainPercentage = aTrainPercentage;
-        total = Optional.empty();
+        trainBatchSize = (int) Math.round(10 * aTrainPercentage);
+        testBatchSize = 10 - trainBatchSize;
         increment = aIncrement;
+        lowSampleThreshold = aLowSampleThreshold;
     }
-
-    @Override
-    public void setTotal(int aTotal) {
-        total = Optional.of(aTotal);
+    
+    public IncrementalSplitter(int aTrainBatchSize, int aTestBatchSize, int aIncrement,
+            int aLowSampleThreshold)
+    {
+        trainBatchSize = aTrainBatchSize;
+        testBatchSize = aTestBatchSize;
+        increment = aIncrement;
+        lowSampleThreshold = aLowSampleThreshold;
     }
 
     @Override
     public TargetSet getTargetSet(Object aObject)
     {
-        long upperBound = Math.round(total.orElseThrow(this::totalNotSet) * trainPercentage);
+        int module = trainBatchSize + testBatchSize;
+        int count = trainCount + testCount + ignoreCount;
         
-        // Is the data in the training set?
         TargetSet target;
-        if (count < Math.min(limit, upperBound)) {
-            target = TargetSet.TRAIN;
+        // Low sample count behavior
+        if (count < lowSampleThreshold) {
+            target = (count % 2) == 0 ? TRAIN : TEST;
         }
-        else if (count >= upperBound) {
-            target = TargetSet.TEST;
+        // Regular behavior
+        else if (trainCount < trainBatchSize && trainCount < limit) {
+            target = TRAIN;
+        }
+        else if (testCount < testBatchSize) {
+            target = TEST;
+        }
+        else if (ignoreCount < (trainBatchSize - limit)) {
+            target = IGNORE;
+            hitTheLimit = true;
         }
         else {
-            target = TargetSet.IGNORE;
+            target = count % module < trainBatchSize ? TRAIN : TEST;
         }
         
-        count++;
+        if (trainCount >= limit && target == TRAIN) {
+            target = IGNORE;
+            hitTheLimit = true;
+        }
+        
+        switch (target) {
+        case TRAIN:
+            trainCount++;
+            break;
+        case TEST:
+            testCount++;
+            break;
+        case IGNORE:
+            ignoreCount++;
+            break;
+        default:
+            throw new IllegalStateException("Invalid target set [" + target + "]");
+        }
 
         return target;
-    }
-
-    private RuntimeException totalNotSet() {
-        return new IllegalStateException("Total has to be set before querying!");
     }
 
     @Override
     public boolean hasNext()
     {
-        if (total.isPresent()) {
-            return limit + increment <= total.get() * trainPercentage;
-        }
-        else {
-            // The total is only set by the evaluate method, but the incremental loop is outside
-            // so we need to return true here to give the evaluate method to set the total
-            return true;
-        }
+        return hitTheLimit;
     }
 
     @Override
     public DataSplitter next()
     {
-        count = 0;
+        trainCount = 0;
+        testCount = 0;
+        ignoreCount = 0;
+        hitTheLimit = false;
+        
         limit += increment;
         
         return this;

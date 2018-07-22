@@ -125,7 +125,6 @@ public class OpenNlpNerRecommender
         List<NameSample> trainingSet = new ArrayList<>();
         List<NameSample> testSet = new ArrayList<>();
 
-        aDataSplitter.setTotal(data.size());
         for (NameSample nameSample : data) {
             switch (aDataSplitter.getTargetSet(nameSample)) {
             case TRAIN:
@@ -145,7 +144,8 @@ public class OpenNlpNerRecommender
             return 0.0;
         }
 
-        LOG.info("Training on [{}] items, predicting on [{}]", trainingSet.size(), testSet.size());
+        LOG.info("Training on [{}] items, predicting on [{}] of total [{}]", trainingSet.size(),
+                testSet.size(), data.size());
 
         // Train model
         TokenNameFinderModel model = train(trainingSet, traits.getParameters());

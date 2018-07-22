@@ -463,7 +463,6 @@ public class DL4JSequenceRecommender
         List<Sample> testSet = new ArrayList<>();
 
         // Split the data up into training and test sets
-        aDataSplitter.setTotal(data.size());
         for (Sample sample : data) {
             switch (aDataSplitter.getTargetSet(sample)) {
             case TRAIN:
@@ -483,7 +482,8 @@ public class DL4JSequenceRecommender
             return 0.0;
         }
 
-        log.info("Training on [{}] items, predicting on [{}]", trainingSet.size(), testSet.size());
+        log.info("Training on [{}] items, predicting on [{}] of total [{}]", trainingSet.size(),
+                testSet.size(), data.size());
 
         try {
             ensureEmbeddingsAreAvailable();

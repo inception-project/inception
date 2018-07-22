@@ -20,41 +20,67 @@ package de.tudarmstadt.ukp.inception.recommendation.api.v2;
 import static de.tudarmstadt.ukp.inception.recommendation.api.v2.DataSplitter.TargetSet.TEST;
 import static de.tudarmstadt.ukp.inception.recommendation.api.v2.DataSplitter.TargetSet.TRAIN;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-
 import org.apache.commons.lang3.Validate;
 
 public class PercentageBasedSplitter
     implements DataSplitter
 {
-    private final double trainPercentage;
-    private Map<Class<?>, Integer> counts;
-    private Optional<Integer> total;
+    private final int trainBatchSize;
+    private final int testBatchSize;
+    private final int lowSampleThreshold;
+    
+    private int trainCount;
+    private int testCount;
 
-    public PercentageBasedSplitter(double aTrainPercentage) {
+    public PercentageBasedSplitter(double aTrainPercentage, int aLowSampleThreshold)
+    {
         Validate.inclusiveBetween(0, 1, aTrainPercentage, "Percentage has to be in (0,1)");
-
-        trainPercentage = aTrainPercentage;
-        counts = new HashMap<>();
-        total = Optional.empty();
+        
+        trainBatchSize = (int) Math.round(10 * aTrainPercentage);
+        testBatchSize = 10 - trainBatchSize;
+        lowSampleThreshold = aLowSampleThreshold;
     }
 
-    @Override
-    public void setTotal(int aTotal) {
-        total = Optional.of(aTotal);
+    public PercentageBasedSplitter(int aTrainBatchSize, int aTestBatchSize, int aLowSampleThreshold)
+    {
+        trainBatchSize = aTrainBatchSize;
+        testBatchSize = aTestBatchSize;
+        lowSampleThreshold = aLowSampleThreshold;
     }
 
     @Override
     public TargetSet getTargetSet(Object aObject)
     {
-        int count = counts.getOrDefault(aObject.getClass(), 0);
-        counts.put(aObject.getClass(), count + 1);
-        return total.orElseThrow(this::totalNotSet) * trainPercentage > count ? TRAIN : TEST;
-    }
-    
-    private RuntimeException totalNotSet() {
-        return new IllegalStateException("Total has to be set before querying!");
+        int module = trainBatchSize + testBatchSize;
+        int count = trainCount + testCount;
+        
+        TargetSet target;
+        // Low sample count behavior
+        if (count < lowSampleThreshold) {
+            target = (count % 2) == 0 ? TRAIN : TEST;
+        }
+        // Regular behavior
+        else if (trainCount < trainBatchSize) {
+            target = TRAIN;
+        }
+        else if (testCount < testBatchSize) {
+            target = TEST;
+        }
+        else {
+            target = count % module < trainBatchSize ? TRAIN : TEST;
+        }
+        
+        switch (target) {
+        case TRAIN:
+            trainCount++;
+            break;
+        case TEST:
+            testCount++;
+            break;
+        default:
+            throw new IllegalStateException("Invalid target set [" + target + "]");
+        }
+        
+        return target;
     }
 }

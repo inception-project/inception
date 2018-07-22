@@ -26,12 +26,6 @@ public class TrainOnAllDataSplitter
     implements DataSplitter
 {
     @Override
-    public void setTotal(int aTotal)
-    {
-        // Not relevant
-    }
-
-    @Override
     public TargetSet getTargetSet(Object aObject)
     {
         return TEST;

@@ -17,12 +17,14 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.v2.ner;
 
+import opennlp.tools.ml.AbstractTrainer;
 import opennlp.tools.util.TrainingParameters;
 
 public class OpenNlpNerRecommenderTraits {
 
     public TrainingParameters getParameters() {
         TrainingParameters parameters = TrainingParameters.defaultParams();
+        parameters.put(AbstractTrainer.VERBOSE_PARAM, "false");
         return parameters;
     }
 }

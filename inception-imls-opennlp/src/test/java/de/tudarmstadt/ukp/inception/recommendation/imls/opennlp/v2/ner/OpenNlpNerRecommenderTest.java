@@ -23,9 +23,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import org.apache.uima.UIMAException;
+import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.util.JCasUtil;
@@ -66,9 +69,9 @@ public class OpenNlpNerRecommenderTest
     public void thatTrainingWorks() throws Exception
     {
         OpenNlpNerRecommender sut = new OpenNlpNerRecommender(recommender, traits);
-        JCas cas = loadDevelopmentData();
+        List<CAS> casList = loadDevelopmentData();
 
-        sut.train(context, asList(cas.getCas()));
+        sut.train(context, casList);
 
         assertThat(context.get(OpenNlpNerRecommender.KEY_MODEL))
             .as("Model has been set")
@@ -79,12 +82,15 @@ public class OpenNlpNerRecommenderTest
     public void thatPredictionWorks() throws Exception
     {
         OpenNlpNerRecommender sut = new OpenNlpNerRecommender(recommender, traits);
-        JCas cas = loadDevelopmentData();
-        sut.train(context, asList(cas.getCas()));
+        List<CAS> casList = loadDevelopmentData();
+        
+        CAS cas = casList.get(0);
+        
+        sut.train(context, asList(cas));
 
-        sut.predict(context, cas.getCas());
+        sut.predict(context, cas);
 
-        Collection<PredictedSpan> predictions = JCasUtil.select(cas, PredictedSpan.class);
+        Collection<PredictedSpan> predictions = JCasUtil.select(cas.getJCas(), PredictedSpan.class);
 
         assertThat(predictions).as("Predictions have been written to CAS")
             .isNotEmpty();
@@ -93,11 +99,11 @@ public class OpenNlpNerRecommenderTest
     @Test
     public void thatEvaluationWorks() throws Exception
     {
-        DataSplitter splitStrategy = new PercentageBasedSplitter(0.8);
+        DataSplitter splitStrategy = new PercentageBasedSplitter(0.8, 10);
         OpenNlpNerRecommender sut = new OpenNlpNerRecommender(recommender, traits);
-        JCas cas = loadDevelopmentData();
+        List<CAS> casList = loadDevelopmentData();
 
-        double score = sut.evaluate(context, asList(cas.getCas()), splitStrategy);
+        double score = sut.evaluate(context, casList, splitStrategy);
 
         System.out.printf("Score: %f%n", score);
         
@@ -107,14 +113,14 @@ public class OpenNlpNerRecommenderTest
     @Test
     public void thatIncrementalNerEvaluationWorks() throws Exception
     {
-        IncrementalSplitter splitStrategy = new IncrementalSplitter(0.8, 250);
+        IncrementalSplitter splitStrategy = new IncrementalSplitter(0.8, 250, 10);
         OpenNlpNerRecommender sut = new OpenNlpNerRecommender(recommender, traits);
-        JCas cas = loadDevelopmentData();
+        List<CAS> casList = loadAllData();
 
         while (splitStrategy.hasNext()) {
             splitStrategy.next();
             
-            double score = sut.evaluate(context, asList(cas.getCas()), splitStrategy);
+            double score = sut.evaluate(context, casList, splitStrategy);
 
             System.out.printf("Score: %f%n", score);
 
@@ -123,24 +129,35 @@ public class OpenNlpNerRecommenderTest
         }
     }
 
-    private JCas loadDevelopmentData() throws IOException, UIMAException
+    private List<CAS> loadAllData() throws IOException, UIMAException
+    {
+        Dataset ds = loader.load("germeval2014-de");
+        return loadData(ds, ds.getDataFiles());
+    }
+
+    private List<CAS> loadDevelopmentData() throws IOException, UIMAException
     {
         Dataset ds = loader.load("germeval2014-de");
         return loadData(ds, ds.getDefaultSplit().getDevelopmentFiles());
     }
 
-    private JCas loadData(Dataset ds, File ... files) throws UIMAException, IOException
+    private List<CAS> loadData(Dataset ds, File ... files) throws UIMAException, IOException
     {
         CollectionReader reader = createReader(Conll2002Reader.class,
-            Conll2002Reader.PARAM_PATTERNS, files, Conll2002Reader.PARAM_LANGUAGE,
-            ds.getLanguage(), Conll2002Reader.PARAM_COLUMN_SEPARATOR,
-            Conll2002Reader.ColumnSeparators.TAB.getName(),
-            Conll2002Reader.PARAM_HAS_TOKEN_NUMBER, true, Conll2002Reader.PARAM_HAS_HEADER,
-            true, Conll2002Reader.PARAM_HAS_EMBEDDED_NAMED_ENTITY, true);
+            Conll2002Reader.PARAM_PATTERNS, files, 
+            Conll2002Reader.PARAM_LANGUAGE, ds.getLanguage(), 
+            Conll2002Reader.PARAM_COLUMN_SEPARATOR, Conll2002Reader.ColumnSeparators.TAB.getName(),
+            Conll2002Reader.PARAM_HAS_TOKEN_NUMBER, true, 
+            Conll2002Reader.PARAM_HAS_HEADER, true, 
+            Conll2002Reader.PARAM_HAS_EMBEDDED_NAMED_ENTITY, true);
 
-        JCas cas = JCasFactory.createJCas();
-        reader.getNext(cas.getCas());
-        return cas;
+        List<CAS> casList = new ArrayList<>();
+        while (reader.hasNext()) {
+            JCas cas = JCasFactory.createJCas();
+            reader.getNext(cas.getCas());
+            casList.add(cas.getCas());
+        }
+        return casList;
     }
 
     private static Recommender buildRecommender()

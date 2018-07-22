@@ -265,7 +265,7 @@ public class DL4JSequenceRecommenderTest
     @Test
     public void thatPosEvaluationWorks() throws Exception
     {
-        DataSplitter splitStrategy = new PercentageBasedSplitter(0.8);
+        DataSplitter splitStrategy = new PercentageBasedSplitter(0.8, 10);
         DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildPosRecommender(), traits);
         JCas cas = loadPosDevelopmentData();
 
@@ -308,7 +308,7 @@ public class DL4JSequenceRecommenderTest
     @Test
     public void thatNerEvaluationWorks() throws Exception
     {
-        DataSplitter splitStrategy = new PercentageBasedSplitter(0.8);
+        DataSplitter splitStrategy = new PercentageBasedSplitter(0.8, 10);
         DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildNerRecommender(), traits);
         JCas cas = loadNerDevelopmentData();
 
@@ -322,7 +322,7 @@ public class DL4JSequenceRecommenderTest
     @Test
     public void thatIncrementalNerEvaluationWorks() throws Exception
     {
-        IncrementalSplitter splitStrategy = new IncrementalSplitter(0.8, 500);
+        IncrementalSplitter splitStrategy = new IncrementalSplitter(0.8, 500, 10);
         DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildNerRecommender(), traits);
         JCas cas = loadNerDevelopmentData();
 

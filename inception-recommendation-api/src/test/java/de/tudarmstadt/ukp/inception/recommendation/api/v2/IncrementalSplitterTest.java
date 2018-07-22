@@ -49,8 +49,7 @@ public class IncrementalSplitterTest {
         @Test
         public void thatSplittingWorks() {
             List<String> data = asList("0", "1", "2", "3", "4", "5", "6", "7", "8", "9");
-            IncrementalSplitter splitter = new IncrementalSplitter(k, 1);
-            splitter.setTotal(data.size());
+            IncrementalSplitter splitter = new IncrementalSplitter(k, 1, 4);
             
             int currentTrainingSetSize = 1;
             
@@ -59,8 +58,8 @@ public class IncrementalSplitterTest {
             while (splitter.hasNext()) {
                 splitter.next();
                 
-                trainingSet.clear();;
-                testSet.clear();;
+                trainingSet.clear();
+                testSet.clear();
     
                 for (String s : data) {
                     switch (splitter.getTargetSet(s)) {
@@ -98,7 +97,7 @@ public class IncrementalSplitterTest {
         public static Collection<Object[]> data() {
             // k, trainingSetSize, testSetSize
             return Arrays.asList(new Object[][]{
-                {0.1, 1, 9},
+                {0.1, 2, 8},
                 {0.2, 2, 8},
                 {0.3, 3, 7},
                 {0.4, 4, 6},
@@ -106,23 +105,16 @@ public class IncrementalSplitterTest {
                 {0.6, 6, 4},
                 {0.7, 7, 3},
                 {0.8, 8, 2},
-                {0.9, 9, 1}
+                {0.9, 8, 2}
             });
         }
     }
 
     @RunWith(JUnit4.class)
     public static class NonParameterizedTests {
-        @Test(expected = IllegalStateException.class)
-        public void thatTotalHasToBeSetFirst() {
-            IncrementalSplitter splitter = new IncrementalSplitter(0.3, 1);
-
-            splitter.getTargetSet("Test");
-        }
-
         @Test(expected = IllegalArgumentException.class)
         public void thatPercentageHasToBePercentage() {
-            IncrementalSplitter splitter = new IncrementalSplitter(42.1337, 1);
+            IncrementalSplitter splitter = new IncrementalSplitter(42.1337, 1, 10);
         }
     }
 }

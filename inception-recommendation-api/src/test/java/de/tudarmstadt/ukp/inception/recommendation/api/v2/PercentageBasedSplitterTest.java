@@ -49,8 +49,7 @@ public class PercentageBasedSplitterTest {
         @Test
         public void thatSplittingWorks() {
             List<String> data = asList("0", "1", "2", "3", "4", "5", "6", "7", "8", "9");
-            PercentageBasedSplitter splitter = new PercentageBasedSplitter(k);
-            splitter.setTotal(data.size());
+            PercentageBasedSplitter splitter = new PercentageBasedSplitter(k, 4);
             List<String> trainingSet = new ArrayList<>();
             List<String> testSet = new ArrayList<>();
 
@@ -80,7 +79,7 @@ public class PercentageBasedSplitterTest {
         public static Collection<Object[]> data() {
             // k, trainingSetSize, testSetSize
             return Arrays.asList(new Object[][]{
-                {0.1, 1, 9},
+                {0.1, 2, 8},
                 {0.2, 2, 8},
                 {0.3, 3, 7},
                 {0.4, 4, 6},
@@ -88,23 +87,16 @@ public class PercentageBasedSplitterTest {
                 {0.6, 6, 4},
                 {0.7, 7, 3},
                 {0.8, 8, 2},
-                {0.9, 9, 1}
+                {0.9, 8, 2}
             });
         }
     }
 
     @RunWith(JUnit4.class)
     public static class NonParameterizedTests {
-        @Test(expected = IllegalStateException.class)
-        public void thatTotalHasToBeSetFirst() {
-            PercentageBasedSplitter splitter = new PercentageBasedSplitter(0.3);
-
-            splitter.getTargetSet("Test");
-        }
-
         @Test(expected = IllegalArgumentException.class)
         public void thatPercentageHasToBePercentage() {
-            PercentageBasedSplitter splitter = new PercentageBasedSplitter(42.1337);
+            PercentageBasedSplitter splitter = new PercentageBasedSplitter(42.1337, 10);
         }
     }
 }
