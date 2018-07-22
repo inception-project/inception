@@ -134,13 +134,12 @@ public class ConceptLinkingService
     }    
 
     /**
-     * Generate a set of candidate entities from a Knowledge Base for a mention.
-     * It only contains entities which are instances of a pre-defined concept.
+     * Retrieve a set of candidate entities via full-text search from a Knowledge Base.
      * May lead to recursive calls if first search does not yield any results.
      *
      * @param aKB the Knowledge Base in which to search.
      * @param aTypedString typed string from the user
-     * @param aMention the marked surface form, which is pre-processed first.
+     * @param aMention the marked surface form
      */
     private Set<CandidateEntity> retrieveCandidatesFullText(KnowledgeBase aKB, String aTypedString,
         String aMention)
@@ -165,7 +164,7 @@ public class ConceptLinkingService
             String[] split = aMention.split(" ");
             if (split.length > 1) {
                 for (String s : split) {
-                    candidatesFullText.addAll(retrieveCandidatesFullText(aKB, s, aTypedString));
+                    candidatesFullText.addAll(retrieveCandidatesFullText(aKB, s, aMention));
                 }
             }
         }
@@ -173,6 +172,13 @@ public class ConceptLinkingService
         return candidatesFullText;
     }
 
+    /**
+     * Retrieve a set of candidate entities from a Knowledge Base
+     *
+     * @param aKB the Knowledge Base in which to search.
+     * @param aTypedString typed string from the user
+     * @param aMention the marked surface form, which is pre-processed first.
+     */
     private Set<CandidateEntity> retrieveCandidatesExact(KnowledgeBase aKB, String aTypedString,
         String aMention)
     {
@@ -205,6 +211,9 @@ public class ConceptLinkingService
         }
     }
 
+    /*
+     * Add all results from a query to a set of candidates
+     */
     private Set<CandidateEntity> processCandidateQuery(TupleQuery aTupleQuery)
     {
         Set<CandidateEntity> candidates = new HashSet<>();
@@ -284,14 +293,14 @@ public class ConceptLinkingService
     }
 
     /*
-     * This method does the actual ranking of the candidate entities by sorting after multiple keys
+     * This method does the actual ranking of the candidate entities.
+     * First the candidates from full-text matching are sorted by frequency cutoff after a threshold,
+     * because they are more numerous. Then the candidates from exact matching are added and sorted by multiple keys.
      */
     private List<CandidateEntity> rankCandidates(KnowledgeBase aKB, String aTypedString,
         String mention, Set<CandidateEntity> aCandidatesExact,
         Set<CandidateEntity> aCandidatesFullText, JCas aJCas, int aBegin)
     {
-        long startTime = System.currentTimeMillis();
-
         Sentence mentionSentence = getMentionSentence(aJCas, aBegin);
         Validate.notNull(mentionSentence, "Mention sentence could not be determined.");
 
@@ -316,9 +325,6 @@ public class ConceptLinkingService
             if (entityFrequencyMap != null && entityFrequencyMap.get(wikidataId) != null) {
                 l.setFrequency(entityFrequencyMap.get(wikidataId));
             }
-            else {
-                l.setFrequency(0);
-            }
 
         });
 
@@ -330,7 +336,7 @@ public class ConceptLinkingService
         // Add exact matching candidates
         result.addAll(aCandidatesExact);
 
-        // Do the main ranking
+        // Set the feature values
         result.parallelStream().forEach(l -> {
             String wikidataId = l.getIRI().replace(WIKIDATA_PREFIX, "");
             
@@ -358,9 +364,9 @@ public class ConceptLinkingService
             l.setNumRelatedRelations(
                 (sig.getRelatedRelations() != null) ? sig.getRelatedRelations().size() : 0);
         });
+
+        // Do the main ranking
         result = sortCandidates(result);
-        logger.debug("It took [{}] ms to rank candidates",
-            System.currentTimeMillis() - startTime);
         return result;
     }
 
@@ -377,6 +383,8 @@ public class ConceptLinkingService
 
     /*
      * Sort candidates by multiple keys.
+     * The edit distance between typed string and label is given high importance
+     * to push the exact matching candidates to the top.
      * A high signature overlap score is preferred.
      * A low edit distance is preferred.
      * A high entity frequency is preferred.
@@ -458,16 +466,19 @@ public class ConceptLinkingService
 
     /**
      * Given a mention in the text, this method returns a list of ranked candidate entities
-     * generated from a Knowledge Base. It only contains entities which are instances of a
-     * pre-defined concept.
+     * generated from a Knowledge Base.
      *
-     * @param aKB the KB used to generate candidates
+     * The candidates are retrieved in two separate queries, because of the higher number of results
+     * returned by full-text matching, which are filtered first.
+     * To not possible lose any of the candidates from the exact matching results,
+     * the latter are added to the ranking afterwards and given top priority.
+     *
+     * @param aKB the KB used to generate candidates.
      * @param aTypedString What the user has typed so far in the text field. Might be null.
-     * @param aMention Marked Surface form of an entity to be linked
-     * @param aMentionBeginOffset the offset where the mention begins in the text
-     * @param aJcas used to extract information about mention sentence
-     *                       tokens
-     * @return ranked list of entities, starting with the most probable entity
+     * @param aMention Marked Surface form of an entity to be linked.
+     * @param aMentionBeginOffset the offset where the mention begins in the text.
+     * @param aJcas used to extract information about mention sentence tokens.
+     * @return a ranked list of entities.
      */
     public List<KBHandle> disambiguate(KnowledgeBase aKB, String aTypedString, String
         aMention, int aMentionBeginOffset, JCas aJcas)
@@ -476,15 +487,24 @@ public class ConceptLinkingService
 
         Set<CandidateEntity> candidatesExact = retrieveCandidatesExact(aKB, aTypedString, aMention);
 
-        Set<CandidateEntity> candidatesFullText = retrieveCandidatesFullText(aKB, aTypedString,
-            aMention);
+        Set<CandidateEntity> candidatesFullText = new HashSet<>();
+        if (!aTypedString.isEmpty()) {
+            candidatesFullText = retrieveCandidatesFullText(aKB, aTypedString, aMention);
+        }
+
+        long afterRetrieval = System.currentTimeMillis();
 
         logger
             .debug("It took [{}] ms to retrieve candidates for mention [{}] and typed string [{}]",
-                System.currentTimeMillis() - startTime, aMention);
+                afterRetrieval - startTime, aMention, aTypedString);
 
         List<CandidateEntity> rankedCandidates = rankCandidates(aKB, aTypedString, aMention,
             candidatesExact, candidatesFullText, aJcas, aMentionBeginOffset);
+
+        logger
+            .debug("It took [{}] ms to rank candidates for mention [{}] and typed string [{}]",
+                System.currentTimeMillis() - afterRetrieval, aMention, aTypedString);
+
 
         return rankedCandidates.stream()
             .map(c -> new KBHandle(c.getIRI(), c.getLabel(), c.getDescription()))

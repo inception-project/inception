@@ -86,6 +86,17 @@ public class QueryUtil
             "    }");
     }
 
+    /**
+     * This query retrieves candidates via exact matching of their labels and full-text-search
+     * It has been tied to use LCASE in combination with FILTER to allow matching the lower cased arguments with the entities from the KB,
+     * but that was too time-intensive and lead to timeouts.
+     * Therefore, the still needs to type with correct capitalization in order that this part retrieves the result.
+     *
+     * @param aTypedString typed string from the user
+     * @param aMention the marked surface form
+     * @param aDescriptionIri KB-specific IRI that indicates a description
+     * @return a query to retrieve candidate entities
+     */
     public static TupleQuery generateCandidateExactQuery(RepositoryConnection conn,
         String aTypedString, String aMention, IRI aDescriptionIri)
     {
@@ -150,11 +161,11 @@ public class QueryUtil
             "      }",
             "    }",
             "    LIMIT " + aLimit);
-
     }
+
     /**
      *
-     * This query retrieves candidates via exact matching of their labels and full-text-search
+     * This query retrieves candidates via full-text matching of their labels and full-text-search
      *
      * @param aString String for which to perform full text search
      * @param aLimit maximum number of results

@@ -95,6 +95,8 @@ public class CandidateEntity
         this.label = label;
         this.alternativeLabel = alternativeLabel;
         this.description = description;
+        this.levTypedString = Integer.MAX_VALUE;
+        this.frequency = 0;
     }
 
     /**
