@@ -32,7 +32,7 @@ import org.junit.runners.JUnit4;
 import org.junit.runners.Parameterized;
 
 @RunWith(Enclosed.class)
-public class PercentageBasedSplitterTest {
+public class IncrementalSplitterTest {
 
     @RunWith(Parameterized.class)
     public static class ParameterizedTests {
@@ -49,25 +49,43 @@ public class PercentageBasedSplitterTest {
         @Test
         public void thatSplittingWorks() {
             List<String> data = asList("0", "1", "2", "3", "4", "5", "6", "7", "8", "9");
-            PercentageBasedSplitter splitter = new PercentageBasedSplitter(k);
+            IncrementalSplitter splitter = new IncrementalSplitter(k, 1);
             splitter.setTotal(data.size());
+            
+            int currentTrainingSetSize = 1;
+            
             List<String> trainingSet = new ArrayList<>();
             List<String> testSet = new ArrayList<>();
-
-            for (String s : data) {
-                switch (splitter.getTargetSet(s)) {
-                case TRAIN:
-                    trainingSet.add(s);
-                    break;
-                case TEST:
-                    testSet.add(s);
-                    break;
-                default:
-                    // Do nothing
-                    break;
+            while (splitter.hasNext()) {
+                splitter.next();
+                
+                trainingSet.clear();;
+                testSet.clear();;
+    
+                for (String s : data) {
+                    switch (splitter.getTargetSet(s)) {
+                    case TRAIN:
+                        trainingSet.add(s);
+                        break;
+                    case TEST:
+                        testSet.add(s);
+                        break;
+                    default:
+                        // Do nothing
+                        break;
+                    }
                 }
+    
+                assertThat(trainingSet)
+                    .as("Training set has correct size")
+                    .hasSize(currentTrainingSetSize);
+                assertThat(testSet)
+                    .as("Test set has correct size")
+                    .hasSize(testSetSize);
+                
+                currentTrainingSetSize++;
             }
-
+            
             assertThat(trainingSet)
                 .as("Training set has correct size")
                 .hasSize(trainingSetSize);
@@ -97,14 +115,14 @@ public class PercentageBasedSplitterTest {
     public static class NonParameterizedTests {
         @Test(expected = IllegalStateException.class)
         public void thatTotalHasToBeSetFirst() {
-            PercentageBasedSplitter splitter = new PercentageBasedSplitter(0.3);
+            IncrementalSplitter splitter = new IncrementalSplitter(0.3, 1);
 
             splitter.getTargetSet("Test");
         }
 
         @Test(expected = IllegalArgumentException.class)
         public void thatPercentageHasToBePercentage() {
-            PercentageBasedSplitter splitter = new PercentageBasedSplitter(42.1337);
+            IncrementalSplitter splitter = new IncrementalSplitter(42.1337, 1);
         }
     }
 }

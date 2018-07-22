@@ -18,6 +18,12 @@
 package de.tudarmstadt.ukp.inception.recommendation.api.v2;
 
 public interface DataSplitter {
+    public static enum TargetSet {
+        TRAIN,
+        TEST,
+        IGNORE
+    }
+    
     void setTotal(int aTotal);
-    boolean belongsToTrainingSet(Object aObject);
+    TargetSet getTargetSet(Object aObject);
 }

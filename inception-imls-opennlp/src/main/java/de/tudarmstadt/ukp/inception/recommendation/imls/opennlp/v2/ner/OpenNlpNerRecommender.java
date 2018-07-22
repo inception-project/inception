@@ -127,11 +127,17 @@ public class OpenNlpNerRecommender
 
         aDataSplitter.setTotal(data.size());
         for (NameSample nameSample : data) {
-            if (aDataSplitter.belongsToTrainingSet(nameSample)) {
+            switch (aDataSplitter.getTargetSet(nameSample)) {
+            case TRAIN:
                 trainingSet.add(nameSample);
-            } else {
+                break;
+            case TEST:
                 testSet.add(nameSample);
-            }
+                break;
+            default:
+                // Do nothing
+                break;
+            }            
         }
 
         if (trainingSet.size() < 2 || testSet.size() < 2) {

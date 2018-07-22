@@ -50,6 +50,7 @@ import de.tudarmstadt.ukp.dkpro.core.testing.DkproTestContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.type.PredictedSpan;
 import de.tudarmstadt.ukp.inception.recommendation.api.v2.DataSplitter;
+import de.tudarmstadt.ukp.inception.recommendation.api.v2.IncrementalSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.v2.PercentageBasedSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommenderContext;
 
@@ -272,7 +273,7 @@ public class DL4JSequenceRecommenderTest
 
         System.out.printf("Score: %f%n", score);
         
-        assertThat(score).isStrictlyBetween(0.0, 1.0);
+        assertThat(score).isBetween(0.0, 1.0);
     }
 
     @Test
@@ -315,7 +316,26 @@ public class DL4JSequenceRecommenderTest
 
         System.out.printf("Score: %f%n", score);
         
-        assertThat(score).isStrictlyBetween(0.0, 1.0);
+        assertThat(score).isBetween(0.0, 1.0);
+    }
+
+    @Test
+    public void thatIncrementalNerEvaluationWorks() throws Exception
+    {
+        IncrementalSplitter splitStrategy = new IncrementalSplitter(0.8, 500);
+        DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildNerRecommender(), traits);
+        JCas cas = loadNerDevelopmentData();
+
+        while (splitStrategy.hasNext()) {
+            splitStrategy.next();
+            
+            double score = sut.evaluate(context, asList(cas.getCas()), splitStrategy);
+
+            System.out.printf("Score: %f%n", score);
+
+            assertThat(score).isBetween(0.0, 1.0);
+
+        }
     }
 
     private JCas loadPosDevelopmentData() throws IOException, UIMAException
@@ -323,7 +343,7 @@ public class DL4JSequenceRecommenderTest
         Dataset ds = loader.load("conll2000-en");
         
         CollectionReader reader = createReader(Conll2000Reader.class,
-                Conll2000Reader.PARAM_PATTERNS, ds.getDefaultSplit().getDevelopmentFiles(), 
+                Conll2000Reader.PARAM_PATTERNS, ds.getDefaultSplit().getTestFiles(), 
                 Conll2000Reader.PARAM_LANGUAGE, ds.getLanguage());
         
         JCas cas = JCasFactory.createJCas();

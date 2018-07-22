@@ -1,5 +1,5 @@
 /*
- * Copyright 2017
+ * Copyright 2018
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  * 
@@ -28,7 +28,7 @@ public class DL4JSequenceRecommenderTraits
 {
     // General parameters
     private int maxTagsetSize = 70;
-    private int truncateLength = 150;
+    private int maxSentenceLength = 150;
     private int nEpochs = 1;
     
     // Network parameters
@@ -54,14 +54,14 @@ public class DL4JSequenceRecommenderTraits
         this.maxTagsetSize = maxTagsetSize;
     }
 
-    public int getTruncateLength()
+    public int getMaxSentenceLength()
     {
-        return truncateLength;
+        return maxSentenceLength;
     }
 
-    public void setTruncateLength(int truncateLength)
+    public void setMaxSentenceLength(int truncateLength)
     {
-        this.truncateLength = truncateLength;
+        this.maxSentenceLength = truncateLength;
     }
 
     public int getnEpochs()

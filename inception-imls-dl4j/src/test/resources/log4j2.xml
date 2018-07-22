@@ -8,7 +8,7 @@
 
   <Loggers>
     <Logger name="org.deeplearning4j.optimize.listeners" level="INFO"/>
-    <Logger name="de.tudarmstadt.ukp.inception.recommendation" level="INFO"/>
+    <Logger name="de.tudarmstadt.ukp.inception.recommendation" level="TRACE"/>
     <Root level="ERROR">
       <AppenderRef ref="ConsoleAppender" />
     </Root>

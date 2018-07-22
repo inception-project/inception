@@ -42,6 +42,7 @@ import de.tudarmstadt.ukp.dkpro.core.testing.DkproTestContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.type.PredictedSpan;
 import de.tudarmstadt.ukp.inception.recommendation.api.v2.DataSplitter;
+import de.tudarmstadt.ukp.inception.recommendation.api.v2.IncrementalSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.v2.PercentageBasedSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommenderContext;
 
@@ -98,7 +99,28 @@ public class OpenNlpNerRecommenderTest
 
         double score = sut.evaluate(context, asList(cas.getCas()), splitStrategy);
 
+        System.out.printf("Score: %f%n", score);
+        
         assertThat(score).isStrictlyBetween(0.0, 1.0);
+    }
+
+    @Test
+    public void thatIncrementalNerEvaluationWorks() throws Exception
+    {
+        IncrementalSplitter splitStrategy = new IncrementalSplitter(0.8, 250);
+        OpenNlpNerRecommender sut = new OpenNlpNerRecommender(recommender, traits);
+        JCas cas = loadDevelopmentData();
+
+        while (splitStrategy.hasNext()) {
+            splitStrategy.next();
+            
+            double score = sut.evaluate(context, asList(cas.getCas()), splitStrategy);
+
+            System.out.printf("Score: %f%n", score);
+
+            assertThat(score).isBetween(0.0, 1.0);
+
+        }
     }
 
     private JCas loadDevelopmentData() throws IOException, UIMAException

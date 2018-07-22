@@ -29,6 +29,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -45,12 +46,12 @@ import org.deeplearning4j.nn.conf.layers.GravesLSTM;
 import org.deeplearning4j.nn.conf.layers.RnnOutputLayer;
 import org.deeplearning4j.nn.conf.layers.recurrent.Bidirectional;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
-import org.deeplearning4j.optimize.listeners.ScoreIterationListener;
 import org.dkpro.core.api.embeddings.binary.BinaryVectorizer;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.DataSet;
 import org.nd4j.linalg.factory.Nd4j;
 import org.nd4j.linalg.indexing.INDArrayIndex;
+import org.nd4j.linalg.indexing.NDArrayIndex;
 import org.nd4j.linalg.learning.config.Nesterovs;
 import org.nd4j.linalg.schedule.ScheduleType;
 import org.nd4j.linalg.schedule.StepSchedule;
@@ -148,6 +149,8 @@ public class DL4JSequenceRecommender
     
     private List<Sample> extractData(List<CAS> aCasses, boolean aExtractLabels)
     {
+        long start = System.currentTimeMillis();
+        
         List<Sample> data = new ArrayList<>();
         
         for (CAS cas : aCasses) {
@@ -171,6 +174,8 @@ public class DL4JSequenceRecommender
             }
         }
         
+        log.trace("Extracting data took {}ms", System.currentTimeMillis() - start);
+        
         return data;
     }
     
@@ -181,25 +186,25 @@ public class DL4JSequenceRecommender
         MultiLayerNetwork model = createConfiguredNetwork(traits, wordVectors.dimensions());
 
         final int limit = Integer.MAX_VALUE;
-        final int batchSize = 100;
+        final int batchSize = 250;
 
         // First vectorizing all sentences and then passing them to the model would consume
         // huge amounts of memory. Thus, every sentence is vectorized and then immediately
         // passed on to the model.
         nextEpoch: for (int epoch = 0; epoch < traits.getnEpochs(); epoch++) {
             int sentNum = 0;
-            Iterator<Sample> sentenceIterator = aTrainingData.iterator();
-            while (sentenceIterator.hasNext()) {
+            Iterator<Sample> sampleIterator = aTrainingData.iterator();
+            while (sampleIterator.hasNext()) {
                 List<DataSet> batch = new ArrayList<>();
-                while (sentenceIterator.hasNext() && batch.size() < batchSize && sentNum < limit) {
-                    Sample sample = sentenceIterator.next();
-                    DataSet trainingData = vectorize(sample, aTagset, true);
+                while (sampleIterator.hasNext() && batch.size() < batchSize && sentNum < limit) {
+                    Sample sample = sampleIterator.next();
+                    DataSet trainingData = vectorize(asList(sample), aTagset, true);
                     batch.add(trainingData);
                     sentNum++;
                 }
                 
                 model.fit(new ListDataSetIterator<DataSet>(batch, batch.size()));
-                log.info("Epoch {}: processed {} of {} sentences", epoch, sentNum,
+                log.trace("Epoch {}: processed {} of {} sentences", epoch, sentNum,
                         aTrainingData.size());
                 
                 if (sentNum >= limit) {
@@ -211,54 +216,64 @@ public class DL4JSequenceRecommender
         return model;
     }
 
-    private DataSet vectorize(Sample aData)
+    private DataSet vectorize(List<? extends Sample> aData)
         throws IOException
     {
         return vectorize(aData, null, false);
     }
 
-    private DataSet vectorize(Sample aData, Object2IntMap<String> aTagset, boolean aIncludeLabels)
+    private DataSet vectorize(List<? extends Sample> aData, Object2IntMap<String> aTagset,
+            boolean aIncludeLabels)
         throws IOException
     {
-        List<String> tokens = aData.getSentence();
-        List<String> labels = aData.getTags();
+        // vectorize is pretty fast taking around 1-2ms
         
-        int sentenceLength = traits.getTruncateLength();
+        // long start = System.currentTimeMillis();
+        int maxSentenceLength = traits.getMaxSentenceLength();
         
         // Create data for training
         int embeddingSize = wordVectors.dimensions(); 
-        INDArray featureVec = Nd4j.create(1, embeddingSize, sentenceLength);
+        INDArray featureVec = Nd4j.create(aData.size(), embeddingSize, maxSentenceLength);
 
         // Tags are using a 1-hot encoding
-        INDArray labelVec = Nd4j.create(1, traits.getMaxTagsetSize(), sentenceLength);
+        INDArray labelVec = Nd4j.create(aData.size(), traits.getMaxTagsetSize(), maxSentenceLength);
         
         // Sentences have variable length, so we we need to mask positions not used in short
         // sentences.
-        INDArray featureMask = Nd4j.zeros(1, sentenceLength);
-        INDArray labelMask = Nd4j.zeros(1, sentenceLength);
+        INDArray featureMask = Nd4j.zeros(aData.size(), maxSentenceLength);
+        INDArray labelMask = Nd4j.zeros(aData.size(), maxSentenceLength);
         
         // Get word vectors for each word in review, and put them in the training data
-        for (int t = 0; t < Math.min(tokens.size(), sentenceLength); t++) {
-            String word = tokens.get(t);
-            INDArray vector = Nd4j.create(wordVectors.vectorize(word));
-
-            if (vector == null) {
-                vector = randUnk;
-            }
-
-            featureVec.put(new INDArrayIndex[] { point(0), all(), point(t) }, vector);
-            featureMask.putScalar(new int[] { 0, t }, 1.0);
-            labelMask.putScalar(new int[] { 0, t }, 1.0);
-
-            if (aIncludeLabels) {
-                String label = labels.get(t);
-                if (!aTagset.containsKey(label)) {
-                    aTagset.put(label, aTagset.size());
+        int sampleIdx = 0;
+        for (Sample sample : aData) {
+            List<String> tokens = sample.getSentence();
+            List<String> labels = sample.getTags();
+            for (int t = 0; t < Math.min(tokens.size(), maxSentenceLength); t++) {
+                String word = tokens.get(t);
+                INDArray vector = Nd4j.create(wordVectors.vectorize(word));
+    
+                if (vector == null) {
+                    vector = randUnk;
                 }
-                labelVec.putScalar(0, aTagset.get(label), t, 1.0);
+    
+                featureVec.put(new INDArrayIndex[] { point(sampleIdx), all(), point(t) }, vector);
+                featureMask.putScalar(new int[] { sampleIdx, t }, 1.0);
+                labelMask.putScalar(new int[] { sampleIdx, t }, 1.0);
+    
+                if (aIncludeLabels) {
+                    String label = labels.get(t);
+                    if (!aTagset.containsKey(label)) {
+                        aTagset.put(label, aTagset.size());
+                    }
+                    labelVec.putScalar(sampleIdx, aTagset.get(label), t, 1.0);
+                }
             }
+            
+            sampleIdx++;
         }
 
+        // log.trace("Vectorizing took {}ms", System.currentTimeMillis() - start);
+        
         return new DataSet(featureVec, labelVec, featureMask, labelMask);
     }
     
@@ -343,27 +358,50 @@ public class DL4JSequenceRecommender
             Feature confidenceFeature = predictionType.getFeatureByBaseName("score");
             Feature labelFeature = predictionType.getFeatureByBaseName("label");
     
+            final int limit = Integer.MAX_VALUE;
+            final int batchSize = 250;
+
             Collection<AnnotationFS> sentences = select(aCas, sentenceType);
             int sentCount = sentences.size();
             int sentNum = 0;
             
-            for (AnnotationFS sentence : sentences) {
-                List<AnnotationFS> tokenFSes = selectCovered(tokenType, sentence);
-                List<String> tokens = CasUtil.toText(tokenFSes);
-                
-                List<String> labels = predict(classifier, tagset, new Sample(tokens));
-                
-                for (int tokenIdx = 0; tokenIdx < tokens.size(); tokenIdx ++) {
-                    AnnotationFS token = tokenFSes.get(tokenIdx);
-                    AnnotationFS annotation = aCas.createAnnotation(predictionType,
-                            token.getBegin(), token.getEnd());
-                    //annotation.setDoubleValue(confidenceFeature, prediction.getProb());
-                    annotation.setStringValue(labelFeature, labels.get(tokenIdx));
-                    aCas.addFsToIndexes(annotation);
+            Iterator<AnnotationFS> sentenceIterator = sentences.iterator();
+            while (sentenceIterator.hasNext()) {
+                // Prepare a batch of sentences that we want to predict because calling the
+                // prediction is expensive
+                List<CasSample> batch = new ArrayList<>();
+                while (sentenceIterator.hasNext() && batch.size() < batchSize && sentNum < limit) {
+                    AnnotationFS sentence = sentenceIterator.next();
+                    List<AnnotationFS> tokenFSes = selectCovered(tokenType, sentence);
+                    List<String> tokens = CasUtil.toText(tokenFSes);
+                    batch.add(new CasSample(tokens, tokenFSes));
+                    sentNum++;
                 }
                 
-                sentNum++;
-                log.info("Predicted {} of {} sentences", sentNum, sentCount);
+                // If a limit was set that is smaller than the number of sentence, then we
+                // eventually start producing empty batches. At this point, we are done.
+                if (batch.isEmpty()) {
+                    break;
+                }
+
+                List<Outcome<CasSample>> outcomes = predict(classifier, tagset, batch);
+                
+                int outcomeIdx = 0;
+                for (Outcome<CasSample> outcome : outcomes) {
+                    List<AnnotationFS> tokenFSes = outcome.getSample().getTokens();
+                    for (int tokenIdx = 0; tokenIdx < tokenFSes.size(); tokenIdx ++) {
+                        AnnotationFS token = tokenFSes.get(tokenIdx);
+                        AnnotationFS annotation = aCas.createAnnotation(predictionType,
+                                token.getBegin(), token.getEnd());
+                        //annotation.setDoubleValue(confidenceFeature, prediction.getProb());
+                        annotation.setStringValue(labelFeature,
+                                outcomes.get(outcomeIdx).getLabels().get(tokenIdx));
+                        aCas.addFsToIndexes(annotation);
+                    }
+                    outcomeIdx++;
+                }
+                
+                log.trace("Predicted {} of {} sentences", sentNum, sentCount);
             }
         }
         catch (IOException e) {
@@ -371,23 +409,45 @@ public class DL4JSequenceRecommender
         }
     }
     
-    private List<String> predict(MultiLayerNetwork aClassifier, String[] aTagset, Sample aSample)
+    private <T extends Sample> List<Outcome<T>> predict(MultiLayerNetwork aClassifier,
+            String[] aTagset, List<T> aData)
         throws IOException
-    {        
-        DataSet data = vectorize(aSample);
-        
-        // Predict labels
-        INDArray predicted = aClassifier.output(data.getFeatureMatrix(), false,
-                data.getFeaturesMaskArray(), data.getLabelsMaskArray());
-        INDArray argMax = Nd4j.argMax(predicted, 1);
-
-        List<String> tokens = aSample.getSentence();
-        String[] labels = new String[tokens.size()];
-        for (int tokenIdx = 0; tokenIdx < tokens.size(); tokenIdx ++) {
-            labels[tokenIdx] = aTagset[argMax.getInt(tokenIdx)];
+    {
+        if (aData.isEmpty()) {
+            return Collections.emptyList();
         }
         
-        return asList(labels);
+        DataSet data = vectorize(aData);
+        
+        // Predict labels
+        long predictionStart = System.currentTimeMillis();
+        INDArray predicted = aClassifier.output(data.getFeatureMatrix(), false,
+                data.getFeaturesMaskArray(), data.getLabelsMaskArray());
+        log.trace("Prediction took {}ms", System.currentTimeMillis() - predictionStart);
+        
+        // This is a brute-force hack to ensue that argmax doesn't predict tags that are not 
+        // in the tagset. Actually, this should be necessary at all if the network is properly
+        // configured...
+        predicted = predicted.get(NDArrayIndex.all(), NDArrayIndex.interval(0, aTagset.length),
+                NDArrayIndex.all());
+        
+        List<Outcome<T>> outcomes = new ArrayList<>();
+        int sampleIdx = 0;
+        for (Sample sample : aData) {
+            INDArray argMax = Nd4j.argMax(predicted, 1);
+    
+            List<String> tokens = sample.getSentence();
+            String[] labels = new String[tokens.size()];
+            for (int tokenIdx = 0; tokenIdx < tokens.size(); tokenIdx ++) {
+                labels[tokenIdx] = aTagset[argMax.getInt(sampleIdx, tokenIdx)];
+            }
+            
+            outcomes.add(new Outcome(sample, asList(labels)));
+            
+            sampleIdx ++;
+        }
+        
+        return outcomes;
     }
 
     @Override
@@ -405,11 +465,17 @@ public class DL4JSequenceRecommender
         // Split the data up into training and test sets
         aDataSplitter.setTotal(data.size());
         for (Sample sample : data) {
-            if (aDataSplitter.belongsToTrainingSet(sample)) {
+            switch (aDataSplitter.getTargetSet(sample)) {
+            case TRAIN:
                 trainingSet.add(sample);
-            } else {
+                break;
+            case TEST:
                 testSet.add(sample);
-            }
+                break;
+            default:
+                // Do nothing
+                break;
+            }            
         }
 
         if (trainingSet.size() < 2 || testSet.size() < 2) {
@@ -425,15 +491,32 @@ public class DL4JSequenceRecommender
             MultiLayerNetwork classifier = train(trainingSet, tagsetCollector);
             String[] tagset = compileTagset(tagsetCollector);
             
+            final int limit = Integer.MAX_VALUE;
+            final int batchSize = 250;
+            
+            int sentNum = 0;
             double total = 0;
             double correct = 0;
-            for (Sample sample : testSet) {
-                List<String> expectedLabels = sample.getTags();
-                List<String> predictedLabels = predict(classifier, tagset, sample);
-                for (int i = 0; i < expectedLabels.size(); i++) {
-                    total++;
-                    if (expectedLabels.get(i).equals(predictedLabels.get(i))) {
-                        correct++;
+            Iterator<Sample> testSetIterator = testSet.iterator();
+            while (testSetIterator.hasNext()) {
+                // Prepare a batch of sentences that we want to predict because calling the
+                // prediction is expensive
+                List<Sample> batch = new ArrayList<>();
+                while (testSetIterator.hasNext() && batch.size() < batchSize && sentNum < limit) {
+                    batch.add(testSetIterator.next());
+                    sentNum++;
+                }
+                
+                List<Outcome<Sample>> outcomes = predict(classifier, tagset, batch);
+                
+                for (Outcome<Sample> outcome : outcomes) {
+                    List<String> expectedLabels = outcome.getSample().getTags();
+                    List<String> actualLabels = outcome.getLabels();
+                    for (int i = 0; i < expectedLabels.size(); i++) {
+                        total++;
+                        if (expectedLabels.get(i).equals(actualLabels.get(i))) {
+                            correct++;
+                        }
                     }
                 }
             }
@@ -448,6 +531,8 @@ public class DL4JSequenceRecommender
     private MultiLayerNetwork createConfiguredNetwork(DL4JSequenceRecommenderTraits aTraits,
             int aEmbeddingsDim)
     {
+        long start = System.currentTimeMillis();
+        
         // Set up network configuration
         MultiLayerConfiguration conf = new NeuralNetConfiguration.Builder()
                 .optimizationAlgo(aTraits.getOptimizationAlgorithm())
@@ -475,14 +560,38 @@ public class DL4JSequenceRecommender
                 .backprop(true)
                 .build();
         
-        log.info("Network configuration: {}", conf.toYaml());
+        // log.info("Network configuration: {}", conf.toYaml());
 
         MultiLayerNetwork net = new MultiLayerNetwork(conf);
         net.init();
 
-        net.setListeners(new ScoreIterationListener(1));
+        // net.setListeners(new ScoreIterationListener(1));
+        
+        log.trace("Setting up the model took {}ms", System.currentTimeMillis() - start);
         
         return net;
+    }
+    
+    private static class Outcome<T extends Sample>
+    {
+        private final T sample;
+        private final List<String> labels;
+        public Outcome(T aSample, List<String> aLabels)
+        {
+            super();
+            sample = aSample;
+            labels = aLabels;
+        }
+        
+        public T getSample()
+        {
+            return sample;
+        }
+        
+        public List<String> getLabels()
+        {
+            return labels;
+        }
     }
     
     private static class Sample
@@ -514,6 +623,22 @@ public class DL4JSequenceRecommender
             else {
                 return null;
             }
+        }
+    }
+    
+    private static class CasSample extends Sample
+    {
+        private final List<AnnotationFS> tokens;
+
+        public CasSample(Collection<String> aSentence, List<AnnotationFS> aTokens)
+        {
+            super(aSentence);
+            tokens = aTokens;
+        }
+        
+        public List<AnnotationFS> getTokens()
+        {
+            return tokens;
         }
     }
 }

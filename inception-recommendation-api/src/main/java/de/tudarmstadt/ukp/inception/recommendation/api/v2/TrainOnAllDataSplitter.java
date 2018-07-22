@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.api.v2;
 
+import static de.tudarmstadt.ukp.inception.recommendation.api.v2.DataSplitter.TargetSet.TEST;
+
 /**
  * Maps all data to the training set.
  */
@@ -24,12 +26,14 @@ public class TrainOnAllDataSplitter
     implements DataSplitter
 {
     @Override
-    public void setTotal(int aTotal) {
+    public void setTotal(int aTotal)
+    {
         // Not relevant
     }
 
     @Override
-    public boolean belongsToTrainingSet(Object aObject) {
-        return true;
+    public TargetSet getTargetSet(Object aObject)
+    {
+        return TEST;
     }
 }

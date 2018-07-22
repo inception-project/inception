@@ -17,28 +17,26 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.api.v2;
 
-import static de.tudarmstadt.ukp.inception.recommendation.api.v2.DataSplitter.TargetSet.TEST;
-import static de.tudarmstadt.ukp.inception.recommendation.api.v2.DataSplitter.TargetSet.TRAIN;
-
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Iterator;
 import java.util.Optional;
 
 import org.apache.commons.lang3.Validate;
 
-public class PercentageBasedSplitter
-    implements DataSplitter
+public class IncrementalSplitter
+    implements DataSplitter, Iterator<DataSplitter>
 {
     private final double trainPercentage;
-    private Map<Class<?>, Integer> counts;
+    private final int increment;
+    private int count;
+    private int limit;
     private Optional<Integer> total;
 
-    public PercentageBasedSplitter(double aTrainPercentage) {
+    public IncrementalSplitter(double aTrainPercentage, int aIncrement) {
         Validate.inclusiveBetween(0, 1, aTrainPercentage, "Percentage has to be in (0,1)");
 
         trainPercentage = aTrainPercentage;
-        counts = new HashMap<>();
         total = Optional.empty();
+        increment = aIncrement;
     }
 
     @Override
@@ -49,12 +47,48 @@ public class PercentageBasedSplitter
     @Override
     public TargetSet getTargetSet(Object aObject)
     {
-        int count = counts.getOrDefault(aObject.getClass(), 0);
-        counts.put(aObject.getClass(), count + 1);
-        return total.orElseThrow(this::totalNotSet) * trainPercentage > count ? TRAIN : TEST;
+        long upperBound = Math.round(total.orElseThrow(this::totalNotSet) * trainPercentage);
+        
+        // Is the data in the training set?
+        TargetSet target;
+        if (count < Math.min(limit, upperBound)) {
+            target = TargetSet.TRAIN;
+        }
+        else if (count >= upperBound) {
+            target = TargetSet.TEST;
+        }
+        else {
+            target = TargetSet.IGNORE;
+        }
+        
+        count++;
+
+        return target;
     }
-    
+
     private RuntimeException totalNotSet() {
         return new IllegalStateException("Total has to be set before querying!");
+    }
+
+    @Override
+    public boolean hasNext()
+    {
+        if (total.isPresent()) {
+            return limit + increment <= total.get() * trainPercentage;
+        }
+        else {
+            // The total is only set by the evaluate method, but the incremental loop is outside
+            // so we need to return true here to give the evaluate method to set the total
+            return true;
+        }
+    }
+
+    @Override
+    public DataSplitter next()
+    {
+        count = 0;
+        limit += increment;
+        
+        return this;
     }
 }
