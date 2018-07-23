@@ -701,10 +701,6 @@ public class KnowledgeBaseServiceImpl
         return resultList;
     }
     
-    public String getPropertyListQuery(KnowledgeBase kb) {
-        return SPARQLQueryStore.PROPERTYLIST_QUERY;
-    }
-    
     @Override
     public List<KBHandle> listRootConcepts(KnowledgeBase kb, boolean aAll)
         throws QueryEvaluationException

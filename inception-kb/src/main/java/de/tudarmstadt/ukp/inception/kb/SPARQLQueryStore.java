@@ -22,8 +22,8 @@ public class SPARQLQueryStore
     
     public static String aLimit = "1000";
     public static String PROPERTYLIST_QUERY = String.join("\n"
-            , InferencerVariableStore.RDF_PREFIX
-            , InferencerVariableStore.OWL_PREFIX
+            , InferencerVariableStore.PREFIX_RDFS
+            , InferencerVariableStore.PREFIX_OWL
             , "SELECT DISTINCT ?s ?l WHERE {"
             , "  { ?s ?pTYPE ?oPROPERTY .}"
             , "  UNION "
