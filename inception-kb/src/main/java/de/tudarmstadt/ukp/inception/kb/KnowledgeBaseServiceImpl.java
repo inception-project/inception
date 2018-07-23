@@ -569,7 +569,7 @@ public class KnowledgeBaseServiceImpl
     @Override
     public void initStatement(KnowledgeBase kb, KBStatement aStatement)
     {
-        List<Statement> statements = getReificationStrategy(kb).reify(kb, aStatement);
+        Set<Statement> statements = getReificationStrategy(kb).reify(kb, aStatement);
         aStatement.setOriginalStatements(statements);
     }
 
