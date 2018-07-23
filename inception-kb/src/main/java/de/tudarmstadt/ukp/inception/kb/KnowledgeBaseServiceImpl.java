@@ -440,7 +440,31 @@ public class KnowledgeBaseServiceImpl
     @Override
     public List<KBHandle> listProperties(KnowledgeBase kb, boolean aAll)
     {
-        return listProperties(kb, kb.getPropertyTypeIri(), true, aAll);
+        return listProperties(kb, true, aAll);
+    }
+
+    @Override
+    public List<KBHandle> listProperties(KnowledgeBase kb, boolean aIncludeInferred, boolean aAll)
+        throws QueryEvaluationException
+    {
+        List<KBHandle> resultList = read(kb, (conn) -> {
+            String QUERY = getPropertyListQuery(kb);
+            TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
+            tupleQuery.setBinding("pTYPE", kb.getTypeIri());
+            tupleQuery.setBinding("oPROPERTY", kb.getPropertyTypeIri());
+            tupleQuery.setBinding("pLABEL", kb.getLabelIri());
+            tupleQuery.setIncludeInferred(aIncludeInferred);
+
+            return evaluateListQuery(tupleQuery, aAll);
+        });
+
+        resultList.sort(Comparator.comparing(KBObject::getUiLabel));
+
+        return resultList;
+    }
+    
+    public String getPropertyListQuery(KnowledgeBase kb) {
+        return SPARQLQueryStore.PROPERTYLIST_QUERY;
     }
 
     @Override
@@ -654,31 +678,6 @@ public class KnowledgeBaseServiceImpl
         resultList.sort(Comparator.comparing(KBObject::getUiLabel));
 
         return resultList;
-    }
-
-    @Override
-    public List<KBHandle> listProperties(KnowledgeBase kb, IRI aType, boolean aIncludeInferred,
-            boolean aAll)
-        throws QueryEvaluationException
-    {
-        List<KBHandle> resultList = read(kb, (conn) -> {
-            String QUERY = getPropertyListQuery(kb);
-            TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
-            tupleQuery.setBinding("pTYPE", kb.getTypeIri());
-            tupleQuery.setBinding("oPROPERTY", aType);
-            tupleQuery.setBinding("pLABEL", kb.getLabelIri());
-            tupleQuery.setIncludeInferred(aIncludeInferred);
-
-            return evaluateListQuery(tupleQuery, aAll);
-        });
-
-        resultList.sort(Comparator.comparing(KBObject::getUiLabel));
-
-        return resultList;
-    }
-    
-    public String getPropertyListQuery(KnowledgeBase kb) {
-        return SPARQLQueryStore.PROPERTYLIST_QUERY;
     }
     
     @Override
