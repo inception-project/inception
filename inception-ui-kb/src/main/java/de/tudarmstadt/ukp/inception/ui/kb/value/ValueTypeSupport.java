@@ -22,6 +22,7 @@ import java.util.List;
 import org.apache.wicket.model.IModel;
 import org.springframework.beans.factory.BeanNameAware;
 
+import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
@@ -41,6 +42,9 @@ public interface ValueTypeSupport
     
     boolean accepts(KBStatement aStatement, KBProperty aProperty);
 
+    boolean accepts(String range, KBObject kbrange);
+    
+    
     /**
      * Returns a {@link ValueEditor} instance given a datatype IRI (most likely the range of a
      * property or the datatype of a statement).

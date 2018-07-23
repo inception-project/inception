@@ -26,6 +26,7 @@ import org.eclipse.rdf4j.model.IRI;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
+import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
@@ -55,7 +56,7 @@ public class IriValueSupport
     @Override
     public List<ValueType> getSupportedValueTypes()
     {
-        return asList(new ValueType("resource", "Resource", valueTypeSupportId));
+        return asList(new ValueType("resource", "KB Resource", valueTypeSupportId));
     }
 
     @Override
@@ -70,17 +71,22 @@ public class IriValueSupport
         }
     }
 
-//    @Override
-//    public boolean accepts(String range)
-//    {   
-//       
-//    }
+    @Override
+    public boolean accepts(String range, KBObject kbrange)
+    {
+        if (kbrange instanceof KBObject) {
+            return true;
+        }
+       
+        return false;
+    }
+
     
     @Override
     public ValueEditor createEditor(String aId, IModel<KBStatement> aStatement,
             IModel<KBProperty> aProperty, IModel<KnowledgeBase> kbModel)
     {
-        return new IRIValueEditor(aId, aStatement, kbModel);
+        return new IRIValueEditor(aId, aStatement,aProperty, kbModel);
     }
 
     @Override

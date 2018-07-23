@@ -303,6 +303,10 @@ public interface KnowledgeBaseService
             int aLimit)
         throws QueryEvaluationException;
     
+    List<KBHandle> listChildConceptsInstances(KnowledgeBase aKB, String aParentIdentifier,
+            boolean aAll, int aLimit) throws QueryEvaluationException;
+    
+    
     RepositoryConnection getConnection(KnowledgeBase kb);
 
     interface ReadAction<T>
@@ -367,4 +371,11 @@ public interface KnowledgeBaseService
 
     Optional<KBObject> readKBIdentifier(Project aProject, String aIdentifier);
 
+    List<KBHandle> getParentConcept(KnowledgeBase aKB, String aIdentifier,
+            boolean aAll)
+        throws QueryEvaluationException;
+    
+    List<KBHandle> getParentConceptList(KnowledgeBase aKB, String aIdentifier, boolean aAll)
+            throws QueryEvaluationException;
+    
 }

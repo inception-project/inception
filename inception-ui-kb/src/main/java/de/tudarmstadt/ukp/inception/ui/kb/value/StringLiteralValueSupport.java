@@ -26,6 +26,7 @@ import org.cyberborean.rdfbeans.datatype.DefaultDatatypeMapper;
 import org.eclipse.rdf4j.model.vocabulary.XMLSchema;
 import org.springframework.stereotype.Component;
 
+import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
@@ -55,8 +56,8 @@ public class StringLiteralValueSupport
     @Override
     public List<ValueType> getSupportedValueTypes()
     {
-        return asList(
-                new ValueType(XMLSchema.STRING.stringValue(), "String", valueTypeSupportId));
+        return asList(new ValueType(XMLSchema.STRING.stringValue(), "String Resource",
+                valueTypeSupportId));
     }
     
     @Override
@@ -69,15 +70,17 @@ public class StringLiteralValueSupport
         return DefaultDatatypeMapper.getDatatypeURI(aStatement.getValue().getClass()) != null;
     }
     
-//    @Override
-//    public boolean accepts(String range)
-//    {
-//        if (aStatement.getValue() == null) {
-//            return false;
-//        }
-//
-//        return DefaultDatatypeMapper.getDatatypeURI(aStatement.getValue().getClass()) != null;
-//    }
+    @Override
+    public boolean accepts(String range, KBObject kbrange)
+    {
+        if (kbrange instanceof KBObject) {
+            return true;
+        }
+        else if (range.equals(XMLSchema.STRING.stringValue()) ) {
+            return true;
+        }
+        return false;
+    }
 
 
     @Override

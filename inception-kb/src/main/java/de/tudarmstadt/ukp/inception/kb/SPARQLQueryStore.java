@@ -55,5 +55,15 @@ public class SPARQLQueryStore
             , "}"
             , "LIMIT 10000");
     
+  
+ 
+    public static String PARENT_CONCEPT = String.join("\n"
+            , "SELECT DISTINCT ?s ?l WHERE { "
+            , "     {?oChild ?pSUBCLASS ?s . }" 
+            , "     OPTIONAL { "
+            , "         ?s ?pLABEL ?l . "
+            , "         FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\")) "
+            , "     } "
+            , "} ");
     
 }

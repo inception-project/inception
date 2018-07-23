@@ -21,8 +21,7 @@ import static java.util.Comparator.comparing;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import com.google.common.base.Optional;
+import java.util.Optional;
 
 import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
@@ -49,12 +48,12 @@ public interface ValueTypeSupportRegistry
         List<ValueType> rangeTypes = new ArrayList<>();
 
         for (ValueTypeSupport valueSupport : getValueSupports()) {
-            List<ValueType> types = valueSupport.getSupportedValueTypes();
-            types.stream().forEach(rangeTypes::add);
+            if (valueSupport.accepts(range, rangeKbObject.get())) {
+                List<ValueType> types = valueSupport.getSupportedValueTypes();
+                types.stream().forEach(rangeTypes::add);
+            }
         }
-
         rangeTypes.sort(comparing(ValueType::getUiName));
-
         return rangeTypes;
     }
     

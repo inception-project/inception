@@ -721,9 +721,6 @@ public class KnowledgeBaseServiceImpl
         return resultList;
     }
     
-    
-    
-    
     @Override
     public List<KBHandle> listRootConcepts(KnowledgeBase kb, boolean aAll)
         throws QueryEvaluationException
@@ -782,6 +779,51 @@ public class KnowledgeBaseServiceImpl
     {
         return listChildConcepts(aKB, aParentIdentifier, aAll, 10000);
     }
+    
+    @Override
+    public List<KBHandle> getParentConcept(KnowledgeBase aKB, String aIdentifier,
+            boolean aAll)
+        throws QueryEvaluationException
+    {
+        // The query below only returns subclasses which simultaneously declare being a class
+        // via the class property defined in the KB specification. This means that if the KB
+        // is configured to use rdfs:Class but a subclass defines itself using owl:Class, then
+        // this subclass is *not* returned. We do presently *not* support mixed schemes in a
+        // single KB.
+        List<KBHandle> resultList = read(aKB, (conn) -> {
+            String QUERY = SPARQLQueryStore.PARENT_CONCEPT;
+            ValueFactory vf = SimpleValueFactory.getInstance();
+            TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
+            tupleQuery.setBinding("oChild", vf.createIRI(aIdentifier));
+            tupleQuery.setBinding("pTYPE", aKB.getTypeIri());
+            tupleQuery.setBinding("oCLASS", aKB.getClassIri());
+            tupleQuery.setBinding("pSUBCLASS", aKB.getSubclassIri());
+            tupleQuery.setBinding("pLABEL", aKB.getLabelIri());
+            tupleQuery.setIncludeInferred(false);
+            return evaluateListQuery(tupleQuery, aAll);
+        });
+        
+        return resultList;
+    }
+    
+    @Override
+    public List<KBHandle> getParentConceptList(KnowledgeBase aKB, String aIdentifier, boolean aAll)
+        throws QueryEvaluationException
+    {
+        List<KBHandle> parentConceptList = new ArrayList<KBHandle>();
+        
+        if (aIdentifier != null) {
+            List<KBHandle> parentList = getParentConcept(aKB, aIdentifier, aAll);
+            if (!parentList.isEmpty()) {
+                parentConceptList.add(parentList.get(0));
+                getParentConceptList(aKB, parentList.get(0).getIdentifier(), aAll);
+            }
+            else {
+                return parentConceptList;
+            }
+        }
+        return parentConceptList;
+    }
 
     // Need to work on the query for variable inputs like owl:intersectionOf, rdf:rest*/rdf:first
     @Override
@@ -826,6 +868,21 @@ public class KnowledgeBaseServiceImpl
         return resultList;
     }
 
+    
+    @Override
+    public List<KBHandle> listChildConceptsInstances(KnowledgeBase aKB, String aParentIdentifier,
+            boolean aAll, int aLimit)
+        throws QueryEvaluationException
+    {
+        List<KBHandle> childConceptInstances = new ArrayList<KBHandle>();
+        List<KBHandle> childConcepts =  listChildConcepts(aKB, aParentIdentifier, aAll, aLimit);
+        for (KBHandle childConcept : childConcepts) {
+            childConceptInstances.addAll(listInstances(aKB, childConcept.getIdentifier(), aAll));
+        }
+        return childConceptInstances;
+    }
+    
+    
     private List<KBHandle> evaluateListQuery(TupleQuery tupleQuery, boolean aAll)
         throws QueryEvaluationException
     {
@@ -951,4 +1008,7 @@ public class KnowledgeBaseServiceImpl
         }
         return Optional.empty();
     }
+    
+    
+    
 }

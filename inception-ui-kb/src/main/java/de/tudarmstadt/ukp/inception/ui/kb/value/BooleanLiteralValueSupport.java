@@ -27,6 +27,7 @@ import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.vocabulary.XMLSchema;
 import org.springframework.stereotype.Component;
 
+import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
@@ -72,11 +73,15 @@ public class BooleanLiteralValueSupport
         return iri != null && XMLSchema.BOOLEAN.equals(iri);        
     }
     
-//    @Override
-//    public boolean accepts(String range)
-//    {
-//             
-//    }
+    @Override
+    public boolean accepts(String range, KBObject kbrange)
+    {
+        if (range.equals(XMLSchema.BOOLEAN.stringValue())) {
+            return true;
+        }
+        return false;
+    }
+
     
     
 

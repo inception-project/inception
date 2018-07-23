@@ -18,24 +18,24 @@
 package de.tudarmstadt.ukp.inception.ui.kb.value.editor;
 
 import org.apache.wicket.Component;
-import org.apache.wicket.markup.html.form.TextArea;
+import org.apache.wicket.markup.html.form.NumberTextField;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 
-public class IntegerLiteralValueEditor
+public class NumericLiteralValueEditor
     extends ValueEditor
 {
     private static final long serialVersionUID = 6935837930064826698L;
 
-    private TextArea<String> value;
+    private NumberTextField<Integer> value;
     
-    public IntegerLiteralValueEditor(String aId, IModel<KBStatement> aModel)
+    public NumericLiteralValueEditor(String aId, IModel<KBStatement> aModel)
     {
         super(aId, CompoundPropertyModel.of(aModel));
-        value = new TextArea<>("value");
+        value = new NumberTextField<>("value");
         value.setOutputMarkupId(true);
         value.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> t.add(getParent())));
         add(value);

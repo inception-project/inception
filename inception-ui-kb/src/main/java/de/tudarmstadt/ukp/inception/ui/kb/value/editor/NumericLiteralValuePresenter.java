@@ -23,12 +23,12 @@ import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 
-public class IntegerLiteralValuePresenter
+public class NumericLiteralValuePresenter
     extends ValuePresenter
 {
     private static final long serialVersionUID = -6774637988828817203L;
 
-    public IntegerLiteralValuePresenter(String aId, IModel<KBStatement> aModel)
+    public NumericLiteralValuePresenter(String aId, IModel<KBStatement> aModel)
     {
         super(aId, CompoundPropertyModel.of(aModel));
 

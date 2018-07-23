@@ -173,6 +173,15 @@ public class StatementGroupPanel extends Panel {
             try {
                 properties = kbService.listDomainProperties(groupModel.getObject().getKb(),
                         bean.getInstance().getIdentifier(), true, true);
+                
+                List<KBHandle> parentConceptList = kbService.getParentConceptList(
+                        groupModel.getObject().getKb(), bean.getInstance().getIdentifier(), true);
+                
+                for (KBHandle parent : parentConceptList) {
+                    properties.addAll(kbService.listDomainProperties(groupModel.getObject().getKb(),
+                            parent.getIdentifier(), true, true));
+                }
+
                 // Kept here to avoid fail case scenario for WikiData
                 if (properties.isEmpty()) {
                     properties = kbService.listProperties(groupModel.getObject().getKb(),

@@ -318,18 +318,13 @@ public class StatementEditor extends Panel
             String rangeValue = property.getObject().getRange();
             Optional<KBObject> rangeKBHandle = kbService.
                     readKBIdentifier(kbModel.getObject().getProject(), rangeValue);
-            if (rangeValue == null) {
+            if (rangeKBHandle.isPresent() || rangeValue != null) {
+                valueTypes = valueTypeRegistry.getRangeTypes(rangeValue, rangeKBHandle);
+            }
+            else {
                 valueTypes = valueTypeRegistry.getAllTypes();
             }
-            else if (rangeKBHandle.isPresent()) {
-               
-            }
-            
-            
-            
-            
-            //valueTypes = valueTypeRegistry.getRangeTypes(property.getObject());
-            valueType = new DropDownChoice<>("valueType", valueTypeRegistry.getAllTypes());
+            valueType = new DropDownChoice<>("valueType", valueTypes);
             valueType.setChoiceRenderer(new ChoiceRenderer<>("uiName"));
             valueType.setModel(Model.of(
                     valueTypeRegistry.getValueType(aStatement.getObject(), property.getObject())));
