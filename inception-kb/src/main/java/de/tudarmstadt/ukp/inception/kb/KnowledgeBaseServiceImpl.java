@@ -403,8 +403,9 @@ public class KnowledgeBaseServiceImpl
     {
         return read(kb, (conn) -> {
             ValueFactory vf = conn.getValueFactory();
-            try (RepositoryResult<Statement> stmts = RdfUtils.getStatements(conn,
-                    vf.createIRI(aIdentifier), kb.getTypeIri(), kb.getPropertyTypeIri(), true)) {
+            try (RepositoryResult<Statement> stmts = RdfUtils.getPropertyStatementsSparql(conn,
+                    vf.createIRI(aIdentifier), kb.getTypeIri(), kb.getPropertyTypeIri(), 1000, true,
+                    null)) {
                 if (stmts.hasNext()) {
                     Statement propStmt = stmts.next();
                     KBProperty kbProp = KBProperty.read(conn, propStmt, kb);
@@ -439,7 +440,31 @@ public class KnowledgeBaseServiceImpl
     @Override
     public List<KBHandle> listProperties(KnowledgeBase kb, boolean aAll)
     {
-        return list(kb, kb.getPropertyTypeIri(), true, aAll);
+        return listProperties(kb, true, aAll);
+    }
+
+    @Override
+    public List<KBHandle> listProperties(KnowledgeBase kb, boolean aIncludeInferred, boolean aAll)
+        throws QueryEvaluationException
+    {
+        List<KBHandle> resultList = read(kb, (conn) -> {
+            String QUERY = getPropertyListQuery(kb);
+            TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
+            tupleQuery.setBinding("pTYPE", kb.getTypeIri());
+            tupleQuery.setBinding("oPROPERTY", kb.getPropertyTypeIri());
+            tupleQuery.setBinding("pLABEL", kb.getLabelIri());
+            tupleQuery.setIncludeInferred(aIncludeInferred);
+
+            return evaluateListQuery(tupleQuery, aAll);
+        });
+
+        resultList.sort(Comparator.comparing(KBObject::getUiLabel));
+
+        return resultList;
+    }
+    
+    public String getPropertyListQuery(KnowledgeBase kb) {
+        return SPARQLQueryStore.PROPERTYLIST_QUERY;
     }
 
     @Override
@@ -853,6 +878,7 @@ public class KnowledgeBaseServiceImpl
      * 
      * @return {@link Optional} of {@link KBObject} of type {@link KBConcept} or {@link KBInstance}
      */
+    @Override
     public Optional<KBObject> readKBIdentifier(Project aProject, String aIdentifier)
     {
         for (KnowledgeBase kb : getKnowledgeBases(aProject)) {
