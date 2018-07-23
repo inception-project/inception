@@ -1285,7 +1285,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     }
 
     @Test
-    public void statementsMatchSPO_WithMatchedStatement_ShouldReturnTure()
+    public void statementsMatchSPO_WithMatchedStatement_ShouldReturnTrue()
     {
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         KBConcept concept = buildConcept();
