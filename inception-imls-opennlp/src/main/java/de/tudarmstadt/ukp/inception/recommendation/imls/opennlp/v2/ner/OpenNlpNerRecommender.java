@@ -118,8 +118,7 @@ public class OpenNlpNerRecommender
     }
 
     @Override
-    public double evaluate(RecommenderContext aContext, List<CAS> aCasses,
-                           DataSplitter aDataSplitter)
+    public double evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
     {
         List<NameSample> data = extractNameSamples(aCasses);
         List<NameSample> trainingSet = new ArrayList<>();

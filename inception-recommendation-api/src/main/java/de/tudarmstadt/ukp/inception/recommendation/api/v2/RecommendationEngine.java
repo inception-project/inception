@@ -24,6 +24,5 @@ import org.apache.uima.cas.CAS;
 public interface RecommendationEngine {
     void train(RecommenderContext aContext, List<CAS> aCasses);
     void predict(RecommenderContext aContext, CAS aCas);
-    double evaluate(RecommenderContext aContext, List<CAS> aCas,
-                    DataSplitter aDataSplitter);
+    double evaluate(List<CAS> aCas, DataSplitter aDataSplitter);
 }

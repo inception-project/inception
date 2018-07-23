@@ -451,7 +451,7 @@ public class DL4JSequenceRecommender
     }
 
     @Override
-    public double evaluate(RecommenderContext aContext, List<CAS> aCas, DataSplitter aDataSplitter)
+    public double evaluate(List<CAS> aCas, DataSplitter aDataSplitter)
     {
         // Prepare a map where we store the mapping from labels to numeric label IDs - i.e.
         // which index in the label vector represents which label

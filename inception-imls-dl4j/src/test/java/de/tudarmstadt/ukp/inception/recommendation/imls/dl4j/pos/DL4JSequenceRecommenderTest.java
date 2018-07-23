@@ -269,7 +269,7 @@ public class DL4JSequenceRecommenderTest
         DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildPosRecommender(), traits);
         JCas cas = loadPosDevelopmentData();
 
-        double score = sut.evaluate(context, asList(cas.getCas()), splitStrategy);
+        double score = sut.evaluate(asList(cas.getCas()), splitStrategy);
 
         System.out.printf("Score: %f%n", score);
         
@@ -312,7 +312,7 @@ public class DL4JSequenceRecommenderTest
         DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildNerRecommender(), traits);
         JCas cas = loadNerDevelopmentData();
 
-        double score = sut.evaluate(context, asList(cas.getCas()), splitStrategy);
+        double score = sut.evaluate(asList(cas.getCas()), splitStrategy);
 
         System.out.printf("Score: %f%n", score);
         
@@ -329,7 +329,7 @@ public class DL4JSequenceRecommenderTest
         while (splitStrategy.hasNext()) {
             splitStrategy.next();
             
-            double score = sut.evaluate(context, asList(cas.getCas()), splitStrategy);
+            double score = sut.evaluate(asList(cas.getCas()), splitStrategy);
 
             System.out.printf("Score: %f%n", score);
 
