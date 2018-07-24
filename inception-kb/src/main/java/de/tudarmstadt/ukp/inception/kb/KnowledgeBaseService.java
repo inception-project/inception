@@ -371,11 +371,14 @@ public interface KnowledgeBaseService
 
     Optional<KBObject> readKBIdentifier(Project aProject, String aIdentifier);
 
-    List<KBHandle> getParentConcept(KnowledgeBase aKB, String aIdentifier,
+    List<KBHandle> getParentConceptsForConcept(KnowledgeBase aKB, String aIdentifier,
             boolean aAll)
         throws QueryEvaluationException;
     
     List<KBHandle> getParentConceptList(KnowledgeBase aKB, String aIdentifier, boolean aAll)
             throws QueryEvaluationException;
     
+    List<KBHandle> getConceptForInstance(KnowledgeBase aKB, String aIdentifier,
+            boolean aAll)
+        throws QueryEvaluationException;
 }

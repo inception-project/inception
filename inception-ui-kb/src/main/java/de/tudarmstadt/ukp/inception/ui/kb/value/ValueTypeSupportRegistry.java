@@ -48,7 +48,7 @@ public interface ValueTypeSupportRegistry
         List<ValueType> rangeTypes = new ArrayList<>();
 
         for (ValueTypeSupport valueSupport : getValueSupports()) {
-            if (valueSupport.accepts(range, rangeKbObject.get())) {
+            if (valueSupport.accepts(range, rangeKbObject)) {
                 List<ValueType> types = valueSupport.getSupportedValueTypes();
                 types.stream().forEach(rangeTypes::add);
             }

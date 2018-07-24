@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.ui.kb.value;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.wicket.model.IModel;
 import org.springframework.beans.factory.BeanNameAware;
@@ -42,7 +43,7 @@ public interface ValueTypeSupport
     
     boolean accepts(KBStatement aStatement, KBProperty aProperty);
 
-    boolean accepts(String range, KBObject kbrange);
+    boolean accepts(String range, Optional<KBObject> rangeKbObject);
     
     
     /**

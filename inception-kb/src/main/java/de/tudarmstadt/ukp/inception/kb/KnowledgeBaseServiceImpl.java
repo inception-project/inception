@@ -780,7 +780,7 @@ public class KnowledgeBaseServiceImpl
     }
     
     @Override
-    public List<KBHandle> getParentConcept(KnowledgeBase aKB, String aIdentifier,
+    public List<KBHandle> getParentConceptsForConcept(KnowledgeBase aKB, String aIdentifier,
             boolean aAll)
         throws QueryEvaluationException
     {
@@ -806,22 +806,70 @@ public class KnowledgeBaseServiceImpl
     }
     
     @Override
+    public List<KBHandle> getConceptForInstance(KnowledgeBase aKB, String aIdentifier,
+            boolean aAll)
+        throws QueryEvaluationException
+    {
+        List<KBHandle> resultList = read(aKB, (conn) -> {
+            String QUERY = SPARQLQueryStore.CONCEPT_FOR_INSTANCE;
+            ValueFactory vf = SimpleValueFactory.getInstance();
+            TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
+            tupleQuery.setBinding("pTYPE", aKB.getTypeIri());
+            tupleQuery.setBinding("pInstance", vf.createIRI(aIdentifier));
+            tupleQuery.setBinding("pLABEL", aKB.getLabelIri());
+            tupleQuery.setIncludeInferred(true);
+
+            return evaluateListQuery(tupleQuery, aAll);
+        });
+
+        resultList.sort(Comparator.comparing(KBObject::getUiLabel));
+
+        return resultList;
+    }
+    
+    
+    @Override
     public List<KBHandle> getParentConceptList(KnowledgeBase aKB, String aIdentifier, boolean aAll)
         throws QueryEvaluationException
     {
         List<KBHandle> parentConceptList = new ArrayList<KBHandle>();
-        
         if (aIdentifier != null) {
-            List<KBHandle> parentList = getParentConcept(aKB, aIdentifier, aAll);
-            if (!parentList.isEmpty()) {
-                parentConceptList.add(parentList.get(0));
-                getParentConceptList(aKB, parentList.get(0).getIdentifier(), aAll);
+            Optional<KBObject> identifierKBObj = readKBIdentifier(aKB.getProject(), aIdentifier);
+            if (identifierKBObj.get() instanceof KBConcept) {
+                getParentConceptListforConcept(parentConceptList, aKB, aIdentifier,
+                        aAll);
             }
-            else {
-                return parentConceptList;
+            else if (identifierKBObj.get() instanceof KBInstance) {
+                List<KBHandle> conceptList = getConceptForInstance(aKB, aIdentifier, aAll);
+                parentConceptList.addAll(conceptList);
+                for (KBHandle parent : conceptList) {
+                    getParentConceptListforConcept(parentConceptList, aKB, parent.getIdentifier(),
+                            aAll);
+                }
             }
         }
         return parentConceptList;
+    }
+    
+    // recursive method to get concept tree
+    public List<KBHandle> getParentConceptListforConcept(List<KBHandle> parentConceptList,
+            KnowledgeBase aKB, String aIdentifier, boolean aAll)
+        throws QueryEvaluationException
+    {
+        List<KBHandle> parentList = getParentConceptsForConcept(aKB, aIdentifier, aAll);
+        if (!parentList.isEmpty()) {
+            parentConceptList.addAll(parentList);
+            for (KBHandle parent : parentList) {
+                getParentConceptListforConcept(parentConceptList, aKB, parent.getIdentifier(),
+                        aAll);
+            }
+
+        }
+        else {
+            return parentConceptList;
+        }
+        return parentConceptList;
+
     }
 
     // Need to work on the query for variable inputs like owl:intersectionOf, rdf:rest*/rdf:first

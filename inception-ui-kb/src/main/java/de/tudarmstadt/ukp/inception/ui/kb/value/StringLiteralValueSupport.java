@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.ui.kb.value;
 import static java.util.Arrays.asList;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.wicket.model.IModel;
 import org.cyberborean.rdfbeans.datatype.DefaultDatatypeMapper;
@@ -71,9 +72,9 @@ public class StringLiteralValueSupport
     }
     
     @Override
-    public boolean accepts(String range, KBObject kbrange)
+    public boolean accepts(String range, Optional<KBObject> rangeKbObject)
     {
-        if (kbrange instanceof KBObject) {
+        if (rangeKbObject.isPresent()) {
             return true;
         }
         else if (range.equals(XMLSchema.STRING.stringValue()) ) {

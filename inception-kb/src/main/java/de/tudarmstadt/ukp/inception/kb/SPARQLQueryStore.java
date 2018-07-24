@@ -22,6 +22,7 @@ public class SPARQLQueryStore
     
     public static String aLimit = "1000";
     
+    // Query to get list of property
     public static String PROPERTYLIST_QUERY = String.join("\n"
             , InferencerVariableStore.RDF_PREFIX
             , InferencerVariableStore.OWL_PREFIX
@@ -47,7 +48,7 @@ public class SPARQLQueryStore
     // , "}"
     // , "LIMIT 10000");
     
-    
+  //Query to get property specific domain elements
     public static String PROPERTYLIST_DOMAIN_DEPENDENT = String.join("\n"
             , InferencerVariableStore.RDF_PREFIX
             , InferencerVariableStore.OWL_PREFIX
@@ -60,6 +61,7 @@ public class SPARQLQueryStore
             , "}"
             , "LIMIT 10000");
     
+    //Query to get property specific range elements
     public static String PROPERTY_SPECIFIC_RANGE = String.join("\n"
             , InferencerVariableStore.RDF_PREFIX
             , InferencerVariableStore.OWL_PREFIX
@@ -73,14 +75,32 @@ public class SPARQLQueryStore
             , "LIMIT 10000");
     
   
- 
+    // Query to retrieve super class concept for a concept
     public static String PARENT_CONCEPT = String.join("\n"
             , "SELECT DISTINCT ?s ?l WHERE { "
-            , "     {?oChild ?pSUBCLASS ?s . }" 
+            , "     {?oChild ?pSUBCLASS ?s . }"
+            , "     UNION { ?oChild ?pTYPE ?oCLASS ."
+            , "         ?oChild owl:intersectionOf ?list . "
+            , "         FILTER EXISTS {?list rdf:rest*/rdf:first ?s. } }"
             , "     OPTIONAL { "
             , "         ?s ?pLABEL ?l . "
             , "         FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\")) "
             , "     } "
             , "} ");
+    
+    
+    // Query to retrieve concept for an instance
+    public static String CONCEPT_FOR_INSTANCE = String.join("\n"
+            , "SELECT DISTINCT ?s ?l WHERE {"
+            , "  ?pInstance ?pTYPE ?s ."
+            , "  OPTIONAL {"
+            , "    ?pInstance ?pLABEL ?l ."
+            , "    FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\"))"
+            , "  }"
+            , "}"
+            , "LIMIT 10000");
+    
+    
+    
     
 }
