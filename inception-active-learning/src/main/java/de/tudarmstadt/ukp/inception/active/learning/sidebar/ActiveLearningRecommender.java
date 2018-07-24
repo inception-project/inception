@@ -101,6 +101,7 @@ public class ActiveLearningRecommender
             .collect(Collectors.toList());
     }
 
+//TODO remove the duplicate codes
     public RecommendationDifference generateRecommendationWithLowestDifference(
             LearningRecordService aRecordService, ActiveLearningService aActiveLearningService,
             Date learnSkippedRecommendationTime)

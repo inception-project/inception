@@ -17,8 +17,12 @@
  */
 package de.tudarmstadt.ukp.inception.active.learning;
 
+import java.util.Date;
 import java.util.List;
 
+import de.tudarmstadt.ukp.inception.active.learning.sidebar.RecommendationDifference;
+import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
@@ -36,4 +40,20 @@ public interface ActiveLearningService
 
     List<AnnotationObject> getFlattenedRecommendationsFromRecommendationModel(JCas aJcas,
             AnnotatorState aState, AnnotationLayer aSelectedLayer);
+
+    RecommendationDifference updateRecommendations(LearningRecordService aRecordService,
+        Date learnSkippedRecommendationTime);
+
+    boolean checkRecommendationExist(ActiveLearningService aActiveLearningService,
+        LearningRecord aRecord);
+
+    RecommendationDifference generateRecommendationWithLowestDifference(
+        LearningRecordService aRecordService, ActiveLearningService aActiveLearningService,
+        Date learnSkippedRecommendationTime);
+
+    boolean hasRecommendationWhichIsSkipped(LearningRecordService aRecordService,
+        ActiveLearningService aActiveLearningService);
+
+    void setAnnotatorStateAndLayer(AnnotatorState aAnnotatorState, AnnotationLayer
+        aSelectedLayer);
 }

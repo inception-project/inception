@@ -149,7 +149,6 @@ public class ActiveLearningSidebar
     private boolean hasSkippedRecommendation = false;
     private boolean doExistRecommenders = true;
 
-    private ActiveLearningRecommender activeLearningRecommender;
     private AnnotationObject currentRecommendation;
     private RecommendationDifference currentDifference;
     private AnnotationPage annotationPage;
@@ -254,10 +253,10 @@ public class ActiveLearningSidebar
             sessionActive = true;
             learnSkippedRecommendationTime = null;
 
-            activeLearningRecommender = new ActiveLearningRecommender(annotatorState,
+            activeLearningService.setAnnotatorStateAndLayer(annotatorState,
                     selectedLayer.getObject());
 
-            currentDifference = activeLearningRecommender
+            currentDifference = activeLearningService
                 .generateRecommendationWithLowestDifference(learningRecordService,
                     activeLearningService, learnSkippedRecommendationTime);
             showAndHighlightRecommendationAndJumpToRecommendationLocation(target);
@@ -316,7 +315,7 @@ public class ActiveLearningSidebar
         }
         else if (learnSkippedRecommendationTime == null) {
             hasUnseenRecommendation = false;
-            hasSkippedRecommendation = activeLearningRecommender.hasRecommendationWhichIsSkipped(
+            hasSkippedRecommendation = activeLearningService.hasRecommendationWhichIsSkipped(
                     learningRecordService, activeLearningService);
         }
         else {
@@ -607,6 +606,8 @@ public class ActiveLearningSidebar
 
         moveToNextRecommendation(aTarget);
 
+
+
         LOG.debug("all the annotate action costs {}ms", (System.currentTimeMillis() - timeStart));
     }
 
@@ -634,7 +635,7 @@ public class ActiveLearningSidebar
         aTarget.add((Component) getActionHandler());
 
         annotationPage.actionRefreshDocument(aTarget);
-        currentDifference = activeLearningRecommender
+        currentDifference = activeLearningService
                 .updateRecommendations(learningRecordService, learnSkippedRecommendationTime);
         LOG.debug("Get next Recommendation costs: {}ms.",
             (System.currentTimeMillis() - timerStart));
@@ -709,7 +710,7 @@ public class ActiveLearningSidebar
             highlightTextAndDisplayMessage(aTarget, record);
         }
         // if the suggestion still exists, highlight that suggestion.
-        else if (activeLearningRecommender.checkRecommendationExist(activeLearningService,
+        else if (activeLearningService.checkRecommendationExist(activeLearningService,
                 record)) {
             highlightRecommendation(aTarget, record.getOffsetCharacterBegin(),
                     record.getOffsetCharacterEnd(), record.getTokenText(), record.getAnnotation());
@@ -956,7 +957,7 @@ public class ActiveLearningSidebar
         }
 
         if (currentRecommendation != null && !currentRecommendation.isVisible()) {
-            currentDifference = activeLearningRecommender
+            currentDifference = activeLearningService
                 .generateRecommendationWithLowestDifference(learningRecordService,
                     activeLearningService, learnSkippedRecommendationTime);
             if (currentDifference != null) {
@@ -975,7 +976,7 @@ public class ActiveLearningSidebar
             }
             else if (learnSkippedRecommendationTime == null) {
                 hasUnseenRecommendation = false;
-                hasSkippedRecommendation = activeLearningRecommender
+                hasSkippedRecommendation = activeLearningService
                     .hasRecommendationWhichIsSkipped(learningRecordService, activeLearningService);
             }
             else {
