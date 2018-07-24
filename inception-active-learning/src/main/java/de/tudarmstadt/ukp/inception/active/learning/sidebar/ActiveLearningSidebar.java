@@ -584,7 +584,11 @@ public class ActiveLearningSidebar
             .unwrapFeatureValue(annotationFeature, jCas.getCas(), featureState.value);
         if (selectedValue.equals(currentRecommendation.getLabel())) {
             writeLearningRecordInDatabaseAndEventLog(LearningRecordUserAction.ACCEPTED);
-//            currentRecommendation.setVisible(false);
+            currentRecommendation.setVisible(false);
+            //TODO: "it would be best to implement this in such a way that the
+            // RecommendationService provides some method updateRecommendationVisibility which
+            // the AL can call and which is also called by the RecommendationService itself
+            // during rendering."
         }
         else {
             writeLearningRecordInDatabaseAndEventLog(LearningRecordUserAction.CORRECTED,
