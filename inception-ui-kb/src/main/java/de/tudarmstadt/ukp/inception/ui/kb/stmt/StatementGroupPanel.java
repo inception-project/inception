@@ -169,7 +169,7 @@ public class StatementGroupPanel extends Panel {
 
             }
 
-            List<KBHandle> properties = new ArrayList<>();
+            List<KBHandle> properties = new ArrayList<KBHandle>();
             try {
                 properties = kbService.listDomainProperties(groupModel.getObject().getKb(),
                         bean.getInstance().getIdentifier(), true, true);

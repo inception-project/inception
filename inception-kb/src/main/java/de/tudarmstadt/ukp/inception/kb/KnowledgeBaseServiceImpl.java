@@ -454,12 +454,9 @@ public class KnowledgeBaseServiceImpl
             tupleQuery.setBinding("oPROPERTY", kb.getPropertyTypeIri());
             tupleQuery.setBinding("pLABEL", kb.getLabelIri());
             tupleQuery.setIncludeInferred(aIncludeInferred);
-
             return evaluateListQuery(tupleQuery, aAll);
         });
-
         resultList.sort(Comparator.comparing(KBObject::getUiLabel));
-
         return resultList;
     }
     
@@ -784,11 +781,6 @@ public class KnowledgeBaseServiceImpl
             boolean aAll)
         throws QueryEvaluationException
     {
-        // The query below only returns subclasses which simultaneously declare being a class
-        // via the class property defined in the KB specification. This means that if the KB
-        // is configured to use rdfs:Class but a subclass defines itself using owl:Class, then
-        // this subclass is *not* returned. We do presently *not* support mixed schemes in a
-        // single KB.
         List<KBHandle> resultList = read(aKB, (conn) -> {
             String QUERY = SPARQLQueryStore.PARENT_CONCEPT;
             ValueFactory vf = SimpleValueFactory.getInstance();
@@ -801,7 +793,6 @@ public class KnowledgeBaseServiceImpl
             tupleQuery.setIncludeInferred(false);
             return evaluateListQuery(tupleQuery, aAll);
         });
-        
         return resultList;
     }
     
@@ -821,9 +812,7 @@ public class KnowledgeBaseServiceImpl
 
             return evaluateListQuery(tupleQuery, aAll);
         });
-
         resultList.sort(Comparator.comparing(KBObject::getUiLabel));
-
         return resultList;
     }
     
@@ -863,13 +852,11 @@ public class KnowledgeBaseServiceImpl
                 getParentConceptListforConcept(parentConceptList, aKB, parent.getIdentifier(),
                         aAll);
             }
-
         }
         else {
             return parentConceptList;
         }
         return parentConceptList;
-
     }
 
     // Need to work on the query for variable inputs like owl:intersectionOf, rdf:rest*/rdf:first
