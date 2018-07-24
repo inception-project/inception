@@ -17,10 +17,13 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.api.v2;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 
 public interface RecommendationEngineFactory {
     RecommendationEngine build(Recommender aRecommender);
-    String getEvaluationUnit();
     String getName();
+    String getId();
+    boolean accepts(AnnotationLayer aLayer, AnnotationFeature aFeature);
 }

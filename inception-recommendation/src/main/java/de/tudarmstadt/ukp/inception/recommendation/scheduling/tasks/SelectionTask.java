@@ -86,8 +86,7 @@ public class SelectionTask
                 try {
                     long start = System.currentTimeMillis();
                     
-                    ClassificationTool<?> ct = recommendationService.getTool(recommender,
-                            recommendationService.getMaxSuggestions(user));
+                    ClassificationTool<?> ct = null;
     
                     if (ct == null || !recommender.isEnabled()) {
                         continue;

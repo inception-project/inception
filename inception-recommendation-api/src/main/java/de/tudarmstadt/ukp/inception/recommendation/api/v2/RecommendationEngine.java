@@ -22,7 +22,23 @@ import java.util.List;
 import org.apache.uima.cas.CAS;
 
 public interface RecommendationEngine {
+    /**
+     * Given training data in {@code aCasses}, train a model. In order to save data between
+     * This method must not mutate {@code aCasses} in any way.
+     * @param aContext
+     * @param aCasses
+     */
     void train(RecommenderContext aContext, List<CAS> aCasses);
     void predict(RecommenderContext aContext, CAS aCas);
-    double evaluate(List<CAS> aCas, DataSplitter aDataSplitter);
+
+    /**
+     * Evaluates the performance of a recommender by splitting the data given in {@code aCasses}
+     * in training and test sets by using {@code aDataSplitter}, training on the training śet
+     * and measuring performance on unseen data on the training set. This method must not
+     * mutate {@code aCasses} in any way.
+     * @param aCasses The CASses containing target annotations
+     * @param aDataSplitter The splitter which determines which annotations belong to which set
+     * @return Score measuring the performance of predicting on the test set
+     */
+    double evaluate(List<CAS> aCasses, DataSplitter aDataSplitter);
 }

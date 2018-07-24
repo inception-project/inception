@@ -52,11 +52,11 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.inception.recommendation.api.ClassificationTool;
-import de.tudarmstadt.ukp.inception.recommendation.api.ClassificationToolRegistry;
+import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationEngineFactoryRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderDeletedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.scheduling.RecommendationScheduler;
 
@@ -73,7 +73,8 @@ public class RecommendationServiceImpl
     
     private @Autowired SessionRegistry sessionRegistry;
     private @Autowired UserDao userRepository;
-    private @Autowired ClassificationToolRegistry classificationToolRegistry;
+    private @Autowired
+    RecommendationEngineFactoryRegistry recommendationEngineFactoryRegistry;
     private @Autowired RecommendationScheduler scheduler;
     
     private Map<String, RecommendationUserState> states = new ConcurrentHashMap<>();
@@ -197,12 +198,6 @@ public class RecommendationServiceImpl
         return settings;
     }
 
-    @Override
-    public List<String> getAvailableTools(AnnotationLayer aLayer, AnnotationFeature aFeature)
-    {
-        return classificationToolRegistry.getAvailableTools(aLayer, aFeature);
-    }
-
     @EventListener
     public void afterAnnotationUpdate(AfterAnnotationUpdateEvent aEvent)
     {
@@ -267,9 +262,9 @@ public class RecommendationServiceImpl
     }
     
     @Override
-    public ClassificationTool<?> getTool(Recommender aSettings, int aMaxPredictions)
+    public RecommendationEngineFactory getRecommendationEngineFactory(Recommender aRecommender)
     {
-        return classificationToolRegistry.createClassificationTool(aSettings, aMaxPredictions);
+        return recommendationEngineFactoryRegistry.getFactory(aRecommender.getTool());
     }
     
     @Override

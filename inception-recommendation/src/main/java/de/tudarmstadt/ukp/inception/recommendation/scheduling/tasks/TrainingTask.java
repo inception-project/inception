@@ -82,8 +82,7 @@ public class TrainingTask
                 long startTime = System.currentTimeMillis();
 
                 try {
-                    ClassificationTool<?> classificationTool = recommendationService
-                            .getTool(recommender, recommendationService.getMaxSuggestions(user));
+                    ClassificationTool<?> classificationTool = null;
     
                     Trainer<?> trainer = classificationTool.getTrainer();
     

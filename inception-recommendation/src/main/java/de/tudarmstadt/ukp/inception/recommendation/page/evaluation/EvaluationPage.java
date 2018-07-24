@@ -334,7 +334,7 @@ public class EvaluationPage
             recommender.setTool(classifierId);
             recommender.setFeature(pref.feature.getName());
             
-            ClassificationTool<?> ct = recommendationService.getTool(recommender, 1);
+            ClassificationTool<?> ct = null;
             
             if (ct == null || ct.getLoader() == null) {
                 continue;

@@ -29,6 +29,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommendationEngineFactory;
 
 /**
  * The main contact point of the Recommendation module. This interface can be injected in the wicket
@@ -53,13 +54,7 @@ public interface RecommendationService
      */
     List<AnnotationLayer> listLayersWithEnabledRecommenders(Project aProject);
 
-    /**
-     * @deprecated Use {@link ClassificationToolRegistry#getTools}
-     */
-    @Deprecated
-    List<String> getAvailableTools(AnnotationLayer aLayer, AnnotationFeature aFeature); 
-
-    ClassificationTool<?> getTool(Recommender aSettings, int aMaxPredictions);
+    RecommendationEngineFactory getRecommendationEngineFactory(Recommender aRecommender);
 
     void setActiveRecommenders(User aUser, AnnotationLayer layer,
             List<Recommender> selectedClassificationTools);
