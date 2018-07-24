@@ -78,13 +78,6 @@ public class IRIValueEditor
                 if (values.isEmpty()) {
                     values = kbService.listConcepts(kbModel.getObject(), true);
                 }
-                /*
-                 * SimpleValueFactory vf = SimpleValueFactory.getInstance(); MemValueFactory mvf =
-                 * new MemValueFactory(); List<KBHandle> concepts =
-                 * kbService.listConcepts(kbModel.getObject(), true); List<MemIRI> choices =
-                 * concepts.stream().map(c -> (MemIRI)mvf.createIRI(c.getIdentifier()))
-                 * .collect(Collectors.toList());
-                 */
                 return values;
             }
             

@@ -709,9 +709,9 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         assertThat(savedProperty)
             .as("Check that property has not been updated")
             .hasFieldOrPropertyWithValue("description", "Property description")
-            .hasFieldOrPropertyWithValue("domain", URI.create("https://test.schema.com/#domain"))
+            .hasFieldOrPropertyWithValue("domain", "https://test.schema.com/#domain")
             .hasFieldOrPropertyWithValue("name", "Property name")
-            .hasFieldOrPropertyWithValue("range", URI.create("https://test.schema.com/#range"));
+            .hasFieldOrPropertyWithValue("range", "https://test.schema.com/#range");
     }
 
     @Test
