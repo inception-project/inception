@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
@@ -70,6 +69,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
@@ -176,13 +176,13 @@ public class ActiveLearningSidebar
         user = aModel.getObject().getUser();
 
         //set the user states to the ActiveLearningSidebar fields
-        sessionActive = activeLearningService.getSessionActive(user);
-        hasUnseenRecommendation = activeLearningService.getHasUnseenRecommendation(user);
+        sessionActive = activeLearningService.isSessionActive(user);
+        hasUnseenRecommendation = activeLearningService.isHasUnseenRecommendation(user);
         currentDifference = activeLearningService.getCurrentDifference(user);
         currentRecommendation = activeLearningService.getCurrentRecommendation(user);
         activeLearningRecommender = activeLearningService.getActiveLearningRecommender(user);
-        doExistRecommenders = activeLearningService.getDoExistRecommenders(user);
-        hasSkippedRecommendation = activeLearningService.getHasSkippedRecommendation(user);
+        doExistRecommenders = activeLearningService.isDoExistRecommender(user);
+        hasSkippedRecommendation = activeLearningService.isHasSkippedRecommendation(user);
         selectedLayer = Model.of(activeLearningService.getSelectedLayer(user));
         learnSkippedRecommendationTime = activeLearningService.getLearnSkippedRecommendationTime
             (user);
@@ -213,9 +213,8 @@ public class ActiveLearningSidebar
             else if (!layersWithRecommenders.isEmpty()) {
                 selectedLayer = Model.of(layersWithRecommenders.get(0));
             }
-            // If there are no layers with recommenders, then choose nothing and show no recommenders
-
-            // message.
+            // If there are no layers with recommenders, then choose nothing and show no
+            // recommenders message.
             else {
                 selectedLayer = Model.of();
                 doExistRecommenders = false;
@@ -953,15 +952,17 @@ public class ActiveLearningSidebar
         }
     }
 
-    private void setUserState() {
-        activeLearningService.putSessionActive(user, sessionActive);
-        activeLearningService.putHasUnseenRecommendation(user, hasUnseenRecommendation);
-        activeLearningService.putHasSkippedRecommendation(user, hasSkippedRecommendation);
-        activeLearningService.putDoExistRecommender(user, doExistRecommenders);
-        activeLearningService.putCurrentDifference(user, currentDifference);
-        activeLearningService.putCurrentRecommendation(user, currentRecommendation);
-        activeLearningService.putSelectedLayer(user, selectedLayer.getObject());
-        activeLearningService.putActiveLearningRecommender(user, activeLearningRecommender);
-        activeLearningService.putLearnSkippedRecommendationTime(user, learnSkippedRecommendationTime);
+    private void setUserState()
+    {
+        activeLearningService.setSessionActive(user, sessionActive);
+        activeLearningService.setHasUnseenRecommendation(user, hasUnseenRecommendation);
+        activeLearningService.setHasSkippedRecommendation(user, hasSkippedRecommendation);
+        activeLearningService.setDoExistRecommender(user, doExistRecommenders);
+        activeLearningService.setCurrentDifference(user, currentDifference);
+        activeLearningService.setCurrentRecommendation(user, currentRecommendation);
+        activeLearningService.setSelectedLayer(user, selectedLayer.getObject());
+        activeLearningService.setActiveLearningRecommender(user, activeLearningRecommender);
+        activeLearningService
+            .setLearnSkippedRecommendationTime(user, learnSkippedRecommendationTime);
     }
 }

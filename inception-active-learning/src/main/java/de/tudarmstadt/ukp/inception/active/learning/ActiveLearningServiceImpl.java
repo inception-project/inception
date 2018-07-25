@@ -17,22 +17,26 @@
  */
 package de.tudarmstadt.ukp.inception.active.learning;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.DocumentOpenedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningSessionCompletedEvent;
-import de.tudarmstadt.ukp.inception.active.learning.sidebar.ActiveLearningRecommender;
-import de.tudarmstadt.ukp.inception.active.learning.sidebar.RecommendationDifference;
 import org.apache.uima.jcas.JCas;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.DocumentOpenedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningSessionCompletedEvent;
+import de.tudarmstadt.ukp.inception.active.learning.sidebar.ActiveLearningRecommender;
+import de.tudarmstadt.ukp.inception.active.learning.sidebar.RecommendationDifference;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
@@ -110,7 +114,7 @@ public class ActiveLearningServiceImpl
     }
 
     @Override
-    public void putSessionActive(User aUser, boolean aSesscionActive)
+    public void setSessionActive(User aUser, boolean aSesscionActive)
     {
         ActiveLearningUserState state = getState(aUser.getUsername());
         synchronized (state) {
@@ -119,7 +123,7 @@ public class ActiveLearningServiceImpl
     }
 
     @Override
-    public boolean getSessionActive(User aUser)
+    public boolean isSessionActive(User aUser)
     {
         ActiveLearningUserState state = getState(aUser.getUsername());
         boolean sessionActive;
@@ -130,7 +134,7 @@ public class ActiveLearningServiceImpl
     }
 
     @Override
-    public void putHasUnseenRecommendation(User aUser, boolean aHasUnseenRecommendation)
+    public void setHasUnseenRecommendation(User aUser, boolean aHasUnseenRecommendation)
     {
         ActiveLearningUserState state = getState(aUser.getUsername());
         synchronized (state) {
@@ -139,7 +143,7 @@ public class ActiveLearningServiceImpl
     }
 
     @Override
-    public boolean getHasUnseenRecommendation(User aUser)
+    public boolean isHasUnseenRecommendation(User aUser)
     {
         ActiveLearningUserState state = getState(aUser.getUsername());
         boolean hasUnseenRecommendation;
@@ -150,7 +154,7 @@ public class ActiveLearningServiceImpl
     }
 
     @Override
-    public void putHasSkippedRecommendation(User aUser, boolean aHasSkippedRecommendation)
+    public void setHasSkippedRecommendation(User aUser, boolean aHasSkippedRecommendation)
     {
         ActiveLearningUserState state = getState(aUser.getUsername());
         synchronized (state) {
@@ -159,7 +163,7 @@ public class ActiveLearningServiceImpl
     }
 
     @Override
-    public boolean getHasSkippedRecommendation(User aUser)
+    public boolean isHasSkippedRecommendation(User aUser)
     {
         ActiveLearningUserState state = getState(aUser.getUsername());
         boolean hasSkippedRecommendation;
@@ -170,7 +174,7 @@ public class ActiveLearningServiceImpl
     }
 
     @Override
-    public void putDoExistRecommender(User aUser, boolean aDoExistRecommenders)
+    public void setDoExistRecommender(User aUser, boolean aDoExistRecommenders)
     {
         ActiveLearningUserState state = getState(aUser.getUsername());
         synchronized (state) {
@@ -179,7 +183,7 @@ public class ActiveLearningServiceImpl
     }
 
     @Override
-    public boolean getDoExistRecommenders(User aUser)
+    public boolean isDoExistRecommender(User aUser)
     {
         ActiveLearningUserState state = getState(aUser.getUsername());
         boolean doExistRecommenders;
@@ -190,7 +194,7 @@ public class ActiveLearningServiceImpl
     }
 
     @Override
-    public void putCurrentRecommendation(User aUser, AnnotationObject aCurrentRecommendation)
+    public void setCurrentRecommendation(User aUser, AnnotationObject aCurrentRecommendation)
     {
         ActiveLearningUserState state = getState(aUser.getUsername());
         synchronized (state) {
@@ -210,7 +214,7 @@ public class ActiveLearningServiceImpl
     }
 
     @Override
-    public void putCurrentDifference(User aUser, RecommendationDifference aCurrentDifference)
+    public void setCurrentDifference(User aUser, RecommendationDifference aCurrentDifference)
     {
         ActiveLearningUserState state = getState(aUser.getUsername());
         synchronized (state) {
@@ -230,7 +234,7 @@ public class ActiveLearningServiceImpl
     }
 
     @Override
-    public void putSelectedLayer(User aUser, AnnotationLayer aSelectedLayer)
+    public void setSelectedLayer(User aUser, AnnotationLayer aSelectedLayer)
     {
         ActiveLearningUserState state = getState(aUser.getUsername());
         synchronized (state) {
@@ -250,7 +254,7 @@ public class ActiveLearningServiceImpl
     }
 
     @Override
-    public void putActiveLearningRecommender(User aUser, ActiveLearningRecommender
+    public void setActiveLearningRecommender(User aUser, ActiveLearningRecommender
         aActiveLearningRecommender)
     {
         ActiveLearningUserState state = getState(aUser.getUsername());
@@ -271,7 +275,7 @@ public class ActiveLearningServiceImpl
     }
 
     @Override
-    public void putLearnSkippedRecommendationTime(User aUser, Date
+    public void setLearnSkippedRecommendationTime(User aUser, Date
         aLearnSkippedRecommendationTime)
     {
         ActiveLearningUserState state = getState(aUser.getUsername());
@@ -296,7 +300,7 @@ public class ActiveLearningServiceImpl
         synchronized (states) {
             ActiveLearningUserState state;
             state = states.get(aUsername);
-            if (state ==null) {
+            if (state == null) {
                 state = new ActiveLearningUserState();
                 states.put(aUsername, state);
             }
@@ -325,7 +329,6 @@ public class ActiveLearningServiceImpl
 
     private static class ActiveLearningUserState
     {
-        //TODO: change them to Map for multiple projects
         private boolean sessionActive = false;
         private boolean hasUnseenRecommendation = false;
         private boolean hasSkippedRecommendation = false;

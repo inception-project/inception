@@ -20,14 +20,13 @@ package de.tudarmstadt.ukp.inception.active.learning;
 import java.util.Date;
 import java.util.List;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.inception.active.learning.sidebar.ActiveLearningRecommender;
-import de.tudarmstadt.ukp.inception.active.learning.sidebar.RecommendationDifference;
 import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.active.learning.sidebar.ActiveLearningRecommender;
+import de.tudarmstadt.ukp.inception.active.learning.sidebar.RecommendationDifference;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 
@@ -42,40 +41,40 @@ public interface ActiveLearningService
     List<AnnotationObject> getFlattenedRecommendationsFromRecommendationModel(JCas aJcas,
             AnnotatorState aState, AnnotationLayer aSelectedLayer);
 
-    void putSessionActive(User aUser, boolean aSesscionActive);
+    void setSessionActive(User aUser, boolean aSesscionActive);
 
-    boolean getSessionActive(User aUser);
+    boolean isSessionActive(User aUser);
 
-    void putHasUnseenRecommendation(User aUser, boolean aHasUnseenRecommendation);
+    void setHasUnseenRecommendation(User aUser, boolean aHasUnseenRecommendation);
 
-    boolean getHasUnseenRecommendation(User aUser);
+    boolean isHasUnseenRecommendation(User aUser);
 
-    void putHasSkippedRecommendation(User aUser, boolean aHasSkippedRecommendation);
+    void setHasSkippedRecommendation(User aUser, boolean aHasSkippedRecommendation);
 
-    boolean getHasSkippedRecommendation(User aUser);
+    boolean isHasSkippedRecommendation(User aUser);
 
-    void putDoExistRecommender(User aUser, boolean aDoExistRecommenders);
+    void setDoExistRecommender(User aUser, boolean aDoExistRecommenders);
 
-    boolean getDoExistRecommenders(User aUser);
+    boolean isDoExistRecommender(User aUser);
 
-    void putCurrentRecommendation(User aUser, AnnotationObject aCurrentRecommendation);
+    void setCurrentRecommendation(User aUser, AnnotationObject aCurrentRecommendation);
 
     AnnotationObject getCurrentRecommendation(User aUser);
 
-    void putCurrentDifference(User aUser, RecommendationDifference aCurrentDifference);
+    void setCurrentDifference(User aUser, RecommendationDifference aCurrentDifference);
 
     RecommendationDifference getCurrentDifference(User aUser);
 
-    void putSelectedLayer(User aUser, AnnotationLayer aSelectedLayer);
+    void setSelectedLayer(User aUser, AnnotationLayer aSelectedLayer);
 
     AnnotationLayer getSelectedLayer(User aUser);
 
-    void putActiveLearningRecommender(User aUser,
+    void setActiveLearningRecommender(User aUser,
         ActiveLearningRecommender aActiveLearningRecommender);
 
     ActiveLearningRecommender getActiveLearningRecommender(User aUser);
 
-    void putLearnSkippedRecommendationTime(User aUser, Date
+    void setLearnSkippedRecommendationTime(User aUser, Date
         aLearnSkippedRecommendationTime);
 
     Date getLearnSkippedRecommendationTime(User aUser);
