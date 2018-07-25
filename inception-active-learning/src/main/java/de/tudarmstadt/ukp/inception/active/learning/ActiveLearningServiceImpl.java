@@ -117,140 +117,98 @@ public class ActiveLearningServiceImpl
     public void setSessionActive(User aUser, boolean aSesscionActive)
     {
         ActiveLearningUserState state = getState(aUser.getUsername());
-        synchronized (state) {
-            state.setSessionActive(aSesscionActive);
-        }
+        state.setSessionActive(aSesscionActive);
     }
 
     @Override
     public boolean isSessionActive(User aUser)
     {
         ActiveLearningUserState state = getState(aUser.getUsername());
-        boolean sessionActive;
-        synchronized (state) {
-            sessionActive = state.isSessionActive();
-        }
-        return sessionActive;
+        return state.isSessionActive();
     }
 
     @Override
     public void setHasUnseenRecommendation(User aUser, boolean aHasUnseenRecommendation)
     {
         ActiveLearningUserState state = getState(aUser.getUsername());
-        synchronized (state) {
-            state.setHasUnseenRecommendation(aHasUnseenRecommendation);
-        }
+        state.setHasUnseenRecommendation(aHasUnseenRecommendation);
     }
 
     @Override
     public boolean isHasUnseenRecommendation(User aUser)
     {
         ActiveLearningUserState state = getState(aUser.getUsername());
-        boolean hasUnseenRecommendation;
-        synchronized (state) {
-            hasUnseenRecommendation = state.isHasUnseenRecommendation();
-        }
-        return hasUnseenRecommendation;
+        return state.isHasUnseenRecommendation();
     }
 
     @Override
     public void setHasSkippedRecommendation(User aUser, boolean aHasSkippedRecommendation)
     {
         ActiveLearningUserState state = getState(aUser.getUsername());
-        synchronized (state) {
-            state.setHasSkippedRecommendation(aHasSkippedRecommendation);
-        }
+        state.setHasSkippedRecommendation(aHasSkippedRecommendation);
     }
 
     @Override
     public boolean isHasSkippedRecommendation(User aUser)
     {
         ActiveLearningUserState state = getState(aUser.getUsername());
-        boolean hasSkippedRecommendation;
-        synchronized (state) {
-            hasSkippedRecommendation = state.isHasSkippedRecommendation();
-        }
-        return hasSkippedRecommendation;
+        return state.isHasSkippedRecommendation();
     }
 
     @Override
     public void setDoExistRecommender(User aUser, boolean aDoExistRecommenders)
     {
         ActiveLearningUserState state = getState(aUser.getUsername());
-        synchronized (state) {
-            state.setDoExistRecommenders(aDoExistRecommenders);
-        }
+        state.setDoExistRecommenders(aDoExistRecommenders);
     }
 
     @Override
     public boolean isDoExistRecommender(User aUser)
     {
         ActiveLearningUserState state = getState(aUser.getUsername());
-        boolean doExistRecommenders;
-        synchronized (state) {
-            doExistRecommenders = state.isDoExistRecommenders();
-        }
-        return doExistRecommenders;
+        return state.isDoExistRecommenders();
     }
 
     @Override
     public void setCurrentRecommendation(User aUser, AnnotationObject aCurrentRecommendation)
     {
         ActiveLearningUserState state = getState(aUser.getUsername());
-        synchronized (state) {
-            state.setCurrentRecommendation(aCurrentRecommendation);
-        }
+        state.setCurrentRecommendation(aCurrentRecommendation);
     }
 
     @Override
     public AnnotationObject getCurrentRecommendation(User aUser)
     {
         ActiveLearningUserState state = getState(aUser.getUsername());
-        AnnotationObject currentRecommendation;
-        synchronized (state) {
-            currentRecommendation = state.getCurrentRecommendation();
-        }
-        return currentRecommendation;
+        return state.getCurrentRecommendation();
     }
 
     @Override
     public void setCurrentDifference(User aUser, RecommendationDifference aCurrentDifference)
     {
         ActiveLearningUserState state = getState(aUser.getUsername());
-        synchronized (state) {
-            state.setCurrentDifference(aCurrentDifference);
-        }
+        state.setCurrentDifference(aCurrentDifference);
     }
 
     @Override
     public RecommendationDifference getCurrentDifference(User aUser)
     {
         ActiveLearningUserState state = getState(aUser.getUsername());
-        RecommendationDifference currentDifference;
-        synchronized (state) {
-            currentDifference = state.getCurrentDifference();
-        }
-        return currentDifference;
+        return state.getCurrentDifference();
     }
 
     @Override
     public void setSelectedLayer(User aUser, AnnotationLayer aSelectedLayer)
     {
         ActiveLearningUserState state = getState(aUser.getUsername());
-        synchronized (state) {
-            state.setSelectedLayer(aSelectedLayer);
-        }
+        state.setSelectedLayer(aSelectedLayer);
     }
 
     @Override
     public AnnotationLayer getSelectedLayer(User aUser)
     {
         ActiveLearningUserState state = getState(aUser.getUsername());
-        AnnotationLayer selectedLayer;
-        synchronized (state) {
-            selectedLayer = state.getSelectedLayer();
-        }
-        return selectedLayer;
+        return state.getSelectedLayer();
     }
 
     @Override
@@ -258,20 +216,14 @@ public class ActiveLearningServiceImpl
         aActiveLearningRecommender)
     {
         ActiveLearningUserState state = getState(aUser.getUsername());
-        synchronized (state) {
-            state.setActiveLearningRecommender(aActiveLearningRecommender);
-        }
+        state.setActiveLearningRecommender(aActiveLearningRecommender);
     }
 
     @Override
     public ActiveLearningRecommender getActiveLearningRecommender(User aUser)
     {
         ActiveLearningUserState state = getState(aUser.getUsername());
-        ActiveLearningRecommender activeLearningRecommender;
-        synchronized (state) {
-            activeLearningRecommender = state.getActiveLearningRecommender();
-        }
-        return activeLearningRecommender;
+        return state.getActiveLearningRecommender();
     }
 
     @Override
@@ -279,33 +231,25 @@ public class ActiveLearningServiceImpl
         aLearnSkippedRecommendationTime)
     {
         ActiveLearningUserState state = getState(aUser.getUsername());
-        synchronized (state) {
-            state.setLearnSkippedRecommendationTime(aLearnSkippedRecommendationTime);
-        }
+        state.setLearnSkippedRecommendationTime(aLearnSkippedRecommendationTime);
     }
 
     @Override
     public Date getLearnSkippedRecommendationTime(User aUser)
     {
         ActiveLearningUserState state = getState(aUser.getUsername());
-        Date learnSkippedRecommendationTime;
-        synchronized (state) {
-            learnSkippedRecommendationTime = state.getLearnSkippedRecommendationTime();
-        }
-        return learnSkippedRecommendationTime;
+        return state.getLearnSkippedRecommendationTime();
     }
 
     private ActiveLearningUserState getState(String aUsername)
     {
-        synchronized (states) {
-            ActiveLearningUserState state;
-            state = states.get(aUsername);
-            if (state == null) {
-                state = new ActiveLearningUserState();
-                states.put(aUsername, state);
-            }
-            return state;
+        ActiveLearningUserState state;
+        state = states.get(aUsername);
+        if (state == null) {
+            state = new ActiveLearningUserState();
+            states.put(aUsername, state);
         }
+        return state;
     }
 
     @EventListener
