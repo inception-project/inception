@@ -19,11 +19,17 @@ package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 import java.io.File;
 
+import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
+
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
 import org.junit.Before;
@@ -45,60 +51,84 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 public class DocumentServiceImplTest
 {
     private DocumentService sut;
-    
+
     private @Mock UserDao userRepository;
     private @Mock ImportExportService importExportService;
     private @Mock ProjectService projectService;
     private @Mock ApplicationEventPublisher applicationEventPublisher;
-    
+    private @Mock EntityManager entityManager;
+
     private BackupProperties backupProperties;
     private RepositoryProperties repositoryProperties;
     private CasStorageService storageService;
 
     @Rule
     public TemporaryFolder testFolder = new TemporaryFolder();
-    
+
     @Before
     public void setup() throws Exception
     {
         initMocks(this);
-        
+
         backupProperties = new BackupProperties();
-        
+
         repositoryProperties = new RepositoryProperties();
         repositoryProperties.setPath(testFolder.newFolder());
-        
+
         storageService = new CasStorageServiceImpl(null, repositoryProperties, backupProperties);
-        
+
         sut = new DocumentServiceImpl(repositoryProperties, userRepository, storageService,
-                importExportService, projectService, applicationEventPublisher);
+                importExportService, projectService, applicationEventPublisher, entityManager);
     }
-    
+
     @Test
-    public void testReadOrCreateCas() throws Exception
+    public void thatCreatingOrReadingInitialCasForNewDocumentCreatesNewCas() throws Exception
     {
         when(importExportService.importCasFromFile(any(File.class), any(Project.class),
-                any())).thenReturn(JCasFactory.createText("Test"));        
-        
+                any())).thenReturn(JCasFactory.createText("Test"));
+
         SourceDocument doc = makeSourceDocument(1l, 1l, "test");
-        
+
         JCas cas = sut.createOrReadInitialCas(doc);
-        
+
         assertThat(cas).isNotNull();
         assertThat(cas.getDocumentText()).isEqualTo("Test");
         assertThat(storageService.getCasFile(doc, WebAnnoConst.INITIAL_CAS_PSEUDO_USER)).exists();
+    }
+
+    @Test
+    public void thatReadingNonExistentAnnotationCasCreatesNewCas() throws Exception
+    {
+        SourceDocument sourceDocument = makeSourceDocument(1l, 1l, "test");
+        User user = makeUser();
+        when(userRepository.get(user.getUsername())).thenReturn(user);
+        when(entityManager.createQuery(anyString(), any())).thenThrow(NoResultException.class);
+        when(importExportService.importCasFromFile(any(File.class), any(Project.class),
+                any())).thenReturn(JCasFactory.createText("Test"));
+
+        JCas cas = sut.readAnnotationCas(sourceDocument, user.getUsername());
+
+        assertThat(cas).isNotNull();
+        assertThat(cas.getDocumentText()).isEqualTo("Test");
+        assertThat(storageService.getCasFile(sourceDocument, user.getUsername())).exists();
     }
 
     private SourceDocument makeSourceDocument(long aProjectId, long aDocumentId, String aDocName)
     {
         Project project = new Project();
         project.setId(aProjectId);
-        
+
         SourceDocument doc = new SourceDocument();
         doc.setProject(project);
         doc.setId(aDocumentId);
         doc.setName(aDocName);
-        
+
         return doc;
+    }
+
+    private User makeUser() {
+        User user = new User();
+        user.setUsername("Test user");
+        return user;
     }
 }

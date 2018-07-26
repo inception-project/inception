@@ -340,10 +340,27 @@ public interface DocumentService
      *             if there was an I/O error.
      * @deprecated use {@link #createOrGetAnnotationDocument(SourceDocument, User)} and
      *             {@link #readAnnotationCas(AnnotationDocument)} instead and manually set source
-     *             document status manually if desired.
+     *             document status manually if desired or use
+     *             {@link #readAnnotationCas(SourceDocument, String)}
      */
     @Deprecated
     JCas readAnnotationCas(SourceDocument document, User user)
+        throws IOException;
+
+    /**
+     * Gets the CAS for the given annotation document. Converts it form the source document if
+     * necessary. If necessary, no annotation document exists, one is created. The state of
+     * the source document is not changed.
+     *
+     * @param document
+     *            the source document.
+     * @param userName
+     *            the username.
+     * @return the JCas.
+     * @throws IOException
+     *             if there was an I/O error.
+     */
+    JCas readAnnotationCas(SourceDocument document, String userName)
         throws IOException;
 
     /**
