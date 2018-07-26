@@ -327,7 +327,7 @@ public interface DocumentService
         throws IOException;
     
     /**
-     * Gets the CAS for the given annotation document. Converts it form the source document if
+     * Gets the CAS for the given source document. Converts it form the source document if
      * necessary. If necessary, no annotation document exists, one is created. The source document
      * is set into state {@link SourceDocumentState#ANNOTATION_IN_PROGRESS}.
      *
@@ -348,9 +348,8 @@ public interface DocumentService
         throws IOException;
 
     /**
-     * Gets the CAS for the given annotation document. Converts it form the source document if
-     * necessary. If necessary, no annotation document exists, one is created. The state of
-     * the source document is not changed.
+     * Gets the CAS for the given source document. Converts it form the source document if
+     * necessary. The state of the source document is not changed.
      *
      * @param document
      *            the source document.

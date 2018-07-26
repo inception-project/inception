@@ -112,9 +112,9 @@ public class DocumentServiceImpl
     }
 
     public DocumentServiceImpl(RepositoryProperties aRepositoryProperties, UserDao aUserRepository,
-                               CasStorageService aCasStorageService, ImportExportService aImportExportService,
-                               ProjectService aProjectService, ApplicationEventPublisher aApplicationEventPublisher,
-                               EntityManager aEntityManager)
+            CasStorageService aCasStorageService, ImportExportService aImportExportService,
+            ProjectService aProjectService, ApplicationEventPublisher aApplicationEventPublisher,
+            EntityManager aEntityManager)
     {
         this(aRepositoryProperties, aUserRepository, aCasStorageService,
                 aImportExportService, aProjectService, aApplicationEventPublisher);
@@ -608,11 +608,7 @@ public class DocumentServiceImpl
     {
         User user = userRepository.get(aUserName);
 
-        // Check if there is an annotation document entry in the database. If there is none,
-        // create one.
-        AnnotationDocument annotationDocument = createOrGetAnnotationDocument(aDocument, user);
-
-        // If there is no CAS yet for the annotation document, create one.
+        // If there is no CAS yet for the source document, create one.
         JCas jcas  = casStorageService.readOrCreateCas(aDocument, aUserName, () -> {
             // Convert the source file into an annotation CAS
             return createOrReadInitialCas(aDocument);
