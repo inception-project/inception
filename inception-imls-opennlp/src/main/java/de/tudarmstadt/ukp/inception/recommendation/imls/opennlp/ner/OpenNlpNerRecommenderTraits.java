@@ -15,26 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.v2.ner;
+package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.ner;
 
-import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
-import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommendationEngine;
-import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommendationEngineFactory;
+import opennlp.tools.ml.AbstractTrainer;
+import opennlp.tools.util.TrainingParameters;
 
-public class OpenNlpNerRecommenderFactory implements RecommendationEngineFactory {
+public class OpenNlpNerRecommenderTraits {
 
-    @Override
-    public RecommendationEngine build(Recommender aRecommender) {
-        return null;
-    }
-
-    @Override
-    public String getEvaluationUnit() {
-        return null;
-    }
-
-    @Override
-    public String getName() {
-        return null;
+    public TrainingParameters getParameters() {
+        TrainingParameters parameters = TrainingParameters.defaultParams();
+        parameters.put(AbstractTrainer.VERBOSE_PARAM, "false");
+        return parameters;
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017
+ * Copyright 2018
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  *
@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.ner;
 
-import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 
@@ -27,19 +26,17 @@ import opennlp.tools.util.ObjectStream;
 public class NameSampleStream
     implements ObjectStream<NameSample>, AutoCloseable
 {
-
     private List<NameSample> samples;
     private Iterator<NameSample> iterator;
 
-    public NameSampleStream(List<NameSample> samples)
+    public NameSampleStream(List<NameSample> aSamples)
     {
-        this.samples = samples;
-        iterator = this.samples.iterator();
+        samples = aSamples;
+        iterator = samples.iterator();
     }
 
     @Override
     public NameSample read()
-        throws IOException
     {
         if (iterator != null && iterator.hasNext()) {
             return iterator.next();
@@ -48,15 +45,13 @@ public class NameSampleStream
     }
 
     @Override
-    public void reset()
-        throws IOException, UnsupportedOperationException
+    public void reset() throws UnsupportedOperationException
     {
         iterator = samples.iterator();
     }
 
     @Override
     public void close()
-        throws IOException
     {
         samples = null;
         iterator = null;

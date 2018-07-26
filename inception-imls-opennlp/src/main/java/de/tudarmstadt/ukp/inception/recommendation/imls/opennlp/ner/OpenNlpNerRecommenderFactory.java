@@ -23,13 +23,13 @@ import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.inception.recommendation.api.ClassificationTool;
-import de.tudarmstadt.ukp.inception.recommendation.api.ClassificationToolFactory;
-import opennlp.tools.util.TrainingParameters;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommendationEngine;
+import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommendationEngineFactory;
 
 @Component
-public class OpenNlpNerClassificationToolFactory
-    implements ClassificationToolFactory<TrainingParameters, Void>
+public class OpenNlpNerRecommenderFactory
+    implements RecommendationEngineFactory
 {
     private Logger log = LoggerFactory.getLogger(getClass());
 
@@ -43,20 +43,19 @@ public class OpenNlpNerClassificationToolFactory
     {
         return ID;
     }
-    
+
+    @Override
+    public RecommendationEngine build(Recommender aRecommender) {
+        OpenNlpNerRecommenderTraits traits = new OpenNlpNerRecommenderTraits();
+        return new OpenNlpNerRecommender(aRecommender, traits);
+    }
+
     @Override
     public String getName()
     {
         return "Multi-Token Sequence Classifier (OpenNLP NER)";
     }
 
-    @Override
-    public ClassificationTool<TrainingParameters> createTool(long aRecommenderId, String aFeature,
-        AnnotationLayer aLayer, int aMaxPredictions)
-    {
-        return new OpenNlpNerClassificationTool(aRecommenderId, aFeature, aLayer);
-    }
-    
     @Override
     public boolean accepts(AnnotationLayer aLayer, AnnotationFeature aFeature)
     {

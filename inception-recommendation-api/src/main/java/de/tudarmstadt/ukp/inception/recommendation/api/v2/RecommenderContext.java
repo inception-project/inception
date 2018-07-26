@@ -22,37 +22,22 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class RecommenderContext {
     private final ConcurrentHashMap<String, Object> store;
-    private final String nameSpace;
 
     public RecommenderContext() {
         store = new ConcurrentHashMap<>();
-        nameSpace = "";
-    }
-
-    private RecommenderContext(String aNameSpace, ConcurrentHashMap<String, Object> aStore) {
-        nameSpace = aNameSpace;
-        store = aStore;
-    }
-
-    public RecommenderContext getView(String aNameSpace) {
-        return new RecommenderContext(aNameSpace, store);
     }
 
     @SuppressWarnings("unchecked")
     public <T> T get(Key<T> aKey) {
-        String key = buildKey(aKey.name);
-        if (!store.containsKey(key)) {
-            String message = String.format("Value with key [%s] not found in context!", key);
+        String name = aKey.name;
+        if (!store.containsKey(name)) {
+            String message = String.format("Value with key [%s] not found in context!", name);
             throw new NoSuchElementException(message);
         }
-        return (T) store.get(key);
+        return (T) store.get(name);
     }
     public <T> void put(Key<T> aKey, T aValue) {
-        store.put(buildKey(aKey.name), aValue);
-    }
-
-    private String buildKey(String aKey) {
-        return nameSpace + ":" + aKey;
+        store.put(aKey.name, aValue);
     }
 
     public static class Key<T> {

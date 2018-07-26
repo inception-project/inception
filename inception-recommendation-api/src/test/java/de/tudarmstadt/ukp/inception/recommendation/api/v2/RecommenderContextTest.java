@@ -67,22 +67,4 @@ public class RecommenderContextTest {
     {
         sut.get(KEY);
     }
-
-    @Test
-    public void thatNameSpacingWorks()
-    {
-        String value1 = "INCEpTION";
-        String value2 = "Tyrannotator";
-
-        sut.put(KEY, value1);
-        RecommenderContext namespaced = sut.getView("TestNameSpace");
-        namespaced.put(KEY, value2);
-
-        assertThat(sut.get(KEY)).as("Correct value is returned for global context")
-            .isEqualTo(value1);
-        assertThat(namespaced.get(KEY))
-            .as("Correct value is returned for namespaced context")
-            .isEqualTo(value2);
-    }
-
 }

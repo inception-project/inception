@@ -56,9 +56,8 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.inception.recommendation.api.ClassificationToolFactory;
-import de.tudarmstadt.ukp.inception.recommendation.api.ClassificationToolRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
+import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderFactoryRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderDeletedEvent;
 
@@ -72,7 +71,7 @@ public class RecommenderEditorPanel
     
     private @SpringBean RecommendationService recommendationService;
     private @SpringBean AnnotationSchemaService annotationSchemaService;
-    private @SpringBean ClassificationToolRegistry toolRegistry;
+    private @SpringBean RecommenderFactoryRegistry recommenderRegistry;
     private @SpringBean ApplicationEventPublisherHolder appEventPublisherHolder;
     private @SpringBean UserDao userDao;
 
@@ -147,16 +146,8 @@ public class RecommenderEditorPanel
             protected void onModelChanged()
             {
                 // If the feature type has changed, we need to set up a new traits editor
-                Component newTraits;
-                if (form.getModelObject() != null && getModelObject() != null) {
-                    ClassificationToolFactory<?,?> ctf = toolRegistry
-                            .getTool(getModelObject().getKey());
-                    newTraits = ctf.createTraitsEditor(MID_TRAITS, form.getModel());
-                }
-                else {
-                    newTraits = new EmptyPanel(MID_TRAITS);
-                }
-                
+                // TODO: Add traits
+                Component newTraits = new EmptyPanel(MID_TRAITS);
                 traitsContainer.addOrReplace(newTraits);
             }
         };
@@ -270,9 +261,10 @@ public class RecommenderEditorPanel
             AnnotationLayer layer = recommenderModel.getObject().getLayer();
             AnnotationFeature feature = annotationSchemaService
                     .getFeature(recommenderModel.getObject().getFeature(), layer);
-            return toolRegistry.getTools(layer, feature).stream()
-                    .map(f -> Pair.of(f.getId(), f.getName()))
-                    .collect(Collectors.toList());
+            return recommenderRegistry.getFactories(layer, feature)
+                .stream()
+                .map(f -> Pair.of(f.getId(), f.getName()))
+                .collect(Collectors.toList());
         }
         else {
             return Collections.emptyList();

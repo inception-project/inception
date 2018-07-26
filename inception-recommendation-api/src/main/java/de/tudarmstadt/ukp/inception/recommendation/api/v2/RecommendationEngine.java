@@ -25,8 +25,8 @@ public interface RecommendationEngine {
     /**
      * Given training data in {@code aCasses}, train a model. In order to save data between
      * This method must not mutate {@code aCasses} in any way.
-     * @param aContext
-     * @param aCasses
+     * @param aContext The context of the recommender
+     * @param aCasses The training data
      */
     void train(RecommenderContext aContext, List<CAS> aCasses);
     void predict(RecommenderContext aContext, CAS aCas);
@@ -41,4 +41,9 @@ public interface RecommendationEngine {
      * @return Score measuring the performance of predicting on the test set
      */
     double evaluate(List<CAS> aCasses, DataSplitter aDataSplitter);
+
+    default boolean isEvaluable()
+    {
+        return true;
+    }
 }

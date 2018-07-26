@@ -30,6 +30,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommendationEngineFactory;
+import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommenderContext;
 
 /**
  * The main contact point of the Recommendation module. This interface can be injected in the wicket
@@ -37,7 +38,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommendationEngineFa
  */
 public interface RecommendationService
 {
-    static final String SERVICE_NAME = "recommendationService";
+    String SERVICE_NAME = "recommendationService";
     
     void createOrUpdateRecommender(Recommender aRecommender);
 
@@ -60,11 +61,7 @@ public interface RecommendationService
             List<Recommender> selectedClassificationTools);
     
     List<Recommender> getActiveRecommenders(User aUser, AnnotationLayer aLayer);
-    
-    void storeTrainedModel(User aUser, Recommender aRecommender, Object aTrain);
-    
-    Object getTrainedModel(User aUser, Recommender aRecommender);
-    
+
     void setMaxSuggestions(User aUser, int aMax);
     
     int getMaxSuggestions(User aUser);
@@ -79,4 +76,13 @@ public interface RecommendationService
 
     void setFeatureValue(AnnotationFeature aFeature, Object aPredictedValue,
         SpanAdapter aAdapter, AnnotatorState aState, JCas aJcas, int address);
+
+    /**
+     * Returns the {@code RecommenderContext} for the given recommender if it exists,
+     * else it creates an empty one.
+     * @param aUser The owner of the context
+     * @param aRecommender The recommender to which the desired context belongs
+     * @return The context of the given recommender if ther is one, or an empty one
+     */
+    RecommenderContext getContext(User aUser, Recommender aRecommender);
 }

@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.Session;
@@ -67,10 +68,11 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.app.session.SessionMetaData;
 import de.tudarmstadt.ukp.inception.recommendation.api.AnnotationObjectLoader;
 import de.tudarmstadt.ukp.inception.recommendation.api.ClassificationTool;
-import de.tudarmstadt.ukp.inception.recommendation.api.ClassificationToolRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
+import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderFactoryRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.imls.conf.EvaluationConfiguration;
 import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.imls.core.evaluation.IncrementalEvaluationService;
@@ -89,7 +91,7 @@ public class EvaluationPage
     private @SpringBean UserDao userRepository;
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean RecommendationService recommendationService;
-    private @SpringBean ClassificationToolRegistry classificationToolRegistry;
+    private @SpringBean RecommenderFactoryRegistry recommendationRegistry;
 
     private List<String> trainingIncrementChoices = Arrays.asList(new String[] {
             "fibonacciIncrementStrategy", "equidistantIncrementStrategy"});
@@ -274,8 +276,10 @@ public class EvaluationPage
             return Collections.emptyList();
         }
         
-        List<String> classifierList = classificationToolRegistry
-                .getAvailableTools(selectedLayer.getObject(), preferences.getObject().feature);
+        List<String> classifierList = recommendationRegistry.getAllFactories()
+            .stream()
+            .map(RecommendationEngineFactory::getName)
+            .collect(Collectors.toList());
         if (classifierList == null) {
             return Collections.emptyList();
         }

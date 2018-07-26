@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.v2.ner;
+package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.ner;
 
 import static org.apache.uima.fit.util.CasUtil.getAnnotationType;
 import static org.apache.uima.fit.util.CasUtil.getType;
@@ -45,7 +45,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.v2.DataSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommenderContext.Key;
-import de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.ner.NameSampleStream;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;

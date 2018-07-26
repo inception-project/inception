@@ -76,7 +76,6 @@ public class PredictionTask
         Project project = getProject();
         Predictions model = new Predictions(project, getUser());
         List<AnnotationDocument> documents = documentService.listAnnotationDocuments(project, user);
-        RecommenderContext recommenderContext = new RecommenderContext();
 
         for (AnnotationDocument document : documents) {
             JCas jCas;
@@ -94,13 +93,15 @@ public class PredictionTask
                     continue;
                 }
 
-                List<Recommender> recommenders = recommendationService.getActiveRecommenders(user, layer);
+                List<Recommender> recommenders = recommendationService
+                    .getActiveRecommenders(user, layer);
 
                 for (Recommender recommender : recommenders) {
+                    RecommenderContext context = recommendationService.getContext(user, recommender);
                     RecommendationEngineFactory factory = recommendationService.getRecommendationEngineFactory(recommender);
                     RecommendationEngine recommendationEngine = factory.build(recommender);
 
-                    recommendationEngine.predict(recommenderContext, jCas.getCas());
+                    recommendationEngine.predict(context, jCas.getCas());
 
                     List<AnnotationObject> predictions = extractAnnotations(jCas, document, recommender);
                     model.putPredictions(layer.getId(), predictions);
@@ -131,12 +132,14 @@ public class PredictionTask
             DocumentMetaData dmd = DocumentMetaData.get(aJcas);
             String documentUri = dmd.getDocumentUri();
 
-            TokenObject to = new TokenObject(offset, predictedSpan.getCoveredText(), documentUri, aDocument.getName(), id);
+            TokenObject to = new TokenObject(offset, predictedSpan.getCoveredText(),
+                documentUri, aDocument.getName(), id);
 
             String label = predictedSpan.getLabel();
             String feature = aRecommender.getFeature();
             String name = aRecommender.getName();
-            AnnotationObject ao = new AnnotationObject(to, label, label, -id, feature, name, aRecommender.getId());
+            AnnotationObject ao = new AnnotationObject(to, label, label, -id,
+                feature, name, aRecommender.getId());
 
             result.add(ao);
             id++;
