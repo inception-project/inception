@@ -30,6 +30,9 @@ import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.TimeoutException;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.uima.UIMAException;
 import org.apache.uima.fit.factory.JCasBuilder;
@@ -56,6 +59,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
@@ -119,7 +123,7 @@ import net.jodah.concurrentunit.Waiter;
 @TestPropertySource(locations = "classpath:MtasDocumentIndexTest.properties")
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @DataJpaTest
-@Transactional
+@Transactional(propagation = Propagation.NEVER)
 public class MtasDocumentIndexTest
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -129,8 +133,9 @@ public class MtasDocumentIndexTest
     // test results. If this happens, a largest value could allow the test to pass.
     private final int WAIT_TIME = 3000;
 
-    private @Autowired UserDao userRepository;
+    private @PersistenceContext EntityManager entityManager;
 
+    private @Autowired UserDao userRepository;
     private @Autowired ProjectService projectService;
     private @Autowired DocumentService documentService;
     private @Autowired SearchService searchService;
@@ -143,63 +148,23 @@ public class MtasDocumentIndexTest
         userRepository.create(new User("admin", Role.ROLE_ADMIN));
     }
 
-    private void createProject(Project aProject) throws TimeoutException
+    private void createProject(Project aProject) throws Exception
     {
-        Waiter createProjectWaiter = new Waiter();
-
-        // Start thread to create and initialize project
-        new Thread(() -> {
-            try {
-                projectService.createProject(aProject);
-                annotationSchemaService.initializeProject(aProject);
-            }
-            catch (IOException e) {
-                e.printStackTrace();
-            }
-            createProjectWaiter.assertTrue(true);
-            createProjectWaiter.resume();
-        }).start();
-
-        // Wait for thread to complete
-        createProjectWaiter.await();
+        projectService.createProject(aProject);
+        annotationSchemaService.initializeProject(aProject);
     }
 
     private void uploadDocument(Project aProject, String aFileContent,
             SourceDocument aSourceDocument)
-        throws TimeoutException
+        throws Exception
     {
         InputStream fileStream = new ByteArrayInputStream(
                 aFileContent.getBytes(StandardCharsets.UTF_8));
 
-        Waiter uploadWaiter = new Waiter();
-
-        // Start thread to upload the document
-        new Thread(() -> {
-            try {
-                documentService.uploadSourceDocument(fileStream, aSourceDocument);
-
-                // Wait some time so that the document can be indexed
-                Thread.sleep(WAIT_TIME);
-
-                // Test if the index has been created
-                if (searchService.isIndexValid(aProject)) {
-                    log.info("**************** Index is valid");
-                    uploadWaiter.assertTrue(true);
-                }
-                else {
-                    log.info("**************** Index is NOT valid");
-                    uploadWaiter.assertTrue(false);
-                }
-            }
-            catch (UIMAException | IOException | InterruptedException e) {
-                e.printStackTrace();
-            }
-
-            uploadWaiter.resume();
-        }).start();
-
-        // Wait for thread to complete
-        uploadWaiter.await();
+        documentService.uploadSourceDocument(fileStream, aSourceDocument);
+        while (!searchService.isIndexValid(aProject)) {
+            Thread.sleep(WAIT_TIME);
+        }
     }
 
     private void annotateDocument(Project aProject, User aUser, SourceDocument aSourceDocument)
