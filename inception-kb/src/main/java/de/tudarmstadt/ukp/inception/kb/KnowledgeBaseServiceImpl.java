@@ -386,18 +386,25 @@ public class KnowledgeBaseServiceImpl
     @Override
     public KBHandle createProperty(KnowledgeBase kb, KBProperty aProperty)
     {
-        if (StringUtils.isNotEmpty(aProperty.getIdentifier())) {
+        if (StringUtils.isNotEmpty(aProperty.getIdentifier())
+                && (!aProperty.getIdentifier().equals(kb.getSubclassIri().stringValue()))) {
             throw new IllegalArgumentException("Identifier must be empty on create");
         }
 
         return update(kb, (conn) -> {
-            String identifier = generateIdentifier(conn, kb);
+            String identifier;
+            if (aProperty.getIdentifier().equals(kb.getSubclassIri().stringValue())) {
+                identifier = kb.getSubclassIri().stringValue();
+            }
+            else {
+                identifier = generateIdentifier(conn, kb);    
+            }
             aProperty.setIdentifier(identifier);
             aProperty.write(conn, kb);
             return new KBHandle(identifier, aProperty.getName());
         });
     }
-
+    
     @Override
     public Optional<KBProperty> readProperty(KnowledgeBase kb, String aIdentifier)
     {
