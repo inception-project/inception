@@ -320,7 +320,7 @@ public class WikiDataReification
 
                 while (subStmts.hasNext()) {
                     Statement stmt = subStmts.next();
-                    // if the identifier appears as subject, the statement id is the object of the triple
+                    // if the identifier appears as subject, the stmt id is the object of the triple
                     String stmtId = stmt.getObject().stringValue();
                     conn.remove(getStatementsById(kb, stmtId));
                     conn.remove(getQualifiersById(kb, stmtId));
@@ -329,16 +329,17 @@ public class WikiDataReification
                     conn.remove(stmt);
                 }
 
-                while (objStmts.hasNext()){
+                while (objStmts.hasNext()) {
                     Statement stmt = objStmts.next();
-                    // if the identifier appears as object, the statement id is the subject of the triple
+                    // if the identifier appears as object, the stmt id is the subject of the triple
                     String stmtId = stmt.getSubject().stringValue();
 
-                    if(!stmt.getPredicate().stringValue().contains(PREDICATE_NAMESPACE)){
-                        // if this statement is a qualifier or a non reified triple, delete just this statement
+                    if (!stmt.getPredicate().stringValue().contains(PREDICATE_NAMESPACE)) {
+                        // if this statement is a qualifier or a non reified triple,
+                        // delete just this statement
                         conn.remove(stmt);
                     }
-                    else{
+                    else {
                         // remove all statements and qualifiers with that id
                         conn.remove(getStatementsById(kb, stmtId));
                         conn.remove(getQualifiersById(kb, stmtId));
