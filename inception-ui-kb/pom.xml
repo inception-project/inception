@@ -118,7 +118,12 @@
       <groupId>org.eclipse.rdf4j</groupId>
       <artifactId>rdf4j-repository-api</artifactId>
     </dependency>
-
+    <dependency>
+      <groupId>org.cyberborean</groupId>
+      <artifactId>rdfbeans</artifactId>
+      <version>2.2</version>
+    </dependency>
+    
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-core</artifactId>

@@ -69,4 +69,12 @@ public interface KBObject
             return getIdentifier();
         }
     }
+    
+    default KBHandle toKBHandle() {
+        KBHandle handle = new KBHandle();
+        handle.setIdentifier(getIdentifier());
+        handle.setName(getName());
+        return handle;
+        
+    }
 }
