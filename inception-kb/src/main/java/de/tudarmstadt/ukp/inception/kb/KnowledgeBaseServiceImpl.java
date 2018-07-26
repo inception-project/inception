@@ -390,10 +390,10 @@ public class KnowledgeBaseServiceImpl
                 && (!aProperty.getIdentifier().equals(kb.getSubclassIri().stringValue()))) {
             throw new IllegalArgumentException("Identifier must be empty on create");
         }
-
         return update(kb, (conn) -> {
             String identifier;
-            if (aProperty.getIdentifier().equals(kb.getSubclassIri().stringValue())) {
+            if (aProperty.getIdentifier() != null && aProperty.getIdentifier().toString()
+                    .equals(kb.getSubclassIri().stringValue())) {
                 identifier = kb.getSubclassIri().stringValue();
             }
             else {
