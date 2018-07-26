@@ -40,6 +40,7 @@ import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.eclipse.rdf4j.model.Statement;
 
+import com.googlecode.wicket.jquery.core.Options;
 import com.googlecode.wicket.kendo.ui.widget.tooltip.TooltipBehavior;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
@@ -166,10 +167,17 @@ public abstract class AbstractInfoPanel<T extends KBObject> extends Panel {
                 StatementDetailPreference aDetailPreference) {
             super(id, "viewMode", AbstractInfoPanel.this);
             Label uiLabel = new Label("uiLabel", compoundModel.bind("uiLabel"));
-            uiLabel.add(new TooltipBehavior(compoundModel.bind("identifier")).setOption("autoHide",
-                    false));
             add(uiLabel);
             add(new Label("typeLabel", new ResourceModel(getTypeLabelResourceKey())));
+            Label identifier = new Label("idtext"); 
+            TooltipBehavior tip = new TooltipBehavior();
+            tip.setOption("autoHide", false);
+            tip.setOption("content",
+                    Options.asString((compoundModel.bind("identifier").getObject())));
+            tip.setOption("showOn", Options.asString("click"));
+            identifier.add(tip);
+            add(identifier);
+            
             // button for deleting the KBObject
             LambdaAjaxLink deleteButton = new LambdaAjaxLink("delete",
                     AbstractInfoPanel.this::confirmActionDelete).onConfigure((_this) -> {

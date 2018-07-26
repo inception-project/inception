@@ -20,8 +20,10 @@ package de.tudarmstadt.ukp.inception.kb.reification;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.eclipse.rdf4j.model.BNode;
 import org.eclipse.rdf4j.model.IRI;
@@ -61,7 +63,7 @@ public class NoReification implements ReificationStrategy {
     }
 
     @Override
-    public List<Statement> reify(KnowledgeBase kb, KBStatement aStatement) {
+    public Set<Statement> reify(KnowledgeBase kb, KBStatement aStatement) {
         KBHandle instance = aStatement.getInstance();
         KBHandle property = aStatement.getProperty();
 
@@ -73,7 +75,7 @@ public class NoReification implements ReificationStrategy {
         Value value = mapper.mapStatementValue(aStatement, vf);
 
         Statement statement = vf.createStatement(subject, predicate, value);
-        List<Statement> statements = new ArrayList<>(1);
+        Set<Statement> statements = new HashSet<>(1);
         statements.add(statement);
         return statements;
     }
@@ -118,7 +120,7 @@ public class NoReification implements ReificationStrategy {
                 }
             }
 
-            List<Statement> originalStatements = new ArrayList<>();
+            Set<Statement> originalStatements = new HashSet<>();
             originalStatements.add(stmt);
 
             KBStatement kbStatement = new KBStatement(aInstance, property, value);
@@ -207,7 +209,7 @@ public class NoReification implements ReificationStrategy {
     {
         kbService.update(kb, (conn) -> {
             conn.remove(aStatement.getOriginalStatements());
-            aStatement.setOriginalStatements(Collections.emptyList());
+            aStatement.setOriginalStatements(Collections.emptySet());
             return null;
         });
     }
@@ -219,7 +221,7 @@ public class NoReification implements ReificationStrategy {
             if (!aStatement.isInferred()) {
                 conn.remove(aStatement.getOriginalStatements());
             }
-            List<Statement> statements = reify(kb, aStatement);
+            Set<Statement> statements = reify(kb, aStatement);
             conn.add(statements);
             aStatement.setOriginalStatements(statements);
 

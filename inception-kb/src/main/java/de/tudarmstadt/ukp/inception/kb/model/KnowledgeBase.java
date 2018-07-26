@@ -21,12 +21,17 @@ import static de.tudarmstadt.ukp.inception.kb.reification.Reification.NONE;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
+import javax.persistence.CollectionTable;
 import javax.persistence.Column;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
@@ -43,6 +48,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 import de.tudarmstadt.ukp.inception.kb.reification.Reification;
+import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseMapping;
 
 @Entity
 @Table(name = "knowledgebase",
@@ -140,6 +146,14 @@ public class KnowledgeBase
      */
     @Column(nullable = false)
     private String basePrefix = IriConstants.INCEPTION_NAMESPACE;
+    
+    /**
+     * A List of explicitly defined root concepts that can be used if auto detection takes too long
+     */
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "knowledgebase_root_classes")
+    @Column(name = "name")
+    private List<IRI> explicitlyDefinedRootConcepts = new ArrayList<>();
     
     public String getRepositoryId() {
         return repositoryId;
@@ -296,7 +310,27 @@ public class KnowledgeBase
     {
         basePrefix = aBasePrefix;
     }
+    
+    public List<IRI> getExplicitlyDefinedRootConcepts()
+    {
+        return explicitlyDefinedRootConcepts;
+    }
 
+    public void setExplicitlyDefinedRootConcepts(List<IRI> aExplicitlyDefinedRootConcepts)
+    {
+        explicitlyDefinedRootConcepts = aExplicitlyDefinedRootConcepts;
+    }
+    
+    public void applyMapping(KnowledgeBaseMapping aMapping)
+    {
+        setClassIri(aMapping.getClassIri());
+        setSubclassIri(aMapping.getSubclassIri());
+        setTypeIri(aMapping.getTypeIri());
+        setDescriptionIri(aMapping.getDescriptionIri());
+        setLabelIri(aMapping.getLabelIri());
+        setPropertyTypeIri(aMapping.getPropertyTypeIri());
+    }
+    
     @Override
     public String toString()
     {

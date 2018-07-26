@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.eclipse.rdf4j.model.IRI;
@@ -36,14 +37,26 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
+import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBQualifier;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
+import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 
 public interface KnowledgeBaseService
 {
     String SERVICE_NAME = "knowledgeBaseService";
+    
+    /**
+     * Reads knowledgebase profiles from a YAML file and stores them in a HashMap with the key that
+     * is defined in the file and a corresponding {@link KnowledgeBaseProfile} object as value
+     * 
+     * @return a HashMap with the knowledgebase profiles
+     * @throws IOException
+     *             if an error occurs when reading the file
+     */
+    Map<String, KnowledgeBaseProfile> readKnowledgeBaseProfiles() throws IOException;
 
     void importData(KnowledgeBase kb, String aFilename, InputStream aIS) throws IOException;
 
@@ -187,6 +200,8 @@ public interface KnowledgeBaseService
 
     List<KBHandle> listProperties(KnowledgeBase kb, boolean aAll) throws QueryEvaluationException;
 
+    List<KBHandle> listProperties(KnowledgeBase kb, boolean aIncludeInferred, boolean aAll);
+
     /**
      * Creates a new instance in the given knowledge base. Does nothing if the knowledge base is
      * read only.
@@ -318,7 +333,7 @@ public interface KnowledgeBaseService
 
     List<KBHandle> list(KnowledgeBase kb, IRI aType, boolean aIncludeInferred, boolean
         aAll);
-
+    
     /**
      * Adds a new qualifier in the given knowledge base. Does
      * nothing if the knowledge base is read only.
@@ -353,4 +368,6 @@ public interface KnowledgeBaseService
     List<KBQualifier> listQualifiers(KnowledgeBase kb, KBStatement aStatement);
 
     boolean statementsMatchSPO(KnowledgeBase akb, KBStatement mockStatement);
+
+    Optional<KBObject> readKBIdentifier(Project aProject, String aIdentifier);
 }
