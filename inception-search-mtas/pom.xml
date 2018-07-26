@@ -28,8 +28,8 @@
   <name>INCEpTION - Search - MTAS</name>
   <dependencies>
     <dependency>
-    	<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-    	<artifactId>webanno-api</artifactId>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-api</artifactId>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
@@ -108,8 +108,8 @@
       <artifactId>spring-boot-autoconfigure</artifactId>
     </dependency>
     <dependency>
-    	<groupId>org.springframework</groupId>
-    	<artifactId>spring-beans</artifactId>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-beans</artifactId>
     </dependency>
 
     <dependency>
@@ -155,20 +155,14 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-    	<groupId>net.jodah</groupId>
-    	<artifactId>concurrentunit</artifactId>
-    	<version>0.4.3</version>
-    	<scope>test</scope>
+      <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
+      <artifactId>de.tudarmstadt.ukp.dkpro.core.io.conll-asl</artifactId>
+      <scope>test</scope>
     </dependency>
     <dependency>
-    	<groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
-    	<artifactId>de.tudarmstadt.ukp.dkpro.core.io.conll-asl</artifactId>
-    	<scope>test</scope>
-    </dependency>
-    <dependency>
-    	<groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
-    	<artifactId>de.tudarmstadt.ukp.dkpro.core.io.text-asl</artifactId>
-    	<scope>test</scope>
+      <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
+      <artifactId>de.tudarmstadt.ukp.dkpro.core.io.text-asl</artifactId>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
@@ -181,40 +175,40 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-    	<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-    	<artifactId>webanno-api-dao</artifactId>
-    	<scope>test</scope>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-api-dao</artifactId>
+      <scope>test</scope>
     </dependency>
     <dependency>
-    	<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-    	<artifactId>webanno-curation</artifactId>
-    	<scope>test</scope>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-curation</artifactId>
+      <scope>test</scope>
     </dependency>
     <dependency>
-    	<groupId>de.tudarmstadt.ukp.inception.app</groupId>
-    	<artifactId>inception-kb</artifactId>
-    	<scope>test</scope>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-kb</artifactId>
+      <scope>test</scope>
     </dependency>
     <dependency>
-    	<groupId>org.springframework</groupId>
-    	<artifactId>spring-tx</artifactId>
-    	<scope>test</scope>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-tx</artifactId>
+      <scope>test</scope>
     </dependency>
     <dependency>
-    	<groupId>org.springframework.boot</groupId>
-    	<artifactId>spring-boot-starter-data-jpa</artifactId>
-    	<scope>test</scope>
-    	<exclusions>
-    	  <exclusion>
-    	    <groupId>ch.qos.logback</groupId>
-    	    <artifactId>logback-classic</artifactId>
-    	  </exclusion>
-    	</exclusions>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-data-jpa</artifactId>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>ch.qos.logback</groupId>
+          <artifactId>logback-classic</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
-    	<groupId>org.assertj</groupId>
-    	<artifactId>assertj-core</artifactId>
-    	<scope>test</scope>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <scope>test</scope>
     </dependency>
 
     <!-- Testing END -->

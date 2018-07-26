@@ -28,13 +28,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
-import java.util.concurrent.TimeoutException;
-
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.uima.UIMAException;
 import org.apache.uima.fit.factory.JCasBuilder;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
@@ -108,7 +105,6 @@ import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexFactory;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexRegistry;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexRegistryImpl;
 import de.tudarmstadt.ukp.inception.search.scheduling.IndexScheduler;
-import net.jodah.concurrentunit.Waiter;
 
 /**
  * The Class MtasDocumentIndexTest.
@@ -145,7 +141,9 @@ public class MtasDocumentIndexTest
     @Before
     public void setUp()
     {
-        userRepository.create(new User("admin", Role.ROLE_ADMIN));
+        if (!userRepository.exists("admin")) {
+            userRepository.create(new User("admin", Role.ROLE_ADMIN));
+        }
     }
 
     private void createProject(Project aProject) throws Exception
@@ -168,72 +166,48 @@ public class MtasDocumentIndexTest
     }
 
     private void annotateDocument(Project aProject, User aUser, SourceDocument aSourceDocument)
-        throws TimeoutException
+        throws Exception
     {
-        Waiter annotationWaiter = new Waiter();
+        // Manually build annotated CAS
+        JCas jCas = JCasFactory.createJCas();
+        
+        JCasBuilder builder = new JCasBuilder(jCas);
 
-        // Start thread to annotate the document
-        new Thread(() -> {
-            try {
-                // Manually build annotated CAS
-                JCas jCas = JCasFactory.createJCas();
-                
-                JCasBuilder builder = new JCasBuilder(jCas);
+        builder.add("The", Token.class);
+        builder.add(" ");
+        builder.add("capital", Token.class);
+        builder.add(" ");
+        builder.add("of", Token.class);
+        builder.add(" ");
+        
+        int begin = builder.getPosition();
+        builder.add("Galicia", Token.class);
+        
+        NamedEntity ne = new NamedEntity(jCas, begin, builder.getPosition());
+        ne.setValue("LOC");
+        ne.addToIndexes();
+        
+        builder.add(" ");
+        builder.add("is", Token.class);
+        builder.add(" ");
+        builder.add("Santiago", Token.class);
+        builder.add(" ");
+        builder.add("de", Token.class);
+        builder.add(" ");
+        builder.add("Compostela", Token.class);
+        builder.add(" ");
+        builder.add(".", Token.class);
+        
+        // Create annotation document
+        AnnotationDocument annotationDocument = documentService
+                .createOrGetAnnotationDocument(aSourceDocument, aUser);
 
-                builder.add("The", Token.class);
-                builder.add(" ");
-                builder.add("capital", Token.class);
-                builder.add(" ");
-                builder.add("of", Token.class);
-                builder.add(" ");
-                
-                int begin = builder.getPosition();
-                builder.add("Galicia", Token.class);
-                
-                NamedEntity ne = new NamedEntity(jCas, begin, builder.getPosition());
-                ne.setValue("LOC");
-                ne.addToIndexes();
-                
-                builder.add(" ");
-                builder.add("is", Token.class);
-                builder.add(" ");
-                builder.add("Santiago", Token.class);
-                builder.add(" ");
-                builder.add("de", Token.class);
-                builder.add(" ");
-                builder.add("Compostela", Token.class);
-                builder.add(" ");
-                builder.add(".", Token.class);
-                
-                // Create annotation document
-                AnnotationDocument annotationDocument = documentService
-                        .createOrGetAnnotationDocument(aSourceDocument, aUser);
+        // Write annotated CAS to annotated document
+        documentService.writeAnnotationCas(jCas, annotationDocument, false);
 
-                // Write annotated CAS to annotated document
-                documentService.writeAnnotationCas(jCas, annotationDocument, false);
-
-                // Wait some time so that the document can be indexed
-                Thread.sleep(WAIT_TIME);
-
-                // Test if the index has been created
-                if (searchService.isIndexValid(aProject)) {
-                    log.info("**************** Index is valid");
-                    annotationWaiter.assertTrue(true);
-                }
-                else {
-                    log.info("**************** Index is NOT valid");
-                    annotationWaiter.assertTrue(false);
-                }
-            }
-            catch (IOException | UIMAException | InterruptedException e) {
-                e.printStackTrace();
-            }
-
-            annotationWaiter.resume();
-        }).start();
-
-        // Wait for thread to complete
-        annotationWaiter.await();
+        while (!searchService.isIndexValid(aProject)) {
+            Thread.sleep(WAIT_TIME);
+        }
     }
 
     @Test
