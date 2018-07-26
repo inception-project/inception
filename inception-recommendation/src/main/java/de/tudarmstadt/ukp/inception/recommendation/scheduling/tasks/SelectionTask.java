@@ -41,6 +41,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.v2.PercentageBasedSplitte
 import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderEvaluationResultEvent;
+import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.ExtendedResult;
 
 /**
  * This task is run every 60 seconds, if the document has changed. It evaluates all available
@@ -127,9 +128,11 @@ public class SelectionTask
                                 threshold);
                     }
 
+                    ExtendedResult result = new ExtendedResult(new ArrayList<>(), new ArrayList<>());
+
                     // TODO: Change to new event, add listeners
                     appEventPublisher.publishEvent(new RecommenderEvaluationResultEvent(this,
-                            recommender, user.getUsername(), null,
+                            recommender, user.getUsername(), result,
                             System.currentTimeMillis() - start));
                 }
                 catch (Throwable e) {

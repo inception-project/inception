@@ -173,7 +173,9 @@ public class OpenNlpNerRecommender
                 AnnotationFS sentence = e.getKey();
                 Collection<AnnotationFS> tokens = e.getValue();
                 NameSample nameSample = createNameSample(cas, sentence, tokens);
-                nameSamples.add(nameSample);
+                if (nameSample.getNames().length > 0) {
+                    nameSamples.add(nameSample);
+                }
             }
         }
         return nameSamples;
@@ -196,7 +198,7 @@ public class OpenNlpNerRecommender
         int idx = 0;
         for (AnnotationFS t : aTokens) {
             idxTokenOffset.put(t.getBegin(), t);
-            idxTokenOffset.put(t.getEnd() - 1, t);
+            idxTokenOffset.put(t.getEnd(), t);
             idxToken.put(t, idx);
             idx++;
         }
@@ -210,9 +212,9 @@ public class OpenNlpNerRecommender
         for (int i = 0; i < numberOfAnnotations; i++) {
             AnnotationFS annotation = annotations.get(i);
             int begin = idxToken.get(idxTokenOffset.get(annotation.getBegin()));
-            int end = idxToken.get(idxTokenOffset.get(annotation.getEnd() - 1));
+            int end = idxToken.get(idxTokenOffset.get(annotation.getEnd()));
             String label = annotation.getFeatureValueAsString(feature);
-            result[i] = new Span(begin, end, label);
+            result[i] = new Span(begin, end + 1, label);
         }
         return result;
     }
