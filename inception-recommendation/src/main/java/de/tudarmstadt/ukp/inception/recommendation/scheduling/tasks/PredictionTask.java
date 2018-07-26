@@ -97,13 +97,16 @@ public class PredictionTask
                     .getActiveRecommenders(user, layer);
 
                 for (Recommender recommender : recommenders) {
-                    RecommenderContext context = recommendationService.getContext(user, recommender);
-                    RecommendationEngineFactory factory = recommendationService.getRecommendationEngineFactory(recommender);
+                    RecommenderContext context = recommendationService.getContext(user,
+                            recommender);
+                    RecommendationEngineFactory factory = recommendationService
+                            .getRecommendationEngineFactory(recommender);
                     RecommendationEngine recommendationEngine = factory.build(recommender);
 
                     recommendationEngine.predict(context, jCas.getCas());
 
-                    List<AnnotationObject> predictions = extractAnnotations(jCas, document, recommender);
+                    List<AnnotationObject> predictions = extractAnnotations(jCas, document,
+                            recommender);
                     model.putPredictions(layer.getId(), predictions);
 
                     // In order to just extract the annotations for a single recommender, each
@@ -116,7 +119,8 @@ public class PredictionTask
         recommendationService.putIncomingPredictions(getUser(), project, model);
     }
 
-    private List<AnnotationObject> extractAnnotations(JCas aJcas, AnnotationDocument aDocument, Recommender aRecommender)
+    private List<AnnotationObject> extractAnnotations(JCas aJcas, AnnotationDocument aDocument,
+            Recommender aRecommender)
     {
         List<AnnotationObject> result = new ArrayList<>();
         int id = 0;

@@ -128,7 +128,8 @@ public class SelectionTask
                                 threshold);
                     }
 
-                    ExtendedResult result = new ExtendedResult(new ArrayList<>(), new ArrayList<>());
+                    ExtendedResult result = new ExtendedResult(new ArrayList<>(),
+                            new ArrayList<>());
 
                     // TODO: Change to new event, add listeners
                     appEventPublisher.publishEvent(new RecommenderEvaluationResultEvent(this,
