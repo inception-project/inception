@@ -17,13 +17,16 @@
  */
 package de.tudarmstadt.ukp.inception.kb;
 
+import org.eclipse.rdf4j.model.vocabulary.OWL;
+import org.eclipse.rdf4j.model.vocabulary.RDFS;
+
 public class SPARQLQueryStore
 {
     
     public static String aLimit = "1000";
     public static String PROPERTYLIST_QUERY = String.join("\n"
-            , InferencerVariableStore.PREFIX_RDFS
-            , InferencerVariableStore.PREFIX_OWL
+            , "PREFIX rdfs: <",RDFS.NAMESPACE,">"
+            , "PREFIX rdfs: <",OWL.NAMESPACE,">"
             , "SELECT DISTINCT ?s ?l WHERE {"
             , "  { ?s ?pTYPE ?oPROPERTY .}"
             , "  UNION "

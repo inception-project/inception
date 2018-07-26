@@ -28,6 +28,9 @@ import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.Value;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.vocabulary.OWL;
+import org.eclipse.rdf4j.model.vocabulary.RDF;
+import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.eclipse.rdf4j.query.BindingSet;
 import org.eclipse.rdf4j.query.QueryEvaluationException;
 import org.eclipse.rdf4j.query.QueryLanguage;
@@ -38,7 +41,6 @@ import org.eclipse.rdf4j.repository.RepositoryException;
 import org.eclipse.rdf4j.repository.RepositoryResult;
 import org.eclipse.rdf4j.rio.ntriples.NTriplesUtil;
 
-import de.tudarmstadt.ukp.inception.kb.InferencerVariableStore;
 import de.tudarmstadt.ukp.inception.kb.IriConstants;
 
 public class RdfUtils
@@ -161,9 +163,9 @@ public class RdfUtils
                 .escapeString(language) + "\")).";
         }
         String QUERY = String.join("\n",
-            InferencerVariableStore.PREFIX_OWL,
-            InferencerVariableStore.PREFIX_RDF,
-            InferencerVariableStore.PREFIX_RDFS,
+            "PREFIX rdfs: <",RDFS.NAMESPACE,">",
+            "PREFIX rdfs: <",OWL.NAMESPACE,">",    
+            "PREFIX rdfs: <",RDF.NAMESPACE,">", 
             "SELECT * WHERE { ",
             " {?s ?p ?o .}",
             " UNION ",
