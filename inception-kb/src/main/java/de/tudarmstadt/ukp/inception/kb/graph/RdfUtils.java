@@ -163,9 +163,9 @@ public class RdfUtils
                 .escapeString(language) + "\")).";
         }
         String QUERY = String.join("\n",
-            "PREFIX rdfs: <",RDFS.NAMESPACE,">",
-            "PREFIX rdfs: <",OWL.NAMESPACE,">",    
-            "PREFIX rdfs: <",RDF.NAMESPACE,">", 
+                "PREFIX rdfs: <" + RDFS.NAMESPACE + ">",
+                "PREFIX owl: <" + OWL.NAMESPACE + ">",
+                "PREFIX rdf: <" + RDF.NAMESPACE + ">", 
             "SELECT * WHERE { ",
             " {?s ?p ?o .}",
             " UNION ",

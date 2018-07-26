@@ -25,8 +25,8 @@ public class SPARQLQueryStore
     
     public static String aLimit = "1000";
     public static String PROPERTYLIST_QUERY = String.join("\n"
-            , "PREFIX rdfs: <",RDFS.NAMESPACE,">"
-            , "PREFIX rdfs: <",OWL.NAMESPACE,">"
+            , "PREFIX rdfs: <" + RDFS.NAMESPACE + ">"
+            , "PREFIX owl: <" + OWL.NAMESPACE + ">"
             , "SELECT DISTINCT ?s ?l WHERE {"
             , "  { ?s ?pTYPE ?oPROPERTY .}"
             , "  UNION "
