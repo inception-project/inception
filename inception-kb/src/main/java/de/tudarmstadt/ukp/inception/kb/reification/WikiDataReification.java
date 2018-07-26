@@ -37,6 +37,7 @@ import org.eclipse.rdf4j.query.QueryLanguage;
 import org.eclipse.rdf4j.query.TupleQuery;
 import org.eclipse.rdf4j.query.TupleQueryResult;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
+import org.eclipse.rdf4j.repository.RepositoryResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -310,8 +311,43 @@ public class WikiDataReification
 
     private void delete(KnowledgeBase kb, String aIdentifier)
     {
-        // TODO: implement cascading deletion
-        throw new UnsupportedOperationException();
+        kbService.update(kb, (conn) -> {
+            ValueFactory vf = conn.getValueFactory();
+            IRI iri = vf.createIRI(aIdentifier);
+            try (RepositoryResult<Statement> subStmts = conn.getStatements(iri, null, null);
+                 RepositoryResult<Statement> predStmts = conn.getStatements(null, iri, null);
+                 RepositoryResult<Statement> objStmts = conn.getStatements(null, null, iri)) {
+
+                while (subStmts.hasNext()) {
+                    Statement stmt = subStmts.next();
+                    // if the identifier appears as subject, the statement id is the object of the triple
+                    String stmtId = stmt.getObject().stringValue();
+                    conn.remove(getStatementsById(kb, stmtId));
+                    conn.remove(getQualifiersById(kb, stmtId));
+
+                    //just remove the stmt in case it is a non reified triple
+                    conn.remove(stmt);
+                }
+
+                while (objStmts.hasNext()){
+                    Statement stmt = objStmts.next();
+                    // if the identifier appears as object, the statement id is the subject of the triple
+                    String stmtId = stmt.getSubject().stringValue();
+
+                    if(!stmt.getPredicate().stringValue().contains(PREDICATE_NAMESPACE)){
+                        // if this statement is a qualifier or a non reified triple, delete just this statement
+                        conn.remove(stmt);
+                    }
+                    else{
+                        // remove all statements and qualifiers with that id
+                        conn.remove(getStatementsById(kb, stmtId));
+                        conn.remove(getQualifiersById(kb, stmtId));
+                    }
+                }
+
+                return null;
+            }
+        });
     }
 
     @Override
