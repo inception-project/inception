@@ -28,8 +28,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.uima.fit.factory.JCasBuilder;
@@ -129,14 +127,11 @@ public class MtasDocumentIndexTest
     // test results. If this happens, a largest value could allow the test to pass.
     private final int WAIT_TIME = 3000;
 
-    private @PersistenceContext EntityManager entityManager;
-
     private @Autowired UserDao userRepository;
     private @Autowired ProjectService projectService;
     private @Autowired DocumentService documentService;
     private @Autowired SearchService searchService;
     private @Autowired AnnotationSchemaService annotationSchemaService;
-    private @Autowired ImportExportService importExportService;
 
     @Before
     public void setUp()
