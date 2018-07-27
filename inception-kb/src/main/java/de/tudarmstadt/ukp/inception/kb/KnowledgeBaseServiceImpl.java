@@ -156,9 +156,15 @@ public class KnowledgeBaseServiceImpl
         kb.setRepositoryId(repositoryId);
 
         repoManager.addRepositoryConfig(new RepositoryConfig(repositoryId, cfg));
+        if (kb.getType() == RepositoryType.LOCAL) {
+           
+        }
         entityManager.persist(kb);
     }
 
+    
+    
+    
     @Transactional
     @Override
     public boolean knowledgeBaseExists(Project project, String kbName)
@@ -399,6 +405,17 @@ public class KnowledgeBaseServiceImpl
             else {
                 identifier = generateIdentifier(conn, kb);    
             }
+            aProperty.setIdentifier(identifier);
+            aProperty.write(conn, kb);
+            return new KBHandle(identifier, aProperty.getName());
+        });
+    }
+    
+    public KBHandle createBaseProperties(KnowledgeBase kb, KBProperty aProperty)
+    {
+        return update(kb, (conn) -> {
+            String identifier;
+            identifier = kb.getSubclassIri().stringValue();
             aProperty.setIdentifier(identifier);
             aProperty.write(conn, kb);
             return new KBHandle(identifier, aProperty.getName());
