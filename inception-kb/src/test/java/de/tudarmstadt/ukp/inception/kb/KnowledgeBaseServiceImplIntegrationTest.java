@@ -291,9 +291,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     @Test
     public void empty_WithEmptyKnowledgeBase_ShouldReturnTrue() {
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
-
         boolean isEmpty = sut.isEmpty(kb);
-
         assertThat(isEmpty)
             .as("Check that knowledge base is empty")
             .isTrue();
@@ -309,6 +307,14 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         assertThat(isEmpty)
             .as("Check that knowledge base is not empty")
             .isFalse();
+    }
+    
+    @Test
+    public void nonempty_WithEmptyKnowledgeBase_ShouldReturnTrue() {
+        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
+        sut.defineBaseProperties(kb);
+        List<KBHandle> listProperties = sut.listProperties(kb, true);
+        assertEquals(listProperties.size(),3);
     }
 
     @Test

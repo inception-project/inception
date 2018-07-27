@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.inception.ui.kb;
 
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Optional;
 
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -129,20 +128,10 @@ public class SubclassCreationDialog
 
                 // get subclassof property
                 KnowledgeBase kb = kbModel.getObject();
-                Optional<KBProperty> propertyContainer = kbService.readProperty(kb,
-                        kb.getSubclassIri().stringValue());
-                KBHandle propertyHandle;
-                if (propertyContainer.isPresent()) {
-                    propertyHandle = new KBHandle(propertyContainer.get().getIdentifier(),
-                            propertyContainer.get().getName(),
-                            propertyContainer.get().getDescription());
-                }
-                else {
-                    KBProperty property = new KBProperty();
-                    property.setIdentifier(kb.getSubclassIri().stringValue());
-                    property.setName(kb.getSubclassIri().getLocalName());
-                    propertyHandle = kbService.createProperty(kb, property);
-                }
+                KBProperty property = kbService.readProperty(kb, kb.getSubclassIri().stringValue())
+                        .get();
+                KBHandle propertyHandle = new KBHandle(property.getIdentifier(), property.getName(),
+                        property.getDescription());
 
                 // check whether the subclass name already exists for this superclass
                 List<KBHandle> existingSubclasses = kbService.listChildConcepts(kb,

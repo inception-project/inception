@@ -154,14 +154,26 @@ public class KnowledgeBaseServiceImpl
         String baseName = "pid-" + Long.toString(kb.getProject().getId()) + "-kbid-";
         String repositoryId = repoManager.getNewRepositoryID(baseName);
         kb.setRepositoryId(repositoryId);
-
         repoManager.addRepositoryConfig(new RepositoryConfig(repositoryId, cfg));
-        if (kb.getType() == RepositoryType.LOCAL) {
-           
-        }
         entityManager.persist(kb);
     }
 
+    @Override
+    public void defineBaseProperties(KnowledgeBase kb) 
+    {
+     // KB will initialize base properties with base IRI schema properties defined by user
+        if (kb.getType() == RepositoryType.LOCAL && !kb.isReadOnly()) {
+            KBProperty property = new KBProperty(kb.getSubclassIri().getLocalName());
+            property.setIdentifier(kb.getSubclassIri().stringValue());
+            createBaseProperty(kb, property);
+            property = new KBProperty(kb.getLabelIri().getLocalName());
+            property.setIdentifier(kb.getLabelIri().stringValue());
+            createBaseProperty(kb, property);
+            property = new KBProperty(kb.getDescriptionIri().getLocalName());
+            property.setIdentifier(kb.getDescriptionIri().stringValue());
+            createBaseProperty(kb, property);
+        }
+    }
     
     
     
@@ -392,33 +404,24 @@ public class KnowledgeBaseServiceImpl
     @Override
     public KBHandle createProperty(KnowledgeBase kb, KBProperty aProperty)
     {
-        if (StringUtils.isNotEmpty(aProperty.getIdentifier())
-                && (!aProperty.getIdentifier().equals(kb.getSubclassIri().stringValue()))) {
+        if (StringUtils.isNotEmpty(aProperty.getIdentifier())) {
             throw new IllegalArgumentException("Identifier must be empty on create");
         }
+
         return update(kb, (conn) -> {
-            String identifier;
-            if (aProperty.getIdentifier() != null && aProperty.getIdentifier().toString()
-                    .equals(kb.getSubclassIri().stringValue())) {
-                identifier = kb.getSubclassIri().stringValue();
-            }
-            else {
-                identifier = generateIdentifier(conn, kb);    
-            }
+            String identifier = generateIdentifier(conn, kb);
             aProperty.setIdentifier(identifier);
             aProperty.write(conn, kb);
             return new KBHandle(identifier, aProperty.getName());
         });
     }
     
-    public KBHandle createBaseProperties(KnowledgeBase kb, KBProperty aProperty)
+    // Method to create and define base property
+    public KBHandle createBaseProperty(KnowledgeBase kb, KBProperty aProperty)
     {
         return update(kb, (conn) -> {
-            String identifier;
-            identifier = kb.getSubclassIri().stringValue();
-            aProperty.setIdentifier(identifier);
             aProperty.write(conn, kb);
-            return new KBHandle(identifier, aProperty.getName());
+            return new KBHandle(aProperty.getIdentifier(), aProperty.getName());
         });
     }
     
@@ -478,7 +481,6 @@ public class KnowledgeBaseServiceImpl
             tupleQuery.setBinding("oPROPERTY", kb.getPropertyTypeIri());
             tupleQuery.setBinding("pLABEL", kb.getLabelIri());
             tupleQuery.setIncludeInferred(aIncludeInferred);
-
             return evaluateListQuery(tupleQuery, aAll);
         });
 
@@ -832,6 +834,8 @@ public class KnowledgeBaseServiceImpl
         }
         return handles;
     }
+    
+    
 
     private ReificationStrategy getReificationStrategy(KnowledgeBase kb)
     {
