@@ -38,12 +38,16 @@ import org.eclipse.rdf4j.query.QueryLanguage;
 import org.eclipse.rdf4j.query.TupleQuery;
 import org.eclipse.rdf4j.query.TupleQueryResult;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
+import org.eclipse.rdf4j.repository.RepositoryResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.inception.kb.InceptionValueMapper;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
+import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
+import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
+import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBQualifier;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
@@ -164,6 +168,40 @@ public class NoReification implements ReificationStrategy {
             }
             return statements;
         }
+    }
+    
+    @Override
+    public void deleteInstance(KnowledgeBase kb, KBInstance aInstance)
+    {
+        delete(kb, aInstance.getIdentifier());
+    }
+
+    @Override
+    public void deleteProperty(KnowledgeBase kb, KBProperty aProperty)
+    {
+        delete(kb, aProperty.getIdentifier());
+    }
+
+    @Override
+    public void deleteConcept(KnowledgeBase kb, KBConcept aConcept)
+    {
+        delete(kb, aConcept.getIdentifier());
+    }
+
+    private void delete(KnowledgeBase kb, String aIdentifier)
+    {
+        kbService.update(kb, (conn) -> {
+            ValueFactory vf = conn.getValueFactory();
+            IRI iri = vf.createIRI(aIdentifier);
+            try (RepositoryResult<Statement> subStmts = conn.getStatements(iri, null, null);
+                    RepositoryResult<Statement> predStmts = conn.getStatements(null, iri, null);
+                    RepositoryResult<Statement> objStmts = conn.getStatements(null, null, iri)) {
+                conn.remove(subStmts);
+                conn.remove(predStmts);
+                conn.remove(objStmts);
+            }
+            return null;
+        });
     }
 
     @Override
