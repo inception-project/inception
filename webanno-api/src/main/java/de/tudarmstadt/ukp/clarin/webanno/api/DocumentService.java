@@ -375,16 +375,35 @@ public interface DocumentService
         throws IOException;
 
     /**
-     * List all the {@link AnnotationDocument}s, if available for a given {@link SourceDocument} in
-     * the {@link Project}. Returns list of {@link AnnotationDocument}s for all {@link User}s in the
-     * {@link Project} that has already annotated the {@link SourceDocument}
-     *
+     * List all the {@link AnnotationDocument annotation documents} for a given 
+     * {@link SourceDocument}. 
+     * <p>
+     * Note that this method does may not return an {@link AnnotationDocument annotation document}
+     * for every user in the project because they are created lazily when a user opens a document
+     * for annotation the first time.
+     * 
      * @param document
      *            the {@link SourceDocument}
      * @return {@link AnnotationDocument}
+     * @see #createOrGetAnnotationDocument(SourceDocument, User)
      */
     List<AnnotationDocument> listAnnotationDocuments(SourceDocument document);
 
+    /**
+     * List all the {@link AnnotationDocument annotation documents} from a project for a given
+     * user. 
+     * <p>
+     * Note that this method does may not return an {@link AnnotationDocument annotation document}
+     * for every user in the project because they are created lazily when a user opens a document
+     * for annotation the first time.
+     * 
+     * @param project
+     *            the {@link SourceDocument}
+     * @param user
+     *            the {@link User}
+     * @return {@link AnnotationDocument}
+     * @see #createOrGetAnnotationDocument(SourceDocument, User)
+     */
     List<AnnotationDocument> listAnnotationDocuments(Project project, User user);
 
     /**

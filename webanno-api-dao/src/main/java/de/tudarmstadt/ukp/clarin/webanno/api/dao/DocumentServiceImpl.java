@@ -606,8 +606,6 @@ public class DocumentServiceImpl
     public JCas readAnnotationCas(SourceDocument aDocument, String aUserName)
             throws IOException
     {
-        User user = userRepository.get(aUserName);
-
         // If there is no CAS yet for the source document, create one.
         JCas jcas  = casStorageService.readOrCreateCas(aDocument, aUserName, () -> {
             // Convert the source file into an annotation CAS
