@@ -327,7 +327,7 @@ public interface DocumentService
         throws IOException;
     
     /**
-     * Gets the CAS for the given annotation document. Converts it form the source document if
+     * Gets the CAS for the given source document. Converts it form the source document if
      * necessary. If necessary, no annotation document exists, one is created. The source document
      * is set into state {@link SourceDocumentState#ANNOTATION_IN_PROGRESS}.
      *
@@ -340,10 +340,26 @@ public interface DocumentService
      *             if there was an I/O error.
      * @deprecated use {@link #createOrGetAnnotationDocument(SourceDocument, User)} and
      *             {@link #readAnnotationCas(AnnotationDocument)} instead and manually set source
-     *             document status manually if desired.
+     *             document status manually if desired or use
+     *             {@link #readAnnotationCas(SourceDocument, String)}
      */
     @Deprecated
     JCas readAnnotationCas(SourceDocument document, User user)
+        throws IOException;
+
+    /**
+     * Gets the CAS for the given source document. Converts it form the source document if
+     * necessary. The state of the source document is not changed.
+     *
+     * @param document
+     *            the source document.
+     * @param userName
+     *            the username.
+     * @return the JCas.
+     * @throws IOException
+     *             if there was an I/O error.
+     */
+    JCas readAnnotationCas(SourceDocument document, String userName)
         throws IOException;
 
     /**
@@ -359,16 +375,35 @@ public interface DocumentService
         throws IOException;
 
     /**
-     * List all the {@link AnnotationDocument}s, if available for a given {@link SourceDocument} in
-     * the {@link Project}. Returns list of {@link AnnotationDocument}s for all {@link User}s in the
-     * {@link Project} that has already annotated the {@link SourceDocument}
-     *
+     * List all the {@link AnnotationDocument annotation documents} for a given 
+     * {@link SourceDocument}. 
+     * <p>
+     * Note that this method does may not return an {@link AnnotationDocument annotation document}
+     * for every user in the project because they are created lazily when a user opens a document
+     * for annotation the first time.
+     * 
      * @param document
      *            the {@link SourceDocument}
      * @return {@link AnnotationDocument}
+     * @see #createOrGetAnnotationDocument(SourceDocument, User)
      */
     List<AnnotationDocument> listAnnotationDocuments(SourceDocument document);
 
+    /**
+     * List all the {@link AnnotationDocument annotation documents} from a project for a given
+     * user. 
+     * <p>
+     * Note that this method does may not return an {@link AnnotationDocument annotation document}
+     * for every user in the project because they are created lazily when a user opens a document
+     * for annotation the first time.
+     * 
+     * @param project
+     *            the {@link SourceDocument}
+     * @param user
+     *            the {@link User}
+     * @return {@link AnnotationDocument}
+     * @see #createOrGetAnnotationDocument(SourceDocument, User)
+     */
     List<AnnotationDocument> listAnnotationDocuments(Project project, User user);
 
     /**

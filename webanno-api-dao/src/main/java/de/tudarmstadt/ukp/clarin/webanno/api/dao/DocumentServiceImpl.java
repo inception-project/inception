@@ -110,6 +110,16 @@ public class DocumentServiceImpl
         projectService = aProjectService;
         applicationEventPublisher = aApplicationEventPublisher;
     }
+
+    public DocumentServiceImpl(RepositoryProperties aRepositoryProperties, UserDao aUserRepository,
+            CasStorageService aCasStorageService, ImportExportService aImportExportService,
+            ProjectService aProjectService, ApplicationEventPublisher aApplicationEventPublisher,
+            EntityManager aEntityManager)
+    {
+        this(aRepositoryProperties, aUserRepository, aCasStorageService,
+                aImportExportService, aProjectService, aApplicationEventPublisher);
+        entityManager = aEntityManager;
+    }
     
     @Override
     public File getDir()
@@ -593,23 +603,31 @@ public class DocumentServiceImpl
 
     @Override
     @Transactional
+    public JCas readAnnotationCas(SourceDocument aDocument, String aUserName)
+            throws IOException
+    {
+        // If there is no CAS yet for the source document, create one.
+        JCas jcas  = casStorageService.readOrCreateCas(aDocument, aUserName, () -> {
+            // Convert the source file into an annotation CAS
+            return createOrReadInitialCas(aDocument);
+        });
+
+        // We intentionally do not upgrade the CAS here because in general the IDs
+        // must remain stable. If an upgrade is required the caller should do it
+        return jcas;
+    }
+
+    @Override
+    @Transactional
     public JCas readAnnotationCas(AnnotationDocument aAnnotationDocument)
         throws IOException
     {
         Validate.notNull(aAnnotationDocument, "Annotation document must be specified");
         
         SourceDocument aDocument = aAnnotationDocument.getDocument();
-        String user = aAnnotationDocument.getUser();
+        String userName = aAnnotationDocument.getUser();
         
-        // If there is no CAS yet for the annotation document, create one.
-        JCas jcas  = casStorageService.readOrCreateCas(aDocument, user, () -> {
-            // Convert the source file into an annotation CAS
-            return createOrReadInitialCas(aDocument);
-        });
-        
-        // We intentionally do not upgrade the CAS here because in general the IDs
-        // must remain stable. If an upgrade is required the caller should do it
-        return jcas;
+        return readAnnotationCas(aDocument, userName);
     }
 
     @Override
