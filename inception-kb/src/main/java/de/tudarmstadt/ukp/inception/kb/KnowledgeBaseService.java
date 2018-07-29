@@ -197,8 +197,20 @@ public interface KnowledgeBaseService
      */
     void deleteProperty(KnowledgeBase kb, KBProperty aType);
 
+    /**
+     * List the properties from the knowledge base
+     * @param kb The knowledge base from which the new concept will be deleted
+     * @param aAll indicates whether to include base properties or not
+     */
     List<KBHandle> listProperties(KnowledgeBase kb, boolean aAll) throws QueryEvaluationException;
 
+    /**
+     * List the properties from the knowledge base
+     * @param kb The knowledge base from which the new concept will be deleted
+     * @param includeInferred
+     *        indicates whether inferred statements should be included in the result.
+     * @param aAll indicates whether to include base properties or not
+     */
     List<KBHandle> listProperties(KnowledgeBase kb, boolean aIncludeInferred, boolean aAll);
 
     /**

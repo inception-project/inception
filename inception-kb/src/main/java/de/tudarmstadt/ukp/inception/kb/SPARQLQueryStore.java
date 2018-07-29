@@ -21,9 +21,10 @@ import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
 
 public class SPARQLQueryStore
-{
-    
+{   
     public static String aLimit = "1000";
+    
+    // Query to list properties from KnowledgeBase
     public static String PROPERTYLIST_QUERY = String.join("\n"
             , "PREFIX rdfs: <" + RDFS.NAMESPACE + ">"
             , "PREFIX owl: <" + OWL.NAMESPACE + ">"
@@ -37,18 +38,5 @@ public class SPARQLQueryStore
             , "    FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\"))"
             , "  }"
             , "}"
-            , "LIMIT 10000");
-    
-    // Add queries if needed for different KBs 
-    // public static String PROPERTYLIST_WIKIDATA_QUERY = String.join("\n"
-    // , "SELECT DISTINCT ?s ?l WHERE {"
-    // , " ?s ?pTYPE ?oPROPERTY ."
-    // , " OPTIONAL {"
-    // , " ?s ?pLABEL ?l ."
-    // , " FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\"))"
-    // , " }"
-    // , "}"
-    // , "LIMIT 10000");
-    
-    
+            , "LIMIT 10000");  
 }
