@@ -294,8 +294,9 @@ public class ConceptLinkingService
 
     /*
      * This method does the actual ranking of the candidate entities.
-     * First the candidates from full-text matching are sorted by frequency cutoff after a threshold,
-     * because they are more numerous. Then the candidates from exact matching are added and sorted by multiple keys.
+     * First the candidates from full-text matching are sorted by frequency cutoff after a
+     * threshold because they are more numerous.
+     * Then the candidates from exact matching are added and sorted by multiple keys.
      */
     private List<CandidateEntity> rankCandidates(KnowledgeBase aKB, String aTypedString,
         String mention, Set<CandidateEntity> aCandidatesExact,

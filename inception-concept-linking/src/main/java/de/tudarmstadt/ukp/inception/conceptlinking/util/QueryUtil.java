@@ -88,9 +88,12 @@ public class QueryUtil
 
     /**
      * This query retrieves candidates via exact matching of their labels and full-text-search
-     * It has been tied to use LCASE in combination with FILTER to allow matching the lower cased arguments with the entities from the KB,
-     * but that was too time-intensive and lead to timeouts.
-     * Therefore, the still needs to type with correct capitalization in order that this part retrieves the result.
+     * It has been tied to use LCASE in combination with FILTER to allow matching the lower cased
+     * arguments with the entities from the KB, but that was too time-intensive and lead to
+     * timeouts.
+     *
+     * Therefore, one still needs to type with correct capitalization in order to retrieve the
+     * desired result.
      *
      * @param aTypedString typed string from the user
      * @param aMention the marked surface form
