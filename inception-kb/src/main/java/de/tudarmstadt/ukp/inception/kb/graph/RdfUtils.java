@@ -167,7 +167,8 @@ public class RdfUtils
             "SELECT * WHERE { ",
             " {?s ?p ?o .}",
             " UNION ",
-            " {?s a owl:ObjectProperty .}",
+            " {?s a ?prop .",
+            "  VALUES ?prop {owl:ObjectProperty owl:DatatypeProperty} }",
             filter,
             "} LIMIT 1000");
         TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);

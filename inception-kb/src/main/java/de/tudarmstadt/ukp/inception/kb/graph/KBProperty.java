@@ -20,17 +20,14 @@ package de.tudarmstadt.ukp.inception.kb.graph;
 import static de.tudarmstadt.ukp.inception.kb.graph.RdfUtils.readFirst;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
-import org.eclipse.rdf4j.model.vocabulary.XMLSchema;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
@@ -47,11 +44,11 @@ public class KBProperty
     private String identifier;
     private String name;
     private String description;
-    private URI domain;
+    private String domain;
     /**
      * Declares the class or data type of the object in a triple whose predicate is that property.
      */
-    private URI range;
+    private String range;
     private List<Statement> originalStatements = new ArrayList<>();
 
     public KBProperty()
@@ -97,22 +94,22 @@ public class KBProperty
         description = aDescription;
     }
 
-    public URI getDomain()
+    public String getDomain()
     {
         return domain;
     }
 
-    public void setDomain(URI aDomain)
+    public void setDomain(String aDomain)
     {
         domain = aDomain;
     }
 
-    public URI getRange()
+    public String getRange()
     {
         return range;
     }
 
-    public void setRange(URI aRange)
+    public void setRange(String aRange)
     {
         range = aRange;
     }
@@ -178,19 +175,13 @@ public class KBProperty
             kbProp.originalStatements.add(stmt);
         });
 
-        // if no range is given, assume values of type String
-        Optional<Statement> optionalRangeStmt = readFirst(aConn, aStmt.getSubject(), RDFS.RANGE,
-                null);
-        if (optionalRangeStmt.isPresent()) {
-            Statement rangeStmt = optionalRangeStmt.get();
-            kbProp.setRange(URI.create(rangeStmt.getObject().stringValue()));
-            kbProp.originalStatements.add(rangeStmt);
-        } else {
-            kbProp.setRange(URI.create(XMLSchema.STRING.stringValue()));
-        }
+        readFirst(aConn, aStmt.getSubject(), RDFS.RANGE, null).ifPresent((stmt) -> {
+            kbProp.setRange(stmt.getObject().stringValue());
+            kbProp.originalStatements.add(stmt);
+        });
 
         readFirst(aConn, aStmt.getSubject(), RDFS.DOMAIN, null).ifPresent((stmt) -> {
-            kbProp.setDomain(URI.create(stmt.getObject().stringValue()));
+            kbProp.setDomain(stmt.getObject().stringValue());
             kbProp.originalStatements.add(stmt);
         });
 

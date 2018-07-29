@@ -305,6 +305,10 @@ public interface KnowledgeBaseService
             int aLimit)
         throws QueryEvaluationException;
     
+    List<KBHandle> listChildConceptsInstances(KnowledgeBase aKB, String aParentIdentifier,
+            boolean aAll, int aLimit) throws QueryEvaluationException;
+    
+    
     RepositoryConnection getConnection(KnowledgeBase kb);
 
     interface ReadAction<T>
@@ -323,7 +327,13 @@ public interface KnowledgeBaseService
 
     List<KBHandle> list(KnowledgeBase kb, IRI aType, boolean aIncludeInferred, boolean
         aAll);
-    
+
+    List<KBHandle> listDomainProperties(KnowledgeBase kb, String aDomain, boolean aIncludeInferred,
+            boolean aAll);
+
+    List<KBHandle> listPropertiesRangeValue(KnowledgeBase kb, String aDomain,
+            boolean aIncludeInferred, boolean aAll);
+
     /**
      * Adds a new qualifier in the given knowledge base. Does
      * nothing if the knowledge base is read only.
@@ -360,4 +370,15 @@ public interface KnowledgeBaseService
     boolean statementsMatchSPO(KnowledgeBase akb, KBStatement mockStatement);
 
     Optional<KBObject> readKBIdentifier(Project aProject, String aIdentifier);
+
+    List<KBHandle> getParentConceptsForConcept(KnowledgeBase aKB, String aIdentifier,
+            boolean aAll)
+        throws QueryEvaluationException;
+    
+    List<KBHandle> getParentConceptList(KnowledgeBase aKB, String aIdentifier, boolean aAll)
+            throws QueryEvaluationException;
+    
+    List<KBHandle> getConceptForInstance(KnowledgeBase aKB, String aIdentifier,
+            boolean aAll)
+        throws QueryEvaluationException;
 }
