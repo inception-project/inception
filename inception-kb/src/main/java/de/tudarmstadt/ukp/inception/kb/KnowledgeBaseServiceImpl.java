@@ -159,9 +159,22 @@ public class KnowledgeBaseServiceImpl
     }
 
     @Override
-    public void defineBaseProperties(KnowledgeBase kb) 
+    public void defineBaseProperties(KnowledgeBase kb, boolean kbUpdateFlag) 
     {
-     // KB will initialize base properties with base IRI schema properties defined by user
+        if (kbUpdateFlag) {
+            List<KBHandle> listProperties = listProperties(kb, true, true);
+            if (!listProperties.isEmpty()) {
+                for (KBHandle propertyHandle : listProperties) {
+                    KBProperty property = new KBProperty();
+                    property.setIdentifier(propertyHandle.getIdentifier());
+                    property.setName(propertyHandle.getName());
+                    deleteProperty(kb, property);
+
+                }
+            }
+        }
+        
+        // KB will initialize base properties with base IRI schema properties defined by user
         if (kb.getType() == RepositoryType.LOCAL && !kb.isReadOnly()) {
             KBProperty property = new KBProperty(kb.getSubclassIri().getLocalName());
             property.setIdentifier(kb.getSubclassIri().stringValue());

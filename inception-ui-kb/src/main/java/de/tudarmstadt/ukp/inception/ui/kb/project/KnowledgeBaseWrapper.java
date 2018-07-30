@@ -76,7 +76,7 @@ public class KnowledgeBaseWrapper implements Serializable {
         KnowledgeBase kb = kbw.getKb();
         kbService.updateKnowledgeBase(kb, cfg);
         if (kb.getType() == RepositoryType.LOCAL) {
-            kbService.defineBaseProperties(kb);
+            kbService.defineBaseProperties(kb,true);
             KnowledgeBaseWrapper.importFiles(kbw, kbService);
         }
     }
@@ -95,7 +95,7 @@ public class KnowledgeBaseWrapper implements Serializable {
         case LOCAL:
             cfg = kbService.getNativeConfig();
             kbService.registerKnowledgeBase(kb, cfg);
-            kbService.defineBaseProperties(kb);
+            kbService.defineBaseProperties(kb,false);
             KnowledgeBaseWrapper.importFiles(kbw, kbService);
             break;
         case REMOTE:

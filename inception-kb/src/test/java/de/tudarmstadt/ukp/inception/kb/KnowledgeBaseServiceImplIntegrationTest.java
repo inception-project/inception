@@ -312,7 +312,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     @Test
     public void nonempty_WithEmptyKnowledgeBase_ShouldReturnTrue() {
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
-        sut.defineBaseProperties(kb);
+        sut.defineBaseProperties(kb,false);
         List<KBHandle> listProperties = sut.listProperties(kb, true);
         assertEquals(listProperties.size(),3);
     }

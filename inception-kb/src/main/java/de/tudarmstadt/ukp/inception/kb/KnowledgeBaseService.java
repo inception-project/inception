@@ -361,5 +361,10 @@ public interface KnowledgeBaseService
 
     Optional<KBObject> readKBIdentifier(Project aProject, String aIdentifier);
 
-    void defineBaseProperties(KnowledgeBase kb);
+    /**
+     * Define base properties of comment, label and subClassOf while initializing the KB
+     * @param kb The knowledge base to initialize base properties
+     * @param kbUpdateFlag Flag variabel to indicate the update of KB or not.  
+     */
+    void defineBaseProperties(KnowledgeBase kb, boolean kbUpdateFlag);
 }
