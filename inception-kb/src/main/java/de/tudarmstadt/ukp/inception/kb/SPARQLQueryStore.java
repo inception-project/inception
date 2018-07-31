@@ -17,15 +17,17 @@
  */
 package de.tudarmstadt.ukp.inception.kb;
 
+import org.eclipse.rdf4j.model.vocabulary.OWL;
+import org.eclipse.rdf4j.model.vocabulary.RDFS;
+
 public class SPARQLQueryStore
-{
-    
+{   
     public static String aLimit = "1000";
-    
-    // Query to get list of property
+  
+    // Query to list properties from KnowledgeBase
     public static String PROPERTYLIST_QUERY = String.join("\n"
-            , InferencerVariableStore.RDF_PREFIX
-            , InferencerVariableStore.OWL_PREFIX
+            , "PREFIX rdfs: <" + RDFS.NAMESPACE + ">"
+            , "PREFIX owl: <" + OWL.NAMESPACE + ">"
             , "SELECT DISTINCT ?s ?l WHERE {"
             , "  { ?s ?pTYPE ?oPROPERTY .}"
             , "  UNION "
@@ -38,16 +40,7 @@ public class SPARQLQueryStore
             , "}"
             , "LIMIT 10000");
     
-    // public static String PROPERTYLIST_WIKIDATA_QUERY = String.join("\n"
-    // , "SELECT DISTINCT ?s ?l WHERE {"
-    // , " ?s ?pTYPE ?oPROPERTY ."
-    // , " OPTIONAL {"
-    // , " ?s ?pLABEL ?l ."
-    // , " FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\"))"
-    // , " }"
-    // , "}"
-    // , "LIMIT 10000");
-    
+   
   //Query to get property specific domain elements
     public static String PROPERTYLIST_DOMAIN_DEPENDENT = String.join("\n"
             , InferencerVariableStore.RDF_PREFIX
@@ -99,8 +92,5 @@ public class SPARQLQueryStore
             , "  }"
             , "}"
             , "LIMIT 10000");
-    
-    
-    
-    
+
 }
