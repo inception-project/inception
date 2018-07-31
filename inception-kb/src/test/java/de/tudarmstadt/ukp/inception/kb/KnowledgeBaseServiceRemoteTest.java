@@ -164,7 +164,7 @@ public class KnowledgeBaseServiceRemoteTest
             kb_wine.setLabelIri(RDFS.LABEL);
             kb_wine.setPropertyTypeIri(RDF.PROPERTY);
             kb_wine.setDescriptionIri(RDFS.COMMENT);
-            kbList.add(new TestConfiguration("data/wine-ontology.rdf", kb_wine));
+            kbList.add(new TestConfiguration("data/wine-ontology.rdf", kb_wine, "http://www.w3.org/TR/2003/PR-owl-guide-20031209/wine#ChateauMargaux"));
         }
         
         {
@@ -174,25 +174,25 @@ public class KnowledgeBaseServiceRemoteTest
             kb_wikidata_direct.setReification(Reification.NONE);
             kb_wikidata_direct.applyMapping(PROFILES.get("wikidata").getMapping());
             kbList.add(new TestConfiguration(PROFILES.get("wikidata").getSparqlUrl(),
-                    kb_wikidata_direct));
+                    kb_wikidata_direct, "http://www.wikidata.org/entity/Q19576436"));
         }
 
         // This profile is yet incomplete and needs to be fixed
-//        {
-//            ValueFactory vf = SimpleValueFactory.getInstance();
-//            
-//            KnowledgeBase kb_wikidata_reified = new KnowledgeBase();
-//            kb_wikidata_reified.setName("Wikidata (official/reified)");
-//            kb_wikidata_reified.setType(RepositoryType.REMOTE);
-//            kb_wikidata_reified.setReification(Reification.WIKIDATA);
-//            kb_wikidata_reified.setClassIri(OWL.CLASS); // FIXME
-//            kb_wikidata_reified.setSubclassIri(vf.createIRI("http://www.wikidata.org/prop/P279"));
-//            kb_wikidata_reified.setTypeIri(vf.createIRI("http://www.wikidata.org/prop/P31"));
-//            kb_wikidata_reified.setLabelIri(RDFS.LABEL);
-//            kb_wikidata_reified.setPropertyTypeIri(RDF.PROPERTY); // FIXME
-//            kb_wikidata_reified.setDescriptionIri(vf.createIRI("http://schema.org/description"));
-//            kbList.add(kb_wikidata_reified);
-//        }
+        // {
+        // ValueFactory vf = SimpleValueFactory.getInstance();
+        //
+        // KnowledgeBase kb_wikidata_reified = new KnowledgeBase();
+        // kb_wikidata_reified.setName("Wikidata (official/reified)");
+        // kb_wikidata_reified.setType(RepositoryType.REMOTE);
+        // kb_wikidata_reified.setReification(Reification.WIKIDATA);
+        // kb_wikidata_reified.setClassIri(OWL.CLASS); // FIXME
+        // kb_wikidata_reified.setSubclassIri(vf.createIRI("http://www.wikidata.org/prop/P279"));
+        // kb_wikidata_reified.setTypeIri(vf.createIRI("http://www.wikidata.org/prop/P31"));
+        // kb_wikidata_reified.setLabelIri(RDFS.LABEL);
+        // kb_wikidata_reified.setPropertyTypeIri(RDF.PROPERTY); // FIXME
+        // kb_wikidata_reified.setDescriptionIri(vf.createIRI("http://schema.org/description"));
+        // kbList.add(kb_wikidata_reified);
+        // }
 
         {
             KnowledgeBase kb_dbpedia = new KnowledgeBase();
@@ -201,7 +201,7 @@ public class KnowledgeBaseServiceRemoteTest
             kb_dbpedia.setReification(Reification.NONE);
             kb_dbpedia.applyMapping(PROFILES.get("db_pedia").getMapping());
             kbList.add(new TestConfiguration(PROFILES.get("db_pedia").getSparqlUrl(),
-                    kb_dbpedia));
+                    kb_dbpedia, "http://www.wikidata.org/entity/Q20280393" ));
         }
        
         {
@@ -211,7 +211,7 @@ public class KnowledgeBaseServiceRemoteTest
             kb_yago.setReification(Reification.NONE);
             kb_yago.applyMapping(PROFILES.get("yago").getMapping());
             kbList.add(new TestConfiguration(PROFILES.get("yago").getSparqlUrl(),
-                    kb_yago));
+                    kb_yago, "http://www.wikidata.org/entity/Q21445637S003fc070-45f0-80bd-ae2d-072cde5aad89"));
         }
         
         
@@ -255,6 +255,23 @@ public class KnowledgeBaseServiceRemoteTest
         assertThat(propertiesKBHandle).as("Check that property list is not empty").isNotEmpty();
 
     }
+    
+    @Test
+    public void thatParentListCanBeRetireved()
+    {
+        KnowledgeBase kb = sutConfig.getKnowledgeBase();
+        
+        long duration = System.currentTimeMillis();
+        List<KBHandle> parentList = sut.getParentConceptList(kb, sutConfig.getTestIdentifier(), true);
+        duration = System.currentTimeMillis() - duration;
+
+        System.out.printf("Parent List retrieved : %d%n", parentList.size());
+        System.out.printf("Time required        : %d ms%n", duration);
+        parentList.stream().limit(10).forEach(h -> System.out.printf("   %s%n", h));
+
+        assertThat(parentList).as("Check that parent list is not empty").isNotEmpty();
+
+    }
 
     // Helper
 
@@ -282,11 +299,13 @@ public class KnowledgeBaseServiceRemoteTest
     {
         private final String url;
         private final KnowledgeBase kb;
-        public TestConfiguration(String aUrl, KnowledgeBase aKb)
+        private final String testIdentifier;
+        public TestConfiguration(String aUrl, KnowledgeBase aKb, String atestIdentifier)
         {
             super();
             url = aUrl;
             kb = aKb;
+            testIdentifier = atestIdentifier;
         }
         
         public KnowledgeBase getKnowledgeBase()
@@ -299,6 +318,11 @@ public class KnowledgeBaseServiceRemoteTest
             return url;
         }
 
+        public String getTestIdentifier()
+        {
+            return testIdentifier;
+        }
+        
         @Override
         public String toString()
         {
