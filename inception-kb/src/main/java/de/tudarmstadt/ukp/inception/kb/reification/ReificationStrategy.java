@@ -18,17 +18,24 @@
 package de.tudarmstadt.ukp.inception.kb.reification;
 
 import java.util.List;
+import java.util.Set;
 
 import org.eclipse.rdf4j.model.Statement;
 
+import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
+import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
+import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBQualifier;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 public interface ReificationStrategy {
-    List<Statement> reify(KnowledgeBase kb, KBStatement aStatement);
+    Set<Statement> reify(KnowledgeBase kb, KBStatement aStatement);
     List<KBStatement> listStatements(KnowledgeBase kb, KBHandle aInstance, boolean aAll);
+    void deleteInstance(KnowledgeBase kb, KBInstance aInstance);
+    void deleteProperty(KnowledgeBase kb, KBProperty aProperty);
+    void deleteConcept(KnowledgeBase kb, KBConcept aConcept);
     void deleteStatement(KnowledgeBase kb, KBStatement aStatement);
     void upsertStatement(KnowledgeBase kb, KBStatement aStatement);
     void addQualifier(KnowledgeBase kb, KBQualifier newQualifier);

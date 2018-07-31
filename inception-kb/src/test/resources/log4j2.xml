@@ -8,7 +8,7 @@
   </Appenders>
 
   <Loggers>
-    <Logger name="mtas" level="WARN"/>
+    <!-- Logger name="gate.mimir.index" level="DEBUG"/ -->
     <Root level="warn">
       <AppenderRef ref="ConsoleAppender" />
     </Root>

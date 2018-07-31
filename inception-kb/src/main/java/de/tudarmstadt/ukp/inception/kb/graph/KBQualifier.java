@@ -18,8 +18,9 @@
 package de.tudarmstadt.ukp.inception.kb.graph;
 
 import java.io.Serializable;
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.cyberborean.rdfbeans.datatype.DatatypeMapper;
 import org.cyberborean.rdfbeans.datatype.DefaultDatatypeMapper;
@@ -41,7 +42,7 @@ public class KBQualifier
 
     private Object value;
 
-    private List<Statement> originalStatements;
+    private Set<Statement> originalStatements;
 
     public KBQualifier(KBStatement aKbStatement, KBHandle aKbProperty, Object aValue)
     {
@@ -63,13 +64,13 @@ public class KBQualifier
         else {
             throw new IllegalStateException("Unknown object type: " + aValue.getClass());
         }
-        originalStatements = new ArrayList<>();
+        originalStatements = new HashSet<>();
     }
 
     public KBQualifier(KBStatement aKbStatement)
     {
         kbStatement = aKbStatement;
-        originalStatements = new ArrayList<>();
+        originalStatements = new HashSet<>();
     }
 
     public KBQualifier(KBQualifier other)
@@ -119,12 +120,12 @@ public class KBQualifier
         language = language;
     }
 
-    public List<Statement> getOriginalStatements()
+    public Set<Statement> getOriginalStatements()
     {
         return originalStatements;
     }
 
-    public void setOriginalStatements(List<Statement> originalStatements)
+    public void setOriginalStatements(Set<Statement> originalStatements)
     {
         this.originalStatements = originalStatements;
     }

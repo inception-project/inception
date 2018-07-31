@@ -126,4 +126,34 @@ public class SearchResult
     {
         documentTitle = aDocumentTitle;
     }
+
+    @Override
+    public int hashCode()
+    {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + (int) (documentId ^ (documentId >>> 32));
+        result = prime * result + offsetEnd;
+        result = prime * result + offsetStart;
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj)
+    {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        SearchResult other = (SearchResult) obj;
+        if (documentId != other.documentId)
+            return false;
+        if (offsetEnd != other.offsetEnd)
+            return false;
+        if (offsetStart != other.offsetStart)
+            return false;
+        return true;
+    }
 }
