@@ -66,9 +66,9 @@ public interface KnowledgeBaseService
      * No action will be taken if the given knowledge base is not of type
      * {@link RepositoryType#LOCAL} (nothing will be written to the output stream).
      *
-     * @param kb
-     * @param format
-     * @param os
+     * @param kb The knowledge base to export
+     * @param format Format of the data
+     * @param os The {@link OutputStream} variable
      */
     void exportData(KnowledgeBase kb, RDFFormat format, OutputStream os);
 
@@ -78,6 +78,7 @@ public interface KnowledgeBaseService
      * {@code False} if a knowledge base does not contain any statements.
      *
      * @param kb a {@link KnowledgeBase}
+     * @return a {@link Boolean} value
      */
     boolean isEmpty(KnowledgeBase kb);
 
@@ -91,6 +92,8 @@ public interface KnowledgeBaseService
     /**
      * Update the configuration of a knowledge base.
      * The given knowledge base must have been added before.
+     * @param kb the {@link KnowledgeBase} to update
+     * @param cfg the {@link RepositoryImplConfig} variable
      */
     void updateKnowledgeBase(KnowledgeBase kb, RepositoryImplConfig cfg)
         throws RepositoryException, RepositoryConfigException;
@@ -126,6 +129,7 @@ public interface KnowledgeBaseService
      * if the knowledge base is read only.
      * @param kb The knowledge base to which the new concept will be added
      * @param aType The concept to add
+     * @return the KBHandle for the created concept 
      */
     KBHandle createConcept(KnowledgeBase kb, KBConcept aType);
 
@@ -169,6 +173,7 @@ public interface KnowledgeBaseService
      */
     void deleteConcept(KnowledgeBase kb, KBConcept aType);
 
+    
     List<KBHandle> listConcepts(KnowledgeBase kb, boolean aAll) throws QueryEvaluationException;
 
     /**
@@ -176,6 +181,7 @@ public interface KnowledgeBaseService
      * if the knowledge base is read only.
      * @param kb The knowledge base to which the new property will be added
      * @param aProperty The property to add
+     * @return the KBHandle for the created concept 
      */
     KBHandle createProperty(KnowledgeBase kb, KBProperty aProperty);
 
@@ -198,8 +204,22 @@ public interface KnowledgeBaseService
      */
     void deleteProperty(KnowledgeBase kb, KBProperty aType);
 
+    /**
+     * List the properties from the knowledge base
+     * @param kb The knowledge base from which the new concept will be deleted
+     * @param aAll indicates whether to include base properties or not
+     * @return list of all the properties {@link KBHandle} 
+     */
     List<KBHandle> listProperties(KnowledgeBase kb, boolean aAll) throws QueryEvaluationException;
 
+    /**
+     * List the properties from the knowledge base
+     * @param kb The knowledge base from which the new concept will be deleted
+     * @param aIncludeInferred
+     *        indicates whether inferred statements should be included in the result.
+     * @param aAll indicates whether to include base properties or not
+     * @return list of all the properties {@link KBHandle} 
+     */
     List<KBHandle> listProperties(KnowledgeBase kb, boolean aIncludeInferred, boolean aAll);
 
     /**
@@ -210,6 +230,7 @@ public interface KnowledgeBaseService
      *            The knowledge base to which the new instance will be added
      * @param aInstance
      *            The instance to add
+     * @return the instance {@link KBHandle}
      */
     KBHandle createInstance(KnowledgeBase kb, KBInstance aInstance);
 
@@ -249,6 +270,9 @@ public interface KnowledgeBaseService
      * Delete the given instance. Also deletes all statements about that instance (i.e. where the
      * instance is the subject), but not statements pointing to the instance (i.e. where the
      * instance is the object). Does nothing if the knowledge base is read only.
+     * 
+     * @param kb The knowledge base to which the instance will be deleted
+     * @param aInstance The instance to delete
      */
     void deleteInstance(KnowledgeBase kb, KBInstance aInstance);
 
@@ -278,6 +302,9 @@ public interface KnowledgeBaseService
      * before inserting the new one. If the statement is an inferred statement, then no deletion
      * attempt will be made, but the statement will be added as a new explicit statement. Does
      * nothing if the knowledge base is read only.
+     * 
+     * @param kb The knowledge base the statement will be use in
+     * @param aStatement The statement itself
      */
     void upsertStatement(KnowledgeBase kb, KBStatement aStatement) throws RepositoryException;
 
@@ -334,6 +361,8 @@ public interface KnowledgeBaseService
     List<KBHandle> list(KnowledgeBase kb, IRI aType, boolean aIncludeInferred, boolean
         aAll);
     
+    List<KBHandle> listProperties(KnowledgeBase kb, IRI aType, boolean aIncludeInferred, boolean
+            aAll);
     /**
      * Adds a new qualifier in the given knowledge base. Does
      * nothing if the knowledge base is read only.

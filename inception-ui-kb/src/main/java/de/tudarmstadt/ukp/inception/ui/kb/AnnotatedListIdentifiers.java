@@ -87,7 +87,7 @@ public class AnnotatedListIdentifiers
                     .of(query.append(queryHead).append(instance).append(queryEnd).toString());
         }
         LambdaModel<List<SearchResult>> searchResults = LambdaModel.of(this::getSearchResults);
-        LOG.debug("SearchResult count : {}" , searchResults.getObject().size());
+        LOG.trace("SearchResult count : {}" , searchResults.getObject().size());
         OverviewListChoice<String> overviewList = new OverviewListChoice<String>(
                 "annotatedResultGroups")
         {
