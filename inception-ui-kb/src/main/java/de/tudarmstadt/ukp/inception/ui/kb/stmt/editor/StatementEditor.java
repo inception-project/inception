@@ -316,13 +316,13 @@ public class StatementEditor extends Panel
             Form<KBStatement> form = new Form<>("form", model);
             List<ValueType> valueTypes;
             String rangeValue = property.getObject().getRange();
-            Optional<KBObject> rangeKBHandle = kbService.
-                    readKBIdentifier(kbModel.getObject().getProject(), rangeValue);
-            if (rangeKBHandle.isPresent() || rangeValue != null) {
-                valueTypes = valueTypeRegistry.getRangeTypes(rangeValue, rangeKBHandle);
-            }
-            else {
-                valueTypes = valueTypeRegistry.getAllTypes();
+            valueTypes = valueTypeRegistry.getAllTypes();
+            if (rangeValue != null) {
+                Optional<KBObject> rangeKBHandle = kbService.
+                        readKBIdentifier(kbModel.getObject().getProject(), rangeValue);
+                if (rangeKBHandle.isPresent()) {
+                    valueTypes = valueTypeRegistry.getRangeTypes(rangeValue, rangeKBHandle);
+                }
             }
             valueType = new DropDownChoice<>("valueType", valueTypes);
             valueType.setChoiceRenderer(new ChoiceRenderer<>("uiName"));

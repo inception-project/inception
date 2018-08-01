@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.inception.kb;
 public class SPARQLQueryStore
 {   
     public static String aLimit = "1000";
-
     public static final String SPARQL_PREFIX = String.join("\n",
             "PREFIX e:<http://www.wikidata.org/entity/>",
             "PREFIX rdfs:<http://www.w3.org/2000/01/rdf-schema#>",
@@ -75,7 +74,7 @@ public class SPARQLQueryStore
             , SPARQL_PREFIX
             , "SELECT DISTINCT ?s ?l WHERE { "
             , "     {?oChild ?pSUBCLASS ?s . }"
-            , "     UNION { ?oChild ?pTYPE ?oCLASS ."
+            , "     UNION { ?s ?pTYPE ?oCLASS ."
             , "         ?oChild owl:intersectionOf ?list . "
             , "         FILTER EXISTS {?list rdf:rest*/rdf:first ?s. } }"
             , "     OPTIONAL { "
@@ -87,6 +86,7 @@ public class SPARQLQueryStore
     
     // Query to retrieve concept for an instance
     public static String CONCEPT_FOR_INSTANCE = String.join("\n"
+            , SPARQL_PREFIX
             , "SELECT DISTINCT ?s ?l WHERE {"
             , "  ?pInstance ?pTYPE ?s ."
             , "  OPTIONAL {"

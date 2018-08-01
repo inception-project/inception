@@ -29,6 +29,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -762,7 +763,7 @@ public class KnowledgeBaseServiceImpl
         else {
             resultList = read(kb, (conn) -> {
                 String QUERY = String.join("\n"
-                    , SPARQLQueryStore.SPARQL_PREFIX
+                    , SPARQLQueryStore.SPARQL_PREFIX    
                     , "SELECT DISTINCT ?s ?l WHERE { "
                     , "     { ?s ?pTYPE ?oCLASS . } "
                     , "     UNION { ?someSubClass ?pSUBCLASS ?s . } ."
@@ -847,10 +848,10 @@ public class KnowledgeBaseServiceImpl
     
     
     @Override
-    public List<KBHandle> getParentConceptList(KnowledgeBase aKB, String aIdentifier, boolean aAll)
+    public Set<KBHandle> getParentConceptList(KnowledgeBase aKB, String aIdentifier, boolean aAll)
         throws QueryEvaluationException
     {
-        List<KBHandle> parentConceptList = new ArrayList<KBHandle>();
+        Set<KBHandle> parentConceptList = new HashSet<KBHandle>();
         if (aIdentifier != null) {
             Optional<KBObject> identifierKBObj = readKBIdentifier(aKB.getProject(), aIdentifier);
             if (identifierKBObj.get() instanceof KBConcept) {
@@ -870,7 +871,7 @@ public class KnowledgeBaseServiceImpl
     }
     
     // recursive method to get concept tree
-    public List<KBHandle> getParentConceptListforConcept(List<KBHandle> parentConceptList,
+    public Set<KBHandle> getParentConceptListforConcept(Set<KBHandle> parentConceptList,
             KnowledgeBase aKB, String aIdentifier, boolean aAll)
         throws QueryEvaluationException
     {
@@ -888,6 +889,7 @@ public class KnowledgeBaseServiceImpl
         return parentConceptList;
     }
 
+
     // Need to work on the query for variable inputs like owl:intersectionOf, rdf:rest*/rdf:first
     @Override
     public List<KBHandle> listChildConcepts(KnowledgeBase aKB, String aParentIdentifier,
@@ -901,7 +903,7 @@ public class KnowledgeBaseServiceImpl
         // single KB.
         List<KBHandle> resultList = read(aKB, (conn) -> {
             String QUERY = String.join("\n"
-                , SPARQLQueryStore.SPARQL_PREFIX
+                , SPARQLQueryStore.SPARQL_PREFIX    
                 , "SELECT DISTINCT ?s ?l WHERE { "
                 , "     {?s ?pSUBCLASS ?oPARENT . }" 
                 , "     UNION { ?s ?pTYPE ?oCLASS ."
