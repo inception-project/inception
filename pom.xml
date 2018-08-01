@@ -749,6 +749,14 @@
             <usedDependency>com.sun.xml.bind:jaxb-impl</usedDependency>
             <usedDependency>javax.activation:javax.activation-api</usedDependency>
           </usedDependencies>
+          <ignoredUnusedDeclaredDependencies>
+            <!-- 
+              - h2database and data-jpa, used via reflection in tests in search-mtas, 
+              - cannot be detected by Maven
+             -->
+            <ignoredUnusedDeclaredDependency>com.h2database:h2</ignoredUnusedDeclaredDependency>
+            <ignoredUnusedDeclaredDependency>org.springframework.boot:spring-boot-starter-data-jpa</ignoredUnusedDeclaredDependency>
+          </ignoredUnusedDeclaredDependencies>
         </configuration>
       </plugin>
     </plugins>
