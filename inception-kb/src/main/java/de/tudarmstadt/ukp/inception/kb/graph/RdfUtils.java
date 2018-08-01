@@ -40,6 +40,7 @@ import org.eclipse.rdf4j.rio.ntriples.NTriplesUtil;
 
 import de.tudarmstadt.ukp.inception.kb.InferencerVariableStore;
 import de.tudarmstadt.ukp.inception.kb.IriConstants;
+import de.tudarmstadt.ukp.inception.kb.SPARQLQueryStore;
 
 public class RdfUtils
 {
@@ -161,9 +162,7 @@ public class RdfUtils
                 .escapeString(language) + "\")).";
         }
         String QUERY = String.join("\n",
-            InferencerVariableStore.PREFIX_OWL,
-            InferencerVariableStore.PREFIX_RDF,
-            InferencerVariableStore.PREFIX_RDFS,
+            SPARQLQueryStore.SPARQL_PREFIX,    
             "SELECT * WHERE { ",
             " {?s ?p ?o .}",
             " UNION ",
