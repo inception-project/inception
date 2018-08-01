@@ -39,6 +39,8 @@ public class KBConcept
     private String identifier;
     private String name;
     private String description;
+    private KnowledgeBase kb;
+
 
     /* Commented out until the functionality which uses them is actually implemented
     private static final IRI CLOSED;
@@ -98,6 +100,18 @@ public class KBConcept
         name = aName;
     }
 
+    @Override
+    public KnowledgeBase getKB()
+    {
+        return kb;
+    }
+
+    @Override
+    public void setKB(KnowledgeBase akb)
+    {
+        kb = akb;
+    }
+    
     /* Commented out until the functionality which uses them is actually implemented
     public void setAbstract(boolean aValue)
     {
@@ -253,4 +267,5 @@ public class KBConcept
         }
         return true;
     }
+
 }

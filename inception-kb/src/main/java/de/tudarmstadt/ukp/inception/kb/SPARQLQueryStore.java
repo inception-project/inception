@@ -22,10 +22,18 @@ public class SPARQLQueryStore
     
     public static String aLimit = "1000";
     
+    public static final String SPARQL_PREFIX = String.join("\n",
+            "PREFIX e:<http://www.wikidata.org/entity/>",
+            "PREFIX rdfs:<http://www.w3.org/2000/01/rdf-schema#>",
+            "PREFIX rdf:<http://www.w3.org/1999/02/22-rdf-syntax-ns#>",
+            "PREFIX owl:<http://www.w3.org/2002/07/owl#>",
+            "PREFIX skos:<http://www.w3.org/2004/02/skos/core#>",
+            "PREFIX base:<http://www.wikidata.org/ontology#>",
+            "PREFIX schema: <http://schema.org/>");
+    
     // Query to get list of property
     public static String PROPERTYLIST_QUERY = String.join("\n"
-            , InferencerVariableStore.RDF_PREFIX
-            , InferencerVariableStore.OWL_PREFIX
+            , SPARQL_PREFIX
             , "SELECT DISTINCT ?s ?l WHERE {"
             , "  { ?s ?pTYPE ?oPROPERTY .}"
             , "  UNION "
@@ -38,20 +46,9 @@ public class SPARQLQueryStore
             , "}"
             , "LIMIT 10000");
     
-    // public static String PROPERTYLIST_WIKIDATA_QUERY = String.join("\n"
-    // , "SELECT DISTINCT ?s ?l WHERE {"
-    // , " ?s ?pTYPE ?oPROPERTY ."
-    // , " OPTIONAL {"
-    // , " ?s ?pLABEL ?l ."
-    // , " FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\"))"
-    // , " }"
-    // , "}"
-    // , "LIMIT 10000");
-    
-  //Query to get property specific domain elements
+    //Query to get property specific domain elements
     public static String PROPERTYLIST_DOMAIN_DEPENDENT = String.join("\n"
-            , InferencerVariableStore.RDF_PREFIX
-            , InferencerVariableStore.OWL_PREFIX
+            , SPARQL_PREFIX
             , "SELECT DISTINCT ?s ?l WHERE {"
             , "  ?s rdfs:domain/(owl:unionOf/rdf:rest*/rdf:first)* ?aDomain "
             , "  OPTIONAL {"
@@ -63,8 +60,7 @@ public class SPARQLQueryStore
     
     //Query to get property specific range elements
     public static String PROPERTY_SPECIFIC_RANGE = String.join("\n"
-            , InferencerVariableStore.RDF_PREFIX
-            , InferencerVariableStore.OWL_PREFIX
+            , SPARQL_PREFIX
             , "SELECT DISTINCT ?s ?l WHERE {"
             , "  ?aProperty rdfs:range/(owl:unionOf/rdf:rest*/rdf:first)* ?s "
             , "  OPTIONAL {"
@@ -77,6 +73,7 @@ public class SPARQLQueryStore
   
     // Query to retrieve super class concept for a concept
     public static String PARENT_CONCEPT = String.join("\n"
+            , SPARQL_PREFIX
             , "SELECT DISTINCT ?s ?l WHERE { "
             , "     {?oChild ?pSUBCLASS ?s . }"
             , "     UNION { ?oChild ?pTYPE ?oCLASS ."
