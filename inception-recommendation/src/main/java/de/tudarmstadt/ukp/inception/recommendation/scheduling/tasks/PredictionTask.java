@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
@@ -33,9 +34,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -75,14 +76,18 @@ public class PredictionTask
 
         Project project = getProject();
         Predictions model = new Predictions(project, getUser());
-        List<AnnotationDocument> documents = documentService.listAnnotationDocuments(project, user);
+        List<SourceDocument> documents = documentService.listSourceDocuments(project);
 
-        for (AnnotationDocument document : documents) {
+        for (SourceDocument document : documents) {
             JCas jCas;
             try {
-                jCas = documentService.readAnnotationCas(document);
+                jCas = documentService.readAnnotationCas(document, user.getUsername());
+                annoService.upgradeCas(jCas.getCas(), document, user.getUsername());
             } catch (IOException e) {
                 log.error("Cannot read annotation CAS.", e);
+                continue;
+            } catch (UIMAException e) {
+                log.error("Cannot upgrade annotation CAS.", e);
                 continue;
             }
             Type predictionType = JCasUtil.getAnnotationType(jCas, PredictedSpan.class);
@@ -119,7 +124,7 @@ public class PredictionTask
         recommendationService.putIncomingPredictions(getUser(), project, model);
     }
 
-    private List<AnnotationObject> extractAnnotations(JCas aJcas, AnnotationDocument aDocument,
+    private List<AnnotationObject> extractAnnotations(JCas aJcas, SourceDocument aDocument,
             Recommender aRecommender)
     {
         List<AnnotationObject> result = new ArrayList<>();

@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.jcas.JCas;
 import org.slf4j.Logger;
@@ -30,9 +31,9 @@ import org.springframework.context.ApplicationEventPublisher;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
@@ -69,7 +70,7 @@ public class SelectionTask
         Project project = getProject();
         User user = getUser();
         String userName = user.getUsername();
-        List<CAS> casses = readCasses(project, user);
+        List<CAS> casses = readCasses(project, userName);
 
         for (AnnotationLayer layer : annoService.listAnnotationLayer(getProject())) {
             if (!layer.isEnabled()) {
@@ -145,15 +146,19 @@ public class SelectionTask
         }
     }
 
-    private List<CAS> readCasses(Project aProject, User aUser)
+    private List<CAS> readCasses(Project aProject, String aUserName)
     {
         List<CAS> casses = new ArrayList<>();
-        for (AnnotationDocument doc : documentService.listAnnotationDocuments(aProject, aUser)) {
+        for (SourceDocument document : documentService.listSourceDocuments(aProject)) {
             try {
-                JCas jCas = documentService.readAnnotationCas(doc);
-                casses.add(jCas.getCas());
+                JCas jCas = documentService.readAnnotationCas(document, aUserName);
+                annoService.upgradeCas(jCas.getCas(), document, aUserName);
             } catch (IOException e) {
                 log.error("Cannot read annotation CAS.", e);
+                continue;
+            } catch (UIMAException e) {
+                log.error("Cannot upgrade annotation CAS.", e);
+                continue;
             }
         }
         return casses;
