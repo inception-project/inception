@@ -38,7 +38,6 @@ import org.eclipse.rdf4j.repository.RepositoryException;
 import org.eclipse.rdf4j.repository.RepositoryResult;
 import org.eclipse.rdf4j.rio.ntriples.NTriplesUtil;
 
-import de.tudarmstadt.ukp.inception.kb.InferencerVariableStore;
 import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.SPARQLQueryStore;
 
