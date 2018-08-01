@@ -166,7 +166,7 @@ public class RdfUtils
             " {?s ?p ?o .}",
             " UNION ",
             " {?s a ?prop .",
-            "  VALUES ?prop {owl:ObjectProperty owl:DatatypeProperty} }",
+            "    VALUES ?prop { rdf:Property owl:ObjectProperty owl:DatatypeProperty owl:AnnotationProperty} }",
             filter,
             "} LIMIT 1000");
         TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);

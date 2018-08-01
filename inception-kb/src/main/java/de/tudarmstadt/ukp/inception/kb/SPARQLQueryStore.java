@@ -18,10 +18,9 @@
 package de.tudarmstadt.ukp.inception.kb;
 
 public class SPARQLQueryStore
-{
-    
+{   
     public static String aLimit = "1000";
-    
+
     public static final String SPARQL_PREFIX = String.join("\n",
             "PREFIX e:<http://www.wikidata.org/entity/>",
             "PREFIX rdfs:<http://www.w3.org/2000/01/rdf-schema#>",
@@ -31,7 +30,7 @@ public class SPARQLQueryStore
             "PREFIX base:<http://www.wikidata.org/ontology#>",
             "PREFIX schema: <http://schema.org/>");
     
-    // Query to get list of property
+    // Query to list properties from KnowledgeBase
     public static String PROPERTYLIST_QUERY = String.join("\n"
             , SPARQL_PREFIX
             , "SELECT DISTINCT ?s ?l WHERE {"
@@ -96,8 +95,4 @@ public class SPARQLQueryStore
             , "  }"
             , "}"
             , "LIMIT 10000");
-    
-    
-    
-    
 }

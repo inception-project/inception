@@ -37,12 +37,16 @@ import org.eclipse.rdf4j.query.QueryLanguage;
 import org.eclipse.rdf4j.query.TupleQuery;
 import org.eclipse.rdf4j.query.TupleQueryResult;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
+import org.eclipse.rdf4j.repository.RepositoryResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.inception.kb.InceptionValueMapper;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
+import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
+import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
+import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBQualifier;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
@@ -285,6 +289,66 @@ public class WikiDataReification
             return statements;
         }
 
+    }
+    
+    @Override
+    public void deleteInstance(KnowledgeBase kb, KBInstance aInstance)
+    {
+        delete(kb, aInstance.getIdentifier());
+    }
+
+    @Override
+    public void deleteProperty(KnowledgeBase kb, KBProperty aProperty)
+    {
+        delete(kb, aProperty.getIdentifier());
+    }
+
+    @Override
+    public void deleteConcept(KnowledgeBase kb, KBConcept aConcept)
+    {
+        delete(kb, aConcept.getIdentifier());
+    }
+
+    private void delete(KnowledgeBase kb, String aIdentifier)
+    {
+        kbService.update(kb, (conn) -> {
+            ValueFactory vf = conn.getValueFactory();
+            IRI iri = vf.createIRI(aIdentifier);
+            try (RepositoryResult<Statement> subStmts = conn.getStatements(iri, null, null);
+                 RepositoryResult<Statement> predStmts = conn.getStatements(null, iri, null);
+                 RepositoryResult<Statement> objStmts = conn.getStatements(null, null, iri)) {
+
+                while (subStmts.hasNext()) {
+                    Statement stmt = subStmts.next();
+                    // if the identifier appears as subject, the stmt id is the object of the triple
+                    String stmtId = stmt.getObject().stringValue();
+                    conn.remove(getStatementsById(kb, stmtId));
+                    conn.remove(getQualifiersById(kb, stmtId));
+
+                    //just remove the stmt in case it is a non reified triple
+                    conn.remove(stmt);
+                }
+
+                while (objStmts.hasNext()) {
+                    Statement stmt = objStmts.next();
+                    // if the identifier appears as object, the stmt id is the subject of the triple
+                    String stmtId = stmt.getSubject().stringValue();
+
+                    if (!stmt.getPredicate().stringValue().contains(PREDICATE_NAMESPACE)) {
+                        // if this statement is a qualifier or a non reified triple,
+                        // delete just this statement
+                        conn.remove(stmt);
+                    }
+                    else {
+                        // remove all statements and qualifiers with that id
+                        conn.remove(getStatementsById(kb, stmtId));
+                        conn.remove(getQualifiersById(kb, stmtId));
+                    }
+                }
+
+                return null;
+            }
+        });
     }
 
     @Override

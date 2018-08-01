@@ -158,7 +158,7 @@ public class MtasUimaParser
 
         try {
             createTokenCollection(jcas);
-            log.debug("Created token collection in {}ms", (System.currentTimeMillis() - start));
+            log.trace("Created token collection in {}ms", (System.currentTimeMillis() - start));
             return tokenCollection;
         }
         catch (Exception e) {
