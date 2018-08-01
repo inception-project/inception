@@ -177,6 +177,7 @@ public class KBInstance
         KBInstance kbInst = new KBInstance();
         kbInst.setType(URI.create(aStmt.getObject().stringValue()));
         kbInst.setIdentifier(aStmt.getSubject().stringValue());
+        kbInst.setKB(kb);
         kbInst.originalStatements.add(aStmt);
 
         readFirst(aConn, aStmt.getSubject(), kb.getLabelIri(), null, ENGLISH).ifPresent((stmt) -> {

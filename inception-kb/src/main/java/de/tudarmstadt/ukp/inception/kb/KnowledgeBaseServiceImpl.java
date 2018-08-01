@@ -985,7 +985,8 @@ public class KnowledgeBaseServiceImpl
         }
     }
 
-    private boolean hasImplicitNamespace(String s)
+    @Override
+    public boolean hasImplicitNamespace(String s)
     {
         for (String ns : implicitNamespaces) {
             if (s.startsWith(ns)) {

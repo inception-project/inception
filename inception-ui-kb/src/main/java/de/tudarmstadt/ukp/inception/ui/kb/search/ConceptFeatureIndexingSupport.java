@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import org.apache.uima.cas.text.AnnotationFS;
 import org.slf4j.Logger;
@@ -48,6 +49,8 @@ public class ConceptFeatureIndexingSupport
     public static final String KB_ENTITY = "KB.Entity";
     public static final String INDEX_KB_CONCEPT = "class";
     public static final String INDEX_KB_INSTANCE = "instance";
+    public static final String INDEX_KB_SUPER_CONCEPT = "super.concept";
+    
     
     private String id;
 
@@ -127,7 +130,7 @@ public class ConceptFeatureIndexingSupport
             throw new IllegalStateException("Unknown KB object: [" + kbObject.get() + "]");
         }
 
-        String field = aFeature.getLayer().getUiName();
+        String field = replaceSpace(aFeature.getLayer().getUiName());
         
         // Indexing UI label with type i.e Concept/Instance
         values.put(field + "." + aFeature.getUiName() + "." + objectType,
@@ -143,6 +146,23 @@ public class ConceptFeatureIndexingSupport
         // Indexing UI label without type and layer for generic search
         values.put(KB_ENTITY, featureObject.getUiLabel());
         
+        // Indexing super concepts with type super.concept 
+        Set<KBHandle> listParentConcepts = kbService.getParentConceptList(kbObject.get().getKB(),
+                kbObject.get().getIdentifier(), false);
+        for (KBHandle parentConcept : listParentConcepts) {
+            if (kbService.hasImplicitNamespace(parentConcept.getIdentifier())) {
+                continue;
+            }
+            values.put(field + "." + aFeature.getUiName() + "." + INDEX_KB_SUPER_CONCEPT,
+                    parentConcept.getUiLabel());
+        }
+        
         return values;
     }
+    
+    public static String replaceSpace(String s) {
+        return s.replaceAll(" ", "_");  
+    }
+    
+    
 }

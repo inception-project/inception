@@ -203,7 +203,8 @@ public class KBConcept
     {
         KBConcept kbConcept = new KBConcept();
         kbConcept.setIdentifier(aSubject.stringValue());
-
+        kbConcept.setKB(kb);
+        
         readFirst(aConn, aSubject,  kb.getLabelIri(), null).ifPresent((stmt) -> {
             kbConcept.setName(stmt.getObject().stringValue());
             kbConcept.originalStatements.add(stmt);
