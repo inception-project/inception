@@ -29,6 +29,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -847,10 +848,10 @@ public class KnowledgeBaseServiceImpl
     
     
     @Override
-    public List<KBHandle> getParentConceptList(KnowledgeBase aKB, String aIdentifier, boolean aAll)
+    public Set<KBHandle> getParentConceptList(KnowledgeBase aKB, String aIdentifier, boolean aAll)
         throws QueryEvaluationException
     {
-        List<KBHandle> parentConceptList = new ArrayList<KBHandle>();
+        Set<KBHandle> parentConceptList = new HashSet<KBHandle>();
         if (aIdentifier != null) {
             Optional<KBObject> identifierKBObj = readKBIdentifier(aKB.getProject(), aIdentifier);
             if (identifierKBObj.get() instanceof KBConcept) {
@@ -870,7 +871,7 @@ public class KnowledgeBaseServiceImpl
     }
     
     // recursive method to get concept tree
-    public List<KBHandle> getParentConceptListforConcept(List<KBHandle> parentConceptList,
+    public Set<KBHandle> getParentConceptListforConcept(Set<KBHandle> parentConceptList,
             KnowledgeBase aKB, String aIdentifier, boolean aAll)
         throws QueryEvaluationException
     {
@@ -887,6 +888,7 @@ public class KnowledgeBaseServiceImpl
         }
         return parentConceptList;
     }
+
 
     // Need to work on the query for variable inputs like owl:intersectionOf, rdf:rest*/rdf:first
     @Override

@@ -76,7 +76,7 @@ public class SPARQLQueryStore
             , SPARQL_PREFIX
             , "SELECT DISTINCT ?s ?l WHERE { "
             , "     {?oChild ?pSUBCLASS ?s . }"
-            , "     UNION { ?oChild ?pTYPE ?oCLASS ."
+            , "     UNION { ?s ?pTYPE ?oCLASS ."
             , "         ?oChild owl:intersectionOf ?list . "
             , "         FILTER EXISTS {?list rdf:rest*/rdf:first ?s. } }"
             , "     OPTIONAL { "

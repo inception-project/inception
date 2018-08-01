@@ -23,6 +23,7 @@ import java.io.OutputStream;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Statement;
@@ -415,7 +416,7 @@ public interface KnowledgeBaseService
             boolean aAll)
         throws QueryEvaluationException;
     
-    List<KBHandle> getParentConceptList(KnowledgeBase aKB, String aIdentifier, boolean aAll)
+    Set<KBHandle> getParentConceptList(KnowledgeBase aKB, String aIdentifier, boolean aAll)
             throws QueryEvaluationException;
     
     List<KBHandle> getConceptForInstance(KnowledgeBase aKB, String aIdentifier,
