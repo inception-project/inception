@@ -24,12 +24,15 @@ import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.inception.recommendation.api.ClassificationTool;
-import de.tudarmstadt.ukp.inception.recommendation.api.ClassificationToolFactory;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommendationEngine;
+import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommendationEngineFactory;
+import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.StringMatchingRecommender;
+import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.StringMatchingRecommenderTraits;
 
 @Component
 public class StringMatchingPosClassificationToolFactory
-    implements ClassificationToolFactory<Object, Void>
+    implements RecommendationEngineFactory
 {
     private Logger log = LoggerFactory.getLogger(getClass());
 
@@ -51,10 +54,10 @@ public class StringMatchingPosClassificationToolFactory
     }
 
     @Override
-    public ClassificationTool<Object> createTool(long aRecommenderId, String aFeature,
-        AnnotationLayer aLayer, int aMaxPredictions)
+    public RecommendationEngine build(Recommender aRecommender)
     {
-        return new StringMatchingPosClassificationTool(aRecommenderId, aFeature, aLayer);
+        StringMatchingRecommenderTraits traits = new StringMatchingRecommenderTraits();
+        return new StringMatchingRecommender(aRecommender, traits);
     }
     
     @Override
@@ -66,5 +69,11 @@ public class StringMatchingPosClassificationToolFactory
         
         return aLayer.isLockToTokenOffset() && "span".equals(aLayer.getType())
                 && (CAS.TYPE_NAME_STRING.equals(aFeature.getType()) || aFeature.isVirtualFeature());
+    }
+
+    @Override
+    public boolean isDeprecated()
+    {
+        return true;
     }
 }

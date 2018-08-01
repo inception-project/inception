@@ -26,4 +26,13 @@ public interface RecommendationEngineFactory {
     String getName();
     String getId();
     boolean accepts(AnnotationLayer aLayer, AnnotationFeature aFeature);
+
+    /**
+     * @return True if the recommender is deprecated, i.e. users should not
+     * create new recommenders based on this factory
+     */
+    default boolean isDeprecated()
+    {
+        return false;
+    }
 }

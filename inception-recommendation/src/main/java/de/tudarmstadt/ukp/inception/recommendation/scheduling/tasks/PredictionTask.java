@@ -105,7 +105,7 @@ public class PredictionTask
                     RecommenderContext context = recommendationService.getContext(user,
                             recommender);
                     RecommendationEngineFactory factory = recommendationService
-                            .getRecommendationEngineFactory(recommender);
+                            .getRecommenderFactory(recommender);
                     RecommendationEngine recommendationEngine = factory.build(recommender);
 
                     recommendationEngine.predict(context, jCas.getCas());

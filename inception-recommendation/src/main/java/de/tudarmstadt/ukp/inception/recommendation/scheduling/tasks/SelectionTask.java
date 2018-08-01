@@ -91,7 +91,7 @@ public class SelectionTask
                 try {
                     long start = System.currentTimeMillis();
                     RecommendationEngineFactory factory = recommendationService
-                        .getRecommendationEngineFactory(recommender);
+                        .getRecommenderFactory(recommender);
                     log.debug("Factory: [{}]", factory);
                     RecommendationEngine recommendationEngine = factory.build(recommender);
 

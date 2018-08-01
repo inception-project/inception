@@ -2,7 +2,7 @@
  * Copyright 2018
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -14,7 +14,8 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.ner;
+ */
+package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch;
 
 import org.apache.uima.cas.CAS;
 import org.slf4j.Logger;
@@ -26,30 +27,22 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommendationEngineFactory;
-import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.StringMatchingRecommender;
-import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.StringMatchingRecommenderTraits;
 
 @Component
-public class StringMatchingNerClassificationToolFactory
+public class StringMatchingRecommenderFactory
     implements RecommendationEngineFactory
 {
     private Logger log = LoggerFactory.getLogger(getClass());
 
     // This is a string literal so we can rename/refactor the class without it changing its ID
     // and without the database starting to refer to non-existing recommendation tools.
-    public static final String ID = 
-            "de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.ner.StringMatchingNerClassificationTool";
+    public static final String ID =
+        "de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.StringMatchingRecommender";
 
     @Override
     public String getId()
     {
         return ID;
-    }
-    
-    @Override
-    public String getName()
-    {
-        return "Multi-Token String Matcher";
     }
 
     @Override
@@ -58,22 +51,22 @@ public class StringMatchingNerClassificationToolFactory
         StringMatchingRecommenderTraits traits = new StringMatchingRecommenderTraits();
         return new StringMatchingRecommender(aRecommender, traits);
     }
-    
+
+    @Override
+    public String getName()
+    {
+        return "Multi-Token String Matcher";
+    }
+
     @Override
     public boolean accepts(AnnotationLayer aLayer, AnnotationFeature aFeature)
     {
         if (aLayer == null || aFeature == null) {
             return false;
         }
-        
-        return (aLayer.isLockToTokenOffset() || aLayer.isMultipleTokens())
-                && !aLayer.isCrossSentence() && "span".equals(aLayer.getType())
-                && (CAS.TYPE_NAME_STRING.equals(aFeature.getType()) || aFeature.isVirtualFeature());
-    }
 
-    @Override
-    public boolean isDeprecated()
-    {
-        return true;
+        return (aLayer.isLockToTokenOffset() || aLayer.isMultipleTokens())
+            && !aLayer.isCrossSentence() && "span".equals(aLayer.getType())
+            && (CAS.TYPE_NAME_STRING.equals(aFeature.getType()) || aFeature.isVirtualFeature());
     }
 }

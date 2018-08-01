@@ -262,7 +262,7 @@ public class RecommendationServiceImpl
     }
     
     @Override
-    public RecommendationEngineFactory getRecommendationEngineFactory(Recommender aRecommender)
+    public RecommendationEngineFactory getRecommenderFactory(Recommender aRecommender)
     {
         return recommenderFactoryRegistry.getFactory(aRecommender.getTool());
     }

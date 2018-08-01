@@ -55,7 +55,7 @@ public interface RecommendationService
      */
     List<AnnotationLayer> listLayersWithEnabledRecommenders(Project aProject);
 
-    RecommendationEngineFactory getRecommendationEngineFactory(Recommender aRecommender);
+    RecommendationEngineFactory getRecommenderFactory(Recommender aRecommender);
 
     void setActiveRecommenders(User aUser, AnnotationLayer layer,
             List<Recommender> selectedClassificationTools);

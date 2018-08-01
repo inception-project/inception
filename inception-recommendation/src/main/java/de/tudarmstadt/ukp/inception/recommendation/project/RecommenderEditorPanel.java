@@ -59,6 +59,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderFactoryRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderDeletedEvent;
 
 public class RecommenderEditorPanel
@@ -132,9 +133,9 @@ public class RecommenderEditorPanel
                 })));
         
         IModel<Pair<String, String>> toolModel = LambdaModelAdapter.of(() -> {
-            return listTools().stream()
-                    .filter(r -> r.getKey().equals(recommenderModel.getObject().getTool()))
-                    .findFirst().orElse(null);
+            String name = recommenderModel.getObject().getTool();
+            RecommendationEngineFactory factory = recommenderRegistry.getFactory(name);
+            return factory != null ? Pair.of(factory.getId(), factory.getName()) : null;
         }, (v) -> recommenderModel.getObject().setTool(v.getKey()));
         
         toolChoice = new DropDownChoice<Pair<String, String>>("tool", toolModel,
@@ -151,6 +152,7 @@ public class RecommenderEditorPanel
                 traitsContainer.addOrReplace(newTraits);
             }
         };
+        // TODO: For a deprecated recommender, show itself in the tool dropdown but unselectable
         toolChoice.setChoiceRenderer(new ChoiceRenderer<Pair<String, String>>("value"));
         toolChoice.setRequired(true);
         toolChoice.setOutputMarkupId(true);
@@ -263,6 +265,7 @@ public class RecommenderEditorPanel
                     .getFeature(recommenderModel.getObject().getFeature(), layer);
             return recommenderRegistry.getFactories(layer, feature)
                 .stream()
+                .filter(f -> !f.isDeprecated())
                 .map(f -> Pair.of(f.getId(), f.getName()))
                 .collect(Collectors.toList());
         }
