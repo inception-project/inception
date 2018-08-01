@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.persistence.EntityManager;
 
@@ -262,7 +263,7 @@ public class KnowledgeBaseServiceRemoteTest
         KnowledgeBase kb = sutConfig.getKnowledgeBase();
         
         long duration = System.currentTimeMillis();
-        List<KBHandle> parentList = sut.getParentConceptList(kb, sutConfig.getTestIdentifier(), true);
+        Set<KBHandle> parentList = sut.getParentConceptList(kb, sutConfig.getTestIdentifier(), true);
         duration = System.currentTimeMillis() - duration;
 
         System.out.printf("Parent List retrieved : %d%n", parentList.size());
