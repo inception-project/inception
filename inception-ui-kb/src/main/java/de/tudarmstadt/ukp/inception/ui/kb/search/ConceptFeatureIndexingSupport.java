@@ -17,12 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.search;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import org.apache.commons.collections4.MultiValuedMap;
+import org.apache.commons.collections4.multimap.HashSetValuedHashMap;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,7 +49,6 @@ public class ConceptFeatureIndexingSupport
     public static final String INDEX_KB_CONCEPT = "class";
     public static final String INDEX_KB_INSTANCE = "instance";
     public static final String INDEX_KB_SUPER_CONCEPT = "super.concept";
-    
     
     private String id;
 
@@ -90,17 +88,18 @@ public class ConceptFeatureIndexingSupport
     }
     
     @Override
-    public Map<String, String> indexFeatureValue(AnnotationFeature aFeature,
+    public MultiValuedMap<String, String> indexFeatureValue(AnnotationFeature aFeature,
             AnnotationFS aAnnotation)
     {
         // Returns KB IRI label after checking if the
         // feature type is associated with KB and feature value is not null
         FeatureSupport<?> featSup = featureSupportRegistry.getFeatureSupport(aFeature);
         KBHandle featureObject = featSup.getFeatureValue(aFeature, aAnnotation);
+        MultiValuedMap<String, String> values = new HashSetValuedHashMap<String, String>();
         
         // Feature value is not set
         if (featureObject == null) {
-            return Collections.emptyMap();
+            return values;
         }
 
         // === BEGIN NEEDS REFACTORING =====================================================
@@ -110,11 +109,9 @@ public class ConceptFeatureIndexingSupport
         // === END NEEDS REFACTORING =======================================================
 
         if (!kbObject.isPresent()) {
-            return Collections.emptyMap();
+            return values;
         }
-        
-        Map<String, String> values = new HashMap<>();
-        
+        //Map<String, String> values = new HashMap<>();
         String objectType;
         // === BEGIN NEEDS REFACTORING =====================================================
         // As part of issue #244, this needs to be refactored for a more reliable method of
@@ -160,9 +157,7 @@ public class ConceptFeatureIndexingSupport
         return values;
     }
     
-    public static String replaceSpace(String s) {
-        return s.replaceAll(" ", "_");  
+    public String replaceSpace(String s) {
+        return s.replaceAll(" ", "_");
     }
-    
-    
 }

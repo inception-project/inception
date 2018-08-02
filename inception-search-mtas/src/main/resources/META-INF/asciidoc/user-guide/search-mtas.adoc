@@ -164,3 +164,7 @@ POS or lemma annotations).
  
  (<Named_entity.identifier="ChateauMorgonBeaujolais"/> | <Named_entity.identifier="AmericanWine"/>)
  
+ * All annotated identifier with a sub concept or instance of a particular identifier  *RedWine* 
+ 
+ <Named_entity.identifier.super.concept="RedWine"/>
+ 
