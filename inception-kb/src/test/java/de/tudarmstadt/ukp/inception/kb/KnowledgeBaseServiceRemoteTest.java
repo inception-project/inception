@@ -215,6 +215,15 @@ public class KnowledgeBaseServiceRemoteTest
                     kb_yago, "http://www.wikidata.org/entity/Q21445637S003fc070-45f0-80bd-ae2d-072cde5aad89"));
         }
         
+        {
+            KnowledgeBase kb_zbw = new KnowledgeBase();
+            kb_zbw.setName("ZBW (official/direct mapping)");
+            kb_zbw.setType(RepositoryType.REMOTE);
+            kb_zbw.setReification(Reification.NONE);
+            kb_zbw = setOWLSchemaMapping(kb_zbw);
+            kbList.add(new TestConfiguration("http://zbw.eu/beta/sparql/stw/query",
+                    kb_zbw, "http://zbw.eu/stw/thsys/71020"));
+        }
         
         List<Object[]> dataList = new ArrayList<>();
         for (TestConfiguration kb : kbList) {
@@ -294,6 +303,16 @@ public class KnowledgeBaseServiceRemoteTest
             {
             });
         }
+    }
+    
+    public static KnowledgeBase setOWLSchemaMapping(KnowledgeBase kb) {
+        kb.setClassIri(OWL.CLASS);
+        kb.setSubclassIri(RDFS.SUBCLASSOF);
+        kb.setTypeIri(RDF.TYPE);
+        kb.setDescriptionIri(RDFS.COMMENT);
+        kb.setLabelIri(RDFS.LABEL);
+        kb.setPropertyTypeIri(RDF.PROPERTY);
+        return kb;
     }
     
     private static class TestConfiguration
