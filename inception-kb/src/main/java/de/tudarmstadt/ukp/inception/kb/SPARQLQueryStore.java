@@ -22,7 +22,7 @@ import org.eclipse.rdf4j.model.vocabulary.RDFS;
 
 public class SPARQLQueryStore
 {   
-    public static String aLimit = "1000";
+    public static int aLimit = 1000;
     
     // Query to list properties from KnowledgeBase
     public static String PROPERTYLIST_QUERY = String.join("\n"
@@ -38,5 +38,5 @@ public class SPARQLQueryStore
             , "    FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\"))"
             , "  }"
             , "}"
-            , "LIMIT 10000");  
+            , "LIMIT " + aLimit);
 }
