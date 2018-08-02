@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.external;
 
 import java.io.Serializable;
 
-public class ExternalClassifierTraits
+public class ExternalRecommenderTraits
     implements Serializable
 {
 

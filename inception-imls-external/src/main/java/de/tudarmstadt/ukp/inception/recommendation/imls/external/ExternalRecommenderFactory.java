@@ -22,8 +22,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.toJsonString;
 
 import java.io.IOException;
 
-import org.apache.wicket.markup.html.panel.Panel;
-import org.apache.wicket.model.IModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,14 +30,14 @@ import org.springframework.stereotype.Component;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.inception.recommendation.api.ClassificationTool;
-import de.tudarmstadt.ukp.inception.recommendation.api.ClassificationToolFactory;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommendationEngine;
+import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommendationEngineFactory;
 
 @Component
-public class ExternalClassificationToolFactory
-    implements ClassificationToolFactory<Object, ExternalClassifierTraits>
+public class ExternalRecommenderFactory
+    implements RecommendationEngineFactory
 {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -58,20 +56,14 @@ public class ExternalClassificationToolFactory
     }
 
     @Override
-    public String getName()
-    {
-        return "Remote classifier";
+    public RecommendationEngine build(Recommender aRecommender) {
+        return null;
     }
 
     @Override
-    public ClassificationTool<Object> createTool(long aRecommenderId, String aFeature,
-            AnnotationLayer aLayer, int aMaxPredictions)
+    public String getName()
     {
-        Recommender recommender = recommendationService.getRecommender(aRecommenderId);
-        ExternalClassifierTraits traits = readTraits(recommender);
-        String type = aLayer.getName();
-
-        return new ExternalClassificationTool(aRecommenderId, aFeature, type, traits);
+        return "Remote classifier";
     }
 
     @Override
@@ -85,29 +77,22 @@ public class ExternalClassificationToolFactory
                 && WebAnnoConst.SPAN_TYPE.equals(aLayer.getType());
     }
 
-    @Override
-    public Panel createTraitsEditor(String aId, IModel<Recommender> aRecommender) {
-        return new ExternalClassificationToolTraitsEditor(aId, aRecommender);
-    }
-
-    @Override
-    public ExternalClassifierTraits readTraits(Recommender aRecommender) {
-        ExternalClassifierTraits traits = null;
+    private ExternalRecommenderTraits readTraits(Recommender aRecommender) {
+        ExternalRecommenderTraits traits = null;
         try {
-            traits = fromJsonString(ExternalClassifierTraits.class, aRecommender.getTraits());
+            traits = fromJsonString(ExternalRecommenderTraits.class, aRecommender.getTraits());
         } catch (IOException e) {
             log.error("Error while reading traits", e);
         }
 
         if (traits == null) {
-            traits = new ExternalClassifierTraits();
+            traits = new ExternalRecommenderTraits();
         }
 
         return traits;
     }
 
-    @Override
-    public void writeTraits(Recommender aRecommender, ExternalClassifierTraits aTraits) {
+    private void writeTraits(Recommender aRecommender, ExternalRecommenderTraits aTraits) {
         try {
             String json = toJsonString(aTraits);
             aRecommender.setTraits(json);

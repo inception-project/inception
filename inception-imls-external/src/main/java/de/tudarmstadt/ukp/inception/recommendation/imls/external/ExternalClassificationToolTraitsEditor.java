@@ -35,17 +35,18 @@ public class ExternalClassificationToolTraitsEditor
 
     private static final String MID_FORM = "form";
 
-    private @SpringBean ExternalClassificationToolFactory toolFactory;
+    private @SpringBean
+    ExternalRecommenderFactory toolFactory;
     private final Recommender recommender;
-    private final ExternalClassifierTraits traits;
+    private final ExternalRecommenderTraits traits;
 
     public ExternalClassificationToolTraitsEditor(String aId, IModel<Recommender> aRecommender)
     {
         super(aId, aRecommender);
         recommender = aRecommender.getObject();
-        traits = toolFactory.readTraits(recommender);
+        traits =  new ExternalRecommenderTraits();
 
-        Form<ExternalClassifierTraits> form = new Form<ExternalClassifierTraits>(MID_FORM,
+        Form<ExternalRecommenderTraits> form = new Form<ExternalRecommenderTraits>(MID_FORM,
                 CompoundPropertyModel.of(Model.of(traits)))
         {
             private static final long serialVersionUID = -3109239605742291123L;
@@ -54,7 +55,7 @@ public class ExternalClassificationToolTraitsEditor
             protected void onSubmit()
             {
                 super.onSubmit();
-                toolFactory.writeTraits(recommender, traits);
+                // toolFactory.writeTraits(recommender, traits);
             }
         };
 

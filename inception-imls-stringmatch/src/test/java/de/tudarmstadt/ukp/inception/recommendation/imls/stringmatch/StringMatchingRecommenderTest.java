@@ -113,7 +113,7 @@ public class StringMatchingRecommenderTest
     @Test
     public void thatIncrementalNerEvaluationWorks() throws Exception
     {
-        IncrementalSplitter splitStrategy = new IncrementalSplitter(0.8, 250, 10);
+        IncrementalSplitter splitStrategy = new IncrementalSplitter(0.8, 11000, 10);
         StringMatchingRecommender sut = new StringMatchingRecommender(recommender, traits);
         List<CAS> casList = loadAllData();
 
