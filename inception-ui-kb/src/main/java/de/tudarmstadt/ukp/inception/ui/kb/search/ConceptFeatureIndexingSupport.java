@@ -127,7 +127,7 @@ public class ConceptFeatureIndexingSupport
             throw new IllegalStateException("Unknown KB object: [" + kbObject.get() + "]");
         }
 
-        String field = replaceSpace(aFeature.getLayer().getUiName());
+        String field = aFeature.getLayer().getUiName();
         
         // Indexing UI label with type i.e Concept/Instance
         values.put(field + "." + aFeature.getUiName() + "." + objectType,
@@ -157,7 +157,4 @@ public class ConceptFeatureIndexingSupport
         return values;
     }
     
-    public String replaceSpace(String s) {
-        return s.replaceAll(" ", "_");
-    }
 }
