@@ -42,6 +42,7 @@ import javax.persistence.Query;
 import org.apache.commons.compress.compressors.CompressorException;
 import org.apache.commons.compress.compressors.CompressorStreamFactory;
 import org.apache.commons.lang3.StringUtils;
+import org.eclipse.rdf4j.common.iteration.Iterations;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.model.Statement;
@@ -154,11 +155,42 @@ public class KnowledgeBaseServiceImpl
         String baseName = "pid-" + Long.toString(kb.getProject().getId()) + "-kbid-";
         String repositoryId = repoManager.getNewRepositoryID(baseName);
         kb.setRepositoryId(repositoryId);
-
         repoManager.addRepositoryConfig(new RepositoryConfig(repositoryId, cfg));
         entityManager.persist(kb);
     }
 
+    @Override
+    public void defineBaseProperties(KnowledgeBase kb, boolean kbUpdateFlag) 
+    {
+        if (kbUpdateFlag) {
+            List<KBHandle> listProperties = listProperties(kb, true, true);
+            if (!listProperties.isEmpty()) {
+                for (KBHandle propertyHandle : listProperties) {
+                    KBProperty property = new KBProperty();
+                    property.setIdentifier(propertyHandle.getIdentifier());
+                    property.setName(propertyHandle.getName());
+                    deleteProperty(kb, property);
+
+                }
+            }
+        }
+        
+        // KB will initialize base properties with base IRI schema properties defined by user
+        if (kb.getType() == RepositoryType.LOCAL && !kb.isReadOnly()) {
+            KBProperty property = new KBProperty(kb.getSubclassIri().getLocalName());
+            property.setIdentifier(kb.getSubclassIri().stringValue());
+            createBaseProperty(kb, property);
+            property = new KBProperty(kb.getLabelIri().getLocalName());
+            property.setIdentifier(kb.getLabelIri().stringValue());
+            createBaseProperty(kb, property);
+            property = new KBProperty(kb.getDescriptionIri().getLocalName());
+            property.setIdentifier(kb.getDescriptionIri().stringValue());
+            createBaseProperty(kb, property);
+        }
+    }
+    
+    
+    
     @Transactional
     @Override
     public boolean knowledgeBaseExists(Project project, String kbName)
@@ -374,7 +406,7 @@ public class KnowledgeBaseServiceImpl
     @Override
     public void deleteConcept(KnowledgeBase kb, KBConcept aConcept)
     {
-        delete(kb, aConcept.getIdentifier());
+        getReificationStrategy(kb).deleteConcept(kb, aConcept);
     }
 
     @Override
@@ -397,14 +429,24 @@ public class KnowledgeBaseServiceImpl
             return new KBHandle(identifier, aProperty.getName());
         });
     }
-
+    
+    // Method to create and define base property
+    public KBHandle createBaseProperty(KnowledgeBase kb, KBProperty aProperty)
+    {
+        return update(kb, (conn) -> {
+            aProperty.write(conn, kb);
+            return new KBHandle(aProperty.getIdentifier(), aProperty.getName());
+        });
+    }
+    
     @Override
     public Optional<KBProperty> readProperty(KnowledgeBase kb, String aIdentifier)
     {
         return read(kb, (conn) -> {
             ValueFactory vf = conn.getValueFactory();
-            try (RepositoryResult<Statement> stmts = RdfUtils.getStatements(conn,
-                    vf.createIRI(aIdentifier), kb.getTypeIri(), kb.getPropertyTypeIri(), true)) {
+            try (RepositoryResult<Statement> stmts = RdfUtils.getPropertyStatementsSparql(conn,
+                    vf.createIRI(aIdentifier), kb.getTypeIri(), kb.getPropertyTypeIri(), 1000, true,
+                    null)) {
                 if (stmts.hasNext()) {
                     Statement propStmt = stmts.next();
                     KBProperty kbProp = KBProperty.read(conn, propStmt, kb);
@@ -433,13 +475,36 @@ public class KnowledgeBaseServiceImpl
     @Override
     public void deleteProperty(KnowledgeBase kb, KBProperty aType)
     {
-        delete(kb, aType.getIdentifier());
+        getReificationStrategy(kb).deleteProperty(kb, aType);
     }
 
     @Override
     public List<KBHandle> listProperties(KnowledgeBase kb, boolean aAll)
     {
-        return list(kb, kb.getPropertyTypeIri(), true, aAll);
+        return listProperties(kb, true, aAll);
+    }
+
+    @Override
+    public List<KBHandle> listProperties(KnowledgeBase kb, boolean aIncludeInferred, boolean aAll)
+        throws QueryEvaluationException
+    {
+        List<KBHandle> resultList = read(kb, (conn) -> {
+            String QUERY = getPropertyListQuery(kb);
+            TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
+            tupleQuery.setBinding("pTYPE", kb.getTypeIri());
+            tupleQuery.setBinding("oPROPERTY", kb.getPropertyTypeIri());
+            tupleQuery.setBinding("pLABEL", kb.getLabelIri());
+            tupleQuery.setIncludeInferred(aIncludeInferred);
+            return evaluateListQuery(tupleQuery, aAll);
+        });
+
+        resultList.sort(Comparator.comparing(KBObject::getUiLabel));
+
+        return resultList;
+    }
+    
+    public String getPropertyListQuery(KnowledgeBase kb) {
+        return SPARQLQueryStore.PROPERTYLIST_QUERY;
     }
 
     @Override
@@ -529,7 +594,7 @@ public class KnowledgeBaseServiceImpl
     @Override
     public void deleteInstance(KnowledgeBase kb, KBInstance aInstance)
     {
-        delete(kb, aInstance.getIdentifier());
+        getReificationStrategy(kb).deleteInstance(kb, aInstance);
     }
 
     @Override
@@ -544,7 +609,7 @@ public class KnowledgeBaseServiceImpl
     @Override
     public void initStatement(KnowledgeBase kb, KBStatement aStatement)
     {
-        List<Statement> statements = getReificationStrategy(kb).reify(kb, aStatement);
+        Set<Statement> statements = getReificationStrategy(kb).reify(kb, aStatement);
         aStatement.setOriginalStatements(statements);
     }
 
@@ -572,17 +637,23 @@ public class KnowledgeBaseServiceImpl
         KBHandle handle = new KBHandle(aInstance.getIdentifier(), aInstance.getName());
         return listStatements(kb, handle, aAll);
     }
-
-    private void delete(KnowledgeBase kb, String aIdentifier)
+    
+    @Override
+    public List<Statement> listStatementsWithPredicateOrObjectReference(KnowledgeBase kb,
+            String aIdentifier)
     {
-        update(kb, (conn) -> {
+        try (RepositoryConnection conn = getConnection(kb)) {
             ValueFactory vf = conn.getValueFactory();
-            try (RepositoryResult<Statement> stmts = conn
-                .getStatements(vf.createIRI(aIdentifier), null, null)) {
-                conn.remove(stmts);
+            IRI iri = vf.createIRI(aIdentifier);
+            try (RepositoryResult<Statement> predStmts = conn.getStatements(null, iri, null);
+                    RepositoryResult<Statement> objStmts = conn.getStatements(null, null, iri)) {
+                List<Statement> allStmts = new ArrayList<>();
+                Iterations.addAll(predStmts, allStmts);
+                Iterations.addAll(objStmts, allStmts);
+                return allStmts;
+
             }
-            return null;
-        });
+        }
     }
 
     private String generateIdentifier(RepositoryConnection conn, KnowledgeBase kb)
@@ -655,6 +726,27 @@ public class KnowledgeBaseServiceImpl
         return resultList;
     }
 
+    @Override
+    public List<KBHandle> listProperties(KnowledgeBase kb, IRI aType, boolean aIncludeInferred,
+            boolean aAll)
+        throws QueryEvaluationException
+    {
+        List<KBHandle> resultList = read(kb, (conn) -> {
+            String QUERY = getPropertyListQuery(kb);
+            TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
+            tupleQuery.setBinding("pTYPE", kb.getTypeIri());
+            tupleQuery.setBinding("oPROPERTY", aType);
+            tupleQuery.setBinding("pLABEL", kb.getLabelIri());
+            tupleQuery.setIncludeInferred(aIncludeInferred);
+
+            return evaluateListQuery(tupleQuery, aAll);
+        });
+
+        resultList.sort(Comparator.comparing(KBObject::getUiLabel));
+
+        return resultList;
+    }
+    
     @Override
     public List<KBHandle> listRootConcepts(KnowledgeBase kb, boolean aAll)
         throws QueryEvaluationException
@@ -783,6 +875,8 @@ public class KnowledgeBaseServiceImpl
         }
         return handles;
     }
+    
+    
 
     private ReificationStrategy getReificationStrategy(KnowledgeBase kb)
     {
@@ -846,5 +940,39 @@ public class KnowledgeBaseServiceImpl
             return mapper.readValue(r, 
                     new TypeReference<HashMap<String, KnowledgeBaseProfile>>(){});
         }
+    }
+    
+    /**
+     * Read identifier IRI and return {@link Optional} of {@link KBObject}
+     * 
+     * @return {@link Optional} of {@link KBObject} of type {@link KBConcept} or {@link KBInstance}
+     */
+    @Override
+    public Optional<KBObject> readKBIdentifier(Project aProject, String aIdentifier)
+    {
+        for (KnowledgeBase kb : getKnowledgeBases(aProject)) {
+            try (RepositoryConnection conn = getConnection(kb)) {
+                ValueFactory vf = conn.getValueFactory();
+                RepositoryResult<Statement> stmts = RdfUtils.getStatements(conn,
+                        vf.createIRI(aIdentifier), kb.getTypeIri(), kb.getClassIri(), true);
+                if (stmts.hasNext()) {
+                    KBConcept kbConcept = KBConcept.read(conn, vf.createIRI(aIdentifier), kb);
+                    if (kbConcept != null) {
+                        return Optional.of(kbConcept);
+                    }
+                }
+                else if (!stmts.hasNext()) {
+                    Optional<KBInstance> kbInstance = readInstance(kb, aIdentifier);
+                    if (kbInstance.isPresent()) {
+                        return kbInstance.flatMap((p) -> Optional.of(p));
+                    }
+                }
+            }
+            catch (QueryEvaluationException e) {
+                log.error("Reading KB Entries failed.", e);
+                return Optional.empty();
+            }
+        }
+        return Optional.empty();
     }
 }
