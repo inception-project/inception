@@ -24,8 +24,10 @@ import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.fit.factory.JCasBuilder;
@@ -45,7 +47,9 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
+import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
+import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupportRegistryImpl;
 import de.tudarmstadt.ukp.inception.search.PrimitiveUimaIndexingSupport;
 import de.tudarmstadt.ukp.inception.search.index.mtas.MtasUimaParser;
@@ -125,6 +129,12 @@ public class ConceptFeatureIndexingSupportTest
         when(kbService.readKBIdentifier(any(Project.class), any(String.class))).thenReturn(
                 Optional.of(new KBInstance("urn:dummy-concept", "Dummy concept")));
         
+        Set<KBHandle> dummyValue = new HashSet<KBHandle>();
+        dummyValue.add(new KBHandle("urn:dummy-parent-concept", "Dummy Parent Concept"));
+        
+        when(kbService.getParentConceptList(any(KnowledgeBase.class), any(String.class),
+                any(Boolean.class))).thenReturn(dummyValue);
+
         MtasUimaParser sut = new MtasUimaParser(project, annotationSchemaService,
                 featureIndexingSupportRegistry);
         MtasTokenCollection tc = sut.createTokenCollection(jcas);
@@ -137,12 +147,12 @@ public class ConceptFeatureIndexingSupportTest
         assertThat(tokens)
             .filteredOn(t -> t.getPrefix().startsWith("Named_Entity"))
             .extracting(MtasToken::getPrefix)
-            .containsExactly("Named_Entity", "Named_Entity.identifier", 
+            .contains("Named_Entity", "Named_Entity.identifier", 
                     "Named_Entity.identifier.instance");
     
         assertThat(tokens)
             .filteredOn(t -> t.getPrefix().startsWith("Named_Entity"))
             .extracting(MtasToken::getPostfix)
-            .containsExactly("", "urn:dummy-concept", "Dummy concept");
+            .contains("", "urn:dummy-concept", "Dummy concept");
     }
 }
