@@ -61,6 +61,7 @@ import mtas.analysis.token.MtasTokenCollection;
 public class ConceptFeatureIndexingSupportTest
 {
     private Project project;
+    private KnowledgeBase kb;
     private @Mock AnnotationSchemaService annotationSchemaService;
     private @Mock KnowledgeBaseService kbService;
     private FeatureSupportRegistryImpl featureSupportRegistry;
@@ -73,6 +74,7 @@ public class ConceptFeatureIndexingSupportTest
         initMocks(this);
         
         project = new Project();
+        kb = new KnowledgeBase();
         project.setId(1l);
         project.setName("test project");
         
@@ -126,9 +128,13 @@ public class ConceptFeatureIndexingSupportTest
         when(kbService.readInstance(any(Project.class), any(String.class))).thenReturn(
                 Optional.of(new KBInstance("urn:dummy-concept", "Dummy concept")));
         
-        when(kbService.readKBIdentifier(any(Project.class), any(String.class))).thenReturn(
-                Optional.of(new KBInstance("urn:dummy-concept", "Dummy concept")));
         
+        KBInstance kbInstance = new KBInstance("urn:dummy-concept", "Dummy concept");
+        kbInstance.setKB(kb);
+        
+        when(kbService.readKBIdentifier(any(Project.class), any(String.class)))
+                .thenReturn(Optional.of(kbInstance));
+
         Set<KBHandle> dummyValue = new HashSet<KBHandle>();
         dummyValue.add(new KBHandle("urn:dummy-parent-concept", "Dummy Parent Concept"));
         
@@ -138,21 +144,22 @@ public class ConceptFeatureIndexingSupportTest
         MtasUimaParser sut = new MtasUimaParser(project, annotationSchemaService,
                 featureIndexingSupportRegistry);
         MtasTokenCollection tc = sut.createTokenCollection(jcas);
-        
+                
         MtasUtils.print(tc);
         
         List<MtasToken> tokens = new ArrayList<>();
         tc.iterator().forEachRemaining(tokens::add);
-        
+                
         assertThat(tokens)
             .filteredOn(t -> t.getPrefix().startsWith("Named_Entity"))
             .extracting(MtasToken::getPrefix)
-            .contains("Named_Entity", "Named_Entity.identifier", 
-                    "Named_Entity.identifier.instance");
+            .containsExactly("Named_Entity", "Named_Entity.identifier", "Named_Entity.identifier",
+                    "Named_Entity.identifier.instance","Named_Entity.identifier.super.concept");
     
         assertThat(tokens)
             .filteredOn(t -> t.getPrefix().startsWith("Named_Entity"))
             .extracting(MtasToken::getPostfix)
             .contains("", "urn:dummy-concept", "Dummy concept");
     }
+
 }
