@@ -165,7 +165,7 @@ public class KBInstance
         kbInst.setIdentifier(aStmt.getSubject().stringValue());
         kbInst.originalStatements.add(aStmt);
 
-        readFirst(aConn, aStmt.getSubject(), aKb.getLabelIri(), null, aKb.getLanguage())
+        readFirst(aConn, aStmt.getSubject(), aKb.getLabelIri(), null, aKb.getDefaultLanguage())
             .ifPresent((stmt) -> {
                 kbInst.setName(stmt.getObject().stringValue());
                 kbInst.originalStatements.add(stmt);
@@ -176,7 +176,7 @@ public class KBInstance
                 }
             });
 
-        readFirst(aConn, aStmt.getSubject(), aKb.getDescriptionIri(), null, aKb.getLanguage())
+        readFirst(aConn, aStmt.getSubject(), aKb.getDescriptionIri(), null, aKb.getDefaultLanguage())
             .ifPresent((stmt) -> {
                 kbInst.setDescription(stmt.getObject().stringValue());
                 kbInst.originalStatements.add(stmt);

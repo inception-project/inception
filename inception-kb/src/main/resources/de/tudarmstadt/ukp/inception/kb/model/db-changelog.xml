@@ -289,4 +289,14 @@
     </addColumn>
   </changeSet>
 
+  <changeSet author="INCEpTION Team" id="20180803">
+    <preConditions onFail="MARK_RAN">
+      <columnExists tableName="knowledgebase" columnName="language"/>
+    </preConditions>
+
+    <renameColumn tableName="knowledgebase"
+                  newColumnName="defaultLanguage"
+                  oldColumnName="language"
+                  columnDataType="VARCHAR(255)"/>
+  </changeSet>
 </databaseChangeLog>

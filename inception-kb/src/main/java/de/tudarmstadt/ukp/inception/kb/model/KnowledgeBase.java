@@ -159,7 +159,7 @@ public class KnowledgeBase
      * The default language for labels and descriptions of KB elements
      */
     @Column
-    private String language;
+    private String defaultLanguage;
 
     public String getRepositoryId() {
         return repositoryId;
@@ -260,14 +260,14 @@ public class KnowledgeBase
         propertyTypeIri = aPropertyTypeIri;
     }
 
-    public String getLanguage()
+    public String getDefaultLanguage()
     {
-        return language;
+        return defaultLanguage;
     }
 
-    public void setLanguage(String aLanguage)
+    public void setDefaultLanguage(String aLanguage)
     {
-        language = aLanguage;
+        defaultLanguage = aLanguage;
     }
 
     public boolean isReadOnly()
