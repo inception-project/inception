@@ -61,9 +61,9 @@ public class KBStatement implements Serializable
     /**
      * Call {@link KnowledgeBaseService#initStatement(KnowledgeBase, KBStatement)}
      * after constructing this in order to allow upserting.
-     * @param aInstance
-     * @param aProperty
-     * @param aValue
+     * @param aInstance {@link KBHandle} for the statement instance
+     * @param aProperty {@link KBHandle} for the statement property
+     * @param aValue Defines value for the statement
      */
     public KBStatement(KBHandle aInstance, KBHandle aProperty, Value aValue)
     {
