@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.active.learning;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -241,7 +242,8 @@ public class ActiveLearningServiceImpl
         return state.getLearnSkippedRecommendationTime();
     }
 
-    private ActiveLearningUserState getState(String aUsername)
+    @Override
+    public ActiveLearningUserState getState(String aUsername)
     {
         ActiveLearningUserState state;
         state = states.get(aUsername);
@@ -250,6 +252,15 @@ public class ActiveLearningServiceImpl
             states.put(aUsername, state);
         }
         return state;
+    }
+
+    @Override
+    public void setState(String aUsername, ActiveLearningServiceImpl.ActiveLearningUserState
+        aState) {
+        if (aState == null) {
+            aState = new ActiveLearningUserState();
+        }
+        states.put(aUsername, aState);
     }
 
     @EventListener
@@ -271,8 +282,9 @@ public class ActiveLearningServiceImpl
         }
     }
 
-    private static class ActiveLearningUserState
+    public static class ActiveLearningUserState implements Serializable
     {
+        private static final long serialVersionUID = -167705997822964808L;
         private boolean sessionActive = false;
         private boolean hasUnseenRecommendation = false;
         private boolean hasSkippedRecommendation = false;
@@ -283,93 +295,93 @@ public class ActiveLearningServiceImpl
         private ActiveLearningRecommender activeLearningRecommender;
         private Date learnSkippedRecommendationTime;
 
-        private boolean isSessionActive()
+        public boolean isSessionActive()
         {
             return sessionActive;
         }
 
-        private void setSessionActive(boolean sessionActive)
+        public void setSessionActive(boolean sessionActive)
         {
             this.sessionActive = sessionActive;
         }
 
-        private boolean isHasUnseenRecommendation()
+        public boolean isHasUnseenRecommendation()
         {
             return hasUnseenRecommendation;
         }
 
-        private void setHasUnseenRecommendation(boolean hasUnseenRecommendation)
+        public void setHasUnseenRecommendation(boolean hasUnseenRecommendation)
         {
             this.hasUnseenRecommendation = hasUnseenRecommendation;
         }
 
-        private boolean isHasSkippedRecommendation()
+        public boolean isHasSkippedRecommendation()
         {
             return hasSkippedRecommendation;
         }
 
-        private void setHasSkippedRecommendation(boolean hasSkippedRecommendation)
+        public void setHasSkippedRecommendation(boolean hasSkippedRecommendation)
         {
             this.hasSkippedRecommendation = hasSkippedRecommendation;
         }
 
-        private boolean isDoExistRecommenders()
+        public boolean isDoExistRecommenders()
         {
             return doExistRecommenders;
         }
 
-        private void setDoExistRecommenders(boolean doExistRecommenders)
+        public void setDoExistRecommenders(boolean doExistRecommenders)
         {
             this.doExistRecommenders = doExistRecommenders;
         }
 
-        private AnnotationObject getCurrentRecommendation()
+        public AnnotationObject getCurrentRecommendation()
         {
             return currentRecommendation;
         }
 
-        private void setCurrentRecommendation(AnnotationObject currentRecommendation)
+        public void setCurrentRecommendation(AnnotationObject currentRecommendation)
         {
             this.currentRecommendation = currentRecommendation;
         }
 
-        private RecommendationDifference getCurrentDifference()
+        public RecommendationDifference getCurrentDifference()
         {
             return currentDifference;
         }
 
-        private void setCurrentDifference(RecommendationDifference currentDifference)
+        public void setCurrentDifference(RecommendationDifference currentDifference)
         {
             this.currentDifference = currentDifference;
         }
 
-        private AnnotationLayer getSelectedLayer()
+        public AnnotationLayer getSelectedLayer()
         {
             return selectedLayer;
         }
 
-        private void setSelectedLayer(AnnotationLayer selectedLayer)
+        public void setSelectedLayer(AnnotationLayer selectedLayer)
         {
             this.selectedLayer = selectedLayer;
         }
 
-        private ActiveLearningRecommender getActiveLearningRecommender()
+        public ActiveLearningRecommender getActiveLearningRecommender()
         {
             return activeLearningRecommender;
         }
 
-        private void setActiveLearningRecommender(
+        public void setActiveLearningRecommender(
             ActiveLearningRecommender activeLearningRecommender)
         {
             this.activeLearningRecommender = activeLearningRecommender;
         }
 
-        private Date getLearnSkippedRecommendationTime()
+        public Date getLearnSkippedRecommendationTime()
         {
             return learnSkippedRecommendationTime;
         }
 
-        private void setLearnSkippedRecommendationTime(Date learnSkippedRecommendationTime)
+        public void setLearnSkippedRecommendationTime(Date learnSkippedRecommendationTime)
         {
             this.learnSkippedRecommendationTime = learnSkippedRecommendationTime;
         }

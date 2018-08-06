@@ -78,4 +78,8 @@ public interface ActiveLearningService
         aLearnSkippedRecommendationTime);
 
     Date getLearnSkippedRecommendationTime(User aUser);
+
+    ActiveLearningServiceImpl.ActiveLearningUserState getState(String aUsername);
+
+    void setState(String aUsername, ActiveLearningServiceImpl.ActiveLearningUserState aState);
 }
