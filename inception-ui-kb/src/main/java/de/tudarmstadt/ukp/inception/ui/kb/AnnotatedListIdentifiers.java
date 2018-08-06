@@ -65,7 +65,7 @@ public class AnnotatedListIdentifiers
     private Model<String> targetQuery = Model.of("");
 
     public AnnotatedListIdentifiers(String aId, IModel<KnowledgeBase> aKbModel,
-            IModel<KBHandle> aConcept, IModel<KBHandle> aInstance)
+            IModel<KBHandle> aConcept, IModel<KBHandle> aInstance, boolean flagInstanceSelect)
     {
         super(aId, aConcept);
         setOutputMarkupId(true);
@@ -76,7 +76,7 @@ public class AnnotatedListIdentifiers
         String queryHead = "<KB.Entity=\"";
         String queryEnd = "\"/>";
         StringBuffer query = new StringBuffer();
-        if (aInstance.getObject() == null) {
+        if (!flagInstanceSelect) {
             String concept = aConcept.getObject().getUiLabel();
             targetQuery = Model
                     .of(query.append(queryHead).append(concept).append(queryEnd).toString());
@@ -89,7 +89,7 @@ public class AnnotatedListIdentifiers
         LambdaModel<List<SearchResult>> searchResults = LambdaModel.of(this::getSearchResults);
         LOG.trace("SearchResult count : {}" , searchResults.getObject().size());
         OverviewListChoice<String> overviewList = new OverviewListChoice<String>(
-                "annotatedResultGroups")
+                aId)
         {
             private static final long serialVersionUID = -122960232588575731L;
             @Override
@@ -100,6 +100,7 @@ public class AnnotatedListIdentifiers
             }
         };
         overviewList.setChoices(getSearchResultsFormatted(searchResults));
+        
         add(overviewList);
         add(new Label("count", LambdaModel.of(() -> overviewList.getChoices().size())));
     }
