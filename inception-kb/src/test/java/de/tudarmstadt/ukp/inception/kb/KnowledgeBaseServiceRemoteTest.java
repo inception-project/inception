@@ -214,6 +214,16 @@ public class KnowledgeBaseServiceRemoteTest
                     kb_yago));
         }
         
+
+        {
+            KnowledgeBase kb_stw_economics = new KnowledgeBase();
+            kb_stw_economics.setName("STW Thesaurus for Economics");
+            kb_stw_economics.setType(RepositoryType.REMOTE);
+            kb_stw_economics.setReification(Reification.NONE);
+            kb_stw_economics.applyMapping(PROFILES.get("stw-economics").getMapping());
+            kbList.add(new TestConfiguration(PROFILES.get("stw-economics").getSparqlUrl(),
+                    kb_stw_economics));
+        }
         
         List<Object[]> dataList = new ArrayList<>();
         for (TestConfiguration kb : kbList) {
