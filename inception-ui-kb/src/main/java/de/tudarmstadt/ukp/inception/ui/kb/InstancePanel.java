@@ -29,7 +29,7 @@ public class InstancePanel
     {
         super(aId, selectedInstanceModel);
         setOutputMarkupId(true);
-        add(new InstanceInfoPanel("instanceinfo", aKbModel, selectedInstanceHandle,
+        replace(new InstanceInfoPanel("instanceinfo", aKbModel, selectedInstanceHandle,
                 selectedInstanceModel));
 
         Component annotatedSearchPanel;

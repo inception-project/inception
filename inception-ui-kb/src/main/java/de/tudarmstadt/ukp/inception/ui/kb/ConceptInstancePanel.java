@@ -49,7 +49,7 @@ public class ConceptInstancePanel
     private static final long serialVersionUID = -1413622323011843523L;
     private static final Logger LOG = LoggerFactory.getLogger(ConceptInstancePanel.class);
 
-    private static final String INSTANCE_INFO_MARKUP_ID = "instancepanel";
+    private static final String INSTANCE_INFO_MARKUP_ID = "instanceinfo";
     private static final String CONCEPT_MENTIONS_MARKUP_ID = "annotatedResultGroups";
 
     private @SpringBean KnowledgeBaseService kbService;
