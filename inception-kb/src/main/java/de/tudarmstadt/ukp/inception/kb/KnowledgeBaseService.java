@@ -369,6 +369,8 @@ public interface KnowledgeBaseService
 
     boolean statementsMatchSPO(KnowledgeBase akb, KBStatement mockStatement);
 
+    Optional<KBObject> readKBIdentifier(KnowledgeBase aKnowledgeBase, String aIdentifier);
+
     Optional<KBObject> readKBIdentifier(Project aProject, String aIdentifier);
 
     List<KBHandle> getParentConceptsForConcept(KnowledgeBase aKB, String aIdentifier,

@@ -51,7 +51,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
-import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
+import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 
 /**
  * Extension providing knowledge-base-related features for annotations.
@@ -63,8 +63,8 @@ public class ConceptFeatureSupport
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     public static final String PREFIX = "kb:";
-    public static final String ANY_CONCEPT = "<ANY>";
-    public static final String TYPE_ANY_CONCEPT = PREFIX + ANY_CONCEPT;
+    public static final String ANY_OBJECT = "<ANY>";
+    public static final String TYPE_ANY_OBJECT = PREFIX + ANY_OBJECT;
 
     private final KnowledgeBaseService kbService;
     
@@ -107,7 +107,7 @@ public class ConceptFeatureSupport
     {
         // We just start with no specific scope at all (ANY) and let the user refine this via
         // the traits editor
-        return asList(new FeatureType(TYPE_ANY_CONCEPT, "KB: Concept", featureSupportId));
+        return asList(new FeatureType(TYPE_ANY_OBJECT, "KB: Object", featureSupportId));
     }
 
     @Override
@@ -137,19 +137,19 @@ public class ConceptFeatureSupport
             if (aLabel != null) {
                 ConceptFeatureTraits t = readTraits(aFeature);
 
-                // Use the concept from a particular knowledge base
-                Optional<KBInstance> instance;
+                // Use the kbobject from a particular knowledge base
+                Optional<KBObject> kbObject;
                 if (t.getRepositoryId() != null) {
-                    instance = kbService
+                    kbObject = kbService
                             .getKnowledgeBaseById(aFeature.getProject(), t.getRepositoryId())
-                            .flatMap(kb -> kbService.readInstance(kb, aLabel));
+                            .flatMap(kb -> kbService.readKBIdentifier(kb, aLabel));
                 }
-                // Use the concept from any knowledge base (leave KB unselected)
+                // Use the kbobject from any knowledge base (leave KB unselected)
                 else {
-                    instance = kbService.readInstance(aFeature.getProject(), aLabel);
+                    kbObject = kbService.readKBIdentifier(aFeature.getProject(), aLabel);
                 }
 
-                renderValue = instance.map(KBInstance::getUiLabel)
+                renderValue = kbObject.map(KBObject::getUiLabel)
                         .orElseThrow(NoSuchElementException::new);
             }
             renderValueCache.put(pair, renderValue);
@@ -265,7 +265,7 @@ public class ConceptFeatureSupport
         
         // If there is no scope set in the trait, see if once can be extracted from the legacy
         // location which is the feature type.
-        if (traits.getScope() == null && !TYPE_ANY_CONCEPT.equals(aFeature.getType())) {
+        if (traits.getScope() == null && !TYPE_ANY_OBJECT.equals(aFeature.getType())) {
             traits.setScope(aFeature.getType().substring(PREFIX.length()));
         }
         
@@ -280,7 +280,7 @@ public class ConceptFeatureSupport
             aFeature.setType(PREFIX + aTraits.getScope());
         }
         else {
-            aFeature.setType(TYPE_ANY_CONCEPT);
+            aFeature.setType(TYPE_ANY_OBJECT);
         }
         
         try {
