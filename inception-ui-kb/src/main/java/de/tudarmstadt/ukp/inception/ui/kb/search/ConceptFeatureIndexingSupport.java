@@ -19,9 +19,9 @@ package de.tudarmstadt.ukp.inception.ui.kb.search;
 
 import java.util.Optional;
 import java.util.Set;
-
 import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.multimap.HashSetValuedHashMap;
+
 import org.apache.uima.cas.text.AnnotationFS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -111,7 +111,6 @@ public class ConceptFeatureIndexingSupport
         if (!kbObject.isPresent()) {
             return values;
         }
-        //Map<String, String> values = new HashMap<>();
         String objectType;
         // === BEGIN NEEDS REFACTORING =====================================================
         // As part of issue #244, this needs to be refactored for a more reliable method of
@@ -153,7 +152,6 @@ public class ConceptFeatureIndexingSupport
             values.put(field + "." + aFeature.getUiName() + "." + INDEX_KB_SUPER_CONCEPT,
                     parentConcept.getUiLabel());
         }
-        
         return values;
     }
     
