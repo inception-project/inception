@@ -18,16 +18,21 @@
 package de.tudarmstadt.ukp.inception.kb;
 
 import org.eclipse.rdf4j.model.vocabulary.OWL;
+import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
 
 public class SPARQLQueryStore
 {   
     public static String aLimit = "1000";
     
+    public static final String SPARQL_PREFIX = String.join("\n",
+            "PREFIX rdf: <" + RDF.NAMESPACE + ">",
+            "PREFIX rdfs: <" + RDFS.NAMESPACE + ">",
+            "PREFIX owl: <" + OWL.NAMESPACE + ">");
+    
     // Query to list properties from KnowledgeBase
     public static String PROPERTYLIST_QUERY = String.join("\n"
-            , "PREFIX rdfs: <" + RDFS.NAMESPACE + ">"
-            , "PREFIX owl: <" + OWL.NAMESPACE + ">"
+            , SPARQL_PREFIX
             , "SELECT DISTINCT ?s ?l WHERE {"
             , "  { ?s ?pTYPE ?oPROPERTY .}"
             , "  UNION "
