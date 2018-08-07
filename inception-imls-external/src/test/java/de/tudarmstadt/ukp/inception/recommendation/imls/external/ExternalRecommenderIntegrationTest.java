@@ -1,7 +1,8 @@
-package de.tudarmstadt.ukp.inception.recommendation.imls.external.v2;
+package de.tudarmstadt.ukp.inception.recommendation.imls.external;
 
-
+import static de.tudarmstadt.ukp.inception.recommendation.imls.external.util.CasAssert.assertThat;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 import java.io.File;
 import java.io.IOException;
@@ -24,12 +25,14 @@ import de.tudarmstadt.ukp.dkpro.core.io.conll.Conll2002Reader;
 import de.tudarmstadt.ukp.dkpro.core.testing.DkproTestContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommenderContext;
-import de.tudarmstadt.ukp.inception.recommendation.imls.external.ExternalRecommenderTraits;
+import okhttp3.mockwebserver.Dispatcher;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
+import okhttp3.mockwebserver.RecordedRequest;
 
 public class ExternalRecommenderIntegrationTest
 {
+    private static String TYPE = "de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity";
     private static File cache = DkproTestContext.getCacheFolder();
     private static DatasetFactory loader = new DatasetFactory(cache);
 
@@ -37,6 +40,7 @@ public class ExternalRecommenderIntegrationTest
     private RecommenderContext context;
     private ExternalRecommender sut;
     private ExternalRecommenderTraits traits;
+    private RemoteStringMatchingRecommender remoteRecommender;
     private MockWebServer server;
 
     @Before
@@ -48,8 +52,14 @@ public class ExternalRecommenderIntegrationTest
         traits = new ExternalRecommenderTraits();
         sut = new ExternalRecommender(recommender, traits);
 
+        remoteRecommender = new RemoteStringMatchingRecommender(recommender);
+
         server = new MockWebServer();
+        server.setDispatcher(buildDispatcher());
         server.start();
+
+        String url = server.url("/").toString();
+        traits.setRemoteUrl(url);
     }
 
     @After
@@ -59,15 +69,26 @@ public class ExternalRecommenderIntegrationTest
     }
 
     @Test
+    public void thatTrainingWorks()
+    {
+        assertThatCode(() -> {
+            sut.train(context, loadDevelopmentData());
+        }).doesNotThrowAnyException();
+    }
+
+    @Test
     public void thatPredictingWorks() throws Exception
     {
-        String url = server.url("/predict").toString();
-        traits.setRemoteUrl(url);
-        server.enqueue(new MockResponse().setBody("test"));
+        List<CAS> casses = loadDevelopmentData();
+        sut.train(context, casses);
 
-        CAS cas = loadDevelopmentData().get(0);
-
+        CAS cas = casses.get(0);
         sut.predict(context, cas);
+
+        assertThat(cas).as("Predictions are correct")
+            .containsNamedEntity("Ecce homo", "OTH")
+            .containsNamedEntity("The Lindsey School Lindsey School & Community Arts College", "ORG")
+            .containsNamedEntity("Lido delle Nazioni", "LOC");
     }
 
     private List<CAS> loadDevelopmentData() throws IOException, UIMAException
@@ -98,12 +119,31 @@ public class ExternalRecommenderIntegrationTest
     private static Recommender buildRecommender()
     {
         AnnotationLayer layer = new AnnotationLayer();
-        layer.setName("TestLayer");
+        layer.setName(TYPE);
 
         Recommender recommender = new Recommender();
         recommender.setLayer(layer);
         recommender.setFeature("value");
 
         return recommender;
+    }
+
+    private Dispatcher buildDispatcher()
+    {
+        return new Dispatcher() {
+            @Override
+            public MockResponse dispatch(RecordedRequest request) {
+                if (request.getPath().equals("/train")) {
+                    remoteRecommender.train(request.getBody().readUtf8());
+                    return new MockResponse().setResponseCode(204);
+                } else if (request.getPath().equals("/predict")) {
+                    String response = remoteRecommender.predict(request.getBody().readUtf8());
+                    return new MockResponse().setResponseCode(200).setBody(response);
+                } else {
+                    System.err.println("Unknown URL: " + request.getPath());
+                    return new MockResponse().setResponseCode(404);
+                }
+            }
+        };
     }
 }

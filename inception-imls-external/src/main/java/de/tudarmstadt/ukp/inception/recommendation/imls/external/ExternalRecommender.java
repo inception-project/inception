@@ -1,7 +1,10 @@
-package de.tudarmstadt.ukp.inception.recommendation.imls.external.v2;
+package de.tudarmstadt.ukp.inception.recommendation.imls.external;
+
+import static de.tudarmstadt.ukp.inception.recommendation.imls.external.TrainingRequest.Document;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 
@@ -21,7 +24,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.v2.DataSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommenderContext;
-import de.tudarmstadt.ukp.inception.recommendation.imls.external.ExternalRecommenderTraits;
+import okhttp3.HttpUrl;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -48,7 +51,36 @@ public class ExternalRecommender
     @Override
     public void train(RecommenderContext aContext, List<CAS> aCasses)
     {
+        TrainingRequest trainingRequest = new TrainingRequest();
+        List<Document> documents = new ArrayList<>();
+        trainingRequest.setDocuments(documents);
 
+        for (CAS cas : aCasses) {
+            String typeSystem = serializeTypeSystem(cas);
+            String xmi = serializeCas(cas);
+
+            Document doc = new Document();
+            doc.setXmi(xmi);
+            doc.setTypeSystem(typeSystem);
+            doc.setLayer(recommender.getLayer().getName());
+            doc.setFeature(recommender.getFeature());
+            documents.add(doc);
+        }
+
+        HttpUrl url = HttpUrl.parse(traits.getRemoteUrl()).resolve("/train");
+        RequestBody body = RequestBody.create(JSON, toJson(trainingRequest));
+        Request request = new Request.Builder().url(url).post(body).build();
+
+        Response response = sendRequest(request);
+
+        // If the response indicates that the request was not successfull,
+        // then it does not make sense to go on and try to decode the XMI
+        if (!response.isSuccessful()) {
+            int code = response.code();
+            String status = response.message();
+            String msg = String.format("Request was not succesfull: [%d] - [%s]", code, status);
+            throw new RuntimeException(msg);
+        }
     }
 
     @Override
@@ -63,8 +95,9 @@ public class ExternalRecommender
         predictionRequest.setLayer(recommender.getLayer().getName());
         predictionRequest.setFeature(recommender.getFeature());
 
+        HttpUrl url = HttpUrl.parse(traits.getRemoteUrl()).resolve("/predict");
         RequestBody body = RequestBody.create(JSON, toJson(predictionRequest));
-        Request request = new Request.Builder().url(traits.getRemoteUrl()).post(body).build();
+        Request request = new Request.Builder().url(url).post(body).build();
 
         Response response = sendRequest(request);
 
@@ -73,7 +106,7 @@ public class ExternalRecommender
         if (!response.isSuccessful()) {
             int code = response.code();
             String status = response.message();
-            String msg = String.format("Request was not succesfull: [%i] - [%s]", code, status);
+            String msg = String.format("Request was not succesfull: [%d] - [%s]", code, status);
             throw new RuntimeException(msg);
         }
 
@@ -84,9 +117,6 @@ public class ExternalRecommender
             LOG.error("Error while deserializing CAS!", e);
             throw new RuntimeException("Error while deserializing CAS!", e);
         }
-
-
-
     }
 
     private String serializeTypeSystem(CAS aCas)
@@ -146,5 +176,10 @@ public class ExternalRecommender
     public boolean isEvaluable()
     {
         return false;
+    }
+
+    @Override
+    public String getPredictionType() {
+        return recommender.getLayer().getType();
     }
 }

@@ -90,8 +90,6 @@ public class PredictionTask
                 log.error("Cannot upgrade annotation CAS.", e);
                 continue;
             }
-            Type predictionType = JCasUtil.getAnnotationType(jCas, PredictedSpan.class);
-
 
             for (AnnotationLayer layer : annoService.listAnnotationLayer(project)) {
                 if (!layer.isEnabled()) {
@@ -102,13 +100,12 @@ public class PredictionTask
                     .getActiveRecommenders(user, layer);
 
                 for (Recommender recommender : recommenders) {
-                    RecommenderContext context = recommendationService.getContext(user,
-                            recommender);
+                    RecommenderContext ctx = recommendationService.getContext(user, recommender);
                     RecommendationEngineFactory factory = recommendationService
                             .getRecommenderFactory(recommender);
                     RecommendationEngine recommendationEngine = factory.build(recommender);
 
-                    recommendationEngine.predict(context, jCas.getCas());
+                    recommendationEngine.predict(ctx, jCas.getCas());
 
                     List<AnnotationObject> predictions = extractAnnotations(jCas, document,
                             recommender);
@@ -116,6 +113,8 @@ public class PredictionTask
 
                     // In order to just extract the annotations for a single recommender, each
                     // recommender undoes the changes applied in `recommendationEngine.predict`
+                    String typeName = recommendationEngine.getPredictionType();
+                    Type predictionType = CasUtil.getAnnotationType(jCas.getCas(), typeName);
                     removePredictions(jCas.getCas(), predictionType);
                 }
             }

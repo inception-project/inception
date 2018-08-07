@@ -1,4 +1,4 @@
-package de.tudarmstadt.ukp.inception.recommendation.imls.external.v2;
+package de.tudarmstadt.ukp.inception.recommendation.imls.external;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 

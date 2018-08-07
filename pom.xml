@@ -131,13 +131,13 @@
   <dependencies>
     <!-- The logging subsystem used by WebAnno -->
     <dependency>
-      <!-- Use Log4J v2 as logging backend -->
+      <!-- Use Log4J http as logging backend -->
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-core</artifactId>
       <scope>runtime</scope>
     </dependency>
     <dependency>
-      <!-- Use Log4J v2 as logging backend -->
+      <!-- Use Log4J http as logging backend -->
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-slf4j-impl</artifactId>
       <scope>runtime</scope>
