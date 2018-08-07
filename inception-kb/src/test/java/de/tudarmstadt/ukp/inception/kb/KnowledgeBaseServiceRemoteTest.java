@@ -195,7 +195,7 @@ public class KnowledgeBaseServiceRemoteTest
 //        }
 
         {
-            KnowledgeBaseProfile profile = PROFILES.get("yago");
+            KnowledgeBaseProfile profile = PROFILES.get("db_pedia");
             KnowledgeBase kb_dbpedia = new KnowledgeBase();
             kb_dbpedia.setName(profile.getName());
             kb_dbpedia.setType(RepositoryType.REMOTE);
