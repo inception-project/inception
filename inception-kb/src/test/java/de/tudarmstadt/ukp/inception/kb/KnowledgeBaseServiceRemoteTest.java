@@ -168,13 +168,13 @@ public class KnowledgeBaseServiceRemoteTest
         }
         
         {
+            KnowledgeBaseProfile profile = PROFILES.get("wikidata");
             KnowledgeBase kb_wikidata_direct = new KnowledgeBase();
             kb_wikidata_direct.setName("Wikidata (official/direct mapping)");
             kb_wikidata_direct.setType(RepositoryType.REMOTE);
             kb_wikidata_direct.setReification(Reification.NONE);
-            kb_wikidata_direct.applyMapping(PROFILES.get("wikidata").getMapping());
-            kbList.add(new TestConfiguration(PROFILES.get("wikidata").getSparqlUrl(),
-                    kb_wikidata_direct));
+            kb_wikidata_direct.applyMapping(profile.getMapping());
+            kbList.add(new TestConfiguration(profile.getSparqlUrl(), kb_wikidata_direct));
         }
 
         // This profile is yet incomplete and needs to be fixed
@@ -195,34 +195,43 @@ public class KnowledgeBaseServiceRemoteTest
 //        }
 
         {
+            KnowledgeBaseProfile profile = PROFILES.get("yago");
             KnowledgeBase kb_dbpedia = new KnowledgeBase();
-            kb_dbpedia.setName("DKPedia (official)");
+            kb_dbpedia.setName(profile.getName());
             kb_dbpedia.setType(RepositoryType.REMOTE);
             kb_dbpedia.setReification(Reification.NONE);
-            kb_dbpedia.applyMapping(PROFILES.get("db_pedia").getMapping());
-            kbList.add(new TestConfiguration(PROFILES.get("db_pedia").getSparqlUrl(),
-                    kb_dbpedia));
+            kb_dbpedia.applyMapping(profile.getMapping());
+            kbList.add(new TestConfiguration(profile.getSparqlUrl(), kb_dbpedia));
         }
        
         {
+            KnowledgeBaseProfile profile = PROFILES.get("yago");
             KnowledgeBase kb_yago = new KnowledgeBase();
-            kb_yago.setName("Yago (official)");
+            kb_yago.setName(profile.getName());
             kb_yago.setType(RepositoryType.REMOTE);
             kb_yago.setReification(Reification.NONE);
-            kb_yago.applyMapping(PROFILES.get("yago").getMapping());
-            kbList.add(new TestConfiguration(PROFILES.get("yago").getSparqlUrl(),
-                    kb_yago));
+            kb_yago.applyMapping(profile.getMapping());
+            kbList.add(new TestConfiguration(profile.getSparqlUrl(), kb_yago));
         }
         
-
         {
-            KnowledgeBase kb_stw_economics = new KnowledgeBase();
-            kb_stw_economics.setName("STW Thesaurus for Economics");
-            kb_stw_economics.setType(RepositoryType.REMOTE);
-            kb_stw_economics.setReification(Reification.NONE);
-            kb_stw_economics.applyMapping(PROFILES.get("stw-economics").getMapping());
-            kbList.add(new TestConfiguration(PROFILES.get("stw-economics").getSparqlUrl(),
-                    kb_stw_economics));
+            KnowledgeBaseProfile profile = PROFILES.get("zbw-stw-economics");
+            KnowledgeBase kb_zbw_stw_economics = new KnowledgeBase();
+            kb_zbw_stw_economics.setName(profile.getName());
+            kb_zbw_stw_economics.setType(RepositoryType.REMOTE);
+            kb_zbw_stw_economics.setReification(Reification.NONE);
+            kb_zbw_stw_economics.applyMapping(profile.getMapping());
+            kbList.add(new TestConfiguration(profile.getSparqlUrl(), kb_zbw_stw_economics));
+        }
+        
+        {
+            KnowledgeBaseProfile profile = PROFILES.get("zbw-gnd");
+            KnowledgeBase kb_zbw_gnd = new KnowledgeBase();
+            kb_zbw_gnd.setName(profile.getName());
+            kb_zbw_gnd.setType(RepositoryType.REMOTE);
+            kb_zbw_gnd.setReification(Reification.NONE);
+            kb_zbw_gnd.applyMapping(profile.getMapping());
+            kbList.add(new TestConfiguration(profile.getSparqlUrl(), kb_zbw_gnd));
         }
         
         List<Object[]> dataList = new ArrayList<>();

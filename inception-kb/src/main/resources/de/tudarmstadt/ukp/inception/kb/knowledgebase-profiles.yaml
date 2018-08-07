@@ -58,7 +58,7 @@ yago:
       label: http://www.w3.org/2000/01/rdf-schema#label
       property-type: http://www.w3.org/1999/02/22-rdf-syntax-ns#Property
       description: http://www.w3.org/2000/01/rdf-schema#comment
-stw-economics:
+zbw-stw-economics:
   name: STW Thesaurus for Economics
   sparql-url: http://zbw.eu/beta/sparql/stw/query
   mapping:
@@ -66,6 +66,16 @@ stw-economics:
       subclass-of: http://www.w3.org/2004/02/skos/core#broader
       instance-of: http://www.w3.org/1999/02/22-rdf-syntax-ns#type
       label: http://www.w3.org/2004/02/skos/core#prefLabel
+      property-type: http://www.w3.org/1999/02/22-rdf-syntax-ns#Property
+      description: http://www.w3.org/2000/01/rdf-schema#comment
+zbw-gnd:
+  name: Integrated Authority File (GND)
+  sparql-url: http://zbw.eu/beta/sparql/gnd/query
+  mapping:
+      class: http://www.w3.org/2004/02/skos/core#Concept
+      subclass-of: http://www.w3.org/2004/02/skos/core#broader
+      instance-of: http://www.w3.org/1999/02/22-rdf-syntax-ns#type
+      label: http://www.w3.org/2000/01/rdf-schema#label
       property-type: http://www.w3.org/1999/02/22-rdf-syntax-ns#Property
       description: http://www.w3.org/2000/01/rdf-schema#comment
 
