@@ -763,7 +763,7 @@ public class KnowledgeBaseServiceImpl
         else {
             resultList = read(kb, (conn) -> {
                 String QUERY = String.join("\n"
-                    , SPARQLQueryStore.SPARQL_PREFIX    
+                    , SPARQLQueryStore.SPARQL_PREFIX
                     , "SELECT DISTINCT ?s ?l WHERE { "
                     , "     { ?s ?pTYPE ?oCLASS . } "
                     , "     UNION { ?someSubClass ?pSUBCLASS ?s . } ."
@@ -807,7 +807,7 @@ public class KnowledgeBaseServiceImpl
     }
     
     @Override
-    public List<KBHandle> getParentConceptsForConcept(KnowledgeBase aKB, String aIdentifier,
+    public List<KBHandle> getParentConcept(KnowledgeBase aKB, String aIdentifier,
             boolean aAll)
         throws QueryEvaluationException
     {
@@ -846,7 +846,6 @@ public class KnowledgeBaseServiceImpl
         return resultList;
     }
     
-    
     @Override
     public Set<KBHandle> getParentConceptList(KnowledgeBase aKB, String aIdentifier, boolean aAll)
         throws QueryEvaluationException
@@ -854,7 +853,10 @@ public class KnowledgeBaseServiceImpl
         Set<KBHandle> parentConceptList = new HashSet<KBHandle>();
         if (aIdentifier != null) {
             Optional<KBObject> identifierKBObj = readKBIdentifier(aKB.getProject(), aIdentifier);
-            if (identifierKBObj.get() instanceof KBConcept) {
+            if (!identifierKBObj.isPresent()) {
+                return parentConceptList;
+            }
+            else if (identifierKBObj.get() instanceof KBConcept) {
                 getParentConceptListforConcept(parentConceptList, aKB, aIdentifier,
                         aAll);
             }
@@ -875,20 +877,13 @@ public class KnowledgeBaseServiceImpl
             KnowledgeBase aKB, String aIdentifier, boolean aAll)
         throws QueryEvaluationException
     {
-        List<KBHandle> parentList = getParentConceptsForConcept(aKB, aIdentifier, aAll);
-        if (!parentList.isEmpty()) {
-            parentConceptList.addAll(parentList);
-            for (KBHandle parent : parentList) {
-                getParentConceptListforConcept(parentConceptList, aKB, parent.getIdentifier(),
-                        aAll);
-            }
-        }
-        else {
-            return parentConceptList;
+        List<KBHandle> parentList = getParentConcept(aKB, aIdentifier, aAll);
+        parentConceptList.addAll(parentList);
+        for (KBHandle parent : parentList) {
+            getParentConceptListforConcept(parentConceptList, aKB, parent.getIdentifier(), aAll);
         }
         return parentConceptList;
     }
-
 
     // Need to work on the query for variable inputs like owl:intersectionOf, rdf:rest*/rdf:first
     @Override
@@ -903,7 +898,7 @@ public class KnowledgeBaseServiceImpl
         // single KB.
         List<KBHandle> resultList = read(aKB, (conn) -> {
             String QUERY = String.join("\n"
-                , SPARQLQueryStore.SPARQL_PREFIX    
+                , SPARQLQueryStore.SPARQL_PREFIX
                 , "SELECT DISTINCT ?s ?l WHERE { "
                 , "     {?s ?pSUBCLASS ?oPARENT . }" 
                 , "     UNION { ?s ?pTYPE ?oCLASS ."
@@ -933,10 +928,9 @@ public class KnowledgeBaseServiceImpl
         
         return resultList;
     }
-
     
     @Override
-    public List<KBHandle> listChildConceptsInstances(KnowledgeBase aKB, String aParentIdentifier,
+    public List<KBHandle> listInstancesForChildConcepts(KnowledgeBase aKB, String aParentIdentifier,
             boolean aAll, int aLimit)
         throws QueryEvaluationException
     {

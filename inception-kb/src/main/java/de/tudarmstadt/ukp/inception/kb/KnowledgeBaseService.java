@@ -343,7 +343,16 @@ public interface KnowledgeBaseService
             int aLimit)
         throws QueryEvaluationException;
     
-    List<KBHandle> listChildConceptsInstances(KnowledgeBase aKB, String aParentIdentifier,
+    /**
+     * List the instances for the child concepts
+     * 
+     * @param aKB The knowledge base
+     * @param aParentIdentifier a Parent identifier.
+     * @param aAll True if entities with implicit namespaces (e.g. defined by RDF)
+     * @param aLimit Limit for SPARQL queries
+     * @return All instances of the child concepts
+     */
+    List<KBHandle> listInstancesForChildConcepts(KnowledgeBase aKB, String aParentIdentifier,
             boolean aAll, int aLimit) throws QueryEvaluationException;
     
     
@@ -410,16 +419,40 @@ public interface KnowledgeBaseService
 
     boolean statementsMatchSPO(KnowledgeBase akb, KBStatement mockStatement);
 
+    
     Optional<KBObject> readKBIdentifier(Project aProject, String aIdentifier);
 
-    List<KBHandle> getParentConceptsForConcept(KnowledgeBase aKB, String aIdentifier,
-            boolean aAll)
+    /**
+     * Retrieves the parent concept for an identifier
+     * 
+     * @param aKB The knowledge base
+     * @param aIdentifier a concept identifier.
+     * @param aAll True if entities with implicit namespaces (e.g. defined by RDF)
+     * @return List of parent concept for an identifier
+     */
+    List<KBHandle> getParentConcept(KnowledgeBase aKB, String aIdentifier, boolean aAll)
         throws QueryEvaluationException;
     
+    /**
+     * Retrieves the distinct parent concepts till the root element for an identifier regardless of 
+     * it being an instance or concept 
+     * 
+     * @param aKB The knowledge base
+     * @param aIdentifier a concept/instance identifier.
+     * @param aAll True if entities with implicit namespaces (e.g. defined by RDF)
+     * @return List of parent concept for an identifier
+     */
     Set<KBHandle> getParentConceptList(KnowledgeBase aKB, String aIdentifier, boolean aAll)
-            throws QueryEvaluationException;
+        throws QueryEvaluationException;
     
-    List<KBHandle> getConceptForInstance(KnowledgeBase aKB, String aIdentifier,
-            boolean aAll)
+    /**
+     * Retrieves the concepts for an instance identifier 
+     * 
+     * @param aKB The knowledge base
+     * @param aIdentifier an instance identifier.
+     * @param aAll True if entities with implicit namespaces (e.g. defined by RDF)
+     * @return List of concepts for an instance identifier
+     */
+    List<KBHandle> getConceptForInstance(KnowledgeBase aKB, String aIdentifier, boolean aAll)
         throws QueryEvaluationException;
 }

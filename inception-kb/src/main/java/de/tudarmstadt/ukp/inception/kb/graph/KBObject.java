@@ -76,6 +76,5 @@ public interface KBObject
         handle.setIdentifier(getIdentifier());
         handle.setName(getName());
         return handle;
-        
     }
 }

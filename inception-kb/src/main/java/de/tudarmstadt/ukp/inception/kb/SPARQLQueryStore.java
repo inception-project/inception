@@ -44,9 +44,8 @@ public class SPARQLQueryStore
             , "  }"
             , "}"
             , "LIMIT 10000");
-    
    
-  //Query to get property specific domain elements
+    // Query to get property specific domain elements
     public static String PROPERTYLIST_DOMAIN_DEPENDENT = String.join("\n"
             , SPARQL_PREFIX
             , "SELECT DISTINCT ?s ?l WHERE {"
@@ -58,7 +57,7 @@ public class SPARQLQueryStore
             , "}"
             , "LIMIT 10000");
     
-    //Query to get property specific range elements
+    // Query to get property specific range elements
     public static String PROPERTY_SPECIFIC_RANGE = String.join("\n"
             , SPARQL_PREFIX
             , "SELECT DISTINCT ?s ?l WHERE {"

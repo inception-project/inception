@@ -45,6 +45,8 @@ import org.junit.rules.TemporaryFolder;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
@@ -70,6 +72,8 @@ import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 @DataJpaTest
 public class KnowledgeBaseServiceRemoteTest
 {
+    private final Logger log = LoggerFactory.getLogger(getClass());
+
     private final String PROJECT_NAME = "Test project";
 
     private static Map<String, KnowledgeBaseProfile> PROFILES;
@@ -81,6 +85,7 @@ public class KnowledgeBaseServiceRemoteTest
     private Project project;
     private TestFixtures testFixtures;
 
+    
     @Rule
     public TestWatcher watcher = new TestWatcher()
     {
@@ -88,7 +93,7 @@ public class KnowledgeBaseServiceRemoteTest
         protected void starting(org.junit.runner.Description aDescription)
         {
             String methodName = aDescription.getMethodName();
-            System.out.println("\n=== " + methodName + " =====================");
+            log.info("\n=== " + methodName + " =====================");
         };
     };
     
@@ -178,23 +183,6 @@ public class KnowledgeBaseServiceRemoteTest
                     kb_wikidata_direct, "http://www.wikidata.org/entity/Q19576436"));
         }
 
-        // This profile is yet incomplete and needs to be fixed
-        // {
-        // ValueFactory vf = SimpleValueFactory.getInstance();
-        //
-        // KnowledgeBase kb_wikidata_reified = new KnowledgeBase();
-        // kb_wikidata_reified.setName("Wikidata (official/reified)");
-        // kb_wikidata_reified.setType(RepositoryType.REMOTE);
-        // kb_wikidata_reified.setReification(Reification.WIKIDATA);
-        // kb_wikidata_reified.setClassIri(OWL.CLASS); // FIXME
-        // kb_wikidata_reified.setSubclassIri(vf.createIRI("http://www.wikidata.org/prop/P279"));
-        // kb_wikidata_reified.setTypeIri(vf.createIRI("http://www.wikidata.org/prop/P31"));
-        // kb_wikidata_reified.setLabelIri(RDFS.LABEL);
-        // kb_wikidata_reified.setPropertyTypeIri(RDF.PROPERTY); // FIXME
-        // kb_wikidata_reified.setDescriptionIri(vf.createIRI("http://schema.org/description"));
-        // kbList.add(kb_wikidata_reified);
-        // }
-
         {
             KnowledgeBase kb_dbpedia = new KnowledgeBase();
             kb_dbpedia.setName("DKPedia (official)");
@@ -241,9 +229,9 @@ public class KnowledgeBaseServiceRemoteTest
         List<KBHandle> rootConceptKBHandle = sut.listRootConcepts(kb, true);
         duration = System.currentTimeMillis() - duration;
 
-        System.out.printf("Root concepts retrieved : %d%n", rootConceptKBHandle.size());
-        System.out.printf("Time required           : %d ms%n", duration);
-        rootConceptKBHandle.stream().limit(10).forEach(h -> System.out.printf("   %s%n", h));
+        log.info("Root concepts retrieved : %d%n", rootConceptKBHandle.size());
+        log.info("Time required           : %d ms%n", duration);
+        rootConceptKBHandle.stream().limit(10).forEach(h -> log.info("   %s%n", h));
         
         assertThat(rootConceptKBHandle).as("Check that root concept list is not empty")
                 .isNotEmpty();
@@ -258,29 +246,26 @@ public class KnowledgeBaseServiceRemoteTest
         List<KBHandle> propertiesKBHandle = sut.listProperties(kb, true);
         duration = System.currentTimeMillis() - duration;
 
-        System.out.printf("Properties retrieved : %d%n", propertiesKBHandle.size());
-        System.out.printf("Time required        : %d ms%n", duration);
-        propertiesKBHandle.stream().limit(10).forEach(h -> System.out.printf("   %s%n", h));
+        log.info("Properties retrieved : %d%n", propertiesKBHandle.size());
+        log.info("Time required        : %d ms%n", duration);
+        propertiesKBHandle.stream().limit(10).forEach(h -> log.info("   %s%n", h));
 
         assertThat(propertiesKBHandle).as("Check that property list is not empty").isNotEmpty();
 
     }
 
     @Test
-    public void thatParentListCanBeRetireved()
+    public void thatParentListCanBeRetrieved()
     {
         KnowledgeBase kb = sutConfig.getKnowledgeBase();
         
         long duration = System.currentTimeMillis();
         Set<KBHandle> parentList = sut.getParentConceptList(kb, sutConfig.getTestIdentifier(), true);
         duration = System.currentTimeMillis() - duration;
-
-        System.out.printf("Parent List retrieved : %d%n", parentList.size());
-        System.out.printf("Time required        : %d ms%n", duration);
-        parentList.stream().limit(10).forEach(h -> System.out.printf("   %s%n", h));
-
+        log.info("Parent List retrieved : %d%n", parentList.size());
+        log.info("Time required        : %d ms%n", duration);
+        parentList.stream().limit(10).forEach(h -> log.info("   %s%n", h));
         assertThat(parentList).as("Check that parent list is not empty").isNotEmpty();
-
     }
 
     // Helper
