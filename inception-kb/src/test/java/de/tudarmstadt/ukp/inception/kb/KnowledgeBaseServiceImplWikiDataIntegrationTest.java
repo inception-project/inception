@@ -34,7 +34,6 @@ import java.util.stream.Stream;
 
 import javax.persistence.EntityManager;
 
-import org.eclipse.rdf4j.model.Statement;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -60,6 +59,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
+import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 import de.tudarmstadt.ukp.inception.kb.util.TestFixtures;
@@ -194,14 +194,21 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
     
     @Test
     public void listStatements() {
-        List<Statement> statements = sut.listStatementsWithPredicateOrObjectReference(kb, "http://www.wikidata.org/entity/Q2897");
-        
-        
-        
-        String[] expectedInstances = {
-                "http://www.wikidata.org/entity/P1661" , "http://www.wikidata.org/prop/qualifier/P1048", "http://www.wikidata.org/entity/P5061"};
-        //assertThat(properties).as("Check that properties have been found").hasSize(10000).contains(expectedInstances);
-        
+        KBHandle handle = new KBHandle("http://www.wikidata.org/entity/Q50556889");
+
+        Stream<String> properties = sut.listStatements(kb, handle, true).stream()
+                .map(KBStatement::getProperty).map(KBHandle::getIdentifier);
+
+        String[] expectedInstances = { "http://www.wikidata.org/prop/P2894",
+                "http://www.wikidata.org/prop/direct/P2894",
+                "http://www.wikidata.org/prop/direct/P31", "http://www.wikidata.org/prop/P31" };
+        if (reification == Reification.NONE) {
+            assertThat(properties).as("Check that properties have been found")
+                    .contains(expectedInstances);
+        }
+        else {
+            assertThat(properties).as("Check that no statements are returned for now").hasSize(0);
+        }
     }
     
     
