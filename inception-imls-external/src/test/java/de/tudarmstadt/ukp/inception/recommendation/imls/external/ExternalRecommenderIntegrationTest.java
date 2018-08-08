@@ -82,13 +82,15 @@ public class ExternalRecommenderIntegrationTest
         List<CAS> casses = loadDevelopmentData();
         sut.train(context, casses);
 
+        // TODO: Remove named entity annotations from CAS for prediction and
+        // then let external recommender predict NE instead of PredictedSpan
         CAS cas = casses.get(0);
         sut.predict(context, cas);
 
         assertThat(cas).as("Predictions are correct")
-            .containsNamedEntity("Ecce homo", "OTH")
-            .containsNamedEntity("The Lindsey School Lindsey School & Community Arts College", "ORG")
-            .containsNamedEntity("Lido delle Nazioni", "LOC");
+            .containsPrediction("Ecce homo", "OTH")
+            .containsPrediction("The Lindsey School Lindsey School & Community Arts College", "ORG")
+            .containsPrediction("Lido delle Nazioni", "LOC");
     }
 
     private List<CAS> loadDevelopmentData() throws IOException, UIMAException

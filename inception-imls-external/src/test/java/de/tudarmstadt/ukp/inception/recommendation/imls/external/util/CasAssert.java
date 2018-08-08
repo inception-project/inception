@@ -7,6 +7,8 @@ import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.fit.util.FSUtil;
 import org.assertj.core.api.AbstractAssert;
 
+import de.tudarmstadt.ukp.inception.recommendation.api.type.PredictedSpan;
+
 public class CasAssert
     extends AbstractAssert<CasAssert, CAS>
 {
@@ -35,6 +37,23 @@ public class CasAssert
         }
 
         failWithMessage("No named entity with text <%s> and value <%s> found", text, value);
+
+        return this;
+    }
+
+    public CasAssert containsPrediction(String text, String label)
+    {
+        isNotNull();
+
+        Type type = CasUtil.getType(actual, PredictedSpan.class);
+        for (AnnotationFS annotation : CasUtil.select(actual, type)) {
+            if (annotation.getCoveredText().equals(text) &&
+                FSUtil.getFeature(annotation, "label", String.class).equals(label)) {
+                return this;
+            }
+        }
+
+        failWithMessage("No named entity with text <%s> and label <%s> found", text, label);
 
         return this;
     }
