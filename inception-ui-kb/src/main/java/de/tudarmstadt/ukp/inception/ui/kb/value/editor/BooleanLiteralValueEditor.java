@@ -25,7 +25,8 @@ import org.apache.wicket.model.IModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 
-public class BooleanLiteralValueEditor extends ValueEditor
+public class BooleanLiteralValueEditor
+    extends ValueEditor
 {
     private static final long serialVersionUID = 160076747725321107L;
     
