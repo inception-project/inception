@@ -747,6 +747,27 @@ public class KnowledgeBaseServiceImpl
     }
     
     @Override
+    public List<KBHandle> listProperties(KnowledgeBase kb, IRI aType, boolean aIncludeInferred,
+            boolean aAll)
+        throws QueryEvaluationException
+    {
+        List<KBHandle> resultList = read(kb, (conn) -> {
+            String QUERY = getPropertyListQuery(kb);
+            TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
+            tupleQuery.setBinding("pTYPE", kb.getTypeIri());
+            tupleQuery.setBinding("oPROPERTY", aType);
+            tupleQuery.setBinding("pLABEL", kb.getLabelIri());
+            tupleQuery.setIncludeInferred(aIncludeInferred);
+
+            return evaluateListQuery(tupleQuery, aAll);
+        });
+
+        resultList.sort(Comparator.comparing(KBObject::getUiLabel));
+
+        return resultList;
+    }
+    
+    @Override
     public List<KBHandle> listRootConcepts(KnowledgeBase kb, boolean aAll)
         throws QueryEvaluationException
     {
@@ -1040,7 +1061,6 @@ public class KnowledgeBaseServiceImpl
         }
     }
     
-    
     /**
      * Read identifier IRI and return {@link Optional} of {@link KBObject}
      * 
@@ -1074,7 +1094,4 @@ public class KnowledgeBaseServiceImpl
         }
         return Optional.empty();
     }
-    
-    
-    
 }

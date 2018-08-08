@@ -265,7 +265,7 @@ public class KnowledgeBaseServiceRemoteTest
         assertThat(propertiesKBHandle).as("Check that property list is not empty").isNotEmpty();
 
     }
-    
+
     @Test
     public void thatParentListCanBeRetireved()
     {
@@ -342,7 +342,7 @@ public class KnowledgeBaseServiceRemoteTest
         {
             return testIdentifier;
         }
-        
+
         @Override
         public String toString()
         {

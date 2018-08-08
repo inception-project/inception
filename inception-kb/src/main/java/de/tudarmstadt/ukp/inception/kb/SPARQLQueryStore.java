@@ -17,18 +17,18 @@
  */
 package de.tudarmstadt.ukp.inception.kb;
 
+import org.eclipse.rdf4j.model.vocabulary.OWL;
+import org.eclipse.rdf4j.model.vocabulary.RDF;
+import org.eclipse.rdf4j.model.vocabulary.RDFS;
+
 public class SPARQLQueryStore
 {   
     public static String aLimit = "1000";
   
     public static final String SPARQL_PREFIX = String.join("\n",
-            "PREFIX e:<http://www.wikidata.org/entity/>",
-            "PREFIX rdfs:<http://www.w3.org/2000/01/rdf-schema#>",
-            "PREFIX rdf:<http://www.w3.org/1999/02/22-rdf-syntax-ns#>",
-            "PREFIX owl:<http://www.w3.org/2002/07/owl#>",
-            "PREFIX skos:<http://www.w3.org/2004/02/skos/core#>",
-            "PREFIX base:<http://www.wikidata.org/ontology#>",
-            "PREFIX schema: <http://schema.org/>");
+            "PREFIX rdf: <" + RDF.NAMESPACE + ">",
+            "PREFIX rdfs: <" + RDFS.NAMESPACE + ">",
+            "PREFIX owl: <" + OWL.NAMESPACE + ">");
     
     // Query to list properties from KnowledgeBase
     public static String PROPERTYLIST_QUERY = String.join("\n"
@@ -97,5 +97,4 @@ public class SPARQLQueryStore
             , "  }"
             , "}"
             , "LIMIT 10000");
-
 }
