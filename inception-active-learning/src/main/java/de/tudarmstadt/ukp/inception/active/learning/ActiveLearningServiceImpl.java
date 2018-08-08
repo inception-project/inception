@@ -269,12 +269,12 @@ public class ActiveLearningServiceImpl
         clearState(aEvent.getUser());
     }
 
-    @EventListener
-    public void onDocumentOpened(DocumentOpenedEvent aEvent)
-    {
-        clearState(aEvent.getUser());
-    }
-
+//    @EventListener
+//    public void onDocumentOpened(DocumentOpenedEvent aEvent)
+//    {
+//        clearState(aEvent.getUser());
+//    }
+//
     private void clearState(String aUserName)
     {
         synchronized (states) {
