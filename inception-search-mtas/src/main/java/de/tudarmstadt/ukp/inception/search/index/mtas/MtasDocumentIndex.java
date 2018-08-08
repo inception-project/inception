@@ -148,9 +148,9 @@ public class MtasDocumentIndex
                 annotationShortNames.add(getShortName(layer.getName()));
             }
         }
-
+       
         resourceDir = new File(aDir);
-
+        createPhysicalIndex();
         log.info("New Mtas/Lucene index instance created...");
     }
 
