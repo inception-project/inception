@@ -2,7 +2,7 @@ package de.tudarmstadt.ukp.inception.kb;
 
 public enum ConceptFeatureValueType
 {
-    ANY_OBJECT("<Any Object>"), CONCEPT("Concepts"), INSTANCE("Instances");
+    ANY_OBJECT("<Any Concept/Instance>"), CONCEPT("Only Concepts"), INSTANCE("Only Instances");
 
     private final String uiLabel;
 

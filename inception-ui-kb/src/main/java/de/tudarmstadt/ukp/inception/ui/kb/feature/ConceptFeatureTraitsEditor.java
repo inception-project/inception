@@ -108,8 +108,7 @@ public class ConceptFeatureTraitsEditor
                 .add(new LambdaAjaxFormComponentUpdatingBehavior("change", target ->
                         target.add(form.get(MID_SCOPE)))));
         form.add(
-                new DropDownChoice<>(MID_ALLOWED_VALUE_TYPE, LambdaModel.of(this::listAllowedTypes))
-                    .setNullValid(true));
+            new DropDownChoice<>(MID_ALLOWED_VALUE_TYPE, LambdaModel.of(this::listAllowedTypes)));
 
         add(form);
     }
@@ -144,7 +143,13 @@ public class ConceptFeatureTraitsEditor
                     .ifPresent(concept -> result.setScope(KBHandle.of(concept)));
         }
 
-        result.setAllowedValueType(t.getAllowedValueType());
+        if (t.getAllowedValueType() != null) {
+            result.setAllowedValueType(t.getAllowedValueType());
+        }
+        else {
+            // Allow all values as default
+            result.setAllowedValueType(ConceptFeatureValueType.ANY_OBJECT);
+        }
 
         return result;
     }

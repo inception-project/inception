@@ -107,7 +107,7 @@ public class ConceptFeatureSupport
     {
         // We just start with no specific scope at all (ANY) and let the user refine this via
         // the traits editor
-        return asList(new FeatureType(TYPE_ANY_OBJECT, "KB: Object", featureSupportId));
+        return asList(new FeatureType(TYPE_ANY_OBJECT, "KB: Concept/Instance", featureSupportId));
     }
 
     @Override
