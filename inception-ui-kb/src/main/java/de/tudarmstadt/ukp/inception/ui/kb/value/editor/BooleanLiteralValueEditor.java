@@ -39,11 +39,11 @@ public class BooleanLiteralValueEditor extends ValueEditor
         value.setOutputMarkupId(true);
         value.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> t.add(getParent())));
         add(value);
-        
     }
 
     @Override
-    public Component getFocusComponent() {
+    public Component getFocusComponent()
+    {
         return value;
     }
 }

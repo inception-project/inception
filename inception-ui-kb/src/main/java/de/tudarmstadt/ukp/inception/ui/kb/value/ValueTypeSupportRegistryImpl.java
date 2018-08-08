@@ -104,10 +104,8 @@ public class ValueTypeSupportRegistryImpl
             datatype = type != null ? type.stringValue() : null;
         }
         
-        if (datatype == null && aProperty != null) {
-            if (aProperty.getRange() != null) {
-                return aProperty.getRange();
-            }
+        if (datatype == null && aProperty != null && aProperty.getRange() != null) {
+            return aProperty.getRange();
         }
         
         if (datatype == null) {
@@ -120,12 +118,10 @@ public class ValueTypeSupportRegistryImpl
     @Override
     public ValueTypeSupport getValueSupport(KBStatement aStatement, KBProperty aProperty)
     {
-        ValueTypeSupport support = null;
-        
         // Determine the data type
         String datatype = getDataType(aStatement, aProperty);
         
-        support = supportCache.get(datatype);
+        ValueTypeSupport support = supportCache.get(datatype);
         
         for (ValueTypeSupport s : getValueSupports()) {
             if (s.accepts(aStatement, aProperty)) {

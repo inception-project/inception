@@ -37,12 +37,32 @@ import de.tudarmstadt.ukp.inception.ui.kb.value.editor.ValuePresenter;
 public interface ValueTypeSupport
     extends BeanNameAware
 {
+    /**
+     * @return id
+     */
     String getId();
     
+    
+    /**
+     * @return list of {@link ValueType} supported
+     */
     List<ValueType> getSupportedValueTypes();
     
+    
+    /**
+     * Check if the {@link ValueTypeSupport} accepts {@link KBStatement} with {@link KBProperty}
+     * @param aStatement a {@link KBStatement} value
+     * @param aProperty a {@link KBProperty} value
+     * @return
+     */
     boolean accepts(KBStatement aStatement, KBProperty aProperty);
 
+    /**
+     * Check if the range or rangeKbObject is accepted by the {@link ValueTypeSupport} 
+     * @param range a range value
+     * @param rangeKbObject a range value from KB
+     * @return
+     */
     boolean accepts(String range, Optional<KBObject> rangeKbObject);
     
     
@@ -58,6 +78,15 @@ public interface ValueTypeSupport
     ValueEditor createEditor(String aId, IModel<KBStatement> aModel, IModel<KBProperty> aDatatype,
             IModel<KnowledgeBase> kbModel);
 
+    /**
+     * Returns a {@link ValuePresenter} instance given a datatype IRI (most likely the range of a
+     * property or the datatype of a statement).
+     * 
+     * @param aId
+     *            Wicket markup id received by the presenter instances
+     * 
+     * @return a {@link ValuePresenter} instance
+     */
     ValuePresenter createPresenter(String aId, IModel<KBStatement> aModel,
             IModel<KBProperty> aDatatype);
 }

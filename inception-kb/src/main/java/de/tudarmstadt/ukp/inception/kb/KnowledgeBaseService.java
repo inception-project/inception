@@ -374,13 +374,52 @@ public interface KnowledgeBaseService
 
     List<KBHandle> list(KnowledgeBase kb, IRI aType, boolean aIncludeInferred, boolean
         aAll);
-
+    
+    /**
+     * List the properties for a specific accepted domain identifier
+     * 
+     * @param kb
+     *            The knowledge base
+     * @param aDomain
+     *            a domain identifier.
+     * @param aIncludeInferred
+     *            indicates whether inferred statements should be included in the result.
+     * @param aAll
+     *            indicates whether to include base properties or not
+     * @return All properties for a specific accepted domain identifier
+     */
     List<KBHandle> listDomainProperties(KnowledgeBase kb, String aDomain, boolean aIncludeInferred,
             boolean aAll);
 
+    /**
+     * List the properties for a specific accepted range identifier
+     * 
+     * @param kb
+     *            The knowledge base
+     * @param aDomain
+     *            a range identifier.
+     * @param aIncludeInferred
+     *            indicates whether inferred statements should be included in the result.
+     * @param aAll
+     *            indicates whether to include base properties or not
+     * @return All properties for a specific accepted range identifier
+     */
     List<KBHandle> listPropertiesRangeValue(KnowledgeBase kb, String aDomain,
             boolean aIncludeInferred, boolean aAll);
     
+    /**
+     * List the properties
+     * 
+     * @param kb
+     *            The knowledge base
+     * @param aType
+     *            a {@link IRI} for type of property
+     * @param aIncludeInferred
+     *            indicates whether inferred statements should be included in the result.
+     * @param aAll
+     *            indicates whether to include base properties or not
+     * @return All properties 
+     */
     List<KBHandle> listProperties(KnowledgeBase kb, IRI aType, boolean aIncludeInferred, boolean
             aAll);
   

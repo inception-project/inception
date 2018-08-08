@@ -71,6 +71,10 @@ public interface KBObject
         }
     }
     
+    /**
+     * 
+     * @return a {@code KBHandle} from {@code KBObject}
+     */
     default KBHandle toKBHandle() {
         KBHandle handle = new KBHandle();
         handle.setIdentifier(getIdentifier());
