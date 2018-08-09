@@ -28,12 +28,22 @@
 	    </h3>
 	    <hr />
 	  </div>
-      <div class="scrolling flex-content">
-	    <select wicket:id="annotatedResultGroups" class="form-control list-panel"></select>
-	  </div>
+      <span class="list-group scrolling flex-content">
+	    <span wicket:id="annotatedResultGroups" class="form-control list-panel">
+          <span wicket:id="documentTitle" style="color: blue;"></span>
+          <span wicket:id="group"></span>
+        </span>
+	  </span>
     </div>
   </wicket:panel>
 </body>
+<wicket:fragment wicket:id="resultGroup">
+  <span class="list-group">
+    <span wicket:id="results" class="form-control list-panel">
+      <span wicket:id="sentence"></span>
+    </span>
+  </span>
+</wicket:fragment>
 </html>
 
 
