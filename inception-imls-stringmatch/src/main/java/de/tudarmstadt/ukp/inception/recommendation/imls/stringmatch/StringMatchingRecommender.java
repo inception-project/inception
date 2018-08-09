@@ -123,6 +123,12 @@ public class StringMatchingRecommender
         List<Sample> trainingSet = new ArrayList<>();
         List<Sample> testSet = new ArrayList<>();
 
+        // For the DKPro Statistics evaluation study, we need to define a continuum over the data.
+        // We do this in terms of character positions which are aggregated over all samples in the
+        // test set. Thus, the continum size is equal to the sum of the length of all samples in the
+        // test set.
+        int testSetContinuumSize = 0;
+        
         for (Sample sample : data) {
             switch (aDataSplitter.getTargetSet(sample)) {
             case TRAIN:
@@ -130,6 +136,7 @@ public class StringMatchingRecommender
                 break;
             case TEST:
                 testSet.add(sample);
+                testSetContinuumSize += sample.getText().length();
                 break;
             default:
                 // Do nothing
@@ -174,31 +181,38 @@ public class StringMatchingRecommender
         }
         
         // Evaluate
-        UnitizingAnnotationStudy study = new UnitizingAnnotationStudy(2, 0, Long.MAX_VALUE);
+        UnitizingAnnotationStudy study = new UnitizingAnnotationStudy(2, 0, testSetContinuumSize);
+        
         // Add reference data to the study
-        testSet.stream()
-                .forEach(sample -> {
-                    sample.getSpans().stream()
-                        .forEach(span -> {
-                            // Shift the document number into the upper 32 bits
-                            long offset = ((long) sample.getDocNo() << 32);
-                            int length = span.getEnd() - span.getBegin();
-                            study.addUnit(offset + sample.getBegin(), length, 0, span.getLabel());
-                        });
-                });
-
-        actualData.stream()
-                .forEach(sample -> {
-                    sample.getSpans().stream()
-                        .forEach(span -> {
-                            // Shift the document number into the upper 32 bits
-                            long offset = ((long) sample.getDocNo() << 32);
-                            int length = span.getEnd() - span.getBegin();
-                            study.addUnit(offset + sample.getBegin(), length, 1, span.getLabel());
-                        });
-                });
+        addDataToStudy(testSet, study, 0);
+        
+        // Add actual data to the study
+        addDataToStudy(actualData, study, 1);
 
         return new KrippendorffAlphaUnitizingAgreement(study).calculateAgreement();
+    }
+    
+    private void addDataToStudy(Collection<Sample> aData, UnitizingAnnotationStudy aStudy,
+            int aAnnotatorId)
+    {
+        // Offset of the current sample within the evaluation continuum
+        int offset = 0;
+        
+        for (Sample sample : aData) {
+            // Add all labeled spans to the study
+            for (Span span : sample.getSpans()) {
+                // Length of the labeled span
+                int length = span.getEnd() - span.getBegin();
+                
+                // Begin offset of the span within the current sample
+                int beginInSample = span.getBegin() - sample.getBegin();
+                
+                aStudy.addUnit(offset + beginInSample, length, aAnnotatorId, span.getLabel());
+            }
+            
+            // Shift within continuum
+            offset += sample.getLength();
+        }
     }
     
     private void learn(Trie<DictEntry> aDict, String aText, String aLabel) {
