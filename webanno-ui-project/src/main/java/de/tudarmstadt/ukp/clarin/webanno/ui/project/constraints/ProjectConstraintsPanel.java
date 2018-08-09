@@ -48,6 +48,7 @@ import org.slf4j.LoggerFactory;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ConstraintsGrammar;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ParseException;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.TokenMgrError;
 import de.tudarmstadt.ukp.clarin.webanno.model.ConstraintSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanel;
@@ -294,12 +295,16 @@ public class ProjectConstraintsPanel
                     try {
                         importAction();
                     }
-                    catch (ParseException e) {
+                    catch (ParseException | TokenMgrError e) {
+                        LOG.error(
+                                "Exception while parsing the constraint rules file. Please check it.",
+                                e);
                         error("Exception while parsing the constraint rules file. Please check it. "
                                 + ExceptionUtils.getRootCauseMessage(e));
                     }
                     catch (IOException e) {
-                        error("Unable to read constraints file "
+                        LOG.error("Unable to read the constraint rules file.", e);
+                        error("Unable to read constraints file: "
                                 + ExceptionUtils.getRootCauseMessage(e));
                     }
                 }
@@ -355,7 +360,8 @@ public class ProjectConstraintsPanel
                     }
                     catch (IOException e) {
                         detailForm.setModelObject(null);
-                        error("Unable to write constraints file "
+                        LOG.error("Unable to write the constraint rules file.", e);
+                        error("Unable to write the constraints file "
                                 + ExceptionUtils.getRootCauseMessage(e));
                     }
                 }
@@ -379,7 +385,6 @@ public class ProjectConstraintsPanel
                 else {
                     return betterConstraintName;
                 }
-
             }
         }
     }
