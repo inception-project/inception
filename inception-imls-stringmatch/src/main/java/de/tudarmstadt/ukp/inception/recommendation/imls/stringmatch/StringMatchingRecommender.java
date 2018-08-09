@@ -224,7 +224,7 @@ public class StringMatchingRecommender
     private void learn(Trie<DictEntry> aDict, String aText, String aLabel) {
         DictEntry entry = aDict.get(aText);
         if (entry == null) {
-            entry = new DictEntry();
+            entry = new DictEntry(aText);
             aDict.put(aText, entry);
         }
         
@@ -402,8 +402,14 @@ public class StringMatchingRecommender
     
     private static class DictEntry
     {
+        private String key;
         private String[] labels;
         private int[] counts;
+        
+        public DictEntry(String aKey)
+        {
+            key = aKey;
+        }
         
         public void put(String aLabel)
         {
@@ -448,6 +454,16 @@ public class StringMatchingRecommender
             }
             
             return labels[maxIndex];
+        }
+
+        @Override
+        public String toString()
+        {
+            StringBuilder builder = new StringBuilder();
+            builder.append("DictEntry [key=");
+            builder.append(key);
+            builder.append("]");
+            return builder.toString();
         }
     }
 }
