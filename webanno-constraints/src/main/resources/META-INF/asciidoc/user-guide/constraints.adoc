@@ -110,6 +110,22 @@ pos.PosValue
 
 Hereby all annotations of type `<shortLayerName>` at the same position as the current context are found.
 
+=== Comments
+
+The constraint language supports block comments which start with `/*` and end with `*/`. These
+comments may span across multiple lines.
+
+[source,text]
+----
+/* This is a single line comment */
+
+/*
+   This is a multi-
+   line comment
+*/
+----
+
+
 === Conditional features
 
 Constraints can be used to set up conditional features, that is features that only become available
@@ -157,16 +173,16 @@ Note that some role labels are marked with the flag `(!)`. This is a special fla
 [source,text]
 ----
 SemPred {
-  // Rule 1
+  /* Rule 1 */
   @Lemma.value = "ask" -> senseId = "Questioning" | senseId = "Request" | senseId = "XXX";
-  // .. other lemmata
-  // Rule 2
+  /* .. other lemmata */
+  /* Rule 2 */
   senseId = "Questioning" -> 
-    // core roles
+    /* core roles */
     arguments.role = "Addressee" (!) | arguments.role = "Message" (!) | arguments.role = "Speaker" (!) |
-    // non-core roles
+    /* non-core roles */
     arguments.role = "Time" | arguments.role = "Iterations";
-  // .. other senses
+  /* .. other senses */
 }
 ----
 
