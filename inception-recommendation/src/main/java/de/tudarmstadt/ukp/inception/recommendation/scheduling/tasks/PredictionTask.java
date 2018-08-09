@@ -146,8 +146,8 @@ public class PredictionTask
             String label = predictedSpan.getLabel();
             String feature = aRecommender.getFeature();
             String name = aRecommender.getName();
-            AnnotationObject ao = new AnnotationObject(to, label, label, -id,
-                feature, name, aRecommender.getId());
+            AnnotationObject ao = new AnnotationObject(to, label, label, id, feature, name,
+                    aRecommender.getId());
 
             result.add(ao);
             id++;
