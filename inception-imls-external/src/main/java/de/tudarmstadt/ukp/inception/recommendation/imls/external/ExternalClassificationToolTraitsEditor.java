@@ -35,8 +35,7 @@ public class ExternalClassificationToolTraitsEditor
 
     private static final String MID_FORM = "form";
 
-    private @SpringBean
-    ExternalRecommenderFactory toolFactory;
+    private @SpringBean ExternalRecommenderFactory toolFactory;
     private final Recommender recommender;
     private final ExternalRecommenderTraits traits;
 
