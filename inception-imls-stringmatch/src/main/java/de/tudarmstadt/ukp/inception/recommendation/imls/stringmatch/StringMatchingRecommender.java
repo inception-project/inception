@@ -100,12 +100,15 @@ public class StringMatchingRecommender
             Collection<AnnotationFS> tokens = selectCovered(tokenType, sentence);
             for (AnnotationFS token : tokens) {
                 Trie<DictEntry>.Node node = aDict.getNode(text, token.getBegin());
-                // FIXME Need to check that the match actually ends at a token boundary!
                 if (node != null) {
                     int begin = token.getBegin();
                     int end = begin + node.level;
-                    spans.add(new Span(begin, end, text.substring(begin, end),
-                            node.value.getBestLabel()));
+                    
+                    // Need to check that the match actually ends at a token boundary!
+                    if (tokens.stream().filter(t -> t.getEnd() == end).findAny().isPresent()) {
+                        spans.add(new Span(begin, end, text.substring(begin, end),
+                                node.value.getBestLabel()));
+                    }
                 }
             }
             
@@ -167,13 +170,16 @@ public class StringMatchingRecommender
             for (TokenSpan token : sample.getTokens()) {
                 Trie<DictEntry>.Node node = dict.getNode(sample.getText(),
                         token.getBegin() - sample.getBegin());
-                // FIXME Need to check that the match actually ends at a token boundary!
                 if (node != null) {
                     int begin = token.getBegin();
                     int end = token.getBegin() + node.level;
-                    spans.add(new Span(begin, end, sample.getText()
-                            .substring(begin - sample.getBegin(), end - sample.getBegin()),
-                            node.value.getBestLabel()));
+                    
+                    // Need to check that the match actually ends at a token boundary!
+                    if (sample.hasTokenEndingAt(end)) {
+                        spans.add(new Span(begin, end, sample.getText()
+                                .substring(begin - sample.getBegin(), end - sample.getBegin()),
+                                node.value.getBestLabel()));
+                    }
                 }
             }
             
@@ -326,6 +332,11 @@ public class StringMatchingRecommender
         public List<Span> getSpans()
         {
             return spans;
+        }
+        
+        public boolean hasTokenEndingAt(int aOffset)
+        {
+            return tokens.stream().filter(t -> t.end == aOffset).findAny().isPresent();
         }
     }
 
