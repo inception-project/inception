@@ -28,6 +28,9 @@ import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.Value;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.vocabulary.OWL;
+import org.eclipse.rdf4j.model.vocabulary.RDF;
+import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.eclipse.rdf4j.query.BindingSet;
 import org.eclipse.rdf4j.query.QueryEvaluationException;
 import org.eclipse.rdf4j.query.QueryLanguage;
@@ -147,6 +150,69 @@ public class RdfUtils
         
         return new RepositoryResult<Statement>(i2);
     }
+    
+    public static RepositoryResult<Statement> getPropertyStatementsSparql(RepositoryConnection conn,
+            Resource subj, IRI pred, Value obj, int aLimit, boolean includeInferred,
+            String language)
+        throws QueryEvaluationException
+    {
+        
+        String filter = "";
+        if (language != null) {
+            filter = "FILTER(LANG(?o) = \"\" || LANGMATCHES(LANG(?o), \"" + NTriplesUtil
+                .escapeString(language) + "\")).";
+        }
+        String QUERY = String.join("\n",
+                "PREFIX rdfs: <" + RDFS.NAMESPACE + ">",
+                "PREFIX owl: <" + OWL.NAMESPACE + ">",
+                "PREFIX rdf: <" + RDF.NAMESPACE + ">", 
+            "SELECT * WHERE { ",
+            " {?s ?p ?o .}",
+            " UNION ",
+            " {?s a ?prop .",
+            "    VALUES ?prop { rdf:Property owl:ObjectProperty owl:DatatypeProperty owl:AnnotationProperty} }",
+            filter,
+            "} LIMIT 1000");
+        TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
+        if (subj != null) {
+            tupleQuery.setBinding("s", subj);
+        }
+        if (pred != null) {
+            tupleQuery.setBinding("p", pred);
+        }
+        if (obj != null) {
+            tupleQuery.setBinding("o", obj);
+        }
+        tupleQuery.setIncludeInferred(includeInferred);
+        TupleQueryResult result = tupleQuery.evaluate();
+        Iteration<Statement, QueryEvaluationException> i1 = 
+                new ConvertingIteration<BindingSet, Statement, QueryEvaluationException>(result)
+        {
+            @Override
+            protected Statement convert(BindingSet b) throws QueryEvaluationException
+            {
+                Resource s = subj == null ? (Resource) b.getValue("s") : subj;
+                IRI p = pred == null ? (IRI) b.getValue("p") : pred;
+                Value o = obj == null ? b.getValue("o") : obj;
+
+                return SimpleValueFactory.getInstance().createStatement(s, p, o);
+            }
+        };
+        
+        ExceptionConvertingIteration<Statement, RepositoryException> i2 = 
+                new ExceptionConvertingIteration<Statement, RepositoryException>(i1)
+        {
+            @Override
+            protected RepositoryException convert(Exception aE)
+            {
+                return new RepositoryException(aE);
+            }
+        };
+        
+        return new RepositoryResult<Statement>(i2);
+    }
+    
+    
     
     public static boolean existsStatementsWithSubject(
             RepositoryConnection conn, Resource subj, boolean includeInferred)

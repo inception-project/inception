@@ -1,6 +1,6 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab
+ * Copyright 2018
+ * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,23 +17,16 @@
  */
 package de.tudarmstadt.ukp.inception.search;
 
-import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.inception.search.model.Index;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 
-public interface SearchService
+public interface FeatureIndexingSupportRegistry
 {
-    static final String SERVICE_NAME = "searchService";
+    String SERVICE_NAME = "indexingSupportRegistry";
 
-    List<SearchResult> query(User aUser, Project aProject, String aQuery)
-        throws IOException, ExecutionException;
+    List<FeatureIndexingSupport> getFeatureSupports();
 
-    void reindex(Project aproject) throws IOException;
-
-    public Index getIndex(Project aProject);
-
-    public boolean isIndexValid(Project aProject);
+    Optional<FeatureIndexingSupport> getIndexingSupport(AnnotationFeature aFeature);
 }
