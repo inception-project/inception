@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package de.tudarmstadt.ukp.inception.kb;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -316,7 +317,12 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         sut.defineBaseProperties(kb,false);
         List<KBHandle> listProperties = sut.listProperties(kb, true);
+        Stream<String> listIdentifier = listProperties.stream().map(KBHandle::getIdentifier);
         assertEquals(listProperties.size(),3);
+        String expectedProps[] = { kb.getSubclassIri().stringValue(),
+                kb.getLabelIri().stringValue(), kb.getDescriptionIri().stringValue() };
+        assertThat(listIdentifier).as("Check that base properties are created")
+                .contains(expectedProps);
     }
 
     @Test
