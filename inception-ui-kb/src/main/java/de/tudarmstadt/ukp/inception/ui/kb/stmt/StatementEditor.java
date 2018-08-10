@@ -190,7 +190,7 @@ public class StatementEditor extends Panel
         }
     }
 
-    private class ViewMode extends Fragment {
+    public class ViewMode extends Fragment {
         private static final long serialVersionUID = 2375450134740203778L;
 
         private WebMarkupContainer qualifierListWrapper;
