@@ -117,7 +117,7 @@ public class AnnotatedListIdentifiers
                 .collect(Collectors.toList()));
         
         add(overviewList);
-        add(new Label("count", LambdaModel.of(() -> overviewList.getList().size())));
+        add(new Label("count", LambdaModel.of(() -> searchResults.getObject().size())));
     }
 
     public List<String> getSearchResultsFormattedForDocument(
