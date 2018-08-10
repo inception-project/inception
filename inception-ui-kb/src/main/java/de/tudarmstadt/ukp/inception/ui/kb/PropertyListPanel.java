@@ -44,7 +44,6 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.OverviewListChoice;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
-import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.RdfUtils;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
@@ -106,12 +105,6 @@ public class PropertyListPanel extends Panel {
         if (isSelectedPropertyFromImplicitNamespace) {
             preferences.getObject().showAllProperties = true;
         }
-        // Adding the condition to show the explicit property in property list such as subClassOf
-        if (!kbModel.getObject().isReadOnly()
-                && kbModel.getObject().getType() == RepositoryType.LOCAL) {
-            preferences.getObject().showAllProperties = true;
-        }
-
     }
 
     private void actionSelectionChanged(AjaxRequestTarget aTarget) {
