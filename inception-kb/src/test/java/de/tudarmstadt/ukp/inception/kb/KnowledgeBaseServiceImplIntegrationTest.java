@@ -315,12 +315,15 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     @Test
     public void nonempty_WithEmptyKnowledgeBase_ShouldReturnTrue() {
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
+        
         sut.defineBaseProperties(kb,false);
+        
         List<KBHandle> listProperties = sut.listProperties(kb, true);
         Stream<String> listIdentifier = listProperties.stream().map(KBHandle::getIdentifier);
-        assertEquals(listProperties.size(),3);
         String[] expectedProps = { kb.getSubclassIri().stringValue(),
                 kb.getLabelIri().stringValue(), kb.getDescriptionIri().stringValue() };
+        
+        assertEquals(listProperties.size(),3);
         assertThat(listIdentifier).as("Check that base properties are created")
                 .contains(expectedProps);
     }
