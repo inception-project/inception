@@ -170,7 +170,6 @@ public class KnowledgeBaseServiceImpl
                     property.setIdentifier(propertyHandle.getIdentifier());
                     property.setName(propertyHandle.getName());
                     deleteProperty(kb, property);
-
                 }
             }
         }

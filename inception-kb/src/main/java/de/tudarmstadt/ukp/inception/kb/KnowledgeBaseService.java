@@ -357,9 +357,13 @@ public interface KnowledgeBaseService
     boolean statementsMatchSPO(KnowledgeBase akb, KBStatement mockStatement);
     
     /**
-     * Define base properties of comment, label and subClassOf while initializing the KB
-     * @param kb The knowledge base to initialize base properties
-     * @param kbUpdateFlag Flag variable to indicate the update of KB or not.  
+     * Define base default properties of comment, label and subClassOf with schema set defined for
+     * KB while initializing the KB
+     * 
+     * @param kb
+     *            The knowledge base to initialize base properties
+     * @param kbUpdateFlag
+     *            Flag variable to indicate the update of KB or not.
      */
     void defineBaseProperties(KnowledgeBase kb, boolean kbUpdateFlag);
     
