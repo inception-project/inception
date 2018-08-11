@@ -17,16 +17,12 @@
  */
 package de.tudarmstadt.ukp.inception.active.learning;
 
-import java.util.Date;
 import java.util.List;
 
 import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.inception.active.learning.sidebar.ActiveLearningRecommender;
-import de.tudarmstadt.ukp.inception.active.learning.sidebar.RecommendationDifference;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 
@@ -40,44 +36,6 @@ public interface ActiveLearningService
 
     List<AnnotationObject> getFlattenedRecommendationsFromRecommendationModel(JCas aJcas,
             AnnotatorState aState, AnnotationLayer aSelectedLayer);
-
-    void setSessionActive(User aUser, boolean aSesscionActive);
-
-    boolean isSessionActive(User aUser);
-
-    void setHasUnseenRecommendation(User aUser, boolean aHasUnseenRecommendation);
-
-    boolean isHasUnseenRecommendation(User aUser);
-
-    void setHasSkippedRecommendation(User aUser, boolean aHasSkippedRecommendation);
-
-    boolean isHasSkippedRecommendation(User aUser);
-
-    void setDoExistRecommender(User aUser, boolean aDoExistRecommenders);
-
-    boolean isDoExistRecommender(User aUser);
-
-    void setCurrentRecommendation(User aUser, AnnotationObject aCurrentRecommendation);
-
-    AnnotationObject getCurrentRecommendation(User aUser);
-
-    void setCurrentDifference(User aUser, RecommendationDifference aCurrentDifference);
-
-    RecommendationDifference getCurrentDifference(User aUser);
-
-    void setSelectedLayer(User aUser, AnnotationLayer aSelectedLayer);
-
-    AnnotationLayer getSelectedLayer(User aUser);
-
-    void setActiveLearningRecommender(User aUser,
-        ActiveLearningRecommender aActiveLearningRecommender);
-
-    ActiveLearningRecommender getActiveLearningRecommender(User aUser);
-
-    void setLearnSkippedRecommendationTime(User aUser, Date
-        aLearnSkippedRecommendationTime);
-
-    Date getLearnSkippedRecommendationTime(User aUser);
 
     ActiveLearningServiceImpl.ActiveLearningUserState getState(String aUsername);
 

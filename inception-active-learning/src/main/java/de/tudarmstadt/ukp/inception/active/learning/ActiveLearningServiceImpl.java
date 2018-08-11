@@ -31,10 +31,8 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.DocumentOpenedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningSessionCompletedEvent;
 import de.tudarmstadt.ukp.inception.active.learning.sidebar.ActiveLearningRecommender;
 import de.tudarmstadt.ukp.inception.active.learning.sidebar.RecommendationDifference;
@@ -112,134 +110,6 @@ public class ActiveLearningServiceImpl
         // TODO #176 use the document Id once it it available in the CAS
         return model.getFlattenedPredictions(aState.getDocument().getName(), aSelectedLayer,
             windowBegin, windowEnd, aJcas, true);
-    }
-
-    @Override
-    public void setSessionActive(User aUser, boolean aSesscionActive)
-    {
-        ActiveLearningUserState state = getState(aUser.getUsername());
-        state.setSessionActive(aSesscionActive);
-    }
-
-    @Override
-    public boolean isSessionActive(User aUser)
-    {
-        ActiveLearningUserState state = getState(aUser.getUsername());
-        return state.isSessionActive();
-    }
-
-    @Override
-    public void setHasUnseenRecommendation(User aUser, boolean aHasUnseenRecommendation)
-    {
-        ActiveLearningUserState state = getState(aUser.getUsername());
-        state.setHasUnseenRecommendation(aHasUnseenRecommendation);
-    }
-
-    @Override
-    public boolean isHasUnseenRecommendation(User aUser)
-    {
-        ActiveLearningUserState state = getState(aUser.getUsername());
-        return state.isHasUnseenRecommendation();
-    }
-
-    @Override
-    public void setHasSkippedRecommendation(User aUser, boolean aHasSkippedRecommendation)
-    {
-        ActiveLearningUserState state = getState(aUser.getUsername());
-        state.setHasSkippedRecommendation(aHasSkippedRecommendation);
-    }
-
-    @Override
-    public boolean isHasSkippedRecommendation(User aUser)
-    {
-        ActiveLearningUserState state = getState(aUser.getUsername());
-        return state.isHasSkippedRecommendation();
-    }
-
-    @Override
-    public void setDoExistRecommender(User aUser, boolean aDoExistRecommenders)
-    {
-        ActiveLearningUserState state = getState(aUser.getUsername());
-        state.setDoExistRecommenders(aDoExistRecommenders);
-    }
-
-    @Override
-    public boolean isDoExistRecommender(User aUser)
-    {
-        ActiveLearningUserState state = getState(aUser.getUsername());
-        return state.isDoExistRecommenders();
-    }
-
-    @Override
-    public void setCurrentRecommendation(User aUser, AnnotationObject aCurrentRecommendation)
-    {
-        ActiveLearningUserState state = getState(aUser.getUsername());
-        state.setCurrentRecommendation(aCurrentRecommendation);
-    }
-
-    @Override
-    public AnnotationObject getCurrentRecommendation(User aUser)
-    {
-        ActiveLearningUserState state = getState(aUser.getUsername());
-        return state.getCurrentRecommendation();
-    }
-
-    @Override
-    public void setCurrentDifference(User aUser, RecommendationDifference aCurrentDifference)
-    {
-        ActiveLearningUserState state = getState(aUser.getUsername());
-        state.setCurrentDifference(aCurrentDifference);
-    }
-
-    @Override
-    public RecommendationDifference getCurrentDifference(User aUser)
-    {
-        ActiveLearningUserState state = getState(aUser.getUsername());
-        return state.getCurrentDifference();
-    }
-
-    @Override
-    public void setSelectedLayer(User aUser, AnnotationLayer aSelectedLayer)
-    {
-        ActiveLearningUserState state = getState(aUser.getUsername());
-        state.setSelectedLayer(aSelectedLayer);
-    }
-
-    @Override
-    public AnnotationLayer getSelectedLayer(User aUser)
-    {
-        ActiveLearningUserState state = getState(aUser.getUsername());
-        return state.getSelectedLayer();
-    }
-
-    @Override
-    public void setActiveLearningRecommender(User aUser, ActiveLearningRecommender
-        aActiveLearningRecommender)
-    {
-        ActiveLearningUserState state = getState(aUser.getUsername());
-        state.setActiveLearningRecommender(aActiveLearningRecommender);
-    }
-
-    @Override
-    public ActiveLearningRecommender getActiveLearningRecommender(User aUser)
-    {
-        ActiveLearningUserState state = getState(aUser.getUsername());
-        return state.getActiveLearningRecommender();
-    }
-
-    @Override
-    public void setLearnSkippedRecommendationTime(User aUser, Date
-        aLearnSkippedRecommendationTime)
-    {
-        ActiveLearningUserState state = getState(aUser.getUsername());
-        state.setLearnSkippedRecommendationTime(aLearnSkippedRecommendationTime);
-    }
-
-    @Override
-    public Date getLearnSkippedRecommendationTime(User aUser)
-    {
-        ActiveLearningUserState state = getState(aUser.getUsername());
-        return state.getLearnSkippedRecommendationTime();
     }
 
     @Override
