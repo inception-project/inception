@@ -158,36 +158,6 @@ public class KnowledgeBaseServiceImpl
         repoManager.addRepositoryConfig(new RepositoryConfig(repositoryId, cfg));
         entityManager.persist(kb);
     }
-    
-    @Override
-    public void defineBaseProperties(KnowledgeBase kb, boolean kbUpdateFlag) 
-    {
-        if (kbUpdateFlag) {
-            List<KBHandle> listProperties = listProperties(kb, true);
-            if (!listProperties.isEmpty()) {
-                for (KBHandle propertyHandle : listProperties) {
-                    KBProperty property = new KBProperty();
-                    property.setIdentifier(propertyHandle.getIdentifier());
-                    property.setName(propertyHandle.getName());
-                    deleteProperty(kb, property);
-
-                }
-            }
-        }
-        
-        // KB will initialize base properties with base IRI schema properties defined by user
-        if (kb.getType() == RepositoryType.LOCAL && !kb.isReadOnly()) {
-            KBProperty property = new KBProperty(kb.getSubclassIri().getLocalName());
-            property.setIdentifier(kb.getSubclassIri().stringValue());
-            createBaseProperty(kb, property);
-            property = new KBProperty(kb.getLabelIri().getLocalName());
-            property.setIdentifier(kb.getLabelIri().stringValue());
-            createBaseProperty(kb, property);
-            property = new KBProperty(kb.getDescriptionIri().getLocalName());
-            property.setIdentifier(kb.getDescriptionIri().stringValue());
-            createBaseProperty(kb, property);
-        }
-    }
 
     @Transactional
     @Override
@@ -428,15 +398,6 @@ public class KnowledgeBaseServiceImpl
         });
     }
 
-    // Method to create and define base property
-    public KBHandle createBaseProperty(KnowledgeBase kb, KBProperty aProperty)
-    {
-        return update(kb, (conn) -> {
-            aProperty.write(conn, kb);
-            return new KBHandle(aProperty.getIdentifier(), aProperty.getName());
-        });
-    }
-    
     @Override
     public Optional<KBProperty> readProperty(KnowledgeBase kb, String aIdentifier)
     {
