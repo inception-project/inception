@@ -151,7 +151,8 @@ public class ConceptInstancePanel
         }
         else {
             replacementPanel = emptyPanel();
-            replacementSearch = emptyPanel();
+            replacementSearch = new AnnotatedListIdentifiers("annotatedResultGroups", kbModel,
+                    selectedConceptHandle, selectedInstanceHandle);
         }
         annotatedSearchPanel = annotatedSearchPanel.replaceWith(replacementSearch);
         instanceInfoPanel = instanceInfoPanel.replaceWith(replacementPanel);
