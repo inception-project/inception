@@ -47,7 +47,8 @@ public class ActiveLearningServiceImpl
     private final DocumentService documentService;
     private final RecommendationService recommendationService;
 
-    private Map<String, ActiveLearningUserState> states = new ConcurrentHashMap<>();
+    private Map<ActiveLearningUserStateKey, ActiveLearningUserState> states = new
+        ConcurrentHashMap<>();
 
     @Autowired
     public ActiveLearningServiceImpl(DocumentService aDocumentService,
@@ -113,24 +114,25 @@ public class ActiveLearningServiceImpl
     }
 
     @Override
-    public ActiveLearningUserState getState(String aUsername)
+    public ActiveLearningUserState getState(ActiveLearningUserStateKey aUserStateKey)
     {
         ActiveLearningUserState state;
-        state = states.get(aUsername);
+        state = states.get(aUserStateKey);
         if (state == null) {
             state = new ActiveLearningUserState();
-            states.put(aUsername, state);
+            states.put(aUserStateKey, state);
         }
         return state;
     }
 
     @Override
-    public void setState(String aUsername, ActiveLearningServiceImpl.ActiveLearningUserState
-        aState) {
+    public void setState(ActiveLearningUserStateKey aUserStateKey,
+        ActiveLearningServiceImpl.ActiveLearningUserState aState)
+    {
         if (aState == null) {
             aState = new ActiveLearningUserState();
         }
-        states.put(aUsername, aState);
+        states.put(aUserStateKey, aState);
     }
 
     @EventListener
@@ -254,6 +256,42 @@ public class ActiveLearningServiceImpl
         public void setLearnSkippedRecommendationTime(Date learnSkippedRecommendationTime)
         {
             this.learnSkippedRecommendationTime = learnSkippedRecommendationTime;
+        }
+    }
+
+    public static class ActiveLearningUserStateKey implements Serializable
+    {
+        private static final long serialVersionUID = -2134294656221484540L;
+        private String userName;
+        private long projectId;
+
+        public ActiveLearningUserStateKey(String aUserName, long aProjectId)
+        {
+            userName = aUserName;
+            projectId = aProjectId;
+        }
+
+        @Override
+        public boolean equals(Object o)
+        {
+            if (this == o)
+                return true;
+            if (o == null || getClass() != o.getClass())
+                return false;
+
+            ActiveLearningUserStateKey that = (ActiveLearningUserStateKey) o;
+
+            if (projectId != that.projectId)
+                return false;
+            return userName.equals(that.userName);
+        }
+
+        @Override
+        public int hashCode()
+        {
+            int result = userName.hashCode();
+            result = 31 * result + (int) (projectId ^ (projectId >>> 32));
+            return result;
         }
     }
 }

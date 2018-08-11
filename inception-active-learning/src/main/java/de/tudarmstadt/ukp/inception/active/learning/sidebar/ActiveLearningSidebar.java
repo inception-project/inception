@@ -168,9 +168,12 @@ public class ActiveLearningSidebar
 
         annotationPage = aAnnotationPage;
         user = aModel.getObject().getUser();
+        ActiveLearningServiceImpl.ActiveLearningUserStateKey userStateKey = new
+            ActiveLearningServiceImpl.ActiveLearningUserStateKey(
+            user.getUsername(), getModelObject().getProject().getId());
         userStateModel = new CompoundPropertyModel<>(LambdaModelAdapter
-            .of(() -> activeLearningService.getState(user.getUsername()),
-                state -> activeLearningService.setState(user.getUsername(), state)));
+            .of(() -> activeLearningService.getState(userStateKey),
+                state -> activeLearningService.setState(userStateKey, state)));
 
         mainContainer = new WebMarkupContainer(CID_MAIN_CONTAINER);
         mainContainer.setOutputMarkupId(true);
