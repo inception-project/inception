@@ -77,6 +77,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
+import de.tudarmstadt.ukp.inception.kb.ConceptFeatureValueType;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
@@ -376,55 +377,19 @@ public class QualifierFeatureEditor
             FeatureSupport<ConceptFeatureTraits> fs = featureSupportRegistry
                 .getFeatureSupport(linkedAnnotationFeature);
             ConceptFeatureTraits traits = fs.readTraits(linkedAnnotationFeature);
-
-            if (traits.getRepositoryId() != null) {
-                // If a specific KB is selected, get its instances
-                Optional<KnowledgeBase> kb = kbService.getKnowledgeBaseById(project,
-                    traits.getRepositoryId());
-                if (kb.isPresent()) {
-                    if (kb.get().isSupportConceptLinking()) {
-                        handles.addAll(listLinkingInstances(kb.get(), () -> getEditorCas
-                            (aHandler), aTypedString, roleLabe, roleAddr));
-                    }
-                    else {
-                        if (traits.getScope() != null) {
-                            handles = kbService.listInstances(kb.get(), traits.getScope(), false)
-                                .stream()
-                                .filter(inst -> inst.getUiLabel().contains(aTypedString))
-                                .collect(Collectors.toList());
-                        }
-                        else {
-                            for (KBHandle concept : kbService.listConcepts(kb.get(), false)) {
-                                handles.addAll(kbService.listInstances(kb.get(),
-                                    concept.getIdentifier(), false));
-                            }
-                        }
-                    }
-                }
+            ConceptFeatureValueType allowedType = traits.getAllowedValueType();
+            if (ConceptFeatureValueType.INSTANCE.equals(allowedType)) {
+                handles = getInstances(traits, project, aHandler, aTypedString, roleLabe, roleAddr);
+            }
+            else if (ConceptFeatureValueType.CONCEPT.equals(allowedType)) {
+                handles = getConcepts(traits, project, aHandler, aTypedString, roleLabe, roleAddr);
             }
             else {
-                // If no specific KB is selected, collect instances from all KBs
-                for (KnowledgeBase kb : kbService.getEnabledKnowledgeBases(project)) {
-                    if (kb.isSupportConceptLinking()) {
-                        handles
-                            .addAll(listLinkingInstances(kb, () -> getEditorCas(aHandler),
-                                aTypedString, roleLabe, roleAddr));
-                    }
-                    else {
-                        if (traits.getScope() != null) {
-                            handles.addAll(kbService.listInstances(kb, traits.getScope(), false)
-                                .stream()
-                                .filter(inst -> inst.getUiLabel().contains(aTypedString))
-                                .collect(Collectors.toList()));
-                        }
-                        else {
-                            for (KBHandle concept : kbService.listConcepts(kb, false)) {
-                                handles.addAll(
-                                    kbService.listInstances(kb, concept.getIdentifier(), false));
-                            }
-                        }
-                    }
-                }
+                // Allow both
+                handles.addAll(getInstances(traits, project, aHandler, aTypedString, roleLabe,
+                    roleAddr));
+                handles.addAll(getConcepts(traits, project, aHandler, aTypedString, roleLabe,
+                    roleAddr));
             }
         }
         catch (Exception e) {
@@ -434,6 +399,118 @@ public class QualifierFeatureEditor
                 .find(IPartialPageRequestHandler.class);
             if (target != null) {
                 target.addChildren(getPage(), IFeedback.class);
+            }
+        }
+        return handles;
+    }
+
+    private List<KBHandle> getInstances(ConceptFeatureTraits traits, Project project,
+        AnnotationActionHandler aHandler, String aTypedString, String roleLabe, int
+        roleAddr)
+    {
+        List<KBHandle> handles = new ArrayList<>();
+        if (traits.getRepositoryId() != null) {
+            // If a specific KB is selected, get its instances
+            Optional<KnowledgeBase> kb = kbService
+                .getKnowledgeBaseById(project, traits.getRepositoryId());
+            if (kb.isPresent()) {
+                //TODO: (#122) see ConceptFeatureEditor
+                if (kb.get().isSupportConceptLinking()) {
+                    handles.addAll(listLinkingInstances(kb.get(), () -> getEditorCas
+                        (aHandler), aTypedString, roleLabe, roleAddr));
+                }
+                else {
+                    if (traits.getScope() != null) {
+                        handles = kbService
+                            .listChildConceptsInstances(kb.get(), traits.getScope(), false, 50)
+                            .stream().filter(inst -> inst.getUiLabel().contains(aTypedString))
+                            .collect(Collectors.toList());
+                    }
+                    else {
+                        for (KBHandle concept : kbService.listConcepts(kb.get(), false)) {
+                            handles.addAll(
+                                kbService.listInstances(kb.get(), concept.getIdentifier(), false));
+                        }
+                    }
+                }
+            }
+        }
+        else {
+            // If no specific KB is selected, collect instances from all KBs
+            for (KnowledgeBase kb : kbService.getEnabledKnowledgeBases(project)) {
+                //TODO: (#122) see ConceptFeatureEditor
+                if (kb.isSupportConceptLinking()) {
+                    handles.addAll(listLinkingInstances(kb, () -> getEditorCas
+                        (aHandler), aTypedString, roleLabe, roleAddr));
+                }
+                else {
+                    if (traits.getScope() != null) {
+                        handles.addAll(
+                            kbService.listChildConceptsInstances(kb, traits.getScope(), false, 50)
+                                .stream().filter(inst -> inst.getUiLabel().contains(aTypedString))
+                                .collect(Collectors.toList()));
+                    }
+                    else {
+                        for (KBHandle concept : kbService.listConcepts(kb, false)) {
+                            handles.addAll(
+                                kbService.listInstances(kb, concept.getIdentifier(), false));
+                        }
+                    }
+                }
+            }
+        }
+        return handles;
+    }
+
+    private List<KBHandle> getConcepts(ConceptFeatureTraits traits, Project project,
+        AnnotationActionHandler aHandler, String aTypedString, String roleLabe, int
+        roleAddr)
+    {
+        List<KBHandle> handles = new ArrayList<>();
+        if (traits.getRepositoryId() != null) {
+            // If a specific KB is selected, get its instances
+            Optional<KnowledgeBase> kb = kbService
+                .getKnowledgeBaseById(project, traits.getRepositoryId());
+            if (kb.isPresent()) {
+                //TODO: (#122) see ConceptFeatureEditor
+                if (kb.get().isSupportConceptLinking()) {
+                    handles.addAll(listLinkingInstances(kb.get(), () -> getEditorCas
+                        (aHandler), aTypedString, roleLabe, roleAddr));
+                }
+                else {
+                    if (traits.getScope() != null) {
+                        handles = kbService.listChildConcepts(kb.get(), traits.getScope(),
+                            false)
+                            .stream().filter(conc -> conc.getUiLabel().contains(aTypedString))
+                            .collect(Collectors.toList());
+                    }
+                    else {
+                        handles.addAll(kbService.listConcepts(kb.get(), false));
+                    }
+                }
+
+            }
+        }
+        else {
+            // If no specific KB is selected, collect instances from all KBs
+            for (KnowledgeBase kb : kbService.getEnabledKnowledgeBases(project)) {
+                //TODO: (#122) see ConceptFeatureEditor
+                if (kb.isSupportConceptLinking()) {
+                    handles.addAll(listLinkingInstances(kb, () -> getEditorCas
+                        (aHandler), aTypedString, roleLabe, roleAddr));
+                }
+                else {
+                    if (traits.getScope() != null) {
+                        handles = kbService.listChildConcepts(kb, traits.getScope(), false)
+                            .stream()
+                            .filter(conc -> conc.getUiLabel().contains(aTypedString))
+                            .collect(Collectors.toList());
+                    }
+                    else {
+                        handles.addAll(kbService.listConcepts(kb, false));
+                    }
+                }
+
             }
         }
         return handles;

@@ -376,12 +376,12 @@ public class SubjectObjectFeatureEditor
                 handles = getInstances(traits, project, aHandler, aTypedString);
             }
             else if (ConceptFeatureValueType.CONCEPT.equals(allowedType)) {
-                handles = getConcepts(traits, project, aTypedString);
+                handles = getConcepts(traits, project, aHandler, aTypedString);
             }
             else {
                 // Allow both
                 handles.addAll(getInstances(traits, project, aHandler, aTypedString));
-                handles.addAll(getConcepts(traits, project, aTypedString));
+                handles.addAll(getConcepts(traits, project, aHandler, aTypedString));
             }
         }
         catch (Exception e) {
@@ -405,6 +405,7 @@ public class SubjectObjectFeatureEditor
             Optional<KnowledgeBase> kb = kbService
                 .getKnowledgeBaseById(project, traits.getRepositoryId());
             if (kb.isPresent()) {
+                //TODO: (#122) see ConceptFeatureEditor
                 if (kb.get().isSupportConceptLinking()) {
                     handles.addAll(
                         listLinkingInstances(kb.get(), () -> getEditorCas(aHandler), aTypedString));
@@ -428,6 +429,7 @@ public class SubjectObjectFeatureEditor
         else {
             // If no specific KB is selected, collect instances from all KBs
             for (KnowledgeBase kb : kbService.getEnabledKnowledgeBases(project)) {
+                //TODO: (#122) see ConceptFeatureEditor
                 if (kb.isSupportConceptLinking()) {
                     handles.addAll(
                         listLinkingInstances(kb, () -> getEditorCas(aHandler), aTypedString));
@@ -452,7 +454,7 @@ public class SubjectObjectFeatureEditor
     }
 
     private List<KBHandle> getConcepts(ConceptFeatureTraits traits, Project project,
-        String aTypedString)
+        AnnotationActionHandler aHandler, String aTypedString)
     {
         List<KBHandle> handles = new ArrayList<>();
         if (traits.getRepositoryId() != null) {
@@ -460,13 +462,21 @@ public class SubjectObjectFeatureEditor
             Optional<KnowledgeBase> kb = kbService
                 .getKnowledgeBaseById(project, traits.getRepositoryId());
             if (kb.isPresent()) {
-                if (traits.getScope() != null) {
-                    handles = kbService.listChildConcepts(kb.get(), traits.getScope(), false)
-                        .stream().filter(conc -> conc.getUiLabel().contains(aTypedString))
-                        .collect(Collectors.toList());
+                //TODO: (#122) see ConceptFeatureEditor
+                if (kb.get().isSupportConceptLinking()) {
+                    handles.addAll(
+                        listLinkingInstances(kb.get(), () -> getEditorCas(aHandler), aTypedString));
                 }
                 else {
-                    handles.addAll(kbService.listConcepts(kb.get(), false));
+                    if (traits.getScope() != null) {
+                        handles = kbService.listChildConcepts(kb.get(), traits.getScope(),
+                            false)
+                            .stream().filter(conc -> conc.getUiLabel().contains(aTypedString))
+                            .collect(Collectors.toList());
+                    }
+                    else {
+                        handles.addAll(kbService.listConcepts(kb.get(), false));
+                    }
                 }
 
             }
@@ -474,13 +484,21 @@ public class SubjectObjectFeatureEditor
         else {
             // If no specific KB is selected, collect instances from all KBs
             for (KnowledgeBase kb : kbService.getEnabledKnowledgeBases(project)) {
-                if (traits.getScope() != null) {
-                    handles = kbService.listChildConcepts(kb, traits.getScope(), false).stream()
-                        .filter(conc -> conc.getUiLabel().contains(aTypedString))
-                        .collect(Collectors.toList());
+                //TODO: (#122) see ConceptFeatureEditor
+                if (kb.isSupportConceptLinking()) {
+                    handles.addAll(
+                        listLinkingInstances(kb, () -> getEditorCas(aHandler), aTypedString));
                 }
                 else {
-                    handles.addAll(kbService.listConcepts(kb, false));
+                    if (traits.getScope() != null) {
+                        handles = kbService.listChildConcepts(kb, traits.getScope(), false)
+                            .stream()
+                            .filter(conc -> conc.getUiLabel().contains(aTypedString))
+                            .collect(Collectors.toList());
+                    }
+                    else {
+                        handles.addAll(kbService.listConcepts(kb, false));
+                    }
                 }
 
             }
