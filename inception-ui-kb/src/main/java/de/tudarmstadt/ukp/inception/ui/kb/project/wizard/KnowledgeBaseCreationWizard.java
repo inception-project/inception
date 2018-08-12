@@ -19,11 +19,15 @@ package de.tudarmstadt.ukp.inception.ui.kb.project.wizard;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+
+import org.apache.commons.io.FileUtils;
 
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxEventBehavior;
@@ -36,6 +40,7 @@ import org.apache.wicket.extensions.wizard.IWizardStep;
 import org.apache.wicket.extensions.wizard.dynamic.DynamicWizardModel;
 import org.apache.wicket.extensions.wizard.dynamic.DynamicWizardStep;
 import org.apache.wicket.extensions.wizard.dynamic.IDynamicWizardStep;
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.DropDownChoice;
@@ -65,6 +70,7 @@ import de.tudarmstadt.ukp.inception.app.bootstrap.BootstrapWizardButtonBar;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 import de.tudarmstadt.ukp.inception.kb.io.FileUploadHelper;
+import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 import de.tudarmstadt.ukp.inception.ui.kb.project.KnowledgeBaseIriPanel;
@@ -72,6 +78,8 @@ import de.tudarmstadt.ukp.inception.ui.kb.project.KnowledgeBaseIriPanelMode;
 import de.tudarmstadt.ukp.inception.ui.kb.project.KnowledgeBaseListPanel;
 import de.tudarmstadt.ukp.inception.ui.kb.project.KnowledgeBaseWrapper;
 import de.tudarmstadt.ukp.inception.ui.kb.project.Validators;
+;
+
 
 /**
  * Wizard for registering a new knowledge base for a project.
@@ -100,6 +108,9 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
     private final IModel<Project> projectModel;
     private final DynamicWizardModel wizardModel;
     private final CompoundPropertyModel<KnowledgeBaseWrapper> wizardDataModel;
+    private final Map<String, KnowledgeBaseProfile> knowledgeBaseProfiles;
+    private HashMap<String, KnowledgeBaseProfile> downloadedProfiles;
+
 
     public KnowledgeBaseCreationWizard(String id, IModel<Project> aProjectModel) {
         super(id);
@@ -111,7 +122,31 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
 
         wizardModel = new DynamicWizardModel(new TypeStep(null, wizardDataModel));
         wizardModel.setLastVisible(false);
+        knowledgeBaseProfiles = readKbProfiles();
+        downloadedProfiles = new HashMap<>();
+
         init(wizardModel);
+    }
+
+    private Map<String, KnowledgeBaseProfile> readKbProfiles() {
+        Map<String, KnowledgeBaseProfile> profiles = new HashMap<>();
+        try {
+            profiles = kbService.readKnowledgeBaseProfiles();
+        }
+        catch (IOException e) {
+            error("Unable to read knowledge base profiles" + e.getMessage());
+            log.error("Unable to read knowledge base profiles", e);
+        }
+        return profiles;
+    }
+
+    private void setKbIRIsAccordingToProfile(KnowledgeBase kb, KnowledgeBaseProfile kbProfile) {
+        kb.setClassIri(kbProfile.getMapping().getClassIri());
+        kb.setSubclassIri(kbProfile.getMapping().getSubclassIri());
+        kb.setTypeIri(kbProfile.getMapping().getTypeIri());
+        kb.setDescriptionIri(kbProfile.getMapping().getDescriptionIri());
+        kb.setPropertyTypeIri(kbProfile.getMapping().getPropertyTypeIri());
+        kb.setLabelIri(kbProfile.getMapping().getLabelIri());
     }
 
     /**
@@ -206,9 +241,13 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
     private final class LocalRepositoryStep extends DynamicWizardStep {
 
         private static final long serialVersionUID = 8212277960059805657L;
+        private static final String TMP_FILE_NAME = "tmp_kb";
         
         private CompoundPropertyModel<KnowledgeBaseWrapper> model;
         private FileUploadField fileUpload;
+        private File downloadedFile;
+        private WebMarkupContainer listViewContainer;
+        private KnowledgeBaseProfile selectedKnowledgeBaseProfile;
         private boolean completed;
 
         public LocalRepositoryStep(IDynamicWizardStep previousStep,
@@ -216,9 +255,75 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
             super(previousStep);
             this.model = model;
             completed = true;
-            
+            downloadedFile = new File(TMP_FILE_NAME);
+
             fileUpload = new FileUploadField("upload");
             add(fileUpload);
+
+            List<KnowledgeBaseProfile> downloadableKBs = knowledgeBaseProfiles.values().stream()
+                .filter(kb -> RepositoryType.LOCAL.equals(kb.getType()))
+                .collect(Collectors.toList());
+
+            listViewContainer = new WebMarkupContainer("listViewContainer");
+            ListView<KnowledgeBaseProfile> suggestions = new ListView<KnowledgeBaseProfile>(
+                "downloadableKBs", downloadableKBs)
+            {
+                @Override protected void populateItem(ListItem<KnowledgeBaseProfile> item)
+                {
+                    LambdaAjaxLink link = new LambdaAjaxLink("suggestionLink", t -> {
+                        selectedKnowledgeBaseProfile = item.getModelObject();
+                    })
+                    {
+                        @Override protected void onConfigure()
+                        {
+                            // Can not download the same KB more than once
+                            setEnabled(
+                                !downloadedProfiles.containsKey(item.getModelObject().getName()));
+                        }
+                    };
+
+                    String itemLabel;
+                    // Adjust label to indicate whether the KB has already been downloaded
+                    if (downloadedProfiles.containsKey(item.getModelObject().getName())) {
+                        itemLabel = item.getModelObject().getName() + "  [Downloaded]";
+                    }
+                    else {
+                        itemLabel = item.getModelObject().getName();
+                    }
+                    link.add(new Label("suggestionLabel", itemLabel));
+                    item.add(link);
+                }
+            };
+            suggestions.setOutputMarkupId(true);
+            listViewContainer.add(suggestions);
+            listViewContainer.setOutputMarkupId(true);
+            add(listViewContainer);
+
+            LambdaAjaxLink downloadButton = new LambdaAjaxLink("download",
+                LocalRepositoryStep.this::actionDownloadKbAndSetIRIs);
+            downloadButton.add(new Label("downloadLabel", "Download"));
+            add(downloadButton);
+        }
+
+        private void actionDownloadKbAndSetIRIs(AjaxRequestTarget aTarget)
+        {
+            try {
+                if (selectedKnowledgeBaseProfile != null) {
+                    FileUtils.copyURLToFile(new URL(selectedKnowledgeBaseProfile.getAccessUrl()),
+                        downloadedFile);
+                    setKbIRIsAccordingToProfile(model.getObject().getKb(),
+                        selectedKnowledgeBaseProfile);
+                    downloadedProfiles
+                        .put(selectedKnowledgeBaseProfile.getName(), selectedKnowledgeBaseProfile);
+                    aTarget.add(listViewContainer);
+                    selectedKnowledgeBaseProfile = null;
+                }
+            }
+            catch (IOException e) {
+                error("Unable to download knowledge base file" + e.getMessage());
+                log.error("Unable to download knowledge base file", e);
+                downloadedFile = null;
+            }
         }
         
         @Override
@@ -232,6 +337,9 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
                     fileUploads.add(tmpFile);
                 }
                 model.getObject().setFiles(fileUploads);
+                if (downloadedFile != null) {
+                    model.getObject().getFiles().add(downloadedFile);
+                }
             } catch (Exception e) {
                 completed = false;
                 log.error("Error while uploading files", e);
@@ -284,42 +392,28 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
             RequiredTextField<String> urlField = new RequiredTextField<>("url");
             urlField.add(Validators.URL_VALIDATOR);
             add(urlField);
-            
-            Map<String, KnowledgeBaseProfile> profiles = new HashMap<>();
-            try {
-                profiles = kbService.readKnowledgeBaseProfiles();
-            }
-            catch (IOException e) {
-                error("Unable to read knowledge base profiles" + e.getMessage());
-                log.error("Unable to read knowledge base profiles", e);
-            }
+
             // for up to MAXIMUM_REMOTE_REPO_SUGGESTIONS of knowledge bases, create a link which
             // directly fills in the URL field (convenient for both developers AND users :))
-            List<KnowledgeBaseProfile> suggestions = new ArrayList<>(profiles.values());
+            List<KnowledgeBaseProfile> suggestions = new ArrayList<>(
+                knowledgeBaseProfiles.values().stream()
+                    .filter(kb -> RepositoryType.REMOTE.equals(kb.getType()))
+                    .collect(Collectors.toList()));
             suggestions = suggestions.subList(0,
                     Math.min(suggestions.size(), MAXIMUM_REMOTE_REPO_SUGGESTIONS));
-            add(new ListView<KnowledgeBaseProfile>("suggestions", suggestions) {
+            add(new ListView<KnowledgeBaseProfile>("suggestions", suggestions)
+            {
 
                 private static final long serialVersionUID = 4179629475064638272L;
 
-                @Override
-                protected void populateItem(ListItem<KnowledgeBaseProfile> item) {
+                @Override protected void populateItem(ListItem<KnowledgeBaseProfile> item)
+                {
                     // add a link for one knowledge base with proper label
                     LambdaAjaxLink link = new LambdaAjaxLink("suggestionLink", t -> {
                         // set all the fields according to the chosen profile
-                        model.getObject().setUrl(item.getModelObject().getSparqlUrl());
-                        model.getObject().getKb()
-                                .setClassIri(item.getModelObject().getMapping().getClassIri());
-                        model.getObject().getKb().setSubclassIri(
-                                item.getModelObject().getMapping().getSubclassIri());
-                        model.getObject().getKb()
-                                .setTypeIri(item.getModelObject().getMapping().getTypeIri());
-                        model.getObject().getKb().setDescriptionIri(
-                                item.getModelObject().getMapping().getDescriptionIri());
-                        model.getObject().getKb().setPropertyTypeIri(
-                                item.getModelObject().getMapping().getPropertyTypeIri());
-                        model.getObject().getKb()
-                                .setLabelIri(item.getModelObject().getMapping().getLabelIri());
+                        model.getObject().setUrl(item.getModelObject().getAccessUrl());
+                        setKbIRIsAccordingToProfile(model.getObject().getKb(),
+                            item.getModelObject());
 
                         t.add(urlField);
                     });

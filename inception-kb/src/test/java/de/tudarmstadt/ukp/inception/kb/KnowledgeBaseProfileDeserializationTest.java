@@ -40,6 +40,7 @@ public class KnowledgeBaseProfileDeserializationTest
     public void checkThatDeserializationWorks() throws JsonParseException, JsonMappingException, IOException {
         String name = "Test KB";
         String url = "http://someurl/sparql";
+        RepositoryType type = RepositoryType.REMOTE;
         String classIri = "http://www.w3.org/2000/01/rdf-schema#Class";
         String subclassIri = "http://www.w3.org/2000/01/rdf-schema#subClassOf";
         String typeIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
@@ -51,11 +52,13 @@ public class KnowledgeBaseProfileDeserializationTest
         KnowledgeBaseProfile referenceProfile = new KnowledgeBaseProfile();
         referenceProfile.setMapping(referenceMapping);
         referenceProfile.setName(name);
-        referenceProfile.setSparqlUrl(url);
+        referenceProfile.setAccessUrl(url);
+        referenceProfile.setType(type);
         
         String test_yaml = "test_profile:\n    "
                 + "name: " + name + "\n    "
-                + "sparql-url: " + url + " \n    "
+                + "access-url: " + url + " \n    "
+                + "type: " + type + " \n    "
                 + "mapping: \n        "
                 + "class: " + classIri + "\n        "
                 + "subclass-of: " + subclassIri + "\n        "

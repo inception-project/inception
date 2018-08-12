@@ -21,6 +21,7 @@ import java.io.Serializable;
 import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 
 public class KnowledgeBaseProfile implements Serializable
 {
@@ -29,9 +30,12 @@ public class KnowledgeBaseProfile implements Serializable
 
     @JsonProperty("name")
     private String name;
+
+    @JsonProperty("type")
+    private RepositoryType type;
     
-    @JsonProperty("sparql-url")
-    private String sparqlUrl;
+    @JsonProperty("access-url")
+    private String accessUrl;
     
     @JsonProperty("mapping")
     private KnowledgeBaseMapping mapping;
@@ -46,14 +50,24 @@ public class KnowledgeBaseProfile implements Serializable
         name = aName;
     }
 
-    public String getSparqlUrl()
+    public RepositoryType getType()
     {
-        return sparqlUrl;
+        return type;
     }
 
-    public void setSparqlUrl(String aSparqlUrl)
+    public void setType(RepositoryType aType)
     {
-        sparqlUrl = aSparqlUrl;
+        type = aType;
+    }
+
+    public String getAccessUrl()
+    {
+        return accessUrl;
+    }
+
+    public void setAccessUrl(String aSparqlUrl)
+    {
+        accessUrl = aSparqlUrl;
     }
 
     public KnowledgeBaseMapping getMapping()
@@ -76,12 +90,12 @@ public class KnowledgeBaseProfile implements Serializable
             return false;
         }
         KnowledgeBaseProfile that = (KnowledgeBaseProfile) o;
-        return Objects.equals(name, that.name) && Objects.equals(sparqlUrl, that.sparqlUrl)
+        return Objects.equals(name, that.name) && Objects.equals(accessUrl, that.accessUrl)
                 && Objects.equals(mapping, that.mapping);
     }
     
     @Override
     public int hashCode() {
-        return Objects.hash(name, sparqlUrl, mapping);
+        return Objects.hash(name, accessUrl, mapping);
     }
 }

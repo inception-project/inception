@@ -173,7 +173,7 @@ public class KnowledgeBaseServiceRemoteTest
             kb_wikidata_direct.setType(RepositoryType.REMOTE);
             kb_wikidata_direct.setReification(Reification.NONE);
             kb_wikidata_direct.applyMapping(PROFILES.get("wikidata").getMapping());
-            kbList.add(new TestConfiguration(PROFILES.get("wikidata").getSparqlUrl(),
+            kbList.add(new TestConfiguration(PROFILES.get("wikidata").getAccessUrl(),
                     kb_wikidata_direct));
         }
 
@@ -200,7 +200,7 @@ public class KnowledgeBaseServiceRemoteTest
             kb_dbpedia.setType(RepositoryType.REMOTE);
             kb_dbpedia.setReification(Reification.NONE);
             kb_dbpedia.applyMapping(PROFILES.get("db_pedia").getMapping());
-            kbList.add(new TestConfiguration(PROFILES.get("db_pedia").getSparqlUrl(),
+            kbList.add(new TestConfiguration(PROFILES.get("db_pedia").getAccessUrl(),
                     kb_dbpedia));
         }
        
@@ -210,7 +210,7 @@ public class KnowledgeBaseServiceRemoteTest
             kb_yago.setType(RepositoryType.REMOTE);
             kb_yago.setReification(Reification.NONE);
             kb_yago.applyMapping(PROFILES.get("yago").getMapping());
-            kbList.add(new TestConfiguration(PROFILES.get("yago").getSparqlUrl(),
+            kbList.add(new TestConfiguration(PROFILES.get("yago").getAccessUrl(),
                     kb_yago));
         }
         
