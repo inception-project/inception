@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.inception.kb.graph;
 
 import java.util.Optional;
 
-import de.tudarmstadt.ukp.inception.kb.SPARQLQueryStore;
 import org.eclipse.rdf4j.common.iteration.ConvertingIteration;
 import org.eclipse.rdf4j.common.iteration.ExceptionConvertingIteration;
 import org.eclipse.rdf4j.common.iteration.Iteration;
@@ -29,9 +28,7 @@ import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.Value;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
-import org.eclipse.rdf4j.model.vocabulary.OWL;
-import org.eclipse.rdf4j.model.vocabulary.RDF;
-import org.eclipse.rdf4j.model.vocabulary.RDFS;
+
 import org.eclipse.rdf4j.query.BindingSet;
 import org.eclipse.rdf4j.query.QueryEvaluationException;
 import org.eclipse.rdf4j.query.QueryLanguage;
@@ -43,6 +40,7 @@ import org.eclipse.rdf4j.repository.RepositoryResult;
 import org.eclipse.rdf4j.rio.ntriples.NTriplesUtil;
 
 import de.tudarmstadt.ukp.inception.kb.IriConstants;
+import de.tudarmstadt.ukp.inception.kb.SPARQLQueryStore;
 
 public class RdfUtils
 {
