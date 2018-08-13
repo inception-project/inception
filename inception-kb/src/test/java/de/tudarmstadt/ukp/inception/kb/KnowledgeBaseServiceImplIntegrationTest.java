@@ -34,14 +34,12 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.persistence.EntityManager;
 
 import org.eclipse.rdf4j.model.IRI;
-import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.OWL;
@@ -470,32 +468,6 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
             .as("Check that concept has not been updated")
             .hasFieldOrPropertyWithValue("description", "Concept description")
             .hasFieldOrPropertyWithValue("name", "Concept name");
-    }
-
-    @Test
-    public void deleteConcept_WithConceptReferencedAsObject_ShouldDeleteConceptAndStatement() {
-        KBInstance instance = buildInstance();
-        KBProperty property = buildProperty();
-        KBConcept concept = buildConcept();
-
-        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
-        KBHandle subHandle = sut.createInstance(kb, instance);
-        KBHandle predHandle = sut.createProperty(kb, property);
-        KBHandle conceptHandle = sut.createConcept(kb, concept);
-        String conceptId = conceptHandle.getIdentifier();
-
-        sut.upsertStatement(kb, buildStatement(kb, subHandle, predHandle, conceptId));
-
-        sut.deleteConcept(kb, concept);
-
-        assertThat(sut.listStatementsWithPredicateOrObjectReference(kb, conceptId))
-            .isEmpty();
-
-        Optional<KBConcept> savedConcept = sut.readConcept(kb, conceptId);
-        assertThat(savedConcept.isPresent())
-            .as("Check that concept was not found after delete")
-            .isFalse();
-
     }
 
     @Test
@@ -984,32 +956,6 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     }
 
     @Test
-    public void deleteInstance_WithInstanceReferencedAsObject_ShouldDeleteInstanceAndStatement()
-    {
-        KBInstance instance = buildInstance();
-        KBProperty property = buildProperty();
-        KBInstance Instance = buildInstance();
-
-        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
-        KBHandle subHandle = sut.createInstance(kb, instance);
-        KBHandle predHandle = sut.createProperty(kb, property);
-        KBHandle instanceHandle = sut.createInstance(kb, Instance);
-        String instanceId = instanceHandle.getIdentifier();
-
-        sut.upsertStatement(kb, buildStatement(kb, subHandle, predHandle, instanceId));
-
-        sut.deleteInstance(kb, Instance);
-
-        assertThat(sut.listStatementsWithPredicateOrObjectReference(kb, instanceId))
-            .isEmpty();
-
-        Optional<KBInstance> savedInstance = sut.readInstance(kb, instanceId);
-        assertThat(savedInstance.isPresent()).as("Check that Instance was not found after delete")
-                .isFalse();
-
-    }
-
-    @Test
     public void deleteInstance_WithNonexistentProperty_ShouldNoNothing() {
         KBInstance instance = buildInstance();
         instance.setIdentifier("https://nonexistent.identifier.test");
@@ -1229,7 +1175,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
             .as("Check that all root concepts have been found")
             .containsExactlyInAnyOrder(expectedLabels);
     }
-
+    
     @Test
     public void getConceptRoots_WithWildlifeOntologyAndExplicityDefinedConcepts_ShouldReturnRootConcepts() throws Exception {
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
@@ -1241,7 +1187,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         concepts.add(rootConcept2);
         kb.setExplicitlyDefinedRootConcepts(concepts);
         sut.updateKnowledgeBase(kb, sut.getNativeConfig());
-
+        
         importKnowledgeBase("data/wildlife_ontology.ttl");
         setSchema(kb, OWL.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT, RDFS.LABEL, RDF.PROPERTY);
 
@@ -1339,39 +1285,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     }
 
     @Test
-    public void listStatementsWithPredicateOrObjectReference_WithExistingStatements_ShouldOnlyReturnStatementsWhereIdIsPredOrObj()
-    {
-        KBInstance subjectInstance = buildInstance();
-        KBInstance objectInstance = buildInstance();
-        KBProperty property = buildProperty();
-
-        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
-
-        KBHandle subjectHandle = sut.createInstance(kb, subjectInstance);
-        KBHandle predHandle = sut.createProperty(kb, property);
-        KBHandle objectHandle = sut.createInstance(kb, objectInstance);
-        String testInstanceId = objectHandle.getIdentifier();
-
-        KBStatement stmt1 = buildStatement(kb, subjectHandle, predHandle, testInstanceId);
-
-        sut.upsertStatement(kb, stmt1);
-        List<Statement> result = sut.listStatementsWithPredicateOrObjectReference(kb, testInstanceId);
-        assertThat(result)
-            .allMatch(new Predicate<Statement>() {
-
-                @Override
-                public boolean test(Statement arg0)
-                {
-                    return arg0.getObject().stringValue().equals(testInstanceId);
-                }
-
-            });
-        assertTrue(result.size() >= 1);
-
-    }
-
-    @Test
-    public void statementsMatchSPO_WithMatchedStatement_ShouldReturnTrue()
+    public void statementsMatchSPO_WithMatchedStatement_ShouldReturnTure()
     {
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         KBConcept concept = buildConcept();
@@ -1425,11 +1339,11 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
             .as("Check that the English instance is retrieved.")
             .isEqualTo("en");
     }
-
+    
     @Test
     public void readKnowledgeBaseProfiles_ShouldReturnValidHashMapWithProfiles() throws IOException {
         Map<String, KnowledgeBaseProfile> profiles = sut.readKnowledgeBaseProfiles();
-
+        
         assertThat(profiles)
             .allSatisfy((key, profile) -> {
                 assertThat(key).isNotNull();

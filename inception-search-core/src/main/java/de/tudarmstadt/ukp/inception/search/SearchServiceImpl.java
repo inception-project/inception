@@ -33,7 +33,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.event.TransactionalEventListener;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
@@ -80,7 +79,6 @@ public class SearchServiceImpl
     @Value(value = "${repository.path}")
     private String dir;
 
-    @Autowired
     public SearchServiceImpl()
     {
         indexes = new HashMap<>();
@@ -179,8 +177,7 @@ public class SearchServiceImpl
         }
     }
 
-    @TransactionalEventListener(fallbackExecution = true)
-    @Transactional
+    @EventListener
     public void afterAnnotationUpdate(AfterAnnotationUpdateEvent aEvent) throws Exception
     {
         AnnotationDocument document = aEvent.getDocument();
@@ -217,7 +214,6 @@ public class SearchServiceImpl
     }
 
     @Override
-    @Transactional
     public List<SearchResult> query(User aUser, Project aProject, String aQuery)
         throws IOException, ExecutionException
     {
@@ -265,8 +261,7 @@ public class SearchServiceImpl
         return results;
     }
 
-    @TransactionalEventListener(fallbackExecution = true)
-    @Transactional
+    @EventListener
     public void afterDocumentCreate(AfterDocumentCreatedEvent aEvent) throws Exception
     {
         SourceDocument document = aEvent.getDocument();
@@ -295,8 +290,7 @@ public class SearchServiceImpl
         }
     }
 
-    @TransactionalEventListener(fallbackExecution = true)
-    @Transactional
+    @EventListener
     public void beforeLayerConfigurationChanged(LayerConfigurationChangedEvent aEvent)
         throws Exception
     {
@@ -316,7 +310,6 @@ public class SearchServiceImpl
      * Reindex the project. If there is not a physical index, create a new one.
      */
     @Override
-    @Transactional
     public void reindex(Project aProject) throws IOException
     {
         log.info("Reindexing project " + aProject.getName());
@@ -351,14 +344,17 @@ public class SearchServiceImpl
         return indexObject;
     }
 
-    private void createIndex(Index aIndexObject)
+    public void createIndex(Index aIndexObject)
     {
         entityManager.persist(aIndexObject);
+        entityManager.flush();
     }
 
-    private void updateIndex(Index aIndexObject)
+    @Override
+    public void updateIndex(Index aIndexObject)
     {
         entityManager.merge(aIndexObject);
+        entityManager.flush();
     }
 
     public void deleteIndex(Index aIndexObject)
@@ -375,16 +371,4 @@ public class SearchServiceImpl
             this.deleteIndex(indexObject);
         }
     }
-    
-    @Override
-    public boolean isIndexValid(Project aProject)
-    {
-        if (indexes.containsKey(aProject.getId())) {
-            return !indexes.get(aProject.getId()).getInvalid();
-        }
-        else {
-            return false;
-        }
-    }
-
 }

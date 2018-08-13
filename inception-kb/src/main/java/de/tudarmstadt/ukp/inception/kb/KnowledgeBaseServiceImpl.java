@@ -42,7 +42,6 @@ import javax.persistence.Query;
 import org.apache.commons.compress.compressors.CompressorException;
 import org.apache.commons.compress.compressors.CompressorStreamFactory;
 import org.apache.commons.lang3.StringUtils;
-import org.eclipse.rdf4j.common.iteration.Iterations;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.model.Statement;
@@ -375,7 +374,7 @@ public class KnowledgeBaseServiceImpl
     @Override
     public void deleteConcept(KnowledgeBase kb, KBConcept aConcept)
     {
-        getReificationStrategy(kb).deleteConcept(kb, aConcept);
+        delete(kb, aConcept.getIdentifier());
     }
 
     @Override
@@ -404,9 +403,8 @@ public class KnowledgeBaseServiceImpl
     {
         return read(kb, (conn) -> {
             ValueFactory vf = conn.getValueFactory();
-            try (RepositoryResult<Statement> stmts = RdfUtils.getPropertyStatementsSparql(conn,
-                    vf.createIRI(aIdentifier), kb.getTypeIri(), kb.getPropertyTypeIri(), 1000, true,
-                    null)) {
+            try (RepositoryResult<Statement> stmts = RdfUtils.getStatements(conn,
+                    vf.createIRI(aIdentifier), kb.getTypeIri(), kb.getPropertyTypeIri(), true)) {
                 if (stmts.hasNext()) {
                     Statement propStmt = stmts.next();
                     KBProperty kbProp = KBProperty.read(conn, propStmt, kb);
@@ -435,37 +433,13 @@ public class KnowledgeBaseServiceImpl
     @Override
     public void deleteProperty(KnowledgeBase kb, KBProperty aType)
     {
-        getReificationStrategy(kb).deleteProperty(kb, aType);
+        delete(kb, aType.getIdentifier());
     }
 
     @Override
     public List<KBHandle> listProperties(KnowledgeBase kb, boolean aAll)
     {
-        return listProperties(kb, true, aAll);
-    }
-
-    @Override
-    public List<KBHandle> listProperties(KnowledgeBase kb, boolean aIncludeInferred, boolean aAll)
-        throws QueryEvaluationException
-    {
-        List<KBHandle> resultList = read(kb, (conn) -> {
-            String QUERY = getPropertyListQuery(kb);
-            TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
-            tupleQuery.setBinding("pTYPE", kb.getTypeIri());
-            tupleQuery.setBinding("oPROPERTY", kb.getPropertyTypeIri());
-            tupleQuery.setBinding("pLABEL", kb.getLabelIri());
-            tupleQuery.setIncludeInferred(aIncludeInferred);
-
-            return evaluateListQuery(tupleQuery, aAll);
-        });
-
-        resultList.sort(Comparator.comparing(KBObject::getUiLabel));
-
-        return resultList;
-    }
-    
-    public String getPropertyListQuery(KnowledgeBase kb) {
-        return SPARQLQueryStore.PROPERTYLIST_QUERY;
+        return list(kb, kb.getPropertyTypeIri(), true, aAll);
     }
 
     @Override
@@ -555,7 +529,7 @@ public class KnowledgeBaseServiceImpl
     @Override
     public void deleteInstance(KnowledgeBase kb, KBInstance aInstance)
     {
-        getReificationStrategy(kb).deleteInstance(kb, aInstance);
+        delete(kb, aInstance.getIdentifier());
     }
 
     @Override
@@ -570,7 +544,7 @@ public class KnowledgeBaseServiceImpl
     @Override
     public void initStatement(KnowledgeBase kb, KBStatement aStatement)
     {
-        Set<Statement> statements = getReificationStrategy(kb).reify(kb, aStatement);
+        List<Statement> statements = getReificationStrategy(kb).reify(kb, aStatement);
         aStatement.setOriginalStatements(statements);
     }
 
@@ -598,23 +572,17 @@ public class KnowledgeBaseServiceImpl
         KBHandle handle = new KBHandle(aInstance.getIdentifier(), aInstance.getName());
         return listStatements(kb, handle, aAll);
     }
-    
-    @Override
-    public List<Statement> listStatementsWithPredicateOrObjectReference(KnowledgeBase kb,
-            String aIdentifier)
-    {
-        try (RepositoryConnection conn = getConnection(kb)) {
-            ValueFactory vf = conn.getValueFactory();
-            IRI iri = vf.createIRI(aIdentifier);
-            try (RepositoryResult<Statement> predStmts = conn.getStatements(null, iri, null);
-                    RepositoryResult<Statement> objStmts = conn.getStatements(null, null, iri)) {
-                List<Statement> allStmts = new ArrayList<>();
-                Iterations.addAll(predStmts, allStmts);
-                Iterations.addAll(objStmts, allStmts);
-                return allStmts;
 
+    private void delete(KnowledgeBase kb, String aIdentifier)
+    {
+        update(kb, (conn) -> {
+            ValueFactory vf = conn.getValueFactory();
+            try (RepositoryResult<Statement> stmts = conn
+                .getStatements(vf.createIRI(aIdentifier), null, null)) {
+                conn.remove(stmts);
             }
-        }
+            return null;
+        });
     }
 
     private String generateIdentifier(RepositoryConnection conn, KnowledgeBase kb)
@@ -687,27 +655,6 @@ public class KnowledgeBaseServiceImpl
         return resultList;
     }
 
-    @Override
-    public List<KBHandle> listProperties(KnowledgeBase kb, IRI aType, boolean aIncludeInferred,
-            boolean aAll)
-        throws QueryEvaluationException
-    {
-        List<KBHandle> resultList = read(kb, (conn) -> {
-            String QUERY = getPropertyListQuery(kb);
-            TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
-            tupleQuery.setBinding("pTYPE", kb.getTypeIri());
-            tupleQuery.setBinding("oPROPERTY", aType);
-            tupleQuery.setBinding("pLABEL", kb.getLabelIri());
-            tupleQuery.setIncludeInferred(aIncludeInferred);
-
-            return evaluateListQuery(tupleQuery, aAll);
-        });
-
-        resultList.sort(Comparator.comparing(KBObject::getUiLabel));
-
-        return resultList;
-    }
-    
     @Override
     public List<KBHandle> listRootConcepts(KnowledgeBase kb, boolean aAll)
         throws QueryEvaluationException
@@ -901,39 +848,5 @@ public class KnowledgeBaseServiceImpl
             return mapper.readValue(r, 
                     new TypeReference<HashMap<String, KnowledgeBaseProfile>>(){});
         }
-    }
-    
-    /**
-     * Read identifier IRI and return {@link Optional} of {@link KBObject}
-     * 
-     * @return {@link Optional} of {@link KBObject} of type {@link KBConcept} or {@link KBInstance}
-     */
-    @Override
-    public Optional<KBObject> readKBIdentifier(Project aProject, String aIdentifier)
-    {
-        for (KnowledgeBase kb : getKnowledgeBases(aProject)) {
-            try (RepositoryConnection conn = getConnection(kb)) {
-                ValueFactory vf = conn.getValueFactory();
-                RepositoryResult<Statement> stmts = RdfUtils.getStatements(conn,
-                        vf.createIRI(aIdentifier), kb.getTypeIri(), kb.getClassIri(), true);
-                if (stmts.hasNext()) {
-                    KBConcept kbConcept = KBConcept.read(conn, vf.createIRI(aIdentifier), kb);
-                    if (kbConcept != null) {
-                        return Optional.of(kbConcept);
-                    }
-                }
-                else if (!stmts.hasNext()) {
-                    Optional<KBInstance> kbInstance = readInstance(kb, aIdentifier);
-                    if (kbInstance.isPresent()) {
-                        return kbInstance.flatMap((p) -> Optional.of(p));
-                    }
-                }
-            }
-            catch (QueryEvaluationException e) {
-                log.error("Reading KB Entries failed.", e);
-                return Optional.empty();
-            }
-        }
-        return Optional.empty();
     }
 }

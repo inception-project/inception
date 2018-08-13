@@ -35,5 +35,6 @@ public interface SearchService
 
     public Index getIndex(Project aProject);
 
-    public boolean isIndexValid(Project aProject);
+    public void updateIndex(Index aIndexObject);
+
 }
