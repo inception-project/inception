@@ -245,7 +245,7 @@ public class MtasDocumentIndexTest
 
         assertNotNull(results);
         if (results != null) {
-            assertEquals(1, results.size());
+            assertEquals(2, results.size());
             assertEquals(expectedResult, results.get(0));
         }
     }
