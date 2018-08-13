@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
 import static de.tudarmstadt.ukp.inception.ui.kb.feature.FactLinkingConstants.FACT_LAYER;
+
 import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
 import java.util.List;
