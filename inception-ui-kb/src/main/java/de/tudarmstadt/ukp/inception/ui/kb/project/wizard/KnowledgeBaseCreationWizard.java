@@ -20,6 +20,8 @@ package de.tudarmstadt.ukp.inception.ui.kb.project.wizard;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -78,8 +80,6 @@ import de.tudarmstadt.ukp.inception.ui.kb.project.KnowledgeBaseIriPanelMode;
 import de.tudarmstadt.ukp.inception.ui.kb.project.KnowledgeBaseListPanel;
 import de.tudarmstadt.ukp.inception.ui.kb.project.KnowledgeBaseWrapper;
 import de.tudarmstadt.ukp.inception.ui.kb.project.Validators;
-;
-
 
 /**
  * Wizard for registering a new knowledge base for a project.
@@ -109,8 +109,8 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
     private final DynamicWizardModel wizardModel;
     private final CompoundPropertyModel<KnowledgeBaseWrapper> wizardDataModel;
     private final Map<String, KnowledgeBaseProfile> knowledgeBaseProfiles;
-    private HashMap<String, KnowledgeBaseProfile> downloadedProfiles;
-
+    private final HashMap<String, KnowledgeBaseProfile> downloadedProfiles;
+    private final List<File> downloadedFiles;
 
     public KnowledgeBaseCreationWizard(String id, IModel<Project> aProjectModel) {
         super(id);
@@ -124,6 +124,7 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
         wizardModel.setLastVisible(false);
         knowledgeBaseProfiles = readKbProfiles();
         downloadedProfiles = new HashMap<>();
+        downloadedFiles = new ArrayList<>();
 
         init(wizardModel);
     }
@@ -241,11 +242,10 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
     private final class LocalRepositoryStep extends DynamicWizardStep {
 
         private static final long serialVersionUID = 8212277960059805657L;
-        private static final String TMP_FILE_NAME = "tmp_kb";
+        private static final String TMP_FILE_NAME = "inception_tmp_kb";
         
         private CompoundPropertyModel<KnowledgeBaseWrapper> model;
         private FileUploadField fileUpload;
-        private File downloadedFile;
         private WebMarkupContainer listViewContainer;
         private KnowledgeBaseProfile selectedKnowledgeBaseProfile;
         private boolean completed;
@@ -255,7 +255,6 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
             super(previousStep);
             this.model = model;
             completed = true;
-            downloadedFile = new File(TMP_FILE_NAME);
 
             fileUpload = new FileUploadField("upload");
             add(fileUpload);
@@ -282,13 +281,10 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
                         }
                     };
 
-                    String itemLabel;
+                    String itemLabel = item.getModelObject().getName();
                     // Adjust label to indicate whether the KB has already been downloaded
                     if (downloadedProfiles.containsKey(item.getModelObject().getName())) {
-                        itemLabel = item.getModelObject().getName() + "  [Downloaded]";
-                    }
-                    else {
-                        itemLabel = item.getModelObject().getName();
+                        itemLabel = itemLabel + "  [Downloaded]";
                     }
                     link.add(new Label("suggestionLabel", itemLabel));
                     item.add(link);
@@ -309,8 +305,14 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
         {
             try {
                 if (selectedKnowledgeBaseProfile != null) {
+                    // Download to tmp file
+                    Path pathName = Paths.get(selectedKnowledgeBaseProfile.getAccessUrl());
+                    File tmpFile = File
+                        .createTempFile(TMP_FILE_NAME, pathName.getFileName().toString());
                     FileUtils.copyURLToFile(new URL(selectedKnowledgeBaseProfile.getAccessUrl()),
-                        downloadedFile);
+                        tmpFile);
+                    downloadedFiles.add(tmpFile);
+
                     setKbIRIsAccordingToProfile(model.getObject().getKb(),
                         selectedKnowledgeBaseProfile);
                     downloadedProfiles
@@ -322,7 +324,6 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
             catch (IOException e) {
                 error("Unable to download knowledge base file" + e.getMessage());
                 log.error("Unable to download knowledge base file", e);
-                downloadedFile = null;
             }
         }
         
@@ -337,9 +338,7 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
                     fileUploads.add(tmpFile);
                 }
                 model.getObject().setFiles(fileUploads);
-                if (downloadedFile != null) {
-                    model.getObject().getFiles().add(downloadedFile);
-                }
+                model.getObject().getFiles().addAll(downloadedFiles);
             } catch (Exception e) {
                 completed = false;
                 log.error("Error while uploading files", e);
