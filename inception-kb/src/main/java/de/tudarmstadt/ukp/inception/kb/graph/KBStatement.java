@@ -19,9 +19,7 @@ package de.tudarmstadt.ukp.inception.kb.graph;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.cyberborean.rdfbeans.datatype.DatatypeMapper;
@@ -54,16 +52,16 @@ public class KBStatement implements Serializable
 
     private boolean inferred;
 
-    private Set<Statement> originalStatements;
+    private List<Statement> originalStatements;
 
     private List<KBQualifier> qualifiers;
 
     /**
      * Call {@link KnowledgeBaseService#initStatement(KnowledgeBase, KBStatement)}
      * after constructing this in order to allow upserting.
-     * @param aInstance {@link KBHandle} for the statement instance
-     * @param aProperty {@link KBHandle} for the statement property
-     * @param aValue Defines value for the statement
+     * @param aInstance
+     * @param aProperty
+     * @param aValue
      */
     public KBStatement(KBHandle aInstance, KBHandle aProperty, Value aValue)
     {
@@ -86,7 +84,7 @@ public class KBStatement implements Serializable
             throw new IllegalStateException("Unknown object type: " + aValue.getClass());
         }
 
-        originalStatements = new HashSet<>();
+        originalStatements = new ArrayList<>();
 
         qualifiers = new ArrayList<>();
     }
@@ -96,7 +94,7 @@ public class KBStatement implements Serializable
         instance = aInstance;
         property = aProperty;
         value = null;
-        originalStatements = new HashSet<>();
+        originalStatements = new ArrayList<>();
         qualifiers = new ArrayList<>();
     }
 
@@ -172,12 +170,12 @@ public class KBStatement implements Serializable
         inferred = aInferred;
     }
 
-    public Set<Statement> getOriginalStatements()
+    public List<Statement> getOriginalStatements()
     {
         return originalStatements;
     }
 
-    public void setOriginalStatements(Set<Statement> statements)
+    public void setOriginalStatements(List<Statement> statements)
     {
         originalStatements = statements;
     }

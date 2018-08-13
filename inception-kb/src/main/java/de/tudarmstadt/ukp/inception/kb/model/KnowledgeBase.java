@@ -48,7 +48,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 import de.tudarmstadt.ukp.inception.kb.reification.Reification;
-import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseMapping;
 
 @Entity
 @Table(name = "knowledgebase",
@@ -319,16 +318,6 @@ public class KnowledgeBase
     public void setExplicitlyDefinedRootConcepts(List<IRI> aExplicitlyDefinedRootConcepts)
     {
         explicitlyDefinedRootConcepts = aExplicitlyDefinedRootConcepts;
-    }
-    
-    public void applyMapping(KnowledgeBaseMapping aMapping)
-    {
-        setClassIri(aMapping.getClassIri());
-        setSubclassIri(aMapping.getSubclassIri());
-        setTypeIri(aMapping.getTypeIri());
-        setDescriptionIri(aMapping.getDescriptionIri());
-        setLabelIri(aMapping.getLabelIri());
-        setPropertyTypeIri(aMapping.getPropertyTypeIri());
     }
     
     @Override

@@ -40,13 +40,12 @@ public interface KBObject
     void setIdentifier(String aIdentifier);
 
     /**
-     * @return the label of this element.
+     * Returns the label of this element.
      */
     String getName();
 
     /**
      * Sets the label of this element.
-     * @param label the label of this element
      */
     void setName(String label);
 
