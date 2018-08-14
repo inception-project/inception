@@ -93,6 +93,7 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.reification.NoReification;
 import de.tudarmstadt.ukp.inception.kb.reification.ReificationStrategy;
 import de.tudarmstadt.ukp.inception.kb.reification.WikiDataReification;
+import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseMapping;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 
 @Component(KnowledgeBaseService.SERVICE_NAME)
@@ -935,5 +936,51 @@ public class KnowledgeBaseServiceImpl
             }
         }
         return Optional.empty();
+    }
+
+    @Override
+    public SchemaProfile checkSchemaProfile(KnowledgeBaseProfile aProfile)
+    {
+        SchemaProfile[] profiles = SchemaProfile.values();
+        KnowledgeBaseMapping mapping = aProfile.getMapping();
+        for (int i = 0; i < profiles.length; i++) {
+            // Check if kb has a known schema profile
+            if (equalsSchemaProfile(profiles[i], mapping.getClassIri(), mapping.getSubclassIri(),
+                mapping.getTypeIri(), mapping.getDescriptionIri(), mapping.getLabelIri(),
+                mapping.getPropertyTypeIri())) {
+                return profiles[i];
+            }
+        }
+        // If the iris don't represent a known schema profile , return CUSTOM
+        return SchemaProfile.CUSTOMSCHEMA;
+    }
+
+    @Override
+    public SchemaProfile checkSchemaProfile(KnowledgeBase aKb)
+    {
+        SchemaProfile[] profiles = SchemaProfile.values();
+        for (int i = 0; i < profiles.length; i++) {
+            // Check if kb has a known schema profile
+            if (equalsSchemaProfile(profiles[i], aKb.getClassIri(), aKb.getSubclassIri(),
+                aKb.getTypeIri(), aKb.getDescriptionIri(), aKb.getLabelIri(),
+                aKb.getPropertyTypeIri())) {
+                return profiles[i];
+            }
+        }
+        // If the iris don't represent a known schema profile , return CUSTOM
+        return SchemaProfile.CUSTOMSCHEMA;
+    }
+
+    /**
+     * Compares a schema profile to given IRIs. Returns true if the IRIs are the same as in the
+     * profile
+     */
+    private boolean equalsSchemaProfile(SchemaProfile profile, IRI classIri, IRI subclassIri,
+        IRI typeIri, IRI descriptionIri, IRI labelIri, IRI propertyTypeIri)
+    {
+        return profile.getClassIri().equals(classIri) && profile.getSubclassIri()
+            .equals(subclassIri) && profile.getTypeIri().equals(typeIri) && profile
+            .getDescriptionIri().equals(descriptionIri) && profile.getLabelIri().equals(labelIri)
+            && profile.getPropertyTypeIri().equals(propertyTypeIri);
     }
 }

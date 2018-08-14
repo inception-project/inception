@@ -52,8 +52,9 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
+import de.tudarmstadt.ukp.inception.kb.SchemaProfile;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
-import de.tudarmstadt.ukp.inception.ui.kb.project.wizard.SchemaProfile;
+
 
 public class KnowledgeBaseIriPanel
     extends Panel
@@ -96,7 +97,7 @@ public class KnowledgeBaseIriPanel
             {
                 super.onInitialize();
                 // Initialize according to current model values
-                SchemaProfile modelProfile = checkSchemaProfile(kbModel.getObject().getKb());
+                SchemaProfile modelProfile = kbService.checkSchemaProfile(kbModel.getObject().getKb());
                 setModelObject(modelProfile);
 
             }
@@ -230,36 +231,6 @@ public class KnowledgeBaseIriPanel
         }));
         iriTextfield.setEnabled(false);       
         return iriTextfield;
-    }
-
-    private SchemaProfile checkSchemaProfile(KnowledgeBase kb)
-    {
-        SchemaProfile[] profiles = SchemaProfile.values();
-        for (int i = 0; i < profiles.length; i++) {
-            // Check if kb has a known schema profile
-            if (equalsSchemaProfile(profiles[i], kb.getClassIri(), kb.getSubclassIri(),
-                    kb.getTypeIri(), kb.getDescriptionIri(), kb.getLabelIri(),
-                    kb.getPropertyTypeIri())) {
-                return profiles[i];
-            }
-        }
-        // If the iris don't represent a known schema profile , return CUSTOM
-        return SchemaProfile.CUSTOMSCHEMA;
-    }
-
-    /**
-     * Compares a schema profile to given IRIs. Returns true if the IRIs are the same as in the
-     * profile
-     */
-    private boolean equalsSchemaProfile(SchemaProfile profile, IRI classIri, IRI subclassIri,
-            IRI typeIri, IRI descriptionIri, IRI labelIri, IRI propertyTypeIri)
-    {
-        return profile.getClassIri().equals(classIri)
-                && profile.getSubclassIri().equals(subclassIri)
-                && profile.getTypeIri().equals(typeIri)
-                && profile.getDescriptionIri().equals(descriptionIri)
-                && profile.getLabelIri().equals(labelIri)
-                && profile.getPropertyTypeIri().equals(propertyTypeIri);
     }
     
     private class AdvancedIriSettingsPanel

@@ -399,4 +399,8 @@ public interface KnowledgeBaseService
     boolean statementsMatchSPO(KnowledgeBase akb, KBStatement mockStatement);
 
     Optional<KBObject> readKBIdentifier(Project aProject, String aIdentifier);
+
+    SchemaProfile checkSchemaProfile(KnowledgeBaseProfile aProfile);
+
+    SchemaProfile checkSchemaProfile(KnowledgeBase aKb);
 }

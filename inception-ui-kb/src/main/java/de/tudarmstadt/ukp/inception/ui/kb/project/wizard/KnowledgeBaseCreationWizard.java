@@ -31,6 +31,7 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.io.FileUtils;
 
+import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -287,6 +288,10 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
                         itemLabel = itemLabel + "  [Downloaded]";
                     }
                     link.add(new Label("suggestionLabel", itemLabel));
+                    // Show schema type on mouseover
+                    link.add(AttributeModifier.append("title",
+                        "Schema: " + kbService.checkSchemaProfile(item.getModelObject())
+                            .getLabel()));
                     item.add(link);
                 }
             };
