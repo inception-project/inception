@@ -42,6 +42,7 @@ import javax.persistence.Query;
 import org.apache.commons.compress.compressors.CompressorException;
 import org.apache.commons.compress.compressors.CompressorStreamFactory;
 import org.apache.commons.lang3.StringUtils;
+import org.eclipse.rdf4j.common.iteration.Iterations;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.model.Statement;
@@ -374,7 +375,7 @@ public class KnowledgeBaseServiceImpl
     @Override
     public void deleteConcept(KnowledgeBase kb, KBConcept aConcept)
     {
-        delete(kb, aConcept.getIdentifier());
+        getReificationStrategy(kb).deleteConcept(kb, aConcept);
     }
 
     @Override
@@ -403,8 +404,9 @@ public class KnowledgeBaseServiceImpl
     {
         return read(kb, (conn) -> {
             ValueFactory vf = conn.getValueFactory();
-            try (RepositoryResult<Statement> stmts = RdfUtils.getStatements(conn,
-                    vf.createIRI(aIdentifier), kb.getTypeIri(), kb.getPropertyTypeIri(), true)) {
+            try (RepositoryResult<Statement> stmts = RdfUtils.getPropertyStatementsSparql(conn,
+                    vf.createIRI(aIdentifier), kb.getTypeIri(), kb.getPropertyTypeIri(), 1000, true,
+                    null)) {
                 if (stmts.hasNext()) {
                     Statement propStmt = stmts.next();
                     KBProperty kbProp = KBProperty.read(conn, propStmt, kb);
@@ -433,13 +435,37 @@ public class KnowledgeBaseServiceImpl
     @Override
     public void deleteProperty(KnowledgeBase kb, KBProperty aType)
     {
-        delete(kb, aType.getIdentifier());
+        getReificationStrategy(kb).deleteProperty(kb, aType);
     }
 
     @Override
     public List<KBHandle> listProperties(KnowledgeBase kb, boolean aAll)
     {
-        return list(kb, kb.getPropertyTypeIri(), true, aAll);
+        return listProperties(kb, true, aAll);
+    }
+
+    @Override
+    public List<KBHandle> listProperties(KnowledgeBase kb, boolean aIncludeInferred, boolean aAll)
+        throws QueryEvaluationException
+    {
+        List<KBHandle> resultList = read(kb, (conn) -> {
+            String QUERY = getPropertyListQuery(kb);
+            TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
+            tupleQuery.setBinding("pTYPE", kb.getTypeIri());
+            tupleQuery.setBinding("oPROPERTY", kb.getPropertyTypeIri());
+            tupleQuery.setBinding("pLABEL", kb.getLabelIri());
+            tupleQuery.setIncludeInferred(aIncludeInferred);
+
+            return evaluateListQuery(tupleQuery, aAll);
+        });
+
+        resultList.sort(Comparator.comparing(KBObject::getUiLabel));
+
+        return resultList;
+    }
+    
+    public String getPropertyListQuery(KnowledgeBase kb) {
+        return SPARQLQueryStore.PROPERTYLIST_QUERY;
     }
 
     @Override
@@ -529,7 +555,7 @@ public class KnowledgeBaseServiceImpl
     @Override
     public void deleteInstance(KnowledgeBase kb, KBInstance aInstance)
     {
-        delete(kb, aInstance.getIdentifier());
+        getReificationStrategy(kb).deleteInstance(kb, aInstance);
     }
 
     @Override
@@ -544,7 +570,7 @@ public class KnowledgeBaseServiceImpl
     @Override
     public void initStatement(KnowledgeBase kb, KBStatement aStatement)
     {
-        List<Statement> statements = getReificationStrategy(kb).reify(kb, aStatement);
+        Set<Statement> statements = getReificationStrategy(kb).reify(kb, aStatement);
         aStatement.setOriginalStatements(statements);
     }
 
@@ -572,17 +598,23 @@ public class KnowledgeBaseServiceImpl
         KBHandle handle = new KBHandle(aInstance.getIdentifier(), aInstance.getName());
         return listStatements(kb, handle, aAll);
     }
-
-    private void delete(KnowledgeBase kb, String aIdentifier)
+    
+    @Override
+    public List<Statement> listStatementsWithPredicateOrObjectReference(KnowledgeBase kb,
+            String aIdentifier)
     {
-        update(kb, (conn) -> {
+        try (RepositoryConnection conn = getConnection(kb)) {
             ValueFactory vf = conn.getValueFactory();
-            try (RepositoryResult<Statement> stmts = conn
-                .getStatements(vf.createIRI(aIdentifier), null, null)) {
-                conn.remove(stmts);
+            IRI iri = vf.createIRI(aIdentifier);
+            try (RepositoryResult<Statement> predStmts = conn.getStatements(null, iri, null);
+                    RepositoryResult<Statement> objStmts = conn.getStatements(null, null, iri)) {
+                List<Statement> allStmts = new ArrayList<>();
+                Iterations.addAll(predStmts, allStmts);
+                Iterations.addAll(objStmts, allStmts);
+                return allStmts;
+
             }
-            return null;
-        });
+        }
     }
 
     private String generateIdentifier(RepositoryConnection conn, KnowledgeBase kb)
@@ -656,6 +688,27 @@ public class KnowledgeBaseServiceImpl
     }
 
     @Override
+    public List<KBHandle> listProperties(KnowledgeBase kb, IRI aType, boolean aIncludeInferred,
+            boolean aAll)
+        throws QueryEvaluationException
+    {
+        List<KBHandle> resultList = read(kb, (conn) -> {
+            String QUERY = getPropertyListQuery(kb);
+            TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
+            tupleQuery.setBinding("pTYPE", kb.getTypeIri());
+            tupleQuery.setBinding("oPROPERTY", aType);
+            tupleQuery.setBinding("pLABEL", kb.getLabelIri());
+            tupleQuery.setIncludeInferred(aIncludeInferred);
+
+            return evaluateListQuery(tupleQuery, aAll);
+        });
+
+        resultList.sort(Comparator.comparing(KBObject::getUiLabel));
+
+        return resultList;
+    }
+    
+    @Override
     public List<KBHandle> listRootConcepts(KnowledgeBase kb, boolean aAll)
         throws QueryEvaluationException
     {
@@ -672,6 +725,7 @@ public class KnowledgeBaseServiceImpl
         else {
             resultList = read(kb, (conn) -> {
                 String QUERY = String.join("\n"
+                    , SPARQLQueryStore.SPARQL_PREFIX
                     , "SELECT DISTINCT ?s ?l WHERE { "
                     , "     { ?s ?pTYPE ?oCLASS . } "
                     , "     UNION { ?someSubClass ?pSUBCLASS ?s . } ."
@@ -727,6 +781,7 @@ public class KnowledgeBaseServiceImpl
         // single KB.
         List<KBHandle> resultList = read(aKB, (conn) -> {
             String QUERY = String.join("\n"
+                , SPARQLQueryStore.SPARQL_PREFIX
                 , "SELECT DISTINCT ?s ?l WHERE { "
                 , "     {?s ?pSUBCLASS ?oPARENT . }" 
                 , "     UNION { ?s ?pTYPE ?oCLASS ."
@@ -853,6 +908,7 @@ public class KnowledgeBaseServiceImpl
      * 
      * @return {@link Optional} of {@link KBObject} of type {@link KBConcept} or {@link KBInstance}
      */
+    @Override
     public Optional<KBObject> readKBIdentifier(Project aProject, String aIdentifier)
     {
         for (KnowledgeBase kb : getKnowledgeBases(aProject)) {
