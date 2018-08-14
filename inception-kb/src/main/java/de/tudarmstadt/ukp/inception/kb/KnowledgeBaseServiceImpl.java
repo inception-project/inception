@@ -738,6 +738,7 @@ public class KnowledgeBaseServiceImpl
         else {
             resultList = read(kb, (conn) -> {
                 String QUERY = String.join("\n"
+                    , SPARQLQueryStore.SPARQL_PREFIX
                     , "SELECT DISTINCT ?s ?l WHERE { "
                     , "     { ?s ?pTYPE ?oCLASS . } "
                     , "     UNION { ?someSubClass ?pSUBCLASS ?s . } ."
@@ -793,6 +794,7 @@ public class KnowledgeBaseServiceImpl
         // single KB.
         List<KBHandle> resultList = read(aKB, (conn) -> {
             String QUERY = String.join("\n"
+                , SPARQLQueryStore.SPARQL_PREFIX
                 , "SELECT DISTINCT ?s ?l WHERE { "
                 , "     {?s ?pSUBCLASS ?oPARENT . }" 
                 , "     UNION { ?s ?pTYPE ?oCLASS ."
