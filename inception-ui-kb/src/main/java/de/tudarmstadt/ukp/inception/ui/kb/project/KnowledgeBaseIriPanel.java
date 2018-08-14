@@ -97,7 +97,8 @@ public class KnowledgeBaseIriPanel
             {
                 super.onInitialize();
                 // Initialize according to current model values
-                SchemaProfile modelProfile = kbService.checkSchemaProfile(kbModel.getObject().getKb());
+                SchemaProfile modelProfile = kbService
+                    .checkSchemaProfile(kbModel.getObject().getKb());
                 setModelObject(modelProfile);
 
             }
