@@ -398,5 +398,14 @@ public interface KnowledgeBaseService
 
     boolean statementsMatchSPO(KnowledgeBase akb, KBStatement mockStatement);
 
+    /**
+     * Define base default properties of comment, label and subClassOf with schema set defined for
+     * KB while initializing the KB
+     * 
+     * @param akb
+     *            The knowledge base to initialize base properties
+     */
+    void defineBaseProperties(KnowledgeBase akb);
+
     Optional<KBObject> readKBIdentifier(Project aProject, String aIdentifier);
 }
