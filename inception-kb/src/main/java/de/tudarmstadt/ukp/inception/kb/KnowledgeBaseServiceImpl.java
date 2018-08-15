@@ -701,6 +701,10 @@ public class KnowledgeBaseServiceImpl
             return evaluateListQuery(tupleQuery, aAll);
         });
         
+        // Sorting is not done as part of SPARQL queries as it will be more expensive on
+        // SPARQL with sorting the whole data and then setting a limit for the number of
+        // result data set and hence will also skip number of results as part of sorted
+        // data from SPARQL
         resultList.sort(Comparator.comparing(KBObject::getUiLabel));
         return resultList;
     }
@@ -922,6 +926,7 @@ public class KnowledgeBaseServiceImpl
             return evaluateListQuery(tupleQuery, aAll);
         });
 
+        
         if (resultList.size() > 1) {
             resultList.sort(Comparator.comparing(KBObject::getUiLabel));
         }
