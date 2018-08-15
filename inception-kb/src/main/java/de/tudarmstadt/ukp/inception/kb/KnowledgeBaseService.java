@@ -402,12 +402,10 @@ public interface KnowledgeBaseService
      * Define base default properties of comment, label and subClassOf with schema set defined for
      * KB while initializing the KB
      * 
-     * @param kb
+     * @param akb
      *            The knowledge base to initialize base properties
-     * @param kbUpdateFlag
-     *            Flag variable to indicate the update of KB or not.
      */
-    void defineBaseProperties(KnowledgeBase kb, boolean kbUpdateFlag);
+    void defineBaseProperties(KnowledgeBase akb);
 
     Optional<KBObject> readKBIdentifier(Project aProject, String aIdentifier);
 }

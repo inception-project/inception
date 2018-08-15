@@ -161,19 +161,16 @@ public class KnowledgeBaseServiceImpl
     }
     
     @Override
-    public void defineBaseProperties(KnowledgeBase kb, boolean kbUpdateFlag) 
+    public void defineBaseProperties(KnowledgeBase akb) 
     {
         // KB will initialize base properties with base IRI schema properties defined by user
-        if (kb.getType() == RepositoryType.LOCAL) {
-            KBProperty property = new KBProperty(kb.getSubclassIri().getLocalName());
-            property.setIdentifier(kb.getSubclassIri().stringValue());
-            createBaseProperty(kb, property);
-            property = new KBProperty(kb.getLabelIri().getLocalName());
-            property.setIdentifier(kb.getLabelIri().stringValue());
-            createBaseProperty(kb, property);
-            property = new KBProperty(kb.getDescriptionIri().getLocalName());
-            property.setIdentifier(kb.getDescriptionIri().stringValue());
-            createBaseProperty(kb, property);
+        if (akb.getType() == RepositoryType.LOCAL) {
+            createBaseProperty(akb, new KBProperty(akb.getSubclassIri().getLocalName(),
+                    akb.getSubclassIri().stringValue()));
+            createBaseProperty(akb, new KBProperty(akb.getLabelIri().getLocalName(),
+                    akb.getLabelIri().stringValue()));
+            createBaseProperty(akb, new KBProperty(akb.getDescriptionIri().getLocalName(),
+                    akb.getDescriptionIri().stringValue()));
         }
     }
 
@@ -867,11 +864,18 @@ public class KnowledgeBaseServiceImpl
         }
     }
     
-    // Method to create and define base property
-    public KBHandle createBaseProperty(KnowledgeBase kb, KBProperty aProperty)
+    /**
+     * Create base property with a specific IRI as identifier for the base property 
+     * (which includes subClassOf, label and description)   
+     * @param akb
+     *            The knowledge base to initialize base properties
+     * @param aProperty
+     *            Property to be created for KB
+     */
+    public KBHandle createBaseProperty(KnowledgeBase akb, KBProperty aProperty)
     {
-        return update(kb, (conn) -> {
-            aProperty.write(conn, kb);
+        return update(akb, (conn) -> {
+            aProperty.write(conn, akb);
             return new KBHandle(aProperty.getIdentifier(), aProperty.getName());
         });
     }
@@ -880,22 +884,6 @@ public class KnowledgeBaseServiceImpl
     {
         for (String ns : implicitNamespaces) {
             if (s.startsWith(ns)) {
-                return true;
-            }
-        }
-        return false;
-    }
-    
-    public boolean isIdentiferBaseProperty(KBHandle handle)
-    {
-
-        List<IRI> listIRI = new ArrayList<IRI>();
-        listIRI.addAll(IriConstants.SUBCLASS_IRIS);
-        listIRI.addAll(IriConstants.LABEL_IRIS);
-        listIRI.addAll(IriConstants.DESCRIPTION_IRIS);
-        
-        for (IRI val : listIRI) {
-            if (handle.getIdentifier().equals(val.stringValue())) {
                 return true;
             }
         }
