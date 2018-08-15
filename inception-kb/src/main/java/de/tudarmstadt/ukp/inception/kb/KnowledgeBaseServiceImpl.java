@@ -167,7 +167,7 @@ public class KnowledgeBaseServiceImpl
             List<KBHandle> listProperties = listProperties(kb, true);
             if (!listProperties.isEmpty()) {
                 for (KBHandle propertyHandle : listProperties) {
-                    if (isIdentiferBaseProperty(propertyHandle.getIdentifier())) {
+                    if (isIdentiferBaseProperty(propertyHandle)) {
                         KBProperty property = new KBProperty();
                         property.setIdentifier(propertyHandle.getIdentifier());
                         property.setName(propertyHandle.getName());
@@ -900,17 +900,16 @@ public class KnowledgeBaseServiceImpl
         return false;
     }
     
-    public boolean isIdentiferBaseProperty(String identifier)
+    public boolean isIdentiferBaseProperty(KBHandle handle)
     {
 
         List<IRI> listIRI = new ArrayList<IRI>();
-
         listIRI.addAll(IriConstants.SUBCLASS_IRIS);
         listIRI.addAll(IriConstants.LABEL_IRIS);
         listIRI.addAll(IriConstants.DESCRIPTION_IRIS);
-
+        
         for (IRI val : listIRI) {
-            if (identifier.equals(val.stringValue())) {
+            if (handle.getIdentifier().equals(val.stringValue())) {
                 return true;
             }
         }
