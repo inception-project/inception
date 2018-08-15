@@ -430,15 +430,6 @@ public class KnowledgeBaseServiceImpl
         });
     }
 
-    // Method to create and define base property
-    public KBHandle createBaseProperty(KnowledgeBase kb, KBProperty aProperty)
-    {
-        return update(kb, (conn) -> {
-            aProperty.write(conn, kb);
-            return new KBHandle(aProperty.getIdentifier(), aProperty.getName());
-        });
-    }
-    
     @Override
     public Optional<KBProperty> readProperty(KnowledgeBase kb, String aIdentifier)
     {

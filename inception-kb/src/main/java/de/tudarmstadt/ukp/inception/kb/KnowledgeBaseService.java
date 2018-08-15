@@ -408,6 +408,6 @@ public interface KnowledgeBaseService
      *            Flag variable to indicate the update of KB or not.
      */
     void defineBaseProperties(KnowledgeBase kb, boolean kbUpdateFlag);
-    
+
     Optional<KBObject> readKBIdentifier(Project aProject, String aIdentifier);
 }
