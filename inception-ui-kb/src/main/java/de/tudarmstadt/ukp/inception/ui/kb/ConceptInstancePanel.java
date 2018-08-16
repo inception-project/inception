@@ -125,7 +125,7 @@ public class ConceptInstancePanel
         // if the instance handle is not null, an existing instance was selected, otherwise it's a
         // deselection
         Component replacementPanel;
-//        Component replacementSearch;
+
         if (selectedInstanceHandle.getObject() != null) {
             // load the full KBInstance and display its details in an InstanceInfoPanel
             String identifier = selectedInstanceHandle.getObject().getIdentifier();
@@ -136,12 +136,6 @@ public class ConceptInstancePanel
                             return new InstancePanel(INSTANCE_INFO_MARKUP_ID, kbModel,
                                     selectedConceptHandle, selectedInstanceHandle, model);
                         }).orElse(emptyPanel());
-                
-                 
-//                replacementSearch = new AnnotatedListIdentifiers("annotatedResultGroups", 
-//                        kbModel, selectedConceptHandle, selectedInstanceHandle,false);
-                
-                
             }
             catch (QueryEvaluationException e) {
                 replacementPanel = emptyPanel();
@@ -153,10 +147,7 @@ public class ConceptInstancePanel
         }
         else {
             replacementPanel = emptyPanel();
-//            replacementSearch = new AnnotatedListIdentifiers("annotatedResultGroups", kbModel,
-//                selectedConceptHandle, selectedInstanceHandle,false);
         }
-//        annotatedSearchPanel = annotatedSearchPanel.replaceWith(replacementSearch);
         instanceInfoPanel = instanceInfoPanel.replaceWith(replacementPanel);
         
         event.getTarget().add(this);
