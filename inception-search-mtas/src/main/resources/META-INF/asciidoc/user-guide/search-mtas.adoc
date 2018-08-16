@@ -145,7 +145,7 @@ POS or lemma annotations).
 * Named Entity Identifier : all occurrences of the annotated identifier *ChateauMorgonBeaujolais* .
   Here *ChateauMorgonBeaujolais* is the label for an example instance from KnowledgeBase, with IRI: http://www.w3.org/TR/2003/PR-owl-guide-20031209/wine#ChateauMorgonBeaujolais 
 
- <Named_entity.identifier="ChateauMorgonBeaujolais"/>
+ <Named_entity.identifier.exact="ChateauMorgonBeaujolais"/>
 
 * Named Entity Identifier for KB instance: all occurrences of the annotated identifier *ChateauMorgonBeaujolais*
 
@@ -158,13 +158,13 @@ POS or lemma annotations).
 
 * Named Entity Identifier covering multiple tokens: all occurrences of the annotated identifier *ChateauMorgonBeaujolais*
 
- <Named_entity.identifier="ChateauMorgonBeaujolais"/>
+ <Named_entity.identifier.exact="ChateauMorgonBeaujolais"/>
  
  * OR All named entities identifier with annotated identifier *ChateauMorgonBeaujolais* or *AmericanWine*
  
- (<Named_entity.identifier="ChateauMorgonBeaujolais"/> | <Named_entity.identifier="AmericanWine"/>)
+ (<Named_entity.identifier.exact="ChateauMorgonBeaujolais"/> | <Named_entity.identifier.exact="AmericanWine"/>)
  
  * All annotated identifier with a sub concept or instance of a particular identifier  *RedWine* 
  
- <Named_entity.identifier.super.concept="RedWine"/>
+ <Named_entity.identifier="RedWine"/>
  

@@ -48,7 +48,7 @@ public class ConceptFeatureIndexingSupport
     public static final String KB_ENTITY = "KB.Entity";
     public static final String INDEX_KB_CONCEPT = "class";
     public static final String INDEX_KB_INSTANCE = "instance";
-    public static final String INDEX_KB_SUPER_CONCEPT = "super.concept";
+    public static final String INDEX_KB_EXACT = "exact";
     
     private String id;
 
@@ -134,10 +134,12 @@ public class ConceptFeatureIndexingSupport
         // === END NEEDS REFACTORING =======================================================
 
         // Indexing <feature>=<UI label>
-        values.put(field + "." + aFeature.getUiName(), featureObject.getUiLabel());
+        values.put(field + "." + aFeature.getUiName() + "." + INDEX_KB_EXACT,
+                featureObject.getUiLabel());
 
         // Indexing <feature>=<URI>
-        values.put(field + "." + aFeature.getUiName(), kbObject.get().getIdentifier());
+        values.put(field + "." + aFeature.getUiName() + "." + INDEX_KB_EXACT,
+                kbObject.get().getIdentifier());
 
         // Indexing UI label without type and layer for generic search
         values.put(KB_ENTITY, featureObject.getUiLabel());
@@ -149,8 +151,7 @@ public class ConceptFeatureIndexingSupport
             if (kbService.hasImplicitNamespace(parentConcept.getIdentifier())) {
                 continue;
             }
-            values.put(field + "." + aFeature.getUiName() + "." + INDEX_KB_SUPER_CONCEPT,
-                    parentConcept.getUiLabel());
+            values.put(field + "." + aFeature.getUiName(), parentConcept.getUiLabel());
         }
         return values;
     }
