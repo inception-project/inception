@@ -19,9 +19,9 @@ package de.tudarmstadt.ukp.inception.ui.kb.search;
 
 import java.util.Optional;
 import java.util.Set;
+
 import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.multimap.HashSetValuedHashMap;
-
 import org.apache.uima.cas.text.AnnotationFS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
