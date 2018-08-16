@@ -396,7 +396,7 @@ public class KnowledgeBaseServiceImpl
     @Override
     public List<KBHandle> listConcepts(KnowledgeBase kb, boolean aAll)
     {
-        return list(kb, kb.getClassIri(), true, aAll);
+        return listAllConcepts(kb, aAll);
     }
 
     @Override
@@ -670,6 +670,8 @@ public class KnowledgeBaseServiceImpl
             return aAction.accept(conn);
         }
     }
+    
+    
 
     @Override
     public List<KBHandle> list(KnowledgeBase kb, IRI aType, boolean aIncludeInferred, boolean aAll)
@@ -806,6 +808,37 @@ public class KnowledgeBaseServiceImpl
                 return evaluateListQuery(tupleQuery, aAll);
             });
         }
+        resultList.sort(Comparator.comparing(KBObject::getUiLabel));
+        return resultList;
+    }
+    
+    @Override
+    public List<KBHandle> listAllConcepts(KnowledgeBase kb, boolean aAll)
+        throws QueryEvaluationException
+    {
+        List<KBHandle> resultList = new ArrayList<>();
+
+        
+        resultList = read(kb, (conn) -> {
+            String QUERY = String.join("\n"
+                , SPARQLQueryStore.SPARQL_PREFIX
+                , "SELECT DISTINCT ?s ?l WHERE { "
+                , "     { ?s ?pTYPE ?oCLASS . } "
+                , "     UNION { ?someSubClass ?pSUBCLASS ?s . } ."
+                , "     OPTIONAL { "
+                , "         ?s ?pLABEL ?l . "
+                , "         FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\")) "
+                , "     } "
+                , "} "
+                , "LIMIT 10000" );
+            TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
+            tupleQuery.setBinding("pTYPE", kb.getTypeIri());
+            tupleQuery.setBinding("oCLASS", kb.getClassIri());
+            tupleQuery.setBinding("pSUBCLASS", kb.getSubclassIri());
+            tupleQuery.setBinding("pLABEL", kb.getLabelIri());
+            tupleQuery.setIncludeInferred(false);
+            return evaluateListQuery(tupleQuery, aAll);
+        });
         resultList.sort(Comparator.comparing(KBObject::getUiLabel));
         return resultList;
     }

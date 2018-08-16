@@ -502,4 +502,12 @@ public interface KnowledgeBaseService
      */
     List<KBHandle> getConceptForInstance(KnowledgeBase aKB, String aIdentifier, boolean aAll)
         throws QueryEvaluationException;
+
+    /**
+     * List all the concepts
+     * @param kb The knowledge base from which concepts will be listed
+     * @param aAll indicates whether to include everything
+     * @return list of all the properties {@link KBHandle} 
+     */
+    List<KBHandle> listAllConcepts(KnowledgeBase kb, boolean aAll) throws QueryEvaluationException;
 }

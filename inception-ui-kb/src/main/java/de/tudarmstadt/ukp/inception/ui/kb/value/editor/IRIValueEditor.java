@@ -63,21 +63,26 @@ public class IRIValueEditor
             protected List<KBHandle> getChoices(String input)
             {
                 List<KBHandle> values = new ArrayList<KBHandle>();
-                values.addAll(kbService.listInstances(kbModel.getObject(),
-                        aProperty.getObject().getRange(), true));
-                // List of instances for subclasses
-                List<KBHandle> childConcepts = kbService.listChildConcepts(kbModel.getObject(),
-                        aProperty.getObject().getRange(), true, 10000);
-                values.addAll(childConcepts);
-                for (KBHandle childConcept : childConcepts) {
+                
+                if (aProperty.getObject().getRange() != null) {
                     values.addAll(kbService.listInstances(kbModel.getObject(),
-                            childConcept.getIdentifier(), true));
+                            aProperty.getObject().getRange(), true));
+                    // List of instances for subclasses
+                    List<KBHandle> childConcepts = kbService.listChildConcepts(kbModel.getObject(),
+                            aProperty.getObject().getRange(), true, 10000);
+                    values.addAll(childConcepts);
+                    for (KBHandle childConcept : childConcepts) {
+                        values.addAll(kbService.listInstances(kbModel.getObject(),
+                                childConcept.getIdentifier(), true));
+                    }
+                    values.add(kbService.readKBIdentifier(kbModel.getObject().getProject(),
+                            aProperty.getObject().getRange()).get().toKBHandle());
                 }
-                values.add(kbService.readKBIdentifier(kbModel.getObject().getProject(),
-                        aProperty.getObject().getRange()).get().toKBHandle());
+                
                 if (values.isEmpty()) {
                     values = kbService.listConcepts(kbModel.getObject(), true);
                 }
+                
                 return values;
             }
             
