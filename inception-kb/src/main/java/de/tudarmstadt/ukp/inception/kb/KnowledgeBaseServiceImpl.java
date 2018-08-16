@@ -159,6 +159,20 @@ public class KnowledgeBaseServiceImpl
         repoManager.addRepositoryConfig(new RepositoryConfig(repositoryId, cfg));
         entityManager.persist(kb);
     }
+    
+    @Override
+    public void defineBaseProperties(KnowledgeBase akb) 
+    {
+        // KB will initialize base properties with base IRI schema properties defined by user
+        if (akb.getType() == RepositoryType.LOCAL) {
+            createBaseProperty(akb, new KBProperty(akb.getSubclassIri().getLocalName(),
+                    akb.getSubclassIri().stringValue()));
+            createBaseProperty(akb, new KBProperty(akb.getLabelIri().getLocalName(),
+                    akb.getLabelIri().stringValue()));
+            createBaseProperty(akb, new KBProperty(akb.getDescriptionIri().getLocalName(),
+                    akb.getDescriptionIri().stringValue()));
+        }
+    }
 
     @Transactional
     @Override
@@ -725,6 +739,7 @@ public class KnowledgeBaseServiceImpl
         else {
             resultList = read(kb, (conn) -> {
                 String QUERY = String.join("\n"
+                    , SPARQLQueryStore.SPARQL_PREFIX
                     , "SELECT DISTINCT ?s ?l WHERE { "
                     , "     { ?s ?pTYPE ?oCLASS . } "
                     , "     UNION { ?someSubClass ?pSUBCLASS ?s . } ."
@@ -780,6 +795,7 @@ public class KnowledgeBaseServiceImpl
         // single KB.
         List<KBHandle> resultList = read(aKB, (conn) -> {
             String QUERY = String.join("\n"
+                , SPARQLQueryStore.SPARQL_PREFIX
                 , "SELECT DISTINCT ?s ?l WHERE { "
                 , "     {?s ?pSUBCLASS ?oPARENT . }" 
                 , "     UNION { ?s ?pTYPE ?oCLASS ."
@@ -846,6 +862,22 @@ public class KnowledgeBaseServiceImpl
         default:
             return new NoReification(this);
         }
+    }
+    
+    /**
+     * Create base property with a specific IRI as identifier for the base property 
+     * (which includes subClassOf, label and description)   
+     * @param akb
+     *            The knowledge base to initialize base properties
+     * @param aProperty
+     *            Property to be created for KB
+     */
+    public KBHandle createBaseProperty(KnowledgeBase akb, KBProperty aProperty)
+    {
+        return update(akb, (conn) -> {
+            aProperty.write(conn, akb);
+            return new KBHandle(aProperty.getIdentifier(), aProperty.getName());
+        });
     }
 
     private boolean hasImplicitNamespace(String s)
