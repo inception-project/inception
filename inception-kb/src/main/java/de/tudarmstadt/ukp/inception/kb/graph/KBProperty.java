@@ -63,6 +63,13 @@ public class KBProperty
     {
         name = aName;
     }
+    
+    public KBProperty(String aName, String aIdentifier)
+    {
+        name = aName;
+        identifier = aIdentifier;
+    }
+
 
     @Override
     public String getIdentifier()

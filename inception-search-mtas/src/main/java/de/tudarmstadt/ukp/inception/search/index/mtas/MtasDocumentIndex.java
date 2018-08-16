@@ -150,7 +150,6 @@ public class MtasDocumentIndex
         }
        
         resourceDir = new File(aDir);
-        createPhysicalIndex();
         log.info("New Mtas/Lucene index instance created...");
     }
 
