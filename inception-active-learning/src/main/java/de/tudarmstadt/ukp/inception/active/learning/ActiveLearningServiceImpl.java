@@ -27,13 +27,11 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.uima.jcas.JCas;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningSessionCompletedEvent;
 import de.tudarmstadt.ukp.inception.active.learning.sidebar.ActiveLearningRecommender;
 import de.tudarmstadt.ukp.inception.active.learning.sidebar.RecommendationDifference;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
