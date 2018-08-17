@@ -24,6 +24,7 @@ import java.util.Optional;
 
 import org.apache.wicket.model.IModel;
 import org.cyberborean.rdfbeans.datatype.DefaultDatatypeMapper;
+import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.vocabulary.XMLSchema;
 import org.springframework.stereotype.Component;
 
@@ -68,7 +69,21 @@ public class NumericLiteralValueSupport
             return false;
         }
 
-        return DefaultDatatypeMapper.getDatatypeURI(aStatement.getValue().getClass()) != null;
+        IRI iri = DefaultDatatypeMapper.getDatatypeURI((aStatement.getValue()).getClass());
+        Boolean acceptsType = iri.equals(XMLSchema.INTEGER)
+            || iri.equals(XMLSchema.INT)
+            || iri.equals(XMLSchema.NON_NEGATIVE_INTEGER)
+            || iri.equals(XMLSchema.NON_POSITIVE_INTEGER)
+            || iri.equals(XMLSchema.LONG)
+            || iri.equals(XMLSchema.FLOAT)
+            || iri.equals(XMLSchema.NEGATIVE_INTEGER)
+            || iri.equals(XMLSchema.POSITIVE_INTEGER)
+            || iri.equals(XMLSchema.UNSIGNED_INT)
+            || iri.equals(XMLSchema.UNSIGNED_LONG)
+            || iri.equals(XMLSchema.UNSIGNED_SHORT)
+            || iri.equals(XMLSchema.SHORT);
+
+        return iri != null && acceptsType;
     }
     
     @Override

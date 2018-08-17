@@ -324,7 +324,20 @@ public class StatementEditor extends Panel
             CompoundPropertyModel<KBStatement> model = CompoundPropertyModel.of(aStatement);
             Form<KBStatement> form = new Form<>("form", model);
             List<ValueType> valueTypes;
-            String rangeValue = property.getObject().getRange();
+            // Set property to the property of the current statement
+            if (property.getObject() == null) {
+                Optional<KBProperty> prop = kbService.readProperty(kbModel.getObject(),
+                    aStatement.getObject().getProperty().getIdentifier());
+                if (prop.isPresent()) {
+                    property.setObject(prop.get());
+                }
+            }
+
+            String rangeValue = null;
+            if (property.getObject() != null) {
+                rangeValue = property.getObject().getRange();
+            }
+
             valueTypes = valueTypeRegistry.getAllTypes();
             if (rangeValue != null) {
                 Optional<KBObject> rangeKBHandle = kbService
