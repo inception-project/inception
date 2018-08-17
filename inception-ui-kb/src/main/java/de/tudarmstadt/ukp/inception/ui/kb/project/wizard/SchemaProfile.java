@@ -21,6 +21,7 @@ import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
+import org.eclipse.rdf4j.model.vocabulary.SKOS;
 
 import de.tudarmstadt.ukp.inception.kb.IriConstants;
 
@@ -34,6 +35,8 @@ public enum SchemaProfile
 
     OWLSCHEMA(OWL.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT, RDFS.LABEL, RDF.PROPERTY),
 
+    SKOSSCHEMA(SKOS.CONCEPT, SKOS.BROADER, RDF.TYPE, RDFS.COMMENT, SKOS.PREF_LABEL, RDF.PROPERTY),
+
     CUSTOMSCHEMA(RDFS.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT, RDFS.LABEL, RDF.PROPERTY);
 
     private final IRI classIri;
@@ -42,7 +45,6 @@ public enum SchemaProfile
     private final IRI descriptionIri;
     private final IRI labelIri;
     private final IRI propertyTypeIri;
-
 
     private SchemaProfile(IRI aClassIri, IRI aSubclassIri, IRI aTypeIri, IRI aDescriptionIri,
             IRI aLabelIri, IRI aPropertyTypeIri)
