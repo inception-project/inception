@@ -109,7 +109,7 @@ public abstract class AbstractInfoPanel<T extends KBObject> extends Panel {
             content = editMode;
         } else {
             content = new ViewMode(CONTENT_MARKUP_ID, CompoundPropertyModel.of(handleModel),
-                    getDetailPreference());
+                     getDetailPreference());
         }
         add(content);
         
