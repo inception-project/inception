@@ -224,15 +224,17 @@ public class KnowledgeBaseServiceRemoteTest
             kbList.add(new TestConfiguration(profile.getSparqlUrl(), kb_zbw_stw_economics));
         }
         
-        {
-            KnowledgeBaseProfile profile = PROFILES.get("zbw-gnd");
-            KnowledgeBase kb_zbw_gnd = new KnowledgeBase();
-            kb_zbw_gnd.setName(profile.getName());
-            kb_zbw_gnd.setType(RepositoryType.REMOTE);
-            kb_zbw_gnd.setReification(Reification.NONE);
-            kb_zbw_gnd.applyMapping(profile.getMapping());
-            kbList.add(new TestConfiguration(profile.getSparqlUrl(), kb_zbw_gnd));
-        }
+        // Commenting this out for the moment becuase we expect that every ontology contains 
+        // property definitions. However, this one does not include any property definitions!
+        // {
+        // KnowledgeBaseProfile profile = PROFILES.get("zbw-gnd");
+        // KnowledgeBase kb_zbw_gnd = new KnowledgeBase();
+        // kb_zbw_gnd.setName(profile.getName());
+        // kb_zbw_gnd.setType(RepositoryType.REMOTE);
+        // kb_zbw_gnd.setReification(Reification.NONE);
+        // kb_zbw_gnd.applyMapping(profile.getMapping());
+        // kbList.add(new TestConfiguration(profile.getSparqlUrl(), kb_zbw_gnd));
+        // }
         
         List<Object[]> dataList = new ArrayList<>();
         for (TestConfiguration kb : kbList) {
