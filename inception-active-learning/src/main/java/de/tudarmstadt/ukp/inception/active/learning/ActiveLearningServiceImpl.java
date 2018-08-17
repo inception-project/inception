@@ -113,47 +113,6 @@ public class ActiveLearningServiceImpl
             windowBegin, windowEnd, aJcas, true);
     }
 
-    @Override
-    public ActiveLearningUserState getState(ActiveLearningUserStateKey aUserStateKey)
-    {
-        ActiveLearningUserState state;
-        state = states.get(aUserStateKey);
-        if (state == null) {
-            state = new ActiveLearningUserState();
-            states.put(aUserStateKey, state);
-        }
-        return state;
-    }
-
-    @Override
-    public void setState(ActiveLearningUserStateKey aUserStateKey,
-        ActiveLearningServiceImpl.ActiveLearningUserState aState)
-    {
-        if (aState == null) {
-            aState = new ActiveLearningUserState();
-        }
-        states.put(aUserStateKey, aState);
-    }
-
-    @EventListener
-    public void onActiveLearningSessionCompleted(ActiveLearningSessionCompletedEvent aEvent)
-    {
-        clearState(aEvent.getUser());
-    }
-
-//    @EventListener
-//    public void onDocumentOpened(DocumentOpenedEvent aEvent)
-//    {
-//        clearState(aEvent.getUser());
-//    }
-//
-    private void clearState(String aUserName)
-    {
-        synchronized (states) {
-            states.remove(aUserName);
-        }
-    }
-
     public static class ActiveLearningUserState implements Serializable
     {
         private static final long serialVersionUID = -167705997822964808L;

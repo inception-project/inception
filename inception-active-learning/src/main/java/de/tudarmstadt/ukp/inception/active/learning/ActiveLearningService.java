@@ -36,10 +36,4 @@ public interface ActiveLearningService
 
     List<AnnotationObject> getFlattenedRecommendationsFromRecommendationModel(JCas aJcas,
             AnnotatorState aState, AnnotationLayer aSelectedLayer);
-
-    ActiveLearningServiceImpl.ActiveLearningUserState getState(
-        ActiveLearningServiceImpl.ActiveLearningUserStateKey aUserStateKey);
-
-    void setState(ActiveLearningServiceImpl.ActiveLearningUserStateKey aUserStateKey,
-        ActiveLearningServiceImpl.ActiveLearningUserState aState);
 }

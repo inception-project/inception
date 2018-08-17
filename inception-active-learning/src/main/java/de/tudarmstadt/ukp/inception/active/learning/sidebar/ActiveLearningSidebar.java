@@ -70,7 +70,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
@@ -141,7 +140,6 @@ public class ActiveLearningSidebar
     private @SpringBean UserDao userDao;
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
 
-    //private IModel<AnnotationLayer> selectedLayer;
     private IModel<List<LearningRecord>> learningRecords;
     private IModel<FeatureState> aFeatureStateModel;
     private CompoundPropertyModel<ActiveLearningServiceImpl.ActiveLearningUserState> userStateModel;
@@ -158,7 +156,6 @@ public class ActiveLearningSidebar
     private FeatureEditor editor;
     private Form<Void> recommendationForm;
     private AnnotationFeature annotationFeature;
-    private User user;
 
     public ActiveLearningSidebar(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, JCasProvider aJCasProvider,
@@ -167,13 +164,19 @@ public class ActiveLearningSidebar
         super(aId, aModel, aActionHandler, aJCasProvider, aAnnotationPage);
 
         annotationPage = aAnnotationPage;
-        user = aModel.getObject().getUser();
-        ActiveLearningServiceImpl.ActiveLearningUserStateKey userStateKey = new
-            ActiveLearningServiceImpl.ActiveLearningUserStateKey(
-            user.getUsername(), getModelObject().getProject().getId());
-        userStateModel = new CompoundPropertyModel<>(LambdaModelAdapter
-            .of(() -> activeLearningService.getState(userStateKey),
-                state -> activeLearningService.setState(userStateKey, state)));
+
+        if (aAnnotationPage.getMetaData(ActiveLearningUserStateMetaData.CURRENT_AL_USER_STATE)
+            == null) {
+            ActiveLearningServiceImpl.ActiveLearningUserState userState = new
+                ActiveLearningServiceImpl.ActiveLearningUserState();
+            aAnnotationPage
+                .setMetaData(ActiveLearningUserStateMetaData.CURRENT_AL_USER_STATE, userState);
+        }
+
+        userStateModel = new CompoundPropertyModel<>(LambdaModelAdapter.of(() -> aAnnotationPage
+                .getMetaData(ActiveLearningUserStateMetaData.CURRENT_AL_USER_STATE),
+            state -> aAnnotationPage
+                .setMetaData(ActiveLearningUserStateMetaData.CURRENT_AL_USER_STATE, state)));
 
         mainContainer = new WebMarkupContainer(CID_MAIN_CONTAINER);
         mainContainer.setOutputMarkupId(true);
