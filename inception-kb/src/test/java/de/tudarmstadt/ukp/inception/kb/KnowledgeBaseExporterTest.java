@@ -121,12 +121,9 @@ public class KnowledgeBaseExporterTest
         verify(kbService, times(numOfLocalKBs)).importData(any(),
                 any(), any());
 
-//        assertThat(exportedKbs).usingFieldByFieldElementComparator()
-//                .containsExactlyInAnyOrderElementsOf(knowledgeBases());
         assertThat(exportedKbs)
-                .extracting(KnowledgeBase::getName)
-                .containsExactlyInAnyOrderElementsOf(knowledgeBases().stream()
-                        .map(KnowledgeBase::getName).collect(Collectors.toList()));
+                .usingElementComparatorIgnoringFields("repositoryId", "project")
+                .containsExactlyInAnyOrderElementsOf(knowledgeBases());
     }
     
     @Test
