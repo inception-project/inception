@@ -19,19 +19,18 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.external;
 
 import de.tudarmstadt.ukp.inception.recommendation.api.ClassificationTool;
 
-
 public class ExternalClassificationTool
     extends ClassificationTool<Object>
 
 {
     public ExternalClassificationTool(long recommenderId, String feature, String type,
-                                      ExternalClassifierTraits traits)
+        ExternalClassifierTraits traits)
     {
         super(recommenderId, ExternalClassificationTool.class.getName(),
-                new ExternalTrainer(new BaseConfiguration()),
-                new ExternalClassifier(new BaseConfiguration(feature),
-                        new CustomAnnotationObjectLoader(feature, type), traits),
-                new CustomAnnotationObjectLoader(feature, type), true);
+            new ExternalTrainer(new BaseConfiguration()),
+            new ExternalClassifier(new BaseConfiguration(feature),
+                new CustomAnnotationObjectLoader(feature, type), traits, recommenderId),
+            new CustomAnnotationObjectLoader(feature, type), true, false);
     }
 
 }

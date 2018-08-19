@@ -53,22 +53,22 @@ public class IriConstants
             Arrays.asList(RDFS.SUBCLASSOF.stringValue()));
 
     /**
-     * https://www.wikidata.org/wiki/Q35120
+     * http://www.wikidata.org/entity/Q35120
      */
     public static final IRI WIKIDATA_CLASS;
 
     /**
-     * https://www.wikidata.org/wiki/Property:P279
+     * http://www.wikidata.org/prop/direct/P279
      */
     public static final IRI WIKIDATA_SUBCLASS;
 
     /**
-     * https://www.wikidata.org/wiki/Property:P31
+     * http://www.wikidata.org/prop/direct/P31
      */
     public static final IRI WIKIDATA_TYPE;
     
     /**
-     * https://www.wikidata.org/wiki/Q18616576
+     * http://www.wikidata.org/entity/Q18616576
      */
     public static final IRI WIKIDATA_PROPERTY_TYPE;
 
@@ -97,7 +97,7 @@ public class IriConstants
         SUBCLASS_IRIS = asList(RDFS.SUBCLASSOF, WIKIDATA_SUBCLASS, SKOS.BROADER);
         TYPE_IRIS = asList(RDF.TYPE, WIKIDATA_TYPE);
         DESCRIPTION_IRIS = asList(RDFS.COMMENT, SCHEMA_DESCRIPTION);
-        LABEL_IRIS = asList(RDFS.LABEL);
+        LABEL_IRIS = asList(RDFS.LABEL, SKOS.PREF_LABEL);
         PROPERTY_TYPE_IRIS = asList(RDF.PROPERTY, WIKIDATA_PROPERTY_TYPE);
     }
 }

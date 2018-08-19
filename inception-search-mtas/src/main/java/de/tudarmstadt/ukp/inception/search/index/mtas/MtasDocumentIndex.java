@@ -57,11 +57,9 @@ import org.apache.lucene.search.spans.SpanWeight;
 import org.apache.lucene.search.spans.Spans;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
-import org.apache.uima.cas.CASException;
 import org.apache.uima.cas.TypeSystem;
 import org.apache.uima.cas.impl.XmiCasSerializer;
 import org.apache.uima.jcas.JCas;
-import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.wicket.ajax.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -150,9 +148,8 @@ public class MtasDocumentIndex
                 annotationShortNames.add(getShortName(layer.getName()));
             }
         }
-
+       
         resourceDir = new File(aDir);
-
         log.info("New Mtas/Lucene index instance created...");
     }
 
@@ -445,7 +442,7 @@ public class MtasDocumentIndex
             // commit
             indexWriter.commit();
 
-            log.info("Document indexed in project {}. sourceId: {}, annotationId: {}, user: {}",
+            log.info("Document indexed in project [{}]. sourceId: {}, annotationId: {}, user: {}",
                     project.getName(), aSourceDocumentId, aAnnotationDocumentId, aUser);
         }
         catch (SAXException e) {
@@ -479,11 +476,12 @@ public class MtasDocumentIndex
     private void deindexDocument(long aSourceDocumentId, long aAnnotationDocumentId, String aUser)
         throws IOException
     {
-        indexWriter.deleteDocuments(new Term(FIELD_ID,
-                String.valueOf(aSourceDocumentId) + "/" + String.valueOf(aAnnotationDocumentId)));
+        if (indexWriter != null) {
+            indexWriter.deleteDocuments(new Term(FIELD_ID,
+                    String.format("%d/%d", aSourceDocumentId, aAnnotationDocumentId)));
 
-        indexWriter.commit();
-
+            indexWriter.commit();
+        }
         return;
     }
 
@@ -548,10 +546,10 @@ public class MtasDocumentIndex
                     indexWriter.close();
                 }
 
-                log.info("Index for project {} has been closed", project.getName());
+                log.info("Index for project [{}] has been closed", project.getName());
             }
             catch (IOException e) {
-                log.error("Error closing index for project {}", project.getId());
+                log.error("Error closing index for project [{}]", project.getId());
             }
         }
     }
@@ -570,7 +568,7 @@ public class MtasDocumentIndex
         // Delete the index directory
         FileUtils.deleteDirectory(getIndexDir());
 
-        log.info("Index for project {} has been deleted", project.getName());
+        log.info("Index for project [{}] has been deleted", project.getName());
     }
 
     @Override
@@ -597,15 +595,19 @@ public class MtasDocumentIndex
         if (!isOpen) {
             // Only open if it is not already open
             try {
-                log.info("Opening index for project " + project.getName());
+                log.info("indexWriter was not open. Opening it for project [{}]",
+                        project.getName());
 
                 indexWriter = openLuceneIndex(getIndexDir());
+                indexWriter.commit();
 
-                log.info("Index has been opened for project " + project.getName());
+                log.info("indexWriter has been opened for project [{}]", project.getName());
             }
             catch (Exception e) {
-                log.error("Unable to open index", e);
+                log.error("Unable to open indexWriter", e);
             }
+        } else {
+            log.info("indexWriter is already open for project [{}]", project.getName());
         }
     }
 
@@ -619,19 +621,24 @@ public class MtasDocumentIndex
 
         try {
             // Create the directory for the new index
-            log.info("Creating index directory for project " + project.getName());
+            log.info("Creating index directory for project [{}]", project.getName());
             FileUtils.forceMkdir(indexDir);
 
             // Open the index
+            log.info("Opening index for project [{}]", project.getName());
             openPhysicalIndex();
-
-            // Index all documents of the project
-            log.info("Indexing all documents in the project " + project.getName());
-            indexAllDocuments();
-            log.info("All documents have been indexed in the project " + project.getName());
+            
+            if (isOpen()) {
+                // Index all documents of the project
+                log.info("Indexing all documents in the project [{}]", project.getName());
+                indexAllDocuments();
+                log.info("All documents have been indexed in the project [{}]", project.getName());
+            } else {
+                log.info("Index has not been opened. No documents have been indexed.");
+            }
         }
         catch (Exception e) {
-            log.error("Error creating index for project " + project.getName(), e);
+            log.error("Error creating index for project [{}]", project.getName(), e);
         }
     }
 
@@ -671,29 +678,37 @@ public class MtasDocumentIndex
 
     private void indexAllDocuments()
     {
-        log.info("Indexing all annotation documents of project {}", project.getName());
 
-        for (User user : projectService.listProjectUsersWithPermissions(project)) {
-            for (AnnotationDocument document : documentService.listAnnotationDocuments(project,
-                    user)) {
-                try {
+        int users = 0;
+        int annotationDocs = 0;
+        int sourceDocs = 0;
+
+        try {
+            log.info("Indexing all annotation documents of project [{}]", project.getName());
+
+            for (User user : projectService.listProjectUsersWithPermissions(project)) {
+                users++;
+                for (AnnotationDocument document : documentService.listAnnotationDocuments(project,
+                        user)) {
                     indexDocument(document, documentService.readAnnotationCas(document));
-                }
-                catch (IOException e) {
-                    log.error("Unable to index annotation document", e);
+                    annotationDocs++;
                 }
             }
+
+            log.info("Indexing all source documents of project [{}]", project.getName());
+
+            for (SourceDocument document : documentService.listSourceDocuments(project)) {
+                indexDocument(document, documentService.createOrReadInitialCas(document));
+                sourceDocs++;
+            }
+        }
+        catch (IOException e) {
+            log.error("Unable to index document", e);
         }
 
-        log.info("Indexing all source documents of project {}", project.getName());
-        for (SourceDocument document : documentService.listSourceDocuments(project)) {
-            try {
-                indexDocument(document, documentService.readInitialCas(document));
-            }
-            catch (IOException | CASException | ResourceInitializationException e) {
-                log.error("Unable to index source document", e);
-            }
-        }
+        log.info(String.format(
+                "Indexing results: %d source doc(s), %d annotation doc(s) for %d user(s)",
+                sourceDocs, annotationDocs, users));
     }
 
     private String getShortName(String aName)

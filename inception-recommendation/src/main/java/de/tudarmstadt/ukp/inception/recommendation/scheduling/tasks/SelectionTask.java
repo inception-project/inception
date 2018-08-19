@@ -93,6 +93,15 @@ public class SelectionTask
                         continue;
                     }
                     
+                    if (recommender.isAlwaysSelected() || !ct.isEvaluable()) {
+                        log.info(
+                                "[{}][{}]: Skipping evaluation (always selected: {}; evaluatable: {})",
+                                user.getUsername(), ct.getId(), recommender.isAlwaysSelected(),
+                                ct.isEvaluable());
+                        activeRecommenders.add(recommender);
+                        continue;
+                    }
+    
                     log.info("[{}][{}]: Evaluating...", user.getUsername(), recommender.getName());
                     
                     EvaluationConfiguration suiteConf = EvaluationHelper
@@ -137,7 +146,7 @@ public class SelectionTask
                             System.currentTimeMillis() - start, activated));
                 }
                 catch (Throwable e) {
-                    log.error("An error occured", e);
+                    log.error("[{}][{}]: Failed", user.getUsername(), recommender.getName(), e);
                 }
             }
     
@@ -164,7 +173,7 @@ public class SelectionTask
                 continue;
             }
             
-            data.addAll(ct.getLoader().loadAnnotationObjects(jCas));
+            data.addAll(ct.getLoader().loadAnnotationObjectsForEvaluation(jCas));
         }
 
         return es.evaluate(data);

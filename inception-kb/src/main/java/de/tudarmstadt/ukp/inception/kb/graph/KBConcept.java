@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
@@ -128,7 +129,10 @@ public class KBConcept
         closed = aClosed;
     }
     */
-
+    
+    /**
+     * @return Gives description for the concept
+     */
     public String getDescription()
     {
         return description;
@@ -180,19 +184,18 @@ public class KBConcept
         aConn.add(abstractStmt);
         */
     }
-
-    public static KBConcept read(RepositoryConnection aConn, Statement aStmt, KnowledgeBase kb)
+    
+    public static KBConcept read(RepositoryConnection aConn, Resource aSubject, KnowledgeBase kb)
     {
         KBConcept kbConcept = new KBConcept();
-        kbConcept.setIdentifier(aStmt.getSubject().stringValue());
-        kbConcept.originalStatements.add(aStmt);
+        kbConcept.setIdentifier(aSubject.stringValue());
 
-        readFirst(aConn, aStmt.getSubject(), kb.getLabelIri(), null).ifPresent((stmt) -> {
+        readFirst(aConn, aSubject,  kb.getLabelIri(), null).ifPresent((stmt) -> {
             kbConcept.setName(stmt.getObject().stringValue());
             kbConcept.originalStatements.add(stmt);
         });
 
-        readFirst(aConn, aStmt.getSubject(), kb.getDescriptionIri(), null).ifPresent((stmt) -> {
+        readFirst(aConn, aSubject, kb.getDescriptionIri(), null).ifPresent((stmt) -> {
             kbConcept.setDescription(stmt.getObject().stringValue());
             kbConcept.originalStatements.add(stmt);
         });
@@ -202,7 +205,6 @@ public class KBConcept
             kbConcept.setClosed(((Literal) stmt.getObject()).booleanValue());
             kbConcept.originalStatements.add(stmt);
         });
-
         readFirst(aConn, aStmt.getSubject(), ABSTRACT, null).ifPresent((stmt) -> {
             kbConcept.setAbstract(((Literal) stmt.getObject()).booleanValue());
             kbConcept.originalStatements.add(stmt);

@@ -50,6 +50,7 @@ public class ConceptInstancePanel
     private static final Logger LOG = LoggerFactory.getLogger(ConceptInstancePanel.class);
 
     private static final String INSTANCE_INFO_MARKUP_ID = "instanceinfo";
+    private static final String CONCEPT_MENTIONS_MARKUP_ID = "annotatedResultGroups";
 
     private @SpringBean KnowledgeBaseService kbService;
 
@@ -58,22 +59,31 @@ public class ConceptInstancePanel
     private IModel<KBHandle> selectedConceptHandle;
 
     private Component instanceInfoPanel;
+    private Component annotatedSearchPanel;
+    
 
     public ConceptInstancePanel(String aId, IModel<KnowledgeBase> aKbModel,
             IModel<KBHandle> selectedConceptHandle, IModel<KBConcept> selectedConceptModel)
     {
         super(aId, selectedConceptModel);
-
         setOutputMarkupId(true);
-
         kbModel = aKbModel;
         selectedInstanceHandle = Model.of();
         this.selectedConceptHandle = selectedConceptHandle;
-
         add(new ConceptInfoPanel("info", kbModel, selectedConceptHandle, selectedConceptModel));
         add(new InstanceListPanel("instances", kbModel, selectedConceptHandle,
                 selectedInstanceHandle));
-
+        if (selectedConceptHandle.getObject() != null) {
+            annotatedSearchPanel = new AnnotatedListIdentifiers(CONCEPT_MENTIONS_MARKUP_ID, kbModel,
+                    selectedConceptHandle, selectedInstanceHandle,false);
+            add(annotatedSearchPanel);
+        }
+        else {
+            annotatedSearchPanel = new EmptyPanel(CONCEPT_MENTIONS_MARKUP_ID)
+                    .setVisibilityAllowed(false);
+            add(annotatedSearchPanel);
+        }
+        
         instanceInfoPanel = new EmptyPanel(INSTANCE_INFO_MARKUP_ID).setVisibilityAllowed(false);
         add(instanceInfoPanel);
     }
@@ -115,6 +125,7 @@ public class ConceptInstancePanel
         // if the instance handle is not null, an existing instance was selected, otherwise it's a
         // deselection
         Component replacementPanel;
+
         if (selectedInstanceHandle.getObject() != null) {
             // load the full KBInstance and display its details in an InstanceInfoPanel
             String identifier = selectedInstanceHandle.getObject().getIdentifier();
@@ -122,12 +133,13 @@ public class ConceptInstancePanel
                 replacementPanel = kbService.readInstance(kbModel.getObject(), identifier)
                         .<Component>map(instance -> {
                             Model<KBInstance> model = Model.of(instance);
-                            return new InstanceInfoPanel(INSTANCE_INFO_MARKUP_ID, kbModel,
-                                    selectedInstanceHandle, model);
+                            return new InstancePanel(INSTANCE_INFO_MARKUP_ID, kbModel,
+                                    selectedConceptHandle, selectedInstanceHandle, model);
                         }).orElse(emptyPanel());
             }
             catch (QueryEvaluationException e) {
                 replacementPanel = emptyPanel();
+                //replacementSearch = emptyPanel();
                 error("Unable to read instance: " + e.getLocalizedMessage()); 
                 LOG.error("Unable to read instance.", e);
                 event.getTarget().addChildren(getPage(), IFeedback.class);
@@ -137,6 +149,7 @@ public class ConceptInstancePanel
             replacementPanel = emptyPanel();
         }
         instanceInfoPanel = instanceInfoPanel.replaceWith(replacementPanel);
+        
         event.getTarget().add(this);
     }
 
@@ -154,8 +167,8 @@ public class ConceptInstancePanel
         instance.setType(type);
 
         // replace instance info view
-        Component replacement = new InstanceInfoPanel(INSTANCE_INFO_MARKUP_ID, kbModel,
-                selectedInstanceHandle, Model.of(instance));
+        Component replacement = new InstancePanel(INSTANCE_INFO_MARKUP_ID, kbModel,
+                selectedConceptHandle, selectedInstanceHandle, Model.of(instance));
         instanceInfoPanel = instanceInfoPanel.replaceWith(replacement);
 
         event.getTarget().add(this);

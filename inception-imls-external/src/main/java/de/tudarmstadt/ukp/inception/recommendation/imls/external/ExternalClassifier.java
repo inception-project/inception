@@ -55,14 +55,16 @@ public class ExternalClassifier
     private final Logger log = LoggerFactory.getLogger(getClass());
     private CustomAnnotationObjectLoader loader;
     private ExternalClassifierTraits traits;
+    private long recommenderId;
 
     public ExternalClassifier(ClassifierConfiguration<Object> aConfiguration,
                               CustomAnnotationObjectLoader aLoader,
-                              ExternalClassifierTraits aTraits)
+                              ExternalClassifierTraits aTraits, long aRecommenderId)
     {
         super(aConfiguration);
         loader = aLoader;
         traits = aTraits;
+        recommenderId = aRecommenderId;
     }
 
     @Override
@@ -74,7 +76,7 @@ public class ExternalClassifier
     }
 
     @Override
-    public List predictSentences(List inputData)
+    public List<List<List<AnnotationObject>>> predictSentences(List inputData)
     {
         throw new UnsupportedOperationException("Currently not implemented.");
     }
@@ -119,9 +121,12 @@ public class ExternalClassifier
         //i.e. JSON with Base64 encoded bytestreams of Typesystem-XML and CAS-XMI
         try {
             String jsonString = new JSONObject()
-                    .put("CAS", new String(Base64.getEncoder().encode(casOS.toByteArray()), "utf-8"))
-                    .put("Typesystem", new String(Base64.getEncoder().encode(typeOS.toByteArray()), "utf-8"))
-                    .put("Layer", new String(layer.getName()))
+                    .put("CAS", new String(Base64.getEncoder().encode(casOS.toByteArray()),
+                        "utf-8"))
+                    .put("Typesystem",
+                    new String(Base64.getEncoder().encode(typeOS.toByteArray()), "utf-8"))
+                    .put("Layer", layer.getName())
+                    .put("Feature", conf.getFeature())
                     .toString();
             httpPost.setEntity(new StringEntity(jsonString, "utf-8"));
         }
@@ -130,8 +135,7 @@ public class ExternalClassifier
         }
         
         //Send Query and wait for the results
-        try (CloseableHttpResponse response = httpclient.execute(httpPost);) {
-            System.out.println(response.getStatusLine());
+        try (CloseableHttpResponse response = httpclient.execute(httpPost)) {
             HttpEntity entity = response.getEntity();
             
             //extract the results 
@@ -144,7 +148,8 @@ public class ExternalClassifier
             log.error("Error while sending request!", e);
         }
 
-        List<List<AnnotationObject>> annotatedSentences = loader.loadAnnotationObjects(aJCas);
+        List<List<AnnotationObject>> annotatedSentences = loader.loadAnnotationObjects(aJCas,
+            recommenderId);
         List<List<List<AnnotationObject>>> wrappedSents = new LinkedList<>();
         for (List<AnnotationObject> sentence : annotatedSentences) {
             List<List<AnnotationObject>> sentenceList = new LinkedList<>();
@@ -156,8 +161,6 @@ public class ExternalClassifier
             wrappedSents.add(sentenceList);
         }
         
-        List<AnnotationObject> result = mergeAdjacentTokensWithSameLabel(wrappedSents, layer);
-
-        return result;
+        return mergeAdjacentTokensWithSameLabel(wrappedSents, layer);
     }
 }

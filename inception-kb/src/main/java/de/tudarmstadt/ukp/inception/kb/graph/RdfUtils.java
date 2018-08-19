@@ -22,11 +22,15 @@ import java.util.Optional;
 import org.eclipse.rdf4j.common.iteration.ConvertingIteration;
 import org.eclipse.rdf4j.common.iteration.ExceptionConvertingIteration;
 import org.eclipse.rdf4j.common.iteration.Iteration;
+import org.eclipse.rdf4j.common.iteration.Iterations;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.Value;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.vocabulary.OWL;
+import org.eclipse.rdf4j.model.vocabulary.RDF;
+import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.eclipse.rdf4j.query.BindingSet;
 import org.eclipse.rdf4j.query.QueryEvaluationException;
 import org.eclipse.rdf4j.query.QueryLanguage;
@@ -35,6 +39,7 @@ import org.eclipse.rdf4j.query.TupleQueryResult;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.repository.RepositoryException;
 import org.eclipse.rdf4j.repository.RepositoryResult;
+import org.eclipse.rdf4j.rio.ntriples.NTriplesUtil;
 
 import de.tudarmstadt.ukp.inception.kb.IriConstants;
 
@@ -43,7 +48,7 @@ public class RdfUtils
     public static Optional<Value> readFirstValue(RepositoryConnection conn, Resource subj, IRI pred,
             Resource... contexts)
     {
-        Optional<Statement> statement = readFirst(conn, subj, pred, null, contexts);
+        Optional<Statement> statement = readFirst(conn, subj, pred, null);
         if (statement.isPresent()) {
             return Optional.of(statement.get().getObject());
         }
@@ -53,9 +58,10 @@ public class RdfUtils
     }
 
     public static Optional<Statement> readFirst(RepositoryConnection conn, Resource subj, IRI pred,
-            Value obj, Resource... contexts)
+            Value obj, String language)
     {
-        try (RepositoryResult<Statement> results = getStatements(conn, subj, pred, obj, false)) {
+        try (RepositoryResult<Statement> results =
+            getStatements(conn, subj, pred, obj, false, language)) {
             if (results.hasNext()) {
                 return Optional.of(results.next());
             }
@@ -65,10 +71,22 @@ public class RdfUtils
         }
     }
 
-    public static RepositoryResult<Statement> getStatements(
-            RepositoryConnection conn, Resource subj, IRI pred, Value obj, boolean includeInferred)
+    public static Optional<Statement> readFirst(RepositoryConnection conn, Resource subj, IRI pred,
+        Value obj)
     {
-        return getStatementsSparql(conn, subj, pred, obj, includeInferred);
+        return readFirst(conn, subj, pred, obj, null);
+    }
+
+    public static RepositoryResult<Statement> getStatements(RepositoryConnection conn,
+        Resource subj, IRI pred, Value obj, boolean includeInferred)
+    {
+        return getStatementsSparql(conn, subj, pred, obj, 1000, includeInferred, null);
+    }
+
+    public static RepositoryResult<Statement> getStatements(RepositoryConnection conn,
+        Resource subj, IRI pred, Value obj, boolean includeInferred, String language)
+    {
+        return getStatementsSparql(conn, subj, pred, obj, 1000, includeInferred, language);
     }
 
     
@@ -77,12 +95,23 @@ public class RdfUtils
             throws QueryEvaluationException {
         return conn.getStatements(subj, pred, obj, includeInferred);
     }
-    
+
     public static RepositoryResult<Statement> getStatementsSparql(RepositoryConnection conn,
-            Resource subj, IRI pred, Value obj, boolean includeInferred)
+            Resource subj, IRI pred, Value obj, int aLimit, boolean includeInferred,
+            String language)
         throws QueryEvaluationException
     {
-        String QUERY = "SELECT * WHERE { ?s ?p ?o } LIMIT 1000";
+        String filter = "";
+        if (language != null) {
+            filter = "FILTER(LANG(?o) = \"\" || LANGMATCHES(LANG(?o), \"" + NTriplesUtil
+                .escapeString(language) + "\")).";
+        }
+        String QUERY = String.join("\n",
+            "SELECT * WHERE { ",
+            "?s ?p ?o ",
+            filter,
+            "} LIMIT " + aLimit);
+        
         TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
         if (subj != null) {
             tupleQuery.setBinding("s", subj);
@@ -120,6 +149,96 @@ public class RdfUtils
         };
         
         return new RepositoryResult<Statement>(i2);
+    }
+    
+    public static RepositoryResult<Statement> getPropertyStatementsSparql(RepositoryConnection conn,
+            Resource subj, IRI pred, Value obj, int aLimit, boolean includeInferred,
+            String language)
+        throws QueryEvaluationException
+    {
+        
+        String filter = "";
+        if (language != null) {
+            filter = "FILTER(LANG(?o) = \"\" || LANGMATCHES(LANG(?o), \"" + NTriplesUtil
+                .escapeString(language) + "\")).";
+        }
+        String QUERY = String.join("\n",
+                "PREFIX rdfs: <" + RDFS.NAMESPACE + ">",
+                "PREFIX owl: <" + OWL.NAMESPACE + ">",
+                "PREFIX rdf: <" + RDF.NAMESPACE + ">", 
+            "SELECT * WHERE { ",
+            " {?s ?p ?o .}",
+            " UNION ",
+            " {?s a ?prop .",
+            "    VALUES ?prop { rdf:Property owl:ObjectProperty owl:DatatypeProperty owl:AnnotationProperty} }",
+            filter,
+            "} LIMIT " + aLimit);
+        TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
+        if (subj != null) {
+            tupleQuery.setBinding("s", subj);
+        }
+        if (pred != null) {
+            tupleQuery.setBinding("p", pred);
+        }
+        if (obj != null) {
+            tupleQuery.setBinding("o", obj);
+        }
+        tupleQuery.setIncludeInferred(includeInferred);
+        TupleQueryResult result = tupleQuery.evaluate();
+        Iteration<Statement, QueryEvaluationException> i1 = 
+                new ConvertingIteration<BindingSet, Statement, QueryEvaluationException>(result)
+        {
+            @Override
+            protected Statement convert(BindingSet b) throws QueryEvaluationException
+            {
+                Resource s = subj == null ? (Resource) b.getValue("s") : subj;
+                IRI p = pred == null ? (IRI) b.getValue("p") : pred;
+                Value o = obj == null ? b.getValue("o") : obj;
+
+                return SimpleValueFactory.getInstance().createStatement(s, p, o);
+            }
+        };
+        
+        ExceptionConvertingIteration<Statement, RepositoryException> i2 = 
+                new ExceptionConvertingIteration<Statement, RepositoryException>(i1)
+        {
+            @Override
+            protected RepositoryException convert(Exception aE)
+            {
+                return new RepositoryException(aE);
+            }
+        };
+        
+        return new RepositoryResult<Statement>(i2);
+    }
+    
+    
+    
+    public static boolean existsStatementsWithSubject(
+            RepositoryConnection conn, Resource subj, boolean includeInferred)
+    {
+        try (RepositoryResult<Statement> stmts = getStatementsSparql(conn, subj, null, null, 1,
+                includeInferred, null)) {
+            return !Iterations.asList(stmts).isEmpty();
+        }
+    }
+    
+
+    /**
+     * Get all statements about the given subject.
+     * 
+     * @param conn
+     *            a repository connection
+     * @param subj
+     *            the subject resource
+     * @param includeInferred
+     *            whether to include inferred statements
+     * @return all statements with the given subject resource
+     */
+    public static RepositoryResult<Statement> getStatementsWithSubject(
+            RepositoryConnection conn, Resource subj, boolean includeInferred)
+    {
+        return getStatementsSparql(conn, subj, null, null, 1000, includeInferred, null);
     }
     
     public static boolean isFromImplicitNamespace(KBHandle handle) {
