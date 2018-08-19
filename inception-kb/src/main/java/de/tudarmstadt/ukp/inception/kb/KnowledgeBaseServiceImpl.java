@@ -396,7 +396,7 @@ public class KnowledgeBaseServiceImpl
     @Override
     public List<KBHandle> listConcepts(KnowledgeBase kb, boolean aAll)
     {
-        return list(kb, kb.getClassIri(), true, aAll);
+        return list(kb, kb.getClassIri(), true, aAll, SPARQLQueryStore.aLimit);
     }
 
     @Override
@@ -574,7 +574,7 @@ public class KnowledgeBaseServiceImpl
     public List<KBHandle> listInstances(KnowledgeBase kb, String aConceptIri, boolean aAll)
     {
         IRI conceptIri = SimpleValueFactory.getInstance().createIRI(aConceptIri);
-        return list(kb, conceptIri, false, aAll);
+        return list(kb, conceptIri, false, aAll, SPARQLQueryStore.aLimit);
     }
 
     // Statements
@@ -672,7 +672,8 @@ public class KnowledgeBaseServiceImpl
     }
 
     @Override
-    public List<KBHandle> list(KnowledgeBase kb, IRI aType, boolean aIncludeInferred, boolean aAll)
+    public List<KBHandle> list(KnowledgeBase kb, IRI aType, boolean aIncludeInferred, boolean aAll,
+            int aLimit)
         throws QueryEvaluationException
     {
         List<KBHandle> resultList = read(kb, (conn) -> {
@@ -684,7 +685,7 @@ public class KnowledgeBaseServiceImpl
                          , "    FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\"))"
                          , "  }"
                          , "}"
-                         , "LIMIT 10000");
+                         , "LIMIT " + aLimit);
             TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
             tupleQuery.setBinding("pTYPE", kb.getTypeIri());
             tupleQuery.setBinding("oPROPERTY", aType);
@@ -791,7 +792,7 @@ public class KnowledgeBaseServiceImpl
                     , "         FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\")) "
                     , "     } "
                     , "} "
-                    , "LIMIT 10000" );
+                    , "LIMIT " + SPARQLQueryStore.aLimit);
                 TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
                 tupleQuery.setBinding("pTYPE", kb.getTypeIri());
                 tupleQuery.setBinding("oCLASS", kb.getClassIri());
@@ -817,7 +818,7 @@ public class KnowledgeBaseServiceImpl
             boolean aAll)
         throws QueryEvaluationException
     {
-        return listChildConcepts(aKB, aParentIdentifier, aAll, 10000);
+        return listChildConcepts(aKB, aParentIdentifier, aAll, SPARQLQueryStore.aLimit);
     }
     
     @Override

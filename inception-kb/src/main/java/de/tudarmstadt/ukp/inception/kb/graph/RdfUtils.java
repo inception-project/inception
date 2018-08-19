@@ -108,7 +108,7 @@ public class RdfUtils
             "SELECT * WHERE { ",
             "?s ?p ?o ",
             filter,
-            "} LIMIT 1000");
+            "} LIMIT " + aLimit);
         
         TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
         if (subj != null) {
@@ -168,7 +168,7 @@ public class RdfUtils
             " {?s a ?prop .",
             "    VALUES ?prop { rdf:Property owl:ObjectProperty owl:DatatypeProperty owl:AnnotationProperty} }",
             filter,
-            "} LIMIT 1000");
+            "} LIMIT " + aLimit);
         TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
         if (subj != null) {
             tupleQuery.setBinding("s", subj);
