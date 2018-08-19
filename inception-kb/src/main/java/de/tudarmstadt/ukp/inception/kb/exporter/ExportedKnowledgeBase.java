@@ -25,6 +25,9 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ExportedKnowledgeBase
 {    
+    @JsonProperty("id")
+    private String id;
+
     @JsonProperty("name")
     private String name;
 
@@ -67,6 +70,16 @@ public class ExportedKnowledgeBase
     // set to null for local knowledge bases
     @JsonProperty("remote_url")
     private String remoteURL;
+
+    public String getId()
+    {
+        return id;
+    }
+
+    public void setId(String aId)
+    {
+        id = aId;
+    }
 
     public String getName()
     {
