@@ -20,13 +20,12 @@
 <html xmlns:wicket="http://wicket.apache.org">
 <body>
   <wicket:panel>
-    <div class="flex-content flex-v-container flex-gutter flex-only-internal-gutter knowledge-base-panel">
-      <div class="instances-headline">
-        <h3>
-        <wicket:message key="identifier.headline" />
-        (<wicket:container wicket:id="count"></wicket:container>)
-        </h3>
-        <hr />
+    <div class="flex-content flex-v-container panel-default">
+      <div class="panel-heading">
+        <div>
+          <wicket:message key="mentions.headline"/>: 
+          <wicket:container wicket:id="count"></wicket:container>
+        </div>
       </div>
       <div class="scrolling flex-content">
         <table class="table table-striped table-condensed">

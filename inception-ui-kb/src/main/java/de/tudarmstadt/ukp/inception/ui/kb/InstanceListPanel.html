@@ -20,27 +20,29 @@
 <html xmlns:wicket="http://wicket.apache.org">
 <body>
   <wicket:panel>
-    <div class="flex-content flex-v-container flex-gutter flex-only-internal-gutter knowledge-base-panel">
-      <div class="instances-headline">
-        <h3><wicket:message key="concept.instances" /> (<wicket:container wicket:id="count"></wicket:container>)</h3>
-                <div class="pull-right">
+    <div class="flex-content flex-v-container panel-default">
+      <div class="panel-heading">
+        <div class="pull-right form-inline">
           <input type="checkbox" wicket:id="showAllInstances"/>
           <wicket:message key="instance.showall"/>
         </div>
-        <hr />
-      </div>      
-      <div class="flex-v-container flex-content fit-child-snug">
-        <wicket:enclosure child="noInstancesNotice">
-          <div class="list-empty-notice">
-            <p wicket:id="noInstancesNotice"></p>
-          </div>
-        </wicket:enclosure>
-        <select wicket:id="instances" class="form-control list-panel"></select>
-      </div>
-      <div class="btn-group btn-group-justified" role="group">
-        <div class="btn-group" role="group">
-          <button wicket:id="add" type="submit" class="btn btn-primary"><i class="fa fa-plus" aria-hidden="true"></i> <wicket:container wicket:id="label"></wicket:container></button>
+        <div>
+          <wicket:message key="concept.instances"/>:
+          <wicket:container wicket:id="count"></wicket:container>
         </div>
+      </div>      
+      <div class="flex-content flex-v-container" style="padding: 0px;">
+        <div class="flex-v-container flex-content fit-child-snug">
+          <wicket:enclosure child="noInstancesNotice">
+            <div class="list-empty-notice">
+              <p wicket:id="noInstancesNotice"></p>
+            </div>
+          </wicket:enclosure>
+          <select wicket:id="instances" class="form-control list-panel"></select>
+        </div>
+      </div>
+      <div class="panel-footer text-right">
+        <button wicket:id="add" type="submit" class="btn btn-primary"><i class="fa fa-plus" aria-hidden="true"></i> <wicket:container wicket:id="label"></wicket:container></button>
       </div>
     </div>
   </wicket:panel>
