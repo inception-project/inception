@@ -18,8 +18,12 @@
 package de.tudarmstadt.ukp.inception.ui.kb;
 
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.wicket.Component;
+import org.apache.wicket.extensions.markup.html.tabs.AbstractTab;
+import org.apache.wicket.extensions.markup.html.tabs.ITab;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.markup.html.panel.Panel;
@@ -32,6 +36,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
 
+import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapAjaxTabbedPanel;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
@@ -50,7 +55,6 @@ public class ConceptInstancePanel
     private static final Logger LOG = LoggerFactory.getLogger(ConceptInstancePanel.class);
 
     private static final String INSTANCE_INFO_MARKUP_ID = "instanceinfo";
-    private static final String CONCEPT_MENTIONS_MARKUP_ID = "annotatedResultGroups";
 
     private @SpringBean KnowledgeBaseService kbService;
 
@@ -59,8 +63,6 @@ public class ConceptInstancePanel
     private IModel<KBHandle> selectedConceptHandle;
 
     private Component instanceInfoPanel;
-    private Component annotatedSearchPanel;
-    
 
     public ConceptInstancePanel(String aId, IModel<KnowledgeBase> aKbModel,
             IModel<KBHandle> selectedConceptHandle, IModel<KBConcept> selectedConceptModel)
@@ -70,22 +72,48 @@ public class ConceptInstancePanel
         kbModel = aKbModel;
         selectedInstanceHandle = Model.of();
         this.selectedConceptHandle = selectedConceptHandle;
-        add(new ConceptInfoPanel("info", kbModel, selectedConceptHandle, selectedConceptModel));
-        add(new InstanceListPanel("instances", kbModel, selectedConceptHandle,
-                selectedInstanceHandle));
-        if (selectedConceptHandle.getObject() != null) {
-            annotatedSearchPanel = new AnnotatedListIdentifiers(CONCEPT_MENTIONS_MARKUP_ID, kbModel,
-                    selectedConceptHandle, selectedInstanceHandle,false);
-            add(annotatedSearchPanel);
-        }
-        else {
-            annotatedSearchPanel = new EmptyPanel(CONCEPT_MENTIONS_MARKUP_ID)
-                    .setVisibilityAllowed(false);
-            add(annotatedSearchPanel);
-        }
         
+        add(new BootstrapAjaxTabbedPanel<ITab>("tabPanel", makeTabs()));
+        
+        add(new ConceptInfoPanel("info", kbModel, selectedConceptHandle, selectedConceptModel));
+                
         instanceInfoPanel = new EmptyPanel(INSTANCE_INFO_MARKUP_ID).setVisibilityAllowed(false);
         add(instanceInfoPanel);
+    }
+    
+    private List<ITab> makeTabs()
+    {
+        List<ITab> tabs = new ArrayList<>();
+        
+        tabs.add(new AbstractTab(Model.of("Instances"))
+        {
+            private static final long serialVersionUID = 6703144434578403272L;
+
+            @Override
+            public Panel getPanel(String panelId)
+            {
+                return new InstanceListPanel(panelId, kbModel, selectedConceptHandle,
+                        selectedInstanceHandle);
+            }
+        });
+        
+        tabs.add(new AbstractTab(Model.of("Mentions"))
+        {
+            private static final long serialVersionUID = 6703144434578403272L;
+
+            @Override
+            public Panel getPanel(String panelId)
+            {
+                if (selectedConceptHandle.getObject() != null) {
+                    return new AnnotatedListIdentifiers(panelId, kbModel,
+                            selectedConceptHandle, selectedInstanceHandle,false);
+                }
+                else {
+                    return new EmptyPanel(panelId);
+                }
+            }
+        });        
+        return tabs;
     }
 
     /**

@@ -92,7 +92,7 @@ public class AnnotatedListIdentifiers
         }
         LambdaModel<List<SearchResult>> searchResults = LambdaModel.of(this::getSearchResults);
         LOG.trace("SearchResult count : {}" , searchResults.getObject().size());
-        ListView<String> overviewList = new ListView<String>(aId)
+        ListView<String> overviewList = new ListView<String>("searchResultGroups")
         {
             private static final long serialVersionUID = -122960232588575731L;
 

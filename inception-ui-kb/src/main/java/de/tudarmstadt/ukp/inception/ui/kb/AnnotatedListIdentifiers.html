@@ -20,29 +20,34 @@
 <html xmlns:wicket="http://wicket.apache.org">
 <body>
   <wicket:panel>
-    <div class="flex-content flex-v-container flex-gutter flex-only-internal-gutter">
+    <div class="flex-content flex-v-container flex-gutter flex-only-internal-gutter knowledge-base-panel">
       <div class="instances-headline">
-	    <h3>
-	    <wicket:message key="identifier.headline" />
-	    (<wicket:container wicket:id="count"></wicket:container>)
-	    </h3>
-	    <hr />
-	  </div>
-      <span class="list-group scrolling flex-content">
-	    <span wicket:id="annotatedResultGroups" class="form-control list-panel">
-          <span wicket:id="documentTitle" style="color: blue;"></span>
-          <span wicket:id="group"></span>
-        </span>
-	  </span>
+        <h3>
+        <wicket:message key="identifier.headline" />
+        (<wicket:container wicket:id="count"></wicket:container>)
+        </h3>
+        <hr />
+      </div>
+      <div class="scrolling flex-content">
+        <table class="table table-striped table-condensed">
+          <wicket:container wicket:id="searchResultGroups">
+            <tr valign="middle" style="line-height: 2em;">
+              <th class="headers" style="text-align: left; padding-left: 1em;" colspan="2">
+                <wicket:container wicket:id="documentTitle" />
+              </th>
+            </tr>
+            <wicket:container wicket:id="group" />
+          </wicket:container>
+        </table>
+      </div>
     </div>
   </wicket:panel>
 </body>
 <wicket:fragment wicket:id="resultGroup">
-  <span class="list-group">
-    <span wicket:id="results" class="form-control list-panel">
-      <span wicket:id="sentence"></span>
-    </span>
-  </span>
+  <tr wicket:id="results" style="display: table-row;">
+    <td style="text-align: center;"><span
+        wicket:id="sentence"></span></td>
+  </tr>
 </wicket:fragment>
 </html>
 
