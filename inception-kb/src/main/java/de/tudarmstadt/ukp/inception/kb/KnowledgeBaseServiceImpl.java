@@ -974,28 +974,40 @@ public class KnowledgeBaseServiceImpl
     public Optional<KBObject> readKBIdentifier(Project aProject, String aIdentifier)
     {
         for (KnowledgeBase kb : getKnowledgeBases(aProject)) {
-            try (RepositoryConnection conn = getConnection(kb)) {
-                ValueFactory vf = conn.getValueFactory();
-                RepositoryResult<Statement> stmts = RdfUtils.getStatements(conn,
-                        vf.createIRI(aIdentifier), kb.getTypeIri(), kb.getClassIri(), true);
-                if (stmts.hasNext()) {
-                    KBConcept kbConcept = KBConcept.read(conn, vf.createIRI(aIdentifier), kb);
-                    if (kbConcept != null) {
-                        return Optional.of(kbConcept);
-                    }
-                }
-                else if (!stmts.hasNext()) {
-                    Optional<KBInstance> kbInstance = readInstance(kb, aIdentifier);
-                    if (kbInstance.isPresent()) {
-                        return kbInstance.flatMap((p) -> Optional.of(p));
-                    }
-                }
-            }
-            catch (QueryEvaluationException e) {
-                log.error("Reading KB Entries failed.", e);
-                return Optional.empty();
+            Optional<KBObject> handle = readKBIdentifier(kb, aIdentifier);
+            if (handle.isPresent()) {
+                return handle;
             }
         }
+        return Optional.empty();
+    }
+    
+    
+    @Override
+    public Optional<KBObject> readKBIdentifier(KnowledgeBase kb, String aIdentifier)
+    {
+        try (RepositoryConnection conn = getConnection(kb)) {
+            ValueFactory vf = conn.getValueFactory();
+            RepositoryResult<Statement> stmts = RdfUtils.getStatements(conn,
+                    vf.createIRI(aIdentifier), kb.getTypeIri(), kb.getClassIri(), true);
+            if (stmts.hasNext()) {
+                KBConcept kbConcept = KBConcept.read(conn, vf.createIRI(aIdentifier), kb);
+                if (kbConcept != null) {
+                    return Optional.of(kbConcept);
+                }
+            }
+            else if (!stmts.hasNext()) {
+                Optional<KBInstance> kbInstance = readInstance(kb, aIdentifier);
+                if (kbInstance.isPresent()) {
+                    return kbInstance.flatMap((p) -> Optional.of(p));
+                }
+            }
+        }
+        catch (QueryEvaluationException e) {
+            log.error("Reading KB Entries failed.", e);
+            return Optional.empty();
+        }
+
         return Optional.empty();
     }
 }

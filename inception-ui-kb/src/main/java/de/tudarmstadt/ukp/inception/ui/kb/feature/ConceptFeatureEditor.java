@@ -22,6 +22,7 @@ import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -60,6 +61,7 @@ import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
+import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 /**
@@ -110,7 +112,7 @@ public class ConceptFeatureEditor
             @Override
             protected List<KBHandle> getChoices(String input)
             {
-                return listInstances(aState, aHandler, input);
+                return listInstances(aState, aHandler, input.toLowerCase());
             }
 
             @Override
@@ -162,13 +164,26 @@ public class ConceptFeatureEditor
                         if (traits.getScope() != null) {
                             handles = kbService.listInstances(kb.get(), traits.getScope(), false)
                                     .stream()
-                                    .filter(inst -> inst.getUiLabel().contains(aTypedString))
+                                    .filter(inst -> inst.getUiLabel().toLowerCase()
+                                            .contains(aTypedString))
                                     .collect(Collectors.toList());
                         }
                         else {
-                            for (KBHandle concept : kbService.listConcepts(kb.get(), false)) {
-                                handles.addAll(kbService.listInstances(kb.get(), 
-                                    concept.getIdentifier(), false));
+                            List<KBHandle> concepts =  kbService.listAllConcepts(kb.get(), false);
+                            handles.addAll(concepts
+                                    .stream()
+                                    .filter(inst -> inst.getUiLabel().toLowerCase()
+                                            .contains(aTypedString))
+                                    .collect(Collectors.toList()));
+                            for (KBHandle concept : concepts) {
+                                handles.addAll(
+                                        kbService
+                                                .listInstances(
+                                                        kb.get(), concept.getIdentifier(), false)
+                                                .stream()
+                                                .filter(inst -> inst.getUiLabel().toLowerCase()
+                                                        .contains(aTypedString))
+                                                .collect(Collectors.toList()));
                             }
                         }
                     }
@@ -186,13 +201,24 @@ public class ConceptFeatureEditor
                         if (traits.getScope() != null) {
                             handles.addAll(kbService.listInstances(kb, traits.getScope(), false)
                                     .stream()
-                                    .filter(inst -> inst.getUiLabel().contains(aTypedString))
+                                    .filter(inst -> inst.getUiLabel().toLowerCase()
+                                            .contains(aTypedString))
                                     .collect(Collectors.toList()));
                         }
                         else {
-                            for (KBHandle concept : kbService.listConcepts(kb, false)) {
+                            List<KBHandle> concepts =  kbService.listAllConcepts(kb, false);
+                            handles.addAll(concepts
+                                    .stream()
+                                    .filter(inst -> inst.getUiLabel().toLowerCase()
+                                            .contains(aTypedString))
+                                    .collect(Collectors.toList()));
+                            for (KBHandle concept : concepts) {
                                 handles.addAll(
-                                    kbService.listInstances(kb, concept.getIdentifier(), false));
+                                    kbService.listInstances(kb, concept.getIdentifier(), false)
+                                    .stream()
+                                    .filter(inst -> inst.getUiLabel().toLowerCase()
+                                            .contains(aTypedString))
+                                    .collect(Collectors.toList()));
                             }
                         }
                     }
@@ -208,6 +234,8 @@ public class ConceptFeatureEditor
                 target.addChildren(getPage(), IFeedback.class);
             }
         }
+        
+        handles.sort(Comparator.comparing(KBObject::getUiLabel));
         return handles;
     }
 
