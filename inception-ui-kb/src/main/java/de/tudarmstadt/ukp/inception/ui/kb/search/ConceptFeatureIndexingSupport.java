@@ -136,9 +136,13 @@ public class ConceptFeatureIndexingSupport
         // Indexing <feature>=<UI label>
         values.put(field + "." + aFeature.getUiName() + "." + INDEX_KB_EXACT,
                 featureObject.getUiLabel());
+        values.put(field + "." + aFeature.getUiName(),
+                featureObject.getUiLabel());
 
         // Indexing <feature>=<URI>
         values.put(field + "." + aFeature.getUiName() + "." + INDEX_KB_EXACT,
+                kbObject.get().getIdentifier());
+        values.put(field + "." + aFeature.getUiName(),
                 kbObject.get().getIdentifier());
 
         // Indexing UI label without type and layer for generic search
