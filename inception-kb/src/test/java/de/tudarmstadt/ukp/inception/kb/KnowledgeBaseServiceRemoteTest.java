@@ -32,6 +32,8 @@ import java.util.Set;
 
 import javax.persistence.EntityManager;
 
+import org.eclipse.rdf4j.model.ValueFactory;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
@@ -168,6 +170,23 @@ public class KnowledgeBaseServiceRemoteTest
             kbList.add(new TestConfiguration("data/wine-ontology.rdf", kb_wine, "http://www.w3.org/TR/2003/PR-owl-guide-20031209/wine#ChateauMargaux"));
         }
         
+        {
+            ValueFactory vf = SimpleValueFactory.getInstance();
+            KnowledgeBase kb_hucit = new KnowledgeBase();
+            kb_hucit.setName("Hucit");
+            kb_hucit.setType(RepositoryType.REMOTE);
+            kb_hucit.setReification(Reification.NONE);
+            kb_hucit.setBasePrefix("http://www.ukp.informatik.tu-darmstadt.de/inception/1.0#");
+            kb_hucit.setClassIri(vf.createIRI("http://www.w3.org/2002/07/owl#Class"));
+            kb_hucit.setClassIri(vf.createIRI("http://www.w3.org/2002/07/owl#Class"));
+            kb_hucit.setSubclassIri(vf.createIRI("http://www.w3.org/2000/01/rdf-schema#subClassOf"));
+            kb_hucit.setTypeIri(vf.createIRI("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"));
+            kb_hucit.setDescriptionIri(vf.createIRI("http://www.w3.org/2000/01/rdf-schema#comment"));
+            kb_hucit.setLabelIri(vf.createIRI("http://www.w3.org/2000/01/rdf-schema#label"));
+            kb_hucit.setPropertyTypeIri(vf.createIRI("http://www.w3.org/1999/02/22-rdf-syntax-ns#Property"));
+            kbList.add(new TestConfiguration("http://nlp.dainst.org:8888/sparql", kb_hucit));
+        }
+
         {
             KnowledgeBase kb_wikidata_direct = new KnowledgeBase();
             kb_wikidata_direct.setName("Wikidata (official/direct mapping)");
