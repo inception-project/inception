@@ -23,7 +23,7 @@ import org.eclipse.rdf4j.model.vocabulary.RDFS;
 
 public class SPARQLQueryStore
 {   
-    public static String aLimit = "1000";
+    public static int aLimit = 1000;
     
     public static final String SPARQL_PREFIX = String.join("\n",
             "PREFIX rdf: <" + RDF.NAMESPACE + ">",
@@ -94,5 +94,4 @@ public class SPARQLQueryStore
             , "  }"
             , "}"
             , "LIMIT 10000");
-
 }
