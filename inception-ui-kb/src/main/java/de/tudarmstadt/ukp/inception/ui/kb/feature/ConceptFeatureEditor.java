@@ -171,6 +171,10 @@ public class ConceptFeatureEditor
                 target.addChildren(getPage(), IFeedback.class);
             }
         }
+        // Sort results
+        handles = handles.stream()
+            .sorted((h1, h2) -> h1.getUiLabel().compareToIgnoreCase(h2.getUiLabel()))
+            .collect(Collectors.toList());
         return handles;
     }
 
@@ -199,7 +203,10 @@ public class ConceptFeatureEditor
                     else {
                         for (KBHandle concept : kbService.listConcepts(kb.get(), false)) {
                             handles.addAll(
-                                kbService.listInstances(kb.get(), concept.getIdentifier(), false));
+                                kbService.listInstances(kb.get(), concept.getIdentifier(), false)
+                                    .stream()
+                                    .filter(inst -> inst.getUiLabel().contains(aTypedString))
+                                    .collect(Collectors.toList()));
                         }
                     }
                 }
@@ -223,7 +230,9 @@ public class ConceptFeatureEditor
                     else {
                         for (KBHandle concept : kbService.listConcepts(kb, false)) {
                             handles.addAll(
-                                kbService.listInstances(kb, concept.getIdentifier(), false));
+                                kbService.listInstances(kb, concept.getIdentifier(), false).stream()
+                                    .filter(inst -> inst.getUiLabel().contains(aTypedString))
+                                    .collect(Collectors.toList()));
                         }
                     }
                 }
@@ -255,7 +264,9 @@ public class ConceptFeatureEditor
                             .collect(Collectors.toList());
                     }
                     else {
-                        handles.addAll(kbService.listConcepts(kb.get(), false));
+                        handles.addAll(kbService.listConcepts(kb.get(), false).stream()
+                            .filter(conc -> conc.getUiLabel().contains(aTypedString))
+                            .collect(Collectors.toList()));
                     }
                 }
 
@@ -278,7 +289,9 @@ public class ConceptFeatureEditor
                             .collect(Collectors.toList());
                     }
                     else {
-                        handles.addAll(kbService.listConcepts(kb, false));
+                        handles.addAll(kbService.listConcepts(kb, false).stream()
+                            .filter(conc -> conc.getUiLabel().contains(aTypedString))
+                            .collect(Collectors.toList()));
                     }
                 }
 
