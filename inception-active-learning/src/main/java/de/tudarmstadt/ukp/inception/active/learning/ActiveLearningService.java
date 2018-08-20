@@ -40,20 +40,4 @@ public interface ActiveLearningService
 
     List<AnnotationObject> getFlattenedRecommendationsFromRecommendationModel(JCas aJcas,
             AnnotatorState aState, AnnotationLayer aSelectedLayer);
-
-    RecommendationDifference updateRecommendations(LearningRecordService aRecordService,
-        Date learnSkippedRecommendationTime);
-
-    boolean checkRecommendationExist(ActiveLearningService aActiveLearningService,
-        LearningRecord aRecord);
-
-    RecommendationDifference generateRecommendationWithLowestDifference(
-        LearningRecordService aRecordService, ActiveLearningService aActiveLearningService,
-        Date learnSkippedRecommendationTime);
-
-    boolean hasRecommendationWhichIsSkipped(LearningRecordService aRecordService,
-        ActiveLearningService aActiveLearningService);
-
-    void setAnnotatorStateAndLayer(AnnotatorState aAnnotatorState, AnnotationLayer
-        aSelectedLayer);
 }

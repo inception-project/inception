@@ -17,23 +17,20 @@
  */
 package de.tudarmstadt.ukp.inception.active.learning;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import de.tudarmstadt.ukp.inception.active.learning.sidebar.ActiveLearningRecommender;
 import de.tudarmstadt.ukp.inception.active.learning.sidebar.RecommendationDifference;
-import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
-import de.tudarmstadt.ukp.inception.recommendation.event.PredictionsSwitchedEvent;
-import org.apache.uima.cas.Type;
-import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
@@ -55,6 +52,9 @@ public class ActiveLearningServiceImpl
     private AnnotationLayer selectedLayer;
     private static final Logger LOG = LoggerFactory.getLogger(ActiveLearningRecommender.class);
     //TODO: add a state for different users to manage the recommendation list
+
+    private Map<ActiveLearningUserStateKey, ActiveLearningUserState> states = new
+        ConcurrentHashMap<>();
 
     @Autowired
     public ActiveLearningServiceImpl(DocumentService aDocumentService,
@@ -119,402 +119,156 @@ public class ActiveLearningServiceImpl
             windowBegin, windowEnd, aJcas, true);
     }
 
-    @Override
-    public RecommendationDifference updateRecommendations(LearningRecordService aRecordService,
-        Date learnSkippedRecommendationTime)
+    public static class ActiveLearningUserState implements Serializable
     {
-        //remove invisible recommendations
-        List<List<AnnotationObject>> filteredRecommendations = new ArrayList<>
-            (listOfRecommendationsForEachToken);
-        removeInvisibleAnnotations(filteredRecommendations);
+        private static final long serialVersionUID = -167705997822964808L;
+        private boolean sessionActive = false;
+        private boolean hasUnseenRecommendation = false;
+        private boolean hasSkippedRecommendation = false;
+        private boolean doExistRecommenders = true;
+        private AnnotationObject currentRecommendation;
+        private RecommendationDifference currentDifference;
+        private AnnotationLayer selectedLayer;
+        private ActiveLearningRecommender activeLearningRecommender;
+        private Date learnSkippedRecommendationTime;
+        private List<List<AnnotationObject>> listOfRecommendationsForEachToken;
 
-        // remove rejected recommendations
-        removeRejectedOrSkippedAnnotations(aRecordService, true, learnSkippedRecommendationTime,
-            filteredRecommendations);
+        public boolean isSessionActive()
+        {
+            return sessionActive;
+        }
 
-        return calculateDifferencesAndReturnLowestVisibleDifference(filteredRecommendations);
+        public void setSessionActive(boolean sessionActive)
+        {
+            this.sessionActive = sessionActive;
+        }
 
-    }
+        public boolean isHasUnseenRecommendation()
+        {
+            return hasUnseenRecommendation;
+        }
 
-    @EventListener
-    public void onPrecitionsSwitched(PredictionsSwitchedEvent aEvent)
-    {
-        if (annotatorState != null && selectedLayer != null) {
-            listOfRecommendationsForEachToken = getRecommendationFromRecommendationModel(
-                annotatorState, selectedLayer);
-            // remove recommendations with Null Annotation
-            listOfRecommendationsForEachToken.forEach(
-                recommendationList -> removeRecommendationsWithNullAnnotation(recommendationList));
-            listOfRecommendationsForEachToken.removeIf(recommendationList -> recommendationList.isEmpty());
-            // remove duplicate recommendations
-            listOfRecommendationsForEachToken = listOfRecommendationsForEachToken.stream().map(it -> removeDuplicateRecommendations(it)).collect(Collectors.toList());
+        public void setHasUnseenRecommendation(boolean hasUnseenRecommendation)
+        {
+            this.hasUnseenRecommendation = hasUnseenRecommendation;
+        }
+
+        public boolean isHasSkippedRecommendation()
+        {
+            return hasSkippedRecommendation;
+        }
+
+        public void setHasSkippedRecommendation(boolean hasSkippedRecommendation)
+        {
+            this.hasSkippedRecommendation = hasSkippedRecommendation;
+        }
+
+        public boolean isDoExistRecommenders()
+        {
+            return doExistRecommenders;
+        }
+
+        public void setDoExistRecommenders(boolean doExistRecommenders)
+        {
+            this.doExistRecommenders = doExistRecommenders;
+        }
+
+        public AnnotationObject getCurrentRecommendation()
+        {
+            return currentRecommendation;
+        }
+
+        public void setCurrentRecommendation(AnnotationObject currentRecommendation)
+        {
+            this.currentRecommendation = currentRecommendation;
+        }
+
+        public RecommendationDifference getCurrentDifference()
+        {
+            return currentDifference;
+        }
+
+        public void setCurrentDifference(RecommendationDifference currentDifference)
+        {
+            this.currentDifference = currentDifference;
+        }
+
+        public AnnotationLayer getSelectedLayer()
+        {
+            return selectedLayer;
+        }
+
+        public void setSelectedLayer(AnnotationLayer selectedLayer)
+        {
+            this.selectedLayer = selectedLayer;
+        }
+
+        public ActiveLearningRecommender getActiveLearningRecommender()
+        {
+            return activeLearningRecommender;
+        }
+
+        public void setActiveLearningRecommender(
+            ActiveLearningRecommender activeLearningRecommender)
+        {
+            this.activeLearningRecommender = activeLearningRecommender;
+        }
+
+        public Date getLearnSkippedRecommendationTime()
+        {
+            return learnSkippedRecommendationTime;
+        }
+
+        public void setLearnSkippedRecommendationTime(Date learnSkippedRecommendationTime)
+        {
+            this.learnSkippedRecommendationTime = learnSkippedRecommendationTime;
+        }
+
+        public void setListOfRecommendationsForEachToken(List<List<AnnotationObject>>
+            aListOfRecommendationsForEachToken)
+        {
+            this.listOfRecommendationsForEachToken = aListOfRecommendationsForEachToken;
+        }
+
+        public List<List<AnnotationObject>> getListOfRecommendationsForEachToken()
+        {
+            return listOfRecommendationsForEachToken;
         }
     }
 
-    @Override
-    public RecommendationDifference generateRecommendationWithLowestDifference(
-        LearningRecordService aRecordService, ActiveLearningService aActiveLearningService,
-        Date learnSkippedRecommendationTime)
+    public static class ActiveLearningUserStateKey implements Serializable
     {
-        long startTimer = System.currentTimeMillis();
-        listOfRecommendationsForEachToken = aActiveLearningService
-            .getRecommendationFromRecommendationModel(annotatorState, selectedLayer);
-        long getRecommendationsFromRecommendationService = System.currentTimeMillis();
-        LOG.debug("Getting recommendations from recommender system costs {}ms.",
-            (getRecommendationsFromRecommendationService - startTimer));
+        private static final long serialVersionUID = -2134294656221484540L;
+        private String userName;
+        private long projectId;
 
-        // remove recommendations with Null Annotation
-        listOfRecommendationsForEachToken.forEach(recommendationList ->
-            removeRecommendationsWithNullAnnotation(recommendationList));
-        listOfRecommendationsForEachToken.removeIf(recommendationList ->
-            recommendationList.isEmpty());
-        long removeNullRecommendation = System.currentTimeMillis();
-        LOG.debug("Removing recommendations with Null Annotation costs {}ms.",
-            (removeNullRecommendation - getRecommendationsFromRecommendationService));
-
-        // remove duplicate recommendations
-        listOfRecommendationsForEachToken = listOfRecommendationsForEachToken.stream()
-            .map(it -> removeDuplicateRecommendations(it))
-            .collect(Collectors.toList());
-        long removeDuplicateRecommendation = System.currentTimeMillis();
-        LOG.debug("Removing duplicate recommendations costs {}ms.",
-            (removeDuplicateRecommendation - removeNullRecommendation));
-
-        //remove invisible recommendations
-        List<List<AnnotationObject>> filteredRecommendations = new ArrayList<>
-            (listOfRecommendationsForEachToken);
-        removeInvisibleAnnotations(filteredRecommendations);
-
-        // remove rejected recommendations
-        removeRejectedOrSkippedAnnotations(aRecordService, true, learnSkippedRecommendationTime,
-            filteredRecommendations);
-        long removeRejectedSkippedRecommendation = System.currentTimeMillis();
-        LOG.debug("Removing rejected or skipped ones costs {}ms.",
-            (removeRejectedSkippedRecommendation - removeDuplicateRecommendation));
-
-        return calculateDifferencesAndReturnLowestVisibleDifference(filteredRecommendations);
-    }
-
-    public void removeInvisibleAnnotations(
-        List<List<AnnotationObject>> recommendationsWithInvisibleAnnotations)
-    {
-        for (List<AnnotationObject> listOfRecommendations :
-            recommendationsWithInvisibleAnnotations) {
-            listOfRecommendations.removeIf(recommendation -> !recommendation.isVisible());
+        public ActiveLearningUserStateKey(String aUserName, long aProjectId)
+        {
+            userName = aUserName;
+            projectId = aProjectId;
         }
-    }
 
-    @Override
-    public boolean hasRecommendationWhichIsSkipped(LearningRecordService aRecordService,
-        ActiveLearningService aActiveLearningService)
-    {
-        listOfRecommendationsForEachToken = aActiveLearningService
-            .getRecommendationFromRecommendationModel(annotatorState, selectedLayer);
-        removeRejectedOrSkippedAnnotations(aRecordService, false, null,
-            listOfRecommendationsForEachToken);
-        return !listOfRecommendationsForEachToken.isEmpty();
-    }
-
-    private static void removeRecommendationsWithNullAnnotation(
-        List<AnnotationObject> recommendationsList)
-    {
-        if (recommendationsList != null) {
-            recommendationsList.removeIf(recommendation -> recommendation.getLabel() == null);
-        }
-    }
-
-    private static List<AnnotationObject> removeDuplicateRecommendations(
-        List<AnnotationObject> unmodifiedRecommendationList)
-    {
-        List<AnnotationObject> cleanRecommendationList = new ArrayList<>();
-
-        unmodifiedRecommendationList.forEach(recommendationItem -> {
-            if (!isAlreadyInCleanList(cleanRecommendationList, recommendationItem)) {
-                cleanRecommendationList.add(recommendationItem);
-            }
-        });
-
-        return cleanRecommendationList;
-    }
-
-    private static boolean isAlreadyInCleanList(List<AnnotationObject> cleanRecommendationList,
-        AnnotationObject recommendationItem)
-    {
-        String source = recommendationItem.getSource();
-        String annotation = recommendationItem.getLabel();
-        String documentName = recommendationItem.getDocumentName();
-
-        for (AnnotationObject existedRecommendation : cleanRecommendationList) {
-            if (
-                existedRecommendation.getSource().equals(source) &&
-                    existedRecommendation.getLabel().equals(annotation) &&
-                    existedRecommendation.getDocumentName().equals(documentName)
-                ) {
+        @Override
+        public boolean equals(Object o)
+        {
+            if (this == o)
                 return true;
-            }
+            if (o == null || getClass() != o.getClass())
+                return false;
+
+            ActiveLearningUserStateKey that = (ActiveLearningUserStateKey) o;
+
+            if (projectId != that.projectId)
+                return false;
+            return userName.equals(that.userName);
         }
-        return false;
-    }
 
-    private void removeRejectedOrSkippedAnnotations(
-        LearningRecordService aRecordService, boolean filterSkippedRecommendation,
-        Date learnSkippedRecommendationTime,
-        List<List<AnnotationObject>> recommendationsWithRejectedAndSkippedOnes)
-    {
-        List<LearningRecord> records = aRecordService
-            .getAllRecordsByDocumentAndUserAndLayer(annotatorState.getDocument(),
-                annotatorState.getUser().getUsername(), selectedLayer);
-        for (List<AnnotationObject> recommendations : recommendationsWithRejectedAndSkippedOnes) {
-            recommendations.removeIf(
-                recommendation -> doesContainRejectedOrSkippedRecord(records, recommendation,
-                    filterSkippedRecommendation, learnSkippedRecommendationTime));
+        @Override
+        public int hashCode()
+        {
+            int result = userName.hashCode();
+            result = 31 * result + (int) (projectId ^ (projectId >>> 32));
+            return result;
         }
-        recommendationsWithRejectedAndSkippedOnes
-            .removeIf(recommendationsList -> recommendationsList.isEmpty());
-    }
-
-    private static boolean doesContainRejectedOrSkippedRecord(List<LearningRecord> records,
-        AnnotationObject aRecommendation, boolean filterSkippedRecommendation,
-        Date learnSkippedRecommendationTime)
-    {
-        for (LearningRecord record : records) {
-            if ((record.getUserAction().equals(LearningRecordUserAction.REJECTED)
-                || filterSkippedRecord(record, filterSkippedRecommendation) && needFilterByTime(
-                learnSkippedRecommendationTime, record)) && hasSameTokenAndSuggestion(
-                aRecommendation, record)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private static boolean filterSkippedRecord(LearningRecord record,
-        boolean filterSkippedRecommendation)
-    {
-        return record.getUserAction().equals(LearningRecordUserAction.SKIPPED)
-            && filterSkippedRecommendation;
-    }
-
-    private static boolean hasSameTokenAndSuggestion(AnnotationObject aRecommendation,
-        LearningRecord aRecord)
-    {
-        return aRecord.getSourceDocument().getName().equals(aRecommendation.getDocumentName()) &&
-            aRecord.getOffsetTokenBegin() == aRecommendation.getOffset().getBeginToken() &&
-            aRecord.getOffsetTokenEnd() == aRecommendation.getOffset().getEndToken() &&
-            aRecord.getAnnotation().equals(aRecommendation.getLabel());
-    }
-
-    /**
-     * If learnSkippedTime is null, this record needs to be filtered.
-     * If the record written time is after the learnSkippedTime, this record needs to be filtered.
-     * @param learnSkippedTime
-     * @param record
-     * @return
-     */
-    private static boolean needFilterByTime(Date learnSkippedTime, LearningRecord record)
-    {
-        return learnSkippedTime == null || learnSkippedTime.compareTo(record.getActionDate()) <= 0;
-    }
-
-    private static RecommendationDifference calculateDifferencesAndReturnLowestVisibleDifference(
-        List<List<AnnotationObject>> aListOfRecommendationsForEachToken)
-    {
-        long startTimer = System.currentTimeMillis();
-        // create list of recommendationsList, each recommendationsList contains all
-        // recommendations from one classifer for one token
-        List<List<AnnotationObject>> listOfRecommendationsPerTokenPerClassifier =
-            createRecommendationListsPerTokenPerClassifier(aListOfRecommendationsForEachToken);
-        long splitingListTimer = System.currentTimeMillis();
-        LOG.debug("Splitting time costs {}ms.", (splitingListTimer - startTimer));
-
-        // get a list of differences, sorted ascendingly
-        List<RecommendationDifference> recommendationDifferences =
-            createDifferencesSortedAscendingly(
-                listOfRecommendationsPerTokenPerClassifier);
-        long rankingDifferenceTimer = System.currentTimeMillis();
-        LOG.debug("Ranking difference costs {}ms.", (rankingDifferenceTimer - splitingListTimer));
-
-        Optional<RecommendationDifference> recommendationDifference = recommendationDifferences
-            .stream().findFirst();
-        if (recommendationDifference.isPresent()) {
-            return recommendationDifference.get();
-        }
-        else {
-            return null;
-        }
-    }
-
-    private static List<List<AnnotationObject>> createRecommendationListsPerTokenPerClassifier(
-        List<List<AnnotationObject>> aListOfRecommendationsForEachToken)
-    {
-        List<List<AnnotationObject>> listOfRecommendationsPerTokenPerClassifier = new ArrayList<>();
-        for (int i = 0; i < aListOfRecommendationsForEachToken.size(); i++) {
-            List<AnnotationObject> recommendationsPerToken =
-                aListOfRecommendationsForEachToken.get(i);
-            if (recommendationsPerToken.size() == 1) {
-                listOfRecommendationsPerTokenPerClassifier.add(recommendationsPerToken);
-            }
-            else {
-                // split the list of recommendations with different classifiers for each token
-                // into different lists of recommendations with same token same classifier
-                Map<String, List<AnnotationObject>> recommendtionsPerTokenPerClassifier = new
-                    HashMap<>();
-                for (AnnotationObject recommendation : recommendationsPerToken) {
-                    String classifier = recommendation.getSource();
-                    if (recommendtionsPerTokenPerClassifier.containsKey(classifier)) {
-                        List<AnnotationObject> oldListForThisTokenThisClassifier =
-                            recommendtionsPerTokenPerClassifier
-                                .get(classifier);
-                        oldListForThisTokenThisClassifier.add(recommendation);
-                        recommendtionsPerTokenPerClassifier
-                            .put(classifier, oldListForThisTokenThisClassifier);
-                    }
-                    else {
-                        List<AnnotationObject> newListForThisTokenThisClassifier = new
-                            ArrayList<>();
-                        newListForThisTokenThisClassifier.add(recommendation);
-                        recommendtionsPerTokenPerClassifier
-                            .put(classifier, newListForThisTokenThisClassifier);
-                    }
-                }
-                listOfRecommendationsPerTokenPerClassifier.addAll(
-                    recommendtionsPerTokenPerClassifier.values().stream()
-                        .collect(Collectors.toList()));
-            }
-        }
-        return listOfRecommendationsPerTokenPerClassifier;
-    }
-
-    private static List<RecommendationDifference> createDifferencesSortedAscendingly(
-        List<List<AnnotationObject>> listOfRecommendationsPerTokenPerClassifier)
-    {
-        List<RecommendationDifference> recommendationDifferences = new ArrayList<>();
-        for (List<AnnotationObject> recommendationsList :
-            listOfRecommendationsPerTokenPerClassifier) {
-            RecommendationDifference difference = getSmallestDifferencePerTokenPerClassifier(
-                recommendationsList);
-            recommendationDifferences.add(difference);
-        }
-        sortDifferencesAscending(recommendationDifferences);
-        return recommendationDifferences;
-    }
-
-    private static RecommendationDifference getSmallestDifferencePerTokenPerClassifier(
-        List<AnnotationObject> recommendationsList)
-    {
-        if (recommendationsList.size() == 1) {
-            AnnotationObject recommendation = recommendationsList.get(0);
-            double confidenceDifference = Math.abs(recommendation.getConfidence());
-            return new RecommendationDifference(confidenceDifference, recommendation);
-        }
-        else {
-            Collections.sort(recommendationsList,
-                Comparator.comparingDouble(AnnotationObject::getConfidence).reversed());
-            List<RecommendationDifference> differencesAmongOneClassifierPerToken =
-                generateDifferencesPerTokenPerClassifier(recommendationsList);
-            sortDifferencesAscending(differencesAmongOneClassifierPerToken);
-            return differencesAmongOneClassifierPerToken.get(0);
-        }
-    }
-
-    private static List<RecommendationDifference> generateDifferencesPerTokenPerClassifier(
-        List<AnnotationObject> sortedRecommendationsList)
-    {
-        List<RecommendationDifference> differencesAmongOneClassifierPerToken = new ArrayList<>();
-        for (int i = 0; i < sortedRecommendationsList.size() - 1; i++) {
-            AnnotationObject firstOp = sortedRecommendationsList.get(i);
-            AnnotationObject secondOp = sortedRecommendationsList.get(i + 1);
-            double difference = Math.abs(firstOp.getConfidence() - secondOp.getConfidence());
-            differencesAmongOneClassifierPerToken
-                .add(new RecommendationDifference(difference, firstOp, secondOp));
-        }
-        return differencesAmongOneClassifierPerToken;
-    }
-
-    private static void sortDifferencesAscending(
-        List<RecommendationDifference> differences)
-    {
-        Collections.sort(differences, (rd1, rd2) ->
-            Double.compare(rd1.getDifference(), rd2.getDifference()));
-    }
-
-    public Optional<AnnotationObject> generateRecommendationWithLowestConfidence(
-        ActiveLearningService aActiveLearningService, JCas aJcas)
-    {
-        recommendations = aActiveLearningService.getFlattenedRecommendationsFromRecommendationModel(
-            aJcas, annotatorState, selectedLayer);
-        removeRecommendationsWithNullAnnotation(recommendations);
-        removeExistingAnnotations(aJcas, selectedLayer, recommendations);
-        Collections.sort(recommendations,
-            Comparator.comparingDouble(AnnotationObject::getConfidence));
-        return recommendations.stream().findFirst();
-    }
-
-    private static void removeExistingAnnotations(JCas aJcas,
-        AnnotationLayer aLayer, List<AnnotationObject> aRecommendations)
-    {
-        Iterator<AnnotationFS> existingAnnotations = getAlreadyExistingAnnotations(aJcas, aLayer);
-        List<Integer> existingAnnotationsSpanBegin = mapToBeginOffsets(existingAnnotations);
-        aRecommendations.removeIf(recommendation -> existingAnnotationsSpanBegin
-            .contains(recommendation.getOffset().getBeginCharacter()));
-    }
-
-    private static Iterator<AnnotationFS> getAlreadyExistingAnnotations(JCas aJcas,
-        AnnotationLayer aLayer)
-    {
-        int windowBegin = 0;
-        int windowEnd = aJcas.getDocumentText().length() - 1;
-        Type type = CasUtil.getType(aJcas.getCas(), aLayer.getName());
-        Iterator<AnnotationFS> existingAnnotations = CasUtil
-            .selectCovered(aJcas.getCas(), type, windowBegin, windowEnd).iterator();
-        return existingAnnotations;
-    }
-
-    private static List<Integer> mapToBeginOffsets(
-        Iterator<AnnotationFS> existingAnnotations)
-    {
-        List<Integer> existingAnnotationsSpanBegin = new ArrayList<>();
-        while (existingAnnotations.hasNext()) {
-            AnnotationFS fs = (AnnotationFS) existingAnnotations.next();
-            existingAnnotationsSpanBegin.add(fs.getBegin());
-        }
-        return existingAnnotationsSpanBegin;
-    }
-
-    @Override
-    public boolean checkRecommendationExist(ActiveLearningService aActiveLearningService,
-        LearningRecord aRecord)
-    {
-        listOfRecommendationsForEachToken = aActiveLearningService
-            .getRecommendationFromRecommendationModel(annotatorState, selectedLayer);
-        return containSuggestion(listOfRecommendationsForEachToken, aRecord);
-    }
-
-    private boolean containSuggestion(
-        List<List<AnnotationObject>> aListOfRecommendationsForEachToken, LearningRecord record)
-    {
-        for (List<AnnotationObject> listOfAO : aListOfRecommendationsForEachToken) {
-            if (listOfAO.stream().anyMatch(ao -> recordCompareToRecommendation(ao, record))) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public boolean recordCompareToRecommendation(AnnotationObject aRecommendation,
-        LearningRecord aRecord)
-    {
-        return aRecommendation.getLabel().equals(aRecord.getAnnotation())
-            && aRecommendation.getDocumentName().equals(aRecord.getSourceDocument().getName())
-            && aRecommendation.getOffset().getBeginCharacter() == aRecord.getOffsetCharacterBegin()
-            && aRecommendation.getOffset().getEndCharacter() == aRecord.getOffsetCharacterEnd();
-    }
-
-    @Override
-    public void setAnnotatorStateAndLayer(AnnotatorState aAnnotatorState, AnnotationLayer
-        aSelectedLayer)
-    {
-        annotatorState = aAnnotatorState;
-        selectedLayer = aSelectedLayer;
     }
 }

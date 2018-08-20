@@ -129,7 +129,10 @@ public class KBConcept
         closed = aClosed;
     }
     */
-
+    
+    /**
+     * @return Gives description for the concept
+     */
     public String getDescription()
     {
         return description;
