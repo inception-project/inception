@@ -407,5 +407,27 @@ public interface KnowledgeBaseService
      */
     void defineBaseProperties(KnowledgeBase akb);
 
+    /**
+     * Read an identifier value to return {@link KBObject}
+     * @param aProject Project to read the KB identifier
+     * @param aIdentifier String value for IRI
+     * @return {@link Optional} of {@link KBObject} of type {@link KBConcept} or {@link KBInstance}
+     */
     Optional<KBObject> readKBIdentifier(Project aProject, String aIdentifier);
+
+    /**
+     * Read an identifier value from a particular kb to return {@link KBObject}
+     * @param kb
+     * @param aIdentifier
+     * @return {@link Optional} of {@link KBObject} of type {@link KBConcept} or {@link KBInstance}
+     */
+    Optional<KBObject> readKBIdentifier(KnowledgeBase kb, String aIdentifier);
+
+    /**
+     * List all the concepts
+     * @param kb The knowledge base from which concepts will be listed
+     * @param aAll indicates whether to include everything
+     * @return list of all the properties {@link KBHandle} 
+     */
+    List<KBHandle> listAllConcepts(KnowledgeBase kb, boolean aAll) throws QueryEvaluationException;
 }
