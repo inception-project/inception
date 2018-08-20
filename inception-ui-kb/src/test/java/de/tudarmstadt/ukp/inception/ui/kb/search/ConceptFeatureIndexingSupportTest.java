@@ -152,8 +152,7 @@ public class ConceptFeatureIndexingSupportTest
         assertThat(tokens)
             .filteredOn(t -> t.getPrefix().startsWith("Named_Entity"))
             .extracting(MtasToken::getPrefix)
-            .contains("Named_Entity", "Named_Entity.identifier", "Named_Entity.identifier.exact",
-                    "Named_Entity.identifier.instance");
+            .contains("Named_Entity", "Named_Entity.identifier", "Named_Entity.identifier.exact");
     
         assertThat(tokens)
             .filteredOn(t -> t.getPrefix().startsWith("Named_Entity"))
