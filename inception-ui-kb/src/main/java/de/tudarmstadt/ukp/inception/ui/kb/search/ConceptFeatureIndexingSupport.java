@@ -33,9 +33,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRe
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
-import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
-import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
 import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupport;
 
@@ -102,46 +100,26 @@ public class ConceptFeatureIndexingSupport
             return values;
         }
 
-        // === BEGIN NEEDS REFACTORING =====================================================
-        // See comment below.
+        // Get object from the KB
         Optional<KBObject> kbObject = kbService.readKBIdentifier(aFeature.getProject(),
                 WebAnnoCasUtil.getFeature(aAnnotation, aFeature.getName()));
-        // === END NEEDS REFACTORING =======================================================
 
         if (!kbObject.isPresent()) {
             return values;
         }
-        String objectType;
-        // === BEGIN NEEDS REFACTORING =====================================================
-        // As part of issue #244, this needs to be refactored for a more reliable method of
-        // detecting whether an IRI refers to a class or to an instance.
-        // 
-        if (kbObject.get() instanceof KBConcept) {
-            objectType = INDEX_KB_CONCEPT;
-        }
-        else if (kbObject.get() instanceof KBInstance) {
-            objectType = INDEX_KB_INSTANCE;
-        }
-        else {
-            throw new IllegalStateException("Unknown KB object: [" + kbObject.get() + "]");
-        }
 
         String field = aFeature.getLayer().getUiName();
         
-        // Indexing UI label with type i.e Concept/Instance
-        values.put(field + "." + aFeature.getUiName() + "." + objectType,
-                featureObject.getUiLabel());
-        // === END NEEDS REFACTORING =======================================================
-
-        // Indexing <feature>=<UI label>
+        // Indexing <layer>.<feature>.exact=<UI label>
         values.put(field + "." + aFeature.getUiName() + "." + INDEX_KB_EXACT,
                 featureObject.getUiLabel());
+        // Indexing <layer>.<feature>=<UI label>
         values.put(field + "." + aFeature.getUiName(),
                 featureObject.getUiLabel());
-
-        // Indexing <feature>=<URI>
+        // Indexing: <layer>.<feature>.exact=<URI>
         values.put(field + "." + aFeature.getUiName() + "." + INDEX_KB_EXACT,
                 kbObject.get().getIdentifier());
+        // Indexing: <layer>.<feature>=<URI>
         values.put(field + "." + aFeature.getUiName(),
                 kbObject.get().getIdentifier());
 
