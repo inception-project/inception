@@ -408,4 +408,13 @@ public interface KnowledgeBaseService
     void defineBaseProperties(KnowledgeBase akb);
 
     Optional<KBObject> readKBIdentifier(Project aProject, String aIdentifier);
+
+    /**
+     * 
+     * @param kb
+     * @param aAll
+     * @return
+     * @throws QueryEvaluationException
+     */
+    List<KBHandle> listAllConcepts(KnowledgeBase kb, boolean aAll) throws QueryEvaluationException;
 }
