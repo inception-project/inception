@@ -55,7 +55,6 @@ public class ActiveLearningRecommender
 
     private @Autowired ActiveLearningService activeLearningService;
 
-    private List<AnnotationObject> recommendations;
     private List<List<AnnotationObject>> listOfRecommendationsForEachToken;
     private AnnotatorState annotatorState;
     private AnnotationLayer selectedLayer;
@@ -101,14 +100,12 @@ public class ActiveLearningRecommender
             .collect(Collectors.toList());
     }
 
-//TODO remove the duplicate codes
     public RecommendationDifference generateRecommendationWithLowestDifference(
-            LearningRecordService aRecordService, ActiveLearningService aActiveLearningService,
-            Date learnSkippedRecommendationTime)
+            LearningRecordService aRecordService, Date learnSkippedRecommendationTime, List<List<AnnotationObject>>
+        aListOfRecommendationsForEachToken)
     {
         long startTimer = System.currentTimeMillis();
-        listOfRecommendationsForEachToken = aActiveLearningService
-                .getRecommendationFromRecommendationModel(annotatorState, selectedLayer);
+        listOfRecommendationsForEachToken = aListOfRecommendationsForEachToken;
         long getRecommendationsFromRecommendationService = System.currentTimeMillis();
         LOG.debug("Getting recommendations from recommender system costs {}ms.",
             (getRecommendationsFromRecommendationService - startTimer));
@@ -390,7 +387,8 @@ public class ActiveLearningRecommender
     public Optional<AnnotationObject> generateRecommendationWithLowestConfidence(
             ActiveLearningService aActiveLearningService, JCas aJcas)
     {
-        recommendations = aActiveLearningService.getFlattenedRecommendationsFromRecommendationModel(
+        List<AnnotationObject> recommendations = aActiveLearningService
+            .getFlattenedRecommendationsFromRecommendationModel(
                 aJcas, annotatorState, selectedLayer);
         removeRecommendationsWithNullAnnotation(recommendations);
         removeExistingAnnotations(aJcas, selectedLayer, recommendations);
