@@ -373,7 +373,7 @@ public interface KnowledgeBaseService
     }
 
     List<KBHandle> list(KnowledgeBase kb, IRI aType, boolean aIncludeInferred, boolean
-        aAll);
+        aAll, int aLimit);
     
     /**
      * List the properties for a specific accepted domain identifier
@@ -467,9 +467,16 @@ public interface KnowledgeBaseService
      */
     void defineBaseProperties(KnowledgeBase akb);
 
+    /**
+     * Read an identifier value to return {@link KBObject}
+     * @param aProject Project to read the KB identifier
+     * @param aIdentifier String value for IRI
+     * @return {@link Optional} of {@link KBObject} of type {@link KBConcept} or {@link KBInstance}
+     */
     Optional<KBObject> readKBIdentifier(Project aProject, String aIdentifier);
 
     /**
+
      * Retrieves the parent concept for an identifier
      * 
      * @param aKB The knowledge base
@@ -502,6 +509,13 @@ public interface KnowledgeBaseService
      */
     List<KBHandle> getConceptForInstance(KnowledgeBase aKB, String aIdentifier, boolean aAll)
         throws QueryEvaluationException;
+
+     * Read an identifier value from a particular kb to return {@link KBObject}
+     * @param kb
+     * @param aIdentifier
+     * @return {@link Optional} of {@link KBObject} of type {@link KBConcept} or {@link KBInstance}
+     */
+    Optional<KBObject> readKBIdentifier(KnowledgeBase kb, String aIdentifier);
 
     /**
      * List all the concepts

@@ -394,6 +394,37 @@ public class KnowledgeBaseServiceImpl
     }
 
     @Override
+    public List<KBHandle> listAllConcepts(KnowledgeBase kb, boolean aAll)
+        throws QueryEvaluationException
+    {
+        List<KBHandle> resultList = new ArrayList<>();
+
+        
+        resultList = read(kb, (conn) -> {
+            String QUERY = String.join("\n"
+                , SPARQLQueryStore.SPARQL_PREFIX
+                , "SELECT DISTINCT ?s ?l WHERE { "
+                , "     { ?s ?pTYPE ?oCLASS . } "
+                , "     UNION { ?someSubClass ?pSUBCLASS ?s . } ."
+                , "     OPTIONAL { "
+                , "         ?s ?pLABEL ?l . "
+                , "         FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\")) "
+                , "     } "
+                , "} "
+                , "LIMIT 10000" );
+            TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
+            tupleQuery.setBinding("pTYPE", kb.getTypeIri());
+            tupleQuery.setBinding("oCLASS", kb.getClassIri());
+            tupleQuery.setBinding("pSUBCLASS", kb.getSubclassIri());
+            tupleQuery.setBinding("pLABEL", kb.getLabelIri());
+            tupleQuery.setIncludeInferred(false);
+            return evaluateListQuery(tupleQuery, aAll);
+        });
+        resultList.sort(Comparator.comparing(KBObject::getUiLabel));
+        return resultList;
+    }
+    
+    @Override
     public List<KBHandle> listConcepts(KnowledgeBase kb, boolean aAll)
     {
         return listAllConcepts(kb, aAll);
@@ -574,7 +605,7 @@ public class KnowledgeBaseServiceImpl
     public List<KBHandle> listInstances(KnowledgeBase kb, String aConceptIri, boolean aAll)
     {
         IRI conceptIri = SimpleValueFactory.getInstance().createIRI(aConceptIri);
-        return list(kb, conceptIri, false, aAll);
+        return list(kb, conceptIri, false, aAll, SPARQLQueryStore.aLimit);
     }
 
     // Statements
@@ -674,7 +705,8 @@ public class KnowledgeBaseServiceImpl
     
 
     @Override
-    public List<KBHandle> list(KnowledgeBase kb, IRI aType, boolean aIncludeInferred, boolean aAll)
+    public List<KBHandle> list(KnowledgeBase kb, IRI aType, boolean aIncludeInferred, boolean aAll,
+            int aLimit)
         throws QueryEvaluationException
     {
         List<KBHandle> resultList = read(kb, (conn) -> {
@@ -686,7 +718,7 @@ public class KnowledgeBaseServiceImpl
                          , "    FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\"))"
                          , "  }"
                          , "}"
-                         , "LIMIT 10000");
+                         , "LIMIT " + aLimit);
             TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
             tupleQuery.setBinding("pTYPE", kb.getTypeIri());
             tupleQuery.setBinding("oPROPERTY", aType);
@@ -797,7 +829,7 @@ public class KnowledgeBaseServiceImpl
                     , "         FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\")) "
                     , "     } "
                     , "} "
-                    , "LIMIT 10000" );
+                    , "LIMIT " + SPARQLQueryStore.aLimit);
                 TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
                 tupleQuery.setBinding("pTYPE", kb.getTypeIri());
                 tupleQuery.setBinding("oCLASS", kb.getClassIri());
@@ -854,7 +886,7 @@ public class KnowledgeBaseServiceImpl
             boolean aAll)
         throws QueryEvaluationException
     {
-        return listChildConcepts(aKB, aParentIdentifier, aAll, 10000);
+        return listChildConcepts(aKB, aParentIdentifier, aAll, SPARQLQueryStore.aLimit);
     }
     
     @Override
@@ -1111,28 +1143,40 @@ public class KnowledgeBaseServiceImpl
     public Optional<KBObject> readKBIdentifier(Project aProject, String aIdentifier)
     {
         for (KnowledgeBase kb : getKnowledgeBases(aProject)) {
-            try (RepositoryConnection conn = getConnection(kb)) {
-                ValueFactory vf = conn.getValueFactory();
-                RepositoryResult<Statement> stmts = RdfUtils.getStatements(conn,
-                        vf.createIRI(aIdentifier), kb.getTypeIri(), kb.getClassIri(), true);
-                if (stmts.hasNext()) {
-                    KBConcept kbConcept = KBConcept.read(conn, vf.createIRI(aIdentifier), kb);
-                    if (kbConcept != null) {
-                        return Optional.of(kbConcept);
-                    }
-                }
-                else if (!stmts.hasNext()) {
-                    Optional<KBInstance> kbInstance = readInstance(kb, aIdentifier);
-                    if (kbInstance.isPresent()) {
-                        return kbInstance.flatMap((p) -> Optional.of(p));
-                    }
-                }
-            }
-            catch (QueryEvaluationException e) {
-                log.error("Reading KB Entries failed.", e);
-                return Optional.empty();
+            Optional<KBObject> handle = readKBIdentifier(kb, aIdentifier);
+            if (handle.isPresent()) {
+                return handle;
             }
         }
+        return Optional.empty();
+    }
+    
+    
+    @Override
+    public Optional<KBObject> readKBIdentifier(KnowledgeBase kb, String aIdentifier)
+    {
+        try (RepositoryConnection conn = getConnection(kb)) {
+            ValueFactory vf = conn.getValueFactory();
+            RepositoryResult<Statement> stmts = RdfUtils.getStatements(conn,
+                    vf.createIRI(aIdentifier), kb.getTypeIri(), kb.getClassIri(), true);
+            if (stmts.hasNext()) {
+                KBConcept kbConcept = KBConcept.read(conn, vf.createIRI(aIdentifier), kb);
+                if (kbConcept != null) {
+                    return Optional.of(kbConcept);
+                }
+            }
+            else if (!stmts.hasNext()) {
+                Optional<KBInstance> kbInstance = readInstance(kb, aIdentifier);
+                if (kbInstance.isPresent()) {
+                    return kbInstance.flatMap((p) -> Optional.of(p));
+                }
+            }
+        }
+        catch (QueryEvaluationException e) {
+            log.error("Reading KB Entries failed.", e);
+            return Optional.empty();
+        }
+
         return Optional.empty();
     }
 }

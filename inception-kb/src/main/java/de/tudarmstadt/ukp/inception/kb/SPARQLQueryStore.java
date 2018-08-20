@@ -23,8 +23,9 @@ import org.eclipse.rdf4j.model.vocabulary.RDFS;
 
 public class SPARQLQueryStore
 {   
-    public static String aLimit = "1000";
-  
+
+    public static int aLimit = 1000;
+
     public static final String SPARQL_PREFIX = String.join("\n",
             "PREFIX rdf: <" + RDF.NAMESPACE + ">",
             "PREFIX rdfs: <" + RDFS.NAMESPACE + ">",
@@ -43,7 +44,7 @@ public class SPARQLQueryStore
             , "    FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\"))"
             , "  }"
             , "}"
-            , "LIMIT 10000");
+            , "LIMIT " + aLimit);
    
     // Query to get property specific domain elements
     public static String PROPERTYLIST_DOMAIN_DEPENDENT = String.join("\n"
