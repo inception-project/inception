@@ -146,22 +146,22 @@ public class ConceptFeatureSupport
             ConceptFeatureTraits t = readTraits(aKey.getAnnotationFeature());
     
             // Use the concept from a particular knowledge base
-            Optional<KBInstance> instance;
+            Optional<KBObject> kbObject;
             if (t.getRepositoryId() != null) {
-                instance = kbService
+                kbObject = kbService
                         .getKnowledgeBaseById(aKey.getAnnotationFeature().getProject(),
                                 t.getRepositoryId())
-                        .flatMap(kb -> kbService.readInstance(kb, aKey.getLabel()));
+                        .flatMap(kb -> kbService.readKBIdentifier(kb, aKey.getLabel()));
             }
             
             // Use the concept from any knowledge base (leave KB unselected)
             else {
-                instance = kbService.readInstance(aKey.getAnnotationFeature().getProject(),
+                kbObject = kbService.readKBIdentifier(aKey.getAnnotationFeature().getProject(),
                         aKey.getLabel());
 
             }
     
-            return instance.map(KBInstance::getUiLabel).orElseThrow(NoSuchElementException::new);
+            return kbObject.map(KBObject::getUiLabel).orElseThrow(NoSuchElementException::new);
         }
         catch (NoSuchElementException e) {
             LOG.error("No label for feature value [{}]", aKey.getLabel());
