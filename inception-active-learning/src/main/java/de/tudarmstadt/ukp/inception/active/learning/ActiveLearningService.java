@@ -17,12 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.active.learning;
 
-import java.util.Date;
 import java.util.List;
 
-import de.tudarmstadt.ukp.inception.active.learning.sidebar.RecommendationDifference;
-import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;

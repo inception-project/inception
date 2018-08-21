@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import de.tudarmstadt.ukp.inception.recommendation.event.AjaxPredictionsSwitchedEvent;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
@@ -94,6 +93,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
+import de.tudarmstadt.ukp.inception.recommendation.event.AjaxPredictionsSwitchedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.AjaxRecommendationAcceptedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.AjaxRecommendationRejectedEvent;
 
@@ -638,6 +638,11 @@ public class ActiveLearningSidebar
         // Save CAS after annotation has been created
         documentService.writeAnnotationCas(jCas, annoDoc, true);
 
+        recommendationService.getPredictions(state.getUser(), state.getProject())
+            .getPredictionsByTokenAndFeature(currentRecommendation.getDocumentName(),
+                userStateModel.getObject().getSelectedLayer(), begin, end,
+                annotationFeature.getName());
+
         moveToNextRecommendation(aTarget);
     }
 
@@ -990,18 +995,14 @@ public class ActiveLearningSidebar
             }
         }
 
-        if (userStateModel.getObject()
-            .getCurrentDifference().getRecommendation1() != null && !userStateModel.getObject()
+        if (userStateModel.getObject().getCurrentDifference() != null && !userStateModel.getObject()
             .getCurrentDifference().getRecommendation1().isVisible()) {
             ActiveLearningRecommender activeLearningRecommender = userStateModel.getObject()
                 .getActiveLearningRecommender();
-            userStateModel.getObject()
-                .setCurrentDifference(activeLearningRecommender
+            userStateModel.getObject().setCurrentDifference(activeLearningRecommender
                 .updateRecommendations(learningRecordService,
-                    userStateModel.getObject()
-                        .getLearnSkippedRecommendationTime()));
-            if (userStateModel.getObject()
-                .getCurrentDifference().getRecommendation1() != null) {
+                    userStateModel.getObject().getLearnSkippedRecommendationTime()));
+            if (userStateModel.getObject().getCurrentDifference().getRecommendation1() != null) {
                 userStateModel.getObject().setHasUnseenRecommendation(true);
                 userStateModel.getObject().setCurrentRecommendation(
                     userStateModel.getObject().getCurrentDifference().getRecommendation1());
@@ -1018,9 +1019,10 @@ public class ActiveLearningSidebar
             }
             else if (userStateModel.getObject().getLearnSkippedRecommendationTime() == null) {
                 userStateModel.getObject().setHasUnseenRecommendation(false);
-                userStateModel.getObject().setHasUnseenRecommendation(userStateModel.getObject()
-                    .getActiveLearningRecommender()
-                    .hasRecommendationWhichIsSkipped(learningRecordService, activeLearningService));
+                userStateModel.getObject().setHasUnseenRecommendation(
+                    userStateModel.getObject().getActiveLearningRecommender()
+                        .hasRecommendationWhichIsSkipped(learningRecordService,
+                            activeLearningService));
             }
             else {
                 userStateModel.getObject().setHasUnseenRecommendation(false);
@@ -1032,15 +1034,20 @@ public class ActiveLearningSidebar
     @OnEvent
     public void onPredictionsSwitched(AjaxPredictionsSwitchedEvent aEvent)
     {
-        List<List<AnnotationObject>> aListOfRecommendationsForEachToken = activeLearningService
-            .getRecommendationFromRecommendationModel(getModelObject(),
-                userStateModel.getObject().getSelectedLayer());
-        userStateModel.getObject()
-            .setListOfRecommendationsForEachToken(aListOfRecommendationsForEachToken);
-        userStateModel.getObject().getActiveLearningRecommender()
-            .generateRecommendationWithLowestDifference(learningRecordService,
-                userStateModel.getObject().getLearnSkippedRecommendationTime(),
-                aListOfRecommendationsForEachToken);
+        if (userStateModel.getObject().isSessionActive()) {
+            List<List<AnnotationObject>> aListOfRecommendationsForEachToken = activeLearningService
+                .getRecommendationFromRecommendationModel(getModelObject(),
+                    userStateModel.getObject().getSelectedLayer());
+            userStateModel.getObject()
+                .setListOfRecommendationsForEachToken(aListOfRecommendationsForEachToken);
+            RecommendationDifference recommendationDifference = userStateModel.getObject()
+                .getActiveLearningRecommender()
+                .generateRecommendationWithLowestDifference(learningRecordService,
+                    userStateModel.getObject().getLearnSkippedRecommendationTime(),
+                    aListOfRecommendationsForEachToken);
+            userStateModel.getObject().setCurrentDifference(recommendationDifference);
+            userStateModel.getObject()
+                .setCurrentRecommendation(recommendationDifference.getRecommendation1());
+        }
     }
-
 }

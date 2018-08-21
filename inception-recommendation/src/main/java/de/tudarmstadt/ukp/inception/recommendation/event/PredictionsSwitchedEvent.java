@@ -18,11 +18,9 @@
 
 package de.tudarmstadt.ukp.inception.recommendation.event;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import org.springframework.context.ApplicationEvent;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 
 public class PredictionsSwitchedEvent
     extends ApplicationEvent

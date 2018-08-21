@@ -209,7 +209,8 @@ public class PredictionTask
 
             // Check last AnnotationObject
             if (swap != null && !annoFsForFeature.isEmpty()) {
-                if (isOverlappingForFeature(annoFsForFeature.get(annoFsForFeature.size() - 1), swap, feature)) {
+                if (isOverlappingForFeature(annoFsForFeature.get(annoFsForFeature.size() - 1), swap,
+                    feature)) {
                     swap.setVisible(false);
                 }
                 else {

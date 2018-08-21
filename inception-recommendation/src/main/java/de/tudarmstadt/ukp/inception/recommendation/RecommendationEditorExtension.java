@@ -20,12 +20,10 @@ package de.tudarmstadt.ukp.inception.recommendation;
 import java.io.IOException;
 import java.util.Optional;
 
-import de.tudarmstadt.ukp.inception.recommendation.event.*;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
-import org.apache.wicket.Application;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.event.Broadcast;
 import org.apache.wicket.feedback.IFeedback;
@@ -61,6 +59,12 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChang
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.event.AjaxPredictionsSwitchedEvent;
+import de.tudarmstadt.ukp.inception.recommendation.event.AjaxRecommendationAcceptedEvent;
+import de.tudarmstadt.ukp.inception.recommendation.event.AjaxRecommendationRejectedEvent;
+import de.tudarmstadt.ukp.inception.recommendation.event.PredictionsSwitchedEvent;
+import de.tudarmstadt.ukp.inception.recommendation.event.RecommendationAcceptedEvent;
+import de.tudarmstadt.ukp.inception.recommendation.event.RecommendationRejectedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.render.RecommendationRenderer;
 
 
@@ -162,8 +166,8 @@ public class RecommendationEditorExtension
         aActionHandler.actionSelect(aTarget, aJCas);            
         aActionHandler.actionCreateOrUpdate(aTarget, aJCas);
 
-        aTarget.getPage().send(aTarget.getPage(), Broadcast.BREADTH, new
-            AjaxRecommendationAcceptedEvent(aTarget, aState, aVID));
+        aTarget.getPage().send(aTarget.getPage(), Broadcast.BREADTH,
+            new AjaxRecommendationAcceptedEvent(aTarget, aState, aVID));
     }
     
     private void actionRejectRecommendation(AnnotationActionHandler aActionHandler,
@@ -212,11 +216,11 @@ public class RecommendationEditorExtension
         aActionHandler.actionSelect(aTarget, aJCas);
         
         // Send an event that the recommendation was rejected
-        aTarget.getPage().send(aTarget.getPage(), Broadcast.BREADTH, new
-            AjaxRecommendationRejectedEvent(aTarget, aState, aVID));
-        applicationEventPublisher.publishEvent(new RecommendationRejectedEvent(this,
-                document, aState.getUser().getUsername(), aBegin, aEnd, tokenText,
-                feature, predictedValue));
+        aTarget.getPage().send(aTarget.getPage(), Broadcast.BREADTH,
+            new AjaxRecommendationRejectedEvent(aTarget, aState, aVID));
+        applicationEventPublisher.publishEvent(
+            new RecommendationRejectedEvent(this, document, aState.getUser().getUsername(), aBegin,
+                aEnd, tokenText, feature, predictedValue));
     }
 
     @Override

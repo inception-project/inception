@@ -109,7 +109,8 @@ public class RecommendationSpanRenderer
 
         recommendations = PredictionTask
             .setVisibility(learningRecordService, aAnnotationService, aJcas,
-                aState.getUser().getUsername(), annoDoc, layer, recommendations, windowBegin, windowEnd);
+                aState.getUser().getUsername(), annoDoc, layer, recommendations, windowBegin,
+                windowEnd);
 
         for (List<AnnotationObject> token: recommendations) {
             Map<String, Map<Long, AnnotationObject>> labelMap = new HashMap<>();
