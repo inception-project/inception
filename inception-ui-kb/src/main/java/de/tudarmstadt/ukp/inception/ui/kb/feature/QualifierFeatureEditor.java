@@ -77,7 +77,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
-import de.tudarmstadt.ukp.inception.kb.ConceptFeatureValueType;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
@@ -103,10 +102,8 @@ public class QualifierFeatureEditor
     private KBHandle selectedRole;
 
     public QualifierFeatureEditor(String aId, MarkupContainer aOwner,
-                                 AnnotationActionHandler aHandler,
-                                 final IModel<AnnotatorState> aStateModel,
-                                 final IModel<FeatureState>
-                                 aFeatureStateModel)
+            AnnotationActionHandler aHandler, final IModel<AnnotatorState> aStateModel,
+            final IModel<FeatureState> aFeatureStateModel)
     {
         super(aId, aOwner, CompoundPropertyModel.of(aFeatureStateModel));
 
@@ -377,14 +374,14 @@ public class QualifierFeatureEditor
             FeatureSupport<ConceptFeatureTraits> fs = featureSupportRegistry
                 .getFeatureSupport(linkedAnnotationFeature);
             ConceptFeatureTraits traits = fs.readTraits(linkedAnnotationFeature);
-            ConceptFeatureValueType allowedType = traits.getAllowedValueType();
-            if (ConceptFeatureValueType.INSTANCE.equals(allowedType)) {
+            switch (traits.getAllowedValueType()) {
+            case INSTANCE:
                 handles = getInstances(traits, project, aHandler, aTypedString, roleLabe, roleAddr);
-            }
-            else if (ConceptFeatureValueType.CONCEPT.equals(allowedType)) {
+                break;
+            case CONCEPT:
                 handles = getConcepts(traits, project, aHandler, aTypedString, roleLabe, roleAddr);
-            }
-            else {
+                break;
+            default:
                 // Allow both
                 handles.addAll(getInstances(traits, project, aHandler, aTypedString, roleLabe,
                     roleAddr));
@@ -416,8 +413,8 @@ public class QualifierFeatureEditor
             if (kb.isPresent()) {
                 //TODO: (#122) see ConceptFeatureEditor
                 if (kb.get().isSupportConceptLinking()) {
-                    handles.addAll(listLinkingInstances(kb.get(), () -> getEditorCas
-                        (aHandler), aTypedString, roleLabe, roleAddr));
+                    handles.addAll(listLinkingInstances(kb.get(), () -> getEditorCas(aHandler),
+                            aTypedString, roleLabe, roleAddr));
                 }
                 else {
                     if (traits.getScope() != null) {
@@ -488,7 +485,6 @@ public class QualifierFeatureEditor
                         handles.addAll(kbService.listConcepts(kb.get(), false));
                     }
                 }
-
             }
         }
         else {
@@ -510,7 +506,6 @@ public class QualifierFeatureEditor
                         handles.addAll(kbService.listConcepts(kb, false));
                     }
                 }
-
             }
         }
         return handles;

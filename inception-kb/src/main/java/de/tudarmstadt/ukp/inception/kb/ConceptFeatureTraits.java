@@ -61,8 +61,5 @@ public class ConceptFeatureTraits
     public void setAllowedValueType(ConceptFeatureValueType aAllowedType) {
         allowedValueType = aAllowedType;
     }
-
-
-
 }
 

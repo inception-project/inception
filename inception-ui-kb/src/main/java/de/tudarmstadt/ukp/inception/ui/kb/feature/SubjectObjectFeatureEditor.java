@@ -73,7 +73,6 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
-import de.tudarmstadt.ukp.inception.kb.ConceptFeatureValueType;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBErrorHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
@@ -371,14 +370,14 @@ public class SubjectObjectFeatureEditor
             FeatureSupport<ConceptFeatureTraits> fs = featureSupportRegistry
                 .getFeatureSupport(linkedAnnotationFeature);
             ConceptFeatureTraits traits = fs.readTraits(linkedAnnotationFeature);
-            ConceptFeatureValueType allowedType = traits.getAllowedValueType();
-            if (ConceptFeatureValueType.INSTANCE.equals(allowedType)) {
+            switch (traits.getAllowedValueType()) {
+            case INSTANCE:
                 handles = getInstances(traits, project, aHandler, aTypedString);
-            }
-            else if (ConceptFeatureValueType.CONCEPT.equals(allowedType)) {
+                break;
+            case CONCEPT:
                 handles = getConcepts(traits, project, aHandler, aTypedString);
-            }
-            else {
+                break;
+            default:
                 // Allow both
                 handles.addAll(getInstances(traits, project, aHandler, aTypedString));
                 handles.addAll(getConcepts(traits, project, aHandler, aTypedString));
@@ -478,7 +477,6 @@ public class SubjectObjectFeatureEditor
                         handles.addAll(kbService.listConcepts(kb.get(), false));
                     }
                 }
-
             }
         }
         else {
@@ -500,7 +498,6 @@ public class SubjectObjectFeatureEditor
                         handles.addAll(kbService.listConcepts(kb, false));
                     }
                 }
-
             }
         }
         return handles;
@@ -519,7 +516,7 @@ public class SubjectObjectFeatureEditor
             }
             catch (IOException e) {
                 LOG.error("An error occurred while retrieving entity candidates.", e);
-                error(e);
+                error("An error occurred while retrieving entity candidates: " + e.getMessage());
                 return Collections.emptyList();
             }
         });
