@@ -423,30 +423,43 @@ public class MtasDocumentIndex
             long aAnnotationDocumentId, String aUser, JCas aJCas)
         throws IOException
     {
-        try {
-            ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            XmiCasSerializer.serialize(aJCas.getCas(), null, bos, true, null);
-            bos.close();
-            Document doc = new Document();
-            doc.add(new StringField(FIELD_ID,
-                    String.valueOf(aSourceDocumentId) + "/" + String.valueOf(aAnnotationDocumentId),
-                    Field.Store.YES));
-            doc.add(new StringField(FIELD_TITLE, aDocumentTitle, Field.Store.YES));
-            doc.add(new StringField(FIELD_USER, aUser, Field.Store.YES));
-            doc.add(new TextField(FIELD_CONTENT, new String(bos.toByteArray(), "UTF-8"),
-                    Field.Store.YES));
-
-            // Add document to the Lucene index
-            indexWriter.addDocument(doc);
-
-            // commit
-            indexWriter.commit();
-
-            log.info("Document indexed in project [{}]. sourceId: {}, annotationId: {}, user: {}",
-                    project.getName(), aSourceDocumentId, aAnnotationDocumentId, aUser);
+        if (indexWriter != null) {
+            try {
+                log.debug(
+                        "Indexing document in project [{}]. sourceId: {}, annotationId: {}, "
+                                + "user: {}",
+                        project.getName(), aSourceDocumentId, aAnnotationDocumentId, aUser);
+                ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                XmiCasSerializer.serialize(aJCas.getCas(), null, bos, true, null);
+                bos.close();
+                Document doc = new Document();
+                doc.add(new StringField(FIELD_ID, String.valueOf(aSourceDocumentId) + "/"
+                        + String.valueOf(aAnnotationDocumentId), Field.Store.YES));
+                doc.add(new StringField(FIELD_TITLE, aDocumentTitle, Field.Store.YES));
+                doc.add(new StringField(FIELD_USER, aUser, Field.Store.YES));
+                doc.add(new TextField(FIELD_CONTENT, new String(bos.toByteArray(), "UTF-8"),
+                        Field.Store.YES));
+    
+                // Add document to the Lucene index
+                indexWriter.addDocument(doc);
+    
+                // commit
+                indexWriter.commit();
+    
+                log.info(
+                        "Document indexed in project [{}]. sourceId: {}, annotationId: {}, "
+                                + "user: {}",
+                        project.getName(), aSourceDocumentId, aAnnotationDocumentId, aUser);
+            }
+            catch (SAXException e) {
+                log.error("Unable to index document", e);
+            }
         }
-        catch (SAXException e) {
-            log.error("Unable to index document", e);
+        else {
+            log.debug(
+                    "Aborted indexing of document in project [{}]. sourceId: {}, annotationId: {}, "
+                            + "user: {} - indexWriter was null",
+                    project.getName(), aSourceDocumentId, aAnnotationDocumentId, aUser);
         }
     };
 
@@ -477,10 +490,26 @@ public class MtasDocumentIndex
         throws IOException
     {
         if (indexWriter != null) {
+            log.debug(
+                    "Removing document from index in project [{}]. sourceId: {}, annotationId: {}, "
+                            + "user: {}",
+                    project.getName(), aSourceDocumentId, aAnnotationDocumentId, aUser);
+
             indexWriter.deleteDocuments(new Term(FIELD_ID,
                     String.format("%d/%d", aSourceDocumentId, aAnnotationDocumentId)));
 
             indexWriter.commit();
+
+            log.info(
+                    "Removed document from index in project [{}]. sourceId: {}, annotationId: {}, "
+                            + "user: {}",
+                    project.getName(), aSourceDocumentId, aAnnotationDocumentId, aUser);
+        }
+        else {
+            log.debug(
+                    "Aborted removal of document from index in project [{}]. sourceId: {}, "
+                            + "annotationId: {}, " + "user: {} - indexWriter was null.",
+                    project.getName(), aSourceDocumentId, aAnnotationDocumentId, aUser);
         }
         return;
     }
