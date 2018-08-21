@@ -22,6 +22,7 @@ import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -61,6 +62,7 @@ import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureValueType;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
+import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 /**
@@ -111,7 +113,7 @@ public class ConceptFeatureEditor
             @Override
             protected List<KBHandle> getChoices(String input)
             {
-                return listInstances(aState, aHandler, input);
+                return listInstances(aState, aHandler, input.toLowerCase());
             }
 
             @Override
@@ -297,6 +299,8 @@ public class ConceptFeatureEditor
 
             }
         }
+        
+        handles.sort(Comparator.comparing(KBObject::getUiLabel));
         return handles;
     }
 

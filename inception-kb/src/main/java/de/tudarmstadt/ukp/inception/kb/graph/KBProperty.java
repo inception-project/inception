@@ -45,6 +45,8 @@ public class KBProperty
     private String name;
     private String description;
     private String domain;
+    private KnowledgeBase kb;
+    
     /**
      * Declares the class or data type of the object in a triple whose predicate is that property.
      */
@@ -91,6 +93,18 @@ public class KBProperty
         name = aName;
     }
 
+    @Override
+    public KnowledgeBase getKB()
+    {
+        return kb;
+    }
+
+    @Override
+    public void setKB(KnowledgeBase akb)
+    {
+        kb = akb;
+    }
+
     public String getDescription()
     {
         return description;
@@ -125,6 +139,8 @@ public class KBProperty
     {
         return originalStatements;
     }
+    
+    
 
     public void write(RepositoryConnection aConn, KnowledgeBase kb)
     {
@@ -170,6 +186,7 @@ public class KBProperty
     {
         KBProperty kbProp = new KBProperty();
         kbProp.setIdentifier(aStmt.getSubject().stringValue());
+        kbProp.setKB(kb);
         kbProp.originalStatements.add(aStmt);
 
         readFirst(aConn, aStmt.getSubject(), kb.getLabelIri(), null).ifPresent((stmt) -> {

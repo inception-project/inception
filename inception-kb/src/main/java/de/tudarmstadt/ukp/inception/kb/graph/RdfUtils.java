@@ -162,7 +162,7 @@ public class RdfUtils
                 .escapeString(language) + "\")).";
         }
         String QUERY = String.join("\n",
-             SPARQLQueryStore.SPARQL_PREFIX,
+            SPARQLQueryStore.SPARQL_PREFIX,    
             "SELECT * WHERE { ",
             " {?s ?p ?o .}",
             " UNION ",

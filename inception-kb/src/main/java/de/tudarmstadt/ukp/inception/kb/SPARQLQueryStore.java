@@ -43,8 +43,8 @@ public class SPARQLQueryStore
             , "    FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\"))"
             , "  }"
             , "}"
-            , "LIMIT 10000");
-
+            , "LIMIT " + aLimit);
+    
     //Query to get property specific domain elements
     public static String PROPERTYLIST_DOMAIN_DEPENDENT = String.join("\n"
             , SPARQL_PREFIX
@@ -55,7 +55,7 @@ public class SPARQLQueryStore
             , "    FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\"))"
             , "  }"
             , "}"
-            , "LIMIT 10000");
+            , "LIMIT " + aLimit);
     
     //Query to get property specific range elements
     public static String PROPERTY_SPECIFIC_RANGE = String.join("\n"
@@ -67,14 +67,14 @@ public class SPARQLQueryStore
             , "    FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\"))"
             , "  }"
             , "}"
-            , "LIMIT 10000");
+            , "LIMIT " + aLimit);
     
-  
     // Query to retrieve super class concept for a concept
     public static String PARENT_CONCEPT = String.join("\n"
+            , SPARQL_PREFIX
             , "SELECT DISTINCT ?s ?l WHERE { "
             , "     {?oChild ?pSUBCLASS ?s . }"
-            , "     UNION { ?oChild ?pTYPE ?oCLASS ."
+            , "     UNION { ?s ?pTYPE ?oCLASS ."
             , "         ?oChild owl:intersectionOf ?list . "
             , "         FILTER EXISTS {?list rdf:rest*/rdf:first ?s. } }"
             , "     OPTIONAL { "
@@ -86,6 +86,7 @@ public class SPARQLQueryStore
     
     // Query to retrieve concept for an instance
     public static String CONCEPT_FOR_INSTANCE = String.join("\n"
+            , SPARQL_PREFIX
             , "SELECT DISTINCT ?s ?l WHERE {"
             , "  ?pInstance ?pTYPE ?s ."
             , "  OPTIONAL {"
@@ -93,5 +94,5 @@ public class SPARQLQueryStore
             , "    FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\"))"
             , "  }"
             , "}"
-            , "LIMIT 10000");
+            , "LIMIT " + aLimit);
 }

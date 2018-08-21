@@ -29,6 +29,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -392,6 +393,37 @@ public class KnowledgeBaseServiceImpl
         getReificationStrategy(kb).deleteConcept(kb, aConcept);
     }
 
+    @Override
+    public List<KBHandle> listAllConcepts(KnowledgeBase kb, boolean aAll)
+        throws QueryEvaluationException
+    {
+        List<KBHandle> resultList = new ArrayList<>();
+
+        
+        resultList = read(kb, (conn) -> {
+            String QUERY = String.join("\n"
+                , SPARQLQueryStore.SPARQL_PREFIX
+                , "SELECT DISTINCT ?s ?l WHERE { "
+                , "     { ?s ?pTYPE ?oCLASS . } "
+                , "     UNION { ?someSubClass ?pSUBCLASS ?s . } ."
+                , "     OPTIONAL { "
+                , "         ?s ?pLABEL ?l . "
+                , "         FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\")) "
+                , "     } "
+                , "} "
+                , "LIMIT 10000" );
+            TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
+            tupleQuery.setBinding("pTYPE", kb.getTypeIri());
+            tupleQuery.setBinding("oCLASS", kb.getClassIri());
+            tupleQuery.setBinding("pSUBCLASS", kb.getSubclassIri());
+            tupleQuery.setBinding("pLABEL", kb.getLabelIri());
+            tupleQuery.setIncludeInferred(false);
+            return evaluateListQuery(tupleQuery, aAll);
+        });
+        resultList.sort(Comparator.comparing(KBObject::getUiLabel));
+        return resultList;
+    }
+    
     @Override
     public List<KBHandle> listConcepts(KnowledgeBase kb, boolean aAll)
     {
@@ -777,7 +809,7 @@ public class KnowledgeBaseServiceImpl
         else {
             resultList = read(kb, (conn) -> {
                 String QUERY = String.join("\n"
-                    , SPARQLQueryStore.SPARQL_PREFIX
+                    , SPARQLQueryStore.SPARQL_PREFIX    
                     , "SELECT DISTINCT ?s ?l WHERE { "
                     , "     { ?s ?pTYPE ?oCLASS . } "
                     , "     UNION { ?someSubClass ?pSUBCLASS ?s . } ."
@@ -862,10 +894,10 @@ public class KnowledgeBaseServiceImpl
     
     
     @Override
-    public List<KBHandle> getParentConceptList(KnowledgeBase aKB, String aIdentifier, boolean aAll)
+    public Set<KBHandle> getParentConceptList(KnowledgeBase aKB, String aIdentifier, boolean aAll)
         throws QueryEvaluationException
     {
-        List<KBHandle> parentConceptList = new ArrayList<KBHandle>();
+        Set<KBHandle> parentConceptList = new HashSet<KBHandle>();
         if (aIdentifier != null) {
             Optional<KBObject> identifierKBObj = readKBIdentifier(aKB.getProject(), aIdentifier);
             if (identifierKBObj.get() instanceof KBConcept) {
@@ -885,7 +917,7 @@ public class KnowledgeBaseServiceImpl
     }
     
     // recursive method to get concept tree
-    public List<KBHandle> getParentConceptListforConcept(List<KBHandle> parentConceptList,
+    public Set<KBHandle> getParentConceptListforConcept(Set<KBHandle> parentConceptList,
             KnowledgeBase aKB, String aIdentifier, boolean aAll)
         throws QueryEvaluationException
     {
@@ -916,7 +948,7 @@ public class KnowledgeBaseServiceImpl
         // single KB.
         List<KBHandle> resultList = read(aKB, (conn) -> {
             String QUERY = String.join("\n"
-                , SPARQLQueryStore.SPARQL_PREFIX
+                , SPARQLQueryStore.SPARQL_PREFIX    
                 , "SELECT DISTINCT ?s ?l WHERE { "
                 , "     {?s ?pSUBCLASS ?oPARENT . }" 
                 , "     UNION { ?s ?pTYPE ?oCLASS ."
@@ -1016,7 +1048,8 @@ public class KnowledgeBaseServiceImpl
         });
     }
 
-    private boolean hasImplicitNamespace(String s)
+    @Override
+    public boolean hasImplicitNamespace(String s)
     {
         for (String ns : implicitNamespaces) {
             if (s.startsWith(ns)) {
@@ -1078,31 +1111,29 @@ public class KnowledgeBaseServiceImpl
     @Override public Optional<KBObject> readKBIdentifier(Project aProject, String aIdentifier)
     {
         for (KnowledgeBase kb : getKnowledgeBases(aProject)) {
-            Optional<KBObject> kbobject = readKBIdentifier(kb, aIdentifier);
-            if (kbobject.isPresent()) {
-                return kbobject;
+            Optional<KBObject> handle = readKBIdentifier(kb, aIdentifier);
+            if (handle.isPresent()) {
+                return handle;
             }
         }
         return Optional.empty();
     }
-
-    @Override public Optional<KBObject> readKBIdentifier(KnowledgeBase aKnowledgeBase,
-        String aIdentifier)
+    
+    @Override
+    public Optional<KBObject> readKBIdentifier(KnowledgeBase aKb, String aIdentifier)
     {
-        try (RepositoryConnection conn = getConnection(aKnowledgeBase)) {
+        try (RepositoryConnection conn = getConnection(aKb)) {
             ValueFactory vf = conn.getValueFactory();
-            RepositoryResult<Statement> stmts = RdfUtils
-                .getStatements(conn, vf.createIRI(aIdentifier), aKnowledgeBase.getTypeIri(),
-                    aKnowledgeBase.getClassIri(), true);
+            RepositoryResult<Statement> stmts = RdfUtils.getStatements(conn,
+                    vf.createIRI(aIdentifier), aKb.getTypeIri(), aKb.getClassIri(), true);
             if (stmts.hasNext()) {
-                KBConcept kbConcept = KBConcept
-                    .read(conn, vf.createIRI(aIdentifier), aKnowledgeBase);
+                KBConcept kbConcept = KBConcept.read(conn, vf.createIRI(aIdentifier), aKb);
                 if (kbConcept != null) {
                     return Optional.of(kbConcept);
                 }
             }
             else if (!stmts.hasNext()) {
-                Optional<KBInstance> kbInstance = readInstance(aKnowledgeBase, aIdentifier);
+                Optional<KBInstance> kbInstance = readInstance(aKb, aIdentifier);
                 if (kbInstance.isPresent()) {
                     return kbInstance.flatMap((p) -> Optional.of(p));
                 }
@@ -1114,7 +1145,4 @@ public class KnowledgeBaseServiceImpl
         }
         return Optional.empty();
     }
-    
-    
-    
 }

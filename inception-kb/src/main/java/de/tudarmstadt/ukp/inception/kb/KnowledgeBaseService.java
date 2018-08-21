@@ -23,6 +23,7 @@ import java.io.OutputStream;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Statement;
@@ -363,7 +364,7 @@ public interface KnowledgeBaseService
     }
 
     List<KBHandle> list(KnowledgeBase kb, IRI aType, boolean aIncludeInferred, boolean
-        aAll);
+        aAll, int aLimit);
 
     List<KBHandle> listDomainProperties(KnowledgeBase kb, String aDomain, boolean aIncludeInferred,
             boolean aAll);
@@ -420,16 +421,41 @@ public interface KnowledgeBaseService
      */
     void defineBaseProperties(KnowledgeBase akb);
 
+    /**
+     * Read an identifier value to return {@link KBObject}
+     * @param aProject Project to read the KB identifier
+     * @param aIdentifier String value for IRI
+     * @return {@link Optional} of {@link KBObject} of type {@link KBConcept} or {@link KBInstance}
+     */
     Optional<KBObject> readKBIdentifier(Project aProject, String aIdentifier);
 
     List<KBHandle> getParentConceptsForConcept(KnowledgeBase aKB, String aIdentifier,
             boolean aAll)
         throws QueryEvaluationException;
     
-    List<KBHandle> getParentConceptList(KnowledgeBase aKB, String aIdentifier, boolean aAll)
+    Set<KBHandle> getParentConceptList(KnowledgeBase aKB, String aIdentifier, boolean aAll)
             throws QueryEvaluationException;
     
     List<KBHandle> getConceptForInstance(KnowledgeBase aKB, String aIdentifier,
             boolean aAll)
         throws QueryEvaluationException;
+
+    boolean hasImplicitNamespace(String s);
+
+  /**
+     * Read an identifier value from a particular kb to return {@link KBObject}
+     * @param kb
+     * @param aIdentifier
+     * @return {@link Optional} of {@link KBObject} of type {@link KBConcept} or {@link KBInstance}
+     */
+    Optional<KBObject> readKBIdentifier(KnowledgeBase kb, String aIdentifier);
+
+    /**
+     * List all the concepts
+     * @param kb The knowledge base from which concepts will be listed
+     * @param aAll indicates whether to include everything
+     * @return list of all the properties {@link KBHandle} 
+     */
+    List<KBHandle> listAllConcepts(KnowledgeBase kb, boolean aAll) throws QueryEvaluationException;
+
 }

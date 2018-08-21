@@ -160,7 +160,6 @@ public class ConceptFeatureSupport
                         aKey.getLabel());
 
             }
-    
             return kbObject.map(KBObject::getUiLabel).orElseThrow(NoSuchElementException::new);
         }
         catch (NoSuchElementException e) {
