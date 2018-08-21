@@ -188,7 +188,6 @@ public class StatementEditor extends Panel
         try {
             // add the statement as-is to the knowledge base
             kbService.upsertStatement(kbModel.getObject(), statement.getObject());
-
             // to update the statement in the UI, one could either reload all statements of the
             // corresponding instance or (much easier) just set the inferred attribute of the
             // KBStatement to false, so that's what's done here
@@ -196,7 +195,6 @@ public class StatementEditor extends Panel
             aTarget.add(this);
             send(getPage(), Broadcast.BREADTH,
                     new AjaxStatementChangedEvent(aTarget, statement.getObject()));
-
         }
         catch (RepositoryException e) {
             error("Unable to make statement explicit " + e.getLocalizedMessage());
@@ -318,6 +316,7 @@ public class StatementEditor extends Panel
          *            whether the statement being edited is new, meaning it has no corresponding
          *            statement in the KB backend
          */
+         
         public EditMode(String aId, IModel<KBStatement> aStatement, boolean isNewStatement)
         {
             super(aId, "editMode", StatementEditor.this, aStatement);
@@ -350,10 +349,8 @@ public class StatementEditor extends Panel
             valueType.setChoiceRenderer(new ChoiceRenderer<>("uiName"));
             valueType.setModel(Model.of(
                     valueTypeRegistry.getValueType(aStatement.getObject(), property.getObject())));
-
             // replace the editor when the choice is changed
             valueType.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> {
-
                 ValueEditor newEditor = valueTypeRegistry
                         .getValueSupport(valueType.getModelObject())
                         .createEditor("value", model, property, kbModel);
@@ -361,15 +358,12 @@ public class StatementEditor extends Panel
                 editor = (ValueEditor) editor.replaceWith(newEditor);
                 t.add(editor);
             }));
-
             form.add(valueType);
-
             // use the IRI to obtain the appropriate value editor
             editor = valueTypeRegistry.getValueSupport(aStatement.getObject(), property.getObject())
                     .createEditor("value", model, property, kbModel);
             editor.setOutputMarkupId(true);
             form.add(editor);
-
             form.add(new LambdaAjaxButton<>("save", StatementEditor.this::actionSave));
             form.add(new LambdaAjaxLink("cancel", t -> {
                 if (isNewStatement) {

@@ -45,8 +45,8 @@ public class SPARQLQueryStore
             , "  }"
             , "}"
             , "LIMIT " + aLimit);
-   
-    // Query to get property specific domain elements
+    
+    //Query to get property specific domain elements
     public static String PROPERTYLIST_DOMAIN_DEPENDENT = String.join("\n"
             , SPARQL_PREFIX
             , "SELECT DISTINCT ?s ?l WHERE {"
@@ -56,9 +56,9 @@ public class SPARQLQueryStore
             , "    FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\"))"
             , "  }"
             , "}"
-            , "LIMIT 10000");
+            , "LIMIT " + aLimit);
     
-    // Query to get property specific range elements
+    //Query to get property specific range elements
     public static String PROPERTY_SPECIFIC_RANGE = String.join("\n"
             , SPARQL_PREFIX
             , "SELECT DISTINCT ?s ?l WHERE {"
@@ -68,8 +68,7 @@ public class SPARQLQueryStore
             , "    FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\"))"
             , "  }"
             , "}"
-            , "LIMIT 10000");
-    
+            , "LIMIT " + aLimit);
   
     // Query to retrieve super class concept for a concept
     public static String PARENT_CONCEPT = String.join("\n"
@@ -96,5 +95,5 @@ public class SPARQLQueryStore
             , "    FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\"))"
             , "  }"
             , "}"
-            , "LIMIT 10000");
+            , "LIMIT " + aLimit);
 }

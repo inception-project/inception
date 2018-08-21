@@ -101,6 +101,7 @@ public class ValueTypeSupportRegistryImpl
         if (aStatement.getValue() != null) {
             Class<?> clazz = aStatement.getValue().getClass();
             IRI type = DefaultDatatypeMapper.getDatatypeURI(clazz);
+
             // Mapping fails for NaiveIRI class, so check manually
             // if the value is an instance of IRI
             if (type == null && aStatement.getValue() instanceof IRI) {
@@ -127,7 +128,6 @@ public class ValueTypeSupportRegistryImpl
         String datatype = getDataType(aStatement, aProperty);
         
         ValueTypeSupport support = supportCache.get(datatype);
-        
         for (ValueTypeSupport s : getValueSupports()) {
             if (s.accepts(aStatement, aProperty)) {
                 support = s;

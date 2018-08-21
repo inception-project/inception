@@ -63,7 +63,6 @@ public class IRIValueEditor
             protected List<KBHandle> getChoices(String input)
             {
                 List<KBHandle> values = new ArrayList<KBHandle>();
-                
                 if (aProperty.getObject().getRange() != null) {
                     values.addAll(kbService.listInstances(kbModel.getObject(),
                             aProperty.getObject().getRange(), true));
@@ -82,7 +81,6 @@ public class IRIValueEditor
                 if (values.isEmpty()) {
                     values = kbService.listConcepts(kbModel.getObject(), true);
                 }
-                
                 return values;
             }
             

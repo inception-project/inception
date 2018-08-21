@@ -183,13 +183,14 @@ public class KnowledgeBaseServiceRemoteTest
             kb_hucit.setReification(Reification.NONE);
             kb_hucit.setBasePrefix("http://www.ukp.informatik.tu-darmstadt.de/inception/1.0#");
             kb_hucit.setClassIri(vf.createIRI("http://www.w3.org/2002/07/owl#Class"));
-            kb_hucit.setClassIri(vf.createIRI("http://www.w3.org/2002/07/owl#Class"));
             kb_hucit.setSubclassIri(vf.createIRI("http://www.w3.org/2000/01/rdf-schema#subClassOf"));
             kb_hucit.setTypeIri(vf.createIRI("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"));
             kb_hucit.setDescriptionIri(vf.createIRI("http://www.w3.org/2000/01/rdf-schema#comment"));
             kb_hucit.setLabelIri(vf.createIRI("http://www.w3.org/2000/01/rdf-schema#label"));
             kb_hucit.setPropertyTypeIri(vf.createIRI("http://www.w3.org/1999/02/22-rdf-syntax-ns#Property"));
-            kbList.add(new TestConfiguration("http://nlp.dainst.org:8888/sparql", kb_hucit));
+            kbList.add(new TestConfiguration("http://nlp.dainst.org:8888/sparql", kb_hucit, 
+                    // person -> Achilles :: urn:cts:cwkb:1137
+                    "http://purl.org/hucit/kb/authors/1137"));
         }
 
         {
@@ -270,6 +271,23 @@ public class KnowledgeBaseServiceRemoteTest
         propertiesKBHandle.stream().limit(10).forEach(h -> log.info("   %s%n", h));
 
         assertThat(propertiesKBHandle).as("Check that property list is not empty").isNotEmpty();
+
+    }
+    
+    @Test
+    public void thatParentListCanBeRetireved()
+    {
+        KnowledgeBase kb = sutConfig.getKnowledgeBase();
+        
+        long duration = System.currentTimeMillis();
+        Set<KBHandle> parentList = sut.getParentConceptList(kb, sutConfig.getTestIdentifier(), true);
+        duration = System.currentTimeMillis() - duration;
+
+        System.out.printf("Parent List retrieved : %d%n", parentList.size());
+        System.out.printf("Time required        : %d ms%n", duration);
+        parentList.stream().limit(10).forEach(h -> System.out.printf("   %s%n", h));
+
+        assertThat(parentList).as("Check that parent list is not empty").isNotEmpty();
 
     }
 

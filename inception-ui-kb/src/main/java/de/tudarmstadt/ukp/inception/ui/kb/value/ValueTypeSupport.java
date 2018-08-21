@@ -37,6 +37,7 @@ import de.tudarmstadt.ukp.inception.ui.kb.value.editor.ValuePresenter;
 public interface ValueTypeSupport
     extends BeanNameAware
 {
+
     /**
      * @return id
      */

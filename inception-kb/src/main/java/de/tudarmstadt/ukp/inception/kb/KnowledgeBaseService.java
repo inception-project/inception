@@ -374,6 +374,13 @@ public interface KnowledgeBaseService
 
     List<KBHandle> list(KnowledgeBase kb, IRI aType, boolean aIncludeInferred, boolean
         aAll, int aLimit);
+
+
+    List<KBHandle> listDomainProperties(KnowledgeBase kb, String aDomain, boolean aIncludeInferred,
+            boolean aAll);
+
+    List<KBHandle> listPropertiesRangeValue(KnowledgeBase kb, String aDomain,
+            boolean aIncludeInferred, boolean aAll);
     
     /**
      * List the properties for a specific accepted domain identifier
@@ -422,7 +429,7 @@ public interface KnowledgeBaseService
      */
     List<KBHandle> listProperties(KnowledgeBase kb, IRI aType, boolean aIncludeInferred, boolean
             aAll);
-  
+
     /**
      * Adds a new qualifier in the given knowledge base. Does
      * nothing if the knowledge base is read only.
@@ -510,6 +517,9 @@ public interface KnowledgeBaseService
     List<KBHandle> getConceptForInstance(KnowledgeBase aKB, String aIdentifier, boolean aAll)
         throws QueryEvaluationException;
 
+    boolean hasImplicitNamespace(String s);
+
+   /**
      * Read an identifier value from a particular kb to return {@link KBObject}
      * @param kb
      * @param aIdentifier
