@@ -44,4 +44,56 @@ public class SPARQLQueryStore
             , "  }"
             , "}"
             , "LIMIT " + aLimit);
+    
+    //Query to get property specific domain elements
+    public static String PROPERTYLIST_DOMAIN_DEPENDENT = String.join("\n"
+            , SPARQL_PREFIX
+            , "SELECT DISTINCT ?s ?l WHERE {"
+            , "  ?s rdfs:domain/(owl:unionOf/rdf:rest*/rdf:first)* ?aDomain "
+            , "  OPTIONAL {"
+            , "    ?s ?pLABEL ?l ."
+            , "    FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\"))"
+            , "  }"
+            , "}"
+            , "LIMIT " + aLimit);
+    
+    //Query to get property specific range elements
+    public static String PROPERTY_SPECIFIC_RANGE = String.join("\n"
+            , SPARQL_PREFIX
+            , "SELECT DISTINCT ?s ?l WHERE {"
+            , "  ?aProperty rdfs:range/(owl:unionOf/rdf:rest*/rdf:first)* ?s "
+            , "  OPTIONAL {"
+            , "    ?aProperty ?pLABEL ?l ."
+            , "    FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\"))"
+            , "  }"
+            , "}"
+            , "LIMIT " + aLimit);
+    
+  
+    // Query to retrieve super class concept for a concept
+    public static String PARENT_CONCEPT = String.join("\n"
+            , SPARQL_PREFIX
+            , "SELECT DISTINCT ?s ?l WHERE { "
+            , "     {?oChild ?pSUBCLASS ?s . }"
+            , "     UNION { ?s ?pTYPE ?oCLASS ."
+            , "         ?oChild owl:intersectionOf ?list . "
+            , "         FILTER EXISTS {?list rdf:rest*/rdf:first ?s. } }"
+            , "     OPTIONAL { "
+            , "         ?s ?pLABEL ?l . "
+            , "         FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\")) "
+            , "     } "
+            , "} ");
+    
+    
+    // Query to retrieve concept for an instance
+    public static String CONCEPT_FOR_INSTANCE = String.join("\n"
+            , SPARQL_PREFIX
+            , "SELECT DISTINCT ?s ?l WHERE {"
+            , "  ?pInstance ?pTYPE ?s ."
+            , "  OPTIONAL {"
+            , "    ?pInstance ?pLABEL ?l ."
+            , "    FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\"))"
+            , "  }"
+            , "}"
+            , "LIMIT " + aLimit);
 }
