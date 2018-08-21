@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  Copyright 2017
+  Copyright 2018
   Ubiquitous Knowledge Processing (UKP) Lab
   Technische Universität Darmstadt
 
@@ -24,10 +24,7 @@
 </wicket:panel>
 
   <wicket:fragment wicket:id="viewMode">
-    <wicket:enclosure child="language">
-      <label>(<wicket: wicket:id="language" />)</label>
-    </wicket:enclosure>
-    <span wicket:id="value"></span>
+    <wicket:container wicket:id="value"></wicket:container>
     
     <div class="pull-right">
       <a wicket:id="makeExplicit" wicket:message="title:makeExplicit" class="btn-link"> <i class="fa fa-gavel" aria-hidden="true"></i></a>
@@ -48,8 +45,8 @@
 
   <wicket:fragment wicket:id="editMode">
     <form wicket:id="form" class="form-inline">
-      <input type="text" wicket:id="language" class="form-control" size="6" wicket:message="placeholder:statement.language.placeholder"></input>
-      <textarea wicket:id="value" rows="1" class="form-control hfill" wicket:message="placeholder:statement.value.placeholder"></textarea>
+      <select wicket:id=valueType class="form-control"></select>
+      <span wicket:id="value"></span>
       <div class="pull-right statement-editor-button-row">
         <ul>
           <li><a wicket:id="save" wicket:message="title:statement.save" class="btn-link"><i class="fa fa-check" aria-hidden="true"></i></a>

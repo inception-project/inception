@@ -17,8 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.search;
 
-import java.util.Map;
-
+import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.springframework.beans.factory.BeanNameAware;
 
@@ -31,5 +30,6 @@ public interface FeatureIndexingSupport
 
     boolean accepts(AnnotationFeature aFeature);
 
-    Map<String, String> indexFeatureValue(AnnotationFeature aFeature, AnnotationFS aAnnotation);
+    MultiValuedMap<String, String> indexFeatureValue(AnnotationFeature aFeature,
+            AnnotationFS aAnnotation);
 }

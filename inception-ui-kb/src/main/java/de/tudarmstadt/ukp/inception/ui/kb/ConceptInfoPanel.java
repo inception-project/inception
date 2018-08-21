@@ -27,7 +27,6 @@ import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
-import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
@@ -92,7 +91,13 @@ public class ConceptInfoPanel extends AbstractInfoPanel<KBConcept> {
     
     @Override
     protected Comparator<StatementGroupBean> getStatementGroupComparator() {
-        return new ImportantStatementComparator(
-            sgb -> IriConstants.IMPORTANT_CONCEPT_URIS.contains(sgb.getProperty().getIdentifier()));
+        return new ImportantStatementComparator(sgb -> {
+            KnowledgeBase kb = kbModel.getObject();
+            String identifier = sgb.getProperty().getIdentifier();
+            return kb.getTypeIri().stringValue().equals(identifier) ||
+                kb.getSubclassIri().stringValue().equals(identifier) ||
+                kb.getLabelIri().stringValue().equals(identifier) ||
+                kb.getDescriptionIri().stringValue().equals(identifier);
+        });
     }
 }
