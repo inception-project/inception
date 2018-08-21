@@ -375,13 +375,6 @@ public interface KnowledgeBaseService
     List<KBHandle> list(KnowledgeBase kb, IRI aType, boolean aIncludeInferred, boolean
         aAll, int aLimit);
 
-
-    List<KBHandle> listDomainProperties(KnowledgeBase kb, String aDomain, boolean aIncludeInferred,
-            boolean aAll);
-
-    List<KBHandle> listPropertiesRangeValue(KnowledgeBase kb, String aDomain,
-            boolean aIncludeInferred, boolean aAll);
-    
     /**
      * List the properties for a specific accepted domain identifier
      * 
