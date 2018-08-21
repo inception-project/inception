@@ -118,13 +118,17 @@ public class ConceptFeatureIndexingSupport
                 featureObject.getUiLabel());
         // Indexing: <layer>.<feature>.exact=<URI>
         values.put(field + "." + aFeature.getUiName() + "." + INDEX_KB_EXACT,
-                kbObject.get().getIdentifier());
+                featureObject.getIdentifier());
         // Indexing: <layer>.<feature>=<URI>
         values.put(field + "." + aFeature.getUiName(),
-                kbObject.get().getIdentifier());
+                featureObject.getIdentifier());
 
-        // Indexing UI label without type and layer for generic search
+        // The following fields are used by the mentions panes on the KB page in order to find all
+        // mentions of a given resource irrespective of which layer/feature they are linked to.
+        // Indexing: KB.Entity=<UI label>
         values.put(KB_ENTITY, featureObject.getUiLabel());
+        // Indexing: KB.Entity=<URI>
+        values.put(KB_ENTITY, featureObject.getIdentifier());
         
         // Indexing super concepts with type super.concept 
         Set<KBHandle> listParentConcepts = kbService.getParentConceptList(kbObject.get().getKB(),

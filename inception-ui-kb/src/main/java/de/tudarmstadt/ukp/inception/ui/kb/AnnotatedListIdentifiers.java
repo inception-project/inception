@@ -48,6 +48,7 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.search.SearchResult;
 import de.tudarmstadt.ukp.inception.search.SearchService;
+import de.tudarmstadt.ukp.inception.ui.kb.search.ConceptFeatureIndexingSupport;
 
 public class AnnotatedListIdentifiers
     extends Panel
@@ -76,20 +77,15 @@ public class AnnotatedListIdentifiers
         kbModel = aKbModel;
         conceptModel = aConcept;
         currentUser = userRepository.getCurrentUser();
-        //TODO TO replace with KB.identifier after subClass and instances change
-        String queryHead = "<KB.Entity=\"";
-        String queryEnd = "\"/>";
-        StringBuffer query = new StringBuffer();
-        if (!flagInstanceSelect) {
-            String concept = aConcept.getObject().getUiLabel();
-            targetQuery = Model
-                    .of(query.append(queryHead).append(concept).append(queryEnd).toString());
-        }
-        else {
-            String instance = aInstance.getObject().getUiLabel();
-            targetQuery = Model
-                    .of(query.append(queryHead).append(instance).append(queryEnd).toString());
-        }
+        
+        String queryIri = flagInstanceSelect ? aInstance.getObject().getIdentifier()
+                : aConcept.getObject().getIdentifier();
+        // MTAS internally escapes certain characters, so we need to escape them here as well.
+        // Cf. MtasToken.createAutomatonMap()
+        queryIri = queryIri.replaceAll("([\\\"\\)\\(\\<\\>\\.\\@\\#\\]\\[\\{\\}])", "\\\\$1");
+        targetQuery = Model.of(
+                String.format("<%s=\"%s\"/>", ConceptFeatureIndexingSupport.KB_ENTITY, queryIri));
+        
         LambdaModel<List<SearchResult>> searchResults = LambdaModel.of(this::getSearchResults);
         LOG.trace("SearchResult count : {}" , searchResults.getObject().size());
         ListView<String> overviewList = new ListView<String>("searchResultGroups")
