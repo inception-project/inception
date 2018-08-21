@@ -23,6 +23,7 @@ import java.io.OutputStream;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Statement;
@@ -342,6 +343,10 @@ public interface KnowledgeBaseService
             int aLimit)
         throws QueryEvaluationException;
     
+    List<KBHandle> listChildConceptsInstances(KnowledgeBase aKB, String aParentIdentifier,
+            boolean aAll, int aLimit) throws QueryEvaluationException;
+    
+    
     RepositoryConnection getConnection(KnowledgeBase kb);
 
     interface ReadAction<T>
@@ -360,9 +365,17 @@ public interface KnowledgeBaseService
 
     List<KBHandle> list(KnowledgeBase kb, IRI aType, boolean aIncludeInferred, boolean
         aAll, int aLimit);
+
+
+    List<KBHandle> listDomainProperties(KnowledgeBase kb, String aDomain, boolean aIncludeInferred,
+            boolean aAll);
+
+    List<KBHandle> listPropertiesRangeValue(KnowledgeBase kb, String aDomain,
+            boolean aIncludeInferred, boolean aAll);
     
     List<KBHandle> listProperties(KnowledgeBase kb, IRI aType, boolean aIncludeInferred, boolean
             aAll);
+
     /**
      * Adds a new qualifier in the given knowledge base. Does
      * nothing if the knowledge base is read only.
@@ -415,7 +428,20 @@ public interface KnowledgeBaseService
      */
     Optional<KBObject> readKBIdentifier(Project aProject, String aIdentifier);
 
-    /**
+    List<KBHandle> getParentConceptsForConcept(KnowledgeBase aKB, String aIdentifier,
+            boolean aAll)
+        throws QueryEvaluationException;
+    
+    Set<KBHandle> getParentConceptList(KnowledgeBase aKB, String aIdentifier, boolean aAll)
+            throws QueryEvaluationException;
+    
+    List<KBHandle> getConceptForInstance(KnowledgeBase aKB, String aIdentifier,
+            boolean aAll)
+        throws QueryEvaluationException;
+
+    boolean hasImplicitNamespace(String s);
+
+  /**
      * Read an identifier value from a particular kb to return {@link KBObject}
      * @param kb
      * @param aIdentifier
