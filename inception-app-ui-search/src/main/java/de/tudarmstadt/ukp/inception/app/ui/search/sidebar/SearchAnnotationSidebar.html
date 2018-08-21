@@ -26,13 +26,9 @@
       <div class="panel-body flex-v-container">
         <form wicket:id="searchForm" class="form-horizontal">
           <div class="col-sm-12">
-            <div class="form-group" wicket:enclosure="queryInput">
-              <div class="input-group">
-                <input wicket:id="queryInput" class="form-control" />
-                <span class="input-group-btn">
-                  <input wicket:id="search" type="submit" class="btn btn-default" value="Search"/>
-                </span>
-              </div>
+            <div class="form-group flex-v-container flex-gutter flex-only-internal-gutter" wicket:enclosure="queryInput">
+              <textarea wicket:id="queryInput" class="form-control" style="resize: vertical; word-break: break-all;" rows="5"></textarea>
+              <input wicket:id="search" type="submit" class="btn btn-primary" value="Search"/>
             </div>
           </div>
         </form>
