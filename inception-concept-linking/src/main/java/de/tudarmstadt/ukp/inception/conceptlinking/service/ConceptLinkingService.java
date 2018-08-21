@@ -36,7 +36,8 @@ import javax.annotation.Resource;
 
 import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.builder.CompareToBuilder;
-import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.text.similarity.LevenshteinDistance;
 import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
@@ -51,8 +52,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
+
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.conceptlinking.config.EntityLinkingProperties;
@@ -60,7 +63,6 @@ import de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity;
 import de.tudarmstadt.ukp.inception.conceptlinking.model.Property;
 import de.tudarmstadt.ukp.inception.conceptlinking.model.SemanticSignature;
 import de.tudarmstadt.ukp.inception.conceptlinking.util.FileUtils;
-import de.tudarmstadt.ukp.inception.conceptlinking.util.LRUCache;
 import de.tudarmstadt.ukp.inception.conceptlinking.util.QueryUtil;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.event.KnowledgeBaseConfigurationChangedEvent;
@@ -104,8 +106,8 @@ public class ConceptLinkingService
     private static final String POS_NOUN_PREFIX = "N";
     private static final String POS_ADJECTIVE_PREFIX = "J";
 
-    private Map<ImmutablePair<Project, String>, Set<CandidateEntity>> candidateCache;
-    private Map<ImmutablePair<Project, String>, SemanticSignature> semanticSignatureCache;
+    private LoadingCache<CandidateCacheKey, Set<CandidateEntity>> candidateCache;
+    private LoadingCache<SemanticSignatureCacheKey, SemanticSignature> semanticSignatureCache;
 
     @PostConstruct
     public void init()
@@ -115,9 +117,13 @@ public class ConceptLinkingService
         propertyBlacklist = FileUtils.loadPropertyBlacklist(propertyBlacklistFile);
         propertyWithLabels = FileUtils.loadPropertyLabels(propertyWithLabelsFile);
       
-        candidateCache = Collections.synchronizedMap(new LRUCache<>(properties.getCacheSize()));
-        semanticSignatureCache = Collections
-            .synchronizedMap(new LRUCache<>(properties.getCacheSize()));
+        candidateCache = Caffeine.newBuilder()
+                .maximumSize(properties.getCacheSize())
+                .build(key -> loadCandidateSet(key));
+
+        semanticSignatureCache = Caffeine.newBuilder()
+                .maximumSize(properties.getCacheSize())
+                .build(key -> loadSemanticSignature(key));
     }
 
     public String getBeanName()
@@ -143,7 +149,6 @@ public class ConceptLinkingService
             return Collections.emptySet();
         }
 
-        Set<CandidateEntity> candidates = new HashSet<>();
         List<String> mentionList = Arrays.asList(aMention.split(" "));
 
         // Remove any character that is not a letter
@@ -163,16 +168,16 @@ public class ConceptLinkingService
             return Collections.emptySet();
         }
 
-        ImmutablePair<Project, String> pair = new ImmutablePair<>(aKB.getProject(),
-            processedMention);
-        if (candidateCache.containsKey(pair)) {
-            return candidateCache.get(pair);
-        }
+        return candidateCache.get(new CandidateCacheKey(aKB, processedMention));
+    }
 
-
-        try (RepositoryConnection conn = kbService.getConnection(aKB)) {
-            TupleQuery query = QueryUtil.generateCandidateQuery(conn, processedMention,
-                properties.getCandidateQueryLimit(), aKB.getDescriptionIri());
+    private Set<CandidateEntity> loadCandidateSet(CandidateCacheKey aKey)
+    {
+        Set<CandidateEntity> candidates = new HashSet<>();
+        try (RepositoryConnection conn = kbService.getConnection(aKey.getKnowledgeBase())) {
+            TupleQuery query = QueryUtil.generateCandidateQuery(conn, aKey.getQuery(),
+                    properties.getCandidateQueryLimit(),
+                    aKey.getKnowledgeBase().getDescriptionIri());
             try (TupleQueryResult entityResult = query.evaluate()) {
                 while (entityResult.hasNext()) {
                     BindingSet solution = entityResult.next();
@@ -196,18 +201,16 @@ public class ConceptLinkingService
         }
 
         if (candidates.isEmpty()) {
-            String[] split = processedMention.split(" ");
+            String[] split = aKey.getQuery().split(" ");
             if (split.length > 1) {
                 for (String s : split) {
-                    candidates.addAll(generateCandidates(aKB, s));
+                    candidates.addAll(generateCandidates(aKey.getKnowledgeBase(), s));
                 }
             }
         }
-
-        candidateCache.put(pair, candidates);
         return candidates;
     }
-
+    
     /*
      * Finds the position of a mention in a given sentence and returns the corresponding tokens of
      * the mention with <mentionContextSize> tokens before and <mentionContextSize> after the
@@ -296,7 +299,6 @@ public class ConceptLinkingService
             else {
                 l.setFrequency(0);
             }
-
         });
 
         List<CandidateEntity> result = sortByFrequency(new ArrayList<>(candidates)).stream()
@@ -381,16 +383,15 @@ public class ConceptLinkingService
      */
     private SemanticSignature getSemanticSignature(KnowledgeBase aKB, String aWikidataId)
     {
-        ImmutablePair<Project, String> pair = new ImmutablePair<>(aKB.getProject(), aWikidataId);
-
-        if (semanticSignatureCache.containsKey(pair)) {
-            return semanticSignatureCache.get(pair);
-        }
-
+        return semanticSignatureCache.get(new SemanticSignatureCacheKey(aKB, aWikidataId));
+    }
+    
+    private SemanticSignature loadSemanticSignature(SemanticSignatureCacheKey aKey)
+    {
         Set<String> relatedRelations = new HashSet<>();
         Set<String> relatedEntities = new HashSet<>();
-        try (RepositoryConnection conn = kbService.getConnection(aKB)) {
-            TupleQuery query = QueryUtil.generateSemanticSignatureQuery(conn, aWikidataId,
+        try (RepositoryConnection conn = kbService.getConnection(aKey.getKnowledgeBase())) {
+            TupleQuery query = QueryUtil.generateSemanticSignatureQuery(conn, aKey.getQuery(),
                 properties.getSignatureQueryLimit());
             try (TupleQueryResult result = query.evaluate()) {
                 while (result.hasNext()) {
@@ -419,9 +420,7 @@ public class ConceptLinkingService
             }
         }
 
-        SemanticSignature ss = new SemanticSignature(relatedEntities, relatedRelations);
-        semanticSignatureCache.put(pair, ss);
-        return ss;
+        return new SemanticSignature(relatedEntities, relatedRelations);
     }
 
     /**
@@ -486,18 +485,93 @@ public class ConceptLinkingService
     public void onKnowledgeBaseConfigurationChangedEvent(
         KnowledgeBaseConfigurationChangedEvent aEvent)
     {
-        for (Map.Entry<ImmutablePair<Project, String>, Set<CandidateEntity>> pair :
-            candidateCache.entrySet()) {
-            if (pair.getKey().getLeft().equals(aEvent.getProject())) {
-                candidateCache.remove(pair.getKey());
-            }
+        // FIXME instead of maintaining one global cache, we might maintain a cascaded cache
+        // where the top level is the project and then for each project we have sub-caches.
+        // Then we could invalidate only a specific project's cache. However, right now,
+        // we don't have that and there is no way to properly iterate over the caches and
+        // invalidate only entries belonging to a specific project. Thus, we need to
+        // invalidate all.
+        candidateCache.invalidateAll();
+        semanticSignatureCache.invalidateAll();
+    }
+    
+    private class CandidateCacheKey
+    {
+        private final KnowledgeBase knowledgeBase;
+        private final String query;
+        
+        public CandidateCacheKey(KnowledgeBase aKnowledgeBase, String aQuery)
+        {
+            super();
+            knowledgeBase = aKnowledgeBase;
+            query = aQuery;
         }
-        for (Map.Entry<ImmutablePair<Project, String>, SemanticSignature> pair :
-            semanticSignatureCache.entrySet()) {
-            if (pair.getKey().getLeft().equals(aEvent.getProject())) {
-                semanticSignatureCache.remove(pair.getKey());
+        
+        public KnowledgeBase getKnowledgeBase()
+        {
+            return knowledgeBase;
+        }
+
+        public String getQuery()
+        {
+            return query;
+        }
+
+        @Override
+        public boolean equals(final Object other)
+        {
+            if (!(other instanceof CandidateCacheKey)) {
+                return false;
             }
+            CandidateCacheKey castOther = (CandidateCacheKey) other;
+            return new EqualsBuilder().append(knowledgeBase, castOther.knowledgeBase)
+                    .append(query, castOther.query).isEquals();
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return new HashCodeBuilder().append(knowledgeBase).append(query).toHashCode();
         }
     }
 
+    private class SemanticSignatureCacheKey
+    {
+        private final KnowledgeBase knowledgeBase;
+        private final String query;
+        
+        public SemanticSignatureCacheKey(KnowledgeBase aKnowledgeBase, String aQuery)
+        {
+            super();
+            knowledgeBase = aKnowledgeBase;
+            query = aQuery;
+        }
+        
+        public KnowledgeBase getKnowledgeBase()
+        {
+            return knowledgeBase;
+        }
+
+        public String getQuery()
+        {
+            return query;
+        }
+
+        @Override
+        public boolean equals(final Object other)
+        {
+            if (!(other instanceof CandidateCacheKey)) {
+                return false;
+            }
+            CandidateCacheKey castOther = (CandidateCacheKey) other;
+            return new EqualsBuilder().append(knowledgeBase, castOther.knowledgeBase)
+                    .append(query, castOther.query).isEquals();
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return new HashCodeBuilder().append(knowledgeBase).append(query).toHashCode();
+        }
+    }
 }
