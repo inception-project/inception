@@ -159,7 +159,7 @@ public class ConceptFeatureEditor
                 handles = getConcepts(traits, project, aState, aHandler, aTypedString);
             }
             else {
-                // Allow both
+                // Allows both
                 handles.addAll(getInstances(traits, project, aState, aHandler, aTypedString));
                 handles.addAll(getConcepts(traits, project, aState, aHandler, aTypedString));
             }
@@ -174,9 +174,7 @@ public class ConceptFeatureEditor
             }
         }
         // Sort results
-        handles = handles.stream()
-            .sorted((h1, h2) -> h1.getUiLabel().compareToIgnoreCase(h2.getUiLabel()))
-            .collect(Collectors.toList());
+        handles.sort(Comparator.comparing(KBObject::getUiLabel));
         return handles;
     }
 
@@ -199,16 +197,23 @@ public class ConceptFeatureEditor
                     if (traits.getScope() != null) {
                         handles = kbService
                             .listChildConceptsInstances(kb.get(), traits.getScope(), false, 50)
-                            .stream().filter(inst -> inst.getUiLabel().contains(aTypedString))
-                            .collect(Collectors.toList());
+                                .stream().filter(inst -> inst.getUiLabel().toLowerCase()
+                                        .contains(aTypedString))
+                                .collect(Collectors.toList());
+                        
+                        handles.addAll(kbService.listInstances(kb.get(), traits.getScope(), false)
+                                .stream().filter(inst -> inst.getUiLabel().toLowerCase()
+                                        .contains(aTypedString))
+                                .collect(Collectors.toList()));
                     }
                     else {
                         for (KBHandle concept : kbService.listConcepts(kb.get(), false)) {
                             handles.addAll(
                                 kbService.listInstances(kb.get(), concept.getIdentifier(), false)
                                     .stream()
-                                    .filter(inst -> inst.getUiLabel().contains(aTypedString))
-                                    .collect(Collectors.toList()));
+                                            .filter(inst -> inst.getUiLabel().toLowerCase()
+                                                    .contains(aTypedString))
+                                            .collect(Collectors.toList()));
                         }
                     }
                 }
@@ -226,15 +231,22 @@ public class ConceptFeatureEditor
                     if (traits.getScope() != null) {
                         handles.addAll(
                             kbService.listChildConceptsInstances(kb, traits.getScope(), false, 50)
-                                .stream().filter(inst -> inst.getUiLabel().contains(aTypedString))
+                                        .stream()
+                                        .filter(inst -> inst.getUiLabel().toLowerCase()
+                                                .contains(aTypedString))
+                                        .collect(Collectors.toList()));
+                        handles.addAll(kbService.listInstances(kb, traits.getScope(), false)
+                                .stream().filter(inst -> inst.getUiLabel().toLowerCase()
+                                        .contains(aTypedString))
                                 .collect(Collectors.toList()));
                     }
                     else {
                         for (KBHandle concept : kbService.listConcepts(kb, false)) {
                             handles.addAll(
                                 kbService.listInstances(kb, concept.getIdentifier(), false).stream()
-                                    .filter(inst -> inst.getUiLabel().contains(aTypedString))
-                                    .collect(Collectors.toList()));
+                                            .filter(inst -> inst.getUiLabel().toLowerCase()
+                                                    .contains(aTypedString))
+                                            .collect(Collectors.toList()));
                         }
                     }
                 }
@@ -262,13 +274,15 @@ public class ConceptFeatureEditor
                     if (traits.getScope() != null) {
                         handles = kbService.listChildConcepts(kb.get(), traits.getScope(),
                             false)
-                            .stream().filter(conc -> conc.getUiLabel().contains(aTypedString))
-                            .collect(Collectors.toList());
+                                .stream().filter(conc -> conc.getUiLabel().toLowerCase()
+                                        .contains(aTypedString))
+                                .collect(Collectors.toList());
                     }
                     else {
                         handles.addAll(kbService.listConcepts(kb.get(), false).stream()
-                            .filter(conc -> conc.getUiLabel().contains(aTypedString))
-                            .collect(Collectors.toList()));
+                                .filter(conc -> conc.getUiLabel().toLowerCase()
+                                        .contains(aTypedString))
+                                .collect(Collectors.toList()));
                     }
                 }
 
@@ -287,12 +301,12 @@ public class ConceptFeatureEditor
                     if (traits.getScope() != null) {
                         handles = kbService.listChildConcepts(kb, traits.getScope(), false)
                             .stream()
-                            .filter(conc -> conc.getUiLabel().contains(aTypedString))
+                            .filter(conc -> conc.getUiLabel().toLowerCase().contains(aTypedString))
                             .collect(Collectors.toList());
                     }
                     else {
                         handles.addAll(kbService.listConcepts(kb, false).stream()
-                            .filter(conc -> conc.getUiLabel().contains(aTypedString))
+                            .filter(conc -> conc.getUiLabel().toLowerCase().contains(aTypedString))
                             .collect(Collectors.toList()));
                     }
                 }

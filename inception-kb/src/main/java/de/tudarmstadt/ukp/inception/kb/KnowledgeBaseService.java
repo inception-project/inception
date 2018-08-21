@@ -410,8 +410,6 @@ public interface KnowledgeBaseService
 
     boolean statementsMatchSPO(KnowledgeBase akb, KBStatement mockStatement);
 
-    Optional<KBObject> readKBIdentifier(KnowledgeBase aKnowledgeBase, String aIdentifier);
-    
     /**
      * Define base default properties of comment, label and subClassOf with schema set defined for
      * KB while initializing the KB
@@ -429,6 +427,14 @@ public interface KnowledgeBaseService
      */
     Optional<KBObject> readKBIdentifier(Project aProject, String aIdentifier);
 
+    /**
+     * Read an identifier value from a particular kb to return {@link KBObject}
+     * @param akb
+     * @param aIdentifier
+     * @return {@link Optional} of {@link KBObject} of type {@link KBConcept} or {@link KBInstance}
+     */
+    Optional<KBObject> readKBIdentifier(KnowledgeBase akb, String aIdentifier);
+    
     List<KBHandle> getParentConceptsForConcept(KnowledgeBase aKB, String aIdentifier,
             boolean aAll)
         throws QueryEvaluationException;
@@ -441,14 +447,6 @@ public interface KnowledgeBaseService
         throws QueryEvaluationException;
 
     boolean hasImplicitNamespace(String s);
-
-  /**
-     * Read an identifier value from a particular kb to return {@link KBObject}
-     * @param kb
-     * @param aIdentifier
-     * @return {@link Optional} of {@link KBObject} of type {@link KBConcept} or {@link KBInstance}
-     */
-    Optional<KBObject> readKBIdentifier(KnowledgeBase kb, String aIdentifier);
 
     /**
      * List all the concepts
