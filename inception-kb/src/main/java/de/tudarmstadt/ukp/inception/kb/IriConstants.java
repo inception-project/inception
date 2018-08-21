@@ -47,12 +47,6 @@ public class IriConstants
             RDFS.NAMESPACE, XMLSchema.NAMESPACE, OWL.NAMESPACE, INCEPTION_SCHEMA_NAMESPACE));
 
     /**
-     * Define "important" URIs to allow for importance-based sorting of statements.
-     */
-    public static final Set<String> IMPORTANT_CONCEPT_URIS = new HashSet<>(
-            Arrays.asList(RDFS.SUBCLASSOF.stringValue()));
-
-    /**
      * http://www.wikidata.org/entity/Q35120
      */
     public static final IRI WIKIDATA_CLASS;
@@ -97,7 +91,7 @@ public class IriConstants
         SUBCLASS_IRIS = asList(RDFS.SUBCLASSOF, WIKIDATA_SUBCLASS, SKOS.BROADER);
         TYPE_IRIS = asList(RDF.TYPE, WIKIDATA_TYPE);
         DESCRIPTION_IRIS = asList(RDFS.COMMENT, SCHEMA_DESCRIPTION);
-        LABEL_IRIS = asList(RDFS.LABEL);
+        LABEL_IRIS = asList(RDFS.LABEL, SKOS.PREF_LABEL);
         PROPERTY_TYPE_IRIS = asList(RDF.PROPERTY, WIKIDATA_PROPERTY_TYPE);
     }
 }
