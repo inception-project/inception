@@ -182,9 +182,9 @@ public class StatementGroupPanel extends Panel {
                             parent.getIdentifier(), true, true));
                 }
 
-                // Condition here to avoid fail case scenario e.g. WikiData : In case the above domain
-                // property doesn't return anything, we consider the complete list of properties for
-                // now
+                // Condition here to avoid fail case scenario e.g. WikiData : In case the above
+                // domain property doesn't return anything, we consider the complete list of 
+                // properties for now
                 if (properties.isEmpty()) {
                     properties = kbService.listProperties(groupModel.getObject().getKb(),
                             detailPreference == StatementDetailPreference.ALL);
