@@ -31,3 +31,27 @@ image::images/kb3.png[align="center"]
 
 ==== Knowlege Base Page
 
+image::images/kb4.png[align="center"]
+
+
+The knowledge base page provides you with a concept tree hierarchy with a list of instances and statements associated along with the list of properties as shown in the figure above. The user can edit the *LOCAL* knowledge base here which includes adding, editing and deletion of concepts, properties, statements and instances. 
+
+The knowledge base page provides the specific mentions of concepts and instances annotated in the text in the *Mentions* block. 
+
+==== Knowledge Base Scope setting for feature layer
+
+In the *Projects Settings*, switch to the *Layers* tab where the user can edit the configuration for the pre-defined layers or create a new layer with a click *Create* on the bottom of the panel. The user can define several features for each of the layer as shown in the below figure.
+
+image::images/kb5.png[align="center"]
+
+The feature configuration needs a name along with the *Type* which sets the primary scope of the feature. The dropdown provides the user with an option of *KB: Concept/Instance* which sets the scope of the feature to knowledge base entities. 
+
+Furthermore, the feature configuration, if set to *KB: Concept/Instance* asks for the *Allowed values* which has three values as options: *Any Concept/Instance*, *Only Concept* and *Only Instance*. When the user annotates the text with the particular layer for this feature which has been configures for *Any Concept/Instance* , the auto complete field lists all the concept and instances, while for *Only Concept* and *Only Instance* it list only concept or only instance respectively.
+
+The feature configuration allows the user to set up the configuration to list the values from a specific Knowledge base. 
+
+The *Scope* field sets the configuration of the feature with a specific concept 
+
+
+
+
