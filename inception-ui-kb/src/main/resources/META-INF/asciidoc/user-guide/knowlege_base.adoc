@@ -10,22 +10,22 @@ This section briefly describes how to set up a KB in the KB management page on *
 In the *Projects Settings*, switch to the *Knowledge Bases* tab, then click *New…* on the bottom
  and a dialogue box shows as in the figure below.
 
-image::kb1.png[align="center"]
+image::images/kb1.png[align="center"]
 
 To create a *LOCAL | REMOTE*  knowledge base, one needs to choose *Local* for the type. For the reification,
 *NONE* is the defaut case, but to support qualifiers, one needs to choose *WIKIDATA* for the Reification. 
 
-image::kb1.png[align="center"]
+image::images/kb1.png[align="center"]
 
 For the local KB, the user has to choose a file, in case one needs to import a local KB. Alternatively, the user can skip the step to create an empty KB to create a knowledge base from scratch. 
 
 For the remote KB, INCEpTION provides the user with some pre-configured knowledge base such as WikiData, British Museum, BabelNet, DBPediaa and Yago. The user has an option to set up a remote KB apart from the pre-configured ones, in which case the user needs to provide the SPARQL endpoint URL for the Knowledge base as in the figure below.
 
-image::kb2.png[align="center"]
+image::images/kb2.png[align="center"]
 
 In the next step, the user is offered a configurable mapping which relies on a minimal set of IRIs that must be defined for any KB used with the platform. The user can choose one of the pre-configured mapping or provide their own custom defined mapping as shown in the figure below. In the advanced settings, the user can leverage this feature of KB settings when one doesn't want the entire knowledge base to be used and rather choose to identify some specific root concepts. This feature specially helps in case of large knowledge bases such as Wikidata. 
 
-image::kb3.png[align="center"]
+image::images/kb3.png[align="center"]
 
 
 
