@@ -60,7 +60,7 @@ public class NumericLiteralValueSupport
     public List<ValueType> getSupportedValueTypes()
     {
         return asList(
-                new ValueType(XMLSchema.INTEGER.stringValue(), "Numeric", valueTypeSupportId));
+                new ValueType(XMLSchema.DOUBLE.stringValue(), "Numeric", valueTypeSupportId));
     }
     
     @Override
@@ -81,7 +81,8 @@ public class NumericLiteralValueSupport
             || iri.equals(XMLSchema.UNSIGNED_INT)
             || iri.equals(XMLSchema.UNSIGNED_LONG)
             || iri.equals(XMLSchema.UNSIGNED_SHORT)
-            || iri.equals(XMLSchema.SHORT);
+            || iri.equals(XMLSchema.SHORT)
+            || iri.equals(XMLSchema.DOUBLE);
 
         return iri != null && acceptsType;
     }
@@ -100,7 +101,8 @@ public class NumericLiteralValueSupport
                 || range.equals(XMLSchema.UNSIGNED_INT.stringValue())
                 || range.equals(XMLSchema.UNSIGNED_LONG.stringValue())
                 || range.equals(XMLSchema.UNSIGNED_SHORT.stringValue())
-                || range.equals(XMLSchema.SHORT.stringValue())) {
+                || range.equals(XMLSchema.SHORT.stringValue())
+                || range.equals(XMLSchema.DOUBLE.stringValue())) {
             return true;
         }
         

@@ -19,6 +19,8 @@ package de.tudarmstadt.ukp.inception.ui.kb.value.editor;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -26,6 +28,7 @@ import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 
 import com.googlecode.wicket.jquery.core.JQueryBehavior;
@@ -37,6 +40,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.KendoChoi
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
+import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
@@ -54,8 +58,19 @@ public class IRIValueEditor
             IModel<KnowledgeBase> kbModel)
     {   
         super(aId, CompoundPropertyModel.of(aModel));
-        
-        value = new AutoCompleteTextField<KBHandle>("value", Model.of(new KBHandle("","","")) , new TextRenderer<KBHandle>("uiLabel"))
+        // If the value is an IRI, try to create a corresponding
+        // KBHandle as model for the editor, otherwise clear the field (i.e. use empty KBHandle)
+        Object statementValue = aModel.getObject().getValue();
+        KBHandle handleModel = new KBHandle("","","");
+        if (statementValue instanceof IRI) {
+            Optional<KBObject> kbObject = kbService
+                .readKBIdentifier(kbModel.getObject(), ((IRI) statementValue).stringValue());
+            if (kbObject.isPresent()) {
+                handleModel = new KBHandle(kbObject.get().getIdentifier(),
+                    kbObject.get().getUiLabel());
+            }
+        }
+        value = new AutoCompleteTextField<KBHandle>("value", Model.of(handleModel) , new TextRenderer<KBHandle>("uiLabel"))
         {
             private static final long serialVersionUID = -1955006051950156603L;
             
@@ -81,6 +96,10 @@ public class IRIValueEditor
                 if (values.isEmpty()) {
                     values = kbService.listConcepts(kbModel.getObject(), true);
                 }
+                // Filter for input string
+                values = values.stream().filter(
+                    handle -> handle.getUiLabel().toLowerCase().startsWith(input.toLowerCase()))
+                    .collect(Collectors.toList());
                 return values;
             }
             

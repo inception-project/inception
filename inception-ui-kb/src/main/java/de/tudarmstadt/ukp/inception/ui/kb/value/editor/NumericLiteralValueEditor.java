@@ -21,7 +21,7 @@ import org.apache.wicket.Component;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 
-import com.googlecode.wicket.kendo.ui.form.TextArea;
+import com.googlecode.wicket.kendo.ui.form.NumberTextField;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
@@ -31,12 +31,16 @@ public class NumericLiteralValueEditor
 {
     private static final long serialVersionUID = 6935837930064826698L;
 
-    private TextArea<Integer> value;
+    private NumberTextField<Double> value;
     
     public NumericLiteralValueEditor(String aId, IModel<KBStatement> aModel)
     {
         super(aId, CompoundPropertyModel.of(aModel));
-        value = new TextArea<>("value");
+        // Clear the value if it is not an instance of number
+        if (! (aModel.getObject().getValue() instanceof Number)) {
+            aModel.getObject().setValue(0);
+        }
+        value = new NumberTextField<>("value", Double.class);
         value.setOutputMarkupId(true);
         value.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> t.add(getParent())));
         add(value);

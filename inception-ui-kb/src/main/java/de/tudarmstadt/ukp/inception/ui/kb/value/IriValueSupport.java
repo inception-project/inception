@@ -24,9 +24,9 @@ import java.util.Optional;
 
 import org.apache.wicket.model.IModel;
 import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.vocabulary.XMLSchema;
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
@@ -57,19 +57,15 @@ public class IriValueSupport
     @Override
     public List<ValueType> getSupportedValueTypes()
     {
-        return asList(new ValueType("resource", "KB Resource", valueTypeSupportId));
+        return asList(
+            new ValueType(XMLSchema.ANYURI.stringValue(), "KB Resource", valueTypeSupportId));
     }
 
     @Override
     public boolean accepts(KBStatement aStatement, KBProperty aProperty)
-    {   
-        if (aStatement.getValue() != null) {
-            return aStatement.getValue() instanceof IRI;
-        }
-        else {
-            return aStatement.getInstance() instanceof IRI
-                    || aStatement.getInstance() instanceof KBHandle;
-        }
+    {
+        return aStatement.getValue() != null && aStatement.getValue() instanceof IRI;
+
     }
 
     @Override
