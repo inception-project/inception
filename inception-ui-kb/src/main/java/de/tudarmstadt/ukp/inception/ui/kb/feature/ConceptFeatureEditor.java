@@ -59,7 +59,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
-import de.tudarmstadt.ukp.inception.kb.ConceptFeatureValueType;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
@@ -151,14 +150,14 @@ public class ConceptFeatureEditor
             FeatureSupport<ConceptFeatureTraits> fs = featureSupportRegistry
                 .getFeatureSupport(feat);
             ConceptFeatureTraits traits = fs.readTraits(feat);
-            ConceptFeatureValueType allowedType = traits.getAllowedValueType();
-            if (ConceptFeatureValueType.INSTANCE.equals(allowedType)) {
+            switch (traits.getAllowedValueType()) {
+            case INSTANCE:
                 handles = getInstances(traits, project, aState, aHandler, aTypedString);
-            }
-            else if (ConceptFeatureValueType.CONCEPT.equals(allowedType)) {
+                break;
+            case CONCEPT:
                 handles = getConcepts(traits, project, aState, aHandler, aTypedString);
-            }
-            else {
+                break;
+            default:
                 // Allows both
                 handles.addAll(getInstances(traits, project, aState, aHandler, aTypedString));
                 handles.addAll(getConcepts(traits, project, aState, aHandler, aTypedString));
