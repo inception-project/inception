@@ -376,7 +376,8 @@ public interface KnowledgeBaseService
         aAll, int aLimit);
 
     /**
-     * List the properties for a specific accepted domain identifier
+     * List the properties for a specific accepted domain identifier and also 
+     * include properties which do not have any domain specified. 
      * 
      * @param kb
      *            The knowledge base

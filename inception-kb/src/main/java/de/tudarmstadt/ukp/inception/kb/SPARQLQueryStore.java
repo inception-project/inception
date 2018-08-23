@@ -49,11 +49,17 @@ public class SPARQLQueryStore
             , "}"
             , "LIMIT " + aLimit);
     
-    //Query to get property specific domain elements
+    //Query to get property specific domain elements including properties 
+    //which do not have a 
+    // domain specified
     public static final String PROPERTYLIST_DOMAIN_DEPENDENT = String.join("\n"
             , SPARQL_PREFIX
             , "SELECT DISTINCT ?s ?l ?d WHERE {"
-            , "  ?s rdfs:domain/(owl:unionOf/rdf:rest*/rdf:first)* ?aDomain "
+            , "{  ?s rdfs:domain/(owl:unionOf/rdf:rest*/rdf:first)* ?aDomain }"
+            , " UNION "
+            , "{ ?s a ?prop "
+            , "    VALUES ?prop { rdf:Property owl:ObjectProperty owl:DatatypeProperty owl:AnnotationProperty} "
+            , "    FILTER NOT EXISTS {  ?s rdfs:domain/(owl:unionOf/rdf:rest*/rdf:first)* ?x } }"
             , "  OPTIONAL {"
             , "    ?s ?pLABEL ?l ."
             , "    FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\"))"
