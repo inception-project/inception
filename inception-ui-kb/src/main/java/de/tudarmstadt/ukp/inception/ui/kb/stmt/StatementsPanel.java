@@ -40,7 +40,6 @@ import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
-import org.apache.wicket.model.util.ListModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.eclipse.rdf4j.query.QueryEvaluationException;
 import org.slf4j.Logger;
@@ -100,7 +99,10 @@ public class StatementsPanel extends Panel {
         
         setUpDetailPreference(aDetailPreference);
 
-        statementGroups = new ListModel<StatementGroupBean>(getStatementGroupBeans());
+        // We must use a LambdaModel here to delay the fetching of the beans until rendering such
+        // that setting the group comparator actually has an effect. If we use a static model here,
+        // the default group comparator (above) will always be used.
+        statementGroups = LambdaModel.of(this::getStatementGroupBeans);
 
         RefreshingView<StatementGroupBean> groupList = new RefreshingView<StatementGroupBean>(
                 "statementGroupListView") {
