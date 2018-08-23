@@ -11,7 +11,7 @@ In the *Projects Settings*, switch to the *Knowledge Bases* tab, then click *New
  and a dialogue box shows as in the figure below.
 
 [.thumb]
-image::images/kb1.png[align="center"]
+image::images/kb1.png[]
 
 To create a *LOCAL | REMOTE*  knowledge base, one needs to choose *Local* for the type. For the reification,
 *NONE* is the defaut case, but to support qualifiers, one needs to choose *WIKIDATA* for the Reification. 
@@ -21,12 +21,12 @@ For the local KB, the user has to choose a file, in case one needs to import a l
 For the remote KB, INCEpTION provides the user with some pre-configured knowledge base such as WikiData, British Museum, BabelNet, DBPediaa and Yago. The user has an option to set up a remote KB apart from the pre-configured ones, in which case the user needs to provide the SPARQL endpoint URL for the Knowledge base as in the figure below.
 
 [.thumb]
-image::images/kb2.png[align="center"]
+image::images/kb2.png[]
 
 In the next step, the user is offered a configurable mapping which relies on a minimal set of IRIs that must be defined for any KB used with the platform. The user can choose one of the pre-configured mapping or provide their own custom defined mapping as shown in the figure below. In the advanced settings, the user can leverage this feature of KB settings when one doesn't want the entire knowledge base to be used and rather choose to identify some specific root concepts. This feature specially helps in case of large knowledge bases such as Wikidata.
  
 [.thumb]
-image::images/kb3.png[align="center"]
+image::images/kb3.png[]
 
 ==== Knowledge Base Page
 
@@ -35,14 +35,14 @@ The knowledge base page provides you with a concept tree hierarchy with a list o
 The knowledge base page provides the specific mentions of concepts and instances annotated in the text in the *Mentions* block. 
 
 [.thumb]
-image::images/kb4.png[align="center"]
+image::images/kb4.png[]
 
 ==== Knowledge Base Scope setting for feature layer
 
 In the *Projects Settings*, switch to the *Layers* tab where the user can edit the configuration for the pre-defined layers or create a new layer with a click *Create* on the bottom of the panel. The user can define several features for each of the layer as shown in the below figure.
 
 [.thumb]
-image::images/kb5.png[align="center"]
+image::images/kb5.png[]
 
 The feature configuration needs a name along with the *Type* which sets the primary scope of the feature. The dropdown provides the user with an option of *KB: Concept/Instance* which sets the scope of the feature to knowledge base entities. 
 
