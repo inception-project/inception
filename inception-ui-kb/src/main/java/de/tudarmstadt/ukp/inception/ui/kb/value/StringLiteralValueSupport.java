@@ -66,8 +66,9 @@ public class StringLiteralValueSupport
     @Override
     public boolean accepts(KBStatement aStatement, KBProperty aProperty)
     {
+        // accept statements with null as value so that the StringEditor appears as default case
         if (aStatement.getValue() == null) {
-            return false;
+            return true;
         }
         IRI iri = DefaultDatatypeMapper.getDatatypeURI((aStatement.getValue()).getClass());
         if (XMLSchema.DATETIME.equals(iri)) {
