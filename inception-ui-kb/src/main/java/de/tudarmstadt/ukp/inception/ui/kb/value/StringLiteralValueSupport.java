@@ -70,7 +70,14 @@ public class StringLiteralValueSupport
             return false;
         }
         IRI iri = DefaultDatatypeMapper.getDatatypeURI((aStatement.getValue()).getClass());
-        return iri != null && XMLSchema.STRING.equals(iri);
+        if (XMLSchema.DATETIME.equals(iri)) {
+            iri.getClass();
+        }
+        // Conditions for different datatype URI apart from String
+        boolean accept = XMLSchema.STRING.equals(iri) || XMLSchema.DATETIME.equals(iri)
+                || XMLSchema.DATE.equals(iri);
+        
+        return iri != null && accept ;
     }
     
     @Override
