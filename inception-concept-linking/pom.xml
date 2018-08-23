@@ -112,5 +112,9 @@
       <groupId>org.eclipse.rdf4j</groupId>
       <artifactId>rdf4j-query</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.eclipse.rdf4j</groupId>
+      <artifactId>rdf4j-queryrender</artifactId>
+    </dependency>
   </dependencies>
 </project>

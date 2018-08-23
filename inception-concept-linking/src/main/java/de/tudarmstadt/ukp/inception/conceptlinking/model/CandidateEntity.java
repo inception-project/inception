@@ -58,6 +58,11 @@ public class CandidateEntity
     private int levContext;
 
     /**
+     * edit distance between typed string and candidate entity label
+     */
+    private int levTypedString;
+
+    /**
      * set of directly related entities as IRI Strings
      */
     private Set<String> signatureOverlap;
@@ -90,6 +95,8 @@ public class CandidateEntity
         this.label = label;
         this.alternativeLabel = alternativeLabel;
         this.description = description;
+        this.levTypedString = Integer.MAX_VALUE;
+        this.frequency = 0;
     }
 
     /**
@@ -173,6 +180,19 @@ public class CandidateEntity
     }
 
     /**
+     * @param aLevTypedString edit distance between typed string and candidate entity label
+     */
+    public void setLevTypedString(int aLevTypedString)
+    {
+        levTypedString = aLevTypedString;
+    }
+
+    public int getLevTypedString()
+    {
+        return levTypedString;
+    }
+
+    /**
      * @param levContext edit distance between mention + context and candidate entity label
      */
     public void setLevContext(int levContext)
@@ -250,5 +270,11 @@ public class CandidateEntity
     {
         return frequency;
     }
-    
+
+    @Override
+    public String toString()
+    {
+        return "CandidateEntity{" + "label='" + label + '\'' + ", alternativeLabel='"
+            + alternativeLabel + '\'' + '}';
+    }
 }

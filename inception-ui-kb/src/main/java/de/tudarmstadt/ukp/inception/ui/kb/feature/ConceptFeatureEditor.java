@@ -118,6 +118,7 @@ public class ConceptFeatureEditor
             {
                 super.onConfigure(behavior);
                 behavior.setOption("autoWidth", true);
+                behavior.setOption("ignoreCase", false);
             }
 
             @Override
