@@ -188,8 +188,9 @@ public class StatementGroupPanel extends Panel {
                 if (properties.isEmpty()) {
                     properties = kbService.listProperties(groupModel.getObject().getKb(),
                             detailPreference == StatementDetailPreference.ALL);
-                }
-                
+                } 
+              
+                // adding base properties to the list 
                 properties.add(kbService
                         .readProperty(groupModel.getObject().getKb(),
                                 groupModel.getObject().getKb().getLabelIri().stringValue())
@@ -198,7 +199,6 @@ public class StatementGroupPanel extends Panel {
                         .readProperty(groupModel.getObject().getKb(),
                                 groupModel.getObject().getKb().getDescriptionIri().stringValue())
                         .get().toKBHandle());
-                
             }
             catch (QueryEvaluationException e) {
                 error("Unable to list properties: " + e.getLocalizedMessage());
