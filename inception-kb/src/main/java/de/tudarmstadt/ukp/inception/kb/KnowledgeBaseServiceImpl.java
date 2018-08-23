@@ -172,6 +172,8 @@ public class KnowledgeBaseServiceImpl
                     akb.getLabelIri().stringValue()));
             createBaseProperty(akb, new KBProperty(akb.getDescriptionIri().getLocalName(),
                     akb.getDescriptionIri().stringValue()));
+            createBaseProperty(akb, new KBProperty(akb.getTypeIri().getLocalName(),
+                    akb.getTypeIri().stringValue()));
         }
     }
 
