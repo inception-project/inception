@@ -193,34 +193,66 @@ public class SearchServiceImpl
         }
     }
 
-    @Override
-    public void indexDocument(Project aProject, AnnotationDocument aAnnotationDocument, JCas aJCas)
+    private boolean canAddDocumentToIndex(Index aIndex)
     {
-        // Retrieve index entry for the project
-        Index index = getIndexFromMemory(aProject);
-
-        if (!index.getPhysicalIndex().isCreated()) {
+        if (!aIndex.getPhysicalIndex().isCreated()) {
             // Physical index does not exist. 
             log.debug("Physical index not created. Set it to invalid and enqueue reindex task.");
             
             // Set the invalid flag
-            index.setInvalid(true);
-            updateIndex(index);
+            aIndex.setInvalid(true);
+            updateIndex(aIndex);
 
             // Schedule new reindex process
-            indexScheduler.enqueueReindexTask(aProject);
-        }
-        else {
+            indexScheduler.enqueueReindexTask(aIndex.getProject());
+            
+            return false;
+        } else {
             // Physical index already exists
-            log.debug("Physical index already created. Proceed to index annotation.");
+            log.debug("Physical index already created.");
 
-            if (!index.getPhysicalIndex().isOpen()) {
+            if (!aIndex.getPhysicalIndex().isOpen()) {
                 // Physical index is not open. Open it.
                 log.debug("Physical index not open. Open it");
 
-                index.getPhysicalIndex().openPhysicalIndex();
+                aIndex.getPhysicalIndex().openPhysicalIndex();
             }
 
+            return false;
+        }
+    }
+    
+    @Override
+    public void indexDocument(SourceDocument aSourceDocument, JCas aJCas)
+    {
+        // Retrieve index entry for the project
+        Index index = getIndexFromMemory(aSourceDocument.getProject());
+
+        if (canAddDocumentToIndex(index)) {
+            try {
+                // Remove source document from index.
+                log.debug("Remove source document from index");
+                index.getPhysicalIndex().deindexDocument(aSourceDocument);
+
+                // Add annotation document to the index again
+                log.debug("Add source document to index");
+                index.getPhysicalIndex().indexDocument(aSourceDocument, aJCas);
+            }
+            catch (IOException e) {
+                // Auto-generated catch block
+                e.printStackTrace();
+            }
+        }
+    }
+
+
+    @Override
+    public void indexDocument(AnnotationDocument aAnnotationDocument, JCas aJCas)
+    {
+        // Retrieve index entry for the project
+        Index index = getIndexFromMemory(aAnnotationDocument.getProject());
+
+        if (canAddDocumentToIndex(index)) {
             try {
                 // Remove annotation document from index.
                 log.debug("Remove annotation document from index");
@@ -234,10 +266,9 @@ public class SearchServiceImpl
                 // Auto-generated catch block
                 e.printStackTrace();
             }
-
         }
     }
-    
+
     @TransactionalEventListener(fallbackExecution = true)
     @Transactional
     public void afterAnnotationUpdate(AfterAnnotationUpdateEvent aEvent) throws Exception
@@ -247,8 +278,7 @@ public class SearchServiceImpl
         AnnotationDocument document = aEvent.getDocument();
 
         // Schedule new document index process
-        indexScheduler.enqueueIndexDocument(document.getProject(), aEvent.getDocument(),
-                aEvent.getJCas());
+        indexScheduler.enqueueIndexDocument(aEvent.getDocument(), aEvent.getJCas());
     }
 
     @Override
@@ -311,35 +341,9 @@ public class SearchServiceImpl
 
         SourceDocument document = aEvent.getDocument();
 
-        Project project = document.getProject();
+        // Schedule new document index process
+        indexScheduler.enqueueIndexDocument(aEvent.getDocument(), aEvent.getJcas());
 
-        Index index = getIndexFromMemory(project);
-
-        if (!index.getPhysicalIndex().isCreated()) {
-            // Physical index does not exist. 
-            log.debug("Physical index not created. Set it to invalid and enqueue reindex task.");
-
-            // Set the invalid flag
-            index.setInvalid(true);
-            updateIndex(index);
-
-            // Schedule reindexing of the physical index
-            indexScheduler.enqueueReindexTask(project);
-        }
-        else {
-            // Physical index exists
-            log.debug("Physical index already created. Proceed to index document.");
-
-            if (!index.getPhysicalIndex().isOpen()) {
-                // Physical index is not open. Open it.
-                log.debug("Physical index not open. Open it");
-
-                index.getPhysicalIndex().openPhysicalIndex();
-            }
-
-            // Index the new document
-            index.getPhysicalIndex().indexDocument(document, aEvent.getJcas());
-        }
     }
 
     @TransactionalEventListener(fallbackExecution = true)
@@ -440,5 +444,4 @@ public class SearchServiceImpl
             return false;
         }
     }
-
 }

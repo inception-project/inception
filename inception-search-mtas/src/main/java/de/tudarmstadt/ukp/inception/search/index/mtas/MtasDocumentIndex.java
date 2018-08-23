@@ -472,8 +472,10 @@ public class MtasDocumentIndex
     @Override
     public void indexDocument(AnnotationDocument aDocument, JCas aJCas) throws IOException
     {
+        log.debug("***** Indexing annotation document");
         indexDocument(aDocument.getName(), aDocument.getDocument().getId(), aDocument.getId(),
                 aDocument.getUser(), aJCas);
+        log.debug("***** End of Indexing annotation document");
     };
 
     /**

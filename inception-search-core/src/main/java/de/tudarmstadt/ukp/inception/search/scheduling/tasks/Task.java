@@ -23,6 +23,7 @@ import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 /**
@@ -34,6 +35,7 @@ public abstract class Task
 {
     private final Project project;
     private final User user;
+    private SourceDocument sourceDocument;
     private AnnotationDocument annotationDocument;
     private JCas jCas;
 
@@ -46,13 +48,22 @@ public abstract class Task
         user = aUser;
     }
 
-    public Task(Project aProject, AnnotationDocument aAnnotationDocument, JCas aJCas)
+    public Task(SourceDocument aSourceDocument, JCas aJCas)
     {
-        notNull(aProject);
+        notNull(aSourceDocument);
+
+        project = aSourceDocument.getProject();
+        sourceDocument = aSourceDocument;
+        jCas = aJCas;
+        user = null;
+    }
+
+    public Task(AnnotationDocument aAnnotationDocument, JCas aJCas)
+    {
         notNull(aAnnotationDocument);
         notNull(aJCas);
 
-        project = aProject;
+        project = aAnnotationDocument.getProject();
         annotationDocument = aAnnotationDocument;
         jCas = aJCas;
         user = null;
@@ -66,6 +77,11 @@ public abstract class Task
     public Project getProject()
     {
         return project;
+    }
+
+    public SourceDocument getSourceDocument()
+    {
+        return sourceDocument;
     }
 
     public AnnotationDocument getAnnotationDocument()
@@ -87,6 +103,8 @@ public abstract class Task
         builder.append(project.getName());
         builder.append(", user=");
         builder.append((user == null) ? " " : user.getUsername());
+        builder.append(", sourceDocument=");
+        builder.append(sourceDocument.getName());
         builder.append(", annotationDocument=");
         builder.append(annotationDocument.getName());
         builder.append("]");
@@ -100,6 +118,8 @@ public abstract class Task
         int result = 1;
         result = prime * result + ((project == null) ? 0 : project.hashCode());
         result = prime * result + ((user == null) ? 0 : user.hashCode());
+        result = prime * result
+                + ((sourceDocument == null) ? 0 : sourceDocument.hashCode());
         result = prime * result
                 + ((annotationDocument == null) ? 0 : annotationDocument.hashCode());
         return result;
@@ -132,6 +152,14 @@ public abstract class Task
             }
         }
         else if (!user.equals(other.user)) {
+            return false;
+        }
+        else if (sourceDocument == null) {
+            if (other.sourceDocument != null) {
+                return false;
+            }
+        }
+        else if (!sourceDocument.equals(other.sourceDocument)) {
             return false;
         }
         else if (annotationDocument == null) {

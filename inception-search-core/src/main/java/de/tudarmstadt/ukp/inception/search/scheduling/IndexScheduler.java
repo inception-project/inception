@@ -33,6 +33,7 @@ import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.search.scheduling.tasks.IndexDocumentTask;
 import de.tudarmstadt.ukp.inception.search.scheduling.tasks.ReindexTask;
 import de.tudarmstadt.ukp.inception.search.scheduling.tasks.Task;
@@ -71,31 +72,50 @@ public class IndexScheduler
         enqueue(new ReindexTask(aProject));
     }
 
-    public void enqueueIndexDocument(Project aProject, AnnotationDocument aAnnotationDocument,
-            JCas aJCas)
+    public void enqueueIndexDocument(SourceDocument aSourceDocument, JCas aJCas)
     {
-        // Index document
-        enqueue(new IndexDocumentTask(aProject, aAnnotationDocument, aJCas));
+        // Index source document
+        enqueue(new IndexDocumentTask(aSourceDocument, aJCas));
+    }
+
+    public void enqueueIndexDocument(AnnotationDocument aAnnotationDocument, JCas aJCas)
+    {
+        // Index annotation document
+        enqueue(new IndexDocumentTask(aAnnotationDocument, aJCas));
     }
     
     public synchronized void enqueue(Task aRunnable)
     {
-        if (aRunnable.getAnnotationDocument() == null) {
+        if (aRunnable.getAnnotationDocument() == null && aRunnable.getSourceDocument() == null) {
             // Project indexing
             // If there is no indexing in the queue on for this project, enqueue it
             if (!isIndexing(aRunnable.getProject())) {
                 queue.offer(aRunnable);
                 log.info("Enqueued new indexing task: {}", aRunnable);
             }
-        } else {
-            // Document indexing
+        }
+        else if (aRunnable.getSourceDocument() != null) {
+            // Source document indexing
+            // If there is no indexing in the queue on for this project, enqueue it
+            if (!isIndexingDocument(aRunnable.getSourceDocument())) {
+                queue.offer(aRunnable);
+                log.info("Enqueued new source document indexing task: {}", aRunnable);
+            }
+            else {
+                log.debug("No source document indexing task enqueued due to a previous "
+                        + "enqueued task: {}", aRunnable);
+            }
+        }
+        else if (aRunnable.getAnnotationDocument() != null) {
+            // Annotation document indexing
             // If there is no indexing in the queue on for this project, enqueue it
             if (!isIndexingDocument(aRunnable.getAnnotationDocument())) {
                 queue.offer(aRunnable);
                 log.info("Enqueued new document indexing task: {}", aRunnable);
-            } else {
-                log.debug("No document indexing task enqueued due to a previous enqueued task: {}",
-                        aRunnable);
+            }
+            else {
+                log.debug("No annotation document indexing task enqueued due to a previous "
+                        + "enqueued task: {}", aRunnable);
             }
         }
     }
@@ -117,6 +137,19 @@ public class IndexScheduler
         while (it.hasNext()) {
             Task t = it.next();
             if (t.getProject().equals(p)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean isIndexingDocument(SourceDocument aSourceDocument)
+    {
+        Iterator<Task> it = queue.iterator();
+        while (it.hasNext()) {
+            Task t = it.next();
+            if (t.getProject().equals(aSourceDocument.getProject())
+                    && t.getAnnotationDocument().getId() == aSourceDocument.getId()) {
                 return true;
             }
         }

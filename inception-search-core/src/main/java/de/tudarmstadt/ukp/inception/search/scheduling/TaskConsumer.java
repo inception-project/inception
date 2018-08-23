@@ -62,7 +62,7 @@ public class TaskConsumer
 
                     log.debug("Starting new indexing task [{}]...", task);
                     task.run();
-                    log.info("Indexing tasl {} completed successfully.", task);
+                    log.info("Indexing task {} completed successfully.", task);
                 }
                 catch (Exception e) {
                     log.error("Indexing task {} failed.", task, e);
