@@ -133,6 +133,9 @@ public class MtasDocumentIndexTest
     private @Autowired SearchService searchService;
     private @Autowired AnnotationSchemaService annotationSchemaService;
 
+    private final int NUM_WAITS = 3;
+    private final int WAITING_TIME = 1000;
+    
     @Before
     public void setUp()
     {
@@ -272,6 +275,22 @@ public class MtasDocumentIndexTest
         uploadDocument(project, fileContent, sourceDocument);
 
         annotateDocument(project, user, sourceDocument);
+
+        int numWaits = 0;
+        
+        log.debug("Waiting 1 sec for the annotation to be indexed...");
+
+        // Wait for the asynchronous indexing task to finish. We need a sleep before the while 
+        // because otherwise there would not be time even for the index becoming invalid 
+        // before becoming valid again.
+        
+        Thread.sleep(WAITING_TIME);
+        
+        while (!searchService.isIndexValid(project) && numWaits < NUM_WAITS) {
+            log.debug("Waiting 1 sec for the annotation to be indexed...");
+            Thread.sleep(WAITING_TIME);
+            numWaits ++;
+        }
 
         String query = "<Named_entity.value=\"LOC\"/>";
 
