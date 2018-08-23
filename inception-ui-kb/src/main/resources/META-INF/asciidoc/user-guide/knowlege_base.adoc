@@ -50,7 +50,8 @@ Furthermore, the feature configuration, if set to *KB: Concept/Instance* asks fo
 
 The feature configuration allows the user to set up the configuration to list the values from a specific Knowledge base. 
 
-The *Scope* field sets the configuration of the feature with a specific concept 
+The *Scope* field sets the configuration of the feature with a specific concept allowing the values for the auto complete field from a specific range of values which includes everything with "is-a" relationship with the specific concept mentioned here. In case the user selects *Any Concept/Instance*, the values will be instances of the specified concept and the child concepts (which includes the hierarchy of child concepts) including their instances, of the specified concept in the *Scope*. Likewise, the choice of *Only Concept* limit the values to the child concepts (which includes the hierarchy of child concepts) and  *Only Instance* limit the values to all of the instances and the instances for the child concepts of the specified concept. 
+
 
 
 
