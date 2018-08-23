@@ -257,7 +257,7 @@ public class WikiDataReification
                 "SELECT DISTINCT ?p ?o WHERE {",
             "  ?id ?p ?o .",
             "}",
-            "LIMIT "+ SPARQLQueryStore.aLimit);
+            "LIMIT " + SPARQLQueryStore.aLimit);
         Resource id = vf.createBNode(aStatementId);
         try (RepositoryConnection conn = kbService.getConnection(kb)) {
             TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
