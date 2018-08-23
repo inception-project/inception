@@ -713,6 +713,31 @@
   <build>
     <plugins>
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <configuration>
+          <notimestamp>true</notimestamp>
+          <!-- Exclude UIMA types -->
+          <sourceFileExcludes>
+            <exclude>**/*_Type.java</exclude>
+          </sourceFileExcludes>
+          <tags>
+            <tag>
+              <name>generated</name>
+              <placement>X</placement>
+            </tag>
+            <tag>
+              <name>ordered</name>
+              <placement>X</placement>
+            </tag>
+            <tag>
+              <name>modifiable</name>
+              <placement>X</placement>
+            </tag>
+          </tags>
+        </configuration>
+      </plugin>
+      <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>buildnumber-maven-plugin</artifactId>
         <version>1.3</version>
