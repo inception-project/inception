@@ -31,6 +31,7 @@ import java.util.NavigableMap;
 import java.util.Optional;
 import java.util.TreeMap;
 
+import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.io.IOUtils;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.impl.XmiCasDeserializer;
@@ -256,9 +257,9 @@ public class MtasUimaParser
                 Optional<FeatureIndexingSupport> fis = featureIndexingSupportRegistry
                         .getIndexingSupport(feature);
                 if (fis.isPresent()) {
-                    Map<String, String> fieldsAndValues = fis.get().indexFeatureValue(feature,
-                            aAnnotation);
-                    for (Entry<String, String> e : fieldsAndValues.entrySet()) {
+                    MultiValuedMap<String, String> fieldsAndValues = fis.get()
+                            .indexFeatureValue(feature, aAnnotation);
+                    for (Entry<String, String> e : fieldsAndValues.entries()) {
                         indexFeatureValue(e.getKey(), e.getValue(), mtasId++,
                                 aAnnotation.getBegin(), aAnnotation.getEnd(), aBeginToken,
                                 aEndToken);

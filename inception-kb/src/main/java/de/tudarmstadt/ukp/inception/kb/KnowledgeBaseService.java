@@ -23,6 +23,7 @@ import java.io.OutputStream;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Statement;
@@ -342,6 +343,10 @@ public interface KnowledgeBaseService
             int aLimit)
         throws QueryEvaluationException;
     
+    List<KBHandle> listChildConceptsInstances(KnowledgeBase aKB, String aParentIdentifier,
+            boolean aAll, int aLimit) throws QueryEvaluationException;
+
+
     RepositoryConnection getConnection(KnowledgeBase kb);
 
     interface ReadAction<T>
@@ -359,10 +364,18 @@ public interface KnowledgeBaseService
     }
 
     List<KBHandle> list(KnowledgeBase kb, IRI aType, boolean aIncludeInferred, boolean
-        aAll);
+        aAll, int aLimit);
+
+
+    List<KBHandle> listDomainProperties(KnowledgeBase kb, String aDomain, boolean aIncludeInferred,
+            boolean aAll);
+
+    List<KBHandle> listPropertiesRangeValue(KnowledgeBase kb, String aDomain,
+            boolean aIncludeInferred, boolean aAll);
     
     List<KBHandle> listProperties(KnowledgeBase kb, IRI aType, boolean aIncludeInferred, boolean
             aAll);
+
     /**
      * Adds a new qualifier in the given knowledge base. Does
      * nothing if the knowledge base is read only.
@@ -398,7 +411,51 @@ public interface KnowledgeBaseService
 
     boolean statementsMatchSPO(KnowledgeBase akb, KBStatement mockStatement);
 
+    /**
+     * Define base default properties of comment, label and subClassOf with schema set defined for
+     * KB while initializing the KB
+     *
+     * @param akb
+     *            The knowledge base to initialize base properties
+     */
+    void defineBaseProperties(KnowledgeBase akb);
+
+    /**
+     * Read an identifier value to return {@link KBObject}
+     * @param aProject Project to read the KB identifier
+     * @param aIdentifier String value for IRI
+     * @return {@link Optional} of {@link KBObject} of type {@link KBConcept} or {@link KBInstance}
+     */
     Optional<KBObject> readKBIdentifier(Project aProject, String aIdentifier);
+
+    List<KBHandle> getParentConceptsForConcept(KnowledgeBase aKB, String aIdentifier,
+            boolean aAll)
+        throws QueryEvaluationException;
+
+    Set<KBHandle> getParentConceptList(KnowledgeBase aKB, String aIdentifier, boolean aAll)
+            throws QueryEvaluationException;
+
+    List<KBHandle> getConceptForInstance(KnowledgeBase aKB, String aIdentifier,
+            boolean aAll)
+        throws QueryEvaluationException;
+
+    boolean hasImplicitNamespace(String s);
+
+  /**
+     * Read an identifier value from a particular kb to return {@link KBObject}
+     * @param kb
+     * @param aIdentifier
+     * @return {@link Optional} of {@link KBObject} of type {@link KBConcept} or {@link KBInstance}
+     */
+    Optional<KBObject> readKBIdentifier(KnowledgeBase kb, String aIdentifier);
+
+    /**
+     * List all the concepts
+     * @param kb The knowledge base from which concepts will be listed
+     * @param aAll indicates whether to include everything
+     * @return list of all the properties {@link KBHandle}
+     */
+    List<KBHandle> listAllConcepts(KnowledgeBase kb, boolean aAll) throws QueryEvaluationException;
 
     void indexLocalKb(KnowledgeBase aKb) throws IOException;
 }

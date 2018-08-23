@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.kb.exporter;
 
+import static java.util.Arrays.asList;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -39,11 +41,16 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.export.exporters.LayerExporter;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExporter;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
+import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
@@ -62,13 +69,21 @@ public class KnowledgeBaseExporter implements ProjectExporter
     private static final RDFFormat knowledgeBaseFileExportFormat = RDFFormat.TURTLE;
     
     private final KnowledgeBaseService kbService;
+    private final AnnotationSchemaService schemaService;
     
     @Autowired
-    public KnowledgeBaseExporter(KnowledgeBaseService knowledgeBaseService)
+    public KnowledgeBaseExporter(KnowledgeBaseService aKbService,
+            AnnotationSchemaService aSchemaService)
     {
-        kbService = knowledgeBaseService;
+        kbService = aKbService;
+        schemaService = aSchemaService;
     }
     
+    @Override
+    public List<Class<? extends ProjectExporter>> getImportDependencies() {
+        return asList(LayerExporter.class);
+    }
+
     @Override
     public void exportData(ProjectExportRequest aRequest, ExportedProject aExProject, File aFile)
         throws Exception
@@ -77,6 +92,7 @@ public class KnowledgeBaseExporter implements ProjectExporter
         List<ExportedKnowledgeBase> exportedKnowledgeBases = new ArrayList<>();
         for (KnowledgeBase kb: kbService.getKnowledgeBases(project)) {
             ExportedKnowledgeBase exportedKB = new ExportedKnowledgeBase();
+            exportedKB.setId(kb.getRepositoryId());
             exportedKB.setName(kb.getName());
             exportedKB.setType(kb.getType().toString());
             exportedKB.setClassIri(kb.getClassIri().stringValue());
@@ -164,7 +180,33 @@ public class KnowledgeBaseExporter implements ProjectExporter
                 cfg = kbService.getRemoteConfig(exportedKB.getRemoteURL());
                 kbService.registerKnowledgeBase(kb, cfg);
             }
+            
+            // Early versions of INCEpTION did not set the ID.
+            if (exportedKB.getId() == null) {
+                LOG.warn(
+                        "Cannot update concept feature traits: KB identifier is not set in the exported project.");
+                continue;
+            }
+            
+            for (AnnotationFeature feature : schemaService.listAnnotationFeature(aProject)) {
+                if (feature.getType().startsWith("kb:")) {
+                    try {
+                        ConceptFeatureTraits traits = JSONUtil
+                                .fromJsonString(ConceptFeatureTraits.class, feature.getTraits());
+                        
+                        if (traits != null && exportedKB.getId().equals(traits.getRepositoryId())) {
+                            traits.setRepositoryId(kb.getRepositoryId());
+                            feature.setTraits(JSONUtil.toJsonString(traits));
+                            schemaService.createFeature(feature);
+                        }
+                    }
+                    catch (IOException e) {
+                        LOG.error("Unable to update traits", e);
+                    }
+                }
+            }
         }
+        
         int n = knowledgeBases.length;
         LOG.info("Imported [{}] knowledge bases for project [{}]", n, aProject.getName());
     }
@@ -189,5 +231,4 @@ public class KnowledgeBaseExporter implements ProjectExporter
         return KNOWLEDGEBASEFILES + kb.getName() + "."
                 + knowledgeBaseFileExportFormat.getDefaultFileExtension();
     }
-        
 }

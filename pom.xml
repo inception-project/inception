@@ -59,8 +59,8 @@
     <maven>3.0.5</maven>
   </prerequisites>
   <properties>
-    <webanno.version>3.5.0-SNAPSHOT</webanno.version>
-    <dkpro.version>1.9.2</dkpro.version>
+    <webanno.version>3.5.0-beta-3</webanno.version>
+    <dkpro.version>1.9.3</dkpro.version>
     <spring.version>5.0.7.RELEASE</spring.version>
     <spring.boot.version>1.5.14.RELEASE</spring.boot.version>
     <wicket.version>7.10.0</wicket.version>
@@ -528,7 +528,12 @@
         <version>4.4.9</version>
       </dependency>
       <dependency>
-      <groupId>it.unimi.dsi</groupId>
+        <groupId>com.github.ben-manes.caffeine</groupId>
+        <artifactId>caffeine</artifactId>
+        <version>2.6.2</version>
+      </dependency>
+      <dependency>
+        <groupId>it.unimi.dsi</groupId>
         <artifactId>dsiutils</artifactId>
         <version>2.1.10</version>
         <exclusions>
