@@ -21,6 +21,8 @@ import java.io.Serializable;
 
 import org.eclipse.rdf4j.model.util.URIUtil;
 
+import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
+
 /**
  * A {@code KnowledgeGraphItem} represents any element (entity, type, relation, etc.) in the
  * knowledge graph. {@code KnowledgeGraphItem}s can be identified by a {@code String} identifier.
@@ -30,6 +32,16 @@ public interface KBObject
     extends Serializable
 {
 
+    /**
+     * Returns the knowledge base of this element.
+     * 
+     * @return the {@link KnowledgeBase} for the object 
+     */
+    KnowledgeBase getKB();
+
+    void setKB(KnowledgeBase kb);
+
+    
     /**
      * Returns the unique identifier of this element.
      * 
@@ -69,5 +81,13 @@ public interface KBObject
         } else {
             return getIdentifier();
         }
+    }
+    
+    default KBHandle toKBHandle() {
+        KBHandle handle = new KBHandle();
+        handle.setIdentifier(getIdentifier());
+        handle.setName(getName());
+        return handle;
+        
     }
 }
