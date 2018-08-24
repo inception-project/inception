@@ -153,12 +153,13 @@ public class StatementEditor extends Panel
         KBStatement modifiedStatement = aForm.getModelObject();
         try {
             // persist the modified statement and replace the original, unchanged model
+            KBStatement oldStatement = statement.getObject();
             kbService.upsertStatement(kbModel.getObject(), modifiedStatement);
             statement.setObject(modifiedStatement);
             // switch back to ViewMode and send notification to listeners
             actionCancelExistingStatement(aTarget);
             send(getPage(), Broadcast.BREADTH,
-                    new AjaxStatementChangedEvent(aTarget, statement.getObject()));
+                    new AjaxStatementChangedEvent(aTarget, statement.getObject(), oldStatement));
         }
         catch (RepositoryException e) {
             error("Unable to update statement: " + e.getLocalizedMessage());

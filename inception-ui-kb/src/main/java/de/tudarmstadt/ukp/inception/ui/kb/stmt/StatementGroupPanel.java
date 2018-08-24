@@ -292,6 +292,14 @@ public class StatementGroupPanel extends Panel {
             if (!isEventForThisStatementGroup) {
                 return;
             }
+            else if (!event.isDeleted()) {
+                KBStatement oldStatement = event.getStatementBeforeChange();
+                // update the statement from the event
+                StatementGroupBean bean = groupModel.getObject();
+                bean.getStatements().remove(oldStatement);
+                bean.getStatements().add(event.getStatement());
+                groupModel.setObject(bean);
+            }
             if (event.isDeleted()) {
                 // remove statement found in the event from the model
                 StatementGroupBean bean = groupModel.getObject();
@@ -307,6 +315,7 @@ public class StatementGroupPanel extends Panel {
                     event.getTarget().add(statementListWrapper);
                 }
             }
+            event.getTarget().add(statementListWrapper);
         }
 
         private void actionAddValue(AjaxRequestTarget target) {
