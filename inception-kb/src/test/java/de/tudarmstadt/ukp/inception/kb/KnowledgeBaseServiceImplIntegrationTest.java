@@ -326,7 +326,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
                 kb.getLabelIri().stringValue(), kb.getDescriptionIri().stringValue(),
                 kb.getTypeIri().stringValue() };
         
-        assertEquals(listProperties.size(),4);
+        assertEquals(listProperties.size(), 4);
         assertThat(listIdentifier).as("Check that base properties are created")
                 .contains(expectedProps);
     }
