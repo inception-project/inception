@@ -49,6 +49,7 @@ import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.vocabulary.XMLSchema;
 import org.eclipse.rdf4j.query.Binding;
 import org.eclipse.rdf4j.query.BindingSet;
 import org.eclipse.rdf4j.query.QueryEvaluationException;
@@ -169,9 +170,9 @@ public class KnowledgeBaseServiceImpl
             createBaseProperty(akb, new KBProperty(akb.getSubclassIri().getLocalName(),
                     akb.getSubclassIri().stringValue()));
             createBaseProperty(akb, new KBProperty(akb.getLabelIri().getLocalName(),
-                    akb.getLabelIri().stringValue()));
+                    akb.getLabelIri().stringValue(),null,XMLSchema.STRING.stringValue()));
             createBaseProperty(akb, new KBProperty(akb.getDescriptionIri().getLocalName(),
-                    akb.getDescriptionIri().stringValue()));
+                    akb.getDescriptionIri().stringValue(),null,XMLSchema.STRING.stringValue()));
             createBaseProperty(akb, new KBProperty(akb.getTypeIri().getLocalName(),
                     akb.getTypeIri().stringValue()));
         }

@@ -323,8 +323,8 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         List<KBHandle> listProperties = sut.listProperties(kb, true);
         Stream<String> listIdentifier = listProperties.stream().map(KBHandle::getIdentifier);
         String[] expectedProps = { kb.getSubclassIri().stringValue(),
-            kb.getLabelIri().stringValue(), kb.getDescriptionIri().stringValue(),
-            kb.getTypeIri().stringValue() };
+                kb.getLabelIri().stringValue(), kb.getDescriptionIri().stringValue(),
+                kb.getTypeIri().stringValue() };
         
         assertEquals(listProperties.size(),4);
         assertThat(listIdentifier).as("Check that base properties are created")
