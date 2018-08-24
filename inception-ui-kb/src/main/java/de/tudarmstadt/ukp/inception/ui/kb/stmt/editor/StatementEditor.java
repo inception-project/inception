@@ -21,6 +21,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 
+import de.tudarmstadt.ukp.inception.ui.kb.value.editor.StringLiteralValueEditor;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.event.Broadcast;
@@ -359,8 +360,17 @@ public class StatementEditor extends Panel
             }));
             form.add(valueType);
             // use the IRI to obtain the appropriate value editor
-            editor = valueTypeRegistry.getValueSupport(aStatement.getObject(), property.getObject())
+            try {
+                editor = valueTypeRegistry
+                    .getValueSupport(aStatement.getObject(), property.getObject())
                     .createEditor("value", model, property, kbModel);
+            }
+            catch (IllegalArgumentException e) {
+                LOG.warn(
+                    "Unable to find an editor that supports the value type. String Editor is used as default",
+                    e);
+                editor = new StringLiteralValueEditor("value", model);
+            }
             editor.setOutputMarkupId(true);
             form.add(editor);
             form.add(new LambdaAjaxButton<>("save", StatementEditor.this::actionSave));

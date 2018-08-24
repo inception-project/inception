@@ -71,7 +71,7 @@ public class IriValueSupport
     @Override
     public boolean accepts(String range, Optional<KBObject> rangeKbObject)
     {
-        if (rangeKbObject.isPresent()) {
+        if (rangeKbObject != null && rangeKbObject.isPresent()) {
             return true;
         }
         return false;

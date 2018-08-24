@@ -59,8 +59,7 @@ public class NumericLiteralValueSupport
     @Override
     public List<ValueType> getSupportedValueTypes()
     {
-        return asList(
-                new ValueType(XMLSchema.DOUBLE.stringValue(), "Numeric", valueTypeSupportId));
+        return asList(new ValueType(XMLSchema.DOUBLE.stringValue(), "Numeric", valueTypeSupportId));
     }
     
     @Override
@@ -90,7 +89,7 @@ public class NumericLiteralValueSupport
     @Override
     public boolean accepts(String range, Optional<KBObject> rangeKbObject)
     {
-        if (range.equals(XMLSchema.INTEGER.stringValue()) 
+        if (range != null && (range.equals(XMLSchema.INTEGER.stringValue())
                 || range.equals(XMLSchema.INT.stringValue())
                 || range.equals(XMLSchema.NON_NEGATIVE_INTEGER.stringValue()) 
                 || range.equals(XMLSchema.NON_POSITIVE_INTEGER.stringValue())
@@ -102,7 +101,7 @@ public class NumericLiteralValueSupport
                 || range.equals(XMLSchema.UNSIGNED_LONG.stringValue())
                 || range.equals(XMLSchema.UNSIGNED_SHORT.stringValue())
                 || range.equals(XMLSchema.SHORT.stringValue())
-                || range.equals(XMLSchema.DOUBLE.stringValue())) {
+                || range.equals(XMLSchema.DOUBLE.stringValue()))) {
             return true;
         }
         

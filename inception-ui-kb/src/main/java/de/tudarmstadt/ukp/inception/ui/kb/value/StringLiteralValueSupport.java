@@ -68,12 +68,11 @@ public class StringLiteralValueSupport
     {
         // accept statements with null as value so that the StringEditor appears as default case
         if (aStatement.getValue() == null) {
-            return true;
+            return false;
         }
         IRI iri = DefaultDatatypeMapper.getDatatypeURI((aStatement.getValue()).getClass());
         // Conditions for different datatype URI apart from String
-        boolean accept = XMLSchema.STRING.equals(iri) || XMLSchema.DATETIME.equals(iri)
-                || XMLSchema.DATE.equals(iri);
+        boolean accept = XMLSchema.STRING.equals(iri);
         
         return iri != null && accept ;
     }
@@ -81,12 +80,13 @@ public class StringLiteralValueSupport
     @Override
     public boolean accepts(String range, Optional<KBObject> rangeKbObject)
     {
-        if (rangeKbObject.isPresent()) {
+        if (rangeKbObject != null && rangeKbObject.isPresent()) {
             return true;
         }
-        else if (range.equals(XMLSchema.STRING.stringValue()) ) {
+        else if (range != null && range.equals(XMLSchema.STRING.stringValue())) {
             return true;
         }
+
         return false;
     }
 
