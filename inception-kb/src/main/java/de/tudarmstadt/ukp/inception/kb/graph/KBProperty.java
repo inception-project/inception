@@ -48,10 +48,6 @@ public class KBProperty
     private KnowledgeBase kb;
     private String range;
     
-    /**
-     * Declares the class or data type of the object in a triple whose predicate is that property.
-     */
-
     private List<Statement> originalStatements = new ArrayList<>();
 
     public KBProperty()
