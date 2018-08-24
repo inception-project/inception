@@ -23,11 +23,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.uima.jcas.JCas;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -46,15 +43,6 @@ public class ActiveLearningServiceImpl
 {
     private final DocumentService documentService;
     private final RecommendationService recommendationService;
-    private List<AnnotationObject> recommendations;
-    private List<List<AnnotationObject>> listOfRecommendationsForEachToken;
-    private AnnotatorState annotatorState;
-    private AnnotationLayer selectedLayer;
-    private static final Logger LOG = LoggerFactory.getLogger(ActiveLearningRecommender.class);
-    //TODO: add a state for different users to manage the recommendation list
-
-    private Map<ActiveLearningUserStateKey, ActiveLearningUserState> states = new
-        ConcurrentHashMap<>();
 
     @Autowired
     public ActiveLearningServiceImpl(DocumentService aDocumentService,
