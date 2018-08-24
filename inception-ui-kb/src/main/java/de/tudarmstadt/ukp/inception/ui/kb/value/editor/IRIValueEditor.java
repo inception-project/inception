@@ -53,9 +53,9 @@ public class IRIValueEditor
     private @SpringBean KnowledgeBaseService kbService;
     
     private AutoCompleteTextField<KBHandle> value;
-    IModel<KBStatement> aStmtModel;
-    IModel<KBProperty> aStmtProperty;
-    IModel<KnowledgeBase> aKbModel;
+    private IModel<KBStatement> aStmtModel;
+    private IModel<KBProperty> aStmtProperty;
+    private IModel<KnowledgeBase> aKbModel;
 
     public IRIValueEditor(String aId, IModel<KBStatement> aModel, IModel<KBProperty> aProperty,
             IModel<KnowledgeBase> kbModel)

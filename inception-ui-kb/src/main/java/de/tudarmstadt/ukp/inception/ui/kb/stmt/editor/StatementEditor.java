@@ -224,9 +224,8 @@ public class StatementEditor extends Panel
                     .createPresenter("value", model, property);
             }
             catch (IllegalArgumentException e) {
-                LOG.warn(
-                        "Unable to find an editor that supports the value type. String Editor is used as default",
-                        e.getLocalizedMessage());
+                LOG.warn("Unable to find an editor that supports the value type. "
+                        + "String Editor is used as default: {}", e.getLocalizedMessage(), e);
                 presenter = new StringLiteralValuePresenter("value", model);
             }
             add(presenter);
@@ -375,9 +374,8 @@ public class StatementEditor extends Panel
                    .createEditor("value", model, property, kbModel);
             }
             catch (IllegalArgumentException e) {
-                LOG.warn(
-                        "Unable to find an editor that supports the value type. String Editor is used as default",
-                        e.getLocalizedMessage());
+                LOG.warn("Unable to find an editor that supports the value type. "
+                        + "String Editor is used as default: {}", e.getLocalizedMessage(), e);
                 editor = new StringLiteralValueEditor("value", model);
             }
             editor.setOutputMarkupId(true);
