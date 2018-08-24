@@ -21,7 +21,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 
-import de.tudarmstadt.ukp.inception.ui.kb.value.editor.StringLiteralValueEditor;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.event.Broadcast;
@@ -65,6 +64,8 @@ import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxStatementChangedEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.stmt.QualifierEditor;
 import de.tudarmstadt.ukp.inception.ui.kb.value.ValueType;
 import de.tudarmstadt.ukp.inception.ui.kb.value.ValueTypeSupportRegistry;
+import de.tudarmstadt.ukp.inception.ui.kb.value.editor.StringLiteralValueEditor;
+import de.tudarmstadt.ukp.inception.ui.kb.value.editor.StringLiteralValuePresenter;
 import de.tudarmstadt.ukp.inception.ui.kb.value.editor.ValueEditor;
 
 public class StatementEditor extends Panel
@@ -216,11 +217,19 @@ public class StatementEditor extends Panel
             CompoundPropertyModel<KBStatement> model = new CompoundPropertyModel<>(
                     aStatement);
             
-            WebMarkupContainer presenter = valueTypeRegistry
+            WebMarkupContainer presenter;
+            try {
+                presenter = valueTypeRegistry
                     .getValueSupport(aStatement.getObject(), property.getObject())
                     .createPresenter("value", model, property);
+            }
+            catch (IllegalArgumentException e) {
+                LOG.warn(
+                        "Unable to find an editor that supports the value type. String Editor is used as default",
+                        e.getLocalizedMessage());
+                presenter = new StringLiteralValuePresenter("value", model);
+            }
             add(presenter);
-            
             LambdaAjaxLink editLink = new LambdaAjaxLink("edit", StatementEditor.this::actionEdit)
                     .onConfigure((_this) -> _this.setVisible(!statement.getObject().isInferred()));
             editLink.add(new WriteProtectionBehavior(kbModel));
@@ -363,12 +372,12 @@ public class StatementEditor extends Panel
             try {
                 editor = valueTypeRegistry
                     .getValueSupport(aStatement.getObject(), property.getObject())
-                    .createEditor("value", model, property, kbModel);
+                   .createEditor("value", model, property, kbModel);
             }
             catch (IllegalArgumentException e) {
                 LOG.warn(
-                    "Unable to find an editor that supports the value type. String Editor is used as default",
-                    e);
+                        "Unable to find an editor that supports the value type. String Editor is used as default",
+                        e.getLocalizedMessage());
                 editor = new StringLiteralValueEditor("value", model);
             }
             editor.setOutputMarkupId(true);

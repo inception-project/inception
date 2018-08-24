@@ -84,7 +84,8 @@ public class ValueTypeSupportRegistryImpl
     public ValueType getValueType(KBStatement aStatement, KBProperty aProperty)
     {
         String datatype = getDataType(aStatement, aProperty);
-        return getValueSupport(aStatement, aProperty).getSupportedValueTypes().stream().findFirst().orElse(null);
+        return getValueSupport(aStatement, aProperty).getSupportedValueTypes().stream().findFirst()
+                .orElse(null);
     }
     
     @Override
@@ -125,8 +126,10 @@ public class ValueTypeSupportRegistryImpl
     {
         // Determine the data type
         String datatype = getDataType(aStatement, aProperty);
-        String range = aProperty.getRange();
-
+        String range = null;;
+        if (aProperty != null) {
+            range = aProperty.getRange();
+        }
         ValueTypeSupport support = supportCache.get(datatype);
         for (ValueTypeSupport s : getValueSupports()) {
             if (s.accepts(aStatement, aProperty) || s.accepts(range, null)) {
