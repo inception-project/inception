@@ -117,7 +117,8 @@ public class OpenNlpNerRecommenderTest
         OpenNlpNerRecommender sut = new OpenNlpNerRecommender(recommender, traits);
         List<CAS> casList = loadAllData();
 
-        while (splitStrategy.hasNext()) {
+        int i = 0;
+        while (splitStrategy.hasNext() && i < 3) {
             splitStrategy.next();
             
             double score = sut.evaluate(casList, splitStrategy);
@@ -125,7 +126,8 @@ public class OpenNlpNerRecommenderTest
             System.out.printf("Score: %f%n", score);
 
             assertThat(score).isBetween(0.0, 1.0);
-
+            
+            i++;
         }
     }
 
