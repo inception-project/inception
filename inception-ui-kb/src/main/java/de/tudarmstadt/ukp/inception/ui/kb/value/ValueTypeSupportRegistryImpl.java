@@ -84,8 +84,12 @@ public class ValueTypeSupportRegistryImpl
     public ValueType getValueType(KBStatement aStatement, KBProperty aProperty)
     {
         String datatype = getDataType(aStatement, aProperty);
-        return getValueSupport(aStatement, aProperty).getSupportedValueTypes().stream().findFirst()
-                .orElse(null);
+        try {
+            return getValueSupport(aStatement, aProperty).getSupportedValueTypes().stream().findFirst().orElse(null);
+        }
+        catch (IllegalArgumentException e) {
+            return null;
+        }
     }
     
     @Override
