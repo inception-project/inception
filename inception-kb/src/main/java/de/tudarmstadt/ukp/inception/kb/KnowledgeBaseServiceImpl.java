@@ -415,7 +415,7 @@ public class KnowledgeBaseServiceImpl
                 , "    FILTER(LANG(?d) = \"\" || LANGMATCHES(LANG(?d), \"en\")) "
                 , "  }"
                 , "} "
-                , "LIMIT 10000" );
+                , "LIMIT " + SPARQLQueryStore.aLimit);
             TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
             tupleQuery.setBinding("pTYPE", kb.getTypeIri());
             tupleQuery.setBinding("oCLASS", kb.getClassIri());
