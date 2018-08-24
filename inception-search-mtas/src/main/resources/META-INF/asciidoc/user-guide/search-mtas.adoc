@@ -1,6 +1,6 @@
 [[sect_search-mtas]]
 
-==== Mtas search syntax
+=== Mtas search syntax
 
 The INCEpTION Mtas search provider allows queries to be executed using CQL (Corpus 
 Query Language), as shown in the following examples.
@@ -38,133 +38,206 @@ feature has the given value.
 Notice that the multi-token query syntax can also be used to retrieve single token annotations (e.g.
 POS or lemma annotations).
 
-===== Basic Annotation queries
-* Single token: all occurrences of the token *Galicia*
+==== Basic Annotation queries
 
- Galicia
+.Single token: all occurrences of the token *Galicia*
+----
+Galicia
+----
  
-* Multiple tokens: all occurrences of the token sequence *The capital of Galicia*
-
- The capital of Galicia
+.Single token: all occurrences of the token *Galicia* (alternative)
+----
+"Galicia"
+----
  
-* Lemma: all occurrences of the lemma *sign*
-
- [Lemma.Lemma="sign"]
-
-* POS tag: all tokens that are annotated as a noun
-
- [POS.PosValue="NOUN"]
-
-* Named entities: all named entity annotations
-
- <Named_entity/>
-
-* Named entities: all occurrencies of a particular kind of named entity (in this case, *location* named entities)
-
- <Named_entity.value="LOC"/>
-
-* Sequence: all occurrences of the lemma *be* immediately followed by the lemma *signed*
-
- [Lemma.Lemma="be"][Lemma.Lemma="sign"]
-
-* Sequence: all occurrences of the token *house* immediately followed by a verb
-
- [Token="house"][POS.PosValue="VERB"]
-
-* Sequence: all occurrences of a verb immediately followed by a named entity
-
- [POS.PosValue="VERB"]<Named_entity/>
+.Multiple tokens: all occurrences of the token sequence *The capital of Galicia*
+----
+The capital of Galicia
+----
  
-* Sequence: All occurrences of two named entities in a row
-
- <Named_entity/> {2}
+.Multiple tokens: all occurrences of the token sequence *The capital of Galicia* (alternative)
+----
+"The" "capital" "of" "Galicia"
+----
  
-* Sequence: All occurrences of two named entities in a row (alternative syntax)
+.Lemma: all occurrences of the lemma *sign*
+----
+[Lemma.Lemma="sign"]
+----
 
-  <Named_entity/> <Named_entity/>
+.POS tag: all tokens that are annotated as a noun
+[POS.PosValue="NOUN"]
+
+.Named entities: all named entity annotations
+----
+<Named_entity/>
+----
+
+.Named entities: all occurrencies of a particular kind of named entity (in this case, *location* named entities)
+----
+<Named_entity.value="LOC"/>
+----
+
+.Sequence: all occurrences of the lemma *be* immediately followed by the lemma *signed*
+----
+[Lemma.Lemma="be"] [Lemma.Lemma="sign"]
+----
+
+.Sequence: all occurrences of the token *house* immediately followed by a verb
+----
+"house" [POS.PosValue="VERB"]
+----
+
+.Sequence: all occurrences of a verb immediately followed by a named entity
+----
+[POS.PosValue="VERB"]<Named_entity/>
+----
+ 
+.Sequence: All occurrences of two named entities in a row
+----
+<Named_entity/>{2}
+----
+ 
+.Sequence: All occurrences of two named entities in a row (alternative syntax)
+----
+<Named_entity/> <Named_entity/>
+----
   
-* Sequence: All occurrences of a named entity followed by a token (whatever it is) and another named entity:
+.Sequence: All occurrences of a named entity followed by a token (whatever it is) and another named entity:
+----
+<Named_entity/> [] <Named_entity/>
+----
 
- <Named_entity/> [] <Named_entity/>
+.Sequence: All occurrences of a named entity followed by an optional token and another named entity:
+----
+<Named_entity/> []? <Named_entity/>
+----
 
-* Sequence: All occurrences of a named entity followed by an optional token and another named entity:
+.Sequence: All occurrences of two named entities separated by exactly two tokens
+----
+<Named_entity/> []{2} <Named_entity/>
+----
+
+.Sequence: All occurrences of two named entities separated by among one and three tokens
+----
+<Named_entity/> []{1,3} <Named_entity/>
+----
  
- <Named_entity/> []? <Named_entity/>
+.OR: All named entities of type LOC or OTH
+----
+(<Named_entity.value="OTH"/> | <Named_entity.value="LOC"/>)
+----
 
-* Sequence: All occurrences of two named entities separated by exactly two tokens
+.Within: All occurrences of the lemma *sign* annotated as a verb
+----
+[POS.PosValue="VERB"] within [Lemma.Lemma="sign"]
+----
 
- <Named_entity/> []{2} <Named_entity/>
+.Within: All occurrences of a determinant inside a named entity
+----
+[POS.PosValue="DET"] within <Named_entity/>
+----
 
-* Sequence: All occurrences of two named entities separated by among one and three tokens
+.Not within: All occurrences of a determinant not inside a named entity
+----
+[POS.PosValue="DET"] !within <Named_entity/>
+----
 
- <Named_entity/> []{1,3} <Named_entity/>
+.Containing: All occurrences of named entities containing a determinant
+----
+<Named_entity/> containing [POS.PosValue="DET"]
+----
+
+.Not containing: All occurrences of named entities not containing a determinant
+----
+<Named_entity/> !containing [POS.PosValue="DET"]
+----
+
+.Intersecting: All named entities of type LOC intersecting with a semantic argument
+----
+<Named_entity.value="LOC"/> intersecting <SemArg/>
+----
  
-* OR: All named entities of type LOC or OTH
- 
- (<Named_entity.value="OTH"/> | <Named_entity.value="LOC"/>)
+.OR combined with Within: All named entities of type LOC or OTH contained in a semantic argument
+----
+(<Named_entity.value="OTH"/> | <Named_entity.value="LOC"/>) within <SemArg/>
+----
 
-* Within: All occurrences of the lemma *sign* annotated as a verb
+.OR combined with Intersecting query: Named entities of type LOC or OTH intersecting with a semantic argument
+----
+(<Named_entity.value="OTH"/> | <Named_entity.value="LOC"/>) intersecting <SemArg/>
+----
 
- [POS.PosValue="VERB"] within [Lemma.Lemma="sign"]
+==== Relation queries
 
-* Within: All occurrences of a determinant inside a named entity
+When relations are index, they are indexed by their target span.
 
- [POS.PosValue="DET"] within <Named_entity/>
+.Search for dependency targets
+----
+<Dependency/>
+----
 
-* Not within: All occurrences of a determinant not inside a named entity
+.Search for dependency based on a feature value
+----
+<Dependency.Relation="nsubj"/>
+----
 
- [POS.PosValue="DET"] !within <Named_entity/>
+.Search for dependency target by the source text
+----
+<Dependency-source="John"/>
+----
 
-* Containing: All occurrences of named entities containing a determinant
- 
- <Named_entity/> containing [POS.PosValue="DET"]
+.Search for dependency target by the target text
+----
+<Dependency-target="Miller"/>
+----
 
-* Not containing: All occurrences of named entities not containing a determinant
- 
- <Named_entity/> !containing [POS.PosValue="DET"]
+The following examples work for custom relation layers, but not for the built-in **Dependency**
+layer. We assume a span layer called `component` and a relation layer called `rel` attached to it.
+Both layers have a string feature called `value`.
 
-* Intersecting: All named entities of type LOC intersecting with a semantic argument
+.Search for rel annotations by feature on the relation source
+----
+<rel-source.value="foo"/>
+----
 
- <Named_entity.value="LOC"/> intersecting <SemArg/>
- 
-* OR combined with Within: All named entities of type LOC or OTH contained in a semantic argument
- 
- (<Named_entity.value="OTH"/> | <Named_entity.value="LOC"/>) within <SemArg/>
+.Search for rel annotations by feature on the relation target
+----
+<rel-target.value="foo"/>
+----
 
-* OR combined with Intersecting query: Named entities of type LOC or OTH intersecting with a semantic argument
 
- (<Named_entity.value="OTH"/> | <Named_entity.value="LOC"/>) intersecting
-<SemArg/>
+==== Concept Annotation queries
 
-===== Concept Annotation queries
+.Generic Search over annotated KB entities : all occurrences for KB entity *Bordeaux*
+----
+<KB-Entity="Bordeaux"/>
+----
 
-* Generic Search over annotated KB entities : all occurrences for KB entity *Bordeaux*
+The following query returns all mentions of *ChateauMorgonBeaujolais* or any of its subclasses in
+the associated knowledge base.
 
- <KB.Entity="Bordeaux"/>
+.Named Entity Identifier for KB instance: all mentions of *ChateauMorgonBeaujolais*
+----
+<Named_entity.identifier="ChateauMorgonBeaujolais"/>
+----
 
-* Named Entity Identifier : all occurrences of the annotated identifier *ChateauMorgonBeaujolais* .
-  Here *ChateauMorgonBeaujolais* is the label for an example instance from KnowledgeBase, with IRI: http://www.w3.org/TR/2003/PR-owl-guide-20031209/wine#ChateauMorgonBeaujolais 
+Mind that the label of a knowledge base item may be ambiguous, so it may be necessary to search by
+IRI.
 
- <Named_entity.identifier.exact="ChateauMorgonBeaujolais"/>
+.Named Entity Identifier for KB instance: all mentions of *ChateauMorgonBeaujolais* by IRI
+----
+<Named_entity.identifier="http://www.w3.org/TR/2003/PR-owl-guide-20031209/wine#ChateauMorgonBeaujolais"/>
+----
 
-* Named Entity Identifier for KB instance: all occurrences of the annotated identifier *ChateauMorgonBeaujolais*
 
- <Named_entity.identifier.instance="ChateauMorgonBeaujolais"/>
+.Named Entity Identifier : all exact mentions of *ChateauMorgonBeaujolais* .
+----
+<Named_entity.identifier-exact="ChateauMorgonBeaujolais"/>
+----
 
-* Named Entity Identifier for KB concept: all occurrences of the annotated identifier *AmericanWine* 
-  Here *AmericanWine* is the label for an example concept from KnowledgeBase, with IRI: http://www.w3.org/TR/2003/PR-owl-guide-20031209/wine#AmericanWine
 
- <Named_entity.identifier.class="AmericanWine"/>
-
-* Named Entity Identifier covering multiple tokens: all occurrences of the annotated identifier *ChateauMorgonBeaujolais*
-
- <Named_entity.identifier.exact="ChateauMorgonBeaujolais"/>
- 
- * OR All named entities identifier with annotated identifier *ChateauMorgonBeaujolais* or *AmericanWine*
- 
- (<Named_entity.identifier.exact="ChateauMorgonBeaujolais"/> | <Named_entity.identifier.exact="AmericanWine"/>)
- 
- * All annotated identifier with a sub concept or instance of a particular identifier  *RedWine* 
- 
- <Named_entity.identifier="RedWine"/>
- 
+.OR All exact mentions of either *ChateauMorgonBeaujolais* or *AmericanWine*
+---- 
+(<Named_entity.identifier-exact="ChateauMorgonBeaujolais"/> | <Named_entity.identifier-exact="AmericanWine"/>)
+----

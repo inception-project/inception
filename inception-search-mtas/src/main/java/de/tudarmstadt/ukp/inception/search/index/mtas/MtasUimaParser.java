@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.search.index.mtas;
 
+import static de.tudarmstadt.ukp.inception.search.FeatureIndexingSupport.SPECIAL_SEP;
 import static java.util.Arrays.asList;
 
 import java.io.ByteArrayInputStream;
@@ -33,11 +34,13 @@ import java.util.TreeMap;
 
 import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.impl.XmiCasDeserializer;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.factory.TypeSystemDescriptionFactory;
+import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.tcas.Annotation;
@@ -52,6 +55,8 @@ import org.xml.sax.SAXException;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ArcAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -77,6 +82,9 @@ public class MtasUimaParser
     final private String MTAS_TOKEN_LABEL = "Token";
     final private String MTAS_SENTENCE_LABEL = "s";
     
+    final private String SPECIAL_ATTR_REL_SOURCE = "source";
+    final private String SPECIAL_ATTR_REL_TARGET = "target";
+    
     // Annotation schema and project services with knowledge base service
     private @Autowired AnnotationSchemaService annotationSchemaService;
     private @Autowired ProjectService projectService;
@@ -88,7 +96,10 @@ public class MtasUimaParser
     // Annotation layers being indexed by Mtas
     private Map<String, AnnotationLayer> layers;
     private Map<String, List<AnnotationFeature>> layerFeatures;
-    
+
+    private NavigableMap<Integer, Pair<Token, Integer>> tokenBeginIndex;
+    private NavigableMap<Integer, Pair<Token, Integer>> tokenEndIndex;
+
     public MtasUimaParser(MtasConfiguration config)
     {
         super(config);
@@ -192,54 +203,59 @@ public class MtasUimaParser
         
         // Build indexes over the token start and end positions such that we can quickly locate
         // tokens based on their offsets.
-        NavigableMap<Integer, Integer> tokenBeginIndex = new TreeMap<>();
-        NavigableMap<Integer, Integer> tokenEndIndex = new TreeMap<>();
+        tokenBeginIndex = new TreeMap<>();
+        tokenEndIndex = new TreeMap<>();
         for (Token token : JCasUtil.select(aJCas, Token.class)) {
-            tokenBeginIndex.put(token.getBegin(), tokenNum);
-            tokenEndIndex.put(token.getEnd(), tokenNum);
+            tokenBeginIndex.put(token.getBegin(), Pair.of(token, tokenNum));
+            tokenEndIndex.put(token.getEnd(), Pair.of(token, tokenNum));
             tokenNum++;
         }
         
         // Loop over the annotations
         for (Annotation annotation : JCasUtil.select(aJCas, Annotation.class)) {
-            // Get begin of the first token. Special cases:
-            // 1) if the first token starts after the first char. For example, when there's
-            // a space or line break in the beginning of the document.
-            // 2) if the last token ends before the last char. Same as above.
-            int beginToken = 0;
-            if (tokenBeginIndex.floorEntry(annotation.getBegin()) == null) {
-                beginToken = tokenBeginIndex.firstEntry().getValue();
-            }
-            else {
-                beginToken = tokenBeginIndex.floorEntry(annotation.getBegin()).getValue();
-            }
-            
-            int endToken = 0;
-            if (tokenEndIndex.ceilingEntry(annotation.getEnd() - 1) == null) {
-                endToken = tokenEndIndex.lastEntry().getValue();
-            }
-            else {
-                endToken = tokenEndIndex.ceilingEntry(annotation.getEnd() - 1).getValue();
-            }
-            
-            mtasId = indexAnnotation(tokenCollection, annotation, beginToken, endToken, mtasId);
+            mtasId = indexAnnotation(tokenCollection, annotation, mtasId);
         }
         
         return tokenCollection;
     }
     
+    private Range getRange(AnnotationFS aAnnotation)
+    {
+        // Get begin of the first token. Special cases:
+        // 1) if the first token starts after the first char. For example, when there's
+        // a space or line break in the beginning of the document.
+        // 2) if the last token ends before the last char. Same as above.
+        Pair<Token, Integer> beginToken;
+        if (tokenBeginIndex.floorEntry(aAnnotation.getBegin()) == null) {
+            beginToken = tokenBeginIndex.firstEntry().getValue();
+        }
+        else {
+            beginToken = tokenBeginIndex.floorEntry(aAnnotation.getBegin()).getValue();
+        }
+        
+        Pair<Token, Integer> endToken;
+        if (tokenEndIndex.ceilingEntry(aAnnotation.getEnd() - 1) == null) {
+            endToken = tokenEndIndex.lastEntry().getValue();
+        }
+        else {
+            endToken = tokenEndIndex.ceilingEntry(aAnnotation.getEnd() - 1).getValue();
+        }
+        return new Range(beginToken.getValue(), endToken.getValue(), beginToken.getKey().getBegin(),
+                endToken.getKey().getEnd());
+    }
+    
     private int indexAnnotation(MtasTokenCollection aTokenCollection, AnnotationFS aAnnotation,
-            int aBeginToken, int aEndToken, int aMtasId)
+            int aMtasId)
     {
         int mtasId = aMtasId;
         
         // Special case: token values must be indexed
         if (aAnnotation instanceof Token) {
-            indexTokenText(aAnnotation, aBeginToken, aEndToken, mtasId++);
+            indexTokenText(aAnnotation, getRange(aAnnotation), mtasId++);
         } 
         // Special case: sentences must be indexed
         else if (aAnnotation instanceof Sentence) {
-            indexSentenceText(aAnnotation, aBeginToken, aEndToken, mtasId++);
+            indexSentenceText(aAnnotation, getRange(aAnnotation), mtasId++);
         }
         else {
             AnnotationLayer layer = layers.get(aAnnotation.getType().getName());
@@ -249,65 +265,123 @@ public class MtasUimaParser
                 return mtasId;
             }
             
-            // Index the annotation text
-            indexAnnotationText(layer, aAnnotation, aBeginToken, aEndToken, mtasId++);
-            
-            // Iterate over the features of this layer and index them one-by-one
-            for (AnnotationFeature feature : layerFeatures.get(aAnnotation.getType().getName())) {
-                Optional<FeatureIndexingSupport> fis = featureIndexingSupportRegistry
-                        .getIndexingSupport(feature);
-                if (fis.isPresent()) {
-                    MultiValuedMap<String, String> fieldsAndValues = fis.get()
-                            .indexFeatureValue(feature, aAnnotation);
-                    for (Entry<String, String> e : fieldsAndValues.entries()) {
-                        indexFeatureValue(e.getKey(), e.getValue(), mtasId++,
-                                aAnnotation.getBegin(), aAnnotation.getEnd(), aBeginToken,
-                                aEndToken);
-                    }
+            if (WebAnnoConst.RELATION_TYPE.equals(layer.getType())) {
+                ArcAdapter adapter = (ArcAdapter) annotationSchemaService.getAdapter(layer);
+
+                AnnotationFS sourceFs = FSUtil.getFeature(aAnnotation,
+                        adapter.getSourceFeatureName(), AnnotationFS.class);
+
+                AnnotationFS targetFs = FSUtil.getFeature(aAnnotation,
+                        adapter.getTargetFeatureName(), AnnotationFS.class);
+
+                if (sourceFs != null && targetFs != null) {
+                    Range range = getRange(targetFs);
+                    
+                    // Index the source annotation text (equals the target)
+                    indexAnnotationText(layer.getUiName(), targetFs.getCoveredText(), range,
+                            mtasId++);
+                    indexAnnotationText(layer.getUiName() + SPECIAL_SEP + SPECIAL_ATTR_REL_TARGET,
+                            targetFs.getCoveredText(), range, mtasId++);
+                    
+                    // Index the target annotation text
+                    indexAnnotationText(layer.getUiName() + SPECIAL_SEP + SPECIAL_ATTR_REL_SOURCE,
+                            sourceFs.getCoveredText(), range, mtasId++);
+                    
+                    
+                    // Index the relation features
+                    mtasId = indexFeatures(aAnnotation, layer.getUiName(), range, mtasId);
+
+                    // Index the source features
+                    mtasId = indexFeatures(sourceFs, layer.getUiName(),
+                            SPECIAL_SEP + SPECIAL_ATTR_REL_SOURCE, range, mtasId);
+                    
+                    // Index the target features
+                    mtasId = indexFeatures(targetFs, layer.getUiName(),
+                            SPECIAL_SEP + SPECIAL_ATTR_REL_TARGET, range, mtasId);
                 }
+            }
+            else {
+                Range range = getRange(aAnnotation);
+                
+                // Index the annotation text
+                indexAnnotationText(layer.getUiName(), aAnnotation.getCoveredText(), range,
+                        mtasId++);
+                
+                // Iterate over the features of this layer and index them one-by-one
+                mtasId = indexFeatures(aAnnotation, layer.getUiName(), range, mtasId);
             }
         }
         
         return mtasId;
     }
 
-    private void indexTokenText(AnnotationFS aAnnotation, int aBeginToken, int aEndToken,
+    private int indexFeatures(AnnotationFS aAnnotation, String aLayer, Range aRange, int aMtasId)
+    {
+        return indexFeatures(aAnnotation, aLayer, "", aRange, aMtasId);
+    }
+
+    private int indexFeatures(AnnotationFS aAnnotation, String aLayer, String aPrefix, Range aRange,
             int aMtasId)
     {
+        int mtasId = aMtasId;
+        
+        // Iterate over the features of this layer and index them one-by-one
+        for (AnnotationFeature feature : layerFeatures.get(aAnnotation.getType().getName())) {
+            Optional<FeatureIndexingSupport> fis = featureIndexingSupportRegistry
+                    .getIndexingSupport(feature);
+            if (fis.isPresent()) {
+                MultiValuedMap<String, String> fieldsAndValues = fis.get()
+                        .indexFeatureValue(aLayer, aAnnotation, aPrefix, feature);
+                for (Entry<String, String> e : fieldsAndValues.entries()) {
+                    indexFeatureValue(e.getKey(), e.getValue(), mtasId++,
+                            aAnnotation.getBegin(), aAnnotation.getEnd(), aRange);
+                }
+                
+                log.info("FEAT[{}-{}]: {}", aRange.getBegin(), aRange.getEnd(), fieldsAndValues);
+            }
+        }
+        
+        return mtasId;
+    }
+
+    private void indexTokenText(AnnotationFS aAnnotation, Range aRange, int aMtasId)
+    {
         MtasToken mtasToken = new MtasTokenString(aMtasId, MTAS_TOKEN_LABEL,
-                aAnnotation.getCoveredText(), aBeginToken);
+                aAnnotation.getCoveredText(), aRange.getBegin());
         mtasToken.setOffset(aAnnotation.getBegin(), aAnnotation.getEnd());
-        mtasToken.addPositionRange(aBeginToken, aEndToken);
+        mtasToken.addPositionRange(aRange.getBegin(), aRange.getEnd());
         tokenCollection.add(mtasToken);
     }
 
-    private void indexSentenceText(AnnotationFS aAnnotation, int aBeginToken, int aEndToken,
-            int aMtasId)
+    private void indexSentenceText(AnnotationFS aAnnotation, Range aRange, int aMtasId)
     {
         MtasToken mtasSentence = new MtasTokenString(aMtasId, MTAS_SENTENCE_LABEL,
-                aAnnotation.getCoveredText(), aBeginToken);
+                aAnnotation.getCoveredText(), aRange.getBegin());
         mtasSentence.setOffset(aAnnotation.getBegin(), aAnnotation.getEnd());
-        mtasSentence.addPositionRange(aBeginToken, aEndToken);
+        mtasSentence.addPositionRange(aRange.getBegin(), aRange.getEnd());
         tokenCollection.add(mtasSentence);
     }
 
-    private void indexAnnotationText(AnnotationLayer aLayer, AnnotationFS aAnnotation,
-            int aBeginToken, int aEndToken, int aMtasId)
+    private void indexAnnotationText(String aField, String aValue, Range aRange,
+            int aMtasId)
     {
-        MtasToken mtasSentence = new MtasTokenString(aMtasId, getIndexedName(aLayer.getUiName()),
-                aAnnotation.getCoveredText(), aBeginToken);
-        mtasSentence.setOffset(aAnnotation.getBegin(), aAnnotation.getEnd());
-        mtasSentence.addPositionRange(aBeginToken, aEndToken);
+        String field = getIndexedName(aField);
+
+        MtasToken mtasSentence = new MtasTokenString(aMtasId, field, aValue, aRange.getBegin());
+        mtasSentence.setOffset(aRange.getBeginOffset(), aRange.getEndOffset());
+        mtasSentence.addPositionRange(aRange.getBegin(), aRange.getEnd());
         tokenCollection.add(mtasSentence);
+        
+        log.info("TEXT[{}-{}]: {}={}", aRange.getBegin(), aRange.getEnd(), field, aValue);
     }
 
     private void indexFeatureValue(String aField, String aValue, int aMtasId, int aBeginOffset,
-            int aEndOffset, int aBeginPosition, int aEndPosition)
+            int aEndOffset, Range aRange)
     {
         MtasToken mtasAnnotationTypeFeatureLabel = new MtasTokenString(aMtasId,
-                getIndexedName(aField), aValue, aBeginPosition);
-        mtasAnnotationTypeFeatureLabel.setOffset(aBeginOffset, aEndOffset);
-        mtasAnnotationTypeFeatureLabel.addPositionRange(aBeginPosition, aEndPosition);
+                getIndexedName(aField), aValue, aRange.getBegin());
+        mtasAnnotationTypeFeatureLabel.setOffset(aRange.getBeginOffset(), aRange.getEndOffset());
+        mtasAnnotationTypeFeatureLabel.addPositionRange(aRange.getBegin(), aRange.getEnd());
         tokenCollection.add(mtasAnnotationTypeFeatureLabel);
     }
     
@@ -327,5 +401,42 @@ public class MtasUimaParser
     {
         // TODO Auto-generated method stub
         return null;
+    }
+    
+    private static class Range
+    {
+        private final int begin;
+        private final int end;
+        private final int beginOffset;
+        private final int endOffset;
+
+        public Range(int aBegin, int aEnd, int aBeginOffset, int aEndOffset)
+        {
+            super();
+            begin = aBegin;
+            end = aEnd;
+            beginOffset = aBeginOffset;
+            endOffset = aEndOffset;
+        }
+
+        public int getBegin()
+        {
+            return begin;
+        }
+
+        public int getEnd()
+        {
+            return end;
+        }
+        
+        public int getBeginOffset()
+        {
+            return beginOffset;
+        }
+        
+        public int getEndOffset()
+        {
+            return endOffset;
+        }
     }
 }
