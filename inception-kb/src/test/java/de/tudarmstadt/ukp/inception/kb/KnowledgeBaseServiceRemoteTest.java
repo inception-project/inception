@@ -194,44 +194,60 @@ public class KnowledgeBaseServiceRemoteTest
         }
 
         {
+            KnowledgeBaseProfile profile = PROFILES.get("wikidata");
             KnowledgeBase kb_wikidata_direct = new KnowledgeBase();
             kb_wikidata_direct.setName("Wikidata (official/direct mapping)");
             kb_wikidata_direct.setType(RepositoryType.REMOTE);
             kb_wikidata_direct.setReification(Reification.NONE);
-            kb_wikidata_direct.applyMapping(PROFILES.get("wikidata").getMapping());
-            kbList.add(new TestConfiguration(PROFILES.get("wikidata").getSparqlUrl(),
-                    kb_wikidata_direct, "http://www.wikidata.org/entity/Q19576436"));
+            kb_wikidata_direct.applyMapping(profile.getMapping());
+            kbList.add(new TestConfiguration(profile.getSparqlUrl(), kb_wikidata_direct,
+                    "http://www.wikidata.org/entity/Q19576436"));
         }
 
         {
+            KnowledgeBaseProfile profile = PROFILES.get("db_pedia");
             KnowledgeBase kb_dbpedia = new KnowledgeBase();
-            kb_dbpedia.setName("DKPedia (official)");
+            kb_dbpedia.setName(profile.getName());
             kb_dbpedia.setType(RepositoryType.REMOTE);
             kb_dbpedia.setReification(Reification.NONE);
-            kb_dbpedia.applyMapping(PROFILES.get("db_pedia").getMapping());
-            kbList.add(new TestConfiguration(PROFILES.get("db_pedia").getSparqlUrl(),
-                    kb_dbpedia, "http://www.wikidata.org/entity/Q20280393" ));
+            kb_dbpedia.applyMapping(profile.getMapping());
+            kbList.add(new TestConfiguration(profile.getSparqlUrl(), kb_dbpedia,
+                    "http://www.wikidata.org/entity/Q20280393"));
         }
        
         {
+            KnowledgeBaseProfile profile = PROFILES.get("yago");
             KnowledgeBase kb_yago = new KnowledgeBase();
-            kb_yago.setName("Yago (official)");
+            kb_yago.setName(profile.getName());
             kb_yago.setType(RepositoryType.REMOTE);
             kb_yago.setReification(Reification.NONE);
-            kb_yago.applyMapping(PROFILES.get("yago").getMapping());
-            kbList.add(new TestConfiguration(PROFILES.get("yago").getSparqlUrl(),
-                    kb_yago, "http://www.wikidata.org/entity/Q21445637S003fc070-45f0-80bd-ae2d-072cde5aad89"));
+            kb_yago.applyMapping(profile.getMapping());
+            kbList.add(new TestConfiguration(profile.getSparqlUrl(), kb_yago,
+                    "http://www.wikidata.org/entity/Q21445637S003fc070-45f0-80bd-ae2d-072cde5aad89"));
         }
         
         {
-            KnowledgeBase kb_zbw = new KnowledgeBase();
-            kb_zbw.setName("ZBW (official/direct mapping)");
-            kb_zbw.setType(RepositoryType.REMOTE);
-            kb_zbw.setReification(Reification.NONE);
-            kb_zbw = setOWLSchemaMapping(kb_zbw);
-            kbList.add(new TestConfiguration("http://zbw.eu/beta/sparql/stw/query",
-                    kb_zbw, "http://zbw.eu/stw/thsys/71020"));
+            KnowledgeBaseProfile profile = PROFILES.get("zbw-stw-economics");
+            KnowledgeBase kb_zbw_stw_economics = new KnowledgeBase();
+            kb_zbw_stw_economics.setName(profile.getName());
+            kb_zbw_stw_economics.setType(RepositoryType.REMOTE);
+            kb_zbw_stw_economics.setReification(Reification.NONE);
+            kb_zbw_stw_economics.applyMapping(profile.getMapping());
+            kbList.add(new TestConfiguration(profile.getSparqlUrl(), kb_zbw_stw_economics,
+                    "http://zbw.eu/stw/thsys/71020"));
         }
+        
+        // Commenting this out for the moment becuase we expect that every ontology contains 
+        // property definitions. However, this one does not include any property definitions!
+        // {
+        // KnowledgeBaseProfile profile = PROFILES.get("zbw-gnd");
+        // KnowledgeBase kb_zbw_gnd = new KnowledgeBase();
+        // kb_zbw_gnd.setName(profile.getName());
+        // kb_zbw_gnd.setType(RepositoryType.REMOTE);
+        // kb_zbw_gnd.setReification(Reification.NONE);
+        // kb_zbw_gnd.applyMapping(profile.getMapping());
+        // kbList.add(new TestConfiguration(profile.getSparqlUrl(), kb_zbw_gnd));
+        // }
         
         List<Object[]> dataList = new ArrayList<>();
         for (TestConfiguration kb : kbList) {
