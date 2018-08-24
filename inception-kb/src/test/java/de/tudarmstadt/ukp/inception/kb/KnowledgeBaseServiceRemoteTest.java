@@ -47,8 +47,6 @@ import org.junit.rules.TemporaryFolder;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
@@ -74,8 +72,6 @@ import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 @DataJpaTest
 public class KnowledgeBaseServiceRemoteTest
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
-
     private final String PROJECT_NAME = "Test project";
 
     private static Map<String, KnowledgeBaseProfile> PROFILES;
@@ -95,7 +91,7 @@ public class KnowledgeBaseServiceRemoteTest
         protected void starting(org.junit.runner.Description aDescription)
         {
             String methodName = aDescription.getMethodName();
-            log.info("\n=== " + methodName + " =====================");
+            System.out.printf("\n=== " + methodName + " =====================");
         };
     };
     
@@ -265,9 +261,9 @@ public class KnowledgeBaseServiceRemoteTest
         List<KBHandle> rootConceptKBHandle = sut.listRootConcepts(kb, true);
         duration = System.currentTimeMillis() - duration;
 
-        log.info("Root concepts retrieved : %d%n", rootConceptKBHandle.size());
-        log.info("Time required           : %d ms%n", duration);
-        rootConceptKBHandle.stream().limit(10).forEach(h -> log.info("   %s%n", h));
+        System.out.printf("Root concepts retrieved : %d%n", rootConceptKBHandle.size());
+        System.out.printf("Time required           : %d ms%n", duration);
+        rootConceptKBHandle.stream().limit(10).forEach(h -> System.out.printf("   %s%n", h));
         
         assertThat(rootConceptKBHandle).as("Check that root concept list is not empty")
                 .isNotEmpty();
@@ -282,9 +278,9 @@ public class KnowledgeBaseServiceRemoteTest
         List<KBHandle> propertiesKBHandle = sut.listProperties(kb, true);
         duration = System.currentTimeMillis() - duration;
 
-        log.info("Properties retrieved : %d%n", propertiesKBHandle.size());
-        log.info("Time required        : %d ms%n", duration);
-        propertiesKBHandle.stream().limit(10).forEach(h -> log.info("   %s%n", h));
+        System.out.printf("Properties retrieved : %d%n", propertiesKBHandle.size());
+        System.out.printf("Time required        : %d ms%n", duration);
+        propertiesKBHandle.stream().limit(10).forEach(h -> System.out.printf("   %s%n", h));
 
         assertThat(propertiesKBHandle).as("Check that property list is not empty").isNotEmpty();
 
@@ -315,9 +311,9 @@ public class KnowledgeBaseServiceRemoteTest
         long duration = System.currentTimeMillis();
         Set<KBHandle> parentList = sut.getParentConceptList(kb, sutConfig.getTestIdentifier(), true);
         duration = System.currentTimeMillis() - duration;
-        log.info("Parent List retrieved : %d%n", parentList.size());
-        log.info("Time required        : %d ms%n", duration);
-        parentList.stream().limit(10).forEach(h -> log.info("   %s%n", h));
+        System.out.printf("Parent List retrieved : %d%n", parentList.size());
+        System.out.printf("Time required        : %d ms%n", duration);
+        parentList.stream().limit(10).forEach(h -> System.out.printf("   %s%n", h));
         assertThat(parentList).as("Check that parent list is not empty").isNotEmpty();
     }
 
