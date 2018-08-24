@@ -188,8 +188,9 @@ public class MtasDocumentIndex
     {
         String result;
 
-        if (!(aQuery.contains("[") || aQuery.contains("]") || aQuery.contains("{")
-                || aQuery.contains("}") || aQuery.contains("<") || aQuery.contains(">"))) {
+        if (!(aQuery.contains("\"") || aQuery.contains("[") || aQuery.contains("]")
+                || aQuery.contains("{") || aQuery.contains("}") || aQuery.contains("<")
+                || aQuery.contains(">"))) {
             // Convert raw words query to a Mtas CQP query
 
             result = "";
