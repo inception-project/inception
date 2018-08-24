@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -58,11 +59,13 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.inception.app.Focusable;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
+import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.ui.kb.WriteProtectionBehavior;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxPropertySelectionEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxStatementChangedEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxStatementGroupChangedEvent;
+import de.tudarmstadt.ukp.inception.ui.kb.stmt.editor.StatementEditor;
 
 public class StatementGroupPanel extends Panel {
 
@@ -166,15 +169,32 @@ public class StatementGroupPanel extends Panel {
 
             }
 
-            List<KBHandle> properties = new ArrayList<>();
+            List<KBHandle> properties = new ArrayList<KBHandle>();
             try {
-                properties = kbService.listProperties(groupModel.getObject().getKb(),
-                        detailPreference == StatementDetailPreference.ALL);
+                properties = kbService.listDomainProperties(groupModel.getObject().getKb(),
+                        bean.getInstance().getIdentifier(), true, true);
+                
+                Set<KBHandle> parentConceptList = kbService.getParentConceptList(
+                        groupModel.getObject().getKb(), bean.getInstance().getIdentifier(), true);
+                
+                for (KBHandle parent : parentConceptList) {
+                    properties.addAll(kbService.listDomainProperties(groupModel.getObject().getKb(),
+                            parent.getIdentifier(), true, true));
+                }
+
+                // Condition here to avoid fail case scenario e.g. WikiData : In case the above
+                // domain property doesn't return anything, we consider the complete list of 
+                // properties for now
+                if (properties.isEmpty()) {
+                    properties = kbService.listProperties(groupModel.getObject().getKb(),
+                            detailPreference == StatementDetailPreference.ALL);
+                } 
             }
             catch (QueryEvaluationException e) {
                 error("Unable to list properties: " + e.getLocalizedMessage());
                 LOG.error("Unable to list properties.", e);
             }
+            
             properties.removeAll(existingPropertyHandles);
             return properties;
         }
@@ -199,6 +219,14 @@ public class StatementGroupPanel extends Panel {
                     this::actionPropertyLinkClicked);
             propertyLink.add(new Label("property", groupModel.bind("property.uiLabel")));
             form.add(propertyLink);
+
+            // TODO what about handling type intersection when multiple range statements are
+            // present?
+            // obtain IRI of property range, if existent
+            Optional<KBProperty> property = kbService.readProperty(groupModel.getObject().getKb(),
+                    groupModel.getObject().getProperty().getIdentifier());
+            IModel<KBProperty> propertyModel = Model.of(property.orElse(null));
+
             WebMarkupContainer statementIdentifier = new WebMarkupContainer("statementIdtext"); 
             TooltipBehavior tip = new TooltipBehavior();
             tip.setOption("autoHide", false);
@@ -225,7 +253,7 @@ public class StatementGroupPanel extends Panel {
                 @Override
                 protected void populateItem(Item<KBStatement> aItem) {
                     StatementEditor editor = new StatementEditor("statement",
-                            groupModel.bind("kb"), aItem.getModel());
+                            groupModel.bind("kb"), aItem.getModel(), propertyModel);
                     aItem.add(editor);
                     aItem.setOutputMarkupId(true);
                 }
@@ -264,6 +292,14 @@ public class StatementGroupPanel extends Panel {
             if (!isEventForThisStatementGroup) {
                 return;
             }
+            else if (!event.isDeleted()) {
+                KBStatement oldStatement = event.getStatementBeforeChange();
+                // update the statement from the event
+                StatementGroupBean bean = groupModel.getObject();
+                bean.getStatements().remove(oldStatement);
+                bean.getStatements().add(event.getStatement());
+                groupModel.setObject(bean);
+            }
             if (event.isDeleted()) {
                 // remove statement found in the event from the model
                 StatementGroupBean bean = groupModel.getObject();
@@ -279,6 +315,7 @@ public class StatementGroupPanel extends Panel {
                     event.getTarget().add(statementListWrapper);
                 }
             }
+            event.getTarget().add(statementListWrapper);
         }
 
         private void actionAddValue(AjaxRequestTarget target) {

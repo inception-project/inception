@@ -20,14 +20,13 @@ package de.tudarmstadt.ukp.inception.ui.kb.feature;
 import static java.util.Arrays.asList;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.collections4.map.LRUMap;
-import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
@@ -38,6 +37,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
@@ -51,7 +53,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
-import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
+import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 
 /**
  * Extension providing knowledge-base-related features for annotations.
@@ -60,17 +62,21 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
 public class ConceptFeatureSupport
     implements FeatureSupport<ConceptFeatureTraits>
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
-
     public static final String PREFIX = "kb:";
     public static final String ANY_CONCEPT = "<ANY>";
     public static final String TYPE_ANY_CONCEPT = PREFIX + ANY_CONCEPT;
+    
+    private static final Logger LOG = LoggerFactory.getLogger(ConceptFeatureSupport.class);
 
     private final KnowledgeBaseService kbService;
     
+    private LoadingCache<Key, String> labelCache = Caffeine.newBuilder()
+        .maximumSize(10_000)
+        .expireAfterWrite(1, TimeUnit.MINUTES)
+        .refreshAfterWrite(1, TimeUnit.MINUTES)
+        .build(key -> loadLabelValue(key));
+    
     private String featureSupportId;
-    private Map<ImmutablePair<AnnotationFeature, String>, String> renderValueCache = Collections
-        .synchronizedMap(new LRUMap<>(200));
 
     @Autowired
     public ConceptFeatureSupport(KnowledgeBaseService aKbService)
@@ -83,7 +89,7 @@ public class ConceptFeatureSupport
     {
         return featureSupportId;
     }
-    
+
     @Override
     public void setBeanName(String aBeanName)
     {
@@ -125,39 +131,41 @@ public class ConceptFeatureSupport
     @Override
     public String renderFeatureValue(AnnotationFeature aFeature, String aLabel)
     {
+        String renderValue = null;
+        if (aLabel != null) {
+            renderValue = labelCache.get(new Key(aFeature, aLabel));
+        }
+        return renderValue;
+    }
+    
+    private String loadLabelValue(Key aKey)
+    {
         try {
-            ImmutablePair<AnnotationFeature, String> pair = new ImmutablePair<>(aFeature, aLabel);
-            String renderValue = renderValueCache.get(pair);
-            if (renderValue != null) {
-                return renderValue;
+            ConceptFeatureTraits t = readTraits(aKey.getAnnotationFeature());
+    
+            // Use the concept from a particular knowledge base
+            Optional<KBObject> handle;
+            if (t.getRepositoryId() != null) {
+                handle = kbService
+                        .getKnowledgeBaseById(aKey.getAnnotationFeature().getProject(),
+                                t.getRepositoryId())
+                        .flatMap(kb -> kbService.readKBIdentifier(kb, aKey.getLabel()));
             }
-            // FIXME Since this might be called very often during rendering, it *might* be
-            // worth to set up an LRU cache instead of relying on the performance of the
-            // underlying KB store.
-            if (aLabel != null) {
-                ConceptFeatureTraits t = readTraits(aFeature);
-
-                // Use the concept from a particular knowledge base
-                Optional<KBInstance> instance;
-                if (t.getRepositoryId() != null) {
-                    instance = kbService
-                            .getKnowledgeBaseById(aFeature.getProject(), t.getRepositoryId())
-                            .flatMap(kb -> kbService.readInstance(kb, aLabel));
-                }
-                // Use the concept from any knowledge base (leave KB unselected)
-                else {
-                    instance = kbService.readInstance(aFeature.getProject(), aLabel);
-                }
-
-                renderValue = instance.map(KBInstance::getUiLabel)
-                        .orElseThrow(NoSuchElementException::new);
+            // Use the concept from any knowledge base (leave KB unselected)
+            else {
+                handle = kbService.readKBIdentifier(aKey.getAnnotationFeature().getProject(),
+                        aKey.getLabel());
             }
-            renderValueCache.put(pair, renderValue);
-            return renderValue;
+            
+            return handle.map(KBObject::getUiLabel).orElseThrow(NoSuchElementException::new);
+        }
+        catch (NoSuchElementException e) {
+            LOG.error("No label for feature value [{}]", aKey.getLabel());
+            return "NO LABEL (" + aKey.getLabel() + ")";
         }
         catch (Exception e) {
-            log.error("Unable to render feature value", e);
-            return "ERROR";
+            LOG.error("Unable to obtain label value for feature value [{}]", aKey.getLabel(), e);
+            return "ERROR (" + aKey.getLabel() + ")";
         }
     }
 
@@ -178,30 +186,13 @@ public class ConceptFeatureSupport
                     "Unable to handle value [" + aValue + "] of type [" + aValue.getClass() + "]");
         }
     }
-    
+
     @Override
     public KBHandle wrapFeatureValue(AnnotationFeature aFeature, CAS aCAS, Object aValue)
     {
         if (aValue instanceof String) {
             String identifier = (String) aValue;
             return new KBHandle(identifier, renderFeatureValue(aFeature, identifier));
-            
-//            String identifier = (String) aValue;
-//            ConceptFeatureTraits t = readTraits(aFeature);
-//
-//            // Use the concept from a particular knowledge base
-//            Optional<KBInstance> instance;
-//            if (t.getRepositoryId() != null) {
-//                instance = kbService
-//                        .getKnowledgeBaseById(aFeature.getProject(), t.getRepositoryId())
-//                        .flatMap(kb -> kbService.readInstance(kb, identifier));
-//            }
-//            // Use the concept from any knowledge base (leave KB unselected)
-//            else {
-//                instance = kbService.readInstance(aFeature.getProject(), identifier);
-//            }
-//
-//            return instance.map(i -> KBHandle.of(i)).orElseThrow(NoSuchElementException::new);
         }
         else if (aValue instanceof KBHandle) {
             return (KBHandle) aValue;
@@ -256,7 +247,7 @@ public class ConceptFeatureSupport
                     aFeature.getTraits());
         }
         catch (IOException e) {
-            log.error("Unable to read traits", e);
+            LOG.error("Unable to read traits", e);
         }
         
         if (traits == null) {
@@ -287,7 +278,7 @@ public class ConceptFeatureSupport
             aFeature.setTraits(JSONUtil.toJsonString(aTraits));
         }
         catch (IOException e) {
-            log.error("Unable to write traits", e);
+            LOG.error("Unable to write traits", e);
         }
     }
     
@@ -298,4 +289,43 @@ public class ConceptFeatureSupport
         aTD.addFeature(aFeature.getName(), "", CAS.TYPE_NAME_STRING);
     }
 
+    private class Key
+    {
+        private final AnnotationFeature feature;
+        private final String label;
+        
+        public Key(AnnotationFeature aFeature, String aLabel)
+        {
+            super();
+            feature = aFeature;
+            label = aLabel;
+        }
+        
+        public String getLabel()
+        {
+            return label;
+        }
+        
+        public AnnotationFeature getAnnotationFeature()
+        {
+            return feature;
+        }
+        
+        @Override
+        public boolean equals(final Object other)
+        {
+            if (!(other instanceof Key)) {
+                return false;
+            }
+            Key castOther = (Key) other;
+            return new EqualsBuilder().append(feature, castOther.feature)
+                    .append(label, castOther.label).isEquals();
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return new HashCodeBuilder().append(feature).append(label).toHashCode();
+        }
+    }
 }

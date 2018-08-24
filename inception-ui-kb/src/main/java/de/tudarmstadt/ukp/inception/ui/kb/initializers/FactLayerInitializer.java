@@ -71,7 +71,7 @@ public class FactLayerInitializer
 
         annotationSchemaService.createFeature(
             new AnnotationFeature(aProject, factLayer, "predicate", "1) Predicate",
-                PropertyFeatureSupport.FACT_PREDICATE_PREFIX, "Predicate of a fact", null));
+                PropertyFeatureSupport.PREFIX, "Predicate of a fact", null));
 
         AnnotationFeature subjectFeature = createLinkedFeature("subject", "2) Subject",
             "The subject of a fact.", FactLinkingConstants.SUBJECT_LINK, factLayer, aProject);

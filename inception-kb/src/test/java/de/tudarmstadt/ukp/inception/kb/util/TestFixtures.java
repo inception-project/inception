@@ -81,9 +81,9 @@ public class TestFixtures
     {
         KBProperty property = new KBProperty();
         property.setDescription("Property description");
-        property.setDomain(URI.create("https://test.schema.com/#domain"));
+        property.setDomain("https://test.schema.com/#domain");
         property.setName("Property name");
-        property.setRange(URI.create("https://test.schema.com/#range"));
+        property.setRange("https://test.schema.com/#range");
         return property;
     }
 
