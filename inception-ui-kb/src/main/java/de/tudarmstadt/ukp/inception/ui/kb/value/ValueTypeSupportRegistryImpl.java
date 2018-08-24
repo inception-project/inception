@@ -84,8 +84,13 @@ public class ValueTypeSupportRegistryImpl
     public ValueType getValueType(KBStatement aStatement, KBProperty aProperty)
     {
         String datatype = getDataType(aStatement, aProperty);
-        return getValueSupport(aStatement, aProperty).getSupportedValueTypes().stream()
-                .filter(t -> datatype.equals(t.getName())).findFirst().orElse(null);
+        try {
+            return getValueSupport(aStatement, aProperty).getSupportedValueTypes().stream()
+                .findFirst().orElse(null);
+        }
+        catch (IllegalArgumentException e) {
+            return null;
+        }
     }
     
     @Override
@@ -101,13 +106,17 @@ public class ValueTypeSupportRegistryImpl
         if (aStatement.getValue() != null) {
             Class<?> clazz = aStatement.getValue().getClass();
             IRI type = DefaultDatatypeMapper.getDatatypeURI(clazz);
+
+            // Mapping fails for NaiveIRI class, so check manually
+            // if the value is an instance of IRI
+            if (type == null && aStatement.getValue() instanceof IRI) {
+                type = XMLSchema.ANYURI;
+            }
             datatype = type != null ? type.stringValue() : null;
         }
         
-        if (datatype == null && aProperty != null) {
-            if (aProperty.getRange() != null) {
-                return aProperty.getRange();
-            }
+        if (datatype == null && aProperty != null && aProperty.getRange() != null) {
+            return aProperty.getRange();
         }
         
         if (datatype == null) {
@@ -120,15 +129,15 @@ public class ValueTypeSupportRegistryImpl
     @Override
     public ValueTypeSupport getValueSupport(KBStatement aStatement, KBProperty aProperty)
     {
-        ValueTypeSupport support = null;
-        
         // Determine the data type
         String datatype = getDataType(aStatement, aProperty);
-        
-        support = supportCache.get(datatype);
-        
+        String range = null;;
+        if (aProperty != null) {
+            range = aProperty.getRange();
+        }
+        ValueTypeSupport support = supportCache.get(datatype);
         for (ValueTypeSupport s : getValueSupports()) {
-            if (s.accepts(aStatement, aProperty)) {
+            if (s.accepts(aStatement, aProperty) || s.accepts(range, null)) {
                 support = s;
                 supportCache.put(datatype, s);
                 break;

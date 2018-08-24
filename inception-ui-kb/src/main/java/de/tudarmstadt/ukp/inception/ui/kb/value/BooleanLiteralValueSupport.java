@@ -77,7 +77,7 @@ public class BooleanLiteralValueSupport
     @Override
     public boolean accepts(String range, Optional<KBObject> rangeKbObject)
     {
-        if (range.equals(XMLSchema.BOOLEAN.stringValue())) {
+        if (range != null && range.equals(XMLSchema.BOOLEAN.stringValue())) {
             return true;
         }
         return false;

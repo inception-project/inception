@@ -46,11 +46,8 @@ public class KBProperty
     private String description;
     private String domain;
     private KnowledgeBase kb;
-    
-    /**
-     * Declares the class or data type of the object in a triple whose predicate is that property.
-     */
     private String range;
+    
     private List<Statement> originalStatements = new ArrayList<>();
 
     public KBProperty()
@@ -68,6 +65,13 @@ public class KBProperty
         identifier = aIdentifier;
     }
 
+    public KBProperty(String aName, String aIdentifier,String aDomain, String aRange)
+    {
+        name = aName;
+        identifier = aIdentifier;
+        domain = aDomain;
+        range = aRange;
+    }
 
     @Override
     public String getIdentifier()
