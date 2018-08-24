@@ -157,6 +157,27 @@ public class IRIValueEditor
                 handleModel = new KBHandle(kbObject.get().getIdentifier(),
                     kbObject.get().getUiLabel());
             }
+            else {
+                // Check if it is any of the pre-defined IRIs
+                if ((statementValue).equals(aKbModel.getObject().getClassIri())) {
+                    handleModel = new KBHandle(((IRI) statementValue).stringValue(), "Class");
+                }
+                else if ((statementValue).equals(aKbModel.getObject().getSubclassIri())) {
+                    handleModel = new KBHandle(((IRI) statementValue).stringValue(), "Subclass");
+                }
+                else if ((statementValue).equals(aKbModel.getObject().getDescriptionIri())) {
+                    handleModel = new KBHandle(((IRI) statementValue).stringValue(), "Description");
+                }
+                else if ((statementValue).equals(aKbModel.getObject().getLabelIri())) {
+                    handleModel = new KBHandle(((IRI) statementValue).stringValue(), "Label");
+                }
+                else if ((statementValue).equals(aKbModel.getObject().getPropertyTypeIri())) {
+                    handleModel = new KBHandle(((IRI) statementValue).stringValue(), "PropertyType");
+                }
+                else if ((statementValue).equals(aKbModel.getObject().getTypeIri())) {
+                    handleModel = new KBHandle(((IRI) statementValue).stringValue(), "Type");
+                }
+            }
         }
         return  handleModel;
     }
