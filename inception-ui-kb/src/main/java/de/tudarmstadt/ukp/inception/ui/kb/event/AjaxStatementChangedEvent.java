@@ -33,7 +33,12 @@ public class AjaxStatementChangedEvent extends AbstractAjaxAwareEvent {
      * Statement editor component of the changed statement.
      */
     private Component component;
-    
+
+    /**
+     * The statement in the state that it was before the change.
+     */
+    private KBStatement statementBeforeChange;
+
     /**
      * The statement which was changed.
      */
@@ -49,13 +54,25 @@ public class AjaxStatementChangedEvent extends AbstractAjaxAwareEvent {
     }
 
     public AjaxStatementChangedEvent(AjaxRequestTarget target, KBStatement statement,
+        KBStatement statementBeforeChange)
+    {
+        this(target, statement, null, false, statementBeforeChange);
+    }
+
+    public AjaxStatementChangedEvent(AjaxRequestTarget target, KBStatement statement,
             Component component, boolean deleted) {
+        this(target, statement, component, deleted, null);
+    }
+
+    public AjaxStatementChangedEvent(AjaxRequestTarget target, KBStatement statement,
+        Component component, boolean deleted, KBStatement statementBeforeChange) {
         super(target);
         this.statement = statement;
         this.component = component;
         this.deleted = deleted;
+        this.statementBeforeChange = statementBeforeChange;
     }
-    
+
     public KBStatement getStatement() {
         return statement;
     }
@@ -75,4 +92,11 @@ public class AjaxStatementChangedEvent extends AbstractAjaxAwareEvent {
         return deleted;
     }
 
+    /**
+     * Returns the old statement (before the change)
+     */
+    public KBStatement getStatementBeforeChange()
+    {
+        return statementBeforeChange;
+    }
 }
