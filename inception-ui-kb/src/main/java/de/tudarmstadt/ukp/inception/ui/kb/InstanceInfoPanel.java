@@ -19,10 +19,7 @@ package de.tudarmstadt.ukp.inception.ui.kb;
 
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
-import java.util.Arrays;
 import java.util.Comparator;
-import java.util.HashSet;
-import java.util.Set;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.event.Broadcast;
@@ -35,15 +32,13 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxInstanceSelectionEvent;
+import de.tudarmstadt.ukp.inception.ui.kb.stmt.StatementDetailPreference;
 import de.tudarmstadt.ukp.inception.ui.kb.stmt.StatementGroupBean;
 
 public class InstanceInfoPanel extends AbstractInfoPanel<KBInstance> {
 
     private static final long serialVersionUID = 7894987557444275022L;
     
-    private static final Set<String> IMPORTANT_INSTANCE_URIS = new HashSet<>(
-            Arrays.asList("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"));
-
     private @SpringBean KnowledgeBaseService kbService;    
 
     public InstanceInfoPanel(String aId, IModel<KnowledgeBase> aKbModel,
@@ -88,11 +83,21 @@ public class InstanceInfoPanel extends AbstractInfoPanel<KBInstance> {
     protected String getNamePlaceholderResourceKey() {
         return "instance.new.placeholder";
     }
+    
+    @Override
+    protected StatementDetailPreference getDetailPreference() {
+        return StatementDetailPreference.ALL;
+    }
 
     @Override
     protected Comparator<StatementGroupBean> getStatementGroupComparator() {
-        return new ImportantStatementComparator(
-            sgb -> IMPORTANT_INSTANCE_URIS.contains(sgb.getProperty().getIdentifier()));
+        return new ImportantStatementComparator(sgb -> {
+            KnowledgeBase kb = kbModel.getObject();
+            String identifier = sgb.getProperty().getIdentifier();
+            return kb.getTypeIri().stringValue().equals(identifier) ||
+                kb.getSubclassIri().stringValue().equals(identifier) ||
+                kb.getLabelIri().stringValue().equals(identifier) ||
+                kb.getDescriptionIri().stringValue().equals(identifier);
+        });
     }
-
 }

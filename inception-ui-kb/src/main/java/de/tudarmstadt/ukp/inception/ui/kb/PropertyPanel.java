@@ -114,7 +114,5 @@ public class PropertyPanel extends Panel {
         protected StatementDetailPreference getDetailPreference() {
             return StatementDetailPreference.ALL;
         }
-
     }
-
 }

@@ -145,6 +145,7 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
     @Test
     public void listChildConcept_WithExistentConcept_ShouldReturnResult() {
         List<KBHandle> concept = sut.listChildConcepts(kb, "http://www.wikidata.org/entity/Q171644", true);
+        
         assertThat(concept.iterator().next().getUiLabel())
             .as("Check that concept has the same UI label")
             .isIn("12-Stunden-Rennen von Reims 1965","1965 12 Hours of Reims");
@@ -152,24 +153,17 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
     
     @Test
     public void listRootConcepts() {
-        Stream<String> rootConcepts = sut.listRootConcepts(kb, false).stream()
-                .map(KBHandle::getIdentifier);
+        List<KBHandle> rootConcepts = sut.listRootConcepts(kb, false);
 
-        String[] expectedLabels = {
-            "http://www.wikidata.org/entity/Q171644" , "http://www.wikidata.org/entity/Q6728", "http://www.wikidata.org/entity/Q2897"};
-        assertThat(rootConcepts)
-            .as("Check that root concepts have been found")
-            .contains(expectedLabels);
+        assertThat(rootConcepts).as("Check that root concepts have been found").hasSize(SPARQLQueryStore.aLimit);
     }
 
     
     @Test
     public void listProperties() {
         Stream<String> properties = sut.listProperties(kb, true).stream().map(KBHandle::getIdentifier);
-        String[] expectedInstances = {
-                "http://www.wikidata.org/entity/P1661" , "http://www.wikidata.org/prop/qualifier/P1048", "http://www.wikidata.org/entity/P5061"};
-        assertThat(properties).as("Check that properties have been found").hasSize(10000).contains(expectedInstances);
         
+        assertThat(properties).as("Check that properties have been found").hasSize(SPARQLQueryStore.aLimit);
     }
     
     @Test

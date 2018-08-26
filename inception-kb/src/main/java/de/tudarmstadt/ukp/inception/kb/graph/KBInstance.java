@@ -47,7 +47,8 @@ public class KBInstance
     private List<Statement> originalStatements = new ArrayList<>();
     private String language;
     private static String ENGLISH = "en";
-
+    private KnowledgeBase kb;
+    
     public KBInstance()
     {
         // No-args constructor
@@ -81,6 +82,18 @@ public class KBInstance
     public void setName(String aName)
     {
         name = aName;
+    }
+    
+    @Override
+    public KnowledgeBase getKB()
+    {
+        return kb;
+    }
+
+    @Override
+    public void setKB(KnowledgeBase akb)
+    {
+        kb = akb;
     }
 
     public URI getType()
@@ -118,6 +131,7 @@ public class KBInstance
         language = aLanguage;
     }
 
+    
     public void write(RepositoryConnection aConn, KnowledgeBase kb)
     {
         ValueFactory vf = aConn.getValueFactory();
@@ -163,6 +177,7 @@ public class KBInstance
         KBInstance kbInst = new KBInstance();
         kbInst.setType(URI.create(aStmt.getObject().stringValue()));
         kbInst.setIdentifier(aStmt.getSubject().stringValue());
+        kbInst.setKB(kb);
         kbInst.originalStatements.add(aStmt);
 
         readFirst(aConn, aStmt.getSubject(), kb.getLabelIri(), null, ENGLISH).ifPresent((stmt) -> {
