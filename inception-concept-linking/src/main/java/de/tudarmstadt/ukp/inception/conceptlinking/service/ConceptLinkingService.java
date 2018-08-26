@@ -126,17 +126,56 @@ public class ConceptLinkingService
                 .build(key -> loadSemanticSignature(key));
     }
 
-    public String getBeanName()
-    {
-        return "ConceptLinkingService";
-    }
-
-    /*
-     * Retrieves the sentence containing the mention
+    /**
+     * Given a mention in the text, this method returns a list of ranked candidate entities
+     * generated from a Knowledge Base.
+     *
+     * The candidates are retrieved in two separate queries, because of the higher number of results
+     * returned by full-text matching, which are filtered first.
+     * To not possible lose any of the candidates from the exact matching results,
+     * the latter are added to the ranking afterwards and given top priority.
+     *
+     * @param aKB the KB used to generate candidates.
+     * @param aTypedString What the user has typed so far in the text field. Might be null.
+     * @param aMention Marked Surface form of an entity to be linked.
+     * @param aMentionBeginOffset the offset where the mention begins in the text.
+     * @param aJcas used to extract information about mention sentence tokens.
+     * @return a ranked list of entities.
      */
-    private synchronized Sentence getMentionSentence(JCas aJcas, int aBegin)
+    public List<KBHandle> disambiguate(KnowledgeBase aKB, String aTypedString, String
+        aMention, int aMentionBeginOffset, JCas aJcas)
     {
-        return WebAnnoCasUtil.getSentence(aJcas, aBegin);
+        long startTime = System.currentTimeMillis();
+
+        Set<CandidateEntity> candidatesExact = retrieveCandidatesExact(aKB, aTypedString, aMention);
+
+        Set<CandidateEntity> candidatesFullText = new HashSet<>();
+        if (!aTypedString.isEmpty()) {
+            candidatesFullText
+                .addAll(retrieveCandidatesFullText(new CandidateCacheKey(aKB, aTypedString)));
+        }
+        candidatesFullText.addAll(retrieveCandidatesFullText(new CandidateCacheKey(aKB, aMention)));
+
+        long afterRetrieval = System.currentTimeMillis();
+
+        logger
+            .debug("It took [{}] ms to retrieve candidates for mention [{}] and typed string [{}]",
+                afterRetrieval - startTime, aMention, aTypedString);
+
+        List<CandidateEntity> rankedCandidates = rankCandidates(aKB, aTypedString, aMention,
+            candidatesExact, candidatesFullText, aJcas, aMentionBeginOffset);
+
+        logger
+            .debug("It took [{}] ms to rank candidates for mention [{}] and typed string [{}]",
+                System.currentTimeMillis() - afterRetrieval, aMention, aTypedString);
+
+
+        return rankedCandidates.stream()
+            .map(c -> new KBHandle(c.getIRI(), c.getLabel(), c.getDescription()))
+            .distinct()
+            .limit(properties.getCandidateDisplayLimit())
+            .filter(h -> h.getIdentifier().contains(":"))
+            .collect(Collectors.toList());
     }
 
     /**
@@ -227,6 +266,14 @@ public class ConceptLinkingService
             logger.error("Query evaluation was unsuccessful: ", e);
         }
         return candidates;
+    }
+
+    /*
+     * Retrieves the sentence containing the mention
+     */
+    private synchronized Sentence getMentionSentence(JCas aJcas, int aBegin)
+    {
+        return WebAnnoCasUtil.getSentence(aJcas, aBegin);
     }
 
     /*
@@ -451,57 +498,7 @@ public class ConceptLinkingService
         return new SemanticSignature(relatedEntities, relatedRelations);
     }
 
-    /**
-     * Given a mention in the text, this method returns a list of ranked candidate entities
-     * generated from a Knowledge Base.
-     *
-     * The candidates are retrieved in two separate queries, because of the higher number of results
-     * returned by full-text matching, which are filtered first.
-     * To not possible lose any of the candidates from the exact matching results,
-     * the latter are added to the ranking afterwards and given top priority.
-     *
-     * @param aKB the KB used to generate candidates.
-     * @param aTypedString What the user has typed so far in the text field. Might be null.
-     * @param aMention Marked Surface form of an entity to be linked.
-     * @param aMentionBeginOffset the offset where the mention begins in the text.
-     * @param aJcas used to extract information about mention sentence tokens.
-     * @return a ranked list of entities.
-     */
-    public List<KBHandle> disambiguate(KnowledgeBase aKB, String aTypedString, String
-        aMention, int aMentionBeginOffset, JCas aJcas)
-    {
-        long startTime = System.currentTimeMillis();
 
-        Set<CandidateEntity> candidatesExact = retrieveCandidatesExact(aKB, aTypedString, aMention);
-
-        Set<CandidateEntity> candidatesFullText = new HashSet<>();
-        if (!aTypedString.isEmpty()) {
-            candidatesFullText
-                .addAll(retrieveCandidatesFullText(new CandidateCacheKey(aKB, aTypedString)));
-        }
-        candidatesFullText.addAll(retrieveCandidatesFullText(new CandidateCacheKey(aKB, aMention)));
-
-        long afterRetrieval = System.currentTimeMillis();
-
-        logger
-            .debug("It took [{}] ms to retrieve candidates for mention [{}] and typed string [{}]",
-                afterRetrieval - startTime, aMention, aTypedString);
-
-        List<CandidateEntity> rankedCandidates = rankCandidates(aKB, aTypedString, aMention,
-            candidatesExact, candidatesFullText, aJcas, aMentionBeginOffset);
-
-        logger
-            .debug("It took [{}] ms to rank candidates for mention [{}] and typed string [{}]",
-                System.currentTimeMillis() - afterRetrieval, aMention, aTypedString);
-
-
-        return rankedCandidates.stream()
-            .map(c -> new KBHandle(c.getIRI(), c.getLabel(), c.getDescription()))
-            .distinct()
-            .limit(properties.getCandidateDisplayLimit())
-            .filter(h -> h.getIdentifier().contains(":"))
-            .collect(Collectors.toList());
-    }
 
     /**
      * Remove all cache entries of a specific project
