@@ -42,7 +42,8 @@ public class StringLiteralValueEditor
         value.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> t.add(getParent())));
         add(value);
 
-        add(new TextField<>("language"));
+        add(new TextField<>("language")
+            .add((new LambdaAjaxFormComponentUpdatingBehavior("change", t -> t.add(getParent())))));
     }
     
     @Override
