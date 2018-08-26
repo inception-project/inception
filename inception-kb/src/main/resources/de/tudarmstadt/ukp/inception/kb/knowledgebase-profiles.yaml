@@ -88,6 +88,7 @@ wildlife_ontology:
       description: http://www.w3.org/2000/01/rdf-schema#comment
 zbw-stw-economics:
   name: STW Thesaurus for Economics
+  type: REMOTE
   access-url: http://zbw.eu/beta/sparql/stw/query
   mapping:
       class: http://www.w3.org/2004/02/skos/core#Concept
@@ -98,6 +99,7 @@ zbw-stw-economics:
       description: http://www.w3.org/2000/01/rdf-schema#comment
 zbw-gnd:
   name: Integrated Authority File (GND)
+  type: REMOTE
   access-url: http://zbw.eu/beta/sparql/gnd/query
   mapping:
       class: http://www.w3.org/2004/02/skos/core#Concept
