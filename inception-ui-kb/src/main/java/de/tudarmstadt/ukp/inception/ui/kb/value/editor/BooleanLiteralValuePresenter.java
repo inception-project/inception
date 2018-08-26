@@ -22,14 +22,15 @@ import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 
-public class BooleanLiteralValuePresenter extends ValuePresenter
+public class BooleanLiteralValuePresenter
+    extends ValuePresenter
 {
     private static final long serialVersionUID = -1749133670964165564L;
-    
+
     public BooleanLiteralValuePresenter(String aId, IModel<KBStatement> aModel)
     {
         super(aId, aModel);
-        
+
         add(new Label("value"));
     }
 }

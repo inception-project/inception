@@ -24,6 +24,8 @@ import java.util.Optional;
 
 import org.apache.wicket.model.IModel;
 import org.cyberborean.rdfbeans.datatype.DefaultDatatypeMapper;
+
+import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.vocabulary.XMLSchema;
 import org.springframework.stereotype.Component;
 
@@ -57,8 +59,7 @@ public class NumericLiteralValueSupport
     @Override
     public List<ValueType> getSupportedValueTypes()
     {
-        return asList(
-                new ValueType(XMLSchema.INTEGER.stringValue(), "Numeric", valueTypeSupportId));
+        return asList(new ValueType(XMLSchema.DOUBLE.stringValue(), "Numeric", valueTypeSupportId));
     }
     
     @Override
@@ -67,14 +68,28 @@ public class NumericLiteralValueSupport
         if (aStatement.getValue() == null) {
             return false;
         }
+        IRI iri = DefaultDatatypeMapper.getDatatypeURI((aStatement.getValue()).getClass());
+        Boolean acceptsType = iri.equals(XMLSchema.INTEGER)
+            || iri.equals(XMLSchema.INT)
+            || iri.equals(XMLSchema.NON_NEGATIVE_INTEGER)
+            || iri.equals(XMLSchema.NON_POSITIVE_INTEGER)
+            || iri.equals(XMLSchema.LONG)
+            || iri.equals(XMLSchema.FLOAT)
+            || iri.equals(XMLSchema.NEGATIVE_INTEGER)
+            || iri.equals(XMLSchema.POSITIVE_INTEGER)
+            || iri.equals(XMLSchema.UNSIGNED_INT)
+            || iri.equals(XMLSchema.UNSIGNED_LONG)
+            || iri.equals(XMLSchema.UNSIGNED_SHORT)
+            || iri.equals(XMLSchema.SHORT)
+            || iri.equals(XMLSchema.DOUBLE);
 
-        return DefaultDatatypeMapper.getDatatypeURI(aStatement.getValue().getClass()) != null;
+        return iri != null && acceptsType;
     }
     
     @Override
     public boolean accepts(String range, Optional<KBObject> rangeKbObject)
     {
-        if (range.equals(XMLSchema.INTEGER.stringValue()) 
+        if (range != null && (range.equals(XMLSchema.INTEGER.stringValue())
                 || range.equals(XMLSchema.INT.stringValue())
                 || range.equals(XMLSchema.NON_NEGATIVE_INTEGER.stringValue()) 
                 || range.equals(XMLSchema.NON_POSITIVE_INTEGER.stringValue())
@@ -85,7 +100,8 @@ public class NumericLiteralValueSupport
                 || range.equals(XMLSchema.UNSIGNED_INT.stringValue())
                 || range.equals(XMLSchema.UNSIGNED_LONG.stringValue())
                 || range.equals(XMLSchema.UNSIGNED_SHORT.stringValue())
-                || range.equals(XMLSchema.SHORT.stringValue())) {
+                || range.equals(XMLSchema.SHORT.stringValue())
+                || range.equals(XMLSchema.DOUBLE.stringValue()))) {
             return true;
         }
         

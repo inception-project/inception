@@ -19,6 +19,9 @@ package de.tudarmstadt.ukp.inception.ui.kb.value;
 
 import java.io.Serializable;
 
+/**
+ * A {@link ValueType} reports with the name, uiName and ValueTypeSupport Id
+ */
 public class ValueType
     implements Serializable
 {
