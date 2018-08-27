@@ -1423,7 +1423,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     }
 
     @Test
-    public void readFirst()
+    public void thatTheInstanceIsRetrievedInTheCorrectLanguage()
     {
         KBInstance germanInstance = buildInstanceWithLanguage("de");
         KBInstance englishInstance = buildInstanceWithLanguage("en");
@@ -1433,7 +1433,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         KBHandle germanHandle = sut.createInstance(kb, germanInstance);
 
         // Create English instance and ensure that both have the same identifier
-        KBHandle englishHandle = sut.update(kb, (conn) -> {
+        sut.update(kb, (conn) -> {
             englishInstance.setIdentifier(germanHandle.getIdentifier());
             englishInstance.write(conn, kb);
             return new KBHandle(germanHandle.getIdentifier(), englishInstance.getName());
@@ -1443,6 +1443,54 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         assertThat(firstInstance.getLanguage())
             .as("Check that the English instance is retrieved.")
             .isEqualTo("en");
+    }
+
+    @Test
+    public void thatTheLanguageOfKbInstanceCanBeModified()
+    {
+        KBInstance englishInstance = buildInstanceWithLanguage("en");
+
+        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
+        KBHandle englishHandle = sut.createInstance(kb, englishInstance);
+
+        englishInstance.setLanguage("de");
+        sut.updateInstance(kb, englishInstance);
+        KBInstance germanInstance = sut.readInstance(kb, englishHandle.getIdentifier()).get();
+        assertThat(germanInstance.getLanguage())
+            .as("Check that the language has successfully been changed.")
+            .isEqualTo("de");
+    }
+
+    @Test
+    public void thatTheLanguageOfKbPropertyCanBeModified()
+    {
+        KBProperty englishProperty = buildPropertyWithLanguage("en");
+
+        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
+        KBHandle englishHandle = sut.createProperty(kb, englishProperty);
+
+        englishProperty.setLanguage("de");
+        sut.updateProperty(kb, englishProperty);
+        KBProperty germanProperty = sut.readProperty(kb, englishHandle.getIdentifier()).get();
+        assertThat(germanProperty.getLanguage())
+            .as("Check that the language has successfully been changed.")
+            .isEqualTo("de");
+    }
+
+    @Test
+    public void thatTheLanguageOfKbConceptCanBeModified()
+    {
+        KBConcept englishConcept = buildConceptWithLanguage("en");
+
+        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
+        KBHandle englishHandle = sut.createConcept(kb, englishConcept);
+
+        englishConcept.setLanguage("de");
+        sut.updateConcept(kb, englishConcept);
+        KBConcept germanConcept = sut.readConcept(kb, englishHandle.getIdentifier()).get();
+        assertThat(germanConcept.getLanguage())
+            .as("Check that the language has successfully been changed.")
+            .isEqualTo("de");
     }
 
     @Test
@@ -1471,8 +1519,16 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         return testFixtures.buildConcept();
     }
 
+    private KBConcept buildConceptWithLanguage(String aLanguage) {
+        return testFixtures.buildConceptWithLanguage(aLanguage);
+    }
+
     private KBProperty buildProperty() {
         return testFixtures.buildProperty();
+    }
+
+    private KBProperty buildPropertyWithLanguage(String aLanguage) {
+        return testFixtures.buildPropertyWithLanguage(aLanguage);
     }
 
     private KBInstance buildInstance() {
