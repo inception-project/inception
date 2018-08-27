@@ -361,6 +361,8 @@ public class KnowledgeBase
         setDescriptionIri(aMapping.getDescriptionIri());
         setLabelIri(aMapping.getLabelIri());
         setPropertyTypeIri(aMapping.getPropertyTypeIri());
+        setPropertyLabelIri(aMapping.getPropertyLabelIri());
+        setPropertyDescriptionIri(aMapping.getPropertyDescriptionIri());
     }
     
     @Override

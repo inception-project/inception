@@ -168,6 +168,8 @@ public class KnowledgeBaseServiceRemoteTest
             kb_wine.setLabelIri(RDFS.LABEL);
             kb_wine.setPropertyTypeIri(RDF.PROPERTY);
             kb_wine.setDescriptionIri(RDFS.COMMENT);
+            kb_wine.setPropertyLabelIri(RDFS.LABEL);
+            kb_wine.setPropertyDescriptionIri(RDFS.COMMENT);
             kbList.add(new TestConfiguration("data/wine-ontology.rdf", kb_wine, "http://www.w3.org/TR/2003/PR-owl-guide-20031209/wine#ChateauMargaux"));
         }
         
@@ -184,6 +186,8 @@ public class KnowledgeBaseServiceRemoteTest
             kb_hucit.setDescriptionIri(vf.createIRI("http://www.w3.org/2000/01/rdf-schema#comment"));
             kb_hucit.setLabelIri(vf.createIRI("http://www.w3.org/2000/01/rdf-schema#label"));
             kb_hucit.setPropertyTypeIri(vf.createIRI("http://www.w3.org/1999/02/22-rdf-syntax-ns#Property"));
+            kb_hucit.setPropertyLabelIri(RDFS.LABEL);
+            kb_hucit.setPropertyDescriptionIri(RDFS.COMMENT);
             kbList.add(new TestConfiguration("http://nlp.dainst.org:8888/sparql", kb_hucit, 
                     // person -> Achilles :: urn:cts:cwkb:1137
                     "http://purl.org/hucit/kb/authors/1137"));

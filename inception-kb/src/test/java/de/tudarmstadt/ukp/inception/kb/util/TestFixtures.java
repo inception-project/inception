@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.kb.util;
 
 import java.net.URI;
+import java.util.ArrayList;
 
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
@@ -64,6 +65,9 @@ public class TestFixtures
         kb.setLabelIri(RDFS.LABEL);
         kb.setPropertyTypeIri(RDF.PROPERTY);
         kb.setDescriptionIri(RDFS.COMMENT);
+        kb.setPropertyLabelIri(RDFS.LABEL);
+        kb.setPropertyDescriptionIri(RDFS.COMMENT);
+        kb.setExplicitlyDefinedRootConcepts(new ArrayList<>());
 
         kb.setReification(reification);
         return kb;
