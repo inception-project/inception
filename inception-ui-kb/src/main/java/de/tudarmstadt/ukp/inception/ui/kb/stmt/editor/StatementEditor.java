@@ -64,6 +64,8 @@ import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxStatementChangedEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.stmt.QualifierEditor;
 import de.tudarmstadt.ukp.inception.ui.kb.value.ValueType;
 import de.tudarmstadt.ukp.inception.ui.kb.value.ValueTypeSupportRegistry;
+import de.tudarmstadt.ukp.inception.ui.kb.value.editor.StringLiteralValueEditor;
+import de.tudarmstadt.ukp.inception.ui.kb.value.editor.StringLiteralValuePresenter;
 import de.tudarmstadt.ukp.inception.ui.kb.value.editor.ValueEditor;
 
 public class StatementEditor extends Panel
@@ -110,7 +112,8 @@ public class StatementEditor extends Panel
         add(content);
     }
 
-    protected void actionEdit(AjaxRequestTarget aTarget) {
+    protected void actionEdit(AjaxRequestTarget aTarget)
+    {
         // Edit mode works on a model of a shallow copy of the original statement. Any floating
         // changes to the statement are either persisted by saving or undone by canceling. In
         // conjunction with onchange AjaxFormComponentUpdatingBehaviours, this makes sure that
@@ -122,38 +125,43 @@ public class StatementEditor extends Panel
 
         EditMode editMode = new EditMode(CONTENT_MARKUP_ID, shallowCopyModel, false);
         content = content.replaceWith(editMode);
-//        aTarget.focusComponent(editMode.getFocusComponent());
+        // aTarget.focusComponent(editMode.getFocusComponent());
         aTarget.add(this);
     }
 
-    private void actionAddQualifier(AjaxRequestTarget aTarget, KBStatement statement) {
+    private void actionAddQualifier(AjaxRequestTarget aTarget, KBStatement statement)
+    {
         KBQualifier qualifierPorto = new KBQualifier(statement);
         statement.addQualifier(qualifierPorto);
         aTarget.add(this);
     }
 
-    private void actionCancelExistingStatement(AjaxRequestTarget aTarget) {
+    private void actionCancelExistingStatement(AjaxRequestTarget aTarget)
+    {
         content = content.replaceWith(new ViewMode(CONTENT_MARKUP_ID, statement));
         aTarget.add(this);
     }
 
-    private void actionCancelNewStatement(AjaxRequestTarget aTarget) {
+    private void actionCancelNewStatement(AjaxRequestTarget aTarget)
+    {
         // send a delete event to trigger the deletion in the UI
         AjaxStatementChangedEvent deleteEvent = new AjaxStatementChangedEvent(aTarget,
                 statement.getObject(), this, true);
         send(getPage(), Broadcast.BREADTH, deleteEvent);
     }
 
-    private void actionSave(AjaxRequestTarget aTarget, Form<KBStatement> aForm) {
+    private void actionSave(AjaxRequestTarget aTarget, Form<KBStatement> aForm)
+    {
         KBStatement modifiedStatement = aForm.getModelObject();
         try {
             // persist the modified statement and replace the original, unchanged model
+            KBStatement oldStatement = statement.getObject();
             kbService.upsertStatement(kbModel.getObject(), modifiedStatement);
             statement.setObject(modifiedStatement);
             // switch back to ViewMode and send notification to listeners
             actionCancelExistingStatement(aTarget);
             send(getPage(), Broadcast.BREADTH,
-                    new AjaxStatementChangedEvent(aTarget, statement.getObject()));
+                    new AjaxStatementChangedEvent(aTarget, statement.getObject(), oldStatement));
         }
         catch (RepositoryException e) {
             error("Unable to update statement: " + e.getLocalizedMessage());
@@ -162,7 +170,8 @@ public class StatementEditor extends Panel
         }
     }
 
-    private void actionDelete(AjaxRequestTarget aTarget) {
+    private void actionDelete(AjaxRequestTarget aTarget)
+    {
         try {
             kbService.deleteStatement(kbModel.getObject(), statement.getObject());
 
@@ -177,11 +186,11 @@ public class StatementEditor extends Panel
         }
     }
 
-    private void actionMakeExplicit(AjaxRequestTarget aTarget) {
+    private void actionMakeExplicit(AjaxRequestTarget aTarget)
+    {
         try {
             // add the statement as-is to the knowledge base
             kbService.upsertStatement(kbModel.getObject(), statement.getObject());
-    
             // to update the statement in the UI, one could either reload all statements of the
             // corresponding instance or (much easier) just set the inferred attribute of the
             // KBStatement to false, so that's what's done here
@@ -189,7 +198,6 @@ public class StatementEditor extends Panel
             aTarget.add(this);
             send(getPage(), Broadcast.BREADTH,
                     new AjaxStatementChangedEvent(aTarget, statement.getObject()));
-            
         }
         catch (RepositoryException e) {
             error("Unable to make statement explicit " + e.getLocalizedMessage());
@@ -209,11 +217,18 @@ public class StatementEditor extends Panel
             CompoundPropertyModel<KBStatement> model = new CompoundPropertyModel<>(
                     aStatement);
             
-            WebMarkupContainer presenter = valueTypeRegistry
+            WebMarkupContainer presenter;
+            try {
+                presenter = valueTypeRegistry
                     .getValueSupport(aStatement.getObject(), property.getObject())
                     .createPresenter("value", model, property);
+            }
+            catch (IllegalArgumentException e) {
+                LOG.warn("Unable to find an editor that supports the value type. "
+                        + "String Editor is used as default: {}", e.getLocalizedMessage(), e);
+                presenter = new StringLiteralValuePresenter("value", model);
+            }
             add(presenter);
-            
             LambdaAjaxLink editLink = new LambdaAjaxLink("edit", StatementEditor.this::actionEdit)
                     .onConfigure((_this) -> _this.setVisible(!statement.getObject().isInferred()));
             editLink.add(new WriteProtectionBehavior(kbModel));
@@ -284,7 +299,8 @@ public class StatementEditor extends Panel
 
     }
 
-    private class EditMode extends Fragment implements Focusable {
+    private class EditMode extends Fragment implements Focusable 
+    {
         private static final long serialVersionUID = 2489925553729209190L;
 
         private ValueEditor editor;
@@ -310,28 +326,39 @@ public class StatementEditor extends Panel
          *            whether the statement being edited is new, meaning it has no corresponding
          *            statement in the KB backend
          */
-        public EditMode(String aId, IModel<KBStatement> aStatement, boolean isNewStatement) {
+         
+        public EditMode(String aId, IModel<KBStatement> aStatement, boolean isNewStatement)
+        {
             super(aId, "editMode", StatementEditor.this, aStatement);
             CompoundPropertyModel<KBStatement> model = CompoundPropertyModel.of(aStatement);
             Form<KBStatement> form = new Form<>("form", model);
             List<ValueType> valueTypes;
-            String rangeValue = property.getObject().getRange();
+            // Set property to the property of the current statement
+            if (property.getObject() == null) {
+                Optional<KBProperty> prop = kbService.readProperty(kbModel.getObject(),
+                    aStatement.getObject().getProperty().getIdentifier());
+                if (prop.isPresent()) {
+                    property.setObject(prop.get());
+                }
+            }
+
+            String rangeValue = null;
+            if (property.getObject() != null) {
+                rangeValue = property.getObject().getRange();
+            }
+
             valueTypes = valueTypeRegistry.getAllTypes();
             if (rangeValue != null) {
-                Optional<KBObject> rangeKBHandle = kbService.
-                        readKBIdentifier(kbModel.getObject().getProject(), rangeValue);
-                if (rangeKBHandle.isPresent()) {
-                    valueTypes = valueTypeRegistry.getRangeTypes(rangeValue, rangeKBHandle);
-                }
+                Optional<KBObject> rangeKBHandle = kbService
+                        .readKBIdentifier(kbModel.getObject().getProject(), rangeValue);
+                valueTypes = valueTypeRegistry.getRangeTypes(rangeValue, rangeKBHandle);
             }
             valueType = new DropDownChoice<>("valueType", valueTypes);
             valueType.setChoiceRenderer(new ChoiceRenderer<>("uiName"));
             valueType.setModel(Model.of(
                     valueTypeRegistry.getValueType(aStatement.getObject(), property.getObject())));
-            
             // replace the editor when the choice is changed
             valueType.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> {
-                
                 ValueEditor newEditor = valueTypeRegistry
                         .getValueSupport(valueType.getModelObject())
                         .createEditor("value", model, property, kbModel);
@@ -339,20 +366,26 @@ public class StatementEditor extends Panel
                 editor = (ValueEditor) editor.replaceWith(newEditor);
                 t.add(editor);
             }));
-            
             form.add(valueType);
-            
             // use the IRI to obtain the appropriate value editor
-            editor = valueTypeRegistry.getValueSupport(aStatement.getObject(), property.getObject())
-                    .createEditor("value", model, property, kbModel);
+            try {
+                editor = valueTypeRegistry
+                    .getValueSupport(aStatement.getObject(), property.getObject())
+                   .createEditor("value", model, property, kbModel);
+            }
+            catch (IllegalArgumentException e) {
+                LOG.warn("Unable to find an editor that supports the value type. "
+                        + "String Editor is used as default: {}", e.getLocalizedMessage(), e);
+                editor = new StringLiteralValueEditor("value", model);
+            }
             editor.setOutputMarkupId(true);
             form.add(editor);
-            
             form.add(new LambdaAjaxButton<>("save", StatementEditor.this::actionSave));
             form.add(new LambdaAjaxLink("cancel", t -> {
                 if (isNewStatement) {
                     StatementEditor.this.actionCancelNewStatement(t);
-                } else {
+                }
+                else {
                     StatementEditor.this.actionCancelExistingStatement(t);
                 }
             }));
@@ -362,7 +395,8 @@ public class StatementEditor extends Panel
         }
 
         @Override
-        public Component getFocusComponent() {
+        public Component getFocusComponent()
+        {
             return editor.getFocusComponent();
         }
     }

@@ -83,6 +83,7 @@ public class KnowledgeBaseServiceRemoteTest
     private Project project;
     private TestFixtures testFixtures;
 
+    
     @Rule
     public TestWatcher watcher = new TestWatcher()
     {
@@ -90,7 +91,7 @@ public class KnowledgeBaseServiceRemoteTest
         protected void starting(org.junit.runner.Description aDescription)
         {
             String methodName = aDescription.getMethodName();
-            System.out.println("\n=== " + methodName + " =====================");
+            System.out.printf("\n=== " + methodName + " =====================");
         };
     };
     
@@ -199,23 +200,6 @@ public class KnowledgeBaseServiceRemoteTest
                     "http://www.wikidata.org/entity/Q19576436"));
         }
 
-        // This profile is yet incomplete and needs to be fixed
-        // {
-        // ValueFactory vf = SimpleValueFactory.getInstance();
-        //
-        // KnowledgeBase kb_wikidata_reified = new KnowledgeBase();
-        // kb_wikidata_reified.setName("Wikidata (official/reified)");
-        // kb_wikidata_reified.setType(RepositoryType.REMOTE);
-        // kb_wikidata_reified.setReification(Reification.WIKIDATA);
-        // kb_wikidata_reified.setClassIri(OWL.CLASS); // FIXME
-        // kb_wikidata_reified.setSubclassIri(vf.createIRI("http://www.wikidata.org/prop/P279"));
-        // kb_wikidata_reified.setTypeIri(vf.createIRI("http://www.wikidata.org/prop/P31"));
-        // kb_wikidata_reified.setLabelIri(RDFS.LABEL);
-        // kb_wikidata_reified.setPropertyTypeIri(RDF.PROPERTY); // FIXME
-        // kb_wikidata_reified.setDescriptionIri(vf.createIRI("http://schema.org/description"));
-        // kbList.add(kb_wikidata_reified);
-        // }
-
         {
             KnowledgeBaseProfile profile = PROFILES.get("db_pedia");
             KnowledgeBase kb_dbpedia = new KnowledgeBase();
@@ -319,6 +303,20 @@ public class KnowledgeBaseServiceRemoteTest
 
     }
 
+    @Test
+    public void thatParentListCanBeRetrieved()
+    {
+        KnowledgeBase kb = sutConfig.getKnowledgeBase();
+        
+        long duration = System.currentTimeMillis();
+        Set<KBHandle> parentList = sut.getParentConceptList(kb, sutConfig.getTestIdentifier(), true);
+        duration = System.currentTimeMillis() - duration;
+        System.out.printf("Parent List retrieved : %d%n", parentList.size());
+        System.out.printf("Time required        : %d ms%n", duration);
+        parentList.stream().limit(10).forEach(h -> System.out.printf("   %s%n", h));
+        assertThat(parentList).as("Check that parent list is not empty").isNotEmpty();
+    }
+
     // Helper
 
     private void importKnowledgeBase(String resourceName) throws Exception
@@ -378,7 +376,7 @@ public class KnowledgeBaseServiceRemoteTest
         {
             return testIdentifier;
         }
-        
+
         @Override
         public String toString()
         {

@@ -162,14 +162,15 @@ public class RdfUtils
                 .escapeString(language) + "\")).";
         }
         String QUERY = String.join("\n",
-            SPARQLQueryStore.SPARQL_PREFIX,    
-            "SELECT * WHERE { ",
-            " {?s ?p ?o .}",
-            " UNION ",
-            " {?s a ?prop .",
-            "    VALUES ?prop { rdf:Property owl:ObjectProperty owl:DatatypeProperty owl:AnnotationProperty} }",
-            filter,
-            "} LIMIT " + aLimit);
+                SPARQLQueryStore.SPARQL_PREFIX,
+                "SELECT * WHERE { ",
+                " {?s ?p ?o .}",
+                " UNION ",
+                " {?s a ?prop .",
+                "    VALUES ?prop { rdf:Property owl:ObjectProperty owl:DatatypeProperty owl:AnnotationProperty} }",
+                filter,
+                "} LIMIT " + aLimit);
+
         TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
         if (subj != null) {
             tupleQuery.setBinding("s", subj);
