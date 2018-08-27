@@ -22,8 +22,10 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.ValueFactory;
@@ -186,15 +188,28 @@ public class KBConcept
         aConn.add(typeStmt);
 
         if (isNotBlank(name)) {
-            Statement nameStmt = vf.createStatement(subject, kb.getLabelIri(),
-                    vf.createLiteral(name));
+            Literal nameLiteral;
+            if (language == null) {
+                nameLiteral = vf.createLiteral(name);
+            }
+            else {
+                nameLiteral = vf.createLiteral(name, language);
+            }
+            Statement nameStmt = vf.createStatement(subject, kb.getLabelIri(), nameLiteral);
             originalStatements.add(nameStmt);
             aConn.add(nameStmt);
         }
 
         if (isNotBlank(description)) {
+            Literal descriptionLiteral;
+            if (language == null) {
+                descriptionLiteral = vf.createLiteral(description);
+            }
+            else {
+                descriptionLiteral = vf.createLiteral(description, language);
+            }
             Statement descStmt = vf
-                .createStatement(subject, kb.getDescriptionIri(), vf.createLiteral(description));
+                .createStatement(subject, kb.getDescriptionIri(), descriptionLiteral);
             originalStatements.add(descStmt);
             aConn.add(descStmt);
         }
@@ -217,14 +232,26 @@ public class KBConcept
         kbConcept.setIdentifier(aSubject.stringValue());
         kbConcept.setKB(kb);
 
-        readFirst(aConn, aSubject,  kb.getLabelIri(), null).ifPresent((stmt) -> {
-            kbConcept.setName(stmt.getObject().stringValue());
-            kbConcept.originalStatements.add(stmt);
-        });
+        readFirst(aConn, aSubject, kb.getLabelIri(), null, kb.getDefaultLanguage())
+            .ifPresent((stmt) -> {
+                kbConcept.setName(stmt.getObject().stringValue());
+                kbConcept.originalStatements.add(stmt);
+                if (stmt.getObject() instanceof Literal) {
+                    Literal literal = (Literal) stmt.getObject();
+                    Optional<String> language = literal.getLanguage();
+                    language.ifPresent(kbConcept::setLanguage);
+                }
+            });
 
-        readFirst(aConn, aSubject, kb.getDescriptionIri(), null).ifPresent((stmt) -> {
-            kbConcept.setDescription(stmt.getObject().stringValue());
-            kbConcept.originalStatements.add(stmt);
+        readFirst(aConn, aSubject, kb.getDescriptionIri(), null, kb.getDefaultLanguage())
+            .ifPresent((stmt) -> {
+                kbConcept.setDescription(stmt.getObject().stringValue());
+                kbConcept.originalStatements.add(stmt);
+                if (stmt.getObject() instanceof Literal) {
+                Literal literal = (Literal) stmt.getObject();
+                Optional<String> language = literal.getLanguage();
+                language.ifPresent(kbConcept::setLanguage);
+            }
         });
 
         /* Commented out until the functionality which uses them is actually implemented
