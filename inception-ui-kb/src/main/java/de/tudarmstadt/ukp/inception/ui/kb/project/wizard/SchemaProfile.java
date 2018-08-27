@@ -27,17 +27,21 @@ import de.tudarmstadt.ukp.inception.kb.IriConstants;
 
 public enum SchemaProfile
 {
-    RDFSCHEMA(RDFS.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT, RDFS.LABEL, RDF.PROPERTY),
+    RDFSCHEMA(RDFS.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT, RDFS.LABEL, RDF.PROPERTY,
+        RDFS.LABEL, RDFS.COMMENT),
 
     WIKIDATASCHEMA(IriConstants.WIKIDATA_CLASS, IriConstants.WIKIDATA_SUBCLASS,
-            IriConstants.WIKIDATA_TYPE, RDFS.COMMENT, RDFS.LABEL,
-            IriConstants.WIKIDATA_PROPERTY_TYPE),
+        IriConstants.WIKIDATA_TYPE, RDFS.COMMENT, RDFS.LABEL, IriConstants.WIKIDATA_PROPERTY_TYPE,
+        RDFS.LABEL, RDFS.COMMENT),
 
-    OWLSCHEMA(OWL.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT, RDFS.LABEL, RDF.PROPERTY),
+    OWLSCHEMA(OWL.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT, RDFS.LABEL, RDF.PROPERTY,
+        RDFS.LABEL, RDFS.COMMENT),
 
-    SKOSSCHEMA(SKOS.CONCEPT, SKOS.BROADER, RDF.TYPE, RDFS.COMMENT, SKOS.PREF_LABEL, RDF.PROPERTY),
+    SKOSSCHEMA(SKOS.CONCEPT, SKOS.BROADER, RDF.TYPE, RDFS.COMMENT, SKOS.PREF_LABEL, RDF.PROPERTY,
+        RDFS.LABEL, RDFS.COMMENT),
 
-    CUSTOMSCHEMA(RDFS.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT, RDFS.LABEL, RDF.PROPERTY);
+    CUSTOMSCHEMA(RDFS.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT, RDFS.LABEL, RDF.PROPERTY,
+        RDFS.LABEL, RDFS.COMMENT);
 
     private final IRI classIri;
     private final IRI subclassIri;
@@ -45,9 +49,11 @@ public enum SchemaProfile
     private final IRI descriptionIri;
     private final IRI labelIri;
     private final IRI propertyTypeIri;
+    private final IRI propertyLabelIri;
+    private final IRI propertyDescriptionIri;
 
     private SchemaProfile(IRI aClassIri, IRI aSubclassIri, IRI aTypeIri, IRI aDescriptionIri,
-            IRI aLabelIri, IRI aPropertyTypeIri)
+            IRI aLabelIri, IRI aPropertyTypeIri, IRI aPropertyLabelIri, IRI aPropertyDescriptionIri)
     {
         classIri = aClassIri;
         subclassIri = aSubclassIri;
@@ -55,6 +61,9 @@ public enum SchemaProfile
         descriptionIri = aDescriptionIri;
         labelIri = aLabelIri;
         propertyTypeIri = aPropertyTypeIri;
+        propertyLabelIri = aPropertyLabelIri;
+        propertyDescriptionIri = aPropertyDescriptionIri;
+
     }
 
     public IRI getClassIri()
@@ -86,5 +95,14 @@ public enum SchemaProfile
     {
         return propertyTypeIri;
     }
-    
+
+    public IRI getPropertyLabelIri()
+    {
+        return propertyLabelIri;
+    }
+
+    public IRI getPropertyDescriptionIri()
+    {
+        return propertyDescriptionIri;
+    }
 }
