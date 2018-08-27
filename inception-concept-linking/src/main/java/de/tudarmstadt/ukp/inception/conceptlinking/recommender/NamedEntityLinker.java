@@ -113,7 +113,8 @@ public class NamedEntityLinker
                 tokenType);
             for (Map.Entry<AnnotationFS, Collection<AnnotationFS>> e : sentences.entrySet()) {
                 Collection<AnnotationFS> tokens = e.getValue().stream()
-                    .filter(a->a.getFeatureValue(feature) != null)  //TODO maybe it must be hardcoded to "value"
+                    //TODO maybe it must be hardcoded to "value"
+                    .filter(a -> a.getFeatureValue(feature) != null)  
                     .collect(Collectors.toSet());
                 namesPerDocument.addAll(tokens);
             }
@@ -129,8 +130,8 @@ public class NamedEntityLinker
     private boolean isNamedEntity(RecommenderContext aContext, AnnotationFS token,
         String aDocumentUri)
     {
-        return aContext.get(KEY_MODEL).stream().anyMatch(pair->pair.getLeft().equals(aDocumentUri)
-        && pair.getRight().stream().anyMatch(t->t.getBegin() == token.getBegin()));
+        return aContext.get(KEY_MODEL).stream().anyMatch(pair -> pair.getLeft().equals(aDocumentUri)
+        && pair.getRight().stream().anyMatch(t -> t.getBegin() == token.getBegin()));
     }
 
     @Override
