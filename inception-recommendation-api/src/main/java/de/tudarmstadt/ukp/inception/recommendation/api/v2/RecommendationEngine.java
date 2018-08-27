@@ -46,9 +46,4 @@ public interface RecommendationEngine {
     {
         return true;
     }
-
-    default String getPredictionType()
-    {
-        return "de.tudarmstadt.ukp.inception.recommendation.api.type.PredictedSpan";
-    }
 }
