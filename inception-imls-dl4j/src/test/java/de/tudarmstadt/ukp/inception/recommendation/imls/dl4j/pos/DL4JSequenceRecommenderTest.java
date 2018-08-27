@@ -326,7 +326,8 @@ public class DL4JSequenceRecommenderTest
         DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildNerRecommender(), traits);
         JCas cas = loadNerDevelopmentData();
 
-        while (splitStrategy.hasNext()) {
+        int i = 0;
+        while (splitStrategy.hasNext() && i < 3) {
             splitStrategy.next();
             
             double score = sut.evaluate(asList(cas.getCas()), splitStrategy);
@@ -335,6 +336,7 @@ public class DL4JSequenceRecommenderTest
 
             assertThat(score).isBetween(0.0, 1.0);
 
+            i++;
         }
     }
 

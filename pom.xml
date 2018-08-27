@@ -59,9 +59,9 @@
     <maven>3.0.5</maven>
   </prerequisites>
   <properties>
-    <webanno.version>3.5.0-SNAPSHOT</webanno.version>
+    <webanno.version>3.5.0-beta-3</webanno.version>
     <uima.version>2.10.2</uima.version>
-    <dkpro.version>1.9.2</dkpro.version>
+    <dkpro.version>1.9.3</dkpro.version>
     <spring.version>5.0.7.RELEASE</spring.version>
     <spring.boot.version>1.5.14.RELEASE</spring.boot.version>
     <wicket.version>7.10.0</wicket.version>
@@ -520,12 +520,22 @@
         <version>1.14</version>
       </dependency>
       <dependency>
+        <groupId>com.squareup.okio</groupId>
+        <artifactId>okio</artifactId>
+        <version>1.14.0</version>
+      </dependency>
+      <dependency>
         <groupId>com.squareup.okhttp3</groupId>
         <artifactId>okhttp</artifactId>
         <version>${okhttp.version}</version>
       </dependency>
       <dependency>
-      <groupId>it.unimi.dsi</groupId>
+        <groupId>com.github.ben-manes.caffeine</groupId>
+        <artifactId>caffeine</artifactId>
+        <version>2.6.2</version>
+      </dependency>
+      <dependency>
+        <groupId>it.unimi.dsi</groupId>
         <artifactId>dsiutils</artifactId>
         <version>2.1.10</version>
         <exclusions>
@@ -702,6 +712,31 @@
   
   <build>
     <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <configuration>
+          <notimestamp>true</notimestamp>
+          <!-- Exclude UIMA types -->
+          <sourceFileExcludes>
+            <exclude>**/*_Type.java</exclude>
+          </sourceFileExcludes>
+          <tags>
+            <tag>
+              <name>generated</name>
+              <placement>X</placement>
+            </tag>
+            <tag>
+              <name>ordered</name>
+              <placement>X</placement>
+            </tag>
+            <tag>
+              <name>modifiable</name>
+              <placement>X</placement>
+            </tag>
+          </tags>
+        </configuration>
+      </plugin>
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>buildnumber-maven-plugin</artifactId>
