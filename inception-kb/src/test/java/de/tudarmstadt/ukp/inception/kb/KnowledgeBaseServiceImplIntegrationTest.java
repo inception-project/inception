@@ -323,9 +323,10 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         List<KBHandle> listProperties = sut.listProperties(kb, true);
         Stream<String> listIdentifier = listProperties.stream().map(KBHandle::getIdentifier);
         String[] expectedProps = { kb.getSubclassIri().stringValue(),
-                kb.getLabelIri().stringValue(), kb.getDescriptionIri().stringValue() };
+                kb.getLabelIri().stringValue(), kb.getDescriptionIri().stringValue(),
+                kb.getTypeIri().stringValue() };
         
-        assertEquals(listProperties.size(),3);
+        assertEquals(listProperties.size(), 4);
         assertThat(listIdentifier).as("Check that base properties are created")
                 .contains(expectedProps);
     }
@@ -681,9 +682,9 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         KBHandle handle = sut.createProperty(kb, property);
 
         property.setDescription("New property description");
-        property.setDomain(URI.create("https://new.schema.com/#domain"));
+        property.setDomain("https://new.schema.com/#domain");
         property.setName("New property name");
-        property.setRange(URI.create("https://new.schema.com/#range"));
+        property.setRange("https://new.schema.com/#range");
         sut.updateProperty(kb, property);
 
         KBProperty savedProperty = sut.readProperty(kb, handle.getIdentifier()).get();
@@ -745,18 +746,18 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         setReadOnly(kb);
 
         property.setDescription("New property description");
-        property.setDomain(URI.create("https://new.schema.com/#domain"));
+        property.setDomain("https://new.schema.com/#domain");
         property.setName("New property name");
-        property.setRange(URI.create("https://new.schema.com/#range"));
+        property.setRange("https://new.schema.com/#range");
         sut.updateProperty(kb, property);
 
         KBProperty savedProperty = sut.readProperty(kb, handle.getIdentifier()).get();
         assertThat(savedProperty)
             .as("Check that property has not been updated")
             .hasFieldOrPropertyWithValue("description", "Property description")
-            .hasFieldOrPropertyWithValue("domain", URI.create("https://test.schema.com/#domain"))
+            .hasFieldOrPropertyWithValue("domain", "https://test.schema.com/#domain")
             .hasFieldOrPropertyWithValue("name", "Property name")
-            .hasFieldOrPropertyWithValue("range", URI.create("https://test.schema.com/#range"));
+            .hasFieldOrPropertyWithValue("range", "https://test.schema.com/#range");
     }
 
     @Test

@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  Copyright 2017
+  Copyright 2018
   Ubiquitous Knowledge Processing (UKP) Lab
   Technische Universität Darmstadt
 
@@ -24,10 +24,7 @@
 </wicket:panel>
 
   <wicket:fragment wicket:id="viewMode">
-    <wicket:enclosure child="language">
-      <label>(<wicket: wicket:id="language" />)</label>
-    </wicket:enclosure>
-    <span wicket:id="value"></span>
+    <wicket:container wicket:id="value"></wicket:container>
     
     <div class="pull-right">
       <a wicket:id="makeExplicit" wicket:message="title:makeExplicit" class="btn-link"> <i class="fa fa-gavel" aria-hidden="true"></i></a>
@@ -48,17 +45,19 @@
 
   <wicket:fragment wicket:id="editMode">
     <form wicket:id="form" class="form-inline">
-      <input type="text" wicket:id="language" class="form-control" size="6" wicket:message="placeholder:statement.language.placeholder"></input>
-      <textarea wicket:id="value" rows="1" class="form-control hfill" wicket:message="placeholder:statement.value.placeholder"></textarea>
-      <div class="pull-right statement-editor-button-row">
-        <ul>
-          <li><a wicket:id="save" wicket:message="title:statement.save" class="btn-link"><i class="fa fa-check" aria-hidden="true"></i></a>
-          </li>
-          <li><a wicket:id="cancel" wicket:message="title:cancel" class="btn-link"><i class="fa fa-times" aria-hidden="true"></i></a>
-          </li>
-          <li><a wicket:id="delete" wicket:message="title:statement.delete" class="btn-link"><i class="fa fa-trash" aria-hidden="true"></i></a>
-          </li>
-        </ul>
+      <div class="flex-h-container flex-gutter flex-only-internal-gutter">
+        <select wicket:id=valueType class="form-control"></select>
+        <div class="flex-content flex-h-container flex-gutter flex-only-internal-gutter" wicket:id="value"></div>
+        <div class="pull-right statement-editor-button-row">
+          <ul>
+            <li><a wicket:id="save" wicket:message="title:statement.save" class="btn-link"><i class="fa fa-check" aria-hidden="true"></i></a>
+            </li>
+            <li><a wicket:id="cancel" wicket:message="title:cancel" class="btn-link"><i class="fa fa-times" aria-hidden="true"></i></a>
+            </li>
+            <li><a wicket:id="delete" wicket:message="title:statement.delete" class="btn-link"><i class="fa fa-trash" aria-hidden="true"></i></a>
+            </li>
+          </ul>
+        </div>
       </div>
     </form>
   </wicket:fragment>

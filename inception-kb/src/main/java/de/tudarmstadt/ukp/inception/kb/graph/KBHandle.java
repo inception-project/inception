@@ -23,6 +23,8 @@ import java.util.Objects;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
+import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
+
 public class KBHandle
     implements KBObject
 {
@@ -30,6 +32,7 @@ public class KBHandle
     private String identifier;
     private String name;
     private String description;
+    private KnowledgeBase kb;
     private String language;
 
     public KBHandle()
@@ -88,9 +91,16 @@ public class KBHandle
         name = aName;
     }
     
-    public static KBHandle of(KBObject aObject)
+    @Override
+    public KnowledgeBase getKB()
     {
-        return new KBHandle(aObject.getIdentifier(), aObject.getUiLabel());
+        return kb;
+    }
+
+    @Override
+    public void setKB(KnowledgeBase akb)
+    {
+        kb = akb;
     }
 
     @Override
@@ -103,6 +113,11 @@ public class KBHandle
     public void setLanguage(String aLanguage)
     {
         language = aLanguage;
+    }
+
+    public static KBHandle of(KBObject aObject)
+    {
+        return new KBHandle(aObject.getIdentifier(), aObject.getUiLabel());
     }
 
     @Override
