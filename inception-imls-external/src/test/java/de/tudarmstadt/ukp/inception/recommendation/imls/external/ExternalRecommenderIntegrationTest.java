@@ -88,9 +88,9 @@ public class ExternalRecommenderIntegrationTest
     @Test
     public void thatTrainingWorks()
     {
-        assertThatCode(() -> {
-            sut.train(context, loadDevelopmentData());
-        }).doesNotThrowAnyException();
+        assertThatCode(() ->
+            sut.train(context, loadDevelopmentData())
+        ).doesNotThrowAnyException();
     }
 
     @Test
@@ -99,8 +99,6 @@ public class ExternalRecommenderIntegrationTest
         List<CAS> casses = loadDevelopmentData();
         sut.train(context, casses);
 
-        // TODO: Remove named entity annotations from CAS for prediction and
-        // then let external recommender predict NE instead of PredictedSpan
         CAS cas = casses.get(0);
         sut.predict(context, cas);
 

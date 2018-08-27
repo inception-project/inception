@@ -66,8 +66,8 @@ public class RemoteStringMatchingRecommender
         TrainingRequest request = deserializeTrainingRequest(aTrainingRequestJson);
 
         List<CAS> casses = new ArrayList<>();
-        for (TrainingRequest.Document doc : request.getDocuments()) {
-            CAS cas = deserializeCas(doc.getXmi(), doc.getTypeSystem());
+        for (String doc : request.getDocuments()) {
+            CAS cas = deserializeCas(doc, request.getTypeSystem());
             casses.add(cas);
         }
 

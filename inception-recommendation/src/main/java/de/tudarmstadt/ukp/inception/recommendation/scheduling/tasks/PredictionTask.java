@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.scheduling.tasks;
 
+import static org.apache.uima.fit.util.CasUtil.getAnnotationType;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -113,8 +115,7 @@ public class PredictionTask
 
                     // In order to just extract the annotations for a single recommender, each
                     // recommender undoes the changes applied in `recommendationEngine.predict`
-                    String typeName = recommendationEngine.getPredictionType();
-                    Type predictionType = CasUtil.getAnnotationType(jCas.getCas(), typeName);
+                    Type predictionType = getAnnotationType(jCas.getCas(), PredictedSpan.class);
                     removePredictions(jCas.getCas(), predictionType);
                 }
             }

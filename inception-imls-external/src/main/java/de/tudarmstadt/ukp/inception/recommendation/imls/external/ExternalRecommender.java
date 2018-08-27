@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.external;
 
-import static de.tudarmstadt.ukp.inception.recommendation.imls.external.TrainingRequest.Document;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -69,19 +67,17 @@ public class ExternalRecommender
     public void train(RecommenderContext aContext, List<CAS> aCasses)
     {
         TrainingRequest trainingRequest = new TrainingRequest();
-        List<Document> documents = new ArrayList<>();
+        List<String> documents = new ArrayList<>();
         trainingRequest.setDocuments(documents);
 
         for (CAS cas : aCasses) {
             String typeSystem = serializeTypeSystem(cas);
             String xmi = serializeCas(cas);
 
-            Document doc = new Document();
-            doc.setXmi(xmi);
-            doc.setTypeSystem(typeSystem);
-            doc.setLayer(recommender.getLayer().getName());
-            doc.setFeature(recommender.getFeature());
-            documents.add(doc);
+            trainingRequest.setTypeSystem(typeSystem);
+            trainingRequest.setLayer(recommender.getLayer().getName());
+            trainingRequest.setFeature(recommender.getFeature());
+            documents.add(xmi);
         }
 
         HttpUrl url = HttpUrl.parse(traits.getRemoteUrl()).resolve("/train");
@@ -103,6 +99,13 @@ public class ExternalRecommender
     @Override
     public void predict(RecommenderContext aContext, CAS aCas)
     {
+        // TODO: Remove the prediction annotation from the CAS
+        // External recommender can predict arbitrary annotations, not only PredictedSpans.
+        // In order to support the case where the prediction annotation type is the predicted
+        // annotation type (e.g. recommend named entities, recommender creates named entities),
+        // the predicted annotation has to be removed from the CAS first in order to be able
+        // to differentiate between the two
+
         String typeSystem = serializeTypeSystem(aCas);
         String xmi = serializeCas(aCas);
 
@@ -193,10 +196,5 @@ public class ExternalRecommender
     public boolean isEvaluable()
     {
         return false;
-    }
-
-    @Override
-    public String getPredictionType() {
-        return recommender.getLayer().getType();
     }
 }
