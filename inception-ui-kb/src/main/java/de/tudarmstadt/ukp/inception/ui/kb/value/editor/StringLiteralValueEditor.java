@@ -39,11 +39,9 @@ public class StringLiteralValueEditor
 
         value = new TextArea<>("value");
         value.setOutputMarkupId(true);
-        value.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> t.add(getParent())));
         add(value);
 
-        add(new TextField<>("language")
-            .add((new LambdaAjaxFormComponentUpdatingBehavior("change", t -> t.add(getParent())))));
+        add(new TextField<>("language"));
     }
     
     @Override
