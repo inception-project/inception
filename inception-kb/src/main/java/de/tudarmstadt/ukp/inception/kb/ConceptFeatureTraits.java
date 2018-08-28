@@ -56,7 +56,10 @@ public class ConceptFeatureTraits
         scope = aScope;
     }
 
-    public ConceptFeatureValueType getAllowedValueType() { return allowedValueType; }
+    public ConceptFeatureValueType getAllowedValueType()
+    {
+        return allowedValueType;
+    }
 
     public void setAllowedValueType(ConceptFeatureValueType aAllowedType) {
         allowedValueType = aAllowedType;

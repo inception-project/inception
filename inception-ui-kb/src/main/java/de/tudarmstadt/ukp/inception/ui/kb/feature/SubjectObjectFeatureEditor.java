@@ -406,20 +406,21 @@ public class SubjectObjectFeatureEditor
             if (kb.isPresent()) {
                 //TODO: (#122) see ConceptFeatureEditor
                 if (kb.get().isSupportConceptLinking()) {
-                    handles.addAll(
-                        listLinkingInstances(kb.get(), () -> getEditorCas(aHandler), aTypedString));
+                    handles.addAll(listLinkingInstances(kb.get(), () -> getEditorCas(aHandler),
+                            aTypedString));
                 }
                 else {
                     if (traits.getScope() != null) {
                         handles = kbService
-                            .listInstancesForChildConcepts(kb.get(), traits.getScope(), false, 50)
-                            .stream().filter(inst -> inst.getUiLabel().contains(aTypedString))
-                            .collect(Collectors.toList());
+                                .listInstancesForChildConcepts(kb.get(), traits.getScope(), false,
+                                        50)
+                                .stream().filter(inst -> inst.getUiLabel().contains(aTypedString))
+                                .collect(Collectors.toList());
                     }
                     else {
                         for (KBHandle concept : kbService.listConcepts(kb.get(), false)) {
-                            handles.addAll(
-                                kbService.listInstances(kb.get(), concept.getIdentifier(), false));
+                            handles.addAll(kbService.listInstances(kb.get(),
+                                    concept.getIdentifier(), false));
                         }
                     }
                 }

@@ -383,17 +383,17 @@ public class QualifierFeatureEditor
                 break;
             default:
                 // Allow both
-                handles.addAll(getInstances(traits, project, aHandler, aTypedString, roleLabe,
-                    roleAddr));
-                handles.addAll(getConcepts(traits, project, aHandler, aTypedString, roleLabe,
-                    roleAddr));
+                handles.addAll(
+                        getInstances(traits, project, aHandler, aTypedString, roleLabe, roleAddr));
+                handles.addAll(
+                        getConcepts(traits, project, aHandler, aTypedString, roleLabe, roleAddr));
             }
         }
         catch (Exception e) {
             // LOG.error("Unable to read traits", e);
             error("Unable to read traits: " + ExceptionUtils.getRootCauseMessage(e));
             IPartialPageRequestHandler target = RequestCycle.get()
-                .find(IPartialPageRequestHandler.class);
+                    .find(IPartialPageRequestHandler.class);
             if (target != null) {
                 target.addChildren(getPage(), IFeedback.class);
             }
@@ -416,18 +416,15 @@ public class QualifierFeatureEditor
                     handles.addAll(listLinkingInstances(kb.get(), () -> getEditorCas(aHandler),
                             aTypedString, roleLabe, roleAddr));
                 }
-                else {
-                    if (traits.getScope() != null) {
-                        handles = kbService
+                else if (traits.getScope() != null) {
+                    handles = kbService
                             .listInstancesForChildConcepts(kb.get(), traits.getScope(), false, 50)
                             .stream().filter(inst -> inst.getUiLabel().contains(aTypedString))
                             .collect(Collectors.toList());
-                    }
-                    else {
-                        for (KBHandle concept : kbService.listConcepts(kb.get(), false)) {
-                            handles.addAll(
+                } else {
+                    for (KBHandle concept : kbService.listConcepts(kb.get(), false)) {
+                        handles.addAll(
                                 kbService.listInstances(kb.get(), concept.getIdentifier(), false));
-                        }
                     }
                 }
             }
@@ -440,20 +437,15 @@ public class QualifierFeatureEditor
                     handles.addAll(listLinkingInstances(kb, () -> getEditorCas
                         (aHandler), aTypedString, roleLabe, roleAddr));
                 }
+                else if (traits.getScope() != null) {
+                    handles.addAll(kbService
+                            .listInstancesForChildConcepts(kb, traits.getScope(), false, 50)
+                            .stream().filter(inst -> inst.getUiLabel().contains(aTypedString))
+                            .collect(Collectors.toList()));
+                }
                 else {
-                    if (traits.getScope() != null) {
-                        handles.addAll(
-                                kbService
-                                        .listInstancesForChildConcepts(kb, traits.getScope(), false,
-                                                50)
-                                .stream().filter(inst -> inst.getUiLabel().contains(aTypedString))
-                                .collect(Collectors.toList()));
-                    }
-                    else {
-                        for (KBHandle concept : kbService.listConcepts(kb, false)) {
-                            handles.addAll(
-                                kbService.listInstances(kb, concept.getIdentifier(), false));
-                        }
+                    for (KBHandle concept : kbService.listConcepts(kb, false)) {
+                        handles.addAll(kbService.listInstances(kb, concept.getIdentifier(), false));
                     }
                 }
             }
@@ -476,16 +468,12 @@ public class QualifierFeatureEditor
                     handles.addAll(listLinkingInstances(kb.get(), () -> getEditorCas
                         (aHandler), aTypedString, roleLabe, roleAddr));
                 }
-                else {
-                    if (traits.getScope() != null) {
-                        handles = kbService.listChildConcepts(kb.get(), traits.getScope(),
-                            false)
+                else if (traits.getScope() != null) {
+                    handles = kbService.listChildConcepts(kb.get(), traits.getScope(), false)
                             .stream().filter(conc -> conc.getUiLabel().contains(aTypedString))
                             .collect(Collectors.toList());
-                    }
-                    else {
-                        handles.addAll(kbService.listConcepts(kb.get(), false));
-                    }
+                } else {
+                    handles.addAll(kbService.listConcepts(kb.get(), false));
                 }
             }
         }
@@ -497,16 +485,12 @@ public class QualifierFeatureEditor
                     handles.addAll(listLinkingInstances(kb, () -> getEditorCas
                         (aHandler), aTypedString, roleLabe, roleAddr));
                 }
-                else {
-                    if (traits.getScope() != null) {
-                        handles = kbService.listChildConcepts(kb, traits.getScope(), false)
-                            .stream()
+                else if (traits.getScope() != null) {
+                    handles = kbService.listChildConcepts(kb, traits.getScope(), false).stream()
                             .filter(conc -> conc.getUiLabel().contains(aTypedString))
                             .collect(Collectors.toList());
-                    }
-                    else {
-                        handles.addAll(kbService.listConcepts(kb, false));
-                    }
+                } else {
+                    handles.addAll(kbService.listConcepts(kb, false));
                 }
             }
         }
