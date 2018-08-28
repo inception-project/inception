@@ -323,7 +323,6 @@ public class MtasDocumentIndexTest
         int numWaits = 0;
         
         while (!searchService.isIndexValid(project) && numWaits < NUM_WAITS) {
-            log.debug("Waiting for the annotation to be indexed...");
             Thread.sleep(WAIT_TIME);
             numWaits ++;
         }
@@ -332,8 +331,6 @@ public class MtasDocumentIndexTest
 
         numWaits = 0;
         
-        log.debug("Waiting for the annotation to be indexed...");
-
         // Wait for the asynchronous indexing task to finish. We need a sleep before the while 
         // because otherwise there would not be time even for the index becoming invalid 
         // before becoming valid again.
@@ -341,7 +338,6 @@ public class MtasDocumentIndexTest
         Thread.sleep(WAIT_TIME);
         
         while (searchService.isIndexValid(project) && numWaits < NUM_WAITS) {
-            log.debug("Waiting for the annotation to be indexed...");
             Thread.sleep(WAIT_TIME);
             numWaits++;
         }
