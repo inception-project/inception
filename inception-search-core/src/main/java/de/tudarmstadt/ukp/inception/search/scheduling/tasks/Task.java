@@ -104,9 +104,9 @@ public abstract class Task
         builder.append(", user=");
         builder.append((user == null) ? " " : user.getUsername());
         builder.append(", sourceDocument=");
-        builder.append(sourceDocument.getName());
+        builder.append(sourceDocument == null ? "null" : sourceDocument.getName());
         builder.append(", annotationDocument=");
-        builder.append(annotationDocument.getName());
+        builder.append(annotationDocument == null ? "null" : annotationDocument.getName());
         builder.append("]");
         return builder.toString();
     }

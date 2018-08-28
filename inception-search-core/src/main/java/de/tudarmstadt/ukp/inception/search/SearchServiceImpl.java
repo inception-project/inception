@@ -97,14 +97,14 @@ public class SearchServiceImpl
         // Search index entry in the memory map
         if (!indexes.containsKey(aProject.getId())) {
             // Not found. Search index entry in the database
-            log.debug("Index is not in memory for project [{}]. Retrieve it from DB.",
+            log.trace("Index is not in memory for project [{}]. Retrieve it from DB.",
                     aProject.getName());
 
             Index index = getIndex(aProject);
             
             if (index == null) {
                 // Not found in the DB, create new index instance and store it in DB
-                log.debug("Index not found DB for project [{}]. Create it in the DB.",
+                log.trace("Index not found DB for project [{}]. Create it in the DB.",
                         aProject.getName());
 
                 index = new Index();
@@ -140,7 +140,7 @@ public class SearchServiceImpl
     @EventListener
     public void beforeProjectRemove(BeforeProjectRemovedEvent aEvent) throws Exception
     {
-        log.debug("Starting beforeProjectRemove");
+        log.trace("Starting beforeProjectRemove");
 
         Project project = aEvent.getProject();
         
@@ -162,7 +162,7 @@ public class SearchServiceImpl
     @EventListener
     public void beforeDocumentRemove(BeforeDocumentRemovedEvent aEvent) throws Exception
     {
-        log.debug("Starting beforeDocumentRemove");
+        log.trace("Starting beforeDocumentRemove");
 
         SourceDocument document = aEvent.getDocument();
 
@@ -173,11 +173,11 @@ public class SearchServiceImpl
 
         if (index.getPhysicalIndex().isCreated()) {
             // Physical index exists.
-            log.debug("Physical index already created. Proceed to remove document.");
+            log.trace("Physical index already created. Proceed to remove document.");
             
             if (!index.getPhysicalIndex().isOpen()) {
                 // Physical index is not open. Open it.
-                log.debug("Physical index not open. Open it");
+                log.trace("Physical index not open. Open it");
 
                 index.getPhysicalIndex().openPhysicalIndex();
             }
@@ -197,7 +197,7 @@ public class SearchServiceImpl
     {
         if (!aIndex.getPhysicalIndex().isCreated()) {
             // Physical index does not exist. 
-            log.debug("Physical index not created. Set it to invalid and enqueue reindex task.");
+            log.trace("Physical index not created. Set it to invalid and enqueue reindex task.");
             
             // Set the invalid flag
             aIndex.setInvalid(true);
@@ -209,16 +209,16 @@ public class SearchServiceImpl
             return false;
         } else {
             // Physical index already exists
-            log.debug("Physical index already created.");
+            log.trace("Physical index already created.");
 
             if (!aIndex.getPhysicalIndex().isOpen()) {
                 // Physical index is not open. Open it.
-                log.debug("Physical index not open. Open it");
+                log.trace("Physical index not open. Open it");
 
                 aIndex.getPhysicalIndex().openPhysicalIndex();
             }
 
-            return false;
+            return true;
         }
     }
     
@@ -231,16 +231,15 @@ public class SearchServiceImpl
         if (canAddDocumentToIndex(index)) {
             try {
                 // Remove source document from index.
-                log.debug("Remove source document from index");
+                log.trace("Remove source document from index");
                 index.getPhysicalIndex().deindexDocument(aSourceDocument);
 
                 // Add annotation document to the index again
-                log.debug("Add source document to index");
+                log.trace("Add source document to index");
                 index.getPhysicalIndex().indexDocument(aSourceDocument, aJCas);
             }
             catch (IOException e) {
-                // Auto-generated catch block
-                e.printStackTrace();
+                log.error("Error indexing source document", e);
             }
         }
     }
@@ -255,16 +254,15 @@ public class SearchServiceImpl
         if (canAddDocumentToIndex(index)) {
             try {
                 // Remove annotation document from index.
-                log.debug("Remove annotation document from index");
+                log.trace("Remove annotation document from index");
                 index.getPhysicalIndex().deindexDocument(aAnnotationDocument);
 
                 // Add annotation document to the index again
-                log.debug("Add annotation document to index");
+                log.trace("Add annotation document to index");
                 index.getPhysicalIndex().indexDocument(aAnnotationDocument, aJCas);
             }
             catch (IOException e) {
-                // Auto-generated catch block
-                e.printStackTrace();
+                log.error("Error indexing annotation document", e);
             }
         }
     }
@@ -273,9 +271,7 @@ public class SearchServiceImpl
     @Transactional
     public void afterAnnotationUpdate(AfterAnnotationUpdateEvent aEvent) throws Exception
     {
-        log.debug("Starting afterAnnotationUpdate");
-
-        AnnotationDocument document = aEvent.getDocument();
+        log.trace("Starting afterAnnotationUpdate");
 
         // Schedule new document index process
         indexScheduler.enqueueIndexDocument(aEvent.getDocument(), aEvent.getJCas());
@@ -337,9 +333,7 @@ public class SearchServiceImpl
     @Transactional
     public void afterDocumentCreate(AfterDocumentCreatedEvent aEvent) throws Exception
     {
-        log.debug("Starting afterDocumentCreate");
-
-        SourceDocument document = aEvent.getDocument();
+        log.trace("Starting afterDocumentCreate");
 
         // Schedule new document index process
         indexScheduler.enqueueIndexDocument(aEvent.getDocument(), aEvent.getJcas());
@@ -351,7 +345,7 @@ public class SearchServiceImpl
     public void beforeLayerConfigurationChanged(LayerConfigurationChangedEvent aEvent)
         throws Exception
     {
-        log.debug("Starting beforeLayerConfigurationChanged");
+        log.trace("Starting beforeLayerConfigurationChanged");
 
         Project project = aEvent.getProject();
 
@@ -372,7 +366,7 @@ public class SearchServiceImpl
     @Transactional
     public void reindex(Project aProject) throws IOException
     {
-        log.info("Reindexing project " + aProject.getName());
+        log.debug("Reindexing project " + aProject.getName());
         
         Index index = getIndexFromMemory(aProject);
 
@@ -384,11 +378,11 @@ public class SearchServiceImpl
         }
 
         // Create physical index and index all project documents
-        log.info("Create new physical index.");
+        log.debug("Create new physical index.");
         index.getPhysicalIndex().createPhysicalIndex();
         
         // After reindexing, reset the invalid flag
-        log.info("Set index invalid flag to false.");
+        log.trace("Set index invalid flag to false.");
 
         index.setInvalid(false);
         updateIndex(index);
