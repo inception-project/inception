@@ -136,7 +136,7 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
 
             add(nameField("name", "kb.name"));
             add(repositoryTypeRadioButtons("type", "kb.type"));
-            add(languageComboBox("language", model.bind("kb.language")));
+            add(languageComboBox("language", model.bind("kb.defaultLanguage")));
             add(selectReificationStrategy("reification", "kb.reification"));
         }
 

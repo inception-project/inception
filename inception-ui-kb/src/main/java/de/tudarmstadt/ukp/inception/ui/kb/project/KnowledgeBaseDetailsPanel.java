@@ -434,7 +434,7 @@ public class KnowledgeBaseDetailsPanel
                             .add(LambdaBehavior.onConfigure(it -> it.setEnabled(false)));
 
             // add disabled language field
-            wmc.add(new Label("language", kbwModel.bind("kb.language"))
+            wmc.add(new Label("language", kbwModel.bind("kb.defaultLanguage"))
                 .add(LambdaBehavior.onConfigure(tf -> tf.setEnabled(false))));
 
             // don't show radio group in view mode 
@@ -538,7 +538,7 @@ public class KnowledgeBaseDetailsPanel
         @Override protected void setUpCommonComponents(WebMarkupContainer wmc)
         {
             ComboBox<String> comboBox = new ComboBox<String>("language",
-                kbwModel.bind("kb.language"),
+                kbwModel.bind("kb.defaultLanguage"),
                 Arrays.asList("en", "de"));
             comboBox.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> {
                 // Do nothing just update the model values
