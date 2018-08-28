@@ -406,22 +406,19 @@ public class SubjectObjectFeatureEditor
             if (kb.isPresent()) {
                 //TODO: (#122) see ConceptFeatureEditor
                 if (kb.get().isSupportConceptLinking()) {
-                    handles.addAll(listLinkingInstances(kb.get(), () -> getEditorCas(aHandler),
-                            aTypedString));
+                    handles.addAll(
+                        listLinkingInstances(kb.get(), () -> getEditorCas(aHandler), aTypedString));
+                }
+                else if (traits.getScope() != null) {
+                    handles = kbService
+                        .listInstancesForChildConcepts(kb.get(), traits.getScope(), false, 50)
+                        .stream().filter(inst -> inst.getUiLabel().contains(aTypedString))
+                        .collect(Collectors.toList());
                 }
                 else {
-                    if (traits.getScope() != null) {
-                        handles = kbService
-                                .listInstancesForChildConcepts(kb.get(), traits.getScope(), false,
-                                        50)
-                                .stream().filter(inst -> inst.getUiLabel().contains(aTypedString))
-                                .collect(Collectors.toList());
-                    }
-                    else {
-                        for (KBHandle concept : kbService.listConcepts(kb.get(), false)) {
-                            handles.addAll(kbService.listInstances(kb.get(),
-                                    concept.getIdentifier(), false));
-                        }
+                    for (KBHandle concept : kbService.listConcepts(kb.get(), false)) {
+                        handles.addAll(
+                            kbService.listInstances(kb.get(), concept.getIdentifier(), false));
                     }
                 }
             }
@@ -434,20 +431,15 @@ public class SubjectObjectFeatureEditor
                     handles.addAll(
                         listLinkingInstances(kb, () -> getEditorCas(aHandler), aTypedString));
                 }
+                else if (traits.getScope() != null) {
+                    handles.addAll(
+                        kbService.listInstancesForChildConcepts(kb, traits.getScope(), false, 50)
+                            .stream().filter(inst -> inst.getUiLabel().contains(aTypedString))
+                            .collect(Collectors.toList()));
+                }
                 else {
-                    if (traits.getScope() != null) {
-                        handles.addAll(
-                                kbService
-                                        .listInstancesForChildConcepts(kb, traits.getScope(), false,
-                                                50)
-                                .stream().filter(inst -> inst.getUiLabel().contains(aTypedString))
-                                .collect(Collectors.toList()));
-                    }
-                    else {
-                        for (KBHandle concept : kbService.listConcepts(kb, false)) {
-                            handles.addAll(
-                                kbService.listInstances(kb, concept.getIdentifier(), false));
-                        }
+                    for (KBHandle concept : kbService.listConcepts(kb, false)) {
+                        handles.addAll(kbService.listInstances(kb, concept.getIdentifier(), false));
                     }
                 }
             }
@@ -469,17 +461,15 @@ public class SubjectObjectFeatureEditor
                     handles.addAll(
                         listLinkingInstances(kb.get(), () -> getEditorCas(aHandler), aTypedString));
                 }
-                else {
-                    if (traits.getScope() != null) {
-                        handles = kbService.listChildConcepts(kb.get(), traits.getScope(),
-                            false)
-                            .stream().filter(conc -> conc.getUiLabel().contains(aTypedString))
-                            .collect(Collectors.toList());
-                    }
-                    else {
-                        handles.addAll(kbService.listConcepts(kb.get(), false));
-                    }
+                else if (traits.getScope() != null) {
+                    handles = kbService.listChildConcepts(kb.get(), traits.getScope(), false)
+                        .stream().filter(conc -> conc.getUiLabel().contains(aTypedString))
+                        .collect(Collectors.toList());
                 }
+                else {
+                    handles.addAll(kbService.listConcepts(kb.get(), false));
+                }
+
             }
         }
         else {
@@ -490,17 +480,15 @@ public class SubjectObjectFeatureEditor
                     handles.addAll(
                         listLinkingInstances(kb, () -> getEditorCas(aHandler), aTypedString));
                 }
-                else {
-                    if (traits.getScope() != null) {
-                        handles = kbService.listChildConcepts(kb, traits.getScope(), false)
-                            .stream()
-                            .filter(conc -> conc.getUiLabel().contains(aTypedString))
-                            .collect(Collectors.toList());
-                    }
-                    else {
-                        handles.addAll(kbService.listConcepts(kb, false));
-                    }
+                else if (traits.getScope() != null) {
+                    handles = kbService.listChildConcepts(kb, traits.getScope(), false).stream()
+                        .filter(conc -> conc.getUiLabel().contains(aTypedString))
+                        .collect(Collectors.toList());
                 }
+                else {
+                    handles.addAll(kbService.listConcepts(kb, false));
+                }
+
             }
         }
         return handles;
