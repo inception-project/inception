@@ -18,8 +18,6 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.pos;
 
 import org.apache.uima.cas.CAS;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -32,8 +30,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommendationEngineFa
 public class OpenNlpPosClassificationToolFactory
     implements RecommendationEngineFactory
 {
-    private Logger log = LoggerFactory.getLogger(getClass());
-
     // This is a string literal so we can rename/refactor the class without it changing its ID
     // and without the database starting to refer to non-existing recommendation tools.
     public static final String ID = 
@@ -55,7 +51,6 @@ public class OpenNlpPosClassificationToolFactory
     {
         return "Token Sequence Classifier (OpenNLP POS)";
     }
-
 
     @Override
     public boolean accepts(AnnotationLayer aLayer, AnnotationFeature aFeature)

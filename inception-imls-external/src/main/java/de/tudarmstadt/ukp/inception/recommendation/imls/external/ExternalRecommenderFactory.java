@@ -22,6 +22,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.toJsonString;
 
 import java.io.IOException;
 
+import org.apache.wicket.model.IModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -77,6 +78,13 @@ public class ExternalRecommenderFactory
                 && WebAnnoConst.SPAN_TYPE.equals(aLayer.getType());
     }
 
+    @Override
+    public org.apache.wicket.Component createTraitsEditor(String aId,
+            IModel<Recommender> aModel)
+    {
+        return new ExternalRecommenderTraitsEditor(aId, aModel);
+    }
+    
     private ExternalRecommenderTraits readTraits(Recommender aRecommender) {
         ExternalRecommenderTraits traits = null;
         try {

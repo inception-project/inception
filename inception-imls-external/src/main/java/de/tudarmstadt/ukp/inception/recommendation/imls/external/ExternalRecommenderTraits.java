@@ -25,7 +25,7 @@ public class ExternalRecommenderTraits
 
     private static final long serialVersionUID = -3109239605741337123L;
 
-    private String remoteUrl = "http://localhost:12889/";
+    private String remoteUrl;
 
     public String getRemoteUrl()
     {

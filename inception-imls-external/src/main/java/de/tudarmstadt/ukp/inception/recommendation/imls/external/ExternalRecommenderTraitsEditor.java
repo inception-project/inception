@@ -28,7 +28,7 @@ import org.apache.wicket.validation.validator.UrlValidator;
 
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 
-public class ExternalClassificationToolTraitsEditor
+public class ExternalRecommenderTraitsEditor
     extends Panel
 {
     private static final long serialVersionUID = 1677442652521110324L;
@@ -36,13 +36,11 @@ public class ExternalClassificationToolTraitsEditor
     private static final String MID_FORM = "form";
 
     private @SpringBean ExternalRecommenderFactory toolFactory;
-    private final Recommender recommender;
     private final ExternalRecommenderTraits traits;
 
-    public ExternalClassificationToolTraitsEditor(String aId, IModel<Recommender> aRecommender)
+    public ExternalRecommenderTraitsEditor(String aId, IModel<Recommender> aRecommender)
     {
         super(aId, aRecommender);
-        recommender = aRecommender.getObject();
         traits =  new ExternalRecommenderTraits();
 
         Form<ExternalRecommenderTraits> form = new Form<ExternalRecommenderTraits>(MID_FORM,

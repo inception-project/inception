@@ -147,8 +147,16 @@ public class RecommenderEditorPanel
             protected void onModelChanged()
             {
                 // If the feature type has changed, we need to set up a new traits editor
-                // TODO: Add traits
-                Component newTraits = new EmptyPanel(MID_TRAITS);
+                Component newTraits;
+                if (form.getModelObject() != null && getModelObject() != null) {
+                    RecommendationEngineFactory factory = recommenderRegistry
+                            .getFactory(getModelObject().getKey());
+                    newTraits = factory.createTraitsEditor(MID_TRAITS, form.getModel());
+                }
+                else {
+                    newTraits = new EmptyPanel(MID_TRAITS);
+                }
+                
                 traitsContainer.addOrReplace(newTraits);
             }
         };
