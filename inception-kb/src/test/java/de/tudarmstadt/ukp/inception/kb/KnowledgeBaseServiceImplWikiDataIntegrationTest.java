@@ -155,7 +155,7 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
     public void listRootConcepts() {
         List<KBHandle> rootConcepts = sut.listRootConcepts(kb, false);
 
-        assertThat(rootConcepts).as("Check that root concepts have been found").hasSize(SPARQLQueryStore.aLimit);
+        assertThat(rootConcepts).as("Check that root concepts have been found").hasSize(SPARQLQueryStore.LIMIT);
     }
 
     
@@ -163,7 +163,7 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
     public void listProperties() {
         Stream<String> properties = sut.listProperties(kb, true).stream().map(KBHandle::getIdentifier);
         
-        assertThat(properties).as("Check that properties have been found").hasSize(SPARQLQueryStore.aLimit);
+        assertThat(properties).as("Check that properties have been found").hasSize(SPARQLQueryStore.LIMIT);
     }
     
     @Test

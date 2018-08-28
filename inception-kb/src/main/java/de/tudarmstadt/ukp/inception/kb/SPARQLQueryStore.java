@@ -20,58 +20,72 @@ package de.tudarmstadt.ukp.inception.kb;
 import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
+import org.eclipse.rdf4j.rio.ntriples.NTriplesUtil;
 
-public class SPARQLQueryStore
+import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
+
+public final class SPARQLQueryStore
 {   
-    public static int aLimit = 1000;
+    public static final int LIMIT = 1000;
 
     public static final String SPARQL_PREFIX = String.join("\n",
             "PREFIX rdf: <" + RDF.NAMESPACE + ">",
             "PREFIX rdfs: <" + RDFS.NAMESPACE + ">",
             "PREFIX owl: <" + OWL.NAMESPACE + ">");
     
-    // Query to list properties from KnowledgeBase
-    public static final String PROPERTYLIST_QUERY = String.join("\n"
-            , SPARQL_PREFIX
-            , "SELECT DISTINCT ?s ?l ?d WHERE {"
-            , "  { ?s ?pTYPE ?oPROPERTY .}"
-            , "  UNION "
-            , "  { ?s a ?prop" 
-            , "    VALUES ?prop { rdf:Property owl:ObjectProperty owl:DatatypeProperty owl:AnnotationProperty} }"
-            , "  OPTIONAL {"
-            , "    ?s ?pLABEL ?l ."
-            , "    FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\"))"
-            , "  }"
-            , "  OPTIONAL {"
-            , "    ?s ?pDESCRIPTION ?d ."
-            , "    FILTER(LANG(?d) = \"\" || LANGMATCHES(LANG(?d), \"en\"))"
-            , "  }"
-            , "}"
-            , "LIMIT " + aLimit);
+    private static final String optionalLanguageFilteredValue(String aProperty, String aLanguage)
+    {
+        String escapedLang = NTriplesUtil.escapeString(aLanguage);
+        
+        return String.join("\n"
+                , "  OPTIONAL {"
+                , "    ?s " + aProperty + " ?l ."
+                , "    FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"" + escapedLang + "\"))"
+                , "  }");
+    }
     
-    //Query to get property specific domain elements including properties 
-    //which do not have a 
-    // domain specified
-    public static final String PROPERTYLIST_DOMAIN_DEPENDENT = String.join("\n"
-            , SPARQL_PREFIX
-            , "SELECT DISTINCT ?s ?l ?d WHERE {"
-            , "{  ?s rdfs:domain/(owl:unionOf/rdf:rest*/rdf:first)* ?aDomain }"
-            , " UNION "
-            , "{ ?s a ?prop "
-            , "    VALUES ?prop { rdf:Property owl:ObjectProperty owl:DatatypeProperty owl:AnnotationProperty} "
-            , "    FILTER NOT EXISTS {  ?s rdfs:domain/(owl:unionOf/rdf:rest*/rdf:first)* ?x } }"
-            , "  OPTIONAL {"
-            , "    ?s ?pLABEL ?l ."
-            , "    FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\"))"
-            , "  }"
-            , "  OPTIONAL {"
-            , "    ?s ?pDESCRIPTION ?d ."
-            , "    FILTER(LANG(?d) = \"\" || LANGMATCHES(LANG(?d), \"en\"))"
-            , "  }"
-            , "}"
-            , "LIMIT " + aLimit);
+    /** 
+     * Query to list properties from a knowledge base.
+     */
+    public static final String queryForPropertyList(KnowledgeBase aKB)
+    {
+        return String.join("\n"
+                , SPARQL_PREFIX
+                , "SELECT DISTINCT ?s ?l ?d WHERE {"
+                , "  { ?s ?pTYPE ?oPROPERTY .}"
+                , "  UNION "
+                , "  { ?s a ?prop" 
+                , "    VALUES ?prop { rdf:Property owl:ObjectProperty owl:DatatypeProperty owl:AnnotationProperty }"
+                , "  }"
+                , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage())
+                , optionalLanguageFilteredValue("?pDESCRIPTION", aKB.getDefaultLanguage())
+                , "}"
+                , "LIMIT " + LIMIT);
+    }
+        
+    /**
+     * Query to get property specific domain elements including properties which do not have a 
+     * domain specified.
+     */
+    public static final String queryForPropertyListWithDomain(KnowledgeBase aKB)
+    {
+        return String.join("\n"
+                , SPARQL_PREFIX
+                , "SELECT DISTINCT ?s ?l ?d WHERE {"
+                , "{  ?s rdfs:domain/(owl:unionOf/rdf:rest*/rdf:first)* ?aDomain }"
+                , " UNION "
+                , "{ ?s a ?prop "
+                , "    VALUES ?prop { rdf:Property owl:ObjectProperty owl:DatatypeProperty owl:AnnotationProperty} "
+                , "    FILTER NOT EXISTS {  ?s rdfs:domain/(owl:unionOf/rdf:rest*/rdf:first)* ?x } }"
+                , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage())
+                , optionalLanguageFilteredValue("?pDESCRIPTION", aKB.getDefaultLanguage())
+                , "}"
+                , "LIMIT " + LIMIT);        
+    }
     
-    //Query to get property specific range elements
+    /**
+     * Query to get property specific range elements
+     */
     public static final String PROPERTY_SPECIFIC_RANGE = String.join("\n"
             , SPARQL_PREFIX
             , "SELECT DISTINCT ?s ?l ?d WHERE {"
@@ -85,7 +99,7 @@ public class SPARQLQueryStore
             , "    FILTER(LANG(?d) = \"\" || LANGMATCHES(LANG(?d), \"en\"))"
             , "  }"
             , "}"
-            , "LIMIT " + aLimit);
+            , "LIMIT " + LIMIT);
   
     // Query to retrieve super class concept for a concept
     public static final String PARENT_CONCEPT = String.join("\n"
@@ -120,5 +134,5 @@ public class SPARQLQueryStore
             , "    FILTER(LANG(?d) = \"\" || LANGMATCHES(LANG(?d), \"en\"))"
             , "  }"
             , "}"
-            , "LIMIT " + aLimit);
+            , "LIMIT " + LIMIT);
 }

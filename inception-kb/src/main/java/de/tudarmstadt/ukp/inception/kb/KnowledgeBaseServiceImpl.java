@@ -418,7 +418,7 @@ public class KnowledgeBaseServiceImpl
                 (kb.getDefaultLanguage() != null ? kb.getDefaultLanguage() : "en") + "\"))"
                 , "  }"
                 , "} "
-                , "LIMIT " + SPARQLQueryStore.aLimit);
+                , "LIMIT " + SPARQLQueryStore.LIMIT);
             TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
             tupleQuery.setBinding("pTYPE", kb.getTypeIri());
             tupleQuery.setBinding("oCLASS", kb.getClassIri());
@@ -503,7 +503,7 @@ public class KnowledgeBaseServiceImpl
         throws QueryEvaluationException
     {
         List<KBHandle> resultList = read(aKB, (conn) -> {
-            String QUERY = SPARQLQueryStore.PROPERTYLIST_QUERY;
+            String QUERY = SPARQLQueryStore.queryForPropertyList(aKB);
             TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
             tupleQuery.setBinding("pTYPE", aKB.getTypeIri());
             tupleQuery.setBinding("oPROPERTY", aKB.getPropertyTypeIri());
@@ -610,7 +610,7 @@ public class KnowledgeBaseServiceImpl
     public List<KBHandle> listInstances(KnowledgeBase kb, String aConceptIri, boolean aAll)
     {
         IRI conceptIri = SimpleValueFactory.getInstance().createIRI(aConceptIri);
-        return list(kb, conceptIri, false, aAll, SPARQLQueryStore.aLimit);
+        return list(kb, conceptIri, false, aAll, SPARQLQueryStore.LIMIT);
     }
 
     // Statements
@@ -752,7 +752,7 @@ public class KnowledgeBaseServiceImpl
     {
         List<KBHandle> resultList = read(aKB, (conn) -> {
             ValueFactory vf = conn.getValueFactory();
-            String QUERY = SPARQLQueryStore.PROPERTYLIST_DOMAIN_DEPENDENT;
+            String QUERY = SPARQLQueryStore.queryForPropertyListWithDomain(aKB);
             TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
             tupleQuery.setBinding("aDomain", vf.createIRI(aDomain));
             tupleQuery.setBinding("pLABEL", aKB.getLabelIri());
@@ -796,7 +796,7 @@ public class KnowledgeBaseServiceImpl
         throws QueryEvaluationException
     {
         List<KBHandle> resultList = read(aKB, (conn) -> {
-            String QUERY = SPARQLQueryStore.PROPERTYLIST_QUERY;
+            String QUERY = SPARQLQueryStore.queryForPropertyList(aKB);
             TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
             tupleQuery.setBinding("pTYPE", aKB.getTypeIri());
             tupleQuery.setBinding("oPROPERTY", aType);
@@ -849,7 +849,7 @@ public class KnowledgeBaseServiceImpl
                     (aKB.getDefaultLanguage() != null ? aKB.getDefaultLanguage() : "en") + "\"))"
                     , "  }"
                     , "} "
-                    , "LIMIT " + SPARQLQueryStore.aLimit);
+                    , "LIMIT " + SPARQLQueryStore.LIMIT);
                 TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
                 tupleQuery.setBinding("pTYPE", aKB.getTypeIri());
                 tupleQuery.setBinding("oCLASS", aKB.getClassIri());
@@ -876,7 +876,7 @@ public class KnowledgeBaseServiceImpl
             boolean aAll)
         throws QueryEvaluationException
     {
-        return listChildConcepts(aKB, aParentIdentifier, aAll, SPARQLQueryStore.aLimit);
+        return listChildConcepts(aKB, aParentIdentifier, aAll, SPARQLQueryStore.LIMIT);
     }
     
     @Override
