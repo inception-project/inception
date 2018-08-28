@@ -196,7 +196,7 @@ public class ConceptFeatureEditor
                 else {
                     if (traits.getScope() != null) {
                         handles = kbService
-                            .listChildConceptsInstances(kb.get(), traits.getScope(), false, 50)
+                            .listInstancesForChildConcepts(kb.get(), traits.getScope(), false, 50)
                                 .stream().filter(inst -> inst.getUiLabel().toLowerCase()
                                         .contains(aTypedString))
                                 .collect(Collectors.toList());
@@ -230,7 +230,9 @@ public class ConceptFeatureEditor
                 else {
                     if (traits.getScope() != null) {
                         handles.addAll(
-                            kbService.listChildConceptsInstances(kb, traits.getScope(), false, 50)
+                                kbService
+                                        .listInstancesForChildConcepts(kb, traits.getScope(), false,
+                                                50)
                                         .stream()
                                         .filter(inst -> inst.getUiLabel().toLowerCase()
                                                 .contains(aTypedString))
