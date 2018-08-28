@@ -121,11 +121,13 @@ public class KBInstance
         return originalStatements;
     }
 
+    @Override
     public String getLanguage()
     {
         return language;
     }
 
+    @Override
     public void setLanguage(String aLanguage)
     {
         language = aLanguage;
@@ -191,7 +193,8 @@ public class KBInstance
                 }
             });
 
-        readFirst(aConn, aStmt.getSubject(), aKb.getDescriptionIri(), null, aKb.getDefaultLanguage())
+        readFirst(aConn, aStmt.getSubject(), aKb.getDescriptionIri(), null, 
+                aKb.getDefaultLanguage())
             .ifPresent((stmt) -> {
                 kbInst.setDescription(stmt.getObject().stringValue());
                 kbInst.originalStatements.add(stmt);

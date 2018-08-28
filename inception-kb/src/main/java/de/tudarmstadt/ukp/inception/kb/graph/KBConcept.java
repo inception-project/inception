@@ -248,11 +248,11 @@ public class KBConcept
                 kbConcept.setDescription(stmt.getObject().stringValue());
                 kbConcept.originalStatements.add(stmt);
                 if (stmt.getObject() instanceof Literal) {
-                Literal literal = (Literal) stmt.getObject();
-                Optional<String> language = literal.getLanguage();
-                language.ifPresent(kbConcept::setLanguage);
-            }
-        });
+                    Literal literal = (Literal) stmt.getObject();
+                    Optional<String> language = literal.getLanguage();
+                    language.ifPresent(kbConcept::setLanguage);
+                }
+            });
 
         /* Commented out until the functionality which uses them is actually implemented
         readFirst(aConn, aStmt.getSubject(), CLOSED, null).ifPresent((stmt) -> {
