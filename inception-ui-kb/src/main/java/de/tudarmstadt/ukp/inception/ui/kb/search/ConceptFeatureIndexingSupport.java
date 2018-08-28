@@ -17,11 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.search;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
+import org.apache.commons.collections4.MultiValuedMap;
+import org.apache.commons.collections4.multimap.HashSetValuedHashMap;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,9 +33,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRe
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
-import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
-import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
 import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupport;
 
@@ -48,6 +46,7 @@ public class ConceptFeatureIndexingSupport
     public static final String KB_ENTITY = "KB.Entity";
     public static final String INDEX_KB_CONCEPT = "class";
     public static final String INDEX_KB_INSTANCE = "instance";
+    public static final String INDEX_KB_EXACT = "exact";
     
     private String id;
 
@@ -87,62 +86,60 @@ public class ConceptFeatureIndexingSupport
     }
     
     @Override
-    public Map<String, String> indexFeatureValue(AnnotationFeature aFeature,
+    public MultiValuedMap<String, String> indexFeatureValue(AnnotationFeature aFeature,
             AnnotationFS aAnnotation)
     {
         // Returns KB IRI label after checking if the
         // feature type is associated with KB and feature value is not null
         FeatureSupport<?> featSup = featureSupportRegistry.getFeatureSupport(aFeature);
         KBHandle featureObject = featSup.getFeatureValue(aFeature, aAnnotation);
+        MultiValuedMap<String, String> values = new HashSetValuedHashMap<String, String>();
         
         // Feature value is not set
         if (featureObject == null) {
-            return Collections.emptyMap();
+            return values;
         }
 
-        // === BEGIN NEEDS REFACTORING =====================================================
-        // See comment below.
+        // Get object from the KB
         Optional<KBObject> kbObject = kbService.readKBIdentifier(aFeature.getProject(),
                 WebAnnoCasUtil.getFeature(aAnnotation, aFeature.getName()));
-        // === END NEEDS REFACTORING =======================================================
 
         if (!kbObject.isPresent()) {
-            return Collections.emptyMap();
-        }
-        
-        Map<String, String> values = new HashMap<>();
-        
-        String objectType;
-        // === BEGIN NEEDS REFACTORING =====================================================
-        // As part of issue #244, this needs to be refactored for a more reliable method of
-        // detecting whether an IRI refers to a class or to an instance.
-        // 
-        if (kbObject.get() instanceof KBConcept) {
-            objectType = INDEX_KB_CONCEPT;
-        }
-        else if (kbObject.get() instanceof KBInstance) {
-            objectType = INDEX_KB_INSTANCE;
-        }
-        else {
-            throw new IllegalStateException("Unknown KB object: [" + kbObject.get() + "]");
+            return values;
         }
 
         String field = aFeature.getLayer().getUiName();
         
-        // Indexing UI label with type i.e Concept/Instance
-        values.put(field + "." + aFeature.getUiName() + "." + objectType,
+        // Indexing <layer>.<feature>.exact=<UI label>
+        values.put(field + "." + aFeature.getUiName() + "." + INDEX_KB_EXACT,
                 featureObject.getUiLabel());
-        // === END NEEDS REFACTORING =======================================================
+        // Indexing <layer>.<feature>=<UI label>
+        values.put(field + "." + aFeature.getUiName(),
+                featureObject.getUiLabel());
+        // Indexing: <layer>.<feature>.exact=<URI>
+        values.put(field + "." + aFeature.getUiName() + "." + INDEX_KB_EXACT,
+                featureObject.getIdentifier());
+        // Indexing: <layer>.<feature>=<URI>
+        values.put(field + "." + aFeature.getUiName(),
+                featureObject.getIdentifier());
 
-        // Indexing <feature>=<UI label>
-        values.put(field + "." + aFeature.getUiName(), featureObject.getUiLabel());
-
-        // Indexing <feature>=<URI>
-        values.put(field + "." + aFeature.getUiName(), kbObject.get().getIdentifier());
-
-        // Indexing UI label without type and layer for generic search
+        // The following fields are used by the mentions panes on the KB page in order to find all
+        // mentions of a given resource irrespective of which layer/feature they are linked to.
+        // Indexing: KB.Entity=<UI label>
         values.put(KB_ENTITY, featureObject.getUiLabel());
+        // Indexing: KB.Entity=<URI>
+        values.put(KB_ENTITY, featureObject.getIdentifier());
         
+        // Indexing super concepts with type super.concept 
+        Set<KBHandle> listParentConcepts = kbService.getParentConceptList(kbObject.get().getKB(),
+                kbObject.get().getIdentifier(), false);
+        for (KBHandle parentConcept : listParentConcepts) {
+            if (kbService.hasImplicitNamespace(parentConcept.getIdentifier())) {
+                continue;
+            }
+            values.put(field + "." + aFeature.getUiName(), parentConcept.getUiLabel());
+        }
         return values;
     }
+    
 }

@@ -17,8 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.kb;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.any;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -42,10 +44,15 @@ import org.junit.rules.TemporaryFolder;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.kb.exporter.KnowledgeBaseExporter;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
@@ -54,11 +61,12 @@ public class KnowledgeBaseExporterTest
     private static final String TestURLEndpoint = "https://collection.britishmuseum.org/sparql";
         
     private @Mock KnowledgeBaseService kbService;
+    private @Mock AnnotationSchemaService schemaService;
 
-    private Project project;
-    
-    @Rule
-    public TemporaryFolder temporaryFolder = new TemporaryFolder();
+    private Project sourceProject;
+    private Project targetProject;
+
+    public @Rule TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     private KnowledgeBaseExporter sut;
     
@@ -66,15 +74,23 @@ public class KnowledgeBaseExporterTest
     public void setUp() throws Exception
     {
         initMocks(this);
+        
+        sourceProject = new Project();
+        sourceProject.setId(1l);
+        sourceProject.setName("Test Project");
 
-        project = new Project();
-        project.setName("Test Project");
-        when(kbService.getKnowledgeBases(project)).thenReturn(knowledgeBases());
+        targetProject = new Project();
+        sourceProject.setId(2l);
+        targetProject.setName("Test Project");
+
+        when(kbService.getKnowledgeBases(sourceProject)).thenReturn(knowledgeBases());
         
         when(kbService.getKnowledgeBaseConfig(any()))
                 .thenReturn(new SPARQLRepositoryConfig(TestURLEndpoint));
+     
+        when(schemaService.listAnnotationFeature(sourceProject)).thenReturn(features(sourceProject));
         
-        sut = new KnowledgeBaseExporter(kbService);
+        sut = new KnowledgeBaseExporter(kbService, schemaService);
     }
     
     @Test
@@ -82,7 +98,7 @@ public class KnowledgeBaseExporterTest
     {
         // Export the project
         ProjectExportRequest exportRequest = new ProjectExportRequest();
-        exportRequest.setProject(project);
+        exportRequest.setProject(sourceProject);
         ExportedProject exportedProject = new ExportedProject();
         sut.exportData(exportRequest, exportedProject, temporaryFolder.getRoot());
 
@@ -93,7 +109,7 @@ public class KnowledgeBaseExporterTest
         ProjectImportRequest importRequest = new ProjectImportRequest(true);
         ZipFile zipFile = mock(ZipFile.class);
 
-        sut.importData(importRequest, project, exportedProject, zipFile);
+        sut.importData(importRequest, targetProject, exportedProject, zipFile);
 
         // Check how many localKBs have been exported
         List<KnowledgeBase> exportedKbs = exportKbCaptor.getAllValues();
@@ -105,8 +121,53 @@ public class KnowledgeBaseExporterTest
         verify(kbService, times(numOfLocalKBs)).importData(any(),
                 any(), any());
 
-        assertThat(exportedKbs).usingFieldByFieldElementComparator()
+        assertThat(exportedKbs)
+                .usingElementComparatorIgnoringFields("repositoryId", "project")
                 .containsExactlyInAnyOrderElementsOf(knowledgeBases());
+    }
+    
+    @Test
+    public void thatRemappingConceptFeaturesOnImportWorks() throws Exception
+    {
+        // Export the project
+        ProjectExportRequest exportRequest = new ProjectExportRequest();
+        exportRequest.setProject(sourceProject);
+        ExportedProject exportedProject = new ExportedProject();
+        sut.exportData(exportRequest, exportedProject, temporaryFolder.getRoot());
+        
+        // Mock that the KB ID changes during import when registerKnowledgeBase is called
+        doAnswer(i -> {
+            KnowledgeBase kb = i.getArgument(0);
+            kb.setRepositoryId("imported-" + kb.getRepositoryId());
+            return null;
+        }).when(kbService).registerKnowledgeBase(any(), any());
+        
+        // Mock the features in the imported project
+        when(schemaService.listAnnotationFeature(targetProject)).thenReturn(features(targetProject));
+        
+        // Capture remapped features
+        ArgumentCaptor<AnnotationFeature> importedAnnotationFeatureCaptor = ArgumentCaptor
+                .forClass(AnnotationFeature.class);
+        doNothing().when(schemaService).createFeature(importedAnnotationFeatureCaptor.capture());
+        
+        // Import the project again
+        ProjectImportRequest importRequest = new ProjectImportRequest(true);
+        ZipFile zipFile = mock(ZipFile.class);
+        sut.importData(importRequest, targetProject, exportedProject, zipFile);
+        
+        // Verify that features were actually processed
+        verify(schemaService, times(schemaService.listAnnotationFeature(sourceProject).size()))
+                .createFeature(any());
+        
+        // Check that IDs have been remapped
+        List<AnnotationFeature> importedFeatures = importedAnnotationFeatureCaptor.getAllValues();
+        assertThat(importedFeatures)
+                .extracting(feature -> {
+                    ConceptFeatureTraits traits = JSONUtil.fromJsonString(ConceptFeatureTraits.class,
+                            feature.getTraits());
+                    return traits.getRepositoryId();
+                })
+                .allSatisfy(id -> assertThat(id).startsWith("imported-"));
     }
     
     private List<KnowledgeBase> knowledgeBases() throws Exception
@@ -130,10 +191,24 @@ public class KnowledgeBaseExporterTest
         return Arrays.asList(kb1, kb2, kb3);        
     }
     
+    private List<AnnotationFeature> features(Project aProject) throws Exception
+    {
+        AnnotationLayer layer1 = new AnnotationLayer("layer", "layer", WebAnnoConst.SPAN_TYPE,
+                aProject, false);
+
+        AnnotationFeature feat1 = new AnnotationFeature(1, layer1, "conceptFeature", "kb:conceptA");
+        ConceptFeatureTraits traits1 = new ConceptFeatureTraits();
+        traits1.setRepositoryId("id-kb1");
+        feat1.setTraits(JSONUtil.toJsonString(traits1));
+        
+        return asList(feat1);
+    }
+    
     private KnowledgeBase buildKnowledgeBase(String name) throws Exception {
         KnowledgeBase kb = new KnowledgeBase();
+        kb.setRepositoryId("id-" + name);
         kb.setName(name);
-        kb.setProject(project);
+        kb.setProject(sourceProject);
         kb.setSubclassIri(RDFS.SUBCLASSOF);
         kb.setTypeIri(RDF.TYPE);
         kb.setDescriptionIri(RDFS.COMMENT);

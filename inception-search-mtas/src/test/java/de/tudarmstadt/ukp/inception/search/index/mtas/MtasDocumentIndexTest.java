@@ -40,8 +40,6 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
@@ -120,9 +118,7 @@ import de.tudarmstadt.ukp.inception.search.scheduling.IndexScheduler;
 @Transactional(propagation = Propagation.NEVER)
 public class MtasDocumentIndexTest
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
-
-    // Number of miliseconds to wait for the indexing to finish. This time must be enough
+    // Number of milliseconds to wait for the indexing to finish. This time must be enough
     // to allow the index be built before the query is made. Otherwise, it could affect the
     // test results. If this happens, a largest value could allow the test to pass.
     private final int WAIT_TIME = 1000;
@@ -253,6 +249,50 @@ public class MtasDocumentIndexTest
         }
     }
 
+    @Test
+    public void testSimplifiedTokenTextQuery() throws Exception
+    {
+        Project project = new Project();
+        project.setName("SimplifiedTokenTextQuery");
+
+        createProject(project);
+
+        SourceDocument sourceDocument = new SourceDocument();
+
+        sourceDocument.setName("Raw text document");
+        sourceDocument.setProject(project);
+        sourceDocument.setFormat("text");
+
+        String fileContent = "The capital of Galicia is Santiago de Compostela.";
+
+        uploadDocument(project, fileContent, sourceDocument);
+
+        User user = userRepository.get("admin");
+
+        String query = "\"Galicia\"";
+
+        // Execute query
+        List<SearchResult> results = (ArrayList<SearchResult>) searchService.query(user, project,
+                query);
+
+        // Test results
+        SearchResult expectedResult = new SearchResult();
+        expectedResult.setDocumentId(sourceDocument.getId());
+        expectedResult.setDocumentTitle("test");
+        expectedResult.setText("Galicia ");
+        expectedResult.setLeftContext("capital of ");
+        expectedResult.setRightContext("is ");
+        expectedResult.setOffsetStart(15);
+        expectedResult.setOffsetEnd(22);
+        expectedResult.setTokenStart(3);
+        expectedResult.setTokenLength(1);
+
+        assertNotNull(results);
+        if (results != null) {
+            assertEquals(1, results.size());
+            assertEquals(expectedResult, results.get(0));
+        }
+    }
     @Test
     public void testAnnotationQuery() throws Exception
     {

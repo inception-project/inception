@@ -29,7 +29,7 @@ import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Form;
-import org.apache.wicket.markup.html.form.TextField;
+import org.apache.wicket.markup.html.form.TextArea;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.Fragment;
@@ -95,7 +95,7 @@ public class SearchAnnotationSidebar
         add(mainContainer);
 
         Form<Void> searchForm = new Form<Void>("searchForm");
-        searchForm.add(new TextField<String>("queryInput", targetQuery));
+        searchForm.add(new TextArea<String>("queryInput", targetQuery));
         searchForm.add(new LambdaAjaxButton<>("search", this::actionSearch));
         mainContainer.add(searchForm);
 
