@@ -400,7 +400,7 @@ public class KnowledgeBaseServiceImpl
     public List<KBHandle> listAllConcepts(KnowledgeBase kb, boolean aAll)
         throws QueryEvaluationException
     {
-        List<KBHandle> resultList = new ArrayList<>();
+        List<KBHandle> resultList;
         resultList = read(kb, (conn) -> {
             String QUERY = String.join("\n"
                 , SPARQLQueryStore.SPARQL_PREFIX
@@ -409,11 +409,13 @@ public class KnowledgeBaseServiceImpl
                 , "  UNION { ?someSubClass ?pSUBCLASS ?s . } ."
                 , "  OPTIONAL { "
                 , "    ?s ?pLABEL ?l . "
-                , "    FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\")) "
+                , "    FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"" +
+                (kb.getDefaultLanguage() != null ? kb.getDefaultLanguage() : "en") + "\"))"
                 , "  }"
                 , "  OPTIONAL { "
                 , "    ?s ?pDESCRIPTION ?d . "
-                , "    FILTER(LANG(?d) = \"\" || LANGMATCHES(LANG(?d), \"en\")) "
+                , "    FILTER(LANG(?d) = \"\" || LANGMATCHES(LANG(?d), \"" +
+                (kb.getDefaultLanguage() != null ? kb.getDefaultLanguage() : "en") + "\"))"
                 , "  }"
                 , "} "
                 , "LIMIT " + SPARQLQueryStore.aLimit);
@@ -718,11 +720,13 @@ public class KnowledgeBaseServiceImpl
                          , "  ?s ?pTYPE ?oPROPERTY ."
                          , "  OPTIONAL {"
                          , "    ?s ?pLABEL ?l ."
-                         , "    FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\"))"
+                         , "    FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"" +
+                         (kb.getDefaultLanguage() != null ? kb.getDefaultLanguage() : "en") + "\"))"
                          , "  }"
                          , "  OPTIONAL {"
                          , "    ?s ?pDESCRIPTION ?d ."
-                         , "    FILTER(LANG(?d) = \"\" || LANGMATCHES(LANG(?d), \"en\"))"
+                         , "    FILTER(LANG(?d) = \"\" || LANGMATCHES(LANG(?d), \"" +
+                         (kb.getDefaultLanguage() != null ? kb.getDefaultLanguage() : "en") + "\"))"
                          , "  }"
                          , "}"
                          , "LIMIT " + aLimit);
@@ -836,11 +840,13 @@ public class KnowledgeBaseServiceImpl
                     , "    ?s owl:intersectionOf ?list . }"
                     , "  OPTIONAL { "
                     , "    ?s ?pLABEL ?l . "
-                    , "    FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\")) "
+                    , "    FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"" +
+                    (aKB.getDefaultLanguage() != null ? aKB.getDefaultLanguage() : "en") + "\"))"
                     , "  } "
                     , "  OPTIONAL {"
                     , "    ?s ?pDESCRIPTION ?d ."
-                    , "    FILTER(LANG(?d) = \"\" || LANGMATCHES(LANG(?d), \"en\"))"
+                    , "    FILTER(LANG(?d) = \"\" || LANGMATCHES(LANG(?d), \"" +
+                    (aKB.getDefaultLanguage() != null ? aKB.getDefaultLanguage() : "en") + "\"))"
                     , "  }"
                     , "} "
                     , "LIMIT " + SPARQLQueryStore.aLimit);
@@ -976,11 +982,13 @@ public class KnowledgeBaseServiceImpl
                 , "    FILTER EXISTS { ?list rdf:rest*/rdf:first ?oPARENT} }"
                 , "  OPTIONAL { "
                 , "    ?s ?pLABEL ?l . "
-                , "    FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\")) "
+                , "    FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"" +
+                (aKB.getDefaultLanguage() != null ? aKB.getDefaultLanguage() : "en") + "\"))"
                 , "  } "
                 , "  OPTIONAL {"
                 , "    ?s ?pDESCRIPTION ?d ."
-                , "    FILTER(LANG(?d) = \"\" || LANGMATCHES(LANG(?d), \"en\"))"
+                , "    FILTER(LANG(?d) = \"\" || LANGMATCHES(LANG(?d), \"" +
+                (aKB.getDefaultLanguage() != null ? aKB.getDefaultLanguage() : "en") + "\"))"
                 , "  }"
                 , "} "
                 , "LIMIT " + aLimit);
