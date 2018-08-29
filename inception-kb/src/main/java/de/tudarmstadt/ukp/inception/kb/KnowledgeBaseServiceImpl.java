@@ -75,6 +75,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -1224,5 +1225,13 @@ public class KnowledgeBaseServiceImpl
             .equals(subclassIri) && profile.getTypeIri().equals(typeIri) && profile
             .getDescriptionIri().equals(descriptionIri) && profile.getLabelIri().equals(labelIri)
             && profile.getPropertyTypeIri().equals(propertyTypeIri);
+    }
+
+    @Override
+    public File readKbFileFromClassPathResource(String aLocation) throws IOException
+    {
+        PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
+        File kbFile = resolver.getResource(aLocation).getFile();
+        return kbFile;
     }
 }

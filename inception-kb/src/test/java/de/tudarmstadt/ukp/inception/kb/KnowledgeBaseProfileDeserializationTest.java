@@ -23,6 +23,8 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseAccess;
+import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseAccessType;
 import org.junit.Test;
 
 import com.fasterxml.jackson.core.JsonParseException;
@@ -40,6 +42,7 @@ public class KnowledgeBaseProfileDeserializationTest
     public void checkThatDeserializationWorks() throws JsonParseException, JsonMappingException, IOException {
         String name = "Test KB";
         String url = "http://someurl/sparql";
+        KnowledgeBaseAccessType accessType = KnowledgeBaseAccessType.CLASSPATH;
         RepositoryType type = RepositoryType.REMOTE;
         String classIri = "http://www.w3.org/2000/01/rdf-schema#Class";
         String subclassIri = "http://www.w3.org/2000/01/rdf-schema#subClassOf";
@@ -50,14 +53,21 @@ public class KnowledgeBaseProfileDeserializationTest
         
         KnowledgeBaseMapping referenceMapping = new KnowledgeBaseMapping(classIri, subclassIri, typeIri, descriptionIri, label , propertyTypeIri);
         KnowledgeBaseProfile referenceProfile = new KnowledgeBaseProfile();
+
+        KnowledgeBaseAccess referenceAccess = new KnowledgeBaseAccess();
+        referenceAccess.setAccessUrl(url);
+        referenceAccess.setAccessType(accessType);
+
         referenceProfile.setMapping(referenceMapping);
         referenceProfile.setName(name);
-        referenceProfile.setAccessUrl(url);
+        referenceProfile.setAccess(referenceAccess);
         referenceProfile.setType(type);
         
         String test_yaml = "test_profile:\n    "
                 + "name: " + name + "\n    "
-                + "access-url: " + url + " \n    "
+                + "access: \n        "
+                + "access-url: " + url + " \n        "
+                + "access-type: " + accessType + " \n    "
                 + "type: " + type + " \n    "
                 + "mapping: \n        "
                 + "class: " + classIri + "\n        "

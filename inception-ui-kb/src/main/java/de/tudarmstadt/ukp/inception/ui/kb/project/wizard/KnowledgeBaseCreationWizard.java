@@ -56,6 +56,7 @@ import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.validation.IValidator;
@@ -143,12 +144,7 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
     }
 
     private void setKbIRIsAccordingToProfile(KnowledgeBase kb, KnowledgeBaseProfile kbProfile) {
-        kb.setClassIri(kbProfile.getMapping().getClassIri());
-        kb.setSubclassIri(kbProfile.getMapping().getSubclassIri());
-        kb.setTypeIri(kbProfile.getMapping().getTypeIri());
-        kb.setDescriptionIri(kbProfile.getMapping().getDescriptionIri());
-        kb.setPropertyTypeIri(kbProfile.getMapping().getPropertyTypeIri());
-        kb.setLabelIri(kbProfile.getMapping().getLabelIri());
+        kb.applyMapping(kbProfile.getMapping());
     }
 
     /**
@@ -290,8 +286,10 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
                     link.add(new Label("suggestionLabel", itemLabel));
                     // Show schema type on mouseover
                     link.add(AttributeModifier.append("title",
-                        "Schema: " + kbService.checkSchemaProfile(item.getModelObject())
-                            .getLabel()));
+                        new StringResourceModel("kb.wizard.steps.local.schemaOnMouseOver", this)
+                            .setParameters(
+                                kbService.checkSchemaProfile(item.getModelObject()).getLabel(),
+                                item.getModelObject().getAccess().getAccessType())));
                     item.add(link);
                 }
             };
@@ -310,13 +308,26 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
         {
             try {
                 if (selectedKnowledgeBaseProfile != null) {
-                    // Download to tmp file
-                    Path pathName = Paths.get(selectedKnowledgeBaseProfile.getAccessUrl());
-                    File tmpFile = File
-                        .createTempFile(TMP_FILE_NAME, pathName.getFileName().toString());
-                    FileUtils.copyURLToFile(new URL(selectedKnowledgeBaseProfile.getAccessUrl()),
-                        tmpFile);
-                    downloadedFiles.add(tmpFile);
+
+                    String accessUrl = selectedKnowledgeBaseProfile.getAccess().getAccessUrl();
+
+                    switch (selectedKnowledgeBaseProfile.getAccess().getAccessType()) {
+                    case DOWNLOAD:
+                        // Download to tmp file
+                        Path pathName = Paths.get(accessUrl);
+                        File tmpFile = File
+                            .createTempFile(TMP_FILE_NAME, pathName.getFileName().toString());
+                        FileUtils.copyURLToFile(
+                            new URL(selectedKnowledgeBaseProfile.getAccess().getAccessUrl()),
+                            tmpFile);
+                        downloadedFiles.add(tmpFile);
+                        break;
+                    case CLASSPATH:
+                        // import from classpath
+                        File kbFile = kbService.readKbFileFromClassPathResource(accessUrl);
+                        downloadedFiles.add(kbFile);
+
+                    }
 
                     setKbIRIsAccordingToProfile(model.getObject().getKb(),
                         selectedKnowledgeBaseProfile);
@@ -327,8 +338,8 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
                 }
             }
             catch (IOException e) {
-                error("Unable to download knowledge base file" + e.getMessage());
-                log.error("Unable to download knowledge base file", e);
+                error("Unable to download or import knowledge base file" + e.getMessage());
+                log.error("Unable to download or import knowledge base file", e);
             }
         }
         
@@ -415,7 +426,7 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
                     // add a link for one knowledge base with proper label
                     LambdaAjaxLink link = new LambdaAjaxLink("suggestionLink", t -> {
                         // set all the fields according to the chosen profile
-                        model.getObject().setUrl(item.getModelObject().getAccessUrl());
+                        model.getObject().setUrl(item.getModelObject().getAccess().getAccessUrl());
                         setKbIRIsAccordingToProfile(model.getObject().getKb(),
                             item.getModelObject());
 

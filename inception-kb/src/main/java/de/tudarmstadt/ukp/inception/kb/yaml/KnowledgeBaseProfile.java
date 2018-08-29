@@ -34,9 +34,9 @@ public class KnowledgeBaseProfile implements Serializable
     @JsonProperty("type")
     private RepositoryType type;
     
-    @JsonProperty("access-url")
-    private String accessUrl;
-    
+    @JsonProperty("access")
+    private KnowledgeBaseAccess access;
+
     @JsonProperty("mapping")
     private KnowledgeBaseMapping mapping;
 
@@ -60,14 +60,14 @@ public class KnowledgeBaseProfile implements Serializable
         type = aType;
     }
 
-    public String getAccessUrl()
+    public KnowledgeBaseAccess getAccess()
     {
-        return accessUrl;
+        return access;
     }
 
-    public void setAccessUrl(String aSparqlUrl)
+    public void setAccess(KnowledgeBaseAccess aKbAccess)
     {
-        accessUrl = aSparqlUrl;
+        access = aKbAccess;
     }
 
     public KnowledgeBaseMapping getMapping()
@@ -79,9 +79,8 @@ public class KnowledgeBaseProfile implements Serializable
     {
         mapping = aMapping;
     }
-    
-    @Override
-    public boolean equals(Object o)
+
+    @Override public boolean equals(Object o)
     {
         if (this == o) {
             return true;
@@ -90,12 +89,12 @@ public class KnowledgeBaseProfile implements Serializable
             return false;
         }
         KnowledgeBaseProfile that = (KnowledgeBaseProfile) o;
-        return Objects.equals(name, that.name) && Objects.equals(accessUrl, that.accessUrl)
-                && Objects.equals(mapping, that.mapping);
+        return Objects.equals(name, that.name) && Objects.equals(access, that.access) && Objects
+            .equals(mapping, that.mapping) && Objects.equals(type, that.type);
     }
     
     @Override
     public int hashCode() {
-        return Objects.hash(name, accessUrl, mapping);
+        return Objects.hash(name, type, access, mapping);
     }
 }

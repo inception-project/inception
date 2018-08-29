@@ -116,7 +116,7 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
         sut = new KnowledgeBaseServiceImpl(temporaryFolder.getRoot(), entityManager);
         project = createProject(PROJECT_NAME);
         kb = buildKnowledgeBase(project, KB_NAME);
-        sut.registerKnowledgeBase(kb, sut.getRemoteConfig(PROFILES.get("wikidata").getAccessUrl()));
+        sut.registerKnowledgeBase(kb, sut.getRemoteConfig(PROFILES.get("wikidata").getAccess().getAccessUrl()));
 
     }
 

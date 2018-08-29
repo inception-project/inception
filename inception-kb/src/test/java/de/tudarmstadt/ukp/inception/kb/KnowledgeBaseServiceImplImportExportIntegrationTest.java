@@ -218,7 +218,7 @@ public class KnowledgeBaseServiceImplImportExportIntegrationTest {
     public void exportData_WithRemoteKnowledgeBase_ShouldDoNothing() throws Exception {
         File outputFile = temporaryFolder.newFile();
         kb.setType(RepositoryType.REMOTE);
-        sut.registerKnowledgeBase(kb, sut.getRemoteConfig(sut.readKnowledgeBaseProfiles().get("babel_net").getAccessUrl()));
+        sut.registerKnowledgeBase(kb, sut.getRemoteConfig(sut.readKnowledgeBaseProfiles().get("babel_net").getAccess().getAccessUrl()));
 
         try (OutputStream os = new FileOutputStream(outputFile)) {
             sut.exportData(kb, RDFFormat.TURTLE, os);
