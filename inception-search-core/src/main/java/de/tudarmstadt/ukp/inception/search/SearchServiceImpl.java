@@ -54,7 +54,6 @@ import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexRegistry;
 import de.tudarmstadt.ukp.inception.search.model.Index;
 import de.tudarmstadt.ukp.inception.search.scheduling.IndexScheduler;
 
-
 @Component(SearchService.SERVICE_NAME)
 @Transactional
 public class SearchServiceImpl
@@ -132,13 +131,14 @@ public class SearchServiceImpl
         return indexes.get(aProject.getId());
     }
 
-    /** 
+    /**
      * beforeProjectRemove event. Triggered before a project is removed
-     * @param aEvent The BeforeProjectRemovedEvent event
-     * @throws Exception
+     * 
+     * @param aEvent
+     *            The BeforeProjectRemovedEvent event
      */
     @EventListener
-    public void beforeProjectRemove(BeforeProjectRemovedEvent aEvent) throws Exception
+    public void beforeProjectRemove(BeforeProjectRemovedEvent aEvent) throws IOException
     {
         log.trace("Starting beforeProjectRemove");
 
@@ -229,18 +229,23 @@ public class SearchServiceImpl
         Index index = getIndexFromMemory(aSourceDocument.getProject());
 
         if (canAddDocumentToIndex(index)) {
-            try {
-                // Remove source document from index.
-                log.trace("Remove source document from index");
-                index.getPhysicalIndex().deindexDocument(aSourceDocument);
+            return;
+        }
+            
+        try {
+            // Remove source document from index.
+            log.trace("Remove source document from index");
+            index.getPhysicalIndex().deindexDocument(aSourceDocument);
 
-                // Add annotation document to the index again
-                log.trace("Add source document to index");
-                index.getPhysicalIndex().indexDocument(aSourceDocument, aJCas);
-            }
-            catch (IOException e) {
-                log.error("Error indexing source document", e);
-            }
+            // Add annotation document to the index again
+            log.trace("Add source document to index");
+            index.getPhysicalIndex().indexDocument(aSourceDocument, aJCas);
+        }
+        catch (IOException e) {
+            log.error("Error indexing source document [{}]({}) in project [{}]({})",
+                    aSourceDocument.getName(), aSourceDocument.getId(),
+                    aSourceDocument.getProject().getName(), aSourceDocument.getProject().getId(),
+                    e);
         }
     }
 
@@ -262,7 +267,10 @@ public class SearchServiceImpl
                 index.getPhysicalIndex().indexDocument(aAnnotationDocument, aJCas);
             }
             catch (IOException e) {
-                log.error("Error indexing annotation document", e);
+                log.error("Error indexing source document [{}]({}) in project [{}]({})",
+                        aAnnotationDocument.getName(), aAnnotationDocument.getId(),
+                        aAnnotationDocument.getProject().getName(),
+                        aAnnotationDocument.getProject().getId(), e);
             }
         }
     }
@@ -282,8 +290,8 @@ public class SearchServiceImpl
     public List<SearchResult> query(User aUser, Project aProject, String aQuery)
         throws IOException, ExecutionException
     {
-        log.debug("Starting query for user {} in project [{}]", aUser.getUsername(),
-                aProject.getName());
+        log.debug("Starting query for user [{}] in project [{}]({})", aUser.getUsername(),
+                aProject.getName(), aProject.getId());
 
         List<SearchResult> results = null;
 
@@ -320,7 +328,7 @@ public class SearchServiceImpl
                     index.getPhysicalIndex().openPhysicalIndex();
                 }
 
-                log.debug("Running query: {}", aQuery);
+                log.debug("Running query: [{}]", aQuery);
 
                 results = index.getPhysicalIndex().executeQuery(aUser, aQuery, null, (String) null);
             }
@@ -366,13 +374,13 @@ public class SearchServiceImpl
     @Transactional
     public void reindex(Project aProject) throws IOException
     {
-        log.debug("Reindexing project " + aProject.getName());
+        log.info("Re-indexing project [{}]({}) ", aProject.getName(), aProject.getId());
         
         Index index = getIndexFromMemory(aProject);
 
         if (index.getPhysicalIndex().isCreated()) {
             // Physical index already exists, drop it
-            log.info("Physical index already exists. Drop it.");
+            log.debug("Physical index already exists. Drop it.");
 
             index.getPhysicalIndex().dropPhysicalIndex();
         }
