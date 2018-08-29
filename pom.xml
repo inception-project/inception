@@ -69,8 +69,7 @@
     <solr.version>7.1.0</solr.version>
     <dkpro.lab.version>0.14.0</dkpro.lab.version>
     <dl4j.version>0.9.1</dl4j.version>
-    <!-- rdf4j.version>2.4.0-M3</rdf4j.version -->
-    <rdf4j.version>2.3.2</rdf4j.version>
+    <rdf4j.version>2.4.0-M2</rdf4j.version>
     <mockito.version>2.18.3</mockito.version>
     <assertj.version>3.10.0</assertj.version>
   </properties>

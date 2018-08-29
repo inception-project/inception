@@ -36,6 +36,7 @@ import org.apache.wicket.extensions.wizard.IWizardStep;
 import org.apache.wicket.extensions.wizard.dynamic.DynamicWizardModel;
 import org.apache.wicket.extensions.wizard.dynamic.DynamicWizardStep;
 import org.apache.wicket.extensions.wizard.dynamic.IDynamicWizardStep;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.DropDownChoice;
@@ -377,8 +378,10 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
             try {
                 KnowledgeBaseWrapper.registerKb(wrapper, kbService);
             } catch (Exception e) {
+                log.error("Unable to register knowledge base: ", e.getLocalizedMessage(), e);
                 error(e.getMessage());
-                
+                AjaxRequestTarget target = RequestCycle.get().find(AjaxRequestTarget.class);
+                target.addChildren(getPage(), IFeedback.class);
             }
         }
 
