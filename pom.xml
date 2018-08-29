@@ -65,8 +65,8 @@
     <spring.boot.version>1.5.14.RELEASE</spring.boot.version>
     <wicket.version>7.10.0</wicket.version>
     <wicket-jquery-ui.version>7.10.1</wicket-jquery-ui.version>
-    <lucene.version>7.1.0</lucene.version>
-    <solr.version>7.1.0</solr.version>
+    <lucene.version>7.3.0</lucene.version>
+    <mtas.version>7.3.0.3</mtas.version>
     <dkpro.lab.version>0.14.0</dkpro.lab.version>
     <dl4j.version>0.9.1</dl4j.version>
     <!-- rdf4j.version>2.4.0-M3</rdf4j.version -->
@@ -477,20 +477,9 @@
         <scope>test</scope>
       </dependency>
       <dependency>
-        <groupId>org.apache.solr</groupId>
-        <artifactId>solr-core</artifactId>
-        <version>${solr.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.solr</groupId>
-        <artifactId>solr-solrj</artifactId>
-        <version>${solr.version}</version>
-        <scope>test</scope>
-      </dependency>
-      <dependency>
         <groupId>nl.knaw.meertens.mtas</groupId>
         <artifactId>mtas</artifactId>
-        <version>7.1.0.2</version>
+        <version>${mtas.version}</version>
       </dependency>
     
       <dependency>
@@ -945,6 +934,16 @@
           </plugins>
         </pluginManagement>
       </build>
+    </profile>
+    <profile>
+      <id>doc-only</id>
+      <properties>
+        <mdep.analyze.skip>false</mdep.analyze.skip>
+        <maven.test.skip>true</maven.test.skip>
+        <rat.skip>true</rat.skip>
+        <maven.buildNumber.skip>true</maven.buildNumber.skip>
+        <checkstyle.skip>true</checkstyle.skip>
+      </properties>
     </profile>
   </profiles>
 </project>
