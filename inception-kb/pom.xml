@@ -76,6 +76,10 @@
     </dependency>
     <dependency>
       <groupId>org.eclipse.rdf4j</groupId>
+      <artifactId>rdf4j-sail-memory</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.rdf4j</groupId>
       <artifactId>rdf4j-sail-nativerdf</artifactId>
     </dependency>
     <dependency>
@@ -239,6 +243,7 @@
           <configuration>
             <usedDependencies>
               <!-- RDF4J plugins - used via reflection -->
+              <usedDependency>org.eclipse.rdf4j:rdf4j-sail-memory</usedDependency>
               <usedDependency>org.eclipse.rdf4j:rdf4j-rio-rdfxml</usedDependency>
               <usedDependency>org.eclipse.rdf4j:rdf4j-queryresultio-api</usedDependency>
               <usedDependency>org.eclipse.rdf4j:rdf4j-queryparser-sparql</usedDependency>
