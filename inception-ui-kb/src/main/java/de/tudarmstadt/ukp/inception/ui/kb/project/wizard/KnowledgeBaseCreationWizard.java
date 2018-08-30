@@ -56,6 +56,7 @@ import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -281,9 +282,10 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
                     String itemLabel = item.getModelObject().getName();
                     // Adjust label to indicate whether the KB has already been downloaded
                     if (downloadedProfiles.containsKey(item.getModelObject().getName())) {
-                        itemLabel = itemLabel + "  [Downloaded]";
+                        // &#10004; is the checkmark symbol
+                        itemLabel = itemLabel + "  &#10004;";
                     }
-                    link.add(new Label("suggestionLabel", itemLabel));
+                    link.add(new Label("suggestionLabel", itemLabel).setEscapeModelStrings(false));
                     // Show schema type on mouseover
                     link.add(AttributeModifier.append("title",
                         new StringResourceModel("kb.wizard.steps.local.schemaOnMouseOver", this)
@@ -298,10 +300,11 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
             listViewContainer.setOutputMarkupId(true);
             add(listViewContainer);
 
-            LambdaAjaxLink downloadButton = new LambdaAjaxLink("download",
+            LambdaAjaxLink addKbButton = new LambdaAjaxLink("addKbButton",
                 LocalRepositoryStep.this::actionDownloadKbAndSetIRIs);
-            downloadButton.add(new Label("downloadLabel", "Download"));
-            add(downloadButton);
+            addKbButton
+                .add(new Label("addKbLabel", new ResourceModel("kb.wizard.steps.local.addKb")));
+            add(addKbButton);
         }
 
         private void actionDownloadKbAndSetIRIs(AjaxRequestTarget aTarget)

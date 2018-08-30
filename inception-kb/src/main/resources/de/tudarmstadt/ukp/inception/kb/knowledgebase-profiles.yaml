@@ -80,8 +80,8 @@ wine_ontology:
   name: Wine Ontology
   type: LOCAL
   access:
-      access-url: https://www.w3.org/TR/owl-guide/wine.rdf
-      access-type: DOWNLOAD
+      access-url: classpath:de/tudarmstadt/ukp/inception/kb/pre-defined-knowledge-bases/wine.rdf
+      access-type: CLASSPATH
   mapping:
       class: http://www.w3.org/2002/07/owl#Class
       subclass-of: http://www.w3.org/2000/01/rdf-schema#subClassOf
