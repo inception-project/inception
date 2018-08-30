@@ -121,7 +121,7 @@ public class MtasDocumentIndexTest
     // Number of milliseconds to wait for the indexing to finish. This time must be enough
     // to allow the index be built before the query is made. Otherwise, it could affect the
     // test results. If this happens, a largest value could allow the test to pass.
-    private final int WAIT_TIME = 3000;
+    private final int WAIT_TIME = 1000;
 
     private @Autowired UserDao userRepository;
     private @Autowired ProjectService projectService;
@@ -129,6 +129,8 @@ public class MtasDocumentIndexTest
     private @Autowired SearchService searchService;
     private @Autowired AnnotationSchemaService annotationSchemaService;
 
+    private final int NUM_WAITS = 2;
+    
     @Before
     public void setUp()
     {
@@ -151,6 +153,7 @@ public class MtasDocumentIndexTest
                 aFileContent.getBytes(StandardCharsets.UTF_8));
 
         documentService.uploadSourceDocument(fileStream, aSourceDocument);
+        Thread.sleep(WAIT_TIME);
         while (!searchService.isIndexValid(aProject)) {
             Thread.sleep(WAIT_TIME);
         }
@@ -311,7 +314,33 @@ public class MtasDocumentIndexTest
 
         uploadDocument(project, fileContent, sourceDocument);
 
+        // Wait for the asynchronous indexing task to finish. We need a sleep before the while 
+        // because otherwise there would not be time even for the index becoming invalid 
+        // before becoming valid again.
+        
+        Thread.sleep(WAIT_TIME);
+        
+        int numWaits = 0;
+        
+        while (!searchService.isIndexValid(project) && numWaits < NUM_WAITS) {
+            Thread.sleep(WAIT_TIME);
+            numWaits ++;
+        }
+
         annotateDocument(project, user, sourceDocument);
+
+        numWaits = 0;
+        
+        // Wait for the asynchronous indexing task to finish. We need a sleep before the while 
+        // because otherwise there would not be time even for the index becoming invalid 
+        // before becoming valid again.
+        
+        Thread.sleep(WAIT_TIME);
+        
+        while (searchService.isIndexValid(project) && numWaits < NUM_WAITS) {
+            Thread.sleep(WAIT_TIME);
+            numWaits++;
+        }
 
         String query = "<Named_entity.value=\"LOC\"/>";
 
