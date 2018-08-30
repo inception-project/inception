@@ -64,6 +64,7 @@ public class TestFixtures
         kb.setLabelIri(RDFS.LABEL);
         kb.setPropertyTypeIri(RDF.PROPERTY);
         kb.setDescriptionIri(RDFS.COMMENT);
+        kb.setDefaultLanguage("en");
 
         kb.setReification(reification);
         return kb;

@@ -35,13 +35,24 @@ public final class SPARQLQueryStore
     
     private static final String optionalLanguageFilteredValue(String aProperty, String aLanguage)
     {
-        String escapedLang = NTriplesUtil.escapeString(aLanguage);
+        StringBuilder fragment = new StringBuilder();
         
-        return String.join("\n"
-                , "  OPTIONAL {"
-                , "    ?s " + aProperty + " ?l ."
-                , "    FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"" + escapedLang + "\"))"
-                , "  }");
+        fragment.append("  OPTIONAL {\n");
+        fragment.append("    ?s ").append(aProperty).append(" ?l .\n");
+        
+        if (aLanguage != null) {
+            // If a certain language is specified, we look exactly for that
+            String escapedLang = NTriplesUtil.escapeString(aLanguage);
+            fragment.append("    FILTER(LANGMATCHES(LANG(?l), \"").append(escapedLang).append("\"))\n");
+        }
+        else {
+            // If no language is specified, we look for statements without a language as otherwise
+            // we might easily run into trouble on multi-lingual resources where we'd get all the
+            // labels in all the languages being retrieved if we simply didn't apply any filter.
+            fragment.append("    FILTER(LANG(?l) = \"\")\n");
+        }
+        fragment.append("  }\n");
+        return fragment.toString();
     }
     
     /** 

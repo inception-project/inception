@@ -1455,6 +1455,10 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
 
         englishInstance.setLanguage("de");
         sut.updateInstance(kb, englishInstance);
+        
+        // Make sure we retrieve the German version now
+        kb.setDefaultLanguage("de");
+        
         KBInstance germanInstance = sut.readInstance(kb, englishHandle.getIdentifier()).get();
         assertThat(germanInstance.getLanguage())
             .as("Check that the language has successfully been changed.")
@@ -1471,6 +1475,10 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
 
         englishProperty.setLanguage("de");
         sut.updateProperty(kb, englishProperty);
+        
+        // Make sure we retrieve the German version now
+        kb.setDefaultLanguage("de");
+        
         KBProperty germanProperty = sut.readProperty(kb, englishHandle.getIdentifier()).get();
         assertThat(germanProperty.getLanguage())
             .as("Check that the language has successfully been changed.")
@@ -1487,6 +1495,10 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
 
         englishConcept.setLanguage("de");
         sut.updateConcept(kb, englishConcept);
+
+        // Make sure we retrieve the German version now
+        kb.setDefaultLanguage("de");
+        
         KBConcept germanConcept = sut.readConcept(kb, englishHandle.getIdentifier()).get();
         assertThat(germanConcept.getLanguage())
             .as("Check that the language has successfully been changed.")
