@@ -64,7 +64,7 @@ public class TaskConsumer
                     task.run();
                     log.info("Indexing task {} completed successfully.", task);
                 }
-                catch (Exception e) {
+                catch (Throwable e) {
                     log.error("Indexing task {} failed.", task, e);
                 }
             }
