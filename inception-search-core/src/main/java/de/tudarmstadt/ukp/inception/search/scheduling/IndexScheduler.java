@@ -24,13 +24,17 @@ import java.util.concurrent.BlockingQueue;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 
+import org.apache.uima.jcas.JCas;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.inception.search.scheduling.tasks.IndexDocumentTask;
 import de.tudarmstadt.ukp.inception.search.scheduling.tasks.ReindexTask;
 import de.tudarmstadt.ukp.inception.search.scheduling.tasks.Task;
 
@@ -68,12 +72,51 @@ public class IndexScheduler
         enqueue(new ReindexTask(aProject));
     }
 
+    public void enqueueIndexDocument(SourceDocument aSourceDocument, JCas aJCas)
+    {
+        // Index source document
+        enqueue(new IndexDocumentTask(aSourceDocument, aJCas));
+    }
+
+    public void enqueueIndexDocument(AnnotationDocument aAnnotationDocument, JCas aJCas)
+    {
+        // Index annotation document
+        enqueue(new IndexDocumentTask(aAnnotationDocument, aJCas));
+    }
+    
     public synchronized void enqueue(Task aRunnable)
     {
-        // If there is no indexing in the queue on for this project, enqueue it
-        if (!isIndexing(aRunnable.getProject())) {
-            queue.offer(aRunnable);
-            log.info("Enqueued new indexing task: {}", aRunnable);
+        if (aRunnable.getAnnotationDocument() == null && aRunnable.getSourceDocument() == null) {
+            // Project indexing
+            // If there is no indexing in the queue on for this project, enqueue it
+            if (!isIndexing(aRunnable.getProject())) {
+                queue.offer(aRunnable);
+                log.info("Enqueued new indexing task: {}", aRunnable);
+            }
+        }
+        else if (aRunnable.getSourceDocument() != null) {
+            // Source document indexing
+            // If there is no indexing in the queue on for this project, enqueue it
+            if (!isIndexingDocument(aRunnable.getSourceDocument())) {
+                queue.offer(aRunnable);
+                log.info("Enqueued new source document indexing task: {}", aRunnable);
+            }
+            else {
+                log.debug("No source document indexing task enqueued due to a previous "
+                        + "enqueued task: {}", aRunnable);
+            }
+        }
+        else if (aRunnable.getAnnotationDocument() != null) {
+            // Annotation document indexing
+            // If there is no indexing in the queue on for this project, enqueue it
+            if (!isIndexingDocument(aRunnable.getAnnotationDocument())) {
+                queue.offer(aRunnable);
+                log.info("Enqueued new document indexing task: {}", aRunnable);
+            }
+            else {
+                log.debug("No annotation document indexing task enqueued due to a previous "
+                        + "enqueued task: {}", aRunnable);
+            }
         }
     }
 
@@ -99,4 +142,31 @@ public class IndexScheduler
         }
         return false;
     }
+
+    public boolean isIndexingDocument(SourceDocument aSourceDocument)
+    {
+        Iterator<Task> it = queue.iterator();
+        while (it.hasNext()) {
+            Task t = it.next();
+            if (t.getProject().equals(aSourceDocument.getProject())
+                    && t.getAnnotationDocument().getId() == aSourceDocument.getId()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean isIndexingDocument(AnnotationDocument aAnnotationDocument)
+    {
+        Iterator<Task> it = queue.iterator();
+        while (it.hasNext()) {
+            Task t = it.next();
+            if (t.getProject().equals(aAnnotationDocument.getProject())
+                    && t.getAnnotationDocument().getId() == aAnnotationDocument.getId()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 }
