@@ -26,6 +26,8 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.text.BreakIterator;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -53,6 +55,8 @@ import org.apache.lucene.index.SegmentReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.Terms;
 import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.search.spans.SpanWeight;
 import org.apache.lucene.search.spans.Spans;
 import org.apache.lucene.store.Directory;
@@ -106,8 +110,11 @@ public class MtasDocumentIndex
     /** The Constant FIELD_CONTENT. */
     private static final String FIELD_CONTENT = "content";
 
-    /** The Constant FIELD_CONTENT. */
+    /** The Constant FIELD_USER. */
     private static final String FIELD_USER = "user";
+
+    /** The Constant FIELD_TIMESTAMP. */
+    private static final String FIELD_TIMESTAMP = "timestamp";
 
     // Default prefix for CQL queries
     private static final String DEFAULT_PREFIX = "Token";
@@ -430,14 +437,26 @@ public class MtasDocumentIndex
                         "Indexing document in project [{}]. sourceId: {}, annotationId: {}, "
                                 + "user: {}",
                         project.getName(), aSourceDocumentId, aAnnotationDocumentId, aUser);
+                
+                // Prepare bytearray with document content to be indexed
                 ByteArrayOutputStream bos = new ByteArrayOutputStream();
                 XmiCasSerializer.serialize(aJCas.getCas(), null, bos, true, null);
                 bos.close();
+
+                // Calculate timestamp that will be indexed
+                DateTimeFormatter dtFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
+                LocalDateTime now = LocalDateTime.now();
+                String currentTime = dtFormatter.format(now);
+
+                // Create new Lucene document
                 Document doc = new Document();
+                
+                // Add indexed fields
                 doc.add(new StringField(FIELD_ID, String.valueOf(aSourceDocumentId) + "/"
                         + String.valueOf(aAnnotationDocumentId), Field.Store.YES));
                 doc.add(new StringField(FIELD_TITLE, aDocumentTitle, Field.Store.YES));
                 doc.add(new StringField(FIELD_USER, aUser, Field.Store.YES));
+                doc.add(new StringField(FIELD_TIMESTAMP, currentTime, Field.Store.YES));
                 doc.add(new TextField(FIELD_CONTENT, new String(bos.toByteArray(), "UTF-8"),
                         Field.Store.YES));
     
@@ -518,6 +537,52 @@ public class MtasDocumentIndex
     }
 
     /**
+     * Remove a specific document from the index based on its timestamp
+     * 
+     * @param aSourceDocumentId
+     *            The ID of the source document to be removed
+     * @param aSourceDocumentId
+     *            The ID of the annotation document to be removed
+     * @param aUser
+     *            The owner of the document to be removed
+     * @param timestamp
+     *            The timestamp of the document to be removed
+     */
+    private void deindexDocument(long aSourceDocumentId, long aAnnotationDocumentId, String aUser,
+            String aTimestamp)
+        throws IOException
+    {
+        if (indexWriter != null) {
+            log.debug(
+                    "Removing document from index in project [{}]. sourceId: {}, annotationId: {}, "
+                            + "user: {}, timestamp: {}",
+                    project.getName(), aSourceDocumentId, aAnnotationDocumentId, aUser, aTimestamp);
+
+            // Delete document based on its id and timestamp
+            indexWriter
+                    .deleteDocuments(
+                            new Term(FIELD_ID,
+                                    String.format("%d/%d", aSourceDocumentId,
+                                            aAnnotationDocumentId)),
+                            new Term(FIELD_TIMESTAMP, aTimestamp));
+
+            indexWriter.commit();
+
+            log.info(
+                    "Removed document from index in project [{}]. sourceId: {}, annotationId: {}, "
+                            + "user: {}",
+                    project.getName(), aSourceDocumentId, aAnnotationDocumentId, aUser);
+        }
+        else {
+            log.debug(
+                    "Aborted removal of document from index in project [{}]. sourceId: {}, "
+                            + "annotationId: {}, " + "user: {} - indexWriter was null.",
+                    project.getName(), aSourceDocumentId, aAnnotationDocumentId, aUser);
+        }
+        return;
+    }
+
+    /**
      * Remove source document from the index
      * 
      * @param aDocument
@@ -539,6 +604,19 @@ public class MtasDocumentIndex
     public void deindexDocument(AnnotationDocument aDocument) throws IOException
     {
         deindexDocument(aDocument.getDocument().getId(), aDocument.getId(), aDocument.getUser());
+    }
+
+    /**
+     * Remove annotation document from the index based on its timestamp
+     * 
+     * @param aDocument
+     *            The document to be removed
+     */
+    @Override
+    public void deindexDocument(AnnotationDocument aDocument, String aTimestamp) throws IOException
+    {
+        deindexDocument(aDocument.getDocument().getId(), aDocument.getId(), aDocument.getUser(),
+                aTimestamp);
     }
 
     /**
@@ -754,5 +832,55 @@ public class MtasDocumentIndex
             return name.substring(pos + 1, name.length());
         }
         return name;
+    }
+    
+    /*
+     * (non-Javadoc)
+     * 
+     * @see de.tudarmstadt.ukp.inception.search.index.PhysicalIndex#getTimestamp(de.tudarmstadt.ukp.
+     * clarin.webanno.model.AnnotationDocument)
+     */
+    @Override
+    public String getTimestamp(AnnotationDocument aDocument)
+    {
+        String result = "";
+
+        String user = aDocument.getUser();
+
+        try {
+
+            // Prepare index searcher for accessing index
+            Directory directory = FSDirectory.open(getIndexDir().toPath());
+            IndexReader indexReader = DirectoryReader.open(directory);
+            IndexSearcher indexSearcher = new IndexSearcher(indexReader);
+
+            // Prepare query for the annotation document for this user
+            Term term = new Term(FIELD_ID,
+                    String.format("%d/%d", aDocument.getDocument().getId(), aDocument.getId()));
+            
+            TermQuery query = new TermQuery(term);
+//                    (FIELD_ID,
+//                    String.format("%d/%d", aDocument.getDocument().getId(), aDocument.getId()),
+//                    FIELD_USER, user);
+
+            // Do query
+            TopDocs docs = indexSearcher.search(query, 1);
+
+            if (docs.scoreDocs.length > 0) {
+                // If there are results, retrieve first document, since all results should come
+                // from the same document
+                Document document = indexSearcher.doc(docs.scoreDocs[0].doc);
+
+                // Retrieve the timestamp field if it exists
+                if (document.getField(FIELD_TIMESTAMP) != null) {
+                    result = document.getField(FIELD_TIMESTAMP).stringValue();
+                }
+            }
+        }
+        catch (IOException e) {
+            log.error("I/O error trying to read document timestamp", e);
+        }
+
+        return result;
     }
 }

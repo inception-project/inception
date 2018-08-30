@@ -253,18 +253,33 @@ public class SearchServiceImpl
     @Override
     public void indexDocument(AnnotationDocument aAnnotationDocument, JCas aJCas)
     {
+        log.debug("Indexing annotation document {} for user {} in project [{}]",
+                aAnnotationDocument.getName(), aAnnotationDocument.getUser(),
+                aAnnotationDocument.getProject());
+
         // Retrieve index entry for the project
         Index index = getIndexFromMemory(aAnnotationDocument.getProject());
 
         if (canAddDocumentToIndex(index)) {
             try {
-                // Remove annotation document from index.
-                log.trace("Remove annotation document from index");
-                index.getPhysicalIndex().deindexDocument(aAnnotationDocument);
-
+                // Retrieve the timestamp for the current indexed annotation document
+                String timestamp = index.getPhysicalIndex().getTimestamp(aAnnotationDocument);
+                
                 // Add annotation document to the index again
                 log.trace("Add annotation document to index");
                 index.getPhysicalIndex().indexDocument(aAnnotationDocument, aJCas);
+                
+                if (!timestamp.equals("")) {
+                    // If there was a previous timestamped indexed annotation document,
+                    // remove it from index
+                    log.trace("Remove previous annotation document from index based "
+                            + "on last timestamp");
+                    index.getPhysicalIndex().deindexDocument(aAnnotationDocument, timestamp);
+                }
+
+                log.debug("Finished indexing annotation document {} for user {} in project [{}]",
+                        aAnnotationDocument.getName(), aAnnotationDocument.getUser(),
+                        aAnnotationDocument.getProject());
             }
             catch (IOException e) {
                 log.error("Error indexing source document [{}]({}) in project [{}]({})",
