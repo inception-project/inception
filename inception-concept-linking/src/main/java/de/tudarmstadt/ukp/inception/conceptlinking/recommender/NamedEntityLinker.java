@@ -75,7 +75,7 @@ public class NamedEntityLinker
 
     private int numPredictions = 3;
 
-    private static final Key<Collection<ImmutablePair<String, Collection<AnnotationFS>>>> KEY_MODEL
+    public static final Key<Collection<ImmutablePair<String, Collection<AnnotationFS>>>> KEY_MODEL
         = new Key<>("model");
 
     public NamedEntityLinker(Recommender aRecommender, KnowledgeBaseService aKbService,
@@ -113,8 +113,8 @@ public class NamedEntityLinker
                 tokenType);
             for (Map.Entry<AnnotationFS, Collection<AnnotationFS>> e : sentences.entrySet()) {
                 Collection<AnnotationFS> tokens = e.getValue().stream()
-                    //TODO maybe it must be hardcoded to "value"
-                    .filter(a -> a.getFeatureValue(feature) != null)  
+                    // If the identifier has not been set
+                    .filter(a -> a.getStringValue(feature) == null)
                     .collect(Collectors.toSet());
                 namesPerDocument.addAll(tokens);
             }
@@ -142,8 +142,7 @@ public class NamedEntityLinker
             Type sentenceType = getType(aCas, Sentence.class);
             Type tokenType = getType(aCas, Token.class);
 
-            // Does it have to be ordered?
-            select(aCas, sentenceType).parallelStream().forEach(sentence -> {
+            select(aCas, sentenceType).forEach(sentence -> {
                 List<AnnotationFS> tokenAnnotations = selectCovered(tokenType, sentence);
                 predictSentence(aContext, tokenAnnotations, jCas);
             });
@@ -151,7 +150,6 @@ public class NamedEntityLinker
         catch (CASException e) {
             log.error("An error when to trying to access the JCas from Cas.", e);
         }
-
     }
 
     private void predictSentence(RecommenderContext aContext, List<AnnotationFS> aTokenAnnotations,
@@ -200,10 +198,11 @@ public class NamedEntityLinker
             if (kb.isPresent() && kb.get().isSupportConceptLinking()) {
                 handles.addAll(readCandidates(kb.get(), aCoveredText, aBegin, aJcas));
             }
-        } //TODO if-else
-        for (KnowledgeBase kb : kbService.getEnabledKnowledgeBases(recommender.getProject())) {
-            if (kb.isSupportConceptLinking()) {
-                handles.addAll(readCandidates(kb, aCoveredText, aBegin, aJcas));
+        } else {
+            for (KnowledgeBase kb : kbService.getEnabledKnowledgeBases(recommender.getProject())) {
+                if (kb.isSupportConceptLinking()) {
+                    handles.addAll(readCandidates(kb, aCoveredText, aBegin, aJcas));
+                }
             }
         }
 
