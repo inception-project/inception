@@ -26,10 +26,28 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 public interface FeatureIndexingSupport
     extends BeanNameAware
 {
+    public static final String ATTRIBUTE_SEP = ".";
+    public static final String SPECIAL_SEP = "-";
+    
     String getId();
 
     boolean accepts(AnnotationFeature aFeature);
 
-    MultiValuedMap<String, String> indexFeatureValue(AnnotationFeature aFeature,
-            AnnotationFS aAnnotation);
+    /**
+     * Extracts key/value pairs from the given annotation/feature to be added to a search index.
+     * 
+     * @param aFieldPrefix
+     *            the prefix of the field into which the values are to be indexed. All keys in the
+     *            produced map will start with this value. Usually, we use the UI name of the layer
+     *            to which the annotation belongs.
+     * @param aAnnotation
+     *            the annotation from which to extract the values.
+     * @param aFeaturePrefix
+     *            a prefix to be added before the feature name. This could be used to index nested
+     *            features.
+     * @param aFeature
+     *            the feature from which to extract the values.
+     */
+    MultiValuedMap<String, String> indexFeatureValue(String aFieldPrefix,
+            AnnotationFS aAnnotation, String aFeaturePrefix, AnnotationFeature aFeature);
 }

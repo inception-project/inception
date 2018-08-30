@@ -75,8 +75,8 @@ public class PrimitiveUimaIndexingSupport
     }
     
     @Override
-    public MultiValuedMap<String, String> indexFeatureValue(AnnotationFeature aFeature,
-            AnnotationFS aAnnotation)
+    public MultiValuedMap<String, String> indexFeatureValue(String aFieldPrefix,
+            AnnotationFS aAnnotation, String aFeaturePrefix, AnnotationFeature aFeature)
     {
         FeatureSupport<?> featSup = featureSupportRegistry.getFeatureSupport(aFeature);
         String featureValue = featSup.renderFeatureValue(aFeature, aAnnotation);
@@ -84,7 +84,8 @@ public class PrimitiveUimaIndexingSupport
         if (isEmpty(featureValue)) {
             return values;
         }
-        values.put(aFeature.getLayer().getUiName() + "." + aFeature.getUiName(), featureValue);
+        values.put(aFieldPrefix + aFeaturePrefix + ATTRIBUTE_SEP + aFeature.getUiName(),
+                featureValue);
         return values;
     }
 }
