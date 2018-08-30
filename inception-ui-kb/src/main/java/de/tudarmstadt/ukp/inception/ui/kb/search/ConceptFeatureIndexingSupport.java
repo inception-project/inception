@@ -43,7 +43,7 @@ public class ConceptFeatureIndexingSupport
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    public static final String KB_ENTITY = "KB.Entity";
+    public static final String KB_ENTITY = "KB" + SPECIAL_SEP + "Entity";
     public static final String INDEX_KB_CONCEPT = "class";
     public static final String INDEX_KB_INSTANCE = "instance";
     public static final String INDEX_KB_EXACT = "exact";
@@ -86,8 +86,8 @@ public class ConceptFeatureIndexingSupport
     }
     
     @Override
-    public MultiValuedMap<String, String> indexFeatureValue(AnnotationFeature aFeature,
-            AnnotationFS aAnnotation)
+    public MultiValuedMap<String, String> indexFeatureValue(String aFieldPrefix,
+            AnnotationFS aAnnotation, String aFeaturePrefix, AnnotationFeature aFeature)
     {
         // Returns KB IRI label after checking if the
         // feature type is associated with KB and feature value is not null
@@ -108,19 +108,19 @@ public class ConceptFeatureIndexingSupport
             return values;
         }
 
-        String field = aFeature.getLayer().getUiName();
+        String field = aFieldPrefix;
         
-        // Indexing <layer>.<feature>.exact=<UI label>
-        values.put(field + "." + aFeature.getUiName() + "." + INDEX_KB_EXACT,
+        // Indexing <layer>.<feature>-exact=<UI label>
+        values.put(field + ATTRIBUTE_SEP + aFeature.getUiName() + SPECIAL_SEP + INDEX_KB_EXACT,
                 featureObject.getUiLabel());
         // Indexing <layer>.<feature>=<UI label>
-        values.put(field + "." + aFeature.getUiName(),
+        values.put(field + ATTRIBUTE_SEP + aFeature.getUiName(),
                 featureObject.getUiLabel());
-        // Indexing: <layer>.<feature>.exact=<URI>
-        values.put(field + "." + aFeature.getUiName() + "." + INDEX_KB_EXACT,
+        // Indexing: <layer>.<feature>-exact=<URI>
+        values.put(field + ATTRIBUTE_SEP + aFeature.getUiName() + SPECIAL_SEP + INDEX_KB_EXACT,
                 featureObject.getIdentifier());
         // Indexing: <layer>.<feature>=<URI>
-        values.put(field + "." + aFeature.getUiName(),
+        values.put(field + ATTRIBUTE_SEP + aFeature.getUiName(),
                 featureObject.getIdentifier());
 
         // The following fields are used by the mentions panes on the KB page in order to find all
@@ -137,7 +137,8 @@ public class ConceptFeatureIndexingSupport
             if (kbService.hasImplicitNamespace(parentConcept.getIdentifier())) {
                 continue;
             }
-            values.put(field + "." + aFeature.getUiName(), parentConcept.getUiLabel());
+            values.put(field + aFeaturePrefix + ATTRIBUTE_SEP + aFeature.getUiName(),
+                    parentConcept.getUiLabel());
         }
         return values;
     }
