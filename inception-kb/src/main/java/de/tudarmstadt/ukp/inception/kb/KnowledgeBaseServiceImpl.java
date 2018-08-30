@@ -960,7 +960,6 @@ public class KnowledgeBaseServiceImpl
         return parentConceptList;
     }
 
-
     // Need to work on the query for variable inputs like owl:intersectionOf, rdf:rest*/rdf:first
     @Override
     public List<KBHandle> listChildConcepts(KnowledgeBase aKB, String aParentIdentifier,
@@ -1141,13 +1140,13 @@ public class KnowledgeBaseServiceImpl
         }
     }
     
+    
     /**
      * Read identifier IRI and return {@link Optional} of {@link KBObject}
      * 
      * @return {@link Optional} of {@link KBObject} of type {@link KBConcept} or {@link KBInstance}
      */
-    @Override
-    public Optional<KBObject> readKBIdentifier(Project aProject, String aIdentifier)
+    @Override public Optional<KBObject> readKBIdentifier(Project aProject, String aIdentifier)
     {
         for (KnowledgeBase kb : getKnowledgeBases(aProject)) {
             Optional<KBObject> handle = readKBIdentifier(kb, aIdentifier);
@@ -1158,22 +1157,21 @@ public class KnowledgeBaseServiceImpl
         return Optional.empty();
     }
     
-    
     @Override
-    public Optional<KBObject> readKBIdentifier(KnowledgeBase kb, String aIdentifier)
+    public Optional<KBObject> readKBIdentifier(KnowledgeBase aKb, String aIdentifier)
     {
-        try (RepositoryConnection conn = getConnection(kb)) {
+        try (RepositoryConnection conn = getConnection(aKb)) {
             ValueFactory vf = conn.getValueFactory();
             RepositoryResult<Statement> stmts = RdfUtils.getStatements(conn,
-                    vf.createIRI(aIdentifier), kb.getTypeIri(), kb.getClassIri(), true);
+                    vf.createIRI(aIdentifier), aKb.getTypeIri(), aKb.getClassIri(), true);
             if (stmts.hasNext()) {
-                KBConcept kbConcept = KBConcept.read(conn, vf.createIRI(aIdentifier), kb);
+                KBConcept kbConcept = KBConcept.read(conn, vf.createIRI(aIdentifier), aKb);
                 if (kbConcept != null) {
                     return Optional.of(kbConcept);
                 }
             }
             else if (!stmts.hasNext()) {
-                Optional<KBInstance> kbInstance = readInstance(kb, aIdentifier);
+                Optional<KBInstance> kbInstance = readInstance(aKb, aIdentifier);
                 if (kbInstance.isPresent()) {
                     return kbInstance.flatMap((p) -> Optional.of(p));
                 }
@@ -1183,8 +1181,6 @@ public class KnowledgeBaseServiceImpl
             log.error("Reading KB Entries failed.", e);
             return Optional.empty();
         }
-
         return Optional.empty();
     }
-
 }

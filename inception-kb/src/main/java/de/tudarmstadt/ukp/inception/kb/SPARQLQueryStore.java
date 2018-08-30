@@ -100,7 +100,7 @@ public final class SPARQLQueryStore
             , "  }"
             , "}"
             , "LIMIT " + LIMIT);
-  
+
     // Query to retrieve super class concept for a concept
     public static final String PARENT_CONCEPT = String.join("\n"
             , SPARQL_PREFIX
