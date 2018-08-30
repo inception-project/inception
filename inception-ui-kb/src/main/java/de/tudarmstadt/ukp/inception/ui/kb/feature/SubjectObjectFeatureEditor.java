@@ -384,7 +384,7 @@ public class SubjectObjectFeatureEditor
             }
         }
         catch (Exception e) {
-            // LOG.error("Unable to read traits", e);
+            LOG.error("Unable to read traits", e);
             error("Unable to read traits: " + ExceptionUtils.getRootCauseMessage(e));
             IPartialPageRequestHandler target = RequestCycle.get()
                 .find(IPartialPageRequestHandler.class);
