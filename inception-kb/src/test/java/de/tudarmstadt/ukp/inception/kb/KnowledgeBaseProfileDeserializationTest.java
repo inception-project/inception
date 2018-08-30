@@ -23,8 +23,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseAccess;
-import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseAccessType;
 import org.junit.Test;
 
 import com.fasterxml.jackson.core.JsonParseException;
@@ -33,6 +31,8 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
+import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseAccess;
+import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseAccessType;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseMapping;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 
