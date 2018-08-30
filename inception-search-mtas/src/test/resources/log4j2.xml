@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration status="WARN">
-
   <Appenders>
     <Console name="ConsoleAppender" target="SYSTEM_OUT">
       <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} %level{length=5} %logger{1} - %msg%n" />
@@ -8,8 +7,9 @@
   </Appenders>
 
   <Loggers>
-    <Logger name="mtas" level="WARN"/>
-    <Root level="warn">
+    <Logger name="mtas" level="DEBUG"/>
+    <Logger name="de.tudarmstadt.ukp.inception.search" level="DEBUG"/>
+    <Root level="WARN">
       <AppenderRef ref="ConsoleAppender" />
     </Root>
   </Loggers>
