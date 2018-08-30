@@ -43,6 +43,7 @@ import org.apache.wicket.extensions.wizard.IWizardStep;
 import org.apache.wicket.extensions.wizard.dynamic.DynamicWizardModel;
 import org.apache.wicket.extensions.wizard.dynamic.DynamicWizardStep;
 import org.apache.wicket.extensions.wizard.dynamic.IDynamicWizardStep;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
@@ -329,7 +330,14 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
                         // import from classpath
                         File kbFile = kbService.readKbFileFromClassPathResource(accessUrl);
                         downloadedFiles.add(kbFile);
-
+                        break;
+                    default:
+                        error(
+                            "Knowledge base profile is not configured correctly. Local KB must have access type DOWNLOAD or CLASSPATH");
+                        log.error(
+                            "Knowledge base profile is not configured correctly. Local KB must have access type DOWNLOAD or CLASSPATH");
+                        aTarget.addChildren(getPage(), IFeedback.class);
+                        return;
                     }
 
                     setKbIRIsAccordingToProfile(model.getObject().getKb(),
@@ -343,6 +351,7 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
             catch (IOException e) {
                 error("Unable to download or import knowledge base file" + e.getMessage());
                 log.error("Unable to download or import knowledge base file", e);
+                aTarget.addChildren(getPage(), IFeedback.class);
             }
         }
         
