@@ -468,7 +468,7 @@ public interface KnowledgeBaseService
      */
     void defineBaseProperties(KnowledgeBase akb);
 
-    /**
+    /**F
      * Read an identifier value to return {@link KBObject}
      * @param aProject Project to read the KB identifier
      * @param aIdentifier String value for IRI
@@ -477,8 +477,14 @@ public interface KnowledgeBaseService
     Optional<KBObject> readKBIdentifier(Project aProject, String aIdentifier);
 
     /**
-
-     * Retrieves the parent concept for an identifier
+     * Read an identifier value from a particular kb to return {@link KBObject}
+     * @param akb
+     * @param aIdentifier
+     * @return {@link Optional} of {@link KBObject} of type {@link KBConcept} or {@link KBInstance}
+     */
+    Optional<KBObject> readKBIdentifier(KnowledgeBase akb, String aIdentifier);
+    
+     /** Retrieves the parent concept for a concept identifier
      * 
      * @param aKB The knowledge base
      * @param aHandle a concept.
@@ -513,14 +519,6 @@ public interface KnowledgeBaseService
 
     boolean hasImplicitNamespace(String s);
 
-   /**
-     * Read an identifier value from a particular kb to return {@link KBObject}
-     * @param kb
-     * @param aIdentifier
-     * @return {@link Optional} of {@link KBObject} of type {@link KBConcept} or {@link KBInstance}
-     */
-    Optional<KBObject> readKBIdentifier(KnowledgeBase kb, String aIdentifier);
-
     /**
      * List all the concepts
      * @param kb The knowledge base from which concepts will be listed
@@ -528,4 +526,5 @@ public interface KnowledgeBaseService
      * @return list of all the properties {@link KBHandle} 
      */
     List<KBHandle> listAllConcepts(KnowledgeBase kb, boolean aAll) throws QueryEvaluationException;
+
 }

@@ -29,6 +29,7 @@ public class ConceptFeatureTraits
 
     private String repositoryId;
     private String scope;
+    private ConceptFeatureValueType allowedValueType;
 
     public ConceptFeatureTraits()
     {
@@ -54,4 +55,14 @@ public class ConceptFeatureTraits
     {
         scope = aScope;
     }
+
+    public ConceptFeatureValueType getAllowedValueType()
+    {
+        return allowedValueType;
+    }
+
+    public void setAllowedValueType(ConceptFeatureValueType aAllowedType) {
+        allowedValueType = aAllowedType;
+    }
 }
+
