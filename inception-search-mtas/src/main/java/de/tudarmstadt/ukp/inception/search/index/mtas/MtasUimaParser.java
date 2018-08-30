@@ -158,6 +158,7 @@ public class MtasUimaParser
         throws MtasParserException, MtasConfigException
     {
         long start = System.currentTimeMillis();
+        log.debug("DEBUG - Starting creation of token collection");
 
         JCas jcas;
         try {
@@ -170,7 +171,7 @@ public class MtasUimaParser
 
         try {
             createTokenCollection(jcas);
-            log.trace("Created token collection in {}ms", (System.currentTimeMillis() - start));
+            log.debug("Created token collection in {}ms", (System.currentTimeMillis() - start));
             return tokenCollection;
         }
         catch (Exception e) {
