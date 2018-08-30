@@ -218,7 +218,7 @@ public class NamedEntityLinker
             JCas jCas;
             try {
                 jCas = documentService.readAnnotationCas(annoDoc);
-                return clService.disambiguate(kb, null, token.getCoveredText(),
+                return clService.disambiguate(kb, "", token.getCoveredText(),
                     token.getOffset().getBeginCharacter(), jCas);
             }
             catch (IOException e) {

@@ -58,7 +58,7 @@ public class ConceptFeatureTraits
 
     public ConceptFeatureValueType getAllowedValueType()
     {
-        return allowedValueType;
+        return allowedValueType != null ? allowedValueType : ConceptFeatureValueType.INSTANCE;
     }
 
     public void setAllowedValueType(ConceptFeatureValueType aAllowedType) {
