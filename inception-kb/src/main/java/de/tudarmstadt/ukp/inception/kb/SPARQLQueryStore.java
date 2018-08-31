@@ -51,7 +51,7 @@ public final class SPARQLQueryStore
             // labels in all the languages being retrieved if we simply didn't apply any filter.
             fragment.append("    FILTER(LANG(?l) = \"\")\n");
         }
-        fragment.append("LIMIT 1 }\n");
+        fragment.append(" }\n");
         return fragment.toString();
     }
     
@@ -61,7 +61,7 @@ public final class SPARQLQueryStore
     public static final String queryForAllConceptList(KnowledgeBase aKB)
     {
         return String.join("\n"
-                , SPARQLQueryStore.SPARQL_PREFIX
+                , SPARQL_PREFIX
                 , "SELECT DISTINCT ?s ?l ?d WHERE { "
                 , "  { ?s ?pTYPE ?oCLASS . } "
                 , "  UNION { ?someSubClass ?pSUBCLASS ?s . } ."
@@ -77,7 +77,7 @@ public final class SPARQLQueryStore
     public static final String listInstances(KnowledgeBase aKB)
     {
         return String.join("\n"
-                , SPARQLQueryStore.SPARQL_PREFIX
+                , SPARQL_PREFIX
                 , "SELECT DISTINCT ?s ?l ?d WHERE {"
                 , "  ?s ?pTYPE ?oPROPERTY ."
                 , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage())
@@ -93,7 +93,7 @@ public final class SPARQLQueryStore
     public static final String listRootConcepts(KnowledgeBase aKB)
     {
         return String.join("\n"
-                , SPARQLQueryStore.SPARQL_PREFIX    
+                , SPARQL_PREFIX    
                 , "SELECT DISTINCT ?s ?l ?d WHERE { "
                 , "  { ?s ?pTYPE ?oCLASS . } "
                 , "  UNION { ?someSubClass ?pSUBCLASS ?s . } ."
@@ -115,8 +115,7 @@ public final class SPARQLQueryStore
     public static final String listChildConcepts(KnowledgeBase aKB)
     {
         return String.join("\n"
-                , SPARQLQueryStore.SPARQL_PREFIX    
-                , SPARQLQueryStore.SPARQL_PREFIX    
+                , SPARQL_PREFIX    
                 , "SELECT DISTINCT ?s ?l ?d WHERE { "
                 , "  {?s ?pSUBCLASS ?oPARENT . }" 
                 , "  UNION { ?s ?pTYPE ?oCLASS ."
