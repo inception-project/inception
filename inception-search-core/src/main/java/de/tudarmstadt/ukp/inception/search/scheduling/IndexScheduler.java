@@ -121,13 +121,14 @@ public class IndexScheduler
         else if (aRunnable.getAnnotationDocument() != null) {
             // Annotation document indexing task
 
-            // Try to update the task currently enqueued for the same annotation document/user with
-            // the current document value (if there is an enqueued task).
+            // Try to update the document CAS in the task currently enqueued for the same 
+            // annotation document/user (if there is an enqueued task).
             // This must be done so that the task will take into account the
             // latest changes to the annotation document.
 
             if (updateIndexingDocumentTask(aRunnable.getAnnotationDocument(),
-                    aRunnable.getAnnotationDocument().getUser())) {
+                    aRunnable.getAnnotationDocument().getUser(),
+                    aRunnable.getJCas())) {
                 // There was a task in the queue, it was updated with the current document.
                 log.debug("Annotation document indexing task already in the queue. Just updated "
                         + " the document: {}", aRunnable);
@@ -195,8 +196,8 @@ public class IndexScheduler
     }
 
     /**
-     * Update the indexing task that is currently in the queue for this annotation document/user,
-     * if there is one.
+     * Update the CAS in the indexing task that is currently in the queue for this annotation 
+     * document/user, if there is one.
      * 
      * @param aAnnotationDocument
      *          The annotation document
@@ -206,7 +207,8 @@ public class IndexScheduler
      *          True if there was an indexing task in the queue for this annotation document/user.
      *          False otherwise.
      */
-    public boolean updateIndexingDocumentTask(AnnotationDocument aAnnotationDocument, String aUser)
+    public boolean updateIndexingDocumentTask(AnnotationDocument aAnnotationDocument, String aUser,
+            JCas aJCas)
     {
         Iterator<Task> it = queue.iterator();
         while (it.hasNext()) {
@@ -214,7 +216,7 @@ public class IndexScheduler
             if (task.getProject().equals(aAnnotationDocument.getProject())
                     && task.getAnnotationDocument().getId() == aAnnotationDocument.getId()
                     && task.getUser().equals(aUser)) {
-                task.setAnnotationDocument(aAnnotationDocument);
+                task.setJCas(aJCas);
                 return true;
             }
         }

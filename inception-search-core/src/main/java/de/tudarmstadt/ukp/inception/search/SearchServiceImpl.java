@@ -253,9 +253,10 @@ public class SearchServiceImpl
     @Override
     public void indexDocument(AnnotationDocument aAnnotationDocument, JCas aJCas)
     {
-        log.debug("Indexing annotation document {} for user {} in project [{}]",
-                aAnnotationDocument.getName(), aAnnotationDocument.getUser(),
-                aAnnotationDocument.getProject());
+        log.debug("Indexing annotation document [{}]({}) in project [{}]({})",
+                aAnnotationDocument.getName(), aAnnotationDocument.getId(),
+                aAnnotationDocument.getProject().getName(),
+                aAnnotationDocument.getProject().getId());
 
         // Retrieve index entry for the project
         Index index = getIndexFromMemory(aAnnotationDocument.getProject());
@@ -266,23 +267,30 @@ public class SearchServiceImpl
                 String timestamp = index.getPhysicalIndex().getTimestamp(aAnnotationDocument);
                 
                 // Add annotation document to the index again
-                log.trace("Add annotation document to index");
+                log.debug("Add to the index: annotation document [{}]({}) in project [{}]({})",
+                        aAnnotationDocument.getName(), aAnnotationDocument.getId(),
+                        aAnnotationDocument.getProject().getName(),
+                        aAnnotationDocument.getProject().getId());
                 index.getPhysicalIndex().indexDocument(aAnnotationDocument, aJCas);
                 
                 if (!timestamp.equals("")) {
                     // If there was a previous timestamped indexed annotation document,
                     // remove it from index
-                    log.trace("Remove previous annotation document from index based "
-                            + "on last timestamp");
+                    log.debug("Remove from the index previous annotation document [{}]({}) "
+                            + "in project [{}]({}) based on last timestamp {}",
+                            aAnnotationDocument.getName(), aAnnotationDocument.getId(),
+                            aAnnotationDocument.getProject().getName(),
+                            aAnnotationDocument.getProject().getId(), timestamp);
                     index.getPhysicalIndex().deindexDocument(aAnnotationDocument, timestamp);
                 }
 
-                log.debug("Finished indexing annotation document {} for user {} in project [{}]",
-                        aAnnotationDocument.getName(), aAnnotationDocument.getUser(),
-                        aAnnotationDocument.getProject());
+                log.debug("Finished indexing annotation document [{}]({}) in project [{}]({})",
+                        aAnnotationDocument.getName(), aAnnotationDocument.getId(),
+                        aAnnotationDocument.getProject().getName(),
+                        aAnnotationDocument.getProject().getId());
             }
             catch (IOException e) {
-                log.error("Error indexing source document [{}]({}) in project [{}]({})",
+                log.error("Error indexing annotation document [{}]({}) in project [{}]({})",
                         aAnnotationDocument.getName(), aAnnotationDocument.getId(),
                         aAnnotationDocument.getProject().getName(),
                         aAnnotationDocument.getProject().getId(), e);
