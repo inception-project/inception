@@ -54,6 +54,8 @@ import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.index.SegmentReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.Terms;
+import org.apache.lucene.search.BooleanClause;
+import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TopDocs;
@@ -468,8 +470,9 @@ public class MtasDocumentIndex
     
                 log.info(
                         "Document indexed in project [{}]. sourceId: {}, annotationId: {}, "
-                                + "user: {}",
-                        project.getName(), aSourceDocumentId, aAnnotationDocumentId, aUser);
+                                + "user: {}, timestamp: {}",
+                        project.getName(), aSourceDocumentId, aAnnotationDocumentId, aUser,
+                        currentTime);
             }
             catch (SAXException e) {
                 log.error("Unable to index document", e);
@@ -558,13 +561,16 @@ public class MtasDocumentIndex
                             + "user: {}, timestamp: {}",
                     project.getName(), aSourceDocumentId, aAnnotationDocumentId, aUser, aTimestamp);
 
-            // Delete document based on its id and timestamp
-            indexWriter
-                    .deleteDocuments(
-                            new Term(FIELD_ID,
-                                    String.format("%d/%d", aSourceDocumentId,
-                                            aAnnotationDocumentId)),
-                            new Term(FIELD_TIMESTAMP, aTimestamp));
+            // Prepare boolean query with the two obligatory terms (id and timestamp)
+            BooleanQuery.Builder booleanQuery = new BooleanQuery.Builder()
+                    .add(new TermQuery(new Term(FIELD_ID,
+                            String.format("%d/%d", aSourceDocumentId, aAnnotationDocumentId))),
+                            BooleanClause.Occur.MUST)
+                    .add(new TermQuery(new Term(FIELD_TIMESTAMP, aTimestamp)),
+                            BooleanClause.Occur.MUST);
+
+            // Delete document based on the previous query
+            indexWriter.deleteDocuments(booleanQuery.build());
 
             indexWriter.commit();
 
