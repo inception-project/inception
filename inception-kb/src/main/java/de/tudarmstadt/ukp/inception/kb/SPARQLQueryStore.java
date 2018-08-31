@@ -56,6 +56,22 @@ public final class SPARQLQueryStore
     }
     
     /** 
+     * Query to list all concepts from a knowledge base.
+     */
+    public static final String queryForAllConceptList(KnowledgeBase aKB)
+    {
+        return String.join("\n"
+                , SPARQLQueryStore.SPARQL_PREFIX
+                , "SELECT DISTINCT ?s ?l ?d WHERE { "
+                , "  { ?s ?pTYPE ?oCLASS . } "
+                , "  UNION { ?someSubClass ?pSUBCLASS ?s . } ."
+                , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage())
+                , optionalLanguageFilteredValue("?pDESCRIPTION", aKB.getDefaultLanguage())
+                , "}"
+                , "LIMIT " + LIMIT);
+    }
+    
+    /** 
      * Query to list properties from a knowledge base.
      */
     public static final String queryForPropertyList(KnowledgeBase aKB)
