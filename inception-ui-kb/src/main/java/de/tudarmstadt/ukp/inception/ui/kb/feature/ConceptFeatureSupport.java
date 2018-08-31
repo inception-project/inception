@@ -63,8 +63,10 @@ public class ConceptFeatureSupport
     implements FeatureSupport<ConceptFeatureTraits>
 {
     public static final String PREFIX = "kb:";
-    public static final String ANY_CONCEPT = "<ANY>";
-    public static final String TYPE_ANY_CONCEPT = PREFIX + ANY_CONCEPT;
+
+    public static final String ANY_OBJECT = "<ANY>";
+    public static final String TYPE_ANY_OBJECT = PREFIX + ANY_OBJECT;
+
     
     private static final Logger LOG = LoggerFactory.getLogger(ConceptFeatureSupport.class);
 
@@ -113,7 +115,7 @@ public class ConceptFeatureSupport
     {
         // We just start with no specific scope at all (ANY) and let the user refine this via
         // the traits editor
-        return asList(new FeatureType(TYPE_ANY_CONCEPT, "KB: Concept", featureSupportId));
+        return asList(new FeatureType(TYPE_ANY_OBJECT, "KB: Concept/Instance", featureSupportId));
     }
 
     @Override
@@ -144,20 +146,21 @@ public class ConceptFeatureSupport
             ConceptFeatureTraits t = readTraits(aKey.getAnnotationFeature());
     
             // Use the concept from a particular knowledge base
-            Optional<KBObject> handle;
+            Optional<KBObject> kbObject;
             if (t.getRepositoryId() != null) {
-                handle = kbService
+                kbObject = kbService
                         .getKnowledgeBaseById(aKey.getAnnotationFeature().getProject(),
                                 t.getRepositoryId())
                         .flatMap(kb -> kbService.readKBIdentifier(kb, aKey.getLabel()));
             }
+            
             // Use the concept from any knowledge base (leave KB unselected)
             else {
-                handle = kbService.readKBIdentifier(aKey.getAnnotationFeature().getProject(),
+                kbObject = kbService.readKBIdentifier(aKey.getAnnotationFeature().getProject(),
                         aKey.getLabel());
+
             }
-            
-            return handle.map(KBObject::getUiLabel).orElseThrow(NoSuchElementException::new);
+            return kbObject.map(KBObject::getUiLabel).orElseThrow(NoSuchElementException::new);
         }
         catch (NoSuchElementException e) {
             LOG.error("No label for feature value [{}]", aKey.getLabel());
@@ -256,7 +259,7 @@ public class ConceptFeatureSupport
         
         // If there is no scope set in the trait, see if once can be extracted from the legacy
         // location which is the feature type.
-        if (traits.getScope() == null && !TYPE_ANY_CONCEPT.equals(aFeature.getType())) {
+        if (traits.getScope() == null && !TYPE_ANY_OBJECT.equals(aFeature.getType())) {
             traits.setScope(aFeature.getType().substring(PREFIX.length()));
         }
         
@@ -271,7 +274,7 @@ public class ConceptFeatureSupport
             aFeature.setType(PREFIX + aTraits.getScope());
         }
         else {
-            aFeature.setType(TYPE_ANY_CONCEPT);
+            aFeature.setType(TYPE_ANY_OBJECT);
         }
         
         try {
