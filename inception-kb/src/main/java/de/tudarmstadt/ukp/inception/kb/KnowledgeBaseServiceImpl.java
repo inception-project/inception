@@ -742,16 +742,16 @@ public class KnowledgeBaseServiceImpl
     }
     
     @Override
-    public List<KBHandle> listPropertiesRangeValue(KnowledgeBase kb, String aProperty,
+    public List<KBHandle> listPropertiesRangeValue(KnowledgeBase aKB, String aProperty,
             boolean aIncludeInferred, boolean aAll)
         throws QueryEvaluationException
     {
-        List<KBHandle> resultList = read(kb, (conn) -> {
+        List<KBHandle> resultList = read(aKB, (conn) -> {
             ValueFactory vf = conn.getValueFactory();
-            String QUERY = SPARQLQueryStore.PROPERTY_SPECIFIC_RANGE;
+            String QUERY = SPARQLQueryStore.queryForPropertySpecificRange(aKB);
             TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
             tupleQuery.setBinding("aProperty", vf.createIRI(aProperty));
-            tupleQuery.setBinding("pLABEL", kb.getLabelIri());
+            tupleQuery.setBinding("pLABEL", aKB.getLabelIri());
             tupleQuery.setIncludeInferred(aIncludeInferred);
 
             return evaluateListQuery(tupleQuery, aAll);
@@ -835,7 +835,7 @@ public class KnowledgeBaseServiceImpl
         throws QueryEvaluationException
     {
         List<KBHandle> resultList = read(aKB, (conn) -> {
-            String QUERY = SPARQLQueryStore.PARENT_CONCEPT;
+            String QUERY = SPARQLQueryStore.queryForParentConcept(aKB);
             ValueFactory vf = SimpleValueFactory.getInstance();
             TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
             tupleQuery.setBinding("oChild", vf.createIRI(aIdentifier));
@@ -856,7 +856,7 @@ public class KnowledgeBaseServiceImpl
         throws QueryEvaluationException
     {
         List<KBHandle> resultList = read(aKB, (conn) -> {
-            String QUERY = SPARQLQueryStore.CONCEPT_FOR_INSTANCE;
+            String QUERY = SPARQLQueryStore.queryForConceptForInstance(aKB);
             ValueFactory vf = SimpleValueFactory.getInstance();
             TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
             tupleQuery.setBinding("pTYPE", aKB.getTypeIri());

@@ -51,7 +51,7 @@ public final class SPARQLQueryStore
             // labels in all the languages being retrieved if we simply didn't apply any filter.
             fragment.append("    FILTER(LANG(?l) = \"\")\n");
         }
-        fragment.append("  }\n");
+        fragment.append("LIMIT 1 }\n");
         return fragment.toString();
     }
     
@@ -104,7 +104,7 @@ public final class SPARQLQueryStore
                 , "    ?s owl:intersectionOf ?list . }"
                 , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage())
                 , optionalLanguageFilteredValue("?pDESCRIPTION", aKB.getDefaultLanguage())
-                , "}"
+                , "} "
                 , "LIMIT " + LIMIT);
     }
     
@@ -172,53 +172,50 @@ public final class SPARQLQueryStore
     /**
      * Query to get property specific range elements
      */
-    public static final String PROPERTY_SPECIFIC_RANGE = String.join("\n"
-            , SPARQL_PREFIX
-            , "SELECT DISTINCT ?s ?l ?d WHERE {"
-            , "  ?aProperty rdfs:range/(owl:unionOf/rdf:rest*/rdf:first)* ?s "
-            , "  OPTIONAL {"
-            , "    ?aProperty ?pLABEL ?l ."
-            , "    FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\"))"
-            , "  }"
-            , "  OPTIONAL {"
-            , "    ?s ?pDESCRIPTION ?d ."
-            , "    FILTER(LANG(?d) = \"\" || LANGMATCHES(LANG(?d), \"en\"))"
-            , "  }"
-            , "}"
-            , "LIMIT " + LIMIT);
+    public static final String queryForPropertySpecificRange(KnowledgeBase aKB)
+    {
+        return String.join("\n"
+                , SPARQL_PREFIX
+                , "SELECT DISTINCT ?s ?l ?d WHERE {"
+                , "  ?aProperty rdfs:range/(owl:unionOf/rdf:rest*/rdf:first)* ?s "
+                , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage())
+                , optionalLanguageFilteredValue("?pDESCRIPTION", aKB.getDefaultLanguage())
+                , "}"
+                , "LIMIT " + LIMIT);
 
-    // Query to retrieve super class concept for a concept
-    public static final String PARENT_CONCEPT = String.join("\n"
-            , SPARQL_PREFIX
-            , "SELECT DISTINCT ?s ?l ?d WHERE { "
-            , "   {?oChild ?pSUBCLASS ?s . }"
-            , "   UNION { ?s ?pTYPE ?oCLASS ."
-            , "     ?oChild owl:intersectionOf ?list . "
-            , "     FILTER EXISTS {?list rdf:rest*/rdf:first ?s. } }"
-            , "   OPTIONAL { "
-            , "     ?s ?pLABEL ?l . "
-            , "     FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\")) "
-            , "   }"
-            , "  OPTIONAL {"
-            , "    ?s ?pDESCRIPTION ?d ."
-            , "    FILTER(LANG(?d) = \"\" || LANGMATCHES(LANG(?d), \"en\"))"
-            , "  }"
-            , "} ");
+    }
     
+    /**
+     *  Query to retrieve super class concept for a concept
+     */
+    public static final String queryForParentConcept(KnowledgeBase aKB)
+    {
+        return String.join("\n"
+                , SPARQL_PREFIX
+                , "SELECT DISTINCT ?s ?l ?d WHERE { "
+                , "   {?oChild ?pSUBCLASS ?s . }"
+                , "   UNION { ?s ?pTYPE ?oCLASS ."
+                , "     ?oChild owl:intersectionOf ?list . "
+                , "     FILTER EXISTS {?list rdf:rest*/rdf:first ?s. } }"
+                , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage())
+                , optionalLanguageFilteredValue("?pDESCRIPTION", aKB.getDefaultLanguage())
+                , "}");
+
+    }
     
-    // Query to retrieve concept for an instance
-    public static final String CONCEPT_FOR_INSTANCE = String.join("\n"
-            , SPARQL_PREFIX
-            , "SELECT DISTINCT ?s ?l ?d WHERE {"
-            , "  ?pInstance ?pTYPE ?s ."
-            , "  OPTIONAL {"
-            , "    ?pInstance ?pLABEL ?l ."
-            , "    FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\"))"
-            , "  }"
-            , "  OPTIONAL {"
-            , "    ?s ?pDESCRIPTION ?d ."
-            , "    FILTER(LANG(?d) = \"\" || LANGMATCHES(LANG(?d), \"en\"))"
-            , "  }"
-            , "}"
-            , "LIMIT " + LIMIT);
+    /**
+     *  Query to retrieve concept for an instance
+     */
+    public static final String queryForConceptForInstance(KnowledgeBase aKB)
+    {
+        return String.join("\n"
+                , SPARQL_PREFIX
+                , "SELECT DISTINCT ?s ?l ?d WHERE {"
+                , "  ?pInstance ?pTYPE ?s ."
+                , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage())
+                , optionalLanguageFilteredValue("?pDESCRIPTION", aKB.getDefaultLanguage())
+                , "}");
+
+    }
+    
 }
