@@ -85,7 +85,7 @@ public class QueryUtil
             "     VALUES ?labelpredicate {rdfs:label skos:altLabel}",
             "      {",
             "        ?e2 ?labelpredicate ?"
-                        + aString + " @" + (aLanguage != null ? aLanguage : "en") +" .",
+                        + aString + " @" + (aLanguage != null ? aLanguage : "en") + " .",
             "        OPTIONAL",
             "        {",
             "          ?e2 ?descriptionIri ?description.",
