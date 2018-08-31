@@ -487,12 +487,11 @@ public interface KnowledgeBaseService
      /** Retrieves the parent concept for a concept identifier
      * 
      * @param aKB The knowledge base
-     * @param aIdentifier a concept identifier.
+     * @param aHandle a concept.
      * @param aAll True if entities with implicit namespaces (e.g. defined by RDF)
      * @return List of parent concept for an identifier
      */
-    List<KBHandle> getParentConcept(KnowledgeBase aKB, String aIdentifier,
-            boolean aAll)
+    List<KBHandle> getParentConcept(KnowledgeBase aKB, KBHandle aHandle, boolean aAll)
         throws QueryEvaluationException;
     
     /**
