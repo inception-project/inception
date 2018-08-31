@@ -695,31 +695,17 @@ public class KnowledgeBaseServiceImpl
     
 
     @Override
-    public List<KBHandle> list(KnowledgeBase kb, IRI aType, boolean aIncludeInferred, boolean aAll,
+    public List<KBHandle> list(KnowledgeBase aKB, IRI aType, boolean aIncludeInferred, boolean aAll,
             int aLimit)
         throws QueryEvaluationException
     {
-        List<KBHandle> resultList = read(kb, (conn) -> {
-            String QUERY = String.join("\n"
-                         , "SELECT DISTINCT ?s ?l ?d WHERE {"
-                         , "  ?s ?pTYPE ?oPROPERTY ."
-                         , "  OPTIONAL {"
-                         , "    ?s ?pLABEL ?l ."
-                         , "    FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"" +
-                         (kb.getDefaultLanguage() != null ? kb.getDefaultLanguage() : "en") + "\"))"
-                         , "  }"
-                         , "  OPTIONAL {"
-                         , "    ?s ?pDESCRIPTION ?d ."
-                         , "    FILTER(LANG(?d) = \"\" || LANGMATCHES(LANG(?d), \"" +
-                         (kb.getDefaultLanguage() != null ? kb.getDefaultLanguage() : "en") + "\"))"
-                         , "  }"
-                         , "}"
-                         , "LIMIT " + aLimit);
+        List<KBHandle> resultList = read(aKB, (conn) -> {
+            String QUERY = SPARQLQueryStore.listInstances(aKB);
             TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
-            tupleQuery.setBinding("pTYPE", kb.getTypeIri());
+            tupleQuery.setBinding("pTYPE", aKB.getTypeIri());
             tupleQuery.setBinding("oPROPERTY", aType);
-            tupleQuery.setBinding("pLABEL", kb.getLabelIri());
-            tupleQuery.setBinding("pDESCRIPTION", kb.getDescriptionIri());
+            tupleQuery.setBinding("pLABEL", aKB.getLabelIri());
+            tupleQuery.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
             tupleQuery.setIncludeInferred(aIncludeInferred);
 
             return evaluateListQuery(tupleQuery, aAll);
@@ -813,28 +799,7 @@ public class KnowledgeBaseServiceImpl
         }
         else {
             resultList = read(aKB, (conn) -> {
-                String QUERY = String.join("\n"
-                    , SPARQLQueryStore.SPARQL_PREFIX    
-                    , "SELECT DISTINCT ?s ?l ?d WHERE { "
-                    , "  { ?s ?pTYPE ?oCLASS . } "
-                    , "  UNION { ?someSubClass ?pSUBCLASS ?s . } ."
-                    , "  FILTER NOT EXISTS { "
-                    , "    ?s ?pSUBCLASS ?otherSub . "
-                    , "    FILTER (?s != ?otherSub) }"
-                    , "  FILTER NOT EXISTS { "
-                    , "    ?s owl:intersectionOf ?list . }"
-                    , "  OPTIONAL { "
-                    , "    ?s ?pLABEL ?l . "
-                    , "    FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"" +
-                    (aKB.getDefaultLanguage() != null ? aKB.getDefaultLanguage() : "en") + "\"))"
-                    , "  } "
-                    , "  OPTIONAL {"
-                    , "    ?s ?pDESCRIPTION ?d ."
-                    , "    FILTER(LANG(?d) = \"\" || LANGMATCHES(LANG(?d), \"" +
-                    (aKB.getDefaultLanguage() != null ? aKB.getDefaultLanguage() : "en") + "\"))"
-                    , "  }"
-                    , "} "
-                    , "LIMIT " + SPARQLQueryStore.LIMIT);
+                String QUERY = SPARQLQueryStore.listRootConcepts(aKB);
                 TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
                 tupleQuery.setBinding("pTYPE", aKB.getTypeIri());
                 tupleQuery.setBinding("oCLASS", aKB.getClassIri());
@@ -957,25 +922,7 @@ public class KnowledgeBaseServiceImpl
         // this subclass is *not* returned. We do presently *not* support mixed schemes in a
         // single KB.
         List<KBHandle> resultList = read(aKB, (conn) -> {
-            String QUERY = String.join("\n"
-                , SPARQLQueryStore.SPARQL_PREFIX    
-                , "SELECT DISTINCT ?s ?l ?d WHERE { "
-                , "  {?s ?pSUBCLASS ?oPARENT . }" 
-                , "  UNION { ?s ?pTYPE ?oCLASS ."
-                , "    ?s owl:intersectionOf ?list . "
-                , "    FILTER EXISTS { ?list rdf:rest*/rdf:first ?oPARENT} }"
-                , "  OPTIONAL { "
-                , "    ?s ?pLABEL ?l . "
-                , "    FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"" +
-                (aKB.getDefaultLanguage() != null ? aKB.getDefaultLanguage() : "en") + "\"))"
-                , "  } "
-                , "  OPTIONAL {"
-                , "    ?s ?pDESCRIPTION ?d ."
-                , "    FILTER(LANG(?d) = \"\" || LANGMATCHES(LANG(?d), \"" +
-                (aKB.getDefaultLanguage() != null ? aKB.getDefaultLanguage() : "en") + "\"))"
-                , "  }"
-                , "} "
-                , "LIMIT " + aLimit);
+            String QUERY = SPARQLQueryStore.listChildConcepts(aKB);
             ValueFactory vf = SimpleValueFactory.getInstance();
             TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
             tupleQuery.setBinding("oPARENT", vf.createIRI(aParentIdentifier));

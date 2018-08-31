@@ -72,6 +72,65 @@ public final class SPARQLQueryStore
     }
     
     /** 
+     * Query to list all instances from a knowledge base.
+     */
+    public static final String listInstances(KnowledgeBase aKB)
+    {
+        return String.join("\n"
+                , SPARQLQueryStore.SPARQL_PREFIX
+                , "SELECT DISTINCT ?s ?l ?d WHERE {"
+                , "  ?s ?pTYPE ?oPROPERTY ."
+                , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage())
+                , optionalLanguageFilteredValue("?pDESCRIPTION", aKB.getDefaultLanguage())
+                , "}"
+                , "LIMIT " + LIMIT);
+    }
+    
+    
+    /** 
+     * Query to list root concepts from a knowledge base.
+     */
+    public static final String listRootConcepts(KnowledgeBase aKB)
+    {
+        return String.join("\n"
+                , SPARQLQueryStore.SPARQL_PREFIX    
+                , "SELECT DISTINCT ?s ?l ?d WHERE { "
+                , "  { ?s ?pTYPE ?oCLASS . } "
+                , "  UNION { ?someSubClass ?pSUBCLASS ?s . } ."
+                , "  FILTER NOT EXISTS { "
+                , "    ?s ?pSUBCLASS ?otherSub . "
+                , "    FILTER (?s != ?otherSub) }"
+                , "  FILTER NOT EXISTS { "
+                , "    ?s owl:intersectionOf ?list . }"
+                , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage())
+                , optionalLanguageFilteredValue("?pDESCRIPTION", aKB.getDefaultLanguage())
+                , "}"
+                , "LIMIT " + LIMIT);
+    }
+    
+
+    /** 
+     * Query to list child concepts from a knowledge base.
+     */
+    public static final String listChildConcepts(KnowledgeBase aKB)
+    {
+        return String.join("\n"
+                , SPARQLQueryStore.SPARQL_PREFIX    
+                , SPARQLQueryStore.SPARQL_PREFIX    
+                , "SELECT DISTINCT ?s ?l ?d WHERE { "
+                , "  {?s ?pSUBCLASS ?oPARENT . }" 
+                , "  UNION { ?s ?pTYPE ?oCLASS ."
+                , "    ?s owl:intersectionOf ?list . "
+                , "    FILTER EXISTS { ?list rdf:rest*/rdf:first ?oPARENT} }"
+                , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage())
+                , optionalLanguageFilteredValue("?pDESCRIPTION", aKB.getDefaultLanguage())
+                , "}"
+                , "LIMIT " + LIMIT);
+    }
+    
+    
+    
+    /** 
      * Query to list properties from a knowledge base.
      */
     public static final String queryForPropertyList(KnowledgeBase aKB)
