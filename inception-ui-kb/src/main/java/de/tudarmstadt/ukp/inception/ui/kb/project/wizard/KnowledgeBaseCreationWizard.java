@@ -139,8 +139,8 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
             profiles = kbService.readKnowledgeBaseProfiles();
         }
         catch (IOException e) {
-            error("Unable to read knowledge base profiles" + e.getMessage());
-            log.error("Unable to read knowledge base profiles", e);
+            error("Unable to read knowledge base profiles " + e.getMessage());
+            log.error("Unable to read knowledge base profiles ", e);
         }
         return profiles;
     }
@@ -349,8 +349,8 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
                 }
             }
             catch (IOException e) {
-                error("Unable to download or import knowledge base file" + e.getMessage());
-                log.error("Unable to download or import knowledge base file", e);
+                error("Unable to download or import knowledge base file " + e.getMessage());
+                log.error("Unable to download or import knowledge base file ", e);
                 aTarget.addChildren(getPage(), IFeedback.class);
             }
         }

@@ -20,10 +20,13 @@ package de.tudarmstadt.ukp.inception.kb;
 import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.junit.Test;
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -38,12 +41,14 @@ import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 
 public class KnowledgeBaseProfileDeserializationTest
 {
+    private final String KNOWLEDGEBASE_TEST_PROFILES_YAML = "kb_test_profiles.yaml";
+
     @Test
     public void checkThatDeserializationWorks() throws JsonParseException, JsonMappingException, IOException {
         String name = "Test KB";
         String url = "http://someurl/sparql";
         KnowledgeBaseAccessType accessType = KnowledgeBaseAccessType.CLASSPATH;
-        RepositoryType type = RepositoryType.REMOTE;
+        RepositoryType type = RepositoryType.LOCAL;
         String classIri = "http://www.w3.org/2000/01/rdf-schema#Class";
         String subclassIri = "http://www.w3.org/2000/01/rdf-schema#subClassOf";
         String typeIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
@@ -62,27 +67,15 @@ public class KnowledgeBaseProfileDeserializationTest
         referenceProfile.setName(name);
         referenceProfile.setAccess(referenceAccess);
         referenceProfile.setType(type);
-        
-        String test_yaml = "test_profile:\n    "
-                + "name: " + name + "\n    "
-                + "access: \n        "
-                + "access-url: " + url + " \n        "
-                + "access-type: " + accessType + " \n    "
-                + "type: " + type + " \n    "
-                + "mapping: \n        "
-                + "class: " + classIri + "\n        "
-                + "subclass-of: " + subclassIri + "\n        "
-                + "instance-of: " + typeIri + "\n        "
-                + "label: " + label + "\n        "
-                + "property-type: " + propertyTypeIri + "\n        "
-                + "description: " + descriptionIri;
-        
-        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 
-        Map<String, KnowledgeBaseProfile> profiles = new HashMap<>();
-
-        profiles = mapper.readValue(test_yaml,
-                new TypeReference<HashMap<String, KnowledgeBaseProfile>>(){});
+        PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
+        Map<String, KnowledgeBaseProfile> profiles;
+        try (Reader r = new InputStreamReader(
+            resolver.getResource(KNOWLEDGEBASE_TEST_PROFILES_YAML).getInputStream())) {
+            ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+            profiles = mapper
+                .readValue(r, new TypeReference<HashMap<String, KnowledgeBaseProfile>>() {});
+        }
         
         KnowledgeBaseProfile testProfile = profiles.get("test_profile");
         

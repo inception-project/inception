@@ -57,7 +57,10 @@ public enum SchemaProfile
         propertyTypeIri = aPropertyTypeIri;
     }
 
-    public String getLabel() { return label; }
+    public String getLabel()
+    {
+        return label;
+    }
 
     public IRI getClassIri()
     {
