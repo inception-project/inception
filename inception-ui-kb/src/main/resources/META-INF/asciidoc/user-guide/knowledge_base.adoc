@@ -20,6 +20,7 @@ For the local KB, the user can optionally choose a RDF file from which to import
 
 For remote KBs, INCEpTION provides the user with some pre-configured knowledge base such as WikiData, British Museum, BabelNet, DBPediaa or Yago. The user can also set up a custom remote KB, in which case the user needs to provide the SPARQL endpoint URL for the knowledge base as in the figure below.
 
+
 [.thumb]
 image::kb2.png[align="center"]
 
@@ -37,9 +38,11 @@ The knowledge base page provides the specific mentions of concepts and instances
 [.thumb]
 image::kb4.png[align="center"]
 
+
 The concept tree in this page is designed using the *subClass* relationship for the configured mapping. Each concept associates itself with a list of instances (in case it has one) on the *Instance* panel which appear when we click on a specific concept along with the *Mentions* of the concept in the annotated text. The click on a specific instance shows the panel for the list of statements associated with the instance along with *Mentions* of the instance in the annotated text. In the left bottom side of the page, it lists the set of properties from the knowledge base. Clicking on the property showcases the statements associated with the property such as labels, domains, ranges, etc. 
 
 In case the user has the privilege to edit the knowledge base, the user may add statements for concepts, instances and properties. 
+
 
 ==== Knowledge Base scope setting for feature layer
 
@@ -71,7 +74,4 @@ Selecting a specific property then further showcase the user with the range of v
 3. *String*: This is the default resource type where the user has an option to provide a string with a language tag or a URI as a resource which does not exist in KB.  
 
 4. *KB Resource*: This is provided as an option when the property has a range as a particular concept from the knowledge base. In this option, the user is provided with an auto-complete field with a list of knowledge base entities which includes the subclass and instances of the range specified for the property. 
-
-
-
 

@@ -338,7 +338,7 @@ public class MtasUimaParser
                             aAnnotation.getBegin(), aAnnotation.getEnd(), aRange);
                 }
                 
-                log.info("FEAT[{}-{}]: {}", aRange.getBegin(), aRange.getEnd(), fieldsAndValues);
+                log.trace("FEAT[{}-{}]: {}", aRange.getBegin(), aRange.getEnd(), fieldsAndValues);
             }
         }
         
@@ -373,7 +373,7 @@ public class MtasUimaParser
         mtasSentence.addPositionRange(aRange.getBegin(), aRange.getEnd());
         tokenCollection.add(mtasSentence);
         
-        log.info("TEXT[{}-{}]: {}={}", aRange.getBegin(), aRange.getEnd(), field, aValue);
+        log.trace("TEXT[{}-{}]: {}={}", aRange.getBegin(), aRange.getEnd(), field, aValue);
     }
 
     private void indexFeatureValue(String aField, String aValue, int aMtasId, int aBeginOffset,
