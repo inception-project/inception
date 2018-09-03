@@ -24,7 +24,6 @@ import org.apache.uima.jcas.JCas;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 /**
  * Abstract search task
@@ -34,12 +33,12 @@ public abstract class Task
     implements Runnable
 {
     private final Project project;
-    private final User user;
+    private final String user;
     private SourceDocument sourceDocument;
     private AnnotationDocument annotationDocument;
     private JCas jCas;
 
-    public Task(Project aProject, User aUser)
+    public Task(Project aProject, String aUser)
     {
         // notNull(aUser);
         notNull(aProject);
@@ -66,10 +65,10 @@ public abstract class Task
         project = aAnnotationDocument.getProject();
         annotationDocument = aAnnotationDocument;
         jCas = aJCas;
-        user = null;
+        user = aAnnotationDocument.getUser();
     }
 
-    public User getUser()
+    public String getUser()
     {
         return user;
     }
@@ -89,6 +88,11 @@ public abstract class Task
         return annotationDocument;
     }
 
+    public void setJCas(JCas aJCas)
+    {
+        jCas = aJCas;
+    }
+
     public JCas getJCas()
     {
         return jCas;
@@ -102,7 +106,7 @@ public abstract class Task
         builder.append(" [project=");
         builder.append(project.getName());
         builder.append(", user=");
-        builder.append((user == null) ? " " : user.getUsername());
+        builder.append((user == null) ? " " : user);
         builder.append(", sourceDocument=");
         builder.append(sourceDocument == null ? "null" : sourceDocument.getName());
         builder.append(", annotationDocument=");
