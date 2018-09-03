@@ -23,7 +23,6 @@ import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 
 public class StringLiteralValueEditor
@@ -39,7 +38,6 @@ public class StringLiteralValueEditor
 
         value = new TextArea<>("value");
         value.setOutputMarkupId(true);
-        value.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> t.add(getParent())));
         add(value);
 
         add(new TextField<>("language"));
