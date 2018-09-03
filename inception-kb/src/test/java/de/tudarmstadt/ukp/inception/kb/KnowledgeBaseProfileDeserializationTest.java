@@ -35,7 +35,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseAccess;
-import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseAccessType;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseMapping;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 
@@ -47,7 +46,6 @@ public class KnowledgeBaseProfileDeserializationTest
     public void checkThatDeserializationWorks() throws JsonParseException, JsonMappingException, IOException {
         String name = "Test KB";
         String url = "http://someurl/sparql";
-        KnowledgeBaseAccessType accessType = KnowledgeBaseAccessType.CLASSPATH;
         RepositoryType type = RepositoryType.LOCAL;
         String classIri = "http://www.w3.org/2000/01/rdf-schema#Class";
         String subclassIri = "http://www.w3.org/2000/01/rdf-schema#subClassOf";
