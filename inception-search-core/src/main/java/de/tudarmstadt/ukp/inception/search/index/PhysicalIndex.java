@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.search.index;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.uima.jcas.JCas;
 
@@ -66,5 +67,5 @@ public interface PhysicalIndex
      *          The document timestamp field value. Empty string if document is not found.
      * @throws IOException
      */
-    public String getTimestamp(AnnotationDocument aDocument) throws IOException;
+    public Optional<String> getTimestamp(AnnotationDocument aDocument) throws IOException;
 }

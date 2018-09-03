@@ -7,7 +7,7 @@
   </Appenders>
 
   <Loggers>
-    <Logger name="mtas" level="DEBUG"/>
+    <Logger name="mtas" level="INFO"/>
     <Logger name="de.tudarmstadt.ukp.inception.search" level="DEBUG"/>
     <Root level="WARN">
       <AppenderRef ref="ConsoleAppender" />

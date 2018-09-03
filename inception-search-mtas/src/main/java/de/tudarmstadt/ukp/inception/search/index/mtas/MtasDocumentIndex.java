@@ -34,8 +34,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.custom.CustomAnalyzer;
 import org.apache.lucene.analysis.miscellaneous.PerFieldAnalyzerWrapper;
@@ -856,53 +858,37 @@ public class MtasDocumentIndex
         return name;
     }
     
-    /*
-     * (non-Javadoc)
-     * 
-     * @see de.tudarmstadt.ukp.inception.search.index.PhysicalIndex#getTimestamp(de.tudarmstadt.ukp.
-     * clarin.webanno.model.AnnotationDocument)
-     */
     @Override
-    public String getTimestamp(AnnotationDocument aDocument)
+    public Optional<String> getTimestamp(AnnotationDocument aDocument) throws IOException
     {
-        String result = "";
+        Optional<String> result = Optional.empty();
 
-        String user = aDocument.getUser();
+        // Prepare index searcher for accessing index
+        Directory directory = FSDirectory.open(getIndexDir().toPath());
+        IndexReader indexReader = DirectoryReader.open(directory);
+        IndexSearcher indexSearcher = new IndexSearcher(indexReader);
 
-        try {
+        // Prepare query for the annotation document for this annotation document
+        Term term = new Term(FIELD_ID,
+                String.format("%d/%d", aDocument.getDocument().getId(), aDocument.getId()));
+        
+        TermQuery query = new TermQuery(term);
 
-            // Prepare index searcher for accessing index
-            Directory directory = FSDirectory.open(getIndexDir().toPath());
-            IndexReader indexReader = DirectoryReader.open(directory);
-            IndexSearcher indexSearcher = new IndexSearcher(indexReader);
+        // Do query
+        TopDocs docs = indexSearcher.search(query, 1);
 
-            // Prepare query for the annotation document for this user
-            Term term = new Term(FIELD_ID,
-                    String.format("%d/%d", aDocument.getDocument().getId(), aDocument.getId()));
-            
-            TermQuery query = new TermQuery(term);
-//                    (FIELD_ID,
-//                    String.format("%d/%d", aDocument.getDocument().getId(), aDocument.getId()),
-//                    FIELD_USER, user);
+        if (docs.scoreDocs.length > 0) {
+            // If there are results, retrieve first document, since all results should come
+            // from the same document
+            Document document = indexSearcher.doc(docs.scoreDocs[0].doc);
 
-            // Do query
-            TopDocs docs = indexSearcher.search(query, 1);
-
-            if (docs.scoreDocs.length > 0) {
-                // If there are results, retrieve first document, since all results should come
-                // from the same document
-                Document document = indexSearcher.doc(docs.scoreDocs[0].doc);
-
-                // Retrieve the timestamp field if it exists
-                if (document.getField(FIELD_TIMESTAMP) != null) {
-                    result = document.getField(FIELD_TIMESTAMP).stringValue();
-                }
+            // Retrieve the timestamp field if it exists
+            if (document.getField(FIELD_TIMESTAMP) != null) {
+                result = Optional.ofNullable(StringUtils
+                        .trimToNull(document.getField(FIELD_TIMESTAMP).stringValue()));
             }
         }
-        catch (IOException e) {
-            log.error("I/O error trying to read document timestamp", e);
-        }
-
+        
         return result;
     }
 }
