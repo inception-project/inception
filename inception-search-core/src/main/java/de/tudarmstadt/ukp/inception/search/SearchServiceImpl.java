@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
@@ -253,21 +254,45 @@ public class SearchServiceImpl
     @Override
     public void indexDocument(AnnotationDocument aAnnotationDocument, JCas aJCas)
     {
+        log.debug("Indexing annotation document [{}]({}) in project [{}]({})",
+                aAnnotationDocument.getName(), aAnnotationDocument.getId(),
+                aAnnotationDocument.getProject().getName(),
+                aAnnotationDocument.getProject().getId());
+
         // Retrieve index entry for the project
         Index index = getIndexFromMemory(aAnnotationDocument.getProject());
 
         if (canAddDocumentToIndex(index)) {
             try {
-                // Remove annotation document from index.
-                log.trace("Remove annotation document from index");
-                index.getPhysicalIndex().deindexDocument(aAnnotationDocument);
-
+                // Retrieve the timestamp for the current indexed annotation document
+                Optional<String> timestamp = index.getPhysicalIndex()
+                        .getTimestamp(aAnnotationDocument);
+                
                 // Add annotation document to the index again
-                log.trace("Add annotation document to index");
+                log.debug("Add to the index: annotation document [{}]({}) in project [{}]({})",
+                        aAnnotationDocument.getName(), aAnnotationDocument.getId(),
+                        aAnnotationDocument.getProject().getName(),
+                        aAnnotationDocument.getProject().getId());
                 index.getPhysicalIndex().indexDocument(aAnnotationDocument, aJCas);
+                
+                // If there was a previous timestamped indexed annotation document, remove it from 
+                // index
+                if (timestamp.isPresent()) {
+                    log.debug("Remove from the index previous annotation document [{}]({}) "
+                            + "in project [{}]({}) based on last timestamp {}",
+                            aAnnotationDocument.getName(), aAnnotationDocument.getId(),
+                            aAnnotationDocument.getProject().getName(),
+                            aAnnotationDocument.getProject().getId(), timestamp);
+                    index.getPhysicalIndex().deindexDocument(aAnnotationDocument, timestamp.get());
+                }
+
+                log.debug("Finished indexing annotation document [{}]({}) in project [{}]({})",
+                        aAnnotationDocument.getName(), aAnnotationDocument.getId(),
+                        aAnnotationDocument.getProject().getName(),
+                        aAnnotationDocument.getProject().getId());
             }
             catch (IOException e) {
-                log.error("Error indexing source document [{}]({}) in project [{}]({})",
+                log.error("Error indexing annotation document [{}]({}) in project [{}]({})",
                         aAnnotationDocument.getName(), aAnnotationDocument.getId(),
                         aAnnotationDocument.getProject().getName(),
                         aAnnotationDocument.getProject().getId(), e);
