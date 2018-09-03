@@ -3,7 +3,6 @@ test_profile:
   type: LOCAL
   access:
       access-url: http://someurl/sparql
-      access-type: CLASSPATH
   mapping:
       class: http://www.w3.org/2000/01/rdf-schema#Class
       subclass-of: http://www.w3.org/2000/01/rdf-schema#subClassOf

@@ -3,7 +3,6 @@ british_museum:
   type: REMOTE
   access:
       access-url: http://collection.britishmuseum.org/sparql
-      access-type: SPARQL
   mapping:
       class: http://www.w3.org/2000/01/rdf-schema#Class
       subclass-of: http://www.w3.org/2000/01/rdf-schema#subClassOf
@@ -16,7 +15,6 @@ wikidata:
   type: REMOTE
   access:
       access-url: https://query.wikidata.org/sparql
-      access-type: SPARQL
   mapping:
       class: http://www.wikidata.org/entity/Q35120
       subclass-of: http://www.wikidata.org/prop/direct/P279
@@ -29,7 +27,6 @@ virtuoso:
   type: REMOTE
   access:
       access-url: http://knowledgebase.ukp.informatik.tu-darmstadt.de:8890/sparql
-      access-type: SPARQL
   mapping:
       class: http://www.wikidata.org/entity/Q35120
       subclass-of: http://www.wikidata.org/prop/direct/P279
@@ -42,7 +39,6 @@ db_pedia:
   type: REMOTE
   access:
       access-url: http://dbpedia.org/sparql
-      access-type: SPARQL
   mapping:
       class: http://www.w3.org/2002/07/owl#Class
       subclass-of: http://www.w3.org/2000/01/rdf-schema#subClassOf
@@ -55,7 +51,6 @@ babel_net:
   type: REMOTE
   access:
       access-url: http://babelnet.org/sparql/
-      access-type: SPARQL
   mapping:
       class: http://www.w3.org/2000/01/rdf-schema#Class
       subclass-of: http://www.w3.org/2000/01/rdf-schema#subClassOf
@@ -68,7 +63,6 @@ yago:
   type: REMOTE
   access:
       access-url: https://linkeddata1.calcul.u-psud.fr/sparql
-      access-type: SPARQL
   mapping:
       class: http://www.w3.org/2002/07/owl#Class
       subclass-of: http://www.w3.org/2000/01/rdf-schema#subClassOf
@@ -81,7 +75,6 @@ wine_ontology:
   type: LOCAL
   access:
       access-url: classpath:de/tudarmstadt/ukp/inception/kb/pre-defined-knowledge-bases/wine.rdf
-      access-type: CLASSPATH
   mapping:
       class: http://www.w3.org/2002/07/owl#Class
       subclass-of: http://www.w3.org/2000/01/rdf-schema#subClassOf
@@ -94,7 +87,6 @@ wildlife_ontology:
   type: LOCAL
   access:
       access-url: https://www.bbc.co.uk/ontologies/wo/1.1.ttl
-      access-type: DOWNLOAD
   mapping:
       class: http://www.w3.org/2002/07/owl#Class
       subclass-of: http://www.w3.org/2000/01/rdf-schema#subClassOf
@@ -107,7 +99,6 @@ zbw-stw-economics:
   type: REMOTE
   access:
       access-url: http://zbw.eu/beta/sparql/stw/query
-      access-type: SPARQL
   mapping:
       class: http://www.w3.org/2004/02/skos/core#Concept
       subclass-of: http://www.w3.org/2004/02/skos/core#broader
@@ -120,7 +111,6 @@ zbw-gnd:
   type: REMOTE
   access:
       access-url: http://zbw.eu/beta/sparql/gnd/query
-      access-type: SPARQL
   mapping:
       class: http://www.w3.org/2004/02/skos/core#Concept
       subclass-of: http://www.w3.org/2004/02/skos/core#broader

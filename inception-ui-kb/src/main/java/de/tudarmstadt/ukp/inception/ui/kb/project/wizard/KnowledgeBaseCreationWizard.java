@@ -242,6 +242,7 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
 
         private static final long serialVersionUID = 8212277960059805657L;
         private static final String TMP_FILE_NAME = "inception_tmp_kb";
+        private static final String CLASSPATH_PREFIX = "classpath:";
         
         private CompoundPropertyModel<KnowledgeBaseWrapper> model;
         private FileUploadField fileUpload;
@@ -293,7 +294,7 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
                         new StringResourceModel("kb.wizard.steps.local.schemaOnMouseOver", this)
                             .setParameters(
                                 kbService.checkSchemaProfile(item.getModelObject()).getLabel(),
-                                item.getModelObject().getAccess().getAccessType())));
+                                getAccessTypeLabel(item.getModelObject()))));
                     item.add(link);
                 }
             };
@@ -316,29 +317,20 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
 
                     String accessUrl = selectedKnowledgeBaseProfile.getAccess().getAccessUrl();
 
-                    switch (selectedKnowledgeBaseProfile.getAccess().getAccessType()) {
-                    case DOWNLOAD:
+                    if (!accessUrl.startsWith(CLASSPATH_PREFIX)) {
                         // Download to tmp file
                         Path pathName = Paths.get(accessUrl);
                         File tmpFile = File
                             .createTempFile(TMP_FILE_NAME, pathName.getFileName().toString());
                         FileUtils.copyURLToFile(
-                            new URL(selectedKnowledgeBaseProfile.getAccess().getAccessUrl()),
+                            new URL(accessUrl),
                             tmpFile);
                         tmpImportFiles.put(pathName.getFileName().toString(), tmpFile);
-                        break;
-                    case CLASSPATH:
+                    }
+                    else {
                         // import from classpath
                         File kbFile = kbService.readKbFileFromClassPathResource(accessUrl);
                         model.getObject().getFiles().add(kbFile);
-                        break;
-                    default:
-                        error(
-                            "Knowledge base profile is not configured correctly. Local KB must have access type DOWNLOAD or CLASSPATH");
-                        log.error(
-                            "Knowledge base profile is not configured correctly. Local KB must have access type DOWNLOAD or CLASSPATH");
-                        aTarget.addChildren(getPage(), IFeedback.class);
-                        return;
                     }
 
                     setKbIRIsAccordingToProfile(model.getObject().getKb(),
@@ -353,6 +345,15 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
                 error("Unable to download or import knowledge base file " + e.getMessage());
                 log.error("Unable to download or import knowledge base file ", e);
                 aTarget.addChildren(getPage(), IFeedback.class);
+            }
+        }
+
+        private String getAccessTypeLabel(KnowledgeBaseProfile aProfile) {
+            if (aProfile.getAccess().getAccessUrl().startsWith(CLASSPATH_PREFIX)) {
+                return "CLASSPATH";
+            }
+            else {
+                return "DOWNLOAD";
             }
         }
         

@@ -61,7 +61,6 @@ public class KnowledgeBaseProfileDeserializationTest
 
         KnowledgeBaseAccess referenceAccess = new KnowledgeBaseAccess();
         referenceAccess.setAccessUrl(url);
-        referenceAccess.setAccessType(accessType);
 
         referenceProfile.setMapping(referenceMapping);
         referenceProfile.setName(name);
