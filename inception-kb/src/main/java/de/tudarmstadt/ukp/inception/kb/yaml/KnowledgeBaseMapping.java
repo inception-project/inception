@@ -48,15 +48,22 @@ public class KnowledgeBaseMapping implements Serializable
 
     @JsonProperty("property-type")
     private IRI propertyTypeIri;
+
+    @JsonProperty("property-label")
+    private IRI propertyLabelIri;
+
+    @JsonProperty("property-description")
+    private IRI propertyDescriptionIri;
     
     
-    @JsonCreator
-    public KnowledgeBaseMapping(@JsonProperty("class") String classIri,
-            @JsonProperty("subclass-of") String subclassIri,
-            @JsonProperty("instance-of") String typeIri,
-            @JsonProperty("description") String descriptionIri,
-            @JsonProperty("label") String labelIri,
-            @JsonProperty("property-type") String propertyTypeIri)
+    @JsonCreator public KnowledgeBaseMapping(@JsonProperty("class") String classIri,
+        @JsonProperty("subclass-of") String subclassIri,
+        @JsonProperty("instance-of") String typeIri,
+        @JsonProperty("description") String descriptionIri,
+        @JsonProperty("label") String labelIri,
+        @JsonProperty("property-type") String propertyTypeIri,
+        @JsonProperty("property-label") String propertyLabelIri,
+        @JsonProperty("property-description") String propertyDescriptionIri)
     {
         SimpleValueFactory vf = SimpleValueFactory.getInstance();
         this.classIri = vf.createIRI(classIri);
@@ -65,6 +72,8 @@ public class KnowledgeBaseMapping implements Serializable
         this.descriptionIri = vf.createIRI(descriptionIri);
         this.labelIri = vf.createIRI(labelIri);
         this.propertyTypeIri = vf.createIRI(propertyTypeIri);
+        this.propertyLabelIri = vf.createIRI(propertyLabelIri);
+        this.propertyDescriptionIri = vf.createIRI(propertyDescriptionIri);
     }
     
     public KnowledgeBaseMapping() {
@@ -130,7 +139,27 @@ public class KnowledgeBaseMapping implements Serializable
     {
         propertyTypeIri = aPropertyTypeIri;
     }
-    
+
+    public IRI getPropertyLabelIri()
+    {
+        return propertyLabelIri;
+    }
+
+    public void setPropertyLabelIri(IRI aPropertyLabelIri)
+    {
+        propertyLabelIri = aPropertyLabelIri;
+    }
+
+    public IRI getPropertyDescriptionIri()
+    {
+        return propertyDescriptionIri;
+    }
+
+    public void setPropertyDescriptionIri(IRI aPropertyDescriptionIri)
+    {
+        propertyDescriptionIri = aPropertyDescriptionIri;
+    }
+
     @Override
     public boolean equals(Object o)
     {
@@ -146,13 +175,15 @@ public class KnowledgeBaseMapping implements Serializable
                 && Objects.equals(typeIri, that.typeIri) 
                 && Objects.equals(labelIri, that.labelIri)
                 && Objects.equals(propertyTypeIri, that.propertyTypeIri)
-                && Objects.equals(descriptionIri, that.descriptionIri);
+                && Objects.equals(descriptionIri, that.descriptionIri)
+                && Objects.equals(propertyLabelIri, that.propertyLabelIri)
+                && Objects.equals(propertyDescriptionIri, that.propertyDescriptionIri);
     }
 
     @Override
     public int hashCode()
     {
         return Objects.hash(classIri, subclassIri, typeIri, propertyTypeIri, descriptionIri,
-                labelIri);
+                labelIri, propertyLabelIri, propertyDescriptionIri);
     }
 }
