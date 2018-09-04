@@ -20,17 +20,16 @@ package de.tudarmstadt.ukp.inception.kb.graph;
 import static de.tudarmstadt.ukp.inception.kb.graph.RdfUtils.readFirst;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
 import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
-import org.eclipse.rdf4j.model.vocabulary.XMLSchema;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
@@ -47,11 +46,11 @@ public class KBProperty
     private String identifier;
     private String name;
     private String description;
-    private URI domain;
-    /**
-     * Declares the class or data type of the object in a triple whose predicate is that property.
-     */
-    private URI range;
+    private String domain;
+    private KnowledgeBase kb;
+    private String range;
+    private String language;
+
     private List<Statement> originalStatements = new ArrayList<>();
 
     public KBProperty()
@@ -61,6 +60,20 @@ public class KBProperty
     public KBProperty(String aName)
     {
         name = aName;
+    }
+    
+    public KBProperty(String aName, String aIdentifier)
+    {
+        name = aName;
+        identifier = aIdentifier;
+    }
+
+    public KBProperty(String aName, String aIdentifier,String aDomain, String aRange)
+    {
+        name = aName;
+        identifier = aIdentifier;
+        domain = aDomain;
+        range = aRange;
     }
 
     @Override
@@ -87,6 +100,18 @@ public class KBProperty
         name = aName;
     }
 
+    @Override
+    public KnowledgeBase getKB()
+    {
+        return kb;
+    }
+
+    @Override
+    public void setKB(KnowledgeBase akb)
+    {
+        kb = akb;
+    }
+
     public String getDescription()
     {
         return description;
@@ -97,24 +122,36 @@ public class KBProperty
         description = aDescription;
     }
 
-    public URI getDomain()
+    public String getDomain()
     {
         return domain;
     }
 
-    public void setDomain(URI aDomain)
+    public void setDomain(String aDomain)
     {
         domain = aDomain;
     }
 
-    public URI getRange()
+    public String getRange()
     {
         return range;
     }
 
-    public void setRange(URI aRange)
+    public void setRange(String aRange)
     {
         range = aRange;
+    }
+
+    @Override
+    public String getLanguage()
+    {
+        return language;
+    }
+
+    @Override
+    public void setLanguage(String aLanguage)
+    {
+        language = aLanguage;
     }
 
     public List<Statement> getOriginalStatements()
@@ -134,15 +171,28 @@ public class KBProperty
         aConn.add(typeStmt);
 
         if (isNotBlank(name)) {
-            Statement nameStmt = vf.createStatement(subject, kb.getLabelIri(),
-                    vf.createLiteral(name));
+            Literal nameLiteral;
+            if (language == null) {
+                nameLiteral = vf.createLiteral(name);
+            }
+            else {
+                nameLiteral = vf.createLiteral(name, language);
+            }
+            Statement nameStmt = vf.createStatement(subject, kb.getLabelIri(), nameLiteral);
             originalStatements.add(nameStmt);
             aConn.add(nameStmt);
         }
 
         if (isNotBlank(description)) {
+            Literal descriptionLiteral;
+            if (language == null) {
+                descriptionLiteral = vf.createLiteral(description);
+            }
+            else {
+                descriptionLiteral = vf.createLiteral(description, language);
+            }
             Statement descStmt = vf
-                .createStatement(subject, kb.getDescriptionIri(), vf.createLiteral(description));
+                .createStatement(subject, kb.getDescriptionIri(), descriptionLiteral);
             originalStatements.add(descStmt);
             aConn.add(descStmt);
         }
@@ -166,31 +216,38 @@ public class KBProperty
     {
         KBProperty kbProp = new KBProperty();
         kbProp.setIdentifier(aStmt.getSubject().stringValue());
+        kbProp.setKB(kb);
         kbProp.originalStatements.add(aStmt);
 
-        readFirst(aConn, aStmt.getSubject(), kb.getLabelIri(), null).ifPresent((stmt) -> {
-            kbProp.setName(stmt.getObject().stringValue());
+        readFirst(aConn, aStmt.getSubject(), kb.getLabelIri(), null, kb.getDefaultLanguage())
+            .ifPresent((stmt) -> {
+                kbProp.setName(stmt.getObject().stringValue());
+                kbProp.originalStatements.add(stmt);
+                if (stmt.getObject() instanceof Literal) {
+                    Literal literal = (Literal) stmt.getObject();
+                    Optional<String> language = literal.getLanguage();
+                    language.ifPresent(kbProp::setLanguage);
+                }
+            });
+
+        readFirst(aConn, aStmt.getSubject(), kb.getDescriptionIri(), null, kb.getDefaultLanguage())
+            .ifPresent((stmt) -> {
+                kbProp.setDescription(stmt.getObject().stringValue());
+                kbProp.originalStatements.add(stmt);
+                if (stmt.getObject() instanceof Literal) {
+                    Literal literal = (Literal) stmt.getObject();
+                    Optional<String> language = literal.getLanguage();
+                    language.ifPresent(kbProp::setLanguage);
+                }
+            });
+
+        readFirst(aConn, aStmt.getSubject(), RDFS.RANGE, null).ifPresent((stmt) -> {
+            kbProp.setRange(stmt.getObject().stringValue());
             kbProp.originalStatements.add(stmt);
         });
-
-        readFirst(aConn, aStmt.getSubject(), kb.getDescriptionIri(), null).ifPresent((stmt) -> {
-            kbProp.setDescription(stmt.getObject().stringValue());
-            kbProp.originalStatements.add(stmt);
-        });
-
-        // if no range is given, assume values of type String
-        Optional<Statement> optionalRangeStmt = readFirst(aConn, aStmt.getSubject(), RDFS.RANGE,
-                null);
-        if (optionalRangeStmt.isPresent()) {
-            Statement rangeStmt = optionalRangeStmt.get();
-            kbProp.setRange(URI.create(rangeStmt.getObject().stringValue()));
-            kbProp.originalStatements.add(rangeStmt);
-        } else {
-            kbProp.setRange(URI.create(XMLSchema.STRING.stringValue()));
-        }
 
         readFirst(aConn, aStmt.getSubject(), RDFS.DOMAIN, null).ifPresent((stmt) -> {
-            kbProp.setDomain(URI.create(stmt.getObject().stringValue()));
+            kbProp.setDomain(stmt.getObject().stringValue());
             kbProp.originalStatements.add(stmt);
         });
 

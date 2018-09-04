@@ -19,9 +19,11 @@ package de.tudarmstadt.ukp.inception.active.learning.sidebar;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
@@ -36,6 +38,7 @@ import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
+import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.StringResourceModel;
@@ -65,6 +68,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
@@ -72,10 +76,12 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaChoiceRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.inception.active.learning.ActiveLearningService;
+import de.tudarmstadt.ukp.inception.active.learning.ActiveLearningServiceImpl;
 import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningRecommendationEvent;
 import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningSessionCompletedEvent;
 import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningSessionStartedEvent;
@@ -120,6 +126,7 @@ public class ActiveLearningSidebar
     private static final String CID_USER_ACTION = "userAction";
     private static final String CID_RECOMMENDED_ANNOTATION = "recommendedAnnotation";
     private static final String CID_JUMP_TO_ANNOTATION = "jumpToAnnotation";
+    private static final String CID_NO_RECOMMENDERS = "noRecommenders";
     
     private static final String ANNOTATION_MARKER = "VAnnotationMarker";
     private static final String TEXT_MARKER = "VTextMarker";
@@ -130,35 +137,25 @@ public class ActiveLearningSidebar
     private @SpringBean LearningRecordService learningRecordService;
     private @SpringBean DocumentService documentService;
     private @SpringBean ApplicationEventPublisherHolder applicationEventPublisherHolder;
-    private @SpringBean FeatureSupportRegistry fsRegistry;
     private @SpringBean UserDao userDao;
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
 
-    private IModel<AnnotationLayer> selectedLayer;
     private IModel<List<LearningRecord>> learningRecords;
     private IModel<FeatureState> aFeatureStateModel;
+    private CompoundPropertyModel<ActiveLearningServiceImpl.ActiveLearningUserState> userStateModel;
 
     private final WebMarkupContainer mainContainer;
 
-    private boolean sessionActive = false;
-    private boolean hasUnseenRecommendation = false;
-    private boolean hasSkippedRecommendation = false;
-    
-    private ActiveLearningRecommender activeLearningRecommender;
-    private AnnotationObject currentRecommendation;
-    private RecommendationDifference currentDifference;
     private AnnotationPage annotationPage;
     private Predictions model;
     private String vMarkerType = "";
     private VID highlightVID;
     private LearningRecord selectedRecord;
-    private Date learnSkippedRecommendationTime;
     private FeatureState featureState;
     private ConfirmationDialog confirmationDialog;
     private FeatureEditor editor;
     private Form<Void> recommendationForm;
     private AnnotationFeature annotationFeature;
-
 
     public ActiveLearningSidebar(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, JCasProvider aJCasProvider,
@@ -167,9 +164,23 @@ public class ActiveLearningSidebar
         super(aId, aModel, aActionHandler, aJCasProvider, aAnnotationPage);
 
         annotationPage = aAnnotationPage;
-        
+
+        if (aAnnotationPage.getMetaData(ActiveLearningUserStateMetaData.CURRENT_AL_USER_STATE)
+            == null) {
+            ActiveLearningServiceImpl.ActiveLearningUserState userState = new
+                ActiveLearningServiceImpl.ActiveLearningUserState();
+            aAnnotationPage
+                .setMetaData(ActiveLearningUserStateMetaData.CURRENT_AL_USER_STATE, userState);
+        }
+
+        userStateModel = new CompoundPropertyModel<>(LambdaModelAdapter.of(() -> aAnnotationPage
+                .getMetaData(ActiveLearningUserStateMetaData.CURRENT_AL_USER_STATE),
+            state -> aAnnotationPage
+                .setMetaData(ActiveLearningUserStateMetaData.CURRENT_AL_USER_STATE, state)));
+
         mainContainer = new WebMarkupContainer(CID_MAIN_CONTAINER);
         mainContainer.setOutputMarkupId(true);
+        mainContainer.add(createNoRecommendersMessage());
         mainContainer.add(createSessionControlForm());
         mainContainer.add(createNoRecommendationLabel());
         mainContainer.add(createLearnFromSkippedRecommendationForm());
@@ -180,40 +191,59 @@ public class ActiveLearningSidebar
         add(confirmationDialog);
     }
 
+    private Label createNoRecommendersMessage()
+    {
+        if (!userStateModel.getObject().isSessionActive()) {
+            // Use the currently selected layer from the annotation detail editor panel as the
+            // default choice in the active learning mode.
+            List<AnnotationLayer> layersWithRecommenders = listLayersWithRecommenders();
+            if (layersWithRecommenders.contains(getModelObject().getDefaultAnnotationLayer())) {
+                userStateModel.getObject()
+                    .setSelectedLayer(getModelObject().getDefaultAnnotationLayer());
+            }
+            // If the currently selected layer has no recommenders, use the first one which has
+            else if (!layersWithRecommenders.isEmpty()) {
+                userStateModel.getObject().setSelectedLayer(layersWithRecommenders.get(0));
+            }
+            // If there are no layers with recommenders, then choose nothing and show no
+            // recommenders message.
+            else {
+                userStateModel.getObject().setSelectedLayer(null);
+                userStateModel.getObject().setDoExistRecommenders(false);
+            }
+        }
+        Label noRecommendersMessage = new Label(CID_NO_RECOMMENDERS, "None of the layers have any "
+            + "recommenders configured. Please set the recommenders first in the Project "
+            + "Settings.");
+        noRecommendersMessage.add(LambdaBehavior.onConfigure(component -> component.setVisible
+            (!userStateModel.getObject().isDoExistRecommenders())));
+        return noRecommendersMessage;
+    }
+
     private Form<?> createSessionControlForm()
     {
-        // Use the currently selected layer from the annotation detail editor panel as the
-        // default choice in the active learning mode.
-        List<AnnotationLayer> layersWithRecommenders = listLayersWithRecommenders();
-        if (layersWithRecommenders.contains(getModelObject().getDefaultAnnotationLayer())) {
-            selectedLayer = Model.of(getModelObject().getDefaultAnnotationLayer());
-        }
-        // If the currently selected layer has no recommenders, use the first one which has
-        else if (!layersWithRecommenders.isEmpty()) {
-            selectedLayer = Model.of(layersWithRecommenders.get(0));
-        }
-        // If there are no layers with recommenders, then choose nothing.
-        else {
-            // FIXME: in this case, we might display a nice message saying that none of the layers
-            // have any recommenders configured.
-            selectedLayer = Model.of();
-        }
-        
-        Form<?> form = new Form<Void>(CID_SESSION_CONTROL_FORM);
-        
-        DropDownChoice<AnnotationLayer> layersDropdown = new DropDownChoice<>(CID_SELECT_LAYER);
-        layersDropdown.setModel(selectedLayer);
+        Form<?> form = new Form<>(CID_SESSION_CONTROL_FORM,
+            userStateModel);
+
+        DropDownChoice<AnnotationLayer> layersDropdown = new DropDownChoice<AnnotationLayer>(
+            CID_SELECT_LAYER);
+        layersDropdown.setModel(userStateModel.bind("selectedLayer"));
         layersDropdown.setChoices(LambdaModel.of(this::listLayersWithRecommenders));
         layersDropdown.setChoiceRenderer(new LambdaChoiceRenderer<>(AnnotationLayer::getUiName));
-        layersDropdown.add(LambdaBehavior.onConfigure(it -> it.setEnabled(!sessionActive)));
+        layersDropdown.add(LambdaBehavior.onConfigure(it -> it.setEnabled(!userStateModel
+            .getObject().isSessionActive())));
         layersDropdown.setOutputMarkupId(true);
         layersDropdown.setRequired(true);
         form.add(layersDropdown);
         
         LambdaAjaxButton<Void> startStopButton = new LambdaAjaxButton<>(
                 CID_LAYER_SELECTION_BUTTON, this::actionStartStopTraining);
-        startStopButton.setModel(LambdaModel.of(() -> sessionActive ? "Terminate" : "Start"));
+        startStopButton.setModel(LambdaModel
+            .of(() -> userStateModel.getObject().isSessionActive() ? "Terminate" : "Start"));
         form.add(startStopButton);
+        form.add(
+            LambdaBehavior.onConfigure(component -> component.setVisible(userStateModel
+                .getObject().isDoExistRecommenders())));
 
         return form;
     }
@@ -230,16 +260,17 @@ public class ActiveLearningSidebar
         target.add(mainContainer);
         
         AnnotatorState annotatorState = getModelObject();
-        annotatorState.setSelectedAnnotationLayer(selectedLayer.getObject());
+        annotatorState.setSelectedAnnotationLayer(userStateModel.getObject().getSelectedLayer());
 
-        if (!sessionActive) {
+        if (!userStateModel.getObject().isSessionActive()) {
             // Start new session
-            sessionActive = true;
-            learnSkippedRecommendationTime = null;
-            
-            activeLearningRecommender = new ActiveLearningRecommender(annotatorState,
-                    selectedLayer.getObject());
-            
+            userStateModel.getObject().setSessionActive(true);
+            userStateModel.getObject().setLearnSkippedRecommendationTime(null);
+
+            ActiveLearningRecommender activeLearningRecommender = new ActiveLearningRecommender(
+                annotatorState, userStateModel.getObject().getSelectedLayer());
+            userStateModel.getObject().setActiveLearningRecommender(activeLearningRecommender);
+
             moveToNextRecommendation(target);
             
             applicationEventPublisherHolder.get().publishEvent(
@@ -248,7 +279,7 @@ public class ActiveLearningSidebar
         }
         else {
             // Stop current session
-            sessionActive = false;
+            userStateModel.getObject().setSessionActive(false);
             applicationEventPublisherHolder.get()
                     .publishEvent(new ActiveLearningSessionCompletedEvent(this,
                             annotatorState.getProject(), annotatorState.getUser().getUsername()));
@@ -258,33 +289,13 @@ public class ActiveLearningSidebar
     private void showAndHighlightRecommendationAndJumpToRecommendationLocation(
             AjaxRequestTarget aTarget)
     {
-        if (currentDifference != null) {
-            hasUnseenRecommendation = true;
-            currentRecommendation = currentDifference.getRecommendation1();
-
+        if (userStateModel.getObject().getCurrentDifference() != null) {
+            userStateModel.getObject().setHasUnseenRecommendation(true);
+            AnnotationObject currentRecommendation = userStateModel.getObject()
+                .getCurrentDifference().getRecommendation1();
+            userStateModel.getObject().setCurrentRecommendation(currentRecommendation);
             try {
-                // create AnnotationFeature and FeatureSupport
-                annotationFeature = annotationService
-                    .getFeature(currentRecommendation.getFeature(), selectedLayer.getObject());
-                FeatureSupport featureSupport = featureSupportRegistry
-                    .getFeatureSupport(annotationFeature);
-                // get Jcas
-                AnnotatorState state = ActiveLearningSidebar.this.getModelObject();
-                SourceDocument sourceDoc = documentService
-                    .getSourceDocument(state.getProject(), currentRecommendation.getDocumentName());
-                AnnotationDocument annoDoc = documentService
-                    .createOrGetAnnotationDocument(sourceDoc, state.getUser());
-                JCas jCas = documentService.readAnnotationCas(annoDoc);
-                // create FeatureState with the recommendation value (maybe a String or a KBHandle)
-                featureState = new FeatureState(annotationFeature, (Serializable) featureSupport
-                    .wrapFeatureValue(annotationFeature, jCas.getCas(),
-                        currentRecommendation.getLabel()));
-                featureState.tagset = annotationService.listTags(annotationFeature.getTagset());
-                aFeatureStateModel = Model.of(featureState);
-                // update feature editor with the recommendation value
-                editor = featureSupport
-                    .createEditor("editor", mainContainer, this.getActionHandler(), this.getModel(),
-                        aFeatureStateModel);
+                createFeatureEditor();
                 recommendationForm.addOrReplace(editor);
                 aTarget.add(mainContainer);
                 // jump to the document of that recommendation
@@ -302,25 +313,28 @@ public class ActiveLearningSidebar
             setShowingRecommendation();
             highlightCurrentRecommendation(aTarget);
         }
-        else if (learnSkippedRecommendationTime == null) {
-            hasUnseenRecommendation = false;
-            hasSkippedRecommendation = activeLearningRecommender.hasRecommendationWhichIsSkipped(
-                    learningRecordService, activeLearningService);
+        else if (userStateModel.getObject().getLearnSkippedRecommendationTime() == null) {
+            userStateModel.getObject().setHasUnseenRecommendation(false);
+            boolean hasSkippedRecommendation = userStateModel.getObject()
+                .getActiveLearningRecommender()
+                .hasRecommendationWhichIsSkipped(learningRecordService, activeLearningService);
+            userStateModel.getObject().setHasSkippedRecommendation(hasSkippedRecommendation);
         }
         else {
-            hasUnseenRecommendation = false;
-            hasSkippedRecommendation = false;
+            userStateModel.getObject().setHasUnseenRecommendation(false);
+            userStateModel.getObject().setHasSkippedRecommendation(false);
         }
     }
 
     private void setShowingRecommendation()
     {
-        AnnotatorState annotatorState = getModelObject();
         writeLearningRecordInDatabaseAndEventLog(LearningRecordUserAction.SHOWN);
     }
 
     private void highlightCurrentRecommendation(AjaxRequestTarget aTarget)
     {
+        AnnotationObject currentRecommendation = userStateModel.getObject()
+            .getCurrentRecommendation();
         highlightRecommendation(aTarget, currentRecommendation.getOffset().getBeginCharacter(),
                 currentRecommendation.getOffset().getEndCharacter(),
                 currentRecommendation.getCoveredText(), currentRecommendation.getLabel());
@@ -337,8 +351,9 @@ public class ActiveLearningSidebar
                     aRecommendation);
             if (aoForVID.isPresent()) {
                 highlightVID = new VID(RecommendationEditorExtension.BEAN_NAME,
-                        selectedLayer.getObject().getId(), (int) aoForVID.get().getRecommenderId(),
-                        aoForVID.get().getId(), VID.NONE, VID.NONE);
+                    userStateModel.getObject().getSelectedLayer().getId(),
+                    (int) aoForVID.get().getRecommenderId(), aoForVID.get().getId(), VID.NONE,
+                    VID.NONE);
                 vMarkerType = ANNOTATION_MARKER;
             }
             else {
@@ -356,7 +371,9 @@ public class ActiveLearningSidebar
         Label noRecommendation = new Label(CID_NO_RECOMMENDATION_LABEL,
             "There are no further suggestions.");
         noRecommendation.add(LambdaBehavior.onConfigure(component -> component
-            .setVisible(sessionActive && !hasUnseenRecommendation && !hasSkippedRecommendation)));
+            .setVisible(userStateModel.getObject().isSessionActive() &&
+                !userStateModel.getObject().isHasUnseenRecommendation() &&
+                !userStateModel.getObject().isHasSkippedRecommendation())));
         noRecommendation.setOutputMarkupPlaceholderTag(true);
         return noRecommendation;
     }
@@ -366,7 +383,9 @@ public class ActiveLearningSidebar
         Form<?> learnFromSkippedRecommendationForm = new Form<Void>(
                 CID_LEARN_FROM_SKIPPED_RECOMMENDATION_FORM);
         learnFromSkippedRecommendationForm.add(LambdaBehavior.onConfigure(component -> component
-            .setVisible(sessionActive && !hasUnseenRecommendation && hasSkippedRecommendation)));
+            .setVisible(userStateModel.getObject().isSessionActive() && !userStateModel.getObject
+                ().isHasUnseenRecommendation() &&
+                userStateModel.getObject().isHasSkippedRecommendation())));
         learnFromSkippedRecommendationForm.setOutputMarkupPlaceholderTag(true);
         learnFromSkippedRecommendationForm.add(new Label(CID_ONLY_SKIPPED_RECOMMENDATION_LABEL, "There "
             + "are only skipped suggestions. Do you want to learn these again?"));
@@ -379,8 +398,8 @@ public class ActiveLearningSidebar
     private void learnSkippedRecommendations(AjaxRequestTarget aTarget, Form<Void> aForm)
         throws IOException
     {
-        learnSkippedRecommendationTime = new Date();
-        
+        userStateModel.getObject().setLearnSkippedRecommendationTime(new Date());
+
         moveToNextRecommendation(aTarget);
         
         aTarget.add(mainContainer);
@@ -389,18 +408,28 @@ public class ActiveLearningSidebar
     private Form<Void> createRecommendationOperationForm()
     {
         recommendationForm = new Form<Void>(CID_RECOMMENDATION_FORM);
-        recommendationForm.add(LambdaBehavior.onConfigure(component -> component.setVisible
-            (sessionActive && hasUnseenRecommendation)));
+        recommendationForm.add(LambdaBehavior.onConfigure(component -> component.setVisible(
+            userStateModel.getObject().isSessionActive() && userStateModel.getObject()
+                .isHasUnseenRecommendation())));
         recommendationForm.setOutputMarkupPlaceholderTag(true);
 
         recommendationForm.add(createRecommendationCoveredTextLink());
         recommendationForm.add(new Label(CID_RECOMMENDED_PREDITION, LambdaModel.of(() ->
-                currentRecommendation != null ? this.getRecommendationLabelValue() : null)));
+            userStateModel.getObject().getCurrentRecommendation() != null ?
+                this.getRecommendationLabelValue() :
+                null)));
         recommendationForm.add(new Label(CID_RECOMMENDED_CONFIDENCE, LambdaModel.of(() ->
-                currentRecommendation != null ? currentRecommendation.getConfidence() : 0.0)));
+            userStateModel.getObject().getCurrentRecommendation() != null ?
+                userStateModel.getObject().getCurrentRecommendation().getConfidence() :
+                0.0)));
         recommendationForm.add(new Label(CID_RECOMMENDED_DIFFERENCE, LambdaModel.of(() ->
-                currentDifference != null ? currentDifference.getDifference() : 0.0)));
-        recommendationForm.add(createFeatureEditor());
+            userStateModel.getObject().getCurrentDifference() != null ?
+                userStateModel.getObject().getCurrentDifference().getDifference() :
+                0.0)));
+        recommendationForm.add((userStateModel.getObject().getSelectedLayer() != null
+            && userStateModel.getObject().getCurrentRecommendation() != null) ?
+            initializeFeatureEditor() :
+            new Label("editor").setVisible(false));
 
         recommendationForm.add(new LambdaAjaxButton<>(CID_ANNOTATE_BUTTON, this::actionAnnotate));
         recommendationForm.add(new LambdaAjaxLink(CID_SKIP_BUTTON, this::actionSkip));
@@ -412,18 +441,20 @@ public class ActiveLearningSidebar
     private String getRecommendationLabelValue()
     {
         annotationFeature = annotationService
-            .getFeature(currentRecommendation.getFeature(), selectedLayer.getObject());
+            .getFeature(userStateModel.getObject().getCurrentRecommendation().getFeature(),
+                userStateModel.getObject().getSelectedLayer());
         FeatureSupport featureSupport = featureSupportRegistry.getFeatureSupport(annotationFeature);
-        String labelValue = featureSupport
-            .renderFeatureValue(annotationFeature, currentRecommendation.getLabel());
+        String labelValue = featureSupport.renderFeatureValue(annotationFeature,
+            userStateModel.getObject().getCurrentRecommendation().getLabel());
         return labelValue;
     }
 
     private LambdaAjaxLink createRecommendationCoveredTextLink()
     {
         LambdaAjaxLink link = new LambdaAjaxLink(CID_RECOMMENDATION_COVERED_TEXT_LINK,
-                this::jumpToRecommendationLocationAndHighlightRecommendation);
-        link.setBody(LambdaModel.of(() -> Optional.ofNullable(currentRecommendation)
+            this::jumpToRecommendationLocationAndHighlightRecommendation);
+        link.setBody(LambdaModel
+            .of(() -> Optional.ofNullable(userStateModel.getObject().getCurrentRecommendation())
                 .map(it -> it.getCoveredText()).orElse("")));
         return link;
     }
@@ -433,47 +464,95 @@ public class ActiveLearningSidebar
     {
         actionShowSelectedDocument(aTarget, documentService
                 .getSourceDocument(this.getModelObject().getProject(),
-                    currentRecommendation.getDocumentName()),
-            currentRecommendation.getOffset().getBeginCharacter());
+                    userStateModel.getObject().getCurrentRecommendation().getDocumentName()),
+            userStateModel.getObject().getCurrentRecommendation().getOffset().getBeginCharacter());
         highlightCurrentRecommendation(aTarget);
     }
 
-    private FeatureEditor createFeatureEditor()
+    private FeatureEditor initializeFeatureEditor()
     {
-        if (currentRecommendation != null) {
-            annotationFeature = annotationService
-                .getFeature(currentRecommendation.getFeature(), selectedLayer.getObject());
+        try {
+            createFeatureEditor();
         }
-        else {
-            annotationFeature = annotationService
-                .listAnnotationFeature(selectedLayer.getObject()).get(0);
+        catch (IOException e) {
+            LOG.error("Unable to switch to document : {} ", e.getMessage(), e);
+            error("Unable to switch to document : " + e.getMessage());
         }
-        FeatureSupport featureSupport = featureSupportRegistry.getFeatureSupport(annotationFeature);
+        return editor;
+    }
 
-        featureState = new FeatureState(annotationFeature, null);
-        featureState.tagset = annotationService.listTags(annotationFeature.getTagset());
+    private void createFeatureEditor()
+        throws IOException
+    {
+        AnnotationObject currentRecommendation = userStateModel.getObject()
+            .getCurrentRecommendation();
+        // create AnnotationFeature and FeatureSupport
+        annotationFeature = annotationService.getFeature(currentRecommendation.getFeature(),
+            userStateModel.getObject().getSelectedLayer());
+        FeatureSupport featureSupport = featureSupportRegistry.getFeatureSupport(annotationFeature);
+        // get Jcas
+        AnnotatorState state = ActiveLearningSidebar.this.getModelObject();
+        SourceDocument sourceDoc = documentService
+            .getSourceDocument(state.getProject(), currentRecommendation.getDocumentName());
+        AnnotationDocument annoDoc = documentService
+            .createOrGetAnnotationDocument(sourceDoc, state.getUser());
+        JCas jCas = documentService.readAnnotationCas(annoDoc);
+        // create FeatureState with the recommendation value (maybe a String or a KBHandle)
+        featureState = new FeatureState(annotationFeature, (Serializable) featureSupport
+            .wrapFeatureValue(annotationFeature, jCas.getCas(), currentRecommendation.getLabel()));
+        List<Tag> tagList = annotationService.listTags(annotationFeature.getTagset());
+        List<Tag> reorderedTagList = new ArrayList<>();
+        if (tagList.size() > 0) {
+            model = recommendationService.getPredictions(state.getUser(), state.getProject());
+            // get all the predictions
+            List<AnnotationObject> otherRecommendations = model
+                .getPredictionsByTokenAndFeature(currentRecommendation.getDocumentName(),
+                    userStateModel.getObject().getSelectedLayer(),
+                    currentRecommendation.getOffset().getBeginCharacter(),
+                    currentRecommendation.getOffset().getEndCharacter(),
+                    currentRecommendation.getFeature());
+            // get all the label of the predictions (e.g. "NN")
+            List<String> otherRecommendationsLabel = otherRecommendations.stream()
+                .map(ao -> ao.getLabel()).collect(Collectors.toList());
+            for (Tag tag : tagList) {
+                // add the tags which contain the prediction-labels to the beginning of a
+                // tagset
+                if (otherRecommendationsLabel.contains(tag.getName())) {
+                    tag.setReordered(true);
+                    reorderedTagList.add(tag);
+                }
+            }
+            // remove these tags containing the prediction-labels
+            tagList.removeAll(reorderedTagList);
+            // add the rest tags to the tagset after these
+            reorderedTagList.addAll(tagList);
+        }
+        featureState.tagset = reorderedTagList;
         aFeatureStateModel = Model.of(featureState);
+        // update feature editor with the recommendation value
         editor = featureSupport
             .createEditor("editor", mainContainer, this.getActionHandler(), this.getModel(),
                 aFeatureStateModel);
-        return editor;
     }
 
     private void writeLearningRecordInDatabaseAndEventLog(LearningRecordUserAction
         userAction)
     {
-        writeLearningRecordInDatabaseAndEventLog(userAction, currentRecommendation.getLabel());
+        writeLearningRecordInDatabaseAndEventLog(userAction,
+            userStateModel.getObject().getCurrentRecommendation().getLabel());
     }
 
     private void writeLearningRecordInDatabaseAndEventLog(LearningRecordUserAction userAction,
         String annotationValue)
     {
         AnnotatorState state = ActiveLearningSidebar.this.getModelObject();
+        AnnotationObject currentRecommendation = userStateModel.getObject()
+            .getCurrentRecommendation();
 
-        SourceDocument sourceDoc = documentService.getSourceDocument(state.getProject(),
-            currentRecommendation.getDocumentName());
-        annotationFeature = annotationService
-            .getFeature(currentRecommendation.getFeature(), selectedLayer.getObject());
+        SourceDocument sourceDoc = documentService
+            .getSourceDocument(state.getProject(), currentRecommendation.getDocumentName());
+        annotationFeature = annotationService.getFeature(currentRecommendation.getFeature(),
+            userStateModel.getObject().getSelectedLayer());
 
         LearningRecord record = new LearningRecord();
         record.setUser(state.getUser().getUsername());
@@ -485,7 +564,7 @@ public class ActiveLearningSidebar
         record.setOffsetCharacterBegin(currentRecommendation.getOffset().getBeginCharacter());
         record.setOffsetCharacterEnd(currentRecommendation.getOffset().getEndCharacter());
         record.setAnnotation(annotationValue);
-        record.setLayer(selectedLayer.getObject());
+        record.setLayer(userStateModel.getObject().getSelectedLayer());
         record.setChangeLocation(LearningRecordChangeLocation.AL_SIDEBAR);
         record.setAnnotationFeature(annotationFeature);
 
@@ -497,11 +576,11 @@ public class ActiveLearningSidebar
             new ActiveLearningRecommendationEvent(this, documentService
                 .getSourceDocument(state.getProject(),
                     currentRecommendation.getDocumentName()), currentRecommendation,
-                state.getUser().getUsername(), selectedLayer.getObject(),
+                state.getUser().getUsername(), userStateModel.getObject().getSelectedLayer(),
                 currentRecommendation.getFeature(), userAction, model
                 .getPredictionsByTokenAndFeature(
                     currentRecommendation.getDocumentName(),
-                    selectedLayer.getObject(),
+                    userStateModel.getObject().getSelectedLayer(),
                     currentRecommendation.getOffset().getBeginCharacter(),
                     currentRecommendation.getOffset().getEndCharacter(),
                     currentRecommendation.getFeature())));
@@ -512,9 +591,11 @@ public class ActiveLearningSidebar
     {
         aTarget.add(mainContainer);
 
+        AnnotationObject currentRecommendation = userStateModel.getObject()
+            .getCurrentRecommendation();
         // Create AnnotationFeature and FeatureSupport
-        annotationFeature = annotationService
-            .getFeature(currentRecommendation.getFeature(), selectedLayer.getObject());
+        annotationFeature = annotationService.getFeature(currentRecommendation.getFeature(),
+            userStateModel.getObject().getSelectedLayer());
         FeatureSupport featureSupport = featureSupportRegistry.getFeatureSupport(annotationFeature);
         // Load CAS in which to create the annotation
 
@@ -531,16 +612,18 @@ public class ActiveLearningSidebar
             writeLearningRecordInDatabaseAndEventLog(LearningRecordUserAction.ACCEPTED);
         }
         else {
-            writeLearningRecordInDatabaseAndEventLog(LearningRecordUserAction.CORRECTED);
+            writeLearningRecordInDatabaseAndEventLog(LearningRecordUserAction.CORRECTED,
+                selectedValue);
         }
 
         int begin = currentRecommendation.getOffset().getBeginCharacter();
         int end = currentRecommendation.getOffset().getEndCharacter();
 
-        SpanAdapter adapter = (SpanAdapter) annotationService.getAdapter(selectedLayer.getObject());
+        SpanAdapter adapter = (SpanAdapter) annotationService
+            .getAdapter(userStateModel.getObject().getSelectedLayer());
         int id = adapter.add(state, jCas, begin, end);
         recommendationService
-            .setFeatureValue(annotationFeature, currentRecommendation.getLabel(), adapter, state,
+            .setFeatureValue(annotationFeature, selectedValue, adapter, state,
                 jCas, id);
 
         // Save CAS after annotation has been created
@@ -571,9 +654,15 @@ public class ActiveLearningSidebar
         aTarget.add((Component) getActionHandler());
 
         annotationPage.actionRefreshDocument(aTarget);
-        currentDifference = activeLearningRecommender
-                .generateRecommendationWithLowestDifference(learningRecordService,
-                        activeLearningService, learnSkippedRecommendationTime);
+
+        ActiveLearningRecommender activeLearningRecommender = userStateModel.getObject()
+            .getActiveLearningRecommender();
+        Date skippedRecommendationTime = userStateModel.getObject()
+            .getLearnSkippedRecommendationTime();
+        RecommendationDifference currentDifference = activeLearningRecommender
+            .generateRecommendationWithLowestDifference(learningRecordService,
+                activeLearningService, skippedRecommendationTime);
+        userStateModel.getObject().setCurrentDifference(currentDifference);
         showAndHighlightRecommendationAndJumpToRecommendationLocation(aTarget);
     }
 
@@ -584,7 +673,7 @@ public class ActiveLearningSidebar
             private static final long serialVersionUID = -961690443085882064L;
         };
         learningHistoryForm.add(LambdaBehavior.onConfigure(component -> component
-            .setVisible(sessionActive)));
+            .setVisible(userStateModel.getObject().isSessionActive())));
         learningHistoryForm.setOutputMarkupPlaceholderTag(true);
         learningHistoryForm.setOutputMarkupId(true);
 
@@ -642,10 +731,10 @@ public class ActiveLearningSidebar
             highlightTextAndDisplayMessage(aTarget, record);
         }
         // if the suggestion still exists, highlight that suggestion.
-        else if (activeLearningRecommender.checkRecommendationExist(activeLearningService,
-                record)) {
+        else if (userStateModel.getObject().getActiveLearningRecommender()
+            .checkRecommendationExist(activeLearningService, record)) {
             highlightRecommendation(aTarget, record.getOffsetCharacterBegin(),
-                    record.getOffsetCharacterEnd(), record.getTokenText(), record.getAnnotation());
+                record.getOffsetCharacterEnd(), record.getTokenText(), record.getAnnotation());
         }
         // else if that suggestion is annotated, highlight the annotation.
         else if (!isAnnotatedInCas(record, jCas)) {
@@ -657,13 +746,14 @@ public class ActiveLearningSidebar
     private boolean isAnnotatedInCas(LearningRecord aRecord, JCas aJcas)
         throws IOException
     {
-        Type type = CasUtil.getType(aJcas.getCas(), selectedLayer.getObject().getName());
+        Type type = CasUtil
+            .getType(aJcas.getCas(), userStateModel.getObject().getSelectedLayer().getName());
         AnnotationFS annotationFS = WebAnnoCasUtil
             .selectSingleFsAt(aJcas, type, aRecord.getOffsetCharacterBegin(),
                 aRecord.getOffsetCharacterEnd());
         if (annotationFS != null) {
             for (AnnotationFeature annotationFeature : annotationService
-                .listAnnotationFeature(selectedLayer.getObject())) {
+                .listAnnotationFeature(userStateModel.getObject().getSelectedLayer())) {
                 String annotatedValue = WebAnnoCasUtil
                     .getFeature(annotationFS, annotationFeature.getName());
                 if (aRecord.getAnnotation().equals(annotatedValue)) {
@@ -690,7 +780,7 @@ public class ActiveLearningSidebar
         AnnotatorState annotatorState = ActiveLearningSidebar.this.getModelObject();
         return learningRecordService.getAllRecordsByDocumentAndUserAndLayer(
                 annotatorState.getDocument(), annotatorState.getUser().getUsername(),
-                selectedLayer.getObject());
+                userStateModel.getObject().getSelectedLayer());
     }
 
     private void actionRemoveHistoryItem(AjaxRequestTarget aTarget, LearningRecord aRecord)
@@ -769,8 +859,9 @@ public class ActiveLearningSidebar
         model = recommendationService
             .getPredictions(annotatorState.getUser(), annotatorState.getProject());
 
-        if (sessionActive && eventState.getUser().equals(annotatorState.getUser()) && eventState
-            .getProject().equals(annotatorState.getProject())) {
+        if (userStateModel.getObject().isSessionActive() && eventState.getUser()
+            .equals(annotatorState.getUser()) && eventState.getProject()
+            .equals(annotatorState.getProject())) {
             SourceDocument document = eventState.getDocument();
             VID vid = aEvent.getVid();
             Optional<AnnotationObject> prediction = model.getPredictionByVID(document, vid);
@@ -793,9 +884,9 @@ public class ActiveLearningSidebar
                     rejectedRecommendation.getOffset().getEndCharacter(),
                     rejectedRecommendation.getFeature())));
 
-            if (document.equals(annotatorState.getDocument()) && vid.getLayerId() == selectedLayer
-                .getObject().getId() && prediction.get().equals(currentRecommendation)) {
-
+            if (document.equals(annotatorState.getDocument()) && vid.getLayerId() ==
+                userStateModel.getObject().getSelectedLayer().getId() && prediction.get()
+                .equals(userStateModel.getObject().getCurrentRecommendation())) {
                 moveToNextRecommendation(aEvent.getTarget());
             }
             aEvent.getTarget().add(mainContainer);
@@ -852,12 +943,15 @@ public class ActiveLearningSidebar
                 acceptedRecommendation.getOffset().getEndCharacter(),
                 acceptedRecommendation.getFeature())));
 
-        if (sessionActive && currentRecommendation != null
-                && eventState.getUser().equals(annotatorState.getUser())
-                && eventState.getProject().equals(annotatorState.getProject())) {
-            if (acceptedRecommendation.getOffset().equals(currentRecommendation.getOffset()) &&
-                annotationService.getLayer(vid.getLayerId()).equals(selectedLayer.getObject()) &&
-                acceptedRecommendation.getFeature().equals(currentRecommendation.getFeature())) {
+        AnnotationObject currentRecommendation = userStateModel.getObject()
+            .getCurrentRecommendation();
+        if (userStateModel.getObject().isSessionActive() && currentRecommendation != null
+            && eventState.getUser().equals(annotatorState.getUser()) && eventState.getProject()
+            .equals(annotatorState.getProject())) {
+            if (acceptedRecommendation.getOffset().equals(currentRecommendation.getOffset())
+                && annotationService.getLayer(vid.getLayerId())
+                .equals(userStateModel.getObject().getSelectedLayer()) && acceptedRecommendation
+                .getFeature().equals(currentRecommendation.getFeature())) {
                 moveToNextRecommendation(aEvent.getTarget());
             }
             aEvent.getTarget().add(mainContainer);
@@ -888,4 +982,5 @@ public class ActiveLearningSidebar
             }
         }
     }
+
 }

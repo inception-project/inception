@@ -24,8 +24,13 @@ import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
+import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.list.ListItem;
+import org.apache.wicket.markup.html.list.ListView;
+import org.apache.wicket.markup.html.panel.Fragment;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
@@ -38,12 +43,12 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.OverviewListChoice;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.search.SearchResult;
 import de.tudarmstadt.ukp.inception.search.SearchService;
+import de.tudarmstadt.ukp.inception.ui.kb.search.ConceptFeatureIndexingSupport;
 
 public class AnnotatedListIdentifiers
     extends Panel
@@ -65,53 +70,64 @@ public class AnnotatedListIdentifiers
     private Model<String> targetQuery = Model.of("");
 
     public AnnotatedListIdentifiers(String aId, IModel<KnowledgeBase> aKbModel,
-            IModel<KBHandle> aConcept, IModel<KBHandle> aInstance)
+            IModel<KBHandle> aConcept, IModel<KBHandle> aInstance, boolean flagInstanceSelect)
     {
         super(aId, aConcept);
         setOutputMarkupId(true);
         kbModel = aKbModel;
         conceptModel = aConcept;
         currentUser = userRepository.getCurrentUser();
-        //TODO TO replace with KB.identifier after subClass and instances change
-        String queryHead = "<KB.Entity=\"";
-        String queryEnd = "\"/>";
-        StringBuffer query = new StringBuffer();
-        if (aInstance.getObject() == null) {
-            String concept = aConcept.getObject().getUiLabel();
-            targetQuery = Model
-                    .of(query.append(queryHead).append(concept).append(queryEnd).toString());
-        }
-        else {
-            String instance = aInstance.getObject().getUiLabel();
-            targetQuery = Model
-                    .of(query.append(queryHead).append(instance).append(queryEnd).toString());
-        }
+        
+        String queryIri = flagInstanceSelect ? aInstance.getObject().getIdentifier()
+                : aConcept.getObject().getIdentifier();
+        // MTAS internally escapes certain characters, so we need to escape them here as well.
+        // Cf. MtasToken.createAutomatonMap()
+        queryIri = queryIri.replaceAll("([\\\"\\)\\(\\<\\>\\.\\@\\#\\]\\[\\{\\}])", "\\\\$1");
+        targetQuery = Model.of(
+                String.format("<%s=\"%s\"/>", ConceptFeatureIndexingSupport.KB_ENTITY, queryIri));
+        
         LambdaModel<List<SearchResult>> searchResults = LambdaModel.of(this::getSearchResults);
-        LOG.debug("SearchResult count : {}" , searchResults.getObject().size());
-        OverviewListChoice<String> overviewList = new OverviewListChoice<String>(
-                "annotatedResultGroups")
+        LOG.trace("SearchResult count : {}" , searchResults.getObject().size());
+        ListView<String> overviewList = new ListView<String>("searchResultGroups")
         {
             private static final long serialVersionUID = -122960232588575731L;
-            @Override
-            protected void onConfigure()
+
+            @Override protected void onConfigure()
             {
                 super.onConfigure();
                 setVisible(!searchResults.getObject().isEmpty());
             }
+
+            @Override protected void populateItem(ListItem<String> aItem)
+            {
+                aItem.add(new Label("documentTitle", aItem.getModel()));
+                aItem.add(
+                    new SearchResultGroup("group", "resultGroup",
+                        AnnotatedListIdentifiers.this,
+                        getSearchResultsFormattedForDocument(searchResults,
+                            aItem.getModelObject())));
+            }
         };
-        overviewList.setChoices(getSearchResultsFormatted(searchResults));
+        overviewList.setList(
+            searchResults.getObject().stream().map(res -> res.getDocumentTitle()).distinct()
+                .collect(Collectors.toList()));
+        
         add(overviewList);
-        add(new Label("count", LambdaModel.of(() -> overviewList.getChoices().size())));
+        add(new Label("count", LambdaModel.of(() -> searchResults.getObject().size())));
     }
 
-    public List<String> getSearchResultsFormatted(LambdaModel<List<SearchResult>> searchResults)
+    public List<String> getSearchResultsFormattedForDocument(
+        LambdaModel<List<SearchResult>> searchResults, String documentTitle)
     {
         List<String> searchResultList = new ArrayList<String>();
         for (SearchResult x : searchResults.getObject()) {
-            String sentence = new String();
-            sentence = sentence + x.getText();
-            searchResultList.add(sentence);
-            LOG.debug("Sentence search : {}" , sentence);
+            if (x.getDocumentTitle().equals(documentTitle)) {
+                String sentence = x.getLeftContext() + "<strong>" + x.getText() + "</strong>"
+                    + x.getRightContext();
+
+                searchResultList.add(sentence);
+                LOG.debug("Sentence search : {}", sentence);
+            }
         }
         return searchResultList;
     }
@@ -137,6 +153,32 @@ public class AnnotatedListIdentifiers
             LOG.debug("Error in the query.", e);
             error("Error in the query: " + e.getMessage());
             return Collections.emptyList();
+        }
+    }
+
+    private class SearchResultGroup
+        extends Fragment
+    {
+        private static final long serialVersionUID = 3540041356505975132L;
+
+        public SearchResultGroup(String aId, String aMarkupId, MarkupContainer aMarkupProvider,
+            List<String> aResultList)
+        {
+            super(aId, aMarkupId, aMarkupProvider);
+
+            ListView<String> statementList = new ListView<String>("results")
+            {
+                private static final long serialVersionUID = 5811425707843441458L;
+
+                @Override protected void populateItem(ListItem<String> aItem)
+                {
+                    aItem.add(
+                        new Label("sentence", aItem.getModelObject())
+                            .setEscapeModelStrings(false));
+                }
+            };
+            statementList.setList(aResultList);
+            add(statementList);
         }
     }
 

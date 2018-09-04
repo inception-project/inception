@@ -48,6 +48,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 import de.tudarmstadt.ukp.inception.kb.reification.Reification;
+import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseMapping;
 
 @Entity
 @Table(name = "knowledgebase",
@@ -124,6 +125,18 @@ public class KnowledgeBase
     @Column(nullable = false)
     private IRI propertyTypeIri;
 
+    /**
+     * The IRI for a label of a property
+     */
+    @Column(nullable = false)
+    private IRI propertyLabelIri;
+
+    /**
+     * The IRI for a description of a property
+     */
+    @Column(nullable = false)
+    private IRI propertyDescriptionIri;
+
     @Column(nullable = false)
     private boolean readOnly;
 
@@ -153,7 +166,13 @@ public class KnowledgeBase
     @CollectionTable(name = "knowledgebase_root_classes")
     @Column(name = "name")
     private List<IRI> explicitlyDefinedRootConcepts = new ArrayList<>();
-    
+
+    /**
+     * The default language for labels and descriptions of KB elements
+     */
+    @Column
+    private String defaultLanguage;
+
     public String getRepositoryId() {
         return repositoryId;
     }
@@ -253,6 +272,36 @@ public class KnowledgeBase
         propertyTypeIri = aPropertyTypeIri;
     }
 
+    public String getDefaultLanguage()
+    {
+        return defaultLanguage;
+    }
+
+    public void setDefaultLanguage(String aLanguage)
+    {
+        defaultLanguage = aLanguage;
+    }
+    
+    public IRI getPropertyLabelIri()
+    {
+        return propertyLabelIri;
+    }
+
+    public void setPropertyLabelIri(IRI aPropertyLabelIri)
+    {
+        propertyLabelIri = aPropertyLabelIri;
+    }
+
+    public IRI getPropertyDescriptionIri()
+    {
+        return propertyDescriptionIri;
+    }
+
+    public void setPropertyDescriptionIri(IRI aPropertyDescriptionIri)
+    {
+        propertyDescriptionIri = aPropertyDescriptionIri;
+    }
+
     public boolean isReadOnly()
     {
         return readOnly;
@@ -318,6 +367,18 @@ public class KnowledgeBase
     public void setExplicitlyDefinedRootConcepts(List<IRI> aExplicitlyDefinedRootConcepts)
     {
         explicitlyDefinedRootConcepts = aExplicitlyDefinedRootConcepts;
+    }
+    
+    public void applyMapping(KnowledgeBaseMapping aMapping)
+    {
+        setClassIri(aMapping.getClassIri());
+        setSubclassIri(aMapping.getSubclassIri());
+        setTypeIri(aMapping.getTypeIri());
+        setDescriptionIri(aMapping.getDescriptionIri());
+        setLabelIri(aMapping.getLabelIri());
+        setPropertyTypeIri(aMapping.getPropertyTypeIri());
+        setPropertyLabelIri(aMapping.getPropertyLabelIri());
+        setPropertyDescriptionIri(aMapping.getPropertyDescriptionIri());
     }
     
     @Override

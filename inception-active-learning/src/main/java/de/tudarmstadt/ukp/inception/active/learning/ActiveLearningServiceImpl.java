@@ -17,10 +17,13 @@
  */
 package de.tudarmstadt.ukp.inception.active.learning;
 
+import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.uima.jcas.JCas;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +32,8 @@ import org.springframework.stereotype.Component;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.inception.active.learning.sidebar.ActiveLearningRecommender;
+import de.tudarmstadt.ukp.inception.active.learning.sidebar.RecommendationDifference;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
@@ -39,6 +44,9 @@ public class ActiveLearningServiceImpl
 {
     private final DocumentService documentService;
     private final RecommendationService recommendationService;
+
+    private Map<ActiveLearningUserStateKey, ActiveLearningUserState> states = new
+        ConcurrentHashMap<>();
 
     @Autowired
     public ActiveLearningServiceImpl(DocumentService aDocumentService,
@@ -101,5 +109,146 @@ public class ActiveLearningServiceImpl
         // TODO #176 use the document Id once it it available in the CAS
         return model.getFlattenedPredictions(aState.getDocument().getName(), aSelectedLayer,
             windowBegin, windowEnd, aJcas, true);
+    }
+
+    public static class ActiveLearningUserState implements Serializable
+    {
+        private static final long serialVersionUID = -167705997822964808L;
+        private boolean sessionActive = false;
+        private boolean hasUnseenRecommendation = false;
+        private boolean hasSkippedRecommendation = false;
+        private boolean doExistRecommenders = true;
+        private AnnotationObject currentRecommendation;
+        private RecommendationDifference currentDifference;
+        private AnnotationLayer selectedLayer;
+        private ActiveLearningRecommender activeLearningRecommender;
+        private Date learnSkippedRecommendationTime;
+
+        public boolean isSessionActive()
+        {
+            return sessionActive;
+        }
+
+        public void setSessionActive(boolean sessionActive)
+        {
+            this.sessionActive = sessionActive;
+        }
+
+        public boolean isHasUnseenRecommendation()
+        {
+            return hasUnseenRecommendation;
+        }
+
+        public void setHasUnseenRecommendation(boolean hasUnseenRecommendation)
+        {
+            this.hasUnseenRecommendation = hasUnseenRecommendation;
+        }
+
+        public boolean isHasSkippedRecommendation()
+        {
+            return hasSkippedRecommendation;
+        }
+
+        public void setHasSkippedRecommendation(boolean hasSkippedRecommendation)
+        {
+            this.hasSkippedRecommendation = hasSkippedRecommendation;
+        }
+
+        public boolean isDoExistRecommenders()
+        {
+            return doExistRecommenders;
+        }
+
+        public void setDoExistRecommenders(boolean doExistRecommenders)
+        {
+            this.doExistRecommenders = doExistRecommenders;
+        }
+
+        public AnnotationObject getCurrentRecommendation()
+        {
+            return currentRecommendation;
+        }
+
+        public void setCurrentRecommendation(AnnotationObject currentRecommendation)
+        {
+            this.currentRecommendation = currentRecommendation;
+        }
+
+        public RecommendationDifference getCurrentDifference()
+        {
+            return currentDifference;
+        }
+
+        public void setCurrentDifference(RecommendationDifference currentDifference)
+        {
+            this.currentDifference = currentDifference;
+        }
+
+        public AnnotationLayer getSelectedLayer()
+        {
+            return selectedLayer;
+        }
+
+        public void setSelectedLayer(AnnotationLayer selectedLayer)
+        {
+            this.selectedLayer = selectedLayer;
+        }
+
+        public ActiveLearningRecommender getActiveLearningRecommender()
+        {
+            return activeLearningRecommender;
+        }
+
+        public void setActiveLearningRecommender(
+            ActiveLearningRecommender activeLearningRecommender)
+        {
+            this.activeLearningRecommender = activeLearningRecommender;
+        }
+
+        public Date getLearnSkippedRecommendationTime()
+        {
+            return learnSkippedRecommendationTime;
+        }
+
+        public void setLearnSkippedRecommendationTime(Date learnSkippedRecommendationTime)
+        {
+            this.learnSkippedRecommendationTime = learnSkippedRecommendationTime;
+        }
+    }
+
+    public static class ActiveLearningUserStateKey implements Serializable
+    {
+        private static final long serialVersionUID = -2134294656221484540L;
+        private String userName;
+        private long projectId;
+
+        public ActiveLearningUserStateKey(String aUserName, long aProjectId)
+        {
+            userName = aUserName;
+            projectId = aProjectId;
+        }
+
+        @Override
+        public boolean equals(Object o)
+        {
+            if (this == o)
+                return true;
+            if (o == null || getClass() != o.getClass())
+                return false;
+
+            ActiveLearningUserStateKey that = (ActiveLearningUserStateKey) o;
+
+            if (projectId != that.projectId)
+                return false;
+            return userName.equals(that.userName);
+        }
+
+        @Override
+        public int hashCode()
+        {
+            int result = userName.hashCode();
+            result = 31 * result + (int) (projectId ^ (projectId >>> 32));
+            return result;
+        }
     }
 }

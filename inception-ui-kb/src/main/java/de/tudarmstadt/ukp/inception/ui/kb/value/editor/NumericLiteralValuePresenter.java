@@ -15,16 +15,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.search.index.mtas;
+package de.tudarmstadt.ukp.inception.ui.kb.value.editor;
 
+import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.model.CompoundPropertyModel;
+import org.apache.wicket.model.IModel;
 
-public class IndexingConstants {
-    public static final String KB = "kb";
-    public static final String KBENTITY = "KB.Entity";
-    public static final String KBCONCEPT = "KBConcept";
-    public static final String KBINSTANCE = "KBInstance";
-    public static final String INDEXKBCONCEPT = "class";
-    public static final String INDEXKBINSTANCE = "instance";  
+import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
+
+public class NumericLiteralValuePresenter
+    extends ValuePresenter
+{
+    private static final long serialVersionUID = -6774637988828817203L;
+
+    public NumericLiteralValuePresenter(String aId, IModel<KBStatement> aModel)
+    {
+        super(aId, CompoundPropertyModel.of(aModel));
+
+        add(new Label("value"));
+    }
 }
-
-

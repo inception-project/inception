@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.kb.util;
 
 import java.net.URI;
+import java.util.ArrayList;
 
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
@@ -64,7 +65,10 @@ public class TestFixtures
         kb.setLabelIri(RDFS.LABEL);
         kb.setPropertyTypeIri(RDF.PROPERTY);
         kb.setDescriptionIri(RDFS.COMMENT);
-
+        kb.setDefaultLanguage("en");
+        kb.setPropertyLabelIri(RDFS.LABEL);
+        kb.setPropertyDescriptionIri(RDFS.COMMENT);
+        kb.setExplicitlyDefinedRootConcepts(new ArrayList<>());
         kb.setReification(reification);
         return kb;
     }
@@ -77,13 +81,28 @@ public class TestFixtures
         return concept;
     }
 
+    public KBConcept buildConceptWithLanguage(String aLanguage)
+    {
+        KBConcept concept = buildConcept();
+        concept.setLanguage(aLanguage);
+        return concept;
+    }
+
     public KBProperty buildProperty()
     {
         KBProperty property = new KBProperty();
         property.setDescription("Property description");
-        property.setDomain(URI.create("https://test.schema.com/#domain"));
+        property.setDomain("https://test.schema.com/#domain");
         property.setName("Property name");
-        property.setRange(URI.create("https://test.schema.com/#range"));
+        property.setRange("https://test.schema.com/#range");
+        property.setLanguage("en");
+        return property;
+    }
+
+    public KBProperty buildPropertyWithLanguage(String aLanguage)
+    {
+        KBProperty property = buildProperty();
+        property.setLanguage(aLanguage);
         return property;
     }
 

@@ -20,8 +20,11 @@ package de.tudarmstadt.ukp.inception.ui.kb.feature;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
@@ -31,6 +34,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
@@ -48,15 +54,27 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 public class PropertyFeatureSupport
     implements FeatureSupport<Void>
 {
-    private static final Logger LOG = LoggerFactory.getLogger(PropertyFeatureSupport.class);
     public static final String PREDICATE_KEY = "KB: Property";
-    public static final String FACT_PREDICATE_PREFIX = "kb-property:";
+    public static final String PREFIX = "kb-property:";
+    
+    private static final Logger LOG = LoggerFactory.getLogger(PropertyFeatureSupport.class);
 
-    @Autowired private FactLinkingService factService;
-    @Autowired private KnowledgeBaseService kbService;
-
+    private final KnowledgeBaseService kbService;
+    
+    private LoadingCache<Key, String> labelCache = Caffeine.newBuilder()
+        .maximumSize(10_000)
+        .expireAfterWrite(1, TimeUnit.MINUTES)
+        .refreshAfterWrite(1, TimeUnit.MINUTES)
+        .build(key -> loadLabelValue(key));
+    
     private String featureSupportId;
 
+    @Autowired
+    public PropertyFeatureSupport(KnowledgeBaseService aKbService)
+    {
+        kbService = aKbService;
+    }
+    
     @Override
     public String getId()
     {
@@ -73,7 +91,7 @@ public class PropertyFeatureSupport
     public List<FeatureType> getSupportedFeatureTypes(AnnotationLayer aAnnotationLayer)
     {
         List<FeatureType> types = new ArrayList<>();
-        types.add(new FeatureType(FACT_PREDICATE_PREFIX, PREDICATE_KEY, featureSupportId, true));
+        types.add(new FeatureType(PREFIX, PREDICATE_KEY, featureSupportId, true));
         return types;
     }
 
@@ -82,7 +100,7 @@ public class PropertyFeatureSupport
     {
         switch (aFeature.getMultiValueMode()) {
         case NONE:
-            return aFeature.getType().startsWith(FACT_PREDICATE_PREFIX);
+            return aFeature.getType().startsWith(PREFIX);
         case ARRAY: // fall-through
         default:
             return false;
@@ -92,22 +110,24 @@ public class PropertyFeatureSupport
     @Override
     public String renderFeatureValue(AnnotationFeature aFeature, String aLabel)
     {
+        String renderValue = null;
+        if (aLabel != null) {
+            renderValue = labelCache.get(new Key(aFeature, aLabel));
+        }
+        return renderValue;
+    }
+
+    private String loadLabelValue(Key aKey)
+    {
         try {
-            String renderValue = null;
-            if (aLabel != null) {
-                // FIXME Since this might be called very often during rendering, it *might* be
-                // worth to set up an LRU cache instead of relying on the performance of the
-                // underlying KB store.
-                renderValue = kbService.getKnowledgeBases(aFeature.getProject()).stream()
-                    .map(k -> kbService.readProperty(k, aLabel))
+            return kbService.getKnowledgeBases(aKey.getAnnotationFeature().getProject()).stream()
+                    .map(k -> kbService.readProperty(k, aKey.getLabel()))
                     .flatMap(o -> o.map(Stream::of).orElseGet(Stream::empty))
                     .map(KBProperty::getUiLabel).findAny().orElseThrow(NoSuchElementException::new);
-            }
-            return renderValue;
         }
         catch (Exception e) {
-            LOG.error("Unable to render feature value", e);
-            return "ERROR";
+            LOG.error("Unable to render feature value [{}]", aKey.getLabel(), e);
+            return "ERROR (" + aKey.getLabel() + ")";
         }
     }
 
@@ -135,25 +155,6 @@ public class PropertyFeatureSupport
         if (aValue instanceof String) {
             String identifier = (String) aValue;
             return new KBHandle(identifier, renderFeatureValue(aFeature, identifier));
-//            Project project = aFeature.getProject();
-//            ConceptFeatureTraits traits = factService.getFeatureTraits(project);
-//            // Use the property from a particular knowledge base
-//            Optional<KBProperty> property = null;
-//            if (traits.getRepositoryId() != null) {
-//                property = kbService
-//                    .getKnowledgeBaseById(aFeature.getProject(), traits.getRepositoryId())
-//                    .flatMap(kb -> kbService.readProperty(kb, identifier));
-//            }
-//            // Use the property from any knowledge base (leave KB unselected)
-//            else {
-//                for (KnowledgeBase kb : kbService.getKnowledgeBases(project)) {
-//                    property = kbService.readProperty(kb, identifier);
-//                    if (property.isPresent()) {
-//                        break;
-//                    }
-//                }
-//            }
-//            return property.map(i -> KBHandle.of(i)).orElseThrow(NoSuchElementException::new);
         }
         else if (aValue == null ) {
             return null;
@@ -174,7 +175,7 @@ public class PropertyFeatureSupport
 
         switch (featureState.feature.getMultiValueMode()) {
         case NONE:
-            if (featureState.feature.getType().startsWith(FACT_PREDICATE_PREFIX)) {
+            if (featureState.feature.getType().startsWith(PREFIX)) {
                 editor = new PropertyFeatureEditor(aId, aOwner, aHandler, aStateModel,
                     aFeatureStateModel);
             }
@@ -195,6 +196,46 @@ public class PropertyFeatureSupport
         AnnotationFeature aFeature)
     {
         aTD.addFeature(aFeature.getName(), "", CAS.TYPE_NAME_STRING);
+    }
+
+    private class Key
+    {
+        private final AnnotationFeature feature;
+        private final String label;
+        
+        public Key(AnnotationFeature aFeature, String aLabel)
+        {
+            super();
+            feature = aFeature;
+            label = aLabel;
+        }
+        
+        public String getLabel()
+        {
+            return label;
+        }
+        
+        public AnnotationFeature getAnnotationFeature()
+        {
+            return feature;
+        }
+        
+        @Override
+        public boolean equals(final Object other)
+        {
+            if (!(other instanceof Key)) {
+                return false;
+            }
+            Key castOther = (Key) other;
+            return new EqualsBuilder().append(feature, castOther.feature)
+                    .append(label, castOther.label).isEquals();
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return new HashCodeBuilder().append(feature).append(label).toHashCode();
+        }
     }
 }
 

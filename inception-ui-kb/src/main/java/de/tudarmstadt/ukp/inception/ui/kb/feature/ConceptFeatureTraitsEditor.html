@@ -19,6 +19,14 @@
   xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 <wicket:panel>
   <form wicket:id="form">
+    <div class="form-group" wicket:enclosure="allowedValueType">
+      <label wicket:for="allowedValueType" class="col-sm-4 control-label">
+        <wicket:label key="allowedValueType"/>
+      </label>
+      <div class="col-sm-8">
+        <select wicket:id="allowedValueType" class="form-control"></select>
+      </div>
+    </div>
     <div class="form-group" wicket:enclosure="knowledgeBase">
       <label wicket:for="knowledgeBase" class="col-sm-4 control-label">
         <wicket:label key="knowledgeBase"/>
