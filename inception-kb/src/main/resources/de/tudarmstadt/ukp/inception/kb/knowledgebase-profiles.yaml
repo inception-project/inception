@@ -8,6 +8,9 @@ british_museum:
       label: http://www.w3.org/2000/01/rdf-schema#label
       property-type: http://www.w3.org/1999/02/22-rdf-syntax-ns#Property
       description: http://www.w3.org/2000/01/rdf-schema#comment
+      property-type: http://www.w3.org/1999/02/22-rdf-syntax-ns#Property
+      property-label: http://www.w3.org/2000/01/rdf-schema#label
+      property-description: http://www.w3.org/2000/01/rdf-schema#comment
 wikidata:
   name: Wikidata
   sparql-url: https://query.wikidata.org/sparql
@@ -18,6 +21,8 @@ wikidata:
       label: http://www.w3.org/2000/01/rdf-schema#label
       property-type: http://www.wikidata.org/entity/Q18616576
       description: http://www.w3.org/2000/01/rdf-schema#comment
+      property-label: http://www.w3.org/2000/01/rdf-schema#label
+      property-description: http://www.w3.org/2000/01/rdf-schema#comment
 virtuoso:
   name: UKP Wikidata
   sparql-url: http://knowledgebase.ukp.informatik.tu-darmstadt.de:8890/sparql
@@ -28,6 +33,8 @@ virtuoso:
       label: http://www.w3.org/2000/01/rdf-schema#label
       property-type: http://www.wikidata.org/entity/Q18616576
       description: http://www.schema.org/description
+      property-label: http://www.w3.org/2000/01/rdf-schema#label
+      property-description: http://www.schema.org/description
 db_pedia:
   name: DBpedia
   sparql-url: http://dbpedia.org/sparql
@@ -38,6 +45,8 @@ db_pedia:
       label: http://www.w3.org/2000/01/rdf-schema#label
       property-type: http://www.w3.org/1999/02/22-rdf-syntax-ns#Property
       description: http://www.w3.org/2000/01/rdf-schema#comment
+      property-label: http://www.w3.org/2000/01/rdf-schema#label
+      property-description: http://www.w3.org/2000/01/rdf-schema#comment
 babel_net:
   name: BabelNet
   sparql-url: http://babelnet.org/sparql/
@@ -48,6 +57,8 @@ babel_net:
       label: http://www.w3.org/2000/01/rdf-schema#label
       property-type: http://www.w3.org/1999/02/22-rdf-syntax-ns#Property
       description: http://www.w3.org/2000/01/rdf-schema#comment
+      property-label: http://www.w3.org/2000/01/rdf-schema#label
+      property-description: http://www.w3.org/2000/01/rdf-schema#comment
 yago:
   name: YAGO
   sparql-url: https://linkeddata1.calcul.u-psud.fr/sparql
@@ -58,6 +69,8 @@ yago:
       label: http://www.w3.org/2000/01/rdf-schema#label
       property-type: http://www.w3.org/1999/02/22-rdf-syntax-ns#Property
       description: http://www.w3.org/2000/01/rdf-schema#comment
+      property-label: http://www.w3.org/2000/01/rdf-schema#label
+      property-description: http://www.w3.org/2000/01/rdf-schema#comment
 zbw-stw-economics:
   name: STW Thesaurus for Economics
   sparql-url: http://zbw.eu/beta/sparql/stw/query
@@ -68,6 +81,8 @@ zbw-stw-economics:
       label: http://www.w3.org/2004/02/skos/core#prefLabel
       property-type: http://www.w3.org/1999/02/22-rdf-syntax-ns#Property
       description: http://www.w3.org/2000/01/rdf-schema#comment
+      property-label: http://www.w3.org/2004/02/skos/core#prefLabel
+      property-description: http://www.w3.org/2000/01/rdf-schema#comment
 zbw-gnd:
   name: Integrated Authority File (GND)
   sparql-url: http://zbw.eu/beta/sparql/gnd/query
@@ -78,4 +93,6 @@ zbw-gnd:
       label: http://www.w3.org/2004/02/skos/core#prefLabel
       property-type: http://www.w3.org/1999/02/22-rdf-syntax-ns#Property
       description: http://www.w3.org/2000/01/rdf-schema#comment
+      property-label: http://www.w3.org/2004/02/skos/core#prefLabel
+      property-description: http://www.w3.org/2000/01/rdf-schema#comment
 

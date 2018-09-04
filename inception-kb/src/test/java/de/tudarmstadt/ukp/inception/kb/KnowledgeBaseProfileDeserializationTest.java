@@ -46,8 +46,12 @@ public class KnowledgeBaseProfileDeserializationTest
         String label = "http://www.w3.org/2000/01/rdf-schema#label";
         String propertyTypeIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#Property";
         String descriptionIri = "http://www.w3.org/2000/01/rdf-schema#comment";
-        
-        KnowledgeBaseMapping referenceMapping = new KnowledgeBaseMapping(classIri, subclassIri, typeIri, descriptionIri, label , propertyTypeIri);
+        String propertyLabelIri = "http://www.w3.org/2000/01/rdf-schema#label";
+        String propertyDescriptionIri = "http://www.w3.org/2000/01/rdf-schema#comment";
+
+        KnowledgeBaseMapping referenceMapping = new KnowledgeBaseMapping(classIri, subclassIri,
+            typeIri, descriptionIri, label, propertyTypeIri, propertyLabelIri,
+            propertyDescriptionIri);
         KnowledgeBaseProfile referenceProfile = new KnowledgeBaseProfile();
         referenceProfile.setMapping(referenceMapping);
         referenceProfile.setName(name);
@@ -62,7 +66,9 @@ public class KnowledgeBaseProfileDeserializationTest
                 + "instance-of: " + typeIri + "\n        "
                 + "label: " + label + "\n        "
                 + "property-type: " + propertyTypeIri + "\n        "
-                + "description: " + descriptionIri;
+                + "description: " + descriptionIri + "\n        "
+                + "property-label: " + propertyLabelIri + "\n        "
+                + "property-description: " + propertyDescriptionIri + "\n        ";
         
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 

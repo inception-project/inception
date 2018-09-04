@@ -77,6 +77,8 @@ public class IriConstants
     public static final List<IRI> DESCRIPTION_IRIS;
     public static final List<IRI> LABEL_IRIS;
     public static final List<IRI> PROPERTY_TYPE_IRIS;
+    public static final List<IRI> PROPERTY_LABEL_IRIS;
+    public static final List<IRI> PROPERTY_DESCRIPTION_IRIS;
 
     static {
         ValueFactory vf = SimpleValueFactory.getInstance();
@@ -93,5 +95,8 @@ public class IriConstants
         DESCRIPTION_IRIS = asList(RDFS.COMMENT, SCHEMA_DESCRIPTION);
         LABEL_IRIS = asList(RDFS.LABEL, SKOS.PREF_LABEL);
         PROPERTY_TYPE_IRIS = asList(RDF.PROPERTY, WIKIDATA_PROPERTY_TYPE);
+        PROPERTY_LABEL_IRIS = asList(RDFS.LABEL, SKOS.PREF_LABEL);
+        PROPERTY_DESCRIPTION_IRIS = asList(RDFS.COMMENT, SCHEMA_DESCRIPTION);
+
     }
 }
