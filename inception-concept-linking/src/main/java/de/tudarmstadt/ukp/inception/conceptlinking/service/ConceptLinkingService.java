@@ -152,9 +152,9 @@ public class ConceptLinkingService
         Set<CandidateEntity> candidatesFullText = new HashSet<>();
         if (!aTypedString.isEmpty()) {
             candidatesFullText
-                .addAll(retrieveCandidatesFullText(new CandidateCacheKey(aKB, aTypedString)));
+                .addAll(generateCandidatesFullText(new CandidateCacheKey(aKB, aTypedString)));
         }
-        candidatesFullText.addAll(retrieveCandidatesFullText(new CandidateCacheKey(aKB, aMention)));
+        candidatesFullText.addAll(generateCandidatesFullText(new CandidateCacheKey(aKB, aMention)));
 
         long afterRetrieval = System.currentTimeMillis();
 
@@ -188,22 +188,29 @@ public class ConceptLinkingService
         Set<CandidateEntity> candidatesFullText = new HashSet<>();
 
         try (RepositoryConnection conn = kbService.getConnection(aKey.getKnowledgeBase())) {
-            if (candidateFullTextCache.get(aKey) != null) {
-                candidatesFullText.addAll(candidateFullTextCache.get(aKey));
-            }
-            else {
-                TupleQuery fullTextQueryMention = QueryUtil
-                    .generateCandidateFullTextQuery(conn, aKey.getQuery(),
-                        properties.getCandidateQueryLimit(),
-                        aKey.getKnowledgeBase().getDescriptionIri());
-                candidatesFullText.addAll(processCandidateQuery(fullTextQueryMention));
-            }
-
+            TupleQuery fullTextQueryMention = QueryUtil
+                .generateCandidateFullTextQuery(conn, aKey.getQuery(),
+                    properties.getCandidateQueryLimit(),
+                    aKey.getKnowledgeBase().getDescriptionIri());
+            candidatesFullText.addAll(processCandidateQuery(fullTextQueryMention));
         }
         catch (QueryEvaluationException e) {
             logger.error("Query evaluation was unsuccessful: ", e);
         }
 
+        return candidatesFullText;
+    }
+
+    public Set<CandidateEntity> generateCandidatesFullText(CandidateCacheKey aKey)
+    {
+        Set<CandidateEntity> candidatesFullText = new HashSet<>();
+
+        if (candidateFullTextCache.get(aKey) != null) {
+            candidatesFullText.addAll(candidateFullTextCache.get(aKey));
+        }
+        else {
+            candidatesFullText.addAll(retrieveCandidatesFullText(aKey));
+        }
         if (candidatesFullText.isEmpty()) {
             String[] split = aKey.getQuery().split(" ");
             if (split.length > 1) {
@@ -213,7 +220,6 @@ public class ConceptLinkingService
                 }
             }
         }
-
         return candidatesFullText;
     }
 
