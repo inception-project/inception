@@ -1136,7 +1136,7 @@ public class KnowledgeBaseServiceImpl
         SchemaProfile[] profiles = SchemaProfile.values();
         KnowledgeBaseMapping mapping = aProfile.getMapping();
         for (int i = 0; i < profiles.length; i++) {
-            // Check if kb has a known schema profile
+            // Check if kb profile corresponds to a known schema profile
             if (equalsSchemaProfile(profiles[i], mapping.getClassIri(), mapping.getSubclassIri(),
                 mapping.getTypeIri(), mapping.getDescriptionIri(), mapping.getLabelIri(),
                 mapping.getPropertyTypeIri())) {
