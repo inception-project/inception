@@ -116,16 +116,6 @@ public class KnowledgeBaseServiceImpl
     public KnowledgeBaseServiceImpl(
             @org.springframework.beans.factory.annotation.Value("${data.path}") File dataDir)
     {
-        // If there is still the deprecated SYSTEM repository from RDF4J, then we rename it because
-        // if it is present, RDF4J may internally generate an exception which prevents us from 
-        // creating new KBs. https://github.com/eclipse/rdf4j/issues/1077
-        File systemRepo = new File(dataDir, "kb/repositories/SYSTEM");
-        if (systemRepo.exists()) {
-            log.info("Detected deprecated RDF4J SYSTEM repo - renaming to SYSTEM.off "
-                    + "(this is a one-time action)");
-            systemRepo.renameTo(new File(dataDir, "kb/repositories/SYSTEM.off"));
-        }
-        
         String url = Paths.get(dataDir.getAbsolutePath(), "kb").toUri().toString();
         repoManager = RepositoryProvider.getRepositoryManager(url);
         log.info("Knowledge base repository path: " + url);
