@@ -19,17 +19,12 @@ package de.tudarmstadt.ukp.inception.ui.kb.project.wizard;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
-import org.apache.commons.io.FileUtils;
 
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Component;
@@ -75,7 +70,7 @@ import de.tudarmstadt.ukp.inception.app.bootstrap.BootstrapWizard;
 import de.tudarmstadt.ukp.inception.app.bootstrap.BootstrapWizardButtonBar;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
-import de.tudarmstadt.ukp.inception.kb.io.FileUploadHelper;
+import de.tudarmstadt.ukp.inception.kb.io.FileUploadDownloadHelper;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
@@ -108,9 +103,7 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
 
     private @SpringBean KnowledgeBaseService kbService;
 
-    //tmp files are going to be deleted after import in the last step
-    private final Map<String, File> tmpImportFiles;
-
+    private final Map<String, File> uploadedFiles;
     private final IModel<Project> projectModel;
     private final DynamicWizardModel wizardModel;
     private final CompoundPropertyModel<KnowledgeBaseWrapper> wizardDataModel;
@@ -120,7 +113,7 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
     public KnowledgeBaseCreationWizard(String id, IModel<Project> aProjectModel) {
         super(id);
 
-        tmpImportFiles = new HashMap<>();
+        uploadedFiles = new HashMap<>();
 
         projectModel = aProjectModel;
         wizardDataModel = new CompoundPropertyModel<>(new KnowledgeBaseWrapper());
@@ -241,7 +234,6 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
     private final class LocalRepositoryStep extends DynamicWizardStep {
 
         private static final long serialVersionUID = 8212277960059805657L;
-        private static final String TMP_FILE_NAME = "inception_tmp_kb";
         private static final String CLASSPATH_PREFIX = "classpath:";
         
         private CompoundPropertyModel<KnowledgeBaseWrapper> model;
@@ -318,14 +310,11 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
                     String accessUrl = selectedKnowledgeBaseProfile.getAccess().getAccessUrl();
 
                     if (!accessUrl.startsWith(CLASSPATH_PREFIX)) {
-                        // Download to tmp file
-                        Path pathName = Paths.get(accessUrl);
-                        File tmpFile = File
-                            .createTempFile(TMP_FILE_NAME, pathName.getFileName().toString());
-                        FileUtils.copyURLToFile(
-                            new URL(accessUrl),
-                            tmpFile);
-                        tmpImportFiles.put(pathName.getFileName().toString(), tmpFile);
+                        FileUploadDownloadHelper fileUploadDownloadHelper =
+                            new FileUploadDownloadHelper(getApplication());
+                        File tmpFile = fileUploadDownloadHelper
+                            .writeFileDownloadToTemporaryFile(accessUrl, model);
+                        model.getObject().getFiles().add(tmpFile);
                     }
                     else {
                         // import from classpath
@@ -363,10 +352,9 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
             model.getObject().getKb().setReadOnly(false);
             try {
                 for (FileUpload fu : fileUpload.getFileUploads()) {
-                    uploadFile(fu);
+                    File tmp = uploadFile(fu);
+                    model.getObject().getFiles().add(tmp);
                 }
-                // Add all tmp files for the import
-                model.getObject().getFiles().addAll(tmpImportFiles.values());
             } catch (Exception e) {
                 completed = false;
                 log.error("Error while uploading files", e);
@@ -376,14 +364,15 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
 
         private File uploadFile(FileUpload fu) throws Exception {
             String fileName = fu.getClientFileName();
-            if (!tmpImportFiles.containsKey(fileName)) {
-                FileUploadHelper fileUploadHelper = new FileUploadHelper(getApplication());
-                File tmpFile = fileUploadHelper.writeToTemporaryFile(fu, model);
-                tmpImportFiles.put(fileName, tmpFile);
+            if (!uploadedFiles.containsKey(fileName)) {
+                FileUploadDownloadHelper fileUploadDownloadHelper = new FileUploadDownloadHelper(
+                    getApplication());
+                File tmpFile = fileUploadDownloadHelper.writeFileUploadToTemporaryFile(fu, model);
+                uploadedFiles.put(fileName, tmpFile);
             } else {
                 log.debug("File [{}] already downloaded, skipping!", fileName);
             }
-            return tmpImportFiles.get(fileName);
+            return uploadedFiles.get(fileName);
         }
 
         @Override
@@ -501,14 +490,6 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
             catch (Exception e) {
                 error(e.getMessage());
 
-            }
-            finally {
-                for (File tmpFile : tmpImportFiles.values()) {
-                    if (!tmpFile.delete()) {
-                        log.error(
-                            "Unable to delete temporary file after import: " + tmpFile.getName());
-                    }
-                }
             }
         }
 
