@@ -23,8 +23,10 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
@@ -47,7 +49,8 @@ public class KBProperty
     private String domain;
     private KnowledgeBase kb;
     private String range;
-    
+    private String language;
+
     private List<Statement> originalStatements = new ArrayList<>();
 
     public KBProperty()
@@ -139,12 +142,22 @@ public class KBProperty
         range = aRange;
     }
 
+    @Override
+    public String getLanguage()
+    {
+        return language;
+    }
+
+    @Override
+    public void setLanguage(String aLanguage)
+    {
+        language = aLanguage;
+    }
+
     public List<Statement> getOriginalStatements()
     {
         return originalStatements;
     }
-    
-    
 
     public void write(RepositoryConnection aConn, KnowledgeBase kb)
     {
@@ -158,15 +171,28 @@ public class KBProperty
         aConn.add(typeStmt);
 
         if (isNotBlank(name)) {
-            Statement nameStmt = vf.createStatement(subject, kb.getLabelIri(),
-                    vf.createLiteral(name));
+            Literal nameLiteral;
+            if (language == null) {
+                nameLiteral = vf.createLiteral(name);
+            }
+            else {
+                nameLiteral = vf.createLiteral(name, language);
+            }
+            Statement nameStmt = vf.createStatement(subject, kb.getLabelIri(), nameLiteral);
             originalStatements.add(nameStmt);
             aConn.add(nameStmt);
         }
 
         if (isNotBlank(description)) {
+            Literal descriptionLiteral;
+            if (language == null) {
+                descriptionLiteral = vf.createLiteral(description);
+            }
+            else {
+                descriptionLiteral = vf.createLiteral(description, language);
+            }
             Statement descStmt = vf
-                .createStatement(subject, kb.getDescriptionIri(), vf.createLiteral(description));
+                .createStatement(subject, kb.getDescriptionIri(), descriptionLiteral);
             originalStatements.add(descStmt);
             aConn.add(descStmt);
         }
@@ -193,15 +219,27 @@ public class KBProperty
         kbProp.setKB(kb);
         kbProp.originalStatements.add(aStmt);
 
-        readFirst(aConn, aStmt.getSubject(), kb.getLabelIri(), null).ifPresent((stmt) -> {
-            kbProp.setName(stmt.getObject().stringValue());
-            kbProp.originalStatements.add(stmt);
-        });
+        readFirst(aConn, aStmt.getSubject(), kb.getLabelIri(), null, kb.getDefaultLanguage())
+            .ifPresent((stmt) -> {
+                kbProp.setName(stmt.getObject().stringValue());
+                kbProp.originalStatements.add(stmt);
+                if (stmt.getObject() instanceof Literal) {
+                    Literal literal = (Literal) stmt.getObject();
+                    Optional<String> language = literal.getLanguage();
+                    language.ifPresent(kbProp::setLanguage);
+                }
+            });
 
-        readFirst(aConn, aStmt.getSubject(), kb.getDescriptionIri(), null).ifPresent((stmt) -> {
-            kbProp.setDescription(stmt.getObject().stringValue());
-            kbProp.originalStatements.add(stmt);
-        });
+        readFirst(aConn, aStmt.getSubject(), kb.getDescriptionIri(), null, kb.getDefaultLanguage())
+            .ifPresent((stmt) -> {
+                kbProp.setDescription(stmt.getObject().stringValue());
+                kbProp.originalStatements.add(stmt);
+                if (stmt.getObject() instanceof Literal) {
+                    Literal literal = (Literal) stmt.getObject();
+                    Optional<String> language = literal.getLanguage();
+                    language.ifPresent(kbProp::setLanguage);
+                }
+            });
 
         readFirst(aConn, aStmt.getSubject(), RDFS.RANGE, null).ifPresent((stmt) -> {
             kbProp.setRange(stmt.getObject().stringValue());

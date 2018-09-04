@@ -22,12 +22,12 @@ virtuoso:
   name: UKP Wikidata
   sparql-url: http://knowledgebase.ukp.informatik.tu-darmstadt.de:8890/sparql
   mapping:
-      class: http://www.wikidata.org/entity/Q35120
-      subclass-of: http://www.wikidata.org/prop/direct/P279
-      instance-of: http://www.wikidata.org/prop/direct/P31
+      class: http://www.w3.org/2002/07/owl#Class
+      subclass-of: http://www.w3.org/2000/01/rdf-schema#subClassOf
+      instance-of: http://www.w3.org/1999/02/22-rdf-syntax-ns#type
       label: http://www.w3.org/2000/01/rdf-schema#label
       property-type: http://www.wikidata.org/entity/Q18616576
-      description: http://www.schema.org/description      
+      description: http://www.schema.org/description
 db_pedia:
   name: DBpedia
   sparql-url: http://dbpedia.org/sparql

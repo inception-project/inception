@@ -154,7 +154,13 @@ public class KnowledgeBase
     @CollectionTable(name = "knowledgebase_root_classes")
     @Column(name = "name")
     private List<IRI> explicitlyDefinedRootConcepts = new ArrayList<>();
-    
+
+    /**
+     * The default language for labels and descriptions of KB elements
+     */
+    @Column
+    private String defaultLanguage;
+
     public String getRepositoryId() {
         return repositoryId;
     }
@@ -252,6 +258,16 @@ public class KnowledgeBase
     public void setPropertyTypeIri(IRI aPropertyTypeIri)
     {
         propertyTypeIri = aPropertyTypeIri;
+    }
+
+    public String getDefaultLanguage()
+    {
+        return defaultLanguage;
+    }
+
+    public void setDefaultLanguage(String aLanguage)
+    {
+        defaultLanguage = aLanguage;
     }
 
     public boolean isReadOnly()
