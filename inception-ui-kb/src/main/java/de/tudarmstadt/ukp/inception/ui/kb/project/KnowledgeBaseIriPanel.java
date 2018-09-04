@@ -126,8 +126,12 @@ public class KnowledgeBaseIriPanel
                 kbModel.bind("kb.labelIri"), IriConstants.LABEL_IRIS);
         ComboBox<String> propertyTypeField = buildComboBox("propertyTypeIri",
                 kbModel.bind("kb.propertyTypeIri"), IriConstants.PROPERTY_TYPE_IRIS);
+        ComboBox<String> propertyLabelField = buildComboBox("propertyLabelIri",
+            kbModel.bind("kb.propertyLabelIri"), IriConstants.PROPERTY_LABEL_IRIS);
+        ComboBox<String> propertyDescriptionField = buildComboBox("propertyDescriptionIri",
+            kbModel.bind("kb.propertyDescriptionIri"), IriConstants.PROPERTY_DESCRIPTION_IRIS);
         comboBoxWrapper.add(classField, subclassField, typeField, descriptionField, labelField,
-                propertyTypeField);
+                propertyTypeField, propertyLabelField, propertyDescriptionField);
        
         // OnChange update the model with corresponding iris
         iriSchemaChoice.setChangeHandler(new ISelectionChangeHandler<SchemaProfile>()
@@ -143,6 +147,9 @@ public class KnowledgeBaseIriPanel
                 descriptionField.setModelObject(bean.getDescriptionIri().stringValue());
                 labelField.setModelObject(bean.getLabelIri().stringValue());
                 propertyTypeField.setModelObject(bean.getPropertyTypeIri().stringValue());
+                propertyLabelField.setModelObject(bean.getPropertyLabelIri().stringValue());
+                propertyDescriptionField
+                    .setModelObject(bean.getPropertyDescriptionIri().stringValue());
 
                 target.add(comboBoxWrapper, iriSchemaChoice);
             }

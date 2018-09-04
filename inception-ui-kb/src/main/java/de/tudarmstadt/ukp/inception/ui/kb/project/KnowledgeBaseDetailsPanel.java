@@ -46,6 +46,7 @@ import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.resource.IResourceStream;
+import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.repository.RepositoryException;
 import org.eclipse.rdf4j.repository.config.RepositoryConfigException;
 import org.eclipse.rdf4j.repository.config.RepositoryImplConfig;
@@ -54,11 +55,14 @@ import org.eclipse.rdf4j.rio.RDFFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.googlecode.wicket.kendo.ui.form.combobox.ComboBox;
+
 import de.agilecoders.wicket.core.markup.html.bootstrap.button.Buttons;
 import de.agilecoders.wicket.core.markup.html.bootstrap.form.BootstrapCheckbox;
 import de.agilecoders.wicket.core.markup.html.bootstrap.form.radio.BootstrapRadioGroup;
 import de.agilecoders.wicket.core.markup.html.bootstrap.form.radio.EnumRadioChoiceRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
@@ -429,7 +433,12 @@ public class KnowledgeBaseDetailsPanel
             // Schema configuration
             Component iriPanel = new KnowledgeBaseIriPanel("iriPanel", model,
                 KnowledgeBaseIriPanelMode.PROJECTSETTINGS)
-                .add(LambdaBehavior.onConfigure(it -> it.setEnabled(false)));
+                            .add(LambdaBehavior.onConfigure(it -> it.setEnabled(false)));
+
+            // add disabled language field
+            wmc.add(new Label("language", kbwModel.bind("kb.defaultLanguage"))
+                .add(LambdaBehavior.onConfigure(tf -> tf.setEnabled(false))));
+
             // don't show radio group in view mode 
             iriPanel.get("iriSchema").setVisible(false);
             wmc.add(iriPanel);
@@ -470,12 +479,33 @@ public class KnowledgeBaseDetailsPanel
             wmc.add(lv);
         }
 
-        @Override protected void setUpRemoteKnowledgeBaseComponents(WebMarkupContainer wmc)
-        {
-            addDisabledUrlField(wmc, "url");
+        @Override
+        protected void setUpRemoteKnowledgeBaseComponents(WebMarkupContainer wmc) {
+            addDisabledTextField(wmc, "url");
         }
 
-        private void addDisabledUrlField(WebMarkupContainer wmc, String id)
+        private void addDisabledIriField(WebMarkupContainer wmc, String id, IModel<IRI> model)
+        {
+            TextField<IRI> textField = new RequiredTextField<IRI>(id, model)
+            {
+                private static final long serialVersionUID = 5886070596284072382L;
+
+                @Override
+                protected String getModelValue()
+                {
+                    return getModelObject().stringValue();
+                }
+
+                @Override
+                protected void onConfigure()
+                {
+                    setEnabled(false);
+                }
+            };
+            wmc.add(textField);
+        }
+
+        private void addDisabledTextField(WebMarkupContainer wmc, String id)
         {
             TextField<String> textField = new RequiredTextField<String>(id);
             textField.add(LambdaBehavior.onConfigure(tf -> tf.setEnabled(false)));
@@ -509,6 +539,16 @@ public class KnowledgeBaseDetailsPanel
 
         @Override protected void setUpCommonComponents(WebMarkupContainer wmc)
         {
+            ComboBox<String> comboBox = new ComboBox<String>("language",
+                kbwModel.bind("kb.defaultLanguage"),
+                Arrays.asList("en", "de"));
+            comboBox.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> {
+                // Do nothing just update the model values
+            }));
+            comboBox.setOutputMarkupId(true);
+            comboBox.setRequired(true);
+            wmc.add(comboBox);
+
             // Schema configuration
             wmc.add(new KnowledgeBaseIriPanel("iriPanel", model,
                 KnowledgeBaseIriPanelMode.PROJECTSETTINGS));

@@ -10,3 +10,5 @@ test_profile:
       label: http://www.w3.org/2000/01/rdf-schema#label
       property-type: http://www.w3.org/1999/02/22-rdf-syntax-ns#Property
       description: http://www.w3.org/2000/01/rdf-schema#comment
+      property-label: http://www.w3.org/2000/01/rdf-schema#label
+      property-description: http://www.w3.org/2000/01/rdf-schema#comment

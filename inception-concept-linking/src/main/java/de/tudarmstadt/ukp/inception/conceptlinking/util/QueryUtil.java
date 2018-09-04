@@ -27,6 +27,8 @@ import org.eclipse.rdf4j.query.TupleQuery;
 import org.eclipse.rdf4j.queryrender.RenderUtils;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 
+import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
+
 /**
  * Contains SPARQL query parts and query builder methods
  */
@@ -69,18 +71,26 @@ public class QueryUtil
 
     private static final String WIKIMEDIA_NAVIGATIONAL_TEMPLATE = "e:Q11753321";
 
-    private static String getExactMatchingQueryPart(String aString)
+    /**
+     *
+     * @param aString
+     * @param aLanguage
+     * @return
+     */
+    private static String getExactMatchingQueryPart(String aString, String aLanguage)
     {
         return String.join("\n",
             "    SELECT DISTINCT ?e2 ?description WHERE",
             "    {",
             "     VALUES ?labelpredicate {rdfs:label skos:altLabel}",
             "      {",
-            "        ?e2 ?labelpredicate ?" + aString + " @en .",
+            "        ?e2 ?labelpredicate ?"
+                        + aString + " @" + (aLanguage != null ? aLanguage : "en") + " .",
             "        OPTIONAL",
             "        {",
             "          ?e2 ?descriptionIri ?description.",
-            "          FILTER ( lang(?description) = \"en\" )",
+            "          FILTER ( lang(?description) = \""
+                        + (aLanguage != null ? aLanguage : "en") + "\" )",
             "        }",
             "      }",
             "    }");
@@ -97,20 +107,23 @@ public class QueryUtil
      *
      * @param aTypedString typed string from the user
      * @param aMention the marked surface form
-     * @param aDescriptionIri KB-specific IRI that indicates a description
+     * @param aKb the Knowledge Base
      * @return a query to retrieve candidate entities
      */
     public static TupleQuery generateCandidateExactQuery(RepositoryConnection conn,
-        String aTypedString, String aMention, IRI aDescriptionIri)
+        String aTypedString, String aMention, KnowledgeBase aKb)
     {
+        IRI aDescriptionIri = aKb.getDescriptionIri();
         aTypedString = RenderUtils.escape(aTypedString);
         aMention = RenderUtils.escape(aMention);
 
         // Matching user input exactly
-        String exactMatchingTypedString = getExactMatchingQueryPart("exactTyped");
+        String exactMatchingTypedString = getExactMatchingQueryPart("exactTyped",
+            aKb.getDefaultLanguage());
 
         // Match surface form exactly
-        String exactMatchingMention = getExactMatchingQueryPart("exactMention");
+        String exactMatchingMention = getExactMatchingQueryPart("exactMention",
+            aKb.getDefaultLanguage());
 
         String query = String.join("\n",
             "DEFINE input:inference 'instances'",
@@ -135,7 +148,8 @@ public class QueryUtil
             "    ?e2 rdf:type ?topic",
             "  }",
             "  ?e2 rdfs:label ?label.",
-            "  FILTER ( lang(?label) = \"en\" )",
+            "  FILTER ( lang(?label) = \"" + (aKb.getDefaultLanguage() != null
+                ? aKb.getDefaultLanguage() : "en") + "\" )",
             "}");
 
         ValueFactory vf = SimpleValueFactory.getInstance();
@@ -148,7 +162,8 @@ public class QueryUtil
         return tupleQuery;
     }
 
-    private static String getFullTextMatchingQueryPart(String aString, int aLimit) {
+    private static String getFullTextMatchingQueryPart(String aString, int aLimit, String aLanguage)
+    {
         return  String.join("\n",
             "    SELECT DISTINCT ?e2 ?altLabel ?description WHERE",
             "    {",
@@ -159,7 +174,8 @@ public class QueryUtil
             "        OPTIONAL",
             "        {",
             "          ?e2 ?descriptionIri ?description.",
-            "          FILTER ( lang(?description) = \"en\" )",
+            "          FILTER ( lang(?description) = \""
+                         + (aLanguage != null ? aLanguage : "en") + "\" )",
             "        }",
             "      }",
             "    }",
@@ -172,15 +188,16 @@ public class QueryUtil
      *
      * @param aString String for which to perform full text search
      * @param aLimit maximum number of results
-     * @param aDescriptionIri KB-specific IRI that indicates a description
+     * @param aKb the Knowledge Base
      * @return a query to retrieve candidate entities
      */
     public static TupleQuery generateCandidateFullTextQuery(RepositoryConnection conn,
-        String aString, int aLimit, IRI aDescriptionIri)
+        String aString, int aLimit, KnowledgeBase aKb)
     {
         aString = RenderUtils.escape(aString).toLowerCase(Locale.ENGLISH);
 
-        String fullTextMatchingString = getFullTextMatchingQueryPart("string", aLimit);
+        String fullTextMatchingString = getFullTextMatchingQueryPart("string", aLimit,
+            aKb.getDefaultLanguage());
 
         String query = String.join("\n",
             "DEFINE input:inference 'instances'",
@@ -201,14 +218,15 @@ public class QueryUtil
             "    ?e2 rdf:type ?topic",
             "  }",
             "  ?e2 rdfs:label ?label.",
-            "  FILTER ( lang(?label) = \"en\" )",
+            "  FILTER ( lang(?label) = \""
+                + (aKb.getDefaultLanguage() != null ? aKb.getDefaultLanguage() : "en") + "\" )",
             "}");
 
         ValueFactory vf = SimpleValueFactory.getInstance();
 
         TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, query);
         tupleQuery.setBinding("string", vf.createLiteral(aString));
-        tupleQuery.setBinding("descriptionIri", aDescriptionIri);
+        tupleQuery.setBinding("descriptionIri", aKb.getDescriptionIri());
         return tupleQuery;
     }
 
@@ -216,10 +234,11 @@ public class QueryUtil
      *
      * @param wikidataId wikidataId, e.g. "Q3"
      * @param limit maximum number of results
+     * @param aKb the Knowledge Base
      * @return a query to retrieve the semantic signature
      */
     public static TupleQuery generateSemanticSignatureQuery(RepositoryConnection conn, String
-        wikidataId, int limit)
+        wikidataId, int limit, KnowledgeBase aKb)
     {
         ValueFactory vf = SimpleValueFactory.getInstance();
         IRI iri = vf.createIRI("http://www.wikidata.org/entity/" + wikidataId);
@@ -240,7 +259,8 @@ public class QueryUtil
             "    }",
             "    {",
             "      GRAPH " + TERMS + " { ?e1 rdfs:label ?label. }",
-            "      FILTER ( lang(?label) = \"en\" )",
+            "      FILTER ( lang(?label) = \""
+                    + (aKb.getDefaultLanguage() != null ? aKb.getDefaultLanguage() : "en") + "\" )",
             "    }",
             "  }",
             " LIMIT " + limit);

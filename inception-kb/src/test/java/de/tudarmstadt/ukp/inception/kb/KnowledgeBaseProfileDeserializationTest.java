@@ -53,8 +53,12 @@ public class KnowledgeBaseProfileDeserializationTest
         String label = "http://www.w3.org/2000/01/rdf-schema#label";
         String propertyTypeIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#Property";
         String descriptionIri = "http://www.w3.org/2000/01/rdf-schema#comment";
-        
-        KnowledgeBaseMapping referenceMapping = new KnowledgeBaseMapping(classIri, subclassIri, typeIri, descriptionIri, label , propertyTypeIri);
+        String propertyLabelIri = "http://www.w3.org/2000/01/rdf-schema#label";
+        String propertyDescriptionIri = "http://www.w3.org/2000/01/rdf-schema#comment";
+
+        KnowledgeBaseMapping referenceMapping = new KnowledgeBaseMapping(classIri, subclassIri,
+            typeIri, descriptionIri, label, propertyTypeIri, propertyLabelIri,
+            propertyDescriptionIri);
         KnowledgeBaseProfile referenceProfile = new KnowledgeBaseProfile();
 
         KnowledgeBaseAccess referenceAccess = new KnowledgeBaseAccess();
