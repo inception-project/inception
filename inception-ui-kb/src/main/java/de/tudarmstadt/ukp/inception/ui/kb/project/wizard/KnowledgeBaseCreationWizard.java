@@ -346,6 +346,10 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
                                 item.getModelObject().getMapping().getPropertyTypeIri());
                         model.getObject().getKb()
                                 .setLabelIri(item.getModelObject().getMapping().getLabelIri());
+                        model.getObject().getKb().setPropertyLabelIri(
+                            item.getModelObject().getMapping().getPropertyLabelIri());
+                        model.getObject().getKb().setPropertyDescriptionIri(
+                            item.getModelObject().getMapping().getPropertyDescriptionIri());
 
                         t.add(urlField);
                     });

@@ -125,6 +125,18 @@ public class KnowledgeBase
     @Column(nullable = false)
     private IRI propertyTypeIri;
 
+    /**
+     * The IRI for a label of a property
+     */
+    @Column(nullable = false)
+    private IRI propertyLabelIri;
+
+    /**
+     * The IRI for a description of a property
+     */
+    @Column(nullable = false)
+    private IRI propertyDescriptionIri;
+
     @Column(nullable = false)
     private boolean readOnly;
 
@@ -269,6 +281,26 @@ public class KnowledgeBase
     {
         defaultLanguage = aLanguage;
     }
+    
+    public IRI getPropertyLabelIri()
+    {
+        return propertyLabelIri;
+    }
+
+    public void setPropertyLabelIri(IRI aPropertyLabelIri)
+    {
+        propertyLabelIri = aPropertyLabelIri;
+    }
+
+    public IRI getPropertyDescriptionIri()
+    {
+        return propertyDescriptionIri;
+    }
+
+    public void setPropertyDescriptionIri(IRI aPropertyDescriptionIri)
+    {
+        propertyDescriptionIri = aPropertyDescriptionIri;
+    }
 
     public boolean isReadOnly()
     {
@@ -345,6 +377,8 @@ public class KnowledgeBase
         setDescriptionIri(aMapping.getDescriptionIri());
         setLabelIri(aMapping.getLabelIri());
         setPropertyTypeIri(aMapping.getPropertyTypeIri());
+        setPropertyLabelIri(aMapping.getPropertyLabelIri());
+        setPropertyDescriptionIri(aMapping.getPropertyDescriptionIri());
     }
     
     @Override
