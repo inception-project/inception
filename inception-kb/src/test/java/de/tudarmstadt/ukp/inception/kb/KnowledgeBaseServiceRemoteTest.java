@@ -170,6 +170,7 @@ public class KnowledgeBaseServiceRemoteTest
             kb_wine.setDescriptionIri(RDFS.COMMENT);
             kb_wine.setPropertyLabelIri(RDFS.LABEL);
             kb_wine.setPropertyDescriptionIri(RDFS.COMMENT);
+            kb_wine.setDefaultLanguage("en");
             kbList.add(new TestConfiguration("data/wine-ontology.rdf", kb_wine, "http://www.w3.org/TR/2003/PR-owl-guide-20031209/wine#ChateauMargaux"));
         }
         
@@ -188,6 +189,7 @@ public class KnowledgeBaseServiceRemoteTest
             kb_hucit.setPropertyTypeIri(vf.createIRI("http://www.w3.org/1999/02/22-rdf-syntax-ns#Property"));
             kb_hucit.setPropertyLabelIri(RDFS.LABEL);
             kb_hucit.setPropertyDescriptionIri(RDFS.COMMENT);
+            kb_hucit.setDefaultLanguage("en");
             kbList.add(new TestConfiguration("http://nlp.dainst.org:8888/sparql", kb_hucit, 
                     // person -> Achilles :: urn:cts:cwkb:1137
                     "http://purl.org/hucit/kb/authors/1137"));
@@ -200,6 +202,7 @@ public class KnowledgeBaseServiceRemoteTest
             kb_wikidata_direct.setType(RepositoryType.REMOTE);
             kb_wikidata_direct.setReification(Reification.NONE);
             kb_wikidata_direct.applyMapping(profile.getMapping());
+            kb_wikidata_direct.setDefaultLanguage("en");
             kbList.add(new TestConfiguration(profile.getSparqlUrl(), kb_wikidata_direct,
                     "http://www.wikidata.org/entity/Q19576436"));
         }
@@ -211,6 +214,7 @@ public class KnowledgeBaseServiceRemoteTest
             kb_wikidata_direct.setType(RepositoryType.REMOTE);
             kb_wikidata_direct.setReification(Reification.NONE);
             kb_wikidata_direct.applyMapping(profile.getMapping());
+            kb_wikidata_direct.setDefaultLanguage("en");
             kbList.add(new TestConfiguration(profile.getSparqlUrl(), kb_wikidata_direct,
                 "http://www.wikidata.org/entity/Q19576436"));
         }
@@ -222,6 +226,7 @@ public class KnowledgeBaseServiceRemoteTest
             kb_dbpedia.setType(RepositoryType.REMOTE);
             kb_dbpedia.setReification(Reification.NONE);
             kb_dbpedia.applyMapping(profile.getMapping());
+            kb_dbpedia.setDefaultLanguage("en");
             kbList.add(new TestConfiguration(profile.getSparqlUrl(), kb_dbpedia,
                     "http://www.wikidata.org/entity/Q20280393"));
         }
@@ -244,6 +249,7 @@ public class KnowledgeBaseServiceRemoteTest
             kb_zbw_stw_economics.setType(RepositoryType.REMOTE);
             kb_zbw_stw_economics.setReification(Reification.NONE);
             kb_zbw_stw_economics.applyMapping(profile.getMapping());
+            kb_zbw_stw_economics.setDefaultLanguage("en");
             kbList.add(new TestConfiguration(profile.getSparqlUrl(), kb_zbw_stw_economics,
                     "http://zbw.eu/stw/thsys/71020"));
         }
@@ -316,20 +322,6 @@ public class KnowledgeBaseServiceRemoteTest
 
         assertThat(parentList).as("Check that parent list is not empty").isNotEmpty();
 
-    }
-
-    @Test
-    public void thatParentListCanBeRetrieved()
-    {
-        KnowledgeBase kb = sutConfig.getKnowledgeBase();
-        
-        long duration = System.currentTimeMillis();
-        Set<KBHandle> parentList = sut.getParentConceptList(kb, sutConfig.getTestIdentifier(), true);
-        duration = System.currentTimeMillis() - duration;
-        System.out.printf("Parent List retrieved : %d%n", parentList.size());
-        System.out.printf("Time required        : %d ms%n", duration);
-        parentList.stream().limit(10).forEach(h -> System.out.printf("   %s%n", h));
-        assertThat(parentList).as("Check that parent list is not empty").isNotEmpty();
     }
 
     // Helper
