@@ -65,7 +65,6 @@ public class TestFixtures
         kb.setLabelIri(RDFS.LABEL);
         kb.setPropertyTypeIri(RDF.PROPERTY);
         kb.setDescriptionIri(RDFS.COMMENT);
-        kb.setDefaultLanguage("en");
         kb.setPropertyLabelIri(RDFS.LABEL);
         kb.setPropertyDescriptionIri(RDFS.COMMENT);
         kb.setExplicitlyDefinedRootConcepts(new ArrayList<>());

@@ -813,7 +813,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
             .hasSize(1)
             .element(0)
             .hasFieldOrPropertyWithValue("identifier", handle.getIdentifier())
-            .hasFieldOrPropertyWithValue("name", handle.getName())
+            .hasFieldOrProperty("name")
             .matches(h -> h.getIdentifier().startsWith(IriConstants.INCEPTION_NAMESPACE));
     }
 
@@ -1069,7 +1069,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
             .hasSize(1)
             .element(0)
             .hasFieldOrPropertyWithValue("identifier", instanceHandle.getIdentifier())
-            .hasFieldOrPropertyWithValue("name", instanceHandle.getName())
+            .hasFieldOrProperty("name")
             .matches(h -> h.getIdentifier().startsWith(IriConstants.INCEPTION_NAMESPACE));
     }
 
@@ -1240,8 +1240,8 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
                 .map(KBHandle::getName);
 
         String[] expectedLabels = {
-            "Adaptation", "Animal Intelligence", "Collection", "Conservation Status", "Ecozone",
-            "Habitat", "Red List Status", "Taxon Name", "Taxonomic Rank"
+            "Adaptation", "AnimalIntelligence", "Collection", "ConservationStatus", "Ecozone",
+            "Habitat", "RedListStatus", "TaxonName", "TaxonRank"
         };
         assertThat(rootConcepts)
             .as("Check that all root concepts have been found")
@@ -1283,10 +1283,10 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         Stream<String> childConcepts = sut.listRootConcepts(kb, false).stream()
                 .map(KBHandle::getName);
 
-        String[] expectedLabels = { "Creature" };
-        assertThat(childConcepts)
-            .as("Check that only root concepts")
-            .containsExactlyInAnyOrder(expectedLabels);
+        String[] expectedLabels = { "creature" };
+        assertThat(childConcepts).as("Check that only root concepts")
+                .containsExactlyInAnyOrder(expectedLabels);
+   
     }
 
     @Test
@@ -1299,9 +1299,9 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         Stream<String> childConcepts = sut.listChildConcepts(kb, concept.getIdentifier(), false)
             .stream()
             .map(KBHandle::getName);
-
+        
         String[] expectedLabels = {
-            "Cat", "Dog", "Monkey"
+            "cat", "dog", "monkey"
         };
         assertThat(childConcepts)
             .as("Check that all child concepts have been found")
@@ -1320,8 +1320,8 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
             .map(KBHandle::getName);
 
         String[] expectedLabels = {
-            "bytearrayinput", "fileinput", "filterinput", "objectinput",
-            "pipedinput","sequenceinput", "stringbufferinput"
+            "ByteArrayInputStream", "FileInputStream", "FilterInputStream", "ObjectInputStream",
+            "PipedInputStream","SequenceInputStream", "StringBufferInputStream"
         };
         assertThat(childConcepts)
             .as("Check that all immediate child concepts have been found")
