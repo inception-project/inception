@@ -114,22 +114,35 @@ public class KnowledgeBase
     private IRI descriptionIri;
 
     /**
-     * The IRI for a property describing B being a label for A, e.g. rdfs:label
+     * The IRI used for full text search, e.g. bif:contains or <http://www.openrdf.org/contrib/lucenesail#>
+     */
+    @Column
+    private IRI ftsIri;
+
+    /**
+     * The IRI for a property describing B being a label for A, e.g. rdfs:label 
      */
     @Column(nullable = false)
     private IRI labelIri;
-
+    
     /**
-     * The IRI for an object describing A is of type propertyType, e.g. rdf:Property
+     * The IRI for an object describing A is of type propertyType, e.g. rdf:Property 
      */
     @Column(nullable = false)
     private IRI propertyTypeIri;
 
     /**
-     * The IRI used for full text search, e.g. bif:contains or <http://www.openrdf.org/contrib/lucenesail#>
+     * The IRI for a label of a property
      */
-    @Column
-    private IRI ftsIri;
+    @Column(nullable = false)
+    private IRI propertyLabelIri;
+
+    /**
+     * The IRI for a description of a property
+     */
+    @Column(nullable = false)
+    private IRI propertyDescriptionIri;
+
 
     @Column(nullable = false)
     private boolean readOnly;
@@ -148,11 +161,11 @@ public class KnowledgeBase
     private boolean supportConceptLinking = false;
     
     /**
-     * All statements created in a local KB are prefixed with this string
+     * All statements created in a local KB are prefixed with this string 
      */
     @Column(nullable = false)
     private String basePrefix = IriConstants.INCEPTION_NAMESPACE;
-
+    
     /**
      * A List of explicitly defined root concepts that can be used if auto detection takes too long
      */
@@ -160,6 +173,12 @@ public class KnowledgeBase
     @CollectionTable(name = "knowledgebase_root_classes")
     @Column(name = "name")
     private List<IRI> explicitlyDefinedRootConcepts = new ArrayList<>();
+
+    /**
+     * The default language for labels and descriptions of KB elements
+     */
+    @Column
+    private String defaultLanguage;
 
     public String getRepositoryId() {
         return repositoryId;
@@ -270,6 +289,36 @@ public class KnowledgeBase
         this.ftsIri = ftsIri;
     }
 
+    public String getDefaultLanguage()
+    {
+        return defaultLanguage;
+    }
+
+    public void setDefaultLanguage(String aLanguage)
+    {
+        defaultLanguage = aLanguage;
+    }
+
+    public IRI getPropertyLabelIri()
+    {
+        return propertyLabelIri;
+    }
+
+    public void setPropertyLabelIri(IRI aPropertyLabelIri)
+    {
+        propertyLabelIri = aPropertyLabelIri;
+    }
+
+    public IRI getPropertyDescriptionIri()
+    {
+        return propertyDescriptionIri;
+    }
+
+    public void setPropertyDescriptionIri(IRI aPropertyDescriptionIri)
+    {
+        propertyDescriptionIri = aPropertyDescriptionIri;
+    }
+
     public boolean isReadOnly()
     {
         return readOnly;
@@ -345,6 +394,8 @@ public class KnowledgeBase
         setDescriptionIri(aMapping.getDescriptionIri());
         setLabelIri(aMapping.getLabelIri());
         setPropertyTypeIri(aMapping.getPropertyTypeIri());
+        setPropertyLabelIri(aMapping.getPropertyLabelIri());
+        setPropertyDescriptionIri(aMapping.getPropertyDescriptionIri());
     }
     
     @Override

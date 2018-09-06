@@ -63,6 +63,16 @@ public interface KBObject
     void setName(String label);
 
     /**
+     * Returns the language (e.g. of label and description) of this element.
+     */
+    String getLanguage();
+
+    /**
+     * Sets the language (e.g. of label and description) of this element.
+     */
+    void setLanguage(String language);
+
+    /**
      * Returns a UI-friendly representation of this {@code KBObject}.
      * 
      * @return the name of the {@code KBObject} if available, otherwise return the local name of its
@@ -83,11 +93,14 @@ public interface KBObject
         }
     }
     
+    /**
+     * 
+     * @return a {@code KBHandle} from {@code KBObject}
+     */
     default KBHandle toKBHandle() {
         KBHandle handle = new KBHandle();
         handle.setIdentifier(getIdentifier());
         handle.setName(getName());
         return handle;
-        
     }
 }

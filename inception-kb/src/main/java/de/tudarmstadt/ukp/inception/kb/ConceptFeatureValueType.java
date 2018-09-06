@@ -7,7 +7,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,22 +15,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.ui.kb.value.editor;
+package de.tudarmstadt.ukp.inception.kb;
 
-import org.apache.wicket.markup.html.basic.Label;
-import org.apache.wicket.model.IModel;
-
-import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
-
-public class BooleanLiteralValuePresenter
-    extends ValuePresenter
+public enum ConceptFeatureValueType
 {
-    private static final long serialVersionUID = -1749133670964165564L;
+    ANY_OBJECT("<Any Concept/Instance>"), 
+    CONCEPT("Only Concepts"), 
+    INSTANCE("Only Instances");
 
-    public BooleanLiteralValuePresenter(String aId, IModel<KBStatement> aModel)
+    private final String uiLabel;
+
+    ConceptFeatureValueType(String aUiLabel)
     {
-        super(aId, aModel);
+        uiLabel = aUiLabel;
+    }
 
-        add(new Label("value"));
+    @Override
+    public String toString()
+    {
+        return uiLabel;
     }
 }

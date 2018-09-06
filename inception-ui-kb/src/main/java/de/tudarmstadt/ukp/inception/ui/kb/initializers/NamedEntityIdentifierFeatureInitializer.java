@@ -65,6 +65,6 @@ public class NamedEntityIdentifierFeatureInitializer
                 aProject);
 
         annotationSchemaService.createFeature(new AnnotationFeature(aProject, neLayer, "identifier",
-                "identifier", ConceptFeatureSupport.TYPE_ANY_CONCEPT, "Linked entity", null));
+                "identifier", ConceptFeatureSupport.TYPE_ANY_OBJECT, "Linked entity", null));
     }
 }

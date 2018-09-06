@@ -83,6 +83,7 @@ public class KnowledgeBaseServiceRemoteTest
     private Project project;
     private TestFixtures testFixtures;
 
+    
     @Rule
     public TestWatcher watcher = new TestWatcher()
     {
@@ -90,7 +91,7 @@ public class KnowledgeBaseServiceRemoteTest
         protected void starting(org.junit.runner.Description aDescription)
         {
             String methodName = aDescription.getMethodName();
-            System.out.println("\n=== " + methodName + " =====================");
+            System.out.printf("\n=== " + methodName + " =====================");
         };
     };
     
@@ -167,6 +168,8 @@ public class KnowledgeBaseServiceRemoteTest
             kb_wine.setLabelIri(RDFS.LABEL);
             kb_wine.setPropertyTypeIri(RDF.PROPERTY);
             kb_wine.setDescriptionIri(RDFS.COMMENT);
+            kb_wine.setPropertyLabelIri(RDFS.LABEL);
+            kb_wine.setPropertyDescriptionIri(RDFS.COMMENT);
             kbList.add(new TestConfiguration("data/wine-ontology.rdf", kb_wine, "http://www.w3.org/TR/2003/PR-owl-guide-20031209/wine#ChateauMargaux"));
         }
         
@@ -183,6 +186,8 @@ public class KnowledgeBaseServiceRemoteTest
             kb_hucit.setDescriptionIri(vf.createIRI("http://www.w3.org/2000/01/rdf-schema#comment"));
             kb_hucit.setLabelIri(vf.createIRI("http://www.w3.org/2000/01/rdf-schema#label"));
             kb_hucit.setPropertyTypeIri(vf.createIRI("http://www.w3.org/1999/02/22-rdf-syntax-ns#Property"));
+            kb_hucit.setPropertyLabelIri(RDFS.LABEL);
+            kb_hucit.setPropertyDescriptionIri(RDFS.COMMENT);
             kbList.add(new TestConfiguration("http://nlp.dainst.org:8888/sparql", kb_hucit, 
                     // person -> Achilles :: urn:cts:cwkb:1137
                     "http://purl.org/hucit/kb/authors/1137"));
@@ -199,22 +204,16 @@ public class KnowledgeBaseServiceRemoteTest
                     "http://www.wikidata.org/entity/Q19576436"));
         }
 
-        // This profile is yet incomplete and needs to be fixed
-        // {
-        // ValueFactory vf = SimpleValueFactory.getInstance();
-        //
-        // KnowledgeBase kb_wikidata_reified = new KnowledgeBase();
-        // kb_wikidata_reified.setName("Wikidata (official/reified)");
-        // kb_wikidata_reified.setType(RepositoryType.REMOTE);
-        // kb_wikidata_reified.setReification(Reification.WIKIDATA);
-        // kb_wikidata_reified.setClassIri(OWL.CLASS); // FIXME
-        // kb_wikidata_reified.setSubclassIri(vf.createIRI("http://www.wikidata.org/prop/P279"));
-        // kb_wikidata_reified.setTypeIri(vf.createIRI("http://www.wikidata.org/prop/P31"));
-        // kb_wikidata_reified.setLabelIri(RDFS.LABEL);
-        // kb_wikidata_reified.setPropertyTypeIri(RDF.PROPERTY); // FIXME
-        // kb_wikidata_reified.setDescriptionIri(vf.createIRI("http://schema.org/description"));
-        // kbList.add(kb_wikidata_reified);
-        // }
+        {
+            KnowledgeBaseProfile profile = PROFILES.get("virtuoso");
+            KnowledgeBase kb_wikidata_direct = new KnowledgeBase();
+            kb_wikidata_direct.setName("UKP_Wikidata (Virtuoso)");
+            kb_wikidata_direct.setType(RepositoryType.REMOTE);
+            kb_wikidata_direct.setReification(Reification.NONE);
+            kb_wikidata_direct.applyMapping(profile.getMapping());
+            kbList.add(new TestConfiguration(profile.getSparqlUrl(), kb_wikidata_direct,
+                "http://www.wikidata.org/entity/Q19576436"));
+        }
 
         {
             KnowledgeBaseProfile profile = PROFILES.get("db_pedia");
@@ -319,6 +318,20 @@ public class KnowledgeBaseServiceRemoteTest
 
     }
 
+    @Test
+    public void thatParentListCanBeRetrieved()
+    {
+        KnowledgeBase kb = sutConfig.getKnowledgeBase();
+        
+        long duration = System.currentTimeMillis();
+        Set<KBHandle> parentList = sut.getParentConceptList(kb, sutConfig.getTestIdentifier(), true);
+        duration = System.currentTimeMillis() - duration;
+        System.out.printf("Parent List retrieved : %d%n", parentList.size());
+        System.out.printf("Time required        : %d ms%n", duration);
+        parentList.stream().limit(10).forEach(h -> System.out.printf("   %s%n", h));
+        assertThat(parentList).as("Check that parent list is not empty").isNotEmpty();
+    }
+
     // Helper
 
     private void importKnowledgeBase(String resourceName) throws Exception
@@ -378,7 +391,7 @@ public class KnowledgeBaseServiceRemoteTest
         {
             return testIdentifier;
         }
-        
+
         @Override
         public String toString()
         {

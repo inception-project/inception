@@ -343,10 +343,19 @@ public interface KnowledgeBaseService
             int aLimit)
         throws QueryEvaluationException;
     
-    List<KBHandle> listChildConceptsInstances(KnowledgeBase aKB, String aParentIdentifier,
+    /**
+     * List the instances for the child concepts
+     *
+     * @param aKB The knowledge base
+     * @param aParentIdentifier a Parent identifier.
+     * @param aAll True if entities with implicit namespaces (e.g. defined by RDF)
+     * @param aLimit Limit for SPARQL queries
+     * @return All instances of the child concepts
+     */
+    List<KBHandle> listInstancesForChildConcepts(KnowledgeBase aKB, String aParentIdentifier,
             boolean aAll, int aLimit) throws QueryEvaluationException;
-
-
+    
+    
     RepositoryConnection getConnection(KnowledgeBase kb);
 
     interface ReadAction<T>
@@ -366,13 +375,52 @@ public interface KnowledgeBaseService
     List<KBHandle> list(KnowledgeBase kb, IRI aType, boolean aIncludeInferred, boolean
         aAll, int aLimit);
 
-
+    /**
+     * List the properties for a specific accepted domain identifier and also
+     * include properties which do not have any domain specified.
+     *
+     * @param kb
+     *            The knowledge base
+     * @param aDomain
+     *            a domain identifier.
+     * @param aIncludeInferred
+     *            indicates whether inferred statements should be included in the result.
+     * @param aAll
+     *            indicates whether to include base properties or not
+     * @return All properties for a specific accepted domain identifier
+     */
     List<KBHandle> listDomainProperties(KnowledgeBase kb, String aDomain, boolean aIncludeInferred,
             boolean aAll);
 
+    /**
+     * List the properties for a specific accepted range identifier
+     *
+     * @param kb
+     *            The knowledge base
+     * @param aDomain
+     *            a range identifier.
+     * @param aIncludeInferred
+     *            indicates whether inferred statements should be included in the result.
+     * @param aAll
+     *            indicates whether to include base properties or not
+     * @return All properties for a specific accepted range identifier
+     */
     List<KBHandle> listPropertiesRangeValue(KnowledgeBase kb, String aDomain,
             boolean aIncludeInferred, boolean aAll);
     
+    /**
+     * List the properties
+     *
+     * @param kb
+     *            The knowledge base
+     * @param aType
+     *            a {@link IRI} for type of property
+     * @param aIncludeInferred
+     *            indicates whether inferred statements should be included in the result.
+     * @param aAll
+     *            indicates whether to include base properties or not
+     * @return All properties
+     */
     List<KBHandle> listProperties(KnowledgeBase kb, IRI aType, boolean aIncludeInferred, boolean
             aAll);
 
@@ -414,7 +462,7 @@ public interface KnowledgeBaseService
     /**
      * Define base default properties of comment, label and subClassOf with schema set defined for
      * KB while initializing the KB
-     *
+     * 
      * @param akb
      *            The knowledge base to initialize base properties
      */
@@ -428,32 +476,54 @@ public interface KnowledgeBaseService
      */
     Optional<KBObject> readKBIdentifier(Project aProject, String aIdentifier);
 
-    List<KBHandle> getParentConceptsForConcept(KnowledgeBase aKB, String aIdentifier,
-            boolean aAll)
-        throws QueryEvaluationException;
-
-    Set<KBHandle> getParentConceptList(KnowledgeBase aKB, String aIdentifier, boolean aAll)
-            throws QueryEvaluationException;
-
-    List<KBHandle> getConceptForInstance(KnowledgeBase aKB, String aIdentifier,
-            boolean aAll)
-        throws QueryEvaluationException;
-
-    boolean hasImplicitNamespace(String s);
-
-  /**
+    /**
      * Read an identifier value from a particular kb to return {@link KBObject}
-     * @param kb
+     * @param akb
      * @param aIdentifier
      * @return {@link Optional} of {@link KBObject} of type {@link KBConcept} or {@link KBInstance}
      */
-    Optional<KBObject> readKBIdentifier(KnowledgeBase kb, String aIdentifier);
+    Optional<KBObject> readKBIdentifier(KnowledgeBase akb, String aIdentifier);
+
+     /** Retrieves the parent concept for a concept identifier
+     *
+     * @param aKB The knowledge base
+     * @param aHandle a concept.
+     * @param aAll True if entities with implicit namespaces (e.g. defined by RDF)
+     * @return List of parent concept for an identifier
+     */
+    List<KBHandle> getParentConcept(KnowledgeBase aKB, KBHandle aHandle, boolean aAll)
+        throws QueryEvaluationException;
+
+    /**
+     * Retrieves the distinct parent concepts till the root element for an identifier regardless of
+     * it being an instance or concept
+     *
+     * @param aKB The knowledge base
+     * @param aIdentifier a concept/instance identifier.
+     * @param aAll True if entities with implicit namespaces (e.g. defined by RDF)
+     * @return List of parent concept for an identifier
+     */
+    Set<KBHandle> getParentConceptList(KnowledgeBase aKB, String aIdentifier, boolean aAll)
+        throws QueryEvaluationException;
+
+    /**
+     * Retrieves the concepts for an instance identifier
+     *
+     * @param aKB The knowledge base
+     * @param aIdentifier an instance identifier.
+     * @param aAll True if entities with implicit namespaces (e.g. defined by RDF)
+     * @return List of concepts for an instance identifier
+     */
+    List<KBHandle> getConceptForInstance(KnowledgeBase aKB, String aIdentifier, boolean aAll)
+        throws QueryEvaluationException;
+
+    boolean hasImplicitNamespace(String s);
 
     /**
      * List all the concepts
      * @param kb The knowledge base from which concepts will be listed
      * @param aAll indicates whether to include everything
-     * @return list of all the properties {@link KBHandle}
+     * @return list of all the properties {@link KBHandle} 
      */
     List<KBHandle> listAllConcepts(KnowledgeBase kb, boolean aAll) throws QueryEvaluationException;
 

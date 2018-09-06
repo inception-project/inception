@@ -28,6 +28,7 @@ import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.Value;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+
 import org.eclipse.rdf4j.query.BindingSet;
 import org.eclipse.rdf4j.query.QueryEvaluationException;
 import org.eclipse.rdf4j.query.QueryLanguage;
@@ -161,14 +162,15 @@ public class RdfUtils
                 .escapeString(language) + "\")).";
         }
         String QUERY = String.join("\n",
-            SPARQLQueryStore.SPARQL_PREFIX,    
-            "SELECT * WHERE { ",
-            " {?s ?p ?o .}",
-            " UNION ",
-            " {?s a ?prop .",
-            "    VALUES ?prop { rdf:Property owl:ObjectProperty owl:DatatypeProperty owl:AnnotationProperty} }",
-            filter,
-            "} LIMIT " + aLimit);
+                SPARQLQueryStore.SPARQL_PREFIX,
+                "SELECT * WHERE { ",
+                " {?s ?p ?o .}",
+                " UNION ",
+                " {?s a ?prop .",
+                "    VALUES ?prop { rdf:Property owl:ObjectProperty owl:DatatypeProperty owl:AnnotationProperty} }",
+                filter,
+                "} LIMIT " + aLimit);
+
         TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
         if (subj != null) {
             tupleQuery.setBinding("s", subj);
