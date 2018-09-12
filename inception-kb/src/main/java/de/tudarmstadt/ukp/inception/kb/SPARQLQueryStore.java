@@ -22,16 +22,15 @@ import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
 
 public class SPARQLQueryStore
-{   
-    public static int aLimit = 1000;
-
+{
     public static final String SPARQL_PREFIX = String.join("\n",
             "PREFIX rdf: <" + RDF.NAMESPACE + ">",
             "PREFIX rdfs: <" + RDFS.NAMESPACE + ">",
             "PREFIX owl: <" + OWL.NAMESPACE + ">");
     
     // Query to list properties from KnowledgeBase
-    public static final String PROPERTYLIST_QUERY = String.join("\n"
+    public static String getPropertyListQuery(int aLimit) {
+        return String.join("\n"
             , SPARQL_PREFIX
             , "SELECT DISTINCT ?s ?l ?d WHERE {"
             , "  { ?s ?pTYPE ?oPROPERTY .}"
@@ -48,11 +47,13 @@ public class SPARQLQueryStore
             , "  }"
             , "}"
             , "LIMIT " + aLimit);
+    }
     
     //Query to get property specific domain elements including properties 
     //which do not have a 
     // domain specified
-    public static final String PROPERTYLIST_DOMAIN_DEPENDENT = String.join("\n"
+    public static String getPropertyDomainDependentQuery(int aLimit) {
+        return String.join("\n"
             , SPARQL_PREFIX
             , "SELECT DISTINCT ?s ?l ?d WHERE {"
             , "{  ?s rdfs:domain/(owl:unionOf/rdf:rest*/rdf:first)* ?aDomain }"
@@ -70,9 +71,14 @@ public class SPARQLQueryStore
             , "  }"
             , "}"
             , "LIMIT " + aLimit);
+    }
+
+
+
     
     //Query to get property specific range elements
-    public static final String PROPERTY_SPECIFIC_RANGE = String.join("\n"
+    public static String getPropertySpecificRangeQuery(int aLimit) {
+        return String.join("\n"
             , SPARQL_PREFIX
             , "SELECT DISTINCT ?s ?l ?d WHERE {"
             , "  ?aProperty rdfs:range/(owl:unionOf/rdf:rest*/rdf:first)* ?s "
@@ -86,28 +92,32 @@ public class SPARQLQueryStore
             , "  }"
             , "}"
             , "LIMIT " + aLimit);
+    }
 
     // Query to retrieve super class concept for a concept
-    public static final String PARENT_CONCEPT = String.join("\n"
-            , SPARQL_PREFIX
-            , "SELECT DISTINCT ?s ?l ?d WHERE { "
-            , "   {?oChild ?pSUBCLASS ?s . }"
-            , "   UNION { ?s ?pTYPE ?oCLASS ."
-            , "     ?oChild owl:intersectionOf ?list . "
-            , "     FILTER EXISTS {?list rdf:rest*/rdf:first ?s. } }"
-            , "   OPTIONAL { "
-            , "     ?s ?pLABEL ?l . "
-            , "     FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\")) "
-            , "   }"
-            , "  OPTIONAL {"
-            , "    ?s ?pDESCRIPTION ?d ."
-            , "    FILTER(LANG(?d) = \"\" || LANGMATCHES(LANG(?d), \"en\"))"
-            , "  }"
-            , "} ");
+    public static String getParentConceptQuery(int aLimit) {
+        return String.join("\n"
+        , SPARQL_PREFIX
+        , "SELECT DISTINCT ?s ?l ?d WHERE { "
+        , "   {?oChild ?pSUBCLASS ?s . }"
+        , "   UNION { ?s ?pTYPE ?oCLASS ."
+        , "     ?oChild owl:intersectionOf ?list . "
+        , "     FILTER EXISTS {?list rdf:rest*/rdf:first ?s. } }"
+        , "   OPTIONAL { "
+        , "     ?s ?pLABEL ?l . "
+        , "     FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\")) "
+        , "   }"
+        , "  OPTIONAL {"
+        , "    ?s ?pDESCRIPTION ?d ."
+        , "    FILTER(LANG(?d) = \"\" || LANGMATCHES(LANG(?d), \"en\"))"
+        , "  }"
+        , "} ");
+    }
     
     
     // Query to retrieve concept for an instance
-    public static final String CONCEPT_FOR_INSTANCE = String.join("\n"
+    public static String getConceptForInstanceQuery(int aLimit) {
+        return String.join("\n"
             , SPARQL_PREFIX
             , "SELECT DISTINCT ?s ?l ?d WHERE {"
             , "  ?pInstance ?pTYPE ?s ."
@@ -121,4 +131,6 @@ public class SPARQLQueryStore
             , "  }"
             , "}"
             , "LIMIT " + aLimit);
+    }
+
 }

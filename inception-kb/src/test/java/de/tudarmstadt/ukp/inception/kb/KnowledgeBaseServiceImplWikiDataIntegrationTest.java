@@ -56,6 +56,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
@@ -79,6 +80,8 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
 
     @Autowired
     private TestEntityManager testEntityManager;
+
+    private KnowledgeBaseProperties kbProperties = new KnowledgeBaseProperties();
 
     @ClassRule
     public static final SpringClassRule SPRING_CLASS_RULE = new SpringClassRule();
@@ -113,7 +116,7 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
     public void setUp() throws Exception {
         EntityManager entityManager = testEntityManager.getEntityManager();
         testFixtures = new TestFixtures(testEntityManager);
-        sut = new KnowledgeBaseServiceImpl(temporaryFolder.getRoot(), entityManager);
+        sut = new KnowledgeBaseServiceImpl(temporaryFolder.getRoot(), entityManager, kbProperties);
         project = createProject(PROJECT_NAME);
         kb = buildKnowledgeBase(project, KB_NAME);
         sut.registerKnowledgeBase(kb, sut.getRemoteConfig(PROFILES.get("wikidata").getSparqlUrl()));
@@ -155,7 +158,7 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
     public void listRootConcepts() {
         List<KBHandle> rootConcepts = sut.listRootConcepts(kb, false);
 
-        assertThat(rootConcepts).as("Check that root concepts have been found").hasSize(SPARQLQueryStore.aLimit);
+        assertThat(rootConcepts).as("Check that root concepts have been found").hasSize(kbProperties.getSparqlQueryResultLimit());
     }
 
     
@@ -163,7 +166,7 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
     public void listProperties() {
         Stream<String> properties = sut.listProperties(kb, true).stream().map(KBHandle::getIdentifier);
         
-        assertThat(properties).as("Check that properties have been found").hasSize(SPARQLQueryStore.aLimit);
+        assertThat(properties).as("Check that properties have been found").hasSize(kbProperties.getSparqlQueryResultLimit());
     }
     
     @Test

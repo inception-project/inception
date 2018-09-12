@@ -47,6 +47,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
@@ -72,6 +73,8 @@ public class KnowledgeBaseServiceImplImportExportIntegrationTest {
     private TestEntityManager testEntityManager;
     private TestFixtures testFixtures;
 
+    private KnowledgeBaseProperties kbProperties = new KnowledgeBaseProperties();
+
     private KnowledgeBaseServiceImpl sut;
     private Project project;
     private KnowledgeBase kb;
@@ -85,7 +88,7 @@ public class KnowledgeBaseServiceImplImportExportIntegrationTest {
     public void setUp() {
         EntityManager entityManager = testEntityManager.getEntityManager();
         testFixtures = new TestFixtures(testEntityManager);
-        sut = new KnowledgeBaseServiceImpl(temporaryFolder.getRoot(), entityManager);
+        sut = new KnowledgeBaseServiceImpl(temporaryFolder.getRoot(), entityManager, kbProperties);
         project = createProject(PROJECT_NAME);
         kb = buildKnowledgeBase(project, KB_NAME);
     }
