@@ -190,8 +190,7 @@ public class ConceptLinkingService
         try (RepositoryConnection conn = kbService.getConnection(aKey.getKnowledgeBase())) {
             TupleQuery fullTextQueryMention = QueryUtil
                 .generateCandidateFullTextQuery(conn, aKey.getQuery(),
-                    properties.getCandidateQueryLimit(),
-                    aKey.getKnowledgeBase().getDescriptionIri());
+                    properties.getCandidateQueryLimit(), aKey.getKnowledgeBase());
             candidatesFullText.addAll(processCandidateQuery(fullTextQueryMention));
         }
         catch (QueryEvaluationException e) {
@@ -237,7 +236,7 @@ public class ConceptLinkingService
 
         try (RepositoryConnection conn = kbService.getConnection(aKB)) {
             TupleQuery exactQuery = QueryUtil
-                .generateCandidateExactQuery(conn, aTypedString, aMention, aKB.getDescriptionIri());
+                .generateCandidateExactQuery(conn, aTypedString, aMention, aKB);
             candidates.addAll(processCandidateQuery(exactQuery));
         }
         catch (QueryEvaluationException e) {
@@ -473,7 +472,7 @@ public class ConceptLinkingService
         Set<String> relatedEntities = new HashSet<>();
         try (RepositoryConnection conn = kbService.getConnection(aKey.getKnowledgeBase())) {
             TupleQuery query = QueryUtil.generateSemanticSignatureQuery(conn, aKey.getQuery(),
-                properties.getSignatureQueryLimit());
+                properties.getSignatureQueryLimit(), aKey.getKnowledgeBase());
             try (TupleQueryResult result = query.evaluate()) {
                 while (result.hasNext()) {
                     BindingSet sol = result.next();

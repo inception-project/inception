@@ -142,7 +142,7 @@ public class WikiDataReification
             "  ?p  ?pLABEL ?l.",
             "  FILTER(STRSTARTS(STR(?ps), STR(?ps_ns)))",
             "}",
-            "LIMIT " + SPARQLQueryStore.aLimit);
+            "LIMIT " + SPARQLQueryStore.LIMIT);
 
         IRI instance = vf.createIRI(aInstance.getIdentifier());
         try (RepositoryConnection conn = kbService.getConnection(kb)) {
@@ -257,7 +257,7 @@ public class WikiDataReification
                 "SELECT DISTINCT ?p ?o WHERE {",
             "  ?id ?p ?o .",
             "}",
-            "LIMIT " + SPARQLQueryStore.aLimit);
+            "LIMIT " + SPARQLQueryStore.LIMIT);
         Resource id = vf.createBNode(aStatementId);
         try (RepositoryConnection conn = kbService.getConnection(kb)) {
             TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
@@ -474,7 +474,7 @@ public class WikiDataReification
             "    FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\"))",
             "  }",
             "}",
-            "LIMIT " + SPARQLQueryStore.aLimit);
+            "LIMIT " + SPARQLQueryStore.LIMIT);
         Resource id = vf.createBNode(aStatement.getStatementId());
         try (RepositoryConnection conn = kbService.getConnection(kb)) {
             TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);

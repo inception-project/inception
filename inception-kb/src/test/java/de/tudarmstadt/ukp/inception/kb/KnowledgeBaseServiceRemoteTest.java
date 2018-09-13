@@ -205,6 +205,17 @@ public class KnowledgeBaseServiceRemoteTest
         }
 
         {
+            KnowledgeBaseProfile profile = PROFILES.get("virtuoso");
+            KnowledgeBase kb_wikidata_direct = new KnowledgeBase();
+            kb_wikidata_direct.setName("UKP_Wikidata (Virtuoso)");
+            kb_wikidata_direct.setType(RepositoryType.REMOTE);
+            kb_wikidata_direct.setReification(Reification.NONE);
+            kb_wikidata_direct.applyMapping(profile.getMapping());
+            kbList.add(new TestConfiguration(profile.getSparqlUrl(), kb_wikidata_direct,
+                "http://www.wikidata.org/entity/Q19576436"));
+        }
+
+        {
             KnowledgeBaseProfile profile = PROFILES.get("db_pedia");
             KnowledgeBase kb_dbpedia = new KnowledgeBase();
             kb_dbpedia.setName(profile.getName());
