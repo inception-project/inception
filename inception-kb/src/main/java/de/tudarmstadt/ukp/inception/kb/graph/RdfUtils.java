@@ -77,9 +77,9 @@ public class RdfUtils
     }
 
     public static RepositoryResult<Statement> getStatements(RepositoryConnection conn,
-        Resource subj, IRI pred, Value obj, boolean includeInferred)
+        Resource subj, IRI pred, Value obj, boolean includeInferred, int aLimit)
     {
-        return getStatementsSparql(conn, subj, pred, obj, 1000, includeInferred, null);
+        return getStatementsSparql(conn, subj, pred, obj, aLimit, includeInferred, null);
     }
 
     public static RepositoryResult<Statement> getStatements(RepositoryConnection conn,
@@ -234,9 +234,9 @@ public class RdfUtils
      * @return all statements with the given subject resource
      */
     public static RepositoryResult<Statement> getStatementsWithSubject(
-            RepositoryConnection conn, Resource subj, boolean includeInferred)
+            RepositoryConnection conn, Resource subj, boolean includeInferred, int aLimit)
     {
-        return getStatementsSparql(conn, subj, null, null, 1000, includeInferred, null);
+        return getStatementsSparql(conn, subj, null, null, aLimit, includeInferred, null);
     }
     
     public static boolean isFromImplicitNamespace(KBHandle handle) {

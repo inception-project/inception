@@ -576,7 +576,7 @@ public class KnowledgeBaseServiceImpl
             // Read the instance
             try (RepositoryResult<Statement> instanceStmts = RdfUtils.getStatements(conn,
                     vf.createIRI(aIdentifier), kb.getTypeIri(), vf.createIRI(conceptIdentifier),
-                    true)) {
+                    true, kbProperties.getSparqlQueryResultLimit())) {
                 if (instanceStmts.hasNext()) {
                     Statement kbStmt = instanceStmts.next();
                     KBInstance kbInst = KBInstance.read(conn, kbStmt, kb);
@@ -1179,8 +1179,9 @@ public class KnowledgeBaseServiceImpl
     {
         try (RepositoryConnection conn = getConnection(aKb)) {
             ValueFactory vf = conn.getValueFactory();
-            RepositoryResult<Statement> stmts = RdfUtils.getStatements(conn,
-                    vf.createIRI(aIdentifier), aKb.getTypeIri(), aKb.getClassIri(), true);
+            RepositoryResult<Statement> stmts = RdfUtils
+                .getStatements(conn, vf.createIRI(aIdentifier), aKb.getTypeIri(), aKb.getClassIri(),
+                    true, kbProperties.getSparqlQueryResultLimit());
             if (stmts.hasNext()) {
                 KBConcept kbConcept = KBConcept.read(conn, vf.createIRI(aIdentifier), aKb);
                 if (kbConcept != null) {
