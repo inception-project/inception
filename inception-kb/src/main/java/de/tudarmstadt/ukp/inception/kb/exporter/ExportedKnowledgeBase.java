@@ -51,6 +51,9 @@ public class ExportedKnowledgeBase
 
     @JsonProperty("property_type_iri")
     private String propertyTypeIri;
+    
+    @JsonProperty("base_concept_iri")
+    private String baseConceptIri;;
 
     @JsonProperty("read_only")
     private boolean readOnly;
@@ -159,6 +162,16 @@ public class ExportedKnowledgeBase
     public void setPropertyTypeIri(String aPropertyTypeIri)
     {
         propertyTypeIri = aPropertyTypeIri;
+    }
+
+    public String getBaseConceptIri()
+    {
+        return baseConceptIri;
+    }
+
+    public void setBaseConceptIri(String baseConceptIri)
+    {
+        this.baseConceptIri = baseConceptIri;
     }
 
     public boolean isReadOnly()

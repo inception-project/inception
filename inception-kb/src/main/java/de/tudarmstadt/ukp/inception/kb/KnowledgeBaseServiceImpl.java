@@ -808,7 +808,8 @@ public class KnowledgeBaseServiceImpl
                 resultList.add(conceptHandle);
             }
         }
-        else if (!(aKB.getBaseConceptIri().stringValue().equals(OWL.NOTHING.stringValue()))) {
+        else if (aKB.getBaseConceptIri() != null
+                && !(aKB.getBaseConceptIri().stringValue().equals(OWL.NOTHING.stringValue()))) {
             KBConcept concept = readConcept(aKB, aKB.getBaseConceptIri().stringValue()).get();
             KBHandle conceptHandle = new KBHandle(concept.getIdentifier(), concept.getName(),
                     concept.getDescription());
