@@ -95,7 +95,7 @@ public class SPARQLQueryStore
     }
 
     // Query to retrieve super class concept for a concept
-    public static String getParentConceptQuery(int aLimit) {
+    public static String getParentConceptQuery() {
         return String.join("\n"
         , SPARQL_PREFIX
         , "SELECT DISTINCT ?s ?l ?d WHERE { "

@@ -901,7 +901,7 @@ public class KnowledgeBaseServiceImpl
     {
         List<KBHandle> resultList = read(aKB, (conn) -> {
             String QUERY = SPARQLQueryStore
-                .getParentConceptQuery(kbProperties.getSparqlQueryResultLimit());
+                .getParentConceptQuery();
             ValueFactory vf = SimpleValueFactory.getInstance();
             TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
             tupleQuery.setBinding("oChild", vf.createIRI(aHandle.getIdentifier()));
