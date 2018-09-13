@@ -83,6 +83,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
@@ -109,6 +110,8 @@ public class KnowledgeBaseServiceImpl
     private final RepositoryManager repoManager;
     private final Set<String> implicitNamespaces;
 
+    private @javax.annotation.Resource KnowledgeBaseProperties kbProperties;
+
     @org.springframework.beans.factory.annotation.Value(value = "${data.path}/kb")
     private File dataDir;
 
@@ -134,10 +137,11 @@ public class KnowledgeBaseServiceImpl
 
     public KnowledgeBaseServiceImpl(
             @org.springframework.beans.factory.annotation.Value("${data.path}") File dataDir,
-            EntityManager entityManager)
+            EntityManager entityManager, KnowledgeBaseProperties kbProperties)
     {
         this(dataDir);
         this.entityManager = entityManager;
+        this.kbProperties = kbProperties;
     }
 
     @Override
@@ -426,7 +430,7 @@ public class KnowledgeBaseServiceImpl
                 , "    FILTER(LANG(?d) = \"\" || LANGMATCHES(LANG(?d), \"en\")) "
                 , "  }"
                 , "} "
-                , "LIMIT " + SPARQLQueryStore.aLimit);
+                , "LIMIT " + kbProperties.getSparqlQueryResultLimit());
             TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
             tupleQuery.setBinding("pTYPE", kb.getTypeIri());
             tupleQuery.setBinding("oCLASS", kb.getClassIri());
@@ -461,22 +465,23 @@ public class KnowledgeBaseServiceImpl
         });
     }
 
-    @Override
-    public Optional<KBProperty> readProperty(KnowledgeBase kb, String aIdentifier)
+    @Override public Optional<KBProperty> readProperty(KnowledgeBase kb, String aIdentifier)
     {
         return read(kb, (conn) -> {
             ValueFactory vf = conn.getValueFactory();
-            try (RepositoryResult<Statement> stmts = RdfUtils.getPropertyStatementsSparql(conn,
-                    vf.createIRI(aIdentifier), kb.getTypeIri(), kb.getPropertyTypeIri(), 1000, true,
+            try (RepositoryResult<Statement> stmts = RdfUtils
+                .getPropertyStatementsSparql(conn, vf.createIRI(aIdentifier), kb.getTypeIri(),
+                    kb.getPropertyTypeIri(), kbProperties.getSparqlQueryResultLimit(), true,
                     null)) {
                 if (stmts.hasNext()) {
                     Statement propStmt = stmts.next();
                     KBProperty kbProp = KBProperty.read(conn, propStmt, kb);
                     return Optional.of(kbProp);
-                } else {
+                }
+                else {
                     return Optional.empty();
                 }
-            } 
+            }
         });
     }
 
@@ -511,7 +516,8 @@ public class KnowledgeBaseServiceImpl
         throws QueryEvaluationException
     {
         List<KBHandle> resultList = read(aKB, (conn) -> {
-            String QUERY = SPARQLQueryStore.PROPERTYLIST_QUERY;
+            String QUERY = SPARQLQueryStore
+                .getPropertyListQuery(kbProperties.getSparqlQueryResultLimit());
             TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
             tupleQuery.setBinding("pTYPE", aKB.getTypeIri());
             tupleQuery.setBinding("oPROPERTY", aKB.getPropertyTypeIri());
@@ -549,7 +555,8 @@ public class KnowledgeBaseServiceImpl
             // Try to figure out the type of the instance - we ignore the inferred types here
             // and only make use of the explicitly asserted types
             RepositoryResult<Statement> conceptStmts = RdfUtils.getStatementsSparql(conn,
-                    vf.createIRI(aIdentifier), kb.getTypeIri(), null, 1000, false, null);
+                vf.createIRI(aIdentifier), kb.getTypeIri(), null,
+                kbProperties.getSparqlQueryResultLimit(), false, null);
 
             String conceptIdentifier = null;
             while (conceptStmts.hasNext() && conceptIdentifier == null) {
@@ -569,7 +576,7 @@ public class KnowledgeBaseServiceImpl
             // Read the instance
             try (RepositoryResult<Statement> instanceStmts = RdfUtils.getStatements(conn,
                     vf.createIRI(aIdentifier), kb.getTypeIri(), vf.createIRI(conceptIdentifier),
-                    true)) {
+                    true, kbProperties.getSparqlQueryResultLimit())) {
                 if (instanceStmts.hasNext()) {
                     Statement kbStmt = instanceStmts.next();
                     KBInstance kbInst = KBInstance.read(conn, kbStmt, kb);
@@ -618,7 +625,7 @@ public class KnowledgeBaseServiceImpl
     public List<KBHandle> listInstances(KnowledgeBase kb, String aConceptIri, boolean aAll)
     {
         IRI conceptIri = SimpleValueFactory.getInstance().createIRI(aConceptIri);
-        return list(kb, conceptIri, false, aAll, SPARQLQueryStore.aLimit);
+        return list(kb, conceptIri, false, aAll, kbProperties.getSparqlQueryResultLimit());
     }
 
     // Statements
@@ -758,7 +765,8 @@ public class KnowledgeBaseServiceImpl
     {
         List<KBHandle> resultList = read(aKB, (conn) -> {
             ValueFactory vf = conn.getValueFactory();
-            String QUERY = SPARQLQueryStore.PROPERTYLIST_DOMAIN_DEPENDENT;
+            String QUERY = SPARQLQueryStore
+                .getPropertyDomainDependentQuery(kbProperties.getSparqlQueryResultLimit());
             TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
             tupleQuery.setBinding("aDomain", vf.createIRI(aDomain));
             tupleQuery.setBinding("pLABEL", aKB.getLabelIri());
@@ -783,7 +791,8 @@ public class KnowledgeBaseServiceImpl
     {
         List<KBHandle> resultList = read(kb, (conn) -> {
             ValueFactory vf = conn.getValueFactory();
-            String QUERY = SPARQLQueryStore.PROPERTY_SPECIFIC_RANGE;
+            String QUERY = SPARQLQueryStore
+                .getPropertySpecificRangeQuery(kbProperties.getSparqlQueryResultLimit());
             TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
             tupleQuery.setBinding("aProperty", vf.createIRI(aProperty));
             tupleQuery.setBinding("pLABEL", kb.getLabelIri());
@@ -802,7 +811,8 @@ public class KnowledgeBaseServiceImpl
         throws QueryEvaluationException
     {
         List<KBHandle> resultList = read(aKB, (conn) -> {
-            String QUERY = SPARQLQueryStore.PROPERTYLIST_QUERY;
+            String QUERY = SPARQLQueryStore
+                .getPropertyListQuery(kbProperties.getSparqlQueryResultLimit());
             TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
             tupleQuery.setBinding("pTYPE", aKB.getTypeIri());
             tupleQuery.setBinding("oPROPERTY", aType);
@@ -853,7 +863,7 @@ public class KnowledgeBaseServiceImpl
                     , "    FILTER(LANG(?d) = \"\" || LANGMATCHES(LANG(?d), \"en\"))"
                     , "  }"
                     , "} "
-                    , "LIMIT " + SPARQLQueryStore.aLimit);
+                    , "LIMIT " + kbProperties.getSparqlQueryResultLimit());
                 TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
                 tupleQuery.setBinding("pTYPE", aKB.getTypeIri());
                 tupleQuery.setBinding("oCLASS", aKB.getClassIri());
@@ -880,7 +890,8 @@ public class KnowledgeBaseServiceImpl
             boolean aAll)
         throws QueryEvaluationException
     {
-        return listChildConcepts(aKB, aParentIdentifier, aAll, SPARQLQueryStore.aLimit);
+        return listChildConcepts(aKB, aParentIdentifier, aAll,
+            kbProperties.getSparqlQueryResultLimit());
     }
     
     @Override
@@ -889,7 +900,8 @@ public class KnowledgeBaseServiceImpl
         throws QueryEvaluationException
     {
         List<KBHandle> resultList = read(aKB, (conn) -> {
-            String QUERY = SPARQLQueryStore.PARENT_CONCEPT;
+            String QUERY = SPARQLQueryStore
+                .getParentConceptQuery();
             ValueFactory vf = SimpleValueFactory.getInstance();
             TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
             tupleQuery.setBinding("oChild", vf.createIRI(aHandle.getIdentifier()));
@@ -910,7 +922,8 @@ public class KnowledgeBaseServiceImpl
         throws QueryEvaluationException
     {
         List<KBHandle> resultList = read(aKB, (conn) -> {
-            String QUERY = SPARQLQueryStore.CONCEPT_FOR_INSTANCE;
+            String QUERY = SPARQLQueryStore
+                .getConceptForInstanceQuery(kbProperties.getSparqlQueryResultLimit());
             ValueFactory vf = SimpleValueFactory.getInstance();
             TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
             tupleQuery.setBinding("pTYPE", aKB.getTypeIri());
@@ -1067,7 +1080,7 @@ public class KnowledgeBaseServiceImpl
     {
         switch (kb.getReification()) {
         case WIKIDATA:
-            return new WikiDataReification(this);
+            return new WikiDataReification(this, kbProperties);
         case NONE: // Fallthrough
         default:
             return new NoReification(this);
@@ -1166,8 +1179,9 @@ public class KnowledgeBaseServiceImpl
     {
         try (RepositoryConnection conn = getConnection(aKb)) {
             ValueFactory vf = conn.getValueFactory();
-            RepositoryResult<Statement> stmts = RdfUtils.getStatements(conn,
-                    vf.createIRI(aIdentifier), aKb.getTypeIri(), aKb.getClassIri(), true);
+            RepositoryResult<Statement> stmts = RdfUtils
+                .getStatements(conn, vf.createIRI(aIdentifier), aKb.getTypeIri(), aKb.getClassIri(),
+                    true, kbProperties.getSparqlQueryResultLimit());
             if (stmts.hasNext()) {
                 KBConcept kbConcept = KBConcept.read(conn, vf.createIRI(aIdentifier), aKb);
                 if (kbConcept != null) {

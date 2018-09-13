@@ -45,6 +45,7 @@ import org.springframework.test.context.junit4.rules.SpringMethodRule;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
@@ -80,6 +81,7 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest {
     private KnowledgeBase kb;
     private Reification reification;
     private TestFixtures testFixtures;
+    private KnowledgeBaseProperties kbProperties = new KnowledgeBaseProperties();
 
     public KnowledgeBaseServiceImplQualifierIntegrationTest(Reification aReification)
     {
@@ -104,7 +106,7 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest {
     {
         EntityManager entityManager = testEntityManager.getEntityManager();
         testFixtures = new TestFixtures(testEntityManager);
-        sut = new KnowledgeBaseServiceImpl(temporaryFolder.getRoot(), entityManager);
+        sut = new KnowledgeBaseServiceImpl(temporaryFolder.getRoot(), entityManager, kbProperties);
         project = testFixtures.createProject(PROJECT_NAME);
         kb = testFixtures.buildKnowledgeBase(project, KB_NAME, reification);
     }
