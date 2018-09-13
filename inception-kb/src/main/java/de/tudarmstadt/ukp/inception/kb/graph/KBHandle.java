@@ -33,6 +33,7 @@ public class KBHandle
     private String name;
     private String description;
     private KnowledgeBase kb;
+    private String language;
 
     public KBHandle()
     {
@@ -102,7 +103,18 @@ public class KBHandle
         kb = akb;
     }
 
-    
+    @Override
+    public String getLanguage()
+    {
+        return language;
+    }
+
+    @Override
+    public void setLanguage(String aLanguage)
+    {
+        language = aLanguage;
+    }
+
     public static KBHandle of(KBObject aObject)
     {
         return new KBHandle(aObject.getIdentifier(), aObject.getUiLabel());
