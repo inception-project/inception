@@ -49,6 +49,7 @@ import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.XMLSchema;
 import org.eclipse.rdf4j.query.Binding;
 import org.eclipse.rdf4j.query.BindingSet;
@@ -807,6 +808,12 @@ public class KnowledgeBaseServiceImpl
                 resultList.add(conceptHandle);
             }
         }
+        else if (!(aKB.getBaseConceptIri().stringValue().equals(OWL.NOTHING.stringValue()))) {
+            KBConcept concept = readConcept(aKB, aKB.getBaseConceptIri().stringValue()).get();
+            KBHandle conceptHandle = new KBHandle(concept.getIdentifier(), concept.getName(),
+                    concept.getDescription());
+            resultList.add(conceptHandle);
+        }
         else {
             resultList = read(aKB, (conn) -> {
                 String QUERY = SPARQLQueryStore.listRootConcepts(aKB);
@@ -817,6 +824,7 @@ public class KnowledgeBaseServiceImpl
                 tupleQuery.setBinding("pLABEL", aKB.getLabelIri());
                 tupleQuery.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
                 tupleQuery.setIncludeInferred(false);
+                tupleQuery.setMaxExecutionTime(0);
     
                 return evaluateListQuery(tupleQuery, aAll);
             });

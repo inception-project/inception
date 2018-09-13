@@ -137,6 +137,12 @@ public class KnowledgeBase
     @Column(nullable = false)
     private IRI propertyDescriptionIri;
 
+    /**
+     * The IRI for a base concept for instance for DBPedia as owl:Thing
+     */
+    @Column(nullable = false)
+    private IRI baseConceptIri;
+    
     @Column(nullable = false)
     private boolean readOnly;
 
@@ -369,6 +375,16 @@ public class KnowledgeBase
         explicitlyDefinedRootConcepts = aExplicitlyDefinedRootConcepts;
     }
     
+    public IRI getBaseConceptIri()
+    {
+        return baseConceptIri;
+    }
+
+    public void setBaseConceptIri(IRI aBaseConceptIri)
+    {
+        this.baseConceptIri = aBaseConceptIri;
+    }
+
     public void applyMapping(KnowledgeBaseMapping aMapping)
     {
         setClassIri(aMapping.getClassIri());
@@ -379,6 +395,7 @@ public class KnowledgeBase
         setPropertyTypeIri(aMapping.getPropertyTypeIri());
         setPropertyLabelIri(aMapping.getPropertyLabelIri());
         setPropertyDescriptionIri(aMapping.getPropertyDescriptionIri());
+        setBaseConceptIri(aMapping.getBaseConceptIri());
     }
     
     @Override

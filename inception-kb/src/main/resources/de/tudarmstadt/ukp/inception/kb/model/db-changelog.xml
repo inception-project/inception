@@ -331,4 +331,20 @@
       </column>
     </addColumn>
   </changeSet>
+  
+  <changeSet author="INCEpTION Team" id="20180913-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="knowledgebase" columnName="baseConceptIri"/>
+      </not>
+    </preConditions>
+
+    <addColumn tableName="knowledgebase">
+      <column name="baseConceptIri"
+              type="VARCHAR(255)"
+              defaultValue="http://www.w3.org/2002/07/owl#Nothing">
+      </column>
+    </addColumn>
+  </changeSet>
+  
 </databaseChangeLog>

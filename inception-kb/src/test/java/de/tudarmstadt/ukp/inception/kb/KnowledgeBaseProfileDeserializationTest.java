@@ -48,10 +48,11 @@ public class KnowledgeBaseProfileDeserializationTest
         String descriptionIri = "http://www.w3.org/2000/01/rdf-schema#comment";
         String propertyLabelIri = "http://www.w3.org/2000/01/rdf-schema#label";
         String propertyDescriptionIri = "http://www.w3.org/2000/01/rdf-schema#comment";
-
+        String baseConceptIRI = "http://www.w3.org/2002/07/owl#Nothing";
+        
         KnowledgeBaseMapping referenceMapping = new KnowledgeBaseMapping(classIri, subclassIri,
             typeIri, descriptionIri, label, propertyTypeIri, propertyLabelIri,
-            propertyDescriptionIri);
+            propertyDescriptionIri, baseConceptIRI);
         KnowledgeBaseProfile referenceProfile = new KnowledgeBaseProfile();
         referenceProfile.setMapping(referenceMapping);
         referenceProfile.setName(name);
@@ -68,7 +69,8 @@ public class KnowledgeBaseProfileDeserializationTest
                 + "property-type: " + propertyTypeIri + "\n        "
                 + "description: " + descriptionIri + "\n        "
                 + "property-label: " + propertyLabelIri + "\n        "
-                + "property-description: " + propertyDescriptionIri + "\n        ";
+                + "property-description: " + propertyDescriptionIri + "\n        "
+                + "base-concept: " + baseConceptIRI + "\n        ";
         
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 

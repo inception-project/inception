@@ -22,6 +22,7 @@ import java.util.ArrayList;
 
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
@@ -69,6 +70,7 @@ public class TestFixtures
         kb.setPropertyDescriptionIri(RDFS.COMMENT);
         kb.setExplicitlyDefinedRootConcepts(new ArrayList<>());
         kb.setReification(reification);
+        kb.setBaseConceptIri(OWL.NOTHING);
         return kb;
     }
 

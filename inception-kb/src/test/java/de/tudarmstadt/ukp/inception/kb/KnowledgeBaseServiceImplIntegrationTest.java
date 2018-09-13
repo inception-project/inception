@@ -1516,7 +1516,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
             });
 
     }
-
+    
     // Helper
 
     private Project createProject(String name) {

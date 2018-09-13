@@ -171,6 +171,7 @@ public class KnowledgeBaseServiceRemoteTest
             kb_wine.setPropertyLabelIri(RDFS.LABEL);
             kb_wine.setPropertyDescriptionIri(RDFS.COMMENT);
             kb_wine.setDefaultLanguage("en");
+            kb_wine.setBaseConceptIri(OWL.NOTHING);
             kbList.add(new TestConfiguration("data/wine-ontology.rdf", kb_wine, "http://www.w3.org/TR/2003/PR-owl-guide-20031209/wine#ChateauMargaux"));
         }
         
@@ -190,6 +191,7 @@ public class KnowledgeBaseServiceRemoteTest
             kb_hucit.setPropertyLabelIri(RDFS.LABEL);
             kb_hucit.setPropertyDescriptionIri(RDFS.COMMENT);
             kb_hucit.setDefaultLanguage("en");
+            kb_hucit.setBaseConceptIri(OWL.NOTHING);
             kbList.add(new TestConfiguration("http://nlp.dainst.org:8888/sparql", kb_hucit, 
                     // person -> Achilles :: urn:cts:cwkb:1137
                     "http://purl.org/hucit/kb/authors/1137"));
