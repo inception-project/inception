@@ -119,10 +119,8 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
         super(id);
 
         uploadedFiles = new HashMap<>();
-
         projectModel = aProjectModel;
         wizardDataModel = new CompoundPropertyModel<>(new KnowledgeBaseWrapper());
-
         wizardModel = new DynamicWizardModel(new TypeStep(null, wizardDataModel));
         wizardModel.setLastVisible(false);
         knowledgeBaseProfiles = readKbProfiles();
