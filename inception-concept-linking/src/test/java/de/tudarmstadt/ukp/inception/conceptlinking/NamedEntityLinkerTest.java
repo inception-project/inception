@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.conceptlinking;
 
+import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -39,22 +40,12 @@ import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
-import org.apache.uima.resource.metadata.TypeDescription;
-import org.apache.uima.resource.metadata.TypeSystemDescription;
-import org.apache.wicket.MarkupContainer;
-import org.apache.wicket.model.IModel;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mock;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureType;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.FeatureEditor;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.datasets.Dataset;
@@ -80,8 +71,6 @@ public class NamedEntityLinkerTest
     private RecommenderContext context;
     private Recommender recommender;
 
-    private @Mock NamedEntityLinker nwefewel;
-
     @Before
     public void setUp() {
         context = new RecommenderContext();
@@ -106,15 +95,15 @@ public class NamedEntityLinkerTest
     @Test
     public void thatPredictionWorks() throws Exception
     {
-        List<KBHandle> mockResult = new ArrayList<>();
-        mockResult.add(new KBHandle("https://www.wikidata.org/wiki/Q76", "Barack Obama",
-            "44th President of the United States of America"));
-        mockResult.add(new KBHandle("https://www.wikidata.org/wiki/Q26446735", "Obama",
-            "Japanese Family Name"));
-        mockResult.add(new KBHandle("https://www.wikidata.org/wiki/Q18355807", "Obama",
-            "genus of worms"));
-        mockResult.add(new KBHandle("https://www.wikidata.org/wiki/Q41773", "Obama",
-            "city in Fukui prefecture, Japan"));
+        List<KBHandle> mockResult = asList(
+            new KBHandle("https://www.wikidata.org/wiki/Q76", "Barack Obama",
+                "44th President of the United States of America"),
+            new KBHandle("https://www.wikidata.org/wiki/Q26446735", "Obama",
+                "Japanese Family Name"),
+            new KBHandle("https://www.wikidata.org/wiki/Q18355807", "Obama",
+                "genus of worms"),
+            new KBHandle("https://www.wikidata.org/wiki/Q41773", "Obama",
+                "city in Fukui prefecture, Japan"));
 
         KnowledgeBaseService kbService = mock(KnowledgeBaseService.class);
         KnowledgeBase kb = new KnowledgeBase();
@@ -133,7 +122,7 @@ public class NamedEntityLinkerTest
             .thenReturn(mockAnnoFeature);
 
         FeatureSupportRegistry fsRegistry = mock(FeatureSupportRegistry.class);
-        FeatureSupport fs = mock(MockFeatureSupport.class);
+        FeatureSupport fs = mock(FeatureSupport.class);
         when(fsRegistry.getFeatureSupport(mockAnnoFeature)).thenReturn(fs);
         when(fs.readTraits(mockAnnoFeature)).thenReturn(new ConceptFeatureTraits());
 
@@ -150,6 +139,8 @@ public class NamedEntityLinkerTest
 
         assertThat(predictions).as("Predictions have been written to CAS")
             .isNotEmpty();
+
+        System.out.println(predictions);
     }
 
     private List<CAS> loadAllData() throws IOException, UIMAException
@@ -193,63 +184,6 @@ public class NamedEntityLinkerTest
         recommender.setFeature("identifier");
 
         return recommender;
-    }
-
-    private class MockFeatureSupport
-        implements FeatureSupport<ConceptFeatureTraits>
-    {
-        @Override
-        public String getId()
-        {
-            return null;
-        }
-
-        @Override
-        public boolean accepts(AnnotationFeature annotationFeature)
-        {
-            return false;
-        }
-
-        @Override
-        public List<FeatureType> getSupportedFeatureTypes(AnnotationLayer annotationLayer)
-        {
-            return null;
-        }
-
-        @Override
-        public void generateFeature(TypeSystemDescription typeSystemDescription,
-            TypeDescription typeDescription, AnnotationFeature annotationFeature)
-        {
-
-        }
-
-        @Override
-        public FeatureEditor createEditor(String s, MarkupContainer markupContainer,
-            AnnotationActionHandler annotationActionHandler, IModel<AnnotatorState> iModel,
-            IModel<FeatureState> iModel1)
-        {
-            return null;
-        }
-
-        @Override
-        public <V> V unwrapFeatureValue(AnnotationFeature annotationFeature, CAS cas,
-            Object o)
-        {
-            return null;
-        }
-
-        @Override
-        public Object wrapFeatureValue(AnnotationFeature annotationFeature, CAS cas,
-            Object o)
-        {
-            return null;
-        }
-
-        @Override
-        public void setBeanName(String s)
-        {
-
-        }
     }
 }
 
