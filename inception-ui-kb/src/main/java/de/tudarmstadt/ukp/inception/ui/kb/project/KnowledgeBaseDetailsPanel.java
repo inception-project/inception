@@ -27,6 +27,7 @@ import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.ajax.markup.html.form.AjaxButton;
+import org.apache.wicket.ajax.markup.html.form.AjaxCheckBox;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
@@ -445,6 +446,10 @@ public class KnowledgeBaseDetailsPanel
                 .add(LambdaBehavior.onConfigure(it -> it.setEnabled(false))));
             wmc.add(new CheckBox("supportConceptLinking", model.bind("kb.supportConceptLinking"))
                 .add(LambdaBehavior.onConfigure(it -> it.setEnabled(false))));
+            wmc.add(new RequiredTextField<>("sparqlQueryResultLimit",
+                model.bind("kb.sparqlQueryResultLimit"))
+                .add(LambdaBehavior.onConfigure(it -> it.setEnabled(false))));
+
         }
 
         @Override protected void setUpLocalKnowledgeBaseComponents(WebMarkupContainer wmc)
@@ -529,6 +534,8 @@ public class KnowledgeBaseDetailsPanel
     {
 
         private static final long serialVersionUID = 7838564354437836375L;
+        private TextField<Integer> queryLimitField;
+        private CheckBox maxQueryLimitCheckBox;
 
         public EditMode(String id, CompoundPropertyModel<KnowledgeBaseWrapper> model)
         {
@@ -552,6 +559,11 @@ public class KnowledgeBaseDetailsPanel
                 KnowledgeBaseIriPanelMode.PROJECTSETTINGS));
             wmc.add(new CheckBox("enabled", model.bind("kb.enabled")));
             wmc.add(new CheckBox("supportConceptLinking", model.bind("kb.supportConceptLinking")));
+            queryLimitField = queryLimitField("sparqlQueryResultLimit",
+                model.bind("kb.sparqlQueryResultLimit"));
+            wmc.add(queryLimitField);
+            maxQueryLimitCheckBox = maxQueryLimitCheckbox("maxQueryLimit", new Model(false));
+            wmc.add(maxQueryLimitCheckBox);
         }
 
         @Override protected void setUpLocalKnowledgeBaseComponents(WebMarkupContainer wmc)
@@ -593,6 +605,30 @@ public class KnowledgeBaseDetailsPanel
             TextField<String> textField = new RequiredTextField<String>(id);
             textField.add(Validators.URL_VALIDATOR);
             wmc.add(textField);
+        }
+
+        private CheckBox maxQueryLimitCheckbox(String id, IModel<Boolean> model) {
+            return new AjaxCheckBox(id, model) {
+                @Override
+                public void onUpdate(AjaxRequestTarget aTarget) {
+                    if (getModelObject()) {
+                        queryLimitField.setModelObject(Integer.MAX_VALUE);
+                        queryLimitField.setEnabled(false);
+                    }
+                    else {
+                        queryLimitField.setEnabled(true);
+                    }
+                    aTarget.add(queryLimitField);
+                }
+
+            };
+        }
+
+        private TextField<Integer> queryLimitField(String id, IModel<Integer> model)
+        {
+            TextField<Integer> queryLimit = new RequiredTextField<>(id, model);
+            queryLimit.setOutputMarkupId(true);
+            return queryLimit;
         }
     }
 }

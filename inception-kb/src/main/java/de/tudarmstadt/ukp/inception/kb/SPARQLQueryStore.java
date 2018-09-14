@@ -25,8 +25,7 @@ import org.eclipse.rdf4j.rio.ntriples.NTriplesUtil;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 public final class SPARQLQueryStore
-{   
-    public static final int LIMIT = 1000;
+{
 
     public static final String SPARQL_PREFIX = String.join("\n",
             "PREFIX rdf: <" + RDF.NAMESPACE + ">",
@@ -69,7 +68,7 @@ public final class SPARQLQueryStore
                 , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage(),"?l")
                 , optionalLanguageFilteredValue("?pDESCRIPTION", aKB.getDefaultLanguage(),"?d")
                 , "}"
-                , "LIMIT " + LIMIT);
+                , "LIMIT " + aKB.getSparqlQueryResultLimit());
     }
     
     /** 
@@ -84,7 +83,7 @@ public final class SPARQLQueryStore
                 , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage(),"?l")
                 , optionalLanguageFilteredValue("?pDESCRIPTION", aKB.getDefaultLanguage(),"?d")
                 , "}"
-                , "LIMIT " + LIMIT);
+                , "LIMIT " + aKB.getSparqlQueryResultLimit());
     }
     
     
@@ -106,7 +105,7 @@ public final class SPARQLQueryStore
                 , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage(),"?l")
                 , optionalLanguageFilteredValue("?pDESCRIPTION", aKB.getDefaultLanguage(),"?d")
                 , "} "
-                , "LIMIT " + LIMIT);
+                , "LIMIT " + aKB.getSparqlQueryResultLimit());
     }
     
 
@@ -125,7 +124,7 @@ public final class SPARQLQueryStore
                 , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage(),"?l")
                 , optionalLanguageFilteredValue("?pDESCRIPTION", aKB.getDefaultLanguage(),"?d")
                 , "}"
-                , "LIMIT " + LIMIT);
+                , "LIMIT " + aKB.getSparqlQueryResultLimit());
     }
     
     
@@ -146,7 +145,7 @@ public final class SPARQLQueryStore
                 , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage(),"?l")
                 , optionalLanguageFilteredValue("?pDESCRIPTION", aKB.getDefaultLanguage(),"?d")
                 , "}"
-                , "LIMIT " + LIMIT);
+                , "LIMIT " + aKB.getSparqlQueryResultLimit());
     }
         
     /**
@@ -166,7 +165,7 @@ public final class SPARQLQueryStore
                 , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage(),"?l")
                 , optionalLanguageFilteredValue("?pDESCRIPTION", aKB.getDefaultLanguage(),"?d")
                 , "}"
-                , "LIMIT " + LIMIT);        
+                , "LIMIT " + aKB.getSparqlQueryResultLimit());
     }
     
     /**
@@ -181,7 +180,7 @@ public final class SPARQLQueryStore
                 , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage(),"?l")
                 , optionalLanguageFilteredValue("?pDESCRIPTION", aKB.getDefaultLanguage(),"?d")
                 , "}"
-                , "LIMIT " + LIMIT);
+                , "LIMIT " + aKB.getSparqlQueryResultLimit());
 
     }
     
