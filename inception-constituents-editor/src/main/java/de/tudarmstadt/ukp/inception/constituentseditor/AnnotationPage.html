@@ -1,0 +1,379 @@
+<!-- 
+	Thesis : Collaborative Web-based Tool for the Annotation of Syntactic Parse Trees
+	@author: Asha Joshi
+	Technische Universität Darmstadt
+	AnnotationPage.html
+-->
+
+<html
+	xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+<wicket:head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<!--  CSS for Annotation Page -->
+	<link rel="stylesheet" href="css/annotation/bootstrap.min.css">
+	<link rel="stylesheet" href="css/annotation/jquery.svg.css">
+	<link rel="stylesheet"
+		href="css/annotation/jquery-toastmessage/css/jquery.toastmessage.css">
+	<link rel="stylesheet" href="css/annotation/chosen.min.css">
+	<link rel="stylesheet"
+		href="css/annotation/font-awesome/css/font-awesome.min.css">
+	<link rel="stylesheet" href="css/annotation/annotation.css">
+	<link rel="stylesheet" href="css/annotation/simple-sidebar.css">
+	<!-- Custom css specific to annotation page -->
+</wicket:head>
+<body>
+	<wicket:extend>
+		<div id="reconnectAlert" class="container">
+		    <div class="alert alert-danger alert-dismissable">
+			    <a href="#" class="close" data-dismiss="alert" aria-label="close">
+			    	<i class="fa fa-window-close-o" aria-hidden="true"></i>
+				</a>
+			    <i class="fa fa-exclamation-triangle" aria-hidden="true"></i><strong>Connection lost!</strong> Please 
+			    <a href="syntacticannotation.html" >click here</a> to reconnect.
+			  </div>
+		</div>
+		<div id="wrapper">
+		<!-- Sidebar -->
+	        <div id="sidebar-wrapper">
+	            <ul class="sidebar-nav">
+	            </ul>
+	        </div>
+	        <!-- /#sidebar-wrapper -->
+        <div id="page-content-wrapper">
+		<div class="container-fluid" >
+			<div class="row">
+			<div class="col-md-12">
+				<div class="col-md-1 col-xs-2">
+					<!-- History bar -->
+					<a href="#menu-toggle" class="btn btn-primary" id="menu-toggle">History</a>
+				</div>
+				<div class="col-md-1 col-xs-2">
+					<!-- Start automatic Test -->
+					<button class="btn btn-primary" data-toggle="modal" data-target="#testCases_modal">Test Suite</button>
+				</div>
+				<div class="col-md-2 col-xs-3">
+					<div class="col-md-4 col-xs-6">
+						<!-- User Name -->
+						<label for="username">User: </label>
+					</div>
+					<div class="col-md-8 col-xs-12">
+						<input type="text" id="username" value="" class="form-control"/>
+					</div>
+				</div>
+				<div class="col-md-2 col-xs-3">
+				<!-- Select rendering mode -->
+					<div class="col-md-4 col-xs-6">
+						<label for="sel1">Mode: </label>
+					</div>
+					<div class="col-md-8 col-xs-12">
+						<select class="form-control" id="renderingmode">
+							<option value="0">Baseline</option>
+							<option value="1">Incremental</option>
+						</select>
+					</div>
+				</div>
+				<div class="col-md-2 col-xs-3">
+					<!-- Select Annotation file -->
+					<button id="selectfile" class="btn btn-primary" data-toggle="modal"
+						data-target="#file_modal">Select corpus</button>
+				</div>
+				<div class="col-md-1 col-xs-2">
+					<!-- Start annotation  -->
+					<button id="startannotation" class="btn btn-primary">Start</button>
+				</div>
+				
+				<div class="col-md-2 col-xs-5">
+					<!--  Zoom In -->
+					<button id="zoomout" class="btn btn-primary"
+						title="zoom out">
+						<i class="fa fa-search-minus" aria-hidden="true"></i>
+					</button>
+					<!--  Default -->
+					<button id="default" class="btn btn-primary"
+						title="default">
+						<i class="fa fa-search" aria-hidden="true"></i>
+					</button>
+					<!-- Minimize window -->
+					<button id="halfwindow" class="btn btn-primary"
+						title="window-minimize">
+						<i class="fa fa-window-minimize" aria-hidden="true"></i>
+					</button>
+					<!--  Maximize window -->
+					<button id="fullwindow" class="btn btn-primary"
+						title="window-maximize">
+						<i class="fa fa-window-maximize" aria-hidden="true"></i>
+					</button>
+				</div>
+				
+				<div class="col-md-1 col-xs-2">
+					<!-- Stop annotation and return to the home page -->
+					<a href="welcome.html" role="button" class="btn btn-danger"
+						id="closeannotation" onclick="Wicket.WebSocket.close();">Close</a>
+				</div>
+			</div>	
+			</div>
+			<div class="row">
+				<div id="content"
+				style="width: 400px; height: 400px; margin: 0 auto; overflow: auto;position: relative;">
+					<!-- Container of syntactic tree svg elements -->
+					<div id="svgsketch"></div>
+				</div>
+			</div>
+		</div>
+		</div>
+	</div>
+		
+
+
+		<!-- Select Annotation file Modal -->
+		<div id="file_modal" class="modal fade" role="dialog" tabindex='-1'>
+			<div class="modal-dialog">
+				<!-- Modal content-->
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal">&times;</button>
+						<h4 class="modal-title">Select File</h4>
+					</div>
+					<div class="modal-body">
+						<!--  list of annotation files -->
+						<select class="form-control" id="file_select"></select>
+					</div>
+					<div class="modal-footer">
+						<!-- select file -->
+						<button type="button" id="createNew" class="btn btn-primary" data-toggle="modal"
+						data-target="#createCorpus" data-dismiss="modal">Create New</button>
+						<button type="button" id="submitfile" class="btn btn-primary">Select</button>
+						<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+					</div>
+				</div>
+
+			</div>
+		</div>
+		<!-- Select File Modal -->
+
+		<!-- Create new corpus -->
+		<div id="createCorpus" class="modal fade" role="dialog" tabindex='-1'>
+			<div class="modal-dialog">
+				<!-- Modal content-->
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal">&times;</button>
+						<h4 class="modal-title">Create New Corpus</h4>
+					</div>
+					<div class="modal-body">
+						<!--  list of annotation files -->
+						<form id="newCorpusForm">
+							<input type="hidden" name="action" value="createNew"/>
+							<div class="form-group">
+								<label for="newfilename">Enter file name:</label>
+								<input type="text" class="form-control" id="newfilename" required="required"/>
+							</div>
+							<div class="form-group">		
+								<label for="corpustext">Enter text:</label>
+								<textarea class="form-control" id="corpustext" required="required"></textarea>
+							</div>
+							<div class="form-group text-center">		
+								<button type="submit" class="btn btn-primary">Create</button>
+							</div>
+						</form>
+						
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- Select File Modal -->		
+
+		<!-- ADD POS NODE Modal -->
+		<div id="addPOSmodal" class="modal fade" role="dialog" tabindex='-1'>
+			<div class="modal-dialog">
+				<!-- Modal content-->
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal">&times;</button>
+						<h4 class="modal-title styledTitle">Add POS Node</h4>
+					</div>
+					<div class="modal-body clearfix">
+						<div class="col-lg-12">
+							<div class="col-lg-10">
+								<label for="pos_text" class="styledLabel">Select type: </label>
+								<select id="pos_text"></select>
+							</div>
+							<div class="col-lg-1">
+								<a id="addPOS" href="#" data-dismiss="modal" title="Add"><i
+									class="fa fa-floppy-o fa-2x" aria-hidden="true"></i></a>
+							</div>
+							<div class="col-lg-1">
+								<a href="#" data-dismiss="modal" title="Cancel"><i
+									class="fa fa fa-times fa-2x" aria-hidden="true"></i></a>
+							</div>
+						</div>
+						<input type="hidden" id="sentence_id" />
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- ADD POS NODE Modal -->
+
+		<!-- Node Actions Modal -->
+		<div id="nodeActions" class="modal fade" role="dialog" tabindex='-1'>
+			<div class="modal-dialog">
+				<!-- Modal content-->
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal">&times;</button>
+						<h4 class="modal-title styledTitle">Node Actions</h4>
+					</div>
+					<div class="modal-body clearfix">
+						<input type="hidden" id="node_id" />
+						<div class="form-group text-center">
+							<label class="form-check-inline"> <input
+								class="form-check-input form-control" type="radio"
+								name="node_action" value="1" /><span class="styledLabel">Change
+									node type</span>
+							</label> <label class="form-check-inline "> <input
+								class="form-check-input form-control" type="radio"
+								name="node_action" value="2" /><span class="styledLabel">Delete
+									node</span>
+							</label> <label class="form-check-inline deletenodeaction"> <input
+								class="form-check-input form-control" type="radio"
+								name="node_action" value="3" /><span class="styledLabel">Add
+									parent node</span>
+							</label>
+						</div>
+						<div class="form-group text-center">
+							<select class="form-control" id="node_new_type" tabindex="2"></select>
+						</div>
+						<div class="form-group text-center">
+							<a id="submitnodeaction" href="#" data-dismiss="modal"
+								title="Submit action"><i class="fa fa-floppy-o fa-2x"
+								aria-hidden="true"></i></a>
+							<a href="#" data-dismiss="modal"
+								title="Cancel"><i class="fa fa fa-times fa-2x"
+								aria-hidden="true"></i></a>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- Node Actions Modal -->
+
+		<!-- Edge update Modal -->
+		<div id="edgeActions" class="modal fade" role="dialog" tabindex='-1'>
+			<div class="modal-dialog">
+				<!-- Modal content-->
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal">&times;</button>
+						<h4 class="modal-title styledTitle">Edge Actions</h4>
+					</div>
+					<div class="modal-body clearfix">
+						<input type="hidden" id="edge_id" />
+						<div class="form-group text-center">
+							<label class="form-check-inline"> 
+							<input class="form-check-input form-control" type="radio" id="edge_action1" name="edge_action" value="1" />
+							<span class ="styledLabel" id="edge_action1_label">Change text</span>
+							</label> <label class="form-check-inline"> <input
+								class="form-check-input form-control" type="radio"
+								id="edge_action2" name="edge_action" value="2" /><span
+								id="edge_action2_label" class="styledLabel">Delete edge</span>
+							</label> <label class="form-check-inline"> <input
+								class="form-check-input form-control" type="radio"
+								id="edge_action3" name="edge_action" value="3" /><span
+								id="edge_action3_label" class="styledLabel">Add Node</span>
+							</label>
+						</div>
+						<div class="form-group">
+							<input id="edge_text" type="text" class="form-control" />
+							<select class="form-control" id="nodeInBW_type" tabindex="2"></select>
+						</div>
+						<div class="form-group text-center">
+							<a id="submitEdgeaction" href="#" data-dismiss="modal"
+								title="Submit action"><i class="fa fa-floppy-o fa-2x"
+								aria-hidden="true"></i></a> 
+							<a href="#" data-dismiss="modal"
+								title="Cancel"><i class="fa fa fa-times fa-2x"
+								aria-hidden="true"></i></a>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- Edge update Modal -->
+		
+		<!-- Test Cases Modal -->
+		<div id="testCases_modal" class="modal fade" role="dialog" tabindex='-1'>
+			<div class="modal-dialog">
+				<!-- Modal content-->
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal">&times;</button>
+						<h4 class="modal-title styledTitle">Select Test Cases</h4>
+					</div>
+					<div class="modal-body clearfix">
+					    <div class="radio">
+					      <label><input value="concurrentAccessBaseline" type="radio" name="testcase">Test suit: Concurrent access, Protocol:Baseline, Clients:2</label>
+					    </div>
+					    <div class="radio">
+					      <label><input value="concurrentAccessIncremental" type="radio" name="testcase">Test suit: Concurrent access, Protocol:Incremental, Clients:2</label>
+					    </div>
+					    <div class="radio">
+					      <label><input value="randomTestBaseline" type="radio" name="testcase">Test suit: Tree editing actions, Protocol:Baseline, Client:1</label>
+					    </div>
+					    <div class="radio">
+					      <label><input value="randomTestIncremental" type="radio" name="testcase">Test suit: Tree editing actions, Protocol:Incremental, Client:1</label>
+					    </div>
+					    <div class="radio">
+					      <label><input value="loadTestBaseline" type="radio" name="testcase">Test suit: Load Test, Protocol:Baseline, Clients:3</label>
+					    </div>
+					    <div class="radio">
+					      <label><input value="loadTestIncremental" type="radio" name="testcase">Test suit: Load Test, Protocol:Incremental, Clients:3</label>
+					    </div>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-primary" id="automatictesting">Start Test</button>
+						<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- Test Cases Modal -->
+
+		<!--  JavaScript for Annotation Page -->
+		<!--  JavaScript Plugins -->
+		<script src="js/annotation/plugins/jquery.js" type="text/javascript"></script>
+		<script src="js/annotation/plugins/bootstrap.js"
+			type="text/javascript"></script>
+		<script src="js/annotation/plugins/jquery.svg.js"
+			type="text/javascript"></script>
+		<script src="js/annotation/plugins/jquery.svgdom.js"
+			type="text/javascript"></script>
+		<script src="js/annotation/plugins/jquery.svganim.js"
+			type="text/javascript"></script>
+		<script src="js/annotation/plugins/chosen.jquery.min.js"
+			type="text/javascript"></script>
+		<script src="js/annotation/plugins/jquery.toastmessage.js"
+			type="text/javascript"></script>
+		<script src="js/annotation/plugins/jquery.easing.js"
+			type="text/javascript"></script>
+		<!-- Annotation Custom JavaScript -->
+		<script src="js/annotation/Components.js" type="text/javascript"></script>
+		<script src="js/annotation/sentenceRenderer.js" type="text/javascript"></script>
+		<script src="js/annotation/edgeRenderer.js" type="text/javascript"></script>
+		<script src="js/annotation/nodesRenderer.js" type="text/javascript"></script>
+		<script src="js/annotation/commHandler.js" type="text/javascript"></script>
+		<script src="js/annotation/testSuits.js" type="text/javascript"></script>
+		<script src="js/annotation/annotationInit.js" type="text/javascript"></script>
+		<script type="text/javascript">
+			$(function() {
+				//init the Annotation main js when document is ready
+				Annotation.init();
+			});
+		</script>
+	</wicket:extend>
+</body>
+</html>

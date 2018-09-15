@@ -1,0 +1,78 @@
+/**
+Thesis: Collaborative Web-based Tool for the Annotation of Syntactic Parse Trees
+@author : Asha Joshi
+Technische Universität Darmstadt
+Annotation page stylesheet 
+**/
+
+@CHARSET "ISO-8859-1";
+
+		-moz-user-select: none;
+		-khtml-user-select: none;
+		user-select: none;
+		.styledTitle{
+			font-family: "Times New Roman", Times, serif;
+		}
+		.styledLabel{
+			font-family: "Times New Roman", Times, serif;
+		}
+		rect#surface{
+			fill: #fcfafa;
+		}
+		text.hasnode {
+			fill: #7f7e7e;
+		}
+		.pos rect{
+			fill: #dbdbdb;
+		}
+		.constituent rect{
+			fill: #b1ff9e;
+		}
+		.hasParent rect{
+			stroke-dasharray:4;
+		}
+		.edges{
+			font-size: 10px;
+			font-family: "Times New Roman", Times, serif;
+		}
+		.margin-bottom-20{
+			margin-bottom: 20px;	
+		}
+		.hovereffect{
+			stroke: #9238F7;
+		}
+		.highlight text {
+			fill: rgb( 0, 100, 0);
+		}
+		.highlight rect{
+			fill: #ffff80 !important;
+		}
+		.highlight path {
+			stroke: rgb( 0, 100, 0);
+		}
+		.TBdeleted text {
+			fill: rgb(255, 0, 0);
+		}
+		.TBdeleted path {
+			stroke: rgb(255, 0, 0);
+		}
+		.TBdeleted rect {
+			fill: rgb(255, 160, 122);
+		}
+		.sentence text:hover, .pos g:hover, .constituent g:hover, .edges g:hover  {
+        cursor:pointer;
+    	}
+		
+#loader {
+    border: 10px solid #f3f3f3; /* Light grey */
+    border-top: 10px solid #3498db; /* Blue */
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}

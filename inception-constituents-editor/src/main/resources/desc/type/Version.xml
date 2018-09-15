@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<typeSystemDescription xmlns="http://uima.apache.org/resourceSpecifier">
+	<name>CollabourativeSyntacticAnnotationTypeSystem</name>
+  <description>Type system definition for including version number and last update date of a document</description>
+  <version>1.0</version>
+  <vendor>Thesis, UKP, Technische Universität Darmstadt</vendor>
+  <types>
+	<typeDescription>
+      <name>de.tudarmstadt.ukp.dkpro.templates.synchronization.Version</name>
+      <description/>
+      <supertypeName>uima.cas.TOP</supertypeName>
+      <features>
+        <featureDescription>
+          <name>version</name>
+          <description>Store the version number of document</description>
+          <rangeTypeName>uima.cas.Integer</rangeTypeName>
+        </featureDescription>
+      	<featureDescription>
+          <name>versiondate</name>
+          <description>Store the date  of last update</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+      <featureDescription>
+          <name>sentenceAddress</name>
+          <description/>
+          <rangeTypeName>uima.cas.Integer</rangeTypeName>
+        </featureDescription>
+      </features>
+    </typeDescription>
+  </types>
+</typeSystemDescription>
