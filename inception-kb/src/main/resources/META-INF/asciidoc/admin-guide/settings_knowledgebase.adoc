@@ -1,0 +1,25 @@
+[[sect_settings_knowledge-base]]
+=== Knowledge Base Settings
+
+This section describes the global settings related to the knowledge base module.
+
+.SPARQL query result limit
+This parameter determines the maximum number of results that can be retrieved from a SPARQL query.
+The queries are used to retrieve concepts, statements, properties, etc. from the knowledge base.
+
+If no value for the parameter is specified, its default value is used. The default value is shown as
+an example of how the parameter can be configured below:
+
+.Knowledge base settings overview
+[cols="4*", options="header"]
+|===
+| Setting
+| Description
+| Default
+| Example
+
+| inception.knowledge-base.sparqlQueryResultLimit
+| SPARQL query result limit
+| 1000
+| 10000
+|===
