@@ -110,7 +110,7 @@ public class KnowledgeBaseServiceImpl
     private final RepositoryManager repoManager;
     private final Set<String> implicitNamespaces;
 
-    private @javax.annotation.Resource KnowledgeBaseProperties kbProperties;
+    private @Autowired KnowledgeBaseProperties kbProperties;
 
     @org.springframework.beans.factory.annotation.Value(value = "${data.path}/kb")
     private File dataDir;
@@ -465,17 +465,18 @@ public class KnowledgeBaseServiceImpl
         });
     }
 
-    @Override public Optional<KBProperty> readProperty(KnowledgeBase kb, String aIdentifier)
+    @Override
+    public Optional<KBProperty> readProperty(KnowledgeBase aKB, String aIdentifier)
     {
-        return read(kb, (conn) -> {
+        return read(aKB, (conn) -> {
             ValueFactory vf = conn.getValueFactory();
             try (RepositoryResult<Statement> stmts = RdfUtils
-                .getPropertyStatementsSparql(conn, vf.createIRI(aIdentifier), kb.getTypeIri(),
-                    kb.getPropertyTypeIri(), kbProperties.getSparqlQueryResultLimit(), true,
+                .getPropertyStatementsSparql(conn, vf.createIRI(aIdentifier), aKB.getTypeIri(),
+                    aKB.getPropertyTypeIri(), kbProperties.getSparqlQueryResultLimit(), true,
                     null)) {
                 if (stmts.hasNext()) {
                     Statement propStmt = stmts.next();
-                    KBProperty kbProp = KBProperty.read(conn, propStmt, kb);
+                    KBProperty kbProp = KBProperty.read(conn, propStmt, aKB);
                     return Optional.of(kbProp);
                 }
                 else {
@@ -516,9 +517,9 @@ public class KnowledgeBaseServiceImpl
         throws QueryEvaluationException
     {
         List<KBHandle> resultList = read(aKB, (conn) -> {
-            String QUERY = SPARQLQueryStore
+            String query = SPARQLQueryStore
                 .getPropertyListQuery(kbProperties.getSparqlQueryResultLimit());
-            TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
+            TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, query);
             tupleQuery.setBinding("pTYPE", aKB.getTypeIri());
             tupleQuery.setBinding("oPROPERTY", aKB.getPropertyTypeIri());
             tupleQuery.setBinding("pLABEL", aKB.getLabelIri());

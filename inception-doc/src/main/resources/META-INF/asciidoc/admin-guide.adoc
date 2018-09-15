@@ -38,3 +38,5 @@ include::{include-dir}systemproperties.adoc[]
 <<<
 
 include::{include-dir}settings.adoc[]
+include::{include-dir}settings_concept-linking.adoc[]
+include::{include-dir}settings_knowledgebase.adoc[]
