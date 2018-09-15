@@ -119,7 +119,7 @@ public class ConceptLinkingService
       
         candidateFullTextCache = Caffeine.newBuilder()
                 .maximumSize(properties.getCacheSize())
-                .build(key -> retrieveCandidatesFullText(key));
+                .build(key -> loadCandidatesFullText(key));
 
         semanticSignatureCache = Caffeine.newBuilder()
                 .maximumSize(properties.getCacheSize())
@@ -152,9 +152,9 @@ public class ConceptLinkingService
         Set<CandidateEntity> candidatesFullText = new HashSet<>();
         if (!aTypedString.isEmpty()) {
             candidatesFullText
-                .addAll(generateCandidatesFullText(new CandidateCacheKey(aKB, aTypedString)));
+                .addAll(getCandidatesFullText(new CandidateCacheKey(aKB, aTypedString)));
         }
-        candidatesFullText.addAll(generateCandidatesFullText(new CandidateCacheKey(aKB, aMention)));
+        candidatesFullText.addAll(getCandidatesFullText(new CandidateCacheKey(aKB, aMention)));
 
         long afterRetrieval = System.currentTimeMillis();
 
@@ -183,7 +183,7 @@ public class ConceptLinkingService
      * May lead to recursive calls if first search does not yield any results.
      *
      */
-    private Set<CandidateEntity> retrieveCandidatesFullText(CandidateCacheKey aKey)
+    private Set<CandidateEntity> loadCandidatesFullText(CandidateCacheKey aKey)
     {
         Set<CandidateEntity> candidatesFullText = new HashSet<>();
 
@@ -200,7 +200,7 @@ public class ConceptLinkingService
         return candidatesFullText;
     }
 
-    public Set<CandidateEntity> generateCandidatesFullText(CandidateCacheKey aKey)
+    private Set<CandidateEntity> getCandidatesFullText(CandidateCacheKey aKey)
     {
         Set<CandidateEntity> candidatesFullText = new HashSet<>();
 
@@ -208,13 +208,13 @@ public class ConceptLinkingService
             candidatesFullText.addAll(candidateFullTextCache.get(aKey));
         }
         else {
-            candidatesFullText.addAll(retrieveCandidatesFullText(aKey));
+            candidatesFullText.addAll(loadCandidatesFullText(aKey));
         }
         if (candidatesFullText.isEmpty()) {
             String[] split = aKey.getQuery().split(" ");
             if (split.length > 1) {
                 for (String s : split) {
-                    candidatesFullText.addAll(retrieveCandidatesFullText(
+                    candidatesFullText.addAll(loadCandidatesFullText(
                         new CandidateCacheKey(aKey.getKnowledgeBase(), s)));
                 }
             }
