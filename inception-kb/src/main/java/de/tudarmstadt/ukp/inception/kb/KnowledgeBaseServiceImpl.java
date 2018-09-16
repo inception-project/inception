@@ -187,6 +187,8 @@ public class KnowledgeBaseServiceImpl
                     akb.getDescriptionIri().stringValue(),null,XMLSchema.STRING.stringValue()));
             createBaseProperty(akb, new KBProperty(akb.getTypeIri().getLocalName(),
                     akb.getTypeIri().stringValue()));
+            createBaseProperty(akb, new KBProperty(akb.getSubPropertyIri().getLocalName(),
+                akb.getSubPropertyIri().stringValue()));
         }
     }
 
@@ -1130,16 +1132,16 @@ public class KnowledgeBaseServiceImpl
         return Optional.empty();
     }
 
-    @Override
-    public SchemaProfile checkSchemaProfile(KnowledgeBaseProfile aProfile)
+    @Override public SchemaProfile checkSchemaProfile(KnowledgeBaseProfile aProfile)
     {
         SchemaProfile[] profiles = SchemaProfile.values();
         KnowledgeBaseMapping mapping = aProfile.getMapping();
         for (int i = 0; i < profiles.length; i++) {
             // Check if kb profile corresponds to a known schema profile
             if (equalsSchemaProfile(profiles[i], mapping.getClassIri(), mapping.getSubclassIri(),
-                mapping.getTypeIri(), mapping.getDescriptionIri(), mapping.getLabelIri(),
-                mapping.getPropertyTypeIri())) {
+                mapping.getTypeIri(), mapping.getSubPropertyIri(), mapping.getDescriptionIri(),
+                mapping.getLabelIri(), mapping.getPropertyTypeIri(), mapping.getPropertyLabelIri(),
+                mapping.getPropertyDescriptionIri())) {
                 return profiles[i];
             }
         }
@@ -1154,8 +1156,9 @@ public class KnowledgeBaseServiceImpl
         for (int i = 0; i < profiles.length; i++) {
             // Check if kb has a known schema profile
             if (equalsSchemaProfile(profiles[i], aKb.getClassIri(), aKb.getSubclassIri(),
-                aKb.getTypeIri(), aKb.getDescriptionIri(), aKb.getLabelIri(),
-                aKb.getPropertyTypeIri())) {
+                aKb.getTypeIri(), aKb.getSubPropertyIri(), aKb.getDescriptionIri(),
+                aKb.getLabelIri(), aKb.getPropertyTypeIri(), aKb.getPropertyLabelIri(),
+                aKb.getDescriptionIri())) {
                 return profiles[i];
             }
         }
@@ -1167,13 +1170,17 @@ public class KnowledgeBaseServiceImpl
      * Compares a schema profile to given IRIs. Returns true if the IRIs are the same as in the
      * profile
      */
-    private boolean equalsSchemaProfile(SchemaProfile profile, IRI classIri, IRI subclassIri,
-        IRI typeIri, IRI descriptionIri, IRI labelIri, IRI propertyTypeIri)
+    private boolean equalsSchemaProfile(SchemaProfile aProfile, IRI aClassIri, IRI aSubclassIri,
+        IRI aTypeIri, IRI aSubPropertyIRI, IRI aDescriptionIri, IRI aLabelIri, IRI aPropertyTypeIri,
+        IRI aPropertyLabelIri, IRI aPropertyDescriptionIri)
     {
-        return profile.getClassIri().equals(classIri) && profile.getSubclassIri()
-            .equals(subclassIri) && profile.getTypeIri().equals(typeIri) && profile
-            .getDescriptionIri().equals(descriptionIri) && profile.getLabelIri().equals(labelIri)
-            && profile.getPropertyTypeIri().equals(propertyTypeIri);
+        return aProfile.getClassIri().equals(aClassIri) && aProfile.getSubclassIri()
+            .equals(aSubclassIri) && aProfile.getTypeIri().equals(aTypeIri) && aProfile
+            .getSubPropertyIri().equals(aSubPropertyIRI) && aProfile.getDescriptionIri()
+            .equals(aDescriptionIri) && aProfile.getLabelIri().equals(aLabelIri) && aProfile
+            .getPropertyTypeIri().equals(aPropertyTypeIri) && aProfile.getPropertyLabelIri()
+            .equals(aPropertyLabelIri) && aProfile.getPropertyDescriptionIri()
+            .equals(aPropertyDescriptionIri);
     }
 
     @Override

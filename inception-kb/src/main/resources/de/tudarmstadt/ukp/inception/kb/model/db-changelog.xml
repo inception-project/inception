@@ -331,4 +331,19 @@
       </column>
     </addColumn>
   </changeSet>
+
+  <changeSet author="INCEpTION Team" id="20180914-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="knowledgebase" columnName="subPropertyIri"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="knowledgebase">
+      <column name="subPropertyIri"
+              type="VARCHAR(255)"
+              defaultValue="http://www.w3.org/2000/01/rdf-schema#comment">
+        <constraints nullable="false" />
+      </column>
+    </addColumn>
+  </changeSet>
 </databaseChangeLog>

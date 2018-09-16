@@ -40,6 +40,9 @@ public class KnowledgeBaseMapping implements Serializable
     @JsonProperty("instance-of")
     private IRI typeIri;
 
+    @JsonProperty("subproperty-of")
+    private IRI subPropertyIri;
+
     @JsonProperty("description")
     private IRI descriptionIri;
 
@@ -59,6 +62,7 @@ public class KnowledgeBaseMapping implements Serializable
     @JsonCreator public KnowledgeBaseMapping(@JsonProperty("class") String classIri,
         @JsonProperty("subclass-of") String subclassIri,
         @JsonProperty("instance-of") String typeIri,
+        @JsonProperty("subproperty-of") String subPropertyIri,
         @JsonProperty("description") String descriptionIri,
         @JsonProperty("label") String labelIri,
         @JsonProperty("property-type") String propertyTypeIri,
@@ -69,6 +73,7 @@ public class KnowledgeBaseMapping implements Serializable
         this.classIri = vf.createIRI(classIri);
         this.subclassIri = vf.createIRI(subclassIri);
         this.typeIri = vf.createIRI(typeIri);
+        this.subPropertyIri = vf.createIRI(subPropertyIri);
         this.descriptionIri = vf.createIRI(descriptionIri);
         this.labelIri = vf.createIRI(labelIri);
         this.propertyTypeIri = vf.createIRI(propertyTypeIri);
@@ -108,6 +113,16 @@ public class KnowledgeBaseMapping implements Serializable
     public void setTypeIri(IRI aTypeIri)
     {
         typeIri = aTypeIri;
+    }
+
+    public IRI getSubPropertyIri()
+    {
+        return subPropertyIri;
+    }
+
+    public void setSubPropertyIri(IRI subPropertyIri)
+    {
+        this.subPropertyIri = subPropertyIri;
     }
 
     public IRI getDescriptionIri()
@@ -172,7 +187,8 @@ public class KnowledgeBaseMapping implements Serializable
         KnowledgeBaseMapping that = (KnowledgeBaseMapping) o;
         return Objects.equals(classIri, that.classIri)
                 && Objects.equals(subclassIri, that.subclassIri)
-                && Objects.equals(typeIri, that.typeIri) 
+                && Objects.equals(typeIri, that.typeIri)
+                && Objects.equals(subPropertyIri, that.subPropertyIri)
                 && Objects.equals(labelIri, that.labelIri)
                 && Objects.equals(propertyTypeIri, that.propertyTypeIri)
                 && Objects.equals(descriptionIri, that.descriptionIri)
@@ -184,6 +200,6 @@ public class KnowledgeBaseMapping implements Serializable
     public int hashCode()
     {
         return Objects.hash(classIri, subclassIri, typeIri, propertyTypeIri, descriptionIri,
-                labelIri, propertyLabelIri, propertyDescriptionIri);
+                labelIri, propertyLabelIri, propertyDescriptionIri, subPropertyIri);
     }
 }

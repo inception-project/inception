@@ -108,6 +108,12 @@ public class KnowledgeBase
     private IRI typeIri;
 
     /**
+     *  The IRI for a property describing B being a subproperty of A
+     */
+    @Column(nullable = false)
+    private IRI subPropertyIri;
+
+    /**
      * The IRI for a property describing B being a description of A, e.g. schema:description
      */
     @Column(nullable = false)
@@ -242,6 +248,21 @@ public class KnowledgeBase
         typeIri = aTypeIri;
     }
 
+    public void setPropertyDescriptionIri(IRI aPropertyDescriptionIri)
+    {
+        propertyDescriptionIri = aPropertyDescriptionIri;
+    }
+
+    public IRI getSubPropertyIri()
+    {
+        return subPropertyIri;
+    }
+
+    public void setSubPropertyIri(IRI aSubPropertyIri)
+    {
+        subPropertyIri = aSubPropertyIri;
+    }
+
     public IRI getDescriptionIri()
     {
         return descriptionIri;
@@ -295,11 +316,6 @@ public class KnowledgeBase
     public IRI getPropertyDescriptionIri()
     {
         return propertyDescriptionIri;
-    }
-
-    public void setPropertyDescriptionIri(IRI aPropertyDescriptionIri)
-    {
-        propertyDescriptionIri = aPropertyDescriptionIri;
     }
 
     public boolean isReadOnly()
@@ -374,6 +390,7 @@ public class KnowledgeBase
         setClassIri(aMapping.getClassIri());
         setSubclassIri(aMapping.getSubclassIri());
         setTypeIri(aMapping.getTypeIri());
+        setSubPropertyIri(aMapping.getSubPropertyIri());
         setDescriptionIri(aMapping.getDescriptionIri());
         setLabelIri(aMapping.getLabelIri());
         setPropertyTypeIri(aMapping.getPropertyTypeIri());

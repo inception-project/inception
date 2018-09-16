@@ -74,6 +74,7 @@ public class IriConstants
     public static final List<IRI> CLASS_IRIS;
     public static final List<IRI> SUBCLASS_IRIS;
     public static final List<IRI> TYPE_IRIS;
+    public static final List<IRI> SUB_PROPERTY_IRIS;
     public static final List<IRI> DESCRIPTION_IRIS;
     public static final List<IRI> LABEL_IRIS;
     public static final List<IRI> PROPERTY_TYPE_IRIS;
@@ -92,6 +93,7 @@ public class IriConstants
         CLASS_IRIS = asList(RDFS.CLASS, OWL.CLASS, WIKIDATA_CLASS, SKOS.CONCEPT);
         SUBCLASS_IRIS = asList(RDFS.SUBCLASSOF, WIKIDATA_SUBCLASS, SKOS.BROADER);
         TYPE_IRIS = asList(RDF.TYPE, WIKIDATA_TYPE);
+        SUB_PROPERTY_IRIS = asList(RDFS.SUBPROPERTYOF);
         DESCRIPTION_IRIS = asList(RDFS.COMMENT, SCHEMA_DESCRIPTION);
         LABEL_IRIS = asList(RDFS.LABEL, SKOS.PREF_LABEL);
         PROPERTY_TYPE_IRIS = asList(RDF.PROPERTY, WIKIDATA_PROPERTY_TYPE);

@@ -41,6 +41,7 @@ import org.eclipse.rdf4j.rio.ntriples.NTriplesUtil;
 
 import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.SPARQLQueryStore;
+import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 public class RdfUtils
 {
@@ -70,6 +71,133 @@ public class RdfUtils
         }
     }
 
+    public static Optional<Statement> readFirstLabel(RepositoryConnection conn, KnowledgeBase aKB,
+        Resource subj, String language)
+    {
+        Optional<Statement> resultLabel = readFirst(conn, subj, aKB.getLabelIri(), null, language);
+        if (resultLabel.isPresent()) {
+            return resultLabel;
+        }
+        // if no label can be found look for sub-property labels
+        else {
+            try (RepositoryResult<Statement> results =
+                getSubpropertyLabelsSparql(conn, aKB, subj, language)) {
+                if (results.hasNext()) {
+                    return Optional.of(results.next());
+                }
+                else {
+                    return Optional.empty();
+                }
+            }
+        }
+
+    }
+
+    private static RepositoryResult<Statement> getSubpropertyLabelsSparql(RepositoryConnection conn,
+        KnowledgeBase aKB, Resource subj, String language)
+    {
+        String filter = "";
+        if (language != null) {
+            filter = "FILTER(LANG(?o) = \"\" || LANGMATCHES(LANG(?o), \"" + NTriplesUtil
+                .escapeString(language) + "\")).";
+        }
+        String subPropertyLabelQuery = String
+            .join("\n", "SELECT * WHERE { ",
+                "?s ?p ?o .",
+                "?p ?spl ?lp ",
+                filter,
+                "} LIMIT " + 1000);
+
+        TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, subPropertyLabelQuery);
+        if (subj != null) {
+            tupleQuery.setBinding("s", subj);
+        }
+        tupleQuery.setBinding("lp", aKB.getLabelIri());
+        tupleQuery.setBinding("spl", aKB.getSubPropertyIri());
+
+        tupleQuery.setIncludeInferred(true);
+        TupleQueryResult result = tupleQuery.evaluate();
+
+        Iteration<Statement, QueryEvaluationException> i1 =
+            new ConvertingIteration<BindingSet, Statement, QueryEvaluationException>(result)
+            {
+                @Override
+                protected Statement convert(BindingSet b) throws QueryEvaluationException
+                {
+
+                    Resource s = subj == null ? (Resource) b.getValue("s") : subj;
+                    IRI p = (IRI) b.getValue("p");
+                    Value o = b.getValue("o");
+
+                    return SimpleValueFactory.getInstance().createStatement(s, p, o);
+                }
+            };
+
+        ExceptionConvertingIteration<Statement, RepositoryException> i2 =
+            new ExceptionConvertingIteration<Statement, RepositoryException>(i1)
+            {
+                @Override
+                protected RepositoryException convert(Exception aE)
+                {
+                    return new RepositoryException(aE);
+                }
+            };
+
+        return new RepositoryResult<>(i2);
+    }
+
+    /*
+    private static RepositoryResult<Statement> getLabelsSparql(RepositoryConnection conn,
+        KnowledgeBase aKB, Resource subj, String language)
+    {
+        String filter = "";
+        if (language != null) {
+            filter = "FILTER(LANG(?o) = \"\" || LANGMATCHES(LANG(?o), \"" + NTriplesUtil
+                .escapeString(language) + "\")).";
+        }
+        String subPropertyLabelQuery = String
+            .join("\n", "SELECT DISTINCT * WHERE { ",
+                "{ ?s ?p ?o .",
+                "?p ?spl ?lp ",
+                "} UNION { ?s ?lp ?o } ",filter,
+                "} LIMIT " + 1000);
+
+        TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, subPropertyLabelQuery);
+        if (subj != null) {
+            tupleQuery.setBinding("s", subj);
+        }
+        tupleQuery.setBinding("lp", aKB.getLabelIri());
+        tupleQuery.setBinding("spl", aKB.getSubPropertyIri());
+
+        tupleQuery.setIncludeInferred(true);
+        TupleQueryResult result = tupleQuery.evaluate();
+        Iteration<Statement, QueryEvaluationException> i1 =
+            new ConvertingIteration<BindingSet, Statement, QueryEvaluationException>(result)
+            {
+                @Override
+                protected Statement convert(BindingSet b) throws QueryEvaluationException
+                {
+                    Resource s = subj == null ? (Resource) b.getValue("s") : subj;
+                    IRI p = (IRI) b.getValue("p") == null ? (IRI) b.getValue("lp") : (IRI) b.getValue("p");
+
+                    Value o = b.getValue("o");
+                    return SimpleValueFactory.getInstance().createStatement(s, p, o);
+                }
+            };
+
+        ExceptionConvertingIteration<Statement, RepositoryException> i2 =
+            new ExceptionConvertingIteration<Statement, RepositoryException>(i1)
+            {
+                @Override
+                protected RepositoryException convert(Exception aE)
+                {
+                    return new RepositoryException(aE);
+                }
+            };
+
+        return new RepositoryResult<>(i2);
+    }
+    */
     public static Optional<Statement> readFirst(RepositoryConnection conn, Resource subj, IRI pred,
         Value obj)
     {
@@ -88,7 +216,6 @@ public class RdfUtils
         return getStatementsSparql(conn, subj, pred, obj, 1000, includeInferred, language);
     }
 
-    
     public static RepositoryResult<Statement> getStatementsNormal(RepositoryConnection conn,
             Resource subj, IRI pred, Value obj, boolean includeInferred)
             throws QueryEvaluationException {

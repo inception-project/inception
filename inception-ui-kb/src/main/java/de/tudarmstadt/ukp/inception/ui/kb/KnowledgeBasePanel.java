@@ -203,6 +203,8 @@ public class KnowledgeBasePanel
                     selectedConcept
                             .setIdentifier(selectedConceptHandle.getObject().getIdentifier());
                 }
+                selectedConceptHandle = Model
+                    .of(new KBHandle(selectedConcept.getIdentifier(), selectedConcept.getName()));
                 replacementPanel = new ConceptInstancePanel(DETAILS_MARKUP_ID, kbModel,
                         selectedConceptHandle, Model.of(selectedConcept));
             }

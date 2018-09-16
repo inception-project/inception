@@ -12,3 +12,4 @@ test_profile:
       description: http://www.w3.org/2000/01/rdf-schema#comment
       property-label: http://www.w3.org/2000/01/rdf-schema#label
       property-description: http://www.w3.org/2000/01/rdf-schema#comment
+      subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf

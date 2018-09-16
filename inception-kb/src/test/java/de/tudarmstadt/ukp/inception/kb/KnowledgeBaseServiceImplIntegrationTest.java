@@ -1533,6 +1533,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         String classIri = "http://www.w3.org/2002/07/owl#Class";
         String subclassIri = "http://www.w3.org/2000/01/rdf-schema#subClassOf";
         String typeIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
+        String subPropertyIri = "http://www.w3.org/2000/01/rdf-schema#subPropertyOf";
         String label = "http://www.w3.org/2000/01/rdf-schema#label";
         String propertyTypeIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#Property";
         String descriptionIri = "http://www.w3.org/2000/01/rdf-schema#comment";
@@ -1540,7 +1541,8 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         String propertyDescriptionIri = "http://www.w3.org/2000/01/rdf-schema#comment";
 
         KnowledgeBaseMapping testMapping = new KnowledgeBaseMapping(classIri, subclassIri, typeIri,
-            descriptionIri, label, propertyTypeIri, propertyLabelIri, propertyDescriptionIri);
+            subPropertyIri, descriptionIri, label, propertyTypeIri, propertyLabelIri,
+            propertyDescriptionIri);
         KnowledgeBaseProfile testProfile = new KnowledgeBaseProfile();
         testProfile.setName(name);
         testProfile.setMapping(testMapping);
