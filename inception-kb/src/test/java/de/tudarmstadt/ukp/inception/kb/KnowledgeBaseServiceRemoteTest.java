@@ -60,7 +60,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.reification.Reification;
@@ -102,8 +101,6 @@ public class KnowledgeBaseServiceRemoteTest
     @Autowired
     private TestEntityManager testEntityManager;
 
-    private KnowledgeBaseProperties kbProperties = new KnowledgeBaseProperties();
-
     @ClassRule
     public static final SpringClassRule SPRING_CLASS_RULE = new SpringClassRule();
 
@@ -123,7 +120,7 @@ public class KnowledgeBaseServiceRemoteTest
         
         EntityManager entityManager = testEntityManager.getEntityManager();
         testFixtures = new TestFixtures(testEntityManager);
-        sut = new KnowledgeBaseServiceImpl(temporaryFolder.getRoot(), entityManager, kbProperties);
+        sut = new KnowledgeBaseServiceImpl(temporaryFolder.getRoot(), entityManager);
         project = testFixtures.createProject(PROJECT_NAME);
         kb.setProject(project);
         if (kb.getType() == RepositoryType.LOCAL) {
@@ -205,6 +202,17 @@ public class KnowledgeBaseServiceRemoteTest
             kb_wikidata_direct.applyMapping(profile.getMapping());
             kbList.add(new TestConfiguration(profile.getSparqlUrl(), kb_wikidata_direct,
                     "http://www.wikidata.org/entity/Q19576436"));
+        }
+
+        {
+            KnowledgeBaseProfile profile = PROFILES.get("virtuoso");
+            KnowledgeBase kb_wikidata_direct = new KnowledgeBase();
+            kb_wikidata_direct.setName("UKP_Wikidata (Virtuoso)");
+            kb_wikidata_direct.setType(RepositoryType.REMOTE);
+            kb_wikidata_direct.setReification(Reification.NONE);
+            kb_wikidata_direct.applyMapping(profile.getMapping());
+            kbList.add(new TestConfiguration(profile.getSparqlUrl(), kb_wikidata_direct,
+                "http://www.wikidata.org/entity/Q19576436"));
         }
 
         {

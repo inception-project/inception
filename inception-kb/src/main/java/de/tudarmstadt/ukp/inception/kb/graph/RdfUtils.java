@@ -77,9 +77,9 @@ public class RdfUtils
     }
 
     public static RepositoryResult<Statement> getStatements(RepositoryConnection conn,
-        Resource subj, IRI pred, Value obj, boolean includeInferred, int aLimit)
+        Resource subj, IRI pred, Value obj, boolean includeInferred)
     {
-        return getStatementsSparql(conn, subj, pred, obj, aLimit, includeInferred, null);
+        return getStatementsSparql(conn, subj, pred, obj, 1000, includeInferred, null);
     }
 
     public static RepositoryResult<Statement> getStatements(RepositoryConnection conn,

@@ -68,7 +68,6 @@ public class TestFixtures
         kb.setPropertyLabelIri(RDFS.LABEL);
         kb.setPropertyDescriptionIri(RDFS.COMMENT);
         kb.setExplicitlyDefinedRootConcepts(new ArrayList<>());
-
         kb.setReification(reification);
         return kb;
     }
@@ -81,6 +80,13 @@ public class TestFixtures
         return concept;
     }
 
+    public KBConcept buildConceptWithLanguage(String aLanguage)
+    {
+        KBConcept concept = buildConcept();
+        concept.setLanguage(aLanguage);
+        return concept;
+    }
+
     public KBProperty buildProperty()
     {
         KBProperty property = new KBProperty();
@@ -88,6 +94,14 @@ public class TestFixtures
         property.setDomain("https://test.schema.com/#domain");
         property.setName("Property name");
         property.setRange("https://test.schema.com/#range");
+        property.setLanguage("en");
+        return property;
+    }
+
+    public KBProperty buildPropertyWithLanguage(String aLanguage)
+    {
+        KBProperty property = buildProperty();
+        property.setLanguage(aLanguage);
         return property;
     }
 

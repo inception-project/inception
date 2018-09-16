@@ -55,11 +55,15 @@ import org.apache.wicket.validation.ValidationError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.googlecode.wicket.kendo.ui.form.combobox.ComboBox;
+
 import de.agilecoders.wicket.core.markup.html.bootstrap.button.Buttons;
 import de.agilecoders.wicket.core.markup.html.bootstrap.form.radio.BootstrapRadioGroup;
 import de.agilecoders.wicket.core.markup.html.bootstrap.form.radio.EnumRadioChoiceRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.inception.app.bootstrap.BootstrapWizard;
 import de.tudarmstadt.ukp.inception.app.bootstrap.BootstrapWizardButtonBar;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
@@ -100,6 +104,7 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
     private final IModel<Project> projectModel;
     private final DynamicWizardModel wizardModel;
     private final CompoundPropertyModel<KnowledgeBaseWrapper> wizardDataModel;
+    private final List<String> languages = Arrays.asList("en", "de");
 
     public KnowledgeBaseCreationWizard(String id, IModel<Project> aProjectModel) {
         super(id);
@@ -116,6 +121,7 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
 
     /**
      * Wizard step asking for the KB name and whether it's a local or remote repository.
+     * and language
      */
     private final class TypeStep extends DynamicWizardStep {
 
@@ -130,6 +136,7 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
 
             add(nameField("name", "kb.name"));
             add(repositoryTypeRadioButtons("type", "kb.type"));
+            add(languageComboBox("language", model.bind("kb.defaultLanguage")));
             add(selectReificationStrategy("reification", "kb.reification"));
         }
 
@@ -177,6 +184,25 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
                     validatable.error(new ValidationError(message));
                 }
             });
+        }
+
+        private ComboBox<String> languageComboBox(String id, IModel<String> model)
+        {
+            // Only set model object if it has not been initialized yet
+            if (model.getObject() == null) {
+                model.setObject(languages.get(0));
+            }
+
+            IModel<String> adapter = new LambdaModelAdapter<String>(model::getObject,
+                model::setObject);
+
+            ComboBox<String> comboBox = new ComboBox<String>(id, adapter, languages);
+            comboBox.setOutputMarkupId(true);
+            comboBox.setRequired(true);
+            comboBox.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> {
+                // Do nothing just update the model values
+            }));
+            return comboBox;
         }
 
         private BootstrapRadioGroup<RepositoryType> repositoryTypeRadioButtons(String id,

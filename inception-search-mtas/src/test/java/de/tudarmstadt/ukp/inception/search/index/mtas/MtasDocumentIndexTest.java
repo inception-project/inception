@@ -548,11 +548,5 @@ public class MtasDocumentIndexTest
         {
             return new ApplicationContextProvider();
         }
-
-        @Bean
-        public KnowledgeBaseProperties knowledgeBaseProperties()
-        {
-            return new KnowledgeBaseProperties();
-        }
     }
 }

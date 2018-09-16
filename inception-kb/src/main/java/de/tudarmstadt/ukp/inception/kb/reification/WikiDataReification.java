@@ -43,7 +43,7 @@ import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.inception.kb.InceptionValueMapper;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
-import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
+import de.tudarmstadt.ukp.inception.kb.SPARQLQueryStore;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
@@ -75,18 +75,14 @@ public class WikiDataReification
     private final KnowledgeBaseService kbService;
     private final InceptionValueMapper valueMapper;
     private final ValueFactory vf;
-    private final KnowledgeBaseProperties kbProperties;
 
-    public WikiDataReification(KnowledgeBaseService aKbService,
-        KnowledgeBaseProperties aKbProperties)
+    public WikiDataReification(KnowledgeBaseService aKbService)
     {
         valueMapper = new InceptionValueMapper();
         vf = SimpleValueFactory.getInstance();
 
         kbService = aKbService;
         kbService.registerImplicitNamespace(PREDICATE_NAMESPACE);
-        kbProperties = aKbProperties;
-
     }
 
     @Override
@@ -146,7 +142,7 @@ public class WikiDataReification
             "  ?p  ?pLABEL ?l.",
             "  FILTER(STRSTARTS(STR(?ps), STR(?ps_ns)))",
             "}",
-            "LIMIT " + kbProperties.getSparqlQueryResultLimit());
+            "LIMIT " + SPARQLQueryStore.LIMIT);
 
         IRI instance = vf.createIRI(aInstance.getIdentifier());
         try (RepositoryConnection conn = kbService.getConnection(kb)) {
@@ -261,7 +257,7 @@ public class WikiDataReification
                 "SELECT DISTINCT ?p ?o WHERE {",
             "  ?id ?p ?o .",
             "}",
-            "LIMIT " + kbProperties.getSparqlQueryResultLimit());
+            "LIMIT " + SPARQLQueryStore.LIMIT);
         Resource id = vf.createBNode(aStatementId);
         try (RepositoryConnection conn = kbService.getConnection(kb)) {
             TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
@@ -478,7 +474,7 @@ public class WikiDataReification
             "    FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\"))",
             "  }",
             "}",
-            "LIMIT " + kbProperties.getSparqlQueryResultLimit());
+            "LIMIT " + SPARQLQueryStore.LIMIT);
         Resource id = vf.createBNode(aStatement.getStatementId());
         try (RepositoryConnection conn = kbService.getConnection(kb)) {
             TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);

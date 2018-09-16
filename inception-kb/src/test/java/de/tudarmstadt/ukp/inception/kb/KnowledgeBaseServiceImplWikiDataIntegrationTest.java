@@ -56,7 +56,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
@@ -80,8 +79,6 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
 
     @Autowired
     private TestEntityManager testEntityManager;
-
-    private KnowledgeBaseProperties kbProperties = new KnowledgeBaseProperties();
 
     @ClassRule
     public static final SpringClassRule SPRING_CLASS_RULE = new SpringClassRule();
@@ -116,7 +113,7 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
     public void setUp() throws Exception {
         EntityManager entityManager = testEntityManager.getEntityManager();
         testFixtures = new TestFixtures(testEntityManager);
-        sut = new KnowledgeBaseServiceImpl(temporaryFolder.getRoot(), entityManager, kbProperties);
+        sut = new KnowledgeBaseServiceImpl(temporaryFolder.getRoot(), entityManager);
         project = createProject(PROJECT_NAME);
         kb = buildKnowledgeBase(project, KB_NAME);
         sut.registerKnowledgeBase(kb, sut.getRemoteConfig(PROFILES.get("wikidata").getSparqlUrl()));
@@ -142,7 +139,7 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
         Optional<KBConcept> concept = sut.readConcept(kb, "http://www.wikidata.org/entity/Q171644");
         assertThat(concept.get().getName())
             .as("Check that concept has the same UI label")
-            .isIn("12-Stunden-Rennen von Reims","12-Stunden-Rennen von Reims");
+            .isIn("12 Hours of Reims");
     }
     
     @Test
@@ -158,7 +155,7 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
     public void listRootConcepts() {
         List<KBHandle> rootConcepts = sut.listRootConcepts(kb, false);
 
-        assertThat(rootConcepts).as("Check that root concepts have been found").hasSize(kbProperties.getSparqlQueryResultLimit());
+        assertThat(rootConcepts).as("Check that root concepts have been found").hasSize(SPARQLQueryStore.LIMIT);
     }
 
     
@@ -166,7 +163,7 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
     public void listProperties() {
         Stream<String> properties = sut.listProperties(kb, true).stream().map(KBHandle::getIdentifier);
         
-        assertThat(properties).as("Check that properties have been found").hasSize(kbProperties.getSparqlQueryResultLimit());
+        assertThat(properties).as("Check that properties have been found").hasSize(SPARQLQueryStore.LIMIT);
     }
     
     @Test
@@ -223,6 +220,7 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
         kb_wikidata_direct.setType(RepositoryType.REMOTE);
         kb_wikidata_direct.applyMapping(PROFILES.get("wikidata").getMapping());
         kb_wikidata_direct.setReification(reification);
+        kb_wikidata_direct.setDefaultLanguage("en");
        
         return kb_wikidata_direct;
     }

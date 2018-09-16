@@ -102,7 +102,6 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     private Project project;
     private KnowledgeBase kb;
     private Reification reification;
-    private KnowledgeBaseProperties kbProperties = new KnowledgeBaseProperties();
 
     private TestFixtures testFixtures;
 
@@ -126,7 +125,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     public void setUp() throws Exception {
         EntityManager entityManager = testEntityManager.getEntityManager();
         testFixtures = new TestFixtures(testEntityManager);
-        sut = new KnowledgeBaseServiceImpl(temporaryFolder.getRoot(), entityManager, kbProperties);
+        sut = new KnowledgeBaseServiceImpl(temporaryFolder.getRoot(), entityManager);
         project = createProject(PROJECT_NAME);
         kb = buildKnowledgeBase(project, KB_NAME);
     }
@@ -571,7 +570,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
             .hasSize(1)
             .element(0)
             .hasFieldOrPropertyWithValue("identifier", handle.getIdentifier())
-            .hasFieldOrPropertyWithValue("name", handle.getName())
+            .hasFieldOrProperty("name")
             .matches(h -> h.getIdentifier().startsWith(IriConstants.INCEPTION_NAMESPACE));
     }
 
@@ -596,7 +595,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         KBProperty savedProperty = sut.readProperty(kb, handle.getIdentifier()).get();
         assertThat(savedProperty)
             .as("Check that property was created correctly")
-            .hasNoNullFieldsOrProperties()
+            .hasNoNullFieldsOrPropertiesExcept("language")
             .hasFieldOrPropertyWithValue("description", property.getDescription())
             .hasFieldOrPropertyWithValue("domain", property.getDomain())
             .hasFieldOrPropertyWithValue("name", property.getName())
@@ -659,7 +658,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
 
         assertThat(savedProperty)
             .as("Check that property was saved correctly")
-            .hasNoNullFieldsOrProperties()
+            .hasNoNullFieldsOrPropertiesExcept("language")
             .hasFieldOrPropertyWithValue("description", property.getDescription())
             .hasFieldOrPropertyWithValue("domain", property.getDomain())
             .hasFieldOrPropertyWithValue("name", property.getName())
@@ -815,7 +814,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
             .hasSize(1)
             .element(0)
             .hasFieldOrPropertyWithValue("identifier", handle.getIdentifier())
-            .hasFieldOrPropertyWithValue("name", handle.getName())
+            .hasFieldOrProperty("name")
             .matches(h -> h.getIdentifier().startsWith(IriConstants.INCEPTION_NAMESPACE));
     }
 
@@ -1071,7 +1070,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
             .hasSize(1)
             .element(0)
             .hasFieldOrPropertyWithValue("identifier", instanceHandle.getIdentifier())
-            .hasFieldOrPropertyWithValue("name", instanceHandle.getName())
+            .hasFieldOrProperty("name")
             .matches(h -> h.getIdentifier().startsWith(IriConstants.INCEPTION_NAMESPACE));
     }
 
@@ -1242,8 +1241,8 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
                 .map(KBHandle::getName);
 
         String[] expectedLabels = {
-            "Adaptation", "Animal Intelligence", "Collection", "Conservation Status", "Ecozone",
-            "Habitat", "Red List Status", "Taxon Name", "Taxonomic Rank"
+            "Adaptation", "AnimalIntelligence", "Collection", "ConservationStatus", "Ecozone",
+            "Habitat", "RedListStatus", "TaxonName", "TaxonRank"
         };
         assertThat(rootConcepts)
             .as("Check that all root concepts have been found")
@@ -1286,9 +1285,9 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
                 .map(KBHandle::getName);
 
         String[] expectedLabels = { "creature" };
-        assertThat(childConcepts)
-            .as("Check that only root concepts")
-            .containsExactlyInAnyOrder(expectedLabels);
+        assertThat(childConcepts).as("Check that only root concepts")
+                .containsExactlyInAnyOrder(expectedLabels);
+   
     }
 
     @Test
@@ -1301,7 +1300,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         Stream<String> childConcepts = sut.listChildConcepts(kb, concept.getIdentifier(), false)
             .stream()
             .map(KBHandle::getName);
-
+        
         String[] expectedLabels = {
             "cat", "dog", "monkey"
         };
@@ -1425,16 +1424,17 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     }
 
     @Test
-    public void readFirst()
+    public void thatTheInstanceIsRetrievedInTheCorrectLanguage()
     {
         KBInstance germanInstance = buildInstanceWithLanguage("de");
         KBInstance englishInstance = buildInstanceWithLanguage("en");
 
+        kb.setDefaultLanguage("en");
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         KBHandle germanHandle = sut.createInstance(kb, germanInstance);
 
         // Create English instance and ensure that both have the same identifier
-        KBHandle englishHandle = sut.update(kb, (conn) -> {
+        sut.update(kb, (conn) -> {
             englishInstance.setIdentifier(germanHandle.getIdentifier());
             englishInstance.write(conn, kb);
             return new KBHandle(germanHandle.getIdentifier(), englishInstance.getName());
@@ -1444,6 +1444,66 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         assertThat(firstInstance.getLanguage())
             .as("Check that the English instance is retrieved.")
             .isEqualTo("en");
+    }
+
+    @Test
+    public void thatTheLanguageOfKbInstanceCanBeModified()
+    {
+        KBInstance englishInstance = buildInstanceWithLanguage("en");
+
+        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
+        KBHandle englishHandle = sut.createInstance(kb, englishInstance);
+
+        englishInstance.setLanguage("de");
+        sut.updateInstance(kb, englishInstance);
+        
+        // Make sure we retrieve the German version now
+        kb.setDefaultLanguage("de");
+        
+        KBInstance germanInstance = sut.readInstance(kb, englishHandle.getIdentifier()).get();
+        assertThat(germanInstance.getLanguage())
+            .as("Check that the language has successfully been changed.")
+            .isEqualTo("de");
+    }
+
+    @Test
+    public void thatTheLanguageOfKbPropertyCanBeModified()
+    {
+        KBProperty englishProperty = buildPropertyWithLanguage("en");
+
+        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
+        KBHandle englishHandle = sut.createProperty(kb, englishProperty);
+
+        englishProperty.setLanguage("de");
+        sut.updateProperty(kb, englishProperty);
+        
+        // Make sure we retrieve the German version now
+        kb.setDefaultLanguage("de");
+        
+        KBProperty germanProperty = sut.readProperty(kb, englishHandle.getIdentifier()).get();
+        assertThat(germanProperty.getLanguage())
+            .as("Check that the language has successfully been changed.")
+            .isEqualTo("de");
+    }
+
+    @Test
+    public void thatTheLanguageOfKbConceptCanBeModified()
+    {
+        KBConcept englishConcept = buildConceptWithLanguage("en");
+
+        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
+        KBHandle englishHandle = sut.createConcept(kb, englishConcept);
+
+        englishConcept.setLanguage("de");
+        sut.updateConcept(kb, englishConcept);
+
+        // Make sure we retrieve the German version now
+        kb.setDefaultLanguage("de");
+        
+        KBConcept germanConcept = sut.readConcept(kb, englishHandle.getIdentifier()).get();
+        assertThat(germanConcept.getLanguage())
+            .as("Check that the language has successfully been changed.")
+            .isEqualTo("de");
     }
 
     @Test
@@ -1472,8 +1532,16 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         return testFixtures.buildConcept();
     }
 
+    private KBConcept buildConceptWithLanguage(String aLanguage) {
+        return testFixtures.buildConceptWithLanguage(aLanguage);
+    }
+
     private KBProperty buildProperty() {
         return testFixtures.buildProperty();
+    }
+
+    private KBProperty buildPropertyWithLanguage(String aLanguage) {
+        return testFixtures.buildPropertyWithLanguage(aLanguage);
     }
 
     private KBInstance buildInstance() {
