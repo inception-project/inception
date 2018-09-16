@@ -275,4 +275,60 @@
     </createTable>
   </changeSet>
 
+  <changeSet author="INCEpTION Team" id="20180611">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="knowledgebase" columnName="language"/>
+      </not>
+    </preConditions>
+
+    <addColumn tableName="knowledgebase">
+      <column name="language"
+              type="VARCHAR(255)">
+      </column>
+    </addColumn>
+  </changeSet>    
+
+  <changeSet author="INCEpTION Team" id="20180803">
+    <preConditions onFail="MARK_RAN">
+      <columnExists tableName="knowledgebase" columnName="language"/>
+    </preConditions>
+
+    <renameColumn tableName="knowledgebase"
+                  newColumnName="defaultLanguage"
+                  oldColumnName="language"
+                  columnDataType="VARCHAR(255)"/>
+  </changeSet>
+  
+  <changeSet author="INCEpTION Team" id="20180827-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="knowledgebase" columnName="propertyLabelIri"/>
+      </not>
+    </preConditions>
+
+    <addColumn tableName="knowledgebase">
+      <column name="propertyLabelIri"
+              type="VARCHAR(255)"
+              defaultValue="http://www.w3.org/2000/01/rdf-schema#label">
+          <constraints nullable="false" />
+      </column>
+    </addColumn>
+  </changeSet>
+
+  <changeSet author="INCEpTION Team" id="20180827-2">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="knowledgebase" columnName="propertyDescriptionIri"/>
+      </not>
+    </preConditions>
+
+    <addColumn tableName="knowledgebase">
+      <column name="propertyDescriptionIri"
+              type="VARCHAR(255)"
+              defaultValue="http://www.w3.org/2000/01/rdf-schema#comment">
+        <constraints nullable="false" />
+      </column>
+    </addColumn>
+  </changeSet>
 </databaseChangeLog>

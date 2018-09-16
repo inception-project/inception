@@ -21,7 +21,6 @@ package de.tudarmstadt.ukp.inception.conceptlinking.service;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -36,7 +35,8 @@ import javax.annotation.Resource;
 
 import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.builder.CompareToBuilder;
-import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.text.similarity.LevenshteinDistance;
 import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
@@ -51,8 +51,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
+
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.conceptlinking.config.EntityLinkingProperties;
@@ -60,7 +62,6 @@ import de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity;
 import de.tudarmstadt.ukp.inception.conceptlinking.model.Property;
 import de.tudarmstadt.ukp.inception.conceptlinking.model.SemanticSignature;
 import de.tudarmstadt.ukp.inception.conceptlinking.util.FileUtils;
-import de.tudarmstadt.ukp.inception.conceptlinking.util.LRUCache;
 import de.tudarmstadt.ukp.inception.conceptlinking.util.QueryUtil;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.event.KnowledgeBaseConfigurationChangedEvent;
@@ -104,8 +105,9 @@ public class ConceptLinkingService
     private static final String POS_NOUN_PREFIX = "N";
     private static final String POS_ADJECTIVE_PREFIX = "J";
 
-    private Map<ImmutablePair<Project, String>, Set<CandidateEntity>> candidateCache;
-    private Map<ImmutablePair<Project, String>, SemanticSignature> semanticSignatureCache;
+    // A cache for candidates retrieved by fulltext-search
+    private LoadingCache<CandidateCacheKey, Set<CandidateEntity>> candidateFullTextCache;
+    private LoadingCache<SemanticSignatureCacheKey, SemanticSignature> semanticSignatureCache;
 
     @PostConstruct
     public void init()
@@ -115,14 +117,160 @@ public class ConceptLinkingService
         propertyBlacklist = FileUtils.loadPropertyBlacklist(propertyBlacklistFile);
         propertyWithLabels = FileUtils.loadPropertyLabels(propertyWithLabelsFile);
       
-        candidateCache = Collections.synchronizedMap(new LRUCache<>(properties.getCacheSize()));
-        semanticSignatureCache = Collections
-            .synchronizedMap(new LRUCache<>(properties.getCacheSize()));
+        candidateFullTextCache = Caffeine.newBuilder()
+                .maximumSize(properties.getCacheSize())
+                .build(key -> loadCandidatesFullText(key));
+
+        semanticSignatureCache = Caffeine.newBuilder()
+                .maximumSize(properties.getCacheSize())
+                .build(key -> loadSemanticSignature(key));
     }
 
-    public String getBeanName()
+    /**
+     * Given a mention in the text, this method returns a list of ranked candidate entities
+     * generated from a Knowledge Base.
+     *
+     * The candidates are retrieved in two separate queries, because of the higher number of results
+     * returned by full-text matching, which are filtered first.
+     * To not possible lose any of the candidates from the exact matching results,
+     * the latter are added to the ranking afterwards and given top priority.
+     *
+     * @param aKB the KB used to generate candidates.
+     * @param aTypedString What the user has typed so far in the text field. Might be null.
+     * @param aMention Marked Surface form of an entity to be linked.
+     * @param aMentionBeginOffset the offset where the mention begins in the text.
+     * @param aJcas used to extract information about mention sentence tokens.
+     * @return a ranked list of entities.
+     */
+    public List<KBHandle> disambiguate(KnowledgeBase aKB, String aTypedString, String
+        aMention, int aMentionBeginOffset, JCas aJcas)
     {
-        return "ConceptLinkingService";
+        long startTime = System.currentTimeMillis();
+
+        Set<CandidateEntity> candidatesExact = retrieveCandidatesExact(aKB, aTypedString, aMention);
+
+        Set<CandidateEntity> candidatesFullText = new HashSet<>();
+        if (!aTypedString.isEmpty()) {
+            candidatesFullText
+                .addAll(getCandidatesFullText(new CandidateCacheKey(aKB, aTypedString)));
+        }
+        candidatesFullText.addAll(getCandidatesFullText(new CandidateCacheKey(aKB, aMention)));
+
+        long afterRetrieval = System.currentTimeMillis();
+
+        logger
+            .debug("It took [{}] ms to retrieve candidates for mention [{}] and typed string [{}]",
+                afterRetrieval - startTime, aMention, aTypedString);
+
+        List<CandidateEntity> rankedCandidates = rankCandidates(aKB, aTypedString, aMention,
+            candidatesExact, candidatesFullText, aJcas, aMentionBeginOffset);
+
+        logger
+            .debug("It took [{}] ms to rank candidates for mention [{}] and typed string [{}]",
+                System.currentTimeMillis() - afterRetrieval, aMention, aTypedString);
+
+
+        return rankedCandidates.stream()
+            .map(c -> new KBHandle(c.getIRI(), c.getLabel(), c.getDescription()))
+            .distinct()
+            .limit(properties.getCandidateDisplayLimit())
+            .filter(h -> h.getIdentifier().contains(":"))
+            .collect(Collectors.toList());
+    }
+
+    /**
+     * Retrieve a set of candidate entities via full-text search from a Knowledge Base.
+     * May lead to recursive calls if first search does not yield any results.
+     *
+     */
+    private Set<CandidateEntity> loadCandidatesFullText(CandidateCacheKey aKey)
+    {
+        Set<CandidateEntity> candidatesFullText = new HashSet<>();
+
+        try (RepositoryConnection conn = kbService.getConnection(aKey.getKnowledgeBase())) {
+            TupleQuery fullTextQueryMention = QueryUtil
+                .generateCandidateFullTextQuery(conn, aKey.getQuery(),
+                    properties.getCandidateQueryLimit(), aKey.getKnowledgeBase());
+            candidatesFullText.addAll(processCandidateQuery(fullTextQueryMention));
+        }
+        catch (QueryEvaluationException e) {
+            logger.error("Query evaluation was unsuccessful: ", e);
+        }
+
+        return candidatesFullText;
+    }
+
+    private Set<CandidateEntity> getCandidatesFullText(CandidateCacheKey aKey)
+    {
+        Set<CandidateEntity> candidatesFullText = new HashSet<>();
+
+        if (candidateFullTextCache.get(aKey) != null) {
+            candidatesFullText.addAll(candidateFullTextCache.get(aKey));
+        }
+        else {
+            candidatesFullText.addAll(loadCandidatesFullText(aKey));
+        }
+        if (candidatesFullText.isEmpty()) {
+            String[] split = aKey.getQuery().split(" ");
+            if (split.length > 1) {
+                for (String s : split) {
+                    candidatesFullText.addAll(loadCandidatesFullText(
+                        new CandidateCacheKey(aKey.getKnowledgeBase(), s)));
+                }
+            }
+        }
+        return candidatesFullText;
+    }
+
+    /**
+     * Retrieve a set of candidate entities from a Knowledge Base
+     *
+     * @param aKB the Knowledge Base in which to search.
+     * @param aTypedString typed string from the user
+     * @param aMention the marked surface form, which is pre-processed first.
+     */
+    private Set<CandidateEntity> retrieveCandidatesExact(KnowledgeBase aKB, String aTypedString,
+        String aMention)
+    {
+        Set<CandidateEntity> candidates = new HashSet<>();
+
+        try (RepositoryConnection conn = kbService.getConnection(aKB)) {
+            TupleQuery exactQuery = QueryUtil
+                .generateCandidateExactQuery(conn, aTypedString, aMention, aKB);
+            candidates.addAll(processCandidateQuery(exactQuery));
+        }
+        catch (QueryEvaluationException e) {
+            logger.error("Query evaluation was unsuccessful: ", e);
+        }
+        return candidates;
+    }
+
+    private Set<CandidateEntity> processCandidateQuery(TupleQuery aTupleQuery)
+    {
+        Set<CandidateEntity> candidates = new HashSet<>();
+        try (TupleQueryResult entityResult = aTupleQuery.evaluate()) {
+            while (entityResult.hasNext()) {
+                BindingSet solution = entityResult.next();
+                Value e2 = solution.getValue("e2");
+                Value label = solution.getValue("label");
+                Value altLabel = solution.getValue("altLabel");
+                Value description = solution.getValue("description");
+
+                CandidateEntity newEntity = new CandidateEntity(
+                    (e2 != null) ? e2.stringValue() : "",
+                    (label != null) ? label.stringValue() : "",
+                    (altLabel != null) ? altLabel.stringValue()
+                        // Exact matching does not use altLabel
+                        : (label != null) ? label.stringValue() : "",
+                    (description != null) ? description.stringValue() : "");
+
+                candidates.add(newEntity);
+            }
+        }
+        catch (QueryEvaluationException e) {
+            logger.error("Query evaluation was unsuccessful: ", e);
+        }
+        return candidates;
     }
 
     /*
@@ -131,81 +279,6 @@ public class ConceptLinkingService
     private synchronized Sentence getMentionSentence(JCas aJcas, int aBegin)
     {
         return WebAnnoCasUtil.getSentence(aJcas, aBegin);
-    }    
-
-    /*
-     * Generate a set of candidate entities from a Knowledge Base for a mention.
-     * It only contains entities which are instances of a pre-defined concept.
-     */
-    private Set<CandidateEntity> generateCandidates(KnowledgeBase aKB, String aMention)
-    {
-        if (aMention == null || aMention.isEmpty()) {
-            return Collections.emptySet();
-        }
-
-        Set<CandidateEntity> candidates = new HashSet<>();
-        List<String> mentionList = Arrays.asList(aMention.split(" "));
-
-        // Remove any character that is not a letter
-        mentionList = mentionList.stream().map(m -> m.replaceAll("[^\\p{L}^\\d]", ""))
-            .collect(Collectors.toList());
-
-        if (stopwords != null) {
-            if (stopwords.containsAll(mentionList)) {
-                logger.error("Mention [{}] consists of stopwords only - returning.", aMention);
-                return Collections.emptySet();
-            }
-        }
-
-        String processedMention = String.join(" ", mentionList);
-        if (processedMention.isEmpty()) {
-            logger.error("Mention is empty!");
-            return Collections.emptySet();
-        }
-
-        ImmutablePair<Project, String> pair = new ImmutablePair<>(aKB.getProject(),
-            processedMention);
-        if (candidateCache.containsKey(pair)) {
-            return candidateCache.get(pair);
-        }
-
-
-        try (RepositoryConnection conn = kbService.getConnection(aKB)) {
-            TupleQuery query = QueryUtil.generateCandidateQuery(conn, processedMention,
-                properties.getCandidateQueryLimit(), aKB.getDescriptionIri());
-            try (TupleQueryResult entityResult = query.evaluate()) {
-                while (entityResult.hasNext()) {
-                    BindingSet solution = entityResult.next();
-                    Value e2 = solution.getValue("e2");
-                    Value label = solution.getValue("label");
-                    Value altLabel = solution.getValue("altLabel");
-                    Value description = solution.getValue("description");
-
-                    CandidateEntity newEntity = new CandidateEntity(
-                        (e2 != null) ? e2.stringValue() : "",
-                        (label != null) ? label.stringValue() : "",
-                        (altLabel != null) ? altLabel.stringValue() : "",
-                        (description != null) ? description.stringValue() : "");
-
-                    candidates.add(newEntity);
-                }
-            }
-        }
-        catch (QueryEvaluationException e) {
-            logger.error("Query evaluation was unsuccessful: ", e);
-        }
-
-        if (candidates.isEmpty()) {
-            String[] split = processedMention.split(" ");
-            if (split.length > 1) {
-                for (String s : split) {
-                    candidates.addAll(generateCandidates(aKB, s));
-                }
-            }
-        }
-
-        candidateCache.put(pair, candidates);
-        return candidates;
     }
 
     /*
@@ -262,14 +335,15 @@ public class ConceptLinkingService
     }
 
     /*
-     * This method does the actual ranking of the candidate entity set.
-     * It returns the candidates by descending probability.
+     * This method does the actual ranking of the candidate entities.
+     * First the candidates from full-text matching are sorted by frequency cutoff after a
+     * threshold because they are more numerous.
+     * Then the candidates from exact matching are added and sorted by multiple keys.
      */
-    private List<CandidateEntity> rankCandidates(KnowledgeBase aKB, String mention,
-            Set<CandidateEntity> candidates, JCas aJCas, int aBegin)
+    private List<CandidateEntity> rankCandidates(KnowledgeBase aKB, String aTypedString,
+        String mention, Set<CandidateEntity> aCandidatesExact,
+        Set<CandidateEntity> aCandidatesFullText, JCas aJCas, int aBegin)
     {
-        long startTime = System.currentTimeMillis();
-
         Sentence mentionSentence = getMentionSentence(aJCas, aBegin);
         Validate.notNull(mentionSentence, "Mention sentence could not be determined.");
 
@@ -287,29 +361,34 @@ public class ConceptLinkingService
             }
         }
 
-        candidates.forEach(l -> {
+        // Set frequency
+        aCandidatesFullText.forEach(l -> {
             String wikidataId = l.getIRI().replace(WIKIDATA_PREFIX, "");
 
             if (entityFrequencyMap != null && entityFrequencyMap.get(wikidataId) != null) {
                 l.setFrequency(entityFrequencyMap.get(wikidataId));
             }
-            else {
-                l.setFrequency(0);
-            }
-
         });
 
-        List<CandidateEntity> result = sortByFrequency(new ArrayList<>(candidates)).stream()
-            .limit(properties.getCandidateFrequencyThreshold()).collect(Collectors.toList());
+        // Sort full-text matching candidates by frequency and do cutoff by a threshold
+        List<CandidateEntity> result = sortByFrequency(new ArrayList<>(aCandidatesFullText))
+            .stream().limit(properties.getCandidateFrequencyThreshold())
+            .collect(Collectors.toList());
 
+        // Add exact matching candidates
+        result.addAll(aCandidatesExact);
+
+        // Set the feature values
         result.parallelStream().forEach(l -> {
             String wikidataId = l.getIRI().replace(WIKIDATA_PREFIX, "");
             
             l.setIdRank(Math.log(Double.parseDouble(wikidataId.substring(1))));
-            String altLabel = l.getAltLabel().toLowerCase(Locale.ENGLISH);
+
+            String altLabel = l.getAltLabel();
             LevenshteinDistance lev = new LevenshteinDistance();
             l.setLevMatchLabel(lev.apply(mention, altLabel));
             l.setLevContext(lev.apply(tokensToString(mentionContext), altLabel));
+            l.setLevTypedString(lev.apply(aTypedString, altLabel));
 
             SemanticSignature sig = getSemanticSignature(aKB, wikidataId);
             Set<String> relatedEntities = sig.getRelatedEntities();
@@ -327,9 +406,9 @@ public class ConceptLinkingService
             l.setNumRelatedRelations(
                 (sig.getRelatedRelations() != null) ? sig.getRelatedRelations().size() : 0);
         });
+
+        // Do the main ranking
         result = sortCandidates(result);
-        logger.debug("It took [{}] ms to rank candidates",
-            System.currentTimeMillis() - startTime);
         return result;
     }
 
@@ -346,6 +425,8 @@ public class ConceptLinkingService
 
     /*
      * Sort candidates by multiple keys.
+     * The edit distance between typed string and label is given high importance
+     * to push the exact matching candidates to the top.
      * A high signature overlap score is preferred.
      * A low edit distance is preferred.
      * A high entity frequency is preferred.
@@ -355,6 +436,7 @@ public class ConceptLinkingService
     private List<CandidateEntity> sortCandidates(List<CandidateEntity> candidates)
     {
         candidates.sort((e1, e2) -> new CompareToBuilder()
+            .append(e1.getLevTypedString(), e2.getLevTypedString())
             .append(e2.getSignatureOverlapScore(), e1.getSignatureOverlapScore())
             .append(e1.getLevContext() + e1.getLevMatchLabel(),
                 e2.getLevContext() + e2.getLevMatchLabel())
@@ -381,17 +463,16 @@ public class ConceptLinkingService
      */
     private SemanticSignature getSemanticSignature(KnowledgeBase aKB, String aWikidataId)
     {
-        ImmutablePair<Project, String> pair = new ImmutablePair<>(aKB.getProject(), aWikidataId);
+        return semanticSignatureCache.get(new SemanticSignatureCacheKey(aKB, aWikidataId));
+    }
 
-        if (semanticSignatureCache.containsKey(pair)) {
-            return semanticSignatureCache.get(pair);
-        }
-
+    private SemanticSignature loadSemanticSignature(SemanticSignatureCacheKey aKey)
+    {
         Set<String> relatedRelations = new HashSet<>();
         Set<String> relatedEntities = new HashSet<>();
-        try (RepositoryConnection conn = kbService.getConnection(aKB)) {
-            TupleQuery query = QueryUtil.generateSemanticSignatureQuery(conn, aWikidataId,
-                properties.getSignatureQueryLimit());
+        try (RepositoryConnection conn = kbService.getConnection(aKey.getKnowledgeBase())) {
+            TupleQuery query = QueryUtil.generateSemanticSignatureQuery(conn, aKey.getQuery(),
+                properties.getSignatureQueryLimit(), aKey.getKnowledgeBase());
             try (TupleQueryResult result = query.evaluate()) {
                 while (result.hasNext()) {
                     BindingSet sol = result.next();
@@ -419,63 +500,10 @@ public class ConceptLinkingService
             }
         }
 
-        SemanticSignature ss = new SemanticSignature(relatedEntities, relatedRelations);
-        semanticSignatureCache.put(pair, ss);
-        return ss;
+        return new SemanticSignature(relatedEntities, relatedRelations);
     }
 
-    /**
-     * Given a mention in the text, this method returns a list of ranked candidate entities
-     * generated from a Knowledge Base. It only contains entities which are instances of a
-     * pre-defined concept.
-     *
-     * @param aKB the KB used to generate candidates
-     * @param aTypedString What the user has typed so far in the text field. Might be null.
-     * @param aMention AnnotatorState, used to get information about what surface form was
-     *                     marked
-     * @param aMentionBeginOffset the offset where the mention begins in the text
-     * @param aJcas used to extract information about mention sentence
-     *                       tokens
-     * @return ranked list of entities, starting with the most probable entity
-     */
-    public List<KBHandle> disambiguate(KnowledgeBase aKB, String aTypedString, String
-        aMention, int aMentionBeginOffset, JCas aJcas)
-    {
-        long startTime = System.currentTimeMillis();
 
-        Set<CandidateEntity> candidates = new HashSet<>();
-
-        aMention = aMention.toLowerCase(Locale.ENGLISH);
-
-        if (aTypedString != null) {
-            aTypedString = aTypedString.toLowerCase(Locale.ENGLISH);
-            if (!aMention.startsWith(aTypedString)) {
-                candidates.addAll(generateCandidates(aKB, aTypedString));
-                logger.debug("It took [{}] ms to retrieve candidates for typed string [{}]", System
-                    .currentTimeMillis() - startTime, aTypedString);
-            }
-            else {
-                candidates.addAll(generateCandidates(aKB, aMention));
-                logger.debug("It took [{}] ms to retrieve candidates for mention [{}]", System
-                    .currentTimeMillis() - startTime, aMention);
-            }
-        }
-        else {
-            candidates.addAll(generateCandidates(aKB, aMention));
-            logger.debug("It took [{}] ms to retrieve candidates for mention [{}]", System
-                .currentTimeMillis() - startTime, aMention);
-        }
-        
-        List<CandidateEntity> rankedCandidates = rankCandidates(aKB, aMention, candidates, aJcas,
-            aMentionBeginOffset);
-
-        return rankedCandidates.stream()
-            .map(c -> new KBHandle(c.getIRI(), c.getLabel(), c.getDescription()))
-            .distinct()
-            .limit(properties.getCandidateDisplayLimit())
-            .filter(h -> h.getIdentifier().contains(":"))
-            .collect(Collectors.toList());
-    }
 
     /**
      * Remove all cache entries of a specific project
@@ -486,18 +514,93 @@ public class ConceptLinkingService
     public void onKnowledgeBaseConfigurationChangedEvent(
         KnowledgeBaseConfigurationChangedEvent aEvent)
     {
-        for (Map.Entry<ImmutablePair<Project, String>, Set<CandidateEntity>> pair :
-            candidateCache.entrySet()) {
-            if (pair.getKey().getLeft().equals(aEvent.getProject())) {
-                candidateCache.remove(pair.getKey());
-            }
+        // FIXME instead of maintaining one global cache, we might maintain a cascaded cache
+        // where the top level is the project and then for each project we have sub-caches.
+        // Then we could invalidate only a specific project's cache. However, right now,
+        // we don't have that and there is no way to properly iterate over the caches and
+        // invalidate only entries belonging to a specific project. Thus, we need to
+        // invalidate all.
+        candidateFullTextCache.invalidateAll();
+        semanticSignatureCache.invalidateAll();
+    }
+
+    private class CandidateCacheKey
+    {
+        private final KnowledgeBase knowledgeBase;
+        private final String query;
+
+        public CandidateCacheKey(KnowledgeBase aKnowledgeBase, String aQuery)
+        {
+            super();
+            knowledgeBase = aKnowledgeBase;
+            query = aQuery;
         }
-        for (Map.Entry<ImmutablePair<Project, String>, SemanticSignature> pair :
-            semanticSignatureCache.entrySet()) {
-            if (pair.getKey().getLeft().equals(aEvent.getProject())) {
-                semanticSignatureCache.remove(pair.getKey());
+
+        public KnowledgeBase getKnowledgeBase()
+        {
+            return knowledgeBase;
+        }
+
+        public String getQuery()
+        {
+            return query;
+        }
+
+        @Override
+        public boolean equals(final Object other)
+        {
+            if (!(other instanceof CandidateCacheKey)) {
+                return false;
             }
+            CandidateCacheKey castOther = (CandidateCacheKey) other;
+            return new EqualsBuilder().append(knowledgeBase, castOther.knowledgeBase)
+                    .append(query, castOther.query).isEquals();
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return new HashCodeBuilder().append(knowledgeBase).append(query).toHashCode();
         }
     }
 
+    private class SemanticSignatureCacheKey
+    {
+        private final KnowledgeBase knowledgeBase;
+        private final String query;
+
+        public SemanticSignatureCacheKey(KnowledgeBase aKnowledgeBase, String aQuery)
+        {
+            super();
+            knowledgeBase = aKnowledgeBase;
+            query = aQuery;
+        }
+
+        public KnowledgeBase getKnowledgeBase()
+        {
+            return knowledgeBase;
+        }
+
+        public String getQuery()
+        {
+            return query;
+        }
+
+        @Override
+        public boolean equals(final Object other)
+        {
+            if (!(other instanceof CandidateCacheKey)) {
+                return false;
+            }
+            CandidateCacheKey castOther = (CandidateCacheKey) other;
+            return new EqualsBuilder().append(knowledgeBase, castOther.knowledgeBase)
+                    .append(query, castOther.query).isEquals();
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return new HashCodeBuilder().append(knowledgeBase).append(query).toHashCode();
+        }
+    }
 }

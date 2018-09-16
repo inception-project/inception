@@ -28,9 +28,7 @@ import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.Value;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
-import org.eclipse.rdf4j.model.vocabulary.OWL;
-import org.eclipse.rdf4j.model.vocabulary.RDF;
-import org.eclipse.rdf4j.model.vocabulary.RDFS;
+
 import org.eclipse.rdf4j.query.BindingSet;
 import org.eclipse.rdf4j.query.QueryEvaluationException;
 import org.eclipse.rdf4j.query.QueryLanguage;
@@ -42,6 +40,7 @@ import org.eclipse.rdf4j.repository.RepositoryResult;
 import org.eclipse.rdf4j.rio.ntriples.NTriplesUtil;
 
 import de.tudarmstadt.ukp.inception.kb.IriConstants;
+import de.tudarmstadt.ukp.inception.kb.SPARQLQueryStore;
 
 public class RdfUtils
 {
@@ -163,16 +162,15 @@ public class RdfUtils
                 .escapeString(language) + "\")).";
         }
         String QUERY = String.join("\n",
-                "PREFIX rdfs: <" + RDFS.NAMESPACE + ">",
-                "PREFIX owl: <" + OWL.NAMESPACE + ">",
-                "PREFIX rdf: <" + RDF.NAMESPACE + ">", 
-            "SELECT * WHERE { ",
-            " {?s ?p ?o .}",
-            " UNION ",
-            " {?s a ?prop .",
-            "    VALUES ?prop { rdf:Property owl:ObjectProperty owl:DatatypeProperty owl:AnnotationProperty} }",
-            filter,
-            "} LIMIT " + aLimit);
+                SPARQLQueryStore.SPARQL_PREFIX,
+                "SELECT * WHERE { ",
+                " {?s ?p ?o .}",
+                " UNION ",
+                " {?s a ?prop .",
+                "    VALUES ?prop { rdf:Property owl:ObjectProperty owl:DatatypeProperty owl:AnnotationProperty} }",
+                filter,
+                "} LIMIT " + aLimit);
+
         TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
         if (subj != null) {
             tupleQuery.setBinding("s", subj);

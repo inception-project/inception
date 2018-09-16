@@ -15,27 +15,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package de.tudarmstadt.ukp.inception.ui.kb.value.editor;
 
-package de.tudarmstadt.ukp.inception.conceptlinking.util;
+import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.model.CompoundPropertyModel;
+import org.apache.wicket.model.IModel;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
+import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 
-public class LRUCache<K, V>
-    extends LinkedHashMap<K, V>
+public class NumericLiteralValuePresenter
+    extends ValuePresenter
 {
-    private int cacheSize;
+    private static final long serialVersionUID = -6774637988828817203L;
 
-    public LRUCache(int cacheSize)
+    public NumericLiteralValuePresenter(String aId, IModel<KBStatement> aModel)
     {
-        super(16, 0.75f, true);
-        this.cacheSize = cacheSize;
-    }
+        super(aId, CompoundPropertyModel.of(aModel));
 
-    @Override
-    protected boolean removeEldestEntry(Map.Entry<K, V> eldest)
-    {
-        return size() >= cacheSize;
+        add(new Label("value"));
     }
 }
-

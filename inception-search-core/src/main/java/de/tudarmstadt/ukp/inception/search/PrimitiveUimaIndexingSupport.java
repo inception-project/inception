@@ -19,9 +19,8 @@ package de.tudarmstadt.ukp.inception.search;
 
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
-import java.util.Collections;
-import java.util.Map;
-
+import org.apache.commons.collections4.MultiValuedMap;
+import org.apache.commons.collections4.multimap.HashSetValuedHashMap;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -76,17 +75,17 @@ public class PrimitiveUimaIndexingSupport
     }
     
     @Override
-    public Map<String, String> indexFeatureValue(AnnotationFeature aFeature,
-            AnnotationFS aAnnotation)
+    public MultiValuedMap<String, String> indexFeatureValue(String aFieldPrefix,
+            AnnotationFS aAnnotation, String aFeaturePrefix, AnnotationFeature aFeature)
     {
         FeatureSupport<?> featSup = featureSupportRegistry.getFeatureSupport(aFeature);
         String featureValue = featSup.renderFeatureValue(aFeature, aAnnotation);
-        
+        MultiValuedMap<String, String> values = new HashSetValuedHashMap<String, String>();
         if (isEmpty(featureValue)) {
-            return Collections.emptyMap();
+            return values;
         }
-        
-        return Collections.singletonMap(
-                aFeature.getLayer().getUiName() + "." + aFeature.getUiName(), featureValue);
+        values.put(aFieldPrefix + aFeaturePrefix + ATTRIBUTE_SEP + aFeature.getUiName(),
+                featureValue);
+        return values;
     }
 }

@@ -24,7 +24,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -32,8 +31,6 @@ import java.util.stream.Stream;
 
 import javax.persistence.EntityManager;
 
-import org.eclipse.rdf4j.model.vocabulary.RDF;
-import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.junit.After;
 import org.junit.Before;
@@ -56,6 +53,8 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
+import de.tudarmstadt.ukp.inception.kb.reification.Reification;
+import de.tudarmstadt.ukp.inception.kb.util.TestFixtures;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = SpringConfig.class)
@@ -71,6 +70,7 @@ public class KnowledgeBaseServiceImplImportExportIntegrationTest {
 
     @Autowired
     private TestEntityManager testEntityManager;
+    private TestFixtures testFixtures;
 
     private KnowledgeBaseServiceImpl sut;
     private Project project;
@@ -84,6 +84,7 @@ public class KnowledgeBaseServiceImplImportExportIntegrationTest {
     @Before
     public void setUp() {
         EntityManager entityManager = testEntityManager.getEntityManager();
+        testFixtures = new TestFixtures(testEntityManager);
         sut = new KnowledgeBaseServiceImpl(temporaryFolder.getRoot(), entityManager);
         project = createProject(PROJECT_NAME);
         kb = buildKnowledgeBase(project, KB_NAME);
@@ -238,18 +239,7 @@ public class KnowledgeBaseServiceImplImportExportIntegrationTest {
     }
 
     private KnowledgeBase buildKnowledgeBase(Project project, String name) {
-        KnowledgeBase kb = new KnowledgeBase();
-        kb.setName(name);
-        kb.setProject(project);
-        kb.setType(RepositoryType.LOCAL);
-        kb.setClassIri(RDFS.CLASS);
-        kb.setSubclassIri(RDFS.SUBCLASSOF);
-        kb.setTypeIri(RDF.TYPE);
-        kb.setDescriptionIri(RDFS.COMMENT);
-        kb.setLabelIri(RDFS.LABEL);
-        kb.setPropertyTypeIri(RDF.PROPERTY);
-        kb.setExplicitlyDefinedRootConcepts(new ArrayList<>());
-        return kb;
+        return testFixtures.buildKnowledgeBase(project, name, Reification.NONE);
     }
 
     private void importKnowledgeBase(String resourceName) throws Exception {

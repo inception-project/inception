@@ -60,13 +60,13 @@ public class TaskConsumer
                     factory.autowireBean(task);
                     factory.initializeBean(task, "transientTask");
 
+                    log.debug("Starting new indexing task [{}]...", task);
                     task.run();
+                    log.info("Indexing task {} completed successfully.", task);
                 }
-                catch (Exception e) {
-                    log.error("{} failed.", task, e);
+                catch (Throwable e) {
+                    log.error("Indexing task {} failed.", task, e);
                 }
-
-                log.info("{} completed successfully.", task);
             }
         }
         catch (InterruptedException ie) {

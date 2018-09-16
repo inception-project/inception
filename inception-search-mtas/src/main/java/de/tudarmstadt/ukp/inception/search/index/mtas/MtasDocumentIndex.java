@@ -29,17 +29,21 @@ import java.text.BreakIterator;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.custom.CustomAnalyzer;
 import org.apache.lucene.analysis.miscellaneous.PerFieldAnalyzerWrapper;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.codecs.Codec;
+import org.apache.lucene.document.DateTools;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.StringField;
@@ -52,7 +56,11 @@ import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.index.SegmentReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.Terms;
+import org.apache.lucene.search.BooleanClause;
+import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.search.spans.SpanWeight;
 import org.apache.lucene.search.spans.Spans;
 import org.apache.lucene.store.Directory;
@@ -106,8 +114,11 @@ public class MtasDocumentIndex
     /** The Constant FIELD_CONTENT. */
     private static final String FIELD_CONTENT = "content";
 
-    /** The Constant FIELD_CONTENT. */
+    /** The Constant FIELD_USER. */
     private static final String FIELD_USER = "user";
+
+    /** The Constant FIELD_TIMESTAMP. */
+    private static final String FIELD_TIMESTAMP = "timestamp";
 
     // Default prefix for CQL queries
     private static final String DEFAULT_PREFIX = "Token";
@@ -188,8 +199,9 @@ public class MtasDocumentIndex
     {
         String result;
 
-        if (!(aQuery.contains("[") || aQuery.contains("]") || aQuery.contains("{")
-                || aQuery.contains("}") || aQuery.contains("<") || aQuery.contains(">"))) {
+        if (!(aQuery.contains("\"") || aQuery.contains("[") || aQuery.contains("]")
+                || aQuery.contains("{") || aQuery.contains("}") || aQuery.contains("<")
+                || aQuery.contains(">"))) {
             // Convert raw words query to a Mtas CQP query
 
             result = "";
@@ -423,30 +435,56 @@ public class MtasDocumentIndex
             long aAnnotationDocumentId, String aUser, JCas aJCas)
         throws IOException
     {
-        try {
-            ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            XmiCasSerializer.serialize(aJCas.getCas(), null, bos, true, null);
-            bos.close();
-            Document doc = new Document();
-            doc.add(new StringField(FIELD_ID,
-                    String.valueOf(aSourceDocumentId) + "/" + String.valueOf(aAnnotationDocumentId),
-                    Field.Store.YES));
-            doc.add(new StringField(FIELD_TITLE, aDocumentTitle, Field.Store.YES));
-            doc.add(new StringField(FIELD_USER, aUser, Field.Store.YES));
-            doc.add(new TextField(FIELD_CONTENT, new String(bos.toByteArray(), "UTF-8"),
-                    Field.Store.YES));
+        if (indexWriter != null) {
+            try {
+                log.debug(
+                        "Indexing document in project [{}]({}). sourceId: {}, annotationId: {}, "
+                                + "user: {}",
+                        project.getName(), project.getId(), aSourceDocumentId,
+                        aAnnotationDocumentId, aUser);
+                
+                // Prepare bytearray with document content to be indexed
+                ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                XmiCasSerializer.serialize(aJCas.getCas(), null, bos, true, null);
+                bos.close();
 
-            // Add document to the Lucene index
-            indexWriter.addDocument(doc);
+                // Calculate timestamp that will be indexed
+                String timestamp = DateTools.dateToString(new Date(),
+                        DateTools.Resolution.MILLISECOND);
 
-            // commit
-            indexWriter.commit();
-
-            log.info("Document indexed in project [{}]. sourceId: {}, annotationId: {}, user: {}",
-                    project.getName(), aSourceDocumentId, aAnnotationDocumentId, aUser);
+                // Create new Lucene document
+                Document doc = new Document();
+                
+                // Add indexed fields
+                doc.add(new StringField(FIELD_ID, String.valueOf(aSourceDocumentId) + "/"
+                        + String.valueOf(aAnnotationDocumentId), Field.Store.YES));
+                doc.add(new StringField(FIELD_TITLE, aDocumentTitle, Field.Store.YES));
+                doc.add(new StringField(FIELD_USER, aUser, Field.Store.YES));
+                doc.add(new StringField(FIELD_TIMESTAMP, timestamp, Field.Store.YES));
+                doc.add(new TextField(FIELD_CONTENT, new String(bos.toByteArray(), "UTF-8"),
+                        Field.Store.YES));
+    
+                // Add document to the Lucene index
+                indexWriter.addDocument(doc);
+    
+                // commit
+                indexWriter.commit();
+    
+                log.info(
+                        "Document indexed in project [{}]({}). sourceId: {}, annotationId: {}, "
+                                + "user: {}, timestamp: {}",
+                        project.getName(), project.getId(), aSourceDocumentId,
+                        aAnnotationDocumentId, aUser, timestamp);
+            }
+            catch (SAXException e) {
+                log.error("Unable to index document", e);
+            }
         }
-        catch (SAXException e) {
-            log.error("Unable to index document", e);
+        else {
+            log.debug(
+                    "Aborted indexing of document in project [{}]. sourceId: {}, annotationId: {}, "
+                            + "user: {} - indexWriter was null",
+                    project.getName(), aSourceDocumentId, aAnnotationDocumentId, aUser);
         }
     };
 
@@ -459,8 +497,10 @@ public class MtasDocumentIndex
     @Override
     public void indexDocument(AnnotationDocument aDocument, JCas aJCas) throws IOException
     {
+        log.debug("***** Indexing annotation document");
         indexDocument(aDocument.getName(), aDocument.getDocument().getId(), aDocument.getId(),
                 aDocument.getUser(), aJCas);
+        log.debug("***** End of Indexing annotation document");
     };
 
     /**
@@ -477,10 +517,80 @@ public class MtasDocumentIndex
         throws IOException
     {
         if (indexWriter != null) {
+            log.debug(
+                    "Removing document from index in project [{}]({}). sourceId: {}, "
+                            + "annotationId: {}, user: {}",
+                    project.getName(), project.getId(), aSourceDocumentId, aAnnotationDocumentId,
+                    aUser);
+
             indexWriter.deleteDocuments(new Term(FIELD_ID,
                     String.format("%d/%d", aSourceDocumentId, aAnnotationDocumentId)));
 
             indexWriter.commit();
+
+            log.info(
+                    "Removed document from index in project [{}]({}). sourceId: {}, "
+                            + "annotationId: {}, user: {}",
+                    project.getName(), project.getId(), aSourceDocumentId, aAnnotationDocumentId,
+                    aUser);
+        }
+        else {
+            log.debug(
+                    "Aborted removal of document from index in project [{}]. sourceId: {}, "
+                            + "annotationId: {}, " + "user: {} - indexWriter was null.",
+                    project.getName(), aSourceDocumentId, aAnnotationDocumentId, aUser);
+        }
+        return;
+    }
+
+    /**
+     * Remove a specific document from the index based on its timestamp
+     * 
+     * @param aSourceDocumentId
+     *            The ID of the source document to be removed
+     * @param aSourceDocumentId
+     *            The ID of the annotation document to be removed
+     * @param aUser
+     *            The owner of the document to be removed
+     * @param timestamp
+     *            The timestamp of the document to be removed
+     */
+    private void deindexDocument(long aSourceDocumentId, long aAnnotationDocumentId, String aUser,
+            String aTimestamp)
+        throws IOException
+    {
+        if (indexWriter != null) {
+            log.debug(
+                    "Removing document from index in project [{}]({}). sourceId: {}, "
+                            + "annotationId: {}, user: {}, timestamp: {}",
+                    project.getName(), project.getId(), aSourceDocumentId, aAnnotationDocumentId,
+                    aUser, aTimestamp);
+
+            // Prepare boolean query with the two obligatory terms (id and timestamp)
+            BooleanQuery.Builder booleanQuery = new BooleanQuery.Builder()
+                    .add(new TermQuery(new Term(FIELD_ID,
+                            String.format("%d/%d", aSourceDocumentId, aAnnotationDocumentId))),
+                            BooleanClause.Occur.MUST)
+                    .add(new TermQuery(new Term(FIELD_TIMESTAMP, aTimestamp)),
+                            BooleanClause.Occur.MUST);
+
+            // Delete document based on the previous query
+            indexWriter.deleteDocuments(booleanQuery.build());
+
+            indexWriter.commit();
+
+            log.info(
+                    "Removed document from index in project [{}]({}). sourceId: {}, "
+                            + "annotationId: {}, user: {}",
+                    project.getName(), project.getId(), aSourceDocumentId, aAnnotationDocumentId,
+                    aUser);
+        }
+        else {
+            log.debug(
+                    "Aborted removal of document from index in project [{}]({}). sourceId: {}, "
+                            + "annotationId: {}, " + "user: {} - indexWriter was null.",
+                    project.getName(), project.getId(), aSourceDocumentId, aAnnotationDocumentId,
+                    aUser);
         }
         return;
     }
@@ -507,6 +617,19 @@ public class MtasDocumentIndex
     public void deindexDocument(AnnotationDocument aDocument) throws IOException
     {
         deindexDocument(aDocument.getDocument().getId(), aDocument.getId(), aDocument.getUser());
+    }
+
+    /**
+     * Remove annotation document from the index based on its timestamp
+     * 
+     * @param aDocument
+     *            The document to be removed
+     */
+    @Override
+    public void deindexDocument(AnnotationDocument aDocument, String aTimestamp) throws IOException
+    {
+        deindexDocument(aDocument.getDocument().getId(), aDocument.getId(), aDocument.getUser(),
+                aTimestamp);
     }
 
     /**
@@ -546,7 +669,8 @@ public class MtasDocumentIndex
                     indexWriter.close();
                 }
 
-                log.info("Index for project [{}] has been closed", project.getName());
+                log.info("Index for project [{}]({}) has been closed", project.getName(),
+                        project.getId());
             }
             catch (IOException e) {
                 log.error("Error closing index for project [{}]", project.getId());
@@ -568,7 +692,8 @@ public class MtasDocumentIndex
         // Delete the index directory
         FileUtils.deleteDirectory(getIndexDir());
 
-        log.info("Index for project [{}] has been deleted", project.getName());
+        log.info("Index for project [{}]({}) has been deleted", project.getName(),
+                project.getId());
     }
 
     @Override
@@ -595,19 +720,21 @@ public class MtasDocumentIndex
         if (!isOpen) {
             // Only open if it is not already open
             try {
-                log.info("indexWriter was not open. Opening it for project [{}]",
-                        project.getName());
+                log.info("indexWriter was not open. Opening it for project [{}]({})",
+                        project.getName(), project.getId());
 
                 indexWriter = openLuceneIndex(getIndexDir());
                 indexWriter.commit();
 
-                log.info("indexWriter has been opened for project [{}]", project.getName());
+                log.info("indexWriter has been opened for project [{}]({})", project.getName(),
+                        project.getId());
             }
             catch (Exception e) {
                 log.error("Unable to open indexWriter", e);
             }
         } else {
-            log.info("indexWriter is already open for project [{}]", project.getName());
+            log.info("indexWriter is already open for project [{}]({})", project.getName(),
+                    project.getId());
         }
     }
 
@@ -621,24 +748,29 @@ public class MtasDocumentIndex
 
         try {
             // Create the directory for the new index
-            log.info("Creating index directory for project [{}]", project.getName());
+            log.info("Creating index directory for project [{}]({})", project.getName(),
+                    project.getId());
             FileUtils.forceMkdir(indexDir);
 
             // Open the index
-            log.info("Opening index for project [{}]", project.getName());
+            log.info("Opening index directory for project [{}]({})", project.getName(),
+                    project.getId());
             openPhysicalIndex();
             
             if (isOpen()) {
                 // Index all documents of the project
-                log.info("Indexing all documents in the project [{}]", project.getName());
+                log.info("Indexing all documents in the project [{}]({})", project.getName(),
+                        project.getId());
                 indexAllDocuments();
-                log.info("All documents have been indexed in the project [{}]", project.getName());
+                log.info("All documents have been indexed in the project [{}]({})",
+                        project.getName(), project.getId());
             } else {
                 log.info("Index has not been opened. No documents have been indexed.");
             }
         }
         catch (Exception e) {
-            log.error("Error creating index for project [{}]", project.getName(), e);
+            log.error("Error creating index for project [{}]({})", project.getName(),
+                    project.getId(), e);
         }
     }
 
@@ -684,7 +816,8 @@ public class MtasDocumentIndex
         int sourceDocs = 0;
 
         try {
-            log.info("Indexing all annotation documents of project [{}]", project.getName());
+            log.info("Indexing all annotation documents of project [{}]({})", project.getName(),
+                    project.getId());
 
             for (User user : projectService.listProjectUsersWithPermissions(project)) {
                 users++;
@@ -695,7 +828,8 @@ public class MtasDocumentIndex
                 }
             }
 
-            log.info("Indexing all source documents of project [{}]", project.getName());
+            log.info("Indexing all source documents of project [{}]({})", project.getName(),
+                    project.getId());
 
             for (SourceDocument document : documentService.listSourceDocuments(project)) {
                 indexDocument(document, documentService.createOrReadInitialCas(document));
@@ -722,5 +856,39 @@ public class MtasDocumentIndex
             return name.substring(pos + 1, name.length());
         }
         return name;
+    }
+    
+    @Override
+    public Optional<String> getTimestamp(AnnotationDocument aDocument) throws IOException
+    {
+        Optional<String> result = Optional.empty();
+
+        // Prepare index searcher for accessing index
+        Directory directory = FSDirectory.open(getIndexDir().toPath());
+        IndexReader indexReader = DirectoryReader.open(directory);
+        IndexSearcher indexSearcher = new IndexSearcher(indexReader);
+
+        // Prepare query for the annotation document for this annotation document
+        Term term = new Term(FIELD_ID,
+                String.format("%d/%d", aDocument.getDocument().getId(), aDocument.getId()));
+        
+        TermQuery query = new TermQuery(term);
+
+        // Do query
+        TopDocs docs = indexSearcher.search(query, 1);
+
+        if (docs.scoreDocs.length > 0) {
+            // If there are results, retrieve first document, since all results should come
+            // from the same document
+            Document document = indexSearcher.doc(docs.scoreDocs[0].doc);
+
+            // Retrieve the timestamp field if it exists
+            if (document.getField(FIELD_TIMESTAMP) != null) {
+                result = Optional.ofNullable(StringUtils
+                        .trimToNull(document.getField(FIELD_TIMESTAMP).stringValue()));
+            }
+        }
+        
+        return result;
     }
 }

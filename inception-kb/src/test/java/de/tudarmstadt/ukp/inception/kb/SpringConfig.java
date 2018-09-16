@@ -15,24 +15,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package de.tudarmstadt.ukp.inception.kb;
 
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.ComponentScan.Filter;
+import org.springframework.context.annotation.FilterType;
+
+import de.tudarmstadt.ukp.inception.kb.exporter.KnowledgeBaseExporter;
 
 @SpringBootConfiguration
-@ComponentScan(basePackages = {
-    "de.tudarmstadt.ukp.clarin.webanno.webapp",
-    "de.tudarmstadt.ukp.inception"
-})
-@EntityScan(basePackages = {
-    "de.tudarmstadt.ukp.inception.kb.model",
-    "de.tudarmstadt.ukp.clarin.webanno.model"
+@ComponentScan(
+        excludeFilters = {
+            // We do now text exporting here and the exporter depends on the annotation schema 
+            // service which is otherwise not needed. So we exclude this component here.
+            @Filter(type = FilterType.ASSIGNABLE_TYPE, classes = { 
+                    KnowledgeBaseExporter.class
+            })
+        },
+        basePackages = {
+            "de.tudarmstadt.ukp.clarin.webanno.webapp",
+            "de.tudarmstadt.ukp.inception"
+        })
+@EntityScan(
+        basePackages = {
+            "de.tudarmstadt.ukp.inception.kb.model",
+            "de.tudarmstadt.ukp.clarin.webanno.model"
 })
 @EnableAutoConfiguration
 public class SpringConfig {
-
+    // No content
 }

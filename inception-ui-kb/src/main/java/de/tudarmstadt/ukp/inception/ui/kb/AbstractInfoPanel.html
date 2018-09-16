@@ -16,16 +16,12 @@
  - See the License for the specific language governing permissions and
  - limitations under the License.
 -->
-
-
-
 <html xmlns:wicket="http://wicket.apache.org">
-
 <body>
   <wicket:panel>
+    <wicket:container wicket:id="content"></wicket:container>
     <div wicket:id="confirmationDialog"></div>
     <div wicket:id="createSubclass"></div>
-    <wicket:container wicket:id="content"></wicket:container>
   </wicket:panel>
   
   <wicket:fragment wicket:id="viewMode">
@@ -34,8 +30,8 @@
          <h2 wicket:id="uiLabel"></h2>
        </div>
        <span wicket:id="idtext" class="fa fa-info-circle"></span>
-       <button wicket:id="delete" type="button" class="btn btn-outline-danger pull-right"><i class="fa fa-trash" aria-hidden="true"></i> <wicket:container wicket:id="label"></wicket:container></button>
-       <button wicket:id="createSubclass" type="button" class="btn btn-outline-primary btn pull-right" style="margin-right :5px"><i class="fa fa-plus" aria-hidden="true"></i> <wicket:container wicket:id="subclassLabel"></wicket:container></button>
+       <button wicket:id="delete" type="button" class="btn btn-danger pull-right"><i class="fa fa-trash" aria-hidden="true"></i> <wicket:container wicket:id="label"></wicket:container></button>
+       <button wicket:id="createSubclass" type="button" class="btn btn-primary btn pull-right" style="margin-right :5px"><i class="fa fa-plus" aria-hidden="true"></i> <wicket:container wicket:id="subclassLabel"></wicket:container></button>
        <h5>
          <span wicket:id="typeLabel" class="label label-default pull-down"></span>
        </h5>

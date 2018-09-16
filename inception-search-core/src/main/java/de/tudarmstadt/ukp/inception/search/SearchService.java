@@ -20,7 +20,11 @@ package de.tudarmstadt.ukp.inception.search;
 import java.io.IOException;
 import java.util.List;
 
+import org.apache.uima.jcas.JCas;
+
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.search.model.Index;
 
@@ -36,4 +40,8 @@ public interface SearchService
     public Index getIndex(Project aProject);
 
     public boolean isIndexValid(Project aProject);
+    
+    public void indexDocument(SourceDocument aSourceDocument, JCas aJCas);
+
+    public void indexDocument(AnnotationDocument aAnnotationDocument, JCas aJCas);
 }

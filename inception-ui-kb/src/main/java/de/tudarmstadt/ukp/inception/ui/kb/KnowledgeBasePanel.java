@@ -164,7 +164,9 @@ public class KnowledgeBasePanel
             models.stream().filter(model -> model.getObject() != null && model.getObject()
                     .getIdentifier().equals(statement.getInstance().getIdentifier()))
                     .forEach(model -> {
-                        model.getObject().setName((String) statement.getValue());
+                        if (statement.getValue() != null) {
+                            model.getObject().setName(statement.getValue().toString());
+                        }
                         event.getTarget().add(this);
                     });
         }

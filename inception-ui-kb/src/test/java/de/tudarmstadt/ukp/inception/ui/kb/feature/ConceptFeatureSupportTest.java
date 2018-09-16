@@ -70,8 +70,12 @@ public class ConceptFeatureSupportTest
         
         KBHandle referenceHandle = new KBHandle("id", "name");
         
-        when(kbService.readInstance((Project) any(), anyString()))
+        when(kbService.readKBIdentifier((Project) any(), anyString()))
                 .thenReturn(Optional.of(new KBInstance("id", "name")));
+        
+        when(kbService.readKBIdentifier((Project) any(), anyString()))
+                .thenReturn(Optional.of(new KBInstance("id", "name")));
+        
         
         assertThat(sut.wrapFeatureValue(feat1, null, "id"))
                 .isEqualToComparingFieldByField(referenceHandle);

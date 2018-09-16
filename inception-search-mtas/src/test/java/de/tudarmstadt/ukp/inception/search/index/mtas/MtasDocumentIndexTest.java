@@ -40,8 +40,6 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
@@ -120,12 +118,10 @@ import de.tudarmstadt.ukp.inception.search.scheduling.IndexScheduler;
 @Transactional(propagation = Propagation.NEVER)
 public class MtasDocumentIndexTest
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
-
-    // Number of miliseconds to wait for the indexing to finish. This time must be enough
+    // Number of milliseconds to wait for the indexing to finish. This time must be enough
     // to allow the index be built before the query is made. Otherwise, it could affect the
     // test results. If this happens, a largest value could allow the test to pass.
-    private final int WAIT_TIME = 3000;
+    private final int WAIT_TIME = 1000;
 
     private @Autowired UserDao userRepository;
     private @Autowired ProjectService projectService;
@@ -133,6 +129,8 @@ public class MtasDocumentIndexTest
     private @Autowired SearchService searchService;
     private @Autowired AnnotationSchemaService annotationSchemaService;
 
+    private final int NUM_WAITS = 2;
+    
     @Before
     public void setUp()
     {
@@ -155,6 +153,7 @@ public class MtasDocumentIndexTest
                 aFileContent.getBytes(StandardCharsets.UTF_8));
 
         documentService.uploadSourceDocument(fileStream, aSourceDocument);
+        Thread.sleep(WAIT_TIME);
         while (!searchService.isIndexValid(aProject)) {
             Thread.sleep(WAIT_TIME);
         }
@@ -251,6 +250,50 @@ public class MtasDocumentIndexTest
     }
 
     @Test
+    public void testSimplifiedTokenTextQuery() throws Exception
+    {
+        Project project = new Project();
+        project.setName("SimplifiedTokenTextQuery");
+
+        createProject(project);
+
+        SourceDocument sourceDocument = new SourceDocument();
+
+        sourceDocument.setName("Raw text document");
+        sourceDocument.setProject(project);
+        sourceDocument.setFormat("text");
+
+        String fileContent = "The capital of Galicia is Santiago de Compostela.";
+
+        uploadDocument(project, fileContent, sourceDocument);
+
+        User user = userRepository.get("admin");
+
+        String query = "\"Galicia\"";
+
+        // Execute query
+        List<SearchResult> results = (ArrayList<SearchResult>) searchService.query(user, project,
+                query);
+
+        // Test results
+        SearchResult expectedResult = new SearchResult();
+        expectedResult.setDocumentId(sourceDocument.getId());
+        expectedResult.setDocumentTitle("test");
+        expectedResult.setText("Galicia ");
+        expectedResult.setLeftContext("capital of ");
+        expectedResult.setRightContext("is ");
+        expectedResult.setOffsetStart(15);
+        expectedResult.setOffsetEnd(22);
+        expectedResult.setTokenStart(3);
+        expectedResult.setTokenLength(1);
+
+        assertNotNull(results);
+        if (results != null) {
+            assertEquals(1, results.size());
+            assertEquals(expectedResult, results.get(0));
+        }
+    }
+    @Test
     public void testAnnotationQuery() throws Exception
     {
         Project project = new Project();
@@ -271,7 +314,33 @@ public class MtasDocumentIndexTest
 
         uploadDocument(project, fileContent, sourceDocument);
 
+        // Wait for the asynchronous indexing task to finish. We need a sleep before the while 
+        // because otherwise there would not be time even for the index becoming invalid 
+        // before becoming valid again.
+        
+        Thread.sleep(WAIT_TIME);
+        
+        int numWaits = 0;
+        
+        while (!searchService.isIndexValid(project) && numWaits < NUM_WAITS) {
+            Thread.sleep(WAIT_TIME);
+            numWaits ++;
+        }
+
         annotateDocument(project, user, sourceDocument);
+
+        numWaits = 0;
+        
+        // Wait for the asynchronous indexing task to finish. We need a sleep before the while 
+        // because otherwise there would not be time even for the index becoming invalid 
+        // before becoming valid again.
+        
+        Thread.sleep(WAIT_TIME);
+        
+        while (searchService.isIndexValid(project) && numWaits < NUM_WAITS) {
+            Thread.sleep(WAIT_TIME);
+            numWaits++;
+        }
 
         String query = "<Named_entity.value=\"LOC\"/>";
 
