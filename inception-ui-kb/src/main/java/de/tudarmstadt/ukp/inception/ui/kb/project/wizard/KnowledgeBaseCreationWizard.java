@@ -138,6 +138,7 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
             add(repositoryTypeRadioButtons("type", "kb.type"));
             add(languageComboBox("language", model.bind("kb.defaultLanguage")));
             add(selectReificationStrategy("reification", "kb.reification"));
+            add(new CheckBox("supportConceptLinking", model.bind("kb.supportConceptLinking")));
         }
 
         private DropDownChoice<Reification> selectReificationStrategy(String id, String property)
@@ -350,6 +351,8 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
                             item.getModelObject().getMapping().getPropertyLabelIri());
                         model.getObject().getKb().setPropertyDescriptionIri(
                             item.getModelObject().getMapping().getPropertyDescriptionIri());
+                        model.getObject().getKb()
+                            .setFtsIri(item.getModelObject().getMapping().getFtsIri());
 
                         t.add(urlField);
                     });
@@ -357,7 +360,6 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
                     item.add(link);
                 }
             });
-            add(new CheckBox("supportConceptLinking", model.bind("kb.supportConceptLinking")));
         }
         
         @Override

@@ -54,8 +54,10 @@ public class KnowledgeBaseMapping implements Serializable
 
     @JsonProperty("property-description")
     private IRI propertyDescriptionIri;
-    
-    
+
+    @JsonProperty("full-text-search")
+    private IRI ftsIri;
+
     @JsonCreator public KnowledgeBaseMapping(@JsonProperty("class") String classIri,
         @JsonProperty("subclass-of") String subclassIri,
         @JsonProperty("instance-of") String typeIri,
@@ -158,6 +160,16 @@ public class KnowledgeBaseMapping implements Serializable
     public void setPropertyDescriptionIri(IRI aPropertyDescriptionIri)
     {
         propertyDescriptionIri = aPropertyDescriptionIri;
+    }
+
+    public IRI getFtsIri()
+    {
+        return ftsIri;
+    }
+
+    public void setFtsIri(IRI ftsIri)
+    {
+        this.ftsIri = ftsIri;
     }
 
     @Override

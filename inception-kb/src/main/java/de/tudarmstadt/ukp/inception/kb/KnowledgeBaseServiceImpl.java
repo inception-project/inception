@@ -59,7 +59,6 @@ import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.XMLSchema;
-import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.eclipse.rdf4j.query.Binding;
 import org.eclipse.rdf4j.query.BindingSet;
 import org.eclipse.rdf4j.query.QueryEvaluationException;
@@ -122,6 +121,9 @@ public class KnowledgeBaseServiceImpl
 
     @org.springframework.beans.factory.annotation.Value(value = "${data.path}/kb")
     private File dataDir;
+
+    @org.springframework.beans.factory.annotation.Value(value = "${repository.path}/luceneIndex")
+    private File luceneIndexDir;
 
     @Autowired
     public KnowledgeBaseServiceImpl(
@@ -1138,77 +1140,47 @@ public class KnowledgeBaseServiceImpl
         return Optional.empty();
     }
 
-
-    public void openIndex(KnowledgeBase aKb)
-    {
-        try {
-
-            log.info("Index has been opened for KB " + aKb.getName());
-        }
-        catch (Exception e) {
-            log.error("Unable to open index", e);
-        }
-    }
-//
-//    public SailRepository setupLuceneSail()
-//    {
-//        // create a sesame memory sail
-//        MemoryStore memoryStore = new MemoryStore();
-//
-//        // create a lucenesail to wrap the memorystore
-//        LuceneSail lucenesail = new LuceneSail();
-//
-//        // set this parameter to store the lucene index on disk
-//        //d
-//        lucenesail.setParameter(LuceneSail.LUCENE_DIR_KEY, "${repository.path}/luceneIndex");
-//
-//        // wrap memorystore in a lucenesail
-//        lucenesail.setBaseSail(memoryStore);
-//
-//        // create a Repository to access the sails
-//        SailRepository repository = new SailRepository(lucenesail);
-//        repository.initialize();
-//        return repository;
-//    }
-
     @Override
     public void indexLocalKb(KnowledgeBase aKb) throws IOException
     {
         Analyzer analyzer = new StandardAnalyzer();
-        File f = new File("${repository.path}/luceneIndex");
-        Directory directory = FSDirectory.open(f.toPath());
+        Directory directory = FSDirectory
+            .open(new File(luceneIndexDir, aKb.getRepositoryId()).toPath());
         IndexWriter indexWriter = new IndexWriter(directory, new IndexWriterConfig(analyzer));
 
         try (RepositoryConnection conn = getConnection(aKb)) {
             RepositoryResult<Statement> stmts = RdfUtils
-                .getStatementsSparql(conn, null, RDFS.LABEL, null, Integer.MAX_VALUE, false, null);
+                .getStatementsSparql(conn, null, aKb.getLabelIri(), null,
+                    Integer.MAX_VALUE, false, null);
             while (stmts.hasNext()) {
                 Statement stmt = stmts.next();
                 String id = stmt.getSubject().stringValue();
                 String label = stmt.getObject().stringValue();
-                try {
-                    indexEntity(id, label, indexWriter);
-                }
-                catch (IOException e) {
-                    log.error("Could not index entity with id [{}] and label [{}]", id, label);
-                }
+                String predicate = stmt.getPredicate().stringValue();
+                indexEntity(id, label, predicate, indexWriter);
             }
         }
 
         indexWriter.close();
     }
 
-    private void indexEntity(String aId, String aLabel, IndexWriter aIndexWriter)
-        throws IOException
+    private void indexEntity(String aId, String aLabel, String aPredictate,
+        IndexWriter aIndexWriter)
     {
-        String FIELD_ID = "id";
-        String FIELD_CONTENT = "label";
-        Document doc = new Document();
-        doc.add(new StringField(FIELD_ID, aId, Field.Store.YES));
-        doc.add(new StringField(FIELD_CONTENT, aLabel, Field.Store.YES));
-        aIndexWriter.addDocument(doc);
-        aIndexWriter.commit();
+        try {
+            String FIELD_ID = "id";
+            String FIELD_CONTENT = "label";
+            Document doc = new Document();
+            doc.add(new StringField(FIELD_ID, aId, Field.Store.YES));
+            doc.add(new StringField(FIELD_CONTENT, aLabel, Field.Store.YES));
+            aIndexWriter.addDocument(doc);
+            aIndexWriter.commit();
 
-        log.info("Entity indexed with id [{}] and label [{}]", aId, aLabel);
+            log.info("Entity indexed with id [{}] and label [{}], predicate [{}]",
+                aId, aLabel, aPredictate);
+        }
+        catch (IOException e) {
+            log.error("Could not index entity with id [{}] and label [{}]", aId, aLabel);
+        }
     }
 }

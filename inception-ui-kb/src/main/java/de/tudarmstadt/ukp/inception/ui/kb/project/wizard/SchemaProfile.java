@@ -28,20 +28,20 @@ import de.tudarmstadt.ukp.inception.kb.IriConstants;
 public enum SchemaProfile
 {
     RDFSCHEMA(RDFS.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT, RDFS.LABEL, RDF.PROPERTY,
-        RDFS.LABEL, RDFS.COMMENT),
+        RDFS.LABEL, RDFS.COMMENT, IriConstants.FTS_NONE),
 
     WIKIDATASCHEMA(IriConstants.WIKIDATA_CLASS, IriConstants.WIKIDATA_SUBCLASS,
         IriConstants.WIKIDATA_TYPE, RDFS.COMMENT, RDFS.LABEL, IriConstants.WIKIDATA_PROPERTY_TYPE,
-        RDFS.LABEL, RDFS.COMMENT),
+        RDFS.LABEL, RDFS.COMMENT, IriConstants.FTS_NONE),
 
     OWLSCHEMA(OWL.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT, RDFS.LABEL, RDF.PROPERTY,
-        RDFS.LABEL, RDFS.COMMENT),
+        RDFS.LABEL, RDFS.COMMENT, IriConstants.FTS_NONE),
 
     SKOSSCHEMA(SKOS.CONCEPT, SKOS.BROADER, RDF.TYPE, RDFS.COMMENT, SKOS.PREF_LABEL, RDF.PROPERTY,
-        SKOS.PREF_LABEL, RDFS.COMMENT),
+        SKOS.PREF_LABEL, RDFS.COMMENT, IriConstants.FTS_NONE),
 
     CUSTOMSCHEMA(RDFS.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT, RDFS.LABEL, RDF.PROPERTY,
-        RDFS.LABEL, RDFS.COMMENT);
+        RDFS.LABEL, RDFS.COMMENT, IriConstants.FTS_NONE);
 
     private final IRI classIri;
     private final IRI subclassIri;
@@ -51,9 +51,11 @@ public enum SchemaProfile
     private final IRI propertyTypeIri;
     private final IRI propertyLabelIri;
     private final IRI propertyDescriptionIri;
+    private final IRI ftsIri;
 
     private SchemaProfile(IRI aClassIri, IRI aSubclassIri, IRI aTypeIri, IRI aDescriptionIri,
-            IRI aLabelIri, IRI aPropertyTypeIri, IRI aPropertyLabelIri, IRI aPropertyDescriptionIri)
+        IRI aLabelIri, IRI aPropertyTypeIri, IRI aPropertyLabelIri, IRI aPropertyDescriptionIri,
+        IRI aFtsIri)
     {
         classIri = aClassIri;
         subclassIri = aSubclassIri;
@@ -63,7 +65,7 @@ public enum SchemaProfile
         propertyTypeIri = aPropertyTypeIri;
         propertyLabelIri = aPropertyLabelIri;
         propertyDescriptionIri = aPropertyDescriptionIri;
-
+        ftsIri = aFtsIri;
     }
 
     public IRI getClassIri()
@@ -104,5 +106,10 @@ public enum SchemaProfile
     public IRI getPropertyDescriptionIri()
     {
         return propertyDescriptionIri;
+    }
+
+    public IRI getFtsIri()
+    {
+        return ftsIri;
     }
 }

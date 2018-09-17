@@ -72,6 +72,11 @@ public class IriConstants
      */
     public static final IRI SCHEMA_DESCRIPTION;
 
+    public static final IRI FTS_NONE;
+    public static final IRI FTS_VIRTUOSO;
+    public static final IRI LUCENE_SEARCH_MATCHES;
+    public static final IRI LUCENE_SEARCH_QUERY;
+
     public static final List<IRI> CLASS_IRIS;
     public static final List<IRI> SUBCLASS_IRIS;
     public static final List<IRI> TYPE_IRIS;
@@ -80,10 +85,7 @@ public class IriConstants
     public static final List<IRI> PROPERTY_TYPE_IRIS;
     public static final List<IRI> PROPERTY_LABEL_IRIS;
     public static final List<IRI> PROPERTY_DESCRIPTION_IRIS;
-
-    public static final IRI LUCENE_SEARCH_MATCHES;
-
-    public static final IRI LUCENE_SEARCH_QUERY;
+    public static final List<IRI> FTS_IRIS;
 
     static {
         ValueFactory vf = SimpleValueFactory.getInstance();
@@ -93,6 +95,8 @@ public class IriConstants
         WIKIDATA_TYPE = vf.createIRI(PREFIX_WIKIDATA_DIRECT, "P31");
         WIKIDATA_PROPERTY_TYPE =  vf.createIRI(PREFIX_WIKIDATA_ENTITY, "Q18616576");
         SCHEMA_DESCRIPTION = vf.createIRI(PREFIX_SCHEMA, "description");
+        FTS_NONE = vf.createIRI("FTS:NONE");
+        FTS_VIRTUOSO = vf.createIRI("bif:contains");
         LUCENE_SEARCH_MATCHES = vf.createIRI(PREFIX_LUCENE_SEARCH, "matches");
         LUCENE_SEARCH_QUERY = vf.createIRI(PREFIX_LUCENE_SEARCH, "query");
 
@@ -104,6 +108,6 @@ public class IriConstants
         PROPERTY_TYPE_IRIS = asList(RDF.PROPERTY, WIKIDATA_PROPERTY_TYPE);
         PROPERTY_LABEL_IRIS = asList(RDFS.LABEL, SKOS.PREF_LABEL);
         PROPERTY_DESCRIPTION_IRIS = asList(RDFS.COMMENT, SCHEMA_DESCRIPTION);
-
+        FTS_IRIS = asList(FTS_VIRTUOSO, LUCENE_SEARCH_MATCHES);
     }
 }
