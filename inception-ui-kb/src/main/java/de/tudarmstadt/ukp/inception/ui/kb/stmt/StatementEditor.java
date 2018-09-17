@@ -48,7 +48,6 @@ import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.inception.app.Focusable;
@@ -139,6 +138,11 @@ public class StatementEditor extends Panel
     private void actionSave(AjaxRequestTarget aTarget, Form<KBStatement> aForm) {
         KBStatement modifiedStatement = aForm.getModelObject();
         try {
+            String language = aForm.getModelObject().getLanguage() != null
+                ? aForm.getModelObject().getLanguage()
+                : kbModel.getObject().getDefaultLanguage();
+            modifiedStatement.setLanguage(language);
+
             // persist the modified statement and replace the original, unchanged model
             kbService.upsertStatement(kbModel.getObject(), modifiedStatement);
             statement.setObject(modifiedStatement);
@@ -312,14 +316,17 @@ public class StatementEditor extends Panel
             Form<KBStatement> form = new Form<>("form", CompoundPropertyModel.of(aStatement));
 
             // text area for the statement value should receive focus
-            Component valueTextArea = new TextArea<String>("value").add(
-                    new LambdaAjaxFormComponentUpdatingBehavior("change", t -> t.add(getParent())));
+            Component valueTextArea = new TextArea<String>("value");
+            valueTextArea.setOutputMarkupId(true);
             initialFocusComponent = valueTextArea;
             form.add(valueTextArea);
 
             // FIXME This field should only be visible if the selected datatype is
             // langString
-            form.add(new TextField<>("language"));
+
+            TextField<String> textField = new TextField<>("language");
+            textField.setOutputMarkupId(true);
+            form.add(textField);
 
             // FIXME Selection of the data type should only be possible if it is not
             // restricted to a single type in the property definition - take into account

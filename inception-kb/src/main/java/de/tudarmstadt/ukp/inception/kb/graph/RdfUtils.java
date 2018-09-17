@@ -28,6 +28,7 @@ import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.Value;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+
 import org.eclipse.rdf4j.query.BindingSet;
 import org.eclipse.rdf4j.query.QueryEvaluationException;
 import org.eclipse.rdf4j.query.QueryLanguage;
@@ -233,9 +234,9 @@ public class RdfUtils
      * @return all statements with the given subject resource
      */
     public static RepositoryResult<Statement> getStatementsWithSubject(
-            RepositoryConnection conn, Resource subj, boolean includeInferred)
+            RepositoryConnection conn, Resource subj, boolean includeInferred, int aLimit)
     {
-        return getStatementsSparql(conn, subj, null, null, 1000, includeInferred, null);
+        return getStatementsSparql(conn, subj, null, null, aLimit, includeInferred, null);
     }
     
     public static boolean isFromImplicitNamespace(KBHandle handle) {

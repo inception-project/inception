@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.kb;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -468,7 +469,7 @@ public interface KnowledgeBaseService
      */
     void defineBaseProperties(KnowledgeBase akb);
 
-    /**
+    /**F
      * Read an identifier value to return {@link KBObject}
      * @param aProject Project to read the KB identifier
      * @param aIdentifier String value for IRI
@@ -477,15 +478,21 @@ public interface KnowledgeBaseService
     Optional<KBObject> readKBIdentifier(Project aProject, String aIdentifier);
 
     /**
-
-     * Retrieves the parent concept for an identifier
+     * Read an identifier value from a particular kb to return {@link KBObject}
+     * @param akb
+     * @param aIdentifier
+     * @return {@link Optional} of {@link KBObject} of type {@link KBConcept} or {@link KBInstance}
+     */
+    Optional<KBObject> readKBIdentifier(KnowledgeBase akb, String aIdentifier);
+    
+     /** Retrieves the parent concept for a concept identifier
      * 
      * @param aKB The knowledge base
-     * @param aIdentifier a concept identifier.
+     * @param aHandle a concept.
      * @param aAll True if entities with implicit namespaces (e.g. defined by RDF)
      * @return List of parent concept for an identifier
      */
-    List<KBHandle> getParentConcept(KnowledgeBase aKB, String aIdentifier, boolean aAll)
+    List<KBHandle> getParentConcept(KnowledgeBase aKB, KBHandle aHandle, boolean aAll)
         throws QueryEvaluationException;
     
     /**
@@ -513,14 +520,6 @@ public interface KnowledgeBaseService
 
     boolean hasImplicitNamespace(String s);
 
-   /**
-     * Read an identifier value from a particular kb to return {@link KBObject}
-     * @param kb
-     * @param aIdentifier
-     * @return {@link Optional} of {@link KBObject} of type {@link KBConcept} or {@link KBInstance}
-     */
-    Optional<KBObject> readKBIdentifier(KnowledgeBase kb, String aIdentifier);
-
     /**
      * List all the concepts
      * @param kb The knowledge base from which concepts will be listed
@@ -528,4 +527,30 @@ public interface KnowledgeBaseService
      * @return list of all the properties {@link KBHandle} 
      */
     List<KBHandle> listAllConcepts(KnowledgeBase kb, boolean aAll) throws QueryEvaluationException;
+
+    /**
+     * Check if the given profile equals one of the schema profiles defined in {@link SchemaProfile}
+     * @param aProfile
+     * @return the corresponding schema profile (CUSTOM if the given profile does not equal any of
+     * the pre-defined ones
+     */
+    SchemaProfile checkSchemaProfile(KnowledgeBaseProfile aProfile);
+
+    /**
+     * Check if the IRIs of the given {@link KnowledgeBase} object are equal to the IRIs of one of
+     * the schema profiles defined in {@link SchemaProfile}
+     * @param aKb
+     * @return the corresponding schema profile (CUSTOM if the given profile does not equal any of
+     * the pre-defined ones
+     */
+    SchemaProfile checkSchemaProfile(KnowledgeBase aKb);
+
+    /**
+     * Reads a knowledge base file from the classpath and returns the file handle
+     * @param aLocation location of the knowledge base resource
+     * @return the file handle of the knowledge base resource
+     * @throws IOException
+     */
+    File readKbFileFromClassPathResource(String aLocation) throws IOException;
+
 }

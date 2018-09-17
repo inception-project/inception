@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.search.index;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.uima.jcas.JCas;
 
@@ -55,4 +56,16 @@ public interface PhysicalIndex
     public void deindexDocument(SourceDocument aDocument) throws IOException;
 
     public void deindexDocument(AnnotationDocument aDocument) throws IOException;
+
+    public void deindexDocument(AnnotationDocument aDocument, String aTimestamp) throws IOException;
+
+    /**
+     * Retrieve the timestamp of this annotation document
+     * @param aDocument
+     *          The annotation document
+     * @return
+     *          The document timestamp field value. Empty string if document is not found.
+     * @throws IOException
+     */
+    public Optional<String> getTimestamp(AnnotationDocument aDocument) throws IOException;
 }

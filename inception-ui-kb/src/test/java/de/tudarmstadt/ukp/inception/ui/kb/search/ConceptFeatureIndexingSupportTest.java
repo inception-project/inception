@@ -152,12 +152,11 @@ public class ConceptFeatureIndexingSupportTest
         assertThat(tokens)
             .filteredOn(t -> t.getPrefix().startsWith("Named_Entity"))
             .extracting(MtasToken::getPrefix)
-            .contains("Named_Entity", "Named_Entity.identifier", "Named_Entity.identifier.exact");
+            .contains("Named_Entity", "Named_Entity.identifier", "Named_Entity.identifier-exact");
     
         assertThat(tokens)
             .filteredOn(t -> t.getPrefix().startsWith("Named_Entity"))
             .extracting(MtasToken::getPostfix)
             .contains("", "urn:dummy-concept", "Dummy concept");
     }
-
 }

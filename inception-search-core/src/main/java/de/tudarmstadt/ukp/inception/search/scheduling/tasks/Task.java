@@ -19,8 +19,11 @@ package de.tudarmstadt.ukp.inception.search.scheduling.tasks;
 
 import static org.apache.commons.lang3.Validate.notNull;
 
+import org.apache.uima.jcas.JCas;
+
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
 /**
  * Abstract search task
@@ -30,9 +33,12 @@ public abstract class Task
     implements Runnable
 {
     private final Project project;
-    private final User user;
+    private final String user;
+    private SourceDocument sourceDocument;
+    private AnnotationDocument annotationDocument;
+    private JCas jCas;
 
-    public Task(Project aProject, User aUser)
+    public Task(Project aProject, String aUser)
     {
         // notNull(aUser);
         notNull(aProject);
@@ -41,7 +47,28 @@ public abstract class Task
         user = aUser;
     }
 
-    public User getUser()
+    public Task(SourceDocument aSourceDocument, JCas aJCas)
+    {
+        notNull(aSourceDocument);
+
+        project = aSourceDocument.getProject();
+        sourceDocument = aSourceDocument;
+        jCas = aJCas;
+        user = null;
+    }
+
+    public Task(AnnotationDocument aAnnotationDocument, JCas aJCas)
+    {
+        notNull(aAnnotationDocument);
+        notNull(aJCas);
+
+        project = aAnnotationDocument.getProject();
+        annotationDocument = aAnnotationDocument;
+        jCas = aJCas;
+        user = aAnnotationDocument.getUser();
+    }
+
+    public String getUser()
     {
         return user;
     }
@@ -49,6 +76,26 @@ public abstract class Task
     public Project getProject()
     {
         return project;
+    }
+
+    public SourceDocument getSourceDocument()
+    {
+        return sourceDocument;
+    }
+
+    public AnnotationDocument getAnnotationDocument()
+    {
+        return annotationDocument;
+    }
+
+    public void setJCas(JCas aJCas)
+    {
+        jCas = aJCas;
+    }
+
+    public JCas getJCas()
+    {
+        return jCas;
     }
 
     @Override
@@ -59,7 +106,11 @@ public abstract class Task
         builder.append(" [project=");
         builder.append(project.getName());
         builder.append(", user=");
-        builder.append((user == null) ? " " : user.getUsername());
+        builder.append((user == null) ? " " : user);
+        builder.append(", sourceDocument=");
+        builder.append(sourceDocument == null ? "null" : sourceDocument.getName());
+        builder.append(", annotationDocument=");
+        builder.append(annotationDocument == null ? "null" : annotationDocument.getName());
         builder.append("]");
         return builder.toString();
     }
@@ -71,6 +122,10 @@ public abstract class Task
         int result = 1;
         result = prime * result + ((project == null) ? 0 : project.hashCode());
         result = prime * result + ((user == null) ? 0 : user.hashCode());
+        result = prime * result
+                + ((sourceDocument == null) ? 0 : sourceDocument.hashCode());
+        result = prime * result
+                + ((annotationDocument == null) ? 0 : annotationDocument.hashCode());
         return result;
     }
 
@@ -101,6 +156,22 @@ public abstract class Task
             }
         }
         else if (!user.equals(other.user)) {
+            return false;
+        }
+        else if (sourceDocument == null) {
+            if (other.sourceDocument != null) {
+                return false;
+            }
+        }
+        else if (!sourceDocument.equals(other.sourceDocument)) {
+            return false;
+        }
+        else if (annotationDocument == null) {
+            if (other.annotationDocument != null) {
+                return false;
+            }
+        }
+        else if (!annotationDocument.equals(other.annotationDocument)) {
             return false;
         }
         return true;
