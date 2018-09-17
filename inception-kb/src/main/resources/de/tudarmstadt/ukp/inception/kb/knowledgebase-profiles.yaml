@@ -1,6 +1,8 @@
 british_museum:
   name: British Museum
-  sparql-url: http://collection.britishmuseum.org/sparql
+  type: REMOTE
+  access:
+      access-url: http://collection.britishmuseum.org/sparql
   mapping:
       class: http://www.w3.org/2000/01/rdf-schema#Class
       subclass-of: http://www.w3.org/2000/01/rdf-schema#subClassOf
@@ -13,7 +15,9 @@ british_museum:
       property-description: http://www.w3.org/2000/01/rdf-schema#comment
 wikidata:
   name: Wikidata
-  sparql-url: https://query.wikidata.org/sparql
+  type: REMOTE
+  access:
+      access-url: https://query.wikidata.org/sparql
   mapping:
       class: http://www.wikidata.org/entity/Q35120
       subclass-of: http://www.wikidata.org/prop/direct/P279
@@ -25,7 +29,9 @@ wikidata:
       property-description: http://www.w3.org/2000/01/rdf-schema#comment
 virtuoso:
   name: UKP Wikidata
-  sparql-url: http://knowledgebase.ukp.informatik.tu-darmstadt.de:8890/sparql
+  type: REMOTE
+  access:
+      access-url: http://knowledgebase.ukp.informatik.tu-darmstadt.de:8890/sparql
   mapping:
       class: http://www.w3.org/2002/07/owl#Class
       subclass-of: http://www.w3.org/2000/01/rdf-schema#subClassOf
@@ -37,7 +43,9 @@ virtuoso:
       property-description: http://www.schema.org/description
 db_pedia:
   name: DBpedia
-  sparql-url: http://dbpedia.org/sparql
+  type: REMOTE
+  access:
+      access-url: http://dbpedia.org/sparql
   mapping:
       class: http://www.w3.org/2002/07/owl#Class
       subclass-of: http://www.w3.org/2000/01/rdf-schema#subClassOf
@@ -49,7 +57,9 @@ db_pedia:
       property-description: http://www.w3.org/2000/01/rdf-schema#comment
 babel_net:
   name: BabelNet
-  sparql-url: http://babelnet.org/sparql/
+  type: REMOTE
+  access:
+      access-url: http://babelnet.org/sparql/
   mapping:
       class: http://www.w3.org/2000/01/rdf-schema#Class
       subclass-of: http://www.w3.org/2000/01/rdf-schema#subClassOf
@@ -61,7 +71,37 @@ babel_net:
       property-description: http://www.w3.org/2000/01/rdf-schema#comment
 yago:
   name: YAGO
-  sparql-url: https://linkeddata1.calcul.u-psud.fr/sparql
+  type: REMOTE
+  access:
+      access-url: https://linkeddata1.calcul.u-psud.fr/sparql
+  mapping:
+      class: http://www.w3.org/2002/07/owl#Class
+      subclass-of: http://www.w3.org/2000/01/rdf-schema#subClassOf
+      instance-of: http://www.w3.org/1999/02/22-rdf-syntax-ns#type
+      label: http://www.w3.org/2000/01/rdf-schema#label
+      property-type: http://www.w3.org/1999/02/22-rdf-syntax-ns#Property
+      description: http://www.w3.org/2000/01/rdf-schema#comment
+      property-label: http://www.w3.org/2000/01/rdf-schema#label
+      property-description: http://www.w3.org/2000/01/rdf-schema#comment
+wine_ontology:
+  name: Wine Ontology
+  type: LOCAL
+  access:
+      access-url: classpath:de/tudarmstadt/ukp/inception/kb/pre-defined-knowledge-bases/wine.rdf
+  mapping:
+      class: http://www.w3.org/2002/07/owl#Class
+      subclass-of: http://www.w3.org/2000/01/rdf-schema#subClassOf
+      instance-of: http://www.w3.org/1999/02/22-rdf-syntax-ns#type
+      label: http://www.w3.org/2000/01/rdf-schema#label
+      property-type: http://www.w3.org/1999/02/22-rdf-syntax-ns#Property
+      description: http://www.w3.org/2000/01/rdf-schema#comment
+      property-label: http://www.w3.org/2000/01/rdf-schema#label
+      property-description: http://www.w3.org/2000/01/rdf-schema#comment
+wildlife_ontology:
+  name: Wildlife Ontology
+  type: LOCAL
+  access:
+      access-url: https://www.bbc.co.uk/ontologies/wo/1.1.ttl
   mapping:
       class: http://www.w3.org/2002/07/owl#Class
       subclass-of: http://www.w3.org/2000/01/rdf-schema#subClassOf
@@ -73,7 +113,9 @@ yago:
       property-description: http://www.w3.org/2000/01/rdf-schema#comment
 zbw-stw-economics:
   name: STW Thesaurus for Economics
-  sparql-url: http://zbw.eu/beta/sparql/stw/query
+  type: REMOTE
+  access:
+      access-url: http://zbw.eu/beta/sparql/stw/query
   mapping:
       class: http://www.w3.org/2004/02/skos/core#Concept
       subclass-of: http://www.w3.org/2004/02/skos/core#broader
@@ -85,7 +127,9 @@ zbw-stw-economics:
       property-description: http://www.w3.org/2000/01/rdf-schema#comment
 zbw-gnd:
   name: Integrated Authority File (GND)
-  sparql-url: http://zbw.eu/beta/sparql/gnd/query
+  type: REMOTE
+  access:
+      access-url: http://zbw.eu/beta/sparql/gnd/query
   mapping:
       class: http://www.w3.org/2004/02/skos/core#Concept
       subclass-of: http://www.w3.org/2004/02/skos/core#broader
