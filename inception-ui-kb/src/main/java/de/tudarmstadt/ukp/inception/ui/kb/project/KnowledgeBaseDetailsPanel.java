@@ -73,7 +73,7 @@ import de.tudarmstadt.ukp.inception.app.bootstrap.DisabledBootstrapCheckbox;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 import de.tudarmstadt.ukp.inception.kb.event.KnowledgeBaseConfigurationChangedEvent;
-import de.tudarmstadt.ukp.inception.kb.io.FileUploadHelper;
+import de.tudarmstadt.ukp.inception.kb.io.FileUploadDownloadHelper;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 public class KnowledgeBaseDetailsPanel
@@ -166,10 +166,12 @@ public class KnowledgeBaseDetailsPanel
 
                 try {
                     FileUploadField fileUploadField = (FileUploadField) c;
-                    FileUploadHelper fileUploadHelper = new FileUploadHelper(getApplication());
+                    FileUploadDownloadHelper fileUploadDownloadHelper =
+                        new FileUploadDownloadHelper(getApplication());
                     List<File> fileUploads = new ArrayList<>();
                     for (FileUpload fu : fileUploadField.getFileUploads()) {
-                        File tmpFile = fileUploadHelper.writeToTemporaryFile(fu, kbw);
+                        File tmpFile = fileUploadDownloadHelper
+                            .writeFileUploadToTemporaryFile(fu, kbw);
                         fileUploads.add(tmpFile);
                     }
                     kbwModel.getObject().setFiles(fileUploads);
