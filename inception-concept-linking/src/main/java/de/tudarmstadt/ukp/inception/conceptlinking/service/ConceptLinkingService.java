@@ -486,6 +486,9 @@ public class ConceptLinkingService
     {
         long startTime = System.currentTimeMillis();
 
+        if (aTypedString == null) {
+            aTypedString = "";
+        }
         Set<CandidateEntity> candidatesExact = retrieveCandidatesExact(aKB, aTypedString, aMention);
 
         Set<CandidateEntity> candidatesFullText = new HashSet<>();
