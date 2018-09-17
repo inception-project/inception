@@ -58,7 +58,9 @@ public class ExternalRecommenderFactory
 
     @Override
     public RecommendationEngine build(Recommender aRecommender) {
-        return null;
+        ExternalRecommenderTraits traits = readTraits(aRecommender);
+        traits.setRemoteUrl("http://localhost:30500");
+        return new ExternalRecommender(aRecommender, traits);
     }
 
     @Override
