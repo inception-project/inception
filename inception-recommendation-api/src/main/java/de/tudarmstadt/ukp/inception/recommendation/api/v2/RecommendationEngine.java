@@ -28,8 +28,8 @@ public interface RecommendationEngine {
      * @param aContext The context of the recommender
      * @param aCasses The training data
      */
-    void train(RecommenderContext aContext, List<CAS> aCasses);
-    void predict(RecommenderContext aContext, CAS aCas);
+    void train(RecommenderContext aContext, List<CAS> aCasses) throws RecommendationException;
+    void predict(RecommenderContext aContext, CAS aCas) throws RecommendationException;
 
     /**
      * Evaluates the performance of a recommender by splitting the data given in {@code aCasses}
@@ -45,5 +45,10 @@ public interface RecommendationEngine {
     default boolean isEvaluable()
     {
         return true;
+    }
+
+    default String getPredictedType()
+    {
+        return "de.tudarmstadt.ukp.inception.recommendation.api.type.PredictedSpan";
     }
 }

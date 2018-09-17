@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.external;
 
 import static de.tudarmstadt.ukp.inception.recommendation.imls.external.util.CasAssert.assertThat;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
+import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
 import java.io.File;
@@ -28,6 +29,9 @@ import java.util.List;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.Feature;
+import org.apache.uima.cas.Type;
+import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
@@ -57,7 +61,7 @@ public class ExternalRecommenderIntegrationTest
     private RecommenderContext context;
     private ExternalRecommender sut;
     private ExternalRecommenderTraits traits;
-    private RemoteStringMatchingRecommender remoteRecommender;
+    private RemoteStringMatchingNerRecommender remoteRecommender;
     private MockWebServer server;
 
     @Before
@@ -69,7 +73,7 @@ public class ExternalRecommenderIntegrationTest
         traits = new ExternalRecommenderTraits();
         sut = new ExternalRecommender(recommender, traits);
 
-        remoteRecommender = new RemoteStringMatchingRecommender(recommender);
+        remoteRecommender = new RemoteStringMatchingNerRecommender(recommender);
 
         server = new MockWebServer();
         server.setDispatcher(buildDispatcher());
@@ -103,9 +107,30 @@ public class ExternalRecommenderIntegrationTest
         sut.predict(context, cas);
 
         assertThat(cas).as("Predictions are correct")
-            .containsPrediction("Ecce homo", "OTH")
-            .containsPrediction("The Lindsey School Lindsey School & Community Arts College", "ORG")
-            .containsPrediction("Lido delle Nazioni", "LOC");
+            .containsNamedEntity("Ecce homo", "OTH")
+            .containsNamedEntity("The Lindsey School Lindsey School & Community Arts College", "ORG")
+            .containsNamedEntity("Lido delle Nazioni", "LOC");
+    }
+
+    @Test
+    public void thatAnnotationsAreCleardBeforeSending() throws Exception
+    {
+        List<CAS> casses = loadDevelopmentData();
+        sut.train(context, casses);
+
+        // Add fake annotation to the CAS that should be cleared by
+        // the external recommender when predicting
+        CAS cas = casses.get(0);
+        createNamedEntity(cas, "FAKE");
+        sut.predict(context, cas);
+
+        assertThat(cas).as("Predictions are cleared")
+            .extractNamedEntities()
+            .noneMatch(fs -> {
+                Type neType = getType(cas, "de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity");
+                Feature valueFeature = neType.getFeatureByBaseName("value");
+                return "FAKE".equals(fs.getStringValue(valueFeature));
+            });
     }
 
     private List<CAS> loadDevelopmentData() throws IOException, UIMAException
@@ -162,5 +187,14 @@ public class ExternalRecommenderIntegrationTest
                 }
             }
         };
+    }
+
+    private void createNamedEntity(CAS aCas, String aValue)
+    {
+        Type neType = getType(aCas, "de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity");
+        Feature valueFeature = neType.getFeatureByBaseName("value");
+        AnnotationFS ne = aCas.createAnnotation(neType, 0, 42);
+        ne.setStringValue(valueFeature, aValue);
+        aCas.addFsToIndexes(ne);
     }
 }

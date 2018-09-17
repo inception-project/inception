@@ -51,6 +51,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.TokenObject;
 import de.tudarmstadt.ukp.inception.recommendation.api.type.PredictedSpan;
 import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommendationEngineFactory;
+import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommenderContext;
 
 /**
@@ -107,7 +108,12 @@ public class PredictionTask
                             .getRecommenderFactory(recommender);
                     RecommendationEngine recommendationEngine = factory.build(recommender);
 
-                    recommendationEngine.predict(ctx, jCas.getCas());
+                    try {
+                        recommendationEngine.predict(ctx, jCas.getCas());
+                    } catch (RecommendationException e) {
+                        log.error("Error while predicting", e);
+                        continue;
+                    }
 
                     List<AnnotationObject> predictions = extractAnnotations(jCas, document,
                             recommender);

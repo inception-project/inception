@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.external;
 
+import static org.apache.uima.fit.util.CasUtil.getType;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -30,9 +32,13 @@ import org.apache.commons.io.FileUtils;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.CASRuntimeException;
+import org.apache.uima.cas.Feature;
+import org.apache.uima.cas.Type;
 import org.apache.uima.cas.impl.XmiCasDeserializer;
 import org.apache.uima.cas.impl.XmiCasSerializer;
+import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.factory.JCasFactory;
+import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,11 +47,12 @@ import org.xml.sax.SAXException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.type.PredictedSpan;
 import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.StringMatchingRecommender;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.StringMatchingRecommenderTraits;
 
-public class RemoteStringMatchingRecommender
+public class RemoteStringMatchingNerRecommender
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -53,7 +60,7 @@ public class RemoteStringMatchingRecommender
     private final RecommenderContext context;
     private final StringMatchingRecommender recommendationEngine;
 
-    public RemoteStringMatchingRecommender(Recommender aRecommender)
+    public RemoteStringMatchingNerRecommender(Recommender aRecommender)
     {
         recommender = aRecommender;
         context = new RecommenderContext();
@@ -90,6 +97,19 @@ public class RemoteStringMatchingRecommender
         CAS cas = deserializeCas(request.getXmi(), request.getTypeSystem());
 
         recommendationEngine.predict(context, cas);
+
+        // Convert PredictionSpan to NamedEntity annotations
+        Type predictionType = getType(cas, PredictedSpan.class);
+        Feature labelFeature = predictionType.getFeatureByBaseName("label");
+        Type neType = getType(cas, "de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity");
+        Feature valueFeature = neType.getFeatureByBaseName("value");
+
+        for (AnnotationFS fs : CasUtil.select(cas, predictionType)) {
+            AnnotationFS ne = cas.createAnnotation(neType, fs.getBegin(), fs.getEnd());
+            ne.setStringValue(valueFeature, fs.getStringValue(labelFeature));
+            cas.addFsToIndexes(ne);
+            cas.removeFsFromIndexes(fs);
+        }
 
         return serializeCasToXmi(cas);
     }

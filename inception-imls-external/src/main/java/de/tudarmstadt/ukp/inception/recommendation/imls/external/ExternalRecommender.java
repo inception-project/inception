@@ -25,8 +25,11 @@ import java.util.List;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.CASRuntimeException;
+import org.apache.uima.cas.Type;
 import org.apache.uima.cas.impl.XmiCasDeserializer;
 import org.apache.uima.cas.impl.XmiCasSerializer;
+import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.util.TypeSystemUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,6 +41,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.v2.DataSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommendationEngine;
+import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommenderContext;
 import okhttp3.HttpUrl;
 import okhttp3.MediaType;
@@ -65,6 +69,7 @@ public class ExternalRecommender
 
     @Override
     public void train(RecommenderContext aContext, List<CAS> aCasses)
+        throws RecommendationException
     {
         TrainingRequest trainingRequest = new TrainingRequest();
         List<String> documents = new ArrayList<>();
@@ -97,14 +102,14 @@ public class ExternalRecommender
     }
 
     @Override
-    public void predict(RecommenderContext aContext, CAS aCas)
+    public void predict(RecommenderContext aContext, CAS aCas) throws RecommendationException
     {
-        // TODO: Remove the prediction annotation from the CAS
         // External recommender can predict arbitrary annotations, not only PredictedSpans.
         // In order to support the case where the prediction annotation type is the predicted
         // annotation type (e.g. recommend named entities, recommender creates named entities),
         // the predicted annotation has to be removed from the CAS first in order to be able
         // to differentiate between the two
+        removePredictedAnnotations(aCas);
 
         String typeSystem = serializeTypeSystem(aCas);
         String xmi = serializeCas(aCas);
@@ -139,7 +144,15 @@ public class ExternalRecommender
         }
     }
 
-    private String serializeTypeSystem(CAS aCas)
+    private void removePredictedAnnotations(CAS aCas)
+    {
+        Type type = CasUtil.getType(aCas, getPredictedType());
+        for (AnnotationFS annotationFS : CasUtil.select(aCas, type)) {
+            aCas.removeFsFromIndexes(annotationFS);
+        }
+    }
+
+    private String serializeTypeSystem(CAS aCas) throws RecommendationException
     {
         try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             TypeSystemUtil.typeSystem2TypeSystemDescription(aCas.getTypeSystem()).toXML(out);
@@ -147,11 +160,11 @@ public class ExternalRecommender
         }
         catch (CASRuntimeException | SAXException | IOException e) {
             LOG.error("Error while serializing type system!", e);
-            throw new RuntimeException("Coud not serialize type system", e);
+            throw new RecommendationException("Coud not serialize type system", e);
         }
     }
 
-    private String serializeCas(CAS aCas)
+    private String serializeCas(CAS aCas) throws RecommendationException
     {
         try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             XmiCasSerializer.serialize(aCas, null, out, true, null);
@@ -159,11 +172,11 @@ public class ExternalRecommender
         }
         catch (CASRuntimeException | SAXException | IOException e) {
             LOG.error("Error while serializing CAS!", e);
-            throw new RuntimeException("Error while serializing CAS!", e);
+            throw new RecommendationException("Error while serializing CAS!", e);
         }
     }
 
-    private String toJson(Object aObject)
+    private String toJson(Object aObject) throws RecommendationException
     {
         try {
             ObjectMapper objectMapper = new ObjectMapper();
@@ -171,18 +184,18 @@ public class ExternalRecommender
         }
         catch (JsonProcessingException e) {
             LOG.error("Error while serializing JSON!", e);
-            throw new RuntimeException("Error while serializing JSON!", e);
+            throw new RecommendationException("Error while serializing JSON!", e);
         }
     }
 
-    private Response sendRequest(Request aRequest)
+    private Response sendRequest(Request aRequest) throws RecommendationException
     {
         try {
             return client.newCall(aRequest).execute();
         }
         catch (IOException e) {
             LOG.error("Error while sending request!", e);
-            throw new RuntimeException("Error while sending request!", e);
+            throw new RecommendationException("Error while sending request!", e);
         }
     }
 
@@ -196,5 +209,11 @@ public class ExternalRecommender
     public boolean isEvaluable()
     {
         return false;
+    }
+
+    @Override
+    public String getPredictedType()
+    {
+        return recommender.getLayer().getName();
     }
 }

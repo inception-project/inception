@@ -17,12 +17,16 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.external.util;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.fit.util.FSUtil;
 import org.assertj.core.api.AbstractAssert;
+import org.assertj.core.api.ListAssert;
 
 import de.tudarmstadt.ukp.inception.recommendation.api.type.PredictedSpan;
 
@@ -73,5 +77,15 @@ public class CasAssert
         failWithMessage("No named entity with text <%s> and label <%s> found", text, label);
 
         return this;
+    }
+
+    public ListAssert<AnnotationFS> extractNamedEntities()
+    {
+        isNotNull();
+
+        Type type = CasUtil.getType(actual, TYPE_NE);
+        List<AnnotationFS> result = new ArrayList<>();
+        result.addAll(CasUtil.select(actual, type));
+        return new ListAssert<>(result);
     }
 }
