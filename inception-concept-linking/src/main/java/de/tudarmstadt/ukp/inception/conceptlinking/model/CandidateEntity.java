@@ -89,12 +89,19 @@ public class CandidateEntity
      */
     private int frequency;
 
-    public CandidateEntity(String IRI, String label, String alternativeLabel, String description)
+    /**
+     * language of this candidate entry
+     */
+    private String language;
+
+    public CandidateEntity(String IRI, String label, String alternativeLabel, String description,
+        String language)
     {
         this.IRI = IRI;
         this.label = label;
         this.alternativeLabel = alternativeLabel;
         this.description = description;
+        this.language = language;
         this.levTypedString = Integer.MAX_VALUE;
         this.frequency = 0;
     }
@@ -269,6 +276,16 @@ public class CandidateEntity
     public int getFrequency()
     {
         return frequency;
+    }
+
+    public void setLanguage(String language)
+    {
+        this.language = language;
+    }
+
+    public String getLanguage()
+    {
+        return language;
     }
 
     @Override

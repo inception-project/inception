@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.inception.conceptlinking.util;
 
 import java.util.Locale;
 
-import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.query.QueryLanguage;
@@ -39,11 +38,8 @@ public class QueryUtil
             "PREFIX e:<http://www.wikidata.org/entity/>",
             "PREFIX rdfs:<http://www.w3.org/2000/01/rdf-schema#>",
             "PREFIX skos:<http://www.w3.org/2004/02/skos/core#>",
-            "PREFIX base:<http://www.wikidata.org/ontology#>");
-
-    private static final String INSTANCES = "<http://wikidata.org/instances>";
-    private static final String STATEMENTS = "<http://wikidata.org/statements>";
-    private static final String TERMS = "<http://wikidata.org/terms>";
+            "PREFIX base:<http://www.wikidata.org/ontology#>",
+            "PREFIX search: <http://www.openrdf.org/contrib/lucenesail#>");
 
     /*
      * instance of this page are about some Wikimedia-only content and should not refer to external
@@ -71,27 +67,15 @@ public class QueryUtil
 
     private static final String WIKIMEDIA_NAVIGATIONAL_TEMPLATE = "e:Q11753321";
 
-    /**
-     *
-     * @param aString
-     * @param aLanguage
-     * @return
-     */
-    private static String getExactMatchingQueryPart(String aString, String aLanguage)
+    private static String getExactMatchingQueryPart(String aString)
     {
         return String.join("\n",
             "    SELECT DISTINCT ?e2 ?description WHERE",
             "    {",
-            "     VALUES ?labelpredicate {rdfs:label skos:altLabel}",
+            "      ?e2 ?labelIri " + aString + " .",
+            "      OPTIONAL",
             "      {",
-            "        ?e2 ?labelpredicate ?"
-                        + aString + " @" + (aLanguage != null ? aLanguage : "en") + " .",
-            "        OPTIONAL",
-            "        {",
-            "          ?e2 ?descriptionIri ?description.",
-            "          FILTER ( lang(?description) = \""
-                        + (aLanguage != null ? aLanguage : "en") + "\" )",
-            "        }",
+            "        ?e2 ?descriptionIri ?description.",
             "      }",
             "    }");
     }
@@ -117,12 +101,10 @@ public class QueryUtil
         aMention = RenderUtils.escape(aMention);
 
         // Matching user input exactly
-        String exactMatchingTypedString = getExactMatchingQueryPart("exactTyped",
-            aKb.getDefaultLanguage());
+        String exactMatchingTypedString = getExactMatchingQueryPart("?exactTyped");
 
         // Match surface form exactly
-        String exactMatchingMention = getExactMatchingQueryPart("exactMention",
-            aKb.getDefaultLanguage());
+        String exactMatchingMention = getExactMatchingQueryPart("?exactMention");
 
         String query = String.join("\n",
             SPARQL_PREFIX,
@@ -141,13 +123,10 @@ public class QueryUtil
             "    VALUES ?topic {" + String.join(" ", WIKIMEDIA_INTERNAL,
                 WIKIMEDIA_PROJECT_PAGE, WIKIMEDIA_CATEGORY, WIKIMEDIA_DISAMBIGUATION_PAGE,
                 WIKIMEDIA_LIST_ARTICLE, WIKIMEDIA_TEMPLATE, WIKIMEDIA_NEWS_ARTICLE,
-                WIKIMEDIA_NAVIGATIONAL_TEMPLATE) +
-                "}",
-            "    ?e2 rdf:type ?topic",
+                WIKIMEDIA_NAVIGATIONAL_TEMPLATE) + "}",
+            "    ?e2 ?typeIri ?topic",
             "  }",
-            "  ?e2 rdfs:label ?label.",
-            "  FILTER ( lang(?label) = \"" + (aKb.getDefaultLanguage() != null
-                ? aKb.getDefaultLanguage() : "en") + "\" )",
+            "  ?e2 ?labelIri ?label.",
             "}");
 
         ValueFactory vf = SimpleValueFactory.getInstance();
@@ -155,27 +134,43 @@ public class QueryUtil
         TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, query);
         tupleQuery.setBinding("exactTyped", vf.createLiteral(aTypedString));
         tupleQuery.setBinding("exactMention", vf.createLiteral(aMention));
+        tupleQuery.setBinding("language", vf.createLiteral((aKb.getDefaultLanguage() != null)
+            ? aKb.getDefaultLanguage() : "en"));
 
+        tupleQuery.setBinding("labelIri", aKb.getLabelIri());
+        tupleQuery.setBinding("typeIri", aKb.getTypeIri());
         tupleQuery.setBinding("descriptionIri", aKb.getDescriptionIri());
-        tupleQuery.setBinding("ftsIri", aKb.getFtsIri());
         return tupleQuery;
     }
 
-    private static String getFullTextMatchingQueryPart(String aString, int aLimit, String aLanguage)
+//    private static String getFullTextMatchingQueryPart(int aLimit)
+//    {
+//        return  String.join("\n",
+//            "    SELECT DISTINCT ?e2 ?altLabel ?description WHERE",
+//            "    {",
+//            "      ?e2 ?labelIri ?altLabel.",
+//            "      ?altLabel ?ftsIri ?string. ",
+//            "      OPTIONAL",
+//            "      {",
+//            "        ?e2 ?descriptionIri ?description.",
+//            "      }",
+//            "    }",
+//            "    LIMIT " + aLimit);
+//    }
+
+    // http://culturecloud.ru/resource/Help:Search#Full_Text_Search
+    private static String getFullTextMatchingQueryPart(int aLimit)
     {
         return  String.join("\n",
             "    SELECT DISTINCT ?e2 ?altLabel ?description WHERE",
             "    {",
-            "      VALUES ?labelpredicate {rdfs:label skos:altLabel}",
+            "      ?e2 search:matches ?match .",
+            "      ?match search:query ?string ;",
+            "             search:property ?labelIri ;",
+            "             search:snippet ?altLabel",
+            "      OPTIONAL",
             "      {",
-            "        ?e2 ?labelpredicate ?altLabel.",
-            "        ?altLabel ?ftsIri '?" + aString + "'. ",
-            "        OPTIONAL",
-            "        {",
-            "          ?e2 ?descriptionIri ?description.",
-            "          FILTER ( lang(?description) = \""
-                         + (aLanguage != null ? aLanguage : "en") + "\" )",
-            "        }",
+            "        ?e2 ?descriptionIri ?description.",
             "      }",
             "    }",
             "    LIMIT " + aLimit);
@@ -195,11 +190,9 @@ public class QueryUtil
     {
         aString = RenderUtils.escape(aString).toLowerCase(Locale.ENGLISH);
 
-        String fullTextMatchingString = getFullTextMatchingQueryPart("string", aLimit,
-            aKb.getDefaultLanguage());
+        String fullTextMatchingString = getFullTextMatchingQueryPart(aLimit);
 
         String query = String.join("\n",
-            "DEFINE input:inference 'instances'",
             SPARQL_PREFIX,
             "SELECT DISTINCT ?e2 ?altLabel ?label ?description WHERE",
             "{",
@@ -214,17 +207,19 @@ public class QueryUtil
                 WIKIMEDIA_LIST_ARTICLE, WIKIMEDIA_TEMPLATE, WIKIMEDIA_NEWS_ARTICLE,
                 WIKIMEDIA_NAVIGATIONAL_TEMPLATE) +
                 "}",
-            "    ?e2 rdf:type ?topic",
+            "    ?e2 ?typeIri ?topic",
             "  }",
-            "  ?e2 rdfs:label ?label.",
-            "  FILTER ( lang(?label) = \""
-                + (aKb.getDefaultLanguage() != null ? aKb.getDefaultLanguage() : "en") + "\" )",
+            "  ?e2 ?labelIri ?label.",
             "}");
 
         ValueFactory vf = SimpleValueFactory.getInstance();
 
         TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, query);
         tupleQuery.setBinding("string", vf.createLiteral(aString));
+        tupleQuery.setBinding("language", vf.createLiteral((aKb.getDefaultLanguage() != null)
+            ? aKb.getDefaultLanguage() : "en"));
+        tupleQuery.setBinding("labelIri", aKb.getLabelIri());
+        tupleQuery.setBinding("typeIri", aKb.getTypeIri());
         tupleQuery.setBinding("descriptionIri", aKb.getDescriptionIri());
         tupleQuery.setBinding("ftsIri", aKb.getFtsIri());
         return tupleQuery;
@@ -232,41 +227,31 @@ public class QueryUtil
 
     /**
      *
-     * @param wikidataId wikidataId, e.g. "Q3"
-     * @param limit maximum number of results
+     * @param aIri an IRI, e.g. "http://www.wikidata.org/entity/Q3"
+     * @param aLimit maximum number of results
      * @param aKb the Knowledge Base
      * @return a query to retrieve the semantic signature
      */
-    public static TupleQuery generateSemanticSignatureQuery(RepositoryConnection conn, String
-        wikidataId, int limit, KnowledgeBase aKb)
+    public static TupleQuery generateSemanticSignatureQuery(RepositoryConnection conn, String aIri,
+        int aLimit, KnowledgeBase aKb)
     {
         ValueFactory vf = SimpleValueFactory.getInstance();
-        IRI iri = vf.createIRI("http://www.wikidata.org/entity/" + wikidataId);
         String query = String.join("\n",
             SPARQL_PREFIX,
             "SELECT DISTINCT ?label ?p WHERE ",
             "  {",
-            "    {",
-            "      {",
-            "        GRAPH " + STATEMENTS,
-            "          { ?e1  ?rd ?m . ?m ?p ?e2 . }",
-            "      }",
-            "      UNION",
-            "      {",
-            "        GRAPH " + STATEMENTS,
-            "          { ?e2 ?p ?m . ?m ?rr ?e1 . }",
-            "      }",
-            "    }",
-            "    {",
-            "      GRAPH " + TERMS + " { ?e1 rdfs:label ?label. }",
-            "      FILTER ( lang(?label) = \""
-                    + (aKb.getDefaultLanguage() != null ? aKb.getDefaultLanguage() : "en") + "\" )",
-            "    }",
+            "    { ?e1  ?rd ?m . ?m ?p ?e2 . }",
+            "    UNION",
+            "    { ?e2 ?p ?m . ?m ?rr ?e1 . }",
+            "    ?e1 ?labelIri ?label. ",
             "  }",
-            " LIMIT " + limit);
+            " LIMIT " + aLimit);
 
         TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, query);
-        tupleQuery.setBinding("e2", iri);
+        tupleQuery.setBinding("language", vf.createLiteral((aKb.getDefaultLanguage() != null)
+            ? aKb.getDefaultLanguage() : "en"));
+        tupleQuery.setBinding("e2", vf.createIRI(aIri));
+        tupleQuery.setBinding("labelIri", aKb.getLabelIri());
         return tupleQuery;
     }
 }

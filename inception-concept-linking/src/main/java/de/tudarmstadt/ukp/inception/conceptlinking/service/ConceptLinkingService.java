@@ -23,10 +23,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
@@ -41,6 +43,7 @@ import org.apache.commons.text.similarity.LevenshteinDistance;
 import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.eclipse.rdf4j.model.Value;
+import org.eclipse.rdf4j.model.impl.SimpleLiteral;
 import org.eclipse.rdf4j.query.BindingSet;
 import org.eclipse.rdf4j.query.QueryEvaluationException;
 import org.eclipse.rdf4j.query.TupleQuery;
@@ -98,11 +101,6 @@ public class ConceptLinkingService
     private Set<String> typeBlacklist = new HashSet<>(Arrays
         .asList("commonsmedia", "external-id", "globe-coordinate", "math", "monolingualtext",
             "quantity", "string", "url", "wikibase-property"));
-
-    private static final String WIKIDATA_PREFIX = "http://www.wikidata.org/entity/";
-    private static final String POS_VERB_PREFIX = "V";
-    private static final String POS_NOUN_PREFIX = "N";
-    private static final String POS_ADJECTIVE_PREFIX = "J";
 
     private Map<ImmutablePair<Project, String>, Set<CandidateEntity>> candidateCache;
     private Map<ImmutablePair<Project, String>, SemanticSignature> semanticSignatureCache;
@@ -169,7 +167,7 @@ public class ConceptLinkingService
             }
         }
 
-        return candidatesFullText;
+        return distinctByIri(candidatesFullText, aKB);
     }
 
     /**
@@ -192,7 +190,7 @@ public class ConceptLinkingService
         catch (QueryEvaluationException e) {
             logger.error("Query evaluation was unsuccessful: ", e);
         }
-        return candidates;
+        return distinctByIri(candidates, aKB);
     }
 
     private void addFullTextCandidates(KnowledgeBase aKB, Set<CandidateEntity> aFullTextCandidates,
@@ -224,6 +222,7 @@ public class ConceptLinkingService
                 Value label = solution.getValue("label");
                 Value altLabel = solution.getValue("altLabel");
                 Value description = solution.getValue("description");
+                Optional<String> language = ((SimpleLiteral) solution.getValue("label")).getLanguage();
 
                 CandidateEntity newEntity = new CandidateEntity(
                     (e2 != null) ? e2.stringValue() : "",
@@ -231,7 +230,8 @@ public class ConceptLinkingService
                     (altLabel != null) ? altLabel.stringValue() :
                         // Exact matching does not use altLabel
                         (label != null) ? label.stringValue() : "",
-                    (description != null) ? description.stringValue() : "");
+                    (description != null) ? description.stringValue() : "",
+                    language.orElse(""));
 
                 candidates.add(newEntity);
             }
@@ -320,14 +320,18 @@ public class ConceptLinkingService
         }
 
         // Set frequency
-        aCandidatesFullText.forEach(l -> {
-            String wikidataId = l.getIRI().replace(WIKIDATA_PREFIX, "");
-
-            if (entityFrequencyMap != null && entityFrequencyMap.get(wikidataId) != null) {
-                l.setFrequency(entityFrequencyMap.get(wikidataId));
-            }
-
-        });
+        if (entityFrequencyMap != null) {
+            aCandidatesFullText.forEach(l -> {
+                String key = l.getIRI();
+                // For Virtuoso KBs
+                if (aKB.getFtsIri().toString().equals("bif:contains")) {
+                    key = key.replace("http://www.wikidata.org/entity/", "");
+                    if (entityFrequencyMap.get(key) != null) {
+                        l.setFrequency(entityFrequencyMap.get(key));
+                    }
+                }
+            });
+        }
 
         // Sort full-text matching candidates by frequency and do cutoff by a threshold
         List<CandidateEntity> result = sortByFrequency(new ArrayList<>(aCandidatesFullText))
@@ -339,9 +343,11 @@ public class ConceptLinkingService
 
         // Set the feature values
         result.parallelStream().forEach(l -> {
-            String wikidataId = l.getIRI().replace(WIKIDATA_PREFIX, "");
-            
-            l.setIdRank(Math.log(Double.parseDouble(wikidataId.substring(1))));
+            // For Virtuoso KBs
+            if (aKB.getFtsIri().toString().equals("bif:contains")) {
+                String wikidataId = l.getIRI().replace("http://www.wikidata.org/entity/", "");
+                l.setIdRank(Math.log(Double.parseDouble(wikidataId.substring(1))));
+            }
 
             String altLabel = l.getAltLabel();
             LevenshteinDistance lev = new LevenshteinDistance();
@@ -349,7 +355,7 @@ public class ConceptLinkingService
             l.setLevContext(lev.apply(tokensToString(mentionContext), altLabel));
             l.setLevTypedString(lev.apply(aTypedString, altLabel));
 
-            SemanticSignature sig = getSemanticSignature(aKB, wikidataId);
+            SemanticSignature sig = getSemanticSignature(aKB, l.getIRI());
             Set<String> relatedEntities = sig.getRelatedEntities();
             Set<String> signatureOverlap = new HashSet<>();
             for (String entityLabel : relatedEntities) {
@@ -420,9 +426,9 @@ public class ConceptLinkingService
     /*
      * Retrieves the semantic signature of an entity. See documentation of SemanticSignature class.
      */
-    private SemanticSignature getSemanticSignature(KnowledgeBase aKB, String aWikidataId)
+    private SemanticSignature getSemanticSignature(KnowledgeBase aKB, String aIri)
     {
-        ImmutablePair<Project, String> pair = new ImmutablePair<>(aKB.getProject(), aWikidataId);
+        ImmutablePair<Project, String> pair = new ImmutablePair<>(aKB.getProject(), aIri);
 
         if (semanticSignatureCache.containsKey(pair)) {
             return semanticSignatureCache.get(pair);
@@ -431,7 +437,7 @@ public class ConceptLinkingService
         Set<String> relatedRelations = new HashSet<>();
         Set<String> relatedEntities = new HashSet<>();
         try (RepositoryConnection conn = kbService.getConnection(aKB)) {
-            TupleQuery query = QueryUtil.generateSemanticSignatureQuery(conn, aWikidataId,
+            TupleQuery query = QueryUtil.generateSemanticSignatureQuery(conn, aIri,
                 properties.getSignatureQueryLimit(), aKB);
             try (TupleQueryResult result = query.evaluate()) {
                 while (result.hasNext()) {
@@ -506,13 +512,28 @@ public class ConceptLinkingService
             .debug("It took [{}] ms to rank candidates for mention [{}] and typed string [{}]",
                 System.currentTimeMillis() - afterRetrieval, aMention, aTypedString);
 
-
         return rankedCandidates.stream()
             .map(c -> new KBHandle(c.getIRI(), c.getLabel(), c.getDescription()))
             .distinct()
             .limit(properties.getCandidateDisplayLimit())
             .filter(h -> h.getIdentifier().contains(":"))
             .collect(Collectors.toList());
+    }
+
+    // Make sure that each concept is only represented once, preferably in the default language
+    private Set<CandidateEntity> distinctByIri(Set<CandidateEntity> aCandidates,
+        KnowledgeBase aKb)
+    {
+        Map<String, CandidateEntity> cMap = new HashMap<>();
+        for (CandidateEntity c : aCandidates) {
+            if (!cMap.containsKey(c.getIRI())) {
+                cMap.put(c.getIRI(), c);
+            }
+            else if (c.getLanguage().equals(aKb.getDefaultLanguage())) {
+                cMap.put(c.getIRI(), c);
+            }
+        }
+        return new HashSet<>(cMap.values());
     }
 
     /**
