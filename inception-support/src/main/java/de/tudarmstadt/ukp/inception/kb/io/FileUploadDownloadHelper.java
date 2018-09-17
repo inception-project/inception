@@ -18,7 +18,11 @@
 package de.tudarmstadt.ukp.inception.kb.io;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.wicket.Application;
@@ -27,14 +31,16 @@ import org.apache.wicket.util.file.IFileCleaner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class FileUploadHelper
+public class FileUploadDownloadHelper
 {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final IFileCleaner fileTracker;
 
-    public FileUploadHelper(Application application)
+    private final String INCEPTION_TMP_FILE_PREFIX = "inception_file";
+
+    public FileUploadDownloadHelper(Application application)
     {
         fileTracker = application.getResourceSettings().getFileCleaner();
     }
@@ -49,15 +55,28 @@ public class FileUploadHelper
      * @return A handle to the created temporary file
      * @throws Exception
      */
-    public File writeToTemporaryFile(FileUpload fileUpload, Object marker) throws Exception
+    public File writeFileUploadToTemporaryFile(FileUpload fileUpload, Object marker)
+        throws Exception
     {
         String fileName = fileUpload.getClientFileName();
-        File tmpFile = File.createTempFile("inception_upload", fileName);
+        File tmpFile = File.createTempFile(INCEPTION_TMP_FILE_PREFIX, fileName);
         log.debug("Creating temporary file for [{}] in [{}]", fileName, tmpFile.getAbsolutePath());
         fileTracker.track(tmpFile, marker);
         try (InputStream is = fileUpload.getInputStream()) {
             FileUtils.copyInputStreamToFile(is, tmpFile);
         }
+        return tmpFile;
+    }
+
+    public File writeFileDownloadToTemporaryFile(String downloadUrl, Object marker) throws
+        IOException
+    {
+        Path pathName = Paths.get(downloadUrl);
+        String fileName = pathName.getFileName().toString();
+        File tmpFile = File.createTempFile(INCEPTION_TMP_FILE_PREFIX, fileName);
+        log.debug("Creating temporary file for [{}] in [{}]", fileName, tmpFile.getAbsolutePath());
+        fileTracker.track(tmpFile, marker);
+        FileUtils.copyURLToFile(new URL(downloadUrl), tmpFile);
         return tmpFile;
     }
 }

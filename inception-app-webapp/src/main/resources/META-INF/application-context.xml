@@ -35,6 +35,18 @@
       <context:exclude-filter 
         expression="de.tudarmstadt.ukp.clarin.webanno.automation.service.export.AutomationTrainingDocumentExporter" 
         type="assignable" />
+      <context:exclude-filter 
+        expression="de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageMenuItem" 
+        type="assignable" />
+      <context:exclude-filter 
+        expression="de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.CurationPageMenuItem" 
+        type="assignable" />
+      <context:exclude-filter 
+        expression="de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.page.MonitoringPageMenuItem" 
+        type="assignable" />
+      <context:exclude-filter 
+        expression="de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.page.AgreementPageMenuItem" 
+        type="assignable" />
     </context:component-scan>
     <context:component-scan base-package="de.tudarmstadt.ukp.inception" />
 
