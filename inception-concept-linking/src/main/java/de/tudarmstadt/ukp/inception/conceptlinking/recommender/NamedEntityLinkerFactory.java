@@ -29,11 +29,11 @@ import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommendationEngine;
-import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommendationEngineFactory;
+import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommendationEngineFactoryImplBase;
 
 @Component
 public class NamedEntityLinkerFactory
-    implements RecommendationEngineFactory
+    extends RecommendationEngineFactoryImplBase<Void>
 {
     // This is a string literal so we can rename/refactor the class without it changing its ID
     // and without the database starting to refer to non-existing recommendation tools.
@@ -46,7 +46,6 @@ public class NamedEntityLinkerFactory
     private @Autowired ConceptLinkingService clService;
     private @Autowired AnnotationSchemaService annoService;
     private @Autowired FeatureSupportRegistry fsRegistry;
-
 
     @Override
     public String getId()

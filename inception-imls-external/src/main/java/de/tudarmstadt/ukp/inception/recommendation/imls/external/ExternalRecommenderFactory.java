@@ -17,39 +17,24 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.external;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.fromJsonString;
-import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.toJsonString;
-
-import java.io.IOException;
-
 import org.apache.wicket.model.IModel;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommendationEngine;
-import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommendationEngineFactory;
+import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommendationEngineFactoryImplBase;
 
 @Component
 public class ExternalRecommenderFactory
-    implements RecommendationEngineFactory
+    extends RecommendationEngineFactoryImplBase<ExternalRecommenderTraits>
 {
-
-    private final Logger log = LoggerFactory.getLogger(getClass());
-
     // This is a string literal so we can rename/refactor the class without it changing its ID
     // and without the database starting to refer to non-existing recommendation tools.
-    public static final String ID = 
-            "de.tudarmstadt.ukp.inception.recommendation.imls.external.ExternalClassificationTool";
+    public static final String ID = "de.tudarmstadt.ukp.inception.recommendation.imls.external.ExternalClassificationTool";
 
-    private @Autowired RecommendationService recommendationService;
-    
     @Override
     public String getId()
     {
@@ -57,7 +42,8 @@ public class ExternalRecommenderFactory
     }
 
     @Override
-    public RecommendationEngine build(Recommender aRecommender) {
+    public RecommendationEngine build(Recommender aRecommender)
+    {
         ExternalRecommenderTraits traits = readTraits(aRecommender);
         traits.setRemoteUrl("http://localhost:30500");
         return new ExternalRecommender(aRecommender, traits);
@@ -75,39 +61,20 @@ public class ExternalRecommenderFactory
         if (aLayer == null || aFeature == null) {
             return false;
         }
-        
+
         return (aLayer.isLockToTokenOffset() || aLayer.isMultipleTokens())
                 && WebAnnoConst.SPAN_TYPE.equals(aLayer.getType());
     }
 
     @Override
-    public org.apache.wicket.Component createTraitsEditor(String aId,
-            IModel<Recommender> aModel)
+    public org.apache.wicket.Component createTraitsEditor(String aId, IModel<Recommender> aModel)
     {
         return new ExternalRecommenderTraitsEditor(aId, aModel);
     }
-    
-    private ExternalRecommenderTraits readTraits(Recommender aRecommender) {
-        ExternalRecommenderTraits traits = null;
-        try {
-            traits = fromJsonString(ExternalRecommenderTraits.class, aRecommender.getTraits());
-        } catch (IOException e) {
-            log.error("Error while reading traits", e);
-        }
 
-        if (traits == null) {
-            traits = new ExternalRecommenderTraits();
-        }
-
-        return traits;
-    }
-
-    private void writeTraits(Recommender aRecommender, ExternalRecommenderTraits aTraits) {
-        try {
-            String json = toJsonString(aTraits);
-            aRecommender.setTraits(json);
-        } catch (IOException e) {
-            log.error("Error while writing traits", e);
-        }
+    @Override
+    public ExternalRecommenderTraits createTraits()
+    {
+        return new ExternalRecommenderTraits();
     }
 }

@@ -30,6 +30,7 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.ajax.markup.html.form.AjaxButton;
 import org.apache.wicket.behavior.Behavior;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
@@ -197,9 +198,15 @@ public class RecommenderEditorPanel
             private static final long serialVersionUID = -3902555252753037183L;
 
             @Override
-            protected void onAfterSubmit(AjaxRequestTarget target, Form<?> aForm)
+            protected void onError(AjaxRequestTarget aTarget, Form<?> aForm)
             {
-                actionSave(target, (Form) aForm);
+                aTarget.addChildren(getPage(), IFeedback.class);
+            };
+
+            @Override
+            protected void onAfterSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
+            {
+                actionSave(aTarget, (Form) aForm);
             };
         });
         form.add(new LambdaAjaxLink("delete", this::actionDelete)

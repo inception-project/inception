@@ -36,12 +36,14 @@ public class ExternalRecommenderTraitsEditor
     private static final String MID_FORM = "form";
 
     private @SpringBean ExternalRecommenderFactory toolFactory;
+    
     private final ExternalRecommenderTraits traits;
 
     public ExternalRecommenderTraitsEditor(String aId, IModel<Recommender> aRecommender)
     {
         super(aId, aRecommender);
-        traits =  new ExternalRecommenderTraits();
+        
+        traits = toolFactory.readTraits(aRecommender.getObject());
 
         Form<ExternalRecommenderTraits> form = new Form<ExternalRecommenderTraits>(MID_FORM,
                 CompoundPropertyModel.of(Model.of(traits)))
@@ -52,7 +54,7 @@ public class ExternalRecommenderTraitsEditor
             protected void onSubmit()
             {
                 super.onSubmit();
-                // toolFactory.writeTraits(recommender, traits);
+                toolFactory.writeTraits(aRecommender.getObject(), traits);
             }
         };
 

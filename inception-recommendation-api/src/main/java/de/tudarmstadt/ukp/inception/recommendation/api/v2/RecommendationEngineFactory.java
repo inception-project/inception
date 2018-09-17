@@ -18,33 +18,33 @@
 package de.tudarmstadt.ukp.inception.recommendation.api.v2;
 
 import org.apache.wicket.Component;
-import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 
-public interface RecommendationEngineFactory
+public interface RecommendationEngineFactory<T>
 {
     String getId();
 
     String getName();
-    
-    RecommendationEngine build(Recommender aRecommender);
-
-    boolean accepts(AnnotationLayer aLayer, AnnotationFeature aFeature);
-
-    default Component createTraitsEditor(String aId, IModel<Recommender> aModel) {
-        return new EmptyPanel(aId);
-    }
 
     /**
      * @return True if the recommender is deprecated, i.e. users should not create new recommenders
      *         based on this factory
      */
-    default boolean isDeprecated()
-    {
-        return false;
-    }
+    boolean isDeprecated();
+
+    RecommendationEngine build(Recommender aRecommender);
+
+    boolean accepts(AnnotationLayer aLayer, AnnotationFeature aFeature);
+
+    T createTraits();
+
+    Component createTraitsEditor(String aId, IModel<Recommender> aModel);
+
+    T readTraits(Recommender aRecommender);
+
+    void writeTraits(Recommender aRecommender, T aTraits);
 }
