@@ -143,23 +143,23 @@ public class QueryUtil
         return tupleQuery;
     }
 
-//    private static String getFullTextMatchingQueryPart(int aLimit)
-//    {
-//        return  String.join("\n",
-//            "    SELECT DISTINCT ?e2 ?altLabel ?description WHERE",
-//            "    {",
-//            "      ?e2 ?labelIri ?altLabel.",
-//            "      ?altLabel ?ftsIri ?string. ",
-//            "      OPTIONAL",
-//            "      {",
-//            "        ?e2 ?descriptionIri ?description.",
-//            "      }",
-//            "    }",
-//            "    LIMIT " + aLimit);
-//    }
+    private static String getFullTextMatchingQueryPartVirtuoso(int aLimit)
+    {
+        return  String.join("\n",
+            "    SELECT DISTINCT ?e2 ?altLabel ?description WHERE",
+            "    {",
+            "      ?e2 ?labelIri ?altLabel.",
+            "      ?altLabel ?ftsIri ?string. ",
+            "      OPTIONAL",
+            "      {",
+            "        ?e2 ?descriptionIri ?description.",
+            "      }",
+            "    }",
+            "    LIMIT " + aLimit);
+    }
 
     // http://culturecloud.ru/resource/Help:Search#Full_Text_Search
-    private static String getFullTextMatchingQueryPart(int aLimit)
+    private static String getFullTextMatchingQueryPartLucene(int aLimit)
     {
         return  String.join("\n",
             "    SELECT DISTINCT ?e2 ?altLabel ?description WHERE",
@@ -190,7 +190,7 @@ public class QueryUtil
     {
         aString = RenderUtils.escape(aString).toLowerCase(Locale.ENGLISH);
 
-        String fullTextMatchingString = getFullTextMatchingQueryPart(aLimit);
+        String fullTextMatchingString = getFullTextMatchingQueryPartLucene(aLimit);
 
         String query = String.join("\n",
             SPARQL_PREFIX,

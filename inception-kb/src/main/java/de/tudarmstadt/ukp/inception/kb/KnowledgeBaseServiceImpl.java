@@ -50,6 +50,7 @@ import org.apache.lucene.document.Field;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.index.Term;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.eclipse.rdf4j.common.iteration.Iterations;
@@ -367,6 +368,15 @@ public class KnowledgeBaseServiceImpl
             String identifier = generateIdentifier(conn, kb);
             aConcept.setIdentifier(identifier);
             aConcept.write(conn, kb);
+            if (kb.getType().equals(RepositoryType.LOCAL)) {
+                try {
+                    indexCreatedConcept(aConcept.getIdentifier(), aConcept.getName(),
+                        getIndexWriter(kb));
+                }
+                catch (IOException e) {
+                    log.error("Could not get IndexWriter.", e);
+                }
+            }
             return new KBHandle(identifier, aConcept.getName());
         });
     }
@@ -411,6 +421,15 @@ public class KnowledgeBaseServiceImpl
         update(kb, (conn) -> {
             conn.remove(aConcept.getOriginalStatements());
             aConcept.write(conn, kb);
+            if (kb.getType().equals(RepositoryType.LOCAL)) {
+                try {
+                    indexUpdatedConcept(aConcept.getIdentifier(), aConcept.getName(),
+                        getIndexWriter(kb));
+                }
+                catch (IOException e) {
+                    log.error("Could not get IndexWriter.", e);
+                }
+            }
             return null;
         });
     }
@@ -419,6 +438,15 @@ public class KnowledgeBaseServiceImpl
     public void deleteConcept(KnowledgeBase kb, KBConcept aConcept)
     {
         getReificationStrategy(kb).deleteConcept(kb, aConcept);
+        if (kb.getType().equals(RepositoryType.LOCAL)) {
+            try {
+                indexDeletedConcept(aConcept.getIdentifier(), aConcept.getName(),
+                    getIndexWriter(kb));
+            }
+            catch (IOException e) {
+                log.error("Could not get IndexWriter.", e);
+            }
+        }
     }
 
     @Override
@@ -459,6 +487,15 @@ public class KnowledgeBaseServiceImpl
             String identifier = generateIdentifier(conn, kb);
             aProperty.setIdentifier(identifier);
             aProperty.write(conn, kb);
+            if (kb.getType().equals(RepositoryType.LOCAL)) {
+                try {
+                    indexCreatedConcept(aProperty.getIdentifier(), aProperty.getName(),
+                        getIndexWriter(kb));
+                }
+                catch (IOException e) {
+                    log.error("Could not get IndexWriter.", e);
+                }
+            }
             return new KBHandle(identifier, aProperty.getName());
         });
     }
@@ -492,6 +529,15 @@ public class KnowledgeBaseServiceImpl
         update(kb, (conn) -> {
             conn.remove(aProperty.getOriginalStatements());
             aProperty.write(conn, kb);
+            if (kb.getType().equals(RepositoryType.LOCAL)) {
+                try {
+                    indexUpdatedConcept(aProperty.getIdentifier(), aProperty.getName(),
+                        getIndexWriter(kb));
+                }
+                catch (IOException e) {
+                    log.error("Could not get IndexWriter.", e);
+                }
+            }
             return null;
         });
     }
@@ -500,6 +546,14 @@ public class KnowledgeBaseServiceImpl
     public void deleteProperty(KnowledgeBase kb, KBProperty aType)
     {
         getReificationStrategy(kb).deleteProperty(kb, aType);
+        if (kb.getType().equals(RepositoryType.LOCAL)) {
+            try {
+                indexDeletedConcept(aType.getIdentifier(), aType.getName(), getIndexWriter(kb));
+            }
+            catch (IOException e) {
+                log.error("Could not get IndexWriter.", e);
+            }
+        }
     }
 
     @Override
@@ -1140,47 +1194,95 @@ public class KnowledgeBaseServiceImpl
         return Optional.empty();
     }
 
-    @Override
-    public void indexLocalKb(KnowledgeBase aKb) throws IOException
+    private IndexWriter getIndexWriter(KnowledgeBase aKb) throws IOException
     {
         Analyzer analyzer = new StandardAnalyzer();
         Directory directory = FSDirectory
             .open(new File(luceneIndexDir, aKb.getRepositoryId()).toPath());
-        IndexWriter indexWriter = new IndexWriter(directory, new IndexWriterConfig(analyzer));
-
-        try (RepositoryConnection conn = getConnection(aKb)) {
-            RepositoryResult<Statement> stmts = RdfUtils
-                .getStatementsSparql(conn, null, aKb.getLabelIri(), null,
-                    Integer.MAX_VALUE, false, null);
-            while (stmts.hasNext()) {
-                Statement stmt = stmts.next();
-                String id = stmt.getSubject().stringValue();
-                String label = stmt.getObject().stringValue();
-                String predicate = stmt.getPredicate().stringValue();
-                indexEntity(id, label, predicate, indexWriter);
-            }
-        }
-
-        indexWriter.close();
+        return new IndexWriter(directory, new IndexWriterConfig(analyzer));
     }
 
-    private void indexEntity(String aId, String aLabel, String aPredictate,
-        IndexWriter aIndexWriter)
+    @Override
+    public void indexLocalKb(KnowledgeBase aKb)
+    {
+        try {
+            IndexWriter indexWriter = getIndexWriter(aKb);
+
+            try (RepositoryConnection conn = getConnection(aKb)) {
+                RepositoryResult<Statement> stmts = RdfUtils
+                    .getStatementsSparql(conn, null, aKb.getLabelIri(), null, Integer.MAX_VALUE,
+                        false, null);
+                while (stmts.hasNext()) {
+                    Statement stmt = stmts.next();
+                    String id = stmt.getSubject().stringValue();
+                    String label = stmt.getObject().stringValue();
+                    indexCreatedConcept(id, label, indexWriter);
+                }
+            }
+            indexWriter.close();
+        }
+        catch (IOException e) {
+            log.error("Could not index local KB.", e);
+        }
+    }
+
+    private void indexCreatedConcept(String aId, String aLabel, IndexWriter aIndexWriter)
     {
         try {
             String FIELD_ID = "id";
             String FIELD_CONTENT = "label";
+
             Document doc = new Document();
             doc.add(new StringField(FIELD_ID, aId, Field.Store.YES));
             doc.add(new StringField(FIELD_CONTENT, aLabel, Field.Store.YES));
+
             aIndexWriter.addDocument(doc);
             aIndexWriter.commit();
-
-            log.info("Entity indexed with id [{}] and label [{}], predicate [{}]",
-                aId, aLabel, aPredictate);
+            aIndexWriter.close();
+            log.info("LuceneIndex updated by creating Concept with id [{}] and label [{}].", aId,
+                aLabel);
         }
         catch (IOException e) {
-            log.error("Could not index entity with id [{}] and label [{}]", aId, aLabel);
+            log.error("Could not add concept with id [{}] and label [{}] to LuceneIndex.", aId,
+                aLabel);
+        }
+    }
+
+    private void indexUpdatedConcept(String aId, String aLabel, IndexWriter aIndexWriter)
+    {
+        String FIELD_ID = "id";
+        String FIELD_CONTENT = "label";
+
+        Document doc = new Document();
+        doc.add(new StringField(FIELD_ID, aId, Field.Store.YES));
+        doc.add(new StringField(FIELD_CONTENT, aLabel, Field.Store.YES));
+
+        try {
+            aIndexWriter.updateDocument(new Term(FIELD_ID, aId), doc);
+            aIndexWriter.commit();
+            aIndexWriter.close();
+            log.info("LuceneIndex updated by updating Concept with id [{}] and label [{}].", aId,
+                aLabel);
+        }
+        catch (IOException e) {
+            log.error("Could not update concept with id [{}] and label [{}] in LuceneIndex.", aId,
+                aLabel);
+        }
+    }
+
+    private void indexDeletedConcept(String aId, String aLabel, IndexWriter aIndexWriter)
+    {
+        String FIELD_ID = "id";
+
+        try {
+            aIndexWriter.deleteDocuments(new Term(FIELD_ID, aId));
+            aIndexWriter.commit();
+            aIndexWriter.close();
+            log.info("Concept deleted with id [{}] and label [{}].", aId, aLabel);
+        }
+        catch (IOException e) {
+            log.error("Could not remove concept with id [{}] and label [{}] from LuceneIndex.", aId,
+                aLabel);
         }
     }
 }
