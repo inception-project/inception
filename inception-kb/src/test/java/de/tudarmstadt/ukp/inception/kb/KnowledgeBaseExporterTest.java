@@ -178,12 +178,10 @@ public class KnowledgeBaseExporterTest
         
         KnowledgeBase kb2 = buildKnowledgeBase("kb2");
         kb2.setType(RepositoryType.REMOTE);
-        kb2.setBaseConceptIri(OWL.NOTHING);
         kb2.setClassIri(OWL.CLASS);
 
         KnowledgeBase kb3 = buildKnowledgeBase("kb3");
         kb3.setType(RepositoryType.REMOTE);
-        kb3.setBaseConceptIri(OWL.NOTHING);
         kb3.setClassIri(RDFS.CLASS);
 
         KnowledgeBase kb4 = buildKnowledgeBase("kb4");

@@ -1514,7 +1514,6 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         assertThat(profiles)
             .allSatisfy((key, profile) -> {
                 assertThat(key).isNotNull();
-                assertThat(profile).hasNoNullFieldsOrProperties();
             });
 
     }
@@ -1538,9 +1537,11 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         String descriptionIri = "http://www.w3.org/2000/01/rdf-schema#comment";
         String propertyLabelIri = "http://www.w3.org/2000/01/rdf-schema#label";
         String propertyDescriptionIri = "http://www.w3.org/2000/01/rdf-schema#comment";
-
-        KnowledgeBaseMapping testMapping = new KnowledgeBaseMapping(classIri, subclassIri, typeIri,
-            descriptionIri, label, propertyTypeIri, propertyLabelIri, propertyDescriptionIri);
+        String rootConcept = null;
+        
+        KnowledgeBaseMapping testMapping = new KnowledgeBaseMapping(classIri, subclassIri,
+            typeIri, descriptionIri, label, propertyTypeIri, propertyLabelIri,
+            propertyDescriptionIri,rootConcept);
         KnowledgeBaseProfile testProfile = new KnowledgeBaseProfile();
         testProfile.setName(name);
         testProfile.setMapping(testMapping);

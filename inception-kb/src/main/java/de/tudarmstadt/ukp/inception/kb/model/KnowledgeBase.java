@@ -41,6 +41,9 @@ import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
 import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.ValueFactory;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
@@ -136,12 +139,6 @@ public class KnowledgeBase
      */
     @Column(nullable = false)
     private IRI propertyDescriptionIri;
-
-    /**
-     * The IRI for a base concept for instance for DBPedia as owl:Thing
-     */
-    @Column(nullable = false)
-    private IRI baseConceptIri;
     
     @Column(nullable = false)
     private boolean readOnly;
@@ -374,16 +371,6 @@ public class KnowledgeBase
     {
         explicitlyDefinedRootConcepts = aExplicitlyDefinedRootConcepts;
     }
-    
-    public IRI getBaseConceptIri()
-    {
-        return baseConceptIri;
-    }
-
-    public void setBaseConceptIri(IRI aBaseConceptIri)
-    {
-        this.baseConceptIri = aBaseConceptIri;
-    }
 
     public void applyMapping(KnowledgeBaseMapping aMapping)
     {
@@ -395,7 +382,7 @@ public class KnowledgeBase
         setPropertyTypeIri(aMapping.getPropertyTypeIri());
         setPropertyLabelIri(aMapping.getPropertyLabelIri());
         setPropertyDescriptionIri(aMapping.getPropertyDescriptionIri());
-        setBaseConceptIri(aMapping.getBaseConceptIri());
+        applyRootConcept(aMapping);
     }
     
     @Override
@@ -432,5 +419,18 @@ public class KnowledgeBase
     @Override
     public int hashCode() {
         return Objects.hash(repositoryId, name);
+    }
+    
+    public void applyRootConcept(KnowledgeBaseMapping aMapping) {
+        if (aMapping.getRootConcept() != null
+                && !(aMapping.getRootConcept().equals(OWL.NOTHING.toString()))) {
+            ValueFactory vf = SimpleValueFactory.getInstance();
+            IRI rootConcept = vf
+                    .createIRI(aMapping.getRootConcept());
+            if (explicitlyDefinedRootConcepts.isEmpty()) {
+                explicitlyDefinedRootConcepts.add(rootConcept);
+                setExplicitlyDefinedRootConcepts(explicitlyDefinedRootConcepts);
+            }                     
+        }
     }
 }

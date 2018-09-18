@@ -112,7 +112,6 @@ public class KnowledgeBaseExporter implements ProjectExporter
                 // set url for remote KB
                 RepositoryImplConfig cfg = kbService.getKnowledgeBaseConfig(kb);
                 String url = ((SPARQLRepositoryConfig) cfg).getQueryEndpointUrl();
-                exportedKB.setBaseConceptIri(kb.getBaseConceptIri().stringValue());
                 exportedKB.setRemoteURL(url);
             }
             else {
@@ -178,7 +177,6 @@ public class KnowledgeBaseExporter implements ProjectExporter
                 importKnowledgeBaseFiles(aZip, kb);
             }
             else {
-                kb.setBaseConceptIri(vf.createIRI(exportedKB.getBaseConceptIri()));
                 cfg = kbService.getRemoteConfig(exportedKB.getRemoteURL());
                 kbService.registerKnowledgeBase(kb, cfg);
             }

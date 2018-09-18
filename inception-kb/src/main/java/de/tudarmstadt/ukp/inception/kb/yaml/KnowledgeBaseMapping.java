@@ -55,8 +55,8 @@ public class KnowledgeBaseMapping implements Serializable
     @JsonProperty("property-description")
     private IRI propertyDescriptionIri;
     
-    @JsonProperty("base-concept")
-    private IRI baseConceptIri;
+    @JsonProperty("root-concept")
+    private String rootConcept;
     
     
     @JsonCreator public KnowledgeBaseMapping(@JsonProperty("class") String classIri,
@@ -67,7 +67,7 @@ public class KnowledgeBaseMapping implements Serializable
         @JsonProperty("property-type") String propertyTypeIri,
         @JsonProperty("property-label") String propertyLabelIri,
         @JsonProperty("property-description") String propertyDescriptionIri,
-        @JsonProperty("base-concept") String baseConceptIri)
+        @JsonProperty("root-concept") String rootConcept)
     {
         SimpleValueFactory vf = SimpleValueFactory.getInstance();
         this.classIri = vf.createIRI(classIri);
@@ -78,8 +78,8 @@ public class KnowledgeBaseMapping implements Serializable
         this.propertyTypeIri = vf.createIRI(propertyTypeIri);
         this.propertyLabelIri = vf.createIRI(propertyLabelIri);
         this.propertyDescriptionIri = vf.createIRI(propertyDescriptionIri);
-        this.baseConceptIri = vf.createIRI(baseConceptIri);
-    }
+        this.rootConcept = rootConcept;
+    }        
     
     public KnowledgeBaseMapping() {
         
@@ -165,14 +165,14 @@ public class KnowledgeBaseMapping implements Serializable
         propertyDescriptionIri = aPropertyDescriptionIri;
     }
 
-    public IRI getBaseConceptIri()
+    public String getRootConcept()
     {
-        return baseConceptIri;
+        return rootConcept;
     }
 
-    public void setBaseConcept(IRI aBaseConceptIri)
+    public void setRootConcept(String rootConcept)
     {
-        this.baseConceptIri = aBaseConceptIri;
+        this.rootConcept = rootConcept;
     }
 
     @Override
@@ -193,13 +193,13 @@ public class KnowledgeBaseMapping implements Serializable
                 && Objects.equals(descriptionIri, that.descriptionIri)
                 && Objects.equals(propertyLabelIri, that.propertyLabelIri)
                 && Objects.equals(propertyDescriptionIri, that.propertyDescriptionIri)
-                && Objects.equals(baseConceptIri, that.baseConceptIri);
+                && Objects.equals(rootConcept, that.rootConcept);
     }
 
     @Override
     public int hashCode()
     {
         return Objects.hash(classIri, subclassIri, typeIri, propertyTypeIri, descriptionIri,
-                labelIri, propertyLabelIri, propertyDescriptionIri, baseConceptIri);
+                labelIri, propertyLabelIri, propertyDescriptionIri);
     }
 }

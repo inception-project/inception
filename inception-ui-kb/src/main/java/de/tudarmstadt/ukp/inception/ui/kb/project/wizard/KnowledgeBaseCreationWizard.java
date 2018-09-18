@@ -58,7 +58,6 @@ import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.validation.IValidator;
 import org.apache.wicket.validation.ValidationError;
-import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -469,6 +468,8 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
                         model.getObject().setUrl(item.getModelObject().getAccess().getAccessUrl());
                         setKbIRIsAccordingToProfile(model.getObject().getKb(),
                             item.getModelObject());
+                       
+                            
                         t.add(urlField);
                     });
                     link.add(new Label("suggestionLabel", item.getModelObject().getName()));
@@ -520,9 +521,7 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
         public void applyState()
         {   
             KnowledgeBaseWrapper wrapper = wizardDataModel.getObject();
-            if (wrapper.getKb().getBaseConceptIri() == null) {
-                wrapper.getKb().setBaseConceptIri(OWL.NOTHING);
-            }
+            
             wrapper.getKb().setProject(projectModel.getObject());
 
             try {
