@@ -176,8 +176,8 @@ public class KnowledgeBase
     /**
      * Limits the number of results that can be retrieved from a SPARQL query.
      */
-    @Column
-    private Integer sparqlQueryResultLimit = 1000;
+    @Column(nullable = false)
+    private int maxResults;
 
     public String getRepositoryId() {
         return repositoryId;
@@ -375,14 +375,14 @@ public class KnowledgeBase
         explicitlyDefinedRootConcepts = aExplicitlyDefinedRootConcepts;
     }
 
-    public int getSparqlQueryResultLimit()
+    public int getMaxResults()
     {
-        return sparqlQueryResultLimit;
+        return maxResults;
     }
 
-    public void setSparqlQueryResultLimit(int aSparqlQueryResultLimit)
+    public void setMaxResults(int aSparqlQueryResultLimit)
     {
-        sparqlQueryResultLimit = aSparqlQueryResultLimit;
+        maxResults = aSparqlQueryResultLimit;
     }
 
     public void applyMapping(KnowledgeBaseMapping aMapping)

@@ -68,7 +68,7 @@ public final class SPARQLQueryStore
                 , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage(),"?l")
                 , optionalLanguageFilteredValue("?pDESCRIPTION", aKB.getDefaultLanguage(),"?d")
                 , "}"
-                , "LIMIT " + aKB.getSparqlQueryResultLimit());
+                , "LIMIT " + aKB.getMaxResults());
     }
     
     /** 
@@ -83,7 +83,7 @@ public final class SPARQLQueryStore
                 , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage(),"?l")
                 , optionalLanguageFilteredValue("?pDESCRIPTION", aKB.getDefaultLanguage(),"?d")
                 , "}"
-                , "LIMIT " + aKB.getSparqlQueryResultLimit());
+                , "LIMIT " + aKB.getMaxResults());
     }
     
     
@@ -105,7 +105,7 @@ public final class SPARQLQueryStore
                 , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage(),"?l")
                 , optionalLanguageFilteredValue("?pDESCRIPTION", aKB.getDefaultLanguage(),"?d")
                 , "} "
-                , "LIMIT " + aKB.getSparqlQueryResultLimit());
+                , "LIMIT " + aKB.getMaxResults());
     }
     
 
@@ -124,7 +124,7 @@ public final class SPARQLQueryStore
                 , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage(),"?l")
                 , optionalLanguageFilteredValue("?pDESCRIPTION", aKB.getDefaultLanguage(),"?d")
                 , "}"
-                , "LIMIT " + aKB.getSparqlQueryResultLimit());
+                , "LIMIT " + aKB.getMaxResults());
     }
     
     
@@ -145,7 +145,7 @@ public final class SPARQLQueryStore
                 , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage(),"?l")
                 , optionalLanguageFilteredValue("?pDESCRIPTION", aKB.getDefaultLanguage(),"?d")
                 , "}"
-                , "LIMIT " + aKB.getSparqlQueryResultLimit());
+                , "LIMIT " + aKB.getMaxResults());
     }
         
     /**
@@ -165,7 +165,7 @@ public final class SPARQLQueryStore
                 , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage(),"?l")
                 , optionalLanguageFilteredValue("?pDESCRIPTION", aKB.getDefaultLanguage(),"?d")
                 , "}"
-                , "LIMIT " + aKB.getSparqlQueryResultLimit());
+                , "LIMIT " + aKB.getMaxResults());
     }
     
     /**
@@ -180,7 +180,7 @@ public final class SPARQLQueryStore
                 , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage(),"?l")
                 , optionalLanguageFilteredValue("?pDESCRIPTION", aKB.getDefaultLanguage(),"?d")
                 , "}"
-                , "LIMIT " + aKB.getSparqlQueryResultLimit());
+                , "LIMIT " + aKB.getMaxResults());
 
     }
     

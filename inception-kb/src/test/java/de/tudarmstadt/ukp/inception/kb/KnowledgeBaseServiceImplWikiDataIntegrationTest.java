@@ -155,7 +155,7 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
     public void listRootConcepts() {
         List<KBHandle> rootConcepts = sut.listRootConcepts(kb, false);
 
-        assertThat(rootConcepts).as("Check that root concepts have been found").hasSize(kb.getSparqlQueryResultLimit());
+        assertThat(rootConcepts).as("Check that root concepts have been found").hasSize(kb.getMaxResults());
     }
 
     
@@ -163,7 +163,7 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
     public void listProperties() {
         Stream<String> properties = sut.listProperties(kb, true).stream().map(KBHandle::getIdentifier);
         
-        assertThat(properties).as("Check that properties have been found").hasSize(kb.getSparqlQueryResultLimit());
+        assertThat(properties).as("Check that properties have been found").hasSize(kb.getMaxResults());
     }
     
     @Test
@@ -221,7 +221,7 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
         kb_wikidata_direct.applyMapping(PROFILES.get("wikidata").getMapping());
         kb_wikidata_direct.setReification(reification);
         kb_wikidata_direct.setDefaultLanguage("en");
-        kb_wikidata_direct.setSparqlQueryResultLimit(1000);
+        kb_wikidata_direct.setMaxResults(1000);
        
         return kb_wikidata_direct;
     }

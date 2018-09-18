@@ -26,6 +26,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
+import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxEventBehavior;
@@ -60,6 +62,7 @@ import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.validation.IValidator;
 import org.apache.wicket.validation.ValidationError;
+import org.apache.wicket.validation.validator.RangeValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -85,6 +88,9 @@ import de.tudarmstadt.ukp.inception.ui.kb.project.KnowledgeBaseIriPanelMode;
 import de.tudarmstadt.ukp.inception.ui.kb.project.KnowledgeBaseListPanel;
 import de.tudarmstadt.ukp.inception.ui.kb.project.KnowledgeBaseWrapper;
 import de.tudarmstadt.ukp.inception.ui.kb.project.Validators;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import javax.annotation.Resource;
 
 /**
  * Wizard for registering a new knowledge base for a project.
@@ -108,6 +114,7 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
     private static final int MAXIMUM_REMOTE_REPO_SUGGESTIONS = 10;
 
     private @SpringBean KnowledgeBaseService kbService;
+    private @SpringBean KnowledgeBaseProperties kbproperties;
 
     private final Map<String, File> uploadedFiles;
     private final IModel<Project> projectModel;
@@ -171,8 +178,8 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
             add(repositoryTypeRadioButtons("type", "kb.type"));
             add(languageComboBox("language", model.bind("kb.defaultLanguage")));
             add(selectReificationStrategy("reification", "kb.reification"));
-            queryLimitField = queryLimitField("sparqlQueryResultLimit",
-                model.bind("kb.sparqlQueryResultLimit"));
+            queryLimitField = queryLimitField("maxResults",
+                model.bind("kb.maxResults"));
             add(queryLimitField);
             maxQueryLimitCheckBox = maxQueryLimitCheckbox("maxQueryLimit", new Model(false));
             add(maxQueryLimitCheckBox);
@@ -247,7 +254,11 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
 
         private TextField<Integer> queryLimitField(String id, IModel<Integer> model)
         {
-            TextField<Integer> queryLimit = new RequiredTextField<>(id, model);
+            if (model.getObject() == 0) {
+                model.setObject(kbproperties.getDefaultMaxResults());
+            }
+            TextField<Integer> queryLimit = new RequiredTextField<Integer>(id, model);
+            queryLimit.add(RangeValidator.range(0, kbproperties.getHardMaxResults()));
             queryLimit.setOutputMarkupId(true);
             return queryLimit;
         }
@@ -257,7 +268,7 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
                 @Override
                 public void onUpdate(AjaxRequestTarget aTarget) {
                     if (getModelObject()) {
-                        queryLimitField.setModelObject(Integer.MAX_VALUE);
+                        queryLimitField.setModelObject(kbproperties.getHardMaxResults());
                         queryLimitField.setEnabled(false);
                     }
                     else {

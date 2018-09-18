@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
@@ -47,6 +48,7 @@ import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.resource.IResourceStream;
+import org.apache.wicket.validation.validator.RangeValidator;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.repository.RepositoryException;
 import org.eclipse.rdf4j.repository.config.RepositoryConfigException;
@@ -113,6 +115,7 @@ public class KnowledgeBaseDetailsPanel
         .map(f -> f.getDefaultFileExtension()).collect(Collectors.toList());
 
     private @SpringBean KnowledgeBaseService kbService;
+    private @SpringBean KnowledgeBaseProperties kbProperties;
 
     private final IModel<KnowledgeBase> kbModel;
     private final CompoundPropertyModel<KnowledgeBaseWrapper> kbwModel;
@@ -448,8 +451,8 @@ public class KnowledgeBaseDetailsPanel
                 .add(LambdaBehavior.onConfigure(it -> it.setEnabled(false))));
             wmc.add(new CheckBox("supportConceptLinking", model.bind("kb.supportConceptLinking"))
                 .add(LambdaBehavior.onConfigure(it -> it.setEnabled(false))));
-            wmc.add(new RequiredTextField<>("sparqlQueryResultLimit",
-                model.bind("kb.sparqlQueryResultLimit"))
+            wmc.add(new RequiredTextField<>("maxResults",
+                model.bind("kb.maxResults"))
                 .add(LambdaBehavior.onConfigure(it -> it.setEnabled(false))));
 
         }
@@ -561,8 +564,8 @@ public class KnowledgeBaseDetailsPanel
                 KnowledgeBaseIriPanelMode.PROJECTSETTINGS));
             wmc.add(new CheckBox("enabled", model.bind("kb.enabled")));
             wmc.add(new CheckBox("supportConceptLinking", model.bind("kb.supportConceptLinking")));
-            queryLimitField = queryLimitField("sparqlQueryResultLimit",
-                model.bind("kb.sparqlQueryResultLimit"));
+            queryLimitField = queryLimitField("maxResults",
+                model.bind("kb.maxResults"));
             wmc.add(queryLimitField);
             maxQueryLimitCheckBox = maxQueryLimitCheckbox("maxQueryLimit", new Model(false));
             wmc.add(maxQueryLimitCheckBox);
@@ -614,7 +617,7 @@ public class KnowledgeBaseDetailsPanel
                 @Override
                 public void onUpdate(AjaxRequestTarget aTarget) {
                     if (getModelObject()) {
-                        queryLimitField.setModelObject(Integer.MAX_VALUE);
+                        queryLimitField.setModelObject(kbProperties.getHardMaxResults());
                         queryLimitField.setEnabled(false);
                     }
                     else {
@@ -628,7 +631,11 @@ public class KnowledgeBaseDetailsPanel
 
         private TextField<Integer> queryLimitField(String id, IModel<Integer> model)
         {
-            TextField<Integer> queryLimit = new RequiredTextField<>(id, model);
+            if (model.getObject() == 0) {
+                model.setObject(kbProperties.getDefaultMaxResults());
+            }
+            TextField<Integer> queryLimit = new RequiredTextField<Integer>(id, model);
+            queryLimit.add(RangeValidator.range(0, kbProperties.getHardMaxResults()));
             queryLimit.setOutputMarkupId(true);
             return queryLimit;
         }

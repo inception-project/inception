@@ -539,7 +539,7 @@ public class KnowledgeBaseServiceImpl
             // and only make use of the explicitly asserted types
             RepositoryResult<Statement> conceptStmts = RdfUtils
                 .getStatementsSparql(conn, vf.createIRI(aIdentifier), kb.getTypeIri(), null,
-                    kb.getSparqlQueryResultLimit(), false, null);
+                    kb.getMaxResults(), false, null);
 
             String conceptIdentifier = null;
             while (conceptStmts.hasNext() && conceptIdentifier == null) {
@@ -559,7 +559,7 @@ public class KnowledgeBaseServiceImpl
             // Read the instance
             try (RepositoryResult<Statement> instanceStmts = RdfUtils.getStatements(conn,
                     vf.createIRI(aIdentifier), kb.getTypeIri(), vf.createIRI(conceptIdentifier),
-                    true, kb.getSparqlQueryResultLimit())) {
+                    true, kb.getMaxResults())) {
                 if (instanceStmts.hasNext()) {
                     Statement kbStmt = instanceStmts.next();
                     KBInstance kbInst = KBInstance.read(conn, kbStmt, kb);
@@ -608,7 +608,7 @@ public class KnowledgeBaseServiceImpl
     public List<KBHandle> listInstances(KnowledgeBase kb, String aConceptIri, boolean aAll)
     {
         IRI conceptIri = SimpleValueFactory.getInstance().createIRI(aConceptIri);
-        return list(kb, conceptIri, false, aAll, kb.getSparqlQueryResultLimit());
+        return list(kb, conceptIri, false, aAll, kb.getMaxResults());
     }
 
     // Statements
@@ -839,7 +839,7 @@ public class KnowledgeBaseServiceImpl
             boolean aAll)
         throws QueryEvaluationException
     {
-        return listChildConcepts(aKB, aParentIdentifier, aAll, aKB.getSparqlQueryResultLimit());
+        return listChildConcepts(aKB, aParentIdentifier, aAll, aKB.getMaxResults());
     }
     
     @Override
@@ -1111,7 +1111,7 @@ public class KnowledgeBaseServiceImpl
             ValueFactory vf = conn.getValueFactory();
             RepositoryResult<Statement> stmts = RdfUtils.getStatements(conn,
                     vf.createIRI(aIdentifier), aKb.getTypeIri(), aKb.getClassIri(), true,
-                aKb.getSparqlQueryResultLimit());
+                aKb.getMaxResults());
             if (stmts.hasNext()) {
                 KBConcept kbConcept = KBConcept.read(conn, vf.createIRI(aIdentifier), aKb);
                 if (kbConcept != null) {
