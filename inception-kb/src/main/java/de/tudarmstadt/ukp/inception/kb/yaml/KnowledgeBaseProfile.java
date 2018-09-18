@@ -21,6 +21,7 @@ import java.io.Serializable;
 import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 
 public class KnowledgeBaseProfile implements Serializable
 {
@@ -29,10 +30,13 @@ public class KnowledgeBaseProfile implements Serializable
 
     @JsonProperty("name")
     private String name;
+
+    @JsonProperty("type")
+    private RepositoryType type;
     
-    @JsonProperty("sparql-url")
-    private String sparqlUrl;
-    
+    @JsonProperty("access")
+    private KnowledgeBaseAccess access;
+
     @JsonProperty("mapping")
     private KnowledgeBaseMapping mapping;
 
@@ -46,14 +50,24 @@ public class KnowledgeBaseProfile implements Serializable
         name = aName;
     }
 
-    public String getSparqlUrl()
+    public RepositoryType getType()
     {
-        return sparqlUrl;
+        return type;
     }
 
-    public void setSparqlUrl(String aSparqlUrl)
+    public void setType(RepositoryType aType)
     {
-        sparqlUrl = aSparqlUrl;
+        type = aType;
+    }
+
+    public KnowledgeBaseAccess getAccess()
+    {
+        return access;
+    }
+
+    public void setAccess(KnowledgeBaseAccess aKbAccess)
+    {
+        access = aKbAccess;
     }
 
     public KnowledgeBaseMapping getMapping()
@@ -65,9 +79,8 @@ public class KnowledgeBaseProfile implements Serializable
     {
         mapping = aMapping;
     }
-    
-    @Override
-    public boolean equals(Object o)
+
+    @Override public boolean equals(Object o)
     {
         if (this == o) {
             return true;
@@ -76,12 +89,12 @@ public class KnowledgeBaseProfile implements Serializable
             return false;
         }
         KnowledgeBaseProfile that = (KnowledgeBaseProfile) o;
-        return Objects.equals(name, that.name) && Objects.equals(sparqlUrl, that.sparqlUrl)
-                && Objects.equals(mapping, that.mapping);
+        return Objects.equals(name, that.name) && Objects.equals(access, that.access) && Objects
+            .equals(mapping, that.mapping) && Objects.equals(type, that.type);
     }
     
     @Override
     public int hashCode() {
-        return Objects.hash(name, sparqlUrl, mapping);
+        return Objects.hash(name, type, access, mapping);
     }
 }

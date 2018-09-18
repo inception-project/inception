@@ -205,7 +205,7 @@ public class KnowledgeBaseServiceRemoteTest
             kb_wikidata_direct.setReification(Reification.NONE);
             kb_wikidata_direct.applyMapping(profile.getMapping());
             kb_wikidata_direct.setDefaultLanguage("en");
-            kbList.add(new TestConfiguration(profile.getSparqlUrl(), kb_wikidata_direct,
+            kbList.add(new TestConfiguration(profile.getAccess().getAccessUrl(), kb_wikidata_direct,
                     "http://www.wikidata.org/entity/Q19576436"));
         }
 
@@ -217,7 +217,7 @@ public class KnowledgeBaseServiceRemoteTest
             kb_wikidata_direct.setReification(Reification.NONE);
             kb_wikidata_direct.applyMapping(profile.getMapping());
             kb_wikidata_direct.setDefaultLanguage("en");
-            kbList.add(new TestConfiguration(profile.getSparqlUrl(), kb_wikidata_direct,
+            kbList.add(new TestConfiguration(profile.getAccess().getAccessUrl(), kb_wikidata_direct,
                 "http://www.wikidata.org/entity/Q19576436"));
         }
 
@@ -229,7 +229,7 @@ public class KnowledgeBaseServiceRemoteTest
             kb_dbpedia.setReification(Reification.NONE);
             kb_dbpedia.applyMapping(profile.getMapping());
             kb_dbpedia.setDefaultLanguage("en");
-            kbList.add(new TestConfiguration(profile.getSparqlUrl(), kb_dbpedia,
+            kbList.add(new TestConfiguration(profile.getAccess().getAccessUrl(), kb_dbpedia,
                     "http://www.wikidata.org/entity/Q20280393"));
         }
        
@@ -240,7 +240,7 @@ public class KnowledgeBaseServiceRemoteTest
             kb_yago.setType(RepositoryType.REMOTE);
             kb_yago.setReification(Reification.NONE);
             kb_yago.applyMapping(profile.getMapping());
-            kbList.add(new TestConfiguration(profile.getSparqlUrl(), kb_yago,
+            kbList.add(new TestConfiguration(profile.getAccess().getAccessUrl(), kb_yago,
                     "http://www.wikidata.org/entity/Q21445637S003fc070-45f0-80bd-ae2d-072cde5aad89"));
         }
         
@@ -252,7 +252,7 @@ public class KnowledgeBaseServiceRemoteTest
             kb_zbw_stw_economics.setReification(Reification.NONE);
             kb_zbw_stw_economics.applyMapping(profile.getMapping());
             kb_zbw_stw_economics.setDefaultLanguage("en");
-            kbList.add(new TestConfiguration(profile.getSparqlUrl(), kb_zbw_stw_economics,
+            kbList.add(new TestConfiguration(profile.getAccess().getAccessUrl(), kb_zbw_stw_economics,
                     "http://zbw.eu/stw/thsys/71020"));
         }
         

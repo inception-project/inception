@@ -26,6 +26,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -74,6 +75,7 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 import de.tudarmstadt.ukp.inception.kb.util.TestFixtures;
+import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseMapping;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 
 @RunWith(Parameterized.class)
@@ -1516,9 +1518,43 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
             });
 
     }
-    
-    // Helper
 
+    @Test public void readKBResourceFromClassPath_ShouldReturnFileHandleToKBResource()
+        throws IOException
+    {
+        String resourceLocation = "classpath:data/more_pets.ttl";
+        File file = sut.readKbFileFromClassPathResource(resourceLocation);
+        assertTrue(file.exists());
+    }
+
+    @Test public void checkKBProfileAndKBObject_ShouldReturnMatchingSchemaProfile()
+    {
+        String name = "Test KB";
+        String classIri = "http://www.w3.org/2002/07/owl#Class";
+        String subclassIri = "http://www.w3.org/2000/01/rdf-schema#subClassOf";
+        String typeIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
+        String label = "http://www.w3.org/2000/01/rdf-schema#label";
+        String propertyTypeIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#Property";
+        String descriptionIri = "http://www.w3.org/2000/01/rdf-schema#comment";
+        String propertyLabelIri = "http://www.w3.org/2000/01/rdf-schema#label";
+        String propertyDescriptionIri = "http://www.w3.org/2000/01/rdf-schema#comment";
+
+        KnowledgeBaseMapping testMapping = new KnowledgeBaseMapping(classIri, subclassIri, typeIri,
+            descriptionIri, label, propertyTypeIri, propertyLabelIri, propertyDescriptionIri);
+        KnowledgeBaseProfile testProfile = new KnowledgeBaseProfile();
+        testProfile.setName(name);
+        testProfile.setMapping(testMapping);
+
+        KnowledgeBase testKb = new KnowledgeBase();
+        testKb.applyMapping(testMapping);
+
+        assertThat(sut.checkSchemaProfile(testProfile))
+            .isEqualTo(SchemaProfile.OWLSCHEMA);
+        assertThat(sut.checkSchemaProfile(testKb))
+            .isEqualTo(SchemaProfile.OWLSCHEMA);
+    }
+
+    // Helper
     private Project createProject(String name) {
         return testFixtures.createProject(name);
     }
