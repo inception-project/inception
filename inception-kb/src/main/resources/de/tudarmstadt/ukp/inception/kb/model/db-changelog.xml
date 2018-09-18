@@ -287,7 +287,7 @@
               type="VARCHAR(255)">
       </column>
     </addColumn>
-  </changeSet>
+  </changeSet>    
 
   <changeSet author="INCEpTION Team" id="20180803">
     <preConditions onFail="MARK_RAN">
@@ -299,8 +299,8 @@
                   oldColumnName="language"
                   columnDataType="VARCHAR(255)"/>
   </changeSet>
-
-  <changeSet author="INCEpTION Team" id="20180827-1">
+  
+  <changeSet author="INCEpTION Team" id="20180904-1">
     <preConditions onFail="MARK_RAN">
       <not>
         <columnExists tableName="knowledgebase" columnName="propertyLabelIri"/>
@@ -316,7 +316,7 @@
     </addColumn>
   </changeSet>
 
-  <changeSet author="INCEpTION Team" id="20180827-2">
+  <changeSet author="INCEpTION Team" id="20180904-2">
     <preConditions onFail="MARK_RAN">
       <not>
         <columnExists tableName="knowledgebase" columnName="propertyDescriptionIri"/>

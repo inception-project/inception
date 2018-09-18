@@ -86,6 +86,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -106,6 +107,7 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.reification.NoReification;
 import de.tudarmstadt.ukp.inception.kb.reification.ReificationStrategy;
 import de.tudarmstadt.ukp.inception.kb.reification.WikiDataReification;
+import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseMapping;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 
 @Component(KnowledgeBaseService.SERVICE_NAME)
@@ -131,7 +133,7 @@ public class KnowledgeBaseServiceImpl
             @org.springframework.beans.factory.annotation.Value("${data.path}") File dataDir)
     {
         // If there is still the deprecated SYSTEM repository from RDF4J, then we rename it because
-        // if it is present, RDF4J may internally generate an exception which prevents us from
+        // if it is present, RDF4J may internally generate an exception which prevents us from 
         // creating new KBs. https://github.com/eclipse/rdf4j/issues/1077
         File systemRepo = new File(dataDir, "kb/repositories/SYSTEM");
         if (systemRepo.exists()) {
@@ -139,7 +141,7 @@ public class KnowledgeBaseServiceImpl
                     + "(this is a one-time action)");
             systemRepo.renameTo(new File(dataDir, "kb/repositories/SYSTEM.off"));
         }
-
+        
         String url = Paths.get(dataDir.getAbsolutePath(), "kb").toUri().toString();
         repoManager = RepositoryProvider.getRepositoryManager(url);
         log.info("Knowledge base repository path: " + url);
@@ -185,7 +187,7 @@ public class KnowledgeBaseServiceImpl
         repoManager.addRepositoryConfig(new RepositoryConfig(repositoryId, cfg));
         entityManager.persist(kb);
     }
-
+    
     @Override
     public void defineBaseProperties(KnowledgeBase akb) 
     {
@@ -454,7 +456,7 @@ public class KnowledgeBaseServiceImpl
         throws QueryEvaluationException
     {
         List<KBHandle> resultList;
-
+        
         resultList = read(aKB, (conn) -> {
             String QUERY = SPARQLQueryStore.queryForAllConceptList(aKB);
             TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
@@ -809,7 +811,7 @@ public class KnowledgeBaseServiceImpl
 
             return evaluateListQuery(tupleQuery, aAll);
         });
-
+        
         // Sorting is not done as part of SPARQL queries as it will be more expensive on
         // SPARQL with sorting the whole data and then setting a limit for the number of
         // result data set and hence will also skip number of results as part of sorted
@@ -947,7 +949,7 @@ public class KnowledgeBaseServiceImpl
         resultList.sort(Comparator.comparing(KBObject::getUiLabel));
         return resultList;
     }
-
+    
     @Override
     public Set<KBHandle> getParentConceptList(KnowledgeBase aKB, String aIdentifier, boolean aAll)
         throws QueryEvaluationException
@@ -1015,13 +1017,14 @@ public class KnowledgeBaseServiceImpl
             return evaluateListQuery(tupleQuery, aAll);
         });
 
+        
         if (resultList.size() > 1) {
             resultList.sort(Comparator.comparing(KBObject::getUiLabel));
         }
         
         return resultList;
     }
-
+    
     @Override
     public List<KBHandle> listInstancesForChildConcepts(KnowledgeBase aKB, String aParentIdentifier,
             boolean aAll, int aLimit)
@@ -1059,11 +1062,11 @@ public class KnowledgeBaseServiceImpl
             else {
                 handle.setName(handle.getUiLabel());
             }
-
+            
             if (description != null) {
                 handle.setDescription(description.getValue().stringValue());
             }
-
+            
             handles.add(handle);
         }
         return handles;
@@ -1150,7 +1153,7 @@ public class KnowledgeBaseServiceImpl
         }
     }
     
-
+    
     /**
      * Read identifier IRI and return {@link Optional} of {@link KBObject}
      * 
@@ -1166,7 +1169,7 @@ public class KnowledgeBaseServiceImpl
         }
         return Optional.empty();
     }
-
+    
     @Override
     public Optional<KBObject> readKBIdentifier(KnowledgeBase aKb, String aIdentifier)
     {
@@ -1193,6 +1196,61 @@ public class KnowledgeBaseServiceImpl
         }
         return Optional.empty();
     }
+
+    @Override
+    public SchemaProfile checkSchemaProfile(KnowledgeBaseProfile aProfile)
+    {
+        SchemaProfile[] profiles = SchemaProfile.values();
+        KnowledgeBaseMapping mapping = aProfile.getMapping();
+        for (int i = 0; i < profiles.length; i++) {
+            // Check if kb profile corresponds to a known schema profile
+            if (equalsSchemaProfile(profiles[i], mapping.getClassIri(), mapping.getSubclassIri(),
+                mapping.getTypeIri(), mapping.getDescriptionIri(), mapping.getLabelIri(),
+                mapping.getPropertyTypeIri())) {
+                return profiles[i];
+            }
+        }
+        // If the iris don't represent a known schema profile , return CUSTOM
+        return SchemaProfile.CUSTOMSCHEMA;
+    }
+
+    @Override
+    public SchemaProfile checkSchemaProfile(KnowledgeBase aKb)
+    {
+        SchemaProfile[] profiles = SchemaProfile.values();
+        for (int i = 0; i < profiles.length; i++) {
+            // Check if kb has a known schema profile
+            if (equalsSchemaProfile(profiles[i], aKb.getClassIri(), aKb.getSubclassIri(),
+                aKb.getTypeIri(), aKb.getDescriptionIri(), aKb.getLabelIri(),
+                aKb.getPropertyTypeIri())) {
+                return profiles[i];
+            }
+        }
+        // If the iris don't represent a known schema profile , return CUSTOM
+        return SchemaProfile.CUSTOMSCHEMA;
+    }
+
+    /**
+     * Compares a schema profile to given IRIs. Returns true if the IRIs are the same as in the
+     * profile
+     */
+    private boolean equalsSchemaProfile(SchemaProfile profile, IRI classIri, IRI subclassIri,
+        IRI typeIri, IRI descriptionIri, IRI labelIri, IRI propertyTypeIri)
+    {
+        return profile.getClassIri().equals(classIri) && profile.getSubclassIri()
+            .equals(subclassIri) && profile.getTypeIri().equals(typeIri) && profile
+            .getDescriptionIri().equals(descriptionIri) && profile.getLabelIri().equals(labelIri)
+            && profile.getPropertyTypeIri().equals(propertyTypeIri);
+    }
+
+    @Override
+    public File readKbFileFromClassPathResource(String aLocation) throws IOException
+    {
+        PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
+        File kbFile = resolver.getResource(aLocation).getFile();
+        return kbFile;
+    }
+
 
     private IndexWriter getIndexWriter(KnowledgeBase aKb) throws IOException
     {
