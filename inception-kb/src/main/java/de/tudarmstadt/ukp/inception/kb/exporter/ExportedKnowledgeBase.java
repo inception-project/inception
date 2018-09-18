@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.kb.exporter;
 
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -52,6 +54,12 @@ public class ExportedKnowledgeBase
     @JsonProperty("property_type_iri")
     private String propertyTypeIri;
 
+    @JsonProperty("property-label-iri")
+    private String propertyLabelIri;
+
+    @JsonProperty("property-description-iri")
+    private String propertyDescriptionIri;
+
     @JsonProperty("read_only")
     private boolean readOnly;
 
@@ -66,7 +74,16 @@ public class ExportedKnowledgeBase
     
     @JsonProperty("base_prefix")
     private String basePrefix;
-    
+
+    @JsonProperty("explicitly-defined-root-concepts")
+    private List<String> explicitlyDefinedRootConcepts;
+
+    @JsonProperty("default-language")
+    private String defaultLanguage;
+
+    @JsonProperty("max-results")
+    private int maxResults;
+
     // set to null for local knowledge bases
     @JsonProperty("remote_url")
     private String remoteURL;
@@ -161,6 +178,26 @@ public class ExportedKnowledgeBase
         propertyTypeIri = aPropertyTypeIri;
     }
 
+    public String getPropertyLabelIri()
+    {
+        return propertyLabelIri;
+    }
+
+    public void setPropertyLabelIri(String aPropertyLabelIri)
+    {
+        propertyLabelIri = aPropertyLabelIri;
+    }
+
+    public String getPropertyDescriptionIri()
+    {
+        return propertyDescriptionIri;
+    }
+
+    public void setPropertyDescriptionIri(String aPropertyDescriptionIri)
+    {
+        propertyDescriptionIri = aPropertyDescriptionIri;
+    }
+
     public boolean isReadOnly()
     {
         return readOnly;
@@ -208,7 +245,37 @@ public class ExportedKnowledgeBase
     {
         basePrefix = aBasePrefix;
     }
-    
+
+    public List<String> getExplicitlyDefinedRootConcepts()
+    {
+        return explicitlyDefinedRootConcepts;
+    }
+
+    public void setExplicitlyDefinedRootConcepts(List<String> explicitlyDefinedRootConcepts)
+    {
+        this.explicitlyDefinedRootConcepts = explicitlyDefinedRootConcepts;
+    }
+
+    public String getDefaultLanguage()
+    {
+        return defaultLanguage;
+    }
+
+    public void setDefaultLanguage(String defaultLanguage)
+    {
+        this.defaultLanguage = defaultLanguage;
+    }
+
+    public int getMaxResults()
+    {
+        return maxResults;
+    }
+
+    public void setMaxResults(int maxResults)
+    {
+        this.maxResults = maxResults;
+    }
+
     public String getRemoteURL()
     {
         return remoteURL;

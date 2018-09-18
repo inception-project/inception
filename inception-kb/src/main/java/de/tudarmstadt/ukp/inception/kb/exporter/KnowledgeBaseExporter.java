@@ -27,6 +27,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -101,11 +102,20 @@ public class KnowledgeBaseExporter implements ProjectExporter
             exportedKB.setDescriptionIri(kb.getDescriptionIri().stringValue());
             exportedKB.setLabelIri(kb.getLabelIri().stringValue());
             exportedKB.setPropertyTypeIri(kb.getPropertyTypeIri().stringValue());
+            exportedKB.setPropertyLabelIri(kb.getPropertyLabelIri().stringValue());
+            exportedKB.setPropertyDescriptionIri(kb.getPropertyDescriptionIri().stringValue());
             exportedKB.setReadOnly(kb.isReadOnly());
             exportedKB.setEnabled(kb.isEnabled());
             exportedKB.setReification(kb.getReification().toString());
             exportedKB.setSupportConceptLinking(kb.isSupportConceptLinking());
             exportedKB.setBasePrefix(kb.getBasePrefix());
+            exportedKB.setExplicitlyDefinedRootConcepts(
+                kb.getExplicitlyDefinedRootConcepts()
+                    .stream()
+                    .map(conceptIRI -> conceptIRI.stringValue())
+                    .collect(Collectors.toList()));
+            exportedKB.setDefaultLanguage(kb.getDefaultLanguage());
+            exportedKB.setMaxResults(kb.getMaxResults());
             exportedKnowledgeBases.add(exportedKB);
             
             if (kb.getType() == RepositoryType.REMOTE) {
@@ -162,11 +172,20 @@ public class KnowledgeBaseExporter implements ProjectExporter
             kb.setDescriptionIri(vf.createIRI(exportedKB.getDescriptionIri()));
             kb.setLabelIri(vf.createIRI(exportedKB.getLabelIri()));
             kb.setPropertyTypeIri(vf.createIRI(exportedKB.getPropertyTypeIri()));
+            kb.setPropertyLabelIri(vf.createIRI(exportedKB.getPropertyLabelIri()));
+            kb.setPropertyDescriptionIri(vf.createIRI(exportedKB.getPropertyDescriptionIri()));
             kb.setReadOnly(exportedKB.isReadOnly());
             kb.setEnabled(exportedKB.isEnabled());
             kb.setReification(Reification.valueOf(exportedKB.getReification()));
             kb.setSupportConceptLinking(exportedKB.isSupportConceptLinking());
             kb.setBasePrefix(exportedKB.getBasePrefix());
+            kb.setExplicitlyDefinedRootConcepts(
+                exportedKB.getExplicitlyDefinedRootConcepts()
+                    .stream()
+                    .map(conceptId -> vf.createIRI(conceptId))
+                    .collect(Collectors.toList()));
+            kb.setDefaultLanguage(exportedKB.getDefaultLanguage());
+            kb.setMaxResults(exportedKB.getMaxResults());
             kb.setProject(aProject);
             
             // Get config and register knowledge base

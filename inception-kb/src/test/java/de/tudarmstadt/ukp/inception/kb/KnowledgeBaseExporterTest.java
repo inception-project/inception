@@ -33,6 +33,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.zip.ZipFile;
 
+import org.eclipse.rdf4j.model.ValueFactory;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
@@ -203,8 +205,9 @@ public class KnowledgeBaseExporterTest
         
         return asList(feat1);
     }
-    
-    private KnowledgeBase buildKnowledgeBase(String name) throws Exception {
+
+    private KnowledgeBase buildKnowledgeBase(String name) throws Exception
+    {
         KnowledgeBase kb = new KnowledgeBase();
         kb.setRepositoryId("id-" + name);
         kb.setName(name);
@@ -214,6 +217,14 @@ public class KnowledgeBaseExporterTest
         kb.setDescriptionIri(RDFS.COMMENT);
         kb.setLabelIri(RDFS.LABEL);
         kb.setPropertyTypeIri(RDF.PROPERTY);
+        kb.setPropertyLabelIri(RDFS.LABEL);
+        kb.setPropertyDescriptionIri(RDFS.COMMENT);
+        kb.setMaxResults(1000);
+        ValueFactory vf = SimpleValueFactory.getInstance();
+        kb.setExplicitlyDefinedRootConcepts(Arrays
+            .asList(vf.createIRI("http://www.ics.forth.gr/isl/CRMinf/I1_Argumentation"),
+                vf.createIRI("http://www.ics.forth.gr/isl/CRMinf/I1_Argumentation")));
+        kb.setDefaultLanguage("en");
         return kb;
     }  
 }

@@ -154,6 +154,7 @@ public class KnowledgeBaseServiceRemoteTest
     public static List<Object[]> data() throws Exception
     {
         PROFILES = readKnowledgeBaseProfiles();
+        int maxResults = 1000;
 
         List<TestConfiguration> kbList = new ArrayList<>();
         
@@ -170,6 +171,7 @@ public class KnowledgeBaseServiceRemoteTest
             kb_wine.setDescriptionIri(RDFS.COMMENT);
             kb_wine.setPropertyLabelIri(RDFS.LABEL);
             kb_wine.setPropertyDescriptionIri(RDFS.COMMENT);
+            kb_wine.setMaxResults(maxResults);
             kbList.add(new TestConfiguration("data/wine-ontology.rdf", kb_wine, "http://www.w3.org/TR/2003/PR-owl-guide-20031209/wine#ChateauMargaux"));
         }
         
@@ -188,6 +190,7 @@ public class KnowledgeBaseServiceRemoteTest
             kb_hucit.setPropertyTypeIri(vf.createIRI("http://www.w3.org/1999/02/22-rdf-syntax-ns#Property"));
             kb_hucit.setPropertyLabelIri(RDFS.LABEL);
             kb_hucit.setPropertyDescriptionIri(RDFS.COMMENT);
+            kb_hucit.setMaxResults(maxResults);
             kbList.add(new TestConfiguration("http://nlp.dainst.org:8888/sparql", kb_hucit, 
                     // person -> Achilles :: urn:cts:cwkb:1137
                     "http://purl.org/hucit/kb/authors/1137"));
@@ -200,6 +203,7 @@ public class KnowledgeBaseServiceRemoteTest
             kb_wikidata_direct.setType(RepositoryType.REMOTE);
             kb_wikidata_direct.setReification(Reification.NONE);
             kb_wikidata_direct.applyMapping(profile.getMapping());
+            kb_wikidata_direct.setMaxResults(maxResults);
             kbList.add(new TestConfiguration(profile.getAccess().getAccessUrl(), kb_wikidata_direct,
                     "http://www.wikidata.org/entity/Q19576436"));
         }
@@ -222,6 +226,7 @@ public class KnowledgeBaseServiceRemoteTest
             kb_dbpedia.setType(RepositoryType.REMOTE);
             kb_dbpedia.setReification(Reification.NONE);
             kb_dbpedia.applyMapping(profile.getMapping());
+            kb_dbpedia.setMaxResults(maxResults);
             kbList.add(new TestConfiguration(profile.getAccess().getAccessUrl(), kb_dbpedia,
                     "http://www.wikidata.org/entity/Q20280393"));
         }
@@ -233,6 +238,7 @@ public class KnowledgeBaseServiceRemoteTest
             kb_yago.setType(RepositoryType.REMOTE);
             kb_yago.setReification(Reification.NONE);
             kb_yago.applyMapping(profile.getMapping());
+            kb_yago.setMaxResults(maxResults);
             kbList.add(new TestConfiguration(profile.getAccess().getAccessUrl(), kb_yago,
                     "http://www.wikidata.org/entity/Q21445637S003fc070-45f0-80bd-ae2d-072cde5aad89"));
         }
@@ -244,6 +250,7 @@ public class KnowledgeBaseServiceRemoteTest
             kb_zbw_stw_economics.setType(RepositoryType.REMOTE);
             kb_zbw_stw_economics.setReification(Reification.NONE);
             kb_zbw_stw_economics.applyMapping(profile.getMapping());
+            kb_zbw_stw_economics.setMaxResults(maxResults);
             kbList.add(new TestConfiguration(profile.getAccess().getAccessUrl(), kb_zbw_stw_economics,
                     "http://zbw.eu/stw/thsys/71020"));
         }
