@@ -217,6 +217,7 @@ public class KnowledgeBaseExporter implements ProjectExporter
             if (kb.getType() == RepositoryType.LOCAL) {
                 cfg = kbService.getNativeConfig();
                 kbService.registerKnowledgeBase(kb, cfg);
+                kbService.defineBaseProperties(kb);
                 importKnowledgeBaseFiles(aZip, kb);
             }
             else {
