@@ -140,7 +140,7 @@ example, I assume that you install the application in `/srv/inception`:
 +
 [source,text]
 ----
-JAVA_OPTS="-Djava.awt.headless=true -inception.home=/srv/inception"
+JAVA_OPTS="-Djava.awt.headless=true -Dinception.home=/srv/inception"
 ----
 +
 * In the previous step, you have already created the `/srv/inception/settings.properties` file. 
