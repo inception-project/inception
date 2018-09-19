@@ -54,10 +54,10 @@ public class ExportedKnowledgeBase
     @JsonProperty("property_type_iri")
     private String propertyTypeIri;
 
-    @JsonProperty("property-label-iri")
+    @JsonProperty("property_label_iri")
     private String propertyLabelIri;
 
-    @JsonProperty("property-description-iri")
+    @JsonProperty("property_description_iri")
     private String propertyDescriptionIri;
 
     @JsonProperty("read_only")
@@ -75,10 +75,10 @@ public class ExportedKnowledgeBase
     @JsonProperty("base_prefix")
     private String basePrefix;
 
-    @JsonProperty("explicitly-defined-root-concepts")
-    private List<String> explicitlyDefinedRootConcepts;
+    @JsonProperty("root_concepts")
+    private List<String> rootConcepts;
 
-    @JsonProperty("default-language")
+    @JsonProperty("default_language")
     private String defaultLanguage;
 
     // set to null for local knowledge bases
@@ -243,14 +243,14 @@ public class ExportedKnowledgeBase
         basePrefix = aBasePrefix;
     }
 
-    public List<String> getExplicitlyDefinedRootConcepts()
+    public List<String> getRootConcepts()
     {
-        return explicitlyDefinedRootConcepts;
+        return rootConcepts;
     }
 
-    public void setExplicitlyDefinedRootConcepts(List<String> explicitlyDefinedRootConcepts)
+    public void setRootConcepts(List<String> aRootConcepts)
     {
-        this.explicitlyDefinedRootConcepts = explicitlyDefinedRootConcepts;
+        rootConcepts = aRootConcepts;
     }
 
     public String getDefaultLanguage()
@@ -258,9 +258,9 @@ public class ExportedKnowledgeBase
         return defaultLanguage;
     }
 
-    public void setDefaultLanguage(String defaultLanguage)
+    public void setDefaultLanguage(String aDefaultLanguage)
     {
-        this.defaultLanguage = defaultLanguage;
+        defaultLanguage = aDefaultLanguage;
     }
 
     public String getRemoteURL()

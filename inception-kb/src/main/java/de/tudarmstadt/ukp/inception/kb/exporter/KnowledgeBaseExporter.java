@@ -112,7 +112,7 @@ public class KnowledgeBaseExporter implements ProjectExporter
             exportedKB.setReification(kb.getReification().toString());
             exportedKB.setSupportConceptLinking(kb.isSupportConceptLinking());
             exportedKB.setBasePrefix(kb.getBasePrefix());
-            exportedKB.setExplicitlyDefinedRootConcepts(
+            exportedKB.setRootConcepts(
                 kb.getExplicitlyDefinedRootConcepts()
                     .stream()
                     .map(conceptIRI -> conceptIRI.stringValue())
@@ -201,9 +201,9 @@ public class KnowledgeBaseExporter implements ProjectExporter
             kb.setSupportConceptLinking(exportedKB.isSupportConceptLinking());
             kb.setBasePrefix(exportedKB.getBasePrefix());
 
-            if (exportedKB.getExplicitlyDefinedRootConcepts() != null) {
+            if (exportedKB.getRootConcepts() != null) {
                 kb.setExplicitlyDefinedRootConcepts(
-                    exportedKB.getExplicitlyDefinedRootConcepts().stream()
+                    exportedKB.getRootConcepts().stream()
                         .map(conceptId -> vf.createIRI(conceptId)).collect(Collectors.toList()));
             }
             else {
