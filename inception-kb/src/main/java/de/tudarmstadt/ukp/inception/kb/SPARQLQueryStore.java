@@ -136,15 +136,15 @@ public final class SPARQLQueryStore
     {
         return String.join("\n"
                 , SPARQL_PREFIX
-                , "SELECT DISTINCT ?s (MIN(?label) AS ?l) (MIN(?desc) AS ?d) WHERE {"
+                , "SELECT DISTINCT ?s ?l ?d WHERE {"
                 , "  { ?s ?pTYPE ?oPROPERTY .}"
                 , "  UNION "
                 , "  { ?s a ?prop" 
                 , "    VALUES ?prop { rdf:Property owl:ObjectProperty owl:DatatypeProperty owl:AnnotationProperty }"
                 , "  }"
-                , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage(),"?label")
-                , optionalLanguageFilteredValue("?pDESCRIPTION", aKB.getDefaultLanguage(),"?desc")
-                , "} GROUP BY ?s"
+                , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage(),"?l")
+                , optionalLanguageFilteredValue("?pDESCRIPTION", aKB.getDefaultLanguage(),"?d")
+                , "}"
                 , "LIMIT " + LIMIT);
     }
         
