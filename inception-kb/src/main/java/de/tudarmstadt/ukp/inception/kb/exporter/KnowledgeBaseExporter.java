@@ -200,11 +200,15 @@ public class KnowledgeBaseExporter implements ProjectExporter
             kb.setReification(Reification.valueOf(exportedKB.getReification()));
             kb.setSupportConceptLinking(exportedKB.isSupportConceptLinking());
             kb.setBasePrefix(exportedKB.getBasePrefix());
-            kb.setExplicitlyDefinedRootConcepts(
-                exportedKB.getExplicitlyDefinedRootConcepts()
-                    .stream()
-                    .map(conceptId -> vf.createIRI(conceptId))
-                    .collect(Collectors.toList()));
+
+            if (exportedKB.getExplicitlyDefinedRootConcepts() != null) {
+                kb.setExplicitlyDefinedRootConcepts(
+                    exportedKB.getExplicitlyDefinedRootConcepts().stream()
+                        .map(conceptId -> vf.createIRI(conceptId)).collect(Collectors.toList()));
+            }
+            else {
+                kb.setExplicitlyDefinedRootConcepts(new ArrayList<>());
+            }
             kb.setDefaultLanguage(exportedKB.getDefaultLanguage());
             kb.setProject(aProject);
 
