@@ -28,7 +28,7 @@ wikidata:
       description: http://www.w3.org/2000/01/rdf-schema#comment
       property-label: http://www.w3.org/2000/01/rdf-schema#label
       property-description: http://www.w3.org/2000/01/rdf-schema#comment
-      root-concept : http://www.wikidata.org/wiki/Q35120
+      root-concept : http://www.wikidata.org/entity/Q35120
 virtuoso:
   name: UKP Wikidata
   type: REMOTE

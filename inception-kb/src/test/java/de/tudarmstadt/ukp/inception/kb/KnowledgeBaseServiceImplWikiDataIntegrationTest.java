@@ -155,7 +155,7 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
     public void listRootConcepts() {
         List<KBHandle> rootConcepts = sut.listRootConcepts(kb, false);
 
-        assertThat(rootConcepts).as("Check that root concepts have been found").hasSize(SPARQLQueryStore.LIMIT);
+        assertThat(rootConcepts).as("Check that root concepts have been found").isNotEmpty();
     }
 
     
@@ -222,7 +222,6 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
         kb_wikidata_direct.setReification(reification);
         kb_wikidata_direct.setDefaultLanguage("en");
         
-       
         return kb_wikidata_direct;
     }
 
