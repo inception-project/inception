@@ -65,7 +65,8 @@ public class KnowledgeBaseMapping implements Serializable
         @JsonProperty("label") String labelIri,
         @JsonProperty("property-type") String propertyTypeIri,
         @JsonProperty("property-label") String propertyLabelIri,
-        @JsonProperty("property-description") String propertyDescriptionIri)
+        @JsonProperty("property-description") String propertyDescriptionIri,
+        @JsonProperty("full-text-search") String ftsIri)
     {
         SimpleValueFactory vf = SimpleValueFactory.getInstance();
         this.classIri = vf.createIRI(classIri);
@@ -76,6 +77,7 @@ public class KnowledgeBaseMapping implements Serializable
         this.propertyTypeIri = vf.createIRI(propertyTypeIri);
         this.propertyLabelIri = vf.createIRI(propertyLabelIri);
         this.propertyDescriptionIri = vf.createIRI(propertyDescriptionIri);
+        this.ftsIri = vf.createIRI(ftsIri);
     }
     
     public KnowledgeBaseMapping() {
@@ -189,13 +191,14 @@ public class KnowledgeBaseMapping implements Serializable
                 && Objects.equals(propertyTypeIri, that.propertyTypeIri)
                 && Objects.equals(descriptionIri, that.descriptionIri)
                 && Objects.equals(propertyLabelIri, that.propertyLabelIri)
-                && Objects.equals(propertyDescriptionIri, that.propertyDescriptionIri);
+                && Objects.equals(propertyDescriptionIri, that.propertyDescriptionIri)
+                && Objects.equals(ftsIri, that.ftsIri);
     }
 
     @Override
     public int hashCode()
     {
         return Objects.hash(classIri, subclassIri, typeIri, propertyTypeIri, descriptionIri,
-                labelIri, propertyLabelIri, propertyDescriptionIri);
+                labelIri, propertyLabelIri, propertyDescriptionIri, ftsIri);
     }
 }

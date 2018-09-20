@@ -58,7 +58,7 @@ public class KnowledgeBaseProfileDeserializationTest
 
         KnowledgeBaseMapping referenceMapping = new KnowledgeBaseMapping(classIri, subclassIri,
             typeIri, descriptionIri, label, propertyTypeIri, propertyLabelIri,
-            propertyDescriptionIri);
+            propertyDescriptionIri, "");
         KnowledgeBaseProfile referenceProfile = new KnowledgeBaseProfile();
 
         KnowledgeBaseAccess referenceAccess = new KnowledgeBaseAccess();

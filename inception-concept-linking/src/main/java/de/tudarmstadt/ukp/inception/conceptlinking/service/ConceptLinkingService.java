@@ -21,6 +21,7 @@ package de.tudarmstadt.ukp.inception.conceptlinking.service;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -67,6 +68,7 @@ import de.tudarmstadt.ukp.inception.conceptlinking.model.Property;
 import de.tudarmstadt.ukp.inception.conceptlinking.model.SemanticSignature;
 import de.tudarmstadt.ukp.inception.conceptlinking.util.FileUtils;
 import de.tudarmstadt.ukp.inception.conceptlinking.util.QueryUtil;
+import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.event.KnowledgeBaseConfigurationChangedEvent;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
@@ -206,6 +208,9 @@ public class ConceptLinkingService
      */
     private Set<CandidateEntity> loadCandidatesFullText(CandidateCacheKey aKey)
     {
+        if (aKey.getKnowledgeBase().getFtsIri().equals(IriConstants.FTS_NONE)) {
+            return Collections.emptySet();
+        }
         Set<CandidateEntity> candidatesFullText = new HashSet<>();
 
         try (RepositoryConnection conn = kbService.getConnection(aKey.getKnowledgeBase())) {

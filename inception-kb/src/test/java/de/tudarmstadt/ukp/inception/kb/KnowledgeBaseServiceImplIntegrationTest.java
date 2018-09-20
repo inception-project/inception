@@ -1540,7 +1540,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         String propertyDescriptionIri = "http://www.w3.org/2000/01/rdf-schema#comment";
 
         KnowledgeBaseMapping testMapping = new KnowledgeBaseMapping(classIri, subclassIri, typeIri,
-            descriptionIri, label, propertyTypeIri, propertyLabelIri, propertyDescriptionIri);
+            descriptionIri, label, propertyTypeIri, propertyLabelIri, propertyDescriptionIri, "");
         KnowledgeBaseProfile testProfile = new KnowledgeBaseProfile();
         testProfile.setName(name);
         testProfile.setMapping(testMapping);
