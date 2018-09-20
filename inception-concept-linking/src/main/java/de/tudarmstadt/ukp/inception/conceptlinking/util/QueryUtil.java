@@ -215,7 +215,8 @@ public class QueryUtil
         ValueFactory vf = SimpleValueFactory.getInstance();
 
         TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, query);
-        tupleQuery.setBinding("string", vf.createLiteral(aString));
+        // add wildcard '*' to perform wildcard search
+        tupleQuery.setBinding("string", vf.createLiteral(aString + "*"));
         tupleQuery.setBinding("language", vf.createLiteral((aKb.getDefaultLanguage() != null)
             ? aKb.getDefaultLanguage() : "en"));
         tupleQuery.setBinding("labelIri", aKb.getLabelIri());
