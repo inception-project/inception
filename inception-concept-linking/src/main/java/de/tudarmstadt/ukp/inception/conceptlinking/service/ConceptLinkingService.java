@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -52,6 +51,7 @@ import org.eclipse.rdf4j.query.TupleQueryResult;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
@@ -108,6 +108,24 @@ public class ConceptLinkingService
     private LoadingCache<CandidateCacheKey, Set<CandidateEntity>> candidateFullTextCache;
     private LoadingCache<SemanticSignatureCacheKey, SemanticSignature> semanticSignatureCache;
 
+    @Autowired
+    public ConceptLinkingService()
+    {
+
+    }
+
+    public ConceptLinkingService(KnowledgeBaseService aKbService,
+        EntityLinkingProperties aProperties)
+    {
+        kbService = aKbService;
+        properties = aProperties;
+        stopwordsFile = new File("${repository.path}/resources/stopwords-en.txt");
+        entityFrequencyFile = new File("${repository.path}/resources/wikidata_entity_freqs.map");
+        propertyBlacklistFile = new File("${repository.path}/resources/property_blacklist.txt");
+        propertyWithLabelsFile = new File("${repository.path}/resources/properties_with_labels.txt");
+        init();
+    }
+
     @PostConstruct
     public void init()
     {
@@ -145,6 +163,10 @@ public class ConceptLinkingService
         aMention, int aMentionBeginOffset, JCas aJcas)
     {
         long startTime = System.currentTimeMillis();
+
+        if (aTypedString == null) {
+            aTypedString = "";
+        }
 
         Set<CandidateEntity> candidatesExact = retrieveCandidatesExact(aKB, aTypedString, aMention);
 
@@ -345,20 +367,24 @@ public class ConceptLinkingService
         String mention, Set<CandidateEntity> aCandidatesExact,
         Set<CandidateEntity> aCandidatesFullText, JCas aJCas, int aBegin)
     {
-        Sentence mentionSentence = getMentionSentence(aJCas, aBegin);
-        Validate.notNull(mentionSentence, "Mention sentence could not be determined.");
-
-        List<String> splitMention = Arrays.asList(mention.split(" "));
-        List<Token> mentionContext = getMentionContext(mentionSentence, splitMention,
-            properties.getMentionContextSize());
-
         Set<String> sentenceContentTokens = new HashSet<>();
-        for (Token t : JCasUtil.selectCovered(Token.class, mentionSentence)) {
-            boolean isNotPartOfMention = !splitMention.contains(t.getCoveredText());
-            boolean isNotStopword = (stopwords == null) || (stopwords != null && !stopwords
-                .contains(t.getCoveredText().toLowerCase(Locale.ENGLISH)));
-            if (isNotPartOfMention && isNotStopword) {
-                sentenceContentTokens.add(t.getCoveredText().toLowerCase(Locale.ENGLISH));
+        List<Token> mentionContext = new ArrayList<>();
+
+        if (aJCas!=null) {
+            Sentence mentionSentence = getMentionSentence(aJCas, aBegin);
+            Validate.notNull(mentionSentence, "Mention sentence could not be determined.");
+
+            List<String> splitMention = Arrays.asList(mention.split(" "));
+            mentionContext = getMentionContext(mentionSentence, splitMention,
+                properties.getMentionContextSize());
+
+            for (Token t : JCasUtil.selectCovered(Token.class, mentionSentence)) {
+                boolean isNotPartOfMention = !splitMention.contains(t.getCoveredText());
+                boolean isNotStopword = (stopwords == null) || (stopwords != null && !stopwords
+                    .contains(t.getCoveredText().toLowerCase(Locale.ENGLISH)));
+                if (isNotPartOfMention && isNotStopword) {
+                    sentenceContentTokens.add(t.getCoveredText().toLowerCase(Locale.ENGLISH));
+                }
             }
         }
 
@@ -385,6 +411,7 @@ public class ConceptLinkingService
         result.addAll(aCandidatesExact);
 
         // Set the feature values
+        List<Token> finalMentionContext = mentionContext;
         result.parallelStream().forEach(l -> {
             // For Virtuoso KBs
             if (aKB.getFtsIri().toString().equals("bif:contains")) {
@@ -395,7 +422,7 @@ public class ConceptLinkingService
             String altLabel = l.getAltLabel();
             LevenshteinDistance lev = new LevenshteinDistance();
             l.setLevMatchLabel(lev.apply(mention, altLabel));
-            l.setLevContext(lev.apply(tokensToString(mentionContext), altLabel));
+            l.setLevContext(lev.apply(tokensToString(finalMentionContext), altLabel));
             l.setLevTypedString(lev.apply(aTypedString, altLabel));
 
             SemanticSignature sig = getSemanticSignature(aKB, l.getIRI());
@@ -463,7 +490,7 @@ public class ConceptLinkingService
         for (Token t : aSentence) {
             joiner.add(t.getCoveredText());
         }
-        return joiner.toString().substring(0, joiner.length() - 1);
+        return joiner.toString().substring(0, (joiner.length() != 0) ? joiner.length() - 1 : 0);
     }
 
     /*
