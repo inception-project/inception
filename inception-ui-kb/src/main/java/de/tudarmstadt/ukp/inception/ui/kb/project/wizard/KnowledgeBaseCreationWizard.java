@@ -468,8 +468,6 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
                         model.getObject().setUrl(item.getModelObject().getAccess().getAccessUrl());
                         setKbIRIsAccordingToProfile(model.getObject().getKb(),
                             item.getModelObject());
-                       
-                            
                         t.add(urlField);
                     });
                     link.add(new Label("suggestionLabel", item.getModelObject().getName()));

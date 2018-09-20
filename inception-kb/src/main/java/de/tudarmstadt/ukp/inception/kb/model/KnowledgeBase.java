@@ -422,15 +422,15 @@ public class KnowledgeBase
     }
     
     public void applyRootConcept(KnowledgeBaseMapping aMapping) {
-        if (aMapping.getRootConcept() != null
-                && !(aMapping.getRootConcept().equals(OWL.NOTHING.toString()))) {
-            ValueFactory vf = SimpleValueFactory.getInstance();
-            IRI rootConcept = vf
-                    .createIRI(aMapping.getRootConcept());
+        if (!aMapping.getRootConcepts().isEmpty()
+                && !(aMapping.getRootConcepts().contains(OWL.NOTHING.stringValue()))) {
             if (explicitlyDefinedRootConcepts.isEmpty()) {
-                explicitlyDefinedRootConcepts.add(rootConcept);
+                ValueFactory vf = SimpleValueFactory.getInstance();
+                for (String rootConcept : aMapping.getRootConcepts()) {
+                    explicitlyDefinedRootConcepts.add(vf.createIRI(rootConcept));
+                }
                 setExplicitlyDefinedRootConcepts(explicitlyDefinedRootConcepts);
-            }                     
+            }
         }
     }
 }

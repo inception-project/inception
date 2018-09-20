@@ -12,3 +12,5 @@ test_profile:
       description: http://www.w3.org/2000/01/rdf-schema#comment
       property-label: http://www.w3.org/2000/01/rdf-schema#label
       property-description: http://www.w3.org/2000/01/rdf-schema#comment
+      root-concepts:
+            - http://www.w3.org/2002/07/owl#Nothing

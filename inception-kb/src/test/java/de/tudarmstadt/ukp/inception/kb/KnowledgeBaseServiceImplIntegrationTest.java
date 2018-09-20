@@ -1537,11 +1537,11 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         String descriptionIri = "http://www.w3.org/2000/01/rdf-schema#comment";
         String propertyLabelIri = "http://www.w3.org/2000/01/rdf-schema#label";
         String propertyDescriptionIri = "http://www.w3.org/2000/01/rdf-schema#comment";
-        String rootConcept = null;
+        List<String> rootConcepts =  new ArrayList<>(Arrays.asList(OWL.NOTHING.stringValue()));
         
         KnowledgeBaseMapping testMapping = new KnowledgeBaseMapping(classIri, subclassIri,
             typeIri, descriptionIri, label, propertyTypeIri, propertyLabelIri,
-            propertyDescriptionIri,rootConcept);
+            propertyDescriptionIri,rootConcepts);
         KnowledgeBaseProfile testProfile = new KnowledgeBaseProfile();
         testProfile.setName(name);
         testProfile.setMapping(testMapping);

@@ -153,9 +153,10 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
     
     @Test
     public void listRootConcepts() {
-        List<KBHandle> rootConcepts = sut.listRootConcepts(kb, false);
-
-        assertThat(rootConcepts).as("Check that root concepts have been found").isNotEmpty();
+        Stream<String> rootConcepts = sut.listRootConcepts(kb, false).stream().map(KBHandle::getIdentifier);
+        String expectedInstances = "http://www.wikidata.org/entity/Q35120";
+        
+        assertThat(rootConcepts).as("Check that root concepts have been found").contains(expectedInstances);
     }
 
     

@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.inception.kb.yaml;
 
 import java.io.Serializable;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 
 import org.eclipse.rdf4j.model.IRI;
@@ -55,8 +57,8 @@ public class KnowledgeBaseMapping implements Serializable
     @JsonProperty("property-description")
     private IRI propertyDescriptionIri;
     
-    @JsonProperty("root-concept")
-    private String rootConcept;
+    @JsonProperty("root-concepts")
+    private List<String> rootConcepts;
     
     
     @JsonCreator public KnowledgeBaseMapping(@JsonProperty("class") String classIri,
@@ -67,7 +69,7 @@ public class KnowledgeBaseMapping implements Serializable
         @JsonProperty("property-type") String propertyTypeIri,
         @JsonProperty("property-label") String propertyLabelIri,
         @JsonProperty("property-description") String propertyDescriptionIri,
-        @JsonProperty("root-concept") String rootConcept)
+        @JsonProperty("root-concept") List<String> rootConcepts)
     {
         SimpleValueFactory vf = SimpleValueFactory.getInstance();
         this.classIri = vf.createIRI(classIri);
@@ -78,7 +80,7 @@ public class KnowledgeBaseMapping implements Serializable
         this.propertyTypeIri = vf.createIRI(propertyTypeIri);
         this.propertyLabelIri = vf.createIRI(propertyLabelIri);
         this.propertyDescriptionIri = vf.createIRI(propertyDescriptionIri);
-        this.rootConcept = rootConcept;
+        this.rootConcepts = rootConcepts;
     }        
     
     public KnowledgeBaseMapping() {
@@ -165,14 +167,14 @@ public class KnowledgeBaseMapping implements Serializable
         propertyDescriptionIri = aPropertyDescriptionIri;
     }
 
-    public String getRootConcept()
+    public List<String> getRootConcepts()
     {
-        return rootConcept;
+        return rootConcepts;
     }
 
-    public void setRootConcept(String rootConcept)
+    public void setRootConcepts(String[] aRootConcepts)
     {
-        this.rootConcept = rootConcept;
+        this.rootConcepts = Arrays.asList(aRootConcepts);
     }
 
     @Override
@@ -193,7 +195,7 @@ public class KnowledgeBaseMapping implements Serializable
                 && Objects.equals(descriptionIri, that.descriptionIri)
                 && Objects.equals(propertyLabelIri, that.propertyLabelIri)
                 && Objects.equals(propertyDescriptionIri, that.propertyDescriptionIri)
-                && Objects.equals(rootConcept, that.rootConcept);
+                && Objects.equals(rootConcepts.get(0), that.rootConcepts.get(0));
     }
 
     @Override

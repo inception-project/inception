@@ -39,9 +39,6 @@ public class KnowledgeBaseProfile implements Serializable
 
     @JsonProperty("mapping")
     private KnowledgeBaseMapping mapping;
-    
-    @JsonProperty("root-concept")
-    private KnowledgeBaseMapping rootConcepts;
 
     public String getName()
     {
@@ -81,16 +78,6 @@ public class KnowledgeBaseProfile implements Serializable
     public void setMapping(KnowledgeBaseMapping aMapping)
     {
         mapping = aMapping;
-    }
-
-    public KnowledgeBaseMapping getRootConcepts()
-    {
-        return rootConcepts;
-    }
-
-    public void setRootConcepts(KnowledgeBaseMapping rootConcepts)
-    {
-        this.rootConcepts = rootConcepts;
     }
 
     @Override public boolean equals(Object o)
