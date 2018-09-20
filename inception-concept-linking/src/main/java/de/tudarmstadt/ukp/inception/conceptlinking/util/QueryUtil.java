@@ -26,6 +26,7 @@ import org.eclipse.rdf4j.query.TupleQuery;
 import org.eclipse.rdf4j.queryrender.RenderUtils;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 
+import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 /**
@@ -143,7 +144,7 @@ public class QueryUtil
         return tupleQuery;
     }
 
-    private static String getFullTextMatchingQueryPartVirtuoso(int aLimit)
+    private static String getFullTextMatchingQueryPartDefault(int aLimit)
     {
         return  String.join("\n",
             "    SELECT DISTINCT ?e2 ?altLabel ?description WHERE",
@@ -190,7 +191,12 @@ public class QueryUtil
     {
         aString = RenderUtils.escape(aString).toLowerCase(Locale.ENGLISH);
 
-        String fullTextMatchingString = getFullTextMatchingQueryPartLucene(aLimit);
+        String fullTextMatchingString;
+        if (aKb.getFtsIri().equals(IriConstants.FTS_LUCENE)) {
+            fullTextMatchingString = getFullTextMatchingQueryPartLucene(aLimit);
+        } else {
+            fullTextMatchingString = getFullTextMatchingQueryPartDefault(aLimit);
+        }
 
         String query = String.join("\n",
             SPARQL_PREFIX,
