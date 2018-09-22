@@ -92,6 +92,11 @@
     </dependency>
 
     <dependency>
+      <groupId>javax.persistence</groupId>
+      <artifactId>javax.persistence-api</artifactId>
+    </dependency>
+
+    <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot</artifactId>
     </dependency>
@@ -103,7 +108,16 @@
       <groupId>org.springframework</groupId>
       <artifactId>spring-context</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-tx</artifactId>
+    </dependency>
 
+    <dependency>
+      <groupId>org.eclipse.rdf4j</groupId>
+      <artifactId>rdf4j-client</artifactId>
+      <version>${rdf4j.version}</version>
+    </dependency>
     <dependency>
       <groupId>org.eclipse.rdf4j</groupId>
       <artifactId>rdf4j-repository-api</artifactId>
@@ -119,11 +133,6 @@
     <dependency>
       <groupId>org.eclipse.rdf4j</groupId>
       <artifactId>rdf4j-queryrender</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.rdf4j</groupId>
-      <artifactId>rdf4j-sail-memory</artifactId>
-      <version>2.4-SNAPSHOT</version>
     </dependency>
 
     <!-- Testing -->
@@ -184,4 +193,27 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-dependency-plugin</artifactId>
+          <configuration>
+            <usedDependencies>
+              <!-- RDF4J plugins - used via reflection -->
+              <usedDependency>org.eclipse.rdf4j:rdf4j-model</usedDependency>
+              <usedDependency>org.eclipse.rdf4j:rdf4j-repository-api</usedDependency>
+              <usedDependency>org.eclipse.rdf4j:rdf4j-query</usedDependency>
+              <usedDependency>org.eclipse.rdf4j:rdf4j-queryrender</usedDependency>
+              <!-- Testing - used via reflection -->
+              <usedDependency>com.h2database:h2</usedDependency>
+              <usedDependency>org.springframework.boot:spring-boot-starter-test</usedDependency>
+              <usedDependency>org.springframework.boot:spring-boot-starter-data-jpa</usedDependency>
+            </usedDependencies>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
 </project>
