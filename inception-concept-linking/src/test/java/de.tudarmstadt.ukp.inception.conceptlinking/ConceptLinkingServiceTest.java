@@ -25,6 +25,7 @@ import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService
 import de.tudarmstadt.ukp.inception.conceptlinking.util.TestFixtures;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseServiceImpl;
+import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.reification.Reification;
@@ -73,6 +74,21 @@ public class ConceptLinkingServiceTest
         assertThat(handles.stream().map(KBHandle::getName))
             .as("Check whether \"Socke\" has been retrieved.")
             .contains("Socke");
+    }
+
+    @Test
+    public void thatAddedLuceneSailIndexedConceptIsRetrievableWithFullTextSearch() throws Exception
+    {
+        kbService.registerKnowledgeBase(kb, kbService.getNativeConfig());
+        importKnowledgeBase("data/pets.ttl");
+        kbService.indexLocalKb(kb);
+
+        kbService.createConcept(kb, new KBConcept("manatee"));
+        List<KBHandle> handles = clService.disambiguate(kb, null, "man", 0, null);
+
+        assertThat(handles.stream().map(KBHandle::getName))
+            .as("Check whether \"manatee\" has been retrieved.")
+            .contains("manatee");
     }
 
     private void importKnowledgeBase(String resourceName) throws Exception {

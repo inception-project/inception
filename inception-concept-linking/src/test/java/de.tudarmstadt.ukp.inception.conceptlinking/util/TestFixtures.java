@@ -48,6 +48,7 @@ public class TestFixtures
     public KnowledgeBase buildKnowledgeBase(Project project, String name, Reification reification)
     {
         KnowledgeBase kb = new KnowledgeBase();
+        kb.setSupportConceptLinking(true);
         kb.setName(name);
         kb.setProject(project);
         kb.setType(RepositoryType.LOCAL);
