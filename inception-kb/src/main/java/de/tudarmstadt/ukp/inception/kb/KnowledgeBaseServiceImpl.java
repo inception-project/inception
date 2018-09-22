@@ -73,12 +73,14 @@ import org.eclipse.rdf4j.repository.config.RepositoryConfigException;
 import org.eclipse.rdf4j.repository.config.RepositoryImplConfig;
 import org.eclipse.rdf4j.repository.manager.RepositoryManager;
 import org.eclipse.rdf4j.repository.manager.RepositoryProvider;
+import org.eclipse.rdf4j.repository.sail.SailRepository;
 import org.eclipse.rdf4j.repository.sail.config.SailRepositoryConfig;
 import org.eclipse.rdf4j.repository.sparql.config.SPARQLRepositoryConfig;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.RDFParseException;
 import org.eclipse.rdf4j.rio.RDFWriter;
 import org.eclipse.rdf4j.rio.Rio;
+import org.eclipse.rdf4j.sail.lucene.LuceneSail;
 import org.eclipse.rdf4j.sail.lucene.config.LuceneSailConfig;
 import org.eclipse.rdf4j.sail.nativerdf.config.NativeStoreConfig;
 import org.slf4j.Logger;
@@ -124,7 +126,8 @@ public class KnowledgeBaseServiceImpl
     @org.springframework.beans.factory.annotation.Value(value = "${data.path}/kb")
     private File dataDir;
 
-    @org.springframework.beans.factory.annotation.Value(value = "${repository.path}/luceneIndex")
+    @org.springframework.beans.factory.annotation.Value
+        (value = "${repository.path}/kb/repositories")
     private File luceneIndexDir;
 
     @Autowired
@@ -1209,23 +1212,18 @@ public class KnowledgeBaseServiceImpl
     @Override
     public void indexLocalKb(KnowledgeBase aKb)
     {
-        try {
-            IndexWriter indexWriter = getIndexWriter(aKb);
-
-            try (RepositoryConnection conn = getConnection(aKb)) {
-                RepositoryResult<Statement> stmts = RdfUtils
-                    .getStatementsSparql(conn, null, aKb.getLabelIri(), null, Integer.MAX_VALUE,
-                        false, null);
-                while (stmts.hasNext()) {
-                    Statement stmt = stmts.next();
-                    String id = stmt.getSubject().stringValue();
-                    String label = stmt.getObject().stringValue();
-                    indexCreatedConcept(id, label, indexWriter);
+        try (RepositoryConnection conn = getConnection(aKb)) {
+            if (repoManager.getRepository(aKb.getRepositoryId()) instanceof SailRepository) {
+                SailRepository sailRepo = (SailRepository) repoManager
+                    .getRepository(aKb.getRepositoryId());
+                if (sailRepo.getSail() instanceof LuceneSail) {
+                    LuceneSail luceneSail = (LuceneSail) (sailRepo.getSail());
+                    luceneSail.reindex();
                 }
-                conn.commit();
             }
+            conn.commit();
         }
-        catch (IOException e) {
+        catch (Exception e) {
             log.error("Could not index local KB.", e);
         }
     }

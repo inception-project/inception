@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.conceptlinking.util;
 
 import java.util.Locale;
 
+import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.query.QueryLanguage;
@@ -189,13 +190,18 @@ public class QueryUtil
     public static TupleQuery generateCandidateFullTextQuery(RepositoryConnection conn,
         String aString, int aLimit, KnowledgeBase aKb)
     {
-        aString = RenderUtils.escape(aString).toLowerCase(Locale.ENGLISH);
-
+        String string = RenderUtils.escape(aString).toLowerCase(Locale.ENGLISH);
+        ValueFactory vf = SimpleValueFactory.getInstance();
+        Literal searchLiteral;
         String fullTextMatchingString;
+
         if (aKb.getFtsIri().equals(IriConstants.FTS_LUCENE)) {
             fullTextMatchingString = getFullTextMatchingQueryPartLucene(aLimit);
+            // add wildcard '*' to perform wildcard search
+            searchLiteral = vf.createLiteral(string + "*");
         } else {
             fullTextMatchingString = getFullTextMatchingQueryPartDefault(aLimit);
+            searchLiteral = vf.createLiteral(string);
         }
 
         String query = String.join("\n",
@@ -218,11 +224,9 @@ public class QueryUtil
             "  ?e2 ?labelIri ?label.",
             "}");
 
-        ValueFactory vf = SimpleValueFactory.getInstance();
 
         TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, query);
-        // add wildcard '*' to perform wildcard search
-        tupleQuery.setBinding("string", vf.createLiteral(aString + "*"));
+        tupleQuery.setBinding("string", searchLiteral);
         tupleQuery.setBinding("language", vf.createLiteral((aKb.getDefaultLanguage() != null)
             ? aKb.getDefaultLanguage() : "en"));
         tupleQuery.setBinding("labelIri", aKb.getLabelIri());

@@ -227,7 +227,7 @@
       </column>
     </addColumn>
   </changeSet>
-  
+
   <changeSet author="INCEpTION Team" id="20180515-1">
     <preConditions onFail="MARK_RAN">
       <not>
@@ -332,23 +332,7 @@
     </addColumn>
   </changeSet>
 
-  <changeSet author="INCEpTION Team" id="20180503">
-    <preConditions onFail="MARK_RAN">
-      <not>
-        <columnExists tableName="knowledgebase" columnName="descriptionIri"/>
-      </not>
-    </preConditions>
-
-    <addColumn tableName="knowledgebase">
-      <column name="descriptionIri"
-              type="VARCHAR(255)"
-              defaultValue="http://www.w3.org/2000/01/rdf-schema#comment">
-        <constraints nullable="false" />
-      </column>
-    </addColumn>
-  </changeSet>
-
-  <changeSet author="INCEpTION Team" id="20180511">
+  <changeSet author="INCEpTION Team" id="20180922">
     <preConditions onFail="MARK_RAN">
       <not>
         <columnExists tableName="knowledgebase" columnName="ftsIri"/>
@@ -358,8 +342,8 @@
     <addColumn tableName="knowledgebase">
       <column name="ftsIri"
               type="VARCHAR(255)">
+        <constraints nullable="false" />
       </column>
     </addColumn>
   </changeSet>
-
 </databaseChangeLog>

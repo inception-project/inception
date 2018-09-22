@@ -110,10 +110,11 @@ public class ConceptLinkingService
     private LoadingCache<CandidateCacheKey, Set<CandidateEntity>> candidateFullTextCache;
     private LoadingCache<SemanticSignatureCacheKey, SemanticSignature> semanticSignatureCache;
 
+    private boolean loadResources;
     @Autowired
     public ConceptLinkingService()
     {
-
+        loadResources = true;
     }
 
     public ConceptLinkingService(KnowledgeBaseService aKbService,
@@ -121,21 +122,20 @@ public class ConceptLinkingService
     {
         kbService = aKbService;
         properties = aProperties;
-        stopwordsFile = new File("${repository.path}/resources/stopwords-en.txt");
-        entityFrequencyFile = new File("${repository.path}/resources/wikidata_entity_freqs.map");
-        propertyBlacklistFile = new File("${repository.path}/resources/property_blacklist.txt");
-        propertyWithLabelsFile = new File("${repository.path}/resources/properties_with_labels.txt");
+        loadResources = false;
         init();
     }
 
     @PostConstruct
     public void init()
     {
-        stopwords = FileUtils.loadStopwordFile(stopwordsFile);
-        entityFrequencyMap = FileUtils.loadEntityFrequencyMap(entityFrequencyFile);
-        propertyBlacklist = FileUtils.loadPropertyBlacklist(propertyBlacklistFile);
-        propertyWithLabels = FileUtils.loadPropertyLabels(propertyWithLabelsFile);
-      
+        if (loadResources) {
+            stopwords = FileUtils.loadStopwordFile(stopwordsFile);
+            entityFrequencyMap = FileUtils.loadEntityFrequencyMap(entityFrequencyFile);
+            propertyBlacklist = FileUtils.loadPropertyBlacklist(propertyBlacklistFile);
+            propertyWithLabels = FileUtils.loadPropertyLabels(propertyWithLabelsFile);
+        }
+
         candidateFullTextCache = Caffeine.newBuilder()
                 .maximumSize(properties.getCacheSize())
                 .build(key -> loadCandidatesFullText(key));
