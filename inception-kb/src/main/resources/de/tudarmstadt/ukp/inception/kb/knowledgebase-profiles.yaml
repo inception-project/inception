@@ -103,7 +103,7 @@ wine_ontology:
       description: http://www.w3.org/2000/01/rdf-schema#comment
       property-label: http://www.w3.org/2000/01/rdf-schema#label
       property-description: http://www.w3.org/2000/01/rdf-schema#comment
-      full-text-search: http://www.openrdf.org/contrib/lucenesail#
+      full-text-search: http://www.openrdf.org/contrib/lucenesail#matches
 wildlife_ontology:
   name: Wildlife Ontology
   type: LOCAL
@@ -118,7 +118,7 @@ wildlife_ontology:
       description: http://www.w3.org/2000/01/rdf-schema#comment
       property-label: http://www.w3.org/2000/01/rdf-schema#label
       property-description: http://www.w3.org/2000/01/rdf-schema#comment
-      full-text-search: http://www.openrdf.org/contrib/lucenesail#
+      full-text-search: http://www.openrdf.org/contrib/lucenesail#matches
 zbw-stw-economics:
   name: STW Thesaurus for Economics
   type: REMOTE
@@ -133,7 +133,7 @@ zbw-stw-economics:
       description: http://www.w3.org/2000/01/rdf-schema#comment
       property-label: http://www.w3.org/2004/02/skos/core#prefLabel
       property-description: http://www.w3.org/2000/01/rdf-schema#comment
-      full-text-search: http://www.openrdf.org/contrib/lucenesail#
+      full-text-search: http://www.openrdf.org/contrib/lucenesail#matches
 zbw-gnd:
   name: Integrated Authority File (GND)
   type: REMOTE
@@ -148,5 +148,5 @@ zbw-gnd:
       description: http://www.w3.org/2000/01/rdf-schema#comment
       property-label: http://www.w3.org/2004/02/skos/core#prefLabel
       property-description: http://www.w3.org/2000/01/rdf-schema#comment
-      full-text-search: http://www.openrdf.org/contrib/lucenesail#
+      full-text-search: http://www.openrdf.org/contrib/lucenesail#matches
 
