@@ -37,9 +37,9 @@ import de.tudarmstadt.ukp.inception.kb.exporter.KnowledgeBaseExporter;
 @SpringBootConfiguration
 @ComponentScan(
         excludeFilters = {
-            // We do now text exporting here and the exporter depends on the annotation schema 
+            // We do now text exporting here and the exporter depends on the annotation schema
             // service which is otherwise not needed. So we exclude this component here.
-            @Filter(type = FilterType.ASSIGNABLE_TYPE, classes = { 
+            @Filter(type = FilterType.ASSIGNABLE_TYPE, classes = {
                     KnowledgeBaseExporter.class
             })
         },
@@ -55,7 +55,7 @@ import de.tudarmstadt.ukp.inception.kb.exporter.KnowledgeBaseExporter;
 })
 @EnableAutoConfiguration
 public class SpringConfig {
-    @Bean(name="formats")
+    @Bean(name = "formats")
     public Properties getFileFormats()
     {
         return new Properties();

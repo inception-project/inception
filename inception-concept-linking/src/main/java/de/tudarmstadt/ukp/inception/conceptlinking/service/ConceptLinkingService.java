@@ -281,7 +281,8 @@ public class ConceptLinkingService
                 Value label = solution.getValue("label");
                 Value altLabel = solution.getValue("altLabel");
                 Value description = solution.getValue("description");
-                Optional<String> language = ((SimpleLiteral) solution.getValue("label")).getLanguage();
+                Optional<String> language = ((SimpleLiteral) solution.getValue("label"))
+                    .getLanguage();
 
                 CandidateEntity newEntity = new CandidateEntity(
                     (e2 != null) ? e2.stringValue() : "",
@@ -375,7 +376,7 @@ public class ConceptLinkingService
         Set<String> sentenceContentTokens = new HashSet<>();
         List<Token> mentionContext = new ArrayList<>();
 
-        if (aJCas!=null) {
+        if (aJCas != null) {
             Sentence mentionSentence = getMentionSentence(aJCas, aBegin);
             Validate.notNull(mentionSentence, "Mention sentence could not be determined.");
 
