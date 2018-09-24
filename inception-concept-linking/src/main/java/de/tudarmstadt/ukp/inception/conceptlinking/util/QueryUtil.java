@@ -195,7 +195,7 @@ public class QueryUtil
         Literal searchLiteral;
         String fullTextMatchingString;
 
-        if (aKb.getFtsIri().equals(IriConstants.FTS_LUCENE)) {
+        if (aKb.getFullTextSearchIri().equals(IriConstants.FTS_LUCENE)) {
             fullTextMatchingString = getFullTextMatchingQueryPartLucene(aLimit);
             // add wildcard '*' to perform wildcard search
             searchLiteral = vf.createLiteral(string + "*");
@@ -232,7 +232,7 @@ public class QueryUtil
         tupleQuery.setBinding("labelIri", aKb.getLabelIri());
         tupleQuery.setBinding("typeIri", aKb.getTypeIri());
         tupleQuery.setBinding("descriptionIri", aKb.getDescriptionIri());
-        tupleQuery.setBinding("ftsIri", aKb.getFtsIri());
+        tupleQuery.setBinding("ftsIri", aKb.getFullTextSearchIri());
         return tupleQuery;
     }
 

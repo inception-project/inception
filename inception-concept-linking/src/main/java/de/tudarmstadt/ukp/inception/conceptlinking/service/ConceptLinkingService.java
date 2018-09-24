@@ -208,7 +208,7 @@ public class ConceptLinkingService
      */
     private Set<CandidateEntity> loadCandidatesFullText(CandidateCacheKey aKey)
     {
-        if (aKey.getKnowledgeBase().getFtsIri().equals(IriConstants.FTS_NONE)) {
+        if (aKey.getKnowledgeBase().getFullTextSearchIri().equals(IriConstants.FTS_NONE)) {
             return Collections.emptySet();
         }
         Set<CandidateEntity> candidatesFullText = new HashSet<>();
@@ -398,7 +398,7 @@ public class ConceptLinkingService
             aCandidatesFullText.forEach(l -> {
                 String key = l.getIRI();
                 // For Virtuoso KBs
-                if (aKB.getFtsIri().toString().equals("bif:contains")) {
+                if (aKB.getFullTextSearchIri().toString().equals("bif:contains")) {
                     key = key.replace("http://www.wikidata.org/entity/", "");
                     if (entityFrequencyMap.get(key) != null) {
                         l.setFrequency(entityFrequencyMap.get(key));
@@ -419,7 +419,7 @@ public class ConceptLinkingService
         List<Token> finalMentionContext = mentionContext;
         result.parallelStream().forEach(l -> {
             // For Virtuoso KBs
-            if (aKB.getFtsIri().toString().equals("bif:contains")) {
+            if (aKB.getFullTextSearchIri().toString().equals("bif:contains")) {
                 String wikidataId = l.getIRI().replace("http://www.wikidata.org/entity/", "");
                 l.setIdRank(Math.log(Double.parseDouble(wikidataId.substring(1))));
             }

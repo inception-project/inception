@@ -130,8 +130,8 @@ public class KnowledgeBaseIriPanel
             kbModel.bind("kb.propertyLabelIri"), IriConstants.PROPERTY_LABEL_IRIS);
         ComboBox<String> propertyDescriptionField = buildComboBox("propertyDescriptionIri",
             kbModel.bind("kb.propertyDescriptionIri"), IriConstants.PROPERTY_DESCRIPTION_IRIS);
-        ComboBox<String> ftsField = buildComboBox("ftsIri",
-            kbModel.bind("kb.ftsIri"), IriConstants.FTS_IRIS);
+        ComboBox<String> ftsField = buildComboBox("fullTextSearchIri",
+            kbModel.bind("kb.fullTextSearchIri"), IriConstants.FTS_IRIS);
         comboBoxWrapper.add(classField, subclassField, typeField, descriptionField, labelField,
                 propertyTypeField, propertyLabelField, propertyDescriptionField, ftsField);
        
@@ -152,7 +152,7 @@ public class KnowledgeBaseIriPanel
                 propertyLabelField.setModelObject(bean.getPropertyLabelIri().stringValue());
                 propertyDescriptionField
                     .setModelObject(bean.getPropertyDescriptionIri().stringValue());
-                ftsField.setModelObject(bean.getFtsIri().stringValue());
+                ftsField.setModelObject(bean.getFullTextSearchIri().stringValue());
                 target.add(comboBoxWrapper, iriSchemaChoice);
             }
         });

@@ -1538,11 +1538,11 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         String descriptionIri = "http://www.w3.org/2000/01/rdf-schema#comment";
         String propertyLabelIri = "http://www.w3.org/2000/01/rdf-schema#label";
         String propertyDescriptionIri = "http://www.w3.org/2000/01/rdf-schema#comment";
-        String ftsIri = "http://www.openrdf.org/contrib/lucenesail#matches";
+        String fullTextSearchIri = "http://www.openrdf.org/contrib/lucenesail#matches";
 
         KnowledgeBaseMapping testMapping = new KnowledgeBaseMapping(classIri, subclassIri, typeIri,
             descriptionIri, label, propertyTypeIri, propertyLabelIri, propertyDescriptionIri,
-            ftsIri);
+            fullTextSearchIri);
         KnowledgeBaseProfile testProfile = new KnowledgeBaseProfile();
         testProfile.setName(name);
         testProfile.setMapping(testMapping);

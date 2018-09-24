@@ -55,11 +55,11 @@ public class KnowledgeBaseProfileDeserializationTest
         String descriptionIri = "http://www.w3.org/2000/01/rdf-schema#comment";
         String propertyLabelIri = "http://www.w3.org/2000/01/rdf-schema#label";
         String propertyDescriptionIri = "http://www.w3.org/2000/01/rdf-schema#comment";
-        String ftsIri = "http://www.openrdf.org/contrib/lucenesail#matches";
+        String fullTextSearchIri = "http://www.openrdf.org/contrib/lucenesail#matches";
 
         KnowledgeBaseMapping referenceMapping = new KnowledgeBaseMapping(classIri, subclassIri,
             typeIri, descriptionIri, label, propertyTypeIri, propertyLabelIri,
-            propertyDescriptionIri, ftsIri);
+            propertyDescriptionIri, fullTextSearchIri);
         KnowledgeBaseProfile referenceProfile = new KnowledgeBaseProfile();
 
         KnowledgeBaseAccess referenceAccess = new KnowledgeBaseAccess();

@@ -58,7 +58,7 @@ public class TestFixtures
         kb.setLabelIri(RDFS.LABEL);
         kb.setPropertyTypeIri(RDF.PROPERTY);
         kb.setDescriptionIri(RDFS.COMMENT);
-        kb.setFtsIri(IriConstants.FTS_LUCENE);
+        kb.setFullTextSearchIri(IriConstants.FTS_LUCENE);
         kb.setPropertyLabelIri(RDFS.LABEL);
         kb.setPropertyDescriptionIri(RDFS.COMMENT);
         kb.setExplicitlyDefinedRootConcepts(new ArrayList<>());

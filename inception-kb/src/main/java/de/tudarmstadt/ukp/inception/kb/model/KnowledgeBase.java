@@ -117,7 +117,7 @@ public class KnowledgeBase
      * The IRI used for full text search, e.g. bif:contains or <http://www.openrdf.org/contrib/lucenesail#>
      */
     @Column
-    private IRI ftsIri;
+    private IRI fullTextSearchIri;
 
     /**
      * The IRI for a property describing B being a label for A, e.g. rdfs:label 
@@ -279,14 +279,14 @@ public class KnowledgeBase
         propertyTypeIri = aPropertyTypeIri;
     }
 
-    public IRI getFtsIri()
+    public IRI getFullTextSearchIri()
     {
-        return ftsIri;
+        return fullTextSearchIri;
     }
 
-    public void setFtsIri(IRI ftsIri)
+    public void setFullTextSearchIri(IRI aFtsIri)
     {
-        this.ftsIri = ftsIri;
+        fullTextSearchIri = aFtsIri;
     }
 
     public String getDefaultLanguage()

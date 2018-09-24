@@ -56,7 +56,7 @@ public class KnowledgeBaseMapping implements Serializable
     private IRI propertyDescriptionIri;
 
     @JsonProperty("full-text-search")
-    private IRI ftsIri;
+    private IRI fullTextSearchIri;
 
     @JsonCreator public KnowledgeBaseMapping(@JsonProperty("class") String classIri,
         @JsonProperty("subclass-of") String subclassIri,
@@ -66,7 +66,7 @@ public class KnowledgeBaseMapping implements Serializable
         @JsonProperty("property-type") String propertyTypeIri,
         @JsonProperty("property-label") String propertyLabelIri,
         @JsonProperty("property-description") String propertyDescriptionIri,
-        @JsonProperty("full-text-search") String ftsIri)
+        @JsonProperty("full-text-search") String fullTextSearchIri)
     {
         SimpleValueFactory vf = SimpleValueFactory.getInstance();
         this.classIri = vf.createIRI(classIri);
@@ -77,7 +77,7 @@ public class KnowledgeBaseMapping implements Serializable
         this.propertyTypeIri = vf.createIRI(propertyTypeIri);
         this.propertyLabelIri = vf.createIRI(propertyLabelIri);
         this.propertyDescriptionIri = vf.createIRI(propertyDescriptionIri);
-        this.ftsIri = vf.createIRI(ftsIri);
+        this.fullTextSearchIri = vf.createIRI(fullTextSearchIri);
     }
     
     public KnowledgeBaseMapping() {
@@ -164,14 +164,14 @@ public class KnowledgeBaseMapping implements Serializable
         propertyDescriptionIri = aPropertyDescriptionIri;
     }
 
-    public IRI getFtsIri()
+    public IRI getFullTextSearchIri()
     {
-        return ftsIri;
+        return fullTextSearchIri;
     }
 
-    public void setFtsIri(IRI ftsIri)
+    public void setFullTextSearchIri(IRI fullTextSearchIri)
     {
-        this.ftsIri = ftsIri;
+        this.fullTextSearchIri = fullTextSearchIri;
     }
 
     @Override
@@ -192,13 +192,13 @@ public class KnowledgeBaseMapping implements Serializable
                 && Objects.equals(descriptionIri, that.descriptionIri)
                 && Objects.equals(propertyLabelIri, that.propertyLabelIri)
                 && Objects.equals(propertyDescriptionIri, that.propertyDescriptionIri)
-                && Objects.equals(ftsIri, that.ftsIri);
+                && Objects.equals(fullTextSearchIri, that.fullTextSearchIri);
     }
 
     @Override
     public int hashCode()
     {
         return Objects.hash(classIri, subclassIri, typeIri, propertyTypeIri, descriptionIri,
-                labelIri, propertyLabelIri, propertyDescriptionIri, ftsIri);
+                labelIri, propertyLabelIri, propertyDescriptionIri, fullTextSearchIri);
     }
 }

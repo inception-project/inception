@@ -23,8 +23,6 @@ import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.eclipse.rdf4j.model.vocabulary.SKOS;
 
-import de.tudarmstadt.ukp.inception.kb.IriConstants;
-
 public enum SchemaProfile
 {
     RDFSCHEMA("RDF", RDFS.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT, RDFS.LABEL, RDF.PROPERTY,
@@ -52,11 +50,11 @@ public enum SchemaProfile
     private final IRI propertyTypeIri;
     private final IRI propertyLabelIri;
     private final IRI propertyDescriptionIri;
-    private final IRI ftsIri;
+    private final IRI fullTextSearchIri;
 
     private SchemaProfile(String aLabel, IRI aClassIri, IRI aSubclassIri, IRI aTypeIri,
         IRI aDescriptionIri, IRI aLabelIri, IRI aPropertyTypeIri, IRI aPropertyLabelIri,
-        IRI aPropertyDescriptionIri, IRI aFtsIri)
+        IRI aPropertyDescriptionIri, IRI aFullTextSearchIri)
     {
         label = aLabel;
         classIri = aClassIri;
@@ -67,7 +65,7 @@ public enum SchemaProfile
         propertyTypeIri = aPropertyTypeIri;
         propertyLabelIri = aPropertyLabelIri;
         propertyDescriptionIri = aPropertyDescriptionIri;
-        ftsIri = aFtsIri;
+        fullTextSearchIri = aFullTextSearchIri;
     }
 
     public String getLabel()
@@ -115,8 +113,8 @@ public enum SchemaProfile
         return propertyDescriptionIri;
     }
 
-    public IRI getFtsIri()
+    public IRI getFullTextSearchIri()
     {
-        return ftsIri;
+        return fullTextSearchIri;
     }
 }

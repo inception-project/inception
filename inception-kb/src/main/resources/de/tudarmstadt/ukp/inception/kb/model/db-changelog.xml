@@ -332,15 +332,15 @@
     </addColumn>
   </changeSet>
 
-  <changeSet author="INCEpTION Team" id="20180922">
+  <changeSet author="INCEpTION Team" id="20180924">
     <preConditions onFail="MARK_RAN">
       <not>
-        <columnExists tableName="knowledgebase" columnName="ftsIri"/>
+        <columnExists tableName="knowledgebase" columnName="fullTextSearchIri"/>
       </not>
     </preConditions>
 
     <addColumn tableName="knowledgebase">
-      <column name="ftsIri"
+      <column name="fullTextSearchIri"
               type="VARCHAR(255)">
         <constraints nullable="false" />
       </column>
