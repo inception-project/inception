@@ -120,6 +120,16 @@ Each chain in a chain layers consist of a *chain* and several *links*. The chain
 points to the first link and each link points to the following link. If the CAS contains any links
 that are not reachable through a chain, then this is likely due to a bug.
 
+[[check_NoMultipleIncomingRelationsCheck]]
+==== No Multiple Incoming Relations
+
+[horizontal]
+ID:: `NoMultipleIncomingRelationsCheck`
+
+Check that nodes have only one in-going dependency relation inside the same annotation layer.
+Since dependency relations form a tree, every node of this tree can only have at most one parent node.
+This check outputs a message that includes the sentence number (useful to jump directly to the problem) and the actual offending dependency edges.
+
 [[check_NoZeroSizeTokensAndSentencesCheck]]
 ==== No Zero-Size Tokens and Sentences
 
