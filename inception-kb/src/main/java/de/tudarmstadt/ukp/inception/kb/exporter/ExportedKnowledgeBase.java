@@ -60,6 +60,9 @@ public class ExportedKnowledgeBase
     @JsonProperty("property_description_iri")
     private String propertyDescriptionIri;
 
+    @JsonProperty("full_text_search_iri")
+    private String fullTextSearchIri;
+
     @JsonProperty("read_only")
     private boolean readOnly;
 
@@ -193,6 +196,16 @@ public class ExportedKnowledgeBase
     public void setPropertyDescriptionIri(String aPropertyDescriptionIri)
     {
         propertyDescriptionIri = aPropertyDescriptionIri;
+    }
+
+    public String getFullTextSearchIri()
+    {
+        return fullTextSearchIri;
+    }
+
+    public void setFullTextSearchIri(String fullTextSearchIri)
+    {
+        this.fullTextSearchIri = fullTextSearchIri;
     }
 
     public boolean isReadOnly()

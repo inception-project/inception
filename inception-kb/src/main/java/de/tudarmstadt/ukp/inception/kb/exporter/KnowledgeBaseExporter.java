@@ -107,6 +107,7 @@ public class KnowledgeBaseExporter implements ProjectExporter
             exportedKB.setPropertyTypeIri(kb.getPropertyTypeIri().stringValue());
             exportedKB.setPropertyLabelIri(kb.getPropertyLabelIri().stringValue());
             exportedKB.setPropertyDescriptionIri(kb.getPropertyDescriptionIri().stringValue());
+            exportedKB.setFullTextSearchIri(kb.getFullTextSearchIri().stringValue());
             exportedKB.setReadOnly(kb.isReadOnly());
             exportedKB.setEnabled(kb.isEnabled());
             exportedKB.setReification(kb.getReification().toString());
@@ -194,6 +195,9 @@ public class KnowledgeBaseExporter implements ProjectExporter
             kb.setPropertyDescriptionIri(exportedKB.getPropertyDescriptionIri() != null ?
                 vf.createIRI(exportedKB.getPropertyDescriptionIri()) :
                 DEFAULTPROFILE.getPropertyDescriptionIri());
+            kb.setFullTextSearchIri(exportedKB.getFullTextSearchIri() != null
+                ? vf.createIRI(exportedKB.getFullTextSearchIri())
+                : DEFAULTPROFILE.getFullTextSearchIri());
 
             kb.setReadOnly(exportedKB.isReadOnly());
             kb.setEnabled(exportedKB.isEnabled());
