@@ -22,6 +22,7 @@ import static org.apache.commons.collections.CollectionUtils.isEmpty;
 
 import java.io.InputStream;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -39,6 +40,7 @@ import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
+import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
@@ -92,7 +94,8 @@ public class ImportDocumentsPanel extends Panel
     
     private List<String> listReadableFormats()
     {
-        return importExportService.getReadableFormatLabels();
+        return importExportService.getReadableFormats().stream().map(FormatSupport::getName)
+                .sorted().collect(Collectors.toList());
     }
 
     private void actionImport(AjaxRequestTarget aTarget, Form<Void> aForm)
@@ -123,7 +126,8 @@ public class ImportDocumentsPanel extends Panel
                 SourceDocument document = new SourceDocument();
                 document.setName(fileName);
                 document.setProject(project);
-                document.setFormat(importExportService.getReadableFormatId(format.getObject()));
+                document.setFormat(importExportService.getFormatByName(format.getObject())
+                        .get().getId());
                 
                 try (InputStream is = documentToUpload.getInputStream()) {
                     documentService.uploadSourceDocument(is, document);

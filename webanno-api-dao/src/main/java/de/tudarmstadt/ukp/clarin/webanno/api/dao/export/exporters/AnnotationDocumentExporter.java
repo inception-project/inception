@@ -43,6 +43,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExporter;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
+import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedAnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -51,7 +52,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsv3XWriter;
+import de.tudarmstadt.ukp.clarin.webanno.tsv.WebAnnoTsv3FormatSupport;
 
 @Component
 public class AnnotationDocumentExporter
@@ -157,20 +158,19 @@ public class AnnotationDocumentExporter
             // 
             
             // Determine which format to use for export
-            String formatId;
+            FormatSupport format;
             if (FORMAT_AUTO.equals(aRequest.getFormat())) {
-                formatId = sourceDocument.getFormat();
+                format = new WebAnnoTsv3FormatSupport();
             }
             else {
-                formatId = importExportService.getWritableFormatId(aRequest.getFormat());
-            }
-            Class<?> writer = importExportService.getWritableFormats().get(formatId);
-            if (writer == null) {
-                String msg = "[" + sourceDocument.getName()
-                        + "] No writer found for format [" + formatId
-                        + "] - exporting as WebAnno TSV instead.";
-                aRequest.addMessage(msg);
-                writer = WebannoTsv3XWriter.class;
+                format = importExportService.getWritableFormatByName(aRequest.getFormat())
+                        .orElseGet(() -> {
+                            String msg = "[" + sourceDocument.getName()
+                                    + "] No writer found for format [" + aRequest.getFormat()
+                                    + "] - exporting as WebAnno TSV instead.";
+                            aRequest.addMessage(msg);
+                            return new WebAnnoTsv3FormatSupport();
+                        });
             }
 
             // Export annotations from regular users
@@ -196,19 +196,17 @@ public class AnnotationDocumentExporter
                             sourceDocument, annotationDocument.getUser());
 
                     File annotationFile = null;
-                    if (annotationFileAsSerialisedCas.exists() && writer != null) {
+                    if (annotationFileAsSerialisedCas.exists()) {
                         annotationFile = importExportService.exportAnnotationDocument(
-                                sourceDocument, annotationDocument.getUser(), writer,
+                                sourceDocument, annotationDocument.getUser(), format,
                                 annotationDocument.getUser(), Mode.ANNOTATION, false);
                     }
                     
                     if (annotationFileAsSerialisedCas.exists()) {
                         FileUtils.copyFileToDirectory(annotationFileAsSerialisedCas,
                                 annotationDocumentAsSerialisedCasDir);
-                        if (writer != null) {
-                            FileUtils.copyFileToDirectory(annotationFile, annotationDocumentDir);
-                            FileUtils.forceDelete(annotationFile);
-                        }
+                        FileUtils.copyFileToDirectory(annotationFile, annotationDocumentDir);
+                        FileUtils.forceDelete(annotationFile);
                     }
                     
                     log.info("Exported annotation document content for user ["
@@ -238,7 +236,7 @@ public class AnnotationDocumentExporter
                             aStage + CURATION_FOLDER + sourceDocument.getName());
                     FileUtils.forceMkdir(curationDir);
                     File correctionFile = importExportService.exportAnnotationDocument(
-                            sourceDocument, CORRECTION_USER, writer, CORRECTION_USER,
+                            sourceDocument, CORRECTION_USER, format, CORRECTION_USER,
                             Mode.CORRECTION);
                     FileUtils.copyFileToDirectory(correctionFile, curationDir);
                     FileUtils.forceDelete(correctionFile);
