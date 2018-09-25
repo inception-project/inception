@@ -58,6 +58,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
+import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -69,7 +70,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils;
-import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsv3XWriter;
+import de.tudarmstadt.ukp.clarin.webanno.tsv.WebAnnoTsv3FormatSupport;
 
 /**
  * Expose some functions of WebAnno via a RESTful remote API.
@@ -112,8 +113,7 @@ public class RemoteApiController
      * @param aName
      *            the name of the project to create.
      * @param aFileType
-     *            the type of the files contained in the ZIP. The possible file types are configured
-     *            in the formats.properties configuration file of WebAnno.
+     *            the type of the files contained in the ZIP.
      * @param aFile
      *            a ZIP file containing the project data.
      * @throws Exception if there was an error.
@@ -641,7 +641,7 @@ public class RemoteApiController
      *            {@link SourceDocument} ID.
      * @param annotatorName
      *            {@link User} name.
-     * @param format
+     * @param aFormatId
      *            Export format.
      * @throws Exception
      *             if there was an error.
@@ -655,7 +655,7 @@ public class RemoteApiController
             @PathVariable(PARAM_PROJECT_ID) long aProjectId,
             @PathVariable(PARAM_DOCUMENT_ID) long aSourceDocumentId, 
             @PathVariable(PARAM_USERNAME) String annotatorName,
-            @RequestParam(value = PARAM_FORMAT, required = false) String format)
+            @RequestParam(value = PARAM_FORMAT, required = false) String aFormatId)
                 throws Exception
     {
         // Get current user
@@ -720,24 +720,25 @@ public class RemoteApiController
         }
 
         String formatId;
-        if (format == null) {
+        if (aFormatId == null) {
             formatId = srcDoc.getFormat();
         }
         else {
-            formatId = format;
+            formatId = aFormatId;
         }
         
-        Class<?> writer = importExportService.getWritableFormats().get(formatId);
-        if (writer == null) {
-            String msg = "[" + srcDoc.getName() + "] No writer found for format [" + formatId
-                    + "] - exporting as WebAnno TSV instead.";
-            LOG.info(msg);
-            writer = WebannoTsv3XWriter.class;
-        }
+        // Determine the format
+        FormatSupport format = importExportService.getWritableFormatById(formatId)
+                .orElseGet(() -> {
+                    LOG.info(
+                            "[{}] Format [{}] is not writable - exporting as WebAnno TSV3 instead.",
+                            srcDoc.getName(), formatId);
+                    return new WebAnnoTsv3FormatSupport();
+                });
 
         // Temporary file of annotation document
         File downloadableFile = importExportService.exportAnnotationDocument(srcDoc,
-                annotatorName, writer, annDoc.getName(), Mode.ANNOTATION);
+                annotatorName, format, annDoc.getName(), Mode.ANNOTATION);
 
         try {
             // Set mime type
@@ -782,7 +783,7 @@ public class RemoteApiController
      *            {@link Project} ID.
      * @param aSourceDocumentId
      *            {@link SourceDocument} ID.
-     * @param format
+     * @param aFormatId
      *            Export format.
      * @throws Exception
      *             if there was an error.
@@ -794,7 +795,7 @@ public class RemoteApiController
     public void curationDocumentRead(HttpServletResponse response, 
             @PathVariable(PARAM_PROJECT_ID) long aProjectId,
             @PathVariable(PARAM_DOCUMENT_ID) long aSourceDocumentId,
-            @RequestParam(value = PARAM_FORMAT, required = false) String format)
+            @RequestParam(value = PARAM_FORMAT, required = false) String aFormatId)
                 throws Exception
     {
         // Get current user
@@ -852,23 +853,25 @@ public class RemoteApiController
         }
         
         String formatId;
-        if (format == null) {
+        if (aFormatId == null) {
             formatId = srcDocument.getFormat();
         }
         else {
-            formatId = format;
+            formatId = aFormatId;
         }
         
-        Class<?> writer = importExportService.getWritableFormats().get(formatId);
-        if (writer == null) {
-            LOG.info("[" + srcDocument.getName() + "] No writer found for format ["
-                    + formatId + "] - exporting as WebAnno TSV instead.");
-            writer = WebannoTsv3XWriter.class;
-        }
+        // Determine the format
+        FormatSupport format = importExportService.getWritableFormatById(formatId)
+                .orElseGet(() -> {
+                    LOG.info(
+                            "[{}] Format [{}] is not writable - exporting as WebAnno TSV3 instead.",
+                            srcDocument.getName(), formatId);
+                    return new WebAnnoTsv3FormatSupport();
+                });
 
         // Temporary file of annotation document
         File downloadableFile = importExportService.exportAnnotationDocument(srcDocument,
-                WebAnnoConst.CURATION_USER, writer, srcDocument.getName(), Mode.CURATION);
+                WebAnnoConst.CURATION_USER, format, srcDocument.getName(), Mode.CURATION);
 
         try {
             // Set mime type

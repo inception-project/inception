@@ -42,8 +42,8 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.zip.ZipFile;
 
 import javax.persistence.NoResultException;
@@ -54,7 +54,6 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.UIMAException;
-import org.apache.uima.analysis_component.JCasAnnotator_ImplBase;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
@@ -63,7 +62,6 @@ import org.apache.uima.cas.impl.FeatureImpl;
 import org.apache.uima.cas.impl.TypeImpl;
 import org.apache.uima.cas.impl.TypeSystemImpl;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.jcas.JCas;
 import org.slf4j.Logger;
@@ -94,6 +92,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
+import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.export.ImportUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -109,7 +108,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils;
-import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsv3XWriter;
+import de.tudarmstadt.ukp.clarin.webanno.tsv.WebAnnoTsv3FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.exception.AccessForbiddenException;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.exception.IllegalObjectStateException;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.exception.IncompatibleDocumentException;
@@ -506,7 +505,7 @@ public class RemoteApiController2
             @PathVariable(PARAM_PROJECT_ID) long aProjectId,
             @RequestParam(PARAM_CONTENT) MultipartFile aFile,
             @RequestParam(PARAM_NAME) String aName,
-            @RequestParam(PARAM_FORMAT) String aFormat,
+            @RequestParam(PARAM_FORMAT) String aFormatId,
             @RequestParam(PARAM_STATE) Optional<String> aState,
             UriComponentsBuilder aUcb)
         throws Exception
@@ -515,19 +514,18 @@ public class RemoteApiController2
         Project project = getProject(aProjectId);
 
         // Check if the format is supported
-        Map<String, Class<CollectionReader>> readableFormats = importExportService
-                .getReadableFormats();
-        if (readableFormats.get(aFormat) == null) {
+        if (!importExportService.getReadableFormatById(aFormatId).isPresent()) {
             throw new UnsupportedFormatException(
-                    "Format [%s] not supported. Acceptable formats are %s.", aFormat,
-                    readableFormats.keySet());
+                    "Format [%s] not supported. Acceptable formats are %s.", aFormatId,
+                    importExportService.getReadableFormats().stream()
+                            .map(FormatSupport::getId).sorted().collect(Collectors.toList()));
         }
         
         // Meta data entry to the database
         SourceDocument document = new SourceDocument();
         document.setProject(project);
         document.setName(aName);
-        document.setFormat(aFormat);
+        document.setFormat(aFormatId);
         
         // Set state if one was provided
         if (aState.isPresent()) {
@@ -583,19 +581,19 @@ public class RemoteApiController2
         SourceDocument doc = getDocument(project, aDocumentId);
         
         boolean originalFile;
-        String format;
+        String formatId;
         if (aFormat.isPresent()) {
             if (VAL_ORIGINAL.equals(aFormat.get())) {
-                format = doc.getFormat();
+                formatId = doc.getFormat();
                 originalFile = true;
             }
             else {
-                format = aFormat.get();
-                originalFile = doc.getFormat().equals(format);
+                formatId = aFormat.get();
+                originalFile = doc.getFormat().equals(formatId);
             }
         }
         else {
-            format = doc.getFormat();
+            formatId = doc.getFormat();
             originalFile = true;
         }
         
@@ -616,14 +614,13 @@ public class RemoteApiController2
             // send that back to the client
             
             // Check if the format is supported
-            Map<String, Class<JCasAnnotator_ImplBase>> writableFormats = importExportService
-                    .getWritableFormats();
-            Class<JCasAnnotator_ImplBase> writer = writableFormats.get(format);
-            if (writer == null) {
-                throw new UnsupportedFormatException(
-                        "Format [%s] cannot be exported. Exportable formats are %s.", aFormat,
-                        writableFormats.keySet());
-            }
+            FormatSupport format = importExportService.getWritableFormatById(formatId)
+                    .orElseThrow(() -> new UnsupportedFormatException(
+                            "Format [%s] cannot be exported. Exportable formats are %s.", aFormat,
+                            importExportService.getWritableFormats().stream()
+                                    .map(FormatSupport::getId)
+                                    .sorted()
+                                    .collect(Collectors.toList()).toString()));
             
             // Create a temporary export file from the annotations
             JCas jcas = documentService.createOrReadInitialCas(doc);
@@ -632,7 +629,7 @@ public class RemoteApiController2
             try {
                 // Load the converted file into memory
                 exportedFile = importExportService.exportCasToFile(jcas.getCas(), doc,
-                        doc.getName(), writer, true);
+                        doc.getName(), format, true);
                 byte[] resource = FileUtils.readFileToByteArray(exportedFile);
                 
                 // Send it back to the client
@@ -915,27 +912,27 @@ public class RemoteApiController2
         SourceDocument doc = getDocument(project, aDocumentId);
 
         // Check format
-        String format;
+        String formatId;
         if (aFormat.isPresent()) {
             if (VAL_ORIGINAL.equals(aFormat.get())) {
-                format = doc.getFormat();
+                formatId = doc.getFormat();
             }
             else {
-                format = aFormat.get();
+                formatId = aFormat.get();
             }
         }
         else {
-            format = doc.getFormat();
+            formatId = doc.getFormat();
         }
         
         // Determine the format
-        Class<?> writer = importExportService.getWritableFormats().get(format);
-        if (writer == null) {
-            String msg = "[" + doc.getName() + "] No writer found for format [" + format
-                    + "] - exporting as WebAnno TSV instead.";
-            LOG.info(msg);
-            writer = WebannoTsv3XWriter.class;
-        }
+        FormatSupport format = importExportService.getWritableFormatById(formatId)
+                .orElseGet(() -> {
+                    LOG.info(
+                            "[{}] Format [{}] is not writable - exporting as WebAnno TSV3 instead.",
+                            doc.getName(), formatId);
+                    return new WebAnnoTsv3FormatSupport();
+                });
         
         // In principle we don't need this call - but it makes sure that we check that the
         // annotation document entry is actually properly set up in the database.
@@ -948,7 +945,7 @@ public class RemoteApiController2
         byte[] resource;
         try {
             exportedAnnoFile = importExportService.exportAnnotationDocument(doc, aAnnotatorId,
-                    writer, doc.getName(), Mode.ANNOTATION);
+                    format, doc.getName(), Mode.ANNOTATION);
             resource = FileUtils.readFileToByteArray(exportedAnnoFile);
         }
         finally {
@@ -970,22 +967,21 @@ public class RemoteApiController2
     }
     
     private JCas createCompatibleCas(long aProjectId, long aDocumentId, MultipartFile aFile,
-            Optional<String> aFormat)
+            Optional<String> aFormatId)
         throws RemoteApiException, ClassNotFoundException, IOException, UIMAException
     {
         Project project = getProject(aProjectId);
         SourceDocument document = getDocument(project, aDocumentId);
-    
+
         // Check if the format is supported
-        String format = aFormat.orElse(FORMAT_DEFAULT);
-        Map<String, Class<CollectionReader>> readableFormats = importExportService
-                .getReadableFormats();
-        if (readableFormats.get(format) == null) {
+        String format = aFormatId.orElse(FORMAT_DEFAULT);
+        if (!importExportService.getReadableFormatById(format).isPresent()) {
             throw new UnsupportedFormatException(
                     "Format [%s] not supported. Acceptable formats are %s.", format,
-                    readableFormats.keySet());
+                    importExportService.getReadableFormats().stream()
+                            .map(FormatSupport::getId).sorted().collect(Collectors.toList()));
         }
-        
+
         // Convert the uploaded annotation document into a CAS
         File tmpFile = null;
         JCas annotationCas;

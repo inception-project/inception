@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Queue;
+import java.util.stream.Collectors;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -58,6 +59,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportService;
+import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.export.ExportUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -128,8 +130,10 @@ public class ProjectExportPanel
                 @Override
                 protected List<String> load()
                 {                    
-                    List<String> formats = new ArrayList<>(
-                            importExportService.getWritableFormatLabels());
+                    List<String> formats = importExportService.getWritableFormats().stream()
+                            .map(FormatSupport::getName)
+                            .sorted()
+                            .collect(Collectors.toCollection(ArrayList::new));
                     formats.add(0, ProjectExportRequest.FORMAT_AUTO);
                     return formats;
                 }

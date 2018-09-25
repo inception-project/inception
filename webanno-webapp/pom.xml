@@ -175,18 +175,6 @@
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
       <artifactId>webanno-io-xmi</artifactId>
     </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
-      <artifactId>de.tudarmstadt.ukp.dkpro.core.io.conll-asl</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
-      <artifactId>de.tudarmstadt.ukp.dkpro.core.io.bincas-asl</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
-      <artifactId>de.tudarmstadt.ukp.dkpro.core.io.text-asl</artifactId>
-    </dependency>
 
     <!-- DATABASE / HIBERNATE -->
 
@@ -431,7 +419,7 @@
               <usedDependency> de.tudarmstadt.ukp.clarin.webanno:webanno-project</usedDependency>
               <usedDependency> de.tudarmstadt.ukp.clarin.webanno:webanno-remote</usedDependency>
               <usedDependency> de.tudarmstadt.ukp.clarin.webanno:webanno-automation</usedDependency>
-              <!-- WebAnno IO Modules - they are required via the formats.properties file -->
+              <!-- WebAnno IO Modules - used via Spring -->
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-io-tei</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-io-tsv</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-io-tcf</usedDependency>
@@ -439,9 +427,6 @@
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-io-xmi</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-io-conll</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-io-text</usedDependency>
-              <usedDependency>de.tudarmstadt.ukp.dkpro.core:de.tudarmstadt.ukp.dkpro.core.io.conll-asl</usedDependency>
-              <usedDependency>de.tudarmstadt.ukp.dkpro.core:de.tudarmstadt.ukp.dkpro.core.io.bincas-asl</usedDependency>
-              <usedDependency>de.tudarmstadt.ukp.dkpro.core:de.tudarmstadt.ukp.dkpro.core.io.text-asl</usedDependency>
               <!-- JDBC drivers and database stuff - used via reflection -->
               <usedDependency>org.hibernate:hibernate-entitymanager</usedDependency>
               <usedDependency>commons-dbcp:commons-dbcp</usedDependency>

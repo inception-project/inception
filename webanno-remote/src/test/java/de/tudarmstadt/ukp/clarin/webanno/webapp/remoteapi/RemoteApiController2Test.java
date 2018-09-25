@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi;
 
+import static java.util.Arrays.asList;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -30,7 +31,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.io.File;
 import java.util.Collections;
-import java.util.Properties;
 
 import org.junit.Before;
 import org.junit.FixMethodOrder;
@@ -78,8 +78,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDaoImpl;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
-import de.tudarmstadt.ukp.dkpro.core.io.text.TextReader;
-import de.tudarmstadt.ukp.dkpro.core.io.text.TextWriter;
+import de.tudarmstadt.ukp.clarin.webanno.text.TextFormatSupport;
 
 @RunWith(SpringRunner.class) 
 @EnableAutoConfiguration
@@ -318,7 +317,8 @@ public class RemoteApiController2Test
         @Bean
         public ImportExportService importExportService()
         {
-            return new ImportExportServiceImpl();
+            return new ImportExportServiceImpl(asList(new TextFormatSupport()), casStorageService(),
+                    annotationService());
         }
         
         @Bean
@@ -345,16 +345,6 @@ public class RemoteApiController2Test
             return new BackupProperties();
         }
 
-        @Bean
-        public Properties formats()
-        {
-            Properties props = new Properties();
-            props.put("text.label", "Plain text");
-            props.put("text.reader", TextReader.class.getName());
-            props.put("text.writer", TextWriter.class.getName());
-            return props;
-        }
-        
         @Bean
         public ApplicationContextProvider contextProvider()
         {

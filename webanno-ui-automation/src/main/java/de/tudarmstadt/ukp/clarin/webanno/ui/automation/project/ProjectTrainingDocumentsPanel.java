@@ -28,6 +28,7 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -47,6 +48,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
+import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.automation.service.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -73,7 +75,7 @@ public class ProjectTrainingDocumentsPanel
 
     private FileUploadField fileUpload;
 
-    private ArrayList<String> readableFormats;
+    private List<String> readableFormats;
     private String selectedFormat;
     private IModel<Project> selectedProjectModel;
     private AnnotationFeature feature;
@@ -92,7 +94,8 @@ public class ProjectTrainingDocumentsPanel
             selectedFormat = WebAnnoConst.TAB_SEP;
         }
         else {
-            readableFormats = new ArrayList<>(importExportService.getReadableFormatLabels());
+            readableFormats = importExportService.getReadableFormats().stream()
+                    .map(FormatSupport::getName).sorted().collect(Collectors.toList());
             selectedFormat = readableFormats.get(0);
         }
         add(fileUpload = new FileUploadField("content", new Model()));
@@ -161,7 +164,8 @@ public class ProjectTrainingDocumentsPanel
                         }
                         else {
                             String reader = importExportService
-                                    .getReadableFormatId(readableFormatsChoice.getModelObject());
+                                    .getFormatByName(readableFormatsChoice.getModelObject())
+                                    .get().getId();
                             document.setFormat(reader);
                         }
 

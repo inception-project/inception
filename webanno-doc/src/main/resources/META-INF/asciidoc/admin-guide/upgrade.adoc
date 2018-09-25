@@ -21,7 +21,7 @@
 
 * Log into WebAnno and export all the projects that you wish to migrate using the *Export* pane in the project settings
 * Move your WebAnno home folder to a safe location so that WebAnno and create a new home folder in the old location
-* Copy the *settings.properties* and *formats.properties* (if present) back from your moved folder
+* Copy the *settings.properties* back from your moved folder
 * Start the new WebAnno version to initialize the database
 * Recreate the users
 ** If you are using MySQL

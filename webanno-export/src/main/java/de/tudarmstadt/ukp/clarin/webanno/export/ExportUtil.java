@@ -31,10 +31,11 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportException;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
+import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsv3XWriter;
+import de.tudarmstadt.ukp.clarin.webanno.tsv.WebAnnoTsv3FormatSupport;
 
 public class ExportUtil
 {
@@ -62,18 +63,20 @@ public class ExportUtil
                 .listSourceDocuments(project);
 
         // Determine which format to use for export.
-        Class<?> writer;
+        FormatSupport format;
         if (FORMAT_AUTO.equals(aModel.getFormat())) {
-            writer = WebannoTsv3XWriter.class;
+            format = new WebAnnoTsv3FormatSupport();
         }
         else {
-            writer = importExportService.getWritableFormats().get(
-                    importExportService.getWritableFormatId(aModel.getFormat()));
-            if (writer == null) {
-                writer = WebannoTsv3XWriter.class;
-            }
+            format = importExportService.getWritableFormatByName(aModel.getFormat())
+                    .orElseGet(() -> {
+//                        LOG.info(
+//                                "Format [{}] is not writable - exporting as WebAnno TSV3 instead.",
+//                                aModel.getFormat());
+                        return new WebAnnoTsv3FormatSupport();
+                    });
         }
-        
+
         int initProgress = aModel.progress - 1;
         int i = 1;
         for (de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument : documents) {
@@ -100,7 +103,7 @@ public class ExportUtil
                     // Copy secondary export format for convenience - not used during import
                     try {
                         File curationFile = importExportService.exportAnnotationDocument(
-                                sourceDocument, WebAnnoConst.CURATION_USER, writer,
+                                sourceDocument, WebAnnoConst.CURATION_USER, format,
                                 WebAnnoConst.CURATION_USER, Mode.CURATION);
                         FileUtils.copyFileToDirectory(curationFile, curationDir);
                         FileUtils.forceDelete(curationFile);

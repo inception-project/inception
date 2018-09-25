@@ -41,12 +41,13 @@ import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportException;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExporter;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
+import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsv3XWriter;
+import de.tudarmstadt.ukp.clarin.webanno.tsv.WebAnnoTsv3FormatSupport;
 
 @Component
 public class CuratedDocumentsExporter
@@ -82,17 +83,19 @@ public class CuratedDocumentsExporter
         // Get all the source documents from the project
         List<SourceDocument> documents = documentService.listSourceDocuments(project);
 
-        // Determine which format to use for export.
-        Class<?> writer;
+        // Determine which format to use for export
+        FormatSupport format;
         if (FORMAT_AUTO.equals(aRequest.getFormat())) {
-            writer = WebannoTsv3XWriter.class;
+            format = new WebAnnoTsv3FormatSupport();
         }
         else {
-            writer = importExportService.getWritableFormats().get(
-                    importExportService.getWritableFormatId(aRequest.getFormat()));
-            if (writer == null) {
-                writer = WebannoTsv3XWriter.class;
-            }
+            format = importExportService.getWritableFormatByName(aRequest.getFormat())
+                    .orElseGet(() -> {
+                        String msg = "No writer found for format [" + aRequest.getFormat()
+                                + "] - exporting as WebAnno TSV instead.";
+                        aRequest.addMessage(msg);
+                        return new WebAnnoTsv3FormatSupport();
+                    });
         }
         
         int initProgress = aRequest.progress - 1;
@@ -121,7 +124,7 @@ public class CuratedDocumentsExporter
                     // Copy secondary export format for convenience - not used during import
                     try {
                         File curationFile = importExportService.exportAnnotationDocument(
-                                sourceDocument, WebAnnoConst.CURATION_USER, writer,
+                                sourceDocument, WebAnnoConst.CURATION_USER, format,
                                 WebAnnoConst.CURATION_USER, Mode.CURATION);
                         FileUtils.copyFileToDirectory(curationFile, curationDir);
                         FileUtils.forceDelete(curationFile);
