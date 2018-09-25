@@ -61,7 +61,7 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 public class KnowledgeBaseExporterTest
 {
     private static final String TestURLEndpoint = "https://collection.britishmuseum.org/sparql";
-        
+
     private @Mock KnowledgeBaseService kbService;
     private @Mock AnnotationSchemaService schemaService;
 
@@ -71,12 +71,12 @@ public class KnowledgeBaseExporterTest
     public @Rule TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     private KnowledgeBaseExporter sut;
-    
+
     @Before
     public void setUp() throws Exception
     {
         initMocks(this);
-        
+
         sourceProject = new Project();
         sourceProject.setId(1l);
         sourceProject.setName("Test Project");
@@ -86,15 +86,15 @@ public class KnowledgeBaseExporterTest
         targetProject.setName("Test Project");
 
         when(kbService.getKnowledgeBases(sourceProject)).thenReturn(knowledgeBases());
-        
+
         when(kbService.getKnowledgeBaseConfig(any()))
-                .thenReturn(new SPARQLRepositoryConfig(TestURLEndpoint));
-     
+            .thenReturn(new SPARQLRepositoryConfig(TestURLEndpoint));
+
         when(schemaService.listAnnotationFeature(sourceProject)).thenReturn(features(sourceProject));
-        
+
         sut = new KnowledgeBaseExporter(kbService, schemaService);
     }
-    
+
     @Test
     public void thatExportingWorks() throws Exception
     {
@@ -116,18 +116,18 @@ public class KnowledgeBaseExporterTest
         // Check how many localKBs have been exported
         List<KnowledgeBase> exportedKbs = exportKbCaptor.getAllValues();
         int numOfLocalKBs = exportedKbs.stream()
-                .filter(kb -> kb.getType().equals(RepositoryType.LOCAL))
-                .collect(Collectors.toList()).size();
+            .filter(kb -> kb.getType().equals(RepositoryType.LOCAL))
+            .collect(Collectors.toList()).size();
 
         // Verify that importData is called as many times as there are localKBs
         verify(kbService, times(numOfLocalKBs)).importData(any(),
-                any(), any());
+            any(), any());
 
         assertThat(exportedKbs)
-                .usingElementComparatorIgnoringFields("repositoryId", "project")
-                .containsExactlyInAnyOrderElementsOf(knowledgeBases());
+            .usingElementComparatorIgnoringFields("repositoryId", "project")
+            .containsExactlyInAnyOrderElementsOf(knowledgeBases());
     }
-    
+
     @Test
     public void thatRemappingConceptFeaturesOnImportWorks() throws Exception
     {
@@ -136,48 +136,48 @@ public class KnowledgeBaseExporterTest
         exportRequest.setProject(sourceProject);
         ExportedProject exportedProject = new ExportedProject();
         sut.exportData(exportRequest, exportedProject, temporaryFolder.getRoot());
-        
+
         // Mock that the KB ID changes during import when registerKnowledgeBase is called
         doAnswer(i -> {
             KnowledgeBase kb = i.getArgument(0);
             kb.setRepositoryId("imported-" + kb.getRepositoryId());
             return null;
         }).when(kbService).registerKnowledgeBase(any(), any());
-        
+
         // Mock the features in the imported project
         when(schemaService.listAnnotationFeature(targetProject)).thenReturn(features(targetProject));
-        
+
         // Capture remapped features
         ArgumentCaptor<AnnotationFeature> importedAnnotationFeatureCaptor = ArgumentCaptor
-                .forClass(AnnotationFeature.class);
+            .forClass(AnnotationFeature.class);
         doNothing().when(schemaService).createFeature(importedAnnotationFeatureCaptor.capture());
-        
+
         // Import the project again
         ProjectImportRequest importRequest = new ProjectImportRequest(true);
         ZipFile zipFile = mock(ZipFile.class);
         sut.importData(importRequest, targetProject, exportedProject, zipFile);
-        
+
         // Verify that features were actually processed
         verify(schemaService, times(schemaService.listAnnotationFeature(sourceProject).size()))
-                .createFeature(any());
-        
+            .createFeature(any());
+
         // Check that IDs have been remapped
         List<AnnotationFeature> importedFeatures = importedAnnotationFeatureCaptor.getAllValues();
         assertThat(importedFeatures)
-                .extracting(feature -> {
-                    ConceptFeatureTraits traits = JSONUtil.fromJsonString(ConceptFeatureTraits.class,
-                            feature.getTraits());
-                    return traits.getRepositoryId();
-                })
-                .allSatisfy(id -> assertThat(id).startsWith("imported-"));
+            .extracting(feature -> {
+                ConceptFeatureTraits traits = JSONUtil.fromJsonString(ConceptFeatureTraits.class,
+                    feature.getTraits());
+                return traits.getRepositoryId();
+            })
+            .allSatisfy(id -> assertThat(id).startsWith("imported-"));
     }
-    
+
     private List<KnowledgeBase> knowledgeBases() throws Exception
     {
         KnowledgeBase kb1 = buildKnowledgeBase("kb1");
         kb1.setType(RepositoryType.LOCAL);
         kb1.setClassIri(IriConstants.WIKIDATA_CLASS);
-        
+
         KnowledgeBase kb2 = buildKnowledgeBase("kb2");
         kb2.setType(RepositoryType.REMOTE);
         kb2.setClassIri(OWL.CLASS);
@@ -190,19 +190,19 @@ public class KnowledgeBaseExporterTest
         kb4.setType(RepositoryType.LOCAL);
         kb4.setClassIri(RDFS.CLASS);
 
-        return Arrays.asList(kb1, kb2, kb3);        
+        return Arrays.asList(kb1, kb2, kb3);
     }
-    
+
     private List<AnnotationFeature> features(Project aProject) throws Exception
     {
         AnnotationLayer layer1 = new AnnotationLayer("layer", "layer", WebAnnoConst.SPAN_TYPE,
-                aProject, false);
+            aProject, false);
 
         AnnotationFeature feat1 = new AnnotationFeature(1, layer1, "conceptFeature", "kb:conceptA");
         ConceptFeatureTraits traits1 = new ConceptFeatureTraits();
         traits1.setRepositoryId("id-kb1");
         feat1.setTraits(JSONUtil.toJsonString(traits1));
-        
+
         return asList(feat1);
     }
 
@@ -226,5 +226,5 @@ public class KnowledgeBaseExporterTest
                 vf.createIRI("http://www.ics.forth.gr/isl/CRMinf/I1_Argumentation")));
         kb.setDefaultLanguage("en");
         return kb;
-    }  
+    }
 }

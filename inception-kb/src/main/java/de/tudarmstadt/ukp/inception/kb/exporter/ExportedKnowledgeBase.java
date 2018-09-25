@@ -26,7 +26,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonPropertyOrder(alphabetic = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ExportedKnowledgeBase
-{    
+{
     @JsonProperty("id")
     private String id;
 
@@ -35,7 +35,7 @@ public class ExportedKnowledgeBase
 
     @JsonProperty("type")
     private String type;
-    
+
     @JsonProperty("class_iri")
     private String classIri;
 
@@ -54,10 +54,10 @@ public class ExportedKnowledgeBase
     @JsonProperty("property_type_iri")
     private String propertyTypeIri;
 
-    @JsonProperty("property-label-iri")
+    @JsonProperty("property_label_iri")
     private String propertyLabelIri;
 
-    @JsonProperty("property-description-iri")
+    @JsonProperty("property_description_iri")
     private String propertyDescriptionIri;
 
     @JsonProperty("read_only")
@@ -68,20 +68,20 @@ public class ExportedKnowledgeBase
 
     @JsonProperty("reification")
     private String reification;
-    
+
     @JsonProperty("support_concept_linking")
     private boolean supportConceptLinking;
-    
+
     @JsonProperty("base_prefix")
     private String basePrefix;
 
-    @JsonProperty("explicitly-defined-root-concepts")
-    private List<String> explicitlyDefinedRootConcepts;
+    @JsonProperty("root_concepts")
+    private List<String> rootConcepts;
 
-    @JsonProperty("default-language")
+    @JsonProperty("default_language")
     private String defaultLanguage;
 
-    @JsonProperty("max-results")
+    @JsonProperty("max_results")
     private int maxResults;
 
     // set to null for local knowledge bases
@@ -227,15 +227,15 @@ public class ExportedKnowledgeBase
     {
         reification = aReification;
     }
-    
+
     public void setSupportConceptLinking(boolean aSupportConceptLinking) {
         supportConceptLinking = aSupportConceptLinking;
     }
-    
+
     public boolean isSupportConceptLinking() {
         return supportConceptLinking;
     }
-    
+
     public String getBasePrefix()
     {
         return basePrefix;
@@ -246,14 +246,14 @@ public class ExportedKnowledgeBase
         basePrefix = aBasePrefix;
     }
 
-    public List<String> getExplicitlyDefinedRootConcepts()
+    public List<String> getRootConcepts()
     {
-        return explicitlyDefinedRootConcepts;
+        return rootConcepts;
     }
 
-    public void setExplicitlyDefinedRootConcepts(List<String> explicitlyDefinedRootConcepts)
+    public void setRootConcepts(List<String> aRootConcepts)
     {
-        this.explicitlyDefinedRootConcepts = explicitlyDefinedRootConcepts;
+        rootConcepts = aRootConcepts;
     }
 
     public String getDefaultLanguage()
@@ -261,9 +261,9 @@ public class ExportedKnowledgeBase
         return defaultLanguage;
     }
 
-    public void setDefaultLanguage(String defaultLanguage)
+    public void setDefaultLanguage(String aDefaultLanguage)
     {
-        this.defaultLanguage = defaultLanguage;
+        defaultLanguage = aDefaultLanguage;
     }
 
     public int getMaxResults()
@@ -271,9 +271,9 @@ public class ExportedKnowledgeBase
         return maxResults;
     }
 
-    public void setMaxResults(int maxResults)
+    public void setMaxResults(int aMaxResults)
     {
-        this.maxResults = maxResults;
+        maxResults = aMaxResults;
     }
 
     public String getRemoteURL()
