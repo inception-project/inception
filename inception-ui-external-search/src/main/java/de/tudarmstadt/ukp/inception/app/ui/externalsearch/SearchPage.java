@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
@@ -30,6 +31,12 @@ import org.apache.wicket.Session;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
+import org.apache.wicket.extensions.markup.html.repeater.data.grid.ICellPopulator;
+import org.apache.wicket.extensions.markup.html.repeater.data.table.AbstractColumn;
+import org.apache.wicket.extensions.markup.html.repeater.data.table.DataTable;
+import org.apache.wicket.extensions.markup.html.repeater.data.table.DefaultDataTable;
+import org.apache.wicket.extensions.markup.html.repeater.data.table.IColumn;
+import org.apache.wicket.extensions.markup.html.repeater.data.table.PropertyColumn;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
@@ -37,8 +44,9 @@ import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.SubmitLink;
 import org.apache.wicket.markup.html.form.TextField;
-import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
+import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
@@ -90,6 +98,10 @@ public class SearchPage extends ApplicationPageBase
     private User currentUser;
     private Project project;
 
+    ExternalResultDataProvider dataProvider;
+
+    ModalWindow modalDocumentWindow;
+
     public SearchPage(PageParameters aParameters)
     {
         project = Session.get().getMetaData(SessionMetaData.CURRENT_PROJECT);
@@ -110,29 +122,6 @@ public class SearchPage extends ApplicationPageBase
         else {
             currentRepository = null;
         }
-
-        final ModalWindow modalDocumentWindow;
-
-        modalDocumentWindow = new ModalWindow("modalDocumentWindow");
-
-        add(modalDocumentWindow);
-
-        modalDocumentWindow.setCloseButtonCallback(new ModalWindow.CloseButtonCallback()
-        {
-            @Override
-            public boolean onCloseButtonClicked(AjaxRequestTarget target)
-            {
-                return true;
-            }
-        });
-
-        modalDocumentWindow.setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
-        {
-            @Override
-            public void onClose(AjaxRequestTarget target)
-            {
-            }
-        });
 
         repositoriesModel = new LoadableDetachableModel<ArrayList<DocumentRepository>>()
         {
@@ -160,57 +149,86 @@ public class SearchPage extends ApplicationPageBase
 
         SearchForm searchForm = new SearchForm("searchForm");
 
-        resultList = new ListView<ExternalSearchResult>("results", results)
+        modalDocumentWindow = new ModalWindow("modalDocumentWindow");
+
+        add(modalDocumentWindow);
+        
+        modalDocumentWindow.setCloseButtonCallback(new ModalWindow.CloseButtonCallback()
         {
-            /**
-             * 
-             */
-            private static final long serialVersionUID = -631500052426449048L;
-
             @Override
-            protected void populateItem(ListItem<ExternalSearchResult> item)
+            public boolean onCloseButtonClicked(AjaxRequestTarget target)
             {
-                AjaxLink<Void> documentId = new AjaxLink<Void>("documentId")
-                {
-                    /**
-                     * 
-                     */
-                    private static final long serialVersionUID = 1L;
-
-                    @Override
-                    public void onClick(AjaxRequestTarget target)
-                    {
-                        String documentId = item.getModel().getObject().getDocumentId();
-                        String text = externalSearchService.getDocumentById(currentUser, 
-                                currentRepository, documentId).getText();
-
-                        modalDocumentWindow.setContent(new ModalDocumentWindow("content", text));
-                        modalDocumentWindow.setTitle(documentId);
-                        
-                        modalDocumentWindow.show(target);
-
-                        if (documentService.existsSourceDocument(project, documentId)) {
-                            error("Document " + documentId + " already uploaded ! Delete "
-                                    + "the document if you want to upload again");
-                        }
-                        else {
-                            importDocument(documentId, text);
-                        }
-
-                    }
-                };
-                documentId.add(new Label("text", item.getModel().getObject().getDocumentId()));
-
-                item.add(documentId);
-
-                item.add(
-                        new Label("documentTitle", item.getModel().getObject().getDocumentTitle()));
+                return true;
             }
-        };
-        mainContainer.add(resultList);
+        });
+
+        modalDocumentWindow.setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
+        {
+            @Override
+            public void onClose(AjaxRequestTarget target)
+            {
+            }
+        });
+
 
         mainContainer.add(searchForm);
 
+        List<IColumn<ExternalSearchResult, String>> columns = new ArrayList<>();
+
+        columns.add(new AbstractColumn<ExternalSearchResult, String>(new Model<>("Text Id"))
+        {
+            @Override
+            public void populateItem(Item<ICellPopulator<ExternalSearchResult>> cellItem,
+                    String componentId, IModel<ExternalSearchResult> model)
+            {
+                cellItem.add(new ShowPanel(componentId, model));
+            }
+        });
+        
+        columns.add(new PropertyColumn<ExternalSearchResult, String>(new Model<>("Doc. Id"),
+                "documentId", "documentId"));
+
+        columns.add(new PropertyColumn<ExternalSearchResult, String>(new Model<>("Source"),
+                "source", "source"));
+
+        columns.add(new PropertyColumn<ExternalSearchResult, String>(new Model<>("Timestamp"),
+                "timestamp", "timestamp"));
+
+        columns.add(new PropertyColumn<ExternalSearchResult, String>(new Model<>("URI"),
+                "uri", "uri"));
+
+        columns.add(new PropertyColumn<ExternalSearchResult, String>(new Model<>("Score"),
+                "score", "score"));
+
+        columns.add(new AbstractColumn<ExternalSearchResult, String>(new Model<>("Highlights"))
+        {
+            @Override
+            public void populateItem(Item<ICellPopulator<ExternalSearchResult>> cellItem,
+                    String componentId, IModel<ExternalSearchResult> model)
+            {
+                cellItem.add(new HighlightsPanel(componentId, model));
+            }
+        });
+        
+        columns.add(new AbstractColumn<ExternalSearchResult, String>(new Model<>("Action"))
+        {
+            @Override
+            public void populateItem(Item<ICellPopulator<ExternalSearchResult>> cellItem,
+                    String componentId, IModel<ExternalSearchResult> model)
+            {
+                cellItem.add(new ImportPanel(componentId, model));
+            }
+        });
+        
+
+        dataProvider = new ExternalResultDataProvider(
+                externalSearchService, currentUser, currentRepository, "merck");
+        
+        DataTable<ExternalSearchResult, String> resultTable = new DefaultDataTable<>("resultsTable",
+                columns, dataProvider, 8);
+
+        mainContainer.add(resultTable);
+        
         mainContainer.setOutputMarkupId(true);
 
     }
@@ -260,6 +278,8 @@ public class SearchPage extends ApplicationPageBase
                     }
 
                     searchDocuments(targetQuery.getObject());
+                    
+                    dataProvider.searchDocuments(targetQuery.getObject());
                 }
             };
 
@@ -332,5 +352,84 @@ public class SearchPage extends ApplicationPageBase
 
     private void abort() {
         throw new RestartResponseException(getApplication().getHomePage());
+    }
+
+    class ShowPanel extends Panel
+    {
+        public ShowPanel(String id, IModel<ExternalSearchResult> model)
+        {
+            super(id, model);
+            
+            ExternalSearchResult result = (ExternalSearchResult) getDefaultModelObject();
+
+            String documentId = result.getDocumentTitle();
+
+            AjaxLink link = new AjaxLink("openDocument")
+            {
+                @Override
+                public void onClick(AjaxRequestTarget aTarget)
+                {
+                    String text = externalSearchService.getDocumentById(currentUser, 
+                            currentRepository, documentId).getText();
+
+                    modalDocumentWindow.setContent(new ModalDocumentWindow("content", text));
+                    modalDocumentWindow.setTitle(documentId);
+                    
+                    modalDocumentWindow.show(aTarget);
+                }
+            };
+            link.add(new Label("documentId", documentId));
+            
+            add(link);
+        }
+    }
+
+    class ImportPanel extends Panel
+    {
+        public ImportPanel(String id, IModel<ExternalSearchResult> model)
+        {
+            super(id, model);
+            
+            ExternalSearchResult result = (ExternalSearchResult) getDefaultModelObject();
+
+            String documentId = result.getDocumentTitle();
+
+            AjaxLink link = new AjaxLink("importDocument")
+            {
+                @Override
+                public void onClick(AjaxRequestTarget aTarget)
+                {
+                    String text = externalSearchService.getDocumentById(currentUser, 
+                            currentRepository, documentId).getText();
+
+                    if (documentService.existsSourceDocument(project, documentId)) {
+                        error("Document " + documentId + " already uploaded ! Delete "
+                                + "the document if you want to upload again");
+                    }
+                    else {
+                        importDocument(documentId, text);
+                    }
+                }
+            };
+            link.add(new Label("documentId", documentId));
+            
+            add(link);
+        }
+    }
+
+    class HighlightsPanel extends Panel
+    {
+        public HighlightsPanel(String id, IModel<ExternalSearchResult> model)
+        {
+            super(id, model);
+            
+            ExternalSearchResult result = (ExternalSearchResult) getDefaultModelObject();
+
+            ArrayList<String> highlights = result.getHighlights();
+
+            String highlight = highlights.get(0);
+            
+            add(new Label("highlight", highlight).setEscapeModelStrings(false));
+        }
     }
 }

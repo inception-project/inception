@@ -60,18 +60,8 @@
 								</div>
 							</fieldset>
 						</form>
-						<table id="bd"
-							class="table table-striped table-bordered table-condensed">
-							<tr>
-								<th>Id</th>
-								<th style="text-align: right;">Title</th>
-							</tr>
-							<tr wicket:id="results" style="display: table-row;">
-								<td style="display: table-cell;"><a wicket:id="documentId"
-									href="#"><span wicket:id="text"></span> </a></td>
-								<td wicket:id="documentTitle"
-									style="display: table-cell; text-align: right;"></td>
-							</tr>
+						<table class="dataview" cellspacing="0" wicket:id="resultsTable">[Results
+							table]
 						</table>
 					</div>
 					<div wicket:id="modalDocumentWindow"></div>

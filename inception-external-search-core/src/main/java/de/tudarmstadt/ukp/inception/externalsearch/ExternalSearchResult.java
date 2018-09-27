@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.externalsearch;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 
 public class ExternalSearchResult
     implements Serializable
@@ -36,6 +37,12 @@ public class ExternalSearchResult
     private String rightContext;
     private String documentId;
     private String documentTitle;
+    private String source;
+    private String uri;
+    private String timestamp;
+    private String language;
+    private Double score;
+    private ArrayList<String> highlights;
 
     public int getTokenStart()
     {
@@ -125,5 +132,65 @@ public class ExternalSearchResult
     public void setDocumentTitle(String aDocumentTitle)
     {
         documentTitle = aDocumentTitle;
+    }
+
+    public String getSource()
+    {
+        return source;
+    }
+
+    public void setSource(String source)
+    {
+        this.source = source;
+    }
+
+    public String getUri()
+    {
+        return uri;
+    }
+
+    public void setUri(String uri)
+    {
+        this.uri = uri;
+    }
+
+    public String getTimestamp()
+    {
+        return timestamp;
+    }
+
+    public void setTimestamp(String timestamp)
+    {
+        this.timestamp = timestamp;
+    }
+
+    public String getLanguage()
+    {
+        return language;
+    }
+
+    public void setLanguage(String language)
+    {
+        this.language = language;
+    }
+
+    public Double getScore()
+    {
+        return score;
+    }
+
+    public void setScore(Double score)
+    {
+        this.score = score;
+    }
+
+    public ArrayList<String> getHighlights()
+    {
+        return highlights;
+    }
+
+    public void setHighlights(ArrayList<String> highlights)
+    {
+        this.highlights = highlights;
     }
 }

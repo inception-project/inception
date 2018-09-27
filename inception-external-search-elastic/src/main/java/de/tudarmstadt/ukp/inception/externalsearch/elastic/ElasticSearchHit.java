@@ -25,8 +25,19 @@ public class ElasticSearchHit
     private String _index;
     private String _type;
     private String _id;
-    private float _score;
+    private Double _score;
     private ElasticSearchSource _source;
+    private ElasticSearchHighlight highlight;
+
+    public ElasticSearchHighlight getHighlight()
+    {
+        return highlight;
+    }
+
+    public void setHighlight(ElasticSearchHighlight highlight)
+    {
+        this.highlight = highlight;
+    }
 
     public String get_index()
     {
@@ -58,12 +69,12 @@ public class ElasticSearchHit
         this._id = _id;
     }
 
-    public float get_score()
+    public Double get_score()
     {
         return _score;
     }
 
-    public void set_score(float _score)
+    public void set_score(Double _score)
     {
         this._score = _score;
     }

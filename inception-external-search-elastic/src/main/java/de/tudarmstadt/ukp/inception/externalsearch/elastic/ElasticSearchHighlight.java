@@ -17,32 +17,24 @@
  */
 package de.tudarmstadt.ukp.inception.externalsearch.elastic;
 
+import java.util.ArrayList;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class ElasticSearchSource
+public class ElasticSearchHighlight
 {
-    private ElasticSearchDoc doc;
-    
-    private ElasticSearchMetadata metadata;
+    @JsonProperty("doc.text")
+    private ArrayList<String> doctext;
 
-    public ElasticSearchDoc getDoc()
+    public ArrayList<String> getDoctext()
     {
-        return doc;
+        return doctext;
     }
 
-    public void setDoc(ElasticSearchDoc doc)
+    public void setDoctext(ArrayList<String> doctext)
     {
-        this.doc = doc;
-    }
-
-    public ElasticSearchMetadata getMetadata()
-    {
-        return metadata;
-    }
-
-    public void setMetadata(ElasticSearchMetadata metadata)
-    {
-        this.metadata = metadata;
+        this.doctext = doctext;
     }
 }

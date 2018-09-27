@@ -20,29 +20,66 @@ package de.tudarmstadt.ukp.inception.externalsearch.elastic;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class ElasticSearchSource
+public class ElasticSearchMetadata
 {
-    private ElasticSearchDoc doc;
-    
-    private ElasticSearchMetadata metadata;
+    private String id;
 
-    public ElasticSearchDoc getDoc()
+    private String language;
+
+    private String source;
+
+    private String timestamp;
+
+    private String uri;
+
+    public String getId()
     {
-        return doc;
+        return id;
     }
 
-    public void setDoc(ElasticSearchDoc doc)
+    public void setId(String id)
     {
-        this.doc = doc;
+        this.id = id;
     }
 
-    public ElasticSearchMetadata getMetadata()
+    public String getLanguage()
     {
-        return metadata;
+        return language;
     }
 
-    public void setMetadata(ElasticSearchMetadata metadata)
+    public void setLanguage(String language)
     {
-        this.metadata = metadata;
+        this.language = language;
     }
+
+    public String getSource()
+    {
+        return source;
+    }
+
+    public void setSource(String source)
+    {
+        this.source = source;
+    }
+
+    public String getTimestamp()
+    {
+        return timestamp;
+    }
+
+    public void setTimestamp(String timestamp)
+    {
+        this.timestamp = timestamp;
+    }
+
+    public String getUri()
+    {
+        return uri;
+    }
+
+    public void setUri(String uri)
+    {
+        this.uri = uri;
+    }
+
 }

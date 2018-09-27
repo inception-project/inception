@@ -96,9 +96,6 @@ public class ExternalSearchServiceImpl
             List<ExternalSearchResult> results = provider.executeQuery(properties, aUser,
                     aQuery, null, null);
 
-            for (ExternalSearchResult result : results) {
-                String title = result.getDocumentTitle();
-            }
             return results;
         }
         else {

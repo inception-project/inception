@@ -34,10 +34,8 @@ public class ElasticSearchProvider
     implements ExternalSearchProvider
 {
 
-    // private String serverUrl = "http://xxx";
-    private String remoteUrl = "http://bart:9200";
+    private String remoteUrl = "http://xxxx";
 
-    //    private String indexName = "index";
     private String indexName = "common-crawl-en";
     
     private String searchPath = "_search";
@@ -86,9 +84,13 @@ public class ElasticSearchProvider
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
+        
+        // Set query
+        String query = "{\"size\":%d,\"query\":{\"match\":"
+                + "{\"doc.text\":\"%s\"}},\"highlight\":{\"fields\":{\"doc.text\":{}}}}";
+
         // Set body
-        String body = String.format("{\"size\":\"%d\",\"_source\":\"false\",\"query\":{\"match\" : "
-                + "{\"doc.text\":\"%s\"}}}", resultSize, aQuery);
+        String body = String.format(query, resultSize, aQuery);
 
         // Set http entity
         HttpEntity<String> entity = new HttpEntity<String>(body, headers);
@@ -103,11 +105,29 @@ public class ElasticSearchProvider
         for (ElasticSearchHit hit : queryResult.getHits().getHits()) {
             ExternalSearchResult result = new ExternalSearchResult();
 
-            result.setDocumentId(hit.get_id());
+            // The title will be filled with the hit id, since there is no title in the
+            // ElasticSearch hit
+            result.setDocumentTitle(hit.get_id());
+            result.setScore(hit.get_score());
+
             if (hit.get_source() != null) {
                 if (hit.get_source().getDoc() != null) {
                     result.setText(hit.get_source().getDoc().getText());
                 }
+                if (hit.get_source().getMetadata() != null) {
+                    // Set the metadata fields
+                    result.setDocumentId(hit.get_source().getMetadata().getId());
+                    result.setLanguage(hit.get_source().getMetadata().getLanguage());
+                    result.setSource(hit.get_source().getMetadata().getSource());
+                    result.setTimestamp(hit.get_source().getMetadata().getTimestamp());
+                    result.setUri(hit.get_source().getMetadata().getUri());
+                }
+            }
+            if (hit.getHighlight() != null) {
+                // There are highlights, set them in the result
+                ArrayList<String> highlights = new ArrayList<String>();
+                highlights.add(hit.getHighlight().getDoctext().get(0));
+                result.setHighlights(highlights);
             }
             results.add(result);
         }
