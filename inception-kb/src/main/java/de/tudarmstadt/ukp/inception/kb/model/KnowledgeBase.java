@@ -114,7 +114,7 @@ public class KnowledgeBase
     private IRI descriptionIri;
 
     /**
-     * The IRI used for full text search, e.g. bif:contains or <http://www.openrdf.org/contrib/lucenesail#>
+     * The IRI used for full text search, e.g. bif:contains or http://www.openrdf.org/contrib/lucenesail#
      */
     @Column
     private IRI fullTextSearchIri;
