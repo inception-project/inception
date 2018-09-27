@@ -22,7 +22,6 @@ import static org.junit.Assert.assertEquals;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -59,10 +58,10 @@ public class KnowledgeBaseProfileDeserializationTest
         String descriptionIri = "http://www.w3.org/2000/01/rdf-schema#comment";
         String propertyLabelIri = "http://www.w3.org/2000/01/rdf-schema#label";
         String propertyDescriptionIri = "http://www.w3.org/2000/01/rdf-schema#comment";
-        List<String> rootConcepts =  new ArrayList<>(Arrays.asList(OWL.NOTHING.stringValue()));
+        List<String> rootConcepts =  Arrays.asList(OWL.NOTHING.stringValue());
         KnowledgeBaseMapping referenceMapping = new KnowledgeBaseMapping(classIri, subclassIri,
             typeIri, descriptionIri, label, propertyTypeIri, propertyLabelIri,
-            propertyDescriptionIri,rootConcepts);
+            propertyDescriptionIri, rootConcepts);
         KnowledgeBaseProfile referenceProfile = new KnowledgeBaseProfile();
 
         KnowledgeBaseAccess referenceAccess = new KnowledgeBaseAccess();

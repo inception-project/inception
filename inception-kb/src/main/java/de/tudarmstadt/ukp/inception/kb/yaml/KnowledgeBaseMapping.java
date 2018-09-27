@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.inception.kb.yaml;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
@@ -175,33 +174,5 @@ public class KnowledgeBaseMapping implements Serializable
     public void setRootConcepts(String[] aRootConcepts)
     {
         this.rootConcepts = Arrays.asList(aRootConcepts);
-    }
-
-    @Override
-    public boolean equals(Object o)
-    {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        KnowledgeBaseMapping that = (KnowledgeBaseMapping) o;
-        return Objects.equals(classIri, that.classIri)
-                && Objects.equals(subclassIri, that.subclassIri)
-                && Objects.equals(typeIri, that.typeIri) 
-                && Objects.equals(labelIri, that.labelIri)
-                && Objects.equals(propertyTypeIri, that.propertyTypeIri)
-                && Objects.equals(descriptionIri, that.descriptionIri)
-                && Objects.equals(propertyLabelIri, that.propertyLabelIri)
-                && Objects.equals(propertyDescriptionIri, that.propertyDescriptionIri)
-                && Objects.equals(rootConcepts.get(0), that.rootConcepts.get(0));
-    }
-
-    @Override
-    public int hashCode()
-    {
-        return Objects.hash(classIri, subclassIri, typeIri, propertyTypeIri, descriptionIri,
-                labelIri, propertyLabelIri, propertyDescriptionIri);
     }
 }
