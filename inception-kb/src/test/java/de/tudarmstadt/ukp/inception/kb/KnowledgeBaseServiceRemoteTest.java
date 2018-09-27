@@ -213,18 +213,18 @@ public class KnowledgeBaseServiceRemoteTest
                     "http://www.wikidata.org/entity/Q35120"));
         }
 
-        {
-            KnowledgeBaseProfile profile = PROFILES.get("virtuoso");
-            KnowledgeBase kb_wikidata_direct = new KnowledgeBase();
-            kb_wikidata_direct.setName("UKP_Wikidata (Virtuoso)");
-            kb_wikidata_direct.setType(RepositoryType.REMOTE);
-            kb_wikidata_direct.setReification(Reification.NONE);
-            kb_wikidata_direct.applyMapping(profile.getMapping());
-            kb_wikidata_direct.setDefaultLanguage("en");
-            kbList.add(new TestConfiguration(profile.getAccess().getAccessUrl(), kb_wikidata_direct,
-                    "http://www.wikidata.org/entity/Q19576436",
-                    "http://www.wikidata.org/entity/Q2419"));
-        }
+        // {
+        // KnowledgeBaseProfile profile = PROFILES.get("virtuoso");
+        // KnowledgeBase kb_wikidata_direct = new KnowledgeBase();
+        // kb_wikidata_direct.setName("UKP_Wikidata (Virtuoso)");
+        // kb_wikidata_direct.setType(RepositoryType.REMOTE);
+        // kb_wikidata_direct.setReification(Reification.NONE);
+        // kb_wikidata_direct.applyMapping(profile.getMapping());
+        // kb_wikidata_direct.setDefaultLanguage("en");
+        // kbList.add(new TestConfiguration(profile.getAccess().getAccessUrl(), kb_wikidata_direct,
+        // "http://www.wikidata.org/entity/Q19576436",
+        // "http://www.wikidata.org/entity/Q2419"));
+        // }
 
         {
             KnowledgeBaseProfile profile = PROFILES.get("db_pedia");
