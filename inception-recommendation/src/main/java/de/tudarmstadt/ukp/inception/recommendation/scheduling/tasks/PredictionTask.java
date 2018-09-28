@@ -25,6 +25,7 @@ import java.util.List;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
@@ -48,7 +49,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.TokenObject;
-import de.tudarmstadt.ukp.inception.recommendation.api.type.PredictedSpan;
 import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommendationException;
@@ -115,13 +115,18 @@ public class PredictionTask
                         continue;
                     }
 
-                    List<AnnotationObject> predictions = extractAnnotations(jCas, document,
-                            recommender);
+                    String predictedTypeName = recommendationEngine.getPredictedType();
+                    String predictedFeatureName = recommendationEngine.getPredictedFeature();
+                    Type predictionType = getAnnotationType(jCas.getCas(), predictedTypeName);
+                    Feature feature = predictionType.getFeatureByBaseName(predictedFeatureName);
+
+                    List<AnnotationObject> predictions = extractAnnotations(jCas.getCas(),
+                        predictionType, feature, document, recommender);
                     model.putPredictions(layer.getId(), predictions);
 
                     // In order to just extract the annotations for a single recommender, each
                     // recommender undoes the changes applied in `recommendationEngine.predict`
-                    Type predictionType = getAnnotationType(jCas.getCas(), PredictedSpan.class);
+
                     removePredictions(jCas.getCas(), predictionType);
                 }
             }
@@ -130,13 +135,13 @@ public class PredictionTask
         recommendationService.putIncomingPredictions(getUser(), project, model);
     }
 
-    private List<AnnotationObject> extractAnnotations(JCas aJcas, SourceDocument aDocument,
-            Recommender aRecommender)
+    private List<AnnotationObject> extractAnnotations(CAS aCas, Type predictionType,
+        Feature predictedFeature, SourceDocument aDocument, Recommender aRecommender)
     {
         List<AnnotationObject> result = new ArrayList<>();
         int id = 0;
-        for (PredictedSpan predictedSpan : JCasUtil.select(aJcas, PredictedSpan.class)) {
-            List<Token> tokens = JCasUtil.selectCovered(Token.class, predictedSpan);
+        for (AnnotationFS annotationFS : CasUtil.select(aCas, predictionType)) {
+            List<Token> tokens = JCasUtil.selectCovered(Token.class, annotationFS);
             Token firstToken = tokens.get(0);
             Token lastToken = tokens.get(tokens.size() - 1);
 
@@ -144,16 +149,16 @@ public class PredictionTask
             offset.setBeginCharacter(firstToken.getBegin());
             offset.setEndCharacter(lastToken.getEnd());
 
-            DocumentMetaData dmd = DocumentMetaData.get(aJcas);
+            DocumentMetaData dmd = DocumentMetaData.get(aCas);
             String documentUri = dmd.getDocumentUri();
 
-            TokenObject to = new TokenObject(offset, predictedSpan.getCoveredText(),
+            TokenObject to = new TokenObject(offset, annotationFS.getCoveredText(),
                 documentUri, aDocument.getName(), id);
 
-            String label = predictedSpan.getLabel();
-            String feature = aRecommender.getFeature();
+            String label = annotationFS.getFeatureValueAsString(predictedFeature);
+            String featurename = aRecommender.getFeature();
             String name = aRecommender.getName();
-            AnnotationObject ao = new AnnotationObject(to, label, label, id, feature, name,
+            AnnotationObject ao = new AnnotationObject(to, label, label, id, featurename, name,
                     aRecommender.getId());
 
             result.add(ao);

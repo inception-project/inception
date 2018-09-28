@@ -58,7 +58,7 @@ public class ExternalRecommender
     implements RecommendationEngine
 {
     private static final Logger LOG = LoggerFactory.getLogger(ExternalRecommender.class);
-    private static final MediaType JSON = MediaType.parse("content-type; application/json");
+    private static final MediaType JSON = MediaType.parse("application/json");
 
     private final Recommender recommender;
     private final ExternalRecommenderTraits traits;
@@ -141,8 +141,9 @@ public class ExternalRecommender
 
         PredictionResponse predictionResponse = deserializePredictionResponse(response);
 
-        try (InputStream is = IOUtils.toInputStream(predictionResponse.getDocument(), "utf-8")) {
-            XmiCasDeserializer.deserialize(is, aCas);
+        try (InputStream is = IOUtils.toInputStream(predictionResponse.getDocument(), "utf-8");
+             InputStream bis = Base64.getDecoder().wrap(is)) {
+            XmiCasDeserializer.deserialize(bis, aCas, true);
         }
         catch (SAXException | IOException e) {
             LOG.error("Error while deserializing CAS!", e);
@@ -246,5 +247,11 @@ public class ExternalRecommender
     public String getPredictedType()
     {
         return recommender.getLayer().getName();
+    }
+
+    @Override
+    public String getPredictedFeature()
+    {
+        return recommender.getFeature();
     }
 }

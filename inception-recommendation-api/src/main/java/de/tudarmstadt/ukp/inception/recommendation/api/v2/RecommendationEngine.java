@@ -51,4 +51,9 @@ public interface RecommendationEngine {
     {
         return "de.tudarmstadt.ukp.inception.recommendation.api.type.PredictedSpan";
     }
+
+    default String getPredictedFeature()
+    {
+        return "label";
+    }
 }
