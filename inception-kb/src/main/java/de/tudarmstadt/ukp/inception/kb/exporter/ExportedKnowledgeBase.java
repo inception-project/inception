@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.kb.exporter;
 
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -24,7 +26,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonPropertyOrder(alphabetic = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ExportedKnowledgeBase
-{    
+{
     @JsonProperty("id")
     private String id;
 
@@ -33,7 +35,7 @@ public class ExportedKnowledgeBase
 
     @JsonProperty("type")
     private String type;
-    
+
     @JsonProperty("class_iri")
     private String classIri;
 
@@ -52,6 +54,12 @@ public class ExportedKnowledgeBase
     @JsonProperty("property_type_iri")
     private String propertyTypeIri;
 
+    @JsonProperty("property_label_iri")
+    private String propertyLabelIri;
+
+    @JsonProperty("property_description_iri")
+    private String propertyDescriptionIri;
+
     @JsonProperty("read_only")
     private boolean readOnly;
 
@@ -60,13 +68,19 @@ public class ExportedKnowledgeBase
 
     @JsonProperty("reification")
     private String reification;
-    
+
     @JsonProperty("support_concept_linking")
     private boolean supportConceptLinking;
-    
+
     @JsonProperty("base_prefix")
     private String basePrefix;
-    
+
+    @JsonProperty("root_concepts")
+    private List<String> rootConcepts;
+
+    @JsonProperty("default_language")
+    private String defaultLanguage;
+
     // set to null for local knowledge bases
     @JsonProperty("remote_url")
     private String remoteURL;
@@ -161,6 +175,26 @@ public class ExportedKnowledgeBase
         propertyTypeIri = aPropertyTypeIri;
     }
 
+    public String getPropertyLabelIri()
+    {
+        return propertyLabelIri;
+    }
+
+    public void setPropertyLabelIri(String aPropertyLabelIri)
+    {
+        propertyLabelIri = aPropertyLabelIri;
+    }
+
+    public String getPropertyDescriptionIri()
+    {
+        return propertyDescriptionIri;
+    }
+
+    public void setPropertyDescriptionIri(String aPropertyDescriptionIri)
+    {
+        propertyDescriptionIri = aPropertyDescriptionIri;
+    }
+
     public boolean isReadOnly()
     {
         return readOnly;
@@ -190,15 +224,15 @@ public class ExportedKnowledgeBase
     {
         reification = aReification;
     }
-    
+
     public void setSupportConceptLinking(boolean aSupportConceptLinking) {
         supportConceptLinking = aSupportConceptLinking;
     }
-    
+
     public boolean isSupportConceptLinking() {
         return supportConceptLinking;
     }
-    
+
     public String getBasePrefix()
     {
         return basePrefix;
@@ -208,7 +242,27 @@ public class ExportedKnowledgeBase
     {
         basePrefix = aBasePrefix;
     }
-    
+
+    public List<String> getRootConcepts()
+    {
+        return rootConcepts;
+    }
+
+    public void setRootConcepts(List<String> aRootConcepts)
+    {
+        rootConcepts = aRootConcepts;
+    }
+
+    public String getDefaultLanguage()
+    {
+        return defaultLanguage;
+    }
+
+    public void setDefaultLanguage(String aDefaultLanguage)
+    {
+        defaultLanguage = aDefaultLanguage;
+    }
+
     public String getRemoteURL()
     {
         return remoteURL;
