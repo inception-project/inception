@@ -156,9 +156,9 @@ public class RemoteStringMatchingNerRecommender
     {
         try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             XmiCasSerializer.serialize(aCas, null, out, true, null);
-            String xmi = new String(out.toByteArray(), "utf-8");
+            String base64Xmi = Base64.getEncoder().encodeToString(out.toByteArray());
             PredictionResponse response = new PredictionResponse();
-            response.setDocument(xmi);
+            response.setDocument(base64Xmi);
             ObjectMapper mapper = new ObjectMapper();
             return mapper.writeValueAsString(response);
         }

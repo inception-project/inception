@@ -24,11 +24,11 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommendationEngine;
-import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommendationEngineFactory;
+import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommendationEngineFactoryImplBase;
 
 @Component
 public class DL4JSequenceRecommenderFactory
-    implements RecommendationEngineFactory
+    extends RecommendationEngineFactoryImplBase<Void>
 {
 
     // This is a string literal so we can rename/refactor the class without it changing its ID
