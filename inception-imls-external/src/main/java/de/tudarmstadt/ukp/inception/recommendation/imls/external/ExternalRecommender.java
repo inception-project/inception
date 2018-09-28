@@ -17,12 +17,16 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.external;
 
+import static java.lang.String.format;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.CASRuntimeException;
 import org.apache.uima.cas.Type;
@@ -91,13 +95,13 @@ public class ExternalRecommender
 
         Response response = sendRequest(request);
 
-        // If the response indicates that the request was not successfull,
+        // If the response indicates that the request was not successful,
         // then it does not make sense to go on and try to decode the XMI
         if (!response.isSuccessful()) {
             int code = response.code();
-            String status = response.message();
-            String msg = String.format("Request was not succesfull: [%d] - [%s]", code, status);
-            throw new RuntimeException(msg);
+            String responseBody = getResponseBody(response);
+            String msg = format("Request was not successful: [%d] - [%s]", code, responseBody);
+            throw new RecommendationException(msg);
         }
     }
 
@@ -115,7 +119,7 @@ public class ExternalRecommender
         String xmi = serializeCas(aCas);
 
         PredictionRequest predictionRequest = new PredictionRequest();
-        predictionRequest.setXmi(xmi);
+        predictionRequest.setDocument(xmi);
         predictionRequest.setTypeSystem(typeSystem);
         predictionRequest.setLayer(recommender.getLayer().getName());
         predictionRequest.setFeature(recommender.getFeature());
@@ -126,21 +130,23 @@ public class ExternalRecommender
 
         Response response = sendRequest(request);
 
-        // If the response indicates that the request was not successfull,
+        // If the response indicates that the request was not successful,
         // then it does not make sense to go on and try to decode the XMI
         if (!response.isSuccessful()) {
             int code = response.code();
-            String status = response.message();
-            String msg = String.format("Request was not succesfull: [%d] - [%s]", code, status);
-            throw new RuntimeException(msg);
+            String responseBody = getResponseBody(response);
+            String msg = format("Request was not successful: [%d] - [%s]", code, responseBody);
+            throw new RecommendationException(msg);
         }
 
-        try {
-            XmiCasDeserializer.deserialize(response.body().byteStream(), aCas);
+        PredictionResponse predictionResponse = deserializePredictionResponse(response);
+
+        try (InputStream is = IOUtils.toInputStream(predictionResponse.getDocument(), "utf-8")) {
+            XmiCasDeserializer.deserialize(is, aCas);
         }
         catch (SAXException | IOException e) {
             LOG.error("Error while deserializing CAS!", e);
-            throw new RuntimeException("Error while deserializing CAS!", e);
+            throw new RecommendationException("Error while deserializing CAS!", e);
         }
     }
 
@@ -176,6 +182,17 @@ public class ExternalRecommender
         }
     }
 
+    private PredictionResponse deserializePredictionResponse(Response response)
+        throws RecommendationException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            return objectMapper.readValue(response.body().byteStream(), PredictionResponse.class);
+        } catch (IOException e) {
+            LOG.error("Error while deserializing prediction response!", e);
+            throw new RecommendationException("Error while deserializing prediction response!", e);
+        }
+    }
+
     private String toJson(Object aObject) throws RecommendationException
     {
         try {
@@ -196,6 +213,20 @@ public class ExternalRecommender
         catch (IOException e) {
             LOG.error("Error while sending request!", e);
             throw new RecommendationException("Error while sending request!", e);
+        }
+    }
+
+    private String getResponseBody(Response response) throws RecommendationException
+    {
+        try {
+            if (response.body() != null) {
+                return response.body().string();
+            } else {
+                return "";
+            }
+        } catch (IOException e) {
+            LOG.error("Error while reading response body!", e);
+            throw new RecommendationException("Error while reading response body!", e);
         }
     }
 

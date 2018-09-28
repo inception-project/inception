@@ -94,7 +94,7 @@ public class RemoteStringMatchingNerRecommender
     public String predict(String aPredictionRequestJson)
     {
         PredictionRequest request = deserializePredictionRequest(aPredictionRequestJson);
-        CAS cas = deserializeCas(request.getXmi(), request.getTypeSystem());
+        CAS cas = deserializeCas(request.getDocument(), request.getTypeSystem());
 
         recommendationEngine.predict(context, cas);
 
@@ -111,7 +111,7 @@ public class RemoteStringMatchingNerRecommender
             cas.removeFsFromIndexes(fs);
         }
 
-        return serializeCasToXmi(cas);
+        return buildPredictionResponse(cas);
     }
 
     private PredictionRequest deserializePredictionRequest(String aPredictionRequestJson)
@@ -152,11 +152,15 @@ public class RemoteStringMatchingNerRecommender
         }
     }
 
-    private String serializeCasToXmi(CAS aCas)
+    private String buildPredictionResponse(CAS aCas)
     {
         try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             XmiCasSerializer.serialize(aCas, null, out, true, null);
-            return new String(out.toByteArray(), "utf-8");
+            String xmi = new String(out.toByteArray(), "utf-8");
+            PredictionResponse response = new PredictionResponse();
+            response.setDocument(xmi);
+            ObjectMapper mapper = new ObjectMapper();
+            return mapper.writeValueAsString(response);
         }
         catch (CASRuntimeException | SAXException | IOException e) {
             log.error("Error while serializing CAS!", e);

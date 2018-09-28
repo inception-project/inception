@@ -19,12 +19,13 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.external;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class PredictionRequest {
+public class PredictionRequest
+{
     @JsonProperty("typeSystem")
     private String typeSystem;
 
-    @JsonProperty("cas")
-    private String xmi;
+    @JsonProperty("document")
+    private String document;
 
     @JsonProperty("layer")
     private String layer;
@@ -32,35 +33,43 @@ public class PredictionRequest {
     @JsonProperty("feature")
     private String feature;
 
-    public String getTypeSystem() {
+    public String getTypeSystem()
+    {
         return typeSystem;
     }
 
-    public void setTypeSystem(String typeSystem) {
-        this.typeSystem = typeSystem;
+    public void setTypeSystem(String aTypeSystem)
+    {
+        typeSystem = aTypeSystem;
     }
 
-    public String getXmi() {
-        return xmi;
+    public String getDocument()
+    {
+        return document;
     }
 
-    public void setXmi(String xmi) {
-        this.xmi = xmi;
+    public void setDocument(String aDocument)
+    {
+        document = aDocument;
     }
 
-    public String getLayer() {
+    public String getLayer()
+    {
         return layer;
     }
 
-    public void setLayer(String layer) {
-        this.layer = layer;
+    public void setLayer(String aLayer)
+    {
+        layer = aLayer;
     }
 
-    public String getFeature() {
+    public String getFeature()
+    {
         return feature;
     }
 
-    public void setFeature(String feature) {
-        this.feature = feature;
+    public void setFeature(String aFeature)
+    {
+        feature = aFeature;
     }
 }

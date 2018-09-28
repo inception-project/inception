@@ -1,0 +1,88 @@
+swagger: "2.0"
+info:
+  description: "This describes the External Recommender API for INCEpTION"
+  version: "1.0.0"
+  title: "INCEpTION external recommender"
+  contact:
+    email: "inception-users@googlegroups.com"
+  license:
+    name: "Apache 2.0"
+    url: "http://www.apache.org/licenses/LICENSE-2.0.html"
+paths:
+  /predict:
+    post:
+      tags:
+      - "predict"
+      summary: "Predict annotations for a single document"
+      operationId: "predictCas"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "Document CAS for which annotations will be predicted"
+        required: true
+        schema:
+          $ref: "#/definitions/Predict"
+      responses:
+        200:
+          description: "Successful prediction"
+          schema:
+            type: "string"
+  /train:
+    post:
+      tags:
+      - "train"
+      summary: "Train recommender on a set of documents"
+      operationId: "trainRecommender"
+      consumes:
+        - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "List of documents CAS whose annotations will be used for training"
+        required: true
+        schema:
+          $ref: "#/definitions/Train"
+      responses:
+        204:
+          description: "Successful training"
+definitions:
+  Predict:
+    type: object
+    properties:
+      layer:
+        type: "string"
+        description: "Layer which should be predicted"
+        example: "de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity"
+      feature:
+        type: "string"
+        description: "Feature of the layer which should be predicted"
+        example: "value"
+      document:
+        type: "string"
+        description: "CAS as XMI which has been base64 encoded"
+      typesystem:
+        type: "string"
+        description: "Type system of the CAS which has been base64 encoded"
+  Train:
+    type: object
+    properties:
+      layer:
+        type: "string"
+        description: "Layer which should be predicted"
+        example: "de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity"
+      feature:
+        type: "string"
+        description: "Feature of the layer which should be predicted"
+        example: "value"
+      document:
+        type: "array"
+        items:
+          type: "string"
+        description: "CAS as XMI which has been base64 encoded"
+      typesystem:
+        type: "string"
+        description: "Type system of the CAS which has been base64 encoded"
