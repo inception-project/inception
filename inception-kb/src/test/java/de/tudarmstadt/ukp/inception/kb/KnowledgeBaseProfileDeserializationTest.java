@@ -84,6 +84,17 @@ public class KnowledgeBaseProfileDeserializationTest
         
         KnowledgeBaseProfile testProfile = profiles.get("test_profile");
         
-        assertEquals(testProfile, referenceProfile);
+        assertEquals(testProfile.getAccess(), referenceProfile.getAccess());
+        assertEquals(testProfile.getName(), referenceProfile.getName());
+        assertEquals(testProfile.getType(), referenceProfile.getType());
+        assertEquals(testProfile.getMapping().getClassIri(), referenceProfile.getMapping().getClassIri());
+        assertEquals(testProfile.getMapping().getDescriptionIri(), referenceProfile.getMapping().getDescriptionIri());
+        assertEquals(testProfile.getMapping().getLabelIri(), referenceProfile.getMapping().getLabelIri());
+        assertEquals(testProfile.getMapping().getPropertyDescriptionIri(), referenceProfile.getMapping().getPropertyDescriptionIri());
+        assertEquals(testProfile.getMapping().getPropertyTypeIri(), referenceProfile.getMapping().getPropertyTypeIri());
+        assertEquals(testProfile.getMapping().getSubclassIri(), referenceProfile.getMapping().getSubclassIri());
+        assertEquals(testProfile.getMapping().getTypeIri(), referenceProfile.getMapping().getTypeIri());
+        assertEquals(testProfile.getMapping().getRootConcepts(), referenceProfile.getMapping().getRootConcepts());
+        
     }
 }
