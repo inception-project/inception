@@ -357,8 +357,7 @@ public class WebannoTsv3Reader
                                         linkFSesPerSlotAnno.get(annos.get(i)).add(link);
 
                                     }
-                                    else if (roleTargets.containsKey(feat)) {
-
+                                    else if (roleTargets.containsKey(feat) && mAnno != null) {
                                         FeatureStructure link = linkFSesPerSlotAnno
                                                 .get(annos.get(i)).get(slot);
                                         int customTypeNumber = 0;

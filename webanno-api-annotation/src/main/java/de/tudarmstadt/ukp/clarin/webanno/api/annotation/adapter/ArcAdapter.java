@@ -38,10 +38,12 @@ import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.ArcCrossedMultipleSentenceException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -101,12 +103,13 @@ public class ArcAdapter
 
     private boolean crossMultipleSentence;
 
-    public ArcAdapter(FeatureSupportRegistry aFeatureSupportRegistry, AnnotationLayer aLayer,
-            long aTypeId, String aTypeName, String aTargetFeatureName,
-            String aSourceFeatureName, /* String aArcSpanType, */
-            String aAttacheFeatureName, String aAttachType, Collection<AnnotationFeature> aFeatures)
+    public ArcAdapter(FeatureSupportRegistry aFeatureSupportRegistry,
+            ApplicationEventPublisher aEventPublisher, AnnotationLayer aLayer, long aTypeId,
+            String aTypeName, String aTargetFeatureName, String aSourceFeatureName, 
+            /* String aArcSpanType, */ String aAttacheFeatureName, String aAttachType, 
+            Collection<AnnotationFeature> aFeatures)
     {
-        super(aFeatureSupportRegistry, aLayer, aFeatures);
+        super(aFeatureSupportRegistry, aEventPublisher, aLayer, aFeatures);
         
         typeId = aTypeId;
         annotationTypeName = aTypeName;
@@ -214,22 +217,14 @@ public class ArcAdapter
         }
 
         
-        // if span A has (start,end)= (20, 26) and B has (start,end)= (30, 36)
-        // arc drawn from A to B, dependency will have (start, end) = (20, 36)
-        // arc drawn from B to A, still dependency will have (start, end) = (20, 36)
-        AnnotationFS newAnnotation;
-        if (dependentFs.getEnd() <= governorFs.getEnd()) {
-            newAnnotation = aJCas.getCas().createAnnotation(type, dependentFs.getBegin(),
-                    governorFs.getEnd());
-        }
-        else {
-            newAnnotation = aJCas.getCas().createAnnotation(type, governorFs.getBegin(),
-                    dependentFs.getEnd());
-        }
-
+        // Set the relation offsets in DKPro Core style - the relation recieves the offsets from
+        // the dependent
         // If origin and target spans are multiple tokens, dependentFS.getBegin will be the
         // the begin position of the first token and dependentFS.getEnd will be the End
         // position of the last token.
+        AnnotationFS newAnnotation = aJCas.getCas().createAnnotation(type,
+                dependentFs.getBegin(), dependentFs.getEnd());
+
         newAnnotation.setFeatureValue(dependentFeature, dependentFs);
         newAnnotation.setFeatureValue(governorFeature, governorFs);
         aJCas.addFsToIndexes(newAnnotation);
@@ -237,12 +232,11 @@ public class ArcAdapter
     }
 
     @Override
-    public void delete(JCas aJCas, VID aVid)
+    public void delete(AnnotatorState aState, JCas aJCas, VID aVid)
     {
         FeatureStructure fs = selectByAddr(aJCas, FeatureStructure.class, aVid.getId());
         aJCas.removeFsFromIndexes(fs);
     }
-
 
     private boolean isDuplicate(AnnotationFS aAnnotationFSOldOrigin,
             AnnotationFS aAnnotationFSNewOrigin, AnnotationFS aAnnotationFSOldTarget,
@@ -282,8 +276,8 @@ public class ArcAdapter
         return new ArrayList<>();
     }
 
-    public void delete(JCas aJCas, AnnotationFeature aFeature, int aBegin, int aEnd,
-            String aDepCoveredText, String aGovCoveredText, Object aValue)
+    public void delete(AnnotatorState aState, JCas aJCas, AnnotationFeature aFeature, int aBegin,
+            int aEnd, String aDepCoveredText, String aGovCoveredText, Object aValue)
     {
         Feature dependentFeature = getAnnotationType(aJCas.getCas())
                 .getFeatureByBaseName(getTargetFeatureName());
@@ -313,7 +307,7 @@ public class ArcAdapter
             if (aDepCoveredText.equals(dependentFs.getCoveredText())
                     && aGovCoveredText.equals(governorFs.getCoveredText())) {
                 if (ObjectUtils.equals(getFeatureValue(aFeature, fs), aValue)) {
-                    delete(aJCas, new VID(getAddr(fs)));
+                    delete(aState, aJCas, new VID(getAddr(fs)));
                 }
             }
         }
@@ -382,7 +376,8 @@ public class ArcAdapter
     }
 
     @Override
-    public void delete(JCas aJCas, AnnotationFeature feature, int aBegin, int aEnd, Object aValue)
+    public void delete(AnnotatorState aState, JCas aJCas, AnnotationFeature feature, int aBegin,
+            int aEnd, Object aValue)
     {
         // TODO Auto-generated method stub
     }

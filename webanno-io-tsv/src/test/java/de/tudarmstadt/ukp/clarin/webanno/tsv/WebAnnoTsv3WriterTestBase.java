@@ -59,13 +59,13 @@ import de.tudarmstadt.ukp.clarin.webanno.xmi.XmiWriter;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.morph.MorphologicalFeatures;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
-import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Stem;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 import de.tudarmstadt.ukp.dkpro.core.testing.DkproTestContext;
+import webanno.custom.Span;
 
 public abstract class WebAnnoTsv3WriterTestBase
 {
@@ -133,6 +133,10 @@ public abstract class WebAnnoTsv3WriterTestBase
         Dependency dep1 = new Dependency(jcas);
         dep1.setGovernor(t1);
         dep1.setDependent(t2);
+        // WebAnno legacy conventions
+        // dep1.setBegin(min(dep1.getDependent().getBegin(), dep1.getGovernor().getBegin()));
+        // dep1.setEnd(max(dep1.getDependent().getEnd(), dep1.getGovernor().getEnd()));
+        // DKPro Core conventions
         dep1.setBegin(dep1.getDependent().getBegin());
         dep1.setEnd(dep1.getDependent().getEnd());
         dep1.addToIndexes();
@@ -148,14 +152,14 @@ public abstract class WebAnnoTsv3WriterTestBase
         JCas jcas = makeJCasOneSentence();
         
         // One at the beginning
-        new NamedEntity(jcas, 0, 0).addToIndexes();
+        new Span(jcas, 0, 0).addToIndexes();
 
         // One at the end
-        new NamedEntity(jcas, jcas.getDocumentText().length(), jcas.getDocumentText().length())
+        new Span(jcas, jcas.getDocumentText().length(), jcas.getDocumentText().length())
                 .addToIndexes();
 
         writeAndAssertEquals(jcas, 
-                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(NamedEntity.class));
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
     }
     
     @Test
@@ -164,18 +168,18 @@ public abstract class WebAnnoTsv3WriterTestBase
         JCas jcas = makeJCasOneSentence();
         
         // One at the beginning
-        NamedEntity ne1 = new NamedEntity(jcas, 0, 0);
+        Span ne1 = new Span(jcas, 0, 0);
         ne1.setValue("PERSON");
         ne1.addToIndexes();
 
         // One at the end
-        NamedEntity ne2 = new NamedEntity(jcas, jcas.getDocumentText().length(),
+        Span ne2 = new Span(jcas, jcas.getDocumentText().length(),
                 jcas.getDocumentText().length());
         ne2.setValue("ORG");
         ne2.addToIndexes();
 
         writeAndAssertEquals(jcas, 
-                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(NamedEntity.class));
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
     }
 
     @Test
@@ -254,14 +258,14 @@ public abstract class WebAnnoTsv3WriterTestBase
         
         int n = 0;
         for (Token t : select(jcas, Token.class)) {
-            NamedEntity ne = new NamedEntity(jcas, t.getBegin(), t.getEnd());
+            Span ne = new Span(jcas, t.getBegin(), t.getEnd());
             ne.setValue("NE " + n);
             ne.addToIndexes();
             n++;
         }
         
         writeAndAssertEquals(jcas, 
-                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(NamedEntity.class));
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
     }
 
     @Test
@@ -270,17 +274,17 @@ public abstract class WebAnnoTsv3WriterTestBase
         JCas jcas = makeJCasOneSentence();
         
         for (Token t : select(jcas, Token.class)) {
-            NamedEntity ne1 = new NamedEntity(jcas, t.getBegin(), t.getEnd());
+            Span ne1 = new Span(jcas, t.getBegin(), t.getEnd());
             ne1.setValue("NE");
             ne1.addToIndexes();
             
-            NamedEntity ne2 = new NamedEntity(jcas, t.getBegin(), t.getEnd());
+            Span ne2 = new Span(jcas, t.getBegin(), t.getEnd());
             ne2.setValue("NE");
             ne2.addToIndexes();
         }
         
         writeAndAssertEquals(jcas, 
-                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(NamedEntity.class));
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
     }
 
     @Test
@@ -289,12 +293,12 @@ public abstract class WebAnnoTsv3WriterTestBase
         JCas jcas = makeJCasOneSentence();
         
         for (Token t : select(jcas, Token.class)) {
-            NamedEntity ne = new NamedEntity(jcas, t.getBegin(), t.getEnd());
+            Span ne = new Span(jcas, t.getBegin(), t.getEnd());
             ne.addToIndexes();
         }
         
         writeAndAssertEquals(jcas, 
-                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(NamedEntity.class));
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
     }
 
     @Test
@@ -303,13 +307,13 @@ public abstract class WebAnnoTsv3WriterTestBase
         JCas jcas = makeJCasOneSentence();
         
         for (Token t : select(jcas, Token.class)) {
-            NamedEntity ne = new NamedEntity(jcas, t.getBegin(), t.getEnd());
+            Span ne = new Span(jcas, t.getBegin(), t.getEnd());
             ne.setValue("de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity:value");
             ne.addToIndexes();
         }
         
         writeAndAssertEquals(jcas, 
-                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(NamedEntity.class));
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
     }
 
     @Test
@@ -318,13 +322,13 @@ public abstract class WebAnnoTsv3WriterTestBase
         JCas jcas = makeJCasOneSentence();
         
         for (Token t : select(jcas, Token.class)) {
-            NamedEntity ne = new NamedEntity(jcas, t.getBegin(), t.getEnd());
+            Span ne = new Span(jcas, t.getBegin(), t.getEnd());
             ne.setValue("_");
             ne.addToIndexes();
         }
         
         writeAndAssertEquals(jcas, 
-                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(NamedEntity.class));
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
     }
 
     @Test
@@ -333,13 +337,13 @@ public abstract class WebAnnoTsv3WriterTestBase
         JCas jcas = makeJCasOneSentence();
         
         for (Token t : select(jcas, Token.class)) {
-            NamedEntity ne = new NamedEntity(jcas, t.getBegin(), t.getEnd());
+            Span ne = new Span(jcas, t.getBegin(), t.getEnd());
             ne.setValue("*");
             ne.addToIndexes();
         }
         
         writeAndAssertEquals(jcas, 
-                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(NamedEntity.class));
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
     }
     
     @Test
@@ -347,10 +351,10 @@ public abstract class WebAnnoTsv3WriterTestBase
         throws Exception
     {
         JCas jCas = makeJCasOneSentence();
-        NamedEntity neToken = new NamedEntity(jCas, 0, 4);
+        Span neToken = new Span(jCas, 0, 4);
         neToken.addToIndexes();
 
-        writeAndAssertEquals(jCas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(NamedEntity.class));
+        writeAndAssertEquals(jCas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
     }
 
     @Test
@@ -360,14 +364,14 @@ public abstract class WebAnnoTsv3WriterTestBase
         
         int n = 0;
         for (Token t : select(jcas, Token.class)) {
-            NamedEntity ne = new NamedEntity(jcas, t.getBegin(), t.getEnd());
+            Span ne = new Span(jcas, t.getBegin(), t.getEnd());
             ne.setValue(((n == 0) ? "B-" : "I-") + "NOTBIO!");
             ne.addToIndexes();
             n++;
         }
         
         writeAndAssertEquals(jcas, 
-                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(NamedEntity.class));
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
     }
 
     @Test
@@ -377,14 +381,14 @@ public abstract class WebAnnoTsv3WriterTestBase
         
         int n = 0;
         for (Token t : select(jcas, Token.class)) {
-            NamedEntity ne = new NamedEntity(jcas, t.getBegin(), t.getEnd());
+            Span ne = new Span(jcas, t.getBegin(), t.getEnd());
             ne.setValue("NOTSTACKED[" + n + "]");
             ne.addToIndexes();
             n++;
         }
         
         writeAndAssertEquals(jcas, 
-                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(NamedEntity.class));
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
     }
 
     @Test
@@ -393,13 +397,13 @@ public abstract class WebAnnoTsv3WriterTestBase
         JCas jcas = makeJCasOneSentence();
         
         for (Token t : select(jcas, Token.class)) {
-            NamedEntity ne = new NamedEntity(jcas, t.getBegin(), t.getEnd());
+            Span ne = new Span(jcas, t.getBegin(), t.getEnd());
             ne.setValue("#*'\"`´\t:;{}|[ ]()\\§$%?=&_\n");
             ne.addToIndexes();
         }
         
         writeAndAssertEquals(jcas, 
-                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(NamedEntity.class));
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
     }
     
     @Test
@@ -407,11 +411,11 @@ public abstract class WebAnnoTsv3WriterTestBase
     {
         JCas jcas = makeJCasOneSentence();
         
-        NamedEntity ne = new NamedEntity(jcas, 0, jcas.getDocumentText().length());
+        Span ne = new Span(jcas, 0, jcas.getDocumentText().length());
         ne.addToIndexes();
         
         writeAndAssertEquals(jcas, 
-                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(NamedEntity.class));
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
     }
 
     @Test
@@ -419,11 +423,11 @@ public abstract class WebAnnoTsv3WriterTestBase
     {
         JCas jcas = makeJCasOneSentence();
         
-        NamedEntity ne1 = new NamedEntity(jcas, 0, 6);
+        Span ne1 = new Span(jcas, 0, 6);
         ne1.addToIndexes();
         
         writeAndAssertEquals(jcas, 
-                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(NamedEntity.class));
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
     }
 
     @Test
@@ -431,11 +435,11 @@ public abstract class WebAnnoTsv3WriterTestBase
     {
         JCas jcas = makeJCasOneSentence();
         
-        NamedEntity ne1 = new NamedEntity(jcas, 1, 6);
+        Span ne1 = new Span(jcas, 1, 6);
         ne1.addToIndexes();
         
         writeAndAssertEquals(jcas, 
-                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(NamedEntity.class));
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
     }
 
     @Test
@@ -443,13 +447,13 @@ public abstract class WebAnnoTsv3WriterTestBase
     {
         JCas jcas = makeJCasOneSentence();
         
-        NamedEntity ne1 = new NamedEntity(jcas, 1, 6);
+        Span ne1 = new Span(jcas, 1, 6);
         ne1.addToIndexes();
-        NamedEntity ne2 = new NamedEntity(jcas, 6, 12);
+        Span ne2 = new Span(jcas, 6, 12);
         ne2.addToIndexes();
         
         writeAndAssertEquals(jcas, 
-                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(NamedEntity.class));
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
     }
 
     @Test
@@ -475,27 +479,27 @@ public abstract class WebAnnoTsv3WriterTestBase
         // 11         |             - zero-span beginning of token
         // 12               |       - zero-span end of token
 
-        List<NamedEntity> annotations = new ArrayList<>();
-        annotations.add(new NamedEntity(jcas,  0,  6)); // 1
-        annotations.add(new NamedEntity(jcas,  0, 13)); // 2
-        annotations.add(new NamedEntity(jcas,  9, 11)); // 3
-        annotations.add(new NamedEntity(jcas,  7, 11)); // 4
-        annotations.add(new NamedEntity(jcas,  9, 13)); // 5
-        annotations.add(new NamedEntity(jcas,  3, 13)); // 6
-        annotations.add(new NamedEntity(jcas,  0, 10)); // 7
-        annotations.add(new NamedEntity(jcas,  3, 10)); // 8
-        annotations.add(new NamedEntity(jcas,  3, 17)); // 9
-        annotations.add(new NamedEntity(jcas, 10, 10)); // 10
-        annotations.add(new NamedEntity(jcas,  7,  7)); // 11
-        annotations.add(new NamedEntity(jcas, 13, 13)); // 12
+        List<Span> annotations = new ArrayList<>();
+        annotations.add(new Span(jcas,  0,  6)); // 1
+        annotations.add(new Span(jcas,  0, 13)); // 2
+        annotations.add(new Span(jcas,  9, 11)); // 3
+        annotations.add(new Span(jcas,  7, 11)); // 4
+        annotations.add(new Span(jcas,  9, 13)); // 5
+        annotations.add(new Span(jcas,  3, 13)); // 6
+        annotations.add(new Span(jcas,  0, 10)); // 7
+        annotations.add(new Span(jcas,  3, 10)); // 8
+        annotations.add(new Span(jcas,  3, 17)); // 9
+        annotations.add(new Span(jcas, 10, 10)); // 10
+        annotations.add(new Span(jcas,  7,  7)); // 11
+        annotations.add(new Span(jcas, 13, 13)); // 12
         IntStream.range(0, annotations.size()).forEach(idx -> {
-            NamedEntity ne = annotations.get(idx);
+            Span ne = annotations.get(idx);
             ne.setValue(String.valueOf(idx + 1));
             ne.addToIndexes();
         });
         
         writeAndAssertEquals(jcas, 
-                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(NamedEntity.class));
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
     }
     
     @Test
@@ -521,39 +525,39 @@ public abstract class WebAnnoTsv3WriterTestBase
         // 11         |             - zero-span beginning of token
         // 12               |       - zero-span end of token
         
-        List<NamedEntity> annotations = new ArrayList<>();
-        annotations.add(new NamedEntity(jcas,  0,  6)); // 1
-        annotations.add(new NamedEntity(jcas,  0,  6)); // 1
-        annotations.add(new NamedEntity(jcas,  0, 13)); // 2
-        annotations.add(new NamedEntity(jcas,  0, 13)); // 2
-        annotations.add(new NamedEntity(jcas,  9, 10)); // 3
-        annotations.add(new NamedEntity(jcas,  9, 10)); // 3
-        annotations.add(new NamedEntity(jcas,  7, 10)); // 4
-        annotations.add(new NamedEntity(jcas,  7, 10)); // 4
-        annotations.add(new NamedEntity(jcas,  9, 13)); // 5
-        annotations.add(new NamedEntity(jcas,  9, 13)); // 5
-        annotations.add(new NamedEntity(jcas,  3, 13)); // 6
-        annotations.add(new NamedEntity(jcas,  3, 13)); // 6
-        annotations.add(new NamedEntity(jcas,  0, 10)); // 7
-        annotations.add(new NamedEntity(jcas,  0, 10)); // 7
-        annotations.add(new NamedEntity(jcas,  3, 10)); // 8
-        annotations.add(new NamedEntity(jcas,  3, 10)); // 8
-        annotations.add(new NamedEntity(jcas,  3, 17)); // 9
-        annotations.add(new NamedEntity(jcas,  3, 17)); // 9
-        annotations.add(new NamedEntity(jcas, 10, 10)); // 10
-        annotations.add(new NamedEntity(jcas, 10, 10)); // 10
-        annotations.add(new NamedEntity(jcas,  7,  7)); // 11
-        annotations.add(new NamedEntity(jcas,  7,  7)); // 11
-        annotations.add(new NamedEntity(jcas, 13, 13)); // 12
-        annotations.add(new NamedEntity(jcas, 13, 13)); // 12
+        List<Span> annotations = new ArrayList<>();
+        annotations.add(new Span(jcas,  0,  6)); // 1
+        annotations.add(new Span(jcas,  0,  6)); // 1
+        annotations.add(new Span(jcas,  0, 13)); // 2
+        annotations.add(new Span(jcas,  0, 13)); // 2
+        annotations.add(new Span(jcas,  9, 10)); // 3
+        annotations.add(new Span(jcas,  9, 10)); // 3
+        annotations.add(new Span(jcas,  7, 10)); // 4
+        annotations.add(new Span(jcas,  7, 10)); // 4
+        annotations.add(new Span(jcas,  9, 13)); // 5
+        annotations.add(new Span(jcas,  9, 13)); // 5
+        annotations.add(new Span(jcas,  3, 13)); // 6
+        annotations.add(new Span(jcas,  3, 13)); // 6
+        annotations.add(new Span(jcas,  0, 10)); // 7
+        annotations.add(new Span(jcas,  0, 10)); // 7
+        annotations.add(new Span(jcas,  3, 10)); // 8
+        annotations.add(new Span(jcas,  3, 10)); // 8
+        annotations.add(new Span(jcas,  3, 17)); // 9
+        annotations.add(new Span(jcas,  3, 17)); // 9
+        annotations.add(new Span(jcas, 10, 10)); // 10
+        annotations.add(new Span(jcas, 10, 10)); // 10
+        annotations.add(new Span(jcas,  7,  7)); // 11
+        annotations.add(new Span(jcas,  7,  7)); // 11
+        annotations.add(new Span(jcas, 13, 13)); // 12
+        annotations.add(new Span(jcas, 13, 13)); // 12
         IntStream.range(0, annotations.size()).forEach(idx -> {
-            NamedEntity ne = annotations.get(idx);
+            Span ne = annotations.get(idx);
             ne.setValue(String.valueOf((idx / 2) + 1) + (idx % 2 == 0 ? "a" : "b"));
             ne.addToIndexes();
         });
         
         writeAndAssertEquals(jcas, 
-                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(NamedEntity.class));
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
     }
     
     @Test
@@ -561,14 +565,14 @@ public abstract class WebAnnoTsv3WriterTestBase
     {
         JCas jcas = makeJCasOneSentence();
         
-        NamedEntity ne1 = new NamedEntity(jcas, 0, jcas.getDocumentText().length());
+        Span ne1 = new Span(jcas, 0, jcas.getDocumentText().length());
         ne1.addToIndexes();
 
-        NamedEntity ne2 = new NamedEntity(jcas, 0, jcas.getDocumentText().length());
+        Span ne2 = new Span(jcas, 0, jcas.getDocumentText().length());
         ne2.addToIndexes();
 
         writeAndAssertEquals(jcas, 
-                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(NamedEntity.class));
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
     }
 
     @Test
@@ -576,12 +580,12 @@ public abstract class WebAnnoTsv3WriterTestBase
     {
         JCas jcas = makeJCasOneSentence();
         
-        NamedEntity ne = new NamedEntity(jcas, 0, jcas.getDocumentText().length());
+        Span ne = new Span(jcas, 0, jcas.getDocumentText().length());
         ne.setValue("PERSON");
         ne.addToIndexes();
         
         writeAndAssertEquals(jcas, 
-                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(NamedEntity.class));
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
     }
     
     @Test
@@ -589,16 +593,16 @@ public abstract class WebAnnoTsv3WriterTestBase
     {
         JCas jcas = makeJCasOneSentence();
         
-        NamedEntity ne1 = new NamedEntity(jcas, 0, jcas.getDocumentText().length());
+        Span ne1 = new Span(jcas, 0, jcas.getDocumentText().length());
         ne1.setValue("PERSON");
         ne1.addToIndexes();
 
-        NamedEntity ne2 = new NamedEntity(jcas, 0, jcas.getDocumentText().length());
+        Span ne2 = new Span(jcas, 0, jcas.getDocumentText().length());
         ne2.setValue("LOCATION");
         ne2.addToIndexes();
 
         writeAndAssertEquals(jcas, 
-                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(NamedEntity.class));
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
     }
 
     @Test
@@ -606,11 +610,11 @@ public abstract class WebAnnoTsv3WriterTestBase
     {
         JCas jcas = makeJCasTwoSentences();
         
-        NamedEntity ne = new NamedEntity(jcas, 0, jcas.getDocumentText().length());
+        Span ne = new Span(jcas, 0, jcas.getDocumentText().length());
         ne.addToIndexes();
         
         writeAndAssertEquals(jcas, 
-                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(NamedEntity.class));
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
     }
 
     @Test
@@ -618,12 +622,12 @@ public abstract class WebAnnoTsv3WriterTestBase
     {
         JCas jcas = makeJCasTwoSentences();
         
-        NamedEntity ne = new NamedEntity(jcas, 0, jcas.getDocumentText().length());
+        Span ne = new Span(jcas, 0, jcas.getDocumentText().length());
         ne.setValue("PERSON");
         ne.addToIndexes();
         
         writeAndAssertEquals(jcas, 
-                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(NamedEntity.class));
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
     }
     
     @Test
@@ -640,6 +644,11 @@ public abstract class WebAnnoTsv3WriterTestBase
         Type relationType = cas.getTypeSystem().getType("webanno.custom.Relation");
         
         // One at the beginning
+        // WebAnno legacy conventions
+        // AnnotationFS fs1 = cas.createAnnotation(relationType, 
+        //         min(dep.getBegin(), gov.getBegin()),
+        //         max(dep.getEnd(), gov.getEnd()));
+        // DKPro Core conventions
         AnnotationFS fs1 = cas.createAnnotation(relationType, dep.getBegin(), dep.getEnd());
         FSUtil.setFeature(fs1, "Governor", gov);
         FSUtil.setFeature(fs1, "Dependent", dep);
@@ -660,21 +669,26 @@ public abstract class WebAnnoTsv3WriterTestBase
         Token t1 = tokens.get(0);
         Token t2 = tokens.get(tokens.size() - 1);
         
-        NamedEntity gov = new NamedEntity(jcas, t1.getBegin(), t1.getEnd());
+        Span gov = new Span(jcas, t1.getBegin(), t1.getEnd());
         gov.addToIndexes();
-        NamedEntity dep =  new NamedEntity(jcas, t2.getBegin(), t2.getEnd());
+        Span dep =  new Span(jcas, t2.getBegin(), t2.getEnd());
         dep.addToIndexes();
 
         Type relationType = cas.getTypeSystem().getType("webanno.custom.Relation");
         
         // One at the beginning
+        // WebAnno legacy conventions
+        // AnnotationFS fs1 = cas.createAnnotation(relationType, 
+        //        min(dep.getBegin(), gov.getBegin()),
+        //        max(dep.getEnd(), gov.getEnd()));
+        // DKPro Core conventions
         AnnotationFS fs1 = cas.createAnnotation(relationType, dep.getBegin(), dep.getEnd());
         FSUtil.setFeature(fs1, "Governor", gov);
         FSUtil.setFeature(fs1, "Dependent", dep);
         cas.addFsToIndexes(fs1);
         
         writeAndAssertEquals(jcas, 
-                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(NamedEntity.class),
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class),
                 WebannoTsv3Writer.PARAM_RELATION_LAYERS, asList("webanno.custom.Relation"));
     }
 
@@ -689,24 +703,29 @@ public abstract class WebAnnoTsv3WriterTestBase
         Token t1 = tokens.get(0);
         Token t2 = tokens.get(tokens.size() - 1);
         
-        NamedEntity gov = new NamedEntity(jcas, t1.getBegin(), t1.getEnd());
+        Span gov = new Span(jcas, t1.getBegin(), t1.getEnd());
         gov.addToIndexes();
-        new NamedEntity(jcas, t1.getBegin(), t1.getEnd()).addToIndexes();
+        new Span(jcas, t1.getBegin(), t1.getEnd()).addToIndexes();
 
-        NamedEntity dep =  new NamedEntity(jcas, t2.getBegin(), t2.getEnd());
+        Span dep =  new Span(jcas, t2.getBegin(), t2.getEnd());
         dep.addToIndexes();
-        new NamedEntity(jcas, t2.getBegin(), t2.getEnd()).addToIndexes();
+        new Span(jcas, t2.getBegin(), t2.getEnd()).addToIndexes();
 
         Type relationType = cas.getTypeSystem().getType("webanno.custom.Relation");
         
         // One at the beginning
+        // WebAnno legacy conventions
+        // AnnotationFS fs1 = cas.createAnnotation(relationType, 
+        //         min(dep.getBegin(), gov.getBegin()),
+        //         max(dep.getEnd(), gov.getEnd()));
+        // DKPro Core conventions
         AnnotationFS fs1 = cas.createAnnotation(relationType, dep.getBegin(), dep.getEnd());
         FSUtil.setFeature(fs1, "Governor", gov);
         FSUtil.setFeature(fs1, "Dependent", dep);
         cas.addFsToIndexes(fs1);
         
         writeAndAssertEquals(jcas, 
-                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(NamedEntity.class),
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class),
                 WebannoTsv3Writer.PARAM_RELATION_LAYERS, asList("webanno.custom.Relation"));
     }
 
@@ -721,23 +740,28 @@ public abstract class WebAnnoTsv3WriterTestBase
         Token t1 = tokens.get(0);
         Token t2 = tokens.get(tokens.size() - 1);
         
-        NamedEntity gov = new NamedEntity(jcas, t1.getBegin(), t1.getEnd());
+        Span gov = new Span(jcas, t1.getBegin(), t1.getEnd());
         gov.addToIndexes();
 
-        NamedEntity dep =  new NamedEntity(jcas, t2.getBegin(), t2.getEnd());
+        Span dep =  new Span(jcas, t2.getBegin(), t2.getEnd());
         dep.addToIndexes();
-        new NamedEntity(jcas, t2.getBegin(), t2.getEnd()).addToIndexes();
+        new Span(jcas, t2.getBegin(), t2.getEnd()).addToIndexes();
 
         Type relationType = cas.getTypeSystem().getType("webanno.custom.Relation");
         
         // One at the beginning
+        // WebAnno legacy conventions
+        // AnnotationFS fs1 = cas.createAnnotation(relationType, 
+        //         min(dep.getBegin(), gov.getBegin()),
+        //         max(dep.getEnd(), gov.getEnd()));
+        // DKPro Core conventions
         AnnotationFS fs1 = cas.createAnnotation(relationType, dep.getBegin(), dep.getEnd());
         FSUtil.setFeature(fs1, "Governor", gov);
         FSUtil.setFeature(fs1, "Dependent", dep);
         cas.addFsToIndexes(fs1);
         
         writeAndAssertEquals(jcas, 
-                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(NamedEntity.class),
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class),
                 WebannoTsv3Writer.PARAM_RELATION_LAYERS, asList("webanno.custom.Relation"));
     }
 
@@ -752,23 +776,28 @@ public abstract class WebAnnoTsv3WriterTestBase
         Token t1 = tokens.get(0);
         Token t2 = tokens.get(tokens.size() - 1);
         
-        NamedEntity gov = new NamedEntity(jcas, t1.getBegin(), t1.getEnd());
+        Span gov = new Span(jcas, t1.getBegin(), t1.getEnd());
         gov.addToIndexes();
-        new NamedEntity(jcas, t1.getBegin(), t1.getEnd()).addToIndexes();
+        new Span(jcas, t1.getBegin(), t1.getEnd()).addToIndexes();
 
-        NamedEntity dep =  new NamedEntity(jcas, t2.getBegin(), t2.getEnd());
+        Span dep =  new Span(jcas, t2.getBegin(), t2.getEnd());
         dep.addToIndexes();
 
         Type relationType = cas.getTypeSystem().getType("webanno.custom.Relation");
         
         // One at the beginning
+        // WebAnno legacy conventions
+        // AnnotationFS fs1 = cas.createAnnotation(relationType, 
+        //         min(dep.getBegin(), gov.getBegin()),
+        //         max(dep.getEnd(), gov.getEnd()));
+        // DKPro Core conventions
         AnnotationFS fs1 = cas.createAnnotation(relationType, dep.getBegin(), dep.getEnd());
         FSUtil.setFeature(fs1, "Governor", gov);
         FSUtil.setFeature(fs1, "Dependent", dep);
         cas.addFsToIndexes(fs1);
         
         writeAndAssertEquals(jcas, 
-                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(NamedEntity.class),
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class),
                 WebannoTsv3Writer.PARAM_RELATION_LAYERS, asList("webanno.custom.Relation"));
     }
     @Test
@@ -782,24 +811,29 @@ public abstract class WebAnnoTsv3WriterTestBase
         Token t1 = tokens.get(0);
         Token t2 = tokens.get(tokens.size() - 1);
         
-        NamedEntity gov = new NamedEntity(jcas, t1.getBegin(), t2.getEnd());
+        Span gov = new Span(jcas, t1.getBegin(), t2.getEnd());
         gov.addToIndexes();
-        new NamedEntity(jcas, t1.getBegin(), t2.getEnd()).addToIndexes();
+        new Span(jcas, t1.getBegin(), t2.getEnd()).addToIndexes();
 
-        NamedEntity dep =  new NamedEntity(jcas, t2.getBegin(), t2.getEnd());
+        Span dep =  new Span(jcas, t2.getBegin(), t2.getEnd());
         dep.addToIndexes();
-        new NamedEntity(jcas, t2.getBegin(), t2.getEnd()).addToIndexes();
+        new Span(jcas, t2.getBegin(), t2.getEnd()).addToIndexes();
 
         Type relationType = cas.getTypeSystem().getType("webanno.custom.Relation");
         
         // One at the beginning
+        // WebAnno legacy conventions
+        // AnnotationFS fs1 = cas.createAnnotation(relationType, 
+        //         min(dep.getBegin(), gov.getBegin()),
+        //         max(dep.getEnd(), gov.getEnd()));
+        // DKPro Core conventions
         AnnotationFS fs1 = cas.createAnnotation(relationType, dep.getBegin(), dep.getEnd());
         FSUtil.setFeature(fs1, "Governor", gov);
         FSUtil.setFeature(fs1, "Dependent", dep);
         cas.addFsToIndexes(fs1);
         
         writeAndAssertEquals(jcas, 
-                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(NamedEntity.class),
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class),
                 WebannoTsv3Writer.PARAM_RELATION_LAYERS, asList("webanno.custom.Relation"));
     }
 
@@ -814,21 +848,26 @@ public abstract class WebAnnoTsv3WriterTestBase
         Token t1 = tokens.get(0);
         Token t2 = tokens.get(tokens.size() - 1);
         
-        NamedEntity gov = new NamedEntity(jcas, t1.getBegin(), t1.getEnd());
+        Span gov = new Span(jcas, t1.getBegin(), t1.getEnd());
         gov.addToIndexes();
-        NamedEntity dep =  new NamedEntity(jcas, t2.getBegin(), t2.getEnd());
+        Span dep =  new Span(jcas, t2.getBegin(), t2.getEnd());
         dep.addToIndexes();
 
         Type relationType = cas.getTypeSystem().getType("webanno.custom.SimpleRelation");
         
         // One at the beginning
+        // WebAnno legacy conventions
+        // AnnotationFS fs1 = cas.createAnnotation(relationType, 
+        //         min(dep.getBegin(), gov.getBegin()),
+        //         max(dep.getEnd(), gov.getEnd()));
+        // DKPro Core conventions
         AnnotationFS fs1 = cas.createAnnotation(relationType, dep.getBegin(), dep.getEnd());
         FSUtil.setFeature(fs1, "Governor", gov);
         FSUtil.setFeature(fs1, "Dependent", dep);
         cas.addFsToIndexes(fs1);
         
         writeAndAssertEquals(jcas, 
-                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(NamedEntity.class),
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class),
                 WebannoTsv3Writer.PARAM_RELATION_LAYERS, asList("webanno.custom.SimpleRelation"));
     }
 
@@ -845,21 +884,26 @@ public abstract class WebAnnoTsv3WriterTestBase
         Token t3 = tokens.get(2);
         Token t4 = tokens.get(3);
         
-        NamedEntity gov = new NamedEntity(jcas, t1.getBegin(), t2.getEnd());
+        Span gov = new Span(jcas, t1.getBegin(), t2.getEnd());
         gov.addToIndexes();
-        NamedEntity dep =  new NamedEntity(jcas, t3.getBegin(), t4.getEnd());
+        Span dep =  new Span(jcas, t3.getBegin(), t4.getEnd());
         dep.addToIndexes();
 
         Type relationType = cas.getTypeSystem().getType("webanno.custom.Relation");
         
         // One at the beginning
+        // WebAnno legacy conventions
+        // AnnotationFS fs1 = cas.createAnnotation(relationType, 
+        //         min(dep.getBegin(), gov.getBegin()),
+        //         max(dep.getEnd(), gov.getEnd()));
+        // DKPro Core conventions
         AnnotationFS fs1 = cas.createAnnotation(relationType, dep.getBegin(), dep.getEnd());
         FSUtil.setFeature(fs1, "Governor", gov);
         FSUtil.setFeature(fs1, "Dependent", dep);
         cas.addFsToIndexes(fs1);
         
         writeAndAssertEquals(jcas, 
-                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(NamedEntity.class),
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class),
                 WebannoTsv3Writer.PARAM_RELATION_LAYERS, asList("webanno.custom.Relation"));
     }
 
@@ -876,24 +920,29 @@ public abstract class WebAnnoTsv3WriterTestBase
         Token t3 = tokens.get(2);
         Token t4 = tokens.get(3);
         
-        NamedEntity gov = new NamedEntity(jcas, t1.getBegin(), t2.getEnd());
+        Span gov = new Span(jcas, t1.getBegin(), t2.getEnd());
         gov.addToIndexes();
-        NamedEntity dep =  new NamedEntity(jcas, t3.getBegin(), t4.getEnd());
+        Span dep =  new Span(jcas, t3.getBegin(), t4.getEnd());
         dep.addToIndexes();
 
         Type relationType = cas.getTypeSystem().getType("webanno.custom.ComplexRelation");
         
         // One at the beginning
+        // WebAnno legacy conventions
+        // AnnotationFS fs1 = cas.createAnnotation(relationType, 
+        //         min(dep.getBegin(), gov.getBegin()),
+        //         max(dep.getEnd(), gov.getEnd()));
+        // DKPro Core conventions
         AnnotationFS fs1 = cas.createAnnotation(relationType, dep.getBegin(), dep.getEnd());
         FSUtil.setFeature(fs1, "Governor", gov);
         FSUtil.setFeature(fs1, "Dependent", dep);
         FSUtil.setFeature(fs1, "value", "nsubj");
         FSUtil.setFeature(fs1, "boolValue", true);
-        FSUtil.setFeature(fs1, "intValue", 42);
+        FSUtil.setFeature(fs1, "integerValue", 42);
         cas.addFsToIndexes(fs1);
         
         writeAndAssertEquals(jcas, 
-                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(NamedEntity.class),
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class),
                 WebannoTsv3Writer.PARAM_RELATION_LAYERS, asList("webanno.custom.ComplexRelation"));
     }
     
@@ -910,31 +959,41 @@ public abstract class WebAnnoTsv3WriterTestBase
         Token t3 = tokens.get(2);
         Token t4 = tokens.get(3);
         
-        NamedEntity gov = new NamedEntity(jcas, t1.getBegin(), t2.getEnd());
+        Span gov = new Span(jcas, t1.getBegin(), t2.getEnd());
         gov.addToIndexes();
-        NamedEntity dep =  new NamedEntity(jcas, t3.getBegin(), t4.getEnd());
+        Span dep =  new Span(jcas, t3.getBegin(), t4.getEnd());
         dep.addToIndexes();
 
         Type relationType = cas.getTypeSystem().getType("webanno.custom.ComplexRelation");
         
+        // WebAnno legacy conventions
+        // AnnotationFS fs1 = cas.createAnnotation(relationType, 
+        //         min(dep.getBegin(), gov.getBegin()),
+        //         max(dep.getEnd(), gov.getEnd()));
+        // DKPro Core conventions
         AnnotationFS fs1 = cas.createAnnotation(relationType, dep.getBegin(), dep.getEnd());
         FSUtil.setFeature(fs1, "Governor", gov);
         FSUtil.setFeature(fs1, "Dependent", dep);
         FSUtil.setFeature(fs1, "value", "nsubj");
         FSUtil.setFeature(fs1, "boolValue", true);
-        FSUtil.setFeature(fs1, "intValue", 42);
+        FSUtil.setFeature(fs1, "integerValue", 42);
         cas.addFsToIndexes(fs1);
 
+        // WebAnno legacy conventions
+        // AnnotationFS fs2 = cas.createAnnotation(relationType, 
+        //         min(dep.getBegin(), gov.getBegin()),
+        //         max(dep.getEnd(), gov.getEnd()));
+        // DKPro Core conventions
         AnnotationFS fs2 = cas.createAnnotation(relationType, dep.getBegin(), dep.getEnd());
         FSUtil.setFeature(fs2, "Governor", gov);
         FSUtil.setFeature(fs2, "Dependent", dep);
         FSUtil.setFeature(fs2, "value", "obj");
         FSUtil.setFeature(fs2, "boolValue", false);
-        FSUtil.setFeature(fs2, "intValue", 43);
+        FSUtil.setFeature(fs2, "integerValue", 43);
         cas.addFsToIndexes(fs2);
 
         writeAndAssertEquals(jcas, 
-                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(NamedEntity.class),
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class),
                 WebannoTsv3Writer.PARAM_RELATION_LAYERS, asList("webanno.custom.ComplexRelation"));
     }    
     @Ignore("Relations between different layers not supported in WebAnno TSV 3 atm")
@@ -949,19 +1008,24 @@ public abstract class WebAnnoTsv3WriterTestBase
         Token gov = tokens.get(0);
         
         Token t2 = tokens.get(tokens.size() - 1);
-        NamedEntity dep =  new NamedEntity(jcas, t2.getBegin(), t2.getEnd());
+        Span dep =  new Span(jcas, t2.getBegin(), t2.getEnd());
         dep.addToIndexes();
 
         Type relationType = cas.getTypeSystem().getType("webanno.custom.Relation");
         
         // One at the beginning
+        // WebAnno legacy conventions
+        // AnnotationFS fs1 = cas.createAnnotation(relationType, 
+        //         min(dep.getBegin(), gov.getBegin()),
+        //         max(dep.getEnd(), gov.getEnd()));
+        // DKPro Core conventions
         AnnotationFS fs1 = cas.createAnnotation(relationType, dep.getBegin(), dep.getEnd());
         FSUtil.setFeature(fs1, "Governor", gov);
         FSUtil.setFeature(fs1, "Dependent", dep);
         cas.addFsToIndexes(fs1);
         
         writeAndAssertEquals(jcas, 
-                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(NamedEntity.class),
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class),
                 WebannoTsv3Writer.PARAM_RELATION_LAYERS, asList("webanno.custom.Relation"));
     }
 
@@ -979,6 +1043,11 @@ public abstract class WebAnnoTsv3WriterTestBase
         Type relationType = cas.getTypeSystem().getType("webanno.custom.Relation");
         
         // One at the beginning
+        // WebAnno legacy conventions
+        // AnnotationFS fs1 = cas.createAnnotation(relationType, 
+        //         min(dep.getBegin(), gov.getBegin()),
+        //         max(dep.getEnd(), gov.getEnd()));
+        // DKPro Core conventions
         AnnotationFS fs1 = cas.createAnnotation(relationType, dep.getBegin(), dep.getEnd());
         FSUtil.setFeature(fs1, "Governor", gov);
         FSUtil.setFeature(fs1, "Dependent", dep);
@@ -1003,12 +1072,17 @@ public abstract class WebAnnoTsv3WriterTestBase
         Type relationType = cas.getTypeSystem().getType("webanno.custom.ComplexRelation");
         
         // One at the beginning
+        // WebAnno legacy conventions
+        // AnnotationFS fs1 = cas.createAnnotation(relationType, 
+        //      min(dep.getBegin(), gov.getBegin()),
+        //      max(dep.getEnd(), gov.getEnd()));
+        // DKPro Core conventions
         AnnotationFS fs1 = cas.createAnnotation(relationType, dep.getBegin(), dep.getEnd());
         FSUtil.setFeature(fs1, "Governor", gov);
         FSUtil.setFeature(fs1, "Dependent", dep);
         FSUtil.setFeature(fs1, "value", "nsubj");
         FSUtil.setFeature(fs1, "boolValue", true);
-        FSUtil.setFeature(fs1, "intValue", 42);
+        FSUtil.setFeature(fs1, "integerValue", 42);
         cas.addFsToIndexes(fs1);
         
         writeAndAssertEquals(jcas, 
@@ -1046,6 +1120,34 @@ public abstract class WebAnnoTsv3WriterTestBase
                 WebannoTsv3Writer.PARAM_SLOT_TARGETS, asList("webanno.custom.SimpleSpan"));
     }
 
+    @Test
+    public void testUnsetSlotFeature() throws Exception
+    {
+        JCas jcas = makeJCasOneSentence();
+        CAS cas = jcas.getCas();
+        
+        List<Token> tokens = new ArrayList<>(select(jcas, Token.class));
+        
+        Token t1 = tokens.get(0);
+        Token t2 = tokens.get(1);
+        Token t3 = tokens.get(2);
+        
+        Type type = cas.getTypeSystem().getType("webanno.custom.SimpleSpan");
+        AnnotationFS s2 = cas.createAnnotation(type, t2.getBegin(), t2.getEnd());
+        cas.addFsToIndexes(s2);
+        AnnotationFS s3 = cas.createAnnotation(type, t3.getBegin(), t3.getEnd());
+        cas.addFsToIndexes(s3);
+
+        makeLinkHostFS(jcas, "webanno.custom.FlexLinkHost", t1.getBegin(), t1.getEnd(),
+                (FeatureStructure[]) null);
+        
+        writeAndAssertEquals(jcas, 
+                WebannoTsv3Writer.PARAM_SLOT_FEATS, asList("webanno.custom.FlexLinkHost:links"),
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList("webanno.custom.SimpleSpan", 
+                        "webanno.custom.SimpleLinkHost"),
+                WebannoTsv3Writer.PARAM_LINK_TYPES, asList("webanno.custom.FlexLinkType"),
+                WebannoTsv3Writer.PARAM_SLOT_TARGETS, asList("webanno.custom.SimpleSpan"));
+    }
     @Test
     public void testSimpleSlotFeatureWithoutValues() throws Exception
     {
@@ -1514,10 +1616,10 @@ public abstract class WebAnnoTsv3WriterTestBase
     {
         JCas jcas = makeJCasOneSentence("This is\na test .");
                 
-        NamedEntity neToken = new NamedEntity(jcas, 0, 4);
+        Span neToken = new Span(jcas, 0, 4);
         neToken.addToIndexes();
         
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(NamedEntity.class));
+        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
     }
 
     @Test
@@ -1525,10 +1627,10 @@ public abstract class WebAnnoTsv3WriterTestBase
     {
         JCas jcas = makeJCasOneSentence("This is\ta test .");
         
-        NamedEntity neToken = new NamedEntity(jcas, 0, 4);
+        Span neToken = new Span(jcas, 0, 4);
         neToken.addToIndexes();
         
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(NamedEntity.class));
+        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
     }
 
     @Test
@@ -1536,10 +1638,10 @@ public abstract class WebAnnoTsv3WriterTestBase
     {
         JCas jcas = makeJCasOneSentence("I like it 😊 .");
         
-        NamedEntity neToken = new NamedEntity(jcas, 10, 12);
+        Span neToken = new Span(jcas, 10, 12);
         neToken.addToIndexes();
         
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(NamedEntity.class));
+        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
     }
 
     @Test
@@ -1675,8 +1777,10 @@ public abstract class WebAnnoTsv3WriterTestBase
     {
         Type hostType = aJCas.getTypeSystem().getType(aType);
         AnnotationFS hostA1 = aJCas.getCas().createAnnotation(hostType, aBegin, aEnd);
-        hostA1.setFeatureValue(hostType.getFeatureByBaseName("links"),
-                FSCollectionFactory.createFSArray(aJCas, asList(aLinks)));
+        if (aLinks != null) {
+            hostA1.setFeatureValue(hostType.getFeatureByBaseName("links"),
+                    FSCollectionFactory.createFSArray(aJCas, asList(aLinks)));
+        }
         aJCas.getCas().addFsToIndexes(hostA1);
         return hostA1;
     }

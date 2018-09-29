@@ -1,0 +1,87 @@
+// Copyright 2015
+// Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+// Technische Universität Darmstadt
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+[[sect_curation]]
+== Curation
+
+NOTE: This functionality is only available to *project managers* (managers of existing projects), 
+      *curators*, and *administrators*. Curators and project managers only see projects in which
+      they hold the respective roles.
+
+When navigating to the *Curation Page*, the procedure for opening projects and documents is the same as in <<sect_annotation>>. The navigation within the document is also equivalent to <<sect_annotation>>.
+
+.Explanation of the project colors in the curation open document dialog
+[cols="2*"]
+|===
+| No curatable documents
+| Red
+
+| Curatable documents
+| Green
+|===
+
+.Explanation of the document colors in the curation open document dialog
+[cols="2*"]
+|===
+| New
+| Black
+
+| Annotation in progress
+| Black
+
+| Curation in progress
+| Blue
+
+| Curation finished
+| Red
+|===
+
+In the left frame of the window, named *Sentences*, an overview of the chosen document is displayed. Sentences are represented by their number inside the document. Sentences containing a disagreement between annotators are colored in red. Click on a sentence in order to select it and to to edit it in the central part of the page. 
+
+image::curation_1.png[align="center"]
+
+The center part of the annotation page is divided into the *Annotation* pane which is a full-scale
+annotation editor and contains the final data from the curation step. Below it are multiple read-only
+panes containing the annotations from individual annotators. Clicking on an annotation in any of the
+annotator's panes transfers the respective annotation to the *Annotation* pane.
+
+When a document is opened for the first time in the curation page, the application analyzes agreements
+and disagreemens between annotators. All annotations on which all annotators agree are automatically
+copied to the *Annotation* pane. Any annotations on which the annotators disagree are skipped.
+
+The annotator's panes are color-coded according to their relation with the contents of the *Annotation*
+pane and according to the agreement status. If the annotations were the same, they are marked *grey* in the lower panes. If the annotations are disparate, the markings are dark blue in the lower frames. By default, they are not taken into the merged file. If you choose one annotation to be right by clicking on it, the chosen annotation will turn green in the frame of the corresponding annotator. Also, the annotation will say *USE* next to the classification. 
+
+Note that the *Annotation* pane is not color-coded. It uses whatever coloring strategy is configured
+in the *Settings* dialog.
+
+The annotations which were not chosen to be in the merged file are marked dark blue. The annotations which were wrongly classified are marked in red.
+
+.Explanation of the annotation colors in the annotator's panes (lower panes)
+[cols="1,3"]
+|===
+| Grey
+| all annotators agree
+
+| Blue 
+| disagreement requiring curation; annotators disagree and there is no corresponding annotation in the upper *Annotation* pane yet
+
+| Green 
+| accepted; matches the corresponding annotation in the upper *Annotation* pane
+
+| Red 
+| rejected; different to the corresponding annotation in the upper *Annotation* pane
+|===

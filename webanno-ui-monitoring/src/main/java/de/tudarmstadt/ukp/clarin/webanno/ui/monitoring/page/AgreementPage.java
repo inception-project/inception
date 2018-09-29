@@ -36,6 +36,7 @@ import org.apache.wicket.ajax.form.OnChangeAjaxBehavior;
 import org.apache.wicket.ajax.markup.html.form.AjaxButton;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
+import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
@@ -45,6 +46,7 @@ import org.apache.wicket.markup.html.form.ListChoice;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.cycle.RequestCycle;
@@ -54,7 +56,6 @@ import org.apache.wicket.util.resource.IResourceStream;
 import org.apache.wicket.util.resource.ResourceStreamNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.wicketstuff.annotation.mount.MountPath;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.components.PopoverBehavior;
@@ -87,13 +88,10 @@ import de.tudarmstadt.ukp.clarin.webanno.support.AJAXDownload;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.OverviewListChoice;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemCondition;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
-@MenuItem(icon = "images/statistics.png", label = "Agreement", prio = 300)
 @MountPath("/agreement.html")
 public class AgreementPage
     extends ApplicationPageBase
@@ -173,7 +171,7 @@ public class AgreementPage
                     if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
                         try {
                             jCas = documentService.readAnnotationCas(annotationDocument);
-                            documentService.upgradeCas(jCas.getCas(), annotationDocument);
+                            annotationService.upgradeCas(jCas.getCas(), annotationDocument);
                             // REC: I think there is no need to write the CASes here. We would not
                             // want to interfere with currently active annotator users
 
@@ -216,8 +214,6 @@ public class AgreementPage
 
         private DropDownChoice<LinkCompareBehavior> linkCompareBehaviorDropDown;
 
-        private DropDownChoice<AgreementReportExportFormat> exportFormat;
-
         private AjaxButton exportAll;
 
         private CheckBox excludeIncomplete;
@@ -229,12 +225,27 @@ public class AgreementPage
             setOutputMarkupId(true);
             setOutputMarkupPlaceholderTag(true);
 
+            add(new Label("name",
+                    PropertyModel.of(projectSelectionForm.getModel(), "project.name")));
+            
+            WebMarkupContainer agreementResults = new WebMarkupContainer("agreementResults") {
+                private static final long serialVersionUID = -2465552557800612807L;
+
+                @Override
+                protected void onConfigure()
+                {
+                    super.onConfigure();
+                    setVisible(featureList.getModelObject() != null);
+                }
+            };
+            add(agreementResults);
+            
             PopoverConfig config = new PopoverConfig().withPlacement(Placement.left)
                     .withHtml(true);
             WebMarkupContainer legend = new WebMarkupContainer("legend");
             legend.add(new PopoverBehavior(new ResourceModel("legend"), 
                     new StringResourceModel("legend.content", legend), config));
-            add(legend);
+            agreementResults.add(legend);
             
             add(measureDropDown = new DropDownChoice<>("measure",
                     asList(ConcreteAgreementMeasure.values()),
@@ -263,9 +274,10 @@ public class AgreementPage
             linkCompareBehaviorDropDown.setOutputMarkupPlaceholderTag(true);
             addUpdateAgreementTableBehavior(linkCompareBehaviorDropDown);
 
-            add(exportFormat = new DropDownChoice<>("exportFormat",
+            agreementResults.add(new DropDownChoice<AgreementReportExportFormat>("exportFormat",
                     asList(AgreementReportExportFormat.values()),
-                    new EnumChoiceRenderer<>(AgreementPage.this)));
+                    new EnumChoiceRenderer<>(AgreementPage.this))
+                            .add(new LambdaAjaxFormComponentUpdatingBehavior("change")));
 
             add(excludeIncomplete = new CheckBox("excludeIncomplete")
             {
@@ -330,7 +342,7 @@ public class AgreementPage
             });
             addUpdateAgreementTableBehavior(featureList);
 
-            add(agreementTable2 = new AgreementTable("agreementTable", getModel(),
+            agreementResults.add(agreementTable2 = new AgreementTable("agreementTable", getModel(),
                     new LoadableDetachableModel<PairwiseAnnotationResult>()
                     {
                         private static final long serialVersionUID = 1L;
@@ -445,7 +457,7 @@ public class AgreementPage
                             + AgreementForm.this.getModelObject().exportFormat.getExtension());
                 }
             };
-            add(exportAll);
+            agreementResults.add(exportAll);
         }
 
         @Override
@@ -599,16 +611,5 @@ public class AgreementPage
         public Project project;
         public Map<String, Integer> annotatorsProgress = new TreeMap<>();
         public Map<String, Integer> annotatorsProgressInPercent = new TreeMap<>();
-    }
-    
-    /**
-     * Only admins and project managers can see this page
-     */
-    @MenuItemCondition
-    public static boolean menuItemCondition(ProjectService aRepo, UserDao aUserRepo)
-    {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = aUserRepo.get(username);
-        return SecurityUtil.monitoringEnabeled(aRepo, user);
     }
 }

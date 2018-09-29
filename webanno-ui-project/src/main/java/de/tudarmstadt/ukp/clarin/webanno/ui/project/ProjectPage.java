@@ -26,23 +26,21 @@ import org.apache.wicket.authroles.authorization.strategies.role.metadata.MetaDa
 import org.apache.wicket.extensions.ajax.markup.html.tabs.AjaxTabbedPanel;
 import org.apache.wicket.extensions.markup.html.tabs.AbstractTab;
 import org.apache.wicket.extensions.markup.html.tabs.ITab;
+import org.apache.wicket.markup.html.WebMarkupContainer;
+import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.wicketstuff.annotation.mount.MountPath;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
-import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapAjaxTabbedPanel;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ModelChangedVisitor;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemCondition;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelRegistryService;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelRegistryService.ProjectSettingsPanelDecl;
@@ -59,7 +57,6 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.project.users.ProjectUsersPanel;
  * {@link Tag} details to a Project as well as updating them The {@link ProjectUsersPanel} is used
  * to update {@link User} to a Project
  */
-@MenuItem(icon = "images/setting_tools.png", label = "Projects", prio = 400)
 @MountPath("/projectsetting.html")
 public class ProjectPage
     extends ApplicationPageBase
@@ -70,6 +67,7 @@ public class ProjectPage
 
     private @SpringBean ProjectSettingsPanelRegistryService projectSettingsPanelRegistryService;
 
+    private WebMarkupContainer tabContainer;
     private AjaxTabbedPanel<ITab> tabPanel;
     private ProjectSelectionPanel projects;
     private ProjectImportPanel importProjectPanel;
@@ -79,6 +77,12 @@ public class ProjectPage
     public ProjectPage()
     {
         selectedProject = Model.of();
+        
+        tabContainer = new WebMarkupContainer("tabContainer");
+        tabContainer.setOutputMarkupId(true);
+        add(tabContainer);
+        
+        tabContainer.add(new Label("projectName", PropertyModel.of(selectedProject, "name")));
         
         tabPanel = new BootstrapAjaxTabbedPanel<ITab>("tabPanel", makeTabs()) {
             private static final long serialVersionUID = -7356420977522213071L;
@@ -91,12 +95,12 @@ public class ProjectPage
             }
         };
         tabPanel.setOutputMarkupPlaceholderTag(true);
-        add(tabPanel);
+        tabContainer.add(tabPanel);
         
         projects = new ProjectSelectionPanel("projects", selectedProject);
         projects.setCreateAction(target -> selectedProject.setObject(new Project()));
         projects.setChangeAction(target -> { 
-            target.add(tabPanel);
+            target.add(tabContainer);
             // Make sure that any invalid forms are cleared now that we load the new project.
             // If we do not do this, then e.g. input fields may just continue showing the values
             // they had when they were marked invalid.
@@ -152,21 +156,12 @@ public class ProjectPage
                 public boolean isVisible()
                 {
                     return selectedProject.getObject() != null
-                            && selectedProject.getObject().getId() != 0
+                            && selectedProject.getObject().getId() != null
                             && psp.condition.applies(selectedProject.getObject());
                 }
             };
             tabs.add(tab);
         }
         return tabs;
-    }
-
-    /*
-     * Only admins and project managers can see this page
-     */
-    @MenuItemCondition
-    public static boolean menuItemCondition(ProjectService aRepo, UserDao aUserRepo)
-    {
-        return SecurityUtil.projectSettingsEnabeled(aRepo, aUserRepo.getCurrentUser());
     }
 }

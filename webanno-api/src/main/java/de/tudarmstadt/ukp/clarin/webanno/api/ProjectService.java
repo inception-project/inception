@@ -174,6 +174,14 @@ public interface ProjectService
     void updateProject(Project project);
 
     /**
+     * Update the project state.
+     * 
+     * @param aProject
+     *            The {@link Project} to be updated.
+     */
+    void recalculateProjectState(Project aProject);
+
+    /**
      * A method that check is a project exists with the same name already. getSingleResult() fails
      * if the project is not created, hence existProject returns false.
      *
@@ -265,11 +273,19 @@ public interface ProjectService
         throws IOException;
 
     /**
-     * List project accessible by current user
+     * List projects accessible by current user
      *
      * @return list of projects accessible by the user.
      */
     List<Project> listAccessibleProjects(User aUser);
+
+    /**
+     * List projects manageable by current user
+     *
+     * @return list of projects manageable by the user.
+     */
+    List<Project> listManageableProjects(User aUser);
+
 
     /**
      * Export the associated project log for this {@link Project} while copying a project
@@ -352,8 +368,9 @@ public interface ProjectService
      * @throws IOException
      *             if an I/O error occurs.
      */
-    void createGuideline(Project project, File content, String fileName)
-        throws IOException;
+    void createGuideline(Project project, File content, String fileName) throws IOException;
+
+    void createGuideline(Project project, InputStream content, String fileName) throws IOException;
 
     /**
      * get the annotation guideline document from the file system
@@ -415,7 +432,7 @@ public interface ProjectService
     // --------------------------------------------------------------------------------------------
 
     void onProjectImport(ZipFile zip,
-            de.tudarmstadt.ukp.clarin.webanno.export.model.Project aExportedProject,
+            de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject aExportedProject,
             Project aProject)
         throws Exception;
     

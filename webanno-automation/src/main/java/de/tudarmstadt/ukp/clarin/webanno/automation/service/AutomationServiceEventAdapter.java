@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.automation.service;
 
-import javax.annotation.Resource;
-
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
@@ -27,10 +27,11 @@ import de.tudarmstadt.ukp.clarin.webanno.automation.model.MiraTemplate;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.TrainingDocument;
 
+@ConditionalOnBean(AutomationService.class)
 @Component
 public class AutomationServiceEventAdapter
 {
-    private @Resource AutomationService service;
+    private @Autowired AutomationService service;
     
     @EventListener
     public void onBeforeProjectRemove(BeforeProjectRemovedEvent aEvent)
@@ -42,6 +43,10 @@ public class AutomationServiceEventAdapter
             service.removeTrainingDocument(document);
         }
         for (MiraTemplate template : service.listMiraTemplates(project)) {
+           // remove associated TRAIN and OTHER features from the Mira Template
+            template.setTrainFeature(null);
+            template.setOtherFeatures(null);
+            
             service.removeMiraTemplate(template);
         }
     }

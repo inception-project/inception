@@ -19,9 +19,8 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
 import java.util.List;
 
-import javax.annotation.Resource;
-
 import org.apache.uima.jcas.JCas;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
@@ -38,8 +37,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 @Component
 public class PreRenderer
 {
-    private @Resource FeatureSupportRegistry featureSupportRegistry;
-    private @Resource AnnotationSchemaService annotationService;
+    private @Autowired FeatureSupportRegistry featureSupportRegistry;
+    private @Autowired AnnotationSchemaService annotationService;
 
     public void render(VDocument aResponse, AnnotatorState aState, JCas aJCas,
             List<AnnotationLayer> aLayers)

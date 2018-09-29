@@ -187,4 +187,7 @@ public interface AutomationService
     boolean existsInitialCas(TrainingDocument aDocument)
             throws IOException;
     boolean existsCas(TrainingDocument aDocument) throws IOException;
+    
+    void uploadTrainingDocument(File aFile, TrainingDocument aDocument)
+            throws IOException;
 }

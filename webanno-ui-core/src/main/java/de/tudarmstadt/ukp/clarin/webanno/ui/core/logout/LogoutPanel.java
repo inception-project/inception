@@ -106,7 +106,7 @@ public class LogoutPanel
         int timeout = getAutoLogoutTime();
         if (timeout > 0) {
             aResponse.render(JavaScriptHeaderItem.forScript(
-                    "$(document).ready(function() { new LogoutTimer(" + timeout + "); });",
+                    "$(document).ready(function() { new LogoutTimer(" + timeout + "); });",
                     "webAnnoAutoLogout"));
         }
     }

@@ -27,6 +27,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.Component;
 import org.apache.wicket.Page;
 import org.apache.wicket.RuntimeConfigurationType;
+import org.apache.wicket.authorization.strategies.CompoundAuthorizationStrategy;
+import org.apache.wicket.authorization.strategies.page.SimplePageAuthorizationStrategy;
+import org.apache.wicket.authroles.authorization.strategies.role.RoleAuthorizationStrategy;
 import org.apache.wicket.core.request.mapper.HomePageMapper;
 import org.apache.wicket.devutils.stateless.StatelessChecker;
 import org.apache.wicket.markup.html.WebPage;
@@ -42,6 +45,7 @@ import org.apache.wicket.resource.loader.NestedStringResourceLoader;
 import org.apache.wicket.settings.ExceptionSettings;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.wicketstuff.annotation.scan.AnnotatedMountList;
 import org.wicketstuff.annotation.scan.AnnotatedMountScanner;
@@ -49,6 +53,7 @@ import org.wicketstuff.annotation.scan.AnnotatedMountScanner;
 import com.giffing.wicket.spring.boot.starter.app.WicketBootSecuredWebApplication;
 import com.github.sommeri.less4j.LessCompiler.Configuration;
 import com.googlecode.wicket.jquery.ui.settings.JQueryUILibrarySettings;
+
 import de.agilecoders.wicket.core.Bootstrap;
 import de.agilecoders.wicket.core.settings.IBootstrapSettings;
 import de.agilecoders.wicket.less.BootstrapLess;
@@ -68,6 +73,8 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.config.KendoResourceBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.css.theme.CustomBootstrapLessReference;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.kendo.WicketJQueryFocusPatchBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.login.LoginPage;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.MenuBar;
 
 /**
@@ -79,10 +86,35 @@ public abstract class WicketApplicationBase
 {
     protected boolean isInitialized = false;
 
+    @Autowired
+    private MenuItemRegistry menuItemRegistry;
+    
     @Override
     protected void init()
     {
         super.init();
+
+        CompoundAuthorizationStrategy authorizationStrategy = new CompoundAuthorizationStrategy();
+        // Custom authorization strategy which prevents access to pages if the corresponding 
+        // menu item does not permit it.
+        authorizationStrategy.add(
+                new SimplePageAuthorizationStrategy(Page.class, getHomePage())
+                {
+                    @Override
+                    protected <T extends Page> boolean isPageAuthorized(Class<T> aPageClass)
+                    {
+                        return menuItemRegistry.getMenuItem(aPageClass).map(MenuItem::applies)
+                                .orElse(true);
+                    }
+
+                    @Override
+                    protected boolean isAuthorized()
+                    {
+                        throw new IllegalStateException("This should not be called");
+                    }
+                });
+        authorizationStrategy.add(new RoleAuthorizationStrategy(this));
+        getSecuritySettings().setAuthorizationStrategy(authorizationStrategy);        
         
 //        initSpring();
         

@@ -17,7 +17,11 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
+
 import org.apache.commons.lang3.StringUtils;
+import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AbstractAjaxBehavior;
 import org.apache.wicket.markup.head.CssHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
@@ -28,8 +32,10 @@ import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.request.handler.TextRequestHandler;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.googlecode.wicket.jquery.ui.resource.JQueryUIResourceReference;
+import com.googlecode.wicket.jquery.ui.settings.JQueryUILibrarySettings;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratAjaxResourceReference;
@@ -52,6 +58,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQuerySvgResourceReferenc
 public abstract class BratVisualizer
     extends Panel
 {
+    private static final Logger LOG = LoggerFactory.getLogger(BratVisualizer.class);
     private static final long serialVersionUID = -1537506294440056609L;
 
     protected static final String EMPTY_DOC = "{text: ''}";
@@ -111,7 +118,7 @@ public abstract class BratVisualizer
         aResponse.render(CssHeaderItem.forReference(BratCssUiReference.get()));
 
         // Libraries
-        aResponse.render(JavaScriptHeaderItem.forReference(JQueryUIResourceReference.get()));
+        aResponse.render(forReference(JQueryUILibrarySettings.get().getJavaScriptReference()));
         aResponse.render(JavaScriptHeaderItem.forReference(JQuerySvgResourceReference.get()));
         aResponse.render(JavaScriptHeaderItem.forReference(JQuerySvgDomResourceReference.get()));
         aResponse.render(JavaScriptHeaderItem.forReference(JQueryJsonResourceReference.get()));
@@ -144,5 +151,95 @@ public abstract class BratVisualizer
     protected String getCollectionData()
     {
         return "{}";
+    }
+    
+    private String bratRenderCommand(String aJson)
+    {
+        return "Wicket.$('" + vis.getMarkupId() + "').dispatcher.post('renderData', [" + aJson
+                + "]);";
+    }
+
+    protected void render(AjaxRequestTarget aTarget)
+    {
+        aTarget.appendJavaScript(
+                "setTimeout(function() { " + bratRenderCommand(getDocumentData()) + " }, 0);");
+    }
+    
+    /**
+     * Schedules a rendering call via at the end of the given AJAX cycle. This method can be
+     * called multiple times, even for the same annotation editor, but only resulting in a single
+     * rendering call.
+     */
+    public final void requestRender(AjaxRequestTarget aTarget)
+    {
+        aTarget.registerRespondListener(new RenderListener());
+    }
+    
+    /**
+     * This is a special AJAX target response listener which implements hashCode and equals.
+     * It useds the markup ID of its host component to identify itself. This enables us to add
+     * multiple instances of this listener to an AJAX response without *actually* adding
+     * multiple instances since the AJAX response internally keeps track of the listeners
+     * using a set.
+     */
+    private class RenderListener
+        implements AjaxRequestTarget.ITargetRespondListener
+    {
+        private String markupId;
+
+        public RenderListener()
+        {
+            markupId = BratVisualizer.this.getMarkupId();
+        }
+
+        @Override
+        public void onTargetRespond(AjaxRequestTarget aTarget)
+        {
+            if (isNotBlank(getDocumentData())) {
+                render(aTarget);
+            }
+        }
+
+        private BratVisualizer getOuterType()
+        {
+            return BratVisualizer.this;
+        }
+
+        @Override
+        public int hashCode()
+        {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + getOuterType().hashCode();
+            result = prime * result + ((markupId == null) ? 0 : markupId.hashCode());
+            return result;
+        }
+
+        @Override
+        public boolean equals(Object obj)
+        {
+            if (this == obj) {
+                return true;
+            }
+            if (obj == null) {
+                return false;
+            }
+            if (getClass() != obj.getClass()) {
+                return false;
+            }
+            RenderListener other = (RenderListener) obj;
+            if (!getOuterType().equals(other.getOuterType())) {
+                return false;
+            }
+            if (markupId == null) {
+                if (other.markupId != null) {
+                    return false;
+                }
+            }
+            else if (!markupId.equals(other.markupId)) {
+                return false;
+            }
+            return true;
+        }
     }
 }

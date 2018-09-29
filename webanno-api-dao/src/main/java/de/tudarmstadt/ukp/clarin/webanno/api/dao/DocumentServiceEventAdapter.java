@@ -19,8 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 
 import java.io.IOException;
 
-import javax.annotation.Resource;
-
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
@@ -31,7 +30,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 @Component
 public class DocumentServiceEventAdapter
 {
-    private @Resource DocumentService service;
+    private @Autowired DocumentService service;
 
     @EventListener
     public void beforeProjectRemove(BeforeProjectRemovedEvent aEvent)

@@ -24,17 +24,20 @@
 		// Based on this accepted answer of so
 		// http://stackoverflow.com/questions/2335553/jquery-how-to-catch-enter-key-and-change-event-to-tab
 		function manageEnter() {			
-			$("#annotationFeatureForm :input").keypress(function(e) {
-			    if (e.which == 13) {
+			$("#annotationFeatureForm :input").keyup(function(e) {
+				if (e.which == 13) {
 			        e.preventDefault();
 			        var inputs = $(this).parents("form").eq(0).find(":input");
 	                var idx = inputs.index(this);
-
 	                if (idx == inputs.length - 1) {
 	                    inputs[idx].blur();
 	                } else {
 	                    inputs[idx + 1].focus(); //  handles submit buttons
 	                    inputs[idx + 1].select();
+	                }
+	                // If it is a forward annotation on free text, trigger change even on Enter key up
+	                if($('#annotationFeatureForm :checkbox:checked').length > 0) {
+	                		$(this).trigger("change")
 	                }
 	                return false;
 			    }
@@ -68,7 +71,7 @@
                     <em wicket:id="relationHint"></em>
                   </div>
                 </div>
-                <div class="form-group">
+                <div class="form-group" wicket:enclosure="forwardAnnotation">
                   <div class="col-sm-offset-3 col-sm-9">
                     <div class="checkbox">
                       <label wicket:for="forwardAnnotation">

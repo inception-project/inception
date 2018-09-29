@@ -21,19 +21,27 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static java.util.Arrays.asList;
+import static java.util.Objects.isNull;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Deque;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
-import javax.annotation.Resource;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 
+import org.apache.commons.collections4.SetUtils;
+import org.apache.commons.lang3.ClassUtils;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
@@ -50,7 +58,13 @@ import org.apache.uima.util.CasCreationUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.context.event.EventListener;
+import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -60,7 +74,10 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ArcAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ChainAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.initializers.ProjectInitializer;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
@@ -82,21 +99,53 @@ public class AnnotationSchemaServiceImpl
     @Value(value = "${repository.path}")
     private File dir;
 
-    @PersistenceContext
-    private EntityManager entityManager;
-    
-    private @Resource FeatureSupportRegistry featureSupportRegistry;
+    private @PersistenceContext EntityManager entityManager;
+    private @Autowired FeatureSupportRegistry featureSupportRegistry;
+    private @Autowired ApplicationEventPublisher applicationEventPublisher;
+    private @Lazy @Autowired(required = false) List<ProjectInitializer> initializerProxy;
+    private List<ProjectInitializer> initializers;
 
     public AnnotationSchemaServiceImpl()
     {
         // Nothing to do
     }
 
+    @EventListener
+    public void onContextRefreshedEvent(ContextRefreshedEvent aEvent)
+    {
+        init();
+    }
+    
+    /* package private */ void init()
+    {
+        List<ProjectInitializer> inits = new ArrayList<>();
+
+        if (initializerProxy != null) {
+            inits.addAll(initializerProxy);
+            AnnotationAwareOrderComparator.sort(inits);
+        
+            Set<Class<? extends ProjectInitializer>> initializerClasses = new HashSet<>();
+            for (ProjectInitializer init : inits) {
+                if (initializerClasses.add(init.getClass())) {
+                    log.info("Found project initializer: {}",
+                            ClassUtils.getAbbreviatedName(init.getClass(), 20));
+                }
+                else {
+                    throw new IllegalStateException("There cannot be more than once instance "
+                            + "of each project initializer class! Duplicate instance of class: "
+                                    + init.getClass());
+                }
+            }
+        }
+        
+        initializers = Collections.unmodifiableList(inits);
+    }
+
     @Override
     @Transactional
     public void createTag(Tag aTag)
     {
-        if (aTag.getId() == 0) {
+        if (isNull(aTag.getId())) {
             entityManager.persist(aTag);
         }
         else {
@@ -117,7 +166,7 @@ public class AnnotationSchemaServiceImpl
     @Transactional
     public void createTagSet(TagSet aTagSet)
     {
-        if (aTagSet.getId() == 0) {
+        if (isNull(aTagSet.getId())) {
             entityManager.persist(aTagSet);
         }
         else {
@@ -135,9 +184,8 @@ public class AnnotationSchemaServiceImpl
     @Override
     @Transactional
     public void createLayer(AnnotationLayer aLayer)
-        throws IOException
     {
-        if (aLayer.getId() == 0) {
+        if (isNull(aLayer.getId())) {
             entityManager.persist(aLayer);
         }
         else {
@@ -156,7 +204,7 @@ public class AnnotationSchemaServiceImpl
     @Transactional
     public void createFeature(AnnotationFeature aFeature)
     {
-        if (aFeature.getId() == 0) {
+        if (isNull(aFeature.getId())) {
             entityManager.persist(aFeature);
         }
         else {
@@ -164,6 +212,21 @@ public class AnnotationSchemaServiceImpl
         }
     }
 
+    @Override
+    @Transactional
+    public Optional<Tag> getTag(long aId)
+    {
+        try {
+            final String query = "FROM Tag WHERE id = :id";
+            return Optional.of(entityManager.createQuery(query, Tag.class)
+                    .setParameter("id", aId)
+                    .getSingleResult());
+        }
+        catch (NoResultException e) {
+            return Optional.empty();
+        }
+    }
+    
     @Override
     @Transactional
     public Tag getTag(String aTagName, TagSet aTagSet)
@@ -215,6 +278,25 @@ public class AnnotationSchemaServiceImpl
         catch (NoResultException e) {
             return false;
 
+        }
+    }
+
+    @Override
+    @Transactional(noRollbackFor = NoResultException.class)
+    public boolean existsLayer(String aName, Project aProject)
+    {
+        try {
+            entityManager
+                    .createQuery(
+                            "FROM AnnotationLayer WHERE name = :name AND project = :project",
+                            AnnotationLayer.class)
+                    .setParameter("name", aName)
+                    .setParameter("project", aProject)
+                    .getSingleResult();
+            return true;
+        }
+        catch (NoResultException e) {
+            return false;
         }
     }
 
@@ -348,6 +430,7 @@ public class AnnotationSchemaServiceImpl
     }
 
     @Override
+    @Transactional
     public TagSet createTagSet(String aDescription, String aTagSetName, String aLanguage,
             String[] aTags, String[] aTagDescription, Project aProject)
                 throws IOException
@@ -375,22 +458,46 @@ public class AnnotationSchemaServiceImpl
 
     @Override
     @Transactional
-    public void initializeTypesForProjectV0(Project aProject, String[] aPostags,
-            String[] aPosTagDescriptions, String[] aDepTags, String[] aDepTagDescriptions,
-            String[] aNeTags, String[] aNeTagDescriptions, String[] aCorefTypeTags,
-            String[] aCorefRelTags)
+    public void initializeProject(Project aProject)
         throws IOException
     {
-        new ProjectInitializer(this).initializeV0(aProject, aPostags, aPosTagDescriptions, aDepTags,
-                aDepTagDescriptions, aNeTags, aNeTagDescriptions, aCorefTypeTags, aCorefRelTags);
-    }
+        Deque<ProjectInitializer> deque = new LinkedList<>(initializers);
+        Set<Class<? extends ProjectInitializer>> initsSeen = new HashSet<>();
+        Set<ProjectInitializer> initsDeferred = SetUtils.newIdentityHashSet();
 
-    @Override
-    @Transactional
-    public void initializeTypesForProject(Project aProject)
-        throws IOException
-    {
-        new ProjectInitializer(this).initialize(aProject);
+        Set<Class<? extends ProjectInitializer>> allInits = new HashSet<>();
+
+        for (ProjectInitializer initializer : deque) {
+            allInits.add(initializer.getClass());
+        }
+        
+        while (!deque.isEmpty()) {
+            ProjectInitializer initializer = deque.pop();
+
+            if (!allInits.containsAll(initializer.getDependencies())) {
+                throw new IllegalStateException(
+                        "Missing dependencies of " + initializer + " initializer from " + deque);
+            }
+
+            if (initsDeferred.contains(initializer)) {
+                throw new IllegalStateException("Circular initializer dependencies in "
+                        + initsDeferred + " via " + initializer);
+            }
+            
+            if (initsSeen.containsAll(initializer.getDependencies())) {
+                log.debug("Applying project initializer: {}", initializer);
+                initializer.configure(aProject);
+                initsSeen.add(initializer.getClass());
+                initsDeferred.clear();
+            }
+            else {
+                log.debug(
+                        "Deferring project initializer as dependencies are not yet fulfilled: [{}]",
+                        initializer);
+                deque.add(initializer);
+                initsDeferred.add(initializer);
+            }
+        }
     }
 
     @Override
@@ -445,7 +552,7 @@ public class AnnotationSchemaServiceImpl
     @Transactional
     public List<AnnotationFeature> listAnnotationFeature(AnnotationLayer aLayer)
     {
-        if (aLayer == null || aLayer.getId() == 0) {
+        if (isNull(aLayer) || isNull(aLayer.getId())) {
             return new ArrayList<>();
         }
 
@@ -539,91 +646,59 @@ public class AnnotationSchemaServiceImpl
     }
 
     @Override
-    public List<TypeSystemDescription> getProjectTypes(Project aProject)
+    public TypeSystemDescription getProjectTypes(Project aProject)
     {
         // Create a new type system from scratch
-        List<TypeSystemDescription> types = new ArrayList<>();
+        TypeSystemDescription tsd = new TypeSystemDescription_impl();
         for (AnnotationLayer type : listAnnotationLayer(aProject)) {
             if (type.getType().equals(SPAN_TYPE) && !type.isBuiltIn()) {
-                TypeSystemDescription tsd = new TypeSystemDescription_impl();
                 TypeDescription td = tsd.addType(type.getName(), "", CAS.TYPE_NAME_ANNOTATION);
-                List<AnnotationFeature> features = listAnnotationFeature(type);
-                for (AnnotationFeature feature : features) {
-                    generateFeature(tsd, td, feature);
-                }
-
-                types.add(tsd);
+                
+                generateFeatures(tsd, td, type);
             }
             else if (type.getType().equals(RELATION_TYPE) && !type.isBuiltIn()) {
-                TypeSystemDescription tsd = new TypeSystemDescription_impl();
                 TypeDescription td = tsd.addType(type.getName(), "", CAS.TYPE_NAME_ANNOTATION);
                 AnnotationLayer attachType = type.getAttachType();
 
                 td.addFeature(WebAnnoConst.FEAT_REL_TARGET, "", attachType.getName());
                 td.addFeature(WebAnnoConst.FEAT_REL_SOURCE, "", attachType.getName());
 
-                List<AnnotationFeature> features = listAnnotationFeature(type);
-                for (AnnotationFeature feature : features) {
-                    generateFeature(tsd, td, feature);
-                }
-
-                types.add(tsd);
+                generateFeatures(tsd, td, type);
             }
             else if (type.getType().equals(CHAIN_TYPE) && !type.isBuiltIn()) {
-                TypeSystemDescription tsdchains = new TypeSystemDescription_impl();
-                TypeDescription tdChains = tsdchains.addType(type.getName() + "Chain", "",
-                        CAS.TYPE_NAME_ANNOTATION);
+                TypeDescription tdChains = tsd.addType(type.getName() + "Chain", "",
+                        CAS.TYPE_NAME_ANNOTATION_BASE);
                 tdChains.addFeature("first", "", type.getName() + "Link");
-                types.add(tsdchains);
-
-                TypeSystemDescription tsdLink = new TypeSystemDescription_impl();
-                TypeDescription tdLink = tsdLink.addType(type.getName() + "Link", "",
+                
+                // Custom features on chain layers are currently not supported
+                // generateFeatures(tsd, tdChains, type);
+                
+                TypeDescription tdLink = tsd.addType(type.getName() + "Link", "",
                         CAS.TYPE_NAME_ANNOTATION);
                 tdLink.addFeature("next", "", type.getName() + "Link");
                 tdLink.addFeature("referenceType", "", CAS.TYPE_NAME_STRING);
                 tdLink.addFeature("referenceRelation", "", CAS.TYPE_NAME_STRING);
-                types.add(tsdLink);
             }
         }
 
-        return types;
+        return tsd;
     }
     
-    private void generateFeature(TypeSystemDescription aTSD, TypeDescription aTD,
-            AnnotationFeature aFeature)
+    private void generateFeatures(TypeSystemDescription aTSD, TypeDescription aTD,
+            AnnotationLayer aLayer)
     {
-        switch (aFeature.getMultiValueMode()) {
-        case NONE:
-            if (aFeature.isVirtualFeature()) {
-                aTD.addFeature(aFeature.getName(), "", CAS.TYPE_NAME_STRING);
-            }
-            else {
-                aTD.addFeature(aFeature.getName(), "", aFeature.getType());
-            }
-            break;
-        case ARRAY: {
-            switch (aFeature.getLinkMode()) {
-            case WITH_ROLE: {
-                // Link type
-                TypeDescription linkTD = aTSD.addType(aFeature.getLinkTypeName(), "",
-                        CAS.TYPE_NAME_TOP);
-                linkTD.addFeature(aFeature.getLinkTypeRoleFeatureName(), "", CAS.TYPE_NAME_STRING);
-                linkTD.addFeature(aFeature.getLinkTypeTargetFeatureName(), "", aFeature.getType());
-                // Link feature
-                aTD.addFeature(aFeature.getName(), "", CAS.TYPE_NAME_FS_ARRAY, linkTD.getName(),
-                        false);
-                break;
-            }
-            default:
-                throw new IllegalArgumentException("Unsupported link mode ["
-                        + aFeature.getLinkMode() + "] on feature [" + aFeature.getName() + "]");
-            }
-            break;
+        List<AnnotationFeature> features = listAnnotationFeature(aLayer);
+        for (AnnotationFeature feature : features) {
+            FeatureSupport fs = featureSupportRegistry.getFeatureSupport(feature);
+            fs.generateFeature(aTSD, aTD, feature);
         }
-        default:
-            throw new IllegalArgumentException("Unsupported multi-value mode ["
-                    + aFeature.getMultiValueMode() + "] on feature [" + aFeature.getName() + "]");
-        }
+    }
+
+    @Override
+    public void upgradeCas(CAS aCas, AnnotationDocument aAnnotationDocument)
+        throws UIMAException, IOException
+    {
+        upgradeCas(aCas, aAnnotationDocument.getDocument(), aAnnotationDocument.getUser());
     }
 
     @Override
@@ -632,9 +707,9 @@ public class AnnotationSchemaServiceImpl
     {
         TypeSystemDescription builtInTypes = TypeSystemDescriptionFactory
                 .createTypeSystemDescription();
-        List<TypeSystemDescription> projectTypes = getProjectTypes(aSourceDocument.getProject());
-        projectTypes.add(builtInTypes);
-        TypeSystemDescription allTypes = CasCreationUtils.mergeTypeSystems(projectTypes);
+        TypeSystemDescription projectTypes = getProjectTypes(aSourceDocument.getProject());
+        TypeSystemDescription allTypes = CasCreationUtils
+                .mergeTypeSystems(asList(projectTypes, builtInTypes));
 
         // Prepare template for new CAS
         CAS newCas = JCasFactory.createJCas(allTypes).getCas();
@@ -673,15 +748,16 @@ public class AnnotationSchemaServiceImpl
     @Transactional
     public TypeAdapter getAdapter(AnnotationLayer aLayer)
     {
-        return getAdapter(this, featureSupportRegistry, aLayer);
+        return getAdapter(this, featureSupportRegistry, applicationEventPublisher, aLayer);
     }
     
     public static TypeAdapter getAdapter(AnnotationSchemaService aSchemaService,
-            FeatureSupportRegistry aFeatureSupportRegistry, AnnotationLayer aLayer)
+            FeatureSupportRegistry aFeatureSupportRegistry,
+            ApplicationEventPublisher aEventPublisher, AnnotationLayer aLayer)
     {
         switch (aLayer.getType()) {
         case WebAnnoConst.SPAN_TYPE: {
-            SpanAdapter adapter = new SpanAdapter(aFeatureSupportRegistry, aLayer,
+            SpanAdapter adapter = new SpanAdapter(aFeatureSupportRegistry, aEventPublisher, aLayer,
                     aSchemaService.listAnnotationFeature(aLayer));
             adapter.setLockToTokenOffsets(aLayer.isLockToTokenOffset());
             adapter.setAllowStacking(aLayer.isAllowStacking());
@@ -690,8 +766,9 @@ public class AnnotationSchemaServiceImpl
             return adapter;
         }
         case WebAnnoConst.RELATION_TYPE: {
-            ArcAdapter adapter = new ArcAdapter(aFeatureSupportRegistry, aLayer, aLayer.getId(),
-                    aLayer.getName(), WebAnnoConst.FEAT_REL_TARGET, WebAnnoConst.FEAT_REL_SOURCE,
+            ArcAdapter adapter = new ArcAdapter(aFeatureSupportRegistry, aEventPublisher, aLayer,
+                    aLayer.getId(), aLayer.getName(), WebAnnoConst.FEAT_REL_TARGET,
+                    WebAnnoConst.FEAT_REL_SOURCE,
                     aLayer.getAttachFeature() == null ? null : aLayer.getAttachFeature().getName(),
                     aLayer.getAttachType().getName(), aSchemaService.listAnnotationFeature(aLayer));
 
@@ -702,9 +779,9 @@ public class AnnotationSchemaServiceImpl
             // default is chain (based on operation, change to CoreferenceLinK)
         }
         case WebAnnoConst.CHAIN_TYPE: {
-            ChainAdapter adapter = new ChainAdapter(aFeatureSupportRegistry, aLayer, aLayer.getId(),
-                    aLayer.getName() + ChainAdapter.CHAIN, aLayer.getName(), "first", "next",
-                    aSchemaService.listAnnotationFeature(aLayer));
+            ChainAdapter adapter = new ChainAdapter(aFeatureSupportRegistry, aEventPublisher,
+                    aLayer, aLayer.getId(), aLayer.getName() + ChainAdapter.CHAIN, aLayer.getName(),
+                    "first", "next", aSchemaService.listAnnotationFeature(aLayer));
 
             adapter.setLinkedListBehavior(aLayer.isLinkedListBehavior());
 

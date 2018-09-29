@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.COREFERENCE_RELATION_FEATURE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.COREFERENCE_TYPE_FEATURE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectOverlapping;
 import static org.apache.uima.fit.util.CasUtil.selectFS;
 
@@ -33,9 +35,12 @@ import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
+import org.springframework.context.ApplicationEventPublisher;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.MultipleSentenceCoveredException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -76,11 +81,12 @@ public class ChainAdapter
 
     private boolean linkedListBehavior;
 
-    public ChainAdapter(FeatureSupportRegistry aFeatureSupportRegistry, AnnotationLayer aLayer,
-            long aLayerId, String aTypeName, String aLabelFeatureName, String aFirstFeatureName,
+    public ChainAdapter(FeatureSupportRegistry aFeatureSupportRegistry,
+            ApplicationEventPublisher aEventPublisher, AnnotationLayer aLayer, long aLayerId,
+            String aTypeName, String aLabelFeatureName, String aFirstFeatureName,
             String aNextFeatureName, Collection<AnnotationFeature> aFeatures)
     {
-        super(aFeatureSupportRegistry, aLayer, aFeatures);
+        super(aFeatureSupportRegistry, aEventPublisher, aLayer, aFeatures);
         
         layerId = aLayerId;
         annotationTypeName = aTypeName;
@@ -228,7 +234,7 @@ public class ChainAdapter
     }
 
     @Override
-    public void delete(JCas aJCas, VID aVid)
+    public void delete(AnnotatorState aState, JCas aJCas, VID aVid)
     {
         if (aVid.getSubId() == VID.NONE) {
             deleteSpan(aJCas, aVid.getId());
@@ -358,7 +364,8 @@ public class ChainAdapter
     }
 
     @Override
-    public void delete(JCas aJCas, AnnotationFeature aFeature, int aBegin, int aEnd, Object aValue)
+    public void delete(AnnotatorState aState, JCas aJCas, AnnotationFeature aFeature, int aBegin,
+            int aEnd, Object aValue)
     {
         // TODO Auto-generated method stub
     }
@@ -542,5 +549,29 @@ public class ChainAdapter
     public String getChainFirstFeatureName()
     {
         return chainFirstFeatureName;
+    }
+    
+    @Override
+    public void initialize(AnnotationSchemaService aSchemaService)
+    {
+        AnnotationFeature relationFeature = new AnnotationFeature();
+        relationFeature.setType(CAS.TYPE_NAME_STRING);
+        relationFeature.setName(COREFERENCE_RELATION_FEATURE);
+        relationFeature.setLayer(getLayer());
+        relationFeature.setEnabled(true);
+        relationFeature.setUiName("Reference Relation");
+        relationFeature.setProject(getLayer().getProject());
+
+        aSchemaService.createFeature(relationFeature);
+
+        AnnotationFeature typeFeature = new AnnotationFeature();
+        typeFeature.setType(CAS.TYPE_NAME_STRING);
+        typeFeature.setName(COREFERENCE_TYPE_FEATURE);
+        typeFeature.setLayer(getLayer());
+        typeFeature.setEnabled(true);
+        typeFeature.setUiName("Reference Type");
+        typeFeature.setProject(getLayer().getProject());
+
+        aSchemaService.createFeature(typeFeature);
     }
 }

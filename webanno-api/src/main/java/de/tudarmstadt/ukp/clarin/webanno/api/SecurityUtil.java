@@ -46,7 +46,7 @@ public class SecurityUtil
     public static Set<String> getRoles(ProjectService aProjectRepository, User aUser)
     {
         // When looking up roles for the user who is currently logged in, then we look in the
-        // security context - otherwise we as the database.
+        // security context - otherwise we ask the database.
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         Set<String> roles = new HashSet<>();
         if (aUser.getUsername().equals(username)) {

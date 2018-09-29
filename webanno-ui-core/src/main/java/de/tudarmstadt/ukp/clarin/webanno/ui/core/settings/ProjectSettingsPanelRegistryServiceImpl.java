@@ -23,12 +23,11 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import javax.annotation.Resource;
-
 import org.apache.commons.lang3.reflect.MethodUtils;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
@@ -48,11 +47,8 @@ public class ProjectSettingsPanelRegistryServiceImpl
 
     private List<ProjectSettingsPanelDecl> panels;
 
-    @Resource(name = "projectService")
-    private ProjectService projectService;
-
-    @Resource(name = "userRepository")
-    private UserDao userRepository;
+    private @Autowired ProjectService projectService;
+    private @Autowired UserDao userRepository;
     
     @Override
     public boolean isRunning()

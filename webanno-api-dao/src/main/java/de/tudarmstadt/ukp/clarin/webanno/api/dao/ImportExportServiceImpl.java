@@ -20,39 +20,34 @@ package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.DOCUMENT_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.SOURCE_FOLDER;
-import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngineDescription;
+import static java.util.Arrays.asList;
+import static java.util.Collections.unmodifiableList;
+import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
 import static org.apache.uima.fit.pipeline.SimplePipeline.runPipeline;
 import static org.apache.uima.fit.util.JCasUtil.select;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.text.BreakIterator;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-
-import javax.annotation.Resource;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.LineIterator;
+import org.apache.commons.lang3.ClassUtils;
 import org.apache.uima.UIMAException;
-import org.apache.uima.analysis_component.JCasAnnotator_ImplBase;
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.collection.CollectionReader;
-import org.apache.uima.fit.factory.CollectionReaderFactory;
+import org.apache.uima.collection.CollectionReaderDescription;
+import org.apache.uima.fit.factory.ConfigurationParameterFactory;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.factory.TypeSystemDescriptionFactory;
 import org.apache.uima.fit.util.CasUtil;
@@ -63,26 +58,25 @@ import org.apache.uima.util.CasCreationUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.context.event.EventListener;
+import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
-import de.tudarmstadt.ukp.clarin.webanno.automation.service.AutomationCasStorageService;
-import de.tudarmstadt.ukp.clarin.webanno.automation.service.AutomationService;
+import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
-import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
-import de.tudarmstadt.ukp.clarin.webanno.model.TrainingDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 import de.tudarmstadt.ukp.dkpro.core.api.io.JCasFileWriter_ImplBase;
@@ -101,50 +95,112 @@ public class ImportExportServiceImpl
     @Value(value = "${repository.path}")
     private File dir;
     
-    @Resource(name = "casStorageService")
     private CasStorageService casStorageService;
-    
-    @Resource(name = "automationCasStorageService")
-    private AutomationCasStorageService automationCasStorageService;
-    
-    
-    @Resource(name = "annotationService")
     private AnnotationSchemaService annotationService;
 
-    @Resource(name = "documentService")
-    private DocumentService documentService;
+    private final List<FormatSupport> formatsProxy;
+    private Map<String, FormatSupport> formats;
     
-    @Resource(name = "automationService")
-    private AutomationService automationService;
-
-    @Resource(name = "formats")
-    private Properties readWriteFileFormats;
-
-    public ImportExportServiceImpl()
+    public ImportExportServiceImpl(
+            @Lazy @Autowired(required = false) List<FormatSupport> aFormats,
+            @Autowired CasStorageService aCasStorageService,
+            @Autowired AnnotationSchemaService aAnnotationService)
     {
-        // Nothing to do
+        casStorageService = aCasStorageService;
+        annotationService = aAnnotationService;
+        formatsProxy = aFormats;
     }
 
+    @EventListener
+    public void onContextRefreshedEvent(ContextRefreshedEvent aEvent)
+    {
+        init();
+    }
+    
+    /* package private */ void init()
+    {
+        Map<String, FormatSupport> formatMap = new LinkedHashMap<>();
+        
+        if (formatsProxy != null) {
+            List<FormatSupport> forms = new ArrayList<>(formatsProxy);
+            AnnotationAwareOrderComparator.sort(forms);
+            forms.forEach(format -> {
+                formatMap.put(format.getId(), format);
+                log.info("Found format: {} ({}, {})",
+                        ClassUtils.getAbbreviatedName(format.getClass(), 20), format.getId(),
+                        readWriteMsg(format));
+            });
+        }
+        
+        // Parse "formats.properties" information into format supports
+//        if (readWriteFileFormats != null) {
+//            for (String key : readWriteFileFormats.stringPropertyNames()) {
+//                if (key.endsWith(".label")) {
+//                    String formatId = key.substring(0, key.lastIndexOf(".label"));
+//                    String formatName = readWriteFileFormats.getProperty(key);
+//                    String readerClass = readWriteFileFormats.getProperty(formatId + ".reader");
+//                    String writerClass = readWriteFileFormats.getProperty(formatId + ".writer");
+//                    
+//                    if (formatMap.containsKey(formatId)) {
+//                        log.info("Found format (format.properties): {} - format already defined by "
+//                                + "a built-in format support, ignoring entry from "
+//                                + "formats.properties file", formatId);
+//                    }
+//                    else {
+//                        FormatSupport format = new FormatSupportDescription(formatId, formatName,
+//                                readerClass, writerClass);
+//                        formatMap.put(format.getId(), format);
+//                        log.info("Found format (format.properties): {} ({})", formatId,
+//                                readWriteMsg(format));
+//                    }
+//                }
+//            }
+//        }
+        
+        formats = Collections.unmodifiableMap(formatMap);
+    }
+    
+    private String readWriteMsg(FormatSupport aFormat)
+    {
+        if (aFormat.isReadable() && !aFormat.isWritable()) {
+            return "read only";
+        }
+        else if (!aFormat.isReadable() && aFormat.isWritable()) {
+            return "write only";
+        }
+        else if (aFormat.isReadable() && aFormat.isWritable()) {
+            return "read/write";
+        }
+        else {
+            throw new IllegalStateException(
+                    "Format [" + aFormat.getId() + "] must be at least readable or writable.");
+        }
+    }
+    
+    @Override
+    public List<FormatSupport> getFormats()
+    {
+        return unmodifiableList(new ArrayList<>(formats.values()));
+    }
+    
     /**
      * A new directory is created using UUID so that every exported file will reside in its own
      * directory. This is useful as the written file can have multiple extensions based on the
      * Writer class used.
      */
-    @SuppressWarnings("rawtypes")
     @Override
     @Transactional
-    public File exportAnnotationDocument(SourceDocument aDocument, String aUser, Class aWriter,
-            String aFileName, Mode aMode)
+    public File exportAnnotationDocument(SourceDocument aDocument, String aUser,
+            FormatSupport aFormat, String aFileName, Mode aMode)
         throws UIMAException, IOException, ClassNotFoundException
     {
-        return exportAnnotationDocument(aDocument, aUser, aWriter, aFileName, aMode, true);
+        return exportAnnotationDocument(aDocument, aUser, aFormat, aFileName, aMode, true);
     }
 
-    @SuppressWarnings("rawtypes")
     @Override
     @Transactional
-    public File exportAnnotationDocument(SourceDocument aDocument, String aUser, Class aWriter,
-            String aFileName, Mode aMode, boolean aStripExtension)
+    public File exportAnnotationDocument(SourceDocument aDocument, String aUser,
+            FormatSupport aFormat, String aFileName, Mode aMode, boolean aStripExtension)
         throws UIMAException, IOException, ClassNotFoundException
     {
         File annotationFolder = casStorageService.getAnnotationFolder(aDocument);
@@ -170,12 +226,12 @@ public class ImportExportServiceImpl
         }
 
         CAS cas = CasCreationUtils.createCas((TypeSystemDescription) null, null, null);
-        CasPersistenceUtils.readSerializedCas(cas.getJCas(), serializedCasFile);
+        CasPersistenceUtils.readSerializedCas(cas, serializedCasFile);
 
         // Update type system the CAS
         annotationService.upgradeCas(cas, aDocument, aUser);
         
-        File exportFile = exportCasToFile(cas, aDocument, aFileName, aWriter, aStripExtension);
+        File exportFile = exportCasToFile(cas, aDocument, aFileName, aFormat, aStripExtension);
 
         Project project = aDocument.getProject();
         
@@ -190,198 +246,29 @@ public class ImportExportServiceImpl
     }
     
     @Override
-    @Transactional
-    public void uploadTrainingDocument(File aFile, TrainingDocument aDocument)
-        throws IOException
+    public JCas importCasFromFile(File aFile, Project aProject, String aFormatId)
+        throws UIMAException, IOException
     {
-        // Check if the file has a valid format / can be converted without error
-        JCas cas = null;
-        try {
-            if (aDocument.getFormat().equals(WebAnnoConst.TAB_SEP)) {
-                if (!isTabSepFileFormatCorrect(aFile)) {
-                    throw new IOException(
-                            "This TAB-SEP file is not in correct format. It should have two columns separated by TAB!");
-                }
-            }
-            else {
-                cas = importCasFromFile(aFile, aDocument.getProject(), aDocument.getFormat());
-                automationCasStorageService.analyzeAndRepair(aDocument, cas.getCas());
-            }
-        }
-        catch (IOException e) {
-            automationService.removeTrainingDocument(aDocument);
-            throw e;
-        }
-        catch (Exception e) {
-            automationService.removeTrainingDocument(aDocument);
-            throw new IOException(e.getMessage(), e);
-        }
-
-        // Copy the original file into the repository
-        File targetFile = automationService.getTrainingDocumentFile(aDocument);
-        FileUtils.forceMkdir(targetFile.getParentFile());
-        FileUtils.copyFile(aFile, targetFile);
-
-        // Copy the initial conversion of the file into the repository
-        if (cas != null) {
-            CasPersistenceUtils.writeSerializedCas(cas, automationService.getCasFile(aDocument));
-        }
-
-        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
-                String.valueOf(aDocument.getProject().getId()))) {
-            Project project = aDocument.getProject();
-            log.info("Imported training document [{}]({}) to project [{}]({})", 
-                    aDocument.getName(), aDocument.getId(), project.getName(), project.getId());
-        }
-    }
-    
-    @Override
-    public List<String> getReadableFormatLabels()
-    {
-        List<String> readableFormats = new ArrayList<>();
-        for (String key : readWriteFileFormats.stringPropertyNames()) {
-            if (key.contains(".label") && !isBlank(readWriteFileFormats.getProperty(key))) {
-                String readerLabel = key.substring(0, key.lastIndexOf(".label"));
-                if (!isBlank(readWriteFileFormats.getProperty(readerLabel + ".reader"))) {
-                    try {
-                        Class.forName(readWriteFileFormats.getProperty(readerLabel + ".reader"));
-                        readableFormats.add(readWriteFileFormats.getProperty(key));
-                    }
-                    catch (ClassNotFoundException e) {
-                        log.error("Reader class not found: "
-                                + readWriteFileFormats.getProperty(readerLabel + ".reader"));
-                    }
-                }
-            }
-        }
-        Collections.sort(readableFormats);
-        return readableFormats;
-    }
-
-    @Override
-    public String getReadableFormatId(String aLabel)
-    {
-        String readableFormat = "";
-        for (String key : readWriteFileFormats.stringPropertyNames()) {
-            if (key.contains(".label") && !isBlank(readWriteFileFormats.getProperty(key))) {
-                if (readWriteFileFormats.getProperty(key).equals(aLabel)) {
-                    readableFormat = key.substring(0, key.lastIndexOf(".label"));
-                    break;
-                }
-            }
-        }
-        return readableFormat;
-    }
-
-    @SuppressWarnings({ "rawtypes", "unchecked" })
-    @Override
-    public Map<String, Class<CollectionReader>> getReadableFormats()
-    {
-        Map<String, Class<CollectionReader>> readableFormats = new HashMap<>();
-        for (String key : readWriteFileFormats.stringPropertyNames()) {
-            if (key.contains(".label") && !isBlank(readWriteFileFormats.getProperty(key))) {
-                String readerLabel = key.substring(0, key.lastIndexOf(".label"));
-                if (!isBlank(readWriteFileFormats.getProperty(readerLabel + ".reader"))) {
-                    try {
-                        readableFormats.put(readerLabel, (Class) Class.forName(
-                                readWriteFileFormats.getProperty(readerLabel + ".reader")));
-                    }
-                    catch (ClassNotFoundException e) {
-                        log.error("Reader class not found: "
-                                + readWriteFileFormats.getProperty(readerLabel + ".reader"));
-                    }
-                }
-            }
-        }
-        return readableFormats;
-    }
-
-    @Override
-    public List<String> getWritableFormatLabels()
-    {
-        List<String> writableFormats = new ArrayList<>();
-        for (String key : readWriteFileFormats.stringPropertyNames()) {
-            if (key.contains(".label") && !isBlank(readWriteFileFormats.getProperty(key))) {
-                String writerLabel = key.substring(0, key.lastIndexOf(".label"));
-                if (!isBlank(readWriteFileFormats.getProperty(writerLabel + ".writer"))) {
-                    try {
-                        Class.forName(readWriteFileFormats.getProperty(writerLabel + ".writer"));
-                        writableFormats.add(readWriteFileFormats.getProperty(key));
-                    }
-                    catch (ClassNotFoundException e) {
-                        log.error("Writer class not found: "
-                                + readWriteFileFormats.getProperty(writerLabel + ".writer"));
-                    }
-                }
-            }
-        }
-        Collections.sort(writableFormats);
-        return writableFormats;
-    }
-
-    @Override
-    public String getWritableFormatId(String aLabel)
-    {
-        String writableFormat = "";
-        for (String key : readWriteFileFormats.stringPropertyNames()) {
-            if (key.contains(".label") && !isBlank(readWriteFileFormats.getProperty(key))) {
-                if (readWriteFileFormats.getProperty(key).equals(aLabel)) {
-                    writableFormat = key.substring(0, key.lastIndexOf(".label"));
-                    break;
-                }
-            }
-        }
-        return writableFormat;
-    }
-
-    @SuppressWarnings({ "rawtypes", "unchecked" })
-    @Override
-    public Map<String, Class<JCasAnnotator_ImplBase>> getWritableFormats()
-    {
-        Map<String, Class<JCasAnnotator_ImplBase>> writableFormats = new HashMap<>();
-        Set<String> keys = (Set) readWriteFileFormats.keySet();
-
-        for (String keyvalue : keys) {
-            if (keyvalue.contains(".label")) {
-                String writerLabel = keyvalue.substring(0, keyvalue.lastIndexOf(".label"));
-                if (readWriteFileFormats.getProperty(writerLabel + ".writer") != null) {
-                    try {
-                        writableFormats.put(writerLabel, (Class) Class.forName(
-                                readWriteFileFormats.getProperty(writerLabel + ".writer")));
-                    }
-                    catch (ClassNotFoundException e) {
-                        log.error("Writer class not found: "
-                                + readWriteFileFormats.getProperty(writerLabel + ".reader"));
-                    }
-                }
-            }
-        }
-        return writableFormats;
-    }
-
-    @Override
-    @SuppressWarnings({ "rawtypes", "unchecked" })
-    public JCas importCasFromFile(File aFile, Project aProject, String aFormat)
-        throws UIMAException, IOException, ClassNotFoundException
-    {
-        Class readerClass = getReadableFormats().get(aFormat);
-        if (readerClass == null) {
-            throw new IOException("No reader available for format [" + aFormat + "]");
-        }
-        
         // Prepare a CAS with the project type system
         TypeSystemDescription builtInTypes = TypeSystemDescriptionFactory
                 .createTypeSystemDescription();
-        List<TypeSystemDescription> projectTypes = annotationService.getProjectTypes(aProject);
-        projectTypes.add(builtInTypes);
-        TypeSystemDescription allTypes = CasCreationUtils.mergeTypeSystems(projectTypes);
+        TypeSystemDescription projectTypes = annotationService.getProjectTypes(aProject);
+        TypeSystemDescription allTypes = CasCreationUtils
+                .mergeTypeSystems(asList(projectTypes, builtInTypes));
         CAS cas = JCasFactory.createJCas(allTypes).getCas();
 
         // Convert the source document to CAS
-        CollectionReader reader = CollectionReaderFactory.createReader(readerClass,
-                ResourceCollectionReaderBase.PARAM_SOURCE_LOCATION, aFile.getParentFile()
-                        .getAbsolutePath(), ResourceCollectionReaderBase.PARAM_PATTERNS,
-                new String[] { "[+]" + aFile.getName() });
+        FormatSupport format = getReadableFormatById(aFormatId).orElseThrow(() -> 
+                new IOException("No reader available for format [" + aFormatId + "]"));
+        
+        CollectionReaderDescription readerDescription = format.getReaderDescription();
+        ConfigurationParameterFactory.addConfigurationParameters(readerDescription, 
+                ResourceCollectionReaderBase.PARAM_SOURCE_LOCATION, 
+                    aFile.getParentFile().getAbsolutePath(), 
+                ResourceCollectionReaderBase.PARAM_PATTERNS,
+                    new String[] { "[+]" + aFile.getName() });
+        CollectionReader reader = createReader(readerDescription);
+        
         if (!reader.hasNext()) {
             throw new FileNotFoundException(
                     "Source file [" + aFile.getName() + "] not found in [" + aFile.getPath() + "]");
@@ -512,7 +399,7 @@ public class ImportExportServiceImpl
      */
     @Override
     public File exportCasToFile(CAS cas, SourceDocument aDocument, String aFileName,
-            @SuppressWarnings("rawtypes") Class aWriter, boolean aStripExtension)
+            FormatSupport aFormat, boolean aStripExtension)
         throws IOException, UIMAException
     {
         // Update the source file name in case it is changed for some reason. This is necessary
@@ -548,78 +435,11 @@ public class ImportExportServiceImpl
             exportTempDir.delete();
             exportTempDir.mkdirs();
             
-            AnalysisEngineDescription writer;
-            if (aWriter.getName()
-                    .equals("de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsv3Writer")) {
-                List<AnnotationLayer> layers = annotationService
-                        .listAnnotationLayer(aDocument.getProject());
-    
-                List<String> slotFeatures = new ArrayList<>();
-                List<String> slotTargets = new ArrayList<>();
-                List<String> linkTypes = new ArrayList<>();
-    
-                Set<String> spanLayers = new HashSet<>();
-                Set<String> slotLayers = new HashSet<>();
-                for (AnnotationLayer layer : layers) {
-                    
-                    if (layer.getType().contentEquals(WebAnnoConst.SPAN_TYPE)) {
-                        // TSV will not use this
-                        if (!annotationExists(cas, layer.getName())) {
-                            continue;
-                        }
-                        boolean isslotLayer = false;
-                        for (AnnotationFeature f : annotationService.listAnnotationFeature(layer)) {
-                            if (MultiValueMode.ARRAY.equals(f.getMultiValueMode())
-                                    && LinkMode.WITH_ROLE.equals(f.getLinkMode())) {
-                                isslotLayer = true;
-                                slotFeatures.add(layer.getName() + ":" + f.getName());
-                                slotTargets.add(f.getType());
-                                linkTypes.add(f.getLinkTypeName());
-                            }
-                        }
-                        
-                        if (isslotLayer) {
-                            slotLayers.add(layer.getName());
-                        } else {
-                            spanLayers.add(layer.getName());
-                        }
-                    }
-                }
-                spanLayers.addAll(slotLayers);
-                List<String> chainLayers = new ArrayList<>();
-                for (AnnotationLayer layer : layers) {
-                    if (layer.getType().contentEquals(WebAnnoConst.CHAIN_TYPE)) {
-                        if (!chainAnnotationExists(cas, layer.getName() + "Chain")) {
-                            continue;
-                        }
-                        chainLayers.add(layer.getName());
-                    }
-                }
-    
-                List<String> relationLayers = new ArrayList<>();
-                for (AnnotationLayer layer : layers) {
-                    if (layer.getType().contentEquals(WebAnnoConst.RELATION_TYPE)) {
-                        // TSV will not use this
-                        if (!annotationExists(cas, layer.getName())) {
-                            continue;
-                        }
-                        relationLayers.add(layer.getName());
-                    }
-                }
-    
-                writer = createEngineDescription(aWriter,
-                        JCasFileWriter_ImplBase.PARAM_TARGET_LOCATION, exportTempDir,
-                        JCasFileWriter_ImplBase.PARAM_STRIP_EXTENSION, aStripExtension,
-                        "spanLayers", spanLayers, "slotFeatures", slotFeatures, "slotTargets",
-                        slotTargets, "linkTypes", linkTypes, "chainLayers", chainLayers,
-                        "relationLayers", relationLayers);
-            }
-            else {
-                writer = createEngineDescription(aWriter,
-                        JCasFileWriter_ImplBase.PARAM_TARGET_LOCATION, exportTempDir,
-                        JCasFileWriter_ImplBase.PARAM_STRIP_EXTENSION, aStripExtension);
-            }
-    
+            AnalysisEngineDescription writer = aFormat.getWriterDescription(aDocument.getProject(),
+                    cas);
+            ConfigurationParameterFactory.addConfigurationParameters(writer,
+                    JCasFileWriter_ImplBase.PARAM_TARGET_LOCATION, exportTempDir,
+                    JCasFileWriter_ImplBase.PARAM_STRIP_EXTENSION, aStripExtension);
             runPipeline(cas, writer);
     
             // If the writer produced more than one file, we package it up as a ZIP file
@@ -651,47 +471,6 @@ public class ImportExportServiceImpl
         }
     }
     
-    private boolean annotationExists(CAS aCas, String aType) {
-
-        Type type = aCas.getTypeSystem().getType(aType);
-        if (CasUtil.select(aCas, type).size() == 0) {
-            return false;
-        }
-        return true;
-    }
-    
-    private boolean chainAnnotationExists(CAS aCas, String aType) {
-
-        Type type = aCas.getTypeSystem().getType(aType);
-        if (CasUtil.selectFS(aCas, type).size() == 0) {
-            return false;
-        }
-        return true;
-    }
-    
-    /**
-     * Check if a TAB-Sep training file is in correct format before importing
-     */
-    private boolean isTabSepFileFormatCorrect(File aFile)
-    {
-        try {
-            LineIterator it = new LineIterator(new FileReader(aFile));
-            while (it.hasNext()) {
-                String line = it.next();
-                if (line.trim().length() == 0) {
-                    continue;
-                }
-                if (line.split("\t").length != 2) {
-                    return false;
-                }
-            }
-        }
-        catch (Exception e) {
-            return false;
-        }
-        return true;
-    }
-
     /**
      * A Helper method to add {@link TagsetDescription} to {@link CAS}
      *

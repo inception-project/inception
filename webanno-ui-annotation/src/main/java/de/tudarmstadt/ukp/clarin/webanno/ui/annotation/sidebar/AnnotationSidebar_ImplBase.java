@@ -28,8 +28,8 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.JCasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.JCasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -145,9 +145,6 @@ public abstract class AnnotationSidebar_ImplBase
         AnnotatorState state = getModelObject();
 
         JCas jCas = annotationPage.getEditorCas();
-
-        Collection<Token> tokenCollection = JCasUtil.select(jCas, Token.class);
-        Token[] tokens = tokenCollection.toArray(new Token[tokenCollection.size()]);
 
         int sentenceNumber = WebAnnoCasUtil.getSentenceNumber(jCas, aBeginOffset);
         Sentence sentence = WebAnnoCasUtil.getSentence(jCas, aBeginOffset);

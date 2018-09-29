@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.project.tagsets;
 
+import static java.util.Objects.isNull;
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
 
 import java.io.IOException;
@@ -46,7 +47,6 @@ import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.JsonImportUtil;
-import de.tudarmstadt.ukp.clarin.webanno.export.ImportService;
 import de.tudarmstadt.ukp.clarin.webanno.export.ImportUtil;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTagSetConstant;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -63,7 +63,6 @@ public class TagSetImportPanel
 
     private static final Logger LOG = LoggerFactory.getLogger(TagSetImportPanel.class);
     
-    private @SpringBean ImportService importService;
     private @SpringBean AnnotationSchemaService annotationService;
     
     private IModel<Project> selectedProject;
@@ -85,7 +84,8 @@ public class TagSetImportPanel
         selectedTagSet = aTagSet;
         
         Form<Preferences> form = new Form<>("form", CompoundPropertyModel.of(preferences));
-        form.add(new DropDownChoice<>("format", LambdaModel.of(this::supportedFormats)));
+        form.add(new DropDownChoice<>("format", LambdaModel.of(this::supportedFormats))
+                .setRequired(true));
         form.add(new CheckBox("overwrite"));
         form.add(fileUpload = new FileUploadField("content", new ListModel<>()));
         fileUpload.setRequired(true);
@@ -107,8 +107,8 @@ public class TagSetImportPanel
             error("Please choose file with tagset before uploading");
             return;
         }
-        else if (project.getId() == 0) {
-            error("Project not yet created, please save project Details!");
+        else if (isNull(project.getId())) {
+            error("Project not yet created, please save project details!");
             return;
         }
         if (aForm.getModelObject().format.equals(

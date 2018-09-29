@@ -30,6 +30,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.NEW;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.CURATION_FINISHED_TO_CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.CURATION_IN_PROGRESS_TO_CURATION_FINISHED;
+import static java.util.Objects.isNull;
 
 import java.awt.Color;
 import java.io.IOException;
@@ -102,14 +103,11 @@ import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.EntityModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.jfreechart.SvgChart;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemCondition;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support.EmbeddableImage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support.TableDataProvider;
@@ -117,7 +115,6 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support.TableDataProvider
 /**
  * A Page To display different monitoring and statistics measurements tabularly and graphically.
  */
-@MenuItem(icon = "images/attribution.png", label = "Monitoring", prio = 300)
 @MountPath("/monitoring.html")
 public class MonitoringPage
     extends ApplicationPageBase
@@ -142,7 +139,7 @@ public class MonitoringPage
     public static final String LAST_ACCESS_ROW = "last access";
 
     private @SpringBean AnnotationSchemaService annotationService;
-    private @SpringBean AutomationService automationService;
+    private @SpringBean(required = false) AutomationService automationService;
     private @SpringBean DocumentService documentService;
     private @SpringBean ProjectService projectService;
     private @SpringBean UserDao userRepository;
@@ -202,6 +199,7 @@ public class MonitoringPage
 
         trainingResultForm = new TrainingResultForm("trainingResultForm");
         trainingResultForm.setVisible(false);
+        trainingResultForm.setVisibilityAllowed(automationService != null);
         add(trainingResultForm);
 
         annotatorsProgressImage = new SvgChart("annotator",
@@ -564,6 +562,8 @@ public class MonitoringPage
         public MonitoringDetailForm(String id)
         {
             super(id, new CompoundPropertyModel<>(new EntityModel<>(new Project())));
+            
+            add(new Label("name"));
         }
     }
     
@@ -571,6 +571,7 @@ public class MonitoringPage
     {
         trainingResultForm.remove();
         trainingResultForm = new TrainingResultForm("trainingResultForm");
+        trainingResultForm.setVisibilityAllowed(automationService != null);
         add(trainingResultForm);
         trainingResultForm
                 .setVisible(WebAnnoConst.PROJECT_TYPE_AUTOMATION.equals(aProject.getMode()));
@@ -785,29 +786,38 @@ public class MonitoringPage
     {
         // fill dataset
         DefaultCategoryDataset dataset = new DefaultCategoryDataset();
-        for (String chartValue : chartValues.keySet()) {
-            dataset.setValue(chartValues.get(chartValue), "Completion", chartValue);
+        if (aMaxValue > 0) {
+            for (String chartValue : chartValues.keySet()) {
+                dataset.setValue(chartValues.get(chartValue), "Completion", chartValue);
+            }
         }
+        
         // create chart
         JFreeChart chart = ChartFactory.createBarChart(null, null, null, dataset,
                 PlotOrientation.HORIZONTAL, false, false, false);
 
         CategoryPlot plot = chart.getCategoryPlot();
-        plot.setInsets(new RectangleInsets(UnitType.ABSOLUTE, 0, 20, 0, 20));
-        plot.getRangeAxis().setRange(0.0, aMaxValue);
-        ((NumberAxis) plot.getRangeAxis()).setNumberFormatOverride(new DecimalFormat("0"));
-        // For documents lessan 10, avoid repeating the number of documents such
-        // as 0 0 1 1 1
-        // NumberTickUnit automatically determin the range
-        if (!aIsPercentage && aMaxValue <= 10) {
-            TickUnits standardUnits = new TickUnits();
-            NumberAxis tick = new NumberAxis();
-            tick.setTickUnit(new NumberTickUnit(1));
-            standardUnits.add(tick.getTickUnit());
-            plot.getRangeAxis().setStandardTickUnits(standardUnits);
-        }
         plot.setOutlineVisible(false);
         plot.setBackgroundPaint(null);
+        plot.setNoDataMessage("No data");
+        plot.setInsets(new RectangleInsets(UnitType.ABSOLUTE, 0, 20, 0, 20));
+        if (aMaxValue > 0) {
+            plot.getRangeAxis().setRange(0.0, aMaxValue);
+            ((NumberAxis) plot.getRangeAxis()).setNumberFormatOverride(new DecimalFormat("0"));
+            // For documents less than 10, avoid repeating the number of documents such
+            // as 0 0 1 1 1 - NumberTickUnit automatically determines the range
+            if (!aIsPercentage && aMaxValue <= 10) {
+                TickUnits standardUnits = new TickUnits();
+                NumberAxis tick = new NumberAxis();
+                tick.setTickUnit(new NumberTickUnit(1));
+                standardUnits.add(tick.getTickUnit());
+                plot.getRangeAxis().setStandardTickUnits(standardUnits);
+            }
+        }
+        else {
+            plot.getRangeAxis().setVisible(false);
+            plot.getDomainAxis().setVisible(false);
+        }
 
         BarRenderer renderer = new BarRenderer();
         renderer.setBarPainter(new StandardBarPainter());
@@ -916,24 +926,19 @@ public class MonitoringPage
                             return;
                         }
                         
-                        try {
-                            SourceDocument doc = documentService.getSourceDocument(project,
-                                    value.substring(value.indexOf(":") + 1));
-                            if (doc.getState().equals(CURATION_FINISHED)) {
-                                changeSourceDocumentState(doc,
-                                        CURATION_FINISHED_TO_CURATION_IN_PROGRESS);
-                            }
-                            else if (doc.getState().equals(CURATION_IN_PROGRESS)) {
-                                changeSourceDocumentState(doc,
-                                        CURATION_IN_PROGRESS_TO_CURATION_FINISHED);
-                            }
-                            else if (doc.getState().equals(ANNOTATION_IN_PROGRESS)) {
-                                changeSourceDocumentState(doc,
-                                        ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS);
-                            }
+                        SourceDocument doc = documentService.getSourceDocument(project,
+                                value.substring(value.indexOf(":") + 1));
+                        if (doc.getState().equals(CURATION_FINISHED)) {
+                            documentService.transitionSourceDocumentState(doc,
+                                    CURATION_FINISHED_TO_CURATION_IN_PROGRESS);
                         }
-                        catch (IOException e) {
-                            LOG.info(e.getMessage(), e);
+                        else if (doc.getState().equals(CURATION_IN_PROGRESS)) {
+                            documentService.transitionSourceDocumentState(doc,
+                                    CURATION_IN_PROGRESS_TO_CURATION_FINISHED);
+                        }
+                        else if (doc.getState().equals(ANNOTATION_IN_PROGRESS)) {
+                            documentService.transitionSourceDocumentState(doc,
+                                    ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS);
                         }
 
                         aTarget.add(aCellItem);
@@ -1034,9 +1039,9 @@ public class MonitoringPage
                             annotationDocument.setName(document.getName());
                             annotationDocument.setProject(project);
                             annotationDocument.setUser(user.getUsername());
-                            annotationDocument.setState(AnnotationDocumentStateTransition
-                                    .transition(NEW_TO_ANNOTATION_IN_PROGRESS));
                             documentService.createAnnotationDocument(annotationDocument);
+                            documentService.transitionAnnotationDocumentState(annotationDocument,
+                                    NEW_TO_ANNOTATION_IN_PROGRESS);
                         }
                         
                         aTarget.add(aCellItem);
@@ -1075,7 +1080,7 @@ public class MonitoringPage
                 return aValue;
             }
             // Initialization of the appliaction, no project selected
-            else if (project.getId() == 0) {
+            else if (isNull(project.getId())) {
                 return "";
             }
             // It is document column, get the status from the database
@@ -1096,31 +1101,9 @@ public class MonitoringPage
         {
             AnnotationDocument annotationDocument = documentService
                     .getAnnotationDocument(aSourceDocument, aUser);
-            annotationDocument.setState(AnnotationDocumentStateTransition
-                    .transition(aAnnotationDocumentStateTransition));
-            documentService.createAnnotationDocument(annotationDocument);
+            
+            documentService.transitionAnnotationDocumentState(annotationDocument,
+                    aAnnotationDocumentStateTransition);
         }
-
-        /**
-         * change source document state when curation document state is changed.
-         */
-        private void changeSourceDocumentState(SourceDocument aSourceDocument,
-                SourceDocumentStateTransition aSourceDocumentStateTransition)
-            throws IOException
-        {
-            aSourceDocument.setState(
-                    SourceDocumentStateTransition.transition(aSourceDocumentStateTransition));
-            documentService.createSourceDocument(aSourceDocument);
-        }
-    }
-    
-    /**
-     * Only admins and project managers can see this page
-     */
-    @MenuItemCondition
-    public static boolean menuItemCondition(ProjectService aRepo, UserDao aUserRepo)
-    {
-        User user = aUserRepo.getCurrentUser();
-        return SecurityUtil.monitoringEnabeled(aRepo, user);
     }
 }

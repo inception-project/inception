@@ -22,12 +22,12 @@ import java.io.IOException;
 import java.io.StringWriter;
 
 import org.apache.commons.io.FileUtils;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.SerializableString;
 import com.fasterxml.jackson.core.io.CharacterEscapes;
 import com.fasterxml.jackson.core.io.SerializedString;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class JSONUtil
 {
@@ -41,40 +41,36 @@ public class JSONUtil
      * @throws IOException
      *             if an I/O error occurs.
      */
-    public static void generatePrettyJson(MappingJackson2HttpMessageConverter jsonConverter,
-            Object aObject, File aFile)
+    public static void generatePrettyJson(ObjectMapper aMapper, Object aObject, File aFile)
         throws IOException
     {
-        FileUtils.writeStringToFile(aFile, toPrettyJsonString(jsonConverter, aObject));
+        FileUtils.writeStringToFile(aFile, toPrettyJsonString(aMapper, aObject), "UTF-8");
     }
 
     public static void generatePrettyJson(Object aObject, File aFile)
         throws IOException
     {
-        FileUtils.writeStringToFile(aFile, toPrettyJsonString(aObject));
+        FileUtils.writeStringToFile(aFile, toPrettyJsonString(aObject), "UTF-8");
     }
 
-    public static String toPrettyJsonString(MappingJackson2HttpMessageConverter jsonConverter,
-            Object aObject)
+    public static String toPrettyJsonString(ObjectMapper aMapper, Object aObject) 
         throws IOException
     {
-        return toJsonString(jsonConverter, true, aObject);
+        return toJsonString(aMapper, true, aObject);
     }
 
     public static String toJsonString(Object aObject)
         throws IOException
     {
-        return toJsonString(getJsonConverter(), false, aObject);
+        return toJsonString(getObjectMapper(), false, aObject);
     }
     
-    public static String toJsonString(MappingJackson2HttpMessageConverter jsonConverter,
-            boolean aPretty, Object aObject)
+    public static String toJsonString(ObjectMapper aMapper, boolean aPretty, Object aObject)
         throws IOException
     {
         StringWriter out = new StringWriter();
 
-        JsonGenerator jsonGenerator = jsonConverter.getObjectMapper().getFactory()
-                .createGenerator(out);
+        JsonGenerator jsonGenerator = aMapper.getFactory().createGenerator(out);
         if (aPretty) {
             jsonGenerator.useDefaultPrettyPrinter();
         }
@@ -83,23 +79,33 @@ public class JSONUtil
         return out.toString();
     }
 
+    public static <T> T fromJsonString(Class<T> aClass, String aJSON)
+        throws IOException
+    {
+        if (aJSON == null) {
+            return null;
+        }
+        else {
+            return getObjectMapper().readValue(aJSON, aClass);
+        }
+    }
+
     public static String toPrettyJsonString(Object aObject)
         throws IOException
     {
-        return toPrettyJsonString(getJsonConverter(), aObject);
+        return toPrettyJsonString(getObjectMapper(), aObject);
     }
-    public static MappingJackson2HttpMessageConverter getJsonConverter()
+    
+    public static ObjectMapper getObjectMapper()
     {
-        return ApplicationContextProvider.getApplicationContext()
-                .getBean(MappingJackson2HttpMessageConverter.class);
+        return new ObjectMapper();
     }
     
     public static String toInterpretableJsonString(Object aObject)
         throws IOException
     {
         StringWriter out = new StringWriter();
-        JsonGenerator jsonGenerator = JSONUtil.getJsonConverter().getObjectMapper().getFactory()
-                .createGenerator(out);
+        JsonGenerator jsonGenerator = JSONUtil.getObjectMapper().getFactory().createGenerator(out);
         jsonGenerator.setCharacterEscapes(JavaScriptCharacterEscapes.get());
         jsonGenerator.writeObject(aObject);
         return out.toString();

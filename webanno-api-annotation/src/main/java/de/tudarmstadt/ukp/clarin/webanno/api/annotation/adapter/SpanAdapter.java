@@ -36,15 +36,18 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.CASException;
 import org.apache.uima.cas.Feature;
-import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
+import org.springframework.context.ApplicationEventPublisher;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.SpanCreatedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.SpanDeletedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.MultipleSentenceCoveredException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -80,10 +83,11 @@ public class SpanAdapter
     // value NILL for a token when the training file do not have annotations provided
     private final static String NILL = "__nill__";
 
-    public SpanAdapter(FeatureSupportRegistry aFeatureSupportRegistry, AnnotationLayer aLayer,
+    public SpanAdapter(FeatureSupportRegistry aFeatureSupportRegistry,
+            ApplicationEventPublisher aEventPublisher, AnnotationLayer aLayer,
             Collection<AnnotationFeature> aFeatures)
     {
-        super(aFeatureSupportRegistry, aLayer, aFeatures);
+        super(aFeatureSupportRegistry, aEventPublisher, aLayer, aFeatures);
     }
 
     /**
@@ -152,12 +156,12 @@ public class SpanAdapter
      * @throws AnnotationException
      *             if the annotation cannot be created/updated.
      */
-    public Integer add(JCas aJCas, int aBegin, int aEnd)
+    public Integer add(AnnotatorState aState, JCas aJCas, int aBegin, int aEnd)
         throws AnnotationException
     {
         // if zero-offset annotation is requested
         if (aBegin == aEnd) {
-            return updateCas(aJCas.getCas(), aBegin, aEnd);
+            return createAnnotation(aState, aJCas.getCas(), aBegin, aEnd);
         }
         if (crossMultipleSentence || isSameSentence(aJCas, aBegin, aEnd)) {
             if (lockToTokenOffsets) {
@@ -166,7 +170,9 @@ public class SpanAdapter
                 if (tokens.isEmpty()) {
                     throw new AnnotationException("No token is found to annotate");
                 }
-                return updateCas(aJCas.getCas(), tokens.get(0).getBegin(), tokens.get(0).getEnd());
+                
+                return createAnnotation(aState, aJCas.getCas(), tokens.get(0).getBegin(),
+                        tokens.get(0).getEnd());
 
             }
             else if (allowMultipleToken) {
@@ -174,10 +180,10 @@ public class SpanAdapter
                 // update the begin and ends (no sub token selection
                 aBegin = tokens.get(0).getBegin();
                 aEnd = tokens.get(tokens.size() - 1).getEnd();
-                return updateCas(aJCas.getCas(), aBegin, aEnd);
+                return createAnnotation(aState, aJCas.getCas(), aBegin, aEnd);
             }
             else {
-                return updateCas(aJCas.getCas(), aBegin, aEnd);
+                return createAnnotation(aState, aJCas.getCas(), aBegin, aEnd);
             }
         }
         else {
@@ -225,9 +231,11 @@ public class SpanAdapter
     /**
      * A Helper method to add annotation to CAS
      */
-    private Integer updateCas(CAS aCas, int aBegin, int aEnd)
+    private Integer createAnnotation(AnnotatorState aState, CAS aCas, int aBegin, int aEnd)
         throws AnnotationException
     {
+        // If stacking is not allowed and there already is an annotation, then return the address
+        // of the existing annotation.
         Type type = CasUtil.getType(aCas, getAnnotationTypeName());
         for (AnnotationFS fs : CasUtil.selectCovered(aCas, type, aBegin, aEnd)) {
             if (fs.getBegin() == aBegin && fs.getEnd() == aEnd) {
@@ -236,15 +244,11 @@ public class SpanAdapter
                 }
             }
         }
-        AnnotationFS newAnnotation = createAnnotation(aCas, aBegin, aEnd, type);
-        return getAddr(newAnnotation);
-    }
-
-    private AnnotationFS createAnnotation(CAS aCas, int aBegin, int aEnd, Type aType)
-        throws AnnotationException
-    {
-        AnnotationFS newAnnotation = aCas.createAnnotation(aType, aBegin, aEnd);
-
+        
+        AnnotationFS newAnnotation = aCas.createAnnotation(type, aBegin, aEnd);
+        
+        // If if the layer attaches to a feature, then set the attach-feature to the newly
+        // created annotation.
         if (getAttachFeatureName() != null) {
             Type theType = CasUtil.getType(aCas, getAttachTypeName());
             Feature attachFeature = theType.getFeatureByBaseName(getAttachFeatureName());
@@ -255,39 +259,44 @@ public class SpanAdapter
             CasUtil.selectCovered(aCas, theType, aBegin, aEnd).get(0)
                     .setFeatureValue(attachFeature, newAnnotation);
         }
+        
         aCas.addFsToIndexes(newAnnotation);
-        return newAnnotation;
+        
+        publishEvent(new SpanCreatedEvent(this, aState.getDocument(),
+                aState.getUser().getUsername(), newAnnotation));
+        
+        return getAddr(newAnnotation);
     }
 
     @Override
-    public void delete(JCas aJCas, VID aVid)
+    public void delete(AnnotatorState aState, JCas aJCas, VID aVid)
     {
-        FeatureStructure fs = selectByAddr(aJCas, FeatureStructure.class, aVid.getId());
+        AnnotationFS fs = selectByAddr(aJCas, AnnotationFS.class, aVid.getId());
         aJCas.removeFsFromIndexes(fs);
 
         // delete associated attachFeature
-        if (getAttachTypeName() == null) {
-            return;
+        if (getAttachTypeName() != null) {
+            Type theType = CasUtil.getType(aJCas.getCas(), getAttachTypeName());
+            Feature attachFeature = theType.getFeatureByBaseName(getAttachFeatureName());
+            if (attachFeature != null) {
+                CasUtil.selectCovered(aJCas.getCas(), theType, fs.getBegin(), fs.getEnd()).get(0)
+                        .setFeatureValue(attachFeature, null);
+            }
         }
-        Type theType = CasUtil.getType(aJCas.getCas(), getAttachTypeName());
-        Feature attachFeature = theType.getFeatureByBaseName(getAttachFeatureName());
-        if (attachFeature == null) {
-            return;
-        }
-        CasUtil.selectCovered(aJCas.getCas(), theType, ((AnnotationFS) fs).getBegin(),
-                ((AnnotationFS) fs).getEnd()).get(0).setFeatureValue(attachFeature, null);
-
+        
+        publishEvent(new SpanDeletedEvent(this, aState.getDocument(),
+                aState.getUser().getUsername(), fs));
     }
 
     @Override
-    public void delete(JCas aJCas, AnnotationFeature aFeature, int aBegin, int aEnd, Object aValue)
+    public void delete(AnnotatorState aState, JCas aJCas, AnnotationFeature aFeature, int aBegin,
+            int aEnd, Object aValue)
     {
         Type type = CasUtil.getType(aJCas.getCas(), getAnnotationTypeName());
         for (AnnotationFS fs : CasUtil.selectCovered(aJCas.getCas(), type, aBegin, aEnd)) {
-
             if (fs.getBegin() == aBegin && fs.getEnd() == aEnd) {
                 if (ObjectUtils.equals(getFeatureValue(aFeature, fs), aValue)) {
-                    delete(aJCas, new VID(getAddr(fs)));
+                    delete(aState, aJCas, new VID(getAddr(fs)));
                 }
             }
         }

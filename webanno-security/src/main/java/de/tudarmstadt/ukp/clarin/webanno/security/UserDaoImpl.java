@@ -20,9 +20,9 @@ package de.tudarmstadt.ukp.clarin.webanno.security;
 import java.util.List;
 
 import javax.persistence.EntityManager;
-import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 
+import org.apache.commons.lang3.Validate;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -85,16 +85,25 @@ public class UserDaoImpl
     }
 
     @Override
-    @Transactional(noRollbackFor = NoResultException.class)
+    @Transactional
     public User get(String aUsername)
     {
-        if (!exists(aUsername)) {
+        Validate.notBlank(aUsername, "User must be specified");
+        
+        String query = "FROM " + User.class.getName() + " o WHERE o.username = :username";
+        
+        List<User> users = entityManager
+                .createQuery(query, User.class)
+                .setParameter("username", aUsername)
+                .setMaxResults(1)
+                .getResultList();
+        
+        if (users.isEmpty()) {
             return null;
         }
-        return entityManager
-                .createQuery("FROM " + User.class.getName() + " o WHERE o.username = :username",
-                        User.class)
-                .setParameter("username", aUsername).getSingleResult();
+        else {
+            return users.get(0);
+        }
     }
 
     @Override

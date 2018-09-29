@@ -29,11 +29,16 @@ import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.commons.lang3.time.StopWatch;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
+import org.apache.wicket.Page;
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AbstractAjaxBehavior;
+import org.apache.wicket.core.request.handler.IPageRequestHandler;
+import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
+import org.apache.wicket.event.Broadcast;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.head.CssHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
@@ -41,37 +46,42 @@ import org.apache.wicket.markup.head.OnDomReadyHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.request.IRequestParameters;
-import org.apache.wicket.request.cycle.AbstractRequestCycleListener;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.string.StringValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.core.context.SecurityContextHolder;
 
-import com.googlecode.wicket.jquery.ui.resource.JQueryUIResourceReference;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.flipkart.zjsonpatch.JsonDiff;
+import com.googlecode.wicket.jquery.ui.settings.JQueryUILibrarySettings;
 
+import de.agilecoders.wicket.webjars.request.resource.WebjarsCssResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.JCasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.JCasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAnnotationsEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VAnnotationMarker;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VMarker;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.brat.config.BratProperties;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.ArcAnnotationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.DoActionResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.LoadConfResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.SpanAnnotationResponse;
-import de.tudarmstadt.ukp.clarin.webanno.brat.message.WhoamiResponse;
+import de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics;
+import de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics.RenderType;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Offsets;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.OffsetsList;
@@ -88,6 +98,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQueryJsonResourceReferen
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQueryScrollbarWidthReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQuerySvgDomResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQuerySvgResourceReference;
+import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JSONPatchResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -115,9 +126,13 @@ public class BratAnnotationEditor
     private @SpringBean PreRenderer preRenderer;
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean AnnotationEditorExtensionRegistry extensionRegistry;
+    private @SpringBean BratMetrics metrics;
+    private @SpringBean BratProperties bratProperties;
     
     private WebMarkupContainer vis;
     private AbstractAjaxBehavior requestHandler;
+    
+    private String lastRenderedJson;
 
     public BratAnnotationEditor(String id, IModel<AnnotatorState> aModel,
             final AnnotationActionHandler aActionHandler, final JCasProvider aJCasProvider)
@@ -165,19 +180,6 @@ public class BratAnnotationEditor
                     paramId = VID.parseOptional(request.getParameterValue(PARAM_ARC_ID).toString());
                 }
 
-                // Record the action in the action context (which currently is persistent...)
-                getModelObject().getAction().setUserAction(action);
-
-                // Ensure that the user action is cleared *AFTER* rendering so that for AJAX
-                // calls that do not go through this AjaxBehavior do not see an active user action.
-                RequestCycle.get().getListeners().add(new AbstractRequestCycleListener() {
-                    @Override
-                    public void onEndRequest(RequestCycle aCycle)
-                    {
-                        BratAnnotationEditor.this.getModelObject().getAction().clearUserAction();
-                    }
-                });
-                
                 // Load the CAS if necessary
                 // Make sure we load the CAS only once here in case of an annotation action.
                 boolean requiresCasLoading = SpanAnnotationResponse.is(action)
@@ -200,13 +202,22 @@ public class BratAnnotationEditor
                     // Whenever an action should be performed, do ONLY perform this action and
                     // nothing else, and only if the item actually is an action item
                     if (DoActionResponse.is(action)) {
-                        actionDoAction(aTarget, request, jCas, paramId);
+                        if (paramId.isSynthetic()) {
+                            Offsets offsets = getOffsetsFromRequest(request, jCas, paramId);
+                            extensionRegistry.fireAction(getActionHandler(), getModelObject(),
+                                    aTarget, jCas, paramId, action, offsets.getBegin(),
+                                    offsets.getEnd());
+                        }
+                        else {
+                            actionDoAction(aTarget, request, jCas, paramId);
+                        }
                     }
                     else {
                         if (paramId.isSynthetic()) {
                             Offsets offsets = getOffsetsFromRequest(request, jCas, paramId);
                             extensionRegistry.fireAction(getActionHandler(), getModelObject(),
-                                    aTarget, jCas, paramId, offsets.getBegin(), offsets.getEnd());
+                                    aTarget, jCas, paramId, action, offsets.getBegin(),
+                                    offsets.getEnd());
                         }
                         else {
                             // HACK: If an arc was clicked that represents a link feature, then 
@@ -223,17 +234,14 @@ public class BratAnnotationEditor
                                 getModelObject().clearArmedSlot();
                             }
         
-                            if (WhoamiResponse.is(action)) {
-                                result = actionWhoami();
-                            }
-                            else if (SpanAnnotationResponse.is(action)) {
+                            if (SpanAnnotationResponse.is(action)) {
                                 result = actionSpan(aTarget, request, jCas, paramId);
                             }
                             else if (ArcAnnotationResponse.is(action)) {
                                 result = actionArc(aTarget, request, jCas, paramId);
                             }
                             else if (LoadConfResponse.is(action)) {
-                                result = new LoadConfResponse();
+                                result = new LoadConfResponse(bratProperties);
                             }
                             else if (GetCollectionInformationResponse.is(action)) {
                                 result = actionGetCollectionInformation();
@@ -246,7 +254,7 @@ public class BratAnnotationEditor
                 }
                 catch (Exception e) {
                     error("Error: " + e.getMessage());
-                    LOG.error("Error: " + e.getMessage(), e);
+                    LOG.error("Error: {}", e.getMessage(), e);
                 }
 
                 // Serialize updated document to JSON
@@ -254,7 +262,14 @@ public class BratAnnotationEditor
                     LOG.warn("AJAX-RPC: Action [{}] produced no result!", action);
                 }
                 else {
-                    String json = toJson(result);
+                    String json;
+                    if (result instanceof String) {
+                        json = (String) result;
+                    }
+                    else {
+                        json = toJson(result);
+                    }
+                    
                     // Since we cannot pass the JSON directly to Brat, we attach it to the HTML
                     // element into which BRAT renders the SVG. In our modified ajax.js, we pick it
                     // up from there and then pass it on to BRAT to do the rendering.
@@ -294,11 +309,6 @@ public class BratAnnotationEditor
         return null;
     }
     
-    private WhoamiResponse actionWhoami()
-    {
-        return new WhoamiResponse(SecurityContextHolder.getContext().getAuthentication().getName());
-    }
-    
     private SpanAnnotationResponse actionSpan(AjaxRequestTarget aTarget, IRequestParameters request,
             JCas jCas, VID paramId)
         throws IOException, AnnotationException
@@ -321,11 +331,9 @@ public class BratAnnotationEditor
 
                 if (selection.getAnnotation().isNotSet()) {
                     // Create new annotation
-                    state.getAction().setAnnotate(true);
                     getActionHandler().actionCreateOrUpdate(aTarget, jCas);
                 }
                 else {
-                    state.getAction().setAnnotate(false);
                     getActionHandler().actionSelect(aTarget, jCas);
                 }
             }
@@ -349,11 +357,9 @@ public class BratAnnotationEditor
 
         if (selection.getAnnotation().isNotSet()) {
             // Create new annotation
-            state.getAction().setAnnotate(true);
             getActionHandler().actionCreateOrUpdate(aTarget, jCas);
         }
         else {
-            state.getAction().setAnnotate(false);
             getActionHandler().actionSelect(aTarget, jCas);
         }
 
@@ -370,13 +376,26 @@ public class BratAnnotationEditor
         return info;
     }
     
-    private GetDocumentResponse actionGetDocument(JCas jCas)
+    private String actionGetDocument(JCas jCas)
     {
+        StopWatch timer = new StopWatch();
+        timer.start();
+        
         GetDocumentResponse response = new GetDocumentResponse();
+        String json;
         if (getModelObject().getProject() != null) {
             render(response, jCas);
+            json = toJson(response);
+            lastRenderedJson = json;
         }
-        return response;
+        else {
+            json = toJson(response);
+        }
+        
+        timer.stop();
+        metrics.renderComplete(RenderType.FULL, timer.getTime(), json, null);
+        
+        return json;
     }
     
     /**
@@ -391,8 +410,8 @@ public class BratAnnotationEditor
             // Create new span annotation - in this case we get the offset information from the
             // request
             String offsets = request.getParameterValue(PARAM_OFFSETS).toString();
-            OffsetsList offsetLists = JSONUtil.getJsonConverter().getObjectMapper()
-                    .readValue(offsets, OffsetsList.class);
+            OffsetsList offsetLists = JSONUtil.getObjectMapper().readValue(offsets,
+                    OffsetsList.class);
 
             int annotationBegin = getModelObject().getWindowBeginOffset()
                     + offsetLists.get(0).getBegin();
@@ -423,13 +442,16 @@ public class BratAnnotationEditor
         // CSS
         aResponse.render(CssHeaderItem.forReference(BratCssVisReference.get()));
         aResponse.render(CssHeaderItem.forReference(BratCssUiReference.get()));
+        aResponse.render(CssHeaderItem
+                .forReference(new WebjarsCssResourceReference("animate.css/current/animate.css")));
                 
         // Libraries
-        aResponse.render(forReference(JQueryUIResourceReference.get()));
+        aResponse.render(forReference(JQueryUILibrarySettings.get().getJavaScriptReference()));
         aResponse.render(forReference(JQuerySvgResourceReference.get()));
         aResponse.render(forReference(JQuerySvgDomResourceReference.get()));
         aResponse.render(forReference(JQueryJsonResourceReference.get()));
         aResponse.render(forReference(JQueryScrollbarWidthReference.get()));
+        aResponse.render(forReference(JSONPatchResourceReference.get()));
         
         // BRAT helpers
         aResponse.render(forReference(BratConfigurationResourceReference.get()));
@@ -499,10 +521,55 @@ public class BratAnnotationEditor
 
     private String bratRenderCommand(JCas aJCas)
     {
+        StopWatch timer = new StopWatch();
+        timer.start();
+        
         GetDocumentResponse response = new GetDocumentResponse();
         render(response, aJCas);
         String json = toJson(response);
-        return "Wicket.$('" + vis.getMarkupId() + "').dispatcher.post('renderData', [" + json
+        
+        // By default, we do a full rendering...
+        RenderType renderType = RenderType.FULL;
+        String cmd = "renderData";
+        String data = json;
+
+        // ... try to render diff
+        String diff = null;
+        JsonNode current = null;
+        JsonNode previous = null;
+        try {
+            ObjectMapper mapper = JSONUtil.getObjectMapper();
+            current = mapper.readTree(json);
+            previous = lastRenderedJson != null ? mapper.readTree(lastRenderedJson) : null;
+        }
+        catch (IOException e) {
+            LOG.error("Unable to generate diff, falling back to full render.", e);
+            // Fall-through
+        }
+        
+        if (previous != null && current != null) {
+            diff = JsonDiff.asJson(previous, current).toString();
+ 
+            // Only sent a patch if it is smaller than sending the full data. E.g. when switching
+            // pages, the patch usually ends up being twice as large as the full data.
+            if (diff.length() < json.length()) {
+                cmd = "renderDataPatch";
+                data = diff;
+                renderType = RenderType.DIFFERENTIAL;
+            }
+            
+//            LOG.info("Diff:  " + diff);
+//            LOG.info("Full: {}   Patch: {}   Diff time: {}", json.length(), diff.length(), timer);
+        }
+        
+        // Storing the last rendered JSON as string because JsonNodes are not serializable.
+        lastRenderedJson = json;
+        
+        timer.stop();
+
+        metrics.renderComplete(renderType, timer.getTime(), json, diff);
+        
+        return "Wicket.$('" + vis.getMarkupId() + "').dispatcher.post('" + cmd + "', [" + data
                 + "]);";
     }
     
@@ -510,8 +577,25 @@ public class BratAnnotationEditor
     {
         VDocument vdoc = new VDocument();
         preRenderer.render(vdoc, getModelObject(), aJCas, getLayersToRender());
-        extensionRegistry.fireRender(aJCas, getModelObject(), vdoc);
         
+        // Fire render event into backend
+        extensionRegistry.fireRender(aJCas, getModelObject(), vdoc);
+
+        // Fire render event into UI
+        Page page = null;
+        Optional<IPageRequestHandler> handler = RequestCycle.get().find(IPageRequestHandler.class);
+        if (handler.isPresent()) {
+            page = (Page) handler.get().getPage();
+        };
+        
+        if (page == null) {
+            page = getPage();
+        }
+        send(page, Broadcast.BREADTH,
+                new RenderAnnotationsEvent(
+                        RequestCycle.get().find(IPartialPageRequestHandler.class).get(), aJCas,
+                        getModelObject(), vdoc));
+
         if (isHighlightEnabled()) {
             AnnotatorState state = getModelObject();
             

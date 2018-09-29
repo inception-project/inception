@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
     <artifactId>webanno</artifactId>
-    <version>3.3.3-SNAPSHOT</version>
+    <version>3.5.0-SNAPSHOT</version>
   </parent>
   <artifactId>webanno-ui-core</artifactId>
   <name>WebAnno - UI - Core</name>
@@ -62,8 +62,8 @@
       <scope>provided</scope>
     </dependency>
 
-    <!-- Spring  dependencies -->
-    
+    <!-- Spring dependencies -->
+
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-core</artifactId>
@@ -132,7 +132,7 @@
       <exclusions>
         <exclusion>
           <groupId>org.springframework.boot</groupId>
-          <artifactId>spring-boot-starter-tomcat</artifactId>
+          <artifactId>spring-boot-starter-web</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
@@ -153,34 +153,6 @@
       <artifactId>less4j</artifactId>
     </dependency>
   </dependencies>
-  <build>
-    <resources>
-      <resource>
-        <filtering>false</filtering>
-        <directory>src/main/resources</directory>
-        <excludes>
-          <exclude>META-INF/version.properties</exclude>
-        </excludes>
-      </resource>
-      <resource>
-        <filtering>true</filtering>
-        <directory>src/main/resources</directory>
-        <includes>
-          <include>**</include>
-        </includes>
-      </resource>
-      <resource>
-        <filtering>false</filtering>
-        <directory>src/main/java</directory>
-        <includes>
-          <include>**</include>
-        </includes>
-        <excludes>
-          <exclude>**/*.java</exclude>
-        </excludes>
-      </resource>
-    </resources>
-  </build>
   <profiles>
     <profile>
       <id>rat-check</id>
@@ -216,4 +188,5 @@
         </plugins>
       </build>
     </profile>
-  </profiles></project>
+  </profiles>
+</project>

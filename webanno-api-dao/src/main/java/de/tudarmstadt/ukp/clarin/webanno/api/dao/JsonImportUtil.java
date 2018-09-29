@@ -42,9 +42,8 @@ public class JsonImportUtil
     {
         String text = IOUtils.toString(tagInputStream, "UTF-8");
 
-        ExportedTagSet importedTagSet = JSONUtil
-                .getJsonConverter().getObjectMapper()
-                .readValue(text, ExportedTagSet.class);
+        ExportedTagSet importedTagSet = JSONUtil.getObjectMapper().readValue(text,
+                ExportedTagSet.class);
 
         if (aAnnotationService.existsTagSet(importedTagSet.getName(), project)) {
             // A tagset exists so we'll have to replace it
@@ -90,9 +89,8 @@ public class JsonImportUtil
     {
         String text = IOUtils.toString(tagInputStream, "UTF-8");
     
-        ExportedTagSet importedTagSet = JSONUtil
-                .getJsonConverter().getObjectMapper()
-                .readValue(text, ExportedTagSet.class);
+        ExportedTagSet importedTagSet = JSONUtil.getObjectMapper().readValue(text,
+                ExportedTagSet.class);
         return createTagSet(project, importedTagSet, aAnnotationService);
     }
     
@@ -114,6 +112,7 @@ public class JsonImportUtil
         newTagSet.setName(importedTagSetName);
         newTagSet.setLanguage(importedTagSet.getLanguage());
         newTagSet.setProject(project);
+        newTagSet.setCreateTag(importedTagSet.isCreateTag());
         aAnnotationService.createTagSet(newTagSet);
         for (ExportedTag tag : importedTagSet.getTags()) {
             Tag newTag = new Tag();

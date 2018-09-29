@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <!--
 #Copyright 2012
 #Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
@@ -15,16 +16,13 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 -->
-<html lang="en-US" xml:lang="en-US" xmlns="http://www.w3.org/1999/xhtml"
-	xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+<html xmlns:wicket="http://wicket.apache.org">
 <body>
-<wicket:panel>
-	    <div wicket:id="feedbackPanel">
-    	   [Feedback]
-  	    </div>
-		<div class="sentence-list-view" wicket:id="sentenceListView">
-			<div wicket:id="sentence"></div>
-		</div>
-</wicket:panel>
+  <wicket:panel>
+    <div wicket:id="feedbackPanel">[Feedback]</div>
+    <div class="sentence-list-view" wicket:id="sentenceListView">
+      <div wicket:id="sentence"></div>
+    </div>
+  </wicket:panel>
 </body>
 </html>

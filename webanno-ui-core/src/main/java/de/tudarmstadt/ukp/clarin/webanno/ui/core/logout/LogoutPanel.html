@@ -19,55 +19,63 @@
 <html
     xmlns="http://www.w3.org/1999/xhtml" 
     xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
-<wicket:head>
+  <wicket:head>
     <script type="text/javascript">
       function LogoutTimer(sessionTimeout) {
-    	  var instance = this;
-    	  
-    	  var timeout = sessionTimeout;
-    	  var started = null;
-    	  var timer = null;
-    	  
+        var instance = this;
+        
+        var timeout = sessionTimeout;
+        var started = null;
+        var timer = null;
+        
           this.tick = function() {
-        	  var remaining = timeout - Math.floor((new Date() - started) / 1000);
-        	  var remaining2 = Math.max(0, remaining);
+            var remaining = timeout - Math.floor((new Date() - started) / 1000);
+            var remaining2 = Math.max(0, remaining);
               var min = Math.floor(remaining2 / 60).toString();
-              $('#timer').text(min);
+              
+              // Calling text(val) causes a redraw of the browser contents causing constant CPU
+              // load. Only calling the method if the text actually did change avoids this issue.
+              var timerElement = $('#timer');
+              if (timerElement.text() != min) {
+                $('#timer').text(min);
+              }
               
               // Wait an additional couple of seconds before reload to avoid reloading before the
               // server-side session has *really* expired.
               if (remaining <= -10) {
-            	  location.reload(true);
+                clearInterval(instance.timer);
+                location.reload(true);
               }
           };
               
           this.start = function() {
-               if (this.timer) {
-                   clearInterval(instance.timer);
-               }
-               started = new Date();
-               timer = setInterval(instance.tick, 1000);
-               instance.tick();
+             const TICK_RATE = 1000; // 1 second
+             if (this.timer) {
+               clearInterval(instance.timer);
+             }
+             started = new Date();
+             timer = setInterval(instance.tick, TICK_RATE);
+             instance.tick();
           };
-    	  
-	      if (typeof Wicket != 'undefined') {
-	          instance.start();
-	          Wicket.Event.subscribe('/ajax/call/beforeSend', function(attr, xhr, status) {
-	              instance.start()
-	          });
-	      }
+
+        if (typeof Wicket != 'undefined') {
+          instance.start();
+          Wicket.Event.subscribe('/ajax/call/beforeSend', function(attr, xhr, status) {
+            instance.start()
+          });
+        }
       }
     </script>
-</wicket:head>
-<body>
-  <wicket:panel>
-    <p class="navbar-text navbar-right" style="margin-right: 1px;">
-      <a class="navbar-link" wicket:id="logout"><i class="fa fa-sign-out" aria-hidden="true"></i> Log out</a>
-      <span wicket:id="logoutTimer"> (automatically in <span id="timer"></span>&thinsp;min)</span>
-    </p>
-    <p class="navbar-text navbar-right">
-      <i class="fa fa-user" aria-hidden="true"></i> <wicket:container wicket:id="username"/>
-    </p>
-  </wicket:panel>
-</body>
+  </wicket:head>
+  <body>
+    <wicket:panel>
+      <p class="navbar-text navbar-right" style="margin-right: 1px;">
+        <a class="navbar-link" wicket:id="logout"><i class="fa fa-sign-out" aria-hidden="true"></i> Log out</a>
+        <span wicket:id="logoutTimer"> (automatically in <span id="timer"></span>&thinsp;min)</span>
+      </p>
+      <p class="navbar-text navbar-right">
+        <i class="fa fa-user" aria-hidden="true"></i> <wicket:container wicket:id="username"/>
+      </p>
+    </wicket:panel>
+  </body>
 </html>

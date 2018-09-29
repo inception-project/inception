@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.uima.cas.CASException;
@@ -49,7 +50,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
  * Data model for annotation editors
  */
 public class AnnotatorStateImpl
-    implements Serializable, AnnotatorState, TransientActionContext
+    implements Serializable, AnnotatorState
 {
     private static final long serialVersionUID = 1078613192789450714L;
 
@@ -118,7 +119,7 @@ public class AnnotatorStateImpl
      */
     private int unitCount;
 
-    private List<FeatureState> featureModels = new ArrayList<>();          
+    private final List<FeatureState> featureModels = new ArrayList<>();          
     
     /**
      * Constraints object from rule file
@@ -181,24 +182,6 @@ public class AnnotatorStateImpl
     public void setConstraints(ParsedConstraints aConstraints)
     {
         constraints = aConstraints;
-    }
-
-    @Override
-    public String getUserAction()
-    {
-        return userAction;
-    }
-
-    @Override
-    public void setUserAction(String aUserAction)
-    {
-        userAction = aUserAction;
-    }
-
-    @Override
-    public void clearUserAction()
-    {
-        userAction = null;
     }
 
     private final Selection selection = new Selection();
@@ -605,31 +588,10 @@ public class AnnotatorStateImpl
     public FeatureState getFeatureState(AnnotationFeature aFeature)
     {
         for (FeatureState f : featureModels) {
-            if (f.feature.getId() == aFeature.getId()) {
+            if (Objects.equals(f.feature.getId(), aFeature.getId())) {
                 return f;
             }
         }
         return null;
-    }
-    
-    @Override
-    public TransientActionContext getAction()
-    {
-        return this;
-    }
-    
-    // if it is annotation or delete operation
-    private boolean isAnnotate = true;
-
-    @Override
-    public boolean isAnnotate()
-    {
-        return isAnnotate;
-    }
-
-    @Override
-    public void setAnnotate(boolean isAnnotate)
-    {
-        this.isAnnotate = isAnnotate;
     }
 }

@@ -46,6 +46,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationExce
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.PrimitiveUimaFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.SlotFeatureSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.AnnotationSchemaServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2;
@@ -53,7 +55,9 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.DiffUtils;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
+import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
@@ -142,21 +146,23 @@ public class CopyAnnotationTest
             TypeAdapter getAdapter(AnnotationLayer aLayer)
             {
                 return AnnotationSchemaServiceImpl.getAdapter(annotationSchemaService,
-                        featureSupportRegistry, aLayer);
+                        featureSupportRegistry, null, aLayer);
             }
 
         }.getMockInstance();
         
-        featureSupportRegistry = new FeatureSupportRegistryImpl();
-        featureSupportRegistry.postProcessAfterInitialization(new PrimitiveUimaFeatureSupport(),
-                "uimaPrimitive");
-        featureSupportRegistry.postProcessAfterInitialization(new SlotFeatureSupport(), "slots");
+        featureSupportRegistry = new FeatureSupportRegistryImpl(
+                asList(new PrimitiveUimaFeatureSupport(),
+                        new SlotFeatureSupport(annotationSchemaService)));
+        featureSupportRegistry.init();
     }
     
     @Test
     public void simpleCopyToEmptyTest()
         throws Exception
     {
+        AnnotatorState state = new AnnotatorStateImpl(Mode.CURATION);
+        state.setUser(new User());
         
         JCas jcas = JCasFactory.createJCas();
         Type type = jcas.getTypeSystem().getType(POS.class.getTypeName());
@@ -165,8 +171,8 @@ public class CopyAnnotationTest
         JCas mergeCAs = JCasFactory.createJCas();
         createTokenAnno(mergeCAs, 0, 0);
 
-        MergeCas.addSpanAnnotation(annotationSchemaService, posLayer, mergeCAs,
-                clickedFs, false);
+        MergeCas.addSpanAnnotation(state, annotationSchemaService,
+                posLayer, mergeCAs, clickedFs, false);
 
         assertEquals(1, CasUtil.selectCovered(mergeCAs.getCas(), type, 0, 0).size());
     }
@@ -203,8 +209,8 @@ public class CopyAnnotationTest
         mergeCAs.addFsToIndexes(existingFs);
 
         exception.expect(AnnotationException.class);
-        MergeCas.addSpanAnnotation(annotationSchemaService, posLayer, mergeCAs,
-                clickedFs, false);
+        MergeCas.addSpanAnnotation(new AnnotatorStateImpl(Mode.CURATION), annotationSchemaService,
+                posLayer, mergeCAs, clickedFs, false);
     }
 
     @Test
@@ -221,8 +227,8 @@ public class CopyAnnotationTest
         existingFs.setStringValue(posValue, "NE");
         mergeCAs.addFsToIndexes(existingFs);
 
-        MergeCas.addSpanAnnotation(annotationSchemaService, posLayer, mergeCAs,
-                clickedFs, false);
+        MergeCas.addSpanAnnotation(new AnnotatorStateImpl(Mode.CURATION), annotationSchemaService,
+                posLayer, mergeCAs, clickedFs, false);
 
         assertEquals(1, CasUtil.selectCovered(mergeCAs.getCas(), type, 0, 0).size());
     }
@@ -231,6 +237,9 @@ public class CopyAnnotationTest
     public void simpleCopyToDiffExistingAnnoWithStackingTest()
         throws Exception
     {
+        AnnotatorState state = new AnnotatorStateImpl(Mode.CURATION);
+        state.setUser(new User());
+        
         posLayer.setAllowStacking(true);
 
         JCas jcas = JCasFactory.createJCas();
@@ -244,8 +253,8 @@ public class CopyAnnotationTest
         existingFs.setStringValue(posValue, "NE");
         mergeCAs.addFsToIndexes(existingFs);
 
-        MergeCas.addSpanAnnotation(annotationSchemaService, posLayer, mergeCAs,
-                clickedFs, true);
+        MergeCas.addSpanAnnotation(state, annotationSchemaService, posLayer, mergeCAs, clickedFs,
+                true);
 
         assertEquals(2, CasUtil.selectCovered(mergeCAs.getCas(), type, 0, 0).size());
     }
@@ -269,8 +278,8 @@ public class CopyAnnotationTest
         DiffUtils.makeLinkHostMultiSPanFeatureFS(mergeCAs, 0, 0, feature, "C",
                 DiffUtils.makeLinkFS(mergeCAs, "slot1", 0, 0));
 
-        MergeCas.addSpanAnnotation(annotationSchemaService, slotLayer, mergeCAs,
-                clickedFs, false);
+        MergeCas.addSpanAnnotation(new AnnotatorStateImpl(Mode.CURATION), annotationSchemaService,
+                slotLayer, mergeCAs, clickedFs, false);
 
         assertEquals(1, CasUtil.selectCovered(mergeCAs.getCas(), type, 0, 0).size());
     }
@@ -279,6 +288,9 @@ public class CopyAnnotationTest
     public void copySpanWithSlotWithStackingTest()
         throws Exception
     {
+        AnnotatorState state = new AnnotatorStateImpl(Mode.CURATION);
+        state.setUser(new User());
+        
         slotLayer.setAllowStacking(true);
         
         JCas jcasA = JCasFactory.createJCas(DiffUtils.createMultiLinkWithRoleTestTypeSytem("f1"));
@@ -294,8 +306,8 @@ public class CopyAnnotationTest
         DiffUtils.makeLinkHostMultiSPanFeatureFS(mergeCAs, 0, 0, feature, "C",
                 DiffUtils.makeLinkFS(mergeCAs, "slot1", 0, 0));
 
-        MergeCas.addSpanAnnotation(annotationSchemaService, slotLayer, mergeCAs,
-                clickedFs, true);
+        MergeCas.addSpanAnnotation(state, annotationSchemaService, slotLayer, mergeCAs, clickedFs,
+                true);
 
         assertEquals(2, CasUtil.selectCovered(mergeCAs.getCas(), type, 0, 0).size());
     }
@@ -552,5 +564,4 @@ public class CopyAnnotationTest
 
     @Rule
     public final ExpectedException exception = ExpectedException.none();
-
 }

@@ -67,8 +67,10 @@ public final class TypeUtil
             return bratLabelText.toString();
         }
         else {
-            // If there are no label features at all, then use the layer UI name
-            return "(" + aAdapter.getLayer().getUiName() + ")";
+            // If there are no label features at all, then return the empty string. This avoids
+            // NPEs in the coloring strategy, saves a few characters in the brat JSON ("" vs null)
+            // and still causes the brat UI JS to fall back to the layer name.
+            return "";
         }
     }
     

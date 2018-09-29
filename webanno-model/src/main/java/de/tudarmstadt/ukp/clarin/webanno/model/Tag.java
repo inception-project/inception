@@ -22,6 +22,7 @@ import java.io.Serializable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.Lob;
@@ -40,8 +41,8 @@ public class Tag
     private static final long serialVersionUID = -1490540239189868920L;
 
     @Id
-    @GeneratedValue
-    private long id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @Column(nullable = false)
     private String name;
@@ -54,12 +55,23 @@ public class Tag
     @JoinColumn(name = "tagset")
     private TagSet tagSet;
 
-    public long getId()
+    public Tag()
+    {
+        // Nothing to do
+    }
+    
+    public Tag(String aName, String aDescription)
+    {
+        name = aName;
+        description = aDescription;
+    }
+    
+    public Long getId()
     {
         return id;
     }
 
-    public void setId(long aId)
+    public void setId(Long aId)
     {
         id = aId;
     }

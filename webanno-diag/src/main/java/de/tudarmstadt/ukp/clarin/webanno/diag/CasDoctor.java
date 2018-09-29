@@ -255,13 +255,19 @@ public class CasDoctor
     {
         // If WebAnno is in under development, automatically enable all checks.
         String version = SettingsUtil.getVersionProperties().getProperty(SettingsUtil.PROP_VERSION);
-        if (!disableAutoScan && (
+        if (
                 "unknown".equals(version) || 
                 version.contains("-SNAPSHOT") || 
-                version.contains("-beta-"))
+                version.contains("-beta-")
         ) {
-            checkClasses.addAll(scanChecks());
-            log.info("Detected SNAPSHOT/beta version - automatically enabling all checks");
+            if (disableAutoScan) {
+                log.info("Detected SNAPSHOT/beta version - but FORCING release mode and NOT "
+                        + "auto-enabling checks");
+            }
+            else {
+                checkClasses.addAll(scanChecks());
+                log.info("Detected SNAPSHOT/beta version - automatically enabling all checks");
+            }
         }
         
         if (StringUtils.isNotBlank(activeChecks)) {

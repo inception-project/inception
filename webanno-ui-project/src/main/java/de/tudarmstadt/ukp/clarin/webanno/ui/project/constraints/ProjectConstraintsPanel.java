@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.project.constraints;
 
+import static java.util.Objects.isNull;
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
 
 import java.io.File;
@@ -48,6 +49,7 @@ import org.slf4j.LoggerFactory;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ConstraintsGrammar;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ParseException;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.TokenMgrError;
 import de.tudarmstadt.ukp.clarin.webanno.model.ConstraintSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanel;
@@ -203,7 +205,7 @@ public class ProjectConstraintsPanel
                 protected void onConfigure()
                 {
                     super.onConfigure();
-                    setVisible(DetailForm.this.getModelObject().getId() >= 0);
+                    setVisible(DetailForm.this.getModelObject().getId() != null);
                 }
             };
             // Add check to prevent accidental delete operation
@@ -283,12 +285,16 @@ public class ProjectConstraintsPanel
                     try {
                         importAction();
                     }
-                    catch (ParseException e) {
+                    catch (ParseException | TokenMgrError e) {
+                        LOG.error(
+                                "Exception while parsing the constraint rules file. Please check it.",
+                                e);
                         error("Exception while parsing the constraint rules file. Please check it. "
                                 + ExceptionUtils.getRootCauseMessage(e));
                     }
                     catch (IOException e) {
-                        error("Unable to read constraints file "
+                        LOG.error("Unable to read the constraint rules file.", e);
+                        error("Unable to read constraints file: "
                                 + ExceptionUtils.getRootCauseMessage(e));
                     }
                 }
@@ -301,7 +307,7 @@ public class ProjectConstraintsPanel
 
             List<FileUpload> uploadedFiles = uploads.getFileUploads();
 
-            if (project.getId() == 0) {
+            if (isNull(project.getId())) {
                 error("Project not yet created, please save project Details!");
                 return;
             }
@@ -344,7 +350,8 @@ public class ProjectConstraintsPanel
                     }
                     catch (IOException e) {
                         detailForm.setModelObject(null);
-                        error("Unable to write constraints file "
+                        LOG.error("Unable to write the constraint rules file.", e);
+                        error("Unable to write the constraints file "
                                 + ExceptionUtils.getRootCauseMessage(e));
                     }
                 }
@@ -368,7 +375,6 @@ public class ProjectConstraintsPanel
                 else {
                     return betterConstraintName;
                 }
-
             }
         }
     }

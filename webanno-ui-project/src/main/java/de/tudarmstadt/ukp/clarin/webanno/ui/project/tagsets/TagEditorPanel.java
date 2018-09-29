@@ -68,7 +68,7 @@ public class TagEditorPanel
         
         form.add(new LambdaAjaxButton<>("save", this::actionSave));
         form.add(new LambdaAjaxLink("delete", this::actionDelete)
-                .onConfigure(_this -> _this.setVisible(form.getModelObject().getId() != 0)));
+                .onConfigure(_this -> _this.setVisible(form.getModelObject().getId() != null)));
         form.add(new LambdaAjaxLink("cancel", this::actionCancel));
     }
     

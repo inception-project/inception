@@ -17,14 +17,25 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
+
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.TreeMap;
 
+import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
+import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.jcas.JCas;
+import org.springframework.context.ApplicationEvent;
+import org.springframework.context.ApplicationEventPublisher;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.FeatureValueUpdatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
@@ -32,6 +43,7 @@ public abstract class TypeAdapter_ImplBase
     implements TypeAdapter
 {
     private FeatureSupportRegistry featureSupportRegistry;
+    private ApplicationEventPublisher applicationEventPublisher;
     
     private AnnotationLayer layer;
 
@@ -40,9 +52,11 @@ public abstract class TypeAdapter_ImplBase
     private boolean deletable;
 
     public TypeAdapter_ImplBase(FeatureSupportRegistry aFeatureSupportRegistry,
-            AnnotationLayer aLayer, Collection<AnnotationFeature> aFeatures)
+            ApplicationEventPublisher aEventPublisher, AnnotationLayer aLayer,
+            Collection<AnnotationFeature> aFeatures)
     {
         featureSupportRegistry = aFeatureSupportRegistry;
+        applicationEventPublisher = aEventPublisher;
         layer = aLayer;
 
         // Using a sorted map here so we have reliable positions in the map when iterating. We use
@@ -77,15 +91,59 @@ public abstract class TypeAdapter_ImplBase
     }
 
     @Override
-    public void setFeatureValue(AnnotationFeature aFeature, JCas aJcas, int aAddress, Object aValue)
+    public void setFeatureValue(AnnotatorState aState, JCas aJcas,
+            int aAddress, AnnotationFeature aFeature, Object aValue)
     {
+        FeatureStructure fs = selectByAddr(aJcas, aAddress);
+
+        Object oldValue =  getValue(fs, aFeature);
+        
         featureSupportRegistry.getFeatureSupport(aFeature).setFeatureValue(aJcas, aFeature,
                 aAddress, aValue);
+
+        Object newValue = getValue(fs, aFeature);
+        
+        if (!Objects.equals(oldValue, newValue)) {
+            publishEvent(new FeatureValueUpdatedEvent(this, aState.getDocument(),
+                    aState.getUser().getUsername(), fs, aFeature, newValue, oldValue));
+        }
+    }
+    
+    private Object getValue(FeatureStructure fs, AnnotationFeature aFeature)
+    {
+        Object value;
+        
+        Feature f = fs.getType().getFeatureByBaseName(aFeature.getName());
+        if (f.getRange().isPrimitive()) {
+            value = FSUtil.getFeature(fs, aFeature.getName(), Object.class);
+        }
+        else if (FSUtil.isMultiValuedFeature(fs, f)) {
+            value = FSUtil.getFeature(fs, aFeature.getName(), List.class);
+        }
+        else {
+            value = FSUtil.getFeature(fs, aFeature.getName(), FeatureStructure.class);
+        }
+        
+        return value;
     }
 
     @Override
     public <T> T getFeatureValue(AnnotationFeature aFeature, FeatureStructure aFs)
     {
-        return featureSupportRegistry.getFeatureSupport(aFeature).getFeatureValue(aFeature, aFs);
+        return (T) featureSupportRegistry.getFeatureSupport(aFeature).getFeatureValue(aFeature,
+                aFs);
+    }
+    
+    public void publishEvent(ApplicationEvent aEvent)
+    {
+        if (applicationEventPublisher != null) {
+            applicationEventPublisher.publishEvent(aEvent);
+        }
+    }
+    
+    @Override
+    public void initialize(AnnotationSchemaService aSchemaService)
+    {
+        // Nothing to do
     }
 }

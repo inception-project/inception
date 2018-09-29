@@ -2,7 +2,7 @@
 * text=input
 
 # Text files
-*.jtb  diff
+*.jtb  binary
 
 # Custom for Visual Studio
 *.cs     diff=csharp

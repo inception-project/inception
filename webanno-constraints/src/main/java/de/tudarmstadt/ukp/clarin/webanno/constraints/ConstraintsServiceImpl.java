@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.constraints;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDER;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
@@ -31,6 +32,8 @@ import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.input.BOMInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -107,7 +110,12 @@ public class ConstraintsServiceImpl
         String constraintRulesPath = dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/"
                 + aSet.getProject().getId() + "/" + ConstraintsService.CONSTRAINTS + "/";
         String filename = aSet.getId() + ".txt";
-        String data = FileUtils.readFileToString(new File(constraintRulesPath, filename), "UTF-8");
+        
+        String data;
+        try (BOMInputStream is = new BOMInputStream(
+                new FileInputStream(new File(constraintRulesPath, filename)))) {
+            data = IOUtils.toString(is, "UTF-8");
+        }
 
         try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
                 String.valueOf(aSet.getProject().getId()))) {

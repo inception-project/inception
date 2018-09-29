@@ -17,35 +17,55 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.support.lambda;
 
+import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
+import org.apache.wicket.request.cycle.IRequestCycleListener;
+import org.apache.wicket.request.cycle.RequestCycle;
 
-public abstract class LambdaModel<T>
+@Deprecated
+public class LambdaModel<T>
     extends LoadableDetachableModel<T>
 {
     private static final long serialVersionUID = -1455152622735082623L;
 
-//    private final SerializableSupplier<T> supplier;
-//
-//    public LambdaModel(SerializableSupplier<T> aSupplier)
-//    {
-//        supplier = aSupplier;
-//    }
-//
-//    @SuppressWarnings("unchecked")
-//    @Override
-//    protected T load()
-//    {
-//        Object value = supplier.get();
-//        if (value instanceof IModel) {
-//            return ((IModel<T>) value).getObject();
-//        }
-//        else {
-//            return (T) value;
-//        }
-//    }
-//
-//    public static <T> LambdaModel<T> of(SerializableSupplier<T> aSupplier)
-//    {
-//        return new LambdaModel<T>(aSupplier);
-//    }
+    private final SerializableSupplier<T> supplier;
+    private boolean autoDetach;
+
+    public LambdaModel(SerializableSupplier<T> aSupplier)
+    {
+        supplier = aSupplier;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    protected T load()
+    {
+        Object value = supplier.get();
+        if (value instanceof IModel) {
+            return ((IModel<T>) value).getObject();
+        }
+        else {
+            return (T) value;
+        }
+    }
+    
+    public LambdaModel<T> autoDetaching()
+    {
+        autoDetach = true;
+        return this;
+    }
+    
+    @Override
+    protected void onAttach()
+    {
+        if (autoDetach) {
+            RequestCycle.get().getListeners().add(new IRequestCycleListener() {
+                @Override
+                public void onDetach(RequestCycle aCycle)
+                {
+                    LambdaModel.this.detach();
+                }
+            });
+        }
+    }
 }

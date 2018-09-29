@@ -17,13 +17,14 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil.annotationEnabeled;
 import static de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil.isAdmin;
 import static de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil.isAnnotator;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_DOCUMENT_ID;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_FOCUS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS;
 import static org.apache.uima.fit.util.JCasUtil.select;
 
 import java.io.IOException;
@@ -62,7 +63,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectType;
 import de.tudarmstadt.ukp.clarin.webanno.api.SessionMetaData;
-import de.tudarmstadt.ukp.clarin.webanno.api.SettingsService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionRegistry;
@@ -71,15 +71,14 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorRegistry
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.DocumentOpenedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
+import de.tudarmstadt.ukp.clarin.webanno.brat.config.BratProperties;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
@@ -99,8 +98,6 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.ExportDocumentDial
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.GuidelinesDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.OpenDocumentDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.SidebarPanel;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemCondition;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import wicket.contrib.input.events.EventType;
 import wicket.contrib.input.events.InputBehavior;
@@ -110,7 +107,6 @@ import wicket.contrib.input.events.key.KeyType;
  * A wicket page for the Brat Annotation/Visualization page. Included components for pagination,
  * annotation layer configuration, and Exporting document
  */
-@MenuItem(icon = "images/categories.png", label = "Annotation", prio = 100)
 @MountPath(value = "/annotation.html", alt = { "/annotate/${" + PAGE_PARAM_PROJECT_ID + "}",
         "/annotate/${" + PAGE_PARAM_PROJECT_ID + "}/${" + PAGE_PARAM_DOCUMENT_ID + "}" })
 @ProjectType(id = WebAnnoConst.PROJECT_TYPE_ANNOTATION, prio = 100)
@@ -124,12 +120,12 @@ public class AnnotationPage
     private @SpringBean DocumentService documentService;
     private @SpringBean ProjectService projectService;
     private @SpringBean ConstraintsService constraintsService;
-    private @SpringBean SettingsService settingsService;
+    private @SpringBean BratProperties defaultPreferences;
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean UserDao userRepository;
     private @SpringBean AnnotationEditorRegistry editorRegistry;
-    private @SpringBean ApplicationEventPublisherHolder applicationEventPublisherHolder;
     private @SpringBean AnnotationEditorExtensionRegistry extensionRegistry;
+    private @SpringBean ApplicationEventPublisherHolder applicationEventPublisherHolder;
     
     private NumberTextField<Integer> gotoPageTextField;
     
@@ -513,9 +509,8 @@ public class AnnotationPage
             AnnotationDocument annotationDocument = documentService.getAnnotationDocument(
                     state.getDocument(), state.getUser());
 
-            annotationDocument.setState(AnnotationDocumentStateTransition.transition(
-                    AnnotationDocumentStateTransition.
-                    ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED));
+            documentService.transitionAnnotationDocumentState(annotationDocument,
+                    ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED);
             
             // manually update state change!! No idea why it is not updated in the DB
             // without calling createAnnotationDocument(...)
@@ -553,7 +548,7 @@ public class AnnotationPage
             JCas editorCas = documentService.readAnnotationCas(annotationDocument);
 
             // Update the annotation document CAS
-            documentService.upgradeCas(editorCas.getCas(), annotationDocument);
+            annotationService.upgradeCas(editorCas.getCas(), annotationDocument);
 
             // After creating an new CAS or upgrading the CAS, we need to save it
             documentService.writeAnnotationCas(editorCas.getCas().getJCas(), annotationDocument,
@@ -566,7 +561,7 @@ public class AnnotationPage
             state.setConstraints(constraintsService.loadConstraints(state.getProject()));
 
             // Load user preferences
-            PreferencesUtil.loadPreferences(state.getUser().getUsername(), settingsService,
+            PreferencesUtil.loadPreferences(state.getUser().getUsername(), defaultPreferences,
                     projectService, annotationService, state, state.getMode());
 
             // if project is changed, reset some project specific settings
@@ -587,10 +582,9 @@ public class AnnotationPage
             annotationEditor = newAnnotationEditor;
 
             // Update document state
-            if (state.getDocument().getState().equals(SourceDocumentState.NEW)) {
-                state.getDocument().setState(SourceDocumentStateTransition
-                        .transition(SourceDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS));
-                documentService.createSourceDocument(state.getDocument());
+            if (SourceDocumentState.NEW.equals(state.getDocument().getState())) {
+                documentService.transitionSourceDocumentState(state.getDocument(),
+                        NEW_TO_ANNOTATION_IN_PROGRESS);
             }
             
             // Reset the editor (we reload the page content below, so in order not to schedule
@@ -605,8 +599,9 @@ public class AnnotationPage
                 WicketUtil.refreshPage(aTarget, getPage());
             }
             
-            applicationEventPublisherHolder.get()
-                    .publishEvent(new DocumentOpenedEvent(this, editorCas, getModelObject()));
+            applicationEventPublisherHolder.get().publishEvent(
+                    new DocumentOpenedEvent(this, editorCas, getModelObject().getDocument(),
+                            getModelObject().getUser().getUsername()));
             
             LOG.debug("Configured BratAnnotatorModel for user [" + state.getUser().getUsername()
                     + "] f:[" + state.getFirstVisibleUnitIndex() + "] l:["
@@ -792,12 +787,5 @@ public class AnnotationPage
                 }
             }
         }
-    }
-    
-    @MenuItemCondition
-    public static boolean menuItemCondition(ProjectService aRepo, UserDao aUserRepo)
-    {
-        User user = aUserRepo.getCurrentUser();
-        return annotationEnabeled(aRepo, user, WebAnnoConst.PROJECT_TYPE_ANNOTATION);
     }
 }

@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.project.guidelines;
 
+import static java.util.Objects.isNull;
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
 
 import java.io.File;
@@ -28,6 +29,7 @@ import java.util.List;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.upload.FileUpload;
 import org.apache.wicket.markup.html.form.upload.FileUploadField;
@@ -72,11 +74,13 @@ public class ImportGuidelinesPanel
         List<FileUpload> uploadedFiles = fileUpload.getFileUploads();
         Project project = projectModel.getObject();
 
-        if (project.getId() == 0) {
-            error("Project not yet created, please save project Details!");
+        if (isNull(project.getId())) {
+            aTarget.addChildren(getPage(), IFeedback.class);
+            error("Project not yet created, please save project details!");
             return;
         }
         if (isEmpty(uploadedFiles)) {
+            aTarget.addChildren(getPage(), IFeedback.class);
             error("No document is selected to upload, please select a document first");
             return;
         }
@@ -101,7 +105,6 @@ public class ImportGuidelinesPanel
             }
         }
 
-        //aTarget.addChildren(getPage(), IFeedback.class);
         WicketUtil.refreshPage(aTarget, getPage());
     }
 }

@@ -17,8 +17,9 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.project.export;
 
+import static java.util.Objects.nonNull;
+
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -27,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Queue;
+import java.util.stream.Collectors;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -56,14 +58,12 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.automation.service.AutomationService;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportService;
+import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
-import de.tudarmstadt.ukp.clarin.webanno.export.ExportService;
 import de.tudarmstadt.ukp.clarin.webanno.export.ExportUtil;
-import de.tudarmstadt.ukp.clarin.webanno.export.ImportUtil;
-import de.tudarmstadt.ukp.clarin.webanno.export.ProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.AJAXDownload;
 import de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils;
@@ -84,13 +84,11 @@ public class ProjectExportPanel
 
     private static final Logger LOG = LoggerFactory.getLogger(ProjectPage.class);
 
-    public static final String EXPORTED_PROJECT = ImportUtil.EXPORTED_PROJECT;
-
     private @SpringBean AnnotationSchemaService annotationService;
-    private @SpringBean AutomationService automationService;
     private @SpringBean DocumentService documentService;
     private @SpringBean ProjectService projectService;
-    private @SpringBean ExportService exportService;
+    //private @SpringBean ExportService exportService;
+    private @SpringBean ProjectExportService exportService;
     private @SpringBean ImportExportService importExportService;
     private @SpringBean ConstraintsService constraintsService;
     private @SpringBean UserDao userRepository;
@@ -116,23 +114,6 @@ public class ProjectExportPanel
         add(new ProjectExportForm("exportForm", aProjectModel));
     }
 
-    private boolean existsCurationDocument(Project aProject)
-    {
-        boolean curationDocumentExist = false;
-        List<de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument> documents = documentService
-                .listSourceDocuments(aProject);
-
-        for (de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument : documents) {
-
-            // If the curation document is finished
-            if (SourceDocumentState.CURATION_FINISHED.equals(sourceDocument.getState())) {
-                curationDocumentExist = true;
-                break;
-            }
-        }
-        return curationDocumentExist;
-    }
-    
     public class ProjectExportForm
         extends Form<ProjectExportRequest>
     {
@@ -141,12 +122,14 @@ public class ProjectExportPanel
         public ProjectExportForm(String id, IModel<Project> aProject)
         {
             super(id, new CompoundPropertyModel<>(
-                    new ProjectExportRequest(aProject, ProjectExportRequest.FORMAT_AUTO)));
+                    new ProjectExportRequest(ProjectExportRequest.FORMAT_AUTO, true)));
             
             DropDownChoice<String> format = new DropDownChoice<>("format",
                     LoadableDetachableModel.of(() -> {
-                        List<String> formats = new ArrayList<>(
-                                importExportService.getWritableFormatLabels());
+                        List<String> formats = importExportService.getWritableFormats().stream()
+                                .map(FormatSupport::getName)
+                                .sorted()
+                                .collect(Collectors.toCollection(ArrayList::new));
                         formats.add(0, ProjectExportRequest.FORMAT_AUTO);
                         return formats;
                     }));
@@ -167,8 +150,8 @@ public class ProjectExportPanel
                         exportTempDir.delete();
                         exportTempDir.mkdirs();
 
-                        boolean curationDocumentExist = existsCurationDocument(
-                                ProjectExportForm.this.getModelObject().project.getObject());
+                        boolean curationDocumentExist = documentService.existsCurationDocument(
+                                ProjectExportForm.this.getModelObject().getProject());
 
                         if (!curationDocumentExist) {
                             error("No curation document created yet for this document");
@@ -215,7 +198,7 @@ public class ProjectExportPanel
                 protected String load()
                 {
                     SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd_HHmm");
-                    return ProjectExportForm.this.getModelObject().project.getObject().getName() +
+                    return ProjectExportForm.this.getModelObject().getProject().getName() +
                         "_curated_documents_" + fmt.format(new Date()) + ".zip";
                 }
             }) {
@@ -223,8 +206,9 @@ public class ProjectExportPanel
 
                 @Override
                 public boolean isVisible() {
-                    return existsCurationDocument(ProjectExportForm.this
-                            .getModelObject().project.getObject());
+                    Project project = ProjectExportPanel.this.getModelObject();
+                    return nonNull(project) ? documentService.existsCurationDocument(project)
+                            : false;
                 }
 
                 @Override
@@ -254,8 +238,9 @@ public class ProjectExportPanel
                     String name;
                     SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd_HHmm");
                     try {
-                        name = URLEncoder.encode(ProjectExportForm.this.getModelObject().project
-                                .getObject().getName(), "UTF-8");
+                        name = URLEncoder.encode(
+                                ProjectExportForm.this.getModelObject().getProject().getName(),
+                                "UTF-8");
                     }
                     catch (UnsupportedEncodingException e) {
                         name = super.getFileName();
@@ -324,8 +309,9 @@ public class ProjectExportPanel
                     fileGenerationProgress.start(target);
                     Authentication authentication = SecurityContextHolder.getContext()
                             .getAuthentication();
-                    runnable = new FileGenerator(ProjectExportForm.this.getModelObject(),
-                            authentication.getName());
+                    ProjectExportRequest request = ProjectExportForm.this.getModelObject();
+                    request.setProject(ProjectExportPanel.this.getModelObject());
+                    runnable = new FileGenerator(request, authentication.getName());
                     thread = new Thread(runnable);
                     thread.start();
                 }
@@ -369,25 +355,21 @@ public class ProjectExportPanel
         {
             // We are in a new thread. Set up thread-specific MDC
             MDC.put(Logging.KEY_USERNAME, username);
-            MDC.put(Logging.KEY_PROJECT_ID, String.valueOf(model.project.getObject().getId()));
+            MDC.put(Logging.KEY_PROJECT_ID, String.valueOf(model.getProject().getId()));
             MDC.put(Logging.KEY_REPOSITORY_PATH, documentService.getDir().toString());
             
             File file;
             try {
                 Thread.sleep(100); // Why do we sleep here?
-                file = exportService.generateZipFile(model);
+                //file = exportService.generateZipFile(model);
+                file = exportService.exportProject(model);
                 fileName = file.getAbsolutePath();
-                projectName = model.project.getObject().getName();
+                projectName = model.getProject().getName();
                 canceled = false;
-            }
-            catch (FileNotFoundException e) {
-                LOG.error("Unable to find some project file(s) during project export", e);
-                model.messages.add("Unable to find file during project export: "
-                        + ExceptionUtils.getRootCauseMessage(e));
             }
             catch (Throwable e) {
                 LOG.error("Unexpected error during project export", e);
-                model.messages.add("Unexpected error during project export: "
+                model.addMessage("Unexpected error during project export: "
                         + ExceptionUtils.getRootCauseMessage(e));
                 if (thread != null) {
                     canceled = true;
@@ -399,7 +381,7 @@ public class ProjectExportPanel
 
         public Queue<String> getMessages()
         {
-            return model.messages;
+            return model.getMessages();
         }
     }
     

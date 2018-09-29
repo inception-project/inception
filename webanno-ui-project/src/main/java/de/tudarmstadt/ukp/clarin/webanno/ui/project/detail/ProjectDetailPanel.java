@@ -17,10 +17,13 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.project.detail;
 
+import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
@@ -58,6 +61,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ChallengeResponseDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.NameUtil;
 
 public class ProjectDetailPanel
@@ -111,7 +115,7 @@ public class ProjectDetailPanel
         form.add(new LambdaAjaxLink("cancel", this::actionCancel));
         form.add(new LambdaAjaxLink("delete", this::actionDelete).onConfigure((_this) -> 
             _this.setEnabled(projectModel.getObject() != null && 
-                    projectModel.getObject().getId() > 0 )));
+                    projectModel.getObject().getId() != null )));
 
         IModel<String> projectNameModel = PropertyModel.of(projectModel, "name");
         add(deleteProjectDialog = new ChallengeResponseDialog("deleteProjectDialog",
@@ -135,23 +139,24 @@ public class ProjectDetailPanel
         
     private DropDownChoice<String> makeProjectTypeChoice()
     {
-        DropDownChoice<String> projectTypes = new DropDownChoice<String>("mode", projectService
-                .listProjectTypes().stream().map(t -> t.id()).collect(Collectors.toList()))
-        {
-            private static final long serialVersionUID = -8268365384613932108L;
+        List<String> types = projectService.listProjectTypes().stream().map(t -> t.id())
+                .collect(Collectors.toList());
 
-            @Override
-            protected void onConfigure()
-            {
-                super.onConfigure();
-                setEnabled(
-                        projectModel.getObject() != null && projectModel.getObject().getId() == 0);
-            }
-        };
+        DropDownChoice<String> projectTypes = new DropDownChoice<>("mode", types);
+
+        projectTypes.add(LambdaBehavior.onConfigure(it -> it.setEnabled(
+                nonNull(projectModel.getObject()) && isNull(projectModel.getObject().getId()))));
 
         projectTypes.setRequired(true);
+        
+        // If there is only a single project type, then we can simply select that and do not need
+        // to show the choice at all.
+        if (types.size() == 1) {
+            projectTypes.setVisible(false);
+            projectModel.getObject().setMode(types.get(0));
+        }
+        
         return projectTypes;
-
     }
 
     private void actionSave(AjaxRequestTarget aTarget, Form<Project> aForm)
@@ -161,7 +166,7 @@ public class ProjectDetailPanel
         // aTarget.addChildren(getPage(), IFeedback.class);
         
         Project project = aForm.getModelObject();
-        if (project.getId() == 0) {
+        if (isNull(project.getId())) {
             try {
                 String username = SecurityContextHolder.getContext().getAuthentication().getName();
                 projectService.createProject(project);
@@ -173,7 +178,7 @@ public class ProjectDetailPanel
                 projectService.createProjectPermission(
                         new ProjectPermission(project, username, PermissionLevel.USER));
 
-                annotationService.initializeTypesForProject(project);
+                annotationService.initializeProject(project);
             }
             catch (IOException e) {
                 error("Project repository path not found " + ":"

@@ -88,6 +88,7 @@ public class WebAnnoTsv3ReaderWriterRoundTripTest
         failingTests.add("testZeroLengthSpanBetweenAdjacentTokens");
         failingTests.add("sampleSlotAnnotation1");
         failingTests.add("sampleSlotAnnotation2");
+        failingTests.add("testUnsetSlotFeature");
 
         return failingTests.contains(aMethodName);
     }
@@ -138,6 +139,7 @@ public class WebAnnoTsv3ReaderWriterRoundTripTest
                         POS.class.getName(), 
                         Lemma.class.getName(), 
                         Stem.class.getName(), 
+                        "webanno.custom.Span", 
                         "webanno.custom.SimpleSpan", 
                         "webanno.custom.SimpleLinkHost"
 //                        "webanno.custom.ComplexLinkHost"

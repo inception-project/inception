@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.automation.project;
 
+import static java.util.Objects.isNull;
+
 import java.io.IOException;
 import java.io.Serializable;
 import java.sql.Timestamp;
@@ -60,6 +62,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Status;
+import de.tudarmstadt.ukp.clarin.webanno.model.TrainDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.TrainingDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.EntityModel;
@@ -133,7 +136,7 @@ public class ProjectMiraTemplatePanel
             protected void onConfigure()
             {
                 super.onConfigure();
-                if (template.getId() == 0) {
+                if (isNull(template.getId())) {
                     this.setVisible(false);
                 }
                 else {
@@ -327,7 +330,7 @@ public class ProjectMiraTemplatePanel
                 @Override
                 public boolean isVisible()
                 {
-                    return miraTemplateDetailForm.getModelObject().getId() != 0;
+                    return miraTemplateDetailForm.getModelObject().getId() != null;
                 }
             });
             targetLayerTarinDocumentsPanel.setOutputMarkupPlaceholderTag(true);
@@ -349,7 +352,7 @@ public class ProjectMiraTemplatePanel
                 @Override
                 public boolean isVisible()
                 {
-                    return miraTemplateDetailForm.getModelObject().getId() != 0
+                    return miraTemplateDetailForm.getModelObject().getId() != null
                             && selectedFeature != null;
                 }
             });
@@ -368,7 +371,7 @@ public class ProjectMiraTemplatePanel
                 @Override
                 public boolean isVisible()
                 {
-                    return otherLayerDetailForm.getModelObject().selectedFeatures.getId() != 0;
+                    return otherLayerDetailForm.getModelObject().selectedFeatures.getId() != null;
                 }
             });
             otherLayerTarinDocumentsPanel.setOutputMarkupPlaceholderTag(true);
@@ -392,7 +395,7 @@ public class ProjectMiraTemplatePanel
                 @Override
                 public boolean isVisible()
                 {
-                    return miraTemplateDetailForm.getModelObject().getId() != 0
+                    return miraTemplateDetailForm.getModelObject().getId() != null
                             && selectedFeature != null;
                 }
             });
@@ -417,7 +420,7 @@ public class ProjectMiraTemplatePanel
                 @Override
                 public boolean isVisible()
                 {
-                    return miraTemplateDetailForm.getModelObject().getId() != 0
+                    return miraTemplateDetailForm.getModelObject().getId() != null
                             && selectedFeature != null;
                 }
             });
@@ -445,7 +448,7 @@ public class ProjectMiraTemplatePanel
                 public void onSubmit()
                 {
                     template = MiraTemplateDetailForm.this.getModelObject();
-                    if (template.getId() == 0) {
+                    if (isNull(template.getId())) {
                         template.setTrainFeature(selectedFeature);
                         automationService.createTemplate(template);
                         featureModel.setObject(
@@ -640,7 +643,7 @@ public class ProjectMiraTemplatePanel
                         boolean existsTrainDocument = false;
                         for (TrainingDocument document : automationService
                                 .listTrainingDocuments(project)) {
-                            if (document.getState().equals(SourceDocumentState.CURATION_FINISHED)
+                            if (document.getState().equals(TrainDocumentState.CURATION_IN_PROGRESS)
                                     || template.getTrainFeature().equals(document.getFeature())) {
                                 existsTrainDocument = true;
                                 break;

@@ -17,12 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.core.users;
 
-import static java.util.Arrays.asList;
-
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
-import java.util.Properties;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.WebMarkupContainer;
@@ -49,20 +45,15 @@ import de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
-import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ModelChangedVisitor;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemCondition;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.NameUtil;
 
 /**
  * Manage Application wide Users.
  */
-@MenuItem(icon = "images/user_add.png", label = "Users")
 @MountPath("/users.html")
 public class ManageUsersPage
     extends ApplicationPageBase
@@ -240,6 +231,8 @@ public class ManageUsersPage
     private void actionCancel(AjaxRequestTarget aTarget) {
         if (isAdmin()) {
             selectedUser.setObject(null);
+            aTarget.add(detailForm);
+            aTarget.add(users);
         }
         else {
             setResponsePage(getApplication().getHomePage());
@@ -249,21 +242,5 @@ public class ManageUsersPage
     private boolean isAdmin()
     {
         return SecurityUtil.isSuperAdmin(projectRepository, userRepository.getCurrentUser());
-    }
-
-    /**
-     * Only admins and project managers can see this page
-     */
-    @MenuItemCondition
-    public static boolean menuItemCondition(ProjectService aRepo, UserDao aUserRepo)
-    {
-        User user = aUserRepo.getCurrentUser();
-
-        List<String> activeProfiles = asList(ApplicationContextProvider.getApplicationContext()
-                .getEnvironment().getActiveProfiles());
-        Properties settings = SettingsUtil.getSettings();
-        return SecurityUtil.isSuperAdmin(aRepo, user)
-                || (!activeProfiles.contains("auto-mode-preauth") && "true"
-                        .equals(settings.getProperty(SettingsUtil.CFG_USER_ALLOW_PROFILE_ACCESS)));
     }
 }

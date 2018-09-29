@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
@@ -27,6 +28,7 @@ import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.springframework.security.access.prepost.PreAuthorize;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -69,14 +71,21 @@ public interface AnnotationSchemaService
      *
      * @param type
      *            the type.
-     * @throws IOException
-     *             if an I/O error occurs.
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
-    void createLayer(AnnotationLayer type)
-        throws IOException;
+    void createLayer(AnnotationLayer type);
 
     void createFeature(AnnotationFeature feature);
+
+    
+    /**
+     * Get Tag by its ID
+     * 
+     * @param id
+     *            the tag id.
+     * @return the tag.
+     */
+    Optional<Tag> getTag(long id);
 
     /**
      * gets a {@link Tag} using its name and a {@link TagSet}
@@ -119,6 +128,17 @@ public interface AnnotationSchemaService
      * @return if any tagset exists.
      */
     boolean existsTagSet(Project project);
+
+    /**
+     * Check if an {@link AnnotationLayer} exists with this name in the given {@link Project}.
+     * 
+     * @param name
+     *            the layer name.
+     * @param project
+     *            the project.
+     * @return if the layer exists.
+     */
+    boolean existsLayer(String name, Project project);
 
     /**
      * check if an {@link AnnotationLayer} exists with this name and type in this {@link Project}
@@ -218,38 +238,6 @@ public interface AnnotationSchemaService
     boolean existsType(String name, String type);
 
     /**
-     * This method only exists to support importing projects previous to WebAnno version 2.0.
-     * Initialize the project with default {@link AnnotationLayer}, {@link TagSet}s, and {@link Tag}
-     * s. This is done per Project. For older projects, this method is used to import old tagsets
-     * and convert to the new scheme.
-     * 
-     * @param project
-     *            the project.
-     * @param postags
-     *            the pos tags.
-     * @param posTagDescriptions
-     *            the pos-tag descriptions.
-     * @param depTags
-     *            the dep tags.
-     * @param depTagDescriptions
-     *            the dep-tag descriptions.
-     * @param neTags
-     *            the ne tags.
-     * @param neTagDescriptions
-     *            the ne-tag descriptions.
-     * @param corefTypeTags
-     *            the coref tags.
-     * @param corefRelTags
-     *            the relation tags.
-     * @throws IOException
-     *             if an I/O error occurs.
-     */
-    void initializeTypesForProjectV0(Project project, String[] postags, String[] posTagDescriptions,
-            String[] depTags, String[] depTagDescriptions, String[] neTags,
-            String[] neTagDescriptions, String[] corefTypeTags, String[] corefRelTags)
-        throws IOException;
-
-    /**
      * Initialize the project with default {@link AnnotationLayer}, {@link TagSet}s, and {@link Tag}
      * s. This is done per Project.
      * 
@@ -258,7 +246,7 @@ public interface AnnotationSchemaService
      * @throws IOException
      *             if an I/O error occurs.
      */ 
-    void initializeTypesForProject(Project aProject)
+    void initializeProject(Project aProject)
             throws IOException;
     
     /**
@@ -388,7 +376,10 @@ public interface AnnotationSchemaService
             String[] aTagDescription, Project aProject)
                 throws IOException;
     
-    List<TypeSystemDescription> getProjectTypes(Project aProject);
+    TypeSystemDescription getProjectTypes(Project aProject);
+    
+    void upgradeCas(CAS aCurCas, AnnotationDocument annotationDocument)
+            throws UIMAException, IOException;
     
     void upgradeCas(CAS aCas, SourceDocument aSourceDocument, String aUser)
             throws UIMAException, IOException;

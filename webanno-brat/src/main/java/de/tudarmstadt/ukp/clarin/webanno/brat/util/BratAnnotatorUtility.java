@@ -28,15 +28,16 @@ import org.apache.uima.cas.CASException;
 import org.apache.uima.cas.impl.CASCompleteSerializer;
 import org.apache.uima.cas.impl.CASImpl;
 import org.apache.uima.fit.factory.JCasFactory;
+import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -49,31 +50,29 @@ public class BratAnnotatorUtility
     public static boolean isDocumentFinished(DocumentService aRepository,
             AnnotatorState aBratAnnotatorModel)
     {
-        // if annotationDocument is finished, disable editing
-        boolean finished = false;
         try {
             if (aBratAnnotatorModel.getMode().equals(Mode.CURATION)) {
-                if (aBratAnnotatorModel.getDocument().getState()
-                        .equals(SourceDocumentState.CURATION_FINISHED)) {
-                    finished = true;
-                }
+                // Load document freshly from DB so we get the latest state. The document state
+                // in the annotator state might be stale.
+                SourceDocument doc = aRepository.getSourceDocument(
+                        aBratAnnotatorModel.getDocument().getProject().getId(),
+                        aBratAnnotatorModel.getDocument().getId());
+                return doc.getState().equals(SourceDocumentState.CURATION_FINISHED);
             }
-            else if (aRepository
-                    .getAnnotationDocument(aBratAnnotatorModel.getDocument(),
-                            aBratAnnotatorModel.getUser()).getState()
-                    .equals(AnnotationDocumentState.FINISHED)) {
-                finished = true;
+            else {
+                // if annotationDocument is finished, disable editing
+                AnnotationDocument adoc = aRepository.getAnnotationDocument(
+                        aBratAnnotatorModel.getDocument(), aBratAnnotatorModel.getUser());
+                
+                return adoc.getState().equals(AnnotationDocumentState.FINISHED);
             }
         }
         catch (Exception e) {
-            finished = false;
+            return false;
         }
-
-        return finished;
     }
 
-    public static JCas clearJcasAnnotations(JCas aJCas, SourceDocument aSourceDocument, User aUser,
-            DocumentService repository)
+    public static JCas clearJcasAnnotations(JCas aJCas)
         throws IOException
     {
         JCas target;
@@ -100,7 +99,12 @@ public class BratAnnotatorUtility
         target.reset();
         
         // Copy over essential information
-        DocumentMetaData.copy(aJCas, target);
+        if (JCasUtil.exists(aJCas, DocumentMetaData.class)) {
+            DocumentMetaData.copy(aJCas, target);
+        }
+        else {
+            DocumentMetaData.create(aJCas);
+        }
         target.setDocumentLanguage(aJCas.getDocumentLanguage()); // DKPro Core Issue 435
         target.setDocumentText(aJCas.getDocumentText());
         
@@ -114,8 +118,6 @@ public class BratAnnotatorUtility
             new Sentence(target, s.getBegin(), s.getEnd()).addToIndexes();
         }
 
-        
-        repository.writeAnnotationCas(target, aSourceDocument, aUser, false);
         return target;
     }
 }

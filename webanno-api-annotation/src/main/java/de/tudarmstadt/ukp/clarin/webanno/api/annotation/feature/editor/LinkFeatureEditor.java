@@ -58,10 +58,13 @@ import com.googlecode.wicket.kendo.ui.form.combobox.ComboBoxBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.PossibleValue;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.support.DescriptionTooltipBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.StyledComboBox;
@@ -74,6 +77,7 @@ public class LinkFeatureEditor
     private static final long serialVersionUID = 7469241620229001983L;
 
     private @SpringBean AnnotationSchemaService annotationService;
+    private @SpringBean FeatureSupportRegistry featureSupportRegistry;
 
     private WebMarkupContainer content;
 
@@ -190,7 +194,8 @@ public class LinkFeatureEditor
                     // Ensure proper order of the initializing JS header items: first combo box
                     // behavior (in super.onInitialize()), then tooltip.
                     Options options = new Options(DescriptionTooltipBehavior.makeTooltipOptions());
-                    options.set("content", TextFeatureEditor.FUNCTION_FOR_TOOLTIP);
+                    options.set("content",
+                            ClassicKendoComboboxTextFeatureEditor.FUNCTION_FOR_TOOLTIP);
                     add(new TooltipBehavior("#" + field.getMarkupId() + "_listbox *[title]",
                             options)
                     {
@@ -241,11 +246,6 @@ public class LinkFeatureEditor
                     }
                 }
             };
-
-            // Ensure that markup IDs of feature editor focus components remain constant across
-            // refreshs of the feature editor panel. This is required to restore the focus.
-            field.setOutputMarkupId(true);
-            field.setMarkupId(ID_PREFIX + getModelObject().feature.getId());
 
             content.add(field);
         }
@@ -392,6 +392,46 @@ public class LinkFeatureEditor
         list.removeIf(link -> link.autoCreated && link.targetAddr == -1);
     }
 
+    private void autoAddDefaultSlots()
+    {
+        AnnotationFeature feat = getModelObject().feature;
+        
+        FeatureSupport<LinkFeatureTraits> fs = featureSupportRegistry.getFeatureSupport(feat);
+        LinkFeatureTraits traits = fs.readTraits(feat);
+
+        // Get links list and build role index
+        @SuppressWarnings("unchecked")
+        List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) getModelObject().value;
+        Set<String> roles = new HashSet<>();
+        for (LinkWithRoleModel l : links) {
+            roles.add(l.role);
+        }
+        
+        for (long id : traits.getDefaultSlots()) {
+            Optional<Tag> optionalTag = annotationService.getTag(id);
+            
+            // If a tag is missing, ignore it. We do not have foreign-key constraints in
+            // traits, so it is not an unusal situation that a user deletes a tag still
+            // referenced in a trait.
+            if (optionalTag.isPresent()) {
+                Tag tag = optionalTag.get();
+                
+                // Check if there is already a slot with the given name
+                if (roles.contains(tag.getName())) {
+                    continue;
+                }
+                
+                // Add empty slot in UI with that name.
+                LinkWithRoleModel m = new LinkWithRoleModel();
+                m.role = tag.getName();
+                // Marking so that can be ignored later.
+                m.autoCreated = true;
+                links.add(m);
+                // NOT arming the slot here!
+            }
+        }
+    }
+    
     private void autoAddImportantTags(List<Tag> aTagset, List<PossibleValue> aPossibleValues)
     {
         if (aTagset == null || aTagset.isEmpty() || aPossibleValues == null
@@ -450,6 +490,7 @@ public class LinkFeatureEditor
         // Update entries for important tags.
         removeAutomaticallyAddedUnusedEntries();
         FeatureState featureState = getModelObject();
+        autoAddDefaultSlots();
         autoAddImportantTags(featureState.tagset, featureState.possibleValues);
 
         // if enabled and constraints rule execution returns anything other than green

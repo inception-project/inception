@@ -25,6 +25,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
 import java.util.List;
+import java.util.zip.ZipFile;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -43,7 +44,8 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.export.ImportService;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportService;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.export.ImportUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils;
@@ -56,7 +58,8 @@ public class ProjectImportPanel
 
     private static final Logger LOG = LoggerFactory.getLogger(ProjectImportPanel.class);
     
-    private @SpringBean ImportService importService;
+    //private @SpringBean ImportService importService;
+    private @SpringBean ProjectExportService exportService;
     
     private IModel<Project> selectedModel;
     private IModel<Preferences> preferences;
@@ -100,7 +103,9 @@ public class ProjectImportPanel
                         throw new IOException("ZIP file is not a WebAnno project archive");
                     }
                     
-                    importedProject = importService.importProject(tempFile, aGenerateUsers);
+                    //importedProject = importService.importProject(tempFile, aGenerateUsers);
+                    ProjectImportRequest request = new ProjectImportRequest(aGenerateUsers);
+                    importedProject = exportService.importProject(request, new ZipFile(tempFile));
                 }
                 finally {
                     tempFile.delete();

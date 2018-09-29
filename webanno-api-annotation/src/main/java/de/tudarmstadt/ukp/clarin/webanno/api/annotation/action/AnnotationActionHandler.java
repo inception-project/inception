@@ -32,6 +32,12 @@ public interface AnnotationActionHandler
         throws IOException, AnnotationException;
 
     /**
+     * Create annotation on the next token for forward annotation
+     */
+    void actionCreateForward(AjaxRequestTarget aTarget, JCas aJCas)
+        throws IOException, AnnotationException;
+
+    /**
      * Load the annotation pointed to in {@link AnnotatorState#getSelection()} in the detail panel.
      */
     void actionSelect(AjaxRequestTarget aTarget, JCas aJCas)

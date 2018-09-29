@@ -42,10 +42,10 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.zip.ZipFile;
 
-import javax.annotation.Resource;
 import javax.persistence.NoResultException;
 
 import org.apache.commons.io.FileUtils;
@@ -54,7 +54,6 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.UIMAException;
-import org.apache.uima.analysis_component.JCasAnnotator_ImplBase;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
@@ -63,12 +62,11 @@ import org.apache.uima.cas.impl.FeatureImpl;
 import org.apache.uima.cas.impl.TypeImpl;
 import org.apache.uima.cas.impl.TypeSystemImpl;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.jcas.JCas;
-import org.apache.wicket.model.Model;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
@@ -82,6 +80,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -90,23 +89,26 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportService;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
+import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.export.ExportService;
-import de.tudarmstadt.ukp.clarin.webanno.export.ImportService;
 import de.tudarmstadt.ukp.clarin.webanno.export.ImportUtil;
-import de.tudarmstadt.ukp.clarin.webanno.export.ProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
+import de.tudarmstadt.ukp.clarin.webanno.model.ProjectState;
+import de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils;
-import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsv3XWriter;
+import de.tudarmstadt.ukp.clarin.webanno.tsv.WebAnnoTsv3FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.exception.AccessForbiddenException;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.exception.IllegalObjectStateException;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.exception.IncompatibleDocumentException;
@@ -120,6 +122,8 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.model.RProject;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.model.RResponse;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.Info;
 import io.swagger.annotations.SwaggerDefinition;
@@ -139,6 +143,7 @@ public class RemoteApiController2
     private static final String EXPORT = "export.zip";
     
     private static final String PARAM_FILE = "file";
+    private static final String PARAM_CONTENT = "content";
     private static final String PARAM_NAME = "name";
     private static final String PARAM_FORMAT = "format";
     private static final String PARAM_STATE = "state";
@@ -159,14 +164,13 @@ public class RemoteApiController2
     
     private final Logger LOG = LoggerFactory.getLogger(getClass());
 
-    private @Resource DocumentService documentService;
-    private @Resource CurationDocumentService curationService;
-    private @Resource ProjectService projectService;
-    private @Resource ImportExportService importExportService;
-    private @Resource AnnotationSchemaService annotationService;
-    private @Resource UserDao userRepository;
-    private @Resource ImportService importService;
-    private @Resource ExportService exportService;
+    private @Autowired DocumentService documentService;
+    private @Autowired CurationDocumentService curationService;
+    private @Autowired ProjectService projectService;
+    private @Autowired ImportExportService importExportService;
+    private @Autowired AnnotationSchemaService annotationService;
+    private @Autowired UserDao userRepository;
+    private @Autowired ProjectExportService exportService;
 
     @ExceptionHandler(value = RemoteApiException.class)
     public ResponseEntity<RResponse<Void>> handleException(RemoteApiException aException)
@@ -292,13 +296,17 @@ public class RemoteApiController2
     }
     
     @ApiOperation(value = "Create a new project")
+    @ApiImplicitParams({
+        @ApiImplicitParam(name = PARAM_NAME, paramType = "form", required = true),
+        @ApiImplicitParam(name = PARAM_CREATOR, paramType = "form")
+    })
     @RequestMapping(
             value = ("/" + PROJECTS), 
             method = RequestMethod.POST, 
             consumes = MULTIPART_FORM_DATA_VALUE,
             produces = APPLICATION_JSON_UTF8_VALUE)    
     public ResponseEntity<RResponse<RProject>> projectCreate(
-            @RequestParam(PARAM_NAME) String aName, 
+            @RequestParam(PARAM_NAME) String aName,
             @RequestParam(PARAM_CREATOR) Optional<String> aCreator,
             UriComponentsBuilder aUcb)
         throws Exception
@@ -326,8 +334,11 @@ public class RemoteApiController2
         LOG.info("Creating project [" + aName + "]");
         Project project = new Project();
         project.setName(aName);
+        project.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
+        project.setScriptDirection(ScriptDirection.LTR);
+        project.setState(ProjectState.NEW);
         projectService.createProject(project);
-        annotationService.initializeTypesForProject(project);
+        annotationService.initializeProject(project);
         
         // Create permission for the project creator
         String owner = aCreator.isPresent() ? aCreator.get() : user.getUsername();
@@ -383,7 +394,7 @@ public class RemoteApiController2
             consumes = MULTIPART_FORM_DATA_VALUE,
             produces = APPLICATION_JSON_UTF8_VALUE)    
     public ResponseEntity<RResponse<RProject>> projectImport(
-            @RequestParam(PARAM_FILE) MultipartFile aFile)
+            @RequestPart(PARAM_FILE) MultipartFile aFile)
         throws Exception
     {
         // Get current user - this will throw an exception if the current user does not exit
@@ -409,7 +420,9 @@ public class RemoteApiController2
                 throw new UnsupportedFormatException("Incompatible to webanno ZIP file");
             }
             
-            importedProject = importService.importProject(tempFile, false);
+//            importedProject = importService.importProject(tempFile, false);
+            ProjectImportRequest request = new ProjectImportRequest(false);
+            importedProject = exportService.importProject(request, new ZipFile(tempFile));
         }
         finally {
             tempFile.delete();
@@ -424,14 +437,16 @@ public class RemoteApiController2
             method = RequestMethod.GET,
             produces = { "application/zip", APPLICATION_JSON_UTF8_VALUE })
     public ResponseEntity<InputStreamResource> projectExport(
-            @PathVariable(PARAM_PROJECT_ID) long aProjectId)
+            @PathVariable(PARAM_PROJECT_ID) long aProjectId,
+            @RequestParam(value = PARAM_FORMAT) Optional<String> aFormat)
         throws Exception
     {
         // Get project (this also ensures that it exists and that the current user can access it
         Project project = getProject(aProjectId);
         
-        ProjectExportRequest per = new ProjectExportRequest(Model.of(project), "bin");
-        File exportedFile = exportService.generateZipFile(per);
+        ProjectExportRequest request = new ProjectExportRequest(project, "UIMA binary CAS", true);
+        //File exportedFile = exportService.generateZipFile(per);
+        File exportedFile = exportService.exportProject(request);
         
         // Turn the file into a resource and auto-delete the file when the resource closes the
         // stream.
@@ -476,6 +491,11 @@ public class RemoteApiController2
     }
     
     @ApiOperation(value = "Create a new document in a project")
+    @ApiImplicitParams({
+        @ApiImplicitParam(name = PARAM_NAME, paramType = "form", required = true),
+        @ApiImplicitParam(name = PARAM_FORMAT, paramType = "form", required = true),
+        @ApiImplicitParam(name = PARAM_STATE, paramType = "form", required = true),
+    })
     @RequestMapping(
             value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS, 
             method = RequestMethod.POST,
@@ -483,10 +503,10 @@ public class RemoteApiController2
             produces = APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<RResponse<RDocument>> documentCreate(
             @PathVariable(PARAM_PROJECT_ID) long aProjectId,
-            @RequestParam(value = PARAM_FILE) MultipartFile aFile,
-            @RequestParam(value = PARAM_NAME) String aName,
-            @RequestParam(value = PARAM_FORMAT) String aFormat,
-            @RequestParam(value = PARAM_STATE) Optional<String> aState,
+            @RequestParam(PARAM_CONTENT) MultipartFile aFile,
+            @RequestParam(PARAM_NAME) String aName,
+            @RequestParam(PARAM_FORMAT) String aFormatId,
+            @RequestParam(PARAM_STATE) Optional<String> aState,
             UriComponentsBuilder aUcb)
         throws Exception
     {               
@@ -494,19 +514,18 @@ public class RemoteApiController2
         Project project = getProject(aProjectId);
 
         // Check if the format is supported
-        Map<String, Class<CollectionReader>> readableFormats = importExportService
-                .getReadableFormats();
-        if (readableFormats.get(aFormat) == null) {
+        if (!importExportService.getReadableFormatById(aFormatId).isPresent()) {
             throw new UnsupportedFormatException(
-                    "Format [%s] not supported. Acceptable formats are %s.", aFormat,
-                    readableFormats.keySet());
+                    "Format [%s] not supported. Acceptable formats are %s.", aFormatId,
+                    importExportService.getReadableFormats().stream()
+                            .map(FormatSupport::getId).sorted().collect(Collectors.toList()));
         }
         
         // Meta data entry to the database
         SourceDocument document = new SourceDocument();
         document.setProject(project);
         document.setName(aName);
-        document.setFormat(aFormat);
+        document.setFormat(aFormatId);
         
         // Set state if one was provided
         if (aState.isPresent()) {
@@ -522,7 +541,7 @@ public class RemoteApiController2
             case CURATION_FINISHED:
             default: 
                 throw new IllegalObjectStateException(
-                        "State [%s] not valid when uploading a curation.", aState.get());
+                        "State [%s] not valid when uploading a document.", aState.get());
             }
         }
         
@@ -562,19 +581,19 @@ public class RemoteApiController2
         SourceDocument doc = getDocument(project, aDocumentId);
         
         boolean originalFile;
-        String format;
+        String formatId;
         if (aFormat.isPresent()) {
             if (VAL_ORIGINAL.equals(aFormat.get())) {
-                format = doc.getFormat();
+                formatId = doc.getFormat();
                 originalFile = true;
             }
             else {
-                format = aFormat.get();
-                originalFile = doc.getFormat().equals(format);
+                formatId = aFormat.get();
+                originalFile = doc.getFormat().equals(formatId);
             }
         }
         else {
-            format = doc.getFormat();
+            formatId = doc.getFormat();
             originalFile = true;
         }
         
@@ -595,14 +614,13 @@ public class RemoteApiController2
             // send that back to the client
             
             // Check if the format is supported
-            Map<String, Class<JCasAnnotator_ImplBase>> writableFormats = importExportService
-                    .getWritableFormats();
-            Class<JCasAnnotator_ImplBase> writer = writableFormats.get(format);
-            if (writer == null) {
-                throw new UnsupportedFormatException(
-                        "Format [%s] cannot be exported. Exportable formats are %s.", aFormat,
-                        writableFormats.keySet());
-            }
+            FormatSupport format = importExportService.getWritableFormatById(formatId)
+                    .orElseThrow(() -> new UnsupportedFormatException(
+                            "Format [%s] cannot be exported. Exportable formats are %s.", aFormat,
+                            importExportService.getWritableFormats().stream()
+                                    .map(FormatSupport::getId)
+                                    .sorted()
+                                    .collect(Collectors.toList()).toString()));
             
             // Create a temporary export file from the annotations
             JCas jcas = documentService.createOrReadInitialCas(doc);
@@ -611,7 +629,7 @@ public class RemoteApiController2
             try {
                 // Load the converted file into memory
                 exportedFile = importExportService.exportCasToFile(jcas.getCas(), doc,
-                        doc.getName(), writer, true);
+                        doc.getName(), format, true);
                 byte[] resource = FileUtils.readFileToByteArray(exportedFile);
                 
                 // Send it back to the client
@@ -633,7 +651,7 @@ public class RemoteApiController2
     @ApiOperation(value = "Delete a document from a project")
     @RequestMapping(
             value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS + "/{" 
-                    + PARAM_DOCUMENT_ID + "}/", 
+                    + PARAM_DOCUMENT_ID + "}", 
             method = RequestMethod.DELETE,
             produces = APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<RResponse<Void>> documentDelete(
@@ -678,6 +696,10 @@ public class RemoteApiController2
     }
     
     @ApiOperation(value = "Create annotations for a document in a project")
+    @ApiImplicitParams({
+        @ApiImplicitParam(name = PARAM_FORMAT, paramType = "form", required = true),
+        @ApiImplicitParam(name = PARAM_STATE, paramType = "form", required = true),
+    })
     @RequestMapping(
             value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS + "/{"
                     + PARAM_DOCUMENT_ID + "}/" + ANNOTATIONS + "/{" + PARAM_ANNOTATOR_ID + "}",
@@ -688,9 +710,9 @@ public class RemoteApiController2
             @PathVariable(PARAM_PROJECT_ID) long aProjectId,
             @PathVariable(PARAM_DOCUMENT_ID) long aDocumentId,
             @PathVariable(PARAM_ANNOTATOR_ID) String aAnnotatorId,
-            @RequestParam(value = PARAM_FILE) MultipartFile aFile,
-            @RequestParam(value = PARAM_FORMAT) Optional<String> aFormat,
-            @RequestParam(value = PARAM_STATE) Optional<String> aState,
+            @RequestPart(PARAM_CONTENT) MultipartFile aFile,
+            @RequestParam(PARAM_FORMAT) Optional<String> aFormat,
+            @RequestParam(PARAM_STATE) Optional<String> aState,
             UriComponentsBuilder aUcb) 
         throws Exception
     {
@@ -719,7 +741,7 @@ public class RemoteApiController2
         
         return ResponseEntity.created(aUcb
                 .path(API_BASE + "/" + PROJECTS + "/{pid}/" + DOCUMENTS + "/{did}/" + ANNOTATIONS
-                        + "{aid}")
+                        + "/{aid}")
                 .buildAndExpand(project.getId(), document.getId(), annotator.getUsername()).toUri())
                 .body(response);
     }
@@ -767,6 +789,10 @@ public class RemoteApiController2
     }
     
     @ApiOperation(value = "Create curation for a document in a project")
+    @ApiImplicitParams({
+        @ApiImplicitParam(name = PARAM_FORMAT, paramType = "form", required = true),
+        @ApiImplicitParam(name = PARAM_STATE, paramType = "form", required = true),
+    })
     @RequestMapping(
             value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS + "/{"
                     + PARAM_DOCUMENT_ID + "}/" + CURATION,
@@ -776,9 +802,9 @@ public class RemoteApiController2
     public ResponseEntity<RResponse<RAnnotation>> curationCreate(
             @PathVariable(PARAM_PROJECT_ID) long aProjectId,
             @PathVariable(PARAM_DOCUMENT_ID) long aDocumentId,
-            @RequestParam(value = PARAM_FILE) MultipartFile aFile,
-            @RequestParam(value = PARAM_FORMAT) Optional<String> aFormat,
-            @RequestParam(value = PARAM_STATE) Optional<String> aState,
+            @RequestPart(value = PARAM_CONTENT) MultipartFile aFile,
+            @RequestParam(PARAM_FORMAT) Optional<String> aFormat,
+            @RequestParam(PARAM_STATE) Optional<String> aState,
             UriComponentsBuilder aUcb) 
         throws Exception
     {
@@ -790,11 +816,17 @@ public class RemoteApiController2
         // If they are compatible, then we can store the new annotations
         curationService.writeCurationCas(annotationCas, document, false);
 
+        AnnotationDocumentState resultState = AnnotationDocumentState.IN_PROGRESS;
         if (aState.isPresent()) {
             SourceDocumentState state = parseSourceDocumentState(aState.get());
             switch (state) {
-            case CURATION_IN_PROGRESS: // fallthrough
+            case CURATION_IN_PROGRESS: 
+                resultState = AnnotationDocumentState.IN_PROGRESS;
+                document.setState(state);
+                documentService.createSourceDocument(document);
+                break;
             case CURATION_FINISHED:
+                resultState = AnnotationDocumentState.FINISHED;
                 document.setState(state);
                 documentService.createSourceDocument(document);
                 break;
@@ -812,7 +844,7 @@ public class RemoteApiController2
         }
         
         RResponse<RAnnotation> response = new RResponse<>(new RAnnotation(
-                WebAnnoConst.CURATION_USER, AnnotationDocumentState.NEW, new Date()));
+                WebAnnoConst.CURATION_USER, resultState, new Date()));
         return ResponseEntity.created(aUcb
                 .path(API_BASE + "/" + PROJECTS + "/{pid}/" + DOCUMENTS + "/{did}/" + CURATION)
                 .buildAndExpand(project.getId(), document.getId()).toUri())
@@ -853,6 +885,18 @@ public class RemoteApiController2
         SourceDocument doc = getDocument(project, aDocumentId);
         curationService.deleteCurationCas(doc);
         
+        // If we delete the curation, it cannot be any longer in-progress or finished. The best
+        // guess is that we set the state back to annotation-in-progress. 
+        switch (doc.getState()) {
+        case CURATION_IN_PROGRESS: // Fall-through
+        case CURATION_FINISHED:
+            doc.setState(SourceDocumentState.ANNOTATION_IN_PROGRESS);
+            documentService.createSourceDocument(doc);
+            break;
+        default:
+            // Nothing to do
+        }
+        
         return ResponseEntity
                 .ok(new RResponse<>(INFO, "Curated annotations for document ["
                         + aDocumentId + "] deleted from project [" + aProjectId + "]."));
@@ -868,27 +912,27 @@ public class RemoteApiController2
         SourceDocument doc = getDocument(project, aDocumentId);
 
         // Check format
-        String format;
+        String formatId;
         if (aFormat.isPresent()) {
             if (VAL_ORIGINAL.equals(aFormat.get())) {
-                format = doc.getFormat();
+                formatId = doc.getFormat();
             }
             else {
-                format = aFormat.get();
+                formatId = aFormat.get();
             }
         }
         else {
-            format = doc.getFormat();
+            formatId = doc.getFormat();
         }
         
         // Determine the format
-        Class<?> writer = importExportService.getWritableFormats().get(format);
-        if (writer == null) {
-            String msg = "[" + doc.getName() + "] No writer found for format [" + format
-                    + "] - exporting as WebAnno TSV instead.";
-            LOG.info(msg);
-            writer = WebannoTsv3XWriter.class;
-        }
+        FormatSupport format = importExportService.getWritableFormatById(formatId)
+                .orElseGet(() -> {
+                    LOG.info(
+                            "[{}] Format [{}] is not writable - exporting as WebAnno TSV3 instead.",
+                            doc.getName(), formatId);
+                    return new WebAnnoTsv3FormatSupport();
+                });
         
         // In principle we don't need this call - but it makes sure that we check that the
         // annotation document entry is actually properly set up in the database.
@@ -901,7 +945,7 @@ public class RemoteApiController2
         byte[] resource;
         try {
             exportedAnnoFile = importExportService.exportAnnotationDocument(doc, aAnnotatorId,
-                    writer, doc.getName(), Mode.ANNOTATION);
+                    format, doc.getName(), Mode.ANNOTATION);
             resource = FileUtils.readFileToByteArray(exportedAnnoFile);
         }
         finally {
@@ -923,22 +967,21 @@ public class RemoteApiController2
     }
     
     private JCas createCompatibleCas(long aProjectId, long aDocumentId, MultipartFile aFile,
-            Optional<String> aFormat)
+            Optional<String> aFormatId)
         throws RemoteApiException, ClassNotFoundException, IOException, UIMAException
     {
         Project project = getProject(aProjectId);
         SourceDocument document = getDocument(project, aDocumentId);
-    
+
         // Check if the format is supported
-        String format = aFormat.orElse(FORMAT_DEFAULT);
-        Map<String, Class<CollectionReader>> readableFormats = importExportService
-                .getReadableFormats();
-        if (readableFormats.get(format) == null) {
+        String format = aFormatId.orElse(FORMAT_DEFAULT);
+        if (!importExportService.getReadableFormatById(format).isPresent()) {
             throw new UnsupportedFormatException(
                     "Format [%s] not supported. Acceptable formats are %s.", format,
-                    readableFormats.keySet());
+                    importExportService.getReadableFormats().stream()
+                            .map(FormatSupport::getId).sorted().collect(Collectors.toList()));
         }
-        
+
         // Convert the uploaded annotation document into a CAS
         File tmpFile = null;
         JCas annotationCas;
@@ -1049,6 +1092,10 @@ public class RemoteApiController2
     
     public static SourceDocumentState parseSourceDocumentState(String aState)
     {
+        if (aState == null) {
+            return null;
+        }
+        
         switch (aState) {
         case "NEW":
             return SourceDocumentState.NEW;
@@ -1065,8 +1112,34 @@ public class RemoteApiController2
         }
     }
     
+    public static String projectStateToString(ProjectState aState)
+    {
+        if (aState == null) {
+            return null;
+        }
+        
+        switch (aState) {
+        case NEW:
+            return "NEW";
+        case ANNOTATION_IN_PROGRESS:
+            return "ANNOTATION-IN-PROGRESS";
+        case ANNOTATION_FINISHED:
+            return "ANNOTATION-COMPLETE";
+        case CURATION_FINISHED:
+            return "CURATION-COMPLETE";
+        case CURATION_IN_PROGRESS:
+            return "CURATION-IN-PROGRESS";
+        default:
+            throw new IllegalArgumentException("Unknown project state [" + aState + "]");
+        }
+    }
+    
     public static String sourceDocumentStateToString(SourceDocumentState aState)
     {
+        if (aState == null) {
+            return null;
+        }
+        
         switch (aState) {
         case NEW:
             return "NEW";
@@ -1085,6 +1158,10 @@ public class RemoteApiController2
     
     public static AnnotationDocumentState parseAnnotationDocumentState(String aState)
     {
+        if (aState == null) {
+            return null;
+        }
+        
         switch (aState) {
         case "NEW":
             return AnnotationDocumentState.NEW;
@@ -1102,6 +1179,10 @@ public class RemoteApiController2
     
     public static String annotationDocumentStateToString(AnnotationDocumentState aState)
     {
+        if (aState == null) {
+            return null;
+        }
+        
         switch (aState) {
         case NEW:
             return "NEW";

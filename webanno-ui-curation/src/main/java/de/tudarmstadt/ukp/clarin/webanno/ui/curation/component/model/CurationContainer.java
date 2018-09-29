@@ -30,8 +30,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
 /**
  * A model for curation container comprises of {@link SourceListView}, {@link SourceDocument},
- * and {@link Project}
- *
+ * and {@link Project}.
  */
 public class CurationContainer
     implements Serializable
@@ -40,7 +39,7 @@ public class CurationContainer
 
     private Map<Integer, SourceListView> curationViewByBegin = new HashMap<>();
 
-    private AnnotatorState bratAnnotatorModel;
+    private AnnotatorState state;
 
     public List<SourceListView> getCurationViews()
     {
@@ -71,14 +70,14 @@ public class CurationContainer
 
     }
 
-    public AnnotatorState getBratAnnotatorModel()
+    public AnnotatorState getAnnotatorState()
     {
-        return bratAnnotatorModel;
+        return state;
     }
 
     public void setBratAnnotatorModel(AnnotatorState bratAnnotatorModel)
     {
-        this.bratAnnotatorModel = bratAnnotatorModel;
+        this.state = bratAnnotatorModel;
     }
 
 }

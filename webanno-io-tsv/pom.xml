@@ -20,11 +20,35 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
     <artifactId>webanno</artifactId>
-    <version>3.3.3-SNAPSHOT</version>
+    <version>3.5.0-SNAPSHOT</version>
   </parent>
   <artifactId>webanno-io-tsv</artifactId>
   <name>WebAnno - IO - TSV</name>
   <dependencies>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-api-formats</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-api-annotation</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-model</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-context</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-beans</artifactId>
+    </dependency>
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
@@ -97,21 +121,6 @@
       <artifactId>webanno-dkprocore</artifactId>
       <scope>test</scope>
     </dependency>
-    <dependency>
-      <groupId>org.apache.logging.log4j</groupId>
-      <artifactId>log4j-core</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.logging.log4j</groupId>
-      <artifactId>log4j-slf4j-impl</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>log4j-over-slf4j</artifactId>
-      <scope>test</scope>
-    </dependency>
   </dependencies>
   <build>
     <pluginManagement>
@@ -120,19 +129,56 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-dependency-plugin</artifactId>
           <configuration>
-            <usedDependencies>
+            <usedDependencies combine.children="append">
               <!-- Not detected by Maven -->
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-dkprocore</usedDependency>
-              <!-- 
-                - The logging is used via reflection and cannot be detected by Maven
-              -->
-              <usedDependency>org.apache.logging.log4j:log4j-slf4j-impl</usedDependency>
-              <usedDependency>org.slf4j:log4j-over-slf4j</usedDependency>
-              <usedDependency>org.apache.logging.log4j:log4j-core</usedDependency>
             </usedDependencies>
           </configuration>
         </plugin>
       </plugins>
     </pluginManagement>
+    <plugins>
+      <plugin>
+        <!--generate types dynamically -->
+        <groupId>org.apache.uima</groupId>
+        <artifactId>jcasgen-maven-plugin</artifactId>
+        <version>${uima.version}</version>
+        <configuration>
+          <limitToProject>true</limitToProject>
+          <outputDirectory>${project.build.directory}/generated-test-sources/jcasgen</outputDirectory>
+          <typeSystemIncludes>
+            <include>src/test/resources/desc/type/**/*.xml</include>
+          </typeSystemIncludes>
+        </configuration>
+        <executions>
+          <execution>
+            <phase>generate-test-sources</phase>
+            <goals>
+              <goal>generate</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>addToSourceFolder</id>
+            <goals>
+              <!--add the generated sources -->
+              <goal>add-test-source</goal>
+            </goals>
+            <phase>process-test-sources</phase>
+            <configuration>
+              <sources>
+                <!--default path to generated sources -->
+                <source>${project.build.directory}/generated-test-sources/jcasgen</source>
+              </sources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
   </build>
 </project>

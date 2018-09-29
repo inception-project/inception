@@ -27,7 +27,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 public class RResponse<T>
 {
     private List<RMessage> messages = new ArrayList<>();
-    private T content;
+    private T body;
 
     public RResponse()
     {
@@ -39,19 +39,19 @@ public class RResponse<T>
         addMessage(aLevel, aMessage);
     }
 
-    public RResponse(T aContent)
+    public RResponse(T aBody)
     {
-        content = aContent;
+        body = aBody;
     }
 
-    public void setContent(T aContent)
+    public void setBody(T aBody)
     {
-        content = aContent;
+        body = aBody;
     }
     
-    public T getContent()
+    public T getBody()
     {
-        return content;
+        return body;
     }
     
     public void addMessage(RMessageLevel aLevel, String aMessage)

@@ -21,7 +21,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.CURATION_FINISHED_TO_CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.CURATION_IN_PROGRESS_TO_CURATION_FINISHED;
-import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.transition;
 import static org.apache.uima.fit.util.JCasUtil.select;
 
 import java.io.IOException;
@@ -31,6 +30,7 @@ import java.util.Map;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
+import org.apache.uima.cas.CAS;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -57,11 +57,11 @@ import de.tudarmstadt.ukp.clarin.webanno.api.CorrectionDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil;
-import de.tudarmstadt.ukp.clarin.webanno.api.SettingsService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.brat.config.BratProperties;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -85,8 +85,6 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.AnnotationPreferen
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.ExportDocumentDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.GuidelinesDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.OpenDocumentDialog;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemCondition;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.CurationPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.CurationContainer;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.SuggestionBuilder;
@@ -100,7 +98,6 @@ import wicket.contrib.input.events.key.KeyType;
  * between user annotations for a specific document. The interface provides a tool for merging these
  * annotations and storing them as a new annotation.
  */
-@MenuItem(icon = "images/data_table.png", label = "Curation", prio = 200)
 @MountPath("/curation.html")
 public class CurationPage
     extends AnnotationPageBase
@@ -115,7 +112,7 @@ public class CurationPage
     private @SpringBean CurationDocumentService curationDocumentService;
     private @SpringBean ProjectService projectService;
     private @SpringBean ConstraintsService constraintsService;
-    private @SpringBean SettingsService settingsService;
+    private @SpringBean BratProperties defaultPreferences;
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean UserDao userRepository;
 
@@ -163,22 +160,6 @@ public class CurationPage
                 catch (Exception e) {
                     handleException(aTarget, e);
                 }
-//                
-//              AnnotatorState state = CurationPage.this.getModelObject();
-//              JCas mergeJCas = null;
-//              try {
-//                  mergeJCas = repository.readCurationCas(state.getDocument());
-//              }
-//              catch (Exception e) {
-//                  aTarget.add(getFeedbackPanel());
-//                  LOG.error("Unable to load data", e);
-//                  error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
-//              }
-//              aTarget.add(numberOfPages);
-//              gotoPageTextField.setModelObject(state.getFirstVisibleSentenceNumber());
-//              gotoPageAddress = getSentenceAddress(mergeJCas, gotoPageTextField.getModelObject());
-//              aTarget.add(gotoPageTextField);
-//              aTarget.add(curationPanel);
             }
         };
         add(curationPanel);
@@ -209,8 +190,7 @@ public class CurationPage
                 if (state.getDocument() != null) {
                     try {
                         documentService.createSourceDocument(state.getDocument());
-                        documentService.upgradeCasAndSave(state.getDocument(), state.getMode(),
-                                username);
+                        upgradeCasAndSave(state.getDocument(), username);
 
                         actionLoadDocument(aTarget);
                         curationPanel.editor.loadFeatureEditorModels(aTarget);
@@ -416,20 +396,9 @@ public class CurationPage
         return curationDocumentService.listCuratableSourceDocuments(getModelObject().getProject());
     }
 
-    // Update the curation panel.
-
     private void updatePanel(CurationContainer aCurationContainer, AjaxRequestTarget aTarget)
     {
         AnnotatorState state = getModelObject();
-//        JCas mergeJCas = null;
-//        try {
-//            mergeJCas = repository.readCurationCas(state.getDocument());
-//        }
-//        catch (Exception e) {
-//            aTarget.add(getFeedbackPanel());
-//            LOG.error("Unable to load data", e);
-//            error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
-//        }
         gotoPageTextField.setModelObject(state.getFirstVisibleUnitIndex());
         curationPanel.setDefaultModelObject(curationContainer);
         aTarget.add(gotoPageTextField);
@@ -549,14 +518,14 @@ public class CurationPage
             AnnotatorState state = getModelObject();
             SourceDocument sourceDocument = state.getDocument();
 
-            if (sourceDocument.getState().equals(SourceDocumentState.CURATION_FINISHED)) {
-                sourceDocument.setState(transition(CURATION_FINISHED_TO_CURATION_IN_PROGRESS));
+            if (SourceDocumentState.CURATION_FINISHED.equals(sourceDocument.getState())) {
+                documentService.transitionSourceDocumentState(sourceDocument,
+                        CURATION_FINISHED_TO_CURATION_IN_PROGRESS);
             }
             else {
-                sourceDocument.setState(transition(CURATION_IN_PROGRESS_TO_CURATION_FINISHED));
+                documentService.transitionSourceDocumentState(sourceDocument,
+                        CURATION_IN_PROGRESS_TO_CURATION_FINISHED);
             }
-            
-            documentService.createSourceDocument(sourceDocument);
             
             aCallbackTarget.add(finishDocumentIcon);
             aCallbackTarget.add(finishDocumentLink);
@@ -574,6 +543,25 @@ public class CurationPage
         actionLoadDocument(aTarget);
         info("Re-merge finished!");
         aTarget.add(getFeedbackPanel());
+    }
+
+    public void upgradeCasAndSave(SourceDocument aDocument, String aUsername)
+        throws IOException
+    {
+        User user = userRepository.get(aUsername);
+        if (documentService.existsAnnotationDocument(aDocument, user)) {
+            AnnotationDocument annotationDocument = documentService.getAnnotationDocument(aDocument,
+                    user);
+            try {
+                CAS cas = documentService.readAnnotationCas(annotationDocument).getCas();
+                annotationService.upgradeCas(cas, annotationDocument);
+                documentService.writeAnnotationCas(cas.getJCas(), annotationDocument, false);
+            }
+            catch (Exception e) {
+                // no need to catch, it is acceptable that no curation document
+                // exists to be upgraded while there are annotation documents
+            }
+        }
     }
 
     /**
@@ -595,14 +583,13 @@ public class CurationPage
         try {
             // Update source document state to CURRATION_INPROGRESS, if it was not
             // ANNOTATION_FINISHED
-            if (!state.getDocument().getState().equals(SourceDocumentState.CURATION_FINISHED)) {
-                state.getDocument()
-                        .setState(transition(ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS));
-                documentService.createSourceDocument(state.getDocument());
+            if (!SourceDocumentState.CURATION_FINISHED.equals(state.getDocument().getState())) {
+                documentService.transitionSourceDocumentState(state.getDocument(),
+                        ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS);
             }
     
             // Load user preferences
-            PreferencesUtil.loadPreferences(username, settingsService, projectService,
+            PreferencesUtil.loadPreferences(username, defaultPreferences, projectService,
                     annotationService, state, state.getMode());            
             
             // Re-render whole page as sidebar size preference may have changed
@@ -628,7 +615,7 @@ public class CurationPage
             // upgrade CASes for each user, what if new type is added once the user finished
             // annotation
             for (AnnotationDocument ad : finishedAnnotationDocuments) {
-                documentService.upgradeCasAndSave(ad.getDocument(), state.getMode(), ad.getUser());
+                upgradeCasAndSave(ad.getDocument(), ad.getUser());
             }
             Map<String, JCas> jCases = cb.listJcasesforCuration(finishedAnnotationDocuments,
                     randomAnnotationDocument, state.getMode());
@@ -656,10 +643,10 @@ public class CurationPage
             curationContainer = builder.buildCurationContainer(state);
             curationContainer.setBratAnnotatorModel(state);
             curationPanel.editor.reset(aTarget);
-            curationPanel.updatePanel(aTarget, curationContainer);
             updatePanel(curationContainer, aTarget);
             updateSentenceNumber(mergeJCas, state.getFirstVisibleUnitAddress());
-    
+            curationPanel.init(aTarget, curationContainer);
+            //curationPanel.updatePanel(aTarget, curationContainer);
             
             // Load constraints
             state.setConstraints(constraintsService.loadConstraints(state.getProject()));
@@ -687,16 +674,5 @@ public class CurationPage
         catch (Exception e) {
             handleException(aTarget, e);
         }
-    }
-    
-    /**
-     * Only project admins and curators can see this page
-     */
-    @MenuItemCondition
-    public static boolean menuItemCondition(ProjectService aRepo, UserDao aUserRepo)
-    {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = aUserRepo.get(username);
-        return SecurityUtil.curationEnabeled(aRepo, user);
     }
 }

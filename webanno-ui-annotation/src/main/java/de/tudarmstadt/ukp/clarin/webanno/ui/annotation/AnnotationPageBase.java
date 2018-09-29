@@ -21,6 +21,7 @@ import static org.apache.uima.fit.util.CasUtil.select;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
@@ -204,18 +205,19 @@ public abstract class AnnotationPageBase
         throws Exception
     {
         AnnotatorState state = getModelObject();
-        JCas jcas = documentService.createOrReadInitialCas(state.getDocument());
-        documentService.writeAnnotationCas(jcas, state.getDocument(), state.getUser(), false);
+        documentService.resetAnnotationCas(state.getDocument(), state.getUser());
         actionLoadDocument(aTarget);
     }
 
     /**
-     * Show the next document if exist
+     * Show the specified document.
      */
     public void actionShowSelectedDocument(AjaxRequestTarget aTarget, SourceDocument aDocument)
     {
-        getModelObject().setDocument(aDocument, getListOfDocs());
-        actionLoadDocument(aTarget);
+        if (!Objects.equals(aDocument.getId(), getModelObject().getDocument().getId())) {
+            getModelObject().setDocument(aDocument, getListOfDocs());
+            actionLoadDocument(aTarget);
+        }
     }
 
     protected void handleException(AjaxRequestTarget aTarget, Exception aException)

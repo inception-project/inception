@@ -20,6 +20,8 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.message;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 
+import de.tudarmstadt.ukp.clarin.webanno.brat.config.BratProperties;
+
 /**
  * Response for the {@code loadConf} command.
  */
@@ -30,9 +32,11 @@ public class LoadConfResponse
 
     private BratConfig config = new BratConfig();
 
-    public LoadConfResponse()
+    public LoadConfResponse(BratProperties aBratProperties)
     {
         super(COMMAND);
+        
+        config.singleClickEdit = aBratProperties.isSingleClickSelection();
     }
 
     public BratConfig getConfig()
@@ -53,28 +57,35 @@ public class LoadConfResponse
     @JsonAutoDetect(fieldVisibility = Visibility.PUBLIC_ONLY)
     public static class BratConfig
     {
-        public boolean abbrevsOn = true;
-        public String textBackgrounds = "striped";
-        public String svgWidth = "100%";
-        public boolean rapidModeOn = false;
-        public boolean confirmModeOn = true;
-        public boolean autorefreshOn = false;
+        public final boolean abbrevsOn = true;
+        public final String textBackgrounds = "striped";
+        public final String svgWidth = "100%";
+        public final boolean rapidModeOn = false;
+        public final boolean confirmModeOn = true;
+        public final boolean autorefreshOn = false;
+        
+        /**
+         * Whether annotations are selected for editing on a single click or on a double click.
+         */
+        public boolean singleClickEdit = true;
+        
         public BratVisualConfig visual = new BratVisualConfig();
     }
     
     @JsonAutoDetect(fieldVisibility = Visibility.PUBLIC_ONLY)
     public static class BratVisualConfig {
-        public int arcTextMargin = 1;
-        public int boxSpacing = 1;
-        public int curlyHeight = 4;
-        public int arcSpacing = 9;
-        public int arcStartHeight = 19;
-        public BratVisualMargin margin = new BratVisualMargin();
+        public final int arcTextMargin = 1;
+        public final int boxSpacing = 1;
+        public final int curlyHeight = 4;
+        public final int arcSpacing = 9;
+        public final int arcStartHeight = 19;
+        
+        public final BratVisualMargin margin = new BratVisualMargin();
     }
     
     @JsonAutoDetect(fieldVisibility = Visibility.PUBLIC_ONLY)
     public static class BratVisualMargin {
-        public int x = 2;
-        public int y = 1;
+        public final int x = 2;
+        public final int y = 1;
     }
 }

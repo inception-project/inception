@@ -17,10 +17,12 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.project.documents;
 
+import static java.util.Objects.isNull;
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
 
 import java.io.InputStream;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -38,6 +40,7 @@ import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
+import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
@@ -71,7 +74,12 @@ public class ImportDocumentsPanel extends Panel
         format = Model.of();
         List<String> readableFormats = listReadableFormats();
         if (!readableFormats.isEmpty()) {
-            format.setObject(readableFormats.get(0));
+            if (readableFormats.contains("Plain text")) {
+                format.setObject("Plain text");
+            }
+            else {
+                format.setObject(readableFormats.get(0));
+            }
         }
         
         form.add(fileUpload = new FileUploadField("documents"));
@@ -86,7 +94,8 @@ public class ImportDocumentsPanel extends Panel
     
     private List<String> listReadableFormats()
     {
-        return importExportService.getReadableFormatLabels();
+        return importExportService.getReadableFormats().stream().map(FormatSupport::getName)
+                .sorted().collect(Collectors.toList());
     }
 
     private void actionImport(AjaxRequestTarget aTarget, Form<Void> aForm)
@@ -99,8 +108,8 @@ public class ImportDocumentsPanel extends Panel
             error("No document is selected to upload, please select a document first");
             return;
         }
-        if (project.getId() == 0) {
-            error("Project not yet created, please save project Details!");
+        if (isNull(project.getId())) {
+            error("Project not yet created, please save project details!");
             return;
         }
 
@@ -117,7 +126,8 @@ public class ImportDocumentsPanel extends Panel
                 SourceDocument document = new SourceDocument();
                 document.setName(fileName);
                 document.setProject(project);
-                document.setFormat(importExportService.getReadableFormatId(format.getObject()));
+                document.setFormat(importExportService.getFormatByName(format.getObject())
+                        .get().getId());
                 
                 try (InputStream is = documentToUpload.getInputStream()) {
                     documentService.uploadSourceDocument(is, document);

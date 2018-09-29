@@ -19,19 +19,19 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
+import org.apache.commons.lang3.ClassUtils;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.config.BeanPostProcessor;
-import org.springframework.core.OrderComparator;
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.context.event.EventListener;
+import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
@@ -41,60 +41,71 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 
 @Component
-@Order(Ordered.HIGHEST_PRECEDENCE)
 public class AnnotationEditorExtensionRegistryImpl
-    implements AnnotationEditorExtensionRegistry, BeanPostProcessor
+    implements AnnotationEditorExtensionRegistry
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private final Map<String, AnnotationEditorExtension> beans = new HashMap<>();
-    private final List<AnnotationEditorExtension> sortedBeans = new ArrayList<>();
-    private boolean sorted = false;
+    private final List<AnnotationEditorExtension> extensionsProxy;
 
-    @Override
-    public Object postProcessAfterInitialization(Object aBean, String aBeanName)
-        throws BeansException
+    private List<AnnotationEditorExtension> extensions;
+    
+    public AnnotationEditorExtensionRegistryImpl(
+            @Lazy @Autowired(required = false) List<AnnotationEditorExtension> aExtensions)
     {
-        // Collect annotation editor extensions
-        if (aBean instanceof AnnotationEditorExtension) {
-            beans.put(aBeanName, (AnnotationEditorExtension) aBean);
-            log.debug("Found annotation editor extension: {}", aBeanName);
+        extensionsProxy = aExtensions;
+    }
+    
+    @EventListener
+    public void onContextRefreshedEvent(ContextRefreshedEvent aEvent)
+    {
+        init();
+    }
+    
+    /* package private */ void init()
+    {
+        List<AnnotationEditorExtension> exts = new ArrayList<>();
+
+        if (extensionsProxy != null) {
+            exts.addAll(extensionsProxy);
+            AnnotationAwareOrderComparator.sort(exts);
+        
+            for (AnnotationEditorExtension fs : exts) {
+                log.info("Found annotation editor extension: {}",
+                        ClassUtils.getAbbreviatedName(fs.getClass(), 20));
+            }
         }
         
-        return aBean;
-    }
-
-    @Override
-    public Object postProcessBeforeInitialization(Object aBean, String aBeanName)
-        throws BeansException
-    {
-        return aBean;
-    }
-
-    @Override
-    public List<AnnotationEditorExtension> getExtensions()
-    {
-        if (!sorted) {
-            sortedBeans.addAll(beans.values());
-            OrderComparator.sort(sortedBeans);
-            sorted = true;
-        }
-        return sortedBeans;
+        extensions = Collections.unmodifiableList(exts);
     }
     
     @Override
-    public AnnotationEditorExtension getExtension(String aName)
+    public List<AnnotationEditorExtension> getExtensions()
     {
-        return beans.get(aName);
+        return extensions;
+    }
+    
+    @Override
+    public AnnotationEditorExtension getExtension(String aId)
+    {
+        if (aId == null) {
+            return null;
+        }
+        else {
+            return extensions.stream().filter(ext -> aId.equals(ext.getBeanName())).findFirst()
+                    .orElse(null);
+        }
     }
     
     @Override
     public void fireAction(AnnotationActionHandler aActionHandler, AnnotatorState aModelObject,
-            AjaxRequestTarget aTarget, JCas aJCas, VID aParamId, int aBegin, int aEnd)
+            AjaxRequestTarget aTarget, JCas aJCas, VID aParamId, String aAction, int aBegin,
+            int aEnd)
         throws IOException, AnnotationException
     {
         for (AnnotationEditorExtension ext : getExtensions()) {
-            ext.handleAction(aActionHandler, aModelObject, aTarget, aJCas, aParamId, aBegin, aEnd);
+            ext.handleAction(aActionHandler, aModelObject, aTarget, aJCas, aParamId, aAction,
+                    aBegin, aEnd);
         }
     }
     

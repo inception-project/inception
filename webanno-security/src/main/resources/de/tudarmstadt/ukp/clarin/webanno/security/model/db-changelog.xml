@@ -1,0 +1,145 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<!--
+ # Copyright 2017
+ # Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+ # Technische Universität Darmstadt
+ #
+ # Licensed under the Apache License, Version 2.0 (the "License");
+ # you may not use this file except in compliance with the License.
+ # You may obtain a copy of the License at
+ # 
+ #  http://www.apache.org/licenses/LICENSE-2.0
+ #
+ # Unless required by applicable law or agreed to in writing, software
+ # distributed under the License is distributed on an "AS IS" BASIS,
+ # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ # See the License for the specific language governing permissions and
+ # limitations under the License.
+-->
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" 
+  xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="
+    http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd 
+    http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+  <changeSet author="WebAnno Team" id="1512223050574-4">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="authorities" />
+      </not>
+    </preConditions>
+    <createTable tableName="authorities">
+      <column autoIncrement="true" name="id" type="BIGINT">
+        <constraints primaryKey="true" />
+      </column>
+      <column name="authority" type="VARCHAR(255)">
+        <constraints nullable="false" />
+      </column>
+      <column name="username" type="VARCHAR(255)">
+        <constraints nullable="false" />
+      </column>
+    </createTable>
+  </changeSet>
+  
+  <!--
+    Clean up legacy unique constraint (authority, username) on (authorities)
+    
+    NOTE: This change set ignores failures since there is no precondition to check if
+          unique constraints exist or not. So we simply have to try it.
+   -->
+  <changeSet author="WebAnno Team" id="1512223050574-4.1" failOnError="false">
+    <dropUniqueConstraint
+      tableName="authorities" 
+      constraintName="UK_2uf74smucdwf9qal2n67m2343"
+      uniqueColumns="authority, username" />
+  </changeSet>
+
+  <!-- 
+    Add unique constraint (authority, username) on (authorities)
+    
+    NOTE: This change set ignores failures since there is no precondition to check if
+          unique constraints exist or not. So we simply have to try it.
+   -->
+  <changeSet author="WebAnno Team" id="1512223050574-4.2" failOnError="false">
+    <addUniqueConstraint 
+      tableName="authorities" 
+      constraintName="UK2uf74smucdwf9qal2n67m2343"
+      columnNames="authority, username" />
+  </changeSet>  
+
+  <!--
+    Add index (username) on (authorities)
+   -->
+  <changeSet author="WebAnno Team" id="1512223050574-4.4">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <indexExists tableName="authorities" indexName="FKhjuy9y4fd8v5m3klig05ktofg"/>
+      </not>
+    </preConditions>
+    <createIndex indexName="FKhjuy9y4fd8v5m3klig05ktofg" tableName="authorities">
+      <column name="username" />
+    </createIndex>
+  </changeSet>  
+  
+  <changeSet author="WebAnno Team" id="1512223050574-15">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="users" />
+      </not>
+    </preConditions>
+    <createTable tableName="users">
+      <column name="username" type="VARCHAR(255)">
+        <constraints nullable="false" />
+      </column>
+      <column name="created" type="datetime(6)" />
+      <column name="email" type="VARCHAR(255)" />
+      <column name="enabled" type="BIT(1)">
+        <constraints nullable="false" />
+      </column>
+      <column name="lastLogin" type="datetime(6)" />
+      <column name="password" type="VARCHAR(255)" />
+      <column name="updated" type="datetime(6)" />
+    </createTable>
+    <addPrimaryKey columnNames="username" tableName="users" />
+  </changeSet>
+  
+  
+  <changeSet author="WebAnno Team" id="1512223050574-48.1">
+    <preConditions onFail="MARK_RAN">
+      <foreignKeyConstraintExists foreignKeyTableName="authorities" foreignKeyName="FK2B0F1321292E1AC9" />
+    </preConditions>
+    <dropForeignKeyConstraint baseTableName="authorities" constraintName="FK2B0F1321292E1AC9" />
+  </changeSet>
+
+  <changeSet author="WebAnno Team" id="1512223050574-48.2">
+    <preConditions onFail="MARK_RAN">
+      <foreignKeyConstraintExists foreignKeyTableName="authorities" foreignKeyName="FK_baahryprcge2u172egph1qwur" />
+    </preConditions>
+    <dropForeignKeyConstraint baseTableName="authorities" constraintName="FK_baahryprcge2u172egph1qwur" />
+  </changeSet>
+  
+  <changeSet author="WebAnno Team" id="1512223050574-48.3">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <foreignKeyConstraintExists foreignKeyTableName="authorities" foreignKeyName="FKhjuy9y4fd8v5m3klig05ktofg" />
+      </not>
+    </preConditions>
+    <addForeignKeyConstraint baseColumnNames="username" baseTableName="authorities"
+      constraintName="FKhjuy9y4fd8v5m3klig05ktofg" deferrable="false" initiallyDeferred="false"
+      onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="username"
+      referencedTableName="users" />
+  </changeSet>
+
+  <!--
+    Clean up legacy index (username) on (authorities)
+   -->
+  <changeSet author="WebAnno Team" id="1512223050574-4.3">
+    <preConditions onFail="MARK_RAN">
+      <indexExists tableName="authorities" indexName="FK_baahryprcge2u172egph1qwur"/>
+    </preConditions>
+    <dropIndex 
+      tableName="authorities"
+      indexName="FK_baahryprcge2u172egph1qwur" />
+  </changeSet>
+</databaseChangeLog>

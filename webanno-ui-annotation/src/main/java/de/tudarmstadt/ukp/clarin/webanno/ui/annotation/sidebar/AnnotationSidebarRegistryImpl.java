@@ -18,70 +18,94 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 
+import org.apache.commons.lang3.ClassUtils;
+import org.apache.commons.lang3.builder.CompareToBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.config.BeanPostProcessor;
-import org.springframework.core.OrderComparator;
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.context.event.EventListener;
+import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.springframework.stereotype.Component;
 
 @Component
-@Order(Ordered.HIGHEST_PRECEDENCE)
 public class AnnotationSidebarRegistryImpl
-    implements AnnotationSidebarRegistry, BeanPostProcessor
+    implements AnnotationSidebarRegistry
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private final Map<String, AnnotationSidebarFactory> beans = new HashMap<>();
-    private final List<AnnotationSidebarFactory> sortedBeans = new ArrayList<>();
-    private boolean sorted = false;
+    private final List<AnnotationSidebarFactory> extensionsProxy;
 
-    @Override
-    public Object postProcessAfterInitialization(Object aBean, String aBeanName)
-        throws BeansException
+    private List<AnnotationSidebarFactory> extensions;
+
+    public AnnotationSidebarRegistryImpl(
+            @Lazy @Autowired(required = false) List<AnnotationSidebarFactory> aExtensions)
     {
-        // Collect annotation sidebar extensions
-        if (aBean instanceof AnnotationSidebarFactory) {
-            beans.put(aBeanName, (AnnotationSidebarFactory) aBean);
-            log.info("Found annotation sidebar factory: {}", aBeanName);
+        extensionsProxy = aExtensions;
+    }
+
+    @EventListener
+    public void onContextRefreshedEvent(ContextRefreshedEvent aEvent)
+    {
+        init();
+    }
+    
+    /* package private */ void init()
+    {
+        List<AnnotationSidebarFactory> exts = new ArrayList<>();
+
+        if (extensionsProxy != null) {
+            exts.addAll(extensionsProxy);
+            exts.sort(buildComparator());
+
+            for (AnnotationSidebarFactory fs : exts) {
+                log.info("Found annotation sidebar extension: {}",
+                        ClassUtils.getAbbreviatedName(fs.getClass(), 20));
+            }
         }
         
-        return aBean;
+        extensions = Collections.unmodifiableList(exts);
     }
-
-    @Override
-    public Object postProcessBeforeInitialization(Object aBean, String aBeanName)
-        throws BeansException
-    {
-        return aBean;
-    }
-
+    
     @Override
     public List<AnnotationSidebarFactory> getSidebarFactories()
     {
-        if (!sorted) {
-            sortedBeans.addAll(beans.values());
-            OrderComparator.sort(sortedBeans);
-            sorted = true;
-        }
-        return sortedBeans;
+        return extensions;
     }
     
     @Override
     public AnnotationSidebarFactory getSidebarFactory(String aId)
     {
-        return beans.get(aId);
+        if (aId == null) {
+            return null;
+        }
+        else {
+            return extensions.stream().filter(f -> aId.equals(f.getBeanName())).findFirst()
+                    .orElse(null);
+        }
     }
     
     @Override
     public AnnotationSidebarFactory getDefaultSidebarFactory()
     {
         return getSidebarFactories().get(0);
+    }
+
+    /**
+     * Builds a comparator that sorts first by the order, if specified, then by the display
+     * name to break ties. It is assumed that the compared elements are all non-null
+     * @return The comparator
+     */
+    private Comparator<AnnotationSidebarFactory> buildComparator()
+    {
+        return (asf1, asf2) -> new CompareToBuilder()
+                .appendSuper(AnnotationAwareOrderComparator.INSTANCE.compare(asf1, asf2))
+                .append(asf1.getDisplayName(), asf2.getDisplayName())
+                .toComparison();
     }
 }

@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
     <artifactId>webanno</artifactId>
-    <version>3.3.3-SNAPSHOT</version>
+    <version>3.5.0-SNAPSHOT</version>
   </parent>
   <artifactId>webanno-dkprocore</artifactId>
   <name>WebAnno - DKPro Core typesystem backports</name>
@@ -41,7 +41,7 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-dependency-plugin</artifactId>
           <configuration>
-            <usedDependencies>
+            <usedDependencies combine.children="append">
               <!--
                 - Maven cannot detect dependencies that are purely due to UIMA type system 
                 - descriptors

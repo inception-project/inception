@@ -93,21 +93,22 @@ public class AutomationUtil
     private static Logger LOG = LoggerFactory.getLogger(AutomationUtil.class);
     private static final String NILL = "__nill__";
 
-    public static void repeateSpanAnnotation(AnnotatorState aBModel,
+    public static void repeateSpanAnnotation(AnnotatorState aState,
             DocumentService aDocumentService, CorrectionDocumentService aCorrectionDocumentService,
             AnnotationSchemaService aAnnotationService, int aStart, int aEnd,
             AnnotationFeature aFeature, String aValue)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
-        AnnotationDocument annoDoc = aDocumentService.getAnnotationDocument(aBModel.getDocument(),
-                aBModel.getUser());
+        AnnotationDocument annoDoc = aDocumentService.getAnnotationDocument(aState.getDocument(),
+                aState.getUser());
         JCas annoCas = aDocumentService.readAnnotationCas(annoDoc);
 
         // get selected text, concatenations of tokens
         String selectedText = WebAnnoCasUtil.getSelectedText(annoCas, aStart, aEnd);
         SpanAdapter adapter = (SpanAdapter) aAnnotationService.getAdapter(aFeature.getLayer());
-        for (SourceDocument d : aDocumentService.listSourceDocuments(aBModel.getProject())) {
-            loadDocument(d, aDocumentService, aCorrectionDocumentService, aBModel.getUser());
+        for (SourceDocument d : aDocumentService.listSourceDocuments(aState.getProject())) {
+            loadDocument(d, aAnnotationService, aDocumentService, aCorrectionDocumentService,
+                    aState.getUser());
             JCas jCas = aCorrectionDocumentService.readCorrectionCas(d);
 
             for (Sentence sentence : select(jCas, Sentence.class)) {
@@ -116,9 +117,10 @@ public class AutomationUtil
                         i)) != -1; i = i + selectedText.length()) {
                     if (selectCovered(jCas, Token.class, sentence.getBegin() + i,
                             sentence.getBegin() + i + selectedText.length()).size() > 0) {
-                        int addr = adapter.add(jCas, sentence.getBegin() + i,
+                        int addr = adapter.add(aState, jCas, sentence.getBegin() + i,
                                 sentence.getBegin() + i + selectedText.length() - 1);
-                        adapter.setFeatureValue(aFeature, jCas, addr, aValue);
+                        adapter.setFeatureValue(aState, jCas, addr,
+                                aFeature, aValue);
                     }
                 }
             }
@@ -126,14 +128,15 @@ public class AutomationUtil
         }
     }
 
-    public static void repeateRelationAnnotation(AnnotatorState aBModel,
+    public static void repeateRelationAnnotation(AnnotatorState aState,
             DocumentService aDocumentService, CorrectionDocumentService aCorrectionDocumentService,
             AnnotationSchemaService aAnnotationService, AnnotationFS fs, AnnotationFeature aFeature,
             String aValue)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
-        for (SourceDocument d : aDocumentService.listSourceDocuments(aBModel.getProject())) {
-            loadDocument(d, aDocumentService, aCorrectionDocumentService, aBModel.getUser());
+        for (SourceDocument d : aDocumentService.listSourceDocuments(aState.getProject())) {
+            loadDocument(d, aAnnotationService, aDocumentService, aCorrectionDocumentService,
+                    aState.getUser());
             JCas jCas = aCorrectionDocumentService.readCorrectionCas(d);
 
             ArcAdapter adapter = (ArcAdapter) aAnnotationService.getAdapter(aFeature.getLayer());
@@ -165,14 +168,14 @@ public class AutomationUtil
             if (adapter.isCrossMultipleSentence()) {
                 List<AnnotationFS> mSpanAnnos = new ArrayList<>(
                         getAllAnnoFss(jCas, governorFs.getType()));
-                repeatRelation(0, jCas.getDocumentText().length() - 1, aFeature, aValue, jCas,
-                        adapter, dependentFs, governorFs, mSpanAnnos);
+                repeatRelation(aState, 0, jCas.getDocumentText().length() - 1, aFeature, aValue,
+                        jCas, adapter, dependentFs, governorFs, mSpanAnnos);
             }
             else {
                 for (Sentence sent : select(jCas, Sentence.class)) {
                     List<AnnotationFS> spanAnnos = selectCovered(governorFs.getType(), sent);
-                    repeatRelation(sent.getBegin(), sent.getEnd(), aFeature, aValue, jCas, adapter,
-                            dependentFs, governorFs, spanAnnos);
+                    repeatRelation(aState, sent.getBegin(), sent.getEnd(), aFeature, aValue, jCas,
+                            adapter, dependentFs, governorFs, spanAnnos);
                 }
 
             }
@@ -181,9 +184,9 @@ public class AutomationUtil
         }
     }
 
-    private static void repeatRelation(int aStart, int aEnd, AnnotationFeature aFeature,
-            String aValue, JCas jCas, ArcAdapter adapter, AnnotationFS aDepFS,
-            AnnotationFS aGovFS, List<AnnotationFS> aSpanAnnos)
+    private static void repeatRelation(AnnotatorState aState, int aStart, int aEnd,
+            AnnotationFeature aFeature, String aValue, JCas jCas, ArcAdapter adapter,
+            AnnotationFS aDepFS, AnnotationFS aGovFS, List<AnnotationFS> aSpanAnnos)
         throws AnnotationException
     {
         String dCoveredText = aDepFS.getCoveredText();
@@ -195,7 +198,7 @@ public class AutomationUtil
             if (dCoveredText.equals(fs.getCoveredText())) {
                 if (g != null && isSamAnno(attachSpanType, fs, aDepFS)) {
                     AnnotationFS arc = adapter.add(g, fs, jCas, aStart, aEnd);
-                    adapter.setFeatureValue(aFeature, jCas, getAddr(arc), aValue);
+                    adapter.setFeatureValue(aState, jCas, getAddr(arc), aFeature, aValue);
                     g = null;
                     d = null;
                     continue;// so we don't go to the other if
@@ -209,7 +212,7 @@ public class AutomationUtil
             if (gCoveredText.equals(fs.getCoveredText())  ) {
                 if (d != null && isSamAnno(attachSpanType, fs, aGovFS)) {
                     AnnotationFS arc = adapter.add(fs, d, jCas, aStart, aEnd);
-                    adapter.setFeatureValue(aFeature, jCas, getAddr(arc), aValue);
+                    adapter.setFeatureValue(aState, jCas, getAddr(arc), aFeature, aValue);
                     g = null;
                     d = null;
                 }
@@ -259,7 +262,8 @@ public class AutomationUtil
      * Repeat annotation will repeat annotations of same pattern to all documents on the project
      * load CAS from document in case no initial CORRECTION_CAS is not created before
      */
-    public static void loadDocument(SourceDocument aDocument, DocumentService aDocumentService,
+    public static void loadDocument(SourceDocument aDocument,
+            AnnotationSchemaService annotationService, DocumentService aDocumentService,
             CorrectionDocumentService aCorrectionDocumentService, User logedInUser)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
@@ -269,14 +273,14 @@ public class AutomationUtil
                 AnnotationDocument logedInUserAnnotationDocument = aDocumentService
                         .getAnnotationDocument(aDocument, logedInUser);
                 jCas = aDocumentService.readAnnotationCas(logedInUserAnnotationDocument);
-                aDocumentService.upgradeCas(jCas.getCas(), logedInUserAnnotationDocument);
+                annotationService.upgradeCas(jCas.getCas(), logedInUserAnnotationDocument);
                 aCorrectionDocumentService.writeCorrectionCas(jCas, aDocument);
             }
             catch (DataRetrievalFailureException | NoResultException e) {
                 jCas = aDocumentService.readAnnotationCas(
                         aDocumentService.createOrGetAnnotationDocument(aDocument, logedInUser));
                 // upgrade this cas
-                aDocumentService.upgradeCas(jCas.getCas(),
+                annotationService.upgradeCas(jCas.getCas(),
                         aDocumentService.createOrGetAnnotationDocument(aDocument, logedInUser));
                 aCorrectionDocumentService.writeCorrectionCas(jCas, aDocument);
             }
@@ -301,7 +305,8 @@ public class AutomationUtil
         String selectedText = WebAnnoCasUtil.getSelectedText(annoCas, aStart, aEnd);
 
         for (SourceDocument d : aDocumentService.listSourceDocuments(aBModel.getProject())) {
-            loadDocument(d, aDocumentService, aCorrectionDocumentService, aBModel.getUser());
+            loadDocument(d, aAnnotationService, aDocumentService, aCorrectionDocumentService,
+                    aBModel.getUser());
             JCas jCas = aCorrectionDocumentService.readCorrectionCas(d);
 
             AutomationTypeAdapter adapter = (AutomationTypeAdapter) aAnnotationService
@@ -314,7 +319,7 @@ public class AutomationUtil
                     if (selectCovered(jCas, Token.class, sentence.getBegin() + i,
                             sentence.getBegin() + i + selectedText.length()).size() > 0) {
 
-                        adapter.delete(jCas, aFeature, sentence.getBegin() + i,
+                        adapter.delete(aBModel, jCas, aFeature, sentence.getBegin() + i,
                                 sentence.getBegin() + i + selectedText.length() - 1, aValue);
                     }
                 }
@@ -330,7 +335,8 @@ public class AutomationUtil
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
         for (SourceDocument d : aDocumentService.listSourceDocuments(aBModel.getProject())) {
-            loadDocument(d, aDocumentService, aCorrectionDocumentService, aBModel.getUser());
+            loadDocument(d, aAnnotationService, aDocumentService, aCorrectionDocumentService,
+                    aBModel.getUser());
             JCas jCas = aCorrectionDocumentService.readCorrectionCas(d);
             ArcAdapter adapter = (ArcAdapter) aAnnotationService.getAdapter(aFeature.getLayer());
             String sourceFName = adapter.getSourceFeatureName();
@@ -364,8 +370,8 @@ public class AutomationUtil
             String depCoveredText = dependentFs.getCoveredText();
             String govCoveredText = governorFs.getCoveredText();
 
-            adapter.delete(jCas, aFeature, beginOffset, endOffset, depCoveredText, govCoveredText,
-                    aValue);
+            adapter.delete(aBModel, jCas, aFeature, beginOffset, endOffset, depCoveredText,
+                    govCoveredText, aValue);
             aCorrectionDocumentService.writeCorrectionCas(jCas, d);
         }
     }

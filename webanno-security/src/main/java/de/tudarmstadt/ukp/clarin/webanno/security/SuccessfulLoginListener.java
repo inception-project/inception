@@ -19,8 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.security;
 
 import java.util.Date;
 
-import javax.annotation.Resource;
-
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.security.authentication.event.AuthenticationSuccessEvent;
@@ -34,7 +33,7 @@ public class SuccessfulLoginListener
 {
     public static final String SERVICE_NAME = "successfulLoginListener";
 
-    private @Resource UserDao userRepository;
+    private @Autowired UserDao userRepository;
     
     @Override
     public void onApplicationEvent(ApplicationEvent aEvent)

@@ -16,6 +16,8 @@
  * limitations under the License.
  */package de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model;
 
+import org.apache.commons.lang3.Validate;
+
 public class TsvSubToken extends TsvToken
 {
     private final TsvToken token;
@@ -26,6 +28,21 @@ public class TsvSubToken extends TsvToken
     {
         super(aToken.getDocument(), aToken.getSentence(), aToken.getUimaToken(),
                 aToken.getPosition());
+        Validate.notNull(aToken, "Must specify a token");
+        Validate.isTrue(aBegin >= 0, "Begin offset must be zero or positive: %d", aBegin);
+        Validate.isTrue(aEnd >= 0, "End offset must be zero or positive: %d", aEnd);
+        Validate.isTrue(aBegin <= aEnd,
+                "End offset must be larger or equal to begin offset: [begin: %d, end: %d]", aBegin,
+                aEnd);
+        if (aToken.getUimaToken() != null
+                && aToken.getUimaToken().getCAS().getDocumentText() != null) {
+            int length = aToken.getUimaToken().getCAS().getDocumentText().length();
+            Validate.isTrue(aBegin <= length, "Begin offset must be in document range [0-%d]): %d",
+                    length, aBegin);
+            Validate.isTrue(aEnd <= length, "End offset must be in document range [0-%d]): %d",
+                    length, aBegin);
+        }
+        
         token = aToken;
         begin = aBegin;
         end = aEnd;

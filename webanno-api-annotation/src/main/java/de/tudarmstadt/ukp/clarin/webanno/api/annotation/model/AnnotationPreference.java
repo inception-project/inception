@@ -113,7 +113,7 @@ public class AnnotationPreference
      */
     public int getWindowSize()
     {
-        return windowSize;
+        return Math.max(1, windowSize);
     }
 
     /**

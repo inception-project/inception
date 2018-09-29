@@ -26,18 +26,16 @@ import java.util.Map;
 import javax.persistence.NoResultException;
 
 import org.apache.uima.UIMAException;
-import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.CASException;
 import org.apache.uima.jcas.JCas;
-import org.apache.uima.resource.ResourceInitializationException;
 import org.springframework.security.access.prepost.PreAuthorize;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 
@@ -52,27 +50,6 @@ public interface DocumentService
      */
     File getDir();
 
-    /**
-     * Load the CAS for the specified source document and user, upgrade it, and save it again.
-     * Depending on the mode parameter, the automation/correction and curation CASes are also
-     * upgraded.
-     *
-     * @param aDocument
-     *            the source document.
-     * @param aMode
-     *            the mode.
-     * @param username
-     *            the username.
-     * @throws IOException
-     *             if an I/O error occurs.
-     * @deprecated Read CAS e.g. using {@link #readAnnotationCas(SourceDocument, User)} then use 
-     *             {@link #upgradeCas(CAS, AnnotationDocument)} and then write the CAS e.g. using
-     *             {@link #writeAnnotationCas(JCas, SourceDocument, User, boolean)}
-     */
-    @Deprecated
-    void upgradeCasAndSave(SourceDocument aDocument, Mode aMode, String username)
-        throws IOException;
-
     // --------------------------------------------------------------------------------------------
     // Methods related to SourceDocuments
     // --------------------------------------------------------------------------------------------
@@ -85,12 +62,9 @@ public interface DocumentService
      *
      * @param document
      *            {@link SourceDocument} to be created
-     * @throws IOException
-     *             if an I/O error occurs.
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER','ROLE_REMOTE')")
-    void createSourceDocument(SourceDocument document)
-        throws IOException;
+    void createSourceDocument(SourceDocument document);
 
     /**
      * Check if a Source document with this same name exist in the project. The caller method then
@@ -195,6 +169,12 @@ public interface DocumentService
     File getDocumentFolder(SourceDocument aDocument)
         throws IOException;
 
+    SourceDocumentState setSourceDocumentState(SourceDocument aDocument,
+            SourceDocumentState aState);
+
+    SourceDocumentState transitionSourceDocumentState(SourceDocument aDocument,
+            SourceDocumentStateTransition aTransition);
+
     // --------------------------------------------------------------------------------------------
     // Methods related to AnnotationDocuments
     // --------------------------------------------------------------------------------------------
@@ -245,6 +225,23 @@ public interface DocumentService
         throws IOException;
 
     /**
+     * Resets the annotation document to its initial state by overwriting it with the initial
+     * CAS.
+     *
+     * @param aDocument
+     *            the source document.
+     * @param aUser
+     *            The User who perform this operation
+     * @throws UIMAException
+     *             if a data error occurs.
+     * @throws IOException
+     *             if an I/O error occurs.
+     */
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
+    void resetAnnotationCas(SourceDocument aDocument, User aUser)
+            throws UIMAException, IOException;
+
+    /**
      * A Method that checks if there is already an annotation document created for the source
      * document
      *
@@ -290,19 +287,32 @@ public interface DocumentService
     /**
      * Get the annotation document.
      *
-     * @param document
+     * @param aDocument
      *            the source document.
-     * @param user
+     * @param aUser
      *            the user.
      * @return the annotation document.
      * @throws NoResultException
      *             if no annotation document exists for the given source/user.
      */
-    AnnotationDocument getAnnotationDocument(SourceDocument document, User user);
+    AnnotationDocument getAnnotationDocument(SourceDocument aDocument, User aUser);
+
+    /**
+     * Get the annotation document.
+     *
+     * @param aDocument
+     *            the source document.
+     * @param aUser
+     *            the user.
+     * @return the annotation document.
+     * @throws NoResultException
+     *             if no annotation document exists for the given source/user.
+     */
+    AnnotationDocument getAnnotationDocument(SourceDocument aDocument, String aUser);
 
     /**
      * Gets the CAS for the given annotation document. Converts it form the source document if
-     * necessary.
+     * necessary. The converted CAS is analyzed using CAS doctor and saved.
      *
      * @param annotationDocument
      *            the annotation document.
@@ -313,14 +323,11 @@ public interface DocumentService
     JCas readAnnotationCas(AnnotationDocument annotationDocument)
         throws IOException;
 
-    JCas readAnnotationCas(AnnotationDocument aAnnotationDocument, boolean aAnalyzeAndRepair)
-        throws IOException;
-    
     void deleteAnnotationCas(AnnotationDocument annotationDocument)
         throws IOException;
     
     /**
-     * Gets the CAS for the given annotation document. Converts it form the source document if
+     * Gets the CAS for the given source document. Converts it form the source document if
      * necessary. If necessary, no annotation document exists, one is created. The source document
      * is set into state {@link SourceDocumentState#ANNOTATION_IN_PROGRESS}.
      *
@@ -333,46 +340,70 @@ public interface DocumentService
      *             if there was an I/O error.
      * @deprecated use {@link #createOrGetAnnotationDocument(SourceDocument, User)} and
      *             {@link #readAnnotationCas(AnnotationDocument)} instead and manually set source
-     *             document status manually if desired.
+     *             document status manually if desired or use
+     *             {@link #readAnnotationCas(SourceDocument, String)}
      */
     @Deprecated
     JCas readAnnotationCas(SourceDocument document, User user)
         throws IOException;
 
-    boolean existsInitialCas(SourceDocument aDocument)
-        throws IOException;
-    
-    JCas createInitialCas(SourceDocument aDocument)
-        throws UIMAException, IOException, ClassNotFoundException;
-
     /**
-     * 
-     * @param aAnalyzeAndRepair
-     *            if {@code false} then the CAS is not analyzed, repaired, and also not saved.
-     */
-    JCas createInitialCas(SourceDocument aDocument, boolean aAnalyzeAndRepair)
-            throws UIMAException, IOException, ClassNotFoundException;
-
-    JCas readInitialCas(SourceDocument aDocument)
-        throws CASException, ResourceInitializationException, IOException;
-    
-    JCas readInitialCas(SourceDocument aDocument, boolean aAnalyzeAndRepair)
-            throws CASException, ResourceInitializationException, IOException;
-
-    JCas createOrReadInitialCas(SourceDocument aDocument)
-        throws IOException, UIMAException, ClassNotFoundException;
-
-    /**
-     * List all the {@link AnnotationDocument}s, if available for a given {@link SourceDocument} in
-     * the {@link Project}. Returns list of {@link AnnotationDocument}s for all {@link User}s in the
-     * {@link Project} that has already annotated the {@link SourceDocument}
+     * Gets the CAS for the given source document. Converts it form the source document if
+     * necessary. The state of the source document is not changed.
      *
+     * @param document
+     *            the source document.
+     * @param userName
+     *            the username.
+     * @return the JCas.
+     * @throws IOException
+     *             if there was an I/O error.
+     */
+    JCas readAnnotationCas(SourceDocument document, String userName)
+        throws IOException;
+
+    /**
+     * Read the initial CAS for the given document. If the CAS does not exist then it is created. 
+     * 
+     * @param aDocument
+     *            the source document.
+     * @return the CAS.
+     * @throws IOException
+     *             if there was a problem loading the CAS.
+     */
+    JCas createOrReadInitialCas(SourceDocument aDocument)
+        throws IOException;
+
+    /**
+     * List all the {@link AnnotationDocument annotation documents} for a given 
+     * {@link SourceDocument}. 
+     * <p>
+     * Note that this method does may not return an {@link AnnotationDocument annotation document}
+     * for every user in the project because they are created lazily when a user opens a document
+     * for annotation the first time.
+     * 
      * @param document
      *            the {@link SourceDocument}
      * @return {@link AnnotationDocument}
+     * @see #createOrGetAnnotationDocument(SourceDocument, User)
      */
     List<AnnotationDocument> listAnnotationDocuments(SourceDocument document);
 
+    /**
+     * List all the {@link AnnotationDocument annotation documents} from a project for a given
+     * user. 
+     * <p>
+     * Note that this method does may not return an {@link AnnotationDocument annotation document}
+     * for every user in the project because they are created lazily when a user opens a document
+     * for annotation the first time.
+     * 
+     * @param project
+     *            the {@link SourceDocument}
+     * @param user
+     *            the {@link User}
+     * @return {@link AnnotationDocument}
+     * @see #createOrGetAnnotationDocument(SourceDocument, User)
+     */
     List<AnnotationDocument> listAnnotationDocuments(Project project, User user);
 
     /**
@@ -440,14 +471,6 @@ public interface DocumentService
      */
     void removeAnnotationDocument(AnnotationDocument annotationDocument);
 
-    void upgradeCas(CAS aCurCas, AnnotationDocument annotationDocument)
-        throws UIMAException, IOException;
-
-    /**
-     * If any of the users finished one annotation document
-     */
-    boolean existFinishedDocument(SourceDocument aSourceDocument, Project aProject);
-
     AnnotationDocument createOrGetAnnotationDocument(SourceDocument aDocument, User aUser);
     
     /**
@@ -459,6 +482,27 @@ public interface DocumentService
      * In order to provide access to the status of a document for a given user, the results is
      * returned as a map where the source document is the key and the annotation document is the
      * value. The annotation document may be {@code null}.
+     * 
+     * @param aProject
+     *            the project for which annotatable documents should be returned.
+     * @param aUser
+     *            the user for whom annotatable documents should be returned.
+     * @return annotatable documents.
      */
     Map<SourceDocument, AnnotationDocument> listAnnotatableDocuments(Project aProject, User aUser);
+    
+    AnnotationDocumentState setAnnotationDocumentState(AnnotationDocument aDocument,
+            AnnotationDocumentState aState);
+
+    AnnotationDocumentState transitionAnnotationDocumentState(AnnotationDocument aDocument,
+            AnnotationDocumentStateTransition aTransition);
+
+    /**
+     * Check if any curation documents exists in the given project.
+     * 
+     * @param aProject
+     *            the project.
+     * @return whether any curation documents exist.
+     */
+    boolean existsCurationDocument(Project aProject);
 }

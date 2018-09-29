@@ -324,7 +324,8 @@ public class Tsv3XDeserializer
             column = new TsvColumn(aIndex, aUimaType, aLayerType, aColDecl, PRIMITIVE);
         }
         else {
-            throw new IOException("Unrecognizable column declaration: [" + aColDecl + "]");
+            throw new IOException("Type [" + aUimaType.getName()
+                    + "] does not contain a feature called [" + aColDecl + "]");
         }
         // PLACEHOLDER - empty column declaration, i.e. only a separator after type name
         // This is not handled here, but rather in the calling method.
@@ -832,12 +833,13 @@ public class Tsv3XDeserializer
                 FeatureStructure[] links = getFeature(aAnnotation,
                         aCol.uimaFeature.getShortName(), FeatureStructure[].class);
                 
-                assert values.length == links.length;
+                assert (links.length == 0 && values.length == 1 && NULL_VALUE.equals(values[0]))
+                        || (values.length == links.length);
 
                 for (int i = 0; i < values.length; i++) {
                     String value = values[i];
                     
-                    if (NULL_COLUMN.equals(value)) {
+                    if (NULL_VALUE.equals(value) || NULL_COLUMN.equals(value)) {
                         continue;
                     }
                     

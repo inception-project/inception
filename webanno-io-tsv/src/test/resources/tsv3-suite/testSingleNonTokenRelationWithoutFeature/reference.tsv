@@ -1,6 +1,6 @@
 #FORMAT=WebAnno TSV 3.2
-#T_SP=de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity|value
-#T_RL=webanno.custom.SimpleRelation|BT_de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity
+#T_SP=webanno.custom.Span|value
+#T_RL=webanno.custom.SimpleRelation|BT_webanno.custom.Span
 
 
 #Text=This is a test .

@@ -52,7 +52,9 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocumen
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VMarker;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VObject;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VRange;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSentenceMarker;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VTextMarker;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotationEditor;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
@@ -65,6 +67,8 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Offsets;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Relation;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.RelationType;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.SentenceComment;
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.SentenceMarker;
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.TextMarker;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
@@ -113,10 +117,18 @@ public class BratRenderer
         
         // Render visible (custom) layers
         Map<String[], Queue<String>> colorQueues = new HashMap<>();
-        for (AnnotationLayer layer : aVDoc.getAnnotationLayers()) {
+        for (AnnotationLayer layer : aAnnotationService.listAnnotationLayer(aState.getProject())) {
             ColoringStrategy coloringStrategy = aColoringStrategy != null ? aColoringStrategy
                     : ColoringStrategy.getStrategy(aAnnotationService, layer,
                             aState.getPreferences(), colorQueues);
+            
+            // If the layer is not included in the rendering, then we skip here - but only after
+            // we have obtained a coloring strategy for this layer and thus secured the layer
+            // color. This ensures that the layer colors do not change depending on the number
+            // of visible layers.
+            if (!aVDoc.getAnnotationLayers().contains(layer)) {
+                continue;
+            }
 
             TypeAdapter typeAdapter = aAnnotationService.getAdapter(layer);
             
@@ -191,8 +203,17 @@ public class BratRenderer
         // Render markers
         for (VMarker vmarker : aVDoc.getMarkers()) {
             if (vmarker instanceof VAnnotationMarker) {
-                aResponse.addMarker(new AnnotationMarker(vmarker.getType(),
-                        ((VAnnotationMarker) vmarker).getVid()));
+                VAnnotationMarker marker = (VAnnotationMarker) vmarker;
+                aResponse.addMarker(new AnnotationMarker(vmarker.getType(), marker.getVid()));
+            }
+            else if (vmarker instanceof VSentenceMarker) {
+                VSentenceMarker marker = (VSentenceMarker) vmarker;
+                aResponse.addMarker(new SentenceMarker(vmarker.getType(), marker.getIndex()));
+            }
+            else if (vmarker instanceof VTextMarker) {
+                VTextMarker marker = (VTextMarker) vmarker;
+                aResponse.addMarker(
+                        new TextMarker(marker.getType(), marker.getBegin(), marker.getEnd()));
             }
             else {
                 LOG.warn("Unknown how to render marker: [" + vmarker + "]");

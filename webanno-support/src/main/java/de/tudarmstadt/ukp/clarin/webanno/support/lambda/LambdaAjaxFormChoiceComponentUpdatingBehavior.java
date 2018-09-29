@@ -30,6 +30,11 @@ public class LambdaAjaxFormChoiceComponentUpdatingBehavior
     
     private AjaxCallback action;
     private AjaxExceptionHandler exceptionHandler;
+    
+    public LambdaAjaxFormChoiceComponentUpdatingBehavior()
+    {
+        this(null, null);
+    }
 
     public LambdaAjaxFormChoiceComponentUpdatingBehavior(AjaxCallback aAction)
     {
@@ -48,7 +53,9 @@ public class LambdaAjaxFormChoiceComponentUpdatingBehavior
     public void onUpdate(AjaxRequestTarget aTarget)
     {
         try {
-            action.accept(aTarget);
+            if (action != null) {
+                action.accept(aTarget);
+            }
         }
         catch (Exception e) {
             if (exceptionHandler != null) {

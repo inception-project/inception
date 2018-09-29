@@ -21,6 +21,7 @@ import java.util.List;
 
 import org.apache.uima.jcas.JCas;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
@@ -29,5 +30,6 @@ public interface AutomationTypeAdapter
     List<String> getAnnotation(Sentence aSentence, AnnotationFeature feature);
 
     // delete based on the begin,end, and type of annotation
-    void delete(JCas aJCas, AnnotationFeature feature, int aBegin, int aEnd, Object aValue);
+    void delete(AnnotatorState aState, JCas aJCas, AnnotationFeature feature, int aBegin, int aEnd,
+            Object aValue);
 }

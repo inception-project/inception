@@ -15,15 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-//CHECKSTYLE:OFF
+// CHECKSTYLE:OFF
 
 /* First created by JCasGen Fri Jun 17 19:10:16 CEST 2016 */
 package de.tudarmstadt.ukp.dkpro.core.api.segmentation.type;
 
-import org.apache.uima.jcas.JCas; 
+import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.JCasRegistry;
 import org.apache.uima.jcas.cas.TOP_Type;
-
 import org.apache.uima.jcas.tcas.Annotation;
 
 /** This annotation can be used to indicate an alternate surface form. E.g. some corpora consider a normalized form of the text with resolved contractions as the canonical form and only maintain the original surface form as a secondary information. One example is the Conll-U format.

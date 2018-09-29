@@ -22,17 +22,15 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * This class comprises usernames, which agree on a specific annotation (same annotation type, same
- * annotation value, same position).
- *
+ * This class comprises usernames, which agree on a specific annotation (same annotation type, 
+ * same annotation value, same position).
  */
 public class AnnotationSelection
     implements Serializable
 {
     private static final long serialVersionUID = -8839941493657969753L;
+    
     private Map<String, Integer> addressByUsername = new LinkedHashMap<>();
-//    private transient Map<String, FeatureStructure> fsStringByUsername = new LinkedHashMap<>();
-    private AnnotationOption annotationOption = null;
 
     public AnnotationSelection()
     {
@@ -59,29 +57,8 @@ public class AnnotationSelection
      */
     public void setAddressByUsername(Map<String, Integer> aAddressByUsername)
     {
-        this.addressByUsername = aAddressByUsername;
+        addressByUsername = aAddressByUsername;
     }
-
-    public AnnotationOption getAnnotationOption()
-    {
-        return annotationOption;
-    }
-
-    /**
-     *
-     * @param annotationOption
-     *            the option.
-     */
-    public void setAnnotationOption(AnnotationOption annotationOption)
-    {
-        this.annotationOption = annotationOption;
-    }
-
-//    @Override
-//    public String toString()
-//    {
-//        return fsStringByUsername.toString();
-//    }
 
     @Override
     public boolean equals(Object obj)
@@ -89,6 +66,7 @@ public class AnnotationSelection
         if (!(obj instanceof AnnotationSelection)) {
             return false;
         }
+        
         AnnotationSelection as = (AnnotationSelection) obj;
         return addressByUsername.equals(as.getAddressByUsername());
     }
@@ -98,14 +76,4 @@ public class AnnotationSelection
     {
         return addressByUsername.hashCode();
     }
-
-//    public Map<String, FeatureStructure> getFsStringByUsername()
-//    {
-//        return fsStringByUsername;
-//    }
-//
-//    public void setFsStringByUsername(Map<String, FeatureStructure> fsStringByUsername)
-//    {
-//        this.fsStringByUsername = fsStringByUsername;
-//    }
 }

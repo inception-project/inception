@@ -20,18 +20,26 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature;
 
 import static java.util.Arrays.asList;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.uima.cas.CAS;
+import org.apache.uima.resource.metadata.TypeDescription;
+import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.wicket.MarkupContainer;
+import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.BooleanFeatureEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.FeatureEditor;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.InputFieldTextFeatureEditor;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.KendoAutoCompleteTextFeatureEditor;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.KendoComboboxTextFeatureEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.NumberFeatureEditor;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.TextFeatureEditor;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.UimaStringTraitsEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -39,18 +47,38 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
 @Component
 public class PrimitiveUimaFeatureSupport
-    implements FeatureSupport
+    implements FeatureSupport<Void>, InitializingBean
 {
-    private final static List<FeatureType> PRIMITIVE_TYPES = asList(
-            new FeatureType(CAS.TYPE_NAME_STRING, "Primitive: String"),
-            new FeatureType(CAS.TYPE_NAME_INTEGER, "Primitive: Integer"), 
-            new FeatureType(CAS.TYPE_NAME_FLOAT, "Primitive: Float"), 
-            new FeatureType(CAS.TYPE_NAME_BOOLEAN, "Primitive: Boolean"));
+    private List<FeatureType> primitiveTypes;
 
+    private String featureSupportId;
+    
+    @Override
+    public String getId()
+    {
+        return featureSupportId;
+    }
+    
+    @Override
+    public void setBeanName(String aBeanName)
+    {
+        featureSupportId = aBeanName;
+    }
+    
+    @Override
+    public void afterPropertiesSet() throws Exception
+    {
+        primitiveTypes = asList(
+                new FeatureType(CAS.TYPE_NAME_STRING, "Primitive: String", featureSupportId),
+                new FeatureType(CAS.TYPE_NAME_INTEGER, "Primitive: Integer", featureSupportId), 
+                new FeatureType(CAS.TYPE_NAME_FLOAT, "Primitive: Float", featureSupportId), 
+                new FeatureType(CAS.TYPE_NAME_BOOLEAN, "Primitive: Boolean", featureSupportId));
+    }
+    
     @Override
     public List<FeatureType> getSupportedFeatureTypes(AnnotationLayer aAnnotationLayer)
     {
-        return PRIMITIVE_TYPES;
+        return Collections.unmodifiableList(primitiveTypes);
     }
 
     @Override
@@ -72,18 +100,59 @@ public class PrimitiveUimaFeatureSupport
             return false;
         }
     }
+
+    @Override
+    public Object wrapFeatureValue(AnnotationFeature aFeature, CAS aCAS, Object aValue)
+    {
+        return aValue;
+    }
+    
+    @Override
+    public <V> V  unwrapFeatureValue(AnnotationFeature aFeature, CAS aCAS, Object aValue)
+    {
+        return (V) aValue;
+    }
+    
+    @Override
+    public Panel createTraitsEditor(String aId,  IModel<AnnotationFeature> aFeatureModel)
+    {
+        AnnotationFeature feature = aFeatureModel.getObject();
+        
+        Panel editor;
+        switch (feature.getMultiValueMode()) {
+        case NONE:
+            switch (feature.getType()) {
+            case CAS.TYPE_NAME_INTEGER:
+            case CAS.TYPE_NAME_FLOAT:
+            case CAS.TYPE_NAME_BOOLEAN:
+                editor = FeatureSupport.super.createTraitsEditor(aId, aFeatureModel);
+                break;
+            case CAS.TYPE_NAME_STRING:
+                editor = new UimaStringTraitsEditor(aId, aFeatureModel);
+                break;
+            default:
+                throw unsupportedFeatureTypeException(feature);
+            }
+            break;
+        case ARRAY: // fall-through
+            throw unsupportedLinkModeException(feature);
+        default:
+            throw unsupportedMultiValueModeException(feature);
+        }
+        return editor;
+    }
     
     @Override
     public FeatureEditor createEditor(String aId, MarkupContainer aOwner,
             AnnotationActionHandler aHandler, final IModel<AnnotatorState> aStateModel,
             final IModel<FeatureState> aFeatureStateModel)
     {
-        FeatureState featureState = aFeatureStateModel.getObject();
+        AnnotationFeature feature = aFeatureStateModel.getObject().feature;
         final FeatureEditor editor;
         
-        switch (featureState.feature.getMultiValueMode()) {
+        switch (feature.getMultiValueMode()) {
         case NONE:
-            switch (featureState.feature.getType()) {
+            switch (feature.getType()) {
             case CAS.TYPE_NAME_INTEGER: {
                 editor = new NumberFeatureEditor(aId, aOwner, aFeatureStateModel);
                 break;
@@ -97,18 +166,53 @@ public class PrimitiveUimaFeatureSupport
                 break;
             }
             case CAS.TYPE_NAME_STRING: {
-                editor = new TextFeatureEditor(aId, aOwner, aFeatureStateModel);
+                if (feature.getTagset() == null) {
+                    // If there is no tagset, use a simple input field
+                    editor = new InputFieldTextFeatureEditor(aId, aOwner, aFeatureStateModel);
+                }
+                else if (aFeatureStateModel.getObject().tagset.size() < 75) {
+                    // For smaller tagsets, use a combobox
+                    editor = new KendoComboboxTextFeatureEditor(aId, aOwner, aFeatureStateModel);
+                }
+                else {
+                    // For larger ones, use an auto-complete field
+                    editor = new KendoAutoCompleteTextFeatureEditor(aId, aOwner,
+                            aFeatureStateModel);
+                }
                 break;
             }
             default:
-                throw unsupportedFeatureTypeException(featureState);
+                throw unsupportedFeatureTypeException(feature);
             }
             break;
-        case ARRAY: // fallthrough
-            throw unsupportedLinkModeException(featureState);
+        case ARRAY: // fall-through
+            throw unsupportedLinkModeException(feature);
         default:
-            throw unsupportedMultiValueModeException(featureState);
+            throw unsupportedMultiValueModeException(feature);
         }
         return editor;
+    }
+    
+    @Override
+    public void generateFeature(TypeSystemDescription aTSD, TypeDescription aTD,
+            AnnotationFeature aFeature)
+    {
+        aTD.addFeature(aFeature.getName(), "", aFeature.getType());
+    }
+    
+    @Override
+    public void configureFeature(AnnotationFeature aFeature)
+    {
+        // If the feature is not a string feature, force the tagset to null.
+        if (!(CAS.TYPE_NAME_STRING.equals(aFeature.getType()))) {
+            aFeature.setTagset(null);
+        }
+    }
+    
+    @Override
+    public boolean isTagsetSupported(AnnotationFeature aFeature)
+    {
+        // Only string features support tagsets
+        return CAS.TYPE_NAME_STRING.equals(aFeature.getType());
     }
 }

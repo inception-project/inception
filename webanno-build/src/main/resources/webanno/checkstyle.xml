@@ -14,7 +14,6 @@
       <property name="file" value="${basedir}/suppressions.xml"/>
       <property name="optional" value="true"/>
   </module>
-  <module name="SuppressionCommentFilter"/>
 
   <!-- Checks for whitespace                               -->
   <!-- See http://checkstyle.sf.net/config_whitespace.html -->
@@ -31,8 +30,9 @@
     <property name="message" value="CRLF line endings are prohibited"/>
   </module>
 
+  <module name="SuppressWithPlainTextCommentFilter"/>
+
   <module name="TreeWalker">
-    <module name="FileContentsHolder"/>
     <module name="OuterTypeFilename"/>
     <module name="IllegalTokenText">
       <property name="tokens" value="STRING_LITERAL, CHAR_LITERAL"/>

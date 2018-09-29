@@ -21,13 +21,14 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CORRECTION_USER
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import javax.annotation.Resource;
+
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.jcas.JCas;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 
@@ -40,11 +41,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 public class CorrectionDocumentServiceImpl
     implements CorrectionDocumentService
 {
-    @Resource(name = "casStorageService")
-    private CasStorageService casStorageService;
-    
-    @Resource(name = "annotationService")
-    private AnnotationSchemaService annotationService;
+    private @Autowired CasStorageService casStorageService;
+    private @Autowired AnnotationSchemaService annotationService;
 
     @PersistenceContext
     private EntityManager entityManager;

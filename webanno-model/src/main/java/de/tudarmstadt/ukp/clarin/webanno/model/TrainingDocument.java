@@ -22,8 +22,11 @@ import java.util.Comparator;
 import java.util.Date;
 
 import javax.persistence.Column;
+import javax.persistence.ConstraintMode;
 import javax.persistence.Entity;
+import javax.persistence.ForeignKey;
 import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
@@ -32,7 +35,6 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.UniqueConstraint;
 
-import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.Type;
 
 /**
@@ -48,15 +50,15 @@ public class TrainingDocument
     private static final long serialVersionUID = 8496087166198616020L;
 
     @Id
-    @GeneratedValue
-    private long id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @Column(nullable = false)
     private String name;
 
     @ManyToOne
     @JoinColumn(name = "project")
-    Project project;
+    private Project project;
 
     private String format;
 
@@ -72,15 +74,15 @@ public class TrainingDocument
     private int sentenceAccessed = 0;
 
     @ManyToOne
-    @ForeignKey(name = "none")
-    AnnotationFeature feature; // if it is a training document, for which Template (layer)
+    @JoinColumn(foreignKey = @ForeignKey(name = "none", value = ConstraintMode.NO_CONSTRAINT))
+    private AnnotationFeature feature; // if it is a training document, for which Template (layer)
 
-    public long getId()
+    public Long getId()
     {
         return id;
     }
 
-    public void setId(long aId)
+    public void setId(Long aId)
     {
         id = aId;
     }
@@ -160,7 +162,7 @@ public class TrainingDocument
     {
         final int prime = 31;
         int result = 1;
-        result = prime * result + (int) (id ^ (id >>> 32));
+        result = prime * result + ((id == null) ? 0 : id.hashCode());
         result = prime * result + ((name == null) ? 0 : name.hashCode());
         return result;
     }
@@ -178,7 +180,12 @@ public class TrainingDocument
             return false;
         }
         TrainingDocument other = (TrainingDocument) obj;
-        if (id != other.id) {
+        if (id == null) {
+            if (other.id != null) {
+                return false;
+            }
+        }
+        else if (!id.equals(other.id)) {
             return false;
         }
         if (name == null) {

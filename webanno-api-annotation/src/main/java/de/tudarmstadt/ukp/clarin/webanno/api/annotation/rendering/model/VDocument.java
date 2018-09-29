@@ -24,8 +24,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.collections4.MultiMap;
-import org.apache.commons.collections4.map.MultiValueMap;
+import org.apache.commons.collections4.ListValuedMap;
+import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -34,9 +34,9 @@ public class VDocument
 {
     private Map<VID, VArc> arcs = new LinkedHashMap<>();
     private Map<VID, VSpan> spans = new LinkedHashMap<>();
-    private MultiMap<VID, VComment> comments = new MultiValueMap<>();
-    private MultiMap<Long, VArc> arcsByLayer = new MultiValueMap<>();
-    private MultiMap<Long, VSpan> spansByLayer = new MultiValueMap<>();
+    private ListValuedMap<VID, VComment> comments = new ArrayListValuedHashMap<>();
+    private ListValuedMap<Long, VArc> arcsByLayer = new ArrayListValuedHashMap<>();
+    private ListValuedMap<Long, VSpan> spansByLayer = new ArrayListValuedHashMap<>();
     private Map<Long, AnnotationLayer> annotationLayers = new LinkedHashMap<>();
     private List<VMarker> markers = new ArrayList<>();
 

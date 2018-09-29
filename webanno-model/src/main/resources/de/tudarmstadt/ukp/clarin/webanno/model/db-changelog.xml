@@ -1,0 +1,1070 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<!--
+ # Copyright 2017
+ # Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+ # Technische Universität Darmstadt
+ #
+ # Licensed under the Apache License, Version 2.0 (the "License");
+ # you may not use this file except in compliance with the License.
+ # You may obtain a copy of the License at
+ # 
+ #  http://www.apache.org/licenses/LICENSE-2.0
+ #
+ # Unless required by applicable law or agreed to in writing, software
+ # distributed under the License is distributed on an "AS IS" BASIS,
+ # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ # See the License for the specific language governing permissions and
+ # limitations under the License.
+-->
+<databaseChangeLog 
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="
+    http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd 
+    http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+  
+  <changeSet author="WebAnno Team" id="1512223050574-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="annotation_document" />
+      </not>
+    </preConditions>
+    <createTable tableName="annotation_document">
+      <column autoIncrement="true" name="id" type="BIGINT">
+        <constraints primaryKey="true" />
+      </column>
+      <column name="created" type="datetime(6)" />
+      <column name="name" type="VARCHAR(255)">
+        <constraints nullable="false" />
+      </column>
+      <column name="sentenceAccessed" type="INT" />
+      <column name="state" type="VARCHAR(255)">
+        <constraints nullable="false" />
+      </column>
+      <column name="timestamp" type="datetime(6)" />
+      <column name="updated" type="datetime(6)" />
+      <column name="user" type="VARCHAR(255)" />
+      <column name="document" type="BIGINT" />
+      <column name="project" type="BIGINT" />
+    </createTable>
+  </changeSet>
+  
+  <!--
+    Clean up legacy unique constraint (name, project, user) on (annotation_document)
+    
+    NOTE: This change set ignores failures since there is no precondition to check if
+          unique constraints exist or not. So we simply have to try it.
+   -->
+  <changeSet author="WebAnno Team" id="1512223050574-1.1" failOnError="false">
+    <dropUniqueConstraint 
+      tableName="annotation_document" 
+      constraintName="UK_lq2x3u95l76hxx8ei9hydk824"
+      uniqueColumns="name, project, user" />
+  </changeSet>
+
+  <!-- 
+    Add unique constraint (name, project, user) on (annotation_document)
+    
+    NOTE: This change set ignores failures since there is no precondition to check if
+          unique constraints exist or not. So we simply have to try it.
+   -->
+  <changeSet author="WebAnno Team" id="1512223050574-1.2" failOnError="false">
+    <addUniqueConstraint 
+      tableName="annotation_document"
+      constraintName="UKlq2x3u95l76hxx8ei9hydk824"
+      columnNames="name, project, user" />
+  </changeSet>
+
+  <!--
+    Add index (project) on (annotation_document)
+   -->
+  <changeSet author="WebAnno Team" id="1512223050574-1.4">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <indexExists tableName="annotation_document" indexName="FKc8nbnendgkcp51yy9mo5yjiu7"/>
+      </not>
+    </preConditions>
+    <createIndex indexName="FKc8nbnendgkcp51yy9mo5yjiu7" tableName="annotation_document">
+      <column name="project" />
+    </createIndex>
+  </changeSet>
+
+  <!--
+    Add index (document) on (annotation_document)
+   -->
+  <changeSet author="WebAnno Team" id="1512223050574-1.6">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <indexExists tableName="annotation_document" indexName="FKlpt8o34eo4nyuv5qsuple9vfa"/>
+      </not>
+    </preConditions>
+    <createIndex indexName="FKlpt8o34eo4nyuv5qsuple9vfa" tableName="annotation_document">
+      <column name="document" />
+    </createIndex>
+  </changeSet>
+  
+  <changeSet author="WebAnno Team" id="1512223050574-2">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="annotation_feature" />
+      </not>
+    </preConditions>
+    <createTable tableName="annotation_feature">
+      <column autoIncrement="true" name="id" type="BIGINT">
+        <constraints primaryKey="true" />
+      </column>
+      <column name="description" type="LONGTEXT" />
+      <column name="enabled" type="BIT(1)">
+        <constraints nullable="false" />
+      </column>
+      <column name="hideUnconstraintFeature" type="BIT(1)" />
+      <column name="includeInHover" type="BIT(1)" />
+      <column name="link_mode" type="VARCHAR(255)" />
+      <column name="link_type_name" type="VARCHAR(255)" />
+      <column name="link_type_role_feature_name" type="VARCHAR(255)" />
+      <column name="link_type_target_feature_name" type="VARCHAR(255)" />
+      <column name="multi_value_mode" type="VARCHAR(255)" />
+      <column name="name" type="VARCHAR(255)">
+        <constraints nullable="false" />
+      </column>
+      <column name="remember" type="BIT(1)">
+        <constraints nullable="false" />
+      </column>
+      <column name="required" type="BIT(1)">
+        <constraints nullable="false" />
+      </column>
+      <column name="type" type="VARCHAR(255)" />
+      <column name="uiName" type="VARCHAR(255)">
+        <constraints nullable="false" />
+      </column>
+      <column name="visible" type="BIT(1)">
+        <constraints nullable="false" />
+      </column>
+      <column name="annotation_type" type="BIGINT" />
+      <column name="project" type="BIGINT" />
+      <column name="tag_set" type="BIGINT" />
+    </createTable>
+  </changeSet>
+
+  <!--
+    Clean up legacy unique constraint (annotation_type, name, project) on (annotation_feature)
+    
+    NOTE: This change set ignores failures since there is no precondition to check if
+          unique constraints exist or not. So we simply have to try it.
+   -->
+  <changeSet author="WebAnno Team" id="1512223050574-2.1" failOnError="false">
+    <dropUniqueConstraint 
+      tableName="annotation_feature"
+      constraintName="UK_pgq9palohljgv9qympj7nbcp2" 
+      uniqueColumns="annotation_type, name, project" />
+  </changeSet>
+
+  <!-- 
+    Add unique constraint (annotation_type, name, project) on (annotation_feature)
+    
+    NOTE: This change set ignores failures since there is no precondition to check if
+          unique constraints exist or not. So we simply have to try it.
+   -->
+  <changeSet author="WebAnno Team" id="1512223050574-2.2" failOnError="false">
+    <addUniqueConstraint 
+      tableName="annotation_feature"
+      constraintName="UKpgq9palohljgv9qympj7nbcp2" 
+      columnNames="annotation_type, name, project" />
+  </changeSet>
+  
+  <!--
+    Add index (project) on (annotation_feature)
+   -->
+  <changeSet author="WebAnno Team" id="1512223050574-2.4">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <indexExists tableName="annotation_feature" indexName="FKb9ffvpa00ogpdrjixrhlxqwtb"/>
+      </not>
+    </preConditions>
+    <createIndex indexName="FKb9ffvpa00ogpdrjixrhlxqwtb" tableName="annotation_feature">
+      <column name="project" />
+    </createIndex>
+  </changeSet>
+
+  <changeSet author="WebAnno Team" id="1512223050574-3">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="annotation_type" />
+      </not>
+    </preConditions>
+    <createTable tableName="annotation_type">
+      <column autoIncrement="true" name="id" type="BIGINT">
+        <constraints primaryKey="true" />
+      </column>
+      <column name="allowSTacking" type="BIT(1)" />
+      <column name="builtIn" type="BIT(1)" />
+      <column name="crossSentence" type="BIT(1)" />
+      <column name="description" type="LONGTEXT" />
+      <column name="enabled" type="BIT(1)">
+        <constraints nullable="false" />
+      </column>
+      <column name="linkedListBehavior" type="BIT(1)" />
+      <column name="lockToTokenOffset" type="BIT(1)" />
+      <column name="multipleTokens" type="BIT(1)" />
+      <column name="name" type="VARCHAR(255)">
+        <constraints nullable="false" />
+      </column>
+      <column name="onClickJavascriptAction" type="LONGTEXT" />
+      <column name="readonly" type="BIT(1)">
+        <constraints nullable="false" />
+      </column>
+      <column name="showTextInHover" type="BIT(1)" />
+      <column name="type" type="VARCHAR(255)">
+        <constraints nullable="false" />
+      </column>
+      <column name="uiName" type="VARCHAR(255)">
+        <constraints nullable="false" />
+      </column>
+      <column name="annotation_feature" type="BIGINT" />
+      <column name="annotation_type" type="BIGINT" />
+      <column name="project" type="BIGINT" />
+    </createTable>
+  </changeSet>
+  
+  <!--
+    Clean up legacy unique constraint (annotation_type, name, project) on (annotation_feature)
+    
+    NOTE: This change set ignores failures since there is no precondition to check if
+          unique constraints exist or not. So we simply have to try it.
+   -->
+  <changeSet author="WebAnno Team" id="1512223050574-3.1" failOnError="false">
+    <dropUniqueConstraint 
+      tableName="annotation_type" 
+      constraintName="UK_m2jvqyu4akybpmyv7e6xli166"
+      uniqueColumns="name, project" />
+  </changeSet>
+
+  <!-- 
+    Add unique constraint (annotation_type, name, project) on (annotation_feature)
+    
+    NOTE: This change set ignores failures since there is no precondition to check if
+          unique constraints exist or not. So we simply have to try it.
+   -->
+  <changeSet author="WebAnno Team" id="1512223050574-3.2" failOnError="false">
+    <addUniqueConstraint 
+      tableName="annotation_type" 
+      constraintName="UKm2jvqyu4akybpmyv7e6xli166"
+      columnNames="name, project" />
+  </changeSet>  
+
+  <!--
+    Add index (project) on (annotation_type)
+   -->
+  <changeSet author="WebAnno Team" id="1512223050574-3.4">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <indexExists tableName="annotation_type" indexName="FKm5kf05xieqgw9pfxqrnbsddac"/>
+      </not>
+    </preConditions>
+    <createIndex indexName="FKm5kf05xieqgw9pfxqrnbsddac" tableName="annotation_type">
+      <column name="project" />
+    </createIndex>
+  </changeSet>
+
+  <changeSet author="WebAnno Team" id="1512223050574-6">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="constraint_set" />
+      </not>
+    </preConditions>
+    <createTable tableName="constraint_set">
+      <column autoIncrement="true" name="id" type="BIGINT">
+        <constraints primaryKey="true" />
+      </column>
+      <column name="name" type="VARCHAR(255)">
+        <constraints nullable="false" />
+      </column>
+      <column name="project" type="BIGINT" />
+    </createTable>
+  </changeSet>
+  
+  <!--
+    Clean up legacy unique constraint (name, project) on (constraint_set)
+    
+    NOTE: This change set ignores failures since there is no precondition to check if
+          unique constraints exist or not. So we simply have to try it.
+   -->
+  <changeSet author="WebAnno Team" id="1512223050574-6.1" failOnError="false">
+    <dropUniqueConstraint
+      tableName="constraint_set" 
+      constraintName="UK_m2jvqyu4akybpmyv7e6xli166"
+      uniqueColumns="name, project" />
+  </changeSet>
+
+  <!-- 
+    Add unique constraint (name, project) on (constraint_set)
+    
+    NOTE: This change set ignores failures since there is no precondition to check if
+          unique constraints exist or not. So we simply have to try it.
+   -->
+  <changeSet author="WebAnno Team" id="1512223050574-6.2" failOnError="false">
+    <addUniqueConstraint 
+      tableName="constraint_set" 
+      constraintName="UKl1sft43l0tnf9b1ix60pf29m"
+      columnNames="name, project" />
+  </changeSet>  
+
+  <!--
+    Add index (project) on (constraint_set)
+   -->
+  <changeSet author="WebAnno Team" id="1512223050574-6.4">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <indexExists tableName="constraint_set" indexName="FK411i5muqyvbe4ag5r38g81uus"/>
+      </not>
+    </preConditions>
+    <createIndex indexName="FK411i5muqyvbe4ag5r38g81uus" tableName="constraint_set">
+      <column name="project" />
+    </createIndex>
+  </changeSet>
+  
+  <changeSet author="WebAnno Team" id="1512223050574-9">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="project" />
+      </not>
+    </preConditions>
+    <createTable tableName="project">
+      <column autoIncrement="true" name="id" type="BIGINT">
+        <constraints primaryKey="true" />
+      </column>
+      <column name="created" type="datetime(6)" />
+      <column name="description" type="LONGTEXT" />
+      <column name="disableExport" type="BIT(1)">
+        <constraints nullable="false" />
+      </column>
+      <column name="mode" type="VARCHAR(255)" />
+      <column name="name" type="VARCHAR(255)">
+        <constraints nullable="false" />
+      </column>
+      <column name="scriptDirection" type="VARCHAR(255)" />
+      <column name="updated" type="datetime(6)" />
+      <column name="version" type="INT">
+        <constraints nullable="false" />
+      </column>
+    </createTable>
+  </changeSet>
+  
+  <!--
+    Clean up legacy unique constraint (name) on (project)
+    
+    NOTE: This change set ignores failures since there is no precondition to check if
+          unique constraints exist or not. So we simply have to try it.
+   -->
+  <changeSet author="WebAnno Team" id="1512223050574-9.1" failOnError="false">
+    <dropUniqueConstraint
+      tableName="project"
+      constraintName="UK_3k75vvu7mevyvvb5may5lj8k7" 
+      uniqueColumns="name" />
+  </changeSet>
+
+  <!-- 
+    Add unique constraint (name) on (project)
+    
+    NOTE: This change set ignores failures since there is no precondition to check if
+          unique constraints exist or not. So we simply have to try it.
+   -->
+  <changeSet author="WebAnno Team" id="1512223050574-9.2" failOnError="false">
+    <addUniqueConstraint 
+      tableName="project" 
+      constraintName="UK3k75vvu7mevyvvb5may5lj8k7" 
+      columnNames="name" />
+  </changeSet>  
+
+  <changeSet author="WebAnno Team" id="1512223050574-10">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="project_permissions" />
+      </not>
+    </preConditions>
+    <createTable tableName="project_permissions">
+      <column autoIncrement="true" name="id" type="BIGINT">
+        <constraints primaryKey="true" />
+      </column>
+      <column name="level" type="VARCHAR(255)" />
+      <column name="user" type="VARCHAR(255)" />
+      <column name="project" type="BIGINT" />
+    </createTable>
+  </changeSet>
+  
+  <!--
+    Clean up legacy unique constraint (user, level, project) on (project_permissions)
+    
+    NOTE: This change set ignores failures since there is no precondition to check if
+          unique constraints exist or not. So we simply have to try it.
+   -->
+  <changeSet author="WebAnno Team" id="1512223050574-10.1" failOnError="false">
+    <dropUniqueConstraint
+      tableName="project_permissions" 
+      constraintName="UK_gh78wc2j1lxhhmk1hu5b9u8vb"
+      uniqueColumns="user, level, project" />
+  </changeSet>
+
+  <!-- 
+    Add unique constraint (user, level, project) on (project_permissions)
+    
+    NOTE: This change set ignores failures since there is no precondition to check if
+          unique constraints exist or not. So we simply have to try it.
+   -->
+  <changeSet author="WebAnno Team" id="1512223050574-10.2" failOnError="false">
+    <addUniqueConstraint 
+      tableName="project_permissions" 
+      constraintName="UKgh78wc2j1lxhhmk1hu5b9u8vb"
+      columnNames="user, level, project" />
+  </changeSet>  
+
+  <!--
+    Add index (project) on (project_permissions)
+   -->
+  <changeSet author="WebAnno Team" id="1512223050574-10.4">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <indexExists tableName="project_permissions" indexName="FKa6yp1botw0ofbutj6ki5q3j1n"/>
+      </not>
+    </preConditions>
+    <createIndex indexName="FKa6yp1botw0ofbutj6ki5q3j1n" tableName="project_permissions">
+      <column name="project" />
+    </createIndex>
+  </changeSet>  
+  
+  <changeSet author="WebAnno Team" id="1512223050574-11">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="source_document" />
+      </not>
+    </preConditions>
+    <createTable tableName="source_document">
+      <column autoIncrement="true" name="id" type="BIGINT">
+        <constraints primaryKey="true" />
+      </column>
+      <column name="created" type="datetime(6)" />
+      <column name="format" type="VARCHAR(255)" />
+      <column name="name" type="VARCHAR(255)">
+        <constraints nullable="false" />
+      </column>
+      <column name="processed" type="BIT(1)">
+        <constraints nullable="false" />
+      </column>
+      <column name="sentenceAccessed" type="INT">
+        <constraints nullable="false" />
+      </column>
+      <column name="state" type="VARCHAR(255)">
+        <constraints nullable="false" />
+      </column>
+      <column name="timestamp" type="datetime(6)" />
+      <column name="trainingDocument" type="BIT(1)">
+        <constraints nullable="false" />
+      </column>
+      <column name="updated" type="datetime(6)" />
+      <column name="project" type="BIGINT" />
+    </createTable>
+  </changeSet>
+  
+  <!--
+    Clean up legacy unique constraint (name, project) on (source_document)
+    
+    NOTE: This change set ignores failures since there is no precondition to check if
+          unique constraints exist or not. So we simply have to try it.
+   -->
+  <changeSet author="WebAnno Team" id="1512223050574-11.1" failOnError="false">
+    <dropUniqueConstraint
+      tableName="source_document"
+      constraintName="UK_3ma3d81kn5x2sjpv7e99rnt2h"
+      uniqueColumns="name, project" />
+  </changeSet>
+
+  <!-- 
+    Add unique constraint (name, project) on (source_document)
+    
+    NOTE: This change set ignores failures since there is no precondition to check if
+          unique constraints exist or not. So we simply have to try it.
+   -->
+  <changeSet author="WebAnno Team" id="1512223050574-11.2" failOnError="false">
+    <addUniqueConstraint 
+      tableName="source_document" 
+      constraintName="UK3ma3d81kn5x2sjpv7e99rnt2h"
+      columnNames="name, project" />
+  </changeSet>  
+
+  <!--
+    Add index (project) on (source_document)
+   -->
+  <changeSet author="WebAnno Team" id="1512223050574-11.4">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <indexExists tableName="source_document" indexName="FKj4k7l1evyutdsam9mw4n5c5c0"/>
+      </not>
+    </preConditions>
+    <createIndex indexName="FKj4k7l1evyutdsam9mw4n5c5c0" tableName="source_document">
+      <column name="project" />
+    </createIndex>
+  </changeSet>  
+  
+  <changeSet author="WebAnno Team" id="1512223050574-12">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="tag" />
+      </not>
+    </preConditions>
+    <createTable tableName="tag">
+      <column autoIncrement="true" name="id" type="BIGINT">
+        <constraints primaryKey="true" />
+      </column>
+      <column name="description" type="LONGTEXT" />
+      <column name="name" type="VARCHAR(255)">
+        <constraints nullable="false" />
+      </column>
+      <column name="tagset" type="BIGINT" />
+    </createTable>
+  </changeSet>
+  
+  <!--
+    Add index (tagset) on (tag)
+   -->
+  <changeSet author="WebAnno Team" id="1512223050574-12.2">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <indexExists tableName="tag" indexName="FKprsffdlcey9b2tq3gw3p3jctd"/>
+      </not>
+    </preConditions>
+    <createIndex indexName="FKprsffdlcey9b2tq3gw3p3jctd" tableName="tag">
+      <column name="tagset" />
+    </createIndex>
+  </changeSet>  
+  
+  <changeSet author="WebAnno Team" id="1512223050574-13">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="tag_set" />
+      </not>
+    </preConditions>
+    <createTable tableName="tag_set">
+      <column autoIncrement="true" name="id" type="BIGINT">
+        <constraints primaryKey="true" />
+      </column>
+      <column name="createTag" type="BIT(1)">
+        <constraints nullable="false" />
+      </column>
+      <column name="description" type="LONGTEXT" />
+      <column name="language" type="VARCHAR(255)" />
+      <column name="name" type="VARCHAR(255)">
+        <constraints nullable="false" />
+      </column>
+      <column name="project" type="BIGINT" />
+    </createTable>
+  </changeSet>
+  
+  <!--
+    Clean up legacy unique constraint (name, project) on (tag_set)
+    
+    NOTE: This change set ignores failures since there is no precondition to check if
+          unique constraints exist or not. So we simply have to try it.
+   -->
+  <changeSet author="WebAnno Team" id="1512223050574-13.1" failOnError="false">
+    <dropUniqueConstraint
+      tableName="tag_set" 
+      constraintName="UK_n1pf8qa78xwkkq5890mp5u5rw"
+      uniqueColumns="name, project" />
+  </changeSet>
+
+  <!-- 
+    Add unique constraint (name, project) on (tag_set)
+    
+    NOTE: This change set ignores failures since there is no precondition to check if
+          unique constraints exist or not. So we simply have to try it.
+   -->
+  <changeSet author="WebAnno Team" id="1512223050574-13.2" failOnError="false">
+    <addUniqueConstraint 
+      tableName="tag_set" 
+      constraintName="UKn1pf8qa78xwkkq5890mp5u5rw"
+      columnNames="name, project" />
+  </changeSet>  
+
+  <!--
+    Add index (project) on (tag_set)
+   -->
+  <changeSet author="WebAnno Team" id="1512223050574-13.4">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <indexExists tableName="tag_set" indexName="FKfmg2omct594qkgix3l6dclxov"/>
+      </not>
+    </preConditions>
+    <createIndex indexName="FKfmg2omct594qkgix3l6dclxov" tableName="tag_set">
+      <column name="project" />
+    </createIndex>
+  </changeSet>  
+  
+  <changeSet author="WebAnno Team" id="1512223050574-14">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="train_document" />
+      </not>
+    </preConditions>
+    <createTable tableName="train_document">
+      <column autoIncrement="true" name="id" type="BIGINT">
+        <constraints primaryKey="true" />
+      </column>
+      <column name="format" type="VARCHAR(255)" />
+      <column name="name" type="VARCHAR(255)">
+        <constraints nullable="false" />
+      </column>
+      <column name="processed" type="BIT(1)">
+        <constraints nullable="false" />
+      </column>
+      <column name="sentenceAccessed" type="INT">
+        <constraints nullable="false" />
+      </column>
+      <column name="state" type="VARCHAR(255)">
+        <constraints nullable="false" />
+      </column>
+      <column name="timestamp" type="datetime(6)" />
+      <column name="feature_id" type="BIGINT" />
+      <column name="project" type="BIGINT" />
+    </createTable>
+  </changeSet>
+  
+  <!--
+    Clean up legacy unique constraint (name, project) on (train_document)
+    
+    NOTE: This change set ignores failures since there is no precondition to check if
+          unique constraints exist or not. So we simply have to try it.
+   -->
+  <changeSet author="WebAnno Team" id="1512223050574-14.1" failOnError="false">
+    <dropUniqueConstraint
+      tableName="train_document" 
+      constraintName="UK_jf8bhw2u6xwp9goc2yqv2qfhc"
+      uniqueColumns="name, project" />
+  </changeSet>
+
+  <!-- 
+    Add unique constraint (name, project) on (train_document)
+    
+    NOTE: This change set ignores failures since there is no precondition to check if
+          unique constraints exist or not. So we simply have to try it.
+   -->
+  <changeSet author="WebAnno Team" id="1512223050574-14.2" failOnError="false">
+    <addUniqueConstraint 
+      tableName="train_document" 
+      constraintName="UKjf8bhw2u6xwp9goc2yqv2qfhc"
+      columnNames="name, project" />
+  </changeSet>  
+
+  <!--
+    Add index (project) on (train_document)
+   -->
+  <changeSet author="WebAnno Team" id="1512223050574-14.4">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <indexExists tableName="train_document" indexName="FKrthd11flannrdgc0hvvjcagy5"/>
+      </not>
+    </preConditions>
+    <createIndex indexName="FKrthd11flannrdgc0hvvjcagy5" tableName="train_document">
+      <column name="project" />
+    </createIndex>
+  </changeSet>  
+  
+  
+  <changeSet author="WebAnno Team" id="1512223050574-41.1">
+    <preConditions onFail="MARK_RAN">
+      <foreignKeyConstraintExists foreignKeyTableName="constraint_set" foreignKeyName="FK7D6BCB001EBB5F0A" />
+    </preConditions>
+    <dropForeignKeyConstraint baseTableName="constraint_set" constraintName="FK7D6BCB001EBB5F0A" />
+  </changeSet>
+
+  <changeSet author="WebAnno Team" id="1512223050574-41.2">
+    <preConditions onFail="MARK_RAN">
+      <foreignKeyConstraintExists foreignKeyTableName="constraint_set" foreignKeyName="FK_iajcg8ytewhcad8q3antmr7gl" />
+    </preConditions>
+    <dropForeignKeyConstraint baseTableName="constraint_set" constraintName="FK_iajcg8ytewhcad8q3antmr7gl" />
+  </changeSet>
+
+  <changeSet author="WebAnno Team" id="1512223050574-41.3">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <foreignKeyConstraintExists foreignKeyTableName="constraint_set" foreignKeyName="FK411i5muqyvbe4ag5r38g81uus" />
+      </not>
+    </preConditions>
+    <addForeignKeyConstraint baseColumnNames="project" baseTableName="constraint_set"
+      constraintName="FK411i5muqyvbe4ag5r38g81uus" deferrable="false" initiallyDeferred="false"
+      onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="project" />
+  </changeSet>
+  
+
+  <changeSet author="WebAnno Team" id="1512223050574-42.1">
+    <preConditions onFail="MARK_RAN">
+      <foreignKeyConstraintExists foreignKeyTableName="project_permissions" foreignKeyName="FKE1C2C05E1EBB5F0A" />
+    </preConditions>
+    <dropForeignKeyConstraint baseTableName="project_permissions" constraintName="FKE1C2C05E1EBB5F0A" />
+  </changeSet>
+
+  <changeSet author="WebAnno Team" id="1512223050574-42.2">
+    <preConditions onFail="MARK_RAN">
+      <foreignKeyConstraintExists foreignKeyTableName="project_permissions" foreignKeyName="FK_8kpmm9cy0xwktxdkd2fmuq2pf" />
+    </preConditions>
+    <dropForeignKeyConstraint baseTableName="project_permissions" constraintName="FK_8kpmm9cy0xwktxdkd2fmuq2pf" />
+  </changeSet>
+
+  <changeSet author="WebAnno Team" id="1512223050574-42.3">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <foreignKeyConstraintExists foreignKeyTableName="project_permissions" foreignKeyName="FKa6yp1botw0ofbutj6ki5q3j1n" />
+      </not>
+    </preConditions>
+    <addForeignKeyConstraint baseColumnNames="project" baseTableName="project_permissions"
+      constraintName="FKa6yp1botw0ofbutj6ki5q3j1n" deferrable="false" initiallyDeferred="false"
+      onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="project" />
+  </changeSet>
+  
+  
+  <changeSet author="WebAnno Team" id="1512223050574-44.1">
+    <preConditions onFail="MARK_RAN">
+      <foreignKeyConstraintExists foreignKeyTableName="annotation_feature" foreignKeyName="FK40F76DE61EBB5F0A" />
+    </preConditions>
+    <dropForeignKeyConstraint baseTableName="annotation_feature" constraintName="FK40F76DE61EBB5F0A" />
+  </changeSet>
+
+  <changeSet author="WebAnno Team" id="1512223050574-44.2">
+    <preConditions onFail="MARK_RAN">
+      <foreignKeyConstraintExists foreignKeyTableName="annotation_feature" foreignKeyName="FK_dtilq2jceedwd8kk00vd8fv7e" />
+    </preConditions>
+    <dropForeignKeyConstraint baseTableName="annotation_feature" constraintName="FK_dtilq2jceedwd8kk00vd8fv7e" />
+  </changeSet>
+
+  <changeSet author="WebAnno Team" id="1512223050574-44.3">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <foreignKeyConstraintExists foreignKeyTableName="annotation_feature" foreignKeyName="FKb9ffvpa00ogpdrjixrhlxqwtb" />
+      </not>
+    </preConditions>
+    <addForeignKeyConstraint baseColumnNames="project" baseTableName="annotation_feature"
+      constraintName="FKb9ffvpa00ogpdrjixrhlxqwtb" deferrable="false" initiallyDeferred="false"
+      onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="project" />
+  </changeSet>
+
+
+  <changeSet author="WebAnno Team" id="1512223050574-45.1">
+    <preConditions onFail="MARK_RAN">
+      <foreignKeyConstraintExists foreignKeyTableName="annotation_document" foreignKeyName="FK22A63C2B1EBB5F0A" />
+    </preConditions>
+    <dropForeignKeyConstraint baseTableName="annotation_document" constraintName="FK22A63C2B1EBB5F0A" />
+  </changeSet>
+
+  <changeSet author="WebAnno Team" id="1512223050574-45.2">
+    <preConditions onFail="MARK_RAN">
+      <foreignKeyConstraintExists foreignKeyTableName="annotation_document" foreignKeyName="FK_d8dwhvclggtq2l5eyntulb2ak" />
+    </preConditions>
+    <dropForeignKeyConstraint baseTableName="annotation_document" constraintName="FK_d8dwhvclggtq2l5eyntulb2ak" />
+  </changeSet>
+
+  <changeSet author="WebAnno Team" id="1512223050574-45.3">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <foreignKeyConstraintExists foreignKeyTableName="annotation_document" foreignKeyName="FKc8nbnendgkcp51yy9mo5yjiu7" />
+      </not>
+    </preConditions>
+    <addForeignKeyConstraint baseColumnNames="project" baseTableName="annotation_document"
+      constraintName="FKc8nbnendgkcp51yy9mo5yjiu7" deferrable="false" initiallyDeferred="false"
+      onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="project" />
+  </changeSet>
+
+
+  <changeSet author="WebAnno Team" id="1512223050574-50.1">
+    <preConditions onFail="MARK_RAN">
+      <foreignKeyConstraintExists foreignKeyTableName="annotation_document" foreignKeyName="FK22A63C2B1A63799" />
+    </preConditions>
+    <dropForeignKeyConstraint baseTableName="annotation_document" constraintName="FK22A63C2B1A63799" />
+  </changeSet>
+
+  <changeSet author="WebAnno Team" id="1512223050574-50.2">
+    <preConditions onFail="MARK_RAN">
+      <foreignKeyConstraintExists foreignKeyTableName="annotation_document" foreignKeyName="FK_ehvg7rvilt5fxlpvpa6vsk9ew" />
+    </preConditions>
+    <dropForeignKeyConstraint baseTableName="annotation_document" constraintName="FK_ehvg7rvilt5fxlpvpa6vsk9ew" />
+  </changeSet>
+
+  <changeSet author="WebAnno Team" id="1512223050574-50.3">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <foreignKeyConstraintExists foreignKeyTableName="annotation_document" foreignKeyName="FKlpt8o34eo4nyuv5qsuple9vfa" />
+      </not>
+    </preConditions>
+    <addForeignKeyConstraint baseColumnNames="document" baseTableName="annotation_document"
+      constraintName="FKlpt8o34eo4nyuv5qsuple9vfa" deferrable="false" initiallyDeferred="false"
+      onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="source_document" />
+  </changeSet>
+  
+  
+  <changeSet author="WebAnno Team" id="1512223050574-46.1">
+    <preConditions onFail="MARK_RAN">
+      <foreignKeyConstraintExists foreignKeyTableName="tag_set" foreignKeyName="FKA3B14E3D1EBB5F0A" />
+    </preConditions>
+    <dropForeignKeyConstraint baseTableName="tag_set" constraintName="FKA3B14E3D1EBB5F0A" />
+  </changeSet>
+
+  <changeSet author="WebAnno Team" id="1512223050574-46.2">
+    <preConditions onFail="MARK_RAN">
+      <foreignKeyConstraintExists foreignKeyTableName="tag_set" foreignKeyName="FK_o4j88awilp74dl39y4kh6p1h0" />
+    </preConditions>
+    <dropForeignKeyConstraint baseTableName="tag_set" constraintName="FK_o4j88awilp74dl39y4kh6p1h0" />
+  </changeSet>
+  
+  <changeSet author="WebAnno Team" id="1512223050574-46.3">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <foreignKeyConstraintExists foreignKeyTableName="tag_set" foreignKeyName="FKfmg2omct594qkgix3l6dclxov" />
+      </not>
+    </preConditions>
+    <addForeignKeyConstraint baseColumnNames="project" baseTableName="tag_set"
+      constraintName="FKfmg2omct594qkgix3l6dclxov" deferrable="false" initiallyDeferred="false"
+      onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="project" />
+  </changeSet>
+  
+
+  <changeSet author="WebAnno Team" id="1512223050574-49.1">
+    <preConditions onFail="MARK_RAN">
+      <foreignKeyConstraintExists foreignKeyTableName="source_document" foreignKeyName="FKE9E588BF1EBB5F0A" />
+    </preConditions>
+    <dropForeignKeyConstraint baseTableName="source_document" constraintName="FKE9E588BF1EBB5F0A" />
+  </changeSet>
+
+  <changeSet author="WebAnno Team" id="1512223050574-49.2">
+    <preConditions onFail="MARK_RAN">
+      <foreignKeyConstraintExists foreignKeyTableName="source_document" foreignKeyName="FK_p8ehk9kheioot0oat8ovxfppf" />
+    </preConditions>
+    <dropForeignKeyConstraint baseTableName="source_document" constraintName="FK_p8ehk9kheioot0oat8ovxfppf" />
+  </changeSet>
+
+  <changeSet author="WebAnno Team" id="1512223050574-49.3">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <foreignKeyConstraintExists foreignKeyTableName="source_document" foreignKeyName="FKj4k7l1evyutdsam9mw4n5c5c0" />
+      </not>
+    </preConditions>
+    <addForeignKeyConstraint baseColumnNames="project" baseTableName="source_document"
+      constraintName="FKj4k7l1evyutdsam9mw4n5c5c0" deferrable="false" initiallyDeferred="false"
+      onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="project" />
+  </changeSet>
+
+
+  <changeSet author="WebAnno Team" id="1512223050574-51.1">
+    <preConditions onFail="MARK_RAN">
+      <foreignKeyConstraintExists foreignKeyTableName="annotation_type" foreignKeyName="FKE9FK6E90024A1EBB5F0AE588BF1EBB5F0A" />
+    </preConditions>
+    <dropForeignKeyConstraint baseTableName="annotation_type" constraintName="FK6E90024A1EBB5F0A" />
+  </changeSet>
+
+  <changeSet author="WebAnno Team" id="1512223050574-51.2">
+    <preConditions onFail="MARK_RAN">
+      <foreignKeyConstraintExists foreignKeyTableName="annotation_type" foreignKeyName="FK_b5xq6g86mys2jxctp4sb069so" />
+    </preConditions>
+    <dropForeignKeyConstraint baseTableName="annotation_type" constraintName="FK_b5xq6g86mys2jxctp4sb069so" />
+  </changeSet>
+
+  <changeSet author="WebAnno Team" id="1512223050574-51.3">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <foreignKeyConstraintExists foreignKeyTableName="annotation_type" foreignKeyName="FKm5kf05xieqgw9pfxqrnbsddac" />
+      </not>
+    </preConditions>
+    <addForeignKeyConstraint baseColumnNames="project" baseTableName="annotation_type"
+      constraintName="FKm5kf05xieqgw9pfxqrnbsddac" deferrable="false" initiallyDeferred="false"
+      onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="project" />
+  </changeSet>
+
+
+  <changeSet author="WebAnno Team" id="1512223050574-53.1">
+    <preConditions onFail="MARK_RAN">
+      <foreignKeyConstraintExists foreignKeyTableName="tag" foreignKeyName="FK1BF9AD2EF8118" />
+    </preConditions>
+    <dropForeignKeyConstraint baseTableName="tag" constraintName="FK1BF9AD2EF8118" />
+  </changeSet>
+
+  <changeSet author="WebAnno Team" id="1512223050574-53.2">
+    <preConditions onFail="MARK_RAN">
+      <foreignKeyConstraintExists foreignKeyTableName="tag" foreignKeyName="FK_95i0bh45afonwe31xc9yvteqq" />
+    </preConditions>
+    <dropForeignKeyConstraint baseTableName="tag" constraintName="FK_95i0bh45afonwe31xc9yvteqq" />
+  </changeSet>
+
+  <changeSet author="WebAnno Team" id="1512223050574-53.3">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <foreignKeyConstraintExists foreignKeyTableName="tag" foreignKeyName="FKprsffdlcey9b2tq3gw3p3jctd" />
+      </not>
+    </preConditions>
+    <addForeignKeyConstraint baseColumnNames="tagset" baseTableName="tag"
+      constraintName="FKprsffdlcey9b2tq3gw3p3jctd" deferrable="false" initiallyDeferred="false"
+      onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="tag_set" />
+  </changeSet>
+
+
+  <changeSet author="WebAnno Team" id="1512223050574-54.1">
+    <preConditions onFail="MARK_RAN">
+      <foreignKeyConstraintExists foreignKeyTableName="train_document" foreignKeyName="FK_ijpb9cuo73wabicxjvnpf8gb6" />
+    </preConditions>
+    <dropForeignKeyConstraint baseTableName="train_document" constraintName="FK_ijpb9cuo73wabicxjvnpf8gb6" />
+  </changeSet>
+
+  <changeSet author="WebAnno Team" id="1512223050574-54.3">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <foreignKeyConstraintExists foreignKeyTableName="train_document" foreignKeyName="FKrthd11flannrdgc0hvvjcagy5" />
+      </not>
+    </preConditions>
+    <addForeignKeyConstraint baseColumnNames="project" baseTableName="train_document"
+      constraintName="FKrthd11flannrdgc0hvvjcagy5" deferrable="false" initiallyDeferred="false"
+      onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="project" />
+  </changeSet>
+
+  <!--
+    Clean up legacy index (project) on (annotation_document)
+   -->
+  <changeSet author="WebAnno Team" id="1512223050574-1.3">
+    <preConditions onFail="MARK_RAN">
+      <indexExists tableName="annotation_document" indexName="FK_d8dwhvclggtq2l5eyntulb2ak"/>
+    </preConditions>
+    <dropIndex
+      tableName="annotation_document"
+      indexName="FK_d8dwhvclggtq2l5eyntulb2ak" />
+  </changeSet>
+
+  <!--
+    Clean up legacy index (document) on (annotation_document)
+   -->
+  <changeSet author="WebAnno Team" id="1512223050574-1.5">
+    <preConditions onFail="MARK_RAN">
+      <indexExists tableName="annotation_document" indexName="FK_ehvg7rvilt5fxlpvpa6vsk9ew"/>
+    </preConditions>
+    <dropIndex 
+      tableName="annotation_document"
+      indexName="FK_ehvg7rvilt5fxlpvpa6vsk9ew" />
+  </changeSet>
+
+  <!--
+    Clean up legacy index (project) on (annotation_feature)
+   -->
+  <changeSet author="WebAnno Team" id="1512223050574-2.3">
+    <preConditions onFail="MARK_RAN">
+      <indexExists tableName="annotation_feature" indexName="FK_dtilq2jceedwd8kk00vd8fv7e"/>
+    </preConditions>
+    <dropIndex 
+      tableName="annotation_feature"
+      indexName="FK_dtilq2jceedwd8kk00vd8fv7e" />
+  </changeSet>
+
+  <!--
+    Clean up legacy index (project) on (annotation_type)
+   -->
+  <changeSet author="WebAnno Team" id="1512223050574-3.3">
+    <preConditions onFail="MARK_RAN">
+      <indexExists tableName="annotation_type" indexName="FK_b5xq6g86mys2jxctp4sb069so"/>
+    </preConditions>
+    <dropIndex 
+      tableName="annotation_type"
+      indexName="FK_b5xq6g86mys2jxctp4sb069so" />
+  </changeSet>
+
+  <!--
+    Clean up legacy index (project) on (constraint_set)
+   -->
+  <changeSet author="WebAnno Team" id="1512223050574-6.3">
+    <preConditions onFail="MARK_RAN">
+      <indexExists tableName="constraint_set" indexName="FK_iajcg8ytewhcad8q3antmr7gl"/>
+    </preConditions>
+    <dropIndex 
+      tableName="constraint_set"
+      indexName="FK_iajcg8ytewhcad8q3antmr7gl" />
+  </changeSet>
+
+  <!--
+    Clean up legacy index (project) on (project_permissions)
+   -->
+  <changeSet author="WebAnno Team" id="1512223050574-10.3">
+    <preConditions onFail="MARK_RAN">
+      <indexExists tableName="project_permissions" indexName="FK_8kpmm9cy0xwktxdkd2fmuq2pf"/>
+    </preConditions>
+    <dropIndex 
+      tableName="project_permissions"
+      indexName="FK_8kpmm9cy0xwktxdkd2fmuq2pf" />
+  </changeSet>
+
+  <!--
+    Clean up legacy index (project) on (source_document)
+   -->
+  <changeSet author="WebAnno Team" id="1512223050574-11.3">
+    <preConditions onFail="MARK_RAN">
+      <indexExists tableName="source_document" indexName="FK_p8ehk9kheioot0oat8ovxfppf"/>
+    </preConditions>
+    <dropIndex 
+      tableName="source_document"
+      indexName="FK_p8ehk9kheioot0oat8ovxfppf" />
+  </changeSet>
+
+  <!--
+    Clean up legacy index (tagset) on (tag)
+   -->
+  <changeSet author="WebAnno Team" id="1512223050574-12.1">
+    <preConditions onFail="MARK_RAN">
+      <indexExists tableName="tag" indexName="FK_95i0bh45afonwe31xc9yvteqq"/>
+    </preConditions>
+    <dropIndex 
+      tableName="tag"
+      indexName="FK_95i0bh45afonwe31xc9yvteqq" />
+  </changeSet>
+
+  <!--
+    Clean up legacy index (project) on (tag_set)
+   -->
+  <changeSet author="WebAnno Team" id="1512223050574-13.3">
+    <preConditions onFail="MARK_RAN">
+      <indexExists tableName="tag_set" indexName="FK_o4j88awilp74dl39y4kh6p1h0"/>
+    </preConditions>
+    <dropIndex 
+      tableName="tag_set"
+      indexName="FK_o4j88awilp74dl39y4kh6p1h0" />
+  </changeSet>
+
+  <!--
+    Clean up legacy index (project) on (train_document)
+   -->
+  <changeSet author="WebAnno Team" id="1512223050574-14.3">
+    <preConditions onFail="MARK_RAN">
+      <indexExists tableName="train_document" indexName="FK_ijpb9cuo73wabicxjvnpf8gb6"/>
+    </preConditions>
+    <dropIndex 
+      tableName="train_document"
+      indexName="FK_ijpb9cuo73wabicxjvnpf8gb6" />
+  </changeSet>
+  
+  <changeSet author="WebAnno Team" id="20180204-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="project" columnName="state"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="project">
+      <column name="state" type="VARCHAR(255)">
+        <constraints nullable="true" />
+      </column>
+    </addColumn>
+  </changeSet>  
+  
+  <changeSet author="WebAnno Team" id="20180331-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="annotation_feature" columnName="traits"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="annotation_feature">
+      <column name="traits" type="LONGTEXT">
+        <constraints nullable="true" />
+      </column>
+    </addColumn>
+  </changeSet>  
+</databaseChangeLog>

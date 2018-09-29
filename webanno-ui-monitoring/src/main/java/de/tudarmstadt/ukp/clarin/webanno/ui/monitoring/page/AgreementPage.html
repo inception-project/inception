@@ -25,13 +25,16 @@
           <div class="panel-heading">
             <h3 class="panel-title"><wicket:message key="projects" /></h3>
           </div>
-          <div class="scrolling panel-body fit-child-snuck" >
+          <div class="scrolling panel-body fit-child-snug" >
             <select wicket:id="project" size="20" class="form-control"></select>
           </div>
         </div>
       </form>
       
       <form wicket:id="agreementForm" class="scrolling flex-content flex-v-container flex-gutter">
+        <div class="page-header">
+          <h1><wicket:container wicket:id="name"/></h1>
+        </div>
         <div class="panel panel-default">
           <div class="panel-heading">
             <h3 class="panel-title"><wicket:message key="settings" />
@@ -76,7 +79,7 @@
           </div>
         </div>
           
-        <div class="flex-content panel panel-default panel-flex" wicket:enclosure="exportAll">
+        <div class="flex-content panel panel-default panel-flex" wicket:id="agreementResults">
           <div class="panel-heading">
             <h3 class="panel-title">
               <wicket:message key="agreement" />
