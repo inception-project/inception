@@ -538,6 +538,8 @@ public class ProjectLayersPanel
                 @Override
                 protected void onConfigure()
                 {
+                    super.onConfigure();
+                    
                     setVisible(StringUtils
                             .isNotBlank(LayerDetailForm.this.getModelObject().getName()));
                 }
@@ -626,6 +628,8 @@ public class ProjectLayersPanel
                 @Override
                 protected void onConfigure()
                 {
+                    super.onConfigure();
+                    
                     setEnabled(isNull(LayerDetailForm.this.getModelObject().getId()));
                     setNullValid(isVisible());
                 }
@@ -648,6 +652,7 @@ public class ProjectLayersPanel
                 protected void onConfigure()
                 {
                     super.onConfigure();
+                    
                     AnnotationLayer layer = LayerDetailForm.this.getModelObject();
                     // Makes no sense for relation layers or layers that attach to tokens
                     setVisible(!isBlank(layer.getType()) && !RELATION_TYPE.equals(layer.getType())
@@ -673,6 +678,7 @@ public class ProjectLayersPanel
                 protected void onConfigure()
                 {
                     super.onConfigure();
+                    
                     AnnotationLayer layer = LayerDetailForm.this.getModelObject();
                     setVisible(!isBlank(layer.getType()));
                     setEnabled(
@@ -699,6 +705,7 @@ public class ProjectLayersPanel
                 protected void onConfigure()
                 {
                     super.onConfigure();
+                    
                     AnnotationLayer layer = LayerDetailForm.this.getModelObject();
                     setVisible(!isBlank(layer.getType()));
                     setEnabled(
@@ -726,6 +733,7 @@ public class ProjectLayersPanel
                 protected void onConfigure()
                 {
                     super.onConfigure();
+                    
                     AnnotationLayer layer = LayerDetailForm.this.getModelObject();
                     setVisible(!isBlank(layer.getType()) &&
                         // Not configurable for chains or relations
@@ -767,6 +775,7 @@ public class ProjectLayersPanel
                 protected void onConfigure()
                 {
                     super.onConfigure();
+                    
                     AnnotationLayer layer = LayerDetailForm.this.getModelObject();
                     setVisible(!isBlank(layer.getType()) && CHAIN_TYPE.equals(layer.getType()));
                 }
@@ -990,6 +999,8 @@ public class ProjectLayersPanel
                 @Override
                 protected void onConfigure()
                 {
+                    super.onConfigure();
+                    
                     setVisible(StringUtils
                             .isNotBlank(FeatureDetailForm.this.getModelObject().getName()));
                 }
@@ -1000,12 +1011,13 @@ public class ProjectLayersPanel
             add(new CheckBox("visible"));
             add(new CheckBox("includeInHover")
             {
-
                 private static final long serialVersionUID = -8273152168889478682L;
 
                 @Override
                 protected void onConfigure()
                 {
+                    super.onConfigure();
+                    
                     String layertype = layerDetailForm.getModelObject().getType();
                     // Currently not configurable for chains or relations
                     // TODO: technically it is possible
@@ -1026,6 +1038,7 @@ public class ProjectLayersPanel
                 protected void onConfigure()
                 {
                     super.onConfigure();
+                    
                     boolean relevant = CAS.TYPE_NAME_STRING
                             .equals(FeatureDetailForm.this.getModelObject().getType());
                     setEnabled(relevant);
@@ -1054,6 +1067,8 @@ public class ProjectLayersPanel
                 @Override
                 protected void onConfigure()
                 {
+                    super.onConfigure();
+
                     if (isNull(FeatureDetailForm.this.getModelObject().getId())) {
                         setEnabled(true);
                         setChoices(LambdaModel.of(() -> featureSupportRegistry
@@ -1247,6 +1262,8 @@ public class ProjectLayersPanel
                         protected void onUpdate()
                         {
                             if (FeatureSelectionForm.this.getModelObject().feature != null) {
+                                featureDetailForm.setModelObject(
+                                        FeatureSelectionForm.this.getModelObject().feature);
                                 featureDetailForm.setVisible(true);
                             }
                         };

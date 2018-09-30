@@ -136,6 +136,7 @@ public class ProjectMiraTemplatePanel
             protected void onConfigure()
             {
                 super.onConfigure();
+                
                 if (isNull(template.getId())) {
                     this.setVisible(false);
                 }

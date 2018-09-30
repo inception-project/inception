@@ -210,6 +210,7 @@ public class CurationPanel
             protected void onConfigure()
             {
                 super.onConfigure();
+                
                 setEnabled(state.getDocument() != null && !documentService
                         .getSourceDocument(state.getDocument().getProject(),
                                 state.getDocument().getName())

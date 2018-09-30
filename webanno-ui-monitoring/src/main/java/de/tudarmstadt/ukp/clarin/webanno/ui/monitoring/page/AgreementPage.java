@@ -235,6 +235,7 @@ public class AgreementPage
                 protected void onConfigure()
                 {
                     super.onConfigure();
+                    
                     setVisible(featureList.getModelObject() != null);
                 }
             };
@@ -261,6 +262,8 @@ public class AgreementPage
                 @Override
                 protected void onConfigure()
                 {
+                    super.onConfigure();
+
                     AgreementFormModel model = AgreementForm.this.getModelObject();
                     if (model != null && model.feature != null) {
                         setVisible(!LinkMode.NONE.equals(model.feature.getLinkMode()));
@@ -287,6 +290,7 @@ public class AgreementPage
                 protected void onConfigure()
                 {
                     super.onConfigure();
+                    
                     setEnabled(AgreementForm.this.getModelObject().measure.isNullValueSupported());
                 }
             });
@@ -463,8 +467,9 @@ public class AgreementPage
         @Override
         protected void onConfigure()
         {
-            ProjectSelectionModel model = projectSelectionForm.getModelObject();
+            super.onConfigure();
 
+            ProjectSelectionModel model = projectSelectionForm.getModelObject();
             setVisible(model != null && model.project != null);
         }
 

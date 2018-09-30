@@ -141,6 +141,7 @@ public class AnnotationFeatureForm
             protected void onConfigure()
             {
                 super.onConfigure();
+                
                 setVisible(getModelObject().getSelection().getAnnotation().isSet());
             }
         };
@@ -168,6 +169,7 @@ public class AnnotationFeatureForm
             protected void onConfigure()
             {
                 super.onConfigure();
+                
                 setVisible(getModelObject().getFeatureStates().isEmpty());
             }
         };
@@ -284,6 +286,7 @@ public class AnnotationFeatureForm
             protected void onConfigure()
             {
                 super.onConfigure();
+                
                 setVisible(getModelObject().getPreferences().isRememberLayer());
             }
         };
@@ -482,6 +485,7 @@ public class AnnotationFeatureForm
             protected void onConfigure()
             {
                 super.onConfigure();
+                
                 setVisible(!getModelObject().getSelection().getAnnotation().isSet());
             }
         };
@@ -533,6 +537,7 @@ public class AnnotationFeatureForm
             protected void onConfigure()
             {
                 super.onConfigure();
+                
                 setVisible(isForwardable());
                 if (!isForwardable()) {
                     AnnotationFeatureForm.this.getModelObject().setForwardAnnotation(false);
@@ -585,6 +590,7 @@ public class AnnotationFeatureForm
     protected void onConfigure()
     {
         super.onConfigure();
+        
         // Avoid reversing in read-only layers
         setEnabled(getModelObject().getDocument() != null && !editorPanel.isAnnotationFinished());
     }

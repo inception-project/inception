@@ -257,6 +257,7 @@ public class CurationPage
             protected void onConfigure()
             {
                 super.onConfigure();
+                
                 AnnotatorState state = CurationPage.this.getModelObject();
                 setVisible(state.getProject() != null && (SecurityUtil.isAdmin(state.getProject(),
                         projectService, state.getUser()) || !state.getProject().isDisableExport()));
@@ -297,6 +298,7 @@ public class CurationPage
             protected void onConfigure()
             {
                 super.onConfigure();
+                
                 AnnotatorState state = CurationPage.this.getModelObject();
                 setEnabled(state.getProject() != null && state.getDocument() != null
                         && !documentService

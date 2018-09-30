@@ -431,6 +431,7 @@ public class BratAnnotationEditor
     protected void onConfigure()
     {
         super.onConfigure();
+        
         setVisible(getModelObject() != null && getModelObject().getProject() != null);
     }
 

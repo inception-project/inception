@@ -161,6 +161,7 @@ public class ManageUsersPage
         protected void onConfigure()
         {
             super.onConfigure();
+            
             setVisible(getModelObject() != null);
         }
     }

@@ -205,6 +205,7 @@ public class ProjectConstraintsPanel
                 protected void onConfigure()
                 {
                     super.onConfigure();
+                    
                     setVisible(DetailForm.this.getModelObject().getId() != null);
                 }
             };

@@ -74,6 +74,7 @@ public class SidebarTabbedPanel<T extends SidebarTab>
     protected void onConfigure()
     {
         super.onConfigure();
+        
         icon.setImageResourceReference(expanded ? ICON_EXPANDED : ICON_COLLAPSED);
     }
     

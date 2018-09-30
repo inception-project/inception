@@ -321,6 +321,8 @@ public class LinkFeatureEditor
             @Override
             protected void onConfigure()
             {
+                super.onConfigure();
+
                 AnnotatorState state = LinkFeatureEditor.this.stateModel.getObject();
                 setVisible(!(state.isSlotArmed() && LinkFeatureEditor.this.getModelObject().feature
                         .equals(state.getArmedFeature())));
@@ -344,6 +346,8 @@ public class LinkFeatureEditor
             @Override
             protected void onConfigure()
             {
+                super.onConfigure();
+
                 AnnotatorState state = LinkFeatureEditor.this.stateModel.getObject();
                 setVisible(state.isSlotArmed() && LinkFeatureEditor.this.getModelObject().feature
                         .equals(state.getArmedFeature()));
@@ -366,6 +370,8 @@ public class LinkFeatureEditor
             @Override
             protected void onConfigure()
             {
+                super.onConfigure();
+
                 AnnotatorState state = LinkFeatureEditor.this.stateModel.getObject();
                 setVisible(state.isSlotArmed() && LinkFeatureEditor.this.getModelObject().feature
                         .equals(state.getArmedFeature()));

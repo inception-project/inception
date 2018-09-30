@@ -282,6 +282,7 @@ public class CorrectionPage
             protected void onConfigure()
             {
                 super.onConfigure();
+                
                 AnnotatorState state = CorrectionPage.this.getModelObject();
                 setVisible(state.getProject() != null && (SecurityUtil.isAdmin(state.getProject(),
                         projectService, state.getUser()) || !state.getProject().isDisableExport()));
@@ -325,6 +326,7 @@ public class CorrectionPage
             protected void onConfigure()
             {
                 super.onConfigure();
+                
                 AnnotatorState state = CorrectionPage.this.getModelObject();
                 setEnabled(state.getDocument() != null && !documentService
                         .isAnnotationFinished(state.getDocument(), state.getUser()));
