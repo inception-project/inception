@@ -149,6 +149,8 @@ public class ProjectLayersPanel
     private final FeatureDetailForm featureDetailForm;
     private final ImportLayerForm importLayerForm;
     private Select<AnnotationLayer> layerSelection;
+    
+    private IModel<AnnotationFeature> selectedFeature;
 
     private String layerType = WebAnnoConst.SPAN_TYPE;
 
@@ -157,15 +159,16 @@ public class ProjectLayersPanel
         super(id, aProjectModel);
         setOutputMarkupId(true);
 
+        selectedFeature = Model.of();
+        
         layerSelectionForm = new LayerSelectionForm("layerSelectionForm");
+        layerDetailForm = new LayerDetailForm("layerDetailForm");
 
-        featureSelectionForm = new FeatureSelectionForm("featureSelectionForm");
+        featureSelectionForm = new FeatureSelectionForm("featureSelectionForm", selectedFeature);
         featureSelectionForm.setVisible(false);
         featureSelectionForm.setOutputMarkupPlaceholderTag(true);
 
-        layerDetailForm = new LayerDetailForm("layerDetailForm");
-
-        featureDetailForm = new FeatureDetailForm("featureDetailForm");
+        featureDetailForm = new FeatureDetailForm("featureDetailForm", selectedFeature);
         featureDetailForm.setVisible(false);
         featureDetailForm.setOutputMarkupPlaceholderTag(true);
 
@@ -186,10 +189,9 @@ public class ProjectLayersPanel
 
         layerDetailForm.setModelObject(null);
 
-        featureSelectionForm.getModelObject().feature = null;
         featureSelectionForm.setVisible(false);
 
-        featureDetailForm.setModelObject(null);
+        selectedFeature.setObject(null);
     }
 
     private class LayerSelectionForm
@@ -211,9 +213,9 @@ public class ProjectLayersPanel
                     LayerSelectionForm.this.getModelObject().layerSelection = null;
 
                     layerDetailForm.setModelObject(new AnnotationLayer());
-                    featureDetailForm.setModelObject(null);
 
                     featureSelectionForm.setVisible(false);
+                    selectedFeature.setObject(null);
                 }
             });
 
@@ -290,7 +292,7 @@ public class ProjectLayersPanel
                     featureSelectionForm.clearInput();
                     featureSelectionForm.setVisible(true);
 
-                    featureDetailForm.setModelObject(null);
+                    selectedFeature.setObject(null);
 
                     layerType = getModelObject().layerSelection.getType();
 
@@ -496,7 +498,6 @@ public class ProjectLayersPanel
         private static final long serialVersionUID = -1L;
 
         private AnnotationLayer layerSelection;
-        public AnnotationFeature feature;
     }
 
     private static enum LayerExportMode
@@ -787,7 +788,6 @@ public class ProjectLayersPanel
                 @Override
                 protected void onUpdate(AjaxRequestTarget aTarget)
                 {
-                    featureSelectionForm.updateChoices();
                     aTarget.add(featureSelectionForm);
                     aTarget.add(featureDetailForm);
                 }
@@ -887,7 +887,8 @@ public class ProjectLayersPanel
             layerDetailForm.setModelObject(null);
 
             featureSelectionForm.setVisible(false);
-            featureDetailForm.setModelObject(null);
+            
+            selectedFeature.setObject(null);
         }
 
         private String getExportLayerFileName()
@@ -985,9 +986,9 @@ public class ProjectLayersPanel
         private CheckBox required;
         private WebMarkupContainer traitsContainer;
 
-        public FeatureDetailForm(String id)
+        public FeatureDetailForm(String id, IModel<AnnotationFeature> aFeature)
         {
-            super(id, CompoundPropertyModel.of(Model.of()));
+            super(id, CompoundPropertyModel.of(aFeature));
 
             add(traitsContainer = new WebMarkupContainer(MID_TRAITS_CONTAINER));
             traitsContainer.setOutputMarkupId(true);
@@ -1180,8 +1181,7 @@ public class ProjectLayersPanel
                     annotationService.createFeature(feature);
 
                     // Clear currently selected feature / feature details
-                    featureSelectionForm.getModelObject().feature = null;
-                    featureDetailForm.setModelObject(null);
+                    selectedFeature.setObject(null);
 
                     // Trigger LayerConfigurationChangedEvent
                     applicationEventPublisherHolder.get().publishEvent(
@@ -1202,8 +1202,7 @@ public class ProjectLayersPanel
                 public void onSubmit()
                 {
                     // cancel selection of feature list
-                    featureSelectionForm.feature.setModelObject(null);
-                    featureDetailForm.setModelObject(null);
+                    selectedFeature.setObject(null);
                 }
             });
         }
@@ -1227,21 +1226,20 @@ public class ProjectLayersPanel
     }
 
     public class FeatureSelectionForm
-        extends Form<SelectionModel>
+        extends Form<AnnotationFeature>
     {
         private static final long serialVersionUID = -1L;
 
-        private ListChoice<AnnotationFeature> feature;
-
-        public FeatureSelectionForm(String id)
+        public FeatureSelectionForm(String id, IModel<AnnotationFeature> aModel)
         {
-            super(id, new CompoundPropertyModel<>(new SelectionModel()));
+            super(id, aModel);
 
-            add(feature = new ListChoice<AnnotationFeature>("feature")
+            add(new ListChoice<AnnotationFeature>("feature")
             {
                 private static final long serialVersionUID = 1L;
                 {
-                    setChoices(regenerateModel());
+                    setChoices(LoadableDetachableModel.of(FeatureSelectionForm.this::listFeatures));
+                    setModel(aModel);
                     setChoiceRenderer(new ChoiceRenderer<AnnotationFeature>()
                     {
                         private static final long serialVersionUID = 4610648616450168333L;
@@ -1261,10 +1259,9 @@ public class ProjectLayersPanel
                         @Override
                         protected void onUpdate()
                         {
-                            if (FeatureSelectionForm.this.getModelObject().feature != null) {
-                                featureDetailForm.setModelObject(
-                                        FeatureSelectionForm.this.getModelObject().feature);
-                                featureDetailForm.setVisible(true);
+                            if (FeatureSelectionForm.this.getModelObject() != null) {
+                                featureDetailForm
+                                        .setModelObject(FeatureSelectionForm.this.getModelObject());
                             }
                         };
                     });
@@ -1285,7 +1282,7 @@ public class ProjectLayersPanel
                 public void onSubmit()
                 {
                     // cancel selection of feature list
-                    feature.setModelObject(null);
+                    selectedFeature.setObject(null);
 
                     AnnotationFeature newFeature = new AnnotationFeature();
                     newFeature.setLayer(layerDetailForm.getModelObject());
@@ -1303,37 +1300,23 @@ public class ProjectLayersPanel
             });
         }
 
-        private LoadableDetachableModel<List<AnnotationFeature>> regenerateModel()
+        private List<AnnotationFeature> listFeatures()
         {
-            return new LoadableDetachableModel<List<AnnotationFeature>>()
-            {
-                private static final long serialVersionUID = 1L;
-
-                @Override
-                protected List<AnnotationFeature> load()
-                {
-                    List<AnnotationFeature> features = annotationService
-                            .listAnnotationFeature(layerDetailForm.getModelObject());
-                    if (CHAIN_TYPE.equals(layerDetailForm.getModelObject().getType())
-                            && !layerDetailForm.getModelObject().isLinkedListBehavior()) {
-                        List<AnnotationFeature> filtered = new ArrayList<>();
-                        for (AnnotationFeature f : features) {
-                            if (!WebAnnoConst.COREFERENCE_RELATION_FEATURE.equals(f.getName())) {
-                                filtered.add(f);
-                            }
-                        }
-                        return filtered;
-                    }
-                    else {
-                        return features;
+            List<AnnotationFeature> features = annotationService
+                    .listAnnotationFeature(layerDetailForm.getModelObject());
+            if (CHAIN_TYPE.equals(layerDetailForm.getModelObject().getType())
+                    && !layerDetailForm.getModelObject().isLinkedListBehavior()) {
+                List<AnnotationFeature> filtered = new ArrayList<>();
+                for (AnnotationFeature f : features) {
+                    if (!WebAnnoConst.COREFERENCE_RELATION_FEATURE.equals(f.getName())) {
+                        filtered.add(f);
                     }
                 }
-            };
-        }
-
-        public void updateChoices()
-        {
-            feature.setChoices(regenerateModel());
+                return filtered;
+            }
+            else {
+                return features;
+            }
         }
     }
 }
