@@ -139,6 +139,10 @@
       <groupId>org.apache.wicket</groupId>
       <artifactId>wicket-extensions</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.danekja</groupId>
+      <artifactId>jdk-serializable-functional</artifactId>
+    </dependency>
 
     <dependency>
       <groupId>com.googlecode.wicket-jquery-ui</groupId>

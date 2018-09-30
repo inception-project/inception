@@ -178,6 +178,10 @@
       <groupId>org.wicketstuff</groupId>
       <artifactId>wicketstuff-input-events</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.danekja</groupId>
+      <artifactId>jdk-serializable-functional</artifactId>
+    </dependency>
   </dependencies>
   <build>
     <pluginManagement>
