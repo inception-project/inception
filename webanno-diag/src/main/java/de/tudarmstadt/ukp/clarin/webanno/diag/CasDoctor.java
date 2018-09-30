@@ -326,7 +326,7 @@ public class CasDoctor
 
     public enum LogLevel
     {
-        INFO, ERROR
+        INFO, WARN, ERROR
     }
 
     public static class LogMessage

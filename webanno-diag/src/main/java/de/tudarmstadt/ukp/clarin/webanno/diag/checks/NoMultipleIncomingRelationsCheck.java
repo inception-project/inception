@@ -40,6 +40,7 @@ import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor.LogLevel;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor.LogMessage;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 
 public class NoMultipleIncomingRelationsCheck
     implements Check
@@ -58,6 +59,10 @@ public class NoMultipleIncomingRelationsCheck
             for (AnnotationLayer layer : allAnnoLayers) {
 
                 if (!WebAnnoConst.RELATION_TYPE.equals(layer.getType())) {
+                    continue;
+                }
+                
+                if (!Dependency.class.getName().equals(layer.getName())) {
                     continue;
                 }
 
@@ -102,7 +107,7 @@ public class NoMultipleIncomingRelationsCheck
                         }
 
                         if (sentenceNumber.isPresent()) {
-                            aMessages.add(new LogMessage(this, LogLevel.ERROR,
+                            aMessages.add(new LogMessage(this, LogLevel.WARN,
                                     "Sentence %d: Relation [%s] -> [%s] points to span that already has an "
                                             + "incoming relation [%s] -> [%s].",
                                     sentenceNumber.get(), source.getCoveredText(),
@@ -111,13 +116,16 @@ public class NoMultipleIncomingRelationsCheck
                         }
                         else {
 
-                            aMessages.add(new LogMessage(this, LogLevel.ERROR,
+                            aMessages.add(new LogMessage(this, LogLevel.WARN,
                                     "Relation [%s] -> [%s] points to span that already has an "
                                             + "incoming relation [%s] -> [%s].",
                                     source.getCoveredText(), target.getCoveredText(),
                                     existingSource.getCoveredText(), target.getCoveredText()));
                         }
-                        ok = false;
+                        
+                        // This check only logs warnings - it should not fail. Having multiple
+                        // incoming edges is not a serious problem.
+                        // ok = false;
                     }
                     else {
                         incoming.put(target, source);

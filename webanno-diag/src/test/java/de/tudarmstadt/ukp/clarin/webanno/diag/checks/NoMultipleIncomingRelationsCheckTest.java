@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.clarin.webanno.diag.checks;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
@@ -47,11 +46,13 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 import de.tudarmstadt.ukp.dkpro.core.testing.DkproTestContext;
 
 @RunWith(SpringRunner.class)
-public class NoMultipleIncomingRelationsCheckTest {
+public class NoMultipleIncomingRelationsCheckTest
+{
 
     @Configuration
     @Import({ AnnotationSchemaService.class, NoMultipleIncomingRelationsCheck.class })
-    static class Config {
+    static class Config
+    {
     }
 
     @Rule
@@ -64,7 +65,8 @@ public class NoMultipleIncomingRelationsCheckTest {
     NoMultipleIncomingRelationsCheck check;
 
     @Test
-    public void testFail() throws Exception {
+    public void testFail() throws Exception
+    {
 
         AnnotationLayer relationLayer = new AnnotationLayer();
         relationLayer.setName(Dependency.class.getName());
@@ -102,7 +104,7 @@ public class NoMultipleIncomingRelationsCheckTest {
 
         messages.forEach(System.out::println);
 
-        assertFalse(result);
+        assertTrue(result);
 
         // also check the message itself
         assertEquals(1, messages.size());
@@ -113,7 +115,8 @@ public class NoMultipleIncomingRelationsCheckTest {
     }
 
     @Test
-    public void testOK() throws Exception {
+    public void testOK() throws Exception
+    {
         AnnotationLayer relationLayer = new AnnotationLayer();
         relationLayer.setName(Dependency.class.getName());
 
@@ -154,7 +157,8 @@ public class NoMultipleIncomingRelationsCheckTest {
     }
 
     @Test
-    public void testOkBecauseCoref() throws Exception {
+    public void testOkBecauseCoref() throws Exception
+    {
 
         AnnotationLayer relationLayer = new AnnotationLayer();
         relationLayer.setName(CoreferenceChain.class.getName());
