@@ -79,10 +79,5 @@
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
     </dependency>
-    <dependency>
-      <groupId>org.danekja</groupId>
-      <artifactId>jdk-serializable-functional</artifactId>
-      <version>1.8.1</version>
-	</dependency>
   </dependencies>
 </project>
