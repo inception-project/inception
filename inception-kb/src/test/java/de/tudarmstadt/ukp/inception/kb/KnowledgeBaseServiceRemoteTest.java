@@ -26,6 +26,7 @@ import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -154,6 +155,7 @@ public class KnowledgeBaseServiceRemoteTest
     {
         PROFILES = readKnowledgeBaseProfiles();
 
+        Set<String> rootConcepts;
         List<TestConfiguration> kbList = new ArrayList<>();
 
         {
@@ -170,9 +172,11 @@ public class KnowledgeBaseServiceRemoteTest
             kb_wine.setPropertyLabelIri(RDFS.LABEL);
             kb_wine.setPropertyDescriptionIri(RDFS.COMMENT);
             kb_wine.setDefaultLanguage("en");
+            rootConcepts = new HashSet<String>();
+            rootConcepts.add("http://www.w3.org/TR/2003/PR-owl-guide-20031209/food#Grape");
             kbList.add(new TestConfiguration("data/wine-ontology.rdf", kb_wine,
                     "http://www.w3.org/TR/2003/PR-owl-guide-20031209/wine#ChateauMargaux",
-                    "http://www.w3.org/TR/2003/PR-owl-guide-20031209/food#Grape"));
+                    rootConcepts));
         }
 
         {
@@ -194,10 +198,11 @@ public class KnowledgeBaseServiceRemoteTest
             kb_hucit.setPropertyLabelIri(RDFS.LABEL);
             kb_hucit.setPropertyDescriptionIri(RDFS.COMMENT);
             kb_hucit.setDefaultLanguage("en");
+            rootConcepts = new HashSet<String>();
+            rootConcepts.add("http://www.w3.org/2000/01/rdf-schema#Class");
             kbList.add(new TestConfiguration("http://nlp.dainst.org:8888/sparql", kb_hucit,
                     // person -> Achilles :: urn:cts:cwkb:1137
-                    "http://purl.org/hucit/kb/authors/1137",
-                    "http://www.w3.org/2000/01/rdf-schema#Class"));
+                    "http://purl.org/hucit/kb/authors/1137", rootConcepts));
         }
 
         {
@@ -208,9 +213,10 @@ public class KnowledgeBaseServiceRemoteTest
             kb_wikidata_direct.setReification(Reification.NONE);
             kb_wikidata_direct.applyMapping(profile.getMapping());
             kb_wikidata_direct.setDefaultLanguage("en");
+            rootConcepts = new HashSet<String>();
+            rootConcepts.add("http://www.wikidata.org/entity/Q35120");
             kbList.add(new TestConfiguration(profile.getAccess().getAccessUrl(), kb_wikidata_direct,
-                    "http://www.wikidata.org/entity/Q19576436",
-                    "http://www.wikidata.org/entity/Q35120"));
+                    "http://www.wikidata.org/entity/Q19576436", rootConcepts));
         }
 
         // {
@@ -221,9 +227,10 @@ public class KnowledgeBaseServiceRemoteTest
         // kb_wikidata_direct.setReification(Reification.NONE);
         // kb_wikidata_direct.applyMapping(profile.getMapping());
         // kb_wikidata_direct.setDefaultLanguage("en");
+        // rootConcepts = new HashSet<String>();
+        // rootConcepts.add("http://www.wikidata.org/entity/Q2419");
         // kbList.add(new TestConfiguration(profile.getAccess().getAccessUrl(), kb_wikidata_direct,
-        // "http://www.wikidata.org/entity/Q19576436",
-        // "http://www.wikidata.org/entity/Q2419"));
+        // "http://www.wikidata.org/entity/Q19576436", rootConcepts));
         // }
 
         {
@@ -234,9 +241,10 @@ public class KnowledgeBaseServiceRemoteTest
             kb_dbpedia.setReification(Reification.NONE);
             kb_dbpedia.applyMapping(profile.getMapping());
             kb_dbpedia.setDefaultLanguage("en");
+            rootConcepts = new HashSet<String>();
+            rootConcepts.add("http://www.w3.org/2002/07/owl#Thing");
             kbList.add(new TestConfiguration(profile.getAccess().getAccessUrl(), kb_dbpedia,
-                    "http://www.wikidata.org/entity/Q20280393",
-                    "http://www.w3.org/2002/07/owl#Thing"));
+                    "http://www.wikidata.org/entity/Q20280393", rootConcepts));
         }
 
         {
@@ -246,9 +254,11 @@ public class KnowledgeBaseServiceRemoteTest
             kb_yago.setType(RepositoryType.REMOTE);
             kb_yago.setReification(Reification.NONE);
             kb_yago.applyMapping(profile.getMapping());
+            rootConcepts = new HashSet<String>();
+            rootConcepts.add("http://www.w3.org/2002/07/owl#Thing");
             kbList.add(new TestConfiguration(profile.getAccess().getAccessUrl(), kb_yago,
                     "http://www.wikidata.org/entity/Q21445637S003fc070-45f0-80bd-ae2d-072cde5aad89",
-                    "http://www.w3.org/2002/07/owl#Thing"));
+                    rootConcepts));
         }
 
         {
@@ -259,9 +269,10 @@ public class KnowledgeBaseServiceRemoteTest
             kb_zbw_stw_economics.setReification(Reification.NONE);
             kb_zbw_stw_economics.applyMapping(profile.getMapping());
             kb_zbw_stw_economics.setDefaultLanguage("en");
-            kbList.add(
-                    new TestConfiguration(profile.getAccess().getAccessUrl(), kb_zbw_stw_economics,
-                            "http://zbw.eu/stw/thsys/71020", "http://zbw.eu/stw/thsys/a"));
+            rootConcepts = new HashSet<String>();
+            rootConcepts.add("http://zbw.eu/stw/thsys/a");
+            kbList.add(new TestConfiguration(profile.getAccess().getAccessUrl(),
+                    kb_zbw_stw_economics, "http://zbw.eu/stw/thsys/71020", rootConcepts));
         }
 
         // Commenting this out for the moment becuase we expect that every ontology contains
@@ -298,8 +309,11 @@ public class KnowledgeBaseServiceRemoteTest
 
         assertThat(rootConceptKBHandle).as("Check that root concept list is not empty")
                 .isNotEmpty();
-        assertThat(rootConceptKBHandle.stream().map(KBHandle::getIdentifier)).as("Check that root concept is retreived")
-        .contains(sutConfig.getRootIdentifier());
+        for (String expectedRoot : sutConfig.getRootIdentifier()) {
+            assertThat(rootConceptKBHandle.stream().map(KBHandle::getIdentifier)).as("Check that root concept is retreived")
+            .contains(expectedRoot);
+        }
+        
     }
 
     @Test
@@ -375,10 +389,10 @@ public class KnowledgeBaseServiceRemoteTest
         private final String url;
         private final KnowledgeBase kb;
         private final String testIdentifier;
-        private final String rootIdentifier;
+        private final Set<String> rootIdentifier;
 
         public TestConfiguration(String aUrl, KnowledgeBase aKb, String atestIdentifier,
-                String aRootIdentifier)
+                Set<String> aRootIdentifier)
         {
             super();
             url = aUrl;
@@ -402,7 +416,7 @@ public class KnowledgeBaseServiceRemoteTest
             return testIdentifier;
         }
 
-        public String getRootIdentifier()
+        public Set<String> getRootIdentifier()
         {
             return rootIdentifier;
         }
