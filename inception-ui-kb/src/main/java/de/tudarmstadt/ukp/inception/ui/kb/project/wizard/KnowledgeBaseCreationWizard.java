@@ -115,7 +115,8 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
     private final Map<String, KnowledgeBaseProfile> downloadedProfiles;
     private final List<String> languages = Arrays.asList("en", "de");
     
-    public KnowledgeBaseCreationWizard(String id, IModel<Project> aProjectModel) {
+    public KnowledgeBaseCreationWizard(String id, IModel<Project> aProjectModel)
+    {
         super(id);
 
         uploadedFiles = new HashMap<>();
@@ -129,7 +130,8 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
         init(wizardModel);
     }
 
-    private Map<String, KnowledgeBaseProfile> readKbProfiles() {
+    private Map<String, KnowledgeBaseProfile> readKbProfiles()
+    {
         Map<String, KnowledgeBaseProfile> profiles = new HashMap<>();
         try {
             profiles = kbService.readKnowledgeBaseProfiles();
@@ -156,7 +158,8 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
         private CompoundPropertyModel<KnowledgeBaseWrapper> model;
 
         public TypeStep(IDynamicWizardStep previousStep,
-                CompoundPropertyModel<KnowledgeBaseWrapper> model) {
+                CompoundPropertyModel<KnowledgeBaseWrapper> model)
+        {
             super(previousStep, "", "", model);
             this.model = model;
 
@@ -199,7 +202,8 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
             return nameField;
         }
 
-        private IValidator<String> knowledgeBaseNameValidator() {
+        private IValidator<String> knowledgeBaseNameValidator()
+        {
             return (validatable -> {
                 String kbName = validatable.getValue();
                 if (kbService.knowledgeBaseExists(projectModel.getObject(), kbName)) {
@@ -267,7 +271,8 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
         private boolean completed;
 
         public LocalRepositoryStep(IDynamicWizardStep previousStep,
-                CompoundPropertyModel<KnowledgeBaseWrapper> aModel) {
+                CompoundPropertyModel<KnowledgeBaseWrapper> aModel)
+        {
             super(previousStep);
             model = aModel;
             model.getObject().setFiles(new ArrayList<>());
@@ -361,7 +366,8 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
             }
         }
 
-        private String getAccessTypeLabel(KnowledgeBaseProfile aProfile) {
+        private String getAccessTypeLabel(KnowledgeBaseProfile aProfile)
+        {
             if (aProfile.getAccess().getAccessUrl().startsWith(CLASSPATH_PREFIX)) {
                 return "CLASSPATH";
             }
@@ -371,7 +377,8 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
         }
         
         @Override
-        public void applyState() {
+        public void applyState()
+        {
             // local knowledge bases are editable by default
             model.getObject().getKb().setReadOnly(false);
             try {
@@ -379,38 +386,44 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
                     File tmp = uploadFile(fu);
                     model.getObject().getFiles().add(tmp);
                 }
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 completed = false;
                 log.error("Error while uploading files", e);
                 error("Could not upload files");
             }
         }
 
-        private File uploadFile(FileUpload fu) throws Exception {
+        private File uploadFile(FileUpload fu) throws Exception
+        {
             String fileName = fu.getClientFileName();
             if (!uploadedFiles.containsKey(fileName)) {
                 FileUploadDownloadHelper fileUploadDownloadHelper = new FileUploadDownloadHelper(
-                    getApplication());
+                        getApplication());
                 File tmpFile = fileUploadDownloadHelper.writeFileUploadToTemporaryFile(fu, model);
                 uploadedFiles.put(fileName, tmpFile);
-            } else {
+            }
+            else {
                 log.debug("File [{}] already downloaded, skipping!", fileName);
             }
             return uploadedFiles.get(fileName);
         }
 
         @Override
-        public boolean isLastStep() {
+        public boolean isLastStep()
+        {
             return false;
         }
 
         @Override
-        public IDynamicWizardStep next() {
+        public IDynamicWizardStep next()
+        {
             return new SchemaConfigurationStep(this, model);
         }
 
         @Override
-        public boolean isComplete() {
+        public boolean isComplete()
+        {
             return completed;
         }
     }
@@ -425,7 +438,8 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
         private CompoundPropertyModel<KnowledgeBaseWrapper> model;
 
         public RemoteRepositoryStep(IDynamicWizardStep previousStep,
-                CompoundPropertyModel<KnowledgeBaseWrapper> model) {
+                CompoundPropertyModel<KnowledgeBaseWrapper> model)
+        {
             super(previousStep, "", "", model);
             this.model = model;
             
@@ -537,7 +551,8 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
     }
 
     @Override
-    protected Component newButtonBar(String id) {
+    protected Component newButtonBar(String id)
+    {
         // add Bootstrap-compatible button bar which closes the parent dialog via the cancel and
         // finish buttons
         Component buttonBar = new BootstrapWizardButtonBar(id, this) {
@@ -545,10 +560,11 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
             private static final long serialVersionUID = 5657260438232087635L;
 
             @Override
-            protected FinishButton newFinishButton(String id, IWizard wizard) {
-                FinishButton button = new FinishButton(id, wizard) {
+            protected FinishButton newFinishButton(String id, IWizard wizard)
+            {
+                FinishButton button = new FinishButton(id, wizard)
+                {
                     private static final long serialVersionUID = -7070739469409737740L;
-
                     @Override
                     public void onAfterSubmit() {
                         // update the list panel and close the dialog - this must be done in
@@ -567,7 +583,8 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
             }
 
             @Override
-            protected CancelButton newCancelButton(String id, IWizard wizard) {
+            protected CancelButton newCancelButton(String id, IWizard wizard)
+            {
                 CancelButton button = super.newCancelButton(id, wizard);
                 button.add(new AjaxEventBehavior("click") {
 

@@ -15,27 +15,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package de.tudarmstadt.ukp.inception.kb.config;
 
-package de.tudarmstadt.ukp.inception.conceptlinking.util;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-
-public class LRUCache<K, V>
-    extends LinkedHashMap<K, V>
+@Component
+@ConfigurationProperties("inception.knowledge-base")
+public class KnowledgeBaseProperties
 {
-    private int cacheSize;
+    private int sparqlQueryResultLimit = 1000;
 
-    public LRUCache(int cacheSize)
+    public int getSparqlQueryResultLimit()
     {
-        super(16, 0.75f, true);
-        this.cacheSize = cacheSize;
+        return sparqlQueryResultLimit;
     }
 
-    @Override
-    protected boolean removeEldestEntry(Map.Entry<K, V> eldest)
+    public void setSparqlQueryResultLimit(int aSparqlQueryResultLimit)
     {
-        return size() >= cacheSize;
+        sparqlQueryResultLimit = aSparqlQueryResultLimit;
     }
 }
-

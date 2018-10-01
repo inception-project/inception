@@ -35,22 +35,21 @@
       <context:exclude-filter 
         expression="de.tudarmstadt.ukp.clarin.webanno.automation.service.export.AutomationTrainingDocumentExporter" 
         type="assignable" />
+      <context:exclude-filter 
+        expression="de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageMenuItem" 
+        type="assignable" />
+      <context:exclude-filter 
+        expression="de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.CurationPageMenuItem" 
+        type="assignable" />
+      <context:exclude-filter 
+        expression="de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.page.MonitoringPageMenuItem" 
+        type="assignable" />
+      <context:exclude-filter 
+        expression="de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.page.AgreementPageMenuItem" 
+        type="assignable" />
     </context:component-scan>
     <context:component-scan base-package="de.tudarmstadt.ukp.inception" />
 
-  <bean id="formats"
-    class="org.springframework.beans.factory.config.PropertiesFactoryBean">
-    <property name="ignoreResourceNotFound">
-      <value>true</value>
-    </property>
-    <property name="locations">
-      <list>
-        <value>classpath:META-INF/formats.properties</value>
-        <value>file:#{systemProperties['inception.home'] ?: systemProperties['user.home'].concat('/.inception') }/formats.properties</value>
-      </list>
-    </property>
-  </bean> 
-  
   <bean
     class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
     <property name="ignoreUnresolvablePlaceholders" value="true" />
