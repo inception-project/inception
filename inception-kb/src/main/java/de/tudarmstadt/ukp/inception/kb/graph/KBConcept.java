@@ -190,11 +190,14 @@ public class KBConcept
 
         if (isNotBlank(name)) {
             Literal nameLiteral;
-            if (language == null) {
-                nameLiteral = vf.createLiteral(name);
+            if (language != null) {
+                nameLiteral = vf.createLiteral(name, language);
+            }
+            else if (kb.getDefaultLanguage() != null){
+                nameLiteral = vf.createLiteral(name, kb.getDefaultLanguage());
             }
             else {
-                nameLiteral = vf.createLiteral(name, language);
+                nameLiteral = vf.createLiteral(name);
             }
             Statement nameStmt = vf.createStatement(subject, kb.getLabelIri(), nameLiteral);
             originalStatements.add(nameStmt);

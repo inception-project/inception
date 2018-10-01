@@ -103,7 +103,7 @@ public class RdfUtils
                 .escapeString(language) + "\")).";
         }
         String labelQuery = String
-            .join("\n", "SELECT DISTINCT * WHERE { ",
+            .join("\n", "SELECT ?s ?p ?o ?lp WHERE { ",
                 "{ ?s ?p ?o .",
                 "?p ?spl ?lp ",
                 "} UNION { ?s ?lp ?o } ",

@@ -45,7 +45,7 @@ public class IriConstants
 
     public static final Set<String> IMPLICIT_NAMESPACES = new HashSet<>(Arrays
         .asList(RDF.NAMESPACE, RDFS.NAMESPACE, XMLSchema.NAMESPACE, OWL.NAMESPACE,
-            INCEPTION_SCHEMA_NAMESPACE, INCEPTION_NAMESPACE));
+            INCEPTION_SCHEMA_NAMESPACE));
 
     /**
      * http://www.wikidata.org/entity/Q35120

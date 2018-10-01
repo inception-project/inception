@@ -40,18 +40,9 @@ public final class SPARQLQueryStore
         
         fragment.append("  OPTIONAL {\n");
         fragment.append("    ?s ").append(aProperty).append(" ").append(variable).append(" .\n");
-        
-        if (aLanguage != null) {
-            // If a certain language is specified, we look exactly for that
-            String escapedLang = NTriplesUtil.escapeString(aLanguage);
-            fragment.append("    FILTER(LANGMATCHES(LANG(").append(variable).append("), \"").append(escapedLang).append("\"))\n");
-        }
-        else {
-            // If no language is specified, we look for statements without a language as otherwise
-            // we might easily run into trouble on multi-lingual resources where we'd get all the
-            // labels in all the languages being retrieved if we simply didn't apply any filter.
-            fragment.append("    FILTER(LANG(").append(variable).append(") = \"\")\n");
-        }
+
+        fragment.append(languageFilterForVariabel(variable, aLanguage));
+
         fragment.append(" }\n");
         return fragment.toString();
     }
@@ -64,21 +55,27 @@ public final class SPARQLQueryStore
         StringBuilder fragment = new StringBuilder();
         fragment.append("  OPTIONAL {\n");
         fragment.append("    ?s ").append("?slp ").append("?sl").append(" .\n");
-        fragment.append("    ?slp ").append("?pSUBLABEL ").append("?pLABEL");
+        fragment.append("    ?slp ").append("?pSUBLABEL ").append("?pLABEL").append(" .\n");
 
+        fragment.append(languageFilterForVariabel("?sl", aLanguage));
+
+        fragment.append(" }\n");
+        return fragment.toString();
+    }
+
+    private static final String languageFilterForVariabel(String aVariabel, String aLanguage) {
+        StringBuilder fragment = new StringBuilder();
         if (aLanguage != null) {
             // If a certain language is specified, we look exactly for that
             String escapedLang = NTriplesUtil.escapeString(aLanguage);
-            fragment.append("    FILTER(LANGMATCHES(LANG(").append("?sl").append("), \"").append(escapedLang).append("\"))\n");
+            fragment.append("    FILTER(LANGMATCHES(LANG(").append(aVariabel).append("), \"").append(escapedLang).append("\"))\n");
         }
         else {
             // If no language is specified, we look for statements without a language as otherwise
             // we might easily run into trouble on multi-lingual resources where we'd get all the
             // labels in all the languages being retrieved if we simply didn't apply any filter.
-            fragment.append("    FILTER(LANG(").append("?sl").append(") = \"\")\n");
-            fragment.append(" }\n");
+            fragment.append("    FILTER(LANG(").append(aVariabel).append(") = \"\")\n");
         }
-        fragment.append(" }\n");
         return fragment.toString();
     }
 

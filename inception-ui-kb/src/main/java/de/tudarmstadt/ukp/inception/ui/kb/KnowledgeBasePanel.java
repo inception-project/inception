@@ -145,13 +145,6 @@ public class KnowledgeBasePanel
     @OnEvent
     public void actionStatementChanged(AjaxStatementChangedEvent event)
     {
-
-        boolean isSchemaChangeEvent = RdfUtils
-                .isFromImplicitNamespace(event.getStatement().getProperty());
-        if (!isSchemaChangeEvent) {
-            return;
-        }
-
         // if this event is not about renaming (changing the RDFS label) of a KBObject, return
         KBStatement statement = event.getStatement();
         String propertyIdentifier = statement.getProperty().getIdentifier();
