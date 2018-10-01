@@ -524,10 +524,11 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
 
             try {
                 KnowledgeBaseWrapper.registerKb(wrapper, kbService);
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
+                log.error("Unable to register knowledge base: ", e.getLocalizedMessage(), e);
                 error(e.getMessage());
-
+                AjaxRequestTarget target = RequestCycle.get().find(AjaxRequestTarget.class);
+                target.addChildren(getPage(), IFeedback.class);
             }
         }
 
