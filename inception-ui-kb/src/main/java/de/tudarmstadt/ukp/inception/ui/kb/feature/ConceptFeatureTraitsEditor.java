@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -38,6 +39,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentU
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaChoiceRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
+import de.tudarmstadt.ukp.inception.kb.ConceptFeatureValueType;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
@@ -54,6 +56,8 @@ public class ConceptFeatureTraitsEditor
     private static final String MID_KNOWLEDGE_BASE = "knowledgeBase";
 
     private static final String MID_SCOPE = "scope";
+
+    private static final String MID_ALLOWED_VALUE_TYPE = "allowedValueType";
 
     private static final long serialVersionUID = 2129000875921279514L;
     
@@ -103,6 +107,8 @@ public class ConceptFeatureTraitsEditor
                 .setNullValid(true)
                 .add(new LambdaAjaxFormComponentUpdatingBehavior("change", target ->
                         target.add(form.get(MID_SCOPE)))));
+        form.add(
+            new DropDownChoice<>(MID_ALLOWED_VALUE_TYPE, LambdaModel.of(this::listAllowedTypes)));
 
         add(form);
     }
@@ -137,6 +143,14 @@ public class ConceptFeatureTraitsEditor
                     .ifPresent(concept -> result.setScope(KBHandle.of(concept)));
         }
 
+        if (t.getAllowedValueType() != null) {
+            result.setAllowedValueType(t.getAllowedValueType());
+        }
+        else {
+            // Allow all values as default
+            result.setAllowedValueType(ConceptFeatureValueType.ANY_OBJECT);
+        }
+
         return result;
     }
     
@@ -155,6 +169,8 @@ public class ConceptFeatureTraitsEditor
         if (traits.getObject().scope != null) {
             t.setScope(traits.getObject().scope.getIdentifier());
         }
+
+        t.setAllowedValueType(traits.getObject().allowedValueType);
 
         getFeatureSupport().writeTraits(feature.getObject(), t);
     }
@@ -180,6 +196,10 @@ public class ConceptFeatureTraitsEditor
             return allConcepts;
         }
     }
+
+    private List<ConceptFeatureValueType> listAllowedTypes() {
+        return Arrays.asList(ConceptFeatureValueType.values());
+    }
     
     private ConceptFeatureSupport getFeatureSupport()
     {
@@ -197,6 +217,7 @@ public class ConceptFeatureTraitsEditor
 
         private KnowledgeBase knowledgeBase;
         private KBHandle scope;
+        private ConceptFeatureValueType allowedValueType;
 
         @SuppressWarnings("unused")
         public KBHandle getScope()
@@ -218,6 +239,14 @@ public class ConceptFeatureTraitsEditor
         public void setKnowledgeBase(KnowledgeBase aKnowledgeBase)
         {
             knowledgeBase = aKnowledgeBase;
+        }
+
+        public ConceptFeatureValueType getAllowedValueType() {
+            return allowedValueType;
+        }
+
+        public void setAllowedValueType(ConceptFeatureValueType aAllows) {
+            allowedValueType = aAllows;
         }
     }
 }

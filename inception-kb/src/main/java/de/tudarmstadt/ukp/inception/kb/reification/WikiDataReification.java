@@ -43,6 +43,7 @@ import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.inception.kb.InceptionValueMapper;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
+import de.tudarmstadt.ukp.inception.kb.SPARQLQueryStore;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
@@ -141,7 +142,7 @@ public class WikiDataReification
             "  ?p  ?pLABEL ?l.",
             "  FILTER(STRSTARTS(STR(?ps), STR(?ps_ns)))",
             "}",
-            "LIMIT 10000");
+            "LIMIT " + SPARQLQueryStore.LIMIT);
 
         IRI instance = vf.createIRI(aInstance.getIdentifier());
         try (RepositoryConnection conn = kbService.getConnection(kb)) {
@@ -256,7 +257,7 @@ public class WikiDataReification
                 "SELECT DISTINCT ?p ?o WHERE {",
             "  ?id ?p ?o .",
             "}",
-            "LIMIT 10000");
+            "LIMIT " + SPARQLQueryStore.LIMIT);
         Resource id = vf.createBNode(aStatementId);
         try (RepositoryConnection conn = kbService.getConnection(kb)) {
             TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
@@ -473,7 +474,7 @@ public class WikiDataReification
             "    FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\"))",
             "  }",
             "}",
-            "LIMIT 10000");
+            "LIMIT " + SPARQLQueryStore.LIMIT);
         Resource id = vf.createBNode(aStatement.getStatementId());
         try (RepositoryConnection conn = kbService.getConnection(kb)) {
             TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);

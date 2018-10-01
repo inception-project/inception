@@ -116,7 +116,7 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
         sut = new KnowledgeBaseServiceImpl(temporaryFolder.getRoot(), entityManager);
         project = createProject(PROJECT_NAME);
         kb = buildKnowledgeBase(project, KB_NAME);
-        sut.registerKnowledgeBase(kb, sut.getRemoteConfig(PROFILES.get("wikidata").getSparqlUrl()));
+        sut.registerKnowledgeBase(kb, sut.getRemoteConfig(PROFILES.get("wikidata").getAccess().getAccessUrl()));
 
     }
 
@@ -139,7 +139,7 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
         Optional<KBConcept> concept = sut.readConcept(kb, "http://www.wikidata.org/entity/Q171644");
         assertThat(concept.get().getName())
             .as("Check that concept has the same UI label")
-            .isIn("12-Stunden-Rennen von Reims","12-Stunden-Rennen von Reims");
+            .isIn("12 Hours of Reims");
     }
     
     @Test
@@ -155,7 +155,7 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
     public void listRootConcepts() {
         List<KBHandle> rootConcepts = sut.listRootConcepts(kb, false);
 
-        assertThat(rootConcepts).as("Check that root concepts have been found").hasSize(SPARQLQueryStore.aLimit);
+        assertThat(rootConcepts).as("Check that root concepts have been found").hasSize(SPARQLQueryStore.LIMIT);
     }
 
     
@@ -163,7 +163,7 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
     public void listProperties() {
         Stream<String> properties = sut.listProperties(kb, true).stream().map(KBHandle::getIdentifier);
         
-        assertThat(properties).as("Check that properties have been found").hasSize(SPARQLQueryStore.aLimit);
+        assertThat(properties).as("Check that properties have been found").hasSize(SPARQLQueryStore.LIMIT);
     }
     
     @Test
@@ -220,6 +220,7 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
         kb_wikidata_direct.setType(RepositoryType.REMOTE);
         kb_wikidata_direct.applyMapping(PROFILES.get("wikidata").getMapping());
         kb_wikidata_direct.setReification(reification);
+        kb_wikidata_direct.setDefaultLanguage("en");
        
         return kb_wikidata_direct;
     }

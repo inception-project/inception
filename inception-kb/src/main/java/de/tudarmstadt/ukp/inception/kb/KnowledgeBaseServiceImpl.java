@@ -29,7 +29,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -49,6 +49,7 @@ import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.vocabulary.XMLSchema;
 import org.eclipse.rdf4j.query.Binding;
 import org.eclipse.rdf4j.query.BindingSet;
 import org.eclipse.rdf4j.query.QueryEvaluationException;
@@ -74,6 +75,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -94,6 +96,7 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.reification.NoReification;
 import de.tudarmstadt.ukp.inception.kb.reification.ReificationStrategy;
 import de.tudarmstadt.ukp.inception.kb.reification.WikiDataReification;
+import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseMapping;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 
 @Component(KnowledgeBaseService.SERVICE_NAME)
@@ -115,6 +118,16 @@ public class KnowledgeBaseServiceImpl
     public KnowledgeBaseServiceImpl(
             @org.springframework.beans.factory.annotation.Value("${data.path}") File dataDir)
     {
+        // If there is still the deprecated SYSTEM repository from RDF4J, then we rename it because
+        // if it is present, RDF4J may internally generate an exception which prevents us from 
+        // creating new KBs. https://github.com/eclipse/rdf4j/issues/1077
+        File systemRepo = new File(dataDir, "kb/repositories/SYSTEM");
+        if (systemRepo.exists()) {
+            log.info("Detected deprecated RDF4J SYSTEM repo - renaming to SYSTEM.off "
+                    + "(this is a one-time action)");
+            systemRepo.renameTo(new File(dataDir, "kb/repositories/SYSTEM.off"));
+        }
+        
         String url = Paths.get(dataDir.getAbsolutePath(), "kb").toUri().toString();
         repoManager = RepositoryProvider.getRepositoryManager(url);
         log.info("Knowledge base repository path: " + url);
@@ -169,9 +182,11 @@ public class KnowledgeBaseServiceImpl
             createBaseProperty(akb, new KBProperty(akb.getSubclassIri().getLocalName(),
                     akb.getSubclassIri().stringValue()));
             createBaseProperty(akb, new KBProperty(akb.getLabelIri().getLocalName(),
-                    akb.getLabelIri().stringValue()));
+                    akb.getLabelIri().stringValue(),null,XMLSchema.STRING.stringValue()));
             createBaseProperty(akb, new KBProperty(akb.getDescriptionIri().getLocalName(),
-                    akb.getDescriptionIri().stringValue()));
+                    akb.getDescriptionIri().stringValue(),null,XMLSchema.STRING.stringValue()));
+            createBaseProperty(akb, new KBProperty(akb.getTypeIri().getLocalName(),
+                    akb.getTypeIri().stringValue()));
         }
     }
 
@@ -394,29 +409,19 @@ public class KnowledgeBaseServiceImpl
     }
 
     @Override
-    public List<KBHandle> listAllConcepts(KnowledgeBase kb, boolean aAll)
+    public List<KBHandle> listAllConcepts(KnowledgeBase aKB, boolean aAll)
         throws QueryEvaluationException
     {
-        List<KBHandle> resultList = new ArrayList<>();
-
+        List<KBHandle> resultList;
         
-        resultList = read(kb, (conn) -> {
-            String QUERY = String.join("\n"
-                , SPARQLQueryStore.SPARQL_PREFIX
-                , "SELECT DISTINCT ?s ?l WHERE { "
-                , "     { ?s ?pTYPE ?oCLASS . } "
-                , "     UNION { ?someSubClass ?pSUBCLASS ?s . } ."
-                , "     OPTIONAL { "
-                , "         ?s ?pLABEL ?l . "
-                , "         FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\")) "
-                , "     } "
-                , "} "
-                , "LIMIT 10000" );
+        resultList = read(aKB, (conn) -> {
+            String QUERY = SPARQLQueryStore.queryForAllConceptList(aKB);
             TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
-            tupleQuery.setBinding("pTYPE", kb.getTypeIri());
-            tupleQuery.setBinding("oCLASS", kb.getClassIri());
-            tupleQuery.setBinding("pSUBCLASS", kb.getSubclassIri());
-            tupleQuery.setBinding("pLABEL", kb.getLabelIri());
+            tupleQuery.setBinding("pTYPE", aKB.getTypeIri());
+            tupleQuery.setBinding("oCLASS", aKB.getClassIri());
+            tupleQuery.setBinding("pSUBCLASS", aKB.getSubclassIri());
+            tupleQuery.setBinding("pLABEL", aKB.getLabelIri());
+            tupleQuery.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
             tupleQuery.setIncludeInferred(false);
             return evaluateListQuery(tupleQuery, aAll);
         });
@@ -427,7 +432,7 @@ public class KnowledgeBaseServiceImpl
     @Override
     public List<KBHandle> listConcepts(KnowledgeBase kb, boolean aAll)
     {
-        return list(kb, kb.getClassIri(), true, aAll, SPARQLQueryStore.aLimit);
+        return listAllConcepts(kb, aAll);
     }
 
     @Override
@@ -491,15 +496,16 @@ public class KnowledgeBaseServiceImpl
     }
 
     @Override
-    public List<KBHandle> listProperties(KnowledgeBase kb, boolean aIncludeInferred, boolean aAll)
+    public List<KBHandle> listProperties(KnowledgeBase aKB, boolean aIncludeInferred, boolean aAll)
         throws QueryEvaluationException
     {
-        List<KBHandle> resultList = read(kb, (conn) -> {
-            String QUERY = getPropertyListQuery(kb);
+        List<KBHandle> resultList = read(aKB, (conn) -> {
+            String QUERY = SPARQLQueryStore.queryForPropertyList(aKB);
             TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
-            tupleQuery.setBinding("pTYPE", kb.getTypeIri());
-            tupleQuery.setBinding("oPROPERTY", kb.getPropertyTypeIri());
-            tupleQuery.setBinding("pLABEL", kb.getLabelIri());
+            tupleQuery.setBinding("pTYPE", aKB.getTypeIri());
+            tupleQuery.setBinding("oPROPERTY", aKB.getPropertyTypeIri());
+            tupleQuery.setBinding("pLABEL", aKB.getLabelIri());
+            tupleQuery.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
             tupleQuery.setIncludeInferred(aIncludeInferred);
             return evaluateListQuery(tupleQuery, aAll);
         });
@@ -507,10 +513,6 @@ public class KnowledgeBaseServiceImpl
         return resultList;
     }
     
-    public String getPropertyListQuery(KnowledgeBase kb) {
-        return SPARQLQueryStore.PROPERTYLIST_QUERY;
-    }
-
     @Override
     public KBHandle createInstance(KnowledgeBase kb, KBInstance aInstance)
     {
@@ -605,7 +607,7 @@ public class KnowledgeBaseServiceImpl
     public List<KBHandle> listInstances(KnowledgeBase kb, String aConceptIri, boolean aAll)
     {
         IRI conceptIri = SimpleValueFactory.getInstance().createIRI(aConceptIri);
-        return list(kb, conceptIri, false, aAll, SPARQLQueryStore.aLimit);
+        return list(kb, conceptIri, false, aAll, SPARQLQueryStore.LIMIT);
     }
 
     // Statements
@@ -701,26 +703,21 @@ public class KnowledgeBaseServiceImpl
             return aAction.accept(conn);
         }
     }
+    
+    
 
     @Override
-    public List<KBHandle> list(KnowledgeBase kb, IRI aType, boolean aIncludeInferred, boolean aAll,
+    public List<KBHandle> list(KnowledgeBase aKB, IRI aType, boolean aIncludeInferred, boolean aAll,
             int aLimit)
         throws QueryEvaluationException
     {
-        List<KBHandle> resultList = read(kb, (conn) -> {
-            String QUERY = String.join("\n"
-                         , "SELECT DISTINCT ?s ?l WHERE {"
-                         , "  ?s ?pTYPE ?oPROPERTY ."
-                         , "  OPTIONAL {"
-                         , "    ?s ?pLABEL ?l ."
-                         , "    FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\"))"
-                         , "  }"
-                         , "}"
-                         , "LIMIT " + aLimit);
+        List<KBHandle> resultList = read(aKB, (conn) -> {
+            String QUERY = SPARQLQueryStore.listInstances(aKB);
             TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
-            tupleQuery.setBinding("pTYPE", kb.getTypeIri());
+            tupleQuery.setBinding("pTYPE", aKB.getTypeIri());
             tupleQuery.setBinding("oPROPERTY", aType);
-            tupleQuery.setBinding("pLABEL", kb.getLabelIri());
+            tupleQuery.setBinding("pLABEL", aKB.getLabelIri());
+            tupleQuery.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
             tupleQuery.setIncludeInferred(aIncludeInferred);
 
             return evaluateListQuery(tupleQuery, aAll);
@@ -732,36 +729,41 @@ public class KnowledgeBaseServiceImpl
     }
     
     @Override
-    public List<KBHandle> listDomainProperties(KnowledgeBase kb, String aDomain,
+    public List<KBHandle> listDomainProperties(KnowledgeBase aKB, String aDomain,
             boolean aIncludeInferred, boolean aAll)
         throws QueryEvaluationException
     {
-        List<KBHandle> resultList = read(kb, (conn) -> {
+        List<KBHandle> resultList = read(aKB, (conn) -> {
             ValueFactory vf = conn.getValueFactory();
-            String QUERY = SPARQLQueryStore.PROPERTYLIST_DOMAIN_DEPENDENT;
+            String QUERY = SPARQLQueryStore.queryForPropertyListWithDomain(aKB);
             TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
             tupleQuery.setBinding("aDomain", vf.createIRI(aDomain));
-            tupleQuery.setBinding("pLABEL", kb.getLabelIri());
+            tupleQuery.setBinding("pLABEL", aKB.getLabelIri());
+            tupleQuery.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
             tupleQuery.setIncludeInferred(aIncludeInferred);
 
             return evaluateListQuery(tupleQuery, aAll);
         });
         
+        // Sorting is not done as part of SPARQL queries as it will be more expensive on
+        // SPARQL with sorting the whole data and then setting a limit for the number of
+        // result data set and hence will also skip number of results as part of sorted
+        // data from SPARQL
         resultList.sort(Comparator.comparing(KBObject::getUiLabel));
         return resultList;
     }
     
     @Override
-    public List<KBHandle> listPropertiesRangeValue(KnowledgeBase kb, String aProperty,
+    public List<KBHandle> listPropertiesRangeValue(KnowledgeBase aKB, String aProperty,
             boolean aIncludeInferred, boolean aAll)
         throws QueryEvaluationException
     {
-        List<KBHandle> resultList = read(kb, (conn) -> {
+        List<KBHandle> resultList = read(aKB, (conn) -> {
             ValueFactory vf = conn.getValueFactory();
-            String QUERY = SPARQLQueryStore.PROPERTY_SPECIFIC_RANGE;
+            String QUERY = SPARQLQueryStore.queryForPropertySpecificRange(aKB);
             TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
             tupleQuery.setBinding("aProperty", vf.createIRI(aProperty));
-            tupleQuery.setBinding("pLABEL", kb.getLabelIri());
+            tupleQuery.setBinding("pLABEL", aKB.getLabelIri());
             tupleQuery.setIncludeInferred(aIncludeInferred);
 
             return evaluateListQuery(tupleQuery, aAll);
@@ -772,16 +774,17 @@ public class KnowledgeBaseServiceImpl
     }
     
     @Override
-    public List<KBHandle> listProperties(KnowledgeBase kb, IRI aType, boolean aIncludeInferred,
+    public List<KBHandle> listProperties(KnowledgeBase aKB, IRI aType, boolean aIncludeInferred,
             boolean aAll)
         throws QueryEvaluationException
     {
-        List<KBHandle> resultList = read(kb, (conn) -> {
-            String QUERY = getPropertyListQuery(kb);
+        List<KBHandle> resultList = read(aKB, (conn) -> {
+            String QUERY = SPARQLQueryStore.queryForPropertyList(aKB);
             TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
-            tupleQuery.setBinding("pTYPE", kb.getTypeIri());
+            tupleQuery.setBinding("pTYPE", aKB.getTypeIri());
             tupleQuery.setBinding("oPROPERTY", aType);
-            tupleQuery.setBinding("pLABEL", kb.getLabelIri());
+            tupleQuery.setBinding("pLABEL", aKB.getLabelIri());
+            tupleQuery.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
             tupleQuery.setIncludeInferred(aIncludeInferred);
 
             return evaluateListQuery(tupleQuery, aAll);
@@ -793,42 +796,28 @@ public class KnowledgeBaseServiceImpl
     }
     
     @Override
-    public List<KBHandle> listRootConcepts(KnowledgeBase kb, boolean aAll)
+    public List<KBHandle> listRootConcepts(KnowledgeBase aKB, boolean aAll)
         throws QueryEvaluationException
     {
         List<KBHandle> resultList = new ArrayList<>();
 
-        if (!kb.getExplicitlyDefinedRootConcepts().isEmpty()) {
-            for (IRI conceptIRI : kb.getExplicitlyDefinedRootConcepts()) {
-                KBConcept concept = readConcept(kb, conceptIRI.stringValue()).get();
+        if (!aKB.getExplicitlyDefinedRootConcepts().isEmpty()) {
+            for (IRI conceptIRI : aKB.getExplicitlyDefinedRootConcepts()) {
+                KBConcept concept = readConcept(aKB, conceptIRI.stringValue()).get();
                 KBHandle conceptHandle = new KBHandle(concept.getIdentifier(), concept.getName(),
                         concept.getDescription());
                 resultList.add(conceptHandle);
             }
         }
         else {
-            resultList = read(kb, (conn) -> {
-                String QUERY = String.join("\n"
-                    , SPARQLQueryStore.SPARQL_PREFIX    
-                    , "SELECT DISTINCT ?s ?l WHERE { "
-                    , "     { ?s ?pTYPE ?oCLASS . } "
-                    , "     UNION { ?someSubClass ?pSUBCLASS ?s . } ."
-                    , "     FILTER NOT EXISTS { "
-                    , "         ?s ?pSUBCLASS ?otherSub . "
-                    , "         FILTER (?s != ?otherSub) }"
-                    , "     FILTER NOT EXISTS { "
-                    , "         ?s owl:intersectionOf ?list . }"
-                    , "     OPTIONAL { "
-                    , "         ?s ?pLABEL ?l . "
-                    , "         FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\")) "
-                    , "     } "
-                    , "} "
-                    , "LIMIT " + SPARQLQueryStore.aLimit);
+            resultList = read(aKB, (conn) -> {
+                String QUERY = SPARQLQueryStore.listRootConcepts(aKB);
                 TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
-                tupleQuery.setBinding("pTYPE", kb.getTypeIri());
-                tupleQuery.setBinding("oCLASS", kb.getClassIri());
-                tupleQuery.setBinding("pSUBCLASS", kb.getSubclassIri());
-                tupleQuery.setBinding("pLABEL", kb.getLabelIri());
+                tupleQuery.setBinding("pTYPE", aKB.getTypeIri());
+                tupleQuery.setBinding("oCLASS", aKB.getClassIri());
+                tupleQuery.setBinding("pSUBCLASS", aKB.getSubclassIri());
+                tupleQuery.setBinding("pLABEL", aKB.getLabelIri());
+                tupleQuery.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
                 tupleQuery.setIncludeInferred(false);
     
                 return evaluateListQuery(tupleQuery, aAll);
@@ -849,23 +838,24 @@ public class KnowledgeBaseServiceImpl
             boolean aAll)
         throws QueryEvaluationException
     {
-        return listChildConcepts(aKB, aParentIdentifier, aAll, SPARQLQueryStore.aLimit);
+        return listChildConcepts(aKB, aParentIdentifier, aAll, SPARQLQueryStore.LIMIT);
     }
     
     @Override
-    public List<KBHandle> getParentConceptsForConcept(KnowledgeBase aKB, String aIdentifier,
+    public List<KBHandle> getParentConcept(KnowledgeBase aKB, KBHandle aHandle,
             boolean aAll)
         throws QueryEvaluationException
     {
         List<KBHandle> resultList = read(aKB, (conn) -> {
-            String QUERY = SPARQLQueryStore.PARENT_CONCEPT;
+            String QUERY = SPARQLQueryStore.queryForParentConcept(aKB);
             ValueFactory vf = SimpleValueFactory.getInstance();
             TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
-            tupleQuery.setBinding("oChild", vf.createIRI(aIdentifier));
+            tupleQuery.setBinding("oChild", vf.createIRI(aHandle.getIdentifier()));
             tupleQuery.setBinding("pTYPE", aKB.getTypeIri());
             tupleQuery.setBinding("oCLASS", aKB.getClassIri());
             tupleQuery.setBinding("pSUBCLASS", aKB.getSubclassIri());
             tupleQuery.setBinding("pLABEL", aKB.getLabelIri());
+            tupleQuery.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
             tupleQuery.setIncludeInferred(false);
             return evaluateListQuery(tupleQuery, aAll);
         });
@@ -878,12 +868,13 @@ public class KnowledgeBaseServiceImpl
         throws QueryEvaluationException
     {
         List<KBHandle> resultList = read(aKB, (conn) -> {
-            String QUERY = SPARQLQueryStore.CONCEPT_FOR_INSTANCE;
+            String QUERY = SPARQLQueryStore.queryForConceptForInstance(aKB);
             ValueFactory vf = SimpleValueFactory.getInstance();
             TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
             tupleQuery.setBinding("pTYPE", aKB.getTypeIri());
             tupleQuery.setBinding("pInstance", vf.createIRI(aIdentifier));
             tupleQuery.setBinding("pLABEL", aKB.getLabelIri());
+            tupleQuery.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
             tupleQuery.setIncludeInferred(true);
 
             return evaluateListQuery(tupleQuery, aAll);
@@ -892,49 +883,46 @@ public class KnowledgeBaseServiceImpl
         return resultList;
     }
     
-    
     @Override
     public Set<KBHandle> getParentConceptList(KnowledgeBase aKB, String aIdentifier, boolean aAll)
         throws QueryEvaluationException
     {
-        Set<KBHandle> parentConceptList = new HashSet<KBHandle>();
+        Set<KBHandle> parentConceptSet = new LinkedHashSet<KBHandle>();
         if (aIdentifier != null) {
             Optional<KBObject> identifierKBObj = readKBIdentifier(aKB.getProject(), aIdentifier);
-            if (identifierKBObj.get() instanceof KBConcept) {
-                getParentConceptListforConcept(parentConceptList, aKB, aIdentifier,
-                        aAll);
+            if (!identifierKBObj.isPresent()) {
+                return parentConceptSet;
+            }
+            else if (identifierKBObj.get() instanceof KBConcept) {
+                parentConceptSet.add(identifierKBObj.get().toKBHandle());
+                getParentConceptListforConcept(parentConceptSet, aKB,
+                        identifierKBObj.get().toKBHandle(), aAll);
             }
             else if (identifierKBObj.get() instanceof KBInstance) {
                 List<KBHandle> conceptList = getConceptForInstance(aKB, aIdentifier, aAll);
-                parentConceptList.addAll(conceptList);
+                parentConceptSet.addAll(conceptList);
                 for (KBHandle parent : conceptList) {
-                    getParentConceptListforConcept(parentConceptList, aKB, parent.getIdentifier(),
-                            aAll);
+                    getParentConceptListforConcept(parentConceptSet, aKB, parent, aAll);
                 }
             }
         }
-        return parentConceptList;
+        return parentConceptSet;
     }
     
     // recursive method to get concept tree
-    public Set<KBHandle> getParentConceptListforConcept(Set<KBHandle> parentConceptList,
-            KnowledgeBase aKB, String aIdentifier, boolean aAll)
+    public Set<KBHandle> getParentConceptListforConcept(Set<KBHandle> parentConceptSet,
+            KnowledgeBase aKB, KBHandle aHandle, boolean aAll)
         throws QueryEvaluationException
     {
-        List<KBHandle> parentList = getParentConceptsForConcept(aKB, aIdentifier, aAll);
-        if (!parentList.isEmpty()) {
-            parentConceptList.addAll(parentList);
-            for (KBHandle parent : parentList) {
-                getParentConceptListforConcept(parentConceptList, aKB, parent.getIdentifier(),
-                        aAll);
+        List<KBHandle> parentList = getParentConcept(aKB, aHandle, aAll);
+        for (KBHandle parent : parentList) {
+            if (!parentConceptSet.contains(parent)) {
+                parentConceptSet.add(parent);
+                getParentConceptListforConcept(parentConceptSet, aKB, parent, aAll);
             }
         }
-        else {
-            return parentConceptList;
-        }
-        return parentConceptList;
+        return parentConceptSet;
     }
-
 
     // Need to work on the query for variable inputs like owl:intersectionOf, rdf:rest*/rdf:first
     @Override
@@ -948,19 +936,7 @@ public class KnowledgeBaseServiceImpl
         // this subclass is *not* returned. We do presently *not* support mixed schemes in a
         // single KB.
         List<KBHandle> resultList = read(aKB, (conn) -> {
-            String QUERY = String.join("\n"
-                , SPARQLQueryStore.SPARQL_PREFIX    
-                , "SELECT DISTINCT ?s ?l WHERE { "
-                , "     {?s ?pSUBCLASS ?oPARENT . }" 
-                , "     UNION { ?s ?pTYPE ?oCLASS ."
-                , "         ?s owl:intersectionOf ?list . "
-                , "         FILTER EXISTS { ?list rdf:rest*/rdf:first ?oPARENT} }"
-                , "     OPTIONAL { "
-                , "         ?s ?pLABEL ?l . "
-                , "         FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\")) "
-                , "     } "
-                , "} "
-                , "LIMIT " + aLimit);
+            String QUERY = SPARQLQueryStore.listChildConcepts(aKB);
             ValueFactory vf = SimpleValueFactory.getInstance();
             TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
             tupleQuery.setBinding("oPARENT", vf.createIRI(aParentIdentifier));
@@ -968,21 +944,22 @@ public class KnowledgeBaseServiceImpl
             tupleQuery.setBinding("oCLASS", aKB.getClassIri());
             tupleQuery.setBinding("pSUBCLASS", aKB.getSubclassIri());
             tupleQuery.setBinding("pLABEL", aKB.getLabelIri());
+            tupleQuery.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
             tupleQuery.setIncludeInferred(false);
 
             return evaluateListQuery(tupleQuery, aAll);
         });
 
+        
         if (resultList.size() > 1) {
             resultList.sort(Comparator.comparing(KBObject::getUiLabel));
         }
         
         return resultList;
     }
-
     
     @Override
-    public List<KBHandle> listChildConceptsInstances(KnowledgeBase aKB, String aParentIdentifier,
+    public List<KBHandle> listInstancesForChildConcepts(KnowledgeBase aKB, String aParentIdentifier,
             boolean aAll, int aLimit)
         throws QueryEvaluationException
     {
@@ -1005,6 +982,7 @@ public class KnowledgeBaseServiceImpl
             BindingSet bindings = result.next();
             String id = bindings.getBinding("s").getValue().stringValue();
             Binding label = bindings.getBinding("l");
+            Binding description = bindings.getBinding("d");
 
             if (!id.contains(":") || (!aAll && hasImplicitNamespace(id))) {
                 continue;
@@ -1017,6 +995,11 @@ public class KnowledgeBaseServiceImpl
             else {
                 handle.setName(handle.getUiLabel());
             }
+            
+            if (description != null) {
+                handle.setDescription(description.getValue().stringValue());
+            }
+            
             handles.add(handle);
         }
         return handles;
@@ -1103,13 +1086,13 @@ public class KnowledgeBaseServiceImpl
         }
     }
     
+    
     /**
      * Read identifier IRI and return {@link Optional} of {@link KBObject}
      * 
      * @return {@link Optional} of {@link KBObject} of type {@link KBConcept} or {@link KBInstance}
      */
-    @Override
-    public Optional<KBObject> readKBIdentifier(Project aProject, String aIdentifier)
+    @Override public Optional<KBObject> readKBIdentifier(Project aProject, String aIdentifier)
     {
         for (KnowledgeBase kb : getKnowledgeBases(aProject)) {
             Optional<KBObject> handle = readKBIdentifier(kb, aIdentifier);
@@ -1120,22 +1103,21 @@ public class KnowledgeBaseServiceImpl
         return Optional.empty();
     }
     
-    
     @Override
-    public Optional<KBObject> readKBIdentifier(KnowledgeBase kb, String aIdentifier)
+    public Optional<KBObject> readKBIdentifier(KnowledgeBase aKb, String aIdentifier)
     {
-        try (RepositoryConnection conn = getConnection(kb)) {
+        try (RepositoryConnection conn = getConnection(aKb)) {
             ValueFactory vf = conn.getValueFactory();
             RepositoryResult<Statement> stmts = RdfUtils.getStatements(conn,
-                    vf.createIRI(aIdentifier), kb.getTypeIri(), kb.getClassIri(), true);
+                    vf.createIRI(aIdentifier), aKb.getTypeIri(), aKb.getClassIri(), true);
             if (stmts.hasNext()) {
-                KBConcept kbConcept = KBConcept.read(conn, vf.createIRI(aIdentifier), kb);
+                KBConcept kbConcept = KBConcept.read(conn, vf.createIRI(aIdentifier), aKb);
                 if (kbConcept != null) {
                     return Optional.of(kbConcept);
                 }
             }
             else if (!stmts.hasNext()) {
-                Optional<KBInstance> kbInstance = readInstance(kb, aIdentifier);
+                Optional<KBInstance> kbInstance = readInstance(aKb, aIdentifier);
                 if (kbInstance.isPresent()) {
                     return kbInstance.flatMap((p) -> Optional.of(p));
                 }
@@ -1145,8 +1127,61 @@ public class KnowledgeBaseServiceImpl
             log.error("Reading KB Entries failed.", e);
             return Optional.empty();
         }
-
         return Optional.empty();
+    }
+
+    @Override
+    public SchemaProfile checkSchemaProfile(KnowledgeBaseProfile aProfile)
+    {
+        SchemaProfile[] profiles = SchemaProfile.values();
+        KnowledgeBaseMapping mapping = aProfile.getMapping();
+        for (int i = 0; i < profiles.length; i++) {
+            // Check if kb profile corresponds to a known schema profile
+            if (equalsSchemaProfile(profiles[i], mapping.getClassIri(), mapping.getSubclassIri(),
+                mapping.getTypeIri(), mapping.getDescriptionIri(), mapping.getLabelIri(),
+                mapping.getPropertyTypeIri())) {
+                return profiles[i];
+            }
+        }
+        // If the iris don't represent a known schema profile , return CUSTOM
+        return SchemaProfile.CUSTOMSCHEMA;
+    }
+
+    @Override
+    public SchemaProfile checkSchemaProfile(KnowledgeBase aKb)
+    {
+        SchemaProfile[] profiles = SchemaProfile.values();
+        for (int i = 0; i < profiles.length; i++) {
+            // Check if kb has a known schema profile
+            if (equalsSchemaProfile(profiles[i], aKb.getClassIri(), aKb.getSubclassIri(),
+                aKb.getTypeIri(), aKb.getDescriptionIri(), aKb.getLabelIri(),
+                aKb.getPropertyTypeIri())) {
+                return profiles[i];
+            }
+        }
+        // If the iris don't represent a known schema profile , return CUSTOM
+        return SchemaProfile.CUSTOMSCHEMA;
+    }
+
+    /**
+     * Compares a schema profile to given IRIs. Returns true if the IRIs are the same as in the
+     * profile
+     */
+    private boolean equalsSchemaProfile(SchemaProfile profile, IRI classIri, IRI subclassIri,
+        IRI typeIri, IRI descriptionIri, IRI labelIri, IRI propertyTypeIri)
+    {
+        return profile.getClassIri().equals(classIri) && profile.getSubclassIri()
+            .equals(subclassIri) && profile.getTypeIri().equals(typeIri) && profile
+            .getDescriptionIri().equals(descriptionIri) && profile.getLabelIri().equals(labelIri)
+            && profile.getPropertyTypeIri().equals(propertyTypeIri);
+    }
+
+    @Override
+    public File readKbFileFromClassPathResource(String aLocation) throws IOException
+    {
+        PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
+        File kbFile = resolver.getResource(aLocation).getFile();
+        return kbFile;
     }
 
 }

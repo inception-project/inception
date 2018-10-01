@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil.annotationEnabeled;
-
 import org.apache.wicket.Page;
 import org.apache.wicket.Session;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +24,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -57,21 +56,23 @@ public class KnowledgeBasePageMenuItem implements MenuItem
     @Override
     public boolean applies()
     {
-        // not visible if the current user is not an annotator
-        User user = userRepo.getCurrentUser();
-        if (!annotationEnabeled(projectService, user, WebAnnoConst.PROJECT_TYPE_ANNOTATION)) {
-            return false;
-        }
-        
-        // not visible if the current project does not have knowledge bases
-        // The project object stored in the session is detached from the persistence context and
         Project sessionProject = Session.get().getMetaData(SessionMetaData.CURRENT_PROJECT);
         if (sessionProject == null) {
             return false;
         }
         
+        // The project object stored in the session is detached from the persistence context and
         // cannot be used immediately in DB interactions. Fetch a fresh copy from the DB.
         Project project = projectService.getProject(sessionProject.getId());
+
+        // Not visible if the current user is not an annotator
+        User user = userRepo.getCurrentUser();
+        if (!(SecurityUtil.isAnnotator(project, projectService, user)
+                && WebAnnoConst.PROJECT_TYPE_ANNOTATION.equals(project.getMode()))) {
+            return false;
+        }
+        
+        // not visible if the current project does not have knowledge bases
         return !kbService.getKnowledgeBases(project).isEmpty();
     }
     

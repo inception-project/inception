@@ -83,6 +83,7 @@ public class KnowledgeBaseServiceRemoteTest
     private Project project;
     private TestFixtures testFixtures;
 
+    
     @Rule
     public TestWatcher watcher = new TestWatcher()
     {
@@ -90,7 +91,7 @@ public class KnowledgeBaseServiceRemoteTest
         protected void starting(org.junit.runner.Description aDescription)
         {
             String methodName = aDescription.getMethodName();
-            System.out.println("\n=== " + methodName + " =====================");
+            System.out.printf("\n=== " + methodName + " =====================");
         };
     };
     
@@ -167,6 +168,8 @@ public class KnowledgeBaseServiceRemoteTest
             kb_wine.setLabelIri(RDFS.LABEL);
             kb_wine.setPropertyTypeIri(RDF.PROPERTY);
             kb_wine.setDescriptionIri(RDFS.COMMENT);
+            kb_wine.setPropertyLabelIri(RDFS.LABEL);
+            kb_wine.setPropertyDescriptionIri(RDFS.COMMENT);
             kbList.add(new TestConfiguration("data/wine-ontology.rdf", kb_wine, "http://www.w3.org/TR/2003/PR-owl-guide-20031209/wine#ChateauMargaux"));
         }
         
@@ -183,67 +186,79 @@ public class KnowledgeBaseServiceRemoteTest
             kb_hucit.setDescriptionIri(vf.createIRI("http://www.w3.org/2000/01/rdf-schema#comment"));
             kb_hucit.setLabelIri(vf.createIRI("http://www.w3.org/2000/01/rdf-schema#label"));
             kb_hucit.setPropertyTypeIri(vf.createIRI("http://www.w3.org/1999/02/22-rdf-syntax-ns#Property"));
+            kb_hucit.setPropertyLabelIri(RDFS.LABEL);
+            kb_hucit.setPropertyDescriptionIri(RDFS.COMMENT);
             kbList.add(new TestConfiguration("http://nlp.dainst.org:8888/sparql", kb_hucit, 
                     // person -> Achilles :: urn:cts:cwkb:1137
                     "http://purl.org/hucit/kb/authors/1137"));
         }
 
         {
+            KnowledgeBaseProfile profile = PROFILES.get("wikidata");
             KnowledgeBase kb_wikidata_direct = new KnowledgeBase();
             kb_wikidata_direct.setName("Wikidata (official/direct mapping)");
             kb_wikidata_direct.setType(RepositoryType.REMOTE);
             kb_wikidata_direct.setReification(Reification.NONE);
-            kb_wikidata_direct.applyMapping(PROFILES.get("wikidata").getMapping());
-            kbList.add(new TestConfiguration(PROFILES.get("wikidata").getSparqlUrl(),
-                    kb_wikidata_direct, "http://www.wikidata.org/entity/Q19576436"));
+            kb_wikidata_direct.applyMapping(profile.getMapping());
+            kbList.add(new TestConfiguration(profile.getAccess().getAccessUrl(), kb_wikidata_direct,
+                    "http://www.wikidata.org/entity/Q19576436"));
         }
 
-        // This profile is yet incomplete and needs to be fixed
-        // {
-        // ValueFactory vf = SimpleValueFactory.getInstance();
-        //
-        // KnowledgeBase kb_wikidata_reified = new KnowledgeBase();
-        // kb_wikidata_reified.setName("Wikidata (official/reified)");
-        // kb_wikidata_reified.setType(RepositoryType.REMOTE);
-        // kb_wikidata_reified.setReification(Reification.WIKIDATA);
-        // kb_wikidata_reified.setClassIri(OWL.CLASS); // FIXME
-        // kb_wikidata_reified.setSubclassIri(vf.createIRI("http://www.wikidata.org/prop/P279"));
-        // kb_wikidata_reified.setTypeIri(vf.createIRI("http://www.wikidata.org/prop/P31"));
-        // kb_wikidata_reified.setLabelIri(RDFS.LABEL);
-        // kb_wikidata_reified.setPropertyTypeIri(RDF.PROPERTY); // FIXME
-        // kb_wikidata_reified.setDescriptionIri(vf.createIRI("http://schema.org/description"));
-        // kbList.add(kb_wikidata_reified);
-        // }
+        {
+            KnowledgeBaseProfile profile = PROFILES.get("virtuoso");
+            KnowledgeBase kb_wikidata_direct = new KnowledgeBase();
+            kb_wikidata_direct.setName("UKP_Wikidata (Virtuoso)");
+            kb_wikidata_direct.setType(RepositoryType.REMOTE);
+            kb_wikidata_direct.setReification(Reification.NONE);
+            kb_wikidata_direct.applyMapping(profile.getMapping());
+            kbList.add(new TestConfiguration(profile.getAccess().getAccessUrl(), kb_wikidata_direct,
+                "http://www.wikidata.org/entity/Q19576436"));
+        }
 
         {
+            KnowledgeBaseProfile profile = PROFILES.get("db_pedia");
             KnowledgeBase kb_dbpedia = new KnowledgeBase();
-            kb_dbpedia.setName("DKPedia (official)");
+            kb_dbpedia.setName(profile.getName());
             kb_dbpedia.setType(RepositoryType.REMOTE);
             kb_dbpedia.setReification(Reification.NONE);
-            kb_dbpedia.applyMapping(PROFILES.get("db_pedia").getMapping());
-            kbList.add(new TestConfiguration(PROFILES.get("db_pedia").getSparqlUrl(),
-                    kb_dbpedia, "http://www.wikidata.org/entity/Q20280393" ));
+            kb_dbpedia.applyMapping(profile.getMapping());
+            kbList.add(new TestConfiguration(profile.getAccess().getAccessUrl(), kb_dbpedia,
+                    "http://www.wikidata.org/entity/Q20280393"));
         }
        
         {
+            KnowledgeBaseProfile profile = PROFILES.get("yago");
             KnowledgeBase kb_yago = new KnowledgeBase();
-            kb_yago.setName("Yago (official)");
+            kb_yago.setName(profile.getName());
             kb_yago.setType(RepositoryType.REMOTE);
             kb_yago.setReification(Reification.NONE);
-            kb_yago.applyMapping(PROFILES.get("yago").getMapping());
-            kbList.add(new TestConfiguration(PROFILES.get("yago").getSparqlUrl(),
-                    kb_yago, "http://www.wikidata.org/entity/Q21445637S003fc070-45f0-80bd-ae2d-072cde5aad89"));
+            kb_yago.applyMapping(profile.getMapping());
+            kbList.add(new TestConfiguration(profile.getAccess().getAccessUrl(), kb_yago,
+                    "http://www.wikidata.org/entity/Q21445637S003fc070-45f0-80bd-ae2d-072cde5aad89"));
         }
         
         {
-            KnowledgeBase kb_zbw = new KnowledgeBase();
-            kb_zbw.setName("ZBW (official/direct mapping)");
-            kb_zbw.setType(RepositoryType.REMOTE);
-            kb_zbw.setReification(Reification.NONE);
-            kb_zbw = setOWLSchemaMapping(kb_zbw);
-            kbList.add(new TestConfiguration("http://zbw.eu/beta/sparql/stw/query",
-                    kb_zbw, "http://zbw.eu/stw/thsys/71020"));
+            KnowledgeBaseProfile profile = PROFILES.get("zbw-stw-economics");
+            KnowledgeBase kb_zbw_stw_economics = new KnowledgeBase();
+            kb_zbw_stw_economics.setName(profile.getName());
+            kb_zbw_stw_economics.setType(RepositoryType.REMOTE);
+            kb_zbw_stw_economics.setReification(Reification.NONE);
+            kb_zbw_stw_economics.applyMapping(profile.getMapping());
+            kbList.add(new TestConfiguration(profile.getAccess().getAccessUrl(), kb_zbw_stw_economics,
+                    "http://zbw.eu/stw/thsys/71020"));
         }
+        
+        // Commenting this out for the moment becuase we expect that every ontology contains 
+        // property definitions. However, this one does not include any property definitions!
+        // {
+        // KnowledgeBaseProfile profile = PROFILES.get("zbw-gnd");
+        // KnowledgeBase kb_zbw_gnd = new KnowledgeBase();
+        // kb_zbw_gnd.setName(profile.getName());
+        // kb_zbw_gnd.setType(RepositoryType.REMOTE);
+        // kb_zbw_gnd.setReification(Reification.NONE);
+        // kb_zbw_gnd.applyMapping(profile.getMapping());
+        // kbList.add(new TestConfiguration(profile.getSparqlUrl(), kb_zbw_gnd));
+        // }
         
         List<Object[]> dataList = new ArrayList<>();
         for (TestConfiguration kb : kbList) {
@@ -301,6 +316,20 @@ public class KnowledgeBaseServiceRemoteTest
 
         assertThat(parentList).as("Check that parent list is not empty").isNotEmpty();
 
+    }
+
+    @Test
+    public void thatParentListCanBeRetrieved()
+    {
+        KnowledgeBase kb = sutConfig.getKnowledgeBase();
+        
+        long duration = System.currentTimeMillis();
+        Set<KBHandle> parentList = sut.getParentConceptList(kb, sutConfig.getTestIdentifier(), true);
+        duration = System.currentTimeMillis() - duration;
+        System.out.printf("Parent List retrieved : %d%n", parentList.size());
+        System.out.printf("Time required        : %d ms%n", duration);
+        parentList.stream().limit(10).forEach(h -> System.out.printf("   %s%n", h));
+        assertThat(parentList).as("Check that parent list is not empty").isNotEmpty();
     }
 
     // Helper
@@ -362,7 +391,7 @@ public class KnowledgeBaseServiceRemoteTest
         {
             return testIdentifier;
         }
-        
+
         @Override
         public String toString()
         {

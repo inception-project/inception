@@ -24,6 +24,8 @@ import java.util.Optional;
 
 import org.apache.wicket.model.IModel;
 import org.cyberborean.rdfbeans.datatype.DefaultDatatypeMapper;
+
+import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.vocabulary.XMLSchema;
 import org.springframework.stereotype.Component;
 
@@ -64,22 +66,27 @@ public class StringLiteralValueSupport
     @Override
     public boolean accepts(KBStatement aStatement, KBProperty aProperty)
     {
+        // accept statements with null as value so that the StringEditor appears as default case
         if (aStatement.getValue() == null) {
             return false;
         }
-
-        return DefaultDatatypeMapper.getDatatypeURI(aStatement.getValue().getClass()) != null;
+        IRI iri = DefaultDatatypeMapper.getDatatypeURI((aStatement.getValue()).getClass());
+        // Conditions for different datatype URI apart from String
+        boolean accept = XMLSchema.STRING.equals(iri);
+        
+        return iri != null && accept ;
     }
     
     @Override
     public boolean accepts(String range, Optional<KBObject> rangeKbObject)
     {
-        if (rangeKbObject.isPresent()) {
+        if (rangeKbObject != null && rangeKbObject.isPresent()) {
             return true;
         }
-        else if (range.equals(XMLSchema.STRING.stringValue()) ) {
+        else if (range != null && range.equals(XMLSchema.STRING.stringValue())) {
             return true;
         }
+
         return false;
     }
 
