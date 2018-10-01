@@ -424,6 +424,7 @@ public class KnowledgeBaseServiceImpl
             tupleQuery.setBinding("pSUBCLASS", aKB.getSubclassIri());
             tupleQuery.setBinding("pLABEL", aKB.getLabelIri());
             tupleQuery.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
+            tupleQuery.setBinding("pSUBLABEL", aKB.getSubPropertyIri());
             tupleQuery.setIncludeInferred(false);
             return evaluateListQuery(tupleQuery, aAll);
         });
@@ -820,6 +821,7 @@ public class KnowledgeBaseServiceImpl
                 tupleQuery.setBinding("pSUBCLASS", aKB.getSubclassIri());
                 tupleQuery.setBinding("pLABEL", aKB.getLabelIri());
                 tupleQuery.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
+                tupleQuery.setBinding("pSUBLABEL", aKB.getSubPropertyIri());
                 tupleQuery.setIncludeInferred(false);
     
                 return evaluateListQuery(tupleQuery, aAll);
@@ -952,7 +954,7 @@ public class KnowledgeBaseServiceImpl
             return evaluateListQuery(tupleQuery, aAll);
         });
 
-        
+
         if (resultList.size() > 1) {
             resultList.sort(Comparator.comparing(KBObject::getUiLabel));
         }
@@ -985,6 +987,7 @@ public class KnowledgeBaseServiceImpl
             String id = bindings.getBinding("s").getValue().stringValue();
             Binding label = bindings.getBinding("l");
             Binding description = bindings.getBinding("d");
+            Binding subpropertyLabel = bindings.getBinding("sl");
 
             if (!id.contains(":") || (!aAll && hasImplicitNamespace(id))) {
                 continue;
@@ -993,6 +996,9 @@ public class KnowledgeBaseServiceImpl
             KBHandle handle = new KBHandle(id);
             if (label != null) {
                 handle.setName(label.getValue().stringValue());
+            }
+            else if (subpropertyLabel != null) {
+                handle.setName(subpropertyLabel.getValue().stringValue());
             }
             else {
                 handle.setName(handle.getUiLabel());
@@ -1132,7 +1138,17 @@ public class KnowledgeBaseServiceImpl
         return Optional.empty();
     }
 
-    @Override public SchemaProfile checkSchemaProfile(KnowledgeBaseProfile aProfile)
+    @Override
+    public boolean isSubpropertyLabel(KnowledgeBase aKB, String aIdentifier)
+    {
+        try (RepositoryConnection conn = getConnection(aKB)) {
+            return RdfUtils.readFirst(conn, SimpleValueFactory.getInstance().createIRI(aIdentifier),
+                aKB.getSubPropertyIri(), aKB.getLabelIri()).isPresent();
+        }
+    }
+
+    @Override
+    public SchemaProfile checkSchemaProfile(KnowledgeBaseProfile aProfile)
     {
         SchemaProfile[] profiles = SchemaProfile.values();
         KnowledgeBaseMapping mapping = aProfile.getMapping();

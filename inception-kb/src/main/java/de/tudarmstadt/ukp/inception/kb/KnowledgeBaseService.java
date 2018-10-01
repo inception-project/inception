@@ -529,6 +529,14 @@ public interface KnowledgeBaseService
     List<KBHandle> listAllConcepts(KnowledgeBase kb, boolean aAll) throws QueryEvaluationException;
 
     /**
+     *
+     * @param aKB
+     * @param aIdentifier
+     * @return
+     */
+    boolean isSubpropertyLabel(KnowledgeBase aKB, String aIdentifier);
+
+    /**
      * Check if the given profile equals one of the schema profiles defined in {@link SchemaProfile}
      * @param aProfile
      * @return the corresponding schema profile (CUSTOM if the given profile does not equal any of

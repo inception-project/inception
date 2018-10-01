@@ -31,7 +31,6 @@ import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.eclipse.rdf4j.query.QueryEvaluationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -146,6 +145,7 @@ public class KnowledgeBasePanel
     @OnEvent
     public void actionStatementChanged(AjaxStatementChangedEvent event)
     {
+
         boolean isSchemaChangeEvent = RdfUtils
                 .isFromImplicitNamespace(event.getStatement().getProperty());
         if (!isSchemaChangeEvent) {
@@ -154,8 +154,10 @@ public class KnowledgeBasePanel
 
         // if this event is not about renaming (changing the RDFS label) of a KBObject, return
         KBStatement statement = event.getStatement();
-        boolean isRenameEvent = statement.getProperty().getIdentifier()
-                .equals(RDFS.LABEL.stringValue());
+        String propertyIdentifier = statement.getProperty().getIdentifier();
+        boolean isRenameEvent =
+            propertyIdentifier.equals(kbModel.getObject().getLabelIri().stringValue()) || kbService
+                .isSubpropertyLabel(kbModel.getObject(), propertyIdentifier);
         if (isRenameEvent) {
             // determine whether the concept name or property name was changed (or neither), then
             // update the name in the respective KBHandle
@@ -203,8 +205,6 @@ public class KnowledgeBasePanel
                     selectedConcept
                             .setIdentifier(selectedConceptHandle.getObject().getIdentifier());
                 }
-                selectedConceptHandle = Model
-                    .of(new KBHandle(selectedConcept.getIdentifier(), selectedConcept.getName()));
                 replacementPanel = new ConceptInstancePanel(DETAILS_MARKUP_ID, kbModel,
                         selectedConceptHandle, Model.of(selectedConcept));
             }

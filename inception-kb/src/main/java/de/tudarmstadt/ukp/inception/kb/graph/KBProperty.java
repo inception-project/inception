@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.kb.graph;
 
 import static de.tudarmstadt.ukp.inception.kb.graph.RdfUtils.readFirst;
+import static de.tudarmstadt.ukp.inception.kb.graph.RdfUtils.readFirstLabel;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import java.util.ArrayList;
@@ -219,7 +220,7 @@ public class KBProperty
         kbProp.setKB(kb);
         kbProp.originalStatements.add(aStmt);
 
-        readFirst(aConn, aStmt.getSubject(), kb.getLabelIri(), null, kb.getDefaultLanguage())
+        readFirstLabel(aConn, kb, aStmt.getSubject(), kb.getDefaultLanguage())
             .ifPresent((stmt) -> {
                 kbProp.setName(stmt.getObject().stringValue());
                 kbProp.originalStatements.add(stmt);

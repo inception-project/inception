@@ -55,7 +55,33 @@ public final class SPARQLQueryStore
         fragment.append(" }\n");
         return fragment.toString();
     }
-    
+
+    /**
+     * adds an OPTIONAL block that looks for a subproperty label
+     */
+    private static final String optionalLanguageFilteredSubpropertyLabel (String aLanguage)
+    {
+        StringBuilder fragment = new StringBuilder();
+        fragment.append("  OPTIONAL {\n");
+        fragment.append("    ?s ").append("?slp ").append("?sl").append(" .\n");
+        fragment.append("    ?slp ").append("?pSUBLABEL ").append("?pLABEL");
+
+        if (aLanguage != null) {
+            // If a certain language is specified, we look exactly for that
+            String escapedLang = NTriplesUtil.escapeString(aLanguage);
+            fragment.append("    FILTER(LANGMATCHES(LANG(").append("?sl").append("), \"").append(escapedLang).append("\"))\n");
+        }
+        else {
+            // If no language is specified, we look for statements without a language as otherwise
+            // we might easily run into trouble on multi-lingual resources where we'd get all the
+            // labels in all the languages being retrieved if we simply didn't apply any filter.
+            fragment.append("    FILTER(LANG(").append("?sl").append(") = \"\")\n");
+            fragment.append(" }\n");
+        }
+        fragment.append(" }\n");
+        return fragment.toString();
+    }
+
     /** 
      * Query to list all concepts from a knowledge base.
      */
@@ -95,7 +121,7 @@ public final class SPARQLQueryStore
     {
         return String.join("\n"
                 , SPARQL_PREFIX    
-                , "SELECT DISTINCT ?s ?l ?d WHERE { "
+                , "SELECT DISTINCT ?s ?l ?d ?sl WHERE { "
                 , "  { ?s ?pTYPE ?oCLASS . } "
                 , "  UNION { ?someSubClass ?pSUBCLASS ?s . } ."
                 , "  FILTER NOT EXISTS { "
@@ -104,6 +130,7 @@ public final class SPARQLQueryStore
                 , "  FILTER NOT EXISTS { "
                 , "    ?s owl:intersectionOf ?list . }"
                 , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage(),"?l")
+                , optionalLanguageFilteredSubpropertyLabel(aKB.getDefaultLanguage())
                 , optionalLanguageFilteredValue("?pDESCRIPTION", aKB.getDefaultLanguage(),"?d")
                 , "} "
                 , "LIMIT " + LIMIT);

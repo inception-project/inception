@@ -43,8 +43,9 @@ public class IriConstants
     public static final String PREFIX_WIKIDATA_DIRECT = "http://www.wikidata.org/prop/direct/";
     public static final String PREFIX_SCHEMA = "http://schema.org/";
 
-    public static final Set<String> IMPLICIT_NAMESPACES = new HashSet<>(Arrays.asList(RDF.NAMESPACE,
-            RDFS.NAMESPACE, XMLSchema.NAMESPACE, OWL.NAMESPACE, INCEPTION_SCHEMA_NAMESPACE));
+    public static final Set<String> IMPLICIT_NAMESPACES = new HashSet<>(Arrays
+        .asList(RDF.NAMESPACE, RDFS.NAMESPACE, XMLSchema.NAMESPACE, OWL.NAMESPACE,
+            INCEPTION_SCHEMA_NAMESPACE, INCEPTION_NAMESPACE));
 
     /**
      * http://www.wikidata.org/entity/Q35120
