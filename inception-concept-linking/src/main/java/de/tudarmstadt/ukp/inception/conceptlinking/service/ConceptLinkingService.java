@@ -50,6 +50,8 @@ import org.eclipse.rdf4j.query.QueryEvaluationException;
 import org.eclipse.rdf4j.query.TupleQuery;
 import org.eclipse.rdf4j.query.TupleQueryResult;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
+import org.eclipse.rdf4j.repository.config.RepositoryImplConfig;
+import org.eclipse.rdf4j.repository.sparql.config.SPARQLRepositoryConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -70,6 +72,7 @@ import de.tudarmstadt.ukp.inception.conceptlinking.util.FileUtils;
 import de.tudarmstadt.ukp.inception.conceptlinking.util.QueryUtil;
 import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
+import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 import de.tudarmstadt.ukp.inception.kb.event.KnowledgeBaseConfigurationChangedEvent;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
@@ -386,6 +389,7 @@ public class ConceptLinkingService
 
             for (Token t : JCasUtil.selectCovered(Token.class, mentionSentence)) {
                 boolean isNotPartOfMention = !splitMention.contains(t.getCoveredText());
+                // TODO Use the right locale based on the KB language
                 boolean isNotStopword = (stopwords == null) || (stopwords != null && !stopwords
                     .contains(t.getCoveredText().toLowerCase(Locale.ENGLISH)));
                 if (isNotPartOfMention && isNotStopword) {
@@ -396,16 +400,21 @@ public class ConceptLinkingService
 
         // Set frequency
         if (entityFrequencyMap != null) {
-            aCandidatesFullText.forEach(l -> {
+            for (CandidateEntity l : aCandidatesFullText) {
                 String key = l.getIRI();
-                // For Virtuoso KBs
-                if (aKB.getFullTextSearchIri().toString().equals("bif:contains")) {
-                    key = key.replace("http://www.wikidata.org/entity/", "");
-                    if (entityFrequencyMap.get(key) != null) {
-                        l.setFrequency(entityFrequencyMap.get(key));
+                // For UKP Wikidata
+                if (aKB.getType() == RepositoryType.REMOTE
+                    && aKB.getFullTextSearchIri().equals(IriConstants.FTS_VIRTUOSO)) {
+                    RepositoryImplConfig cfg = kbService.getKnowledgeBaseConfig(aKB);
+                    if (((SPARQLRepositoryConfig) cfg).getQueryEndpointUrl()
+                        .equals(IriConstants.UKP_WIKIDATA_SPARQL_ENDPOINT)) {
+                        key = key.replace(IriConstants.PREFIX_WIKIDATA_ENTITY, "");
+                        if (entityFrequencyMap.get(key) != null) {
+                            l.setFrequency(entityFrequencyMap.get(key));
+                        }
                     }
                 }
-            });
+            }
         }
 
         // Sort full-text matching candidates by frequency and do cutoff by a threshold
@@ -419,10 +428,17 @@ public class ConceptLinkingService
         // Set the feature values
         List<Token> finalMentionContext = mentionContext;
         result.parallelStream().forEach(l -> {
-            // For Virtuoso KBs
-            if (aKB.getFullTextSearchIri().toString().equals("bif:contains")) {
-                String wikidataId = l.getIRI().replace("http://www.wikidata.org/entity/", "");
-                l.setIdRank(Math.log(Double.parseDouble(wikidataId.substring(1))));
+
+            // For UKP Wikidata
+            if (aKB.getType() == RepositoryType.REMOTE
+                && aKB.getFullTextSearchIri().equals(IriConstants.FTS_VIRTUOSO)) {
+                RepositoryImplConfig cfg = kbService.getKnowledgeBaseConfig(aKB);
+                if (((SPARQLRepositoryConfig) cfg).getQueryEndpointUrl()
+                    .equals(IriConstants.UKP_WIKIDATA_SPARQL_ENDPOINT)) {
+                    String wikidataId =
+                        l.getIRI().replace(IriConstants.PREFIX_WIKIDATA_ENTITY, "");
+                    l.setIdRank(Math.log(Double.parseDouble(wikidataId.substring(1))));
+                }
             }
 
             String altLabel = l.getAltLabel();
@@ -496,6 +512,7 @@ public class ConceptLinkingService
         for (Token t : aSentence) {
             joiner.add(t.getCoveredText());
         }
+        // Avoid IndexOutOfBoundsException in case aSentence is empty (i.e. during testing)
         return joiner.toString().substring(0, (joiner.length() != 0) ? joiner.length() - 1 : 0);
     }
 

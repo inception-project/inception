@@ -43,15 +43,6 @@ import javax.persistence.Query;
 import org.apache.commons.compress.compressors.CompressorException;
 import org.apache.commons.compress.compressors.CompressorStreamFactory;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
-import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Field;
-import org.apache.lucene.document.StringField;
-import org.apache.lucene.index.IndexWriter;
-import org.apache.lucene.index.IndexWriterConfig;
-import org.apache.lucene.store.Directory;
-import org.apache.lucene.store.FSDirectory;
 import org.eclipse.rdf4j.common.iteration.Iterations;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Resource;
@@ -272,7 +263,7 @@ public class KnowledgeBaseServiceImpl
         //   new ForwardChainingRDFSInferencerConfig(new NativeStoreConfig()));
 
         LuceneSailConfig config = new LuceneSailConfig(new NativeStoreConfig());
-        config.setIndexDir("indexDir");
+        config.setIndexDir("luceneIndexDir");
         return new SailRepositoryConfig(config);
     }
 
@@ -1200,15 +1191,6 @@ public class KnowledgeBaseServiceImpl
         return kbFile;
     }
 
-
-    private IndexWriter getIndexWriter(KnowledgeBase aKb) throws IOException
-    {
-        Analyzer analyzer = new StandardAnalyzer();
-        Directory directory = FSDirectory
-            .open(new File(luceneIndexDir, aKb.getRepositoryId()).toPath());
-        return new IndexWriter(directory, new IndexWriterConfig(analyzer));
-    }
-
     @Override
     public void indexLocalKb(KnowledgeBase aKb)
     {
@@ -1225,27 +1207,6 @@ public class KnowledgeBaseServiceImpl
         }
         catch (Exception e) {
             log.error("Could not index local KB.", e);
-        }
-    }
-
-    private void indexCreatedConcept(String aId, String aLabel, IndexWriter aIndexWriter)
-    {
-        try {
-            String FIELD_ID = "id";
-            String FIELD_CONTENT = "label";
-
-            Document doc = new Document();
-            doc.add(new StringField(FIELD_ID, aId, Field.Store.YES));
-            doc.add(new StringField(FIELD_CONTENT, aLabel, Field.Store.YES));
-
-            aIndexWriter.addDocument(doc);
-            aIndexWriter.commit();
-            log.info("LuceneIndex updated by creating Concept with id [{}] and label [{}].", aId,
-                aLabel);
-        }
-        catch (IOException e) {
-            log.error("Could not add concept with id [{}] and label [{}] to LuceneIndex.", aId,
-                aLabel);
         }
     }
 }

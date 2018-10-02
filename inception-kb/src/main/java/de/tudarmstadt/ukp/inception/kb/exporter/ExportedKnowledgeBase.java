@@ -203,9 +203,9 @@ public class ExportedKnowledgeBase
         return fullTextSearchIri;
     }
 
-    public void setFullTextSearchIri(String fullTextSearchIri)
+    public void setFullTextSearchIri(String aFullTextSearchIri)
     {
-        this.fullTextSearchIri = fullTextSearchIri;
+        fullTextSearchIri = aFullTextSearchIri;
     }
 
     public boolean isReadOnly()
