@@ -161,6 +161,10 @@
       <artifactId>wicket-spring</artifactId>
     </dependency>
     <dependency>
+      <groupId>de.agilecoders.wicket</groupId>
+      <artifactId>wicket-bootstrap-core</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.wicketstuff</groupId>
       <artifactId>wicketstuff-annotation</artifactId>
     </dependency>
