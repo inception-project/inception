@@ -263,8 +263,8 @@ public class KnowledgeBaseServiceImpl
         //   new ForwardChainingRDFSInferencerConfig(new NativeStoreConfig()));
 
         LuceneSailConfig config = new LuceneSailConfig(new NativeStoreConfig());
-        config.setIndexDir("luceneIndexDir");
-        return new SailRepositoryConfig(config);
+        config.setIndexDir(luceneIndexDir.getAbsolutePath());
+        return new SailRepositoryConfig(new NativeStoreConfig());
     }
 
     @Override
