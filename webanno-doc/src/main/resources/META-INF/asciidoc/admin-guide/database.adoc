@@ -19,11 +19,14 @@
 
 {product-name} uses an SQL database to store project and user data. 
 
-We test MySQL using a MySQL server. {product-name} uses by default an embedded HSQLDB database. However, we 
-recommend using the embedded database only for testing purposes. For production use, we recommend
-using a MySQL server. The reason for this is, that:
+{product-name} uses by default an embedded HSQLDB database. However, we recommend using the embedded
+database only for testing purposes. For production use, we recommend using a MySQL server. The reason
+for this is, that:
 
-* we do more testing on the MySQL server and
+* some users have reported that HSQLDB databases may become corrupt when the computer crashes
+  (note that this could probably also happen with MySQL, but we did so far not have any reports
+  about this);
+* most {product-name} developers use MySQL when running {product-name} on their servers;
 * in the past, we had cases where we described in-place upgrade procedures that required performing
   SQL commands to change the data model as part of the upgrade. We promise to try avoiding this in
   the future. However, in case we offer advice on fixing anything directly in the database, this
@@ -34,15 +37,40 @@ being used. Theoretically, it should be possible to use any JDBC-compatible data
 corresponding driver to the classpath and configuring {product-name} to use the driver in the
 `settings.properties` file.
 
-If you plan to use UTF-8 encoding for project name and tagset/tag name, make sure either of the following settings for MySQL databse
-a) in the `settings.properties` file, make sure that  `database.url` includes 
+=== Using MySQL in production
 
+This section explains some settings that can be added to the `database.url` in the 
+`settings.properties` file when using MySQL. Settings are separated from the host name and database
+name with a `?` character and multiple settings are separated using the `&` character, e.g.:
+
+----
+database.url=jdbc:mysql://localhost:3306/webanno?useSSL=false&serverTimezone=UTC
+----
+
+To suppress the warning about non-SSL database connections with recent MySQL databases, append the
+following setting to the `database.url`:
+
+----
+useSSL=false
+----
+
+Recent MySQL drivers may refuse to work unless a database server timezone has been specified. The
+easiest way to do this is to add the following setting to the `database.url`: 
+
+----
+serverTimezone=UTC
+----
+
+If you plan to use UTF-8 encoding for project name and tagset/tag name, make sure either of the following settings for MySQL database
+
+* in the `settings.properties` file, make sure that `database.url` includes 
++
 ----
 useUnicode=true&characterEncoding=UTF-8
 ----
 
-b) change the `my.conf` MySQL databse configuration file to include the following line
-
+* change the `my.conf` MySQL databse configuration file to include the following line
++
 ----
 character-set-server = utf8
 ----
