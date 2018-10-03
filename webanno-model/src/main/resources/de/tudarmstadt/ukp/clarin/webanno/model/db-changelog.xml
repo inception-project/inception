@@ -1067,4 +1067,18 @@
       </column>
     </addColumn>
   </changeSet>  
+  
+  <changeSet author="WebAnno Team" id="20181003-1">
+    <preConditions onFail="MARK_RAN">
+      <changeSetExecuted 
+        id="1512223050574-9" 
+        author="WebAnno Team" 
+        changeLogFile="de/tudarmstadt/ukp/clarin/webanno/model/db-changelog.xml" />
+    </preConditions>
+    <addNotNullConstraint 
+      tableName="project" 
+      columnName="mode"
+      columnDataType="VARCHAR(255)" 
+      defaultNullValue="annotation" />
+  </changeSet>  
 </databaseChangeLog>
