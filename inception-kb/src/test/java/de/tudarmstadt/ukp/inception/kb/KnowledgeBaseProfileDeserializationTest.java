@@ -17,17 +17,15 @@
  */
 package de.tudarmstadt.ukp.inception.kb;
 
-import static org.junit.Assert.assertEquals;
-
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.eclipse.rdf4j.model.vocabulary.OWL;
+import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 
@@ -58,7 +56,7 @@ public class KnowledgeBaseProfileDeserializationTest
         String descriptionIri = "http://www.w3.org/2000/01/rdf-schema#comment";
         String propertyLabelIri = "http://www.w3.org/2000/01/rdf-schema#label";
         String propertyDescriptionIri = "http://www.w3.org/2000/01/rdf-schema#comment";
-        List<String> rootConcepts =  Arrays.asList(OWL.NOTHING.stringValue());
+        List<String> rootConcepts =  new ArrayList<String>();
         KnowledgeBaseMapping referenceMapping = new KnowledgeBaseMapping(classIri, subclassIri,
             typeIri, descriptionIri, label, propertyTypeIri, propertyLabelIri,
             propertyDescriptionIri, rootConcepts);
@@ -83,18 +81,6 @@ public class KnowledgeBaseProfileDeserializationTest
         }
         
         KnowledgeBaseProfile testProfile = profiles.get("test_profile");
-        
-        assertEquals(testProfile.getAccess(), referenceProfile.getAccess());
-        assertEquals(testProfile.getName(), referenceProfile.getName());
-        assertEquals(testProfile.getType(), referenceProfile.getType());
-        assertEquals(testProfile.getMapping().getClassIri(), referenceProfile.getMapping().getClassIri());
-        assertEquals(testProfile.getMapping().getDescriptionIri(), referenceProfile.getMapping().getDescriptionIri());
-        assertEquals(testProfile.getMapping().getLabelIri(), referenceProfile.getMapping().getLabelIri());
-        assertEquals(testProfile.getMapping().getPropertyDescriptionIri(), referenceProfile.getMapping().getPropertyDescriptionIri());
-        assertEquals(testProfile.getMapping().getPropertyTypeIri(), referenceProfile.getMapping().getPropertyTypeIri());
-        assertEquals(testProfile.getMapping().getSubclassIri(), referenceProfile.getMapping().getSubclassIri());
-        assertEquals(testProfile.getMapping().getTypeIri(), referenceProfile.getMapping().getTypeIri());
-        assertEquals(testProfile.getMapping().getRootConcepts(), referenceProfile.getMapping().getRootConcepts());
-        
+        Assertions.assertThat(testProfile).isEqualToComparingFieldByFieldRecursively(referenceProfile);
     }
 }

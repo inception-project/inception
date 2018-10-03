@@ -13,8 +13,7 @@ british_museum:
       property-type: http://www.w3.org/1999/02/22-rdf-syntax-ns#Property
       property-label: http://www.w3.org/2000/01/rdf-schema#label
       property-description: http://www.w3.org/2000/01/rdf-schema#comment
-      root-concepts:
-            - http://www.w3.org/2002/07/owl#Nothing
+      root-concepts: [ ]
 wikidata:
   name: Wikidata
   type: REMOTE
@@ -45,8 +44,7 @@ virtuoso:
       description: http://www.schema.org/description
       property-label: http://www.w3.org/2000/01/rdf-schema#label
       property-description: http://www.schema.org/description
-      root-concepts:
-            - http://www.w3.org/2002/07/owl#Nothing
+      root-concepts: [ ]
 db_pedia:
   name: DBpedia
   type: REMOTE
@@ -77,8 +75,7 @@ babel_net:
       description: http://www.w3.org/2000/01/rdf-schema#comment
       property-label: http://www.w3.org/2000/01/rdf-schema#label
       property-description: http://www.w3.org/2000/01/rdf-schema#comment
-      root-concepts:
-            - http://www.w3.org/2002/07/owl#Nothing
+      root-concepts: [ ]
 yago:
   name: YAGO
   type: REMOTE
@@ -93,8 +90,7 @@ yago:
       description: http://www.w3.org/2000/01/rdf-schema#comment
       property-label: http://www.w3.org/2000/01/rdf-schema#label
       property-description: http://www.w3.org/2000/01/rdf-schema#comment
-      root-concepts:
-            - http://www.w3.org/2002/07/owl#Nothing
+      root-concepts: [ ]
 wine_ontology:
   name: Wine Ontology
   type: LOCAL
@@ -109,8 +105,7 @@ wine_ontology:
       description: http://www.w3.org/2000/01/rdf-schema#comment
       property-label: http://www.w3.org/2000/01/rdf-schema#label
       property-description: http://www.w3.org/2000/01/rdf-schema#comment
-      root-concepts:
-            - http://www.w3.org/2002/07/owl#Nothing
+      root-concepts: [ ]
 wildlife_ontology:
   name: Wildlife Ontology
   type: LOCAL
@@ -125,8 +120,7 @@ wildlife_ontology:
       description: http://www.w3.org/2000/01/rdf-schema#comment
       property-label: http://www.w3.org/2000/01/rdf-schema#label
       property-description: http://www.w3.org/2000/01/rdf-schema#comment
-      root-concepts:
-            - http://www.w3.org/2002/07/owl#Nothing
+      root-concepts: [ ]
 zbw-stw-economics:
   name: STW Thesaurus for Economics
   type: REMOTE
@@ -141,8 +135,7 @@ zbw-stw-economics:
       description: http://www.w3.org/2000/01/rdf-schema#comment
       property-label: http://www.w3.org/2004/02/skos/core#prefLabel
       property-description: http://www.w3.org/2000/01/rdf-schema#comment
-      root-concepts:
-            - http://www.w3.org/2002/07/owl#Nothing
+      root-concepts: [ ]
 zbw-gnd:
   name: Integrated Authority File (GND)
   type: REMOTE
@@ -157,5 +150,4 @@ zbw-gnd:
       description: http://www.w3.org/2000/01/rdf-schema#comment
       property-label: http://www.w3.org/2004/02/skos/core#prefLabel
       property-description: http://www.w3.org/2000/01/rdf-schema#comment
-      root-concepts:
-            - http://www.w3.org/2002/07/owl#Nothing
+      root-concepts: [ ]

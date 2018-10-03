@@ -43,7 +43,6 @@ import javax.persistence.UniqueConstraint;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
-import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
@@ -382,7 +381,13 @@ public class KnowledgeBase
         setPropertyTypeIri(aMapping.getPropertyTypeIri());
         setPropertyLabelIri(aMapping.getPropertyLabelIri());
         setPropertyDescriptionIri(aMapping.getPropertyDescriptionIri());
-        applyRootConcept(aMapping);
+        if (explicitlyDefinedRootConcepts.isEmpty()) {
+            ValueFactory vf = SimpleValueFactory.getInstance();
+            for (String rootConcept : aMapping.getRootConcepts()) {
+                explicitlyDefinedRootConcepts.add(vf.createIRI(rootConcept));
+            }
+        }
+        setExplicitlyDefinedRootConcepts(explicitlyDefinedRootConcepts);
     }
     
     @Override
@@ -419,18 +424,5 @@ public class KnowledgeBase
     @Override
     public int hashCode() {
         return Objects.hash(repositoryId, name);
-    }
-    
-    public void applyRootConcept(KnowledgeBaseMapping aMapping) {
-        if (!aMapping.getRootConcepts().isEmpty()
-                && !(aMapping.getRootConcepts().contains(OWL.NOTHING.stringValue()))) {
-            if (explicitlyDefinedRootConcepts.isEmpty()) {
-                ValueFactory vf = SimpleValueFactory.getInstance();
-                for (String rootConcept : aMapping.getRootConcepts()) {
-                    explicitlyDefinedRootConcepts.add(vf.createIRI(rootConcept));
-                }
-                setExplicitlyDefinedRootConcepts(explicitlyDefinedRootConcepts);
-            }
-        }
     }
 }
