@@ -56,6 +56,7 @@ public class Project
     @Column(length = 64000)
     private String description;
 
+    @Column(nullable = false)
     private String mode;
 
     // version of the project
