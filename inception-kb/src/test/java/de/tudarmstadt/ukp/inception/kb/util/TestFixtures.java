@@ -51,6 +51,7 @@ public class TestFixtures
     {
         Project project = new Project();
         project.setName(name);
+        project.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
         return entityManager.persist(project);
     }
 

@@ -46,6 +46,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
@@ -233,9 +234,10 @@ public class KnowledgeBaseServiceImplImportExportIntegrationTest {
     // Helper
 
     private Project createProject(String name) {
-        Project project = new Project();
-        project.setName(name);
-        return testEntityManager.persist(project);
+        Project p = new Project();
+        p.setName(name);
+        p.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
+        return testEntityManager.persist(p);
     }
 
     private KnowledgeBase buildKnowledgeBase(Project project, String name) {
