@@ -74,10 +74,12 @@ public class ConceptFeatureIndexingSupportTest
         initMocks(this);
         
         project = new Project();
-        kb = new KnowledgeBase();
         project.setId(1l);
         project.setName("test project");
-        
+        project.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
+
+        kb = new KnowledgeBase();
+
         featureSupportRegistry = new FeatureSupportRegistryImpl(asList(
                 new PrimitiveUimaFeatureSupport(),
                 new ConceptFeatureSupport(kbService)));
