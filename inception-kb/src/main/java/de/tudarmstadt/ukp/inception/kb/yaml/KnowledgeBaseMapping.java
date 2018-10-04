@@ -18,8 +18,6 @@
 package de.tudarmstadt.ukp.inception.kb.yaml;
 
 import java.io.Serializable;
-import java.util.Arrays;
-import java.util.List;
 
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
@@ -54,11 +52,7 @@ public class KnowledgeBaseMapping implements Serializable
     private IRI propertyLabelIri;
 
     @JsonProperty("property-description")
-    private IRI propertyDescriptionIri;
-    
-    @JsonProperty("root-concepts")
-    private List<String> rootConcepts;
-    
+    private IRI propertyDescriptionIri;   
     
     @JsonCreator public KnowledgeBaseMapping(@JsonProperty("class") String aClassIri,
         @JsonProperty("subclass-of") String aSubclassIri,
@@ -67,8 +61,7 @@ public class KnowledgeBaseMapping implements Serializable
         @JsonProperty("label") String aLabelIri,
         @JsonProperty("property-type") String aPropertyTypeIri,
         @JsonProperty("property-label") String aPropertyLabelIri,
-        @JsonProperty("property-description") String aPropertyDescriptionIri,
-        @JsonProperty("root-concepts") List<String> aRootConcepts)
+        @JsonProperty("property-description") String aPropertyDescriptionIri)
     {
         SimpleValueFactory vf = SimpleValueFactory.getInstance();
         classIri = vf.createIRI(aClassIri);
@@ -78,8 +71,7 @@ public class KnowledgeBaseMapping implements Serializable
         labelIri = vf.createIRI(aLabelIri);
         propertyTypeIri = vf.createIRI(aPropertyTypeIri);
         propertyLabelIri = vf.createIRI(aPropertyLabelIri);
-        propertyDescriptionIri = vf.createIRI(aPropertyDescriptionIri);
-        rootConcepts = aRootConcepts;
+        propertyDescriptionIri = vf.createIRI(aPropertyDescriptionIri);        
     }        
     
     public KnowledgeBaseMapping() {
@@ -164,15 +156,5 @@ public class KnowledgeBaseMapping implements Serializable
     public void setPropertyDescriptionIri(IRI aPropertyDescriptionIri)
     {
         propertyDescriptionIri = aPropertyDescriptionIri;
-    }
-
-    public List<String> getRootConcepts()
-    {
-        return rootConcepts;
-    }
-
-    public void setRootConcepts(String[] aRootConcepts)
-    {
-        this.rootConcepts = Arrays.asList(aRootConcepts);
     }
 }

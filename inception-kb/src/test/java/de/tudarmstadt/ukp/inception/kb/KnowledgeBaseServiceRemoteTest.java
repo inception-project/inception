@@ -212,6 +212,7 @@ public class KnowledgeBaseServiceRemoteTest
             kb_wikidata_direct.setType(RepositoryType.REMOTE);
             kb_wikidata_direct.setReification(Reification.NONE);
             kb_wikidata_direct.applyMapping(profile.getMapping());
+            kb_wikidata_direct.applyRootConcepts(profile);
             kb_wikidata_direct.setDefaultLanguage("en");
             rootConcepts = new HashSet<String>();
             rootConcepts.add("http://www.wikidata.org/entity/Q35120");
@@ -240,6 +241,7 @@ public class KnowledgeBaseServiceRemoteTest
             kb_dbpedia.setType(RepositoryType.REMOTE);
             kb_dbpedia.setReification(Reification.NONE);
             kb_dbpedia.applyMapping(profile.getMapping());
+            kb_dbpedia.applyRootConcepts(profile);
             kb_dbpedia.setDefaultLanguage("en");
             rootConcepts = new HashSet<String>();
             rootConcepts.add("http://www.w3.org/2002/07/owl#Thing");
@@ -254,6 +256,7 @@ public class KnowledgeBaseServiceRemoteTest
             kb_yago.setType(RepositoryType.REMOTE);
             kb_yago.setReification(Reification.NONE);
             kb_yago.applyMapping(profile.getMapping());
+            kb_yago.applyRootConcepts(profile);
             rootConcepts = new HashSet<String>();
             rootConcepts.add("http://www.w3.org/2002/07/owl#Thing");
             kbList.add(new TestConfiguration(profile.getAccess().getAccessUrl(), kb_yago,
@@ -268,6 +271,7 @@ public class KnowledgeBaseServiceRemoteTest
             kb_zbw_stw_economics.setType(RepositoryType.REMOTE);
             kb_zbw_stw_economics.setReification(Reification.NONE);
             kb_zbw_stw_economics.applyMapping(profile.getMapping());
+            kb_zbw_stw_economics.applyRootConcepts(profile);
             kb_zbw_stw_economics.setDefaultLanguage("en");
             rootConcepts = new HashSet<String>();
             rootConcepts.add("http://zbw.eu/stw/thsys/a");

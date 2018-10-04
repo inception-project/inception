@@ -47,6 +47,7 @@ public class KnowledgeBaseProfileDeserializationTest
     public void checkThatDeserializationWorks() throws JsonParseException, JsonMappingException, IOException {
         String name = "Test KB";
         String url = "http://someurl/sparql";
+        List<String> rootConcepts =  new ArrayList<>();
         RepositoryType type = RepositoryType.LOCAL;
         String classIri = "http://www.w3.org/2000/01/rdf-schema#Class";
         String subclassIri = "http://www.w3.org/2000/01/rdf-schema#subClassOf";
@@ -56,10 +57,10 @@ public class KnowledgeBaseProfileDeserializationTest
         String descriptionIri = "http://www.w3.org/2000/01/rdf-schema#comment";
         String propertyLabelIri = "http://www.w3.org/2000/01/rdf-schema#label";
         String propertyDescriptionIri = "http://www.w3.org/2000/01/rdf-schema#comment";
-        List<String> rootConcepts =  new ArrayList<>();
+        
         KnowledgeBaseMapping referenceMapping = new KnowledgeBaseMapping(classIri, subclassIri,
             typeIri, descriptionIri, label, propertyTypeIri, propertyLabelIri,
-            propertyDescriptionIri, rootConcepts);
+            propertyDescriptionIri);
         KnowledgeBaseProfile referenceProfile = new KnowledgeBaseProfile();
 
         KnowledgeBaseAccess referenceAccess = new KnowledgeBaseAccess();
@@ -70,6 +71,7 @@ public class KnowledgeBaseProfileDeserializationTest
 
         referenceProfile.setAccess(referenceAccess);
         referenceProfile.setType(type);
+        referenceProfile.setRootConcepts(rootConcepts);     
 
         PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
         Map<String, KnowledgeBaseProfile> profiles;

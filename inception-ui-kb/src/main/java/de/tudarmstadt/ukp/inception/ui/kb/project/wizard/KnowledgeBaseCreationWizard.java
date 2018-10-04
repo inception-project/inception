@@ -146,6 +146,10 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
     private void setKbIRIsAccordingToProfile(KnowledgeBase kb, KnowledgeBaseProfile kbProfile) {
         kb.applyMapping(kbProfile.getMapping());
     }
+    
+    private void setKbRootConcepts(KnowledgeBase kb, KnowledgeBaseProfile kbProfile) {
+        kb.applyRootConcepts(kbProfile);
+    }
 
     /**
      * Wizard step asking for the KB name and whether it's a local or remote repository.
@@ -466,6 +470,10 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
                     LambdaAjaxLink link = new LambdaAjaxLink("suggestionLink", t -> {
                         // set all the fields according to the chosen profile
                         model.getObject().setUrl(item.getModelObject().getAccess().getAccessUrl());
+                        // sets root concepts list - if null then an empty list otherwise change teh
+                        // values to IRI and populate the list
+                        setKbRootConcepts(model.getObject().getKb(),
+                            item.getModelObject());
                         setKbIRIsAccordingToProfile(model.getObject().getKb(),
                             item.getModelObject());
                         t.add(urlField);

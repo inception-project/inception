@@ -1541,7 +1541,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         
         KnowledgeBaseMapping testMapping = new KnowledgeBaseMapping(classIri, subclassIri,
             typeIri, descriptionIri, label, propertyTypeIri, propertyLabelIri,
-            propertyDescriptionIri, rootConcepts);
+            propertyDescriptionIri);
         KnowledgeBaseProfile testProfile = new KnowledgeBaseProfile();
         testProfile.setName(name);
         testProfile.setMapping(testMapping);

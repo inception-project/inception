@@ -51,6 +51,7 @@ import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseMapping;
+import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 
 @Entity
 @Table(name = "knowledgebase",
@@ -381,13 +382,21 @@ public class KnowledgeBase
         setPropertyTypeIri(aMapping.getPropertyTypeIri());
         setPropertyLabelIri(aMapping.getPropertyLabelIri());
         setPropertyDescriptionIri(aMapping.getPropertyDescriptionIri());
-        if (explicitlyDefinedRootConcepts.isEmpty()) {
+    }
+    
+    public void applyRootConcepts(KnowledgeBaseProfile aProfile)
+    {
+        if (aProfile.getRootConcepts() == null) {
+            setExplicitlyDefinedRootConcepts(new ArrayList<>());
+        }
+        else {
             ValueFactory vf = SimpleValueFactory.getInstance();
-            for (String rootConcept : aMapping.getRootConcepts()) {
+            for (String rootConcept : aProfile.getRootConcepts()) {
                 explicitlyDefinedRootConcepts.add(vf.createIRI(rootConcept));
-            }
+            } 
         }
     }
+    
     
     @Override
     public String toString()
