@@ -56,7 +56,7 @@ public class KnowledgeBaseProfileDeserializationTest
         String descriptionIri = "http://www.w3.org/2000/01/rdf-schema#comment";
         String propertyLabelIri = "http://www.w3.org/2000/01/rdf-schema#label";
         String propertyDescriptionIri = "http://www.w3.org/2000/01/rdf-schema#comment";
-        List<String> rootConcepts =  new ArrayList<String>();
+        List<String> rootConcepts =  new ArrayList<>();
         KnowledgeBaseMapping referenceMapping = new KnowledgeBaseMapping(classIri, subclassIri,
             typeIri, descriptionIri, label, propertyTypeIri, propertyLabelIri,
             propertyDescriptionIri, rootConcepts);

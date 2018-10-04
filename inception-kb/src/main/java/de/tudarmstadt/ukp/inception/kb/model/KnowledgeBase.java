@@ -387,7 +387,6 @@ public class KnowledgeBase
                 explicitlyDefinedRootConcepts.add(vf.createIRI(rootConcept));
             }
         }
-        setExplicitlyDefinedRootConcepts(explicitlyDefinedRootConcepts);
     }
     
     @Override
