@@ -80,10 +80,12 @@ public class KnowledgeBaseExporterTest
         sourceProject = new Project();
         sourceProject.setId(1l);
         sourceProject.setName("Test Project");
+        sourceProject.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
 
         targetProject = new Project();
         sourceProject.setId(2l);
         targetProject.setName("Test Project");
+        targetProject.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
 
         when(kbService.getKnowledgeBases(sourceProject)).thenReturn(knowledgeBases());
 

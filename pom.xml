@@ -53,11 +53,8 @@
       <url>https://zoidberg.ukp.informatik.tu-darmstadt.de/artifactory/public-ukp-releases-local</url>
     </repository>
   </distributionManagement>
-  <prerequisites>
-    <maven>3.0.5</maven>
-  </prerequisites>
   <properties>
-    <webanno.version>3.5.0-SNAPSHOT</webanno.version>
+    <webanno.version>3.5.0-beta-4</webanno.version>
     <dkpro.version>1.9.3</dkpro.version>
     <spring.version>5.0.7.RELEASE</spring.version>
     <spring.boot.version>1.5.14.RELEASE</spring.boot.version>
