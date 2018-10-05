@@ -28,6 +28,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
@@ -63,8 +64,7 @@ public class SemPredArgLayerInitializer
                 SPAN_TYPE, aProject, true);
         semArgLayer.setAllowStacking(true);
         semArgLayer.setCrossSentence(false);
-        semArgLayer.setLockToTokenOffset(false);
-        semArgLayer.setMultipleTokens(true);
+        semArgLayer.setAnchoringMode(AnchoringMode.TOKENS);
         
         annotationSchemaService.createLayer(semArgLayer);
         
@@ -73,8 +73,7 @@ public class SemPredArgLayerInitializer
                 SPAN_TYPE, aProject, true);
         semPredLayer.setAllowStacking(true);
         semPredLayer.setCrossSentence(false);
-        semPredLayer.setLockToTokenOffset(false);
-        semPredLayer.setMultipleTokens(true);
+        semPredLayer.setAnchoringMode(AnchoringMode.TOKENS);
         
         annotationSchemaService.createFeature(new AnnotationFeature(aProject, semPredLayer,
                 "category", "category", CAS.TYPE_NAME_STRING,

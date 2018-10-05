@@ -28,6 +28,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -59,8 +60,7 @@ public class SurfaceFormLayerInitializer
                 "Surface form", SPAN_TYPE, aProject, true);
         surfaceFormLayer.setAllowStacking(false);
         // The surface form must be locked to tokens for CoNLL-U writer to work properly
-        surfaceFormLayer.setLockToTokenOffset(false);
-        surfaceFormLayer.setMultipleTokens(true);
+        surfaceFormLayer.setAnchoringMode(AnchoringMode.TOKENS);
         annotationSchemaService.createLayer(surfaceFormLayer);
 
         AnnotationFeature surfaceFormValueFeature = new AnnotationFeature();

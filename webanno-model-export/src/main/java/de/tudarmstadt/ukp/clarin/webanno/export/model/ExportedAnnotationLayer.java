@@ -22,6 +22,8 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
+
 /**
  * All required contents of a project to be exported.
  */
@@ -58,9 +60,6 @@ public class ExportedAnnotationLayer
     @JsonProperty("attach_feature")
     private ExportedAnnotationFeatureReference attachFeature;
 
-    @JsonProperty("lock_to_token_offset")
-    private boolean lockToTokenOffset = true;
-
     @JsonProperty("allow_stacking")
     private boolean allowStacking;
 
@@ -69,7 +68,15 @@ public class ExportedAnnotationLayer
 
     @JsonProperty("show_hover")
     private boolean showTextInHover = true;
+    
+    @JsonProperty("anchoring_mode")
+    private AnchoringMode anchoringMode;
+    
+    @Deprecated
+    @JsonProperty("lock_to_token_offset")
+    private boolean lockToTokenOffset = true;
 
+    @Deprecated
     @JsonProperty("multiple_tokens")
     private boolean multipleTokens;
 
@@ -162,11 +169,23 @@ public class ExportedAnnotationLayer
         this.attachType = attachType;
     }
 
+    public void setAnchoringMode(AnchoringMode aAnchoringMode)
+    {
+        anchoringMode = aAnchoringMode;
+    }
+    
+    public AnchoringMode getAnchoringMode()
+    {
+        return anchoringMode;
+    }
+    
+    @Deprecated
     public boolean isLockToTokenOffset()
     {
         return lockToTokenOffset;
     }
 
+    @Deprecated
     public void setLockToTokenOffset(boolean lockToTokenOffset)
     {
         this.lockToTokenOffset = lockToTokenOffset;
@@ -202,11 +221,13 @@ public class ExportedAnnotationLayer
         this.showTextInHover = showTextInHover;
     }
 
+    @Deprecated
     public boolean isMultipleTokens()
     {
         return multipleTokens;
     }
 
+    @Deprecated
     public void setMultipleTokens(boolean multipleTokens)
     {
         this.multipleTokens = multipleTokens;

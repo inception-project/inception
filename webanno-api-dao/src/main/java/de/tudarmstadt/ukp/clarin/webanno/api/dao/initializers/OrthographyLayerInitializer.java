@@ -28,6 +28,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -60,8 +61,7 @@ public class OrthographyLayerInitializer
                 "Orthography Correction", SPAN_TYPE, aProject, true);
 
         orthography.setAllowStacking(false);
-        orthography.setMultipleTokens(false);
-        orthography.setLockToTokenOffset(true);
+        orthography.setAnchoringMode(AnchoringMode.SINGLE_TOKEN);
         annotationSchemaService.createLayer(orthography);
 
         AnnotationFeature correction = new AnnotationFeature();

@@ -108,6 +108,7 @@ public class LayerExporter
         exLayer.setEnabled(aLayer.isEnabled());
         exLayer.setLockToTokenOffset(aLayer.isLockToTokenOffset());
         exLayer.setMultipleTokens(aLayer.isMultipleTokens());
+        exLayer.setAnchoringMode(aLayer.getAnchoringMode());
         exLayer.setLinkedListBehavior(aLayer.isLinkedListBehavior());
         exLayer.setName(aLayer.getName());
         exLayer.setProjectName(aLayer.getProject().getName());
@@ -250,8 +251,13 @@ public class LayerExporter
         aLayer.setCrossSentence(aExLayer.isCrossSentence());
         aLayer.setDescription(aExLayer.getDescription());
         aLayer.setEnabled(aExLayer.isEnabled());
-        aLayer.setLockToTokenOffset(aExLayer.isLockToTokenOffset());
-        aLayer.setMultipleTokens(aExLayer.isMultipleTokens());
+        if (aExLayer.getAnchoringMode() == null) {
+            // This allows importing old projects which did not have the anchoring mode yet
+            aLayer.setAnchoringMode(aExLayer.isLockToTokenOffset(), aExLayer.isMultipleTokens());
+        }
+        else {
+            aLayer.setAnchoringMode(aExLayer.getAnchoringMode());
+        }
         aLayer.setLinkedListBehavior(aExLayer.isLinkedListBehavior());
         aLayer.setUiName(aExLayer.getUiName());
         aLayer.setName(aExLayer.getName());

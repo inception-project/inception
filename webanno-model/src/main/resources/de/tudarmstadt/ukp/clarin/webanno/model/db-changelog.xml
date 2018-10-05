@@ -1081,4 +1081,41 @@
       columnDataType="VARCHAR(255)" 
       defaultNullValue="annotation" />
   </changeSet>  
+  
+  <changeSet author="WebAnno Team" id="20181005-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="annotation_type" columnName="anchoring_mode"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="annotation_type">
+      <column name="anchoring_mode" type="VARCHAR(255)">
+        <constraints nullable="true" />
+      </column>
+    </addColumn>
+    <sql>
+      update annotation_type set 
+      anchoring_mode = "characters" 
+      where lockToTokenOffset = false and multipleTokens = false
+    </sql>
+    <sql>
+      update annotation_type 
+      set anchoring_mode = "singleToken" 
+      where lockToTokenOffset = true and multipleTokens = false
+    </sql>
+    <sql>
+      update annotation_type 
+      set anchoring_mode = "tokens" 
+      where lockToTokenOffset = true and multipleTokens = true
+    </sql>
+    <sql>
+      update annotation_type 
+      set anchoring_mode = "tokens" 
+      where lockToTokenOffset = false and multipleTokens = true
+    </sql>
+    <addNotNullConstraint 
+      tableName="annotation_type" 
+      columnName="anchoring_mode"
+      columnDataType="VARCHAR(255)" />
+  </changeSet>  
 </databaseChangeLog>

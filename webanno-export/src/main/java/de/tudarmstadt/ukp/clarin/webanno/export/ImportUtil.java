@@ -207,6 +207,7 @@ public class ImportUtil
         exLayer.setEnabled(aLayer.isEnabled());
         exLayer.setLockToTokenOffset(aLayer.isLockToTokenOffset());
         exLayer.setMultipleTokens(aLayer.isMultipleTokens());
+        exLayer.setAnchoringMode(aLayer.getAnchoringMode());
         exLayer.setLinkedListBehavior(aLayer.isLinkedListBehavior());
         exLayer.setName(aLayer.getName());
         exLayer.setProjectName(aLayer.getProject().getName());

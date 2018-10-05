@@ -49,6 +49,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.MultipleSenten
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
@@ -61,25 +62,6 @@ public class SpanAdapter
     extends TypeAdapter_ImplBase
     implements AutomationTypeAdapter
 {
-    /**
-     * The minimum offset of the annotation is on token, and the annotation can't span multiple
-     * tokens too
-     */
-    private boolean lockToTokenOffsets;
-
-    /**
-     * The minimum offset of the annotation is on token, and the annotation can span multiple token
-     * too
-     */
-    private boolean allowMultipleToken;
-
-    /**
-     * Allow multiple annotations of the same layer (only when the type value is different)
-     */
-    private boolean allowStacking;
-
-    private boolean crossMultipleSentence;
-
     // value NILL for a token when the training file do not have annotations provided
     private final static String NILL = "__nill__";
 
@@ -90,58 +72,28 @@ public class SpanAdapter
         super(aFeatureSupportRegistry, aEventPublisher, aLayer, aFeatures);
     }
 
-    /**
-     * Span can only be made on a single token (not multiple tokens), e.g. for POS or Lemma
-     * annotations. If this is set and a span is made across multiple tokens, then one annotation of
-     * the specified type will be created for each token. If this is not set, a single annotation
-     * covering all tokens is created.
-     *
-     * @param aSingleTokenBehavior
-     *            whether to enable the behavior.
-     */
-    public void setLockToTokenOffsets(boolean aSingleTokenBehavior)
-    {
-        lockToTokenOffsets = aSingleTokenBehavior;
-    }
-
-    /**
-     * @return whether the behavior is enabled.
-     * @see #setLockToTokenOffsets(boolean)
-     */
+    @Deprecated
     public boolean isLockToTokenOffsets()
     {
-        return lockToTokenOffsets;
+        return AnchoringMode.SINGLE_TOKEN.equals(getLayer().getAnchoringMode());
     }
 
+    @Deprecated
     public boolean isAllowMultipleToken()
     {
-        return allowMultipleToken;
-    }
-
-    public void setAllowMultipleToken(boolean allowMultipleToken)
-    {
-        this.allowMultipleToken = allowMultipleToken;
+        return AnchoringMode.TOKENS.equals(getLayer().getAnchoringMode());
     }
 
     public boolean isAllowStacking()
     {
-        return allowStacking;
-    }
-
-    public void setAllowStacking(boolean allowStacking)
-    {
-        this.allowStacking = allowStacking;
+        return getLayer().isAllowStacking();
     }
 
     public boolean isCrossMultipleSentence()
     {
-        return crossMultipleSentence;
+        return getLayer().isCrossSentence();
     }
 
-    public void setCrossMultipleSentence(boolean crossMultipleSentence)
-    {
-        this.crossMultipleSentence = crossMultipleSentence;
-    }
 
     /**
      * Add new span annotation into the CAS and return the the id of the span annotation
@@ -163,8 +115,8 @@ public class SpanAdapter
         if (aBegin == aEnd) {
             return createAnnotation(aState, aJCas.getCas(), aBegin, aEnd);
         }
-        if (crossMultipleSentence || isSameSentence(aJCas, aBegin, aEnd)) {
-            if (lockToTokenOffsets) {
+        if (isCrossMultipleSentence() || isSameSentence(aJCas, aBegin, aEnd)) {
+            if (isLockToTokenOffsets()) {
                 List<Token> tokens = selectOverlapping(aJCas, Token.class, aBegin, aEnd);
 
                 if (tokens.isEmpty()) {
@@ -175,7 +127,7 @@ public class SpanAdapter
                         tokens.get(0).getEnd());
 
             }
-            else if (allowMultipleToken) {
+            else if (isAllowMultipleToken()) {
                 List<Token> tokens = selectOverlapping(aJCas, Token.class, aBegin, aEnd);
                 // update the begin and ends (no sub token selection
                 aBegin = tokens.get(0).getBegin();
@@ -196,19 +148,19 @@ public class SpanAdapter
     public Serializable getSpan(JCas aJCas, int aBegin, int aEnd, AnnotationFeature aFeature,
             String aLabelValue)
     {
-        if (allowStacking) {
+        if (isAllowStacking()) {
             return null;
         }
         
         int begin;
         int end;
         // update the begin and ends (no sub token selection)
-        if (lockToTokenOffsets) {
+        if (isLockToTokenOffsets()) {
             List<Token> tokens = selectOverlapping(aJCas, Token.class, aBegin, aEnd);
             begin = tokens.get(0).getBegin();
             end = tokens.get(tokens.size() - 1).getEnd();
         }
-        else if (allowMultipleToken) {
+        else if (isAllowMultipleToken()) {
             List<Token> tokens = selectOverlapping(aJCas, Token.class, aBegin, aEnd);
             begin = tokens.get(0).getBegin();
             end = tokens.get(tokens.size() - 1).getEnd();
@@ -239,7 +191,7 @@ public class SpanAdapter
         Type type = CasUtil.getType(aCas, getAnnotationTypeName());
         for (AnnotationFS fs : CasUtil.selectCovered(aCas, type, aBegin, aEnd)) {
             if (fs.getBegin() == aBegin && fs.getEnd() == aEnd) {
-                if (!allowStacking) {
+                if (!isAllowStacking()) {
                     return getAddr(fs);
                 }
             }

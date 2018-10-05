@@ -170,39 +170,53 @@
               <div class="panel-body">
                 <div class="col-sm-12">
                   <div class="form-horizontal">
-                    <div class="form-group">
-                      <div class="col-sm-12">
-                        <div class="checkbox" wicket:enclosure="readonly">
+                    <div class="form-group" wicket:enclosure="readonly">
+                      <div class="col-sm-offset-4 col-sm-8">
+                        <div class="checkbox">
                           <label wicket:for="readonly">
                             <input wicket:id="readonly" type="checkbox"> <wicket:label key="readonly"/>
                           </label>
                         </div>
-                        <div class="checkbox" wicket:enclosure="lockToTokenOffset">
-                          <label wicket:for="lockToTokenOffset">
-                            <input wicket:id="lockToTokenOffset" type="checkbox"> <wicket:label key="lockToTokenOffset"/>
-                          </label>
-                        </div>
-                        <div class="checkbox" wicket:enclosure="multipleTokens">
-                          <label wicket:for="multipleTokens">
-                            <input wicket:id="multipleTokens" type="checkbox"> <wicket:label key="allowMultipleTokens"/>
-                          </label>
-                        </div>
-                        <div class="checkbox" wicket:enclosure="allowStacking">
+                      </div>
+                    </div>
+                    <div class="form-group" wicket:enclosure="anchoringMode">
+                      <label wicket:for="anchoringMode" class="col-sm-4 control-label"> <wicket:label
+                          key="anchoringMode" />
+                      </label>
+                      <div class="col-sm-8">
+                        <select wicket:id="anchoringMode" class="form-control"></select>
+                      </div>
+                    </div>
+                    <div class="form-group" wicket:enclosure="allowStacking">
+                      <div class="col-sm-offset-4 col-sm-8">
+                        <div class="checkbox">
                           <label wicket:for="allowStacking">
                             <input wicket:id="allowStacking" type="checkbox"> <wicket:label key="allowStacking"/>
                           </label>
                         </div>
-                        <div class="checkbox" wicket:enclosure="crossSentence">
+                      </div>
+                    </div>
+                    <div class="form-group" wicket:enclosure="crossSentence">
+                      <div class="col-sm-offset-4 col-sm-8">
+                        <div class="checkbox">
                           <label wicket:for="crossSentence">
                             <input wicket:id="crossSentence" type="checkbox"> <wicket:label key="allowCrossSentence"/>
                           </label>
                         </div>
-                        <div class="checkbox" wicket:enclosure="showTextInHover">
+                      </div>
+                    </div>
+                    <div class="form-group" wicket:enclosure="showTextInHover">
+                      <div class="col-sm-offset-4 col-sm-8">
+                        <div class="checkbox">
                           <label wicket:for="showTextInHover">
                             <input wicket:id="showTextInHover" type="checkbox"> <wicket:label key="showTextInHover"/>
                           </label>
                         </div>
-                        <div class="checkbox" wicket:enclosure="linkedListBehavior">
+                      </div>
+                    </div>
+                    <div class="form-group" wicket:enclosure="linkedListBehavior">
+                      <div class="col-sm-offset-4 col-sm-8">
+                        <div class="checkbox">
                           <label wicket:for="linkedListBehavior">
                             <input wicket:id="linkedListBehavior" type="checkbox"> <wicket:label key="linkedListBehavior"/>
                           </label>

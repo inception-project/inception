@@ -51,6 +51,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
@@ -201,8 +202,7 @@ public class TypeSystemAnalysis
         // we choose the most relaxed/permissive configuration here.
         layer.setAllowStacking(true);
         layer.setCrossSentence(true);
-        layer.setLockToTokenOffset(false);
-        layer.setMultipleTokens(false);
+        layer.setAnchoringMode(AnchoringMode.CHARACTERS);
         layer.setLinkedListBehavior(false);
         
         layers.add(layer);

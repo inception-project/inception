@@ -30,6 +30,7 @@ import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.JsonImportUtil;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -69,8 +70,7 @@ public class CoreferenceLayerInitializer
                 CHAIN_TYPE, aProject, true);
         base.setCrossSentence(true);
         base.setAllowStacking(true);
-        base.setMultipleTokens(true);
-        base.setLockToTokenOffset(false);
+        base.setAnchoringMode(AnchoringMode.TOKENS);
         annotationSchemaService.createLayer(base);
         
         annotationSchemaService.createFeature(new AnnotationFeature(aProject, base, "referenceType",

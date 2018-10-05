@@ -27,6 +27,7 @@ import java.util.List;
 import org.apache.uima.cas.CAS;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -236,8 +237,7 @@ public class LegacyProjectInitializer
                 CHAIN_TYPE, aProject, true);
         base.setCrossSentence(true);
         base.setAllowStacking(true);
-        base.setMultipleTokens(true);
-        base.setLockToTokenOffset(false);
+        base.setAnchoringMode(AnchoringMode.TOKENS);
         annotationSchemaService.createLayer(base);
         
         annotationSchemaService.createFeature(new AnnotationFeature(aProject, base, "referenceType",
@@ -255,8 +255,7 @@ public class LegacyProjectInitializer
         AnnotationLayer neLayer = new AnnotationLayer(NamedEntity.class.getName(), "Named entity",
                 SPAN_TYPE, aProject, true);
         neLayer.setAllowStacking(true);
-        neLayer.setMultipleTokens(true);
-        neLayer.setLockToTokenOffset(false);
+        neLayer.setAnchoringMode(AnchoringMode.TOKENS);
         annotationSchemaService.createLayer(neLayer);
         
         annotationSchemaService.createFeature(new AnnotationFeature(aProject, neLayer, "value",
@@ -269,8 +268,7 @@ public class LegacyProjectInitializer
         AnnotationLayer chunkLayer = new AnnotationLayer(Chunk.class.getName(), "Chunk", SPAN_TYPE,
                 aProject, true);
         chunkLayer.setAllowStacking(false);
-        chunkLayer.setMultipleTokens(true);
-        chunkLayer.setLockToTokenOffset(false);
+        chunkLayer.setAnchoringMode(AnchoringMode.TOKENS);
         annotationSchemaService.createLayer(chunkLayer);
 
         AnnotationFeature chunkValueFeature = new AnnotationFeature();

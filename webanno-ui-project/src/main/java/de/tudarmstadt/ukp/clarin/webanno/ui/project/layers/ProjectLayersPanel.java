@@ -100,6 +100,7 @@ import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedAnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedAnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedAnnotationLayerReference;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTagSet;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -509,14 +510,15 @@ public class ProjectLayersPanel
         private static final long serialVersionUID = -1L;
 
         private static final String TYPE_PREFIX = "webanno.custom.";
+
         private DropDownChoice<String> layerTypes;
         private DropDownChoice<AnnotationLayer> attachTypes;
 
-        private CheckBox lockToTokenOffset;
+        private DropDownChoice<AnchoringMode> anchoringMode;
+
         private CheckBox allowStacking;
         private CheckBox crossSentence;
         private CheckBox showTextInHover;
-        private CheckBox multipleTokens;
         private CheckBox linkedListBehavior;
 
         private LayerExportMode exportMode = LayerExportMode.JSON;
@@ -554,6 +556,7 @@ public class ProjectLayersPanel
                     return isNull(LayerDetailForm.this.getModelObject().getId());
                 }
             }.setRequired(true));
+            
             layerTypes.add(new AjaxFormComponentUpdatingBehavior("change")
             {
                 private static final long serialVersionUID = 6790949494089940303L;
@@ -562,13 +565,12 @@ public class ProjectLayersPanel
                 protected void onUpdate(AjaxRequestTarget target)
                 {
                     layerType = getModelObject().getType();
-                    target.add(lockToTokenOffset);
                     target.add(allowStacking);
                     target.add(crossSentence);
                     target.add(showTextInHover);
-                    target.add(multipleTokens);
                     target.add(linkedListBehavior);
                     target.add(attachTypes);
+                    target.add(anchoringMode);
                 }
             });
 
@@ -635,31 +637,28 @@ public class ProjectLayersPanel
             // Behaviors of layers
             add(new CheckBox("readonly"));
 
-            add(lockToTokenOffset = new CheckBox("lockToTokenOffset")
-            {
-                private static final long serialVersionUID = -4934708834659137207L;
-
-                {
-                    setOutputMarkupPlaceholderTag(true);
-                }
-
-                @Override
-                protected void onConfigure()
-                {
-                    super.onConfigure();
-                    AnnotationLayer layer = LayerDetailForm.this.getModelObject();
-                    // Makes no sense for relation layers or layers that attach to tokens
-                    setVisible(!isBlank(layer.getType()) && !RELATION_TYPE.equals(layer.getType())
-                            && layer.getAttachFeature() == null);
-                    setEnabled(
-                            // Surface form must be locked to token boundaries for CONLL-U writer
-                            // to work.
-                            !SurfaceForm.class.getName().equals(layer.getName()) &&
-                            // Not configurable for chains
-                            !CHAIN_TYPE.equals(layer.getType()));
-                }
-            });
-
+            add(anchoringMode = new DropDownChoice<AnchoringMode>("anchoringMode"));
+            anchoringMode.setOutputMarkupPlaceholderTag(true);
+            anchoringMode.setChoiceRenderer(new EnumChoiceRenderer<>(this));
+            anchoringMode.setChoices(Arrays.asList(AnchoringMode.values()));
+            anchoringMode.add(LambdaBehavior.onConfigure(_this -> {
+                AnnotationLayer layer = LayerDetailForm.this.getModelObject();
+                // Makes no sense for relation layers or that attach directly to tokens
+                setVisible(
+                        !isBlank(layer.getType()) && 
+                        !RELATION_TYPE.equals(layer.getType()) && 
+                        layer.getAttachFeature() == null);
+                setEnabled(
+                        // Surface form must be locked to token boundaries for CONLL-U writer
+                        // to work.
+                        !SurfaceForm.class.getName().equals(layer.getName()) &&
+                        // Not configurable for chains
+                        !CHAIN_TYPE.equals(layer.getType()) && 
+                        // Not configurable for layers that attach to tokens (currently
+                        // that is the only layer on which we use the attach feature)
+                        layer.getAttachFeature() == null);
+            }));
+            
             add(allowStacking = new CheckBox("allowStacking")
             {
                 private static final long serialVersionUID = 7800627916287273008L;
@@ -737,23 +736,6 @@ public class ProjectLayersPanel
                 }
             });
 
-            add(multipleTokens = (CheckBox) new CheckBox("multipleTokens")
-                    .add(LambdaBehavior.onConfigure(_this -> {
-                        AnnotationLayer layer = LayerDetailForm.this.getModelObject();
-                        // Makes no sense for relations
-                        _this.setVisible(!isBlank(layer.getType())
-                                && !RELATION_TYPE.equals(layer.getType()));
-                        _this.setEnabled(
-                                // Surface form must be locked to token boundaries for CONLL-U
-                                // writer to work.
-                                !SurfaceForm.class.getName().equals(layer.getName()) &&
-                                // Not configurable for chains
-                                !CHAIN_TYPE.equals(layer.getType())
-                                // Not configurable for layers that attach to tokens (currently
-                                // that is the only layer on which we use the attach feature)
-                                                && layer.getAttachFeature() == null);
-                    })).setOutputMarkupPlaceholderTag(true));
-
             add(linkedListBehavior = new CheckBox("linkedListBehavior")
             {
                 private static final long serialVersionUID = 1319818165277559402L;
@@ -807,10 +789,6 @@ public class ProjectLayersPanel
             aTarget.addChildren(getPage(), IFeedback.class);
 
             AnnotationLayer layer = LayerDetailForm.this.getModelObject();
-
-            if (layer.isLockToTokenOffset() && layer.isMultipleTokens()) {
-                layer.setLockToTokenOffset(false);
-            }
 
             final Project project = ProjectLayersPanel.this.getModelObject();
             // Set type name only when the layer is initially created. After that, only the UI
