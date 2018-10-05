@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -73,6 +74,7 @@ public class SidebarTabbedPanel<T extends SidebarTab>
     protected void onConfigure()
     {
         super.onConfigure();
+        
         icon.setImageResourceReference(expanded ? ICON_EXPANDED : ICON_COLLAPSED);
     }
     
@@ -84,12 +86,12 @@ public class SidebarTabbedPanel<T extends SidebarTab>
     }
     
     @Override
-    protected void onAjaxUpdate(AjaxRequestTarget aTarget)
+    protected void onAjaxUpdate(Optional<AjaxRequestTarget> aTarget)
     {
         super.onAjaxUpdate(aTarget);
         if (!expanded) {
             expanded = true;
-            aTarget.add(getPage());
+            aTarget.ifPresent(_target -> _target.add(getPage()));
         }
     }
 

@@ -24,13 +24,14 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.wicket.MarkupContainer;
-import org.apache.wicket.ajax.json.JSONException;
-import org.apache.wicket.ajax.json.JSONStringer;
 import org.apache.wicket.markup.html.form.AbstractTextComponent;
 import org.apache.wicket.model.IModel;
 import org.wicketstuff.select2.Response;
 import org.wicketstuff.select2.Select2Choice;
 import org.wicketstuff.select2.StringTextChoiceProvider;
+
+import com.github.openjson.JSONException;
+import com.github.openjson.JSONStringer;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;

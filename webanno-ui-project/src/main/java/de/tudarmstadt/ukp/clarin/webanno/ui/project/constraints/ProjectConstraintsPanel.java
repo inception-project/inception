@@ -31,6 +31,7 @@ import org.apache.wicket.WicketRuntimeException;
 import org.apache.wicket.markup.html.form.Button;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
+import org.apache.wicket.markup.html.form.FormComponentUpdatingBehavior;
 import org.apache.wicket.markup.html.form.ListChoice;
 import org.apache.wicket.markup.html.form.TextArea;
 import org.apache.wicket.markup.html.form.TextField;
@@ -118,20 +119,9 @@ public class ProjectConstraintsPanel
                 {
                     setChoiceRenderer(new ChoiceRenderer<>("name"));
                     setNullValid(false);
+                    add(new FormComponentUpdatingBehavior());
                 }
                 
-                @Override
-                protected void onSelectionChanged(ConstraintSet aNewSelection)
-                {
-                    // Nothing to do - model already updated automatically
-                }
-
-                @Override
-                protected boolean wantOnSelectionChangedNotifications()
-                {
-                    return true;
-                }
-
                 @Override
                 protected CharSequence getDefaultChoice(String aSelectedValue)
                 {
@@ -215,6 +205,7 @@ public class ProjectConstraintsPanel
                 protected void onConfigure()
                 {
                     super.onConfigure();
+                    
                     setVisible(DetailForm.this.getModelObject().getId() != null);
                 }
             };

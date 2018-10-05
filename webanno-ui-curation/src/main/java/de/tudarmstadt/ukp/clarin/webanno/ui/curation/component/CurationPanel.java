@@ -210,6 +210,7 @@ public class CurationPanel
             protected void onConfigure()
             {
                 super.onConfigure();
+                
                 setEnabled(state.getDocument() != null && !documentService
                         .getSourceDocument(state.getDocument().getProject(),
                                 state.getDocument().getName())
@@ -344,12 +345,11 @@ public class CurationPanel
             // Here, we ensure that the callback scripts are attached to the sentence links even
             // during AJAX updates.
             if (isEnabledInHierarchy()) {
-                AjaxRequestTarget target = RequestCycle.get().find(AjaxRequestTarget.class);
-                if (target != null) {
+                RequestCycle.get().find(AjaxRequestTarget.class).ifPresent(_target -> {
                     for (AjaxEventBehavior b : getBehaviors(AjaxEventBehavior.class)) {
-                        target.appendJavaScript(b.getCallbackScript());
+                        _target.appendJavaScript(b.getCallbackScript());
                     }
-                }
+                });
             }
         }
         

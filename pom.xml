@@ -63,12 +63,12 @@
     <slf4j.version>1.7.25</slf4j.version>
     <log4j.version>2.7</log4j.version>
     <jboss.logging.version>3.3.1.Final</jboss.logging.version>
-    <wicket.version>7.10.0</wicket.version>
+    <wicket.version>8.1.0</wicket.version>
     <wicketstuff.version>${wicket.version}</wicketstuff.version>
-    <wicket-jquery-ui.version>7.10.1</wicket-jquery-ui.version>
-    <wicket-bootstrap.version>0.10.17</wicket-bootstrap.version>
-    <wicket-webjars.version>0.5.6</wicket-webjars.version>    
-    <wicket-spring-boot.version>1.0.12</wicket-spring-boot.version>
+    <wicket-jquery-ui.version>${wicket.version}</wicket-jquery-ui.version>
+    <wicket-bootstrap.version>2.0.4</wicket-bootstrap.version>
+    <wicket-webjars.version>2.0.8</wicket-webjars.version>    
+    <wicket-spring-boot.version>2.1.2</wicket-spring-boot.version>
     <hibernate.version>5.3.2.Final</hibernate.version>
     <maven.build.timestamp.format>yyyy-MM-dd HH:mm</maven.build.timestamp.format>
     <dkpro.version>1.7.0</dkpro.version>
@@ -694,6 +694,12 @@
         <groupId>com.fasterxml.jackson.core</groupId>
         <artifactId>jackson-annotations</artifactId>
         <version>${jackson.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.github.openjson</groupId>
+        <artifactId>openjson</artifactId>
+        <version>1.0.10</version>
       </dependency>
 
       <dependency>

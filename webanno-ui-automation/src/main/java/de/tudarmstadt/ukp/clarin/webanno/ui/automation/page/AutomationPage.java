@@ -310,6 +310,7 @@ public class AutomationPage
             protected void onConfigure()
             {
                 super.onConfigure();
+                
                 AnnotatorState state = AutomationPage.this.getModelObject();
                 setVisible(state.getProject() != null && (SecurityUtil.isAdmin(state.getProject(),
                         projectService, state.getUser()) || !state.getProject().isDisableExport()));
@@ -353,6 +354,7 @@ public class AutomationPage
             protected void onConfigure()
             {
                 super.onConfigure();
+                
                 AnnotatorState state = AutomationPage.this.getModelObject();
                 setEnabled(state.getDocument() != null && !documentService
                         .isAnnotationFinished(state.getDocument(), state.getUser()));

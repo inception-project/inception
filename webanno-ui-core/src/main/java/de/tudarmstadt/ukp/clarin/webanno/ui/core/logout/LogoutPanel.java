@@ -79,6 +79,7 @@ public class LogoutPanel
             protected void onConfigure()
             {
                 super.onConfigure();
+                
                 setVisible(getAutoLogoutTime() > 0);
             }
         });
@@ -88,6 +89,7 @@ public class LogoutPanel
     protected void onConfigure()
     {
         super.onConfigure();
+        
         setVisible(AuthenticatedWebSession.get().isSignedIn());
     }
     

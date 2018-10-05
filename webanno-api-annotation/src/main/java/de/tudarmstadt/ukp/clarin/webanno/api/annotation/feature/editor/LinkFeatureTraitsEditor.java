@@ -87,6 +87,7 @@ public class LinkFeatureTraitsEditor
             protected void onConfigure()
             {
                 super.onConfigure();
+                
                 setVisible(feature.getObject().getTagset() != null);
             }
         };

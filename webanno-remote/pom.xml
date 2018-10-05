@@ -58,6 +58,10 @@
       <artifactId>slf4j-api</artifactId>
     </dependency>
     <dependency>
+      <groupId>com.github.openjson</groupId>
+      <artifactId>openjson</artifactId>
+    </dependency>
+    <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
       <artifactId>webanno-api</artifactId>
     </dependency>
@@ -93,7 +97,7 @@
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
       <artifactId>webanno-security</artifactId>
     </dependency>
-    
+
     <dependency>
       <groupId>javax.persistence</groupId>
       <artifactId>javax.persistence-api</artifactId>
@@ -125,6 +129,7 @@
       <groupId>org.springframework</groupId>
       <artifactId>spring-web</artifactId>
     </dependency>
+    
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot</artifactId>
@@ -161,11 +166,6 @@
       <groupId>io.swagger</groupId>
       <artifactId>swagger-annotations</artifactId>
       <version>1.5.16</version>
-    </dependency>
-    
-    <dependency>
-      <groupId>org.apache.wicket</groupId>
-      <artifactId>wicket-core</artifactId>
     </dependency>
 
     <dependency>

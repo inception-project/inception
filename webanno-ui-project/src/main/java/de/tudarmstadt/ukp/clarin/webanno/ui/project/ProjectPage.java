@@ -91,6 +91,7 @@ public class ProjectPage
             protected void onConfigure()
             {
                 super.onConfigure();
+                
                 setVisible(selectedProject.getObject() != null);
             }
         };

@@ -116,6 +116,7 @@ public abstract class AnnotationPageBase
                 protected void onConfigure()
                 {
                     super.onConfigure();
+                    
                     setVisible(getModelObject().getDocument() != null);
                 }
             };

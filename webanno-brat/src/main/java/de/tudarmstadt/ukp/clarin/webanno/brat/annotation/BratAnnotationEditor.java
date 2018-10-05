@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -430,6 +431,7 @@ public class BratAnnotationEditor
     protected void onConfigure()
     {
         super.onConfigure();
+        
         setVisible(getModelObject() != null && getModelObject().getProject() != null);
     }
 
@@ -473,8 +475,8 @@ public class BratAnnotationEditor
         // on a reload.
         // We only do this if we are *not* in a partial page reload. The case of a partial
         // page reload is covered in onAfterRender()
-        AjaxRequestTarget target = RequestCycle.get().find(AjaxRequestTarget.class);
-        if (target == null && getModelObject().getProject() != null) {
+        Optional<AjaxRequestTarget> target = RequestCycle.get().find(AjaxRequestTarget.class);
+        if (target.isPresent() && getModelObject().getProject() != null) {
             bratInitRenderLater(aResponse);
         }
     }
@@ -492,8 +494,7 @@ public class BratAnnotationEditor
         // adding the editor to the AJAX request because it creates less initialization 
         // overhead (e.g. it doesn't have to send the collection info again and doesn't require
         // a delay).
-        AjaxRequestTarget target = RequestCycle.get().find(AjaxRequestTarget.class);
-        if (target != null) {
+        RequestCycle.get().find(AjaxRequestTarget.class).ifPresent(target -> {
             try {
                 String script = "setTimeout(function() { " +
                         bratInitCommand() +
@@ -516,7 +517,7 @@ public class BratAnnotationEditor
                 error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
                 target.addChildren(getPage(), IFeedback.class);
             }
-        }
+        });
     }
 
     private String bratRenderCommand(JCas aJCas)
@@ -582,13 +583,18 @@ public class BratAnnotationEditor
         extensionRegistry.fireRender(aJCas, getModelObject(), vdoc);
 
         // Fire render event into UI
-        Page page = (Page) RequestCycle.get().find(IPageRequestHandler.class).getPage();
+        Page page = null;
+        Optional<IPageRequestHandler> handler = RequestCycle.get().find(IPageRequestHandler.class);
+        if (handler.isPresent()) {
+            page = (Page) handler.get().getPage();
+        };
+        
         if (page == null) {
             page = getPage();
         }
         send(page, Broadcast.BREADTH,
                 new RenderAnnotationsEvent(
-                        RequestCycle.get().find(IPartialPageRequestHandler.class), aJCas,
+                        RequestCycle.get().find(IPartialPageRequestHandler.class).get(), aJCas,
                         getModelObject(), vdoc));
 
         if (isHighlightEnabled()) {

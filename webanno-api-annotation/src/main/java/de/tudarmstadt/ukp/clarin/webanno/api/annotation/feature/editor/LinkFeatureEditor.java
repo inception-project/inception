@@ -36,7 +36,6 @@ import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.AbstractTextComponent;
-import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.markup.repeater.RefreshingView;
 import org.apache.wicket.markup.repeater.util.ModelIteratorAdapter;
@@ -237,10 +236,11 @@ public class LinkFeatureEditor
 
                     // Trigger a re-loading of the tagset from the server as constraints may have
                     // changed the ordering
-                    AjaxRequestTarget target = RequestCycle.get().find(AjaxRequestTarget.class);
-                    if (target != null) {
+                    Optional<AjaxRequestTarget> target = RequestCycle.get()
+                            .find(AjaxRequestTarget.class);
+                    if (target.isPresent()) {
                         LOG.trace("onInitialize() requesting datasource re-reading");
-                        target.appendJavaScript(
+                        target.get().appendJavaScript(
                                 String.format("var $w = %s; if ($w) { $w.dataSource.read(); }",
                                         KendoUIBehavior.widget(this, ComboBoxBehavior.METHOD)));
                     }
@@ -321,6 +321,8 @@ public class LinkFeatureEditor
             @Override
             protected void onConfigure()
             {
+                super.onConfigure();
+
                 AnnotatorState state = LinkFeatureEditor.this.stateModel.getObject();
                 setVisible(!(state.isSlotArmed() && LinkFeatureEditor.this.getModelObject().feature
                         .equals(state.getArmedFeature())));
@@ -329,7 +331,7 @@ public class LinkFeatureEditor
             }
 
             @Override
-            protected void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
+            protected void onSubmit(AjaxRequestTarget aTarget)
             {
                 actionAdd(aTarget);
             }
@@ -344,6 +346,8 @@ public class LinkFeatureEditor
             @Override
             protected void onConfigure()
             {
+                super.onConfigure();
+
                 AnnotatorState state = LinkFeatureEditor.this.stateModel.getObject();
                 setVisible(state.isSlotArmed() && LinkFeatureEditor.this.getModelObject().feature
                         .equals(state.getArmedFeature()));
@@ -352,7 +356,7 @@ public class LinkFeatureEditor
             }
 
             @Override
-            protected void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
+            protected void onSubmit(AjaxRequestTarget aTarget)
             {
                 actionSet(aTarget);
             }
@@ -366,6 +370,8 @@ public class LinkFeatureEditor
             @Override
             protected void onConfigure()
             {
+                super.onConfigure();
+
                 AnnotatorState state = LinkFeatureEditor.this.stateModel.getObject();
                 setVisible(state.isSlotArmed() && LinkFeatureEditor.this.getModelObject().feature
                         .equals(state.getArmedFeature()));
@@ -374,7 +380,7 @@ public class LinkFeatureEditor
             }
 
             @Override
-            protected void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
+            protected void onSubmit(AjaxRequestTarget aTarget)
             {
                 actionDel(aTarget);
             }

@@ -117,6 +117,14 @@
       <groupId>org.wicketstuff</groupId>
       <artifactId>wicketstuff-urlfragment</artifactId>
     </dependency>
+    <dependency>
+      <groupId>com.github.openjson</groupId>
+      <artifactId>openjson</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.danekja</groupId>
+      <artifactId>jdk-serializable-functional</artifactId>
+    </dependency>
 
     <!-- Hibernate dependencies -->
     <dependency>
