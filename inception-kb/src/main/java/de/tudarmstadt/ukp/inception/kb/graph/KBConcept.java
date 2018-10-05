@@ -193,7 +193,7 @@ public class KBConcept
             if (language != null) {
                 nameLiteral = vf.createLiteral(name, language);
             }
-            else if (kb.getDefaultLanguage() != null){
+            else if (kb.getDefaultLanguage() != null) {
                 nameLiteral = vf.createLiteral(name, kb.getDefaultLanguage());
             }
             else {

@@ -34,7 +34,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
@@ -1122,10 +1121,11 @@ public class KnowledgeBaseServiceImpl
     @Override
     public Optional<KBObject> readKBIdentifier(KnowledgeBase aKb, String aIdentifier)
     {
-        try (RepositoryConnection conn = getConnection(aKb)) {
-            ValueFactory vf = conn.getValueFactory();
-            RepositoryResult<Statement> stmts = RdfUtils.getStatements(conn,
-                    vf.createIRI(aIdentifier), aKb.getTypeIri(), aKb.getClassIri(), true);
+        SimpleValueFactory vf = SimpleValueFactory.getInstance();
+        try (RepositoryConnection conn = getConnection(aKb);
+            RepositoryResult<Statement> stmts = RdfUtils
+                .getStatements(conn, vf.createIRI(aIdentifier), aKb.getTypeIri(), aKb.getClassIri(),
+                    true)) {
             if (stmts.hasNext()) {
                 KBConcept kbConcept = KBConcept.read(conn, vf.createIRI(aIdentifier), aKb);
                 if (kbConcept != null) {
@@ -1133,13 +1133,9 @@ public class KnowledgeBaseServiceImpl
                 }
             }
             else {
-                if (!listProperties(aKb, true).stream()
-                    .filter(h -> h.getIdentifier().equals(aIdentifier)).collect(Collectors.toList())
-                    .isEmpty()) {
-                    Optional<KBProperty> kbProperty = readProperty(aKb, aIdentifier);
-                    if (kbProperty.isPresent()) {
-                        return kbProperty.flatMap((p) -> Optional.of(p));
-                    }
+                Optional<KBProperty> kbProperty = readProperty(aKb, aIdentifier);
+                if (kbProperty.isPresent()) {
+                    return kbProperty.flatMap((p) -> Optional.of(p));
                 }
                 else {
                     Optional<KBInstance> kbInstance = readInstance(aKb, aIdentifier);

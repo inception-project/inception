@@ -48,9 +48,11 @@ public final class SPARQLQueryStore
     }
 
     /**
-     * adds an OPTIONAL block which looks for a value that is declared with a subproperty of aProperty
+     * adds an OPTIONAL block which looks for a value that is declared with a
+     * subproperty of the given property
      */
-    private static final String optionalLanguageFilteredSubPropertyValue(String aProperty, String aLanguage, String aVariable)
+    private static final String optionalLanguageFilteredSubPropertyValue(String aProperty,
+        String aLanguage, String aVariable)
     {
         StringBuilder fragment = new StringBuilder();
         fragment.append("  OPTIONAL {\n");
@@ -248,5 +250,5 @@ public final class SPARQLQueryStore
                 , "}");
 
     }
-    
+
 }
