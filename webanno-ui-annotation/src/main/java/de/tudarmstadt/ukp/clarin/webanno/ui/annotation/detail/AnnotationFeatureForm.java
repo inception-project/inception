@@ -141,6 +141,7 @@ public class AnnotationFeatureForm
             protected void onConfigure()
             {
                 super.onConfigure();
+                
                 setVisible(getModelObject().getSelection().getAnnotation().isSet());
             }
         };
@@ -168,6 +169,7 @@ public class AnnotationFeatureForm
             protected void onConfigure()
             {
                 super.onConfigure();
+                
                 setVisible(getModelObject().getFeatureStates().isEmpty());
             }
         };
@@ -236,8 +238,9 @@ public class AnnotationFeatureForm
                     List<FeatureState> featureStates = getModelObject().getFeatureStates();
                     featureStates.get(0).value = getKeyBindValue(selectedTag, bindTags);
                 }
+                
                 aTarget.add(textfield);
-                aTarget.add(featureEditorPanelContent.get(0));
+                aTarget.add(featureEditorPanelContent.iterator().next());
             }
         });
         textfield.add(new AttributeAppender("style", "opacity:0", ";"));
@@ -283,6 +286,7 @@ public class AnnotationFeatureForm
             protected void onConfigure()
             {
                 super.onConfigure();
+                
                 setVisible(getModelObject().getPreferences().isRememberLayer());
             }
         };
@@ -481,6 +485,7 @@ public class AnnotationFeatureForm
             protected void onConfigure()
             {
                 super.onConfigure();
+                
                 setVisible(!getModelObject().getSelection().getAnnotation().isSet());
             }
         };
@@ -532,6 +537,7 @@ public class AnnotationFeatureForm
             protected void onConfigure()
             {
                 super.onConfigure();
+                
                 setVisible(isForwardable());
                 if (!isForwardable()) {
                     AnnotationFeatureForm.this.getModelObject().setForwardAnnotation(false);
@@ -584,6 +590,7 @@ public class AnnotationFeatureForm
     protected void onConfigure()
     {
         super.onConfigure();
+        
         // Avoid reversing in read-only layers
         setEnabled(getModelObject().getDocument() != null && !editorPanel.isAnnotationFinished());
     }
@@ -780,8 +787,7 @@ public class AnnotationFeatureForm
         {
             super.onAfterRender();
             
-            AjaxRequestTarget target = RequestCycle.get().find(AjaxRequestTarget.class);
-            if (target != null) {
+            RequestCycle.get().find(AjaxRequestTarget.class).ifPresent(target -> {
                 // Put focus on hidden input field if we are in forward-mode
                 if (getModelObject().isForwardAnnotation()) {
                     List<AnnotationFeature> features = getEnabledFeatures(
@@ -814,7 +820,7 @@ public class AnnotationFeatureForm
                         target.focusComponent(editor.getFocusComponent());
                     }
                 }
-            }
+            });
         }
 
         @Override

@@ -235,6 +235,7 @@ public class AgreementPage
                 protected void onConfigure()
                 {
                     super.onConfigure();
+                    
                     setVisible(featureList.getModelObject() != null);
                 }
             };
@@ -261,6 +262,8 @@ public class AgreementPage
                 @Override
                 protected void onConfigure()
                 {
+                    super.onConfigure();
+
                     AgreementFormModel model = AgreementForm.this.getModelObject();
                     if (model != null && model.feature != null) {
                         setVisible(!LinkMode.NONE.equals(model.feature.getLinkMode()));
@@ -287,6 +290,7 @@ public class AgreementPage
                 protected void onConfigure()
                 {
                     super.onConfigure();
+                    
                     setEnabled(AgreementForm.this.getModelObject().measure.isNullValueSupported());
                 }
             });
@@ -443,7 +447,15 @@ public class AgreementPage
                 }
 
                 @Override
-                protected void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
+                protected void onConfigure()
+                {
+                    super.onConfigure();
+
+                    setVisible(featureList.getModelObject() != null);
+                }
+
+                @Override
+                protected void onSubmit(AjaxRequestTarget aTarget)
                 {
                     download.initiate(aTarget, "agreement"
                             + AgreementForm.this.getModelObject().exportFormat.getExtension());
@@ -455,8 +467,9 @@ public class AgreementPage
         @Override
         protected void onConfigure()
         {
-            ProjectSelectionModel model = projectSelectionForm.getModelObject();
+            super.onConfigure();
 
+            ProjectSelectionModel model = projectSelectionForm.getModelObject();
             setVisible(model != null && model.project != null);
         }
 
@@ -562,7 +575,7 @@ public class AgreementPage
 
             // Clear the cached CASes. When we switch to another project, we'll have to
             // reload them.
-            updateAgreementTable(RequestCycle.get().find(AjaxRequestTarget.class), true);
+            updateAgreementTable(RequestCycle.get().find(AjaxRequestTarget.class).get(), true);
         }
         
         private List<Project> listAllowedProjects()

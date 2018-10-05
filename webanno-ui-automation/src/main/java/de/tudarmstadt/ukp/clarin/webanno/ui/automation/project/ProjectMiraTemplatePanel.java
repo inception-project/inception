@@ -38,6 +38,7 @@ import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
+import org.apache.wicket.markup.html.form.FormComponentUpdatingBehavior;
 import org.apache.wicket.markup.html.form.ListChoice;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
@@ -135,6 +136,7 @@ public class ProjectMiraTemplatePanel
             protected void onConfigure()
             {
                 super.onConfigure();
+                
                 if (isNull(template.getId())) {
                     this.setVisible(false);
                 }
@@ -213,27 +215,24 @@ public class ProjectMiraTemplatePanel
                         }
                     });
                     setNullValid(false);
-                }
+                    
+                    add(new FormComponentUpdatingBehavior() {
+                        private static final long serialVersionUID = 3955427526154717786L;
 
-                @Override
-                public void onSelectionChanged(AnnotationFeature aNewSelection)
-                {
-                    selectedFeature = aNewSelection;
-                    if (automationService.existsMiraTemplate(selectedFeature)) {
-                        template = automationService.getMiraTemplate(selectedFeature);
-                    }
-                    else {
-                        template = new MiraTemplate();
-                        template.setTrainFeature(aNewSelection);
-                    }
-                    featureModel.setObject(selectedFeature);
-                    miraTemplateDetailForm.setModelObject(template);
-                }
-
-                @Override
-                protected boolean wantOnSelectionChangedNotifications()
-                {
-                    return true;
+                        @Override
+                        protected void onUpdate() {
+                            selectedFeature = getModelObject();
+                            if (automationService.existsMiraTemplate(selectedFeature)) {
+                                template = automationService.getMiraTemplate(selectedFeature);
+                            }
+                            else {
+                                template = new MiraTemplate();
+                                template.setTrainFeature(getModelObject());
+                            }
+                            featureModel.setObject(selectedFeature);
+                            miraTemplateDetailForm.setModelObject(template);
+                        };
+                    });
                 }
             }).setOutputMarkupId(true);
             features.setModelObject(selectedFeature);
@@ -535,19 +534,18 @@ public class ProjectMiraTemplatePanel
                                             : aObject.getUiName());
                         }
                     });
-                }
+                    
+                    add(new FormComponentUpdatingBehavior() {
+                        private static final long serialVersionUID = -2174515180334311824L;
 
-                @Override
-                protected void onSelectionChanged(AnnotationFeature aNewSelection)
-                {
-                    miraTemplateDetailForm.getModelObject().getOtherFeatures().add(aNewSelection);
-                    automationService.createTemplate(miraTemplateDetailForm.getModelObject());
-                }
-
-                @Override
-                protected boolean wantOnSelectionChangedNotifications()
-                {
-                    return true;
+                        @Override
+                        protected void onUpdate() {
+                            miraTemplateDetailForm.getModelObject().getOtherFeatures()
+                                    .add(getModelObject());
+                            automationService
+                                    .createTemplate(miraTemplateDetailForm.getModelObject());
+                        };
+                    });
                 }
             });
             otherFeatures.setModelObject(null);// always force to choose, even
@@ -586,22 +584,21 @@ public class ProjectMiraTemplatePanel
                         }
                     });
                     setNullValid(false);
-                }
+                    
+                    add(new FormComponentUpdatingBehavior()
+                    {
+                        private static final long serialVersionUID = 7001921645015996995L;
 
-                @Override
-                protected void onSelectionChanged(AnnotationFeature aNewSelection)
-                {
-                    otherSelectedFeature = aNewSelection;
-                    // always force to choose, even after selection of feature
-                    otherFeatures.setModelObject(null);
-                    updateForm();
-                    targetLayerDetailForm.autoTabs.setSelectedTab(2);
-                }
-
-                @Override
-                protected boolean wantOnSelectionChangedNotifications()
-                {
-                    return true;
+                        @Override
+                        protected void onUpdate()
+                        {
+                            otherSelectedFeature = getModelObject();
+                            // always force to choose, even after selection of feature
+                            otherFeatures.setModelObject(null);
+                            updateForm();
+                            targetLayerDetailForm.autoTabs.setSelectedTab(2);
+                        };
+                    });
                 }
 
                 @Override
@@ -629,7 +626,7 @@ public class ProjectMiraTemplatePanel
                 private static final long serialVersionUID = 1L;
 
                 @Override
-                protected void onSubmit(AjaxRequestTarget aTarget, Form<?> form)
+                protected void onSubmit(AjaxRequestTarget aTarget)
                 {
                     MiraTemplate template = miraTemplateDetailForm.getModelObject();
                     if (!template.getTrainFeature().getLayer().getType()

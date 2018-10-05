@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor;
 
+import java.util.Optional;
+
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.form.AbstractTextComponent;
@@ -104,10 +106,11 @@ public class ClassicKendoComboboxTextFeatureEditor
                 
                 // Trigger a re-loading of the tagset from the server as constraints may have
                 // changed the ordering
-                AjaxRequestTarget target = RequestCycle.get().find(AjaxRequestTarget.class);
-                if (target != null) {
+                Optional<AjaxRequestTarget> target = RequestCycle.get()
+                        .find(AjaxRequestTarget.class);
+                if (target.isPresent()) {
                     LOG.trace("onInitialize() requesting datasource re-reading");
-                    target.appendJavaScript(
+                    target.get().appendJavaScript(
                             String.format("var $w = %s; if ($w) { $w.dataSource.read(); }",
                                     KendoUIBehavior.widget(this, ComboBoxBehavior.METHOD)));
                 }

@@ -39,6 +39,7 @@ import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
+import org.apache.wicket.markup.html.form.FormComponentUpdatingBehavior;
 import org.apache.wicket.markup.html.link.DownloadLink;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
@@ -123,31 +124,19 @@ public class ProjectExportPanel
             super(id, new CompoundPropertyModel<>(
                     new ProjectExportRequest(ProjectExportRequest.FORMAT_AUTO, true)));
             
-            add(new DropDownChoice<String>("format", new LoadableDetachableModel<List<String>>()
-            {
-                private static final long serialVersionUID = 1L;
-
-                @Override
-                protected List<String> load()
-                {                    
-                    List<String> formats = importExportService.getWritableFormats().stream()
-                            .map(FormatSupport::getName)
-                            .sorted()
-                            .collect(Collectors.toCollection(ArrayList::new));
-                    formats.add(0, ProjectExportRequest.FORMAT_AUTO);
-                    return formats;
-                }
-            }) {
-                private static final long serialVersionUID = 1L;
-
-                @Override
-                protected boolean wantOnSelectionChangedNotifications()
-                {
-                    // Needed to update the model with the selection because the DownloadLink does
-                    // not trigger a form submit.
-                    return true;
-                }
-            });
+            DropDownChoice<String> format = new DropDownChoice<>("format",
+                    LoadableDetachableModel.of(() -> {
+                        List<String> formats = importExportService.getWritableFormats().stream()
+                                .map(FormatSupport::getName)
+                                .sorted()
+                                .collect(Collectors.toCollection(ArrayList::new));
+                        formats.add(0, ProjectExportRequest.FORMAT_AUTO);
+                        return formats;
+                    }));
+            // Needed to update the model with the selection because the DownloadLink does
+            // not trigger a form submit.
+            format.add(new FormComponentUpdatingBehavior());
+            add(format);
             
             add(new DownloadLink("export", new LoadableDetachableModel<File>() {
                 private static final long serialVersionUID = 840863954694163375L;

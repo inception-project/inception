@@ -115,6 +115,8 @@ public abstract class TextFeatureEditorBase
     @Override
     public void onConfigure()
     {
+        super.onConfigure();
+        
         // if enabled and constraints rule execution returns anything other than green
         setVisible(!hideUnconstrainedFeature || (getModelObject().indicator.isAffected()
                 && getModelObject().indicator.getStatusColor().equals("green")));

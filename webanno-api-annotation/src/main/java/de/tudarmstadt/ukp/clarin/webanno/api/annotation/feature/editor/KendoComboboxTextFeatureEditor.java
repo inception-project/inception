@@ -99,13 +99,12 @@ public class KendoComboboxTextFeatureEditor
                 
                 // Trigger a re-loading of the tagset from the server as constraints may have
                 // changed the ordering
-                AjaxRequestTarget target = RequestCycle.get().find(AjaxRequestTarget.class);
-                if (target != null) {
+                RequestCycle.get().find(AjaxRequestTarget.class).ifPresent(target -> {
                     LOG.trace("onInitialize() requesting datasource re-reading");
                     target.appendJavaScript(
                             String.format("var $w = %s; if ($w) { $w.dataSource.read(); }",
                                     KendoUIBehavior.widget(this, ComboBoxBehavior.METHOD)));
-                }
+                });
             }
         };
     }
