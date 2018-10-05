@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
@@ -424,7 +425,7 @@ public class KnowledgeBaseServiceImpl
             tupleQuery.setBinding("pSUBCLASS", aKB.getSubclassIri());
             tupleQuery.setBinding("pLABEL", aKB.getLabelIri());
             tupleQuery.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
-            tupleQuery.setBinding("pSUBLABEL", aKB.getSubPropertyIri());
+            tupleQuery.setBinding("pSUBPROPERTY", aKB.getSubPropertyIri());
             tupleQuery.setIncludeInferred(false);
             return evaluateListQuery(tupleQuery, aAll);
         });
@@ -721,6 +722,7 @@ public class KnowledgeBaseServiceImpl
             tupleQuery.setBinding("oPROPERTY", aType);
             tupleQuery.setBinding("pLABEL", aKB.getLabelIri());
             tupleQuery.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
+            tupleQuery.setBinding("pSUBPROPERTY", aKB.getSubPropertyIri());
             tupleQuery.setIncludeInferred(aIncludeInferred);
 
             return evaluateListQuery(tupleQuery, aAll);
@@ -743,6 +745,7 @@ public class KnowledgeBaseServiceImpl
             tupleQuery.setBinding("aDomain", vf.createIRI(aDomain));
             tupleQuery.setBinding("pLABEL", aKB.getLabelIri());
             tupleQuery.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
+            tupleQuery.setBinding("pSUBPROPERTY", aKB.getSubPropertyIri());
             tupleQuery.setIncludeInferred(aIncludeInferred);
 
             return evaluateListQuery(tupleQuery, aAll);
@@ -767,6 +770,7 @@ public class KnowledgeBaseServiceImpl
             TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
             tupleQuery.setBinding("aProperty", vf.createIRI(aProperty));
             tupleQuery.setBinding("pLABEL", aKB.getLabelIri());
+            tupleQuery.setBinding("pSUBPROPERTY", aKB.getSubPropertyIri());
             tupleQuery.setIncludeInferred(aIncludeInferred);
 
             return evaluateListQuery(tupleQuery, aAll);
@@ -788,6 +792,7 @@ public class KnowledgeBaseServiceImpl
             tupleQuery.setBinding("oPROPERTY", aType);
             tupleQuery.setBinding("pLABEL", aKB.getLabelIri());
             tupleQuery.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
+            tupleQuery.setBinding("pSUBPROPERTY", aKB.getSubPropertyIri());
             tupleQuery.setIncludeInferred(aIncludeInferred);
 
             return evaluateListQuery(tupleQuery, aAll);
@@ -821,7 +826,7 @@ public class KnowledgeBaseServiceImpl
                 tupleQuery.setBinding("pSUBCLASS", aKB.getSubclassIri());
                 tupleQuery.setBinding("pLABEL", aKB.getLabelIri());
                 tupleQuery.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
-                tupleQuery.setBinding("pSUBLABEL", aKB.getSubPropertyIri());
+                tupleQuery.setBinding("pSUBPROPERTY", aKB.getSubPropertyIri());
                 tupleQuery.setIncludeInferred(false);
     
                 return evaluateListQuery(tupleQuery, aAll);
@@ -860,6 +865,7 @@ public class KnowledgeBaseServiceImpl
             tupleQuery.setBinding("pSUBCLASS", aKB.getSubclassIri());
             tupleQuery.setBinding("pLABEL", aKB.getLabelIri());
             tupleQuery.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
+            tupleQuery.setBinding("pSUBPROPERTY", aKB.getSubPropertyIri());
             tupleQuery.setIncludeInferred(false);
             return evaluateListQuery(tupleQuery, aAll);
         });
@@ -879,6 +885,7 @@ public class KnowledgeBaseServiceImpl
             tupleQuery.setBinding("pInstance", vf.createIRI(aIdentifier));
             tupleQuery.setBinding("pLABEL", aKB.getLabelIri());
             tupleQuery.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
+            tupleQuery.setBinding("pSUBPROPERTY", aKB.getSubPropertyIri());
             tupleQuery.setIncludeInferred(true);
 
             return evaluateListQuery(tupleQuery, aAll);
@@ -949,6 +956,7 @@ public class KnowledgeBaseServiceImpl
             tupleQuery.setBinding("pSUBCLASS", aKB.getSubclassIri());
             tupleQuery.setBinding("pLABEL", aKB.getLabelIri());
             tupleQuery.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
+            tupleQuery.setBinding("pSUBPROPERTY", aKB.getSubPropertyIri());
             tupleQuery.setIncludeInferred(false);
 
             return evaluateListQuery(tupleQuery, aAll);
@@ -987,7 +995,7 @@ public class KnowledgeBaseServiceImpl
             String id = bindings.getBinding("s").getValue().stringValue();
             Binding label = bindings.getBinding("l");
             Binding description = bindings.getBinding("d");
-            Binding subpropertyLabel = bindings.getBinding("sl");
+            Binding subpropertyLabel = bindings.getBinding("spl");
 
             if (!id.contains(":") || (!aAll && hasImplicitNamespace(id))) {
                 continue;
@@ -1124,10 +1132,20 @@ public class KnowledgeBaseServiceImpl
                     return Optional.of(kbConcept);
                 }
             }
-            else if (!stmts.hasNext()) {
-                Optional<KBInstance> kbInstance = readInstance(aKb, aIdentifier);
-                if (kbInstance.isPresent()) {
-                    return kbInstance.flatMap((p) -> Optional.of(p));
+            else {
+                if (!listProperties(aKb, true).stream()
+                    .filter(h -> h.getIdentifier().equals(aIdentifier)).collect(Collectors.toList())
+                    .isEmpty()) {
+                    Optional<KBProperty> kbProperty = readProperty(aKb, aIdentifier);
+                    if (kbProperty.isPresent()) {
+                        return kbProperty.flatMap((p) -> Optional.of(p));
+                    }
+                }
+                else {
+                    Optional<KBInstance> kbInstance = readInstance(aKb, aIdentifier);
+                    if (kbInstance.isPresent()) {
+                        return kbInstance.flatMap((p) -> Optional.of(p));
+                    }
                 }
             }
         }

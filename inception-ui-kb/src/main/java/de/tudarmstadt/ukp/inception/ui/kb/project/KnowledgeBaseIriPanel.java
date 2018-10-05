@@ -121,7 +121,7 @@ public class KnowledgeBaseIriPanel
         ComboBox<String> typeField = buildComboBox("typeIri", kbModel.bind("kb.typeIri"),
                 IriConstants.TYPE_IRIS);
         ComboBox<String> subPropertyField = buildComboBox("subPropertyIri",
-            kbModel.bind("kb.subPropertyIri"), IriConstants.SUB_PROPERTY_IRIS);
+            kbModel.bind("kb.subPropertyIri"), IriConstants.SUBPROPERTY_IRIS);
         ComboBox<String> descriptionField = buildComboBox("descriptionIri",
                 kbModel.bind("kb.descriptionIri"), IriConstants.DESCRIPTION_IRIS);
         ComboBox<String> labelField = buildComboBox("labelIri",

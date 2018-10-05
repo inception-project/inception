@@ -68,6 +68,11 @@ public class IriConstants
     public static final IRI WIKIDATA_PROPERTY_TYPE;
 
     /**
+     * http://www.wikidata.org/prop/direct/P1647
+     */
+    public static final IRI WIKIDATA_SUBPROPERTY;
+
+    /**
      * http://www.schema.org/description
      */
     public static final IRI SCHEMA_DESCRIPTION;
@@ -75,7 +80,7 @@ public class IriConstants
     public static final List<IRI> CLASS_IRIS;
     public static final List<IRI> SUBCLASS_IRIS;
     public static final List<IRI> TYPE_IRIS;
-    public static final List<IRI> SUB_PROPERTY_IRIS;
+    public static final List<IRI> SUBPROPERTY_IRIS;
     public static final List<IRI> DESCRIPTION_IRIS;
     public static final List<IRI> LABEL_IRIS;
     public static final List<IRI> PROPERTY_TYPE_IRIS;
@@ -89,12 +94,13 @@ public class IriConstants
         WIKIDATA_SUBCLASS = vf.createIRI(PREFIX_WIKIDATA_DIRECT, "P279");
         WIKIDATA_TYPE = vf.createIRI(PREFIX_WIKIDATA_DIRECT, "P31");
         WIKIDATA_PROPERTY_TYPE =  vf.createIRI(PREFIX_WIKIDATA_ENTITY, "Q18616576");
+        WIKIDATA_SUBPROPERTY = vf.createIRI(PREFIX_WIKIDATA_DIRECT, "P1647");
         SCHEMA_DESCRIPTION = vf.createIRI(PREFIX_SCHEMA, "description");
 
         CLASS_IRIS = asList(RDFS.CLASS, OWL.CLASS, WIKIDATA_CLASS, SKOS.CONCEPT);
         SUBCLASS_IRIS = asList(RDFS.SUBCLASSOF, WIKIDATA_SUBCLASS, SKOS.BROADER);
         TYPE_IRIS = asList(RDF.TYPE, WIKIDATA_TYPE);
-        SUB_PROPERTY_IRIS = asList(RDFS.SUBPROPERTYOF);
+        SUBPROPERTY_IRIS = asList(RDFS.SUBPROPERTYOF, WIKIDATA_SUBPROPERTY);
         DESCRIPTION_IRIS = asList(RDFS.COMMENT, SCHEMA_DESCRIPTION);
         LABEL_IRIS = asList(RDFS.LABEL, SKOS.PREF_LABEL);
         PROPERTY_TYPE_IRIS = asList(RDF.PROPERTY, WIKIDATA_PROPERTY_TYPE);

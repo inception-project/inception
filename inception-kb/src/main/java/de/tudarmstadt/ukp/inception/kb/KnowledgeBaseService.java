@@ -529,18 +529,21 @@ public interface KnowledgeBaseService
     List<KBHandle> listAllConcepts(KnowledgeBase kb, boolean aAll) throws QueryEvaluationException;
 
     /**
+     * Returns whether the given identifier is a subproperty of the label IRI defined for this
+     * knowledge base
      *
-     * @param aKB
-     * @param aIdentifier
-     * @return
+     * @param aKB the knowledge base
+     * @param aIdentifier the identifier of the label
+     * @return true if the identifier is a subproperty of the label IRI defined for this
+     * knowledge base, false otherwise
      */
     boolean isSubpropertyLabel(KnowledgeBase aKB, String aIdentifier);
 
     /**
      * Check if the given profile equals one of the schema profiles defined in {@link SchemaProfile}
-     * @param aProfile
+     * @param aProfile the profile that is to be checked
      * @return the corresponding schema profile (CUSTOM if the given profile does not equal any of
-     * the pre-defined ones
+     * the pre-defined ones)
      */
     SchemaProfile checkSchemaProfile(KnowledgeBaseProfile aProfile);
 

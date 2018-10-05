@@ -21,6 +21,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import de.tudarmstadt.ukp.inception.kb.graph.*;
 import org.apache.wicket.Component;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
@@ -31,6 +32,7 @@ import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.query.QueryEvaluationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,11 +42,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
-import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
-import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
-import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
-import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
-import de.tudarmstadt.ukp.inception.kb.graph.RdfUtils;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxConceptSelectionEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxNewConceptEvent;
@@ -148,26 +145,47 @@ public class KnowledgeBasePanel
         // if this event is not about renaming (changing the RDFS label) of a KBObject, return
         KBStatement statement = event.getStatement();
         String propertyIdentifier = statement.getProperty().getIdentifier();
-        boolean isRenameEvent =
-            propertyIdentifier.equals(kbModel.getObject().getLabelIri().stringValue()) || kbService
-                .isSubpropertyLabel(kbModel.getObject(), propertyIdentifier);
-        if (isRenameEvent) {
+
+        if (isRenamingEvent(propertyIdentifier, statement)) {
             // determine whether the concept name or property name was changed (or neither), then
             // update the name in the respective KBHandle
+
             List<Model<KBHandle>> models = Arrays.asList(selectedConceptHandle,
                     selectedPropertyHandle);
             models.stream().filter(model -> model.getObject() != null && model.getObject()
                     .getIdentifier().equals(statement.getInstance().getIdentifier()))
                     .forEach(model -> {
-                        if (statement.getValue() != null) {
+                        Optional<KBObject> kbObject = kbService
+                            .readKBIdentifier(kbModel.getObject(),
+                                model.getObject().getIdentifier());
+                        if (kbObject.isPresent()) {
+                            model.getObject().setName(kbObject.get().getName());
+                        }
+                        /*
+                        if (event.isDeleted()) {
+                            model.getObject().setName(null);
+                        }
+                        else if (statement.getValue() != null) {
                             model.getObject().setName(statement.getValue().toString());
                         }
+                        */
                         event.getTarget().add(this);
                     });
         }
         else {
             event.getTarget().add(getPage());
         }
+    }
+
+    private boolean isRenamingEvent(String aPropertyIdentifier, KBStatement aStatement)
+    {
+        SimpleValueFactory vf = SimpleValueFactory.getInstance();
+        boolean hasMainLabel = RdfUtils.readFirst(kbService.getConnection(kbModel.getObject()),
+            vf.createIRI(aStatement.getInstance().getIdentifier()),
+            kbModel.getObject().getLabelIri(), null).isPresent();
+        return aPropertyIdentifier.equals(kbModel.getObject().getLabelIri().stringValue()) || (
+            kbService.isSubpropertyLabel(kbModel.getObject(), aPropertyIdentifier)
+                && !hasMainLabel);
     }
 
     @OnEvent
