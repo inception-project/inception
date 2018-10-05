@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.kb.yaml;
 
 import java.io.Serializable;
-import java.util.Objects;
 
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
@@ -56,9 +55,8 @@ public class KnowledgeBaseMapping implements Serializable
     private IRI propertyLabelIri;
 
     @JsonProperty("property-description")
-    private IRI propertyDescriptionIri;
-    
-    
+    private IRI propertyDescriptionIri;   
+   
     @JsonCreator public KnowledgeBaseMapping(@JsonProperty("class") String classIri,
         @JsonProperty("subclass-of") String subclassIri,
         @JsonProperty("instance-of") String typeIri,
@@ -173,33 +171,5 @@ public class KnowledgeBaseMapping implements Serializable
     public void setPropertyDescriptionIri(IRI aPropertyDescriptionIri)
     {
         propertyDescriptionIri = aPropertyDescriptionIri;
-    }
-
-    @Override
-    public boolean equals(Object o)
-    {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        KnowledgeBaseMapping that = (KnowledgeBaseMapping) o;
-        return Objects.equals(classIri, that.classIri)
-                && Objects.equals(subclassIri, that.subclassIri)
-                && Objects.equals(typeIri, that.typeIri)
-                && Objects.equals(subPropertyIri, that.subPropertyIri)
-                && Objects.equals(labelIri, that.labelIri)
-                && Objects.equals(propertyTypeIri, that.propertyTypeIri)
-                && Objects.equals(descriptionIri, that.descriptionIri)
-                && Objects.equals(propertyLabelIri, that.propertyLabelIri)
-                && Objects.equals(propertyDescriptionIri, that.propertyDescriptionIri);
-    }
-
-    @Override
-    public int hashCode()
-    {
-        return Objects.hash(classIri, subclassIri, typeIri, propertyTypeIri, descriptionIri,
-                labelIri, propertyLabelIri, propertyDescriptionIri, subPropertyIri);
     }
 }

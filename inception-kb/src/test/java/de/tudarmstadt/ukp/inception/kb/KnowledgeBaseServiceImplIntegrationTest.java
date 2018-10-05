@@ -1514,7 +1514,6 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         assertThat(profiles)
             .allSatisfy((key, profile) -> {
                 assertThat(key).isNotNull();
-                assertThat(profile).hasNoNullFieldsOrProperties();
             });
 
     }
@@ -1557,7 +1556,6 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     }
 
     // Helper
-
     private Project createProject(String name) {
         return testFixtures.createProject(name);
     }
