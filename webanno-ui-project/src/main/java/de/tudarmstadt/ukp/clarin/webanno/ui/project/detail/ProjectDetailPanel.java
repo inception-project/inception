@@ -79,10 +79,11 @@ public class ProjectDetailPanel
     
     private ChallengeResponseDialog deleteProjectDialog;
     private Label idLabel;
+    private DropDownChoice<String> projectTypes;
 
     public ProjectDetailPanel(String id, IModel<Project> aModel)
     {
-        super(id);
+        super(id, aModel);
         
         projectModel = aModel;
         
@@ -109,7 +110,7 @@ public class ProjectDetailPanel
         
         form.add(new CheckBox("disableExport"));
         
-        form.add(makeProjectTypeChoice());
+        form.add(projectTypes = makeProjectTypeChoice());
         
         form.add(new LambdaAjaxButton<>("save", this::actionSave));
         form.add(new LambdaAjaxLink("cancel", this::actionCancel));
@@ -136,27 +137,38 @@ public class ProjectDetailPanel
             }
         });
     }
+    
+    @Override
+    protected void onModelChanged()
+    {
+        super.onModelChanged();
+        
+        // If there is only a single project type, then we can simply select that and do not need
+        // to show the choice at all.
+        if (projectTypes.getChoices().size() == 1 && projectModel.getObject().getMode() == null) {
+            projectModel.getObject().setMode(projectTypes.getChoices().get(0));
+        }
+    }
         
     private DropDownChoice<String> makeProjectTypeChoice()
     {
         List<String> types = projectService.listProjectTypes().stream().map(t -> t.id())
                 .collect(Collectors.toList());
 
-        DropDownChoice<String> projectTypes = new DropDownChoice<>("mode", types);
+        DropDownChoice<String> projTypes = new DropDownChoice<>("mode", types);
 
-        projectTypes.add(LambdaBehavior.onConfigure(it -> it.setEnabled(
+        projTypes.add(LambdaBehavior.onConfigure(it -> it.setEnabled(
                 nonNull(projectModel.getObject()) && isNull(projectModel.getObject().getId()))));
 
-        projectTypes.setRequired(true);
+        projTypes.setRequired(true);
         
         // If there is only a single project type, then we can simply select that and do not need
         // to show the choice at all.
-        if (types.size() == 1) {
-            projectTypes.setVisible(false);
-            projectModel.getObject().setMode(types.get(0));
+        if (projTypes.getChoices().size() == 1) {
+            projTypes.setVisible(false);
         }
         
-        return projectTypes;
+        return projTypes;
     }
 
     private void actionSave(AjaxRequestTarget aTarget, Form<Project> aForm)

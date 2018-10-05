@@ -99,7 +99,11 @@ public class ProjectPage
         tabContainer.add(tabPanel);
         
         projects = new ProjectSelectionPanel("projects", selectedProject);
-        projects.setCreateAction(target -> selectedProject.setObject(new Project()));
+        projects.setCreateAction(target -> {
+            selectedProject.setObject(new Project());
+            // Make sure that default values are loaded
+            tabPanel.visitChildren(new ModelChangedVisitor(selectedProject));
+        });
         projects.setChangeAction(target -> { 
             target.add(tabContainer);
             // Make sure that any invalid forms are cleared now that we load the new project.
