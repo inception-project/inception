@@ -164,8 +164,8 @@ public class ProjectDetailPanel
         
         // If there is only a single project type, then we can simply select that and do not need
         // to show the choice at all.
-        if (projectTypes.getChoices().size() == 1) {
-            projectTypes.setVisible(false);
+        if (projTypes.getChoices().size() == 1) {
+            projTypes.setVisible(false);
         }
         
         return projTypes;
