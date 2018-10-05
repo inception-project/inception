@@ -1572,10 +1572,8 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         assertThat(sut.readKBIdentifier(kb, propertyId).get())
             .as("Check that reading a property id returns an instance of KBProperty")
             .isInstanceOf(KBProperty.class);
-
     }
-
-
+    
     // Helper
     private Project createProject(String name) {
         return testFixtures.createProject(name);
