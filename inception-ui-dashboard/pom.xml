@@ -49,10 +49,12 @@
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-ui-core</artifactId>
     </dependency>
+    
     <dependency>
       <groupId>org.springframework.security</groupId>
       <artifactId>spring-security-core</artifactId>
     </dependency>
+    
     <dependency>
       <groupId>org.apache.wicket</groupId>
       <artifactId>wicket-core</artifactId>
@@ -64,6 +66,10 @@
     <dependency>
       <groupId>org.apache.wicket</groupId>
       <artifactId>wicket-spring</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.danekja</groupId>
+      <artifactId>jdk-serializable-functional</artifactId>
     </dependency>
   </dependencies>
 </project>
