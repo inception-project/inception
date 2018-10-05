@@ -98,7 +98,8 @@ public class StatementsPanel extends Panel {
         statementGroupComparator = LambdaModel
                 .of(() -> new Comparator<StatementGroupBean>()
                     {
-                        @Override public int compare(StatementGroupBean o1, StatementGroupBean o2)
+                        @Override
+                        public int compare(StatementGroupBean o1, StatementGroupBean o2)
                         {
                             KBHandle prop1 = o1.getProperty();
                             KBHandle prop2 = o2.getProperty();
