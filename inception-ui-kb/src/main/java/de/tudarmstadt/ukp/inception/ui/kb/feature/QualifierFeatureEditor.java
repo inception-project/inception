@@ -42,7 +42,6 @@ import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
-import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.markup.repeater.RefreshingView;
 import org.apache.wicket.markup.repeater.util.ModelIteratorAdapter;
@@ -206,7 +205,7 @@ public class QualifierFeatureEditor
             }
 
             @Override
-            protected void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
+            protected void onSubmit(AjaxRequestTarget aTarget)
             {
                 actionAdd(aTarget);
             }
@@ -229,7 +228,7 @@ public class QualifierFeatureEditor
             }
 
             @Override
-            protected void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
+            protected void onSubmit(AjaxRequestTarget aTarget)
             {
                 actionSet(aTarget);
             }
@@ -249,7 +248,7 @@ public class QualifierFeatureEditor
             }
 
             @Override
-            protected void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
+            protected void onSubmit(AjaxRequestTarget aTarget)
             {
                 actionDel(aTarget);
             }
@@ -345,8 +344,8 @@ public class QualifierFeatureEditor
                 // KBItem dropdowns in this feature editor since we can have multilpe modifiers.
                 // For focus-components, the AnnotationFeatureForm already handles adding the
                 // saving behavior.
-                actionHandler
-                    .actionCreateOrUpdate(RequestCycle.get().find(AjaxRequestTarget.class), jCas);
+                actionHandler.actionCreateOrUpdate(
+                        RequestCycle.get().find(AjaxRequestTarget.class).get(), jCas);
             }
             catch (Exception e) {
                 LOG.error("Error: " + e.getMessage(), e);
@@ -392,11 +391,9 @@ public class QualifierFeatureEditor
         catch (Exception e) {
             // LOG.error("Unable to read traits", e);
             error("Unable to read traits: " + ExceptionUtils.getRootCauseMessage(e));
-            IPartialPageRequestHandler target = RequestCycle.get()
-                    .find(IPartialPageRequestHandler.class);
-            if (target != null) {
-                target.addChildren(getPage(), IFeedback.class);
-            }
+            RequestCycle.get()
+                    .find(IPartialPageRequestHandler.class)
+                    .ifPresent(target -> target.addChildren(getPage(), IFeedback.class));
         }
         return handles;
     }

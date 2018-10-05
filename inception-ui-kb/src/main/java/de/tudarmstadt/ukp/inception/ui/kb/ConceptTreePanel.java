@@ -25,6 +25,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -99,15 +100,15 @@ public class ConceptTreePanel extends Panel {
                     }
 
                     @Override
-                    protected void onClick(AjaxRequestTarget aTarget)
+                    protected void onClick(Optional<AjaxRequestTarget> aTarget)
                     {
                         if (selectedConcept.getObject() != null) {
                             selectedConcept.detach();
-                            updateNode(selectedConcept.getObject(), aTarget);
+                            updateNode(selectedConcept.getObject(), aTarget.get());
                         }
                         selectedConcept.setObject(getModelObject());
-                        updateNode(selectedConcept.getObject(), aTarget);
-                        actionSelectionChanged(aTarget);
+                        updateNode(selectedConcept.getObject(), aTarget.get());
+                        actionSelectionChanged(aTarget.get());
                     }
 
                     @Override
