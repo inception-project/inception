@@ -319,6 +319,29 @@ public class KnowledgeBaseServiceRemoteTest
         }
         
     }
+    
+    @Test
+    public void thatChildConceptsCanBeRetrieved()
+    {
+        KnowledgeBase kb = sutConfig.getKnowledgeBase();
+
+        long duration = System.currentTimeMillis();
+
+        for (String parentConcepts : sutConfig.getRootIdentifier()) {
+            List<KBHandle> childConceptKBHandle = sut.listChildConcepts(kb, parentConcepts, true);
+            duration = System.currentTimeMillis() - duration;
+
+            System.out.printf("Child concepts retrieved for %s : %d%n", parentConcepts, childConceptKBHandle.size());
+            System.out.printf("Time required           : %d ms%n", duration);
+            childConceptKBHandle.stream().limit(10).forEach(h -> System.out.printf("   %s%n", h));
+
+            assertThat(childConceptKBHandle).as("Check that root concept list is not empty")
+                    .isNotEmpty();
+
+        }
+                
+        
+    }
 
     @Test
     public void thatPropertyListCanBeRetrieved()
