@@ -153,9 +153,10 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
     
     @Test
     public void listRootConcepts() {
-        List<KBHandle> rootConcepts = sut.listRootConcepts(kb, false);
-
-        assertThat(rootConcepts).as("Check that root concepts have been found").hasSize(kb.getMaxResults());
+        Stream<String> rootConcepts = sut.listRootConcepts(kb, false).stream().map(KBHandle::getIdentifier);
+        String expectedInstances = "http://www.wikidata.org/entity/Q35120";
+        
+        assertThat(rootConcepts).as("Check that root concepts have been found").contains(expectedInstances);
     }
 
     
@@ -219,6 +220,7 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
         kb_wikidata_direct.setName("Wikidata (official/direct mapping)");
         kb_wikidata_direct.setType(RepositoryType.REMOTE);
         kb_wikidata_direct.applyMapping(PROFILES.get("wikidata").getMapping());
+        kb_wikidata_direct.applyRootConcepts(PROFILES.get("wikidata"));
         kb_wikidata_direct.setReification(reification);
         kb_wikidata_direct.setDefaultLanguage("en");
         kb_wikidata_direct.setMaxResults(1000);

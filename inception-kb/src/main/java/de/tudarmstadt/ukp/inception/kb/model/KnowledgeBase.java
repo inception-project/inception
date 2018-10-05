@@ -41,6 +41,8 @@ import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
 import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.ValueFactory;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
@@ -49,6 +51,7 @@ import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseMapping;
+import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 
 @Entity
 @Table(name = "knowledgebase",
@@ -136,7 +139,7 @@ public class KnowledgeBase
      */
     @Column(nullable = false)
     private IRI propertyDescriptionIri;
-
+    
     @Column(nullable = false)
     private boolean readOnly;
 
@@ -396,6 +399,20 @@ public class KnowledgeBase
         setPropertyLabelIri(aMapping.getPropertyLabelIri());
         setPropertyDescriptionIri(aMapping.getPropertyDescriptionIri());
     }
+    
+    public void applyRootConcepts(KnowledgeBaseProfile aProfile)
+    {
+        if (aProfile.getRootConcepts() == null) {
+            setExplicitlyDefinedRootConcepts(new ArrayList<>());
+        }
+        else {
+            ValueFactory vf = SimpleValueFactory.getInstance();
+            for (String rootConcept : aProfile.getRootConcepts()) {
+                explicitlyDefinedRootConcepts.add(vf.createIRI(rootConcept));
+            } 
+        }
+    }
+    
     
     @Override
     public String toString()

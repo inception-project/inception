@@ -94,7 +94,7 @@ public final class SPARQLQueryStore
     {
         return String.join("\n"
                 , SPARQL_PREFIX    
-                , "SELECT DISTINCT ?s ?l ?d WHERE { "
+                , "SELECT DISTINCT ?s (MIN(?label) AS ?l) (MIN(?desc) AS ?d) WHERE { "
                 , "  { ?s ?pTYPE ?oCLASS . } "
                 , "  UNION { ?someSubClass ?pSUBCLASS ?s . } ."
                 , "  FILTER NOT EXISTS { "
@@ -102,13 +102,12 @@ public final class SPARQLQueryStore
                 , "    FILTER (?s != ?otherSub) }"
                 , "  FILTER NOT EXISTS { "
                 , "    ?s owl:intersectionOf ?list . }"
-                , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage(),"?l")
-                , optionalLanguageFilteredValue("?pDESCRIPTION", aKB.getDefaultLanguage(),"?d")
-                , "} "
+                , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage(),"?label")
+                , optionalLanguageFilteredValue("?pDESCRIPTION", aKB.getDefaultLanguage(),"?desc")
+                , "} GROUP BY ?s"
                 , "LIMIT " + aKB.getMaxResults());
     }
     
-
     /** 
      * Query to list child concepts from a knowledge base.
      */
@@ -116,14 +115,14 @@ public final class SPARQLQueryStore
     {
         return String.join("\n"
                 , SPARQL_PREFIX    
-                , "SELECT DISTINCT ?s ?l ?d WHERE { "
+                , "SELECT DISTINCT ?s (MIN(?label) AS ?l) (MIN(?desc) AS ?d) WHERE { "
                 , "  {?s ?pSUBCLASS ?oPARENT . }" 
                 , "  UNION { ?s ?pTYPE ?oCLASS ."
                 , "    ?s owl:intersectionOf ?list . "
                 , "    FILTER EXISTS { ?list rdf:rest*/rdf:first ?oPARENT} }"
-                , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage(),"?l")
-                , optionalLanguageFilteredValue("?pDESCRIPTION", aKB.getDefaultLanguage(),"?d")
-                , "}"
+                , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage(),"?label")
+                , optionalLanguageFilteredValue("?pDESCRIPTION", aKB.getDefaultLanguage(),"?desc")
+                , "} GROUP BY ?s"
                 , "LIMIT " + aKB.getMaxResults());
     }
     
