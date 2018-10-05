@@ -553,4 +553,12 @@ public interface KnowledgeBaseService
      */
     File readKbFileFromClassPathResource(String aLocation) throws IOException;
 
+    /**
+     * Checks whether a property is a base property
+     * @param propertyIdentifier the property that is to be checked
+     * @param aKB the KB
+     * @return true if the property is a base property, false otherwise
+     */
+    boolean isBaseProperty(String propertyIdentifier, KnowledgeBase aKB);
+
 }

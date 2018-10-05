@@ -93,9 +93,34 @@ public class StatementsPanel extends Panel {
         kbModel = aKbModel;
         instance = aInstance;
 
-        // default ordering for statement groups: lexical ordering by UI label
+        // default ordering for statement groups: lexical ordering by UI label and prefer base
+        // properties
         statementGroupComparator = LambdaModel
-                .of(() -> Comparator.comparing(sgb -> sgb.getProperty().getUiLabel()));
+                .of(() -> new Comparator<StatementGroupBean>()
+                    {
+                        @Override public int compare(StatementGroupBean o1, StatementGroupBean o2)
+                        {
+                            KBHandle prop1 = o1.getProperty();
+                            KBHandle prop2 = o2.getProperty();
+                            if (kbService
+                                .isBaseProperty(prop1.getIdentifier(), kbModel.getObject()) == true
+                                && kbService
+                                .isBaseProperty(prop2.getIdentifier(), kbModel.getObject())
+                                == false) {
+                                return 1;
+                            }
+                            else if (kbService
+                                .isBaseProperty(prop1.getUiLabel(), kbModel.getObject()) == false
+                                && kbService
+                                .isBaseProperty(prop2.getUiLabel(), kbModel.getObject())
+                                == true) {
+                                return -1;
+                            }
+                            else {
+                                return prop1.getUiLabel().compareToIgnoreCase(prop2.getUiLabel());
+                            }
+                        }
+                    });
         
         setUpDetailPreference(aDetailPreference);
 

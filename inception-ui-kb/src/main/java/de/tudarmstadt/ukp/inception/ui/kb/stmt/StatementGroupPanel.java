@@ -62,7 +62,6 @@ import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
-import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.ui.kb.WriteProtectionBehavior;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxPropertySelectionEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxStatementChangedEvent;
@@ -277,7 +276,7 @@ public class StatementGroupPanel extends Panel {
             addLink.add(new WriteProtectionBehavior(groupModel.bind("kb")));
             statementGroupFooter.add(addLink);
 
-            if (isPreferedProperty(statementGroupBean.getProperty().getIdentifier(),
+            if (kbService.isBaseProperty(statementGroupBean.getProperty().getIdentifier(),
                 statementGroupBean.getKb())) {
                 AttributeAppender highlightAppender = new AttributeAppender("style",
                     "background-color:LightGrey;font-weight:bold;");
@@ -341,15 +340,6 @@ public class StatementGroupPanel extends Panel {
             groupModel.getObject().getStatements().add(statementProto);
 
             target.add(statementListWrapper);
-        }
-
-        private boolean isPreferedProperty(String propertyIdentifier, KnowledgeBase aKB)
-        {
-            return propertyIdentifier.equals(aKB.getLabelIri().stringValue()) || propertyIdentifier
-                .equals(aKB.getSubclassIri().stringValue()) || propertyIdentifier
-                .equals(aKB.getDescriptionIri().stringValue()) || propertyIdentifier
-                .equals(aKB.getClassIri().stringValue()) || propertyIdentifier
-                .equals(aKB.getTypeIri().stringValue());
         }
     }
 }
