@@ -21,7 +21,6 @@ import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
 import java.util.List;
-import java.util.function.Function;
 
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Component;
@@ -53,7 +52,6 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.ui.kb.stmt.StatementDetailPreference;
-import de.tudarmstadt.ukp.inception.ui.kb.stmt.StatementGroupBean;
 import de.tudarmstadt.ukp.inception.ui.kb.stmt.StatementsPanel;
 
 /**
@@ -213,13 +211,7 @@ public abstract class AbstractInfoPanel<T extends KBObject> extends Panel {
 
     protected ImportantStatementComparator getStatementGroupComparator()
     {
-        return new ImportantStatementComparator(getIsStatementImportantFunction());
-    }
-
-    protected Function<StatementGroupBean, Boolean> getIsStatementImportantFunction()
-    {
-        return (statementGroupBean -> kbService
-            .isBaseProperty(statementGroupBean.getProperty().getIdentifier(), kbModel.getObject()));
+        return null;
     }
     
     public String getCreateSubclassButtonResourceKey()
