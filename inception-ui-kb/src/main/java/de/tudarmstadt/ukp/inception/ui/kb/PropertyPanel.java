@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.inception.ui.kb;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -37,7 +36,6 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxPropertySelectionEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.stmt.StatementDetailPreference;
-import de.tudarmstadt.ukp.inception.ui.kb.stmt.StatementGroupBean;
 
 public class PropertyPanel extends Panel {
 
@@ -95,7 +93,7 @@ public class PropertyPanel extends Panel {
         }
 
         @Override
-        protected Comparator<StatementGroupBean> getStatementGroupComparator() {
+        protected ImportantStatementComparator getStatementGroupComparator() {
             return new ImportantStatementComparator(
                 sgb -> IMPORTANT_PROPERTY_URIS.contains(sgb.getProperty().getIdentifier()));
         }

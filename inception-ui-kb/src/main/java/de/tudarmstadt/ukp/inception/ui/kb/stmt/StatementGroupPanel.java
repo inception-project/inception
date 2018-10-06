@@ -62,6 +62,7 @@ import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
+import de.tudarmstadt.ukp.inception.ui.kb.ImportantStatementComparator;
 import de.tudarmstadt.ukp.inception.ui.kb.WriteProtectionBehavior;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxPropertySelectionEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxStatementChangedEvent;
@@ -79,12 +80,15 @@ public class StatementGroupPanel extends Panel {
     private @SpringBean KnowledgeBaseService kbService;
 
     private CompoundPropertyModel<StatementGroupBean> groupModel;
+    private IModel<ImportantStatementComparator> statementGroupComparator;
     private Component content;
 
-    public StatementGroupPanel(String aId, CompoundPropertyModel<StatementGroupBean> aGroupModel) {
+    public StatementGroupPanel(String aId, CompoundPropertyModel<StatementGroupBean> aGroupModel,
+        IModel<ImportantStatementComparator> aStatementGroupComparator)
+    {
         super(aId, aGroupModel);
         groupModel = aGroupModel;
-               
+        statementGroupComparator = aStatementGroupComparator;
         setOutputMarkupId(true);
         
         if (groupModel.getObject().isNew()) {
@@ -276,8 +280,7 @@ public class StatementGroupPanel extends Panel {
             addLink.add(new WriteProtectionBehavior(groupModel.bind("kb")));
             statementGroupFooter.add(addLink);
 
-            if (kbService.isBaseProperty(statementGroupBean.getProperty().getIdentifier(),
-                statementGroupBean.getKb())) {
+            if (statementGroupComparator.getObject().getImportant().apply(statementGroupBean)) {
                 AttributeAppender highlightAppender = new AttributeAppender("style",
                     "background-color:LightGrey;font-weight:bold;");
                 statementGroupFooter.add(highlightAppender);

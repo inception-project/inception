@@ -20,8 +20,8 @@ package de.tudarmstadt.ukp.inception.ui.kb;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
-import java.util.Comparator;
 import java.util.List;
+import java.util.function.Function;
 
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Component;
@@ -203,16 +203,23 @@ public abstract class AbstractInfoPanel<T extends KBObject> extends Panel {
             // show statements about this KBObject
             StatementsPanel statementsPanel = new StatementsPanel("statements", kbModel,
                     handleModel, getDetailPreference());
-            Comparator<StatementGroupBean> comparator = getStatementGroupComparator();
+            ImportantStatementComparator comparator = getStatementGroupComparator();
             if (comparator != null) {
                 statementsPanel.setStatementGroupComparator(comparator);
             }
             add(statementsPanel);
         }
     }
-    
-    protected Comparator<StatementGroupBean> getStatementGroupComparator() {
-        return null;
+
+    protected ImportantStatementComparator getStatementGroupComparator()
+    {
+        return new ImportantStatementComparator(getIsStatementImportantFunction());
+    }
+
+    protected Function<StatementGroupBean, Boolean> getIsStatementImportantFunction()
+    {
+        return (statementGroupBean -> kbService
+            .isBaseProperty(statementGroupBean.getProperty().getIdentifier(), kbModel.getObject()));
     }
     
     public String getCreateSubclassButtonResourceKey()

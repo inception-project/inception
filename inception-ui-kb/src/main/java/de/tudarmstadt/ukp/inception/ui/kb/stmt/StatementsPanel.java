@@ -22,7 +22,6 @@ import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -56,6 +55,7 @@ import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
+import de.tudarmstadt.ukp.inception.ui.kb.ImportantStatementComparator;
 import de.tudarmstadt.ukp.inception.ui.kb.WriteProtectionBehavior;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxStatementGroupChangedEvent;
 
@@ -69,7 +69,7 @@ public class StatementsPanel extends Panel {
     private IModel<KBHandle> instance;
     private IModel<StatementDetailPreference> detailPreference;
     private WebMarkupContainer statementGroupListWrapper;
-    private IModel<Comparator<StatementGroupBean>> statementGroupComparator;
+    private IModel<ImportantStatementComparator> statementGroupComparator;
     
     private IModel<List<StatementGroupBean>> statementGroups;
     
@@ -93,35 +93,9 @@ public class StatementsPanel extends Panel {
         kbModel = aKbModel;
         instance = aInstance;
 
-        // default ordering for statement groups: lexical ordering by UI label and prefer base
-        // properties
+        // default ordering for statement groups: lexical ordering by UI label
         statementGroupComparator = LambdaModel
-                .of(() -> new Comparator<StatementGroupBean>()
-                    {
-                        @Override
-                        public int compare(StatementGroupBean o1, StatementGroupBean o2)
-                        {
-                            KBHandle prop1 = o1.getProperty();
-                            KBHandle prop2 = o2.getProperty();
-                            if (kbService
-                                .isBaseProperty(prop1.getIdentifier(), kbModel.getObject()) == true
-                                && kbService
-                                .isBaseProperty(prop2.getIdentifier(), kbModel.getObject())
-                                == false) {
-                                return 1;
-                            }
-                            else if (kbService
-                                .isBaseProperty(prop1.getUiLabel(), kbModel.getObject()) == false
-                                && kbService
-                                .isBaseProperty(prop2.getUiLabel(), kbModel.getObject())
-                                == true) {
-                                return -1;
-                            }
-                            else {
-                                return prop1.getUiLabel().compareToIgnoreCase(prop2.getUiLabel());
-                            }
-                        }
-                    });
+            .of(() -> new ImportantStatementComparator(sgb -> true));
         
         setUpDetailPreference(aDetailPreference);
 
@@ -144,12 +118,13 @@ public class StatementsPanel extends Panel {
                 };
             }
 
-            @Override
-            protected void populateItem(Item<StatementGroupBean> aItem) {
+            @Override protected void populateItem(Item<StatementGroupBean> aItem)
+            {
                 CompoundPropertyModel<StatementGroupBean> groupModel = new CompoundPropertyModel<>(
-                        LambdaModel.of(() -> aItem.getModelObject()));
+                    LambdaModel.of(() -> aItem.getModelObject()));
 
-                StatementGroupPanel panel = new StatementGroupPanel("statementGroup", groupModel);
+                StatementGroupPanel panel = new StatementGroupPanel("statementGroup", groupModel,
+                    statementGroupComparator);
                 aItem.add(panel);
             }
         };
@@ -260,7 +235,7 @@ public class StatementsPanel extends Panel {
     }
 
     public void setStatementGroupComparator(
-            Comparator<StatementGroupBean> statementGroupComparator) {
+            ImportantStatementComparator statementGroupComparator) {
         this.statementGroupComparator.setObject(statementGroupComparator);
     }
 
