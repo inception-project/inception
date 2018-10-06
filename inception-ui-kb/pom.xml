@@ -33,6 +33,7 @@
       <groupId>org.apache.uima</groupId>
       <artifactId>uimafit-core</artifactId>
     </dependency>
+    
     <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
       <artifactId>webanno-ui-core</artifactId>
@@ -176,12 +177,10 @@
       <groupId>de.agilecoders.wicket</groupId>
       <artifactId>wicket-bootstrap-core</artifactId>
     </dependency>
-
     <dependency>
       <groupId>de.agilecoders.wicket</groupId>
       <artifactId>wicket-bootstrap-less</artifactId>
     </dependency>
-
     <dependency>
       <groupId>com.googlecode.wicket-jquery-ui</groupId>
       <artifactId>wicket-jquery-ui-core</artifactId>
@@ -190,7 +189,11 @@
       <groupId>com.googlecode.wicket-jquery-ui</groupId>
       <artifactId>wicket-kendo-ui</artifactId>
     </dependency>
-	
+    <dependency>
+      <groupId>org.danekja</groupId>
+      <artifactId>jdk-serializable-functional</artifactId>
+    </dependency>
+
     <dependency>
       <groupId>javax.persistence</groupId>
       <artifactId>javax.persistence-api</artifactId>

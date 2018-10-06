@@ -46,12 +46,13 @@ import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.tcas.Annotation;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.util.CasCreationUtils;
-import org.apache.wicket.ajax.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.xml.sax.SAXException;
+
+import com.github.openjson.JSONObject;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
