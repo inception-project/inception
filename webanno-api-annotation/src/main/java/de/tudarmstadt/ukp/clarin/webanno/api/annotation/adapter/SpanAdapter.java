@@ -72,14 +72,12 @@ public class SpanAdapter
         super(aFeatureSupportRegistry, aEventPublisher, aLayer, aFeatures);
     }
 
-    @Deprecated
-    public boolean isLockToTokenOffsets()
+    public boolean isSingleTokenAnchoringMode()
     {
         return AnchoringMode.SINGLE_TOKEN.equals(getLayer().getAnchoringMode());
     }
 
-    @Deprecated
-    public boolean isAllowMultipleToken()
+    public boolean isTokensAnchoringMode()
     {
         return AnchoringMode.TOKENS.equals(getLayer().getAnchoringMode());
     }
@@ -116,7 +114,7 @@ public class SpanAdapter
             return createAnnotation(aState, aJCas.getCas(), aBegin, aEnd);
         }
         if (isCrossMultipleSentence() || isSameSentence(aJCas, aBegin, aEnd)) {
-            if (isLockToTokenOffsets()) {
+            if (isSingleTokenAnchoringMode()) {
                 List<Token> tokens = selectOverlapping(aJCas, Token.class, aBegin, aEnd);
 
                 if (tokens.isEmpty()) {
@@ -127,7 +125,7 @@ public class SpanAdapter
                         tokens.get(0).getEnd());
 
             }
-            else if (isAllowMultipleToken()) {
+            else if (isTokensAnchoringMode()) {
                 List<Token> tokens = selectOverlapping(aJCas, Token.class, aBegin, aEnd);
                 // update the begin and ends (no sub token selection
                 aBegin = tokens.get(0).getBegin();
@@ -155,12 +153,12 @@ public class SpanAdapter
         int begin;
         int end;
         // update the begin and ends (no sub token selection)
-        if (isLockToTokenOffsets()) {
+        if (isSingleTokenAnchoringMode()) {
             List<Token> tokens = selectOverlapping(aJCas, Token.class, aBegin, aEnd);
             begin = tokens.get(0).getBegin();
             end = tokens.get(tokens.size() - 1).getEnd();
         }
-        else if (isAllowMultipleToken()) {
+        else if (isTokensAnchoringMode()) {
             List<Token> tokens = selectOverlapping(aJCas, Token.class, aBegin, aEnd);
             begin = tokens.get(0).getBegin();
             end = tokens.get(tokens.size() - 1).getEnd();

@@ -40,16 +40,6 @@ public enum AnchoringMode
      */
     TOKENS("tokens");
 
-//    /**
-//     * Single sentence.
-//     */
-//    SINGLE_SENTENCE("singleSentence"),
-//
-//    /**
-//     * Multiple sentences.
-//     */
-//    SENTENCES("sentences");
-
     private final String id;
 
     AnchoringMode(String aId)
