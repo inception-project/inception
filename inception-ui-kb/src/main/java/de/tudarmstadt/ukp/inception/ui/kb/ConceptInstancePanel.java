@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.ui.kb;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.wicket.Component;
 import org.apache.wicket.extensions.markup.html.tabs.AbstractTab;
@@ -30,7 +31,7 @@ import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.eclipse.rdf4j.model.vocabulary.RDFS;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.query.QueryEvaluationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,6 +43,7 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
+import de.tudarmstadt.ukp.inception.kb.graph.RdfUtils;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxInstanceSelectionEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxNewInstanceEvent;
@@ -134,15 +136,29 @@ public class ConceptInstancePanel
             return;
         }
 
-        boolean isRenameEvent = statement.getProperty().getIdentifier()
-                .equals(RDFS.LABEL.stringValue());
-        if (!isRenameEvent) {
+        if (!isRenamingEvent(statement)) {
             return;
         }
-
-        instanceHandle.setName((String) statement.getValue());
+        Optional<KBInstance> kbInstance = kbService
+            .readInstance(kbModel.getObject(),
+                statement.getInstance().getIdentifier());
+        if (kbInstance.isPresent()) {
+            instanceHandle.setName(kbInstance.get().getName());
+        }
         selectedInstanceHandle.setObject(instanceHandle);
         event.getTarget().add(this);
+    }
+
+    private boolean isRenamingEvent(KBStatement aStatement)
+    {
+        String propertyIdentifier = aStatement.getProperty().getIdentifier();
+        SimpleValueFactory vf = SimpleValueFactory.getInstance();
+        boolean hasMainLabel = RdfUtils.readFirst(kbService.getConnection(kbModel.getObject()),
+            vf.createIRI(aStatement.getInstance().getIdentifier()),
+            kbModel.getObject().getLabelIri(), null).isPresent();
+        return propertyIdentifier.equals(kbModel.getObject().getLabelIri().stringValue()) || (
+            kbService.isSubpropertyLabel(kbModel.getObject(), propertyIdentifier)
+                && !hasMainLabel);
     }
 
     @OnEvent

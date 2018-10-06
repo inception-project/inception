@@ -149,9 +149,8 @@ public class KnowledgeBasePanel
     {
         // if this event is not about renaming (changing the RDFS label) of a KBObject, return
         KBStatement statement = event.getStatement();
-        String propertyIdentifier = statement.getProperty().getIdentifier();
 
-        if (isRenamingEvent(propertyIdentifier, statement)) {
+        if (isRenamingEvent(statement)) {
             // determine whether the concept name or property name was changed (or neither), then
             // update the name in the respective KBHandle
 
@@ -166,14 +165,6 @@ public class KnowledgeBasePanel
                         if (kbObject.isPresent()) {
                             model.getObject().setName(kbObject.get().getName());
                         }
-                        /*
-                        if (event.isDeleted()) {
-                            model.getObject().setName(null);
-                        }
-                        else if (statement.getValue() != null) {
-                            model.getObject().setName(statement.getValue().toString());
-                        }
-                        */
                         event.getTarget().add(this);
                     });
         }
@@ -182,14 +173,15 @@ public class KnowledgeBasePanel
         }
     }
 
-    private boolean isRenamingEvent(String aPropertyIdentifier, KBStatement aStatement)
+    private boolean isRenamingEvent(KBStatement aStatement)
     {
+        String propertyIdentifier = aStatement.getProperty().getIdentifier();
         SimpleValueFactory vf = SimpleValueFactory.getInstance();
         boolean hasMainLabel = RdfUtils.readFirst(kbService.getConnection(kbModel.getObject()),
             vf.createIRI(aStatement.getInstance().getIdentifier()),
             kbModel.getObject().getLabelIri(), null).isPresent();
-        return aPropertyIdentifier.equals(kbModel.getObject().getLabelIri().stringValue()) || (
-            kbService.isSubpropertyLabel(kbModel.getObject(), aPropertyIdentifier)
+        return propertyIdentifier.equals(kbModel.getObject().getLabelIri().stringValue()) || (
+            kbService.isSubpropertyLabel(kbModel.getObject(), propertyIdentifier)
                 && !hasMainLabel);
     }
 
