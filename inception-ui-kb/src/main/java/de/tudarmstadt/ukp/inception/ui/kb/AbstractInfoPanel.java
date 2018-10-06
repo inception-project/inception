@@ -105,7 +105,7 @@ public abstract class AbstractInfoPanel<T extends KBObject> extends Panel {
             // obtain AjaxRequestTarget and set the focus
             RequestCycle.get()
                     .find(AjaxRequestTarget.class)
-                    .focusComponent(editMode.getFocusComponent());
+                    .ifPresent(target -> target.focusComponent(editMode.getFocusComponent()));
             content = editMode;
         } else {
             content = new ViewMode(CONTENT_MARKUP_ID, CompoundPropertyModel.of(handleModel),

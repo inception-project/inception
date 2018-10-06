@@ -225,7 +225,6 @@ public class KnowledgeBaseDetailsPanel
         });
         form.add(new AjaxButton("save", form)
         {
-
             private static final long serialVersionUID = 3393631640806116694L;
 
             @Override public boolean isVisible()
@@ -233,8 +232,8 @@ public class KnowledgeBaseDetailsPanel
                 return isEditing;
             }
 
-            @SuppressWarnings("unchecked") @Override protected void onAfterSubmit(
-                AjaxRequestTarget target, Form<?> form)
+            @Override
+            protected void onAfterSubmit(AjaxRequestTarget target)
             {
                 // the call needs to occur in onAfterSubmit, otherwise the file uploads are
                 // submitted after actionSave is called

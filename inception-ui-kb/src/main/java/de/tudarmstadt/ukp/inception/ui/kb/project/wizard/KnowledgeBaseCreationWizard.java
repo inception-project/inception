@@ -32,10 +32,10 @@ import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.form.AjaxCheckBox;
 import org.apache.wicket.behavior.AttributeAppender;
-import org.apache.wicket.extensions.wizard.CancelButton;
 import org.apache.wicket.extensions.wizard.FinishButton;
 import org.apache.wicket.extensions.wizard.IWizard;
 import org.apache.wicket.extensions.wizard.IWizardStep;
+import org.apache.wicket.extensions.wizard.WizardButton;
 import org.apache.wicket.extensions.wizard.dynamic.DynamicWizardModel;
 import org.apache.wicket.extensions.wizard.dynamic.DynamicWizardStep;
 import org.apache.wicket.extensions.wizard.dynamic.IDynamicWizardStep;
@@ -622,7 +622,8 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
                         IWizardStep step = wizardModel.getActiveStep();
                         if (step.isComplete()) {
                             AjaxRequestTarget target = RequestCycle.get()
-                                    .find(AjaxRequestTarget.class);
+                                    .find(AjaxRequestTarget.class)
+                                    .get();
                             target.add(findParent(KnowledgeBaseListPanel.class));
                             findParent(KnowledgeBaseCreationDialog.class).close(target);
                         }
@@ -632,9 +633,9 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
             }
 
             @Override
-            protected CancelButton newCancelButton(String id, IWizard wizard)
+            protected WizardButton newCancelButton(String id, IWizard wizard)
             {
-                CancelButton button = super.newCancelButton(id, wizard);
+                WizardButton button = super.newCancelButton(id, wizard);
                 button.add(new AjaxEventBehavior("click") {
 
                     private static final long serialVersionUID = 3425946914411261187L;

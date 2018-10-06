@@ -154,11 +154,9 @@ public class ConceptFeatureEditor extends FeatureEditor {
         } catch (Exception e) {
             LOG.error("Unable to read traits", e);
             error("Unable to read traits: " + ExceptionUtils.getRootCauseMessage(e));
-            IPartialPageRequestHandler target = RequestCycle.get()
-                    .find(IPartialPageRequestHandler.class);
-            if (target != null) {
-                target.addChildren(getPage(), IFeedback.class);
-            }
+            RequestCycle.get()
+                    .find(IPartialPageRequestHandler.class)
+                    .ifPresent(target -> target.addChildren(getPage(), IFeedback.class));
         }
         // Sort results
         handles.sort(Comparator.comparing(KBObject::getUiLabel));
