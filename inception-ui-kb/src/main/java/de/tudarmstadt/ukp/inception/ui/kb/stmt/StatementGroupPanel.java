@@ -91,11 +91,10 @@ public class StatementGroupPanel extends Panel {
                     CONTENT_MARKUP_ID);
 
             // obtain AjaxRequestTarget and set the focus
-            AjaxRequestTarget target = RequestCycle.get()
-                    .find(AjaxRequestTarget.class);
-            if (target != null) {
-                target.focusComponent(newStatement.getFocusComponent());
-            }
+            RequestCycle.get()
+                    .find(AjaxRequestTarget.class)
+                    .ifPresent(target -> target.focusComponent(newStatement.getFocusComponent()));
+
             content = newStatement;
         } else {
             content = new ExistingStatementGroupFragment(CONTENT_MARKUP_ID);

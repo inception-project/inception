@@ -17,14 +17,15 @@
  */
 package de.tudarmstadt.ukp.inception.kb;
 
-import static org.junit.Assert.assertEquals;
-
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 
@@ -46,6 +47,7 @@ public class KnowledgeBaseProfileDeserializationTest
     public void checkThatDeserializationWorks() throws JsonParseException, JsonMappingException, IOException {
         String name = "Test KB";
         String url = "http://someurl/sparql";
+        List<String> rootConcepts =  new ArrayList<>();
         RepositoryType type = RepositoryType.LOCAL;
         String classIri = "http://www.w3.org/2000/01/rdf-schema#Class";
         String subclassIri = "http://www.w3.org/2000/01/rdf-schema#subClassOf";
@@ -55,7 +57,7 @@ public class KnowledgeBaseProfileDeserializationTest
         String descriptionIri = "http://www.w3.org/2000/01/rdf-schema#comment";
         String propertyLabelIri = "http://www.w3.org/2000/01/rdf-schema#label";
         String propertyDescriptionIri = "http://www.w3.org/2000/01/rdf-schema#comment";
-
+        
         KnowledgeBaseMapping referenceMapping = new KnowledgeBaseMapping(classIri, subclassIri,
             typeIri, descriptionIri, label, propertyTypeIri, propertyLabelIri,
             propertyDescriptionIri);
@@ -66,8 +68,10 @@ public class KnowledgeBaseProfileDeserializationTest
 
         referenceProfile.setMapping(referenceMapping);
         referenceProfile.setName(name);
+
         referenceProfile.setAccess(referenceAccess);
         referenceProfile.setType(type);
+        referenceProfile.setRootConcepts(rootConcepts);     
 
         PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
         Map<String, KnowledgeBaseProfile> profiles;
@@ -79,7 +83,6 @@ public class KnowledgeBaseProfileDeserializationTest
         }
         
         KnowledgeBaseProfile testProfile = profiles.get("test_profile");
-        
-        assertEquals(testProfile, referenceProfile);
+        Assertions.assertThat(testProfile).isEqualToComparingFieldByFieldRecursively(referenceProfile);
     }
 }

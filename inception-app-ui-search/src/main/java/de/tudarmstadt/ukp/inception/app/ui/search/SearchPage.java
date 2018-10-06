@@ -22,6 +22,7 @@ import java.util.List;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
@@ -222,23 +223,22 @@ public class SearchPage extends ApplicationPageBase
                 }
 
                 @Override
-                protected void onSelectionChanged(Project aNewSelection)
-                {
-                    SearchPage.this.currentProject = aNewSelection;
-                }
-
-                @Override
-                protected boolean wantOnSelectionChangedNotifications()
-                {
-                    return true;
-                }
-
-                @Override
                 protected CharSequence getDefaultChoice(String aSelectedValue)
                 {
                     return "";
                 }
             };
+            projectCombo.add(new AjaxFormComponentUpdatingBehavior("change")
+            {
+                private static final long serialVersionUID = 1698576308882366452L;
+
+                @Override
+                protected void onUpdate(AjaxRequestTarget aTarget)
+                {
+                    aTarget.add(getPage());
+                }
+            });
+            
             add(projectCombo);
 
         }

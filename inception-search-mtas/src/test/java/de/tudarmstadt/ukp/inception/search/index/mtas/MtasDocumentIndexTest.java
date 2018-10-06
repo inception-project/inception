@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.search.index.mtas;
 
+import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -27,7 +28,6 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.uima.fit.factory.JCasBuilder;
@@ -60,6 +60,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistryImpl;
@@ -73,6 +74,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.dao.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.initializers.NamedEntityLayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.initializers.PartOfSpeechLayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.initializers.TokenLayerInitializer;
+import de.tudarmstadt.ukp.clarin.webanno.conll.Conll2002FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -84,10 +86,9 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDaoImpl;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
+import de.tudarmstadt.ukp.clarin.webanno.text.TextFormatSupport;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.dkpro.core.io.text.TextReader;
-import de.tudarmstadt.ukp.dkpro.core.io.text.TextWriter;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseServiceImpl;
 import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupport;
@@ -209,6 +210,7 @@ public class MtasDocumentIndexTest
     {
         Project project = new Project();
         project.setName("TestRawTextQuery");
+        project.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
 
         createProject(project);
 
@@ -254,6 +256,7 @@ public class MtasDocumentIndexTest
     {
         Project project = new Project();
         project.setName("SimplifiedTokenTextQuery");
+        project.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
 
         createProject(project);
 
@@ -297,12 +300,12 @@ public class MtasDocumentIndexTest
     public void testAnnotationQuery() throws Exception
     {
         Project project = new Project();
-
         project.setName("TestAnnotationQuery");
-
-        User user = userRepository.get("admin");
+        project.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
 
         createProject(project);
+
+        User user = userRepository.get("admin");
 
         SourceDocument sourceDocument = new SourceDocument();
 
@@ -506,7 +509,9 @@ public class MtasDocumentIndexTest
         @Bean
         public ImportExportService importExportService()
         {
-            return new ImportExportServiceImpl();
+            return new ImportExportServiceImpl(
+                    asList(new TextFormatSupport(), new Conll2002FormatSupport()),
+                    casStorageService(), annotationSchemaService());
         }
 
         @Bean
@@ -525,21 +530,6 @@ public class MtasDocumentIndexTest
         public BackupProperties backupProperties()
         {
             return new BackupProperties();
-        }
-
-        @Bean
-        public Properties formats()
-        {
-            Properties props = new Properties();
-            props.put("text.label", "Plain text");
-            props.put("text.reader", TextReader.class.getName());
-            props.put("text.writer", TextWriter.class.getName());
-            props.put("conll2002.label", "CoNLL 2002");
-            props.put("conll2002.reader",
-                    de.tudarmstadt.ukp.dkpro.core.io.conll.Conll2002Reader.class.getName());
-            props.put("conll2002.writer",
-                    de.tudarmstadt.ukp.dkpro.core.io.conll.Conll2002Writer.class.getName());
-            return props;
         }
 
         @Bean

@@ -31,10 +31,10 @@ import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AttributeAppender;
-import org.apache.wicket.extensions.wizard.CancelButton;
 import org.apache.wicket.extensions.wizard.FinishButton;
 import org.apache.wicket.extensions.wizard.IWizard;
 import org.apache.wicket.extensions.wizard.IWizardStep;
+import org.apache.wicket.extensions.wizard.WizardButton;
 import org.apache.wicket.extensions.wizard.dynamic.DynamicWizardModel;
 import org.apache.wicket.extensions.wizard.dynamic.DynamicWizardStep;
 import org.apache.wicket.extensions.wizard.dynamic.IDynamicWizardStep;
@@ -145,6 +145,10 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
 
     private void setKbIRIsAccordingToProfile(KnowledgeBase kb, KnowledgeBaseProfile kbProfile) {
         kb.applyMapping(kbProfile.getMapping());
+    }
+    
+    private void setKbRootConcepts(KnowledgeBase kb, KnowledgeBaseProfile kbProfile) {
+        kb.applyRootConcepts(kbProfile);
     }
 
     /**
@@ -466,9 +470,12 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
                     LambdaAjaxLink link = new LambdaAjaxLink("suggestionLink", t -> {
                         // set all the fields according to the chosen profile
                         model.getObject().setUrl(item.getModelObject().getAccess().getAccessUrl());
+                        // sets root concepts list - if null then an empty list otherwise change teh
+                        // values to IRI and populate the list
+                        setKbRootConcepts(model.getObject().getKb(),
+                            item.getModelObject());
                         setKbIRIsAccordingToProfile(model.getObject().getKb(),
                             item.getModelObject());
-
                         t.add(urlField);
                     });
                     link.add(new Label("suggestionLabel", item.getModelObject().getName()));
@@ -520,6 +527,7 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
         public void applyState()
         {   
             KnowledgeBaseWrapper wrapper = wizardDataModel.getObject();
+            
             wrapper.getKb().setProject(projectModel.getObject());
 
             try {
@@ -573,7 +581,8 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
                         IWizardStep step = wizardModel.getActiveStep();
                         if (step.isComplete()) {
                             AjaxRequestTarget target = RequestCycle.get()
-                                    .find(AjaxRequestTarget.class);
+                                    .find(AjaxRequestTarget.class)
+                                    .get();
                             target.add(findParent(KnowledgeBaseListPanel.class));
                             findParent(KnowledgeBaseCreationDialog.class).close(target);
                         }
@@ -583,9 +592,9 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
             }
 
             @Override
-            protected CancelButton newCancelButton(String id, IWizard wizard)
+            protected WizardButton newCancelButton(String id, IWizard wizard)
             {
-                CancelButton button = super.newCancelButton(id, wizard);
+                WizardButton button = super.newCancelButton(id, wizard);
                 button.add(new AjaxEventBehavior("click") {
 
                     private static final long serialVersionUID = 3425946914411261187L;
