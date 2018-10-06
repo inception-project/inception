@@ -113,10 +113,14 @@ public class AnnotationLayer
     @Type(type = "de.tudarmstadt.ukp.clarin.webanno.model.AnchoringModeType")
     private AnchoringMode anchoringMode = AnchoringMode.TOKENS;
     
+    // This column is no longer used and should be removed with the next major version.
+    // At that time, a corresponding Liquibase changeset needs to be introduced as well.
     @Deprecated
     @Column(name = "multipleTokens")
     private boolean multipleTokens;
     
+    // This column is no longer used and should be removed with the next major version
+    // At that time, a corresponding Liquibase changeset needs to be introduced as well.
     @Deprecated
     @Column(name = "lockToTokenOffset")
     private boolean lockToTokenOffset = true;
@@ -424,16 +428,15 @@ public class AnnotationLayer
         }
     }
 
+    /**
+     * @deprecated Superseded by {@link AnnotationLayer#getAnchoringMode()} but
+     * kept around for the time being to enable backwards compatibility of exported projects with 
+     * older versions of WebAnno.
+     */
     @Deprecated
     public boolean isLockToTokenOffset()
     {
         return AnchoringMode.SINGLE_TOKEN.equals(anchoringMode);
-    }
-
-    @Deprecated
-    public void setLockToTokenOffset(boolean lockToTokenOffset)
-    {
-        this.lockToTokenOffset = lockToTokenOffset;
     }
 
     public boolean isAllowStacking()
@@ -466,16 +469,15 @@ public class AnnotationLayer
         this.showTextInHover = showTextInHover;
     }
 
+    /**
+     * @deprecated Superseded by {@link AnnotationLayer#getAnchoringMode()} but
+     * kept around for the time being to enable backwards compatibility of exported projects with 
+     * older versions of WebAnno.
+     */
     @Deprecated
     public boolean isMultipleTokens()
     {
         return AnchoringMode.TOKENS.equals(anchoringMode);
-    }
-
-    @Deprecated
-    public void setMultipleTokens(boolean multipleTokens)
-    {
-        this.multipleTokens = multipleTokens;
     }
 
     public boolean isLinkedListBehavior()

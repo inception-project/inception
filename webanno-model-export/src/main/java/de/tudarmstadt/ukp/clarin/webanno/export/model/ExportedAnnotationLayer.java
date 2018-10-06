@@ -179,12 +179,22 @@ public class ExportedAnnotationLayer
         return anchoringMode;
     }
     
+    /**
+     * @deprecated Superseded by {@link ExportedAnnotationLayer#getAnchoringMode()} but
+     * kept around for the time being to enable backwards compatibility of exported projects with 
+     * older versions of WebAnno.
+     */
     @Deprecated
     public boolean isLockToTokenOffset()
     {
         return lockToTokenOffset;
     }
 
+    /**
+     * @deprecated Superseded by {@link ExportedAnnotationLayer#setAnchoringMode(AnchoringMode)} but
+     * kept around for the time being to enable backwards compatibility of exported projects with 
+     * older versions of WebAnno.
+     */
     @Deprecated
     public void setLockToTokenOffset(boolean lockToTokenOffset)
     {
@@ -221,12 +231,22 @@ public class ExportedAnnotationLayer
         this.showTextInHover = showTextInHover;
     }
 
+    /**
+     * @deprecated Superseded by {@link ExportedAnnotationLayer#getAnchoringMode()} but
+     * kept around for the time being to enable backwards compatibility of exported projects with 
+     * older versions of WebAnno.
+     */
     @Deprecated
     public boolean isMultipleTokens()
     {
         return multipleTokens;
     }
 
+    /**
+     * @deprecated Superseded by {@link ExportedAnnotationLayer#setAnchoringMode(AnchoringMode)} but
+     * kept around for the time being to enable backwards compatibility of exported projects with 
+     * older versions of WebAnno.
+     */
     @Deprecated
     public void setMultipleTokens(boolean multipleTokens)
     {
