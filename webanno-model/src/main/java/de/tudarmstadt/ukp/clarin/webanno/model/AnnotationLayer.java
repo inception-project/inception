@@ -428,17 +428,6 @@ public class AnnotationLayer
         }
     }
 
-    /**
-     * @deprecated Superseded by {@link AnnotationLayer#getAnchoringMode()} but
-     * kept around for the time being to enable backwards compatibility of exported projects with 
-     * older versions of WebAnno.
-     */
-    @Deprecated
-    public boolean isLockToTokenOffset()
-    {
-        return AnchoringMode.SINGLE_TOKEN.equals(anchoringMode);
-    }
-
     public boolean isAllowStacking()
     {
         return allowStacking;
@@ -467,17 +456,6 @@ public class AnnotationLayer
     public void setShowTextInHover(boolean showTextInHover)
     {
         this.showTextInHover = showTextInHover;
-    }
-
-    /**
-     * @deprecated Superseded by {@link AnnotationLayer#getAnchoringMode()} but
-     * kept around for the time being to enable backwards compatibility of exported projects with 
-     * older versions of WebAnno.
-     */
-    @Deprecated
-    public boolean isMultipleTokens()
-    {
-        return AnchoringMode.TOKENS.equals(anchoringMode);
     }
 
     public boolean isLinkedListBehavior()

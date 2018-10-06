@@ -73,6 +73,7 @@ import de.tudarmstadt.ukp.clarin.webanno.automation.model.AutomationStatus;
 import de.tudarmstadt.ukp.clarin.webanno.automation.model.MiraTemplate;
 import de.tudarmstadt.ukp.clarin.webanno.automation.service.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -445,7 +446,7 @@ public class AutomationUtil
                 JCas jCas = aAutomationServic.readTrainingAnnotationCas(trainingDocument);
                 for (Sentence sentence : select(jCas, Sentence.class)) {
 
-                    if (aFeature.getLayer().isMultipleTokens()) {
+                    if (AnchoringMode.TOKENS.equals(aFeature.getLayer().getAnchoringMode())) {
                         annotations.addAll(((SpanAdapter) adapter)
                                 .getMultipleAnnotation(sentence, aFeature).values());
                     }
@@ -463,7 +464,7 @@ public class AutomationUtil
                     user);
             JCas jCas = aRepository.readAnnotationCas(annodoc);
             for (Sentence sentence : select(jCas, Sentence.class)) {
-                if (aFeature.getLayer().isMultipleTokens()) {
+                if (AnchoringMode.TOKENS.equals(aFeature.getLayer().getAnchoringMode())) {
                     annotations.addAll(((SpanAdapter) adapter)
                             .getMultipleAnnotation(sentence, aFeature).values());
                 }
@@ -730,7 +731,7 @@ public class AutomationUtil
         List<String> annotations = new ArrayList<>();
         Map<Integer, String> multAnno = null;
         if (aLayerFeature != null) {
-            if (aLayerFeature.getLayer().isMultipleTokens()) {
+            if (AnchoringMode.TOKENS.equals(aLayerFeature.getLayer().getAnchoringMode())) {
                 multAnno = ((SpanAdapter) aAdapter).getMultipleAnnotation(sentence, aLayerFeature);
             }
             else {
@@ -746,7 +747,10 @@ public class AutomationUtil
             char[] words = word.toCharArray();
 
             String prefix1 = "", prefix2 = "", prefix3 = "", prefix4 = "", suffix1 = "", suffix2 = "", suffix3 = "", suffix4 = "";
-            if (aLayerFeature == null || aLayerFeature.getLayer().isLockToTokenOffset()) {
+            if (
+                    aLayerFeature == null || 
+                    AnchoringMode.SINGLE_TOKEN.equals(aLayerFeature.getLayer().getAnchoringMode())
+            ) {
                 prefix1 = Character.toString(words[0]) + " ";
                 prefix2 = (words.length > 1 ? prefix1.trim()
                         + (Character.toString(words[1]).trim().equals("") ? "__nil__" : Character
@@ -777,7 +781,7 @@ public class AutomationUtil
             String nl = "\n";
 
             if (aLayerFeature != null) {
-                if (aLayerFeature.getLayer().isMultipleTokens()) {
+                if (AnchoringMode.TOKENS.equals(aLayerFeature.getLayer().getAnchoringMode())) {
                     tag = multAnno.get(getAddr(token)) == null ? "O" : multAnno.get(getAddr(token));
                 }
                 else {
@@ -875,7 +879,7 @@ public class AutomationUtil
 
             boolean randomInit = false;
 
-            if (!feature.getLayer().isLockToTokenOffset()) {
+            if (!AnchoringMode.SINGLE_TOKEN.equals(feature.getLayer().getAnchoringMode())) {
                 mira.setIobScorer();
             }
             mira.loadTemplates(templateName);
@@ -968,7 +972,10 @@ public class AutomationUtil
     {
 
         StringBuffer sb = new StringBuffer();
-        if (aFeature == null || aFeature.getLayer().isLockToTokenOffset()) {
+        if (
+                aFeature == null || 
+                AnchoringMode.SINGLE_TOKEN.equals(aFeature.getLayer().getAnchoringMode())
+        ) {
             setMorphoTemplate(sb, aOther);
         }
         else {
@@ -1249,7 +1256,7 @@ public class AutomationUtil
         }
 
         boolean randomInit = false;
-        if (!layerFeature.getLayer().isLockToTokenOffset()) {
+        if (!AnchoringMode.SINGLE_TOKEN.equals(layerFeature.getLayer().getAnchoringMode())) {
             mira.setIobScorer();
         }
         mira.loadTemplates(trainTemplate);
@@ -1494,7 +1501,7 @@ public class AutomationUtil
             StringTokenizer st = new StringTokenizer(line, " ");
             // if the target feature is on multiple token, we do not need the morphological features
             // in the prediction file
-            if (aFeature.getLayer().isMultipleTokens()) {
+            if (AnchoringMode.TOKENS.equals(aFeature.getLayer().getAnchoringMode())) {
                 predBuffer.append(st.nextToken()).append(" ");
             }
             else {
@@ -1547,7 +1554,10 @@ public class AutomationUtil
         // automation, no care
         clearAnnotations(aJcas, type);
 
-        if (!aFeature.getLayer().isLockToTokenOffset() || aFeature.getLayer().isMultipleTokens()) {
+        if (
+                !AnchoringMode.SINGLE_TOKEN.equals(aFeature.getLayer().getAnchoringMode()) || 
+                AnchoringMode.TOKENS.equals(aFeature.getLayer().getAnchoringMode())
+        ) {
             for (Token token : select(aJcas, Token.class)) {
                 String value = aLabelValues.get(i);
                 AnnotationFS newAnnotation;
