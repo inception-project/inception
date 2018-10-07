@@ -28,23 +28,30 @@ public enum AnchoringMode
     /**
      * Any number of characters - allows zero-span annotations as well.
      */
-    CHARACTERS("characters"),
+    CHARACTERS("characters", true),
     
     /**
      * Single token - no zero-span annotations.
      */
-    SINGLE_TOKEN("singleToken"),
+    SINGLE_TOKEN("singleToken", false),
     
     /**
      * Any number of tokens - allows zero-span annotations as well.
      */
-    TOKENS("tokens");
+    TOKENS("tokens", true),
+    
+    /**
+     * Any number of sentences - allows zero-span annotations as well.
+     */
+    SENTENCES("sentences", true);
 
     private final String id;
+    private final boolean zeroSpanAllowed;
 
-    AnchoringMode(String aId)
+    AnchoringMode(String aId, boolean aZeroSpanAllowed)
     {
         id = aId;
+        zeroSpanAllowed = aZeroSpanAllowed; 
     }
 
     @Override
@@ -62,5 +69,10 @@ public enum AnchoringMode
     public String toString()
     {
         return getId();
+    }
+    
+    public boolean isZeroSpanAllowed()
+    {
+        return zeroSpanAllowed;
     }
 }

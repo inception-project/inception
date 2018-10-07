@@ -253,7 +253,10 @@ NOTE: It is currently not possible to create relations between spans in differen
 
 | Granularity
 _(span, chain)_
-| The granularity controls at which level annotations can be created. When set to **Character-level**, annotations can be created anywhere. Zero-width annotations are permitted. When set to **Token-level**, annotation boundaries are forced to coincide with token boundaries. If the selection is smaller than a token, the annotation is expanded to the next larger token covering the selection. Again, zero-width annotations are permitted. When set to **Single tokens only** may be applied only to a single token. If the selection covers multiple tokens, the annotation is reduced to the first covered token at a time. Zero-width annotations are not permitted in this mode.
+| The granularity controls at which level annotations can be created. When set to **Character-level**, annotations can be created anywhere. Zero-width annotations are permitted. When set to **Token-level** or **Sentence-level** annotation boundaries are forced to coincide with token/sentence boundaries. If the selection is smaller, the annotation is expanded to the next larger token/sentence covering the selection. Again, zero-width annotations are permitted. When set to **Single tokens only** may be applied only to a single token. If the selection covers multiple tokens, the annotation is reduced to the first covered token at a time. Zero-width annotations are not permitted in this mode. Note that
+in order for the **Sentence-level** mode to allow annotating multiple sentences, the 
+**Allow crossing sentence boundary** setting must be enabled, otherwise only individual sentences
+can be annotated.
 
 | Allow stacking
 | Allow multiple annotations in this layer to be made at exactly the same position. If this option is disabled, a new annotation made at the same location as an existing annotation will replace the existing annotation.

@@ -215,7 +215,7 @@ public class AnnotationDetailEditorPanel
         Selection selection = state.getSelection();
         List<FeatureState> featureStates = state.getFeatureStates();
 
-        if ((aAdapter.isTokensAnchoringMode() || aAdapter.isSingleTokenAnchoringMode())
+        if ((aAdapter.getLayer().getAnchoringMode().isZeroSpanAllowed())
                 && selection.getBegin() == selection.getEnd()) {
             throw new AnnotationException(
                     "Cannot create zero-width annotation on layers that lock to token boundaries.");

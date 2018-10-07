@@ -28,13 +28,10 @@ import static org.apache.uima.fit.util.JCasUtil.selectCovered;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.CASException;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
@@ -49,7 +46,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.MultipleSenten
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
@@ -72,27 +68,6 @@ public class SpanAdapter
         super(aFeatureSupportRegistry, aEventPublisher, aLayer, aFeatures);
     }
 
-    public boolean isSingleTokenAnchoringMode()
-    {
-        return AnchoringMode.SINGLE_TOKEN.equals(getLayer().getAnchoringMode());
-    }
-
-    public boolean isTokensAnchoringMode()
-    {
-        return AnchoringMode.TOKENS.equals(getLayer().getAnchoringMode());
-    }
-
-    public boolean isAllowStacking()
-    {
-        return getLayer().isAllowStacking();
-    }
-
-    public boolean isCrossMultipleSentence()
-    {
-        return getLayer().isCrossSentence();
-    }
-
-
     /**
      * Add new span annotation into the CAS and return the the id of the span annotation
      *
@@ -113,8 +88,12 @@ public class SpanAdapter
         if (aBegin == aEnd) {
             return createAnnotation(aState, aJCas.getCas(), aBegin, aEnd);
         }
-        if (isCrossMultipleSentence() || isSameSentence(aJCas, aBegin, aEnd)) {
-            if (isSingleTokenAnchoringMode()) {
+        if (getLayer().isCrossSentence() || isSameSentence(aJCas, aBegin, aEnd)) {
+            switch (getLayer().getAnchoringMode()) {
+            case CHARACTERS: {
+                return createAnnotation(aState, aJCas.getCas(), aBegin, aEnd);
+            }
+            case SINGLE_TOKEN: {
                 List<Token> tokens = selectOverlapping(aJCas, Token.class, aBegin, aEnd);
 
                 if (tokens.isEmpty()) {
@@ -123,17 +102,24 @@ public class SpanAdapter
                 
                 return createAnnotation(aState, aJCas.getCas(), tokens.get(0).getBegin(),
                         tokens.get(0).getEnd());
-
             }
-            else if (isTokensAnchoringMode()) {
+            case TOKENS: {
                 List<Token> tokens = selectOverlapping(aJCas, Token.class, aBegin, aEnd);
-                // update the begin and ends (no sub token selection
+                // update the begin and ends (no sub token selection)
                 aBegin = tokens.get(0).getBegin();
                 aEnd = tokens.get(tokens.size() - 1).getEnd();
                 return createAnnotation(aState, aJCas.getCas(), aBegin, aEnd);
             }
-            else {
+            case SENTENCES: {
+                List<Sentence> sentences = selectOverlapping(aJCas, Sentence.class, aBegin, aEnd);
+                // update the begin and ends (no sub token selection)
+                aBegin = sentences.get(0).getBegin();
+                aEnd = sentences.get(sentences.size() - 1).getEnd();
                 return createAnnotation(aState, aJCas.getCas(), aBegin, aEnd);
+            }
+            default:
+                throw new IllegalStateException(
+                        "Unsupported anchoring mode: [" + getLayer().getAnchoringMode() + "]");
             }
         }
         else {
@@ -146,26 +132,39 @@ public class SpanAdapter
     public Serializable getSpan(JCas aJCas, int aBegin, int aEnd, AnnotationFeature aFeature,
             String aLabelValue)
     {
-        if (isAllowStacking()) {
+        if (getLayer().isAllowStacking()) {
             return null;
         }
         
         int begin;
         int end;
         // update the begin and ends (no sub token selection)
-        if (isSingleTokenAnchoringMode()) {
-            List<Token> tokens = selectOverlapping(aJCas, Token.class, aBegin, aEnd);
-            begin = tokens.get(0).getBegin();
-            end = tokens.get(tokens.size() - 1).getEnd();
-        }
-        else if (isTokensAnchoringMode()) {
-            List<Token> tokens = selectOverlapping(aJCas, Token.class, aBegin, aEnd);
-            begin = tokens.get(0).getBegin();
-            end = tokens.get(tokens.size() - 1).getEnd();
-        }
-        else {
+        switch (getLayer().getAnchoringMode()) {
+        case CHARACTERS:
             begin = aBegin;
             end = aEnd;
+            break;
+        case SINGLE_TOKEN: {
+            List<Token> tokens = selectOverlapping(aJCas, Token.class, aBegin, aEnd);
+            begin = tokens.get(0).getBegin();
+            end = tokens.get(tokens.size() - 1).getEnd();
+            break;
+        }
+        case TOKENS: {
+            List<Token> tokens = selectOverlapping(aJCas, Token.class, aBegin, aEnd);
+            begin = tokens.get(0).getBegin();
+            end = tokens.get(tokens.size() - 1).getEnd();
+            break;
+        }
+        case SENTENCES: {
+            List<Sentence> sentences = selectOverlapping(aJCas, Sentence.class, aBegin, aEnd);
+            begin = sentences.get(0).getBegin();
+            end = sentences.get(sentences.size() - 1).getEnd();
+            break;
+        }
+        default:
+            throw new IllegalStateException(
+                    "Unsupported anchoring mode: [" + getLayer().getAnchoringMode() + "]");
         }
         
         Type type = CasUtil.getType(aJCas.getCas(), getAnnotationTypeName());
@@ -189,7 +188,7 @@ public class SpanAdapter
         Type type = CasUtil.getType(aCas, getAnnotationTypeName());
         for (AnnotationFS fs : CasUtil.selectCovered(aCas, type, aBegin, aEnd)) {
             if (fs.getBegin() == aBegin && fs.getEnd() == aEnd) {
-                if (!isAllowStacking()) {
+                if (!getLayer().isAllowStacking()) {
                     return getAddr(fs);
                 }
             }
@@ -300,31 +299,6 @@ public class SpanAdapter
             }
         }
         return annotations;
-    }
-
-    public Map<Integer, String> getMultipleAnnotation(Sentence sentence, AnnotationFeature aFeature)
-        throws CASException
-    {
-        Map<Integer, String> multAnno = new HashMap<>();
-        Type type = getType(sentence.getCAS(), getAnnotationTypeName());
-        for (AnnotationFS fs : selectCovered(type, sentence)) {
-            boolean isBegin = true;
-            Feature labelFeature = fs.getType().getFeatureByBaseName(aFeature.getName());
-            for (Token token : selectCovered(Token.class, fs)) {
-                if (multAnno.get(getAddr(token)) == null) {
-                    if (isBegin) {
-                        multAnno.put(getAddr(token),
-                                "B-" + fs.getFeatureValueAsString(labelFeature));
-                        isBegin = false;
-                    }
-                    else {
-                        multAnno.put(getAddr(token),
-                                "I-" + fs.getFeatureValueAsString(labelFeature));
-                    }
-                }
-            }
-        }
-        return multAnno;
     }
 
     /**
