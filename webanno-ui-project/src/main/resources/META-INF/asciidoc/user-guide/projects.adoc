@@ -189,7 +189,7 @@ image::layer1.jpg[align="center"]
 NOTE: When a layer is first created, only ASCII characters are allowed for the layer name because the internal UIMA type name is derived from the initial layer name. After the layer has been created, the name can be changed arbitrarily. The internal UIMA type name will not be updated. The internal UIMA name is
 e.g. used when exporting data or in constraint rules.
 
-image::layer2.jpg[align="center"]
+image::layer_details.png[align="center"]
 
 [[sect_projects_layers_technical_properties]]
 ==== Technical Properties 
@@ -251,13 +251,9 @@ NOTE: It is currently not possible to create relations between spans in differen
 | Read-only
 | The layer may be viewed but not edited.
 
-| Lock to token offsets
+| Granularity
 _(span, chain)_
-| Annotation boundaries are forced to coincide with token boundaries. If the selection is smaller than a token, the annotation is expanded to the next larger token covering the selection. If the selection covers multiple tokens, the annotation is reduced to the first covered token.
-
-| Allow multiple tokens
-_(span, chain)_
-| Like _Lock to token offsets_ except that the annotation may cover multiple tokens. If this is enabled, then _Lock to token offsets_ is automatically disabled.
+| The granularity controls at which level annotations can be created. When set to **Character-level**, annotations can be created anywhere. Zero-width annotations are permitted. When set to **Token-level**, annotation boundaries are forced to coincide with token boundaries. If the selection is smaller than a token, the annotation is expanded to the next larger token covering the selection. Again, zero-width annotations are permitted. When set to **Single tokens only** may be applied only to a single token. If the selection covers multiple tokens, the annotation is reduced to the first covered token at a time. Zero-width annotations are not permitted in this mode.
 
 | Allow stacking
 | Allow multiple annotations in this layer to be made at exactly the same position. If this option is disabled, a new annotation made at the same location as an existing annotation will replace the existing annotation.
@@ -269,8 +265,6 @@ _(chain)_
 | Behave like a linked list
 | Controls what happens when two chains are connected with each other. If this option is *disabled*, then the two entire chains will be merged into one large chain. Links between spans will be changed so that each span connects to the closest following span -  no arc labels are displayed. If this option is *enabled*, then the chains will be split if necessary at the source and target points, reconnecting the spans such that exactly the newly created connection is made - arc labels are available.
 |====
-
-NOTE: In order to create sub-token annotations, both *Lock to token offsets* and *Allow multiple tokens* need to be disabled.
 
 [[sect_projects_layers_features]]
 ==== Features

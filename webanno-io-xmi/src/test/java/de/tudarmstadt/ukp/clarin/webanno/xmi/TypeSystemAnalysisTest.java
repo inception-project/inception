@@ -29,6 +29,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.testing.DkproTestContext;
@@ -51,7 +52,7 @@ public class TypeSystemAnalysisTest
         spanLayer.setName("webanno.custom.Span");
         spanLayer.setUiName("Span");
         spanLayer.setType(WebAnnoConst.SPAN_TYPE);
-        spanLayer.setLockToTokenOffset(false);
+        spanLayer.setAnchoringMode(AnchoringMode.CHARACTERS);
         spanLayer.setAllowStacking(true);
         spanLayer.setCrossSentence(true);
         
@@ -84,7 +85,7 @@ public class TypeSystemAnalysisTest
         slotSpanLayer.setName("webanno.custom.SlotSpan");
         slotSpanLayer.setUiName("SlotSpan");
         slotSpanLayer.setType(WebAnnoConst.SPAN_TYPE);
-        slotSpanLayer.setLockToTokenOffset(false);
+        slotSpanLayer.setAnchoringMode(AnchoringMode.CHARACTERS);
         slotSpanLayer.setAllowStacking(true);
         slotSpanLayer.setCrossSentence(true);
         
@@ -115,7 +116,7 @@ public class TypeSystemAnalysisTest
         relationLayer.setName("webanno.custom.Relation");
         relationLayer.setUiName("Relation");
         relationLayer.setType(WebAnnoConst.RELATION_TYPE);
-        relationLayer.setLockToTokenOffset(false);
+        relationLayer.setAnchoringMode(AnchoringMode.CHARACTERS);
         relationLayer.setAllowStacking(true);
         relationLayer.setCrossSentence(true);
 
@@ -123,7 +124,7 @@ public class TypeSystemAnalysisTest
         relationTargetLayer.setName("webanno.custom.RelationTarget");
         relationTargetLayer.setUiName("RelationTarget");
         relationTargetLayer.setType(WebAnnoConst.SPAN_TYPE);
-        relationTargetLayer.setLockToTokenOffset(false);
+        relationTargetLayer.setAnchoringMode(AnchoringMode.CHARACTERS);
         relationTargetLayer.setAllowStacking(true);
         relationTargetLayer.setCrossSentence(true);
 
@@ -157,7 +158,7 @@ public class TypeSystemAnalysisTest
         chainLayer.setName("webanno.custom.Chain");
         chainLayer.setUiName("Chain");
         chainLayer.setType(WebAnnoConst.CHAIN_TYPE);
-        chainLayer.setLockToTokenOffset(false);
+        chainLayer.setAnchoringMode(AnchoringMode.CHARACTERS);
         chainLayer.setAllowStacking(true);
         chainLayer.setCrossSentence(true);
 

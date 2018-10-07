@@ -43,6 +43,7 @@ import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedAnnotationLayerRef
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTag;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTagSet;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -106,8 +107,9 @@ public class LayerExporter
         exLayer.setCrossSentence(aLayer.isCrossSentence());
         exLayer.setDescription(aLayer.getDescription());
         exLayer.setEnabled(aLayer.isEnabled());
-        exLayer.setLockToTokenOffset(aLayer.isLockToTokenOffset());
-        exLayer.setMultipleTokens(aLayer.isMultipleTokens());
+        exLayer.setLockToTokenOffset(AnchoringMode.SINGLE_TOKEN.equals(aLayer.getAnchoringMode()));
+        exLayer.setMultipleTokens(AnchoringMode.TOKENS.equals(aLayer.getAnchoringMode()));
+        exLayer.setAnchoringMode(aLayer.getAnchoringMode());
         exLayer.setLinkedListBehavior(aLayer.isLinkedListBehavior());
         exLayer.setName(aLayer.getName());
         exLayer.setProjectName(aLayer.getProject().getName());
@@ -250,8 +252,13 @@ public class LayerExporter
         aLayer.setCrossSentence(aExLayer.isCrossSentence());
         aLayer.setDescription(aExLayer.getDescription());
         aLayer.setEnabled(aExLayer.isEnabled());
-        aLayer.setLockToTokenOffset(aExLayer.isLockToTokenOffset());
-        aLayer.setMultipleTokens(aExLayer.isMultipleTokens());
+        if (aExLayer.getAnchoringMode() == null) {
+            // This allows importing old projects which did not have the anchoring mode yet
+            aLayer.setAnchoringMode(aExLayer.isLockToTokenOffset(), aExLayer.isMultipleTokens());
+        }
+        else {
+            aLayer.setAnchoringMode(aExLayer.getAnchoringMode());
+        }
         aLayer.setLinkedListBehavior(aExLayer.isLinkedListBehavior());
         aLayer.setUiName(aExLayer.getUiName());
         aLayer.setName(aExLayer.getName());

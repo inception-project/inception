@@ -77,6 +77,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.JavascriptUtils;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
@@ -564,7 +565,7 @@ public class AnnotationFeatureForm
             return false;
         }
 
-        if (!selectedLayer.isLockToTokenOffset()) {
+        if (!AnchoringMode.SINGLE_TOKEN.equals(selectedLayer.getAnchoringMode())) {
             return false;
         }
 

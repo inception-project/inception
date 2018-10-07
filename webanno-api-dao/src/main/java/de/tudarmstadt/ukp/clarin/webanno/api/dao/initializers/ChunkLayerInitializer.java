@@ -28,6 +28,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -58,8 +59,7 @@ public class ChunkLayerInitializer
         AnnotationLayer chunkLayer = new AnnotationLayer(Chunk.class.getName(), "Chunk", SPAN_TYPE,
                 aProject, true);
         chunkLayer.setAllowStacking(false);
-        chunkLayer.setMultipleTokens(true);
-        chunkLayer.setLockToTokenOffset(false);
+        chunkLayer.setAnchoringMode(AnchoringMode.TOKENS);
         annotationSchemaService.createLayer(chunkLayer);
 
         AnnotationFeature chunkValueFeature = new AnnotationFeature();

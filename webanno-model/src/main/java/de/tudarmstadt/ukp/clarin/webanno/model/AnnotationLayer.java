@@ -32,6 +32,8 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
+import org.hibernate.annotations.Type;
+
 /**
  * A persistence object for an annotation layer. Currently, the builtin layers are:
  * {@literal
@@ -94,9 +96,6 @@ public class AnnotationLayer
     @JoinColumn(name = "project")
     private Project project;
 
-    @Column(name = "lockToTokenOffset")
-    private boolean lockToTokenOffset = true;
-
     // There was a type in the code which unfortunately made it into databases...
     @Column(name = "allowSTacking")
     private boolean allowStacking;
@@ -107,12 +106,24 @@ public class AnnotationLayer
     @Column(name = "showTextInHover")
     private boolean showTextInHover = true;
 
-    @Column(name = "multipleTokens")
-    private boolean multipleTokens;
-    
     @Column(name = "linkedListBehavior")
     private boolean linkedListBehavior;
 
+    @Column(name = "anchoring_mode")
+    @Type(type = "de.tudarmstadt.ukp.clarin.webanno.model.AnchoringModeType")
+    private AnchoringMode anchoringMode = AnchoringMode.TOKENS;
+    
+    // This column is no longer used and should be removed with the next major version.
+    // At that time, a corresponding Liquibase changeset needs to be introduced as well.
+    @Deprecated
+    @Column(name = "multipleTokens")
+    private boolean multipleTokens;
+    
+    // This column is no longer used and should be removed with the next major version
+    // At that time, a corresponding Liquibase changeset needs to be introduced as well.
+    @Deprecated
+    @Column(name = "lockToTokenOffset")
+    private boolean lockToTokenOffset = true;
     
     public AnnotationLayer()
     {
@@ -391,14 +402,30 @@ public class AnnotationLayer
         return true;
     }
 
-    public boolean isLockToTokenOffset()
+    public AnchoringMode getAnchoringMode()
     {
-        return lockToTokenOffset;
+        return anchoringMode;
+    }
+    
+    public void setAnchoringMode(AnchoringMode aAnchoringMode)
+    {
+        anchoringMode = aAnchoringMode;
     }
 
-    public void setLockToTokenOffset(boolean lockToTokenOffset)
+    public void setAnchoringMode(boolean aLockToTokenOffset, boolean aMultipleTokens)
     {
-        this.lockToTokenOffset = lockToTokenOffset;
+        if (!aLockToTokenOffset && !aMultipleTokens) {
+            anchoringMode = AnchoringMode.CHARACTERS;
+        }
+        else if (aLockToTokenOffset && !aMultipleTokens) {
+            anchoringMode = AnchoringMode.SINGLE_TOKEN;
+        }
+        else if (aLockToTokenOffset && aMultipleTokens) {
+            anchoringMode = AnchoringMode.TOKENS;
+        }
+        else if (!aLockToTokenOffset && aMultipleTokens) {
+            anchoringMode = AnchoringMode.TOKENS;
+        }
     }
 
     public boolean isAllowStacking()
@@ -429,16 +456,6 @@ public class AnnotationLayer
     public void setShowTextInHover(boolean showTextInHover)
     {
         this.showTextInHover = showTextInHover;
-    }
-
-    public boolean isMultipleTokens()
-    {
-        return multipleTokens;
-    }
-
-    public void setMultipleTokens(boolean multipleTokens)
-    {
-        this.multipleTokens = multipleTokens;
     }
 
     public boolean isLinkedListBehavior()

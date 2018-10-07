@@ -30,6 +30,7 @@ import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.JsonImportUtil;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -65,8 +66,7 @@ public class NamedEntityLayerInitializer
         AnnotationLayer neLayer = new AnnotationLayer(NamedEntity.class.getName(), "Named entity",
                 SPAN_TYPE, aProject, true);
         neLayer.setAllowStacking(true);
-        neLayer.setMultipleTokens(true);
-        neLayer.setLockToTokenOffset(false);
+        neLayer.setAnchoringMode(AnchoringMode.TOKENS);
         annotationSchemaService.createLayer(neLayer);
 
         annotationSchemaService.createFeature(new AnnotationFeature(aProject, neLayer, "value",

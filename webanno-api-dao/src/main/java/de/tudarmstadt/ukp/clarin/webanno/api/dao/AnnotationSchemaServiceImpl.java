@@ -759,10 +759,6 @@ public class AnnotationSchemaServiceImpl
         case WebAnnoConst.SPAN_TYPE: {
             SpanAdapter adapter = new SpanAdapter(aFeatureSupportRegistry, aEventPublisher, aLayer,
                     aSchemaService.listAnnotationFeature(aLayer));
-            adapter.setLockToTokenOffsets(aLayer.isLockToTokenOffset());
-            adapter.setAllowStacking(aLayer.isAllowStacking());
-            adapter.setAllowMultipleToken(aLayer.isMultipleTokens());
-            adapter.setCrossMultipleSentence(aLayer.isCrossSentence());
             return adapter;
         }
         case WebAnnoConst.RELATION_TYPE: {
@@ -776,7 +772,6 @@ public class AnnotationSchemaServiceImpl
             adapter.setAllowStacking(aLayer.isAllowStacking());
 
             return adapter;
-            // default is chain (based on operation, change to CoreferenceLinK)
         }
         case WebAnnoConst.CHAIN_TYPE: {
             ChainAdapter adapter = new ChainAdapter(aFeatureSupportRegistry, aEventPublisher,
