@@ -16,6 +16,10 @@
  * limitations under the License.
  */package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.ner;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
+import static java.util.Arrays.asList;
+
 import org.apache.uima.cas.CAS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,7 +68,7 @@ public class OpenNlpNerClassificationToolFactory
             return false;
         }
         
-        return (aLayer.isLockToTokenOffset() || aLayer.isMultipleTokens())
+        return (asList(SINGLE_TOKEN, TOKENS).contains(aLayer.getAnchoringMode()))
                 && !aLayer.isCrossSentence() && "span".equals(aLayer.getType())
                 && CAS.TYPE_NAME_STRING.equals(aFeature.getType()) || aFeature.isVirtualFeature();
     }
