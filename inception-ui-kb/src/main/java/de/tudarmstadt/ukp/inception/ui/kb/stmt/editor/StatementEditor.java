@@ -100,11 +100,10 @@ public class StatementEditor extends Panel
             EditMode editMode = new EditMode(CONTENT_MARKUP_ID, statement, true);
 
             // obtain AjaxRequestTarget and set the focus
-            AjaxRequestTarget target = RequestCycle.get()
-                    .find(AjaxRequestTarget.class);
-            if (target != null) {
-                target.focusComponent(editMode.getFocusComponent());
-            }
+            RequestCycle.get()
+                    .find(AjaxRequestTarget.class)
+                    .ifPresent(target -> target.focusComponent(editMode.getFocusComponent()));
+            
             content = editMode;
         } else {
             content = new ViewMode(CONTENT_MARKUP_ID, statement);

@@ -196,9 +196,9 @@ public class RecommenderEditorPanel
             private static final long serialVersionUID = -3902555252753037183L;
 
             @Override
-            protected void onAfterSubmit(AjaxRequestTarget target, Form<?> aForm)
+            protected void onAfterSubmit(AjaxRequestTarget target)
             {
-                actionSave(target, (Form) aForm);
+                actionSave(target);
             };
         });
         form.add(new LambdaAjaxLink("delete", this::actionDelete)
@@ -279,8 +279,8 @@ public class RecommenderEditorPanel
         }
     }
 
-    private void actionSave(AjaxRequestTarget aTarget, Form<Recommender> aForm) {
-        Recommender recommender = aForm.getModelObject();
+    private void actionSave(AjaxRequestTarget aTarget) {
+        Recommender recommender = recommenderModel.getObject();
         recommender.setName(String.format(Locale.US, "[%s@%s] %s (%.2f)",
                 recommender.getFeature(), recommender.getLayer().getUiName(),
                 StringUtils.substringAfterLast(recommender.getTool(), "."),

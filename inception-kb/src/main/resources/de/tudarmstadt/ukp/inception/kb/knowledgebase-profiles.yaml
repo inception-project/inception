@@ -17,6 +17,8 @@ british_museum:
 wikidata:
   name: Wikidata
   type: REMOTE
+  root-concepts:
+        - http://www.wikidata.org/entity/Q35120
   access:
       access-url: https://query.wikidata.org/sparql
   mapping:
@@ -47,6 +49,8 @@ virtuoso:
 db_pedia:
   name: DBpedia
   type: REMOTE
+  root-concepts:
+        - http://www.w3.org/2002/07/owl#Thing
   access:
       access-url: http://dbpedia.org/sparql
   mapping:
@@ -149,4 +153,3 @@ zbw-gnd:
       property-label: http://www.w3.org/2004/02/skos/core#prefLabel
       property-description: http://www.w3.org/2000/01/rdf-schema#comment
       full-text-search: http://www.openrdf.org/contrib/lucenesail#matches
-

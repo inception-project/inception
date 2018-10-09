@@ -115,8 +115,8 @@
     </dependency>
 
     <dependency>
-      <groupId>org.apache.wicket</groupId>
-      <artifactId>wicket-core</artifactId>
+      <groupId>com.github.openjson</groupId>
+      <artifactId>openjson</artifactId>
     </dependency>
 
     <dependency>

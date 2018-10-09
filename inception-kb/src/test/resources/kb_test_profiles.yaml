@@ -1,6 +1,7 @@
 test_profile:
   name: Test KB
   type: LOCAL
+  root-concepts: [ ]
   access:
       access-url: http://someurl/sparql
   mapping:

@@ -18,14 +18,15 @@
 package de.tudarmstadt.ukp.inception.kb.yaml;
 
 import java.io.Serializable;
+import java.util.List;
 import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 
 public class KnowledgeBaseProfile implements Serializable
 {
-
     private static final long serialVersionUID = -2684575269500649910L;
 
     @JsonProperty("name")
@@ -39,6 +40,9 @@ public class KnowledgeBaseProfile implements Serializable
 
     @JsonProperty("mapping")
     private KnowledgeBaseMapping mapping;
+    
+    @JsonProperty("root-concepts")
+    private List<String> rootConcepts;
 
     public String getName()
     {
@@ -80,6 +84,16 @@ public class KnowledgeBaseProfile implements Serializable
         mapping = aMapping;
     }
 
+    public List<String> getRootConcepts()
+    {
+        return rootConcepts;
+    }
+
+    public void setRootConcepts(List<String> rootConcepts)
+    {
+        this.rootConcepts = rootConcepts;
+    }
+
     @Override public boolean equals(Object o)
     {
         if (this == o) {
@@ -89,12 +103,13 @@ public class KnowledgeBaseProfile implements Serializable
             return false;
         }
         KnowledgeBaseProfile that = (KnowledgeBaseProfile) o;
-        return Objects.equals(name, that.name) && Objects.equals(access, that.access) && Objects
-            .equals(mapping, that.mapping) && Objects.equals(type, that.type);
+        return Objects.equals(name, that.name) && Objects.equals(access, that.access)
+                && Objects.equals(mapping, that.mapping) && Objects.equals(type, that.type)
+                && Objects.equals(rootConcepts, that.rootConcepts);
     }
     
     @Override
     public int hashCode() {
-        return Objects.hash(name, type, access, mapping);
+        return Objects.hash(name, type, access, mapping,rootConcepts);
     }
 }

@@ -70,10 +70,9 @@ public class QualifierEditor
         boolean isNewQualifier = qualifier.getObject().getKbProperty() == null;
         if (isNewQualifier) {
             EditMode editMode = new EditMode(CONTENT_MARKUP_ID, qualifier, isNewQualifier);
-            AjaxRequestTarget target = RequestCycle.get().find(AjaxRequestTarget.class);
-            if (target != null) {
-                target.focusComponent(editMode.getFocusComponent());
-            }
+            RequestCycle.get()
+                    .find(AjaxRequestTarget.class)
+                    .ifPresent(target -> target.focusComponent(editMode.getFocusComponent()));
             content = editMode;
         }
         else {

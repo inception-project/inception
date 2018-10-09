@@ -26,6 +26,7 @@ import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
@@ -51,6 +52,7 @@ public class TestFixtures
     {
         Project project = new Project();
         project.setName(name);
+        project.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
         return entityManager.persist(project);
     }
 

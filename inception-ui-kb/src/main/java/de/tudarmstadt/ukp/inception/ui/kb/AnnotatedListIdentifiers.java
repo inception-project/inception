@@ -33,6 +33,7 @@ import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.Fragment;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
@@ -86,7 +87,8 @@ public class AnnotatedListIdentifiers
         targetQuery = Model.of(
                 String.format("<%s=\"%s\"/>", ConceptFeatureIndexingSupport.KB_ENTITY, queryIri));
         
-        LambdaModel<List<SearchResult>> searchResults = LambdaModel.of(this::getSearchResults);
+        LoadableDetachableModel<List<SearchResult>> searchResults = LoadableDetachableModel
+                .of(this::getSearchResults);
         LOG.trace("SearchResult count : {}" , searchResults.getObject().size());
         ListView<String> overviewList = new ListView<String>("searchResultGroups")
         {
@@ -98,14 +100,13 @@ public class AnnotatedListIdentifiers
                 setVisible(!searchResults.getObject().isEmpty());
             }
 
-            @Override protected void populateItem(ListItem<String> aItem)
+            @Override
+            protected void populateItem(ListItem<String> aItem)
             {
                 aItem.add(new Label("documentTitle", aItem.getModel()));
-                aItem.add(
-                    new SearchResultGroup("group", "resultGroup",
-                        AnnotatedListIdentifiers.this,
-                        getSearchResultsFormattedForDocument(searchResults,
-                            aItem.getModelObject())));
+                aItem.add(new SearchResultGroup("group", "resultGroup",
+                        AnnotatedListIdentifiers.this, getSearchResultsFormattedForDocument(
+                                searchResults, aItem.getModelObject())));
             }
         };
         overviewList.setList(
@@ -117,13 +118,13 @@ public class AnnotatedListIdentifiers
     }
 
     public List<String> getSearchResultsFormattedForDocument(
-        LambdaModel<List<SearchResult>> searchResults, String documentTitle)
+            IModel<List<SearchResult>> searchResults, String documentTitle)
     {
         List<String> searchResultList = new ArrayList<String>();
         for (SearchResult x : searchResults.getObject()) {
             if (x.getDocumentTitle().equals(documentTitle)) {
                 String sentence = x.getLeftContext() + "<strong>" + x.getText() + "</strong>"
-                    + x.getRightContext();
+                        + x.getRightContext();
 
                 searchResultList.add(sentence);
                 LOG.debug("Sentence search : {}", sentence);
