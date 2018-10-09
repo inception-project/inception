@@ -197,6 +197,8 @@ public class QualifierFeatureEditor
             @Override
             protected void onConfigure()
             {
+                super.onConfigure();
+                
                 AnnotatorState state = QualifierFeatureEditor.this.stateModel.getObject();
                 setVisible(!(state.isSlotArmed() && QualifierFeatureEditor.this.getModelObject()
                     .feature.equals(state.getArmedFeature())));
@@ -220,6 +222,8 @@ public class QualifierFeatureEditor
             @Override
             protected void onConfigure()
             {
+                super.onConfigure();
+                
                 AnnotatorState state = QualifierFeatureEditor.this.stateModel.getObject();
                 setVisible(state.isSlotArmed() && QualifierFeatureEditor.this.getModelObject()
                     .feature.equals(state.getArmedFeature()));
@@ -242,6 +246,8 @@ public class QualifierFeatureEditor
             @Override
             protected void onConfigure()
             {
+                super.onConfigure();
+                
                 AnnotatorState state = QualifierFeatureEditor.this.stateModel.getObject();
                 setVisible(state.isSlotArmed() && QualifierFeatureEditor.this.getModelObject()
                     .feature.equals(state.getArmedFeature()));
@@ -293,6 +299,7 @@ public class QualifierFeatureEditor
             public void onConfigure(JQueryBehavior behavior)
             {
                 super.onConfigure(behavior);
+                
                 behavior.setOption("autoWidth", true);
             }
 
@@ -531,9 +538,11 @@ public class QualifierFeatureEditor
                 return factService.getPredicatesFromKB(project, traits);
             }
 
-            @Override public void onConfigure(JQueryBehavior behavior)
+            @Override
+            public void onConfigure(JQueryBehavior behavior)
             {
                 super.onConfigure(behavior);
+
                 behavior.setOption("autoWidth", true);
             }
 
