@@ -18,6 +18,11 @@
 
 package de.tudarmstadt.ukp.inception.conceptlinking.recommender;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
+import static java.util.Arrays.asList;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -71,9 +76,8 @@ public class NamedEntityLinkerFactory
         if (aLayer == null || aFeature == null) {
             return false;
         }
-
-        return (aLayer.isLockToTokenOffset() || aLayer.isMultipleTokens())
-            && !aLayer.isCrossSentence() && "span".equals(aLayer.getType())
+        return asList(SINGLE_TOKEN, TOKENS).contains(aLayer.getAnchoringMode())
+            && !aLayer.isCrossSentence() && SPAN_TYPE.equals(aLayer.getType())
             && aFeature.getType().startsWith(PREFIX);
     }
 }

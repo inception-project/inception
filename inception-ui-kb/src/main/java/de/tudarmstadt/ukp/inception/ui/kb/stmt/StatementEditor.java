@@ -209,8 +209,10 @@ public class StatementEditor extends Panel
                 private static final long serialVersionUID = 3436068825093393740L;
 
                 @Override
-                protected void onConfigure() {
+                protected void onConfigure()
+                {
                     super.onConfigure();
+                    
                     setVisible(isNotEmpty(aStatement.getObject().getLanguage()));
                 }
             });

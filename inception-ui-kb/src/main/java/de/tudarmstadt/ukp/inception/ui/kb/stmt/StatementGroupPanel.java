@@ -283,11 +283,13 @@ public class StatementGroupPanel extends Panel {
         
         @OnEvent
         public void actionStatementChanged(AjaxStatementChangedEvent event) {
-            // event is not relevant if the statement in the event has a different property than the
-            // property of this statement group
-            boolean isEventForThisStatementGroup = event.getStatement()
-                    .getProperty()
-                    .equals(groupModel.getObject().getProperty());
+            // event is not relevant if the statement in the event has a different property|subject
+            // than the property|subject of this statement group
+            KBStatement statement = event.getStatement();
+            boolean isEventForThisStatementGroup =
+                statement.getProperty().equals(groupModel.getObject().getProperty())
+                    && statement.getInstance().getIdentifier()
+                    .equals(groupModel.getObject().getInstance().getIdentifier());
             if (!isEventForThisStatementGroup) {
                 return;
             }
@@ -296,13 +298,13 @@ public class StatementGroupPanel extends Panel {
                 // update the statement from the event
                 StatementGroupBean bean = groupModel.getObject();
                 bean.getStatements().remove(oldStatement);
-                bean.getStatements().add(event.getStatement());
+                bean.getStatements().add(statement);
                 groupModel.setObject(bean);
             }
             if (event.isDeleted()) {
                 // remove statement found in the event from the model
                 StatementGroupBean bean = groupModel.getObject();
-                bean.getStatements().remove(event.getStatement());
+                bean.getStatements().remove(statement);
                 groupModel.setObject(bean);
 
                 if (bean.getStatements().isEmpty()) {

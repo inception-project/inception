@@ -108,9 +108,11 @@ public class PropertyFeatureEditor
                 return factService.getPredicatesFromKB(project, traits);
             }
 
-            @Override public void onConfigure(JQueryBehavior behavior)
+            @Override
+            public void onConfigure(JQueryBehavior behavior)
             {
                 super.onConfigure(behavior);
+
                 behavior.setOption("autoWidth", true);
             }
 
@@ -157,6 +159,8 @@ public class PropertyFeatureEditor
     @Override
     public void onConfigure()
     {
+        super.onConfigure();
+        
         KBHandle subject = getHandle(FactLinkingConstants.SUBJECT_ROLE);
         KBHandle object = getHandle(FactLinkingConstants.OBJECT_ROLE);
         KBHandle predicate = (KBHandle) getModelObject().value;

@@ -62,6 +62,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapAjaxTabbedPanel;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -161,16 +162,9 @@ public class EvaluationPage
                 .setMinimum(0));
         
         NumberTextField<Double> splitTestDataPercentage = new NumberTextField<Double>(
-                "splitTestDataPercentage")
-        {
-            @Override
-            protected void onConfigure()
-            {
-                super.onConfigure();
-
-                setVisible(form.getModelObject().evaluationStrategy.equals("holdoutStrategy"));
-            }
-        };
+                "splitTestDataPercentage");
+        splitTestDataPercentage.add(LambdaBehavior.onConfigure(_this -> _this
+                .setVisible(form.getModelObject().evaluationStrategy.equals("holdoutStrategy"))));
         splitTestDataPercentage.setMaximum(1.);
         splitTestDataPercentage.setMinimum(0.);
         splitTestDataPercentage.setStep(0.01);
@@ -180,16 +174,9 @@ public class EvaluationPage
         form.add(splitTestDataPercentage);
         
         NumberTextField<Integer> trainingIncrementSize = 
-                new NumberTextField<Integer>("trainingIncrementSize") {
-            @Override
-            protected void onConfigure()
-                {
-                    super.onConfigure();
-        
-                    setVisible(form.getModelObject()
-                            .trainingIncrementStrategy.equals("equidistantIncrementStrategy"));
-                }
-            };
+                new NumberTextField<Integer>("trainingIncrementSize");
+        trainingIncrementSize.add(LambdaBehavior.onConfigure(_this -> _this
+                .setVisible(form.getModelObject().evaluationStrategy.equals("equidistantIncrementStrategy"))));
         trainingIncrementSize.setMinimum(0);
         trainingIncrementSize.setOutputMarkupId(true);
         trainingIncrementSize.setOutputMarkupPlaceholderTag(true);
@@ -207,16 +194,9 @@ public class EvaluationPage
         
 
         NumberTextField<Integer> testIncrementSize = 
-                new NumberTextField<Integer>("testIncrementSize") {
-            @Override
-            protected void onConfigure()
-                {
-                    super.onConfigure();
-        
-                    setVisible(form.getModelObject()
-                            .evaluationStrategy.equals("equidistantIncrementStrategy"));
-                }
-            };
+                new NumberTextField<Integer>("testIncrementSize");
+        testIncrementSize.add(LambdaBehavior.onConfigure(_this -> _this.setVisible(
+                form.getModelObject().evaluationStrategy.equals("equidistantIncrementStrategy"))));
         testIncrementSize.setMinimum(0);
         testIncrementSize.setOutputMarkupId(true);
         testIncrementSize.setOutputMarkupPlaceholderTag(true);
