@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.kb;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assume.assumeTrue;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -123,6 +124,7 @@ public class KnowledgeBaseServiceRemoteTest
         sut = new KnowledgeBaseServiceImpl(temporaryFolder.getRoot(), entityManager);
         project = testFixtures.createProject(PROJECT_NAME);
         kb.setProject(project);
+        assumeTrue(isRepositoryAvailable());
         if (kb.getType() == RepositoryType.LOCAL) {
             sut.registerKnowledgeBase(kb, sut.getNativeConfig());
             sut.updateKnowledgeBase(kb, sut.getKnowledgeBaseConfig(kb));
@@ -356,6 +358,15 @@ public class KnowledgeBaseServiceRemoteTest
     }
 
     // Helper
+
+    private boolean isRepositoryAvailable() {
+        KnowledgeBase kb = sutConfig.getKnowledgeBase();
+        if (kb.getType() == RepositoryType.REMOTE) {
+            return testFixtures.isEndpointAvailable(sutConfig.getDataUrl(), 5000);
+        }
+        // Assume that local KBs are always available in tests
+        return true;
+    }
 
     private void importKnowledgeBase(String resourceName) throws Exception
     {

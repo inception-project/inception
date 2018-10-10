@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.kb;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assume.assumeTrue;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -116,7 +117,9 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
         sut = new KnowledgeBaseServiceImpl(temporaryFolder.getRoot(), entityManager);
         project = createProject(PROJECT_NAME);
         kb = buildKnowledgeBase(project, KB_NAME);
-        sut.registerKnowledgeBase(kb, sut.getRemoteConfig(PROFILES.get("wikidata").getAccess().getAccessUrl()));
+        String wikidataAccessUrl = PROFILES.get("wikidata").getAccess().getAccessUrl();
+        assumeTrue(testFixtures.isEndpointAvailable(wikidataAccessUrl, 5000));
+        sut.registerKnowledgeBase(kb, sut.getRemoteConfig(wikidataAccessUrl));
 
     }
 

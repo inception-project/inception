@@ -17,7 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.kb.util;
 
+import java.io.IOException;
 import java.net.URI;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
 
 import org.eclipse.rdf4j.model.ValueFactory;
@@ -139,5 +142,24 @@ public class TestFixtures
         KBQualifier qualifier = new KBQualifier(kbStatement, propertyHandle,
             vf.createLiteral(value));
         return qualifier;
+    }
+
+    /**
+     * Tries to connect to the given endpoint url
+     * @param aEndpointURL the url to check
+     * @param aTimeout a timeout
+     * @return returns true if no IOException is thrown when connecting to the url, false otherwise
+     */
+    public boolean isEndpointAvailable(String aEndpointURL, int aTimeout) {
+        try {
+            URLConnection connection = new URL(aEndpointURL).openConnection();
+            connection.setConnectTimeout(aTimeout);
+            connection.connect();
+            return true;
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 }
