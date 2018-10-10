@@ -228,7 +228,7 @@ public class NamedEntityLinker
     @Override
     public double evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
     {
-        return -1;
+        throw new UnsupportedOperationException("Evaluation not supported");
     }
 
     @Override

@@ -59,7 +59,8 @@ public class OpenNlpNerRecommenderTest
     private OpenNlpNerRecommenderTraits traits;
 
     @Before
-    public void setUp() {
+    public void setUp()
+    {
         context = new RecommenderContext();
         recommender = buildRecommender();
         traits = new OpenNlpNerRecommenderTraits();

@@ -51,7 +51,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.TokenObject;
 import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommendationEngineFactory;
-import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommenderContext;
 
 /**
@@ -87,10 +86,18 @@ public class PredictionTask
                 jCas = documentService.readAnnotationCas(document, user.getUsername());
                 annoService.upgradeCas(jCas.getCas(), document, user.getUsername());
             } catch (IOException e) {
-                log.error("Cannot read annotation CAS.", e);
+                log.error(
+                        "Cannot read annotation CAS for user [{}] of document "
+                                + "[{}]({}) in project [{}]({}) - skipping document",
+                        user.getUsername(), document.getName(), document.getId(), project.getName(),
+                        project.getId(), e);
                 continue;
             } catch (UIMAException e) {
-                log.error("Cannot upgrade annotation CAS.", e);
+                log.error(
+                        "Cannot upgrade annotation CAS for user [{}] of document "
+                                + "[{}]({}) in project [{}]({}) - skipping document",
+                        user.getUsername(), document.getName(), document.getId(), project.getName(),
+                        project.getId(), e);
                 continue;
             }
 
@@ -104,14 +111,19 @@ public class PredictionTask
 
                 for (Recommender recommender : recommenders) {
                     RecommenderContext ctx = recommendationService.getContext(user, recommender);
-                    RecommendationEngineFactory factory = recommendationService
+                    RecommendationEngineFactory<?> factory = recommendationService
                             .getRecommenderFactory(recommender);
                     RecommendationEngine recommendationEngine = factory.build(recommender);
 
                     try {
                         recommendationEngine.predict(ctx, jCas.getCas());
-                    } catch (RecommendationException e) {
-                        log.error("Error while predicting", e);
+                    }
+                    catch (Throwable e) {
+                        log.error("Error applying recommender [{}]({}) for user [{}] to document "
+                                        + "[{}]({}) in project [{}]({}) - skipping recommender",
+                                recommender.getName(), recommender.getId(), user.getUsername(),
+                                document.getName(), document.getId(), project.getName(),
+                                project.getId(), e);
                         continue;
                     }
 
