@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.kb.util;
 
+import static org.junit.Assume.assumeTrue;
+
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
@@ -145,21 +147,26 @@ public class TestFixtures
     }
 
     /**
-     * Tries to connect to the given endpoint url
+     * Tries to connect to the given endpoint url and assumes that the connection is successful
+     * with {@link org.junit.Assume#assumeTrue(String, boolean)}
      * @param aEndpointURL the url to check
      * @param aTimeout a timeout
-     * @return returns true if no IOException is thrown when connecting to the url, false otherwise
      */
-    public boolean isEndpointAvailable(String aEndpointURL, int aTimeout) {
+    public void assumeEndpointIsAvailable(String aEndpointURL, int aTimeout) {
+        boolean isAvailable;
+        String errorMsg = aEndpointURL
+            + " is not available. Expected no exception to be thrown when trying to connect"
+            + " to the endpoint, but got:\n%s";
         try {
             URLConnection connection = new URL(aEndpointURL).openConnection();
             connection.setConnectTimeout(aTimeout);
             connection.connect();
-            return true;
+            isAvailable = true;
         }
         catch (IOException e) {
-            e.printStackTrace();
-            return false;
+            isAvailable = false;
+            errorMsg = String.format(errorMsg, e.toString());
         }
+        assumeTrue(errorMsg, isAvailable);
     }
 }
