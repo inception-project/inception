@@ -67,22 +67,22 @@ public class NamedEntityLinker
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private Recommender recommender;
-
+    private NamedEntityLinkerTraits traits;
+    
     private KnowledgeBaseService kbService;
     private ConceptLinkingService clService;
     private AnnotationSchemaService annoService;
     private FeatureSupportRegistry fsRegistry;
 
-    private int numPredictions = 3;
-
     public static final Key<Collection<ImmutablePair<String, Collection<AnnotationFS>>>> KEY_MODEL
         = new Key<>("model");
 
-    public NamedEntityLinker(Recommender aRecommender, KnowledgeBaseService aKbService,
-        ConceptLinkingService aClService, AnnotationSchemaService aAnnoService,
-        FeatureSupportRegistry aFsRegistry)
+    public NamedEntityLinker(Recommender aRecommender, NamedEntityLinkerTraits aTraits,
+            KnowledgeBaseService aKbService, ConceptLinkingService aClService,
+            AnnotationSchemaService aAnnoService, FeatureSupportRegistry aFsRegistry)
     {
         recommender = aRecommender;
+        traits = aTraits;
         kbService = aKbService;
         clService = aClService;
         annoService = aAnnoService;
@@ -190,11 +190,11 @@ public class NamedEntityLinker
         AnnotationFeature feat = annoService
             .getFeature(recommender.getFeature(), recommender.getLayer());
         FeatureSupport<ConceptFeatureTraits> fs = fsRegistry.getFeatureSupport(feat);
-        ConceptFeatureTraits traits = fs.readTraits(feat);
+        ConceptFeatureTraits conceptFeatureTraits = fs.readTraits(feat);
 
-        if (traits.getRepositoryId() != null) {
-            Optional<KnowledgeBase> kb = kbService
-                .getKnowledgeBaseById(recommender.getProject(), traits.getRepositoryId());
+        if (conceptFeatureTraits.getRepositoryId() != null) {
+            Optional<KnowledgeBase> kb = kbService.getKnowledgeBaseById(recommender.getProject(),
+                    conceptFeatureTraits.getRepositoryId());
             if (kb.isPresent() && kb.get().isSupportConceptLinking()) {
                 handles.addAll(readCandidates(kb.get(), aCoveredText, aBegin, aJcas));
             }
@@ -210,13 +210,12 @@ public class NamedEntityLinker
 
         Feature labelFeature = predictionType.getFeatureByBaseName("label");
 
-        for (KBHandle prediction : handles.stream().limit(numPredictions)
+        for (KBHandle prediction : handles.stream().limit(traits.getMaxNumPredictions())
             .collect(Collectors.toList())) {
             AnnotationFS annotation = aJcas.getCas().createAnnotation(predictionType, aBegin, aEnd);
             annotation.setStringValue(labelFeature, prediction.getIdentifier());
             aJcas.getCas().addFsToIndexes(annotation);
         }
-
     }
 
     private List<KBHandle> readCandidates(KnowledgeBase kb, String aCoveredText, int aBegin,

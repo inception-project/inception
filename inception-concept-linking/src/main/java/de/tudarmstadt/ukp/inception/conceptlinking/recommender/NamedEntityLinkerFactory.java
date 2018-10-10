@@ -23,6 +23,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
 import static java.util.Arrays.asList;
 
+import org.apache.wicket.model.IModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -38,7 +39,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommendationEngineFa
 
 @Component
 public class NamedEntityLinkerFactory
-    extends RecommendationEngineFactoryImplBase<Void>
+    extends RecommendationEngineFactoryImplBase<NamedEntityLinkerTraits>
 {
     // This is a string literal so we can rename/refactor the class without it changing its ID
     // and without the database starting to refer to non-existing recommendation tools.
@@ -61,7 +62,9 @@ public class NamedEntityLinkerFactory
     @Override
     public RecommendationEngine build(Recommender aRecommender)
     {
-        return new NamedEntityLinker(aRecommender, kbService, clService, annoService, fsRegistry);
+        NamedEntityLinkerTraits traits = readTraits(aRecommender);
+        return new NamedEntityLinker(aRecommender, traits, kbService, clService, annoService,
+                fsRegistry);
     }
 
     @Override
@@ -79,5 +82,17 @@ public class NamedEntityLinkerFactory
         return asList(SINGLE_TOKEN, TOKENS).contains(aLayer.getAnchoringMode())
             && !aLayer.isCrossSentence() && SPAN_TYPE.equals(aLayer.getType())
             && aFeature.getType().startsWith(PREFIX);
+    }
+
+    @Override
+    public org.apache.wicket.Component createTraitsEditor(String aId, IModel<Recommender> aModel)
+    {
+        return new NamedEntityLinkerTraitsEditor(aId, aModel);
+    }
+
+    @Override
+    public NamedEntityLinkerTraits createTraits()
+    {
+        return new NamedEntityLinkerTraits();
     }
 }

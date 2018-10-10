@@ -16,6 +16,7 @@
  * limitations under the License.
  */package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.ner;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
 import static java.util.Arrays.asList;
@@ -68,7 +69,7 @@ public class OpenNlpNerRecommenderFactory
         }
         
         return (asList(SINGLE_TOKEN, TOKENS).contains(aLayer.getAnchoringMode()))
-                && !aLayer.isCrossSentence() && "span".equals(aLayer.getType())
+                && !aLayer.isCrossSentence() && SPAN_TYPE.equals(aLayer.getType())
                 && CAS.TYPE_NAME_STRING.equals(aFeature.getType()) || aFeature.isVirtualFeature();
     }
 }

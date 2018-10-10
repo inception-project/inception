@@ -54,6 +54,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.io.conll.Conll2002Reader;
 import de.tudarmstadt.ukp.dkpro.core.testing.DkproTestContext;
 import de.tudarmstadt.ukp.inception.conceptlinking.recommender.NamedEntityLinker;
+import de.tudarmstadt.ukp.inception.conceptlinking.recommender.NamedEntityLinkerTraits;
 import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
@@ -80,9 +81,9 @@ public class NamedEntityLinkerTest
     @Test
     public void thatTrainingWorks() throws Exception
     {
-        NamedEntityLinker sut = new NamedEntityLinker(recommender, mock(KnowledgeBaseService.class),
-            mock(ConceptLinkingService.class), mock(AnnotationSchemaService.class),
-            mock(FeatureSupportRegistry.class));
+        NamedEntityLinker sut = new NamedEntityLinker(recommender, new NamedEntityLinkerTraits(),
+                mock(KnowledgeBaseService.class), mock(ConceptLinkingService.class),
+                mock(AnnotationSchemaService.class), mock(FeatureSupportRegistry.class));
 
         List<CAS> casList = loadDevelopmentData();
 
@@ -126,8 +127,8 @@ public class NamedEntityLinkerTest
         when(fsRegistry.getFeatureSupport(mockAnnoFeature)).thenReturn(fs);
         when(fs.readTraits(mockAnnoFeature)).thenReturn(new ConceptFeatureTraits());
 
-        NamedEntityLinker sut = new NamedEntityLinker(recommender, kbService, clService,
-            annoSchemaService, fsRegistry);
+        NamedEntityLinker sut = new NamedEntityLinker(recommender, new NamedEntityLinkerTraits(),
+                kbService, clService, annoSchemaService, fsRegistry);
 
         List<CAS> casList = loadDevelopmentData();
         CAS cas = casList.get(0);

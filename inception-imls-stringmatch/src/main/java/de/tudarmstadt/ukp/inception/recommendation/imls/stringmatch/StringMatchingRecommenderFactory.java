@@ -17,6 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
+import static java.util.Arrays.asList;
+
 import org.apache.uima.cas.CAS;
 import org.springframework.stereotype.Component;
 
@@ -61,8 +66,8 @@ public class StringMatchingRecommenderFactory
             return false;
         }
 
-        return (aLayer.isLockToTokenOffset() || aLayer.isMultipleTokens())
-            && !aLayer.isCrossSentence() && "span".equals(aLayer.getType())
+        return (asList(SINGLE_TOKEN, TOKENS).contains(aLayer.getAnchoringMode()))
+            && !aLayer.isCrossSentence() && SPAN_TYPE.equals(aLayer.getType())
             && (CAS.TYPE_NAME_STRING.equals(aFeature.getType()) || aFeature.isVirtualFeature());
     }
 }
