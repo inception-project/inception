@@ -112,6 +112,7 @@ public class IRIValueEditor
             public void onConfigure(JQueryBehavior behavior)
             {
                 super.onConfigure(behavior);
+                
                 behavior.setOption("autoWidth", true);
             }
 

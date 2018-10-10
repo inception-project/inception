@@ -97,6 +97,7 @@ public class AnnotatedListIdentifiers
             @Override protected void onConfigure()
             {
                 super.onConfigure();
+                
                 setVisible(!searchResults.getObject().isEmpty());
             }
 
@@ -137,6 +138,7 @@ public class AnnotatedListIdentifiers
     protected void onConfigure()
     {
         super.onConfigure();
+        
         setVisible(conceptModel.getObject() != null
                 && isNotEmpty(conceptModel.getObject().getIdentifier()));
     }
