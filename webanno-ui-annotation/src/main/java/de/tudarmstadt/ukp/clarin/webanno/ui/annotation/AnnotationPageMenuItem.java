@@ -37,6 +37,12 @@ public class AnnotationPageMenuItem implements MenuItem
     private @Autowired ProjectService projectService;
     
     @Override
+    public String getPath()
+    {
+        return "/annotation";
+    }
+    
+    @Override
     public String getIcon()
     {
         return "images/categories.png";
