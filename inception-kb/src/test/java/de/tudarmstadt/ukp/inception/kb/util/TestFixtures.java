@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.inception.kb.util;
 
 import static org.junit.Assume.assumeTrue;
 
-import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
@@ -163,7 +162,7 @@ public class TestFixtures
             connection.connect();
             isAvailable = true;
         }
-        catch (IOException e) {
+        catch (Exception e) {
             isAvailable = false;
             errorMsg = String.format(errorMsg, e.toString());
         }
