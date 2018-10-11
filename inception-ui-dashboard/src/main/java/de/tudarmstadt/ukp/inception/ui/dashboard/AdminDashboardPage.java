@@ -1,5 +1,5 @@
 /*
- * Copyright 2017
+ * Copyright 2018
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  *
@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.wicketstuff.annotation.mount.MountPath;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
@@ -34,12 +35,14 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.login.LoginPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
-import de.tudarmstadt.ukp.inception.ui.dashboard.dashlet.CurrentProjectDashlet;
+import de.tudarmstadt.ukp.inception.ui.dashboard.dashlet.SystemStatusDashlet;
 
 /**
- * Main menu page.
+ * Admin menu page.
  */
-public class DashboardPage extends ApplicationPageBase
+@MountPath(value = "/manage/overview.html")
+public class AdminDashboardPage
+    extends ApplicationPageBase
 {
     private static final long serialVersionUID = -2487663821276301436L;
 
@@ -49,13 +52,13 @@ public class DashboardPage extends ApplicationPageBase
 
     private DashboardMenu menu;
 
-    public DashboardPage()
+    public AdminDashboardPage()
     {
         setStatelessHint(true);
         setVersioned(false);
         
         // In case we restore a saved session, make sure the user actually still exists in the DB.
-        // redirect to login page (if no usr is found, admin/admin will be created)
+        // redirect to login page (if no user is found, admin/admin will be created)
         User user = userRepository.getCurrentUser();
         if (user == null) {
             setResponsePage(LoginPage.class);
@@ -74,13 +77,13 @@ public class DashboardPage extends ApplicationPageBase
         menu = new DashboardMenu("menu", LoadableDetachableModel.of(this::getMenuItems));
         add(menu);
         
-        add(new CurrentProjectDashlet("currentProjectDashlet"));
+        add(new SystemStatusDashlet("systemStatusDashlet"));
     }
     
     private List<MenuItem> getMenuItems()
     {
         return menuItemService.getMenuItems().stream()
-                .filter(item -> item.getPath().matches("/[^/]+"))
+                .filter(item -> item.getPath().matches("/admin/[^/]+"))
                 .collect(Collectors.toList());
     }
 }

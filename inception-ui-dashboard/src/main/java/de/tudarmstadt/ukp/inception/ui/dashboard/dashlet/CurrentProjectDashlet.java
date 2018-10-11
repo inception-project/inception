@@ -17,12 +17,12 @@
  */
 package de.tudarmstadt.ukp.inception.ui.dashboard.dashlet;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.Session;
 import org.apache.wicket.markup.html.basic.Label;
-import org.apache.wicket.model.PropertyModel;
+import org.apache.wicket.model.LoadableDetachableModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.inception.app.session.SessionMetaData;
 
 public class CurrentProjectDashlet
@@ -34,20 +34,35 @@ public class CurrentProjectDashlet
     {
         super(aId);
         
-        add(new Label("name", LambdaModel.of(() -> PropertyModel
-                .of(Session.get().getMetaData(SessionMetaData.CURRENT_PROJECT), "name"))));
+        add(new Label("name", LoadableDetachableModel.of(this::getProjectName)));
         
-        add(new Label("description", LambdaModel.of(this::getProjectDescription)));
+        add(new Label("description", LoadableDetachableModel.of(this::getProjectDescription)));
+    }
+    
+    private String getProjectName()
+    {
+        Project project = Session.get().getMetaData(SessionMetaData.CURRENT_PROJECT);
+        if (project != null) {
+            return project.getName();
+        }
+        else {
+            return "No project selected";
+        }
     }
     
     private String getProjectDescription()
     {
         Project project = Session.get().getMetaData(SessionMetaData.CURRENT_PROJECT);
         if (project != null) {
-            return project.getDescription();
+            if (StringUtils.isBlank(project.getDescription())) {
+                return "Project has no description.";
+            }
+            else {
+                return project.getDescription();
+            }
         }
         else {
-            return "Please select a project.";
+            return "Please select a project from the drop-down list above.";
         }
     }
 }

@@ -18,23 +18,36 @@
 package de.tudarmstadt.ukp.inception.ui.dashboard.dashlet;
 
 import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.security.core.session.SessionRegistry;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 
 public class SystemStatusDashlet
     extends Dashlet_ImplBase
 {
     private static final long serialVersionUID = 1276835215161570732L;
-    
+
     private @SpringBean SessionRegistry sessionRegistry;
+    private @SpringBean UserDao userRepo;
+    private @SpringBean ProjectService projectService;
 
     public SystemStatusDashlet(String aId)
     {
         super(aId);
-        
+
         add(new Label("activeUsers",
-                LambdaModel.of(() -> sessionRegistry.getAllPrincipals().size())));
+                LoadableDetachableModel.of(() -> sessionRegistry.getAllPrincipals().size())));
+    }
+    
+    @Override
+    protected void onConfigure()
+    {
+        super.onConfigure();
+        
+        setVisible(SecurityUtil.isSuperAdmin(projectService, userRepo.getCurrentUser()));
     }
 }
