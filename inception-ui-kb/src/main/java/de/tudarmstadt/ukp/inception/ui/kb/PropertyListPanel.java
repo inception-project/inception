@@ -94,7 +94,8 @@ public class PropertyListPanel extends Panel {
     }
 
     @Override
-    protected void onConfigure() {
+    protected void onConfigure()
+    {
         super.onConfigure();
 
         // Via Wicket events it can happen that an explicit property is selected even though the

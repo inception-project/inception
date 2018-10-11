@@ -157,6 +157,7 @@ public class KnowledgeBaseServiceRemoteTest
         int maxResults = 1000;
 
         Set<String> rootConcepts;
+        Map<String, String> parentChildConcepts;
         List<TestConfiguration> kbList = new ArrayList<>();
 
         {
@@ -176,9 +177,12 @@ public class KnowledgeBaseServiceRemoteTest
             kb_wine.setMaxResults(maxResults);
             rootConcepts = new HashSet<String>();
             rootConcepts.add("http://www.w3.org/TR/2003/PR-owl-guide-20031209/food#Grape");
+            parentChildConcepts = new HashMap<String, String>();
+            parentChildConcepts.put("http://www.w3.org/TR/2003/PR-owl-guide-20031209/food#Grape",
+                    "http://www.w3.org/TR/2003/PR-owl-guide-20031209/wine#WineGrape");
             kbList.add(new TestConfiguration("data/wine-ontology.rdf", kb_wine,
                     "http://www.w3.org/TR/2003/PR-owl-guide-20031209/wine#ChateauMargaux",
-                    rootConcepts));
+                    rootConcepts, parentChildConcepts));
         }
 
         {
@@ -203,9 +207,12 @@ public class KnowledgeBaseServiceRemoteTest
             kb_hucit.setMaxResults(maxResults);
             rootConcepts = new HashSet<String>();
             rootConcepts.add("http://www.w3.org/2000/01/rdf-schema#Class");
+            parentChildConcepts = new HashMap<String, String>();
+            parentChildConcepts.put("http://www.w3.org/2000/01/rdf-schema#Class",
+                    "http://www.w3.org/2002/07/owl#Class");
             kbList.add(new TestConfiguration("http://nlp.dainst.org:8888/sparql", kb_hucit,
                     // person -> Achilles :: urn:cts:cwkb:1137
-                    "http://purl.org/hucit/kb/authors/1137", rootConcepts));
+                    "http://purl.org/hucit/kb/authors/1137", rootConcepts, parentChildConcepts));
         }
 
         {
@@ -220,8 +227,11 @@ public class KnowledgeBaseServiceRemoteTest
             kb_wikidata_direct.setMaxResults(maxResults);
             rootConcepts = new HashSet<String>();
             rootConcepts.add("http://www.wikidata.org/entity/Q35120");
+            parentChildConcepts = new HashMap<String, String>();
+            parentChildConcepts.put("http://www.wikidata.org/entity/Q35120",
+                    "http://www.wikidata.org/entity/Q24229398");
             kbList.add(new TestConfiguration(profile.getAccess().getAccessUrl(), kb_wikidata_direct,
-                    "http://www.wikidata.org/entity/Q19576436", rootConcepts));
+                    "http://www.wikidata.org/entity/Q19576436", rootConcepts, parentChildConcepts));
         }
 
         // {
@@ -250,8 +260,11 @@ public class KnowledgeBaseServiceRemoteTest
             kb_dbpedia.setMaxResults(maxResults);
             rootConcepts = new HashSet<String>();
             rootConcepts.add("http://www.w3.org/2002/07/owl#Thing");
+            parentChildConcepts = new HashMap<String, String>();
+            parentChildConcepts.put("http://www.w3.org/2002/07/owl#Thing",
+                    "http://dbpedia.org/ontology/Biomolecule");
             kbList.add(new TestConfiguration(profile.getAccess().getAccessUrl(), kb_dbpedia,
-                    "http://www.wikidata.org/entity/Q20280393", rootConcepts));
+                    "http://www.wikidata.org/entity/Q20280393", rootConcepts, parentChildConcepts));
         }
 
         {
@@ -262,12 +275,15 @@ public class KnowledgeBaseServiceRemoteTest
             kb_yago.setReification(Reification.NONE);
             kb_yago.applyMapping(profile.getMapping());
             kb_yago.applyRootConcepts(profile);
+            kb_yago.setMaxResults(maxResults);
             rootConcepts = new HashSet<String>();
             rootConcepts.add("http://www.w3.org/2002/07/owl#Thing");
-            kb_yago.setMaxResults(maxResults);
+            parentChildConcepts = new HashMap<String, String>();
+            parentChildConcepts.put("http://www.w3.org/2002/07/owl#Thing",
+                    "http://yago-knowledge.org/resource/wikicat_Alleged_UFO-related_entities");
             kbList.add(new TestConfiguration(profile.getAccess().getAccessUrl(), kb_yago,
                     "http://www.wikidata.org/entity/Q21445637S003fc070-45f0-80bd-ae2d-072cde5aad89",
-                    rootConcepts));
+                    rootConcepts, parentChildConcepts));
         }
 
         {
@@ -282,8 +298,11 @@ public class KnowledgeBaseServiceRemoteTest
             kb_zbw_stw_economics.setMaxResults(maxResults);
             rootConcepts = new HashSet<String>();
             rootConcepts.add("http://zbw.eu/stw/thsys/a");
+            parentChildConcepts = new HashMap<String, String>();
+            parentChildConcepts.put("http://zbw.eu/stw/thsys/a",
+                    "http://zbw.eu/stw/thsys/70582");
             kbList.add(new TestConfiguration(profile.getAccess().getAccessUrl(),
-                    kb_zbw_stw_economics, "http://zbw.eu/stw/thsys/71020", rootConcepts));
+                    kb_zbw_stw_economics, "http://zbw.eu/stw/thsys/71020", rootConcepts, parentChildConcepts));
         }
 
         // Commenting this out for the moment becuase we expect that every ontology contains
@@ -324,7 +343,27 @@ public class KnowledgeBaseServiceRemoteTest
             assertThat(rootConceptKBHandle.stream().map(KBHandle::getIdentifier)).as("Check that root concept is retreived")
             .contains(expectedRoot);
         }
-        
+    }
+    
+    @Test
+    public void thatChildConceptsCanBeRetrieved()
+    {
+        KnowledgeBase kb = sutConfig.getKnowledgeBase();
+        long duration = System.currentTimeMillis();
+        for (String parentConcept : sutConfig.getParentChildIdentifier().keySet()) {
+            List<KBHandle> childConceptKBHandle = sut.listChildConcepts(kb, parentConcept, true);
+            duration = System.currentTimeMillis() - duration;
+
+            System.out.printf("Child concepts retrieved for %s : %d%n", parentConcept, childConceptKBHandle.size());
+            System.out.printf("Time required           : %d ms%n", duration);
+            childConceptKBHandle.stream().limit(10).forEach(h -> System.out.printf("   %s%n", h));
+
+            assertThat(childConceptKBHandle).as("Check that root concept list is not empty")
+                    .isNotEmpty();
+            assertThat(childConceptKBHandle.stream().map(KBHandle::getIdentifier))
+                    .as("Check that child concept is retreived")
+                    .contains(sutConfig.getParentChildIdentifier().get(parentConcept));
+        }
     }
 
     @Test
@@ -341,7 +380,6 @@ public class KnowledgeBaseServiceRemoteTest
         propertiesKBHandle.stream().limit(10).forEach(h -> System.out.printf("   %s%n", h));
 
         assertThat(propertiesKBHandle).as("Check that property list is not empty").isNotEmpty();
-
     }
 
     @Test
@@ -359,7 +397,6 @@ public class KnowledgeBaseServiceRemoteTest
         parentList.stream().limit(10).forEach(h -> System.out.printf("   %s%n", h));
 
         assertThat(parentList).as("Check that parent list is not empty").isNotEmpty();
-
     }
 
     // Helper
@@ -401,15 +438,17 @@ public class KnowledgeBaseServiceRemoteTest
         private final KnowledgeBase kb;
         private final String testIdentifier;
         private final Set<String> rootIdentifier;
+        private final Map<String,String> parentChildIdentifier;
 
         public TestConfiguration(String aUrl, KnowledgeBase aKb, String atestIdentifier,
-                Set<String> aRootIdentifier)
+                Set<String> aRootIdentifier, Map<String,String> aParentChildIdentifier)
         {
             super();
             url = aUrl;
             kb = aKb;
             testIdentifier = atestIdentifier;
             rootIdentifier = aRootIdentifier;
+            parentChildIdentifier = aParentChildIdentifier;
         }
 
         public KnowledgeBase getKnowledgeBase()
@@ -430,6 +469,11 @@ public class KnowledgeBaseServiceRemoteTest
         public Set<String> getRootIdentifier()
         {
             return rootIdentifier;
+        }
+
+        public Map<String,String> getParentChildIdentifier()
+        {
+            return parentChildIdentifier;
         }
 
         @Override

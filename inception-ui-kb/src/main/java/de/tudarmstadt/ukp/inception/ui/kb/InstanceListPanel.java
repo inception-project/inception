@@ -72,8 +72,10 @@ public class InstanceListPanel extends Panel {
             private static final long serialVersionUID = -122960232588575731L;
 
             @Override
-            protected void onConfigure() {
+            protected void onConfigure()
+            {
                 super.onConfigure();
+                
                 setVisible(!instancesModel.getObject().isEmpty());
             }
         };
@@ -98,8 +100,10 @@ public class InstanceListPanel extends Panel {
             private static final long serialVersionUID = 2252854898212441711L;
 
             @Override
-            protected void onConfigure() {
+            protected void onConfigure()
+            {
                 super.onConfigure();
+
                 setVisible(instancesModel.getObject().isEmpty());
             }
         });
@@ -114,6 +118,7 @@ public class InstanceListPanel extends Panel {
     protected void onConfigure()
     {
         super.onConfigure();
+        
         setVisible(conceptModel.getObject() != null && 
                 isNotEmpty(conceptModel.getObject().getIdentifier()));
     }

@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.inception.app.session.SessionMetaData;
 
@@ -54,17 +55,9 @@ public class MenuBar
     {
         super(aId);
         
-        project = new DropDownChoice<Project>("project") {
-            private static final long serialVersionUID = -449888636732709172L;
-            
-            @Override
-            protected void onConfigure()
-            {
-                super.onConfigure();
-                
-                setVisible(AuthenticatedWebSession.get().isSignedIn());
-            }
-        };
+        project = new DropDownChoice<Project>("project");
+        project.add(LambdaBehavior.onConfigure(_this -> 
+                _this.setVisible(AuthenticatedWebSession.get().isSignedIn())));
         project.add(new AjaxFormComponentUpdatingBehavior("change")
         {
             private static final long serialVersionUID = -2064647315598402594L;

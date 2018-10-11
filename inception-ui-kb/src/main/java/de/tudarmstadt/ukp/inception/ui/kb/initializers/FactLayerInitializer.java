@@ -30,6 +30,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.initializers.LayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.initializers.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.initializers.TokenLayerInitializer;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
@@ -66,8 +67,7 @@ public class FactLayerInitializer
             SPAN_TYPE, aProject, false);
         factLayer.setAllowStacking(true);
         factLayer.setCrossSentence(false);
-        factLayer.setLockToTokenOffset(false);
-        factLayer.setMultipleTokens(true);
+        factLayer.setAnchoringMode(AnchoringMode.TOKENS);
 
         annotationSchemaService.createFeature(
             new AnnotationFeature(aProject, factLayer, "predicate", "1) Predicate",

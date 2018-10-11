@@ -981,6 +981,9 @@ public class KnowledgeBaseServiceImpl
         List<KBHandle> handles = new ArrayList<>();
         while (result.hasNext()) {
             BindingSet bindings = result.next();
+            if (bindings.size() == 0) {
+                continue;
+            }
             String id = bindings.getBinding("s").getValue().stringValue();
             Binding label = bindings.getBinding("l");
             Binding description = bindings.getBinding("d");

@@ -259,9 +259,11 @@ public class KnowledgeBaseDetailsPanel
         add(confirmationDialog);
     }
 
-    @Override protected void onConfigure()
+    @Override
+    protected void onConfigure()
     {
         super.onConfigure();
+
         setVisible(kbModel != null && kbModel.getObject() != null);
     }
 
@@ -506,6 +508,8 @@ public class KnowledgeBaseDetailsPanel
                 @Override
                 protected void onConfigure()
                 {
+                    super.onConfigure();
+                    
                     setEnabled(false);
                 }
             };
