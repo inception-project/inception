@@ -50,6 +50,7 @@ import de.agilecoders.wicket.core.markup.html.bootstrap.form.radio.BootstrapRadi
 import de.agilecoders.wicket.core.markup.html.bootstrap.form.radio.EnumRadioChoiceRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormSubmittingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
@@ -140,8 +141,10 @@ public class StatementsPanel extends Panel {
             private static final long serialVersionUID = 2252854898212441711L;
 
             @Override
-            protected void onConfigure() {
+            protected void onConfigure()
+            {
                 super.onConfigure();
+                
                 setVisible(statementGroups.getObject().isEmpty());
             }
         });       
@@ -180,15 +183,9 @@ public class StatementsPanel extends Panel {
         // the form for setting the detail preference (and its radio group) is only shown if the
         // detail preference is user-definable
         Form<StatementDetailPreference> form = new Form<StatementDetailPreference>(
-                "detailPreferenceForm") {
-            private static final long serialVersionUID = -222822362868279485L;
-
-            @Override
-            protected void onConfigure() {
-                super.onConfigure();
-                setVisible(isDetailPreferenceUserDefinable);
-            }
-        };
+                "detailPreferenceForm");
+        form.add(LambdaBehavior
+                .onConfigure(_this -> _this.setVisible(isDetailPreferenceUserDefinable)));
         add(form);
         
         // radio choice for statement detail preference
@@ -227,7 +224,8 @@ public class StatementsPanel extends Panel {
     }
 
     @Override
-    protected void onConfigure() {
+    protected void onConfigure()
+    {
         super.onConfigure();
 
         setVisible(

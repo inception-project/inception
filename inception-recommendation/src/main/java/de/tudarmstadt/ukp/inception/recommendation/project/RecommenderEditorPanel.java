@@ -29,7 +29,6 @@ import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.ajax.markup.html.form.AjaxButton;
-import org.apache.wicket.behavior.Behavior;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
@@ -52,6 +51,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormSubmittingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
@@ -180,15 +180,8 @@ public class RecommenderEditorPanel
                 .setMaximum(100.0f)
                 .setStep(0.01f)
                 .setOutputMarkupId(true)
-                .add(new Behavior() {
-                    private static final long serialVersionUID = 1L;
-
-                    @Override
-                    public void onConfigure(org.apache.wicket.Component component)
-                    {
-                        component.setEnabled(!recommenderModel.getObject().isAlwaysSelected());
-                    };
-                }));
+                .add(LambdaBehavior.onConfigure(_this -> 
+                        _this.setEnabled(!recommenderModel.getObject().isAlwaysSelected()))));
         
         // Cannot use LambdaAjaxButton because it does not support onAfterSubmit.
         form.add(new AjaxButton("save")
