@@ -137,18 +137,6 @@ public class ProjectDetailPanel
             }
         });
     }
-    
-    @Override
-    protected void onModelChanged()
-    {
-        super.onModelChanged();
-        
-        // If there is only a single project type, then we can simply select that and do not need
-        // to show the choice at all.
-        if (projectTypes.getChoices().size() == 1 && projectModel.getObject().getMode() == null) {
-            projectModel.getObject().setMode(projectTypes.getChoices().get(0));
-        }
-    }
         
     private DropDownChoice<String> makeProjectTypeChoice()
     {
@@ -156,17 +144,22 @@ public class ProjectDetailPanel
                 .collect(Collectors.toList());
 
         DropDownChoice<String> projTypes = new DropDownChoice<>("mode", types);
-
-        projTypes.add(LambdaBehavior.onConfigure(it -> it.setEnabled(
-                nonNull(projectModel.getObject()) && isNull(projectModel.getObject().getId()))));
-
         projTypes.setRequired(true);
-        
-        // If there is only a single project type, then we can simply select that and do not need
-        // to show the choice at all.
-        if (projTypes.getChoices().size() == 1) {
-            projTypes.setVisible(false);
-        }
+        projTypes.add(LambdaBehavior.onConfigure(_this -> {
+            // If there is only a single project type and the project mode has not been set yet,
+            // then we can simply select that and do not need to show the choice at all.
+            Project project = projectModel.getObject();
+            if (projectTypes.getChoices().size() == 1 && project.getMode() == null) {
+                project.setMode(projectTypes.getChoices().get(0));
+            }
+            
+            _this.setEnabled(
+                    nonNull(projectModel.getObject()) && isNull(projectModel.getObject().getId()));
+            
+            // If there is only a single project type, then we can simply select that and do not
+            // need to show the choice at all.
+            _this.setVisible(projTypes.getChoices().size() > 1);
+        }));
         
         return projTypes;
     }
