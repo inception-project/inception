@@ -17,14 +17,13 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.dl4j.pos;
 
-import org.apache.uima.cas.CAS;
-import org.springframework.stereotype.Component;
-
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommendationEngineFactoryImplBase;
+import org.apache.uima.cas.CAS;
+import org.springframework.stereotype.Component;
 
 @Component
 public class DL4JSequenceRecommenderFactory
@@ -55,8 +54,7 @@ public class DL4JSequenceRecommenderFactory
             return false;
         }
         
-        return aLayer.isLockToTokenOffset() && "span".equals(aLayer.getType())
-            && CAS.TYPE_NAME_STRING.equals(aFeature.getType());
+        return "span".equals(aLayer.getType()) && CAS.TYPE_NAME_STRING.equals(aFeature.getType());
     }
 
     @Override
