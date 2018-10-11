@@ -83,13 +83,10 @@ public class NumericLiteralValueSupport
     @Override
     public boolean accepts(KBStatement aStatement, KBProperty aProperty)
     {
-        
         if (aStatement.getValue() == null) {
             return false;
         }
-        
         IRI iri = DefaultDatatypeMapper.getDatatypeURI((aStatement.getValue()).getClass());
-
         return NUMERIC_TYPES.contains(iri);
     }
     
