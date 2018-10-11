@@ -69,6 +69,7 @@ import de.agilecoders.wicket.core.markup.html.bootstrap.form.radio.EnumRadioChoi
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.inception.app.bootstrap.BootstrapWizard;
 import de.tudarmstadt.ukp.inception.app.bootstrap.BootstrapWizardButtonBar;
@@ -293,19 +294,16 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
             ListView<KnowledgeBaseProfile> suggestions = new ListView<KnowledgeBaseProfile>(
                 "downloadableKBs", downloadableKBs)
             {
+                private static final long serialVersionUID = 1L;
+
                 @Override protected void populateItem(ListItem<KnowledgeBaseProfile> item)
                 {
                     LambdaAjaxLink link = new LambdaAjaxLink("suggestionLink", t -> {
                         selectedKnowledgeBaseProfile = item.getModelObject();
-                    })
-                    {
-                        @Override protected void onConfigure()
-                        {
-                            // Can not download the same KB more than once
-                            setEnabled(
-                                !downloadedProfiles.containsKey(item.getModelObject().getName()));
-                        }
-                    };
+                    });
+                    // Can not download the same KB more than once
+                    link.add(LambdaBehavior.onConfigure(_this -> setEnabled(
+                            !downloadedProfiles.containsKey(item.getModelObject().getName()))));
 
                     String itemLabel = item.getModelObject().getName();
                     // Adjust label to indicate whether the KB has already been downloaded

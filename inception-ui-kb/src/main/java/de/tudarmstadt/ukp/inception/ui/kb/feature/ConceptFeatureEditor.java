@@ -108,8 +108,10 @@ public class ConceptFeatureEditor extends FeatureEditor {
             }
 
             @Override
-            public void onConfigure(JQueryBehavior behavior) {
+            public void onConfigure(JQueryBehavior behavior)
+            {
                 super.onConfigure(behavior);
+
                 behavior.setOption("autoWidth", true);
                 behavior.setOption("ignoreCase", false);
             }

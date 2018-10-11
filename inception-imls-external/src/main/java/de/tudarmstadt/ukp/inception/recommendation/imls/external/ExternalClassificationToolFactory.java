@@ -17,8 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.external;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
 import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.fromJsonString;
 import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.toJsonString;
+import static java.util.Arrays.asList;
 
 import java.io.IOException;
 
@@ -81,7 +84,7 @@ public class ExternalClassificationToolFactory
             return false;
         }
         
-        return (aLayer.isLockToTokenOffset() || aLayer.isMultipleTokens())
+        return asList(SINGLE_TOKEN, TOKENS).contains(aLayer.getAnchoringMode())
                 && WebAnnoConst.SPAN_TYPE.equals(aLayer.getType());
     }
 

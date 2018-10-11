@@ -184,6 +184,7 @@ public class KnowledgeBaseIriPanel
                 protected void onConfigure()
                 {
                     super.onConfigure();
+                    
                     IModel<String> labelModel;
                     if (advancedSettingsPanel.isVisible()) {
                         labelModel = new ResourceModel("toogleAdvSettingsHide");
