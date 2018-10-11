@@ -69,10 +69,10 @@ public class ProjectSettingsExporter
             ExportedProject aExProject, ZipFile aZip)
         throws IOException
     {
+        // The "mode" is already set in ProjectExportServiceImpl.importProject(...) because there
+        // the project is already persisted and when it is persisted the non-null column "mode"
+        // must already have a value.
         aProject.setDescription(aExProject.getDescription());
-        // In older versions of WebAnno, the mode was an enum which was serialized as upper-case
-        // during export but as lower-case in the database. This is compensating for this case.
-        aProject.setMode(StringUtils.lowerCase(aExProject.getMode(), Locale.US));
         aProject.setDisableExport(aExProject.isDisableExport());
         aProject.setCreated(aExProject.getCreated());
         aProject.setUpdated(aExProject.getUpdated());
