@@ -129,6 +129,7 @@ public class KnowledgeBaseServiceRemoteTest
             importKnowledgeBase(sutConfig.getDataUrl());
         }
         else if (kb.getType() == RepositoryType.REMOTE) {
+            testFixtures.assumeEndpointIsAvailable(sutConfig.getDataUrl(), 5000);
             sut.registerKnowledgeBase(kb, sut.getRemoteConfig(sutConfig.getDataUrl()));
             sut.updateKnowledgeBase(kb, sut.getKnowledgeBaseConfig(kb));
         }
