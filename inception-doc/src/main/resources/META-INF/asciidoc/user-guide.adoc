@@ -71,6 +71,10 @@ include::{include-dir}login.adoc[]
 
 <<<
 
+include::{include-dir}menubar.adoc[]
+
+<<<
+
 include::{include-dir}menu.adoc[]
 
 <<<
