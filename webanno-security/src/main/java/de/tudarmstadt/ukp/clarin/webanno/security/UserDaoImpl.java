@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.security;
 import java.util.List;
 
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 
 import org.apache.commons.lang3.Validate;
@@ -27,6 +28,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import de.tudarmstadt.ukp.clarin.webanno.security.model.Authority;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 /**
@@ -120,5 +122,17 @@ public class UserDaoImpl
     {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         return get(username);
+    }
+    
+    @Override
+    @Transactional(noRollbackFor = NoResultException.class)
+    public List<Authority> listAuthorities(User aUser)
+    {
+        String query =
+                "FROM Authority " + 
+                "WHERE username = :username";
+        return entityManager
+                .createQuery(query, Authority.class)
+                .setParameter("username", aUser).getResultList();
     }
 }

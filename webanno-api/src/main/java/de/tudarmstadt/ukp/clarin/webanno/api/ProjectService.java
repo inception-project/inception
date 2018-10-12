@@ -32,6 +32,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Authority;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
@@ -424,7 +425,9 @@ public interface ProjectService
      * @param user
      *            the {@link User} object
      * @return the roles.
+     * @deprecated use {@link UserDao#listAuthorities(User)}
      */
+    @Deprecated
     List<Authority> listAuthorities(User user);
     
     // --------------------------------------------------------------------------------------------

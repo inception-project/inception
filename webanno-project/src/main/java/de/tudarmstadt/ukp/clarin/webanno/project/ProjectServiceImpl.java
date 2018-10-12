@@ -364,16 +364,12 @@ public class ProjectServiceImpl
                 + META_INF_FOLDER + "/");
     }
 
+    @Deprecated
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
     public List<Authority> listAuthorities(User aUser)
     {
-        String query =
-                "FROM Authority " + 
-                "WHERE username = :username";
-        return entityManager
-                .createQuery(query, Authority.class)
-                .setParameter("username", aUser).getResultList();
+        return userRepository.listAuthorities(aUser);
     }
 
     @Override

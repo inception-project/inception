@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.security;
 
 import java.util.List;
 
+import de.tudarmstadt.ukp.clarin.webanno.security.model.Authority;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 /**
@@ -86,4 +87,14 @@ public interface UserDao
      * @return the users.
      */
     List<User> list();
+    
+    /**
+     * Returns a role of a user, globally we will have ROLE_ADMIN and ROLE_USER
+     *
+     * @param user
+     *            the {@link User} object
+     * @return the roles.
+     */
+    List<Authority> listAuthorities(User user);
+
 }
