@@ -182,8 +182,8 @@ public class ProjectLayersPanel
     {
         super.onModelChanged();
         
-        selectedLayer.setObject(null);
-        selectedFeature.setObject(null);
+        layerDetailForm.setModelObject(null);
+        featureDetailForm.setModelObject(null);
     }
 
     private class LayerSelectionForm
@@ -202,8 +202,8 @@ public class ProjectLayersPanel
                 @Override
                 public void onSubmit()
                 {
-                    selectedLayer.setObject(new AnnotationLayer());
-                    selectedFeature.setObject(null);
+                    layerDetailForm.setModelObject(new AnnotationLayer());
+                    featureDetailForm.setModelObject(null);
                 }
             });
 
@@ -268,7 +268,7 @@ public class ProjectLayersPanel
             add(layerSelection.add(layers));
             layerSelection.setOutputMarkupId(true);
             layerSelection.add(OnChangeAjaxBehavior.onChange(_target -> {
-                selectedFeature.setObject(null);
+                featureDetailForm.setModelObject(null);
 
                 _target.add(layerDetailForm);
                 _target.add(featureSelectionForm);
@@ -771,8 +771,8 @@ public class ProjectLayersPanel
 
         private void actionCancel(AjaxRequestTarget aTarget)
         {
-            selectedLayer.setObject(null);
-            selectedFeature.setObject(null);
+            layerDetailForm.setModelObject(null);
+            featureDetailForm.setModelObject(null);
             
             aTarget.add(ProjectLayersPanel.this);
             aTarget.addChildren(getPage(), IFeedback.class);
@@ -939,37 +939,8 @@ public class ProjectLayersPanel
             });
             add(new CheckBox("hideUnconstraintFeature"));
 
-            add(featureType = new DropDownChoice<FeatureType>("type")
-            {
+            add(featureType = new DropDownChoice<FeatureType>("type") {
                 private static final long serialVersionUID = 9029205407108101183L;
-
-                {
-                    IModel<FeatureType> model = LambdaModelAdapter.of(() -> {
-                        return featureSupportRegistry
-                                .getFeatureType(featureDetailForm.getModelObject());
-                    }, (v) -> FeatureDetailForm.this.getModelObject().setType(v.getName()));
-                    setRequired(true);
-                    setNullValid(false);
-                    setChoiceRenderer(new ChoiceRenderer<>("uiName"));
-                    setModel(model);
-                }
-
-                @Override
-                protected void onConfigure()
-                {
-                    super.onConfigure();
-
-                    if (isNull(FeatureDetailForm.this.getModelObject().getId())) {
-                        setEnabled(true);
-                        setChoices(LambdaModel.of(() -> featureSupportRegistry
-                                .getUserSelectableTypes(layerDetailForm.getModelObject())));
-                    }
-                    else {
-                        setEnabled(false);
-                        setChoices(LambdaModel.of(() -> featureSupportRegistry
-                                .getAllTypes(layerDetailForm.getModelObject())));
-                    }
-                }
 
                 @Override
                 protected void onModelChanged()
@@ -990,6 +961,24 @@ public class ProjectLayersPanel
                     traitsContainer.addOrReplace(newTraits);
                 }
             });
+            featureType.setRequired(true);
+            featureType.setNullValid(false);
+            featureType.setChoiceRenderer(new ChoiceRenderer<>("uiName"));
+            featureType.setModel(LambdaModelAdapter.of(
+                () -> featureSupportRegistry.getFeatureType(featureDetailForm.getModelObject()), 
+                (v) -> FeatureDetailForm.this.getModelObject().setType(v.getName())));
+            featureType.add(LambdaBehavior.onConfigure(_this -> {
+                if (isNull(FeatureDetailForm.this.getModelObject().getId())) {
+                    featureType.setEnabled(true);
+                    featureType.setChoices(LoadableDetachableModel.of(() -> featureSupportRegistry
+                            .getUserSelectableTypes(layerDetailForm.getModelObject())));
+                }
+                else {
+                    featureType.setEnabled(false);
+                    featureType.setChoices(LoadableDetachableModel.of(() -> featureSupportRegistry
+                            .getAllTypes(layerDetailForm.getModelObject())));
+                }
+            }));
             featureType.add(new AjaxFormComponentUpdatingBehavior("change")
             {
                 private static final long serialVersionUID = -2904306846882446294L;
@@ -1070,7 +1059,7 @@ public class ProjectLayersPanel
                     annotationService.createFeature(feature);
 
                     // Clear currently selected feature / feature details
-                    selectedFeature.setObject(null);
+                    featureDetailForm.setModelObject(null);
 
                     // Trigger LayerConfigurationChangedEvent
                     applicationEventPublisherHolder.get().publishEvent(
@@ -1091,7 +1080,7 @@ public class ProjectLayersPanel
                 public void onSubmit()
                 {
                     // cancel selection of feature list
-                    selectedFeature.setObject(null);
+                    featureDetailForm.setModelObject(null);
                 }
             });
         }
@@ -1150,10 +1139,10 @@ public class ProjectLayersPanel
                         @Override
                         protected void onUpdate()
                         {
-                            if (FeatureSelectionForm.this.getModelObject() != null) {
-                                featureDetailForm
-                                        .setModelObject(FeatureSelectionForm.this.getModelObject());
-                            }
+                            // list and detail panel share the same model, but they are not
+                            // automatically notified of updates to the model unless the 
+                            // updates go through their respective setModelObject() calls
+                            featureDetailForm.modelChanged();
                         };
                     });
                 }

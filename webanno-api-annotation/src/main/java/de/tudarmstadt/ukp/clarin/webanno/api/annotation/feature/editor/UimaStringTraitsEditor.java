@@ -21,6 +21,7 @@ import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
@@ -28,7 +29,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 
 public class UimaStringTraitsEditor
     extends Panel
@@ -42,18 +42,14 @@ public class UimaStringTraitsEditor
     {
         super(aId);
         
-        add(new DropDownChoice<TagSet>("tagset")
-        {
-            private static final long serialVersionUID = -6705445053442011120L;
-            {
-                setOutputMarkupPlaceholderTag(true);
-                setOutputMarkupId(true);
-                setChoiceRenderer(new ChoiceRenderer<>("name"));
-                setNullValid(true);
-                setModel(PropertyModel.of(aFeature, "tagset"));
-                setChoices(LambdaModel.of(() -> annotationService
-                        .listTagSets(aFeature.getObject().getProject())));
-            }
-        });
+        DropDownChoice<TagSet> tagset = new DropDownChoice<TagSet>("tagset");
+        tagset.setOutputMarkupPlaceholderTag(true);
+        tagset.setOutputMarkupId(true);
+        tagset.setChoiceRenderer(new ChoiceRenderer<>("name"));
+        tagset.setNullValid(true);
+        tagset.setModel(PropertyModel.of(aFeature, "tagset"));
+        tagset.setChoices(LoadableDetachableModel.of(() -> annotationService
+                .listTagSets(aFeature.getObject().getProject())));
+        add(tagset);
     }
 }
