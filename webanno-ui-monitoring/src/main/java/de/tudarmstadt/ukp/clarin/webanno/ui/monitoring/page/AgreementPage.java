@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.page;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil.isCurator;
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
 import static java.util.Arrays.asList;
 
 import java.io.IOException;
@@ -27,6 +29,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+
+import javax.persistence.NoResultException;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.jcas.JCas;
@@ -50,10 +54,12 @@ import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.cycle.RequestCycle;
+import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.resource.AbstractResourceStream;
 import org.apache.wicket.util.resource.IResourceStream;
 import org.apache.wicket.util.resource.ResourceStreamNotFoundException;
+import org.apache.wicket.util.string.StringValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wicketstuff.annotation.mount.MountPath;
@@ -86,7 +92,6 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.AJAXDownload;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.OverviewListChoice;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
@@ -105,15 +110,51 @@ public class AgreementPage
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean UserDao userRepository;
 
-    private final ProjectSelectionForm projectSelectionForm;
-    private final AgreementForm agreementForm;
+    private ProjectSelectionForm projectSelectionForm;
+    private AgreementForm agreementForm;
 
     public AgreementPage()
+    {
+        super();
+        
+        commonInit();
+    }
+
+    public AgreementPage(final PageParameters aPageParameters)
+    {
+        super(aPageParameters);
+        
+        commonInit();
+       
+        projectSelectionForm.setVisibilityAllowed(false);
+        
+        User user = userRepository.getCurrentUser();
+        
+        // Get current project from parameters
+        StringValue projectParameter = aPageParameters.get(PAGE_PARAM_PROJECT_ID);
+        Project project = null;
+        try {
+            project = getProjectFromParameters(projectParameter);
+        }
+        catch (NoResultException e) {
+            error("Project [" + projectParameter + "] does not exist");
+            return;
+        }
+        
+        // Check access to project
+        if (project != null && !isCurator(project, projectService, user)) {
+            error("You have no permission to access project [" + project.getId() + "]");
+            return;
+        }
+        
+        projectSelectionForm.selectProject(project);
+    }    
+    private void commonInit()
     {
         add(projectSelectionForm = new ProjectSelectionForm("projectSelectionForm"));
         add(agreementForm = new AgreementForm("agreementForm"));
     }
-
+    
     private void updateAgreementTable(AjaxRequestTarget aTarget, boolean aClearCache)
     {
         try {
@@ -562,7 +603,7 @@ public class AgreementPage
 
             ListChoice<Project> projectList = new OverviewListChoice<>("project");
             projectList.setChoiceRenderer(new ChoiceRenderer<>("name"));
-            projectList.setChoices(LambdaModel.of(this::listAllowedProjects));
+            projectList.setChoices(LoadableDetachableModel.of(this::listAllowedProjects));
             projectList.add(new LambdaAjaxFormComponentUpdatingBehavior("change",
                     this::onSelectionChanged));
             add(projectList);
@@ -570,12 +611,8 @@ public class AgreementPage
         
         private void onSelectionChanged(AjaxRequestTarget aTarget)
         {
-            agreementForm.setModelObject(new AgreementFormModel());
+            selectProject(getModelObject().project);
             aTarget.add(agreementForm);
-
-            // Clear the cached CASes. When we switch to another project, we'll have to
-            // reload them.
-            updateAgreementTable(RequestCycle.get().find(AjaxRequestTarget.class).get(), true);
         }
         
         private List<Project> listAllowedProjects()
@@ -592,6 +629,16 @@ public class AgreementPage
                 }
             }
             return allowedProject;
+        }
+        
+        private void selectProject(Project aProject)
+        {
+            getModelObject().project = aProject;
+            agreementForm.setModelObject(new AgreementFormModel());
+
+            // Clear the cached CASes. When we switch to another project, we'll have to reload them.
+            updateAgreementTable(RequestCycle.get().find(AjaxRequestTarget.class).orElse(null),
+                    true);
         }
     }
 
@@ -616,5 +663,16 @@ public class AgreementPage
         public Project project;
         public Map<String, Integer> annotatorsProgress = new TreeMap<>();
         public Map<String, Integer> annotatorsProgressInPercent = new TreeMap<>();
+    }
+
+    
+    private Project getProjectFromParameters(StringValue projectParam)
+    {
+        Project project = null;
+        if (projectParam != null && !projectParam.isEmpty()) {
+            long projectId = projectParam.toLong();
+            project = projectService.getProject(projectId);
+        }
+        return project;
     }
 }
