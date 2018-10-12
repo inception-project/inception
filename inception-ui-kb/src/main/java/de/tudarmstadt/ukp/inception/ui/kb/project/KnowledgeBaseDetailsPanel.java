@@ -27,6 +27,7 @@ import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.ajax.markup.html.form.AjaxButton;
+import org.apache.wicket.ajax.markup.html.form.AjaxCheckBox;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
@@ -46,6 +47,7 @@ import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.resource.IResourceStream;
+import org.apache.wicket.validation.validator.RangeValidator;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.repository.RepositoryException;
 import org.eclipse.rdf4j.repository.config.RepositoryConfigException;
@@ -72,6 +74,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.wicket.TempFileResource;
 import de.tudarmstadt.ukp.inception.app.bootstrap.DisabledBootstrapCheckbox;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
+import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
 import de.tudarmstadt.ukp.inception.kb.event.KnowledgeBaseConfigurationChangedEvent;
 import de.tudarmstadt.ukp.inception.kb.io.FileUploadDownloadHelper;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
@@ -112,6 +115,7 @@ public class KnowledgeBaseDetailsPanel
         .map(f -> f.getDefaultFileExtension()).collect(Collectors.toList());
 
     private @SpringBean KnowledgeBaseService kbService;
+    private @SpringBean KnowledgeBaseProperties kbProperties;
 
     private final IModel<KnowledgeBase> kbModel;
     private final CompoundPropertyModel<KnowledgeBaseWrapper> kbwModel;
@@ -448,6 +452,10 @@ public class KnowledgeBaseDetailsPanel
                 .add(LambdaBehavior.onConfigure(it -> it.setEnabled(false))));
             wmc.add(new CheckBox("supportConceptLinking", model.bind("kb.supportConceptLinking"))
                 .add(LambdaBehavior.onConfigure(it -> it.setEnabled(false))));
+            wmc.add(new RequiredTextField<>("maxResults",
+                model.bind("kb.maxResults"))
+                .add(LambdaBehavior.onConfigure(it -> it.setEnabled(false))));
+
         }
 
         @Override protected void setUpLocalKnowledgeBaseComponents(WebMarkupContainer wmc)
@@ -534,6 +542,8 @@ public class KnowledgeBaseDetailsPanel
     {
 
         private static final long serialVersionUID = 7838564354437836375L;
+        private TextField<Integer> queryLimitField;
+        private CheckBox maxQueryLimitCheckBox;
 
         public EditMode(String id, CompoundPropertyModel<KnowledgeBaseWrapper> model)
         {
@@ -557,6 +567,11 @@ public class KnowledgeBaseDetailsPanel
                 KnowledgeBaseIriPanelMode.PROJECTSETTINGS));
             wmc.add(new CheckBox("enabled", model.bind("kb.enabled")));
             wmc.add(new CheckBox("supportConceptLinking", model.bind("kb.supportConceptLinking")));
+            queryLimitField = queryLimitField("maxResults",
+                model.bind("kb.maxResults"));
+            wmc.add(queryLimitField);
+            maxQueryLimitCheckBox = maxQueryLimitCheckbox("maxQueryLimit", new Model(false));
+            wmc.add(maxQueryLimitCheckBox);
         }
 
         @Override protected void setUpLocalKnowledgeBaseComponents(WebMarkupContainer wmc)
@@ -598,6 +613,34 @@ public class KnowledgeBaseDetailsPanel
             TextField<String> textField = new RequiredTextField<String>(id);
             textField.add(Validators.URL_VALIDATOR);
             wmc.add(textField);
+        }
+
+        private CheckBox maxQueryLimitCheckbox(String id, IModel<Boolean> model) {
+            return new AjaxCheckBox(id, model) {
+                @Override
+                public void onUpdate(AjaxRequestTarget aTarget) {
+                    if (getModelObject()) {
+                        queryLimitField.setModelObject(kbProperties.getHardMaxResults());
+                        queryLimitField.setEnabled(false);
+                    }
+                    else {
+                        queryLimitField.setEnabled(true);
+                    }
+                    aTarget.add(queryLimitField);
+                }
+
+            };
+        }
+
+        private TextField<Integer> queryLimitField(String id, IModel<Integer> model)
+        {
+            if (model.getObject() == 0) {
+                model.setObject(kbProperties.getDefaultMaxResults());
+            }
+            TextField<Integer> queryLimit = new RequiredTextField<Integer>(id, model);
+            queryLimit.add(RangeValidator.range(0, kbProperties.getHardMaxResults()));
+            queryLimit.setOutputMarkupId(true);
+            return queryLimit;
         }
     }
 }

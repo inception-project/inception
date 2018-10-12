@@ -75,6 +75,7 @@ public class TestFixtures
         kb.setPropertyDescriptionIri(RDFS.COMMENT);
         kb.setExplicitlyDefinedRootConcepts(new ArrayList<>());
         kb.setReification(reification);
+        kb.setMaxResults(1000);
         return kb;
     }
 
