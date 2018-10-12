@@ -1,5 +1,5 @@
 /*
- * Copyright 2017
+ * Copyright 2018
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
  *
@@ -18,12 +18,11 @@
 package de.tudarmstadt.ukp.clarin.webanno.support.lambda;
 
 import java.io.Serializable;
-import java.util.function.Supplier;
+import java.util.function.Consumer;
 
 @FunctionalInterface
-public interface SerializableSupplier<T>
-    extends Serializable, Supplier<T>
+public interface ExceptionHandler
+    extends Consumer<Exception>, Serializable
 {
-    @Override
-    T get();
+    // No changes compared to parent interfaces
 }

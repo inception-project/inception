@@ -20,6 +20,8 @@ package de.tudarmstadt.ukp.clarin.webanno.support.lambda;
 import java.io.Serializable;
 
 import org.apache.wicket.model.IModel;
+import org.danekja.java.util.function.serializable.SerializableConsumer;
+import org.danekja.java.util.function.serializable.SerializableSupplier;
 
 public class LambdaModelAdapter<T>
     implements IModel<T>

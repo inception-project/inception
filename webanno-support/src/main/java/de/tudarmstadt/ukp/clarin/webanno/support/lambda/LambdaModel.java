@@ -21,6 +21,7 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.request.cycle.IRequestCycleListener;
 import org.apache.wicket.request.cycle.RequestCycle;
+import org.danekja.java.util.function.serializable.SerializableSupplier;
 
 @Deprecated
 public class LambdaModel<T>

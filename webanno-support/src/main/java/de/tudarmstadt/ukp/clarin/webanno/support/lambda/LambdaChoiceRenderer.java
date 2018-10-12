@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.support.lambda;
 
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
+import org.danekja.java.util.function.serializable.SerializableFunction;
 
 public class LambdaChoiceRenderer<T>
     extends ChoiceRenderer<T>

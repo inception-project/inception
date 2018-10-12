@@ -20,7 +20,9 @@ package de.tudarmstadt.ukp.clarin.webanno.support.lambda;
 import org.apache.wicket.Component;
 import org.apache.wicket.behavior.Behavior;
 import org.apache.wicket.markup.ComponentTag;
+import org.danekja.java.util.function.serializable.SerializableBiConsumer;
 import org.danekja.java.util.function.serializable.SerializableBooleanSupplier;
+import org.danekja.java.util.function.serializable.SerializableConsumer;
 
 public class LambdaBehavior
 {
