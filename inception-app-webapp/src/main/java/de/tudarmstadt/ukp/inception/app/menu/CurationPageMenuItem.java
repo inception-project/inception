@@ -41,6 +41,12 @@ public class CurationPageMenuItem implements MenuItem
     private @Autowired ProjectService projectService;
 
     @Override
+    public String getPath()
+    {
+        return "/curation";
+    }
+    
+    @Override
     public String getIcon()
     {
         return "images/data_table.png";
