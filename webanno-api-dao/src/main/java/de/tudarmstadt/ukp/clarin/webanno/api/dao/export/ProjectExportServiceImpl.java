@@ -27,6 +27,7 @@ import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -35,6 +36,7 @@ import org.apache.commons.collections4.SetUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ClassUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -241,31 +243,36 @@ public class ProjectExportServiceImpl
                 projectName = copyProjectName(projectName);
             }
             project.setName(projectName);
-            
+
+            // We need to set the mode here already because the mode is a non-null column.
+            // In older versions of WebAnno, the mode was an enum which was serialized as upper-case
+            // during export but as lower-case in the database. This is compensating for this case.
+            project.setMode(StringUtils.lowerCase(exProject.getMode(), Locale.US));
+
             // Initial saving of the project
             projectService.createProject(project);
             
             // Apply the importers
             while (!deque.isEmpty()) {
-                ProjectExporter initializer = deque.pop();
+                ProjectExporter importer = deque.pop();
                 
-                if (initsDeferred.contains(initializer)) {
+                if (initsDeferred.contains(importer)) {
                     throw new IllegalStateException("Circular initializer dependencies in "
-                            + initsDeferred + " via " + initializer);
+                            + initsDeferred + " via " + importer);
                 }
                 
-                if (initsSeen.containsAll(initializer.getImportDependencies())) {
-                    log.debug("Applying project exporter: {}", initializer);
-                    initializer.importData(aRequest, project, exProject, aZip);
-                    initsSeen.add(initializer.getClass());
+                if (initsSeen.containsAll(importer.getImportDependencies())) {
+                    log.debug("Applying project importer: {}", importer);
+                    importer.importData(aRequest, project, exProject, aZip);
+                    initsSeen.add(importer.getClass());
                     initsDeferred.clear();
                 }
                 else {
                     log.debug(
                             "Deferring project exporter as dependencies are not yet fulfilled: [{}]",
-                            initializer);
-                    deque.add(initializer);
-                    initsDeferred.add(initializer);
+                            importer);
+                    deque.add(importer);
+                    initsDeferred.add(importer);
                 }
             }
         }
