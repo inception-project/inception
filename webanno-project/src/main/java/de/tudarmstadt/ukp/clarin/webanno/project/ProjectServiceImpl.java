@@ -385,7 +385,8 @@ public class ProjectServiceImpl
     {
         String query = 
                 "FROM ProjectPermission " +
-                "WHERE user =:user AND project =:project";
+                "WHERE user =:user AND project =:project " +
+                "ORDER BY level";
         return entityManager
                 .createQuery(query, ProjectPermission.class)
                 .setParameter("user", aUser.getUsername())
