@@ -2,7 +2,7 @@
  * Copyright 2018
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,10 +17,14 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.pos;
 
-public class OpenNlpPosClassificationToolTraits
-{
-    public OpenNlpPosClassificationToolTraits()
-    {
-        // TODO Auto-generated constructor stub
+import opennlp.tools.ml.AbstractTrainer;
+import opennlp.tools.util.TrainingParameters;
+
+public class OpenNlpPosRecommenderTraits {
+
+    public TrainingParameters getParameters() {
+        TrainingParameters parameters = TrainingParameters.defaultParams();
+        parameters.put(AbstractTrainer.VERBOSE_PARAM, "false");
+        return parameters;
     }
 }

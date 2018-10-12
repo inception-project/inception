@@ -40,18 +40,28 @@ public interface RecommendationEngine {
      * @param aDataSplitter The splitter which determines which annotations belong to which set
      * @return Score measuring the performance of predicting on the test set
      */
-    double evaluate(List<CAS> aCasses, DataSplitter aDataSplitter);
+    double evaluate(List<CAS> aCasses, DataSplitter aDataSplitter) throws RecommendationException;
 
     default boolean isEvaluable()
     {
         return true;
     }
 
+    /**
+     * Returns the long name of the type this recommender predict, e.g.
+     * {@code "de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity"}
+     * @return The long name of the feature that is predicted
+     */
     default String getPredictedType()
     {
         return "de.tudarmstadt.ukp.inception.recommendation.api.type.PredictedSpan";
     }
 
+    /**
+     * Returns the name of the feature that is predicted. This has to be a feature
+     * of the type whose name is returned by {@link #getPredictedType}.
+     * @return The name of the feature that is predicted.
+     */
     default String getPredictedFeature()
     {
         return "label";

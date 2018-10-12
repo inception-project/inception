@@ -43,6 +43,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.type.PredictedSpan;
 import de.tudarmstadt.ukp.inception.recommendation.api.v2.DataSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommendationEngine;
+import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommenderContext.Key;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
@@ -60,7 +61,7 @@ import opennlp.tools.util.TrainingParameters;
 public class OpenNlpNerRecommender
     implements RecommendationEngine
 {
-    public static final Key<TokenNameFinderModel> KEY_MODEL = new Key<>("model");
+    public static final Key<TokenNameFinderModel> KEY_MODEL = new Key<>("opennlp_ner_model");
     private static final Logger LOG = LoggerFactory.getLogger(OpenNlpNerRecommender.class);
 
     private final String layerName;
@@ -76,6 +77,7 @@ public class OpenNlpNerRecommender
 
     @Override
     public void train(RecommenderContext aContext, List<CAS> aCasses)
+        throws RecommendationException
     {
         List<NameSample> nameSamples = extractNameSamples(aCasses);
         TokenNameFinderModel model = train(nameSamples, traits.getParameters());
@@ -118,6 +120,7 @@ public class OpenNlpNerRecommender
 
     @Override
     public double evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
+        throws RecommendationException
     {
         List<NameSample> data = extractNameSamples(aCasses);
         List<NameSample> trainingSet = new ArrayList<>();
@@ -156,7 +159,7 @@ public class OpenNlpNerRecommender
             return evaluator.getFMeasure().getFMeasure();
         } catch (IOException e) {
             LOG.error("Exception during evaluating the OpenNLP Named Entity Recognizer model.", e);
-            throw new RuntimeException(e);
+            throw new RecommendationException("Error while evaluating OpenNlp NER", e);
         }
     }
 
@@ -221,13 +224,14 @@ public class OpenNlpNerRecommender
 
     private TokenNameFinderModel train(List<NameSample> aNameSamples,
                                        TrainingParameters aParameters)
+        throws RecommendationException
     {
         try (NameSampleStream stream = new NameSampleStream(aNameSamples)) {
             TokenNameFinderFactory finderFactory = new TokenNameFinderFactory();
             return NameFinderME.train("unknown", null, stream, aParameters, finderFactory);
         } catch (IOException e) {
             LOG.error("Exception during training the OpenNLP Named Entity Recognizer model.", e);
-            throw new RuntimeException(e);
+            throw new RecommendationException("Error while training OpenNLP pos", e);
         }
     }
 }

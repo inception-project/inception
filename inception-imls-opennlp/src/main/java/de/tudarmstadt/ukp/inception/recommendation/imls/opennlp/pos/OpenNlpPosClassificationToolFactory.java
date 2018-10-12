@@ -31,7 +31,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommendationEngineFa
 
 @Component
 public class OpenNlpPosClassificationToolFactory
-    extends RecommendationEngineFactoryImplBase<Void>
+    extends RecommendationEngineFactoryImplBase<OpenNlpPosRecommenderTraits>
 {
     // This is a string literal so we can rename/refactor the class without it changing its ID
     // and without the database starting to refer to non-existing recommendation tools.
@@ -45,8 +45,9 @@ public class OpenNlpPosClassificationToolFactory
     }
 
     @Override
-    public RecommendationEngine build(Recommender aRecommender) {
-        return null;
+    public RecommendationEngine build(Recommender aRecommender)
+    {
+        return new OpenNlpPosRecommender(aRecommender, readTraits(aRecommender));
     }
 
     @Override
