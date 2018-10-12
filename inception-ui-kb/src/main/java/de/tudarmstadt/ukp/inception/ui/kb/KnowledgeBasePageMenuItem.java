@@ -42,6 +42,12 @@ public class KnowledgeBasePageMenuItem implements MenuItem
     private @Autowired KnowledgeBaseService kbService;
     
     @Override
+    public String getPath()
+    {
+        return "/knowledge-base";
+    }
+    
+    @Override
     public String getIcon()
     {
         return "images/books.png";
