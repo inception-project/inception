@@ -19,8 +19,10 @@ package de.tudarmstadt.ukp.inception.ui.core.dashboard;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil.annotationEnabeled;
 import static de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil.curationEnabeled;
+import static java.util.Arrays.asList;
 
 import java.util.List;
+import java.util.Properties;
 import java.util.stream.Collectors;
 
 import org.apache.wicket.model.LoadableDetachableModel;
@@ -28,9 +30,12 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.wicketstuff.annotation.mount.MountPath;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
+import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.login.LoginPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemRegistry;
@@ -54,6 +59,10 @@ public class AdminDashboardPage
 
     public AdminDashboardPage()
     {
+        if (!adminAreaAccessRequired(userRepository, projectService)) {
+            setResponsePage(getApplication().getHomePage());
+        }
+        
         setStatelessHint(true);
         setVersioned(false);
         
@@ -85,5 +94,28 @@ public class AdminDashboardPage
         return menuItemService.getMenuItems().stream()
                 .filter(item -> item.getPath().matches("/admin/[^/]+"))
                 .collect(Collectors.toList());
+    }
+
+    public static boolean adminAreaAccessRequired(UserDao aUserRepo, ProjectService aProjectService)
+    {
+        User user = aUserRepo.getCurrentUser();
+        
+        // Project managers need access to the admin area to manage projects
+        if (SecurityUtil.projectSettingsEnabeled(aProjectService, user)) {
+            return true;
+        }
+        
+        // Admins need access to the admin area to manage projects 
+        if (SecurityUtil.isSuperAdmin(aProjectService, user)) {
+            return true;
+        }
+    
+        // If users are allowed to access their profile information, the also need to access the
+        // admin area. Note: access to the users own profile should be handled differently.
+        List<String> activeProfiles = asList(ApplicationContextProvider.getApplicationContext()
+                .getEnvironment().getActiveProfiles());
+        Properties settings = SettingsUtil.getSettings();
+        return !activeProfiles.contains("auto-mode-preauth") && "true"
+                        .equals(settings.getProperty(SettingsUtil.CFG_USER_ALLOW_PROFILE_ACCESS));
     }
 }

@@ -19,15 +19,19 @@ package de.tudarmstadt.ukp.inception.ui.core.dashboard;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil.annotationEnabeled;
 import static de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil.curationEnabeled;
+import static de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData.CURRENT_PROJECT;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.apache.wicket.Session;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.wicketstuff.annotation.mount.MountPath;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.login.LoginPage;
@@ -37,9 +41,10 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet.CurrentProjectDashlet;
 
 /**
- * Main menu page.
+ * Project dashboard page
  */
-public class DashboardPage extends ApplicationPageBase
+@MountPath(value = "/project.html")
+public class ProjectDashboardPage extends ApplicationPageBase
 {
     private static final long serialVersionUID = -2487663821276301436L;
 
@@ -49,7 +54,7 @@ public class DashboardPage extends ApplicationPageBase
 
     private DashboardMenu menu;
 
-    public DashboardPage()
+    public ProjectDashboardPage()
     {
         setStatelessHint(true);
         setVersioned(false);
@@ -59,6 +64,13 @@ public class DashboardPage extends ApplicationPageBase
         User user = userRepository.getCurrentUser();
         if (user == null) {
             setResponsePage(LoginPage.class);
+        }
+        
+        // If no project has been selected yet, redirect to the project overview page. This allows
+        // us to keep the ProjectDashboardPage as the application home page.
+        Project project = Session.get().getMetaData(CURRENT_PROJECT);
+        if (project == null) {
+            setResponsePage(ProjectsOverviewPage.class);
         }
         
         // if not either a curator or annotator, display warning message
