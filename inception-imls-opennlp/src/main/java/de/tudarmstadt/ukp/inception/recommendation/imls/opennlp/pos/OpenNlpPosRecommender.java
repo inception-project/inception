@@ -39,13 +39,13 @@ import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext.Key;
 import de.tudarmstadt.ukp.inception.recommendation.api.type.PredictedSpan;
-import de.tudarmstadt.ukp.inception.recommendation.api.v2.DataSplitter;
-import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommendationEngine;
-import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommendationException;
-import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommenderContext;
-import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommenderContext.Key;
 import opennlp.tools.postag.POSEvaluator;
 import opennlp.tools.postag.POSModel;
 import opennlp.tools.postag.POSSample;

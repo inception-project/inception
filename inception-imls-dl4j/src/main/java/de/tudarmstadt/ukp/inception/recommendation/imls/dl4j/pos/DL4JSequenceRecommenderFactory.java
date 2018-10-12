@@ -17,13 +17,14 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.dl4j.pos;
 
+import org.apache.uima.cas.CAS;
+import org.springframework.stereotype.Component;
+
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
-import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommendationEngine;
-import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommendationEngineFactoryImplBase;
-import org.apache.uima.cas.CAS;
-import org.springframework.stereotype.Component;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactoryImplBase;
 
 @Component
 public class DL4JSequenceRecommenderFactory

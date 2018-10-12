@@ -34,8 +34,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
-import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommendationEngine;
-import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommendationEngineFactoryImplBase;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactoryImplBase;
 
 @Component
 public class NamedEntityLinkerFactory

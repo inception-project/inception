@@ -29,8 +29,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
-import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommendationEngineFactory;
-import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommenderContext;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 
 /**
  * The main contact point of the Recommendation module. This interface can be injected in the wicket

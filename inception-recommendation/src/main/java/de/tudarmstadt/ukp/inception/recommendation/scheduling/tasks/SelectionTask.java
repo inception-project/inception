@@ -36,13 +36,11 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
+import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
+import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.PercentageBasedSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
-import de.tudarmstadt.ukp.inception.recommendation.api.v2.DataSplitter;
-import de.tudarmstadt.ukp.inception.recommendation.api.v2.PercentageBasedSplitter;
-import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommendationEngine;
-import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommendationEngineFactory;
-import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderEvaluationResultEvent;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.ExtendedResult;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 
 /**
  * This task is run every 60 seconds, if the document has changed. It evaluates all available
@@ -129,13 +127,7 @@ public class SelectionTask
                                 threshold);
                     }
 
-                    ExtendedResult result = new ExtendedResult(new ArrayList<>(),
-                            new ArrayList<>());
-
-                    // TODO: Change to new event, add listeners
-                    appEventPublisher.publishEvent(new RecommenderEvaluationResultEvent(this,
-                            recommender, user.getUsername(), result,
-                            System.currentTimeMillis() - start));
+                    // TODO: Publish an evaluation event
                 }
                 catch (Throwable e) {
                     log.error("[{}][{}]: Failed", user.getUsername(), recommenderName, e);

@@ -2,7 +2,7 @@
  * Copyright 2018
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,18 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.api;
+package de.tudarmstadt.ukp.inception.recommendation.api.evaluation;
 
-import java.util.List;
-
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
-
-public interface RecommenderFactoryRegistry
+public interface DataSplitter
 {
-    List<RecommendationEngineFactory> getAllFactories();
-    List<RecommendationEngineFactory> getFactories(AnnotationLayer aLayer,
-                                                   AnnotationFeature aFeature);
-    RecommendationEngineFactory getFactory(String aId);
+    public static enum TargetSet
+    {
+        TRAIN, TEST, IGNORE
+    }
+
+    TargetSet getTargetSet(Object aObject);
 }

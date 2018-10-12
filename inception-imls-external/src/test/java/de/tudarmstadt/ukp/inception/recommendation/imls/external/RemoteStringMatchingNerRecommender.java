@@ -47,8 +47,8 @@ import org.xml.sax.SAXException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.type.PredictedSpan;
-import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.StringMatchingRecommender;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.StringMatchingRecommenderTraits;
 

@@ -39,13 +39,13 @@ import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext.Key;
 import de.tudarmstadt.ukp.inception.recommendation.api.type.PredictedSpan;
-import de.tudarmstadt.ukp.inception.recommendation.api.v2.DataSplitter;
-import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommendationEngine;
-import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommendationException;
-import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommenderContext;
-import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommenderContext.Key;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;

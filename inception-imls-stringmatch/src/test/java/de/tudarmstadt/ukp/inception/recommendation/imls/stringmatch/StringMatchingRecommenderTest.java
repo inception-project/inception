@@ -42,12 +42,12 @@ import de.tudarmstadt.ukp.dkpro.core.api.datasets.DatasetFactory;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.io.conll.Conll2002Reader;
 import de.tudarmstadt.ukp.dkpro.core.testing.DkproTestContext;
+import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
+import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.IncrementalSplitter;
+import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.PercentageBasedSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.type.PredictedSpan;
-import de.tudarmstadt.ukp.inception.recommendation.api.v2.DataSplitter;
-import de.tudarmstadt.ukp.inception.recommendation.api.v2.IncrementalSplitter;
-import de.tudarmstadt.ukp.inception.recommendation.api.v2.PercentageBasedSplitter;
-import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommenderContext;
 
 public class StringMatchingRecommenderTest
 {

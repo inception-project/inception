@@ -49,9 +49,9 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.TokenObject;
-import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommendationEngine;
-import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommendationEngineFactory;
-import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommenderContext;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 
 /**
  * This consumer predicts new annotations for a given annotation layer, if a classification tool for

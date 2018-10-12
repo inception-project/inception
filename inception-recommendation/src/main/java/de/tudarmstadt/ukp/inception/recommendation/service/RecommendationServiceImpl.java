@@ -56,8 +56,8 @@ import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderFactoryRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
-import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommendationEngineFactory;
-import de.tudarmstadt.ukp.inception.recommendation.api.v2.RecommenderContext;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderDeletedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.scheduling.RecommendationScheduler;
 
