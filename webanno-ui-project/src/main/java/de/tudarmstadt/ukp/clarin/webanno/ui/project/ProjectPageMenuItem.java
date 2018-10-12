@@ -35,6 +35,12 @@ public class ProjectPageMenuItem implements MenuItem
     private @Autowired ProjectService projectService;
 
     @Override
+    public String getPath()
+    {
+        return "/admin/project";
+    }
+    
+    @Override
     public String getIcon()
     {
         return "images/setting_tools.png";

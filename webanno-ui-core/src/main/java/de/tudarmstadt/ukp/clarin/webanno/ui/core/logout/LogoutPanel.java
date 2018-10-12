@@ -34,7 +34,13 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.protocol.http.servlet.ServletWebRequest;
 import org.apache.wicket.request.Request;
 import org.apache.wicket.request.cycle.RequestCycle;
+import org.apache.wicket.request.mapper.parameter.PageParameters;
+import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.security.core.context.SecurityContextHolder;
+
+import de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.users.ManageUsersPage;
 /**
  * A wicket panel for logout.
  */
@@ -43,6 +49,8 @@ public class LogoutPanel
     extends Panel
 {
     private static final long serialVersionUID = 3725185820083021070L;
+
+    private @SpringBean UserDao userRepository;
 
     public LogoutPanel(String id)
     {
@@ -59,9 +67,6 @@ public class LogoutPanel
     @SuppressWarnings("serial")
     private void commonInit()
     {
-        add(new Label("username").setDefaultModel(new Model<>(SecurityContextHolder
-                .getContext().getAuthentication().getName())));
-
         add(new StatelessLink<Void>("logout")
         {
             @Override
@@ -72,7 +77,31 @@ public class LogoutPanel
                 setResponsePage(getApplication().getHomePage());
             }
         });
-        
+
+        add(new StatelessLink<Void>("profile")
+        {
+            {
+                add(new Label("username").setDefaultModel(new Model<>(SecurityContextHolder
+                        .getContext().getAuthentication().getName())));
+            }
+            
+            @Override
+            public void onClick()
+            {
+                PageParameters params = new PageParameters();
+                params.add(ManageUsersPage.PARAM_USER,
+                        userRepository.getCurrentUser().getUsername());
+                setResponsePage(ManageUsersPage.class, params);
+            }
+            
+            @Override
+            protected void onConfigure()
+            {
+                super.onConfigure();
+                setEnabled(SecurityUtil.isProfileSelfServiceAllowed());
+            }
+        });
+
         add(new MarkupContainer("logoutTimer")
         {
             @Override

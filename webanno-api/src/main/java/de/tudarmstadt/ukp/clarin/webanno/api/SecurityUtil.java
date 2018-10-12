@@ -17,8 +17,11 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api;
 
+import static java.util.Arrays.asList;
+
 import java.util.HashSet;
 import java.util.List;
+import java.util.Properties;
 import java.util.Set;
 
 import javax.persistence.NoResultException;
@@ -35,6 +38,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Authority;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
+import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 
 /**
  * This class contains Utility methods that can be used in Project settings
@@ -43,6 +48,17 @@ public class SecurityUtil
 {
     private static final Logger LOG = LoggerFactory.getLogger(SecurityUtil.class);
 
+    public static boolean isProfileSelfServiceAllowed()
+    {
+        // If users are allowed to access their profile information, the also need to access the
+        // admin area. Note: access to the users own profile should be handled differently.
+        List<String> activeProfiles = asList(ApplicationContextProvider.getApplicationContext()
+                .getEnvironment().getActiveProfiles());
+        Properties settings = SettingsUtil.getSettings();
+        return !activeProfiles.contains("auto-mode-preauth") && "true"
+                        .equals(settings.getProperty(SettingsUtil.CFG_USER_ALLOW_PROFILE_ACCESS));
+    }
+    
     public static Set<String> getRoles(ProjectService aProjectRepository, User aUser)
     {
         // When looking up roles for the user who is currently logged in, then we look in the

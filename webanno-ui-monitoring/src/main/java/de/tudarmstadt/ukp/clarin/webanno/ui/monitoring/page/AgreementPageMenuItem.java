@@ -35,6 +35,12 @@ public class AgreementPageMenuItem implements MenuItem
     private @Autowired ProjectService projectService;
 
     @Override
+    public String getPath()
+    {
+        return "/agreement";
+    }
+    
+    @Override
     public String getIcon()
     {
         return "images/statistics.png";

@@ -34,6 +34,7 @@ import org.apache.wicket.markup.html.form.validation.EqualPasswordInputValidator
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.validation.IValidatable;
 import org.apache.wicket.validation.IValidator;
@@ -47,6 +48,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ModelChangedVisitor;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.NameUtil;
@@ -59,6 +61,8 @@ public class ManageUsersPage
     extends ApplicationPageBase
 {
     private static final long serialVersionUID = -2102136855109258306L;
+
+    public static final String PARAM_USER = "user";
 
     private @SpringBean UserDao userRepository;
     private @SpringBean ProjectService projectRepository;
@@ -171,12 +175,59 @@ public class ManageUsersPage
     
     private IModel<User> selectedUser;
     private boolean isCreate = false;
-    
+
     public ManageUsersPage()
     {
-        selectedUser = Model.of();
+        super();
+
+        commonInit();
         
+        // If the user is not an admin, then pre-load the current user to allow self-service
+        // editing of the profile
+        if (!isAdmin() && SecurityUtil.isProfileSelfServiceAllowed()) {
+            selectedUser.setObject(userRepository.getCurrentUser());
+        }
+    }
+
+    public ManageUsersPage(final PageParameters aPageParameters)
+    {
+        super(aPageParameters);
+        
+        commonInit();
+        
+        String username = aPageParameters.get(PARAM_USER).toOptionalString();
+        User user = null;
+        if (username != null) {
+            user = userRepository.get(username);
+        }
+        if (user != null) {
+            if (isAdmin()) {
+                selectedUser.setObject(user);
+            }
+            else if (SecurityUtil.isProfileSelfServiceAllowed()
+                    && userRepository.getCurrentUser().getUsername().equals(user.getUsername())) {
+                selectedUser.setObject(userRepository.getCurrentUser());
+            }
+            else {
+                // Make sure a user doesn't try to access the profile of another user via the
+                // parameter if self-service is turned on.
+                setResponsePage(getApplication().getHomePage());
+            }
+        }
+    }
+    
+    private void commonInit()
+    {
+        // If the user is not an admin and self-service is not allowed, go back to the main page
+        if (!isAdmin() && !SecurityUtil.isProfileSelfServiceAllowed()) {
+            setResponsePage(getApplication().getHomePage());
+        }
+
+        selectedUser = Model.of();
+
         users = new UserSelectionPanel("users", selectedUser);
+        // Show the selection for different users only to administrators
+        users.add(LambdaBehavior.onConfigure(_this -> _this.setVisible(isAdmin())));
         users.setCreateAction(target -> {
             selectedUser.setObject(new User());
             isCreate = true;
@@ -193,17 +244,6 @@ public class ManageUsersPage
         add(users);
         
         detailForm = new DetailForm("detailForm", selectedUser);
-
-        // show only selectionForm when accessing this page as admin
-        if (isAdmin()) {
-            users.setVisible(true);
-        }
-        // else show only the own options
-        else {
-            selectedUser.setObject(userRepository.getCurrentUser());
-            users.setVisible(false);
-        }
-
         add(detailForm);
     }
 

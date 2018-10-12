@@ -73,7 +73,6 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.config.KendoResourceBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.css.theme.CustomBootstrapLessReference;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.kendo.WicketJQueryFocusPatchBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.login.LoginPage;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.MenuBar;
 
@@ -103,7 +102,8 @@ public abstract class WicketApplicationBase
                     @Override
                     protected <T extends Page> boolean isPageAuthorized(Class<T> aPageClass)
                     {
-                        return menuItemRegistry.getMenuItem(aPageClass).map(MenuItem::applies)
+                        return menuItemRegistry.getMenuItem(aPageClass)
+                                .map(item -> item.isDirectAccessAllowed() || item.applies())
                                 .orElse(true);
                     }
 
