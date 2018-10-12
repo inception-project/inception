@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.pos;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
 
 import org.apache.uima.cas.CAS;
 import org.springframework.stereotype.Component;
@@ -63,7 +63,13 @@ public class OpenNlpPosClassificationToolFactory
             return false;
         }
         
-        return SINGLE_TOKEN.equals(aLayer.getAnchoringMode()) && SPAN_TYPE.equals(aLayer.getType())
+        return TOKENS.equals(aLayer.getAnchoringMode()) && SPAN_TYPE.equals(aLayer.getType())
                 && CAS.TYPE_NAME_STRING.equals(aFeature.getType());
+    }
+
+    @Override
+    public OpenNlpPosRecommenderTraits createTraits()
+    {
+        return new OpenNlpPosRecommenderTraits();
     }
 }

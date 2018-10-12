@@ -34,7 +34,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 
 @Component
 public class OpenNlpNerRecommenderFactory
-    extends RecommendationEngineFactoryImplBase<Void>
+    extends RecommendationEngineFactoryImplBase<OpenNlpNerRecommenderTraits>
 {
     private Logger log = LoggerFactory.getLogger(getClass());
 
@@ -71,5 +71,11 @@ public class OpenNlpNerRecommenderFactory
         return (asList(SINGLE_TOKEN, TOKENS).contains(aLayer.getAnchoringMode()))
                 && !aLayer.isCrossSentence() && SPAN_TYPE.equals(aLayer.getType())
                 && CAS.TYPE_NAME_STRING.equals(aFeature.getType()) || aFeature.isVirtualFeature();
+    }
+
+    @Override
+    public OpenNlpNerRecommenderTraits createTraits()
+    {
+        return new OpenNlpNerRecommenderTraits();
     }
 }

@@ -17,33 +17,47 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.api.recommender;
 
-import java.util.NoSuchElementException;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class RecommenderContext {
+import javax.annotation.Nullable;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+public class RecommenderContext
+{
+    private static final Logger LOG = LoggerFactory.getLogger(RecommenderContext.class);
+
     private final ConcurrentHashMap<String, Object> store;
 
-    public RecommenderContext() {
+    public RecommenderContext()
+    {
         store = new ConcurrentHashMap<>();
     }
 
     @SuppressWarnings("unchecked")
-    public <T> T get(Key<T> aKey) {
+    @Nullable
+    public <T> T get(Key<T> aKey)
+    {
         String name = aKey.name;
         if (!store.containsKey(name)) {
-            String message = String.format("Value with key [%s] not found in context!", name);
-            throw new NoSuchElementException(message);
+            LOG.warn("Value with key [{}] not found in context!", name);
+            return null;
         }
         return (T) store.get(name);
     }
-    public <T> void put(Key<T> aKey, T aValue) {
+
+    public <T> void put(Key<T> aKey, T aValue)
+    {
         store.put(aKey.name, aValue);
     }
 
-    public static class Key<T> {
+    public static class Key<T>
+    {
         private final String name;
 
-        public Key(String aName) {
+        public Key(String aName)
+        {
             name = aName;
         }
     }

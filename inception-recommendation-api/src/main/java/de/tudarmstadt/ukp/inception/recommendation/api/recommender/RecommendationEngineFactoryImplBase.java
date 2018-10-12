@@ -58,6 +58,10 @@ public abstract class RecommendationEngineFactoryImplBase<T>
     @Override
     public T readTraits(Recommender aRecommender)
     {
+        if (aRecommender.getTraits() == null) {
+            return createTraits();
+        }
+
         T traits = null;
         try {
             traits = fromJsonString((Class<T>) createTraits().getClass(), aRecommender.getTraits());

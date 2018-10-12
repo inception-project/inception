@@ -29,6 +29,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.Nullable;
+
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
@@ -80,7 +82,10 @@ public class OpenNlpPosRecommender
     {
         List<POSSample> posSamples = extractPosSamples(aCasses);
         POSModel model = train(posSamples, traits.getParameters());
-        aContext.put(KEY_MODEL, model);
+
+        if (model != null) {
+            aContext.put(KEY_MODEL, model);
+        }
     }
 
     @Override
@@ -88,7 +93,12 @@ public class OpenNlpPosRecommender
         throws RecommendationException
     {
         POSModel model = aContext.get(KEY_MODEL);
-        predict(model, aCas);
+
+        if (model != null) {
+            predict(model, aCas);
+        } else {
+            LOG.warn("No model to predict with!");
+        }
     }
 
     private void predict(POSModel aModel, CAS aCas)
@@ -168,6 +178,11 @@ public class OpenNlpPosRecommender
 
         // Train model
         POSModel model = train(trainingSet, traits.getParameters());
+        if (model == null) {
+            LOG.warn("Model is null, cannot evaluate!");
+            throw new RecommendationException("Model is null, cannot evaluate!");
+        }
+
         POSTaggerME tagger = new POSTaggerME(model);
 
         // Evaluate
@@ -192,14 +207,19 @@ public class OpenNlpPosRecommender
                 indexCovered(cas, sentenceType, tokenType);
             for (Map.Entry<AnnotationFS, Collection<AnnotationFS>> e : sentences.entrySet()) {
                 AnnotationFS sentence = e.getKey();
+
                 Collection<AnnotationFS> tokens = e.getValue();
                 POSSample posSample = createPosSample(cas, sentence, tokens);
-                posSamples.add(posSample);
+
+                if (posSample != null) {
+                    posSamples.add(posSample);
+                }
             }
         }
         return posSamples;
     }
 
+    @Nullable
     private POSSample createPosSample(CAS aCas, AnnotationFS aSentence,
                                       Collection<AnnotationFS> aTokens)
     {
@@ -210,30 +230,50 @@ public class OpenNlpPosRecommender
         String[] tokens = new String[numberOfTokens];
         String[] tags = new String[numberOfTokens];
 
+        boolean hasAnnotations = false;
+
         int i = 0;
         for (AnnotationFS token : aTokens) {
-            int begin = token.getBegin();
-            int end = token.getBegin();
-
-            List<AnnotationFS> annotations = CasUtil.selectCovered(annotationType, token);
-
-            String label = PAD;
-            if (annotations.size() > 0) {
-                label = annotations.get(0).getFeatureValueAsString(feature);
-            }
-
             tokens[i] = token.getCoveredText();
-            tags[i] = label;
+            String tag = getFeatureValueCovering(aCas, token, annotationType, feature);
+            tags[i] = tag;
+
+            // If the tag is neither PAD nor null, then there is at
+            // least one annotation the trainer can work with.
+            if (tag != null & !PAD.equals(tag)) {
+                hasAnnotations = true;
+            }
 
             i++;
         }
 
-        return new POSSample(tokens, tags);
+        return hasAnnotations ? new POSSample(tokens, tags) : null;
     }
 
+    private String getFeatureValueCovering(CAS aCas, AnnotationFS aToken,
+                                           Type aType, Feature aFeature)
+    {
+        int begin = aToken.getBegin();
+        int end = aToken.getBegin();
+
+        List<AnnotationFS> annotations = CasUtil.selectCovered(aType, aToken);
+
+        if (annotations.isEmpty()) {
+            return PAD;
+        }
+
+        String value = annotations.get(0).getFeatureValueAsString(aFeature);
+        return value != null ? value : PAD;
+    }
+
+    @Nullable
     private POSModel train(List<POSSample> aPosSamples, TrainingParameters aParameters)
         throws RecommendationException
     {
+        if (aPosSamples.isEmpty()) {
+            return null;
+        }
+
         try (POSSampleStream stream = new POSSampleStream(aPosSamples)) {
             POSTaggerFactory taggerFactory = new POSTaggerFactory();
             return POSTaggerME.train("unknown", stream, aParameters, taggerFactory);
