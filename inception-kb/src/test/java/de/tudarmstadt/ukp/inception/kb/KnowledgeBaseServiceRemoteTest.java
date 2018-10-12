@@ -193,14 +193,14 @@ public class KnowledgeBaseServiceRemoteTest
             kb_hucit.setReification(Reification.NONE);
             kb_hucit.setBasePrefix("http://www.ukp.informatik.tu-darmstadt.de/inception/1.0#");
             kb_hucit.setClassIri(vf.createIRI("http://www.w3.org/2002/07/owl#Class"));
-            kb_hucit
-                .setSubclassIri(vf.createIRI("http://www.w3.org/2000/01/rdf-schema#subClassOf"));
+            kb_hucit.setSubclassIri(
+                    vf.createIRI("http://www.w3.org/2000/01/rdf-schema#subClassOf"));
             kb_hucit.setTypeIri(vf.createIRI("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"));
-            kb_hucit
-                .setDescriptionIri(vf.createIRI("http://www.w3.org/2000/01/rdf-schema#comment"));
+            kb_hucit.setDescriptionIri(
+                    vf.createIRI("http://www.w3.org/2000/01/rdf-schema#comment"));
             kb_hucit.setLabelIri(vf.createIRI("http://www.w3.org/2000/01/rdf-schema#label"));
             kb_hucit.setPropertyTypeIri(
-                vf.createIRI("http://www.w3.org/1999/02/22-rdf-syntax-ns#Property"));
+                    vf.createIRI("http://www.w3.org/1999/02/22-rdf-syntax-ns#Property"));
             kb_hucit.setPropertyLabelIri(RDFS.LABEL);
             kb_hucit.setSubPropertyIri(RDFS.SUBPROPERTYOF);
             kb_hucit.setPropertyDescriptionIri(RDFS.COMMENT);

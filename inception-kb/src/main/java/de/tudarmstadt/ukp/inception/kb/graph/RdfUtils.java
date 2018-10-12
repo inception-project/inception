@@ -72,10 +72,9 @@ public class RdfUtils
     }
 
     public static Optional<Statement> readFirstLabel(RepositoryConnection conn, KnowledgeBase aKB,
-        Resource subj, String language)
+            Resource subj, String language)
     {
-        try (RepositoryResult<Statement> results =
-            getLabelsSparql(conn, aKB, subj, language)) {
+        try (RepositoryResult<Statement> results = getLabelsSparql(conn, aKB, subj, language)) {
             Statement stmt = null;
             while (results.hasNext()) {
                 stmt = results.next();
@@ -95,20 +94,15 @@ public class RdfUtils
     }
 
     private static RepositoryResult<Statement> getLabelsSparql(RepositoryConnection conn,
-        KnowledgeBase aKB, Resource subj, String language)
+            KnowledgeBase aKB, Resource subj, String language)
     {
         String filter = "";
         if (language != null) {
-            filter = "FILTER(LANG(?o) = \"\" || LANGMATCHES(LANG(?o), \"" + NTriplesUtil
-                .escapeString(language) + "\")).";
+            filter = "FILTER(LANG(?o) = \"\" || LANGMATCHES(LANG(?o), \""
+                    + NTriplesUtil.escapeString(language) + "\")).";
         }
-        String labelQuery = String
-            .join("\n", "SELECT ?s ?p ?o ?lp WHERE { ",
-                "{ ?s ?p ?o .",
-                "?p ?spl ?lp ",
-                "} UNION { ?s ?lp ?o } ",
-                filter,
-                "} LIMIT " + 1000);
+        String labelQuery = String.join("\n", "SELECT ?s ?p ?o ?lp WHERE { ", "{ ?s ?p ?o .",
+                "?p ?spl ?lp ", "} UNION { ?s ?lp ?o } ", filter, "} LIMIT " + 1000);
 
         TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, labelQuery);
         if (subj != null) {
@@ -119,31 +113,30 @@ public class RdfUtils
 
         tupleQuery.setIncludeInferred(false);
         TupleQueryResult result = tupleQuery.evaluate();
-        Iteration<Statement, QueryEvaluationException> i1 =
-            new ConvertingIteration<BindingSet, Statement, QueryEvaluationException>(result)
+        Iteration<Statement, QueryEvaluationException> i1 = new ConvertingIteration<BindingSet, 
+                Statement, QueryEvaluationException>(result)
+        {
+            @Override
+            protected Statement convert(BindingSet b) throws QueryEvaluationException
             {
-                @Override
-                protected Statement convert(BindingSet b) throws QueryEvaluationException
-                {
-                    Resource s = subj == null ? (Resource) b.getValue("s") : subj;
-                    IRI p = (IRI) b.getValue("p") == null ?
-                        (IRI) b.getValue("lp") :
-                        (IRI) b.getValue("p");
+                Resource s = subj == null ? (Resource) b.getValue("s") : subj;
+                IRI p = (IRI) b.getValue("p") == null ? (IRI) b.getValue("lp")
+                        : (IRI) b.getValue("p");
 
-                    Value o = b.getValue("o");
-                    return SimpleValueFactory.getInstance().createStatement(s, p, o);
-                }
-            };
+                Value o = b.getValue("o");
+                return SimpleValueFactory.getInstance().createStatement(s, p, o);
+            }
+        };
 
-        ExceptionConvertingIteration<Statement, RepositoryException> i2 =
-            new ExceptionConvertingIteration<Statement, RepositoryException>(i1)
+        ExceptionConvertingIteration<Statement, RepositoryException> i2 = 
+                new ExceptionConvertingIteration<Statement, RepositoryException>(i1)
+        {
+            @Override
+            protected RepositoryException convert(Exception aE)
             {
-                @Override
-                protected RepositoryException convert(Exception aE)
-                {
-                    return new RepositoryException(aE);
-                }
-            };
+                return new RepositoryException(aE);
+            }
+        };
 
         return new RepositoryResult<>(i2);
     }

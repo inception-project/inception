@@ -58,9 +58,7 @@ public final class SPARQLQueryStore
         fragment.append("  OPTIONAL {\n");
         fragment.append("    ?s ").append("?p ").append(aVariable).append(" .\n");
         fragment.append("    ?p ").append("?pSUBPROPERTY ").append(aProperty).append(" .\n");
-
         fragment.append(languageFilterForVariable(aVariable, aLanguage));
-
         fragment.append(" }\n");
         return fragment.toString();
     }
