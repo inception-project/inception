@@ -22,8 +22,8 @@ import org.apache.wicket.Page;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.WicketApplicationBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.inception.app.config.InceptionResourcesBehavior;
-import de.tudarmstadt.ukp.inception.app.menubar.MenuBar;
-import de.tudarmstadt.ukp.inception.ui.dashboard.DashboardPage;
+import de.tudarmstadt.ukp.inception.ui.core.dashboard.DashboardPage;
+import de.tudarmstadt.ukp.inception.ui.core.menubar.MenuBar;
 
 @org.springframework.stereotype.Component("wicketApplication")
 public class WicketApplication

@@ -15,21 +15,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.app.session;
+package de.tudarmstadt.ukp.inception.ui.core;
 
-import org.apache.wicket.MetaDataKey;
+import org.apache.wicket.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+/**
+ * Interface used to indicate which child component to focus initially in a form holding multiple
+ * child components.
+ *
+ */
+public interface Focusable {
 
-public final class SessionMetaData
-{
-    public static final MetaDataKey<Project> CURRENT_PROJECT = new MetaDataKey<Project>()
-    {
-        private static final long serialVersionUID = 1L;
-    };
-    
-    private SessionMetaData()
-    {
-        // No instances
-    }
+    /**
+     * Returns the component which should receive the focus once this {@code Focusable} is rendered
+     * initially.
+     * 
+     * @return the component to focus once this {@code Focusable} is rendered
+     */
+    public Component getFocusComponent();
 }

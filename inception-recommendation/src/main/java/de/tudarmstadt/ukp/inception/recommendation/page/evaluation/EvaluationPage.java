@@ -65,7 +65,6 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.inception.app.session.SessionMetaData;
 import de.tudarmstadt.ukp.inception.recommendation.api.AnnotationObjectLoader;
 import de.tudarmstadt.ukp.inception.recommendation.api.ClassificationTool;
 import de.tudarmstadt.ukp.inception.recommendation.api.ClassificationToolRegistry;
@@ -76,6 +75,7 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.conf.EvaluationConfigura
 import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.imls.core.evaluation.IncrementalEvaluationService;
 import de.tudarmstadt.ukp.inception.recommendation.util.EvaluationHelper;
+import de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData;
 
 @MountPath("/RecommendationEvaluationPage.html")
 public class EvaluationPage

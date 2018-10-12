@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.ui.dashboard.dashlet;
+package de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet;
 
 import org.apache.wicket.markup.html.panel.Panel;
 

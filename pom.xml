@@ -79,7 +79,6 @@
     <module>inception-kb</module>
     <module>inception-ui-core</module>
     <module>inception-ui-kb</module>
-    <module>inception-ui-dashboard</module>
     <module>inception-html-editor</module>
     <module>inception-pdf-editor</module>
     <module>inception-recommendation-api</module>
@@ -198,11 +197,6 @@
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-kb</artifactId>
-        <version>0.6.0-SNAPSHOT</version>
-      </dependency>
-      <dependency>
-        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>inception-ui-dashboard</artifactId>
         <version>0.6.0-SNAPSHOT</version>
       </dependency>
       <dependency>

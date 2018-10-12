@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.ui.dashboard.dashlet;
+package de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.Session;
@@ -23,7 +23,7 @@ import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.model.LoadableDetachableModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.inception.app.session.SessionMetaData;
+import de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData;
 
 public class CurrentProjectDashlet
     extends Dashlet_ImplBase
