@@ -34,6 +34,12 @@ public class EvaluationPageMenuItem implements MenuItem
     private @Autowired ProjectService projectService;
     
     @Override
+    public String getPath()
+    {
+        return "/evaluation";
+    }
+    
+    @Override
     public String getIcon()
     {
         return "images/statistics.png";
