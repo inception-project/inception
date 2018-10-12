@@ -118,6 +118,7 @@ public class KnowledgeBaseExporter implements ProjectExporter
                     .map(conceptIRI -> conceptIRI.stringValue())
                     .collect(Collectors.toList()));
             exportedKB.setDefaultLanguage(kb.getDefaultLanguage());
+            exportedKB.setMaxResults(kb.getMaxResults());
             exportedKnowledgeBases.add(exportedKB);
 
             if (kb.getType() == RepositoryType.REMOTE) {
@@ -210,6 +211,7 @@ public class KnowledgeBaseExporter implements ProjectExporter
                 kb.setExplicitlyDefinedRootConcepts(new ArrayList<>());
             }
             kb.setDefaultLanguage(exportedKB.getDefaultLanguage());
+            kb.setMaxResults(exportedKB.getMaxResults());
             kb.setProject(aProject);
 
             // Get config and register knowledge base

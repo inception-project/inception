@@ -176,6 +176,12 @@ public class KnowledgeBase
     @Column
     private String defaultLanguage;
 
+    /**
+     * Limits the number of results that can be retrieved from a SPARQL query.
+     */
+    @Column(nullable = false)
+    private int maxResults;
+
     public String getRepositoryId() {
         return repositoryId;
     }
@@ -370,6 +376,16 @@ public class KnowledgeBase
     public void setExplicitlyDefinedRootConcepts(List<IRI> aExplicitlyDefinedRootConcepts)
     {
         explicitlyDefinedRootConcepts = aExplicitlyDefinedRootConcepts;
+    }
+
+    public int getMaxResults()
+    {
+        return maxResults;
+    }
+
+    public void setMaxResults(int aSparqlQueryResultLimit)
+    {
+        maxResults = aSparqlQueryResultLimit;
     }
 
     public void applyMapping(KnowledgeBaseMapping aMapping)
