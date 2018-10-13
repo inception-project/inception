@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.kb;
 
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
+
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -25,15 +27,17 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Paths;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
@@ -78,6 +82,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -86,7 +92,9 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
@@ -113,32 +121,85 @@ public class KnowledgeBaseServiceImpl
     private @PersistenceContext EntityManager entityManager;
     private final RepositoryManager repoManager;
     private final Set<String> implicitNamespaces;
-
-    @org.springframework.beans.factory.annotation.Value(value = "${data.path}/kb")
-    private File dataDir;
-
-    @org.springframework.beans.factory.annotation.Value
-        (value = "${repository.path}/kb/repositories")
-    private File luceneIndexDir;
+    private final File kbRepositoriesRoot;
 
     @Autowired
-    public KnowledgeBaseServiceImpl(
-            @org.springframework.beans.factory.annotation.Value("${data.path}") File dataDir)
+    public KnowledgeBaseServiceImpl(RepositoryProperties aRepoProperties)
     {
-        String url = Paths.get(dataDir.getAbsolutePath(), "kb").toUri().toString();
-        repoManager = RepositoryProvider.getRepositoryManager(url);
-        log.info("Knowledge base repository path: " + url);
+        kbRepositoriesRoot = new File(aRepoProperties.getPath(), "kb");
+        
+        // Originally, the KBs were stored next to the repository folder - but they should be
+        // *under* the repository folder
+        File legacyLocation = new File(System.getProperty(SettingsUtil.getPropApplicationHome(),
+                System.getProperty("user.home") + "/"
+                        + SettingsUtil.getApplicationUserHomeSubdir()),
+                "kb");
+
+        if (legacyLocation.exists() && legacyLocation.isDirectory()) {
+            try {
+                log.info("Found legacy KB folder at [" + legacyLocation
+                        + "]. Trying to move it to the new location at [" + kbRepositoriesRoot
+                        + "]");
+                Files.move(legacyLocation.toPath(), kbRepositoriesRoot.toPath(), REPLACE_EXISTING);
+                log.info("Move successful.");
+            }
+            catch (IOException e) {
+                throw new RuntimeException("Detected legacy KB folder at [" + legacyLocation
+                        + "] but cannot move it to the new location at [" + kbRepositoriesRoot
+                        + "]. Please perform the move manually and ensure that the application "
+                        + "has all necessary permissions to the new location - then try starting "
+                        + "the application again.");
+            }
+        }
+        
+        repoManager = RepositoryProvider.getRepositoryManager(kbRepositoriesRoot);
+        log.info("Knowledge base repository path: {}", kbRepositoriesRoot);
         implicitNamespaces = IriConstants.IMPLICIT_NAMESPACES;
     }
-
+    
     public KnowledgeBaseServiceImpl(
-            @org.springframework.beans.factory.annotation.Value("${data.path}") File dataDir,
+            RepositoryProperties aRepoProperties,
             EntityManager entityManager)
     {
-        this(dataDir);
+        this(aRepoProperties);
         this.entityManager = entityManager;
     }
 
+    @EventListener({ContextRefreshedEvent.class})
+    void onContextRefreshed()
+    {
+        Set<String> orphanedIDs = new HashSet<>();
+        try {
+            orphanedIDs.addAll(repoManager.getRepositoryIDs());
+        }
+        catch (Exception e) {
+            log.error("Unable to enumerate KB repositories. This may not be a critical issue, "
+                    + "but it means that I cannot check if there are orphaned repositories. I "
+                    + "will continue loading the application. Please try to fix the problem.", e);
+        }
+        
+        // We loop over all the local repositories and ensure that they have the latest
+        // configuration. One effect of this is that the directory where the full text indexes
+        // is stored is updated with respect to the location of the application data repository
+        // in case the application data was moved to another location by the user (i.e. the
+        // index dir is normally stored as an absolute path in the KB repo config and here we fix
+        // this).
+        for (KnowledgeBase kb : listKnowledgeBases()) {
+            orphanedIDs.remove(kb.getRepositoryId());
+            
+            if (RepositoryType.LOCAL.equals(kb.getType())) {
+                reconfigureLocalKnowledgeBase(kb);
+            }
+        }
+        
+        if (!orphanedIDs.isEmpty()) {
+            log.info("Found orphaned KB repositories: {}",
+                    orphanedIDs.stream().sorted().collect(Collectors.toList()));
+        }
+        
+        repoManager.refresh();
+    }
+    
     @Override
     public void destroy() throws Exception
     {
@@ -148,27 +209,31 @@ public class KnowledgeBaseServiceImpl
     /**
      * Sanity check to test if a knowledge base is already registered with RDF4J.
      *
-     * @param kb
+     * @param aKB a knowledge base
      */
-    private void assertRegistration(KnowledgeBase kb)
+    private void assertRegistration(KnowledgeBase aKB)
     {
-        if (!kb.isManagedRepository()) {
-            throw new IllegalStateException(kb.toString() + " has to be registered first.");
+        if (!aKB.isManagedRepository()) {
+            throw new IllegalStateException(aKB.toString() + " has to be registered first.");
         }
     }
 
     @Transactional
     @Override
-    public void registerKnowledgeBase(KnowledgeBase kb, RepositoryImplConfig cfg)
+    public void registerKnowledgeBase(KnowledgeBase aKB, RepositoryImplConfig aCfg)
         throws RepositoryException, RepositoryConfigException
     {
-        // obtain unique repository id
-        String baseName = "pid-" + Long.toString(kb.getProject().getId()) + "-kbid-";
+        // Obtain unique repository id
+        String baseName = "pid-" + Long.toString(aKB.getProject().getId()) + "-kbid-";
         String repositoryId = repoManager.getNewRepositoryID(baseName);
-        kb.setRepositoryId(repositoryId);
+        aKB.setRepositoryId(repositoryId);
+        
+        // We want to have a separate Lucene index for every local repo, so we need to hack the
+        // index dir in here because this is the place where we finally know the repo ID.
+        setIndexDir(aKB, aCfg);
 
-        repoManager.addRepositoryConfig(new RepositoryConfig(repositoryId, cfg));
-        entityManager.persist(kb);
+        repoManager.addRepositoryConfig(new RepositoryConfig(repositoryId, aCfg));
+        entityManager.persist(aKB);
     }
     
     @Override
@@ -224,6 +289,17 @@ public class KnowledgeBaseServiceImpl
         return (List<KnowledgeBase>) query.getResultList();
     }
 
+    @Transactional
+    public List<KnowledgeBase> listKnowledgeBases()
+    {
+        String query = 
+                "FROM KnowledgeBase " +
+                "ORDER BY name ASC";
+        return entityManager
+                .createQuery(query, KnowledgeBase.class)
+                .getResultList();
+    }
+
     @SuppressWarnings("unchecked")
     @Transactional
     @Override
@@ -236,13 +312,14 @@ public class KnowledgeBaseServiceImpl
 
     @Transactional
     @Override
-    public void removeKnowledgeBase(KnowledgeBase kb)
+    public void removeKnowledgeBase(KnowledgeBase aKB)
         throws RepositoryException, RepositoryConfigException
     {
-        assertRegistration(kb);
-        repoManager.removeRepository(kb.getRepositoryId());
+        assertRegistration(aKB);
+        
+        repoManager.removeRepository(aKB.getRepositoryId());
 
-        entityManager.remove(entityManager.contains(kb) ? kb : entityManager.merge(kb));
+        entityManager.remove(entityManager.contains(aKB) ? aKB : entityManager.merge(aKB));
     }
 
     @Override
@@ -253,8 +330,9 @@ public class KnowledgeBaseServiceImpl
         //   new ForwardChainingRDFSInferencerConfig(new NativeStoreConfig()));
 
         LuceneSailConfig config = new LuceneSailConfig(new NativeStoreConfig());
-        config.setIndexDir(luceneIndexDir.getAbsolutePath());
-        return new SailRepositoryConfig(new NativeStoreConfig());
+        // NOTE: We do not set the index dir here but when the KB is registered because we want each
+        // repo to have its own index folder and we don't know the repo ID until it is registered
+        return new SailRepositoryConfig(config);
     }
 
     @Override
@@ -1186,22 +1264,68 @@ public class KnowledgeBaseServiceImpl
         return kbFile;
     }
 
-    @Override
-    public void indexLocalKb(KnowledgeBase aKb)
+    private void reconfigureLocalKnowledgeBase(KnowledgeBase aKB)
     {
-        try (RepositoryConnection conn = getConnection(aKb)) {
-            if (repoManager.getRepository(aKb.getRepositoryId()) instanceof SailRepository) {
-                SailRepository sailRepo = (SailRepository) repoManager
-                    .getRepository(aKb.getRepositoryId());
-                if (sailRepo.getSail() instanceof LuceneSail) {
-                    LuceneSail luceneSail = (LuceneSail) (sailRepo.getSail());
+        /*
+        log.info("Forcing update of configuration for {}", aKB);
+        Model model = new TreeModel();
+        ValueFactory vf = SimpleValueFactory.getInstance();
+        IRI root = vf
+                .createIRI("http://inception-project.github.io/kbexport#" + aKB.getRepositoryId());
+        repoManager.getRepositoryConfig(aKB.getRepositoryId()).export(model, root);
+        StringWriter out = new StringWriter();
+        Rio.write(model, out, RDFFormat.TURTLE);
+        log.info("Current configuration: {}", out.toString());
+        */
+        
+        RepositoryImplConfig config = getNativeConfig();
+        setIndexDir(aKB, config);
+        repoManager.addRepositoryConfig(new RepositoryConfig(aKB.getRepositoryId(), config));
+    }
+    
+    private void setIndexDir(KnowledgeBase aKB, RepositoryImplConfig aCfg)
+    {
+        assertRegistration(aKB);
+        
+        // We want to have a separate Lucene index for every local repo, so we need to hack the
+        // index dir in here because this is the place where we finally know the repo ID.
+        if (aCfg instanceof SailRepositoryConfig) {
+            SailRepositoryConfig cfg = (SailRepositoryConfig) aCfg;
+            if (cfg.getSailImplConfig() instanceof LuceneSailConfig) {
+                LuceneSailConfig luceneSailCfg = (LuceneSailConfig) cfg.getSailImplConfig();
+                luceneSailCfg
+                        .setIndexDir(new File(kbRepositoriesRoot, "indexes" + aKB.getRepositoryId())
+                                .getAbsolutePath());
+            }
+        }
+    }
+    
+    @Override
+    public void rebuildFullTextIndex(KnowledgeBase aKB) throws Exception
+    {
+        if (!RepositoryType.LOCAL.equals(aKB.getType())) {
+            throw new IllegalArgumentException("Reindexing is only supported on local KBs");
+        }
+        
+        boolean reindexSupported = false;
+        
+        // Handle re-indexing of local repos that use a Lucene FTS
+        if (repoManager.getRepository(aKB.getRepositoryId()) instanceof SailRepository) {
+            SailRepository sailRepo = (SailRepository) repoManager
+                .getRepository(aKB.getRepositoryId());
+            if (sailRepo.getSail() instanceof LuceneSail) {
+                reindexSupported = true;
+                LuceneSail luceneSail = (LuceneSail) (sailRepo.getSail());
+                try (RepositoryConnection conn = getConnection(aKB)) {
                     luceneSail.reindex();
+                    conn.commit();
                 }
             }
-            conn.commit();
         }
-        catch (Exception e) {
-            log.error("Could not index local KB.", e);
+        
+        if (!reindexSupported) {
+            throw new IllegalArgumentException(
+                    aKB + "] does not support rebuilding its full text index.");
         }
     }
 }

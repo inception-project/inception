@@ -553,5 +553,8 @@ public interface KnowledgeBaseService
      */
     File readKbFileFromClassPathResource(String aLocation) throws IOException;
 
-    void indexLocalKb(KnowledgeBase aKb) throws IOException;
+    /**
+     * Can be used to re-index a local KB in case the full text index is corrupt. 
+     */
+    void rebuildFullTextIndex(KnowledgeBase aKb) throws Exception;
 }

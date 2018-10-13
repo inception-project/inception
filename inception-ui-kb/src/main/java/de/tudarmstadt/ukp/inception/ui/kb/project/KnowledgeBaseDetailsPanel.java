@@ -28,6 +28,7 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.ajax.markup.html.form.AjaxButton;
 import org.apache.wicket.ajax.markup.html.form.AjaxCheckBox;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
@@ -210,28 +211,20 @@ public class KnowledgeBaseDetailsPanel
         form.add(title);
         form.add(content);
 
-        // set up form buttons: edit button only visible when not editing, cancel/save buttons only
-        // visible when editing
+        // set up form buttons: 
+        // edit button only visible when not editing,
+        // cancel/save buttons only visible when editing
+        // re-index button only visible for local KBs
         form.add(new LambdaAjaxLink("delete", KnowledgeBaseDetailsPanel.this::actionDelete));
+        form.add(new LambdaAjaxLink("reindex", KnowledgeBaseDetailsPanel.this::actionReindex)
+                .add(LambdaBehavior.visibleWhen(() -> RepositoryType.LOCAL
+                        .equals(kbwModel.getObject().getKb().getType()))));
         form.add(new LambdaAjaxLink("edit", KnowledgeBaseDetailsPanel.this::startEditing)
-        {
-
-            private static final long serialVersionUID = -2013888340002855855L;
-
-            @Override public boolean isVisible()
-            {
-                return !isEditing;
-            }
-        });
+                .add(LambdaBehavior.visibleWhen(() -> !isEditing)));
         form.add(new AjaxButton("save", form)
         {
             private static final long serialVersionUID = 3393631640806116694L;
-
-            @Override public boolean isVisible()
-            {
-                return isEditing;
-            }
-
+            
             @Override
             protected void onAfterSubmit(AjaxRequestTarget target)
             {
@@ -243,17 +236,9 @@ public class KnowledgeBaseDetailsPanel
                     new KnowledgeBaseConfigurationChangedEvent(this,
                         aKbModel.getObject().getProject()));
             }
-        });
+        }.add(LambdaBehavior.visibleWhen(() -> isEditing)));
         form.add(new LambdaAjaxLink("cancel", KnowledgeBaseDetailsPanel.this::stopEditing)
-        {
-
-            private static final long serialVersionUID = -6654306757363572019L;
-
-            @Override public boolean isVisible()
-            {
-                return isEditing;
-            }
-        });
+                .add(LambdaBehavior.visibleWhen(() -> isEditing)));
 
         confirmationDialog = new ConfirmationDialog("confirmationDialog");
         add(confirmationDialog);
@@ -294,11 +279,29 @@ public class KnowledgeBaseDetailsPanel
             aTarget.add(findParentWithAssociatedMarkup());
         }
         catch (Exception e) {
-            error("Unable to save knowledgebase: " + e.getLocalizedMessage());
-            log.error("Unable to save knowledgebase.", e);
+            error("Unable to save knowledge base: " + e.getLocalizedMessage());
+            log.error("Unable to save knowledge base.", e);
+            aTarget.addChildren(getPage(), IFeedback.class);
         }
     }
 
+    private void actionReindex(AjaxRequestTarget aTarget)
+    {
+        KnowledgeBase kb = kbwModel.getObject().getKb();
+        try {
+            log.info("Starting rebuilding full-text index of {} ... this may take a while ...", kb);
+            kbService.rebuildFullTextIndex(kb);
+            log.info("Completed rebuilding full-text index of {}", kb);
+        }
+        catch (Exception e) {
+            error("Unable to rebuild full text index: " + e.getLocalizedMessage());
+            log.error("Unable to rebuild full text index for KB [{}]({}) in project [{}]({})",
+                    kb.getName(), kb.getRepositoryId(), kb.getProject().getName(),
+                    kb.getProject().getId(), e);
+            aTarget.addChildren(getPage(), IFeedback.class);
+        }
+    }
+    
     private void actionDelete(AjaxRequestTarget aTarget)
     {
         // delete only if user confirms deletion
@@ -308,7 +311,7 @@ public class KnowledgeBaseDetailsPanel
             new StringResourceModel("kb.details.delete.confirmation.content", this,
                 kbwModel.bind("kb")));
         confirmationDialog.show(aTarget);
-        confirmationDialog.setConfirmAction((t) -> {
+        confirmationDialog.setConfirmAction(_target -> {
             KnowledgeBase kb = kbwModel.getObject().getKb();
             try {
                 kbService.removeKnowledgeBase(kb);
@@ -318,10 +321,11 @@ public class KnowledgeBaseDetailsPanel
             catch (RepositoryException | RepositoryConfigException e) {
                 error("Unable to remove knowledge base: " + e.getLocalizedMessage());
                 log.error("Unable to remove knowledge base.", e);
+                _target.addChildren(getPage(), IFeedback.class);
 
             }
-            t.add(this);
-            t.add(findParentWithAssociatedMarkup());
+            _target.add(this);
+            _target.add(findParentWithAssociatedMarkup());
         });
     }
 
@@ -335,6 +339,7 @@ public class KnowledgeBaseDetailsPanel
         }
         catch (RepositoryException e) {
             error(e);
+            aTarget.addChildren(getPage(), IFeedback.class);
         }
     }
 

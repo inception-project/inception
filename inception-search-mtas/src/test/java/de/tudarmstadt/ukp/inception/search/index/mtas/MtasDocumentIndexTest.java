@@ -477,7 +477,7 @@ public class MtasDocumentIndexTest
         @Bean
         public KnowledgeBaseService knowledgeBaseService()
         {
-            return new KnowledgeBaseServiceImpl(temporaryFolder);
+            return new KnowledgeBaseServiceImpl(repositoryProperties());
         }
 
         @Bean

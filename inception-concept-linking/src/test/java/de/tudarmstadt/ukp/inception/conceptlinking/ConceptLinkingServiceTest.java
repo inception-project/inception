@@ -37,6 +37,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.transaction.annotation.Transactional;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.conceptlinking.config.EntityLinkingProperties;
 import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
@@ -72,9 +73,11 @@ public class ConceptLinkingServiceTest
     @Before
     public void setUp()
     {
+        RepositoryProperties repoProps = new RepositoryProperties();
+        repoProps.setPath(temporaryFolder.getRoot());
         EntityManager entityManager = testEntityManager.getEntityManager();
         TestFixtures testFixtures = new TestFixtures(testEntityManager);
-        kbService = new KnowledgeBaseServiceImpl(temporaryFolder.getRoot(), entityManager);
+        kbService = new KnowledgeBaseServiceImpl(repoProps, entityManager);
         clService = new ConceptLinkingService(kbService, new EntityLinkingProperties());
         Project project = testFixtures.createProject(PROJECT_NAME);
         kb = testFixtures.buildKnowledgeBase(project, KB_NAME, Reification.NONE);
@@ -85,7 +88,6 @@ public class ConceptLinkingServiceTest
     {
         kbService.registerKnowledgeBase(kb, kbService.getNativeConfig());
         importKnowledgeBase("data/pets.ttl");
-        kbService.indexLocalKb(kb);
 
         List<KBHandle> handles = clService.disambiguate(kb, null, "soc", 0, null);
 
@@ -99,7 +101,6 @@ public class ConceptLinkingServiceTest
     {
         kbService.registerKnowledgeBase(kb, kbService.getNativeConfig());
         importKnowledgeBase("data/pets.ttl");
-        kbService.indexLocalKb(kb);
 
         kbService.createConcept(kb, new KBConcept("manatee"));
         List<KBHandle> handles = clService.disambiguate(kb, null, "man", 0, null);

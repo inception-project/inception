@@ -219,15 +219,14 @@ public class KnowledgeBaseExporter implements ProjectExporter
             kb.setProject(aProject);
 
             // Get config and register knowledge base
-            RepositoryImplConfig cfg;
             if (kb.getType() == RepositoryType.LOCAL) {
-                cfg = kbService.getNativeConfig();
+                RepositoryImplConfig cfg = kbService.getNativeConfig();
                 kbService.registerKnowledgeBase(kb, cfg);
                 kbService.defineBaseProperties(kb);
                 importKnowledgeBaseFiles(aZip, kb);
             }
             else {
-                cfg = kbService.getRemoteConfig(exportedKB.getRemoteURL());
+                RepositoryImplConfig cfg = kbService.getRemoteConfig(exportedKB.getRemoteURL());
                 kbService.registerKnowledgeBase(kb, cfg);
             }
 
