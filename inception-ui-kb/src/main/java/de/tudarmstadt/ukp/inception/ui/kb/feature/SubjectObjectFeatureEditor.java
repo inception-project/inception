@@ -246,6 +246,8 @@ public class SubjectObjectFeatureEditor
     @Override
     public void onConfigure()
     {
+        super.onConfigure();
+        
         List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) this.getModelObject().value;
         if (links.size() == 0) {
             String role = roleModel.role;
@@ -277,9 +279,11 @@ public class SubjectObjectFeatureEditor
                 return listInstances(actionHandler, input);
             }
 
-            @Override public void onConfigure(JQueryBehavior behavior)
+            @Override
+            public void onConfigure(JQueryBehavior behavior)
             {
                 super.onConfigure(behavior);
+                
                 behavior.setOption("autoWidth", true);
             }
 

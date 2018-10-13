@@ -105,7 +105,7 @@
           <div wicket:id="writeprotection" class="col-sm-offset-2"></div>
         </div>
       </div>
-      <div class="form-group">
+      <div class="form-group row">
         <div>
           <label class="col-sm-2 control-label">
             <wicket:message key="kb.language" />
@@ -113,7 +113,6 @@
           <div wicket:id="language" class="col-sm-10"></div>
         </div>
       </div>
-
       <div class="form-group row">
         <label class="col-sm-2 control-label">
           <wicket:message key="kb.details.status" />
@@ -122,7 +121,6 @@
           <input wicket:id="enabled" type="checkbox" />
         </div>
       </div>
-
       <div class="form-group row">
         <label class="col-sm-2 control-label">
             <wicket:message key="kb.supportConceptLinking"/>
@@ -131,7 +129,14 @@
             <input wicket:id="supportConceptLinking" type="checkbox"/>
         </div>
       </div>
-
+      <div class="form-group row">
+        <label class="col-sm-2 control-label">
+          <wicket:message key="kb.queryLimit" />
+        </label>
+        <div class="col-sm-10">
+          <input class="form-control" style="width:20%;" type="text" wicket:id="maxResults"/>
+        </div>
+      </div>
       <div class="form-group row">
         <label class="col-sm-2 control-label">
           <wicket:message key="kb.iri" />
@@ -230,6 +235,20 @@
           <input wicket:id="supportConceptLinking" type="checkbox"/>
         </div>
       </div>
+        <div class="form-group row">
+          <label class="control-label col-sm-2">
+            <wicket:message key="kb.queryLimit" />
+          </label>
+          <div class="form-inline col-sm-10">
+            <input type="text" wicket:id="maxResults" class="form-control"/>
+              <div class="checkbox" style="margin-left: 15px;">
+                <label wicket:for="maxQueryLimit">
+                <input type="checkbox" wicket:id="maxQueryLimit"/>
+                  <i><wicket:label key="kb.details.contents.maxQueryLimit"/></i>
+                </label>
+              </div>
+          </div>
+        </div>
       <div class="form-group row">
         <label class="col-sm-2 control-label">
           <wicket:message key="kb.iri" />

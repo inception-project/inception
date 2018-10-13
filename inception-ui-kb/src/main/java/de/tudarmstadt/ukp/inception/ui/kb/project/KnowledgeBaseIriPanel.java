@@ -74,7 +74,7 @@ public class KnowledgeBaseIriPanel
         selectedSchemaProfile = Model.of(SchemaProfile.RDFSCHEMA);
 
         kbModel = aModel;
-        
+
         // Add textfield and label for basePrefix
         ComboBox<String> basePrefix = new ComboBox<String>("basePrefix",
                 kbModel.bind("kb.basePrefix"), Arrays.asList(IriConstants.INCEPTION_NAMESPACE));
@@ -183,6 +183,7 @@ public class KnowledgeBaseIriPanel
                 protected void onConfigure()
                 {
                     super.onConfigure();
+                    
                     IModel<String> labelModel;
                     if (advancedSettingsPanel.isVisible()) {
                         labelModel = new ResourceModel("toogleAdvSettingsHide");

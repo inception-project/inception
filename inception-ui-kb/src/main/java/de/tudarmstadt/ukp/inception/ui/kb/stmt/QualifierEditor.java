@@ -38,6 +38,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.inception.app.Focusable;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
@@ -159,15 +160,9 @@ public class QualifierEditor
             CompoundPropertyModel<KBQualifier> compoundModel = new CompoundPropertyModel<>(
                 aQualifier);
             add(new Label("property", aQualifier.getObject().getKbProperty().getUiLabel()));
-            add(new Label("language", compoundModel.bind("language")) {
-                private static final long serialVersionUID = 3436068825093393740L;
-
-                @Override
-                protected void onConfigure() {
-                    super.onConfigure();
-                    setVisible(isNotEmpty(aQualifier.getObject().getLanguage()));
-                }
-            });
+            add(new Label("language", compoundModel.bind("language")).add(
+                    LambdaBehavior.onConfigure(_this -> 
+                            _this.setVisible(isNotEmpty(aQualifier.getObject().getLanguage())))));
             add(new Label("value", compoundModel.bind("value")));
 
             LambdaAjaxLink editLink = new LambdaAjaxLink("edit", QualifierEditor

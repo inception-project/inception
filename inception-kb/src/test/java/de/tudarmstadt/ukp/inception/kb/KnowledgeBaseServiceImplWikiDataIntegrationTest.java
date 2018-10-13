@@ -116,7 +116,9 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
         sut = new KnowledgeBaseServiceImpl(temporaryFolder.getRoot(), entityManager);
         project = createProject(PROJECT_NAME);
         kb = buildKnowledgeBase(project, KB_NAME);
-        sut.registerKnowledgeBase(kb, sut.getRemoteConfig(PROFILES.get("wikidata").getAccess().getAccessUrl()));
+        String wikidataAccessUrl = PROFILES.get("wikidata").getAccess().getAccessUrl();
+        testFixtures.assumeEndpointIsAvailable(wikidataAccessUrl, 5000);
+        sut.registerKnowledgeBase(kb, sut.getRemoteConfig(wikidataAccessUrl));
 
     }
 
@@ -164,7 +166,7 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
     public void listProperties() {
         Stream<String> properties = sut.listProperties(kb, true).stream().map(KBHandle::getIdentifier);
         
-        assertThat(properties).as("Check that properties have been found").hasSize(SPARQLQueryStore.LIMIT);
+        assertThat(properties).as("Check that properties have been found").hasSize(kb.getMaxResults());
     }
     
     @Test
@@ -223,7 +225,8 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
         kb_wikidata_direct.applyRootConcepts(PROFILES.get("wikidata"));
         kb_wikidata_direct.setReification(reification);
         kb_wikidata_direct.setDefaultLanguage("en");
-        
+        kb_wikidata_direct.setMaxResults(1000);
+       
         return kb_wikidata_direct;
     }
 

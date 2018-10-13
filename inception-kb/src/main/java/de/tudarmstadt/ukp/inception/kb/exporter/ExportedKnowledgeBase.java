@@ -84,6 +84,9 @@ public class ExportedKnowledgeBase
     @JsonProperty("default_language")
     private String defaultLanguage;
 
+    @JsonProperty("max_results")
+    private int maxResults;
+
     // set to null for local knowledge bases
     @JsonProperty("remote_url")
     private String remoteURL;
@@ -274,6 +277,16 @@ public class ExportedKnowledgeBase
     public void setDefaultLanguage(String aDefaultLanguage)
     {
         defaultLanguage = aDefaultLanguage;
+    }
+
+    public int getMaxResults()
+    {
+        return maxResults;
+    }
+
+    public void setMaxResults(int aMaxResults)
+    {
+        maxResults = aMaxResults;
     }
 
     public String getRemoteURL()

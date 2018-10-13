@@ -28,6 +28,12 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 public class SearchPageMenuItem implements MenuItem
 {
     @Override
+    public String getPath()
+    {
+        return "/search";
+    }
+    
+    @Override
     public String getIcon()
     {
         return "images/magnifier.png";

@@ -41,6 +41,12 @@ public class MonitoringPageMenuItem implements MenuItem
     private @Autowired ProjectService projectService;
 
     @Override
+    public String getPath()
+    {
+        return "/monitoring";
+    }
+    
+    @Override
     public String getIcon()
     {
         return "images/attribution.png";

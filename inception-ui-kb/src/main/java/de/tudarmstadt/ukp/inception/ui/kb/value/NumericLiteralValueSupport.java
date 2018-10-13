@@ -18,6 +18,19 @@
 package de.tudarmstadt.ukp.inception.ui.kb.value;
 
 import static java.util.Arrays.asList;
+import static org.eclipse.rdf4j.model.vocabulary.XMLSchema.DOUBLE;
+import static org.eclipse.rdf4j.model.vocabulary.XMLSchema.FLOAT;
+import static org.eclipse.rdf4j.model.vocabulary.XMLSchema.INT;
+import static org.eclipse.rdf4j.model.vocabulary.XMLSchema.INTEGER;
+import static org.eclipse.rdf4j.model.vocabulary.XMLSchema.LONG;
+import static org.eclipse.rdf4j.model.vocabulary.XMLSchema.NEGATIVE_INTEGER;
+import static org.eclipse.rdf4j.model.vocabulary.XMLSchema.NON_NEGATIVE_INTEGER;
+import static org.eclipse.rdf4j.model.vocabulary.XMLSchema.NON_POSITIVE_INTEGER;
+import static org.eclipse.rdf4j.model.vocabulary.XMLSchema.POSITIVE_INTEGER;
+import static org.eclipse.rdf4j.model.vocabulary.XMLSchema.SHORT;
+import static org.eclipse.rdf4j.model.vocabulary.XMLSchema.UNSIGNED_INT;
+import static org.eclipse.rdf4j.model.vocabulary.XMLSchema.UNSIGNED_LONG;
+import static org.eclipse.rdf4j.model.vocabulary.XMLSchema.UNSIGNED_SHORT;
 
 import java.util.List;
 import java.util.Optional;
@@ -26,6 +39,7 @@ import org.apache.wicket.model.IModel;
 import org.cyberborean.rdfbeans.datatype.DefaultDatatypeMapper;
 
 import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.XMLSchema;
 import org.springframework.stereotype.Component;
 
@@ -42,6 +56,10 @@ import de.tudarmstadt.ukp.inception.ui.kb.value.editor.ValuePresenter;
 public class NumericLiteralValueSupport
     implements ValueTypeSupport
 {
+    private static final List<IRI> NUMERIC_TYPES = asList(INTEGER, INT, NON_NEGATIVE_INTEGER,
+            NON_POSITIVE_INTEGER, LONG, FLOAT, NEGATIVE_INTEGER, POSITIVE_INTEGER, UNSIGNED_INT,
+            UNSIGNED_LONG, UNSIGNED_SHORT, SHORT, DOUBLE);
+    
     private String valueTypeSupportId;
     
     @Override
@@ -69,46 +87,15 @@ public class NumericLiteralValueSupport
             return false;
         }
         IRI iri = DefaultDatatypeMapper.getDatatypeURI((aStatement.getValue()).getClass());
-        Boolean acceptsType = iri.equals(XMLSchema.INTEGER)
-            || iri.equals(XMLSchema.INT)
-            || iri.equals(XMLSchema.NON_NEGATIVE_INTEGER)
-            || iri.equals(XMLSchema.NON_POSITIVE_INTEGER)
-            || iri.equals(XMLSchema.LONG)
-            || iri.equals(XMLSchema.FLOAT)
-            || iri.equals(XMLSchema.NEGATIVE_INTEGER)
-            || iri.equals(XMLSchema.POSITIVE_INTEGER)
-            || iri.equals(XMLSchema.UNSIGNED_INT)
-            || iri.equals(XMLSchema.UNSIGNED_LONG)
-            || iri.equals(XMLSchema.UNSIGNED_SHORT)
-            || iri.equals(XMLSchema.SHORT)
-            || iri.equals(XMLSchema.DOUBLE);
-
-        return iri != null && acceptsType;
+        return NUMERIC_TYPES.contains(iri);
     }
     
     @Override
     public boolean accepts(String range, Optional<KBObject> rangeKbObject)
     {
-        if (range != null && (range.equals(XMLSchema.INTEGER.stringValue())
-                || range.equals(XMLSchema.INT.stringValue())
-                || range.equals(XMLSchema.NON_NEGATIVE_INTEGER.stringValue()) 
-                || range.equals(XMLSchema.NON_POSITIVE_INTEGER.stringValue())
-                || range.equals(XMLSchema.LONG.stringValue())
-                || range.equals(XMLSchema.FLOAT.stringValue())
-                || range.equals(XMLSchema.NEGATIVE_INTEGER.stringValue())
-                || range.equals(XMLSchema.POSITIVE_INTEGER.stringValue())
-                || range.equals(XMLSchema.UNSIGNED_INT.stringValue())
-                || range.equals(XMLSchema.UNSIGNED_LONG.stringValue())
-                || range.equals(XMLSchema.UNSIGNED_SHORT.stringValue())
-                || range.equals(XMLSchema.SHORT.stringValue())
-                || range.equals(XMLSchema.DOUBLE.stringValue()))) {
-            return true;
-        }
-        
-        return false;
+        return range != null
+                && NUMERIC_TYPES.contains(SimpleValueFactory.getInstance().createIRI(range));
     }
-
-    
 
     @Override
     public ValueEditor createEditor(String aId, IModel<KBStatement> aStatement,
@@ -123,5 +110,4 @@ public class NumericLiteralValueSupport
     {
         return new NumericLiteralValuePresenter(aId, aStatement);
     }
-        
 }

@@ -332,6 +332,21 @@
     </addColumn>
   </changeSet>
 
+  <changeSet author="INCEpTION Team" id="20180916-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="knowledgebase" columnName="maxResults"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="knowledgebase">
+      <column name="maxResults"
+              type="int"
+              defaultValue="1000">
+        <constraints nullable="false" />
+      </column>
+    </addColumn>
+  </changeSet>
+  
   <changeSet author="INCEpTION Team" id="20180924">
     <preConditions onFail="MARK_RAN">
       <not>
