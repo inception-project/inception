@@ -221,6 +221,7 @@ public class KnowledgeBaseExporterTest
         kb.setPropertyTypeIri(RDF.PROPERTY);
         kb.setPropertyLabelIri(RDFS.LABEL);
         kb.setPropertyDescriptionIri(RDFS.COMMENT);
+        kb.setMaxResults(1000);
         ValueFactory vf = SimpleValueFactory.getInstance();
         kb.setExplicitlyDefinedRootConcepts(Arrays
             .asList(vf.createIRI("http://www.ics.forth.gr/isl/CRMinf/I1_Argumentation"),
