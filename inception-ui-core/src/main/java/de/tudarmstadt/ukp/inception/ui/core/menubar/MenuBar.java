@@ -88,6 +88,7 @@ public class MenuBar
 
         LambdaStatelessLink projectsLink = new LambdaStatelessLink("projectsLink", () -> 
                 setResponsePage(ProjectsOverviewPage.class));
+        projectsLink.add(visibleWhen(() -> userRepository.getCurrentUser() != null));
         add(projectsLink);
 
         LambdaStatelessLink adminLink = new LambdaStatelessLink("adminLink", () -> 
