@@ -1263,7 +1263,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         concepts.add(rootConcept1);
         concepts.add(rootConcept2);
         kb.setExplicitlyDefinedRootConcepts(concepts);
-        sut.updateKnowledgeBase(kb, sut.getNativeConfig());
+        sut.updateKnowledgeBase(kb);
 
         importKnowledgeBase("data/wildlife_ontology.ttl");
         setSchema(kb, OWL.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT, RDFS.LABEL, RDF.PROPERTY);

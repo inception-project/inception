@@ -241,10 +241,12 @@ public class ExportedKnowledgeBase
         reification = aReification;
     }
 
+    @Deprecated
     public void setSupportConceptLinking(boolean aSupportConceptLinking) {
         supportConceptLinking = aSupportConceptLinking;
     }
 
+    @Deprecated
     public boolean isSupportConceptLinking() {
         return supportConceptLinking;
     }

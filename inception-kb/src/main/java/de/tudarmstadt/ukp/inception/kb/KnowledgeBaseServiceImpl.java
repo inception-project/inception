@@ -271,6 +271,15 @@ public class KnowledgeBaseServiceImpl
 
     @Transactional
     @Override
+    public void updateKnowledgeBase(KnowledgeBase kb)
+        throws RepositoryException, RepositoryConfigException
+    {
+        assertRegistration(kb);
+        entityManager.merge(kb);
+    }
+
+    @Transactional
+    @Override
     public void updateKnowledgeBase(KnowledgeBase kb, RepositoryImplConfig cfg)
         throws RepositoryException, RepositoryConfigException
     {

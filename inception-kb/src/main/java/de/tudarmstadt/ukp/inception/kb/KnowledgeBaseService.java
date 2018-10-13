@@ -90,7 +90,15 @@ public interface KnowledgeBaseService
     boolean knowledgeBaseExists(Project project, String kbName);
 
     Optional<KnowledgeBase> getKnowledgeBaseById(Project project, String aId);
-    
+
+    /**
+     * Update the configuration of a knowledge base.
+     * The given knowledge base must have been added before.
+     * @param kb the {@link KnowledgeBase} to update
+     */
+    void updateKnowledgeBase(KnowledgeBase kb)
+        throws RepositoryException, RepositoryConfigException;
+
     /**
      * Update the configuration of a knowledge base.
      * The given knowledge base must have been added before.

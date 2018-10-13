@@ -51,6 +51,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
+import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 import de.tudarmstadt.ukp.inception.kb.SchemaProfile;
@@ -107,7 +108,9 @@ public class KnowledgeBaseExporter implements ProjectExporter
             exportedKB.setPropertyTypeIri(kb.getPropertyTypeIri().stringValue());
             exportedKB.setPropertyLabelIri(kb.getPropertyLabelIri().stringValue());
             exportedKB.setPropertyDescriptionIri(kb.getPropertyDescriptionIri().stringValue());
-            exportedKB.setFullTextSearchIri(kb.getFullTextSearchIri().stringValue());
+            exportedKB.setFullTextSearchIri(
+                    kb.getFullTextSearchIri() != null ? kb.getFullTextSearchIri().stringValue()
+                            : null);
             exportedKB.setReadOnly(kb.isReadOnly());
             exportedKB.setEnabled(kb.isEnabled());
             exportedKB.setReification(kb.getReification().toString());
@@ -196,6 +199,12 @@ public class KnowledgeBaseExporter implements ProjectExporter
             kb.setPropertyDescriptionIri(exportedKB.getPropertyDescriptionIri() != null ?
                 vf.createIRI(exportedKB.getPropertyDescriptionIri()) :
                 DEFAULTPROFILE.getPropertyDescriptionIri());
+            // The imported project may date from a time where we did not yet have the FTS IRI.
+            // In that case we use concept linking support as an indicator that we dealt with a
+            // remote Virtuoso.
+            if (exportedKB.isSupportConceptLinking() && exportedKB.getFullTextSearchIri() == null) {
+                kb.setFullTextSearchIri(IriConstants.FTS_VIRTUOSO);
+            }
             kb.setFullTextSearchIri(exportedKB.getFullTextSearchIri() != null
                 ? vf.createIRI(exportedKB.getFullTextSearchIri()) : null);
 
