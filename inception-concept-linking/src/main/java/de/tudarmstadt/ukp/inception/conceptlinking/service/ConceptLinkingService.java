@@ -80,7 +80,7 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 @Component
 public class ConceptLinkingService
 {
-    private final Logger logger = LoggerFactory.getLogger(getClass());
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     private @Resource KnowledgeBaseService kbService;
     private @Resource EntityLinkingProperties properties;
@@ -184,14 +184,14 @@ public class ConceptLinkingService
 
         long afterRetrieval = System.currentTimeMillis();
 
-        logger
+        log
             .debug("It took [{}] ms to retrieve candidates for mention [{}] and typed string [{}]",
                 afterRetrieval - startTime, aMention, aTypedString);
 
         List<CandidateEntity> rankedCandidates = rankCandidates(aKB, aTypedString, aMention,
             candidatesExact, candidatesFullText, aJcas, aMentionBeginOffset);
 
-        logger
+        log
             .debug("It took [{}] ms to rank candidates for mention [{}] and typed string [{}]",
                 System.currentTimeMillis() - afterRetrieval, aMention, aTypedString);
 
@@ -223,7 +223,7 @@ public class ConceptLinkingService
             candidatesFullText.addAll(processCandidateQuery(fullTextQueryMention));
         }
         catch (QueryEvaluationException e) {
-            logger.error("Query evaluation was unsuccessful: ", e);
+            log.error("Query evaluation was unsuccessful: ", e);
         }
 
         return candidatesFullText;
@@ -269,7 +269,7 @@ public class ConceptLinkingService
             candidates.addAll(processCandidateQuery(exactQuery));
         }
         catch (QueryEvaluationException e) {
-            logger.error("Query evaluation was unsuccessful: ", e);
+            log.error("Query evaluation was unsuccessful: ", e);
         }
         return distinctByIri(candidates, aKB);
     }
@@ -280,27 +280,26 @@ public class ConceptLinkingService
         try (TupleQueryResult entityResult = aTupleQuery.evaluate()) {
             while (entityResult.hasNext()) {
                 BindingSet solution = entityResult.next();
-                Value e2 = solution.getValue("e2");
-                Value label = solution.getValue("label");
-                Value altLabel = solution.getValue("altLabel");
-                Value description = solution.getValue("description");
+                Optional<Value> e2 = Optional.ofNullable(solution.getValue("e2"));
+                Optional<Value> label = Optional.ofNullable(solution.getValue("label"));
+                Optional<Value> altLabel = Optional.ofNullable(solution.getValue("altLabel"));
+                Optional<Value> description = Optional.ofNullable(solution.getValue("description"));
                 Optional<String> language = ((SimpleLiteral) solution.getValue("label"))
                     .getLanguage();
 
                 CandidateEntity newEntity = new CandidateEntity(
-                    (e2 != null) ? e2.stringValue() : "",
-                    (label != null) ? label.stringValue() : "",
-                    (altLabel != null) ? altLabel.stringValue() :
+                        e2.map(Value::stringValue).orElse(""),
+                        label.map(Value::stringValue).orElse(""),
                         // Exact matching does not use altLabel
-                        (label != null) ? label.stringValue() : "",
-                    (description != null) ? description.stringValue() : "",
-                    language.orElse(""));
+                        altLabel.map(Value::stringValue)
+                                .orElse(label.map(Value::stringValue).orElse("")),
+                        description.map(Value::stringValue).orElse(""), language.orElse(""));
 
                 candidates.add(newEntity);
             }
         }
         catch (QueryEvaluationException e) {
-            logger.error("Query evaluation was unsuccessful: ", e);
+            log.error("Query evaluation was unsuccessful: ", e);
         }
         return candidates;
     }
@@ -354,7 +353,7 @@ public class ConceptLinkingService
 
 
         if (start == end) {
-            logger.error("Mention not found in sentence!");
+            log.error("Mention not found in sentence!");
             return mentionSentence;
         }
         if (start < 0) {
@@ -554,7 +553,7 @@ public class ConceptLinkingService
                 }
             }
             catch (Exception e) {
-                logger.error("could not get semantic signature", e);
+                log.error("could not get semantic signature", e);
             }
         }
 
