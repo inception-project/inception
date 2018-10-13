@@ -59,10 +59,6 @@
       <artifactId>commons-compress</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.apache.lucene</groupId>
-      <artifactId>lucene-core</artifactId>
-    </dependency>
-    <dependency>
       <groupId>de.tudarmstadt.ukp.inception.rdf4j</groupId>
       <artifactId>rdf4j-repository-sail</artifactId>
         <version>${inception-rdf4j.version}</version>

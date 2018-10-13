@@ -26,6 +26,32 @@
   <name>INCEpTION - Entity Linking</name>
 
   <dependencies>
+    <!-- 
+      These dependencies (in particular "rdf4j-repository-sparql") need to come early (in 
+      particular before inception-kb) otherwise the Maven dependency checking plugin gets 
+      with some RDF4J classes existing in multiple RDF4J JARs.
+     -->
+    <dependency>
+      <groupId>org.eclipse.rdf4j</groupId>
+      <artifactId>rdf4j-repository-sparql</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.rdf4j</groupId>
+      <artifactId>rdf4j-repository-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.rdf4j</groupId>
+      <artifactId>rdf4j-model</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.rdf4j</groupId>
+      <artifactId>rdf4j-query</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.rdf4j</groupId>
+      <artifactId>rdf4j-queryrender</artifactId>
+    </dependency>
+  
     <dependency>
       <groupId>org.apache.uima</groupId>
       <artifactId>uimaj-core</artifactId>
@@ -113,28 +139,6 @@
       <artifactId>spring-tx</artifactId>
     </dependency>
 
-    <dependency>
-      <groupId>org.eclipse.rdf4j</groupId>
-      <artifactId>rdf4j-client</artifactId>
-      <version>${rdf4j.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.eclipse.rdf4j</groupId>
-      <artifactId>rdf4j-repository-api</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.eclipse.rdf4j</groupId>
-      <artifactId>rdf4j-model</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.eclipse.rdf4j</groupId>
-      <artifactId>rdf4j-query</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.eclipse.rdf4j</groupId>
-      <artifactId>rdf4j-queryrender</artifactId>
-    </dependency>
-
     <!-- Testing -->
     <dependency>
       <groupId>junit</groupId>
@@ -201,11 +205,6 @@
           <artifactId>maven-dependency-plugin</artifactId>
           <configuration>
             <usedDependencies>
-              <!-- RDF4J plugins - used via reflection -->
-              <usedDependency>org.eclipse.rdf4j:rdf4j-model</usedDependency>
-              <usedDependency>org.eclipse.rdf4j:rdf4j-repository-api</usedDependency>
-              <usedDependency>org.eclipse.rdf4j:rdf4j-query</usedDependency>
-              <usedDependency>org.eclipse.rdf4j:rdf4j-queryrender</usedDependency>
               <!-- Testing - used via reflection -->
               <usedDependency>com.h2database:h2</usedDependency>
               <usedDependency>org.springframework.boot:spring-boot-starter-test</usedDependency>
