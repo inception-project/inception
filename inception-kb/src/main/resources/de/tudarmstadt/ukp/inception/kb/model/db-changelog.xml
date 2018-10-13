@@ -357,8 +357,12 @@
     <addColumn tableName="knowledgebase">
       <column name="fullTextSearchIri"
               type="VARCHAR(255)">
-        <constraints nullable="false" />
       </column>
     </addColumn>
+    <sql>
+      update knowledgebase set 
+      fullTextSearchIri = "bif:contains" 
+      where supportConceptLinking = true
+    </sql>
   </changeSet>
 </databaseChangeLog>

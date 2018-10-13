@@ -73,7 +73,6 @@ public class IriConstants
      */
     public static final IRI SCHEMA_DESCRIPTION;
 
-    public static final IRI FTS_NONE;
     public static final IRI FTS_VIRTUOSO;
     public static final IRI FTS_LUCENE;
 
@@ -95,7 +94,6 @@ public class IriConstants
         WIKIDATA_TYPE = vf.createIRI(PREFIX_WIKIDATA_DIRECT, "P31");
         WIKIDATA_PROPERTY_TYPE =  vf.createIRI(PREFIX_WIKIDATA_ENTITY, "Q18616576");
         SCHEMA_DESCRIPTION = vf.createIRI(PREFIX_SCHEMA, "description");
-        FTS_NONE = vf.createIRI("FTS:NONE");
         FTS_VIRTUOSO = vf.createIRI("bif:contains");
         FTS_LUCENE = vf.createIRI(PREFIX_LUCENE_SEARCH, "matches");
 
@@ -107,6 +105,6 @@ public class IriConstants
         PROPERTY_TYPE_IRIS = asList(RDF.PROPERTY, WIKIDATA_PROPERTY_TYPE);
         PROPERTY_LABEL_IRIS = asList(RDFS.LABEL, SKOS.PREF_LABEL);
         PROPERTY_DESCRIPTION_IRIS = asList(RDFS.COMMENT, SCHEMA_DESCRIPTION);
-        FTS_IRIS = asList(FTS_NONE, FTS_VIRTUOSO, FTS_LUCENE);
+        FTS_IRIS = asList(FTS_VIRTUOSO, FTS_LUCENE);
     }
 }

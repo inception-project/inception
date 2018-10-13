@@ -211,7 +211,7 @@ public class ConceptLinkingService
      */
     private Set<CandidateEntity> loadCandidatesFullText(CandidateCacheKey aKey)
     {
-        if (aKey.getKnowledgeBase().getFullTextSearchIri().equals(IriConstants.FTS_NONE)) {
+        if (!aKey.getKnowledgeBase().isSupportConceptLinking()) {
             return Collections.emptySet();
         }
         Set<CandidateEntity> candidatesFullText = new HashSet<>();

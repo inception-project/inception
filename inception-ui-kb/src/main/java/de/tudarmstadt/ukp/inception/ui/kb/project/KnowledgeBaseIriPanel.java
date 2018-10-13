@@ -25,6 +25,7 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.list.ListItem;
@@ -113,6 +114,14 @@ public class KnowledgeBaseIriPanel
         comboBoxWrapper.setOutputMarkupId(true);
         add(comboBoxWrapper);
 
+        // The FTS IRI is actually more of a mode switch and not part of the schema as it relates
+        // to the storage mechanism and not to the knowledge resource schema
+        DropDownChoice<IRI> ftsField = new DropDownChoice<>("fullTextSearchIri",
+                kbModel.bind("kb.fullTextSearchIri"), IriConstants.FTS_IRIS);
+        ftsField.setOutputMarkupId(true);
+        ftsField.setNullValid(true);
+        add(ftsField);
+
         // Add comboboxes for classIri, subclassIri, typeIri and descriptionIri
         ComboBox<String> classField = buildComboBox("classIri", kbModel.bind("kb.classIri"),
                 IriConstants.CLASS_IRIS);
@@ -127,13 +136,11 @@ public class KnowledgeBaseIriPanel
         ComboBox<String> propertyTypeField = buildComboBox("propertyTypeIri",
                 kbModel.bind("kb.propertyTypeIri"), IriConstants.PROPERTY_TYPE_IRIS);
         ComboBox<String> propertyLabelField = buildComboBox("propertyLabelIri",
-            kbModel.bind("kb.propertyLabelIri"), IriConstants.PROPERTY_LABEL_IRIS);
+                kbModel.bind("kb.propertyLabelIri"), IriConstants.PROPERTY_LABEL_IRIS);
         ComboBox<String> propertyDescriptionField = buildComboBox("propertyDescriptionIri",
-            kbModel.bind("kb.propertyDescriptionIri"), IriConstants.PROPERTY_DESCRIPTION_IRIS);
-        ComboBox<String> ftsField = buildComboBox("fullTextSearchIri",
-            kbModel.bind("kb.fullTextSearchIri"), IriConstants.FTS_IRIS);
+                kbModel.bind("kb.propertyDescriptionIri"), IriConstants.PROPERTY_DESCRIPTION_IRIS);
         comboBoxWrapper.add(classField, subclassField, typeField, descriptionField, labelField,
-                propertyTypeField, propertyLabelField, propertyDescriptionField, ftsField);
+                propertyTypeField, propertyLabelField, propertyDescriptionField);
        
         // OnChange update the model with corresponding iris
         iriSchemaChoice.setChangeHandler(new ISelectionChangeHandler<SchemaProfile>()
@@ -152,7 +159,6 @@ public class KnowledgeBaseIriPanel
                 propertyLabelField.setModelObject(bean.getPropertyLabelIri().stringValue());
                 propertyDescriptionField
                     .setModelObject(bean.getPropertyDescriptionIri().stringValue());
-                ftsField.setModelObject(bean.getFullTextSearchIri().stringValue());
                 target.add(comboBoxWrapper, iriSchemaChoice);
             }
         });
@@ -215,18 +221,19 @@ public class KnowledgeBaseIriPanel
         List<String> choices = iris.stream().map(IRI::stringValue).collect(Collectors.toList());
 
         IModel<String> adapter = new LambdaModelAdapter<String>(
-            () -> model.getObject().stringValue(),
-            str -> model.setObject(SimpleValueFactory.getInstance().createIRI(str)));
+            () -> { return model.getObject() != null ? model.getObject().stringValue() : null; },
+            str -> { 
+                model.setObject(str != null ? SimpleValueFactory.getInstance().createIRI(str) : 
+                    null); });
 
         ComboBox<String> comboBox = new ComboBox<>(id, adapter, choices);
-        comboBox.add(LambdaBehavior.onConfigure(cb -> cb
-                .setEnabled(SchemaProfile.CUSTOMSCHEMA.equals(selectedSchemaProfile.getObject()))));
+        comboBox.add(LambdaBehavior.enabledWhen(() -> 
+                SchemaProfile.CUSTOMSCHEMA.equals(selectedSchemaProfile.getObject())));
         comboBox.setOutputMarkupId(true);
         comboBox.setRequired(true);
         comboBox.add(Validators.IRI_VALIDATOR);
-        comboBox.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> {
-            // Do nothing just update the model values
-        }));
+        // Do nothing just update the model values
+        comboBox.add(new LambdaAjaxFormComponentUpdatingBehavior("change"));
         return comboBox;
     }
     

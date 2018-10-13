@@ -26,20 +26,20 @@ import org.eclipse.rdf4j.model.vocabulary.SKOS;
 public enum SchemaProfile
 {
     RDFSCHEMA("RDF", RDFS.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT, RDFS.LABEL, RDF.PROPERTY,
-        RDFS.LABEL, RDFS.COMMENT, IriConstants.FTS_NONE),
+        RDFS.LABEL, RDFS.COMMENT),
 
     WIKIDATASCHEMA("WIKIDATA", IriConstants.WIKIDATA_CLASS, IriConstants.WIKIDATA_SUBCLASS,
         IriConstants.WIKIDATA_TYPE, RDFS.COMMENT, RDFS.LABEL, IriConstants.WIKIDATA_PROPERTY_TYPE,
-        RDFS.LABEL, RDFS.COMMENT, IriConstants.FTS_NONE),
+        RDFS.LABEL, RDFS.COMMENT),
 
     OWLSCHEMA("OWL", OWL.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT, RDFS.LABEL, RDF.PROPERTY,
-        RDFS.LABEL, RDFS.COMMENT, IriConstants.FTS_NONE),
+        RDFS.LABEL, RDFS.COMMENT),
 
     SKOSSCHEMA("SKOS", SKOS.CONCEPT, SKOS.BROADER, RDF.TYPE, RDFS.COMMENT, SKOS.PREF_LABEL,
-        RDF.PROPERTY, SKOS.PREF_LABEL, RDFS.COMMENT, IriConstants.FTS_NONE),
+        RDF.PROPERTY, SKOS.PREF_LABEL, RDFS.COMMENT),
 
     CUSTOMSCHEMA("CUSTOM", RDFS.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT, RDFS.LABEL,
-        RDF.PROPERTY, RDFS.LABEL, RDFS.COMMENT, IriConstants.FTS_NONE);
+        RDF.PROPERTY, RDFS.LABEL, RDFS.COMMENT);
 
     private final String label;
     private final IRI classIri;
@@ -50,11 +50,10 @@ public enum SchemaProfile
     private final IRI propertyTypeIri;
     private final IRI propertyLabelIri;
     private final IRI propertyDescriptionIri;
-    private final IRI fullTextSearchIri;
 
     private SchemaProfile(String aLabel, IRI aClassIri, IRI aSubclassIri, IRI aTypeIri,
         IRI aDescriptionIri, IRI aLabelIri, IRI aPropertyTypeIri, IRI aPropertyLabelIri,
-        IRI aPropertyDescriptionIri, IRI aFullTextSearchIri)
+        IRI aPropertyDescriptionIri)
     {
         label = aLabel;
         classIri = aClassIri;
@@ -65,7 +64,6 @@ public enum SchemaProfile
         propertyTypeIri = aPropertyTypeIri;
         propertyLabelIri = aPropertyLabelIri;
         propertyDescriptionIri = aPropertyDescriptionIri;
-        fullTextSearchIri = aFullTextSearchIri;
     }
 
     public String getLabel()
@@ -111,10 +109,5 @@ public enum SchemaProfile
     public IRI getPropertyDescriptionIri()
     {
         return propertyDescriptionIri;
-    }
-
-    public IRI getFullTextSearchIri()
-    {
-        return fullTextSearchIri;
     }
 }

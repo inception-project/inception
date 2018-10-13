@@ -197,13 +197,11 @@ public class KnowledgeBaseExporter implements ProjectExporter
                 vf.createIRI(exportedKB.getPropertyDescriptionIri()) :
                 DEFAULTPROFILE.getPropertyDescriptionIri());
             kb.setFullTextSearchIri(exportedKB.getFullTextSearchIri() != null
-                ? vf.createIRI(exportedKB.getFullTextSearchIri())
-                : DEFAULTPROFILE.getFullTextSearchIri());
+                ? vf.createIRI(exportedKB.getFullTextSearchIri()) : null);
 
             kb.setReadOnly(exportedKB.isReadOnly());
             kb.setEnabled(exportedKB.isEnabled());
             kb.setReification(Reification.valueOf(exportedKB.getReification()));
-            kb.setSupportConceptLinking(exportedKB.isSupportConceptLinking());
             kb.setBasePrefix(exportedKB.getBasePrefix());
 
             if (exportedKB.getRootConcepts() != null) {

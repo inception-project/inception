@@ -455,8 +455,6 @@ public class KnowledgeBaseDetailsPanel
 
             wmc.add(new CheckBox("enabled", model.bind("kb.enabled"))
                 .add(LambdaBehavior.onConfigure(it -> it.setEnabled(false))));
-            wmc.add(new CheckBox("supportConceptLinking", model.bind("kb.supportConceptLinking"))
-                .add(LambdaBehavior.onConfigure(it -> it.setEnabled(false))));
             wmc.add(new RequiredTextField<>("maxResults",
                 model.bind("kb.maxResults"))
                 .add(LambdaBehavior.onConfigure(it -> it.setEnabled(false))));
@@ -571,7 +569,6 @@ public class KnowledgeBaseDetailsPanel
             wmc.add(new KnowledgeBaseIriPanel("iriPanel", model,
                 KnowledgeBaseIriPanelMode.PROJECTSETTINGS));
             wmc.add(new CheckBox("enabled", model.bind("kb.enabled")));
-            wmc.add(new CheckBox("supportConceptLinking", model.bind("kb.supportConceptLinking")));
             queryLimitField = queryLimitField("maxResults",
                 model.bind("kb.maxResults"));
             wmc.add(queryLimitField);

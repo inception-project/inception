@@ -117,9 +117,11 @@ public class KnowledgeBase
     private IRI descriptionIri;
 
     /**
-     * The IRI used for full text search, e.g. bif:contains or http://www.openrdf.org/contrib/lucenesail#
+     * The IRI used for full text search, e.g. {@code bif:contains} or 
+     * {@code http://www.openrdf.org/contrib/lucenesail#}. If this field is null, then FTS is not
+     * supported.
      */
-    @Column
+    @Column(nullable = true)
     private IRI fullTextSearchIri;
 
     /**
@@ -158,9 +160,6 @@ public class KnowledgeBase
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private Reification reification = NONE;
-    
-    @Column(name = "supportConceptLinking", nullable = false)
-    private boolean supportConceptLinking = false;
     
     /**
      * All statements created in a local KB are prefixed with this string 
@@ -366,12 +365,8 @@ public class KnowledgeBase
         return !(repositoryId == null || isEmpty(repositoryId));
     }
     
-    public void setSupportConceptLinking(boolean aSupportConceptLinking) {
-        supportConceptLinking = aSupportConceptLinking;
-    }
-    
     public boolean isSupportConceptLinking() {
-        return supportConceptLinking;
+        return fullTextSearchIri != null;
     }
     
     public String getBasePrefix()

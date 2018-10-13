@@ -30,6 +30,12 @@
     </div>
     <div class="form-group col-xs-12">
       <label class="control-label">
+        <wicket:message key="kb.iri.fullTextSearchIri" />
+      </label>
+      <select wicket:id="fullTextSearchIri" class="form-control"/>
+    </div>
+    <div class="form-group col-xs-12">
+      <label class="control-label">
         <wicket:message key="kb.iri.iriSchema" />
       </label>
       <div wicket:id="iriSchema"></div>
@@ -89,13 +95,6 @@
           <wicket:message key="kb.iri.propertyDescriptionIri" />
         </label>
         <input type="text" wicket:id="propertyDescriptionIri" class="form-control"/>
-      </div>
-
-      <div class="form-group col-xs-12">
-        <label class="control-label">
-          <wicket:message key="kb.iri.fullTextSearchIri" />
-        </label>
-        <input type="text" wicket:id="fullTextSearchIri" class="form-control"/>
       </div>
     </div>
     <button wicket:id="toggleAdvancedSettings" type="button" class="btn btn-primary btn-sm"><wicket:container wicket:id="toggleAdvSettingsLabel"></wicket:container></button>

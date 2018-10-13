@@ -76,6 +76,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.inception.app.bootstrap.BootstrapWizard;
 import de.tudarmstadt.ukp.inception.app.bootstrap.BootstrapWizardButtonBar;
+import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
@@ -179,9 +180,7 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
             add(repositoryTypeRadioButtons("type", "kb.type"));
             add(languageComboBox("language", model.bind("kb.defaultLanguage")));
             add(selectReificationStrategy("reification", "kb.reification"));
-            add(new CheckBox("supportConceptLinking", model.bind("kb.supportConceptLinking")));
-            queryLimitField = queryLimitField("maxResults",
-                model.bind("kb.maxResults"));
+            queryLimitField = queryLimitField("maxResults", model.bind("kb.maxResults"));
             add(queryLimitField);
             maxQueryLimitCheckBox = maxQueryLimitCheckbox("maxQueryLimit", Model.of(false));
             add(maxQueryLimitCheckBox);
@@ -324,6 +323,7 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
             super(previousStep);
             model = aModel;
             model.getObject().setFiles(new ArrayList<>());
+            model.getObject().getKb().setFullTextSearchIri(IriConstants.FTS_LUCENE);
             completed = true;
 
             fileUpload = new FileUploadField("upload");
@@ -487,6 +487,9 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
         {
             super(previousStep, "", "", model);
             this.model = model;
+
+            // In case the user stepped back from the local mode
+            model.getObject().getKb().setFullTextSearchIri(null);
             
             RequiredTextField<String> urlField = new RequiredTextField<>("url");
             urlField.add(Validators.URL_VALIDATOR);
