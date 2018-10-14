@@ -77,7 +77,7 @@
     <!-- >module>inception-search-mimir</module -->
     <module>inception-search-mtas</module>
     <module>inception-external-search-core</module>
-    <module>inception-ui-external-search-elastic</module>
+    <module>inception-ui-external-search</module>
     <module>inception-kb</module>
     <module>inception-ui-core</module>
     <module>inception-ui-kb</module>
