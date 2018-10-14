@@ -1,0 +1,12 @@
+== Import
+
+NOTE: This functionality is only available to *administrators*.
+
+Projects are associated with the accounts of users that act as project managers, annotators, or
+curators. When importing a previously exported project, you can choose to automatically *generate
+missing users* (enabled by default). If this option is disabled, projects still maintain their
+association to users by name. If the respective user accounts are created manually after the import,
+the users will start showing up in the projects.
+
+NOTE: Generated users are disabled and have no password. They must be explicitly enabled and a
+      password must be set before the users can log in again.

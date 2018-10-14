@@ -1,0 +1,46 @@
+////
+// Copyright 2015
+// Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+// Technische Universität Darmstadt
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+////
+
+== Settings
+
+Once the document is opened, a default of 5 sentences is loaded on the annotation  page.  The  
+*Settings*  button will  allow  you  to specify the settings of the annotation layer.
+
+image::annotation_settings.png[align="center"]
+
+Next to *Annotation layers*, you to select the annotation layer which is displayed during annotation.
+This is useful to reduce clutter if there are many annotation layers. Mind that hiding a layer which
+has relations attached to it will also hide the respective relations. E.g. if you disable POS, then
+no dependency relations will be visible anymore.
+
+The *Remember layer* checkbox controls if the annotation layer selected in the *Actions* box. It will work as main layer during the annotation process. Only instances of this layer will be created, even if an annotation in another layer is selected. If necessary, it is possible to change active instances. Still, if a new instance is selected, the main layer is automatically activated.
+
+The *Sidebar size* controls the width of the sidebar containing the annotation detail edtior and 
+actions box. In particular on small screens, increasing this can be useful. The sidebar can be 
+configured to take between 10% and 50% of the screen.
+
+The *Number of sentences* controls how many sentences are visible in the annotation area. The more
+sentences are visible, the slower the user interface will react.
+
+The *Auto-scroll* setting controls if the annotation view is centered on the sentence in which the
+last annotation was made. This can be useful to avoid manual navigation.
+
+If *Use the same color for all tags in a layer* is chosen, annotations are colored per layer. If this option
+is off, then annotations are colored by their labels (all annotations with the same label also have
+the same color). Mind that there is a limited number of colors such that eventually colors will
+be reused.

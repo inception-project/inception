@@ -19,13 +19,9 @@
 
 This section describes how to upgrade the standalone version of {product-name} using an embedded database. For further information on how to upgrade {product-name}, in particular the WAR version when using a MySQL database or older versions of {product-name}, please refer to the <<admin-guide.adoc#,Administrator Guide>>.
 
-=== Make a backup
-
-Before any upgrade, make a copy of your {product-name} home folder.
-
-IMPORTANT: If {product-name} is configured to use an external database, e.g. MySQL, make a 
-            backup of this database as well. See the <<admin-guide.adoc#,Administrator Guide>> 
-            for further information.
+IMPORTANT: Before any upgrade, make a copy of your {product-name} home folder. If {product-name} is 
+            configured to use an external database, e.g. MySQL, make a backup of this database as well. See
+            the <<admin-guide.adoc#,Administrator Guide>> for further information.
 
 include::../common/migration.adoc[]
 

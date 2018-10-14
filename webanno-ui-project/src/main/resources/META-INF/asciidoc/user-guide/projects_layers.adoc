@@ -1,0 +1,269 @@
+[[sect_projects_layers]]
+== Layers 
+
+All annotations belong to an annotation *layer*. Each layer has a structural *type* that defines if it is a *span*, a *relation*, or a *chain*. It also defines how the annotations behave and what kind of features it carries.
+
+=== Creating a custom layer
+
+This section provides a short walkthrough on the creation of a custom layer. The following sections act as reference documentation providing additional details on each step. In the following example, we will create a custom layer called *Sentiment* with a feature called *Polarity* that can be *negative*, *neutral*, or *positive*.
+
+. Create the layer _Sentiment_
+  * Go to the *Layers* tab in your project's settings and press the *Create layer* button
+  * Enter the name of the layer in *Layer name*: _Sentiment_
+  * Choose the *type* of the layer: _Span_
+  * Enable *Allow multiple tokens* because we want to mark sentiments on spans longer than a single token.
+  * Press the *Save layer* button
+. Create the feature _Polarity_
+  * Press the *New feature* button
+  * Choose the *type* of the feature: _uima.cas.String_
+  * Enter the *name* of the feature: _Polarity_
+  * Press *Save feature*
+. Create the tagset _Polarity values_
+  * Go to the *Tagsets* tab and press *Create tagset*
+  * Enter the *name* of the tagset: _Polarity values_
+  * Press *Save tagset*
+  * Press *Create tag*, enter the *name* of the tag: _negative_, press *Save tag*
+  * Repeat for _neutra_ and _positive_
+. Assign the tagset _Polarity values_ to the feature _Polarity_
+  * Back in the *Layers* tab, select the layer: _Sentiment_ and select the feature: _Polarity_
+  * Set the *tagset* to _Polarity values_
+  * Press *Save feature*
+
+Now you have created your first custom layer.
+
+=== Built-in layers
+
+{product-name} comes with a set of built-in layers that allow you to start annotating immediately. Also, many import/export formats only work with these layers as their semantics are known. For this reason, the ability to customize the behaviors of built-in layers is limited and it is not possible to extend them with custom features.
+
+.Built-in layers
+[cols="1,2,2v", options="header"]
+|====
+| Layer | Type | Enforced behaviors
+
+| Chunk
+| Span
+| Lock to multiple tokens,
+no stacking,
+no sentence boundary crossing
+
+| Coreference
+| Chain
+| _(no enforced behaviors)_
+
+| Dependency
+| Relation over POS,
+| No stacking,
+no sentence boundary crossing
+
+| Lemma
+| Span
+| Locked to token offsets,
+no stacking,
+no sentence boundary crossing
+
+| Named Entity
+| Span
+| _(no enforced behaviors)_
+
+| Part of Speech (POS)
+| Span
+| Locked to token offsets,
+no stacking,
+no sentence boundary crossing
+|====
+
+The coloring of the layers signal the following: 
+
+.Color legend
+[cols="1,2", options="header"]
+|===
+| Color
+| Description
+
+| green
+| built-in annotation layer, enabled
+
+| blue
+| custom annotation layer, enabled
+
+| red
+| disabled annotation layer
+|===
+
+To create a custom layer, select *Create Layer* in the *Layers* frame. Then, the following frame will be displayed. 
+
+[[sect_projects_layers_properties]]
+=== Properties 
+
+image::layer1.jpg[align="center"]
+
+.Properites
+[cols="1,2", options="header"]
+|====
+| Property | Description
+
+| Layer name
+| The name of the layer (obligatory)
+
+| Description
+| A description of the layer. This information will be shown in a tooltip when the mouse hovers over the layer name in the annotation detail editor panel.
+
+| Enabled
+| Whether the layer is enabled or not. Layers can currently not be deleted, but they can be disabled.
+|====
+
+NOTE: When a layer is first created, only ASCII characters are allowed for the layer name because the internal UIMA type name is derived from the initial layer name. After the layer has been created, the name can be changed arbitrarily. The internal UIMA type name will not be updated. The internal UIMA name is
+e.g. used when exporting data or in constraint rules.
+
+image::layer_details.png[align="center"]
+
+[[sect_projects_layers_technical_properties]]
+=== Technical Properties 
+
+In the frame *Technical Properties*, the user may select the type of annation that will be made with this layer: span, relation, or chain.
+
+.Technical Properites
+[cols="1v,2", options="header"]
+|====
+| Property | Description
+
+| Internal name
+| Internal UIMA type name
+
+| Type
+| The type of the layer (obligatory, see below)
+
+| Attach to layer
+_(Relations)_
+| Determines which span layer a relation attaches to. Relations can only be created between annotations of this span layer.
+|====
+
+The layer type defines the structure of the layer. Three different types are supported: spans, relations, and chains.
+
+.Layer types
+[cols="1,2,3", options="header"]
+|====
+| Type 
+| Description 
+| Example
+
+| Span
+| Continous segment of text delimited by a start and end character offset. The example shows two spans.
+| image:project_layer_type_span.png[]
+
+| Relation
+| Binary relation between two spans visualized as an arc between spans. The example shows a relation between two spans.
+| image:project_layer_type_relation.png[]
+
+| Chain
+| Directed sequence of connected spans in which each span connects to the following one. The example shows a single chain consisting of three connected spans.
+| image:project_layer_type_chain.png[]
+|====
+
+For relation annotations the type of the spans which are to be connected can be chosen in the field *Attach to layer*. Here, only non-default layers are displayed. To create a relation, first the span annotation needs to be created.
+
+NOTE: Currently for each span layer there can be at most one relation layer attaching to it.
+
+NOTE: It is currently not possible to create relations between spans in different layers. For example if you define span layers called *Men* and *Women*, it is impossible to define a relation layer *Married to* between the two. To work around this limitation, create a single span layer *Person* with a feature *Gender* instead. You can now set the feature *Gender* to *Man* or *Woman* and eventually define a relation layer *Married to* attaching to the *Person* layer.
+
+[[sect_projects_layers_behaviours]]
+=== Behaviours
+
+.Behaviors
+[cols="1v,2", options="header"]
+|====
+| Behavior | Description
+
+| Read-only
+| The layer may be viewed but not edited.
+
+| Granularity
+_(span, chain)_
+| The granularity controls at which level annotations can be created. When set to **Character-level**, annotations can be created anywhere. Zero-width annotations are permitted. When set to **Token-level** or **Sentence-level** annotation boundaries are forced to coincide with token/sentence boundaries. If the selection is smaller, the annotation is expanded to the next larger token/sentence covering the selection. Again, zero-width annotations are permitted. When set to **Single tokens only** may be applied only to a single token. If the selection covers multiple tokens, the annotation is reduced to the first covered token at a time. Zero-width annotations are not permitted in this mode. Note that
+in order for the **Sentence-level** mode to allow annotating multiple sentences, the 
+**Allow crossing sentence boundary** setting must be enabled, otherwise only individual sentences
+can be annotated.
+
+| Allow stacking
+| Allow multiple annotations in this layer to be made at exactly the same position. If this option is disabled, a new annotation made at the same location as an existing annotation will replace the existing annotation.
+
+| Allow crossing sentence boundary
+_(chain)_
+| Allow annotations to cross sentence boundaries.
+
+| Behave like a linked list
+| Controls what happens when two chains are connected with each other. If this option is *disabled*, then the two entire chains will be merged into one large chain. Links between spans will be changed so that each span connects to the closest following span -  no arc labels are displayed. If this option is *enabled*, then the chains will be split if necessary at the source and target points, reconnecting the spans such that exactly the newly created connection is made - arc labels are available.
+|====
+
+[[sect_projects_layers_features]]
+=== Features
+
+image::layer3.jpg[align="center"]
+
+In this section, features and their properties can be configured. 
+
+NOTE: When a feature is first created, only ASCII characters are allowed for the feature name because the internal UIMA name is derived from the initial layer name. After the feature has been created, the name can be changed arbitrarily. The internal UIMA feature name will not be updated. The internal UIMA name is
+e.g. used when exporting data or in constraint rules.
+
+.Feature properties
+[cols="1v,2", options="header"]
+|====
+| Property | Description
+
+| Internal name
+| Internal UIMA feature name
+
+| Type
+| The type of the feature (obligatory, see below)
+
+| Name
+| The name of the feature (obligatory)
+
+| Description
+| A description that is shown when the mouse hovers over the feature name in the annotation detail editor panel.
+
+| Enabled
+| Features cannot be deleted, but they can be disabled
+
+| Show
+| Whether the feature value is shown in the annotation label. If this is disabled, the feature is only visible in the annotation detail editor panel.
+
+| Remember
+| Whether the annotation detail editor should carry values of this feature
+over when creating a new annotation of the same type. This can be useful when creating many annotations
+of the same type in a row.
+
+| Tagset
+_(String)_
+| The tagset controlling the possible values for a string feature.
+|====
+
+The following feature types are supported.
+
+.Feature types
+[cols="1v,2", options="header"]
+|====
+| Type | Description
+
+| uima.cas.String
+| Textual feature that can optionally be controlled by a tagset. It is rendered as a text field or as a combobox if a tagset is defined.
+
+| uima.cas.Boolean
+| Boolean feature that can be true or false and is rendered as a checkbox.
+
+| uima.cas.Integer
+| Numeric feature for integer numbers.
+
+| uima.cas.Float
+| Numeric feature for decimal numbers.
+
+| uima.tcas.Annotation
+_(Span layers)_
+| Link feature that can point to any arbitrary span annotation
+
+| _other span layers_
+_(Span layers)_
+| Link feature that can point only to the selected span layer.
+|====
+
+NOTE: Please take care that when working with non-custom layers, they have to be ex- and imported, if you want to use the resulting files in e.g. correction projects.

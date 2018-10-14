@@ -1,0 +1,9 @@
+== Documents
+
+To add or delete documents, you have to click on the tab *Documents* in the project pane. Two frames will be displayed. In the first frame you can import new documents.
+
+image::project6.jpg[align="center"]
+
+Choose a document by clicking on *Choose Files*. Please mind the format, which you have to choose above. Then click on *Import Document*. 
+The imported documents can be seen in the frame below.
+To delete a document from the project, you have to click on it and then click on *Delete* in the right lower corner.

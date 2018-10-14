@@ -16,11 +16,15 @@
 // limitations under the License.
 ////
 
-[[sect_annotation]]
-== Annotation
+== Opening a Document
 
-NOTE: This functionality is only available to *annotators*, *project managers*, and 
-      *administrators*. Annotators and project managers only see projects in which
-      they hold the respective roles. 
+When navigating to the *Annotation* page, a dialogue opens that allows you to select a project, and 
+a document within the project. If you want to open a different project or document later, click on 
+*Open* to open the dialog.
 
-The annotation screen allows to view text documents and to annotate them.
+image::version3_annotation1.png[align="center"]
+
+Projects appear as folders, and contain the documents of the project. Double-click on a document to 
+open it for annotation. Document names written in black show that the document has not been opened 
+by the current user, blue font means that it has already been opened, whereas red font indicates 
+that the document has already been marked as *done*.
