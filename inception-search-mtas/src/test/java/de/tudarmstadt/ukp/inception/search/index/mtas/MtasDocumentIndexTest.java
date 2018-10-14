@@ -110,8 +110,10 @@ import de.tudarmstadt.ukp.inception.search.scheduling.IndexScheduler;
 @RunWith(SpringRunner.class)
 @EnableAutoConfiguration
 @SpringBootTest(webEnvironment = WebEnvironment.MOCK)
-@EntityScan({ "de.tudarmstadt.ukp.clarin.webanno.model",
+@EntityScan({ 
+        "de.tudarmstadt.ukp.clarin.webanno.model",
         "de.tudarmstadt.ukp.inception.search.model",
+        "de.tudarmstadt.ukp.inception.kb.model",
         "de.tudarmstadt.ukp.clarin.webanno.security.model" })
 @TestPropertySource(locations = "classpath:MtasDocumentIndexTest.properties")
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -477,7 +479,7 @@ public class MtasDocumentIndexTest
         @Bean
         public KnowledgeBaseService knowledgeBaseService()
         {
-            return new KnowledgeBaseServiceImpl(temporaryFolder);
+            return new KnowledgeBaseServiceImpl(repositoryProperties());
         }
 
         @Bean

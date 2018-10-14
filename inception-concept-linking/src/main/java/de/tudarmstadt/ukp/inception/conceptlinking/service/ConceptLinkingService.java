@@ -21,11 +21,14 @@ package de.tudarmstadt.ukp.inception.conceptlinking.service;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
@@ -41,13 +44,17 @@ import org.apache.commons.text.similarity.LevenshteinDistance;
 import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.eclipse.rdf4j.model.Value;
+import org.eclipse.rdf4j.model.impl.SimpleLiteral;
 import org.eclipse.rdf4j.query.BindingSet;
 import org.eclipse.rdf4j.query.QueryEvaluationException;
 import org.eclipse.rdf4j.query.TupleQuery;
 import org.eclipse.rdf4j.query.TupleQueryResult;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
+import org.eclipse.rdf4j.repository.config.RepositoryImplConfig;
+import org.eclipse.rdf4j.repository.sparql.config.SPARQLRepositoryConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
@@ -63,7 +70,9 @@ import de.tudarmstadt.ukp.inception.conceptlinking.model.Property;
 import de.tudarmstadt.ukp.inception.conceptlinking.model.SemanticSignature;
 import de.tudarmstadt.ukp.inception.conceptlinking.util.FileUtils;
 import de.tudarmstadt.ukp.inception.conceptlinking.util.QueryUtil;
+import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
+import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 import de.tudarmstadt.ukp.inception.kb.event.KnowledgeBaseConfigurationChangedEvent;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
@@ -71,7 +80,7 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 @Component
 public class ConceptLinkingService
 {
-    private final Logger logger = LoggerFactory.getLogger(getClass());
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     private @Resource KnowledgeBaseService kbService;
     private @Resource EntityLinkingProperties properties;
@@ -100,23 +109,36 @@ public class ConceptLinkingService
         .asList("commonsmedia", "external-id", "globe-coordinate", "math", "monolingualtext",
             "quantity", "string", "url", "wikibase-property"));
 
-    private static final String WIKIDATA_PREFIX = "http://www.wikidata.org/entity/";
-    private static final String POS_VERB_PREFIX = "V";
-    private static final String POS_NOUN_PREFIX = "N";
-    private static final String POS_ADJECTIVE_PREFIX = "J";
-
     // A cache for candidates retrieved by fulltext-search
     private LoadingCache<CandidateCacheKey, Set<CandidateEntity>> candidateFullTextCache;
     private LoadingCache<SemanticSignatureCacheKey, SemanticSignature> semanticSignatureCache;
 
+    private boolean loadResources;
+    @Autowired
+    public ConceptLinkingService()
+    {
+        loadResources = true;
+    }
+
+    public ConceptLinkingService(KnowledgeBaseService aKbService,
+        EntityLinkingProperties aProperties)
+    {
+        kbService = aKbService;
+        properties = aProperties;
+        loadResources = false;
+        init();
+    }
+
     @PostConstruct
     public void init()
     {
-        stopwords = FileUtils.loadStopwordFile(stopwordsFile);
-        entityFrequencyMap = FileUtils.loadEntityFrequencyMap(entityFrequencyFile);
-        propertyBlacklist = FileUtils.loadPropertyBlacklist(propertyBlacklistFile);
-        propertyWithLabels = FileUtils.loadPropertyLabels(propertyWithLabelsFile);
-      
+        if (loadResources) {
+            stopwords = FileUtils.loadStopwordFile(stopwordsFile);
+            entityFrequencyMap = FileUtils.loadEntityFrequencyMap(entityFrequencyFile);
+            propertyBlacklist = FileUtils.loadPropertyBlacklist(propertyBlacklistFile);
+            propertyWithLabels = FileUtils.loadPropertyLabels(propertyWithLabelsFile);
+        }
+
         candidateFullTextCache = Caffeine.newBuilder()
                 .maximumSize(properties.getCacheSize())
                 .build(key -> loadCandidatesFullText(key));
@@ -147,6 +169,10 @@ public class ConceptLinkingService
     {
         long startTime = System.currentTimeMillis();
 
+        if (aTypedString == null) {
+            aTypedString = "";
+        }
+
         Set<CandidateEntity> candidatesExact = retrieveCandidatesExact(aKB, aTypedString, aMention);
 
         Set<CandidateEntity> candidatesFullText = new HashSet<>();
@@ -158,14 +184,14 @@ public class ConceptLinkingService
 
         long afterRetrieval = System.currentTimeMillis();
 
-        logger
+        log
             .debug("It took [{}] ms to retrieve candidates for mention [{}] and typed string [{}]",
                 afterRetrieval - startTime, aMention, aTypedString);
 
         List<CandidateEntity> rankedCandidates = rankCandidates(aKB, aTypedString, aMention,
             candidatesExact, candidatesFullText, aJcas, aMentionBeginOffset);
 
-        logger
+        log
             .debug("It took [{}] ms to rank candidates for mention [{}] and typed string [{}]",
                 System.currentTimeMillis() - afterRetrieval, aMention, aTypedString);
 
@@ -185,6 +211,9 @@ public class ConceptLinkingService
      */
     private Set<CandidateEntity> loadCandidatesFullText(CandidateCacheKey aKey)
     {
+        if (!aKey.getKnowledgeBase().isSupportConceptLinking()) {
+            return Collections.emptySet();
+        }
         Set<CandidateEntity> candidatesFullText = new HashSet<>();
 
         try (RepositoryConnection conn = kbService.getConnection(aKey.getKnowledgeBase())) {
@@ -194,7 +223,7 @@ public class ConceptLinkingService
             candidatesFullText.addAll(processCandidateQuery(fullTextQueryMention));
         }
         catch (QueryEvaluationException e) {
-            logger.error("Query evaluation was unsuccessful: ", e);
+            log.error("Query evaluation was unsuccessful: ", e);
         }
 
         return candidatesFullText;
@@ -219,7 +248,7 @@ public class ConceptLinkingService
                 }
             }
         }
-        return candidatesFullText;
+        return distinctByIri(candidatesFullText, aKey.getKnowledgeBase());
     }
 
     /**
@@ -240,9 +269,9 @@ public class ConceptLinkingService
             candidates.addAll(processCandidateQuery(exactQuery));
         }
         catch (QueryEvaluationException e) {
-            logger.error("Query evaluation was unsuccessful: ", e);
+            log.error("Query evaluation was unsuccessful: ", e);
         }
-        return candidates;
+        return distinctByIri(candidates, aKB);
     }
 
     private Set<CandidateEntity> processCandidateQuery(TupleQuery aTupleQuery)
@@ -251,24 +280,26 @@ public class ConceptLinkingService
         try (TupleQueryResult entityResult = aTupleQuery.evaluate()) {
             while (entityResult.hasNext()) {
                 BindingSet solution = entityResult.next();
-                Value e2 = solution.getValue("e2");
-                Value label = solution.getValue("label");
-                Value altLabel = solution.getValue("altLabel");
-                Value description = solution.getValue("description");
+                Optional<Value> e2 = Optional.ofNullable(solution.getValue("e2"));
+                Optional<Value> label = Optional.ofNullable(solution.getValue("label"));
+                Optional<Value> altLabel = Optional.ofNullable(solution.getValue("altLabel"));
+                Optional<Value> description = Optional.ofNullable(solution.getValue("description"));
+                Optional<String> language = ((SimpleLiteral) solution.getValue("label"))
+                    .getLanguage();
 
                 CandidateEntity newEntity = new CandidateEntity(
-                    (e2 != null) ? e2.stringValue() : "",
-                    (label != null) ? label.stringValue() : "",
-                    (altLabel != null) ? altLabel.stringValue()
+                        e2.map(Value::stringValue).orElse(""),
+                        label.map(Value::stringValue).orElse(""),
                         // Exact matching does not use altLabel
-                        : (label != null) ? label.stringValue() : "",
-                    (description != null) ? description.stringValue() : "");
+                        altLabel.map(Value::stringValue)
+                                .orElse(label.map(Value::stringValue).orElse("")),
+                        description.map(Value::stringValue).orElse(""), language.orElse(""));
 
                 candidates.add(newEntity);
             }
         }
         catch (QueryEvaluationException e) {
-            logger.error("Query evaluation was unsuccessful: ", e);
+            log.error("Query evaluation was unsuccessful: ", e);
         }
         return candidates;
     }
@@ -322,7 +353,7 @@ public class ConceptLinkingService
 
 
         if (start == end) {
-            logger.error("Mention not found in sentence!");
+            log.error("Mention not found in sentence!");
             return mentionSentence;
         }
         if (start < 0) {
@@ -344,31 +375,46 @@ public class ConceptLinkingService
         String mention, Set<CandidateEntity> aCandidatesExact,
         Set<CandidateEntity> aCandidatesFullText, JCas aJCas, int aBegin)
     {
-        Sentence mentionSentence = getMentionSentence(aJCas, aBegin);
-        Validate.notNull(mentionSentence, "Mention sentence could not be determined.");
-
-        List<String> splitMention = Arrays.asList(mention.split(" "));
-        List<Token> mentionContext = getMentionContext(mentionSentence, splitMention,
-            properties.getMentionContextSize());
-
         Set<String> sentenceContentTokens = new HashSet<>();
-        for (Token t : JCasUtil.selectCovered(Token.class, mentionSentence)) {
-            boolean isNotPartOfMention = !splitMention.contains(t.getCoveredText());
-            boolean isNotStopword = (stopwords == null) || (stopwords != null && !stopwords
-                .contains(t.getCoveredText().toLowerCase(Locale.ENGLISH)));
-            if (isNotPartOfMention && isNotStopword) {
-                sentenceContentTokens.add(t.getCoveredText().toLowerCase(Locale.ENGLISH));
+        List<Token> mentionContext = new ArrayList<>();
+
+        if (aJCas != null) {
+            Sentence mentionSentence = getMentionSentence(aJCas, aBegin);
+            Validate.notNull(mentionSentence, "Mention sentence could not be determined.");
+
+            List<String> splitMention = Arrays.asList(mention.split(" "));
+            mentionContext = getMentionContext(mentionSentence, splitMention,
+                properties.getMentionContextSize());
+
+            for (Token t : JCasUtil.selectCovered(Token.class, mentionSentence)) {
+                boolean isNotPartOfMention = !splitMention.contains(t.getCoveredText());
+                // TODO Use the right locale based on the KB language
+                boolean isNotStopword = (stopwords == null) || (stopwords != null && !stopwords
+                    .contains(t.getCoveredText().toLowerCase(Locale.ENGLISH)));
+                if (isNotPartOfMention && isNotStopword) {
+                    sentenceContentTokens.add(t.getCoveredText().toLowerCase(Locale.ENGLISH));
+                }
             }
         }
 
         // Set frequency
-        aCandidatesFullText.forEach(l -> {
-            String wikidataId = l.getIRI().replace(WIKIDATA_PREFIX, "");
-
-            if (entityFrequencyMap != null && entityFrequencyMap.get(wikidataId) != null) {
-                l.setFrequency(entityFrequencyMap.get(wikidataId));
+        if (entityFrequencyMap != null) {
+            for (CandidateEntity l : aCandidatesFullText) {
+                String key = l.getIRI();
+                // For UKP Wikidata
+                if (aKB.getType() == RepositoryType.REMOTE
+                    && aKB.getFullTextSearchIri().equals(IriConstants.FTS_VIRTUOSO)) {
+                    RepositoryImplConfig cfg = kbService.getKnowledgeBaseConfig(aKB);
+                    if (((SPARQLRepositoryConfig) cfg).getQueryEndpointUrl()
+                        .equals(IriConstants.UKP_WIKIDATA_SPARQL_ENDPOINT)) {
+                        key = key.replace(IriConstants.PREFIX_WIKIDATA_ENTITY, "");
+                        if (entityFrequencyMap.get(key) != null) {
+                            l.setFrequency(entityFrequencyMap.get(key));
+                        }
+                    }
+                }
             }
-        });
+        }
 
         // Sort full-text matching candidates by frequency and do cutoff by a threshold
         List<CandidateEntity> result = sortByFrequency(new ArrayList<>(aCandidatesFullText))
@@ -379,18 +425,28 @@ public class ConceptLinkingService
         result.addAll(aCandidatesExact);
 
         // Set the feature values
+        List<Token> finalMentionContext = mentionContext;
         result.parallelStream().forEach(l -> {
-            String wikidataId = l.getIRI().replace(WIKIDATA_PREFIX, "");
-            
-            l.setIdRank(Math.log(Double.parseDouble(wikidataId.substring(1))));
+
+            // For UKP Wikidata
+            if (aKB.getType() == RepositoryType.REMOTE
+                && aKB.getFullTextSearchIri().equals(IriConstants.FTS_VIRTUOSO)) {
+                RepositoryImplConfig cfg = kbService.getKnowledgeBaseConfig(aKB);
+                if (((SPARQLRepositoryConfig) cfg).getQueryEndpointUrl()
+                    .equals(IriConstants.UKP_WIKIDATA_SPARQL_ENDPOINT)) {
+                    String wikidataId =
+                        l.getIRI().replace(IriConstants.PREFIX_WIKIDATA_ENTITY, "");
+                    l.setIdRank(Math.log(Double.parseDouble(wikidataId.substring(1))));
+                }
+            }
 
             String altLabel = l.getAltLabel();
             LevenshteinDistance lev = new LevenshteinDistance();
             l.setLevMatchLabel(lev.apply(mention, altLabel));
-            l.setLevContext(lev.apply(tokensToString(mentionContext), altLabel));
+            l.setLevContext(lev.apply(tokensToString(finalMentionContext), altLabel));
             l.setLevTypedString(lev.apply(aTypedString, altLabel));
 
-            SemanticSignature sig = getSemanticSignature(aKB, wikidataId);
+            SemanticSignature sig = getSemanticSignature(aKB, l.getIRI());
             Set<String> relatedEntities = sig.getRelatedEntities();
             Set<String> signatureOverlap = new HashSet<>();
             for (String entityLabel : relatedEntities) {
@@ -455,15 +511,16 @@ public class ConceptLinkingService
         for (Token t : aSentence) {
             joiner.add(t.getCoveredText());
         }
-        return joiner.toString().substring(0, joiner.length() - 1);
+        // Avoid IndexOutOfBoundsException in case aSentence is empty (i.e. during testing)
+        return joiner.toString().substring(0, (joiner.length() != 0) ? joiner.length() - 1 : 0);
     }
 
     /*
      * Retrieves the semantic signature of an entity. See documentation of SemanticSignature class.
      */
-    private SemanticSignature getSemanticSignature(KnowledgeBase aKB, String aWikidataId)
+    private SemanticSignature getSemanticSignature(KnowledgeBase aKB, String aIri)
     {
-        return semanticSignatureCache.get(new SemanticSignatureCacheKey(aKB, aWikidataId));
+        return semanticSignatureCache.get(new SemanticSignatureCacheKey(aKB, aIri));
     }
 
     private SemanticSignature loadSemanticSignature(SemanticSignatureCacheKey aKey)
@@ -496,7 +553,7 @@ public class ConceptLinkingService
                 }
             }
             catch (Exception e) {
-                logger.error("could not get semantic signature", e);
+                log.error("could not get semantic signature", e);
             }
         }
 
@@ -504,6 +561,21 @@ public class ConceptLinkingService
     }
 
 
+    // Make sure that each concept is only represented once, preferably in the default language
+    private Set<CandidateEntity> distinctByIri(Set<CandidateEntity> aCandidates,
+        KnowledgeBase aKb)
+    {
+        Map<String, CandidateEntity> cMap = new HashMap<>();
+        for (CandidateEntity c : aCandidates) {
+            if (!cMap.containsKey(c.getIRI())) {
+                cMap.put(c.getIRI(), c);
+            }
+            else if (c.getLanguage().equals(aKb.getDefaultLanguage())) {
+                cMap.put(c.getIRI(), c);
+            }
+        }
+        return new HashSet<>(cMap.values());
+    }
 
     /**
      * Remove all cache entries of a specific project

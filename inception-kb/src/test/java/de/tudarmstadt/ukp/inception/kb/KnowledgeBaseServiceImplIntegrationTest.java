@@ -66,6 +66,7 @@ import org.springframework.test.context.junit4.rules.SpringClassRule;
 import org.springframework.test.context.junit4.rules.SpringMethodRule;
 import org.springframework.transaction.annotation.Transactional;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
@@ -124,9 +125,11 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
 
     @Before
     public void setUp() throws Exception {
+        RepositoryProperties repoProps = new RepositoryProperties();
+        repoProps.setPath(temporaryFolder.getRoot());
         EntityManager entityManager = testEntityManager.getEntityManager();
         testFixtures = new TestFixtures(testEntityManager);
-        sut = new KnowledgeBaseServiceImpl(temporaryFolder.getRoot(), entityManager);
+        sut = new KnowledgeBaseServiceImpl(repoProps, entityManager);
         project = createProject(PROJECT_NAME);
         kb = buildKnowledgeBase(project, KB_NAME);
     }
@@ -1260,7 +1263,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         concepts.add(rootConcept1);
         concepts.add(rootConcept2);
         kb.setExplicitlyDefinedRootConcepts(concepts);
-        sut.updateKnowledgeBase(kb, sut.getNativeConfig());
+        sut.updateKnowledgeBase(kb);
 
         importKnowledgeBase("data/wildlife_ontology.ttl");
         setSchema(kb, OWL.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT, RDFS.LABEL, RDF.PROPERTY);
@@ -1537,10 +1540,11 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         String descriptionIri = "http://www.w3.org/2000/01/rdf-schema#comment";
         String propertyLabelIri = "http://www.w3.org/2000/01/rdf-schema#label";
         String propertyDescriptionIri = "http://www.w3.org/2000/01/rdf-schema#comment";
-        
-        KnowledgeBaseMapping testMapping = new KnowledgeBaseMapping(classIri, subclassIri,
-            typeIri, descriptionIri, label, propertyTypeIri, propertyLabelIri,
-            propertyDescriptionIri);
+        String fullTextSearchIri = "http://www.openrdf.org/contrib/lucenesail#matches";
+
+        KnowledgeBaseMapping testMapping = new KnowledgeBaseMapping(classIri, subclassIri, typeIri,
+            descriptionIri, label, propertyTypeIri, propertyLabelIri, propertyDescriptionIri,
+            fullTextSearchIri);
         KnowledgeBaseProfile testProfile = new KnowledgeBaseProfile();
         testProfile.setName(name);
         testProfile.setMapping(testMapping);
