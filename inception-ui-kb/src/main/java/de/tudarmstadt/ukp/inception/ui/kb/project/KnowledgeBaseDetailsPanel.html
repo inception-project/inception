@@ -41,12 +41,17 @@
             <span class="form-control" wicket:id="reification" disabled="disabled"></span>
           </div>
         </div>
+
         <hr />
         <wicket:container wicket:id="content"></wicket:container>
       </div>
 
       <div class="panel-footer">
         <div class="pull-left">
+          <a wicket:id="reindex" class="btn btn-danger" href="#" role="button">
+            <!-- <i class="fa fa-trash"></i> --> <wicket:message
+              key="kb.reindex" />
+          </a>
           <a wicket:id="delete" class="btn btn-danger" href="#" role="button">
             <!-- <i class="fa fa-trash"></i> --> <wicket:message
               key="kb.delete" />
@@ -104,25 +109,28 @@
           <div wicket:id="writeprotection" class="col-sm-offset-2"></div>
         </div>
       </div>
-      <div class="form-group">
+      <div class="form-group row">
         <div>
           <label class="col-sm-2 control-label">
             <wicket:message key="kb.language" />
           </label>
           <div wicket:id="language" class="col-sm-10"></div>
         </div>
-        <div class="col-sm-offset-2 col-sm-10">
-          <div class="checkbox">
-            <label wicket:for="enabled">
-              <input wicket:id="enabled" type="checkbox" /> <wicket:label key="enabled" />
-            </label>
-          </div>
-          <div class="checkbox">
-            <label wicket:for="supportConceptLinking">
-              <input wicket:id="supportConceptLinking" type="checkbox" /> <wicket:label
-                key="kb.supportConceptLinking" />
-            </label>
-          </div>
+      </div>
+      <div class="form-group row">
+        <label class="col-sm-2 control-label">
+          <wicket:message key="kb.details.enabled" />
+        </label>
+        <div class="col-sm-10">
+          <input wicket:id="enabled" type="checkbox" />
+        </div>
+      </div>
+      <div class="form-group row">
+        <label class="col-sm-2 control-label">
+          <wicket:message key="kb.queryLimit" />
+        </label>
+        <div class="col-sm-10">
+          <input class="form-control" style="width:20%;" type="text" wicket:id="maxResults"/>
         </div>
       </div>
       <div class="form-group row">
@@ -208,18 +216,25 @@
         </div>
       </div>
       <div class="form-group row">
-        <div class="col-sm-offset-2 col-sm-10">
-          <div class="checkbox">
-            <label wicket:for="enabled">
-              <input wicket:id="enabled" type="checkbox" /> <wicket:label key="enabled" />
-            </label>
-          </div>
-          <div class="checkbox">
-            <label wicket:for="supportConceptLinking">
-              <input wicket:id="supportConceptLinking" type="checkbox" />
-                <wicket:label key="kb.supportConceptLinking" />
-            </label>
-          </div>
+        <label class="col-sm-2 control-label">
+          <wicket:message key="kb.details.enabled" />
+        </label>
+        <div class="col-sm-10">
+          <input wicket:id="enabled" type="checkbox" />
+        </div>
+      </div>
+      <div class="form-group row">
+        <label class="control-label col-sm-2">
+          <wicket:message key="kb.queryLimit" />
+        </label>
+        <div class="form-inline col-sm-10">
+          <input type="text" wicket:id="maxResults" class="form-control"/>
+            <div class="checkbox" style="margin-left: 15px;">
+              <label wicket:for="maxQueryLimit">
+              <input type="checkbox" wicket:id="maxQueryLimit"/>
+                <i><wicket:label key="kb.details.contents.maxQueryLimit"/></i>
+              </label>
+            </div>
         </div>
       </div>
       <div class="form-group row">
@@ -227,7 +242,7 @@
           <wicket:message key="kb.iri" />
         </label>
         <div class="col-sm-10">
-          <span wicket:id="iriPanel"></span>    
+          <span wicket:id="iriPanel"></span>
         </div>
       </div>
     </wicket:container>

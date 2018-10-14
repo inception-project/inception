@@ -104,5 +104,9 @@
     	<groupId>de.tudarmstadt.ukp.inception.app</groupId>
     	<artifactId>inception-search-core</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.danekja</groupId>
+      <artifactId>jdk-serializable-functional</artifactId>
+    </dependency>
   </dependencies>
 </project>

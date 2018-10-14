@@ -34,6 +34,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
@@ -62,6 +63,8 @@ public class RecommenderExporterTest
 
         project = new Project();
         project.setName("Test Project");
+        project.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
+        
         when(recommendationService.listRecommenders(project)).thenReturn(recommenders());
 
         when(annotationService.getLayer(layer.getName(), project)).thenReturn(layer);

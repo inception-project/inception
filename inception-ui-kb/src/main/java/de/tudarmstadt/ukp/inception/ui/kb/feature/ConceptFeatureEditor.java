@@ -104,12 +104,14 @@ public class ConceptFeatureEditor extends FeatureEditor {
 
             @Override
             protected List<KBHandle> getChoices(String input) {
-                return listInstances(aState, aHandler, input.toLowerCase());
+                return listInstances(aState, aHandler, input != null ? input.toLowerCase() : null);
             }
 
             @Override
-            public void onConfigure(JQueryBehavior behavior) {
+            public void onConfigure(JQueryBehavior behavior)
+            {
                 super.onConfigure(behavior);
+
                 behavior.setOption("autoWidth", true);
                 behavior.setOption("ignoreCase", false);
             }
@@ -154,11 +156,9 @@ public class ConceptFeatureEditor extends FeatureEditor {
         } catch (Exception e) {
             LOG.error("Unable to read traits", e);
             error("Unable to read traits: " + ExceptionUtils.getRootCauseMessage(e));
-            IPartialPageRequestHandler target = RequestCycle.get()
-                    .find(IPartialPageRequestHandler.class);
-            if (target != null) {
-                target.addChildren(getPage(), IFeedback.class);
-            }
+            RequestCycle.get()
+                    .find(IPartialPageRequestHandler.class)
+                    .ifPresent(target -> target.addChildren(getPage(), IFeedback.class));
         }
         // Sort results
         handles.sort(Comparator.comparing(KBObject::getUiLabel));

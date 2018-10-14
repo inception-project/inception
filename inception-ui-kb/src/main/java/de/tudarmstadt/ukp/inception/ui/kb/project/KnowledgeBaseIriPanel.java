@@ -25,6 +25,7 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.list.ListItem;
@@ -52,8 +53,9 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
+import de.tudarmstadt.ukp.inception.kb.SchemaProfile;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
-import de.tudarmstadt.ukp.inception.ui.kb.project.wizard.SchemaProfile;
+
 
 public class KnowledgeBaseIriPanel
     extends Panel
@@ -73,7 +75,7 @@ public class KnowledgeBaseIriPanel
         selectedSchemaProfile = Model.of(SchemaProfile.RDFSCHEMA);
 
         kbModel = aModel;
-        
+
         // Add textfield and label for basePrefix
         ComboBox<String> basePrefix = new ComboBox<String>("basePrefix",
                 kbModel.bind("kb.basePrefix"), Arrays.asList(IriConstants.INCEPTION_NAMESPACE));
@@ -96,7 +98,8 @@ public class KnowledgeBaseIriPanel
             {
                 super.onInitialize();
                 // Initialize according to current model values
-                SchemaProfile modelProfile = checkSchemaProfile(kbModel.getObject().getKb());
+                SchemaProfile modelProfile = kbService
+                    .checkSchemaProfile(kbModel.getObject().getKb());
                 setModelObject(modelProfile);
 
             }
@@ -110,6 +113,14 @@ public class KnowledgeBaseIriPanel
         WebMarkupContainer comboBoxWrapper = new WebMarkupContainer("comboBoxWrapper");
         comboBoxWrapper.setOutputMarkupId(true);
         add(comboBoxWrapper);
+
+        // The FTS IRI is actually more of a mode switch and not part of the schema as it relates
+        // to the storage mechanism and not to the knowledge resource schema
+        DropDownChoice<IRI> ftsField = new DropDownChoice<>("fullTextSearchIri",
+                kbModel.bind("kb.fullTextSearchIri"), IriConstants.FTS_IRIS);
+        ftsField.setOutputMarkupId(true);
+        ftsField.setNullValid(true);
+        add(ftsField);
 
         // Add comboboxes for classIri, subclassIri, typeIri and descriptionIri
         ComboBox<String> classField = buildComboBox("classIri", kbModel.bind("kb.classIri"),
@@ -125,9 +136,9 @@ public class KnowledgeBaseIriPanel
         ComboBox<String> propertyTypeField = buildComboBox("propertyTypeIri",
                 kbModel.bind("kb.propertyTypeIri"), IriConstants.PROPERTY_TYPE_IRIS);
         ComboBox<String> propertyLabelField = buildComboBox("propertyLabelIri",
-            kbModel.bind("kb.propertyLabelIri"), IriConstants.PROPERTY_LABEL_IRIS);
+                kbModel.bind("kb.propertyLabelIri"), IriConstants.PROPERTY_LABEL_IRIS);
         ComboBox<String> propertyDescriptionField = buildComboBox("propertyDescriptionIri",
-            kbModel.bind("kb.propertyDescriptionIri"), IriConstants.PROPERTY_DESCRIPTION_IRIS);
+                kbModel.bind("kb.propertyDescriptionIri"), IriConstants.PROPERTY_DESCRIPTION_IRIS);
         comboBoxWrapper.add(classField, subclassField, typeField, descriptionField, labelField,
                 propertyTypeField, propertyLabelField, propertyDescriptionField);
        
@@ -148,7 +159,6 @@ public class KnowledgeBaseIriPanel
                 propertyLabelField.setModelObject(bean.getPropertyLabelIri().stringValue());
                 propertyDescriptionField
                     .setModelObject(bean.getPropertyDescriptionIri().stringValue());
-
                 target.add(comboBoxWrapper, iriSchemaChoice);
             }
         });
@@ -179,6 +189,7 @@ public class KnowledgeBaseIriPanel
                 protected void onConfigure()
                 {
                     super.onConfigure();
+                    
                     IModel<String> labelModel;
                     if (advancedSettingsPanel.isVisible()) {
                         labelModel = new ResourceModel("toogleAdvSettingsHide");
@@ -210,18 +221,19 @@ public class KnowledgeBaseIriPanel
         List<String> choices = iris.stream().map(IRI::stringValue).collect(Collectors.toList());
 
         IModel<String> adapter = new LambdaModelAdapter<String>(
-            () -> model.getObject().stringValue(),
-            str -> model.setObject(SimpleValueFactory.getInstance().createIRI(str)));
+            () -> { return model.getObject() != null ? model.getObject().stringValue() : null; },
+            str -> { 
+                model.setObject(str != null ? SimpleValueFactory.getInstance().createIRI(str) : 
+                    null); });
 
         ComboBox<String> comboBox = new ComboBox<>(id, adapter, choices);
-        comboBox.add(LambdaBehavior.onConfigure(cb -> cb
-                .setEnabled(SchemaProfile.CUSTOMSCHEMA.equals(selectedSchemaProfile.getObject()))));
+        comboBox.add(LambdaBehavior.enabledWhen(() -> 
+                SchemaProfile.CUSTOMSCHEMA.equals(selectedSchemaProfile.getObject())));
         comboBox.setOutputMarkupId(true);
         comboBox.setRequired(true);
         comboBox.add(Validators.IRI_VALIDATOR);
-        comboBox.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> {
-            // Do nothing just update the model values
-        }));
+        // Do nothing just update the model values
+        comboBox.add(new LambdaAjaxFormComponentUpdatingBehavior("change"));
         return comboBox;
     }
     
@@ -237,39 +249,6 @@ public class KnowledgeBaseIriPanel
         }));
         iriTextfield.setEnabled(false);       
         return iriTextfield;
-    }
-
-    private SchemaProfile checkSchemaProfile(KnowledgeBase kb)
-    {
-        SchemaProfile[] profiles = SchemaProfile.values();
-        for (int i = 0; i < profiles.length; i++) {
-            // Check if kb has a known schema profile
-            if (equalsSchemaProfile(profiles[i], kb.getClassIri(), kb.getSubclassIri(),
-                kb.getTypeIri(), kb.getDescriptionIri(), kb.getLabelIri(), kb.getPropertyTypeIri(),
-                kb.getPropertyLabelIri(), kb.getPropertyDescriptionIri())) {
-                return profiles[i];
-            }
-        }
-        // If the iris don't represent a known schema profile , return CUSTOM
-        return SchemaProfile.CUSTOMSCHEMA;
-    }
-
-    /**
-     * Compares a schema profile to given IRIs. Returns true if the IRIs are the same as in the
-     * profile
-     */
-    private boolean equalsSchemaProfile(SchemaProfile profile, IRI classIri, IRI subclassIri,
-        IRI typeIri, IRI descriptionIri, IRI labelIri, IRI propertyTypeIri, IRI propertyLabelIri,
-        IRI propertyDescriptionIri)
-    {
-        return profile.getClassIri().equals(classIri)
-                && profile.getSubclassIri().equals(subclassIri)
-                && profile.getTypeIri().equals(typeIri)
-                && profile.getDescriptionIri().equals(descriptionIri)
-                && profile.getLabelIri().equals(labelIri)
-                && profile.getPropertyTypeIri().equals(propertyTypeIri)
-                && profile.getPropertyLabelIri().equals(propertyLabelIri)
-                && profile.getPropertyDescriptionIri().equals(propertyDescriptionIri);
     }
     
     private class AdvancedIriSettingsPanel

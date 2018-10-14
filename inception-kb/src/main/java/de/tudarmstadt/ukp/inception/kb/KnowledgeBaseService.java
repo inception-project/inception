@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.kb;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -89,7 +90,15 @@ public interface KnowledgeBaseService
     boolean knowledgeBaseExists(Project project, String kbName);
 
     Optional<KnowledgeBase> getKnowledgeBaseById(Project project, String aId);
-    
+
+    /**
+     * Update the configuration of a knowledge base.
+     * The given knowledge base must have been added before.
+     * @param kb the {@link KnowledgeBase} to update
+     */
+    void updateKnowledgeBase(KnowledgeBase kb)
+        throws RepositoryException, RepositoryConfigException;
+
     /**
      * Update the configuration of a knowledge base.
      * The given knowledge base must have been added before.
@@ -468,7 +477,7 @@ public interface KnowledgeBaseService
      */
     void defineBaseProperties(KnowledgeBase akb);
 
-    /**F
+    /**
      * Read an identifier value to return {@link KBObject}
      * @param aProject Project to read the KB identifier
      * @param aIdentifier String value for IRI
@@ -483,7 +492,7 @@ public interface KnowledgeBaseService
      * @return {@link Optional} of {@link KBObject} of type {@link KBConcept} or {@link KBInstance}
      */
     Optional<KBObject> readKBIdentifier(KnowledgeBase akb, String aIdentifier);
-    
+
      /** Retrieves the parent concept for a concept identifier
      * 
      * @param aKB The knowledge base
@@ -495,9 +504,9 @@ public interface KnowledgeBaseService
         throws QueryEvaluationException;
     
     /**
-     * Retrieves the distinct parent concepts till the root element for an identifier regardless of 
-     * it being an instance or concept 
-     * 
+     * Retrieves the distinct parent concepts till the root element for an identifier regardless of
+     * it being an instance or concept
+     *
      * @param aKB The knowledge base
      * @param aIdentifier a concept/instance identifier.
      * @param aAll True if entities with implicit namespaces (e.g. defined by RDF)
@@ -527,4 +536,33 @@ public interface KnowledgeBaseService
      */
     List<KBHandle> listAllConcepts(KnowledgeBase kb, boolean aAll) throws QueryEvaluationException;
 
+    /**
+     * Check if the given profile equals one of the schema profiles defined in {@link SchemaProfile}
+     * @param aProfile
+     * @return the corresponding schema profile (CUSTOM if the given profile does not equal any of
+     * the pre-defined ones
+     */
+    SchemaProfile checkSchemaProfile(KnowledgeBaseProfile aProfile);
+
+    /**
+     * Check if the IRIs of the given {@link KnowledgeBase} object are equal to the IRIs of one of
+     * the schema profiles defined in {@link SchemaProfile}
+     * @param aKb
+     * @return the corresponding schema profile (CUSTOM if the given profile does not equal any of
+     * the pre-defined ones
+     */
+    SchemaProfile checkSchemaProfile(KnowledgeBase aKb);
+
+    /**
+     * Reads a knowledge base file from the classpath and returns the file handle
+     * @param aLocation location of the knowledge base resource
+     * @return the file handle of the knowledge base resource
+     * @throws IOException
+     */
+    File readKbFileFromClassPathResource(String aLocation) throws IOException;
+
+    /**
+     * Can be used to re-index a local KB in case the full text index is corrupt. 
+     */
+    void rebuildFullTextIndex(KnowledgeBase aKb) throws Exception;
 }

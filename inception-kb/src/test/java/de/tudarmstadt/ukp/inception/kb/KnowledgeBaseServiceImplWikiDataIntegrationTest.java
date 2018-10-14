@@ -55,6 +55,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
@@ -111,12 +112,16 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
 
     @Before
     public void setUp() throws Exception {
+        RepositoryProperties repoProps = new RepositoryProperties();
+        repoProps.setPath(temporaryFolder.getRoot());
         EntityManager entityManager = testEntityManager.getEntityManager();
         testFixtures = new TestFixtures(testEntityManager);
-        sut = new KnowledgeBaseServiceImpl(temporaryFolder.getRoot(), entityManager);
+        sut = new KnowledgeBaseServiceImpl(repoProps, entityManager);
         project = createProject(PROJECT_NAME);
         kb = buildKnowledgeBase(project, KB_NAME);
-        sut.registerKnowledgeBase(kb, sut.getRemoteConfig(PROFILES.get("wikidata").getSparqlUrl()));
+        String wikidataAccessUrl = PROFILES.get("wikidata").getAccess().getAccessUrl();
+        testFixtures.assumeEndpointIsAvailable(wikidataAccessUrl, 5000);
+        sut.registerKnowledgeBase(kb, sut.getRemoteConfig(wikidataAccessUrl));
 
     }
 
@@ -153,9 +158,10 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
     
     @Test
     public void listRootConcepts() {
-        List<KBHandle> rootConcepts = sut.listRootConcepts(kb, false);
-
-        assertThat(rootConcepts).as("Check that root concepts have been found").hasSize(SPARQLQueryStore.LIMIT);
+        Stream<String> rootConcepts = sut.listRootConcepts(kb, false).stream().map(KBHandle::getIdentifier);
+        String expectedInstances = "http://www.wikidata.org/entity/Q35120";
+        
+        assertThat(rootConcepts).as("Check that root concepts have been found").contains(expectedInstances);
     }
 
     
@@ -163,7 +169,7 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
     public void listProperties() {
         Stream<String> properties = sut.listProperties(kb, true).stream().map(KBHandle::getIdentifier);
         
-        assertThat(properties).as("Check that properties have been found").hasSize(SPARQLQueryStore.LIMIT);
+        assertThat(properties).as("Check that properties have been found").hasSize(kb.getMaxResults());
     }
     
     @Test
@@ -219,8 +225,10 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
         kb_wikidata_direct.setName("Wikidata (official/direct mapping)");
         kb_wikidata_direct.setType(RepositoryType.REMOTE);
         kb_wikidata_direct.applyMapping(PROFILES.get("wikidata").getMapping());
+        kb_wikidata_direct.applyRootConcepts(PROFILES.get("wikidata"));
         kb_wikidata_direct.setReification(reification);
         kb_wikidata_direct.setDefaultLanguage("en");
+        kb_wikidata_direct.setMaxResults(1000);
        
         return kb_wikidata_direct;
     }

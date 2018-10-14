@@ -26,6 +26,7 @@ import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -59,6 +60,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
@@ -77,13 +79,12 @@ public class KnowledgeBaseServiceRemoteTest
     private static Map<String, KnowledgeBaseProfile> PROFILES;
     
     private final TestConfiguration sutConfig;
-    
+
     private KnowledgeBaseServiceImpl sut;
-    
+
     private Project project;
     private TestFixtures testFixtures;
 
-    
     @Rule
     public TestWatcher watcher = new TestWatcher()
     {
@@ -94,7 +95,7 @@ public class KnowledgeBaseServiceRemoteTest
             System.out.printf("\n=== " + methodName + " =====================");
         };
     };
-    
+
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
@@ -117,10 +118,12 @@ public class KnowledgeBaseServiceRemoteTest
     public void setUp() throws Exception
     {
         KnowledgeBase kb = sutConfig.getKnowledgeBase();
-        
+
+        RepositoryProperties repoProps = new RepositoryProperties();
+        repoProps.setPath(temporaryFolder.getRoot());
         EntityManager entityManager = testEntityManager.getEntityManager();
         testFixtures = new TestFixtures(testEntityManager);
-        sut = new KnowledgeBaseServiceImpl(temporaryFolder.getRoot(), entityManager);
+        sut = new KnowledgeBaseServiceImpl(repoProps, entityManager);
         project = testFixtures.createProject(PROJECT_NAME);
         kb.setProject(project);
         if (kb.getType() == RepositoryType.LOCAL) {
@@ -129,11 +132,13 @@ public class KnowledgeBaseServiceRemoteTest
             importKnowledgeBase(sutConfig.getDataUrl());
         }
         else if (kb.getType() == RepositoryType.REMOTE) {
+            testFixtures.assumeEndpointIsAvailable(sutConfig.getDataUrl(), 5000);
             sut.registerKnowledgeBase(kb, sut.getRemoteConfig(sutConfig.getDataUrl()));
             sut.updateKnowledgeBase(kb, sut.getKnowledgeBaseConfig(kb));
         }
         else {
-            throw new IllegalStateException("Unknown type: " + sutConfig.getKnowledgeBase().getType());
+            throw new IllegalStateException(
+                    "Unknown type: " + sutConfig.getKnowledgeBase().getType());
         }
     }
 
@@ -144,8 +149,7 @@ public class KnowledgeBaseServiceRemoteTest
         sut.destroy();
     }
 
-    public KnowledgeBaseServiceRemoteTest(TestConfiguration aConfig)
-        throws Exception
+    public KnowledgeBaseServiceRemoteTest(TestConfiguration aConfig) throws Exception
     {
         sutConfig = aConfig;
     }
@@ -154,10 +158,13 @@ public class KnowledgeBaseServiceRemoteTest
     public static List<Object[]> data() throws Exception
     {
         PROFILES = readKnowledgeBaseProfiles();
+        int maxResults = 1000;
 
+        Set<String> rootConcepts;
+        Map<String, String> parentChildConcepts;
         List<TestConfiguration> kbList = new ArrayList<>();
-        
-        { 
+
+        {
             KnowledgeBase kb_wine = new KnowledgeBase();
             kb_wine.setName("Wine ontology (OWL)");
             kb_wine.setType(RepositoryType.LOCAL);
@@ -170,9 +177,18 @@ public class KnowledgeBaseServiceRemoteTest
             kb_wine.setDescriptionIri(RDFS.COMMENT);
             kb_wine.setPropertyLabelIri(RDFS.LABEL);
             kb_wine.setPropertyDescriptionIri(RDFS.COMMENT);
-            kbList.add(new TestConfiguration("data/wine-ontology.rdf", kb_wine, "http://www.w3.org/TR/2003/PR-owl-guide-20031209/wine#ChateauMargaux"));
+            kb_wine.setDefaultLanguage("en");
+            kb_wine.setMaxResults(maxResults);
+            rootConcepts = new HashSet<String>();
+            rootConcepts.add("http://www.w3.org/TR/2003/PR-owl-guide-20031209/food#Grape");
+            parentChildConcepts = new HashMap<String, String>();
+            parentChildConcepts.put("http://www.w3.org/TR/2003/PR-owl-guide-20031209/food#Grape",
+                    "http://www.w3.org/TR/2003/PR-owl-guide-20031209/wine#WineGrape");
+            kbList.add(new TestConfiguration("data/wine-ontology.rdf", kb_wine,
+                    "http://www.w3.org/TR/2003/PR-owl-guide-20031209/wine#ChateauMargaux",
+                    rootConcepts, parentChildConcepts));
         }
-        
+
         {
             ValueFactory vf = SimpleValueFactory.getInstance();
             KnowledgeBase kb_hucit = new KnowledgeBase();
@@ -181,16 +197,26 @@ public class KnowledgeBaseServiceRemoteTest
             kb_hucit.setReification(Reification.NONE);
             kb_hucit.setBasePrefix("http://www.ukp.informatik.tu-darmstadt.de/inception/1.0#");
             kb_hucit.setClassIri(vf.createIRI("http://www.w3.org/2002/07/owl#Class"));
-            kb_hucit.setSubclassIri(vf.createIRI("http://www.w3.org/2000/01/rdf-schema#subClassOf"));
+            kb_hucit.setSubclassIri(
+                    vf.createIRI("http://www.w3.org/2000/01/rdf-schema#subClassOf"));
             kb_hucit.setTypeIri(vf.createIRI("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"));
-            kb_hucit.setDescriptionIri(vf.createIRI("http://www.w3.org/2000/01/rdf-schema#comment"));
+            kb_hucit.setDescriptionIri(
+                    vf.createIRI("http://www.w3.org/2000/01/rdf-schema#comment"));
             kb_hucit.setLabelIri(vf.createIRI("http://www.w3.org/2000/01/rdf-schema#label"));
-            kb_hucit.setPropertyTypeIri(vf.createIRI("http://www.w3.org/1999/02/22-rdf-syntax-ns#Property"));
+            kb_hucit.setPropertyTypeIri(
+                    vf.createIRI("http://www.w3.org/1999/02/22-rdf-syntax-ns#Property"));
             kb_hucit.setPropertyLabelIri(RDFS.LABEL);
             kb_hucit.setPropertyDescriptionIri(RDFS.COMMENT);
-            kbList.add(new TestConfiguration("http://nlp.dainst.org:8888/sparql", kb_hucit, 
+            kb_hucit.setDefaultLanguage("en");
+            kb_hucit.setMaxResults(maxResults);
+            rootConcepts = new HashSet<String>();
+            rootConcepts.add("http://www.w3.org/2000/01/rdf-schema#Class");
+            parentChildConcepts = new HashMap<String, String>();
+            parentChildConcepts.put("http://www.w3.org/2000/01/rdf-schema#Class",
+                    "http://www.w3.org/2002/07/owl#Class");
+            kbList.add(new TestConfiguration("http://nlp.dainst.org:8888/sparql", kb_hucit,
                     // person -> Achilles :: urn:cts:cwkb:1137
-                    "http://purl.org/hucit/kb/authors/1137"));
+                    "http://purl.org/hucit/kb/authors/1137", rootConcepts, parentChildConcepts));
         }
 
         {
@@ -200,20 +226,31 @@ public class KnowledgeBaseServiceRemoteTest
             kb_wikidata_direct.setType(RepositoryType.REMOTE);
             kb_wikidata_direct.setReification(Reification.NONE);
             kb_wikidata_direct.applyMapping(profile.getMapping());
-            kbList.add(new TestConfiguration(profile.getSparqlUrl(), kb_wikidata_direct,
-                    "http://www.wikidata.org/entity/Q19576436"));
+            kb_wikidata_direct.applyRootConcepts(profile);
+            kb_wikidata_direct.setDefaultLanguage("en");
+            kb_wikidata_direct.setMaxResults(maxResults);
+            rootConcepts = new HashSet<String>();
+            rootConcepts.add("http://www.wikidata.org/entity/Q35120");
+            parentChildConcepts = new HashMap<String, String>();
+            parentChildConcepts.put("http://www.wikidata.org/entity/Q35120",
+                    "http://www.wikidata.org/entity/Q24229398");
+            kbList.add(new TestConfiguration(profile.getAccess().getAccessUrl(), kb_wikidata_direct,
+                    "http://www.wikidata.org/entity/Q19576436", rootConcepts, parentChildConcepts));
         }
 
-        {
-            KnowledgeBaseProfile profile = PROFILES.get("virtuoso");
-            KnowledgeBase kb_wikidata_direct = new KnowledgeBase();
-            kb_wikidata_direct.setName("UKP_Wikidata (Virtuoso)");
-            kb_wikidata_direct.setType(RepositoryType.REMOTE);
-            kb_wikidata_direct.setReification(Reification.NONE);
-            kb_wikidata_direct.applyMapping(profile.getMapping());
-            kbList.add(new TestConfiguration(profile.getSparqlUrl(), kb_wikidata_direct,
-                "http://www.wikidata.org/entity/Q19576436"));
-        }
+        // {
+        // KnowledgeBaseProfile profile = PROFILES.get("virtuoso");
+        // KnowledgeBase kb_wikidata_direct = new KnowledgeBase();
+        // kb_wikidata_direct.setName("UKP_Wikidata (Virtuoso)");
+        // kb_wikidata_direct.setType(RepositoryType.REMOTE);
+        // kb_wikidata_direct.setReification(Reification.NONE);
+        // kb_wikidata_direct.applyMapping(profile.getMapping());
+        // kb_wikidata_direct.setDefaultLanguage("en");
+        // rootConcepts = new HashSet<String>();
+        // rootConcepts.add("http://www.wikidata.org/entity/Q2419");
+        // kbList.add(new TestConfiguration(profile.getAccess().getAccessUrl(), kb_wikidata_direct,
+        // "http://www.wikidata.org/entity/Q19576436", rootConcepts));
+        // }
 
         {
             KnowledgeBaseProfile profile = PROFILES.get("db_pedia");
@@ -222,10 +259,18 @@ public class KnowledgeBaseServiceRemoteTest
             kb_dbpedia.setType(RepositoryType.REMOTE);
             kb_dbpedia.setReification(Reification.NONE);
             kb_dbpedia.applyMapping(profile.getMapping());
-            kbList.add(new TestConfiguration(profile.getSparqlUrl(), kb_dbpedia,
-                    "http://www.wikidata.org/entity/Q20280393"));
+            kb_dbpedia.applyRootConcepts(profile);
+            kb_dbpedia.setDefaultLanguage("en");
+            kb_dbpedia.setMaxResults(maxResults);
+            rootConcepts = new HashSet<String>();
+            rootConcepts.add("http://www.w3.org/2002/07/owl#Thing");
+            parentChildConcepts = new HashMap<String, String>();
+            parentChildConcepts.put("http://www.w3.org/2002/07/owl#Thing",
+                    "http://dbpedia.org/ontology/Biomolecule");
+            kbList.add(new TestConfiguration(profile.getAccess().getAccessUrl(), kb_dbpedia,
+                    "http://www.wikidata.org/entity/Q20280393", rootConcepts, parentChildConcepts));
         }
-       
+
         {
             KnowledgeBaseProfile profile = PROFILES.get("yago");
             KnowledgeBase kb_yago = new KnowledgeBase();
@@ -233,10 +278,18 @@ public class KnowledgeBaseServiceRemoteTest
             kb_yago.setType(RepositoryType.REMOTE);
             kb_yago.setReification(Reification.NONE);
             kb_yago.applyMapping(profile.getMapping());
-            kbList.add(new TestConfiguration(profile.getSparqlUrl(), kb_yago,
-                    "http://www.wikidata.org/entity/Q21445637S003fc070-45f0-80bd-ae2d-072cde5aad89"));
+            kb_yago.applyRootConcepts(profile);
+            kb_yago.setMaxResults(maxResults);
+            rootConcepts = new HashSet<String>();
+            rootConcepts.add("http://www.w3.org/2002/07/owl#Thing");
+            parentChildConcepts = new HashMap<String, String>();
+            parentChildConcepts.put("http://www.w3.org/2002/07/owl#Thing",
+                    "http://yago-knowledge.org/resource/wikicat_Alleged_UFO-related_entities");
+            kbList.add(new TestConfiguration(profile.getAccess().getAccessUrl(), kb_yago,
+                    "http://www.wikidata.org/entity/Q21445637S003fc070-45f0-80bd-ae2d-072cde5aad89",
+                    rootConcepts, parentChildConcepts));
         }
-        
+
         {
             KnowledgeBaseProfile profile = PROFILES.get("zbw-stw-economics");
             KnowledgeBase kb_zbw_stw_economics = new KnowledgeBase();
@@ -244,11 +297,19 @@ public class KnowledgeBaseServiceRemoteTest
             kb_zbw_stw_economics.setType(RepositoryType.REMOTE);
             kb_zbw_stw_economics.setReification(Reification.NONE);
             kb_zbw_stw_economics.applyMapping(profile.getMapping());
-            kbList.add(new TestConfiguration(profile.getSparqlUrl(), kb_zbw_stw_economics,
-                    "http://zbw.eu/stw/thsys/71020"));
+            kb_zbw_stw_economics.applyRootConcepts(profile);
+            kb_zbw_stw_economics.setDefaultLanguage("en");
+            kb_zbw_stw_economics.setMaxResults(maxResults);
+            rootConcepts = new HashSet<String>();
+            rootConcepts.add("http://zbw.eu/stw/thsys/a");
+            parentChildConcepts = new HashMap<String, String>();
+            parentChildConcepts.put("http://zbw.eu/stw/thsys/a",
+                    "http://zbw.eu/stw/thsys/70582");
+            kbList.add(new TestConfiguration(profile.getAccess().getAccessUrl(),
+                    kb_zbw_stw_economics, "http://zbw.eu/stw/thsys/71020", rootConcepts, parentChildConcepts));
         }
-        
-        // Commenting this out for the moment becuase we expect that every ontology contains 
+
+        // Commenting this out for the moment becuase we expect that every ontology contains
         // property definitions. However, this one does not include any property definitions!
         // {
         // KnowledgeBaseProfile profile = PROFILES.get("zbw-gnd");
@@ -259,7 +320,7 @@ public class KnowledgeBaseServiceRemoteTest
         // kb_zbw_gnd.applyMapping(profile.getMapping());
         // kbList.add(new TestConfiguration(profile.getSparqlUrl(), kb_zbw_gnd));
         // }
-        
+
         List<Object[]> dataList = new ArrayList<>();
         for (TestConfiguration kb : kbList) {
             dataList.add(new Object[] { kb });
@@ -271,7 +332,7 @@ public class KnowledgeBaseServiceRemoteTest
     public void thatRootConceptsCanBeRetrieved()
     {
         KnowledgeBase kb = sutConfig.getKnowledgeBase();
-        
+
         long duration = System.currentTimeMillis();
         List<KBHandle> rootConceptKBHandle = sut.listRootConcepts(kb, true);
         duration = System.currentTimeMillis() - duration;
@@ -279,16 +340,41 @@ public class KnowledgeBaseServiceRemoteTest
         System.out.printf("Root concepts retrieved : %d%n", rootConceptKBHandle.size());
         System.out.printf("Time required           : %d ms%n", duration);
         rootConceptKBHandle.stream().limit(10).forEach(h -> System.out.printf("   %s%n", h));
-        
+
         assertThat(rootConceptKBHandle).as("Check that root concept list is not empty")
                 .isNotEmpty();
+        for (String expectedRoot : sutConfig.getRootIdentifier()) {
+            assertThat(rootConceptKBHandle.stream().map(KBHandle::getIdentifier)).as("Check that root concept is retreived")
+            .contains(expectedRoot);
+        }
+    }
+    
+    @Test
+    public void thatChildConceptsCanBeRetrieved()
+    {
+        KnowledgeBase kb = sutConfig.getKnowledgeBase();
+        long duration = System.currentTimeMillis();
+        for (String parentConcept : sutConfig.getParentChildIdentifier().keySet()) {
+            List<KBHandle> childConceptKBHandle = sut.listChildConcepts(kb, parentConcept, true);
+            duration = System.currentTimeMillis() - duration;
+
+            System.out.printf("Child concepts retrieved for %s : %d%n", parentConcept, childConceptKBHandle.size());
+            System.out.printf("Time required           : %d ms%n", duration);
+            childConceptKBHandle.stream().limit(10).forEach(h -> System.out.printf("   %s%n", h));
+
+            assertThat(childConceptKBHandle).as("Check that root concept list is not empty")
+                    .isNotEmpty();
+            assertThat(childConceptKBHandle.stream().map(KBHandle::getIdentifier))
+                    .as("Check that child concept is retreived")
+                    .contains(sutConfig.getParentChildIdentifier().get(parentConcept));
+        }
     }
 
     @Test
     public void thatPropertyListCanBeRetrieved()
     {
         KnowledgeBase kb = sutConfig.getKnowledgeBase();
-        
+
         long duration = System.currentTimeMillis();
         List<KBHandle> propertiesKBHandle = sut.listProperties(kb, true);
         duration = System.currentTimeMillis() - duration;
@@ -298,37 +384,22 @@ public class KnowledgeBaseServiceRemoteTest
         propertiesKBHandle.stream().limit(10).forEach(h -> System.out.printf("   %s%n", h));
 
         assertThat(propertiesKBHandle).as("Check that property list is not empty").isNotEmpty();
-
     }
-    
+
     @Test
     public void thatParentListCanBeRetireved()
     {
         KnowledgeBase kb = sutConfig.getKnowledgeBase();
-        
+
         long duration = System.currentTimeMillis();
-        Set<KBHandle> parentList = sut.getParentConceptList(kb, sutConfig.getTestIdentifier(), true);
+        Set<KBHandle> parentList = sut.getParentConceptList(kb, sutConfig.getTestIdentifier(),
+                true);
         duration = System.currentTimeMillis() - duration;
 
         System.out.printf("Parent List retrieved : %d%n", parentList.size());
         System.out.printf("Time required        : %d ms%n", duration);
         parentList.stream().limit(10).forEach(h -> System.out.printf("   %s%n", h));
 
-        assertThat(parentList).as("Check that parent list is not empty").isNotEmpty();
-
-    }
-
-    @Test
-    public void thatParentListCanBeRetrieved()
-    {
-        KnowledgeBase kb = sutConfig.getKnowledgeBase();
-        
-        long duration = System.currentTimeMillis();
-        Set<KBHandle> parentList = sut.getParentConceptList(kb, sutConfig.getTestIdentifier(), true);
-        duration = System.currentTimeMillis() - duration;
-        System.out.printf("Parent List retrieved : %d%n", parentList.size());
-        System.out.printf("Time required        : %d ms%n", duration);
-        parentList.stream().limit(10).forEach(h -> System.out.printf("   %s%n", h));
         assertThat(parentList).as("Check that parent list is not empty").isNotEmpty();
     }
 
@@ -353,8 +424,9 @@ public class KnowledgeBaseServiceRemoteTest
             });
         }
     }
-    
-    public static KnowledgeBase setOWLSchemaMapping(KnowledgeBase kb) {
+
+    public static KnowledgeBase setOWLSchemaMapping(KnowledgeBase kb)
+    {
         kb.setClassIri(OWL.CLASS);
         kb.setSubclassIri(RDFS.SUBCLASSOF);
         kb.setTypeIri(RDF.TYPE);
@@ -363,25 +435,31 @@ public class KnowledgeBaseServiceRemoteTest
         kb.setPropertyTypeIri(RDF.PROPERTY);
         return kb;
     }
-    
+
     private static class TestConfiguration
     {
         private final String url;
         private final KnowledgeBase kb;
         private final String testIdentifier;
-        public TestConfiguration(String aUrl, KnowledgeBase aKb, String atestIdentifier)
+        private final Set<String> rootIdentifier;
+        private final Map<String,String> parentChildIdentifier;
+
+        public TestConfiguration(String aUrl, KnowledgeBase aKb, String atestIdentifier,
+                Set<String> aRootIdentifier, Map<String,String> aParentChildIdentifier)
         {
             super();
             url = aUrl;
             kb = aKb;
             testIdentifier = atestIdentifier;
+            rootIdentifier = aRootIdentifier;
+            parentChildIdentifier = aParentChildIdentifier;
         }
-        
+
         public KnowledgeBase getKnowledgeBase()
         {
             return kb;
         }
-        
+
         public String getDataUrl()
         {
             return url;
@@ -390,6 +468,16 @@ public class KnowledgeBaseServiceRemoteTest
         public String getTestIdentifier()
         {
             return testIdentifier;
+        }
+
+        public Set<String> getRootIdentifier()
+        {
+            return rootIdentifier;
+        }
+
+        public Map<String,String> getParentChildIdentifier()
+        {
+            return parentChildIdentifier;
         }
 
         @Override

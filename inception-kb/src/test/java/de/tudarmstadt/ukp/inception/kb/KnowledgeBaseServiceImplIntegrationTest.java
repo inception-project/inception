@@ -26,6 +26,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -65,6 +66,7 @@ import org.springframework.test.context.junit4.rules.SpringClassRule;
 import org.springframework.test.context.junit4.rules.SpringMethodRule;
 import org.springframework.transaction.annotation.Transactional;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
@@ -74,6 +76,7 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 import de.tudarmstadt.ukp.inception.kb.util.TestFixtures;
+import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseMapping;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 
 @RunWith(Parameterized.class)
@@ -122,9 +125,11 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
 
     @Before
     public void setUp() throws Exception {
+        RepositoryProperties repoProps = new RepositoryProperties();
+        repoProps.setPath(temporaryFolder.getRoot());
         EntityManager entityManager = testEntityManager.getEntityManager();
         testFixtures = new TestFixtures(testEntityManager);
-        sut = new KnowledgeBaseServiceImpl(temporaryFolder.getRoot(), entityManager);
+        sut = new KnowledgeBaseServiceImpl(repoProps, entityManager);
         project = createProject(PROJECT_NAME);
         kb = buildKnowledgeBase(project, KB_NAME);
     }
@@ -813,7 +818,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
             .hasSize(1)
             .element(0)
             .hasFieldOrPropertyWithValue("identifier", handle.getIdentifier())
-            .hasFieldOrPropertyWithValue("name", handle.getName())
+            .hasFieldOrProperty("name")
             .matches(h -> h.getIdentifier().startsWith(IriConstants.INCEPTION_NAMESPACE));
     }
 
@@ -1069,7 +1074,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
             .hasSize(1)
             .element(0)
             .hasFieldOrPropertyWithValue("identifier", instanceHandle.getIdentifier())
-            .hasFieldOrPropertyWithValue("name", instanceHandle.getName())
+            .hasFieldOrProperty("name")
             .matches(h -> h.getIdentifier().startsWith(IriConstants.INCEPTION_NAMESPACE));
     }
 
@@ -1240,8 +1245,8 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
                 .map(KBHandle::getName);
 
         String[] expectedLabels = {
-            "Adaptation", "Animal Intelligence", "Collection", "Conservation Status", "Ecozone",
-            "Habitat", "Red List Status", "Taxon Name", "Taxonomic Rank"
+            "Adaptation", "AnimalIntelligence", "Collection", "ConservationStatus", "Ecozone",
+            "Habitat", "RedListStatus", "TaxonName", "TaxonRank"
         };
         assertThat(rootConcepts)
             .as("Check that all root concepts have been found")
@@ -1258,7 +1263,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         concepts.add(rootConcept1);
         concepts.add(rootConcept2);
         kb.setExplicitlyDefinedRootConcepts(concepts);
-        sut.updateKnowledgeBase(kb, sut.getNativeConfig());
+        sut.updateKnowledgeBase(kb);
 
         importKnowledgeBase("data/wildlife_ontology.ttl");
         setSchema(kb, OWL.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT, RDFS.LABEL, RDF.PROPERTY);
@@ -1283,10 +1288,10 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         Stream<String> childConcepts = sut.listRootConcepts(kb, false).stream()
                 .map(KBHandle::getName);
 
-        String[] expectedLabels = { "Creature" };
-        assertThat(childConcepts)
-            .as("Check that only root concepts")
-            .containsExactlyInAnyOrder(expectedLabels);
+        String[] expectedLabels = { "creature" };
+        assertThat(childConcepts).as("Check that only root concepts")
+                .containsExactlyInAnyOrder(expectedLabels);
+   
     }
 
     @Test
@@ -1299,9 +1304,9 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         Stream<String> childConcepts = sut.listChildConcepts(kb, concept.getIdentifier(), false)
             .stream()
             .map(KBHandle::getName);
-
+        
         String[] expectedLabels = {
-            "Cat", "Dog", "Monkey"
+            "cat", "dog", "monkey"
         };
         assertThat(childConcepts)
             .as("Check that all child concepts have been found")
@@ -1320,8 +1325,8 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
             .map(KBHandle::getName);
 
         String[] expectedLabels = {
-            "bytearrayinput", "fileinput", "filterinput", "objectinput",
-            "pipedinput","sequenceinput", "stringbufferinput"
+            "ByteArrayInputStream", "FileInputStream", "FilterInputStream", "ObjectInputStream",
+            "PipedInputStream","SequenceInputStream", "StringBufferInputStream"
         };
         assertThat(childConcepts)
             .as("Check that all immediate child concepts have been found")
@@ -1512,13 +1517,48 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         assertThat(profiles)
             .allSatisfy((key, profile) -> {
                 assertThat(key).isNotNull();
-                assertThat(profile).hasNoNullFieldsOrProperties();
             });
 
     }
 
-    // Helper
+    @Test public void readKBResourceFromClassPath_ShouldReturnFileHandleToKBResource()
+        throws IOException
+    {
+        String resourceLocation = "classpath:data/more_pets.ttl";
+        File file = sut.readKbFileFromClassPathResource(resourceLocation);
+        assertTrue(file.exists());
+    }
 
+    @Test public void checkKBProfileAndKBObject_ShouldReturnMatchingSchemaProfile()
+    {
+        String name = "Test KB";
+        String classIri = "http://www.w3.org/2002/07/owl#Class";
+        String subclassIri = "http://www.w3.org/2000/01/rdf-schema#subClassOf";
+        String typeIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
+        String label = "http://www.w3.org/2000/01/rdf-schema#label";
+        String propertyTypeIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#Property";
+        String descriptionIri = "http://www.w3.org/2000/01/rdf-schema#comment";
+        String propertyLabelIri = "http://www.w3.org/2000/01/rdf-schema#label";
+        String propertyDescriptionIri = "http://www.w3.org/2000/01/rdf-schema#comment";
+        String fullTextSearchIri = "http://www.openrdf.org/contrib/lucenesail#matches";
+
+        KnowledgeBaseMapping testMapping = new KnowledgeBaseMapping(classIri, subclassIri, typeIri,
+            descriptionIri, label, propertyTypeIri, propertyLabelIri, propertyDescriptionIri,
+            fullTextSearchIri);
+        KnowledgeBaseProfile testProfile = new KnowledgeBaseProfile();
+        testProfile.setName(name);
+        testProfile.setMapping(testMapping);
+
+        KnowledgeBase testKb = new KnowledgeBase();
+        testKb.applyMapping(testMapping);
+
+        assertThat(sut.checkSchemaProfile(testProfile))
+            .isEqualTo(SchemaProfile.OWLSCHEMA);
+        assertThat(sut.checkSchemaProfile(testKb))
+            .isEqualTo(SchemaProfile.OWLSCHEMA);
+    }
+
+    // Helper
     private Project createProject(String name) {
         return testFixtures.createProject(name);
     }

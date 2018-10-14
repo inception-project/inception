@@ -71,6 +71,10 @@ include::{include-dir}login.adoc[]
 
 <<<
 
+include::{include-dir}menubar.adoc[]
+
+<<<
+
 include::{include-dir}menu.adoc[]
 
 <<<
@@ -121,4 +125,3 @@ include::{include-dir}troubleshooting.adoc[]
 <<<
 
 include::{include-dir}settings.adoc[]
-include::{include-dir}settings_concept-linking.adoc[]

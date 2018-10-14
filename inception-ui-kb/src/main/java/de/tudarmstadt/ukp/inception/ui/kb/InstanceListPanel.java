@@ -28,6 +28,7 @@ import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -65,14 +66,16 @@ public class InstanceListPanel extends Panel {
         conceptModel = aConcept;
         showAll = Model.of(Boolean.FALSE);
         
-        LambdaModel<List<KBHandle>> instancesModel = LambdaModel.of(this::getInstances);
+        IModel<List<KBHandle>> instancesModel = LoadableDetachableModel.of(this::getInstances);
 
         OverviewListChoice<KBHandle> overviewList = new OverviewListChoice<KBHandle>("instances") {
             private static final long serialVersionUID = -122960232588575731L;
 
             @Override
-            protected void onConfigure() {
+            protected void onConfigure()
+            {
                 super.onConfigure();
+                
                 setVisible(!instancesModel.getObject().isEmpty());
             }
         };
@@ -97,8 +100,10 @@ public class InstanceListPanel extends Panel {
             private static final long serialVersionUID = 2252854898212441711L;
 
             @Override
-            protected void onConfigure() {
+            protected void onConfigure()
+            {
                 super.onConfigure();
+
                 setVisible(instancesModel.getObject().isEmpty());
             }
         });
@@ -113,6 +118,7 @@ public class InstanceListPanel extends Panel {
     protected void onConfigure()
     {
         super.onConfigure();
+        
         setVisible(conceptModel.getObject() != null && 
                 isNotEmpty(conceptModel.getObject().getIdentifier()));
     }

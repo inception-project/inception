@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.ui.kb.project.wizard;
+package de.tudarmstadt.ukp.inception.kb;
 
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.vocabulary.OWL;
@@ -23,26 +23,25 @@ import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.eclipse.rdf4j.model.vocabulary.SKOS;
 
-import de.tudarmstadt.ukp.inception.kb.IriConstants;
-
 public enum SchemaProfile
 {
-    RDFSCHEMA(RDFS.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT, RDFS.LABEL, RDF.PROPERTY,
+    RDFSCHEMA("RDF", RDFS.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT, RDFS.LABEL, RDF.PROPERTY,
         RDFS.LABEL, RDFS.COMMENT),
 
-    WIKIDATASCHEMA(IriConstants.WIKIDATA_CLASS, IriConstants.WIKIDATA_SUBCLASS,
+    WIKIDATASCHEMA("WIKIDATA", IriConstants.WIKIDATA_CLASS, IriConstants.WIKIDATA_SUBCLASS,
         IriConstants.WIKIDATA_TYPE, RDFS.COMMENT, RDFS.LABEL, IriConstants.WIKIDATA_PROPERTY_TYPE,
         RDFS.LABEL, RDFS.COMMENT),
 
-    OWLSCHEMA(OWL.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT, RDFS.LABEL, RDF.PROPERTY,
+    OWLSCHEMA("OWL", OWL.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT, RDFS.LABEL, RDF.PROPERTY,
         RDFS.LABEL, RDFS.COMMENT),
 
-    SKOSSCHEMA(SKOS.CONCEPT, SKOS.BROADER, RDF.TYPE, RDFS.COMMENT, SKOS.PREF_LABEL, RDF.PROPERTY,
-        SKOS.PREF_LABEL, RDFS.COMMENT),
+    SKOSSCHEMA("SKOS", SKOS.CONCEPT, SKOS.BROADER, RDF.TYPE, RDFS.COMMENT, SKOS.PREF_LABEL,
+        RDF.PROPERTY, SKOS.PREF_LABEL, RDFS.COMMENT),
 
-    CUSTOMSCHEMA(RDFS.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT, RDFS.LABEL, RDF.PROPERTY,
-        RDFS.LABEL, RDFS.COMMENT);
+    CUSTOMSCHEMA("CUSTOM", RDFS.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT, RDFS.LABEL,
+        RDF.PROPERTY, RDFS.LABEL, RDFS.COMMENT);
 
+    private final String label;
     private final IRI classIri;
     private final IRI subclassIri;
     private final IRI typeIri;
@@ -52,9 +51,11 @@ public enum SchemaProfile
     private final IRI propertyLabelIri;
     private final IRI propertyDescriptionIri;
 
-    private SchemaProfile(IRI aClassIri, IRI aSubclassIri, IRI aTypeIri, IRI aDescriptionIri,
-            IRI aLabelIri, IRI aPropertyTypeIri, IRI aPropertyLabelIri, IRI aPropertyDescriptionIri)
+    private SchemaProfile(String aLabel, IRI aClassIri, IRI aSubclassIri, IRI aTypeIri,
+        IRI aDescriptionIri, IRI aLabelIri, IRI aPropertyTypeIri, IRI aPropertyLabelIri,
+        IRI aPropertyDescriptionIri)
     {
+        label = aLabel;
         classIri = aClassIri;
         subclassIri = aSubclassIri;
         typeIri = aTypeIri;
@@ -63,7 +64,11 @@ public enum SchemaProfile
         propertyTypeIri = aPropertyTypeIri;
         propertyLabelIri = aPropertyLabelIri;
         propertyDescriptionIri = aPropertyDescriptionIri;
+    }
 
+    public String getLabel()
+    {
+        return label;
     }
 
     public IRI getClassIri()

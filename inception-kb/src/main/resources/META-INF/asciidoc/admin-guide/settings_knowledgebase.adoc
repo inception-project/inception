@@ -1,0 +1,50 @@
+// Copyright 2018
+// Ubiquitous Knowledge Processing (UKP) Lab
+// Technische Universität Darmstadt
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+[[sect_settings_knowledge-base]]
+=== Knowledge Base Settings
+
+This section describes the global settings related to the knowledge base module.
+
+.Default max results
+This parameter determines the default value for the maximum number of results that can be retrieved from a SPARQL query.
+The queries are used to retrieve concepts, statements, properties, etc. from the knowledge base.
+The maximum number of results can also be configured separately for each knowledge base in the project settings.
+
+.Hard max results
+A hard limit for the *Max results* parameter.
+
+If no value for the parameter is specified, its default value is used. The default value is shown as
+an example of how the parameter can be configured below:
+
+.Knowledge base settings overview
+[cols="4*", options="header"]
+|===
+| Setting
+| Description
+| Default
+| Example
+
+| inception.knowledge-base.defaultMaxResults
+| default result limit for SPARQL query
+| 1000
+| 10000
+
+| inception.knowledge-base.hardMaxResults
+| hard limit for the maximum number of results from a query
+| 10000
+| 5000
+|===

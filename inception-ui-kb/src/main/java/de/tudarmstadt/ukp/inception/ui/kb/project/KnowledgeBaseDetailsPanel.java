@@ -27,6 +27,8 @@ import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.ajax.markup.html.form.AjaxButton;
+import org.apache.wicket.ajax.markup.html.form.AjaxCheckBox;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
@@ -46,6 +48,7 @@ import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.resource.IResourceStream;
+import org.apache.wicket.validation.validator.RangeValidator;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.repository.RepositoryException;
 import org.eclipse.rdf4j.repository.config.RepositoryConfigException;
@@ -72,8 +75,9 @@ import de.tudarmstadt.ukp.clarin.webanno.support.wicket.TempFileResource;
 import de.tudarmstadt.ukp.inception.app.bootstrap.DisabledBootstrapCheckbox;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
+import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
 import de.tudarmstadt.ukp.inception.kb.event.KnowledgeBaseConfigurationChangedEvent;
-import de.tudarmstadt.ukp.inception.kb.io.FileUploadHelper;
+import de.tudarmstadt.ukp.inception.kb.io.FileUploadDownloadHelper;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 public class KnowledgeBaseDetailsPanel
@@ -112,6 +116,7 @@ public class KnowledgeBaseDetailsPanel
         .map(f -> f.getDefaultFileExtension()).collect(Collectors.toList());
 
     private @SpringBean KnowledgeBaseService kbService;
+    private @SpringBean KnowledgeBaseProperties kbProperties;
 
     private final IModel<KnowledgeBase> kbModel;
     private final CompoundPropertyModel<KnowledgeBaseWrapper> kbwModel;
@@ -166,10 +171,12 @@ public class KnowledgeBaseDetailsPanel
 
                 try {
                     FileUploadField fileUploadField = (FileUploadField) c;
-                    FileUploadHelper fileUploadHelper = new FileUploadHelper(getApplication());
+                    FileUploadDownloadHelper fileUploadDownloadHelper =
+                        new FileUploadDownloadHelper(getApplication());
                     List<File> fileUploads = new ArrayList<>();
                     for (FileUpload fu : fileUploadField.getFileUploads()) {
-                        File tmpFile = fileUploadHelper.writeToTemporaryFile(fu, kbw);
+                        File tmpFile = fileUploadDownloadHelper
+                            .writeFileUploadToTemporaryFile(fu, kbw);
                         fileUploads.add(tmpFile);
                     }
                     kbwModel.getObject().setFiles(fileUploads);
@@ -204,31 +211,22 @@ public class KnowledgeBaseDetailsPanel
         form.add(title);
         form.add(content);
 
-        // set up form buttons: edit button only visible when not editing, cancel/save buttons only
-        // visible when editing
+        // set up form buttons: 
+        // edit button only visible when not editing,
+        // cancel/save buttons only visible when editing
+        // re-index button only visible for local KBs
         form.add(new LambdaAjaxLink("delete", KnowledgeBaseDetailsPanel.this::actionDelete));
+        form.add(new LambdaAjaxLink("reindex", KnowledgeBaseDetailsPanel.this::actionReindex)
+                .add(LambdaBehavior.visibleWhen(() -> RepositoryType.LOCAL
+                        .equals(kbwModel.getObject().getKb().getType()))));
         form.add(new LambdaAjaxLink("edit", KnowledgeBaseDetailsPanel.this::startEditing)
-        {
-
-            private static final long serialVersionUID = -2013888340002855855L;
-
-            @Override public boolean isVisible()
-            {
-                return !isEditing;
-            }
-        });
+                .add(LambdaBehavior.visibleWhen(() -> !isEditing)));
         form.add(new AjaxButton("save", form)
         {
-
             private static final long serialVersionUID = 3393631640806116694L;
-
-            @Override public boolean isVisible()
-            {
-                return isEditing;
-            }
-
-            @SuppressWarnings("unchecked") @Override protected void onAfterSubmit(
-                AjaxRequestTarget target, Form<?> form)
+            
+            @Override
+            protected void onAfterSubmit(AjaxRequestTarget target)
             {
                 // the call needs to occur in onAfterSubmit, otherwise the file uploads are
                 // submitted after actionSave is called
@@ -238,25 +236,19 @@ public class KnowledgeBaseDetailsPanel
                     new KnowledgeBaseConfigurationChangedEvent(this,
                         aKbModel.getObject().getProject()));
             }
-        });
+        }.add(LambdaBehavior.visibleWhen(() -> isEditing)));
         form.add(new LambdaAjaxLink("cancel", KnowledgeBaseDetailsPanel.this::stopEditing)
-        {
-
-            private static final long serialVersionUID = -6654306757363572019L;
-
-            @Override public boolean isVisible()
-            {
-                return isEditing;
-            }
-        });
+                .add(LambdaBehavior.visibleWhen(() -> isEditing)));
 
         confirmationDialog = new ConfirmationDialog("confirmationDialog");
         add(confirmationDialog);
     }
 
-    @Override protected void onConfigure()
+    @Override
+    protected void onConfigure()
     {
         super.onConfigure();
+
         setVisible(kbModel != null && kbModel.getObject() != null);
     }
 
@@ -287,11 +279,29 @@ public class KnowledgeBaseDetailsPanel
             aTarget.add(findParentWithAssociatedMarkup());
         }
         catch (Exception e) {
-            error("Unable to save knowledgebase: " + e.getLocalizedMessage());
-            log.error("Unable to save knowledgebase.", e);
+            error("Unable to save knowledge base: " + e.getLocalizedMessage());
+            log.error("Unable to save knowledge base.", e);
+            aTarget.addChildren(getPage(), IFeedback.class);
         }
     }
 
+    private void actionReindex(AjaxRequestTarget aTarget)
+    {
+        KnowledgeBase kb = kbwModel.getObject().getKb();
+        try {
+            log.info("Starting rebuilding full-text index of {} ... this may take a while ...", kb);
+            kbService.rebuildFullTextIndex(kb);
+            log.info("Completed rebuilding full-text index of {}", kb);
+        }
+        catch (Exception e) {
+            error("Unable to rebuild full text index: " + e.getLocalizedMessage());
+            log.error("Unable to rebuild full text index for KB [{}]({}) in project [{}]({})",
+                    kb.getName(), kb.getRepositoryId(), kb.getProject().getName(),
+                    kb.getProject().getId(), e);
+            aTarget.addChildren(getPage(), IFeedback.class);
+        }
+    }
+    
     private void actionDelete(AjaxRequestTarget aTarget)
     {
         // delete only if user confirms deletion
@@ -301,7 +311,7 @@ public class KnowledgeBaseDetailsPanel
             new StringResourceModel("kb.details.delete.confirmation.content", this,
                 kbwModel.bind("kb")));
         confirmationDialog.show(aTarget);
-        confirmationDialog.setConfirmAction((t) -> {
+        confirmationDialog.setConfirmAction(_target -> {
             KnowledgeBase kb = kbwModel.getObject().getKb();
             try {
                 kbService.removeKnowledgeBase(kb);
@@ -311,10 +321,11 @@ public class KnowledgeBaseDetailsPanel
             catch (RepositoryException | RepositoryConfigException e) {
                 error("Unable to remove knowledge base: " + e.getLocalizedMessage());
                 log.error("Unable to remove knowledge base.", e);
+                _target.addChildren(getPage(), IFeedback.class);
 
             }
-            t.add(this);
-            t.add(findParentWithAssociatedMarkup());
+            _target.add(this);
+            _target.add(findParentWithAssociatedMarkup());
         });
     }
 
@@ -328,6 +339,7 @@ public class KnowledgeBaseDetailsPanel
         }
         catch (RepositoryException e) {
             error(e);
+            aTarget.addChildren(getPage(), IFeedback.class);
         }
     }
 
@@ -443,8 +455,10 @@ public class KnowledgeBaseDetailsPanel
 
             wmc.add(new CheckBox("enabled", model.bind("kb.enabled"))
                 .add(LambdaBehavior.onConfigure(it -> it.setEnabled(false))));
-            wmc.add(new CheckBox("supportConceptLinking", model.bind("kb.supportConceptLinking"))
+            wmc.add(new RequiredTextField<>("maxResults",
+                model.bind("kb.maxResults"))
                 .add(LambdaBehavior.onConfigure(it -> it.setEnabled(false))));
+
         }
 
         @Override protected void setUpLocalKnowledgeBaseComponents(WebMarkupContainer wmc)
@@ -497,6 +511,8 @@ public class KnowledgeBaseDetailsPanel
                 @Override
                 protected void onConfigure()
                 {
+                    super.onConfigure();
+                    
                     setEnabled(false);
                 }
             };
@@ -529,6 +545,8 @@ public class KnowledgeBaseDetailsPanel
     {
 
         private static final long serialVersionUID = 7838564354437836375L;
+        private TextField<Integer> queryLimitField;
+        private CheckBox maxQueryLimitCheckBox;
 
         public EditMode(String id, CompoundPropertyModel<KnowledgeBaseWrapper> model)
         {
@@ -551,7 +569,11 @@ public class KnowledgeBaseDetailsPanel
             wmc.add(new KnowledgeBaseIriPanel("iriPanel", model,
                 KnowledgeBaseIriPanelMode.PROJECTSETTINGS));
             wmc.add(new CheckBox("enabled", model.bind("kb.enabled")));
-            wmc.add(new CheckBox("supportConceptLinking", model.bind("kb.supportConceptLinking")));
+            queryLimitField = queryLimitField("maxResults",
+                model.bind("kb.maxResults"));
+            wmc.add(queryLimitField);
+            maxQueryLimitCheckBox = maxQueryLimitCheckbox("maxQueryLimit", new Model(false));
+            wmc.add(maxQueryLimitCheckBox);
         }
 
         @Override protected void setUpLocalKnowledgeBaseComponents(WebMarkupContainer wmc)
@@ -593,6 +615,34 @@ public class KnowledgeBaseDetailsPanel
             TextField<String> textField = new RequiredTextField<String>(id);
             textField.add(Validators.URL_VALIDATOR);
             wmc.add(textField);
+        }
+
+        private CheckBox maxQueryLimitCheckbox(String id, IModel<Boolean> model) {
+            return new AjaxCheckBox(id, model) {
+                @Override
+                public void onUpdate(AjaxRequestTarget aTarget) {
+                    if (getModelObject()) {
+                        queryLimitField.setModelObject(kbProperties.getHardMaxResults());
+                        queryLimitField.setEnabled(false);
+                    }
+                    else {
+                        queryLimitField.setEnabled(true);
+                    }
+                    aTarget.add(queryLimitField);
+                }
+
+            };
+        }
+
+        private TextField<Integer> queryLimitField(String id, IModel<Integer> model)
+        {
+            if (model.getObject() == 0) {
+                model.setObject(kbProperties.getDefaultMaxResults());
+            }
+            TextField<Integer> queryLimit = new RequiredTextField<Integer>(id, model);
+            queryLimit.add(RangeValidator.range(0, kbProperties.getHardMaxResults()));
+            queryLimit.setOutputMarkupId(true);
+            return queryLimit;
         }
     }
 }

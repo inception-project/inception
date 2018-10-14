@@ -227,7 +227,7 @@
       </column>
     </addColumn>
   </changeSet>
-  
+
   <changeSet author="INCEpTION Team" id="20180515-1">
     <preConditions onFail="MARK_RAN">
       <not>
@@ -300,7 +300,7 @@
                   columnDataType="VARCHAR(255)"/>
   </changeSet>
   
-  <changeSet author="INCEpTION Team" id="20180827-1">
+  <changeSet author="INCEpTION Team" id="20180904-1">
     <preConditions onFail="MARK_RAN">
       <not>
         <columnExists tableName="knowledgebase" columnName="propertyLabelIri"/>
@@ -316,7 +316,7 @@
     </addColumn>
   </changeSet>
 
-  <changeSet author="INCEpTION Team" id="20180827-2">
+  <changeSet author="INCEpTION Team" id="20180904-2">
     <preConditions onFail="MARK_RAN">
       <not>
         <columnExists tableName="knowledgebase" columnName="propertyDescriptionIri"/>
@@ -330,5 +330,39 @@
         <constraints nullable="false" />
       </column>
     </addColumn>
+  </changeSet>
+
+  <changeSet author="INCEpTION Team" id="20180916-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="knowledgebase" columnName="maxResults"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="knowledgebase">
+      <column name="maxResults"
+              type="int"
+              defaultValue="1000">
+        <constraints nullable="false" />
+      </column>
+    </addColumn>
+  </changeSet>
+  
+  <changeSet author="INCEpTION Team" id="20180924">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="knowledgebase" columnName="fullTextSearchIri"/>
+      </not>
+    </preConditions>
+
+    <addColumn tableName="knowledgebase">
+      <column name="fullTextSearchIri"
+              type="VARCHAR(255)">
+      </column>
+    </addColumn>
+    <sql>
+      update knowledgebase set 
+      fullTextSearchIri = "bif:contains" 
+      where supportConceptLinking = true
+    </sql>
   </changeSet>
 </databaseChangeLog>

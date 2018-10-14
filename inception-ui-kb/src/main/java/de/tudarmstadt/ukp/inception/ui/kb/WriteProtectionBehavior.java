@@ -38,7 +38,8 @@ public class WriteProtectionBehavior extends Behavior {
     }
 
     @Override
-    public void onConfigure(Component component) {
+    public void onConfigure(Component component)
+    {
         component.setVisibilityAllowed(!kbModel.getObject().isReadOnly());
         super.onConfigure(component);
     }
