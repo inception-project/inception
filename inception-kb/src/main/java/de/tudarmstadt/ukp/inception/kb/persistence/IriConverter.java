@@ -33,16 +33,20 @@ public class IriConverter
     @Override
     public String convertToDatabaseColumn(IRI aIri)
     {
-        if (aIri == null)
+        if (aIri == null) {
             return null;
+        }
+        
         return aIri.stringValue();
     }
 
     @Override
     public IRI convertToEntityAttribute(String iriString)
     {
-        if (iriString == null)
+        if (iriString == null || iriString.length() == 0) {
             return null;
+        }
+        
         ValueFactory factory = SimpleValueFactory.getInstance();
         return factory.createIRI(iriString);
     }

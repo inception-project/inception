@@ -60,6 +60,9 @@ public class ExportedKnowledgeBase
     @JsonProperty("property_description_iri")
     private String propertyDescriptionIri;
 
+    @JsonProperty("full_text_search_iri")
+    private String fullTextSearchIri;
+
     @JsonProperty("read_only")
     private boolean readOnly;
 
@@ -198,6 +201,16 @@ public class ExportedKnowledgeBase
         propertyDescriptionIri = aPropertyDescriptionIri;
     }
 
+    public String getFullTextSearchIri()
+    {
+        return fullTextSearchIri;
+    }
+
+    public void setFullTextSearchIri(String aFullTextSearchIri)
+    {
+        fullTextSearchIri = aFullTextSearchIri;
+    }
+
     public boolean isReadOnly()
     {
         return readOnly;
@@ -228,10 +241,12 @@ public class ExportedKnowledgeBase
         reification = aReification;
     }
 
+    @Deprecated
     public void setSupportConceptLinking(boolean aSupportConceptLinking) {
         supportConceptLinking = aSupportConceptLinking;
     }
 
+    @Deprecated
     public boolean isSupportConceptLinking() {
         return supportConceptLinking;
     }

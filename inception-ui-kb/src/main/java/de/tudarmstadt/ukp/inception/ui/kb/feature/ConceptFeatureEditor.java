@@ -104,7 +104,7 @@ public class ConceptFeatureEditor extends FeatureEditor {
 
             @Override
             protected List<KBHandle> getChoices(String input) {
-                return listInstances(aState, aHandler, input.toLowerCase());
+                return listInstances(aState, aHandler, input != null ? input.toLowerCase() : null);
             }
 
             @Override

@@ -42,7 +42,9 @@ public class IriConstants
     public static final String PREFIX_WIKIDATA_ENTITY = "http://www.wikidata.org/entity/";
     public static final String PREFIX_WIKIDATA_DIRECT = "http://www.wikidata.org/prop/direct/";
     public static final String PREFIX_SCHEMA = "http://schema.org/";
+    public static final String PREFIX_LUCENE_SEARCH = "http://www.openrdf.org/contrib/lucenesail#";
 
+    public static final String UKP_WIKIDATA_SPARQL_ENDPOINT = "http://knowledgebase.ukp.informatik.tu-darmstadt.de:8890/sparql";
     public static final Set<String> IMPLICIT_NAMESPACES = new HashSet<>(Arrays.asList(RDF.NAMESPACE,
             RDFS.NAMESPACE, XMLSchema.NAMESPACE, OWL.NAMESPACE, INCEPTION_SCHEMA_NAMESPACE));
 
@@ -71,6 +73,9 @@ public class IriConstants
      */
     public static final IRI SCHEMA_DESCRIPTION;
 
+    public static final IRI FTS_VIRTUOSO;
+    public static final IRI FTS_LUCENE;
+
     public static final List<IRI> CLASS_IRIS;
     public static final List<IRI> SUBCLASS_IRIS;
     public static final List<IRI> TYPE_IRIS;
@@ -79,6 +84,7 @@ public class IriConstants
     public static final List<IRI> PROPERTY_TYPE_IRIS;
     public static final List<IRI> PROPERTY_LABEL_IRIS;
     public static final List<IRI> PROPERTY_DESCRIPTION_IRIS;
+    public static final List<IRI> FTS_IRIS;
 
     static {
         ValueFactory vf = SimpleValueFactory.getInstance();
@@ -88,6 +94,8 @@ public class IriConstants
         WIKIDATA_TYPE = vf.createIRI(PREFIX_WIKIDATA_DIRECT, "P31");
         WIKIDATA_PROPERTY_TYPE =  vf.createIRI(PREFIX_WIKIDATA_ENTITY, "Q18616576");
         SCHEMA_DESCRIPTION = vf.createIRI(PREFIX_SCHEMA, "description");
+        FTS_VIRTUOSO = vf.createIRI("bif:contains");
+        FTS_LUCENE = vf.createIRI(PREFIX_LUCENE_SEARCH, "matches");
 
         CLASS_IRIS = asList(RDFS.CLASS, OWL.CLASS, WIKIDATA_CLASS, SKOS.CONCEPT);
         SUBCLASS_IRIS = asList(RDFS.SUBCLASSOF, WIKIDATA_SUBCLASS, SKOS.BROADER);
@@ -97,6 +105,6 @@ public class IriConstants
         PROPERTY_TYPE_IRIS = asList(RDF.PROPERTY, WIKIDATA_PROPERTY_TYPE);
         PROPERTY_LABEL_IRIS = asList(RDFS.LABEL, SKOS.PREF_LABEL);
         PROPERTY_DESCRIPTION_IRIS = asList(RDFS.COMMENT, SCHEMA_DESCRIPTION);
-
+        FTS_IRIS = asList(FTS_VIRTUOSO, FTS_LUCENE);
     }
 }
