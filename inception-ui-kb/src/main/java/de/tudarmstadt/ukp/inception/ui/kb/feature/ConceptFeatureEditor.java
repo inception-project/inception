@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -296,10 +295,8 @@ public class ConceptFeatureEditor extends FeatureEditor {
     private List<KBHandle> distinctByIri(List<KBHandle> aHandles)
     {
         Map<String, KBHandle> hMap = new LinkedHashMap<>();
-        for (KBHandle h: aHandles) {
-            if (!hMap.containsKey(h.getIdentifier())) {
-                hMap.put(h.getIdentifier(), h);
-            }
+        for (KBHandle h : aHandles) {
+            hMap.put(h.getIdentifier(), h);
         }
         return new ArrayList<>(hMap.values());
     }    
