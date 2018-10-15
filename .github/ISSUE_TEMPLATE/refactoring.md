@@ -1,5 +1,5 @@
 ---
-name: Refactoring (for developoers)
+name: Refactoring (for developers)
 about: Refactor the application
 
 ---
