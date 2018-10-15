@@ -41,10 +41,6 @@
       <groupId>org.dkpro.lab</groupId>
       <artifactId>dkpro-lab-core</artifactId>
     </dependency>
-    <dependency>
-      <groupId>com.google.code.gson</groupId>
-      <artifactId>gson</artifactId>
-    </dependency>
 
     <dependency>
       <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
