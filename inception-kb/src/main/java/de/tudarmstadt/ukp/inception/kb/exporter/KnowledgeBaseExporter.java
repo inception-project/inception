@@ -51,6 +51,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
+import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 import de.tudarmstadt.ukp.inception.kb.SchemaProfile;
@@ -107,6 +108,9 @@ public class KnowledgeBaseExporter implements ProjectExporter
             exportedKB.setPropertyTypeIri(kb.getPropertyTypeIri().stringValue());
             exportedKB.setPropertyLabelIri(kb.getPropertyLabelIri().stringValue());
             exportedKB.setPropertyDescriptionIri(kb.getPropertyDescriptionIri().stringValue());
+            exportedKB.setFullTextSearchIri(
+                    kb.getFullTextSearchIri() != null ? kb.getFullTextSearchIri().stringValue()
+                            : null);
             exportedKB.setReadOnly(kb.isReadOnly());
             exportedKB.setEnabled(kb.isEnabled());
             exportedKB.setReification(kb.getReification().toString());
@@ -118,6 +122,7 @@ public class KnowledgeBaseExporter implements ProjectExporter
                     .map(conceptIRI -> conceptIRI.stringValue())
                     .collect(Collectors.toList()));
             exportedKB.setDefaultLanguage(kb.getDefaultLanguage());
+            exportedKB.setMaxResults(kb.getMaxResults());
             exportedKnowledgeBases.add(exportedKB);
 
             if (kb.getType() == RepositoryType.REMOTE) {
@@ -194,11 +199,18 @@ public class KnowledgeBaseExporter implements ProjectExporter
             kb.setPropertyDescriptionIri(exportedKB.getPropertyDescriptionIri() != null ?
                 vf.createIRI(exportedKB.getPropertyDescriptionIri()) :
                 DEFAULTPROFILE.getPropertyDescriptionIri());
+            // The imported project may date from a time where we did not yet have the FTS IRI.
+            // In that case we use concept linking support as an indicator that we dealt with a
+            // remote Virtuoso.
+            if (exportedKB.isSupportConceptLinking() && exportedKB.getFullTextSearchIri() == null) {
+                kb.setFullTextSearchIri(IriConstants.FTS_VIRTUOSO);
+            }
+            kb.setFullTextSearchIri(exportedKB.getFullTextSearchIri() != null
+                ? vf.createIRI(exportedKB.getFullTextSearchIri()) : null);
 
             kb.setReadOnly(exportedKB.isReadOnly());
             kb.setEnabled(exportedKB.isEnabled());
             kb.setReification(Reification.valueOf(exportedKB.getReification()));
-            kb.setSupportConceptLinking(exportedKB.isSupportConceptLinking());
             kb.setBasePrefix(exportedKB.getBasePrefix());
 
             if (exportedKB.getRootConcepts() != null) {
@@ -210,18 +222,18 @@ public class KnowledgeBaseExporter implements ProjectExporter
                 kb.setExplicitlyDefinedRootConcepts(new ArrayList<>());
             }
             kb.setDefaultLanguage(exportedKB.getDefaultLanguage());
+            kb.setMaxResults(exportedKB.getMaxResults());
             kb.setProject(aProject);
 
             // Get config and register knowledge base
-            RepositoryImplConfig cfg;
             if (kb.getType() == RepositoryType.LOCAL) {
-                cfg = kbService.getNativeConfig();
+                RepositoryImplConfig cfg = kbService.getNativeConfig();
                 kbService.registerKnowledgeBase(kb, cfg);
                 kbService.defineBaseProperties(kb);
                 importKnowledgeBaseFiles(aZip, kb);
             }
             else {
-                cfg = kbService.getRemoteConfig(exportedKB.getRemoteURL());
+                RepositoryImplConfig cfg = kbService.getRemoteConfig(exportedKB.getRemoteURL());
                 kbService.registerKnowledgeBase(kb, cfg);
             }
 

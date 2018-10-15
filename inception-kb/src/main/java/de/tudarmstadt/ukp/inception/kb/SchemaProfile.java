@@ -66,7 +66,6 @@ public enum SchemaProfile
         propertyTypeIri = aPropertyTypeIri;
         propertyLabelIri = aPropertyLabelIri;
         propertyDescriptionIri = aPropertyDescriptionIri;
-
     }
 
     public String getUiLabel()

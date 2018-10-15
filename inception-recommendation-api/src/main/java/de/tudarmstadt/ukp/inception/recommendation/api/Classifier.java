@@ -22,6 +22,7 @@ import java.util.List;
 
 import org.apache.uima.jcas.JCas;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -96,7 +97,7 @@ public abstract class Classifier<C>
     public List<AnnotationObject> mergeAdjacentTokensWithSameLabel(
             List<List<List<AnnotationObject>>> sentences, AnnotationLayer layer)
     {
-        if (layer.isLockToTokenOffset()) {
+        if (AnchoringMode.SINGLE_TOKEN.equals(layer.getAnchoringMode())) {
             List<AnnotationObject> singleTokenPredictions = new ArrayList<>();
             sentences.forEach(sentence -> sentence.forEach(singleTokenPredictions::addAll));
             return singleTokenPredictions;

@@ -60,6 +60,9 @@ public class ExportedKnowledgeBase
     @JsonProperty("property_description_iri")
     private String propertyDescriptionIri;
 
+    @JsonProperty("full_text_search_iri")
+    private String fullTextSearchIri;
+
     @JsonProperty("read_only")
     private boolean readOnly;
 
@@ -80,6 +83,9 @@ public class ExportedKnowledgeBase
 
     @JsonProperty("default_language")
     private String defaultLanguage;
+
+    @JsonProperty("max_results")
+    private int maxResults;
 
     // set to null for local knowledge bases
     @JsonProperty("remote_url")
@@ -195,6 +201,16 @@ public class ExportedKnowledgeBase
         propertyDescriptionIri = aPropertyDescriptionIri;
     }
 
+    public String getFullTextSearchIri()
+    {
+        return fullTextSearchIri;
+    }
+
+    public void setFullTextSearchIri(String aFullTextSearchIri)
+    {
+        fullTextSearchIri = aFullTextSearchIri;
+    }
+
     public boolean isReadOnly()
     {
         return readOnly;
@@ -225,10 +241,12 @@ public class ExportedKnowledgeBase
         reification = aReification;
     }
 
+    @Deprecated
     public void setSupportConceptLinking(boolean aSupportConceptLinking) {
         supportConceptLinking = aSupportConceptLinking;
     }
 
+    @Deprecated
     public boolean isSupportConceptLinking() {
         return supportConceptLinking;
     }
@@ -261,6 +279,16 @@ public class ExportedKnowledgeBase
     public void setDefaultLanguage(String aDefaultLanguage)
     {
         defaultLanguage = aDefaultLanguage;
+    }
+
+    public int getMaxResults()
+    {
+        return maxResults;
+    }
+
+    public void setMaxResults(int aMaxResults)
+    {
+        maxResults = aMaxResults;
     }
 
     public String getRemoteURL()

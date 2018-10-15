@@ -55,28 +55,36 @@ public class KnowledgeBaseMapping implements Serializable
     private IRI propertyLabelIri;
 
     @JsonProperty("property-description")
-    private IRI propertyDescriptionIri;   
+    private IRI propertyDescriptionIri;
+
+    @JsonProperty("full-text-search")
+    private IRI fullTextSearchIri;
+    
    
-    @JsonCreator public KnowledgeBaseMapping(@JsonProperty("class") String classIri,
-        @JsonProperty("subclass-of") String subclassIri,
-        @JsonProperty("instance-of") String typeIri,
-        @JsonProperty("subproperty-of") String subPropertyIri,
-        @JsonProperty("description") String descriptionIri,
-        @JsonProperty("label") String labelIri,
-        @JsonProperty("property-type") String propertyTypeIri,
-        @JsonProperty("property-label") String propertyLabelIri,
-        @JsonProperty("property-description") String propertyDescriptionIri)
+    @JsonCreator public KnowledgeBaseMapping(@JsonProperty("class") String aClassIri,
+        @JsonProperty("subclass-of") String aSubclassIri,
+        @JsonProperty("instance-of") String aTypeIri,
+        @JsonProperty("subproperty-of") String aSubPropertyIri,
+        @JsonProperty("description") String aDescriptionIri,
+        @JsonProperty("label") String aLabelIri,
+        @JsonProperty("property-type") String aPropertyTypeIri,
+        @JsonProperty("property-label") String aPropertyLabelIri,
+        @JsonProperty("property-description") String aPropertyDescriptionIri,
+        @JsonProperty("full-text-search") String aFullTextSearchIri)
+
     {
         SimpleValueFactory vf = SimpleValueFactory.getInstance();
-        this.classIri = vf.createIRI(classIri);
-        this.subclassIri = vf.createIRI(subclassIri);
-        this.typeIri = vf.createIRI(typeIri);
-        this.subPropertyIri = vf.createIRI(subPropertyIri);
-        this.descriptionIri = vf.createIRI(descriptionIri);
-        this.labelIri = vf.createIRI(labelIri);
-        this.propertyTypeIri = vf.createIRI(propertyTypeIri);
-        this.propertyLabelIri = vf.createIRI(propertyLabelIri);
-        this.propertyDescriptionIri = vf.createIRI(propertyDescriptionIri);
+        classIri = vf.createIRI(aClassIri);
+        subclassIri = vf.createIRI(aSubclassIri);
+        typeIri = vf.createIRI(aTypeIri);
+        subPropertyIri = vf.createIRI(aSubPropertyIri);
+        descriptionIri = vf.createIRI(aDescriptionIri);
+        labelIri = vf.createIRI(aLabelIri);
+        propertyTypeIri = vf.createIRI(aPropertyTypeIri);
+        propertyLabelIri = vf.createIRI(aPropertyLabelIri);
+        propertyDescriptionIri = vf.createIRI(aPropertyDescriptionIri);
+        fullTextSearchIri = vf.createIRI(aFullTextSearchIri);
+
     }
     
     public KnowledgeBaseMapping() {
@@ -171,5 +179,15 @@ public class KnowledgeBaseMapping implements Serializable
     public void setPropertyDescriptionIri(IRI aPropertyDescriptionIri)
     {
         propertyDescriptionIri = aPropertyDescriptionIri;
+    }
+
+    public IRI getFullTextSearchIri()
+    {
+        return fullTextSearchIri;
+    }
+
+    public void setFullTextSearchIri(IRI fullTextSearchIri)
+    {
+        fullTextSearchIri = fullTextSearchIri;
     }
 }

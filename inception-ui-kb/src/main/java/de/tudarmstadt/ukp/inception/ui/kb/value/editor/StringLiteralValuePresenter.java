@@ -42,6 +42,7 @@ public class StringLiteralValuePresenter
             protected void onConfigure()
             {
                 super.onConfigure();
+                
                 String language = (String) this.getDefaultModelObject();
                 setVisible(StringUtils.isNotEmpty(language));
             }
