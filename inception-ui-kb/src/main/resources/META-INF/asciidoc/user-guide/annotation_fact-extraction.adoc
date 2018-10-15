@@ -1,5 +1,6 @@
 [[sect_annotation_fact-extraction]]
-=== Fact Extraction
+= Fact Extraction
+
 Fact extraction is the task of extracting facts from documents. It is defined that a fact consists
 of a subject, a predicate, an object and qualifiers. Fact extraction in {product-name} includes
 annotating the mentions for each fact component, and linking these mentions to instances of concept
@@ -10,9 +11,10 @@ alongside a running example. The example covers creating a local knowledge base 
 qualifiers in the *Projects Settings*, managing qualifiers in the *Knowledge Base*, and extracting a
  fact in the *Annotation* page.
 
-==== A local knowledge base supporting qualifiers
+== A local knowledge base supporting qualifiers
+
 In the *Projects Settings*, switch to the *Knowledge Bases* tab, then click *New…* on the bottom
- and a dialogue box shows as in the figure below.
+and a dialogue box shows as in the figure below.
 
 image::factExtraction1.png[align="center"]
 
@@ -21,7 +23,8 @@ To create a local knowledge base, one needs to choose *Local* for the type. For 
 So, to support qualifiers, one needs to choose *WIKIDATA* for the Reification. One can then follow
 the wizard to finish the setting.
 
-==== Managing qualifiers in the knowledge base
+== Managing qualifiers in the knowledge base
+
 Assuming one has already created concepts, properties, instances and a statement about instance
 _Barack Obama_ in this knowledge base:
 
@@ -34,7 +37,7 @@ image::factExtraction3.png[align="center"]
 
 One can click the pencil icon on the same line as this qualifer to edit and delete this qualifier.
 
-==== Linking a fact in the annotation page
+== Linking a fact in the annotation page
 Assuming the project contains documents for annotation, one can now switch to the annotation page
 and choose the fact layer:
 
@@ -66,15 +69,15 @@ If this fact is already saved in the knowledge base, the label in the predicate 
 
 To extract a qualifier, one needs to choose the qualifier name from the drop-down field in front of
 the button *add* in the qualifier feature editor. The list of candidates for the qualifier name is a
- list of properties from the knowledge base. After clicking *add*, a mention input field and a
- dropdown field appear to collect this qualifier value information. In the screenshot below, the
- qualifier name is _start-date_.
+list of properties from the knowledge base. After clicking *add*, a mention input field and a
+dropdown field appear to collect this qualifier value information. In the screenshot below, the
+qualifier name is _start-date_.
 
 image::factExtraction7.png[align="center"]
 
 One can then click to activate the mention input, annotate the mention, and choose an instance from
 the dropdown field to link the value of this qualifier to the knowledge base. The list of candidates
- for the qualifier value is a list of instances from the knowledge base.
+for the qualifier value is a list of instances from the knowledge base.
 
 image::factExtraction8.png[align="center"]
 
@@ -84,12 +87,12 @@ predicate to the label above the qualifier value, with the qualifier name _start
 So, a fact (Barack Obama, educated-at, Harvard Law School, Start-date: 1988) with its mentions is
 linked in this example.
 
-==== Fact linking with multiple knowledge bases
+== Fact linking with multiple knowledge bases
 If a project has multiple knowledge bases, a user can choose to link the mention to a certain
 knowledge base or to all knowledge bases. This configuration is done in the *Projects Settings*. One
- needs to switch to the *Layers* tab first, then to choose the *Named entity* layer and the
- *identifier* feature. After that one can configure the linked knowledge base information in
- *Feature Details*, choose the desired knowledge base from the dropdown list of the field *Knowledge
- base* as shown in the figure below.
+needs to switch to the *Layers* tab first, then to choose the *Named entity* layer and the
+*identifier* feature. After that one can configure the linked knowledge base information in
+*Feature Details*, choose the desired knowledge base from the dropdown list of the field *Knowledge
+base* as shown in the figure below.
 
 image::factExtraction9.png[align="center"]

@@ -35,6 +35,5 @@ include::{include-dir}systemproperties.adoc[]
 
 <<<
 
-include::{include-dir}search-core.adoc[]
-
-include::{include-dir}search-mtas.adoc[]
+include::{include-dir}search-core.adoc[leveloffset=+1]
+include::{include-dir}search-mtas.adoc[leveloffset=+1]

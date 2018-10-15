@@ -932,7 +932,7 @@
     <profile>
       <id>doc-only</id>
       <properties>
-        <mdep.analyze.skip>false</mdep.analyze.skip>
+        <mdep.analyze.skip>true</mdep.analyze.skip>
         <maven.test.skip>true</maven.test.skip>
         <rat.skip>true</rat.skip>
         <maven.buildNumber.skip>true</maven.buildNumber.skip>

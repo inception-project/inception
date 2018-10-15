@@ -15,14 +15,15 @@
 // limitations under the License.
 
 [[sect_annotation_concept-linking]]
-=== Concept Linking
+== Concept Linking
+
 Concept Linking is the task of identifying concept mentions in the text and linking them to their
 corresponding concept in a knowledge base.
 Use cases of Concept Linking are commonly found in the area of biomedical text mining, e.g.
 to facilitate understanding of unexplained terminology or abbreviations in scientific literature by linking
 biological entities.
 
-==== Interactive Concept Linking
+=== Interactive Concept Linking
 Interactive Concept Linking allows users to manually link concept mentions to a KB. It is especially
 useful in situations where there is no substantial training data available from the start,
 i.e. when no previous linkings have been made. In this case, each concept mention is disambiguated
@@ -36,7 +37,7 @@ image::concept-linking2.png[align="center"]
 
 The suggestions are updated every time it receives new input.
 
-==== Automated Concept Suggestions
+=== Automated Concept Suggestions
 
 The Named Entity Linker (NEL) displays three highest-ranked candidates as suggestions boxes
 over each mention annotated as Named Entity.
