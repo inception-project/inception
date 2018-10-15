@@ -476,7 +476,7 @@ public class BratAnnotationEditor
         // We only do this if we are *not* in a partial page reload. The case of a partial
         // page reload is covered in onAfterRender()
         Optional<AjaxRequestTarget> target = RequestCycle.get().find(AjaxRequestTarget.class);
-        if (target.isPresent() && getModelObject().getProject() != null) {
+        if (!target.isPresent() && getModelObject().getProject() != null) {
             bratInitRenderLater(aResponse);
         }
     }
