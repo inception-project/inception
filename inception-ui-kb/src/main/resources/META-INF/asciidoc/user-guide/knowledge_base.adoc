@@ -1,35 +1,11 @@
 [[sect_knowledge_base]]
-=== Knowledge Base 
+== Knowledge Base 
 
 The knowledge base (KB) module of INCEpTION enables the user to create a KB from scratch or to import it from an RDF file. Alternatively, the user can connect to a remote KB using SPARQL. However, editing the content of remote KBs is currently not supported. The knowledge base enables the user to annotate the text with entities from KB. 
 
 This section briefly describes how to set up a KB in the KB management page on *Projects Settings*, explains the functionalities provided by the *Knowledge Base* page and covers the *concept* and *property* feature types. 
 
-==== Setting up a knowledge base 
-
-In the *Projects Settings*, switch to the *Knowledge Bases* tab, then click *New…* on the bottom
- and a dialogue box shows as in the figure below.
-
-[.thumb]
-image::kb1.png[align="center"]
-
-To create a *local* or *remote*  knowledge base, one needs to choose *Local* or *Remote* for the type. For the reification,
-*NONE* is the default case, but to support qualifiers, one needs to choose *WIKIDATA*. 
-
-For the local KB, the user can optionally choose a RDF file from which to import the initial data. Alternatively, the user can skip the step to create an empty KB to create a knowledge base from scratch. It is also always possible to import data from an RDF file after the creation of a KB. It is also possible to  multiple RDF files into the same KB, one after another.
-
-For remote KBs, INCEpTION provides the user with some pre-configured knowledge base such as WikiData, British Museum, BabelNet, DBPediaa or Yago. The user can also set up a custom remote KB, in which case the user needs to provide the SPARQL endpoint URL for the knowledge base as in the figure below.
-
-
-[.thumb]
-image::kb2.png[align="center"]
-
-In the next step, the user is offered a configurable mapping which relies on a minimal set of IRIs that must be defined for any KB used with the platform. The user can choose one of the pre-configured mapping or provide her own custom defined mapping as shown in the figure below. In the advanced settings, the user can leverage this feature of KB settings when one doesn't want the entire knowledge base to be used and rather choose to identify some specific root concepts. This feature specially helps in case of large knowledge bases such as Wikidata.
- 
-[.thumb]
-image::kb3.png[align="center"]
-
-==== Knowledge Base Page
+=== Knowledge Base Page
 
 The knowledge base page provides a concept tree hierarchy with a list of instances and statements, together with the list of properties as shown in the figure below. For local knowledge bases, the user can edit the KB contents here, which includes adding, editing and deleting concepts, properties, statements and instances.
 
@@ -44,7 +20,7 @@ The concept tree in this page is designed using the *subClass* relationship for 
 In case the user has the privilege to edit the knowledge base, the user may add statements for concepts, instances and properties. 
 
 
-==== Knowledge Base scope setting for feature layer
+=== Knowledge Base scope setting for feature layer
 
 In the *Projects Settings*, switch to the *Layers* tab where the user can edit the configuration for the pre-defined layers or create a new layer clicking the *Create* button on the bottom of the panel. The user can define several features for each of the layers as shown in the figure below.
 
@@ -59,7 +35,7 @@ The feature configuration allows her to set up the configuration to list the val
 
 The *Scope* field allows her to set the scope of KB entities with a specific concept limiting the annotation values to sub class and instances of the concept defined as scope. In case the user selects *Any Concept/Instance*, the values will be instances of the specified concept and the child concepts (which includes the hierarchy of child concepts) including their instances, of the specified concept in the *Scope*. Likewise, the choice of *Only Concept* limit the values to the child concepts (which includes the hierarchy of child concepts) and  *Only Instance* limit the values to all of the instances and the instances for the child concepts of the specified concept. 
 
-==== Knowledge Base Statement Validation
+=== Knowledge Base Statement Validation
 
 INCEpTION provides the user to edit the local knowledge base which includes adding statements to the concepts, sub class and their instances. The platform provides *Create Statement* button for adding in statements for a particular knowledge base entity. 
 
