@@ -449,8 +449,9 @@ public class KnowledgeBaseDetailsPanel
             wmc.add(new Label("language", kbwModel.bind("kb.defaultLanguage"))
                 .add(LambdaBehavior.onConfigure(tf -> tf.setEnabled(false))));
 
-            // don't show radio group in view mode 
-            iriPanel.get("iriSchema").setVisible(false);
+            // don't show radio group in view mode - normally we'd just disable it, but that doesn't
+            // seem to work
+            iriPanel.get("comboBoxWrapper:iriSchema").setVisible(false);
             wmc.add(iriPanel);
 
             wmc.add(new CheckBox("enabled", model.bind("kb.enabled"))
