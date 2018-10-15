@@ -293,7 +293,7 @@ public class ConceptLinkingService
                         // Exact matching does not use altLabel
                         altLabel.map(Value::stringValue)
                                 .orElse(label.map(Value::stringValue).orElse("")),
-                        description.map(Value::stringValue).orElse(""), language.orElse(""));
+                        description.map(Value::stringValue).orElse("").concat("\n" + e2.map(Value::stringValue).orElse("")), language.orElse(""));
 
                 candidates.add(newEntity);
             }
