@@ -17,15 +17,15 @@
  */
 package de.tudarmstadt.ukp.inception.externalsearch.elastic;
 
+import static java.util.Arrays.asList;
+
 import java.io.File;
 import java.util.Collections;
 import java.util.List;
-import java.util.Properties;
 
 import org.junit.Before;
 import org.junit.FixMethodOrder;
 import org.junit.Rule;
-import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
@@ -63,21 +63,16 @@ import de.tudarmstadt.ukp.clarin.webanno.api.dao.initializers.TokenLayerInitiali
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportService;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentServiceImpl;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.project.ProjectServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDaoImpl;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
-import de.tudarmstadt.ukp.dkpro.core.io.text.TextReader;
-import de.tudarmstadt.ukp.dkpro.core.io.text.TextWriter;
+import de.tudarmstadt.ukp.clarin.webanno.text.TextFormatSupport;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchProviderFactory;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchProviderRegistry;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchProviderRegistryImpl;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchService;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchServiceImpl;
-import de.tudarmstadt.ukp.inception.search.SearchService;
-import de.tudarmstadt.ukp.inception.search.SearchServiceImpl;
 /**
  * The Class TestElasticSearch.
  */
@@ -96,12 +91,7 @@ public class ElasticSearchTest
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
-    private @Autowired UserDao userRepository;
-
     private @Autowired ProjectService projectService;
-    private @Autowired DocumentService documentService;
-    private @Autowired SearchService searchService;
-    private @Autowired AnnotationSchemaService annotationSchemaService;
     private @Autowired ExternalSearchService externalSearchService;
 
     // If this is not static, for some reason the value is re-set to false before a
@@ -121,25 +111,25 @@ public class ElasticSearchTest
         }
     }
 
-    @Test
-    public void testSimpleQuery() throws Exception
-    {
-        Project project = new Project();
-
-        project.setName("TestProject");
-
-        projectService.createProject(project);
+//    @Test
+//    public void testSimpleQuery() throws Exception
+//    {
+//        Project project = new Project();
+//        project.setName("TestProject");
+//        project.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
 //
-//        annotationSchemaService.initializeProject(project);
+//        projectService.createProject(project);
+////
+////        annotationSchemaService.initializeProject(project);
+////
+////        User user = userRepository.get("admin");
 //
-//        User user = userRepository.get("admin");
-
-        User user = new User();
-        String query = "merck";
-
-        // TODO: put the proper argument instead of null
-        externalSearchService.query(user, null, query);
-    }
+//        User user = new User();
+//        String query = "merck";
+//
+//        // TODO: put the proper argument instead of null
+//        externalSearchService.query(user, null, query);
+//    }
 
     @Configuration
     public static class TestContext
@@ -180,12 +170,6 @@ public class ElasticSearchTest
                 @Lazy @Autowired AnnotationSchemaService aAnnotationSchemaService)
         {
             return new TokenLayerInitializer(aAnnotationSchemaService);
-        }
-
-        @Bean
-        public SearchService searchService()
-        {
-            return new SearchServiceImpl();
         }
 
         @Lazy
@@ -243,7 +227,9 @@ public class ElasticSearchTest
         @Bean
         public ImportExportService importExportService()
         {
-            return new ImportExportServiceImpl();
+            return new ImportExportServiceImpl(
+                    asList(new TextFormatSupport()),
+                    casStorageService(), annotationSchemaService());
         }
 
         @Bean
@@ -262,17 +248,6 @@ public class ElasticSearchTest
         public BackupProperties backupProperties()
         {
             return new BackupProperties();
-        }
-
-
-        @Bean
-        public Properties formats()
-        {
-            Properties props = new Properties();
-            props.put("text.label", "Plain text");
-            props.put("text.reader", TextReader.class.getName());
-            props.put("text.writer", TextWriter.class.getName());
-            return props;
         }
 
         @Bean
