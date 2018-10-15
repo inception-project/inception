@@ -29,7 +29,6 @@ import org.apache.uima.UIMAException;
 import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.Session;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.extensions.markup.html.repeater.data.grid.ICellPopulator;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.AbstractColumn;
@@ -64,6 +63,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.inception.app.session.SessionMetaData;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
@@ -85,7 +86,7 @@ public class SearchPage extends ApplicationPageBase
 
     final WebMarkupContainer mainContainer = new WebMarkupContainer("mainContainer");
 
-    final String PLAIN_TEXT = "Plain text";
+    final String PLAIN_TEXT = "text";
     
     private ListView<ExternalSearchResult> resultList;
     private ArrayList<ExternalSearchResult> results = new ArrayList<ExternalSearchResult>();
@@ -240,7 +241,7 @@ public class SearchPage extends ApplicationPageBase
         SourceDocument document = new SourceDocument();
         document.setName(aFileName);
         document.setProject(project);
-        document.setFormat(importExportService.getReadableFormatId(PLAIN_TEXT));
+        document.setFormat(PLAIN_TEXT);
 
         try (InputStream is = stream) {
             documentService.uploadSourceDocument(is, document);
@@ -326,23 +327,13 @@ public class SearchPage extends ApplicationPageBase
                 }
 
                 @Override
-                protected void onSelectionChanged(DocumentRepository aNewSelection)
-                {
-                    SearchPage.this.currentRepository = aNewSelection;
-                }
-
-                @Override
-                protected boolean wantOnSelectionChangedNotifications()
-                {
-                    return true;
-                }
-
-                @Override
                 protected CharSequence getDefaultChoice(String aSelectedValue)
                 {
                     return "";
                 }
             };
+            // Just update the selection
+            repositoryCombo.add(new LambdaAjaxFormComponentUpdatingBehavior("change"));
             add(repositoryCombo);
 
         }
@@ -364,20 +355,16 @@ public class SearchPage extends ApplicationPageBase
 
             String documentId = result.getDocumentTitle();
 
-            AjaxLink link = new AjaxLink("openDocument")
-            {
-                @Override
-                public void onClick(AjaxRequestTarget aTarget)
-                {
-                    String text = externalSearchService.getDocumentById(currentUser, 
-                            currentRepository, documentId).getText();
+            LambdaAjaxLink link = new LambdaAjaxLink("openDocument", _target -> {
+                String text = externalSearchService.getDocumentById(currentUser, 
+                        currentRepository, documentId).getText();
 
-                    modalDocumentWindow.setContent(new ModalDocumentWindow("content", text));
-                    modalDocumentWindow.setTitle(documentId);
-                    
-                    modalDocumentWindow.show(aTarget);
-                }
-            };
+                modalDocumentWindow.setContent(new ModalDocumentWindow("content", text));
+                modalDocumentWindow.setTitle(documentId);
+                
+                modalDocumentWindow.show(_target);
+                
+            });
             link.add(new Label("documentId", documentId));
             
             add(link);
@@ -394,23 +381,18 @@ public class SearchPage extends ApplicationPageBase
 
             String documentId = result.getDocumentTitle();
 
-            AjaxLink link = new AjaxLink("importDocument")
-            {
-                @Override
-                public void onClick(AjaxRequestTarget aTarget)
-                {
-                    String text = externalSearchService.getDocumentById(currentUser, 
-                            currentRepository, documentId).getText();
+            LambdaAjaxLink link = new LambdaAjaxLink("importDocument", _target -> {
+                String text = externalSearchService.getDocumentById(currentUser, 
+                        currentRepository, documentId).getText();
 
-                    if (documentService.existsSourceDocument(project, documentId)) {
-                        error("Document " + documentId + " already uploaded ! Delete "
-                                + "the document if you want to upload again");
-                    }
-                    else {
-                        importDocument(documentId, text);
-                    }
+                if (documentService.existsSourceDocument(project, documentId)) {
+                    error("Document " + documentId + " already uploaded ! Delete "
+                            + "the document if you want to upload again");
                 }
-            };
+                else {
+                    importDocument(documentId, text);
+                }
+            });
             link.add(new Label("documentId", documentId));
             
             add(link);

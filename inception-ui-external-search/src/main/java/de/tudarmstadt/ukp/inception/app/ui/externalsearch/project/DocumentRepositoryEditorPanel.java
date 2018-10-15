@@ -41,7 +41,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormSubmittingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchProviderFactory;
@@ -64,7 +63,8 @@ public class DocumentRepositoryEditorPanel
     private @SpringBean UserDao userDao;
 
     private WebMarkupContainer propertiesContainer;
-    DropDownChoice<Pair<String, String>> typeChoice;
+    private DropDownChoice<Pair<String, String>> typeChoice;
+    private Form<DocumentRepository> form;
 
     private IModel<Project> projectModel;
     private IModel<DocumentRepository> repositoryModel;
@@ -80,7 +80,7 @@ public class DocumentRepositoryEditorPanel
         projectModel = aProject;
         repositoryModel = aRepository;
 
-        Form<DocumentRepository> form = new Form<>("form", CompoundPropertyModel.of(aRepository));
+        form = new Form<>("form", CompoundPropertyModel.of(aRepository));
         add(form);
 
         form.add(new TextField<String>("name")
@@ -94,8 +94,7 @@ public class DocumentRepositoryEditorPanel
                     .findFirst().orElse(null);
         }, (v) -> repositoryModel.getObject().setType(v.getKey()));
 
-        typeChoice = new DropDownChoice<Pair<String, String>>("type", typeModel,
-                LambdaModel.of(this::listTypes))
+        typeChoice = new DropDownChoice<Pair<String, String>>("type", typeModel, this::listTypes)
         {
             private static final long serialVersionUID = -1869081847783375166L;
 
@@ -136,9 +135,9 @@ public class DocumentRepositoryEditorPanel
             private static final long serialVersionUID = -3902555252753037183L;
 
             @Override
-            protected void onAfterSubmit(AjaxRequestTarget target, Form<?> aForm)
+            protected void onAfterSubmit(AjaxRequestTarget target)
             {
-                actionSave(target, (Form) aForm);
+                actionSave(target);
             };
         });
         form.add(new LambdaAjaxLink("delete", this::actionDelete)
@@ -176,9 +175,9 @@ public class DocumentRepositoryEditorPanel
                 .collect(Collectors.toList());
     }
 
-    private void actionSave(AjaxRequestTarget aTarget, Form<DocumentRepository> aForm)
+    private void actionSave(AjaxRequestTarget aTarget)
     {
-        DocumentRepository documentRepository = aForm.getModelObject();
+        DocumentRepository documentRepository = form.getModelObject();
         documentRepository.setProject(projectModel.getObject());
         externalSearchService.createOrUpdateDocumentRepository(documentRepository);
 
