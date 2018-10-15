@@ -132,6 +132,7 @@ public class EvaluationResultPanel
                 protected void onConfigure()
                 {
                     super.onConfigure();
+                    
                     setVisible(labelResult != null);
                 }
 
@@ -228,6 +229,7 @@ public class EvaluationResultPanel
                 protected void onConfigure()
                 {
                     super.onConfigure();
+                    
                     setVisible(aModel.getObject() != null);
                 }
 

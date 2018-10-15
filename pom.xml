@@ -53,22 +53,19 @@
       <url>https://zoidberg.ukp.informatik.tu-darmstadt.de/artifactory/public-ukp-releases-local</url>
     </repository>
   </distributionManagement>
-  <prerequisites>
-    <maven>3.0.5</maven>
-  </prerequisites>
   <properties>
     <webanno.version>3.5.0-SNAPSHOT</webanno.version>
-    <dkpro.version>1.9.3</dkpro.version>
+    <dkpro.version>1.10.0</dkpro.version>
     <spring.version>5.0.7.RELEASE</spring.version>
     <spring.boot.version>1.5.14.RELEASE</spring.boot.version>
-    <wicket.version>7.10.0</wicket.version>
-    <wicket-jquery-ui.version>7.10.1</wicket-jquery-ui.version>
+    <wicket.version>8.1.0</wicket.version>
+    <wicket-jquery-ui.version>${wicket.version}</wicket-jquery-ui.version>
     <lucene.version>7.3.0</lucene.version>
     <mtas.version>7.3.0.3</mtas.version>
     <dkpro.lab.version>0.14.0</dkpro.lab.version>
     <dl4j.version>0.9.1</dl4j.version>
-    <!-- rdf4j.version>2.4.0-M3</rdf4j.version -->
-    <rdf4j.version>2.3.2</rdf4j.version>
+    <rdf4j.version>2.4.0</rdf4j.version>
+    <inception-rdf4j.version>${rdf4j.version}</inception-rdf4j.version>
     <mockito.version>2.18.3</mockito.version>
     <assertj.version>3.10.0</assertj.version>
   </properties>
@@ -436,6 +433,11 @@
       <dependency>
         <groupId>org.apache.lucene</groupId>
         <artifactId>lucene-spatial</artifactId>
+        <version>${lucene.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.lucene</groupId>
+        <artifactId>lucene-spatial-extras</artifactId>
         <version>${lucene.version}</version>
       </dependency>
       <dependency>
@@ -936,7 +938,7 @@
     <profile>
       <id>doc-only</id>
       <properties>
-        <mdep.analyze.skip>false</mdep.analyze.skip>
+        <mdep.analyze.skip>true</mdep.analyze.skip>
         <maven.test.skip>true</maven.test.skip>
         <rat.skip>true</rat.skip>
         <maven.buildNumber.skip>true</maven.buildNumber.skip>

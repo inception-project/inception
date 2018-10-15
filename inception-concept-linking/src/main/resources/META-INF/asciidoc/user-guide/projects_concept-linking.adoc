@@ -15,7 +15,7 @@
 // limitations under the License.
 
 [[sect_projects_concept-linking]]
-=== Concept Linking
+== Concept Linking
 The user can setup a local or remote KB for his project in the settings, which includes the
 configuration for the various IRIs. The necessary IRIs are as follows.
 
@@ -37,7 +37,8 @@ image::concept-linking1.png[align="center"]
 Documentation about the NamedEntityLinker can be found in the <<sect_projects_recommendation, Project Settings>> .
 
 
-==== Resources
+=== Resources
+
 In order to improve the quality of suggestions, several additional resources can be incorporated.
 These are to be put into the `.inception/resources` folder. These include:
 

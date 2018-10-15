@@ -80,10 +80,12 @@ public class KnowledgeBaseExporterTest
         sourceProject = new Project();
         sourceProject.setId(1l);
         sourceProject.setName("Test Project");
+        sourceProject.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
 
         targetProject = new Project();
         sourceProject.setId(2l);
         targetProject.setName("Test Project");
+        targetProject.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
 
         when(kbService.getKnowledgeBases(sourceProject)).thenReturn(knowledgeBases());
 
@@ -219,6 +221,7 @@ public class KnowledgeBaseExporterTest
         kb.setPropertyTypeIri(RDF.PROPERTY);
         kb.setPropertyLabelIri(RDFS.LABEL);
         kb.setPropertyDescriptionIri(RDFS.COMMENT);
+        kb.setMaxResults(1000);
         ValueFactory vf = SimpleValueFactory.getInstance();
         kb.setExplicitlyDefinedRootConcepts(Arrays
             .asList(vf.createIRI("http://www.ics.forth.gr/isl/CRMinf/I1_Argumentation"),

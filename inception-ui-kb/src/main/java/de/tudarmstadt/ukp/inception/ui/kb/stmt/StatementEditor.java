@@ -90,11 +90,10 @@ public class StatementEditor extends Panel
             EditMode editMode = new EditMode(CONTENT_MARKUP_ID, statement, true);
 
             // obtain AjaxRequestTarget and set the focus
-            AjaxRequestTarget target = RequestCycle.get()
-                    .find(AjaxRequestTarget.class);
-            if (target != null) {
-                target.focusComponent(editMode.getFocusComponent());
-            }
+            RequestCycle.get()
+                    .find(AjaxRequestTarget.class)
+                    .ifPresent(target -> target.focusComponent(editMode.getFocusComponent()));
+
             content = editMode;
         } else {
             content = new ViewMode(CONTENT_MARKUP_ID, statement);
@@ -210,8 +209,10 @@ public class StatementEditor extends Panel
                 private static final long serialVersionUID = 3436068825093393740L;
 
                 @Override
-                protected void onConfigure() {
+                protected void onConfigure()
+                {
                     super.onConfigure();
+                    
                     setVisible(isNotEmpty(aStatement.getObject().getLanguage()));
                 }
             });

@@ -60,6 +60,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistryImpl;
@@ -109,8 +110,10 @@ import de.tudarmstadt.ukp.inception.search.scheduling.IndexScheduler;
 @RunWith(SpringRunner.class)
 @EnableAutoConfiguration
 @SpringBootTest(webEnvironment = WebEnvironment.MOCK)
-@EntityScan({ "de.tudarmstadt.ukp.clarin.webanno.model",
+@EntityScan({ 
+        "de.tudarmstadt.ukp.clarin.webanno.model",
         "de.tudarmstadt.ukp.inception.search.model",
+        "de.tudarmstadt.ukp.inception.kb.model",
         "de.tudarmstadt.ukp.clarin.webanno.security.model" })
 @TestPropertySource(locations = "classpath:MtasDocumentIndexTest.properties")
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -209,6 +212,7 @@ public class MtasDocumentIndexTest
     {
         Project project = new Project();
         project.setName("TestRawTextQuery");
+        project.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
 
         createProject(project);
 
@@ -254,6 +258,7 @@ public class MtasDocumentIndexTest
     {
         Project project = new Project();
         project.setName("SimplifiedTokenTextQuery");
+        project.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
 
         createProject(project);
 
@@ -297,12 +302,12 @@ public class MtasDocumentIndexTest
     public void testAnnotationQuery() throws Exception
     {
         Project project = new Project();
-
         project.setName("TestAnnotationQuery");
-
-        User user = userRepository.get("admin");
+        project.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
 
         createProject(project);
+
+        User user = userRepository.get("admin");
 
         SourceDocument sourceDocument = new SourceDocument();
 
@@ -474,7 +479,7 @@ public class MtasDocumentIndexTest
         @Bean
         public KnowledgeBaseService knowledgeBaseService()
         {
-            return new KnowledgeBaseServiceImpl(temporaryFolder);
+            return new KnowledgeBaseServiceImpl(repositoryProperties());
         }
 
         @Bean
