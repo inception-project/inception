@@ -15,29 +15,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.kb;
+package de.tudarmstadt.ukp.inception.conceptlinking;
 
+import java.util.Properties;
+
+import org.mockito.Mockito;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.ComponentScan.Filter;
 import org.springframework.context.annotation.FilterType;
+import org.springframework.context.annotation.Primary;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
 import de.tudarmstadt.ukp.inception.kb.exporter.KnowledgeBaseExporter;
 
 @SpringBootConfiguration
 @ComponentScan(
         excludeFilters = {
-            // We do now text exporting here and the exporter depends on the annotation schema 
+            // We do now text exporting here and the exporter depends on the annotation schema
             // service which is otherwise not needed. So we exclude this component here.
-            @Filter(type = FilterType.ASSIGNABLE_TYPE, classes = { 
-                    KnowledgeBaseExporter.class,
-                    KnowledgeBaseService.class,
+            @Filter(type = FilterType.ASSIGNABLE_TYPE, classes = {
+                    KnowledgeBaseExporter.class
             })
         },
         basePackages = {
-            "de.tudarmstadt.ukp.clarin.webanno.webapp",
+            "de.tudarmstadt.ukp.clarin.webanno.api",
+            "de.tudarmstadt.ukp.clarin.webanno.security",
             "de.tudarmstadt.ukp.inception"
         })
 @EntityScan(
@@ -47,5 +55,29 @@ import de.tudarmstadt.ukp.inception.kb.exporter.KnowledgeBaseExporter;
 })
 @EnableAutoConfiguration
 public class SpringConfig {
-    // No content
+    @Bean(name = "formats")
+    public Properties getFileFormats()
+    {
+        return new Properties();
+    }
+
+    @Bean
+    @Primary
+    public DocumentService documentService()
+    {
+        return Mockito.mock(DocumentService.class);
+    }
+
+    @Bean
+    @Primary
+    public ProjectService projectService()
+    {
+        return Mockito.mock(ProjectService.class);
+    }
+
+    @Bean
+    public ConceptLinkingService clService()
+    {
+        return new ConceptLinkingService();
+    }
 }
