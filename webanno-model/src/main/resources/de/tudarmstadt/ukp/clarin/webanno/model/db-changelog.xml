@@ -1082,7 +1082,7 @@
       defaultNullValue="annotation" />
   </changeSet>  
   
-  <changeSet author="WebAnno Team" id="20181005-1">
+  <changeSet author="WebAnno Team" id="20181005-2">
     <preConditions onFail="MARK_RAN">
       <not>
         <columnExists tableName="annotation_type" columnName="anchoring_mode"/>
@@ -1093,26 +1093,22 @@
         <constraints nullable="true" />
       </column>
     </addColumn>
-    <sql>
-      update annotation_type set 
-      anchoring_mode = "characters" 
-      where lockToTokenOffset = false and multipleTokens = false
-    </sql>
-    <sql>
-      update annotation_type 
-      set anchoring_mode = "singleToken" 
-      where lockToTokenOffset = true and multipleTokens = false
-    </sql>
-    <sql>
-      update annotation_type 
-      set anchoring_mode = "tokens" 
-      where lockToTokenOffset = true and multipleTokens = true
-    </sql>
-    <sql>
-      update annotation_type 
-      set anchoring_mode = "tokens" 
-      where lockToTokenOffset = false and multipleTokens = true
-    </sql>
+    <update tableName="annotation_type">
+      <column name="anchoring_mode" type="VARCHAR(255)" value="characters"/>
+      <where>lockToTokenOffset = false and multipleTokens = false</where>
+    </update>
+    <update tableName="annotation_type">
+      <column name="anchoring_mode" type="VARCHAR(255)" value="singleToken"/>
+      <where>lockToTokenOffset = true and multipleTokens = false</where>
+    </update>
+    <update tableName="annotation_type">
+      <column name="anchoring_mode" type="VARCHAR(255)" value="tokens"/>
+      <where>lockToTokenOffset = true and multipleTokens = true</where>
+    </update>
+    <update tableName="annotation_type">
+      <column name="anchoring_mode" type="VARCHAR(255)" value="tokens"/>
+      <where>lockToTokenOffset = false and multipleTokens = true</where>
+    </update>
     <addNotNullConstraint 
       tableName="annotation_type" 
       columnName="anchoring_mode"
