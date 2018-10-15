@@ -17,12 +17,15 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.core.logout;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil.isProfileSelfServiceAllowed;
+
 import javax.servlet.http.HttpSession;
 
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.WicketAjaxJQueryResourceReference;
 import org.apache.wicket.authroles.authentication.AuthenticatedWebSession;
 import org.apache.wicket.devutils.stateless.StatelessComponent;
+import org.apache.wicket.markup.ComponentTag;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.JavaScriptHeaderItem;
 import org.apache.wicket.markup.head.PriorityHeaderItem;
@@ -38,7 +41,7 @@ import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil;
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.users.ManageUsersPage;
 /**
@@ -51,6 +54,7 @@ public class LogoutPanel
     private static final long serialVersionUID = 3725185820083021070L;
 
     private @SpringBean UserDao userRepository;
+    private @SpringBean ProjectService projectService;
 
     public LogoutPanel(String id)
     {
@@ -98,7 +102,17 @@ public class LogoutPanel
             protected void onConfigure()
             {
                 super.onConfigure();
-                setEnabled(SecurityUtil.isProfileSelfServiceAllowed());
+                setEnabled(isProfileSelfServiceAllowed());
+            }
+            
+            @Override
+            protected void onComponentTag(ComponentTag aTag)
+            {
+                super.onComponentTag(aTag);
+                
+                if (!isEnabled()) {
+                    aTag.append("class", "disabled", " ");
+                }
             }
         });
 
