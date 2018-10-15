@@ -1,0 +1,58 @@
+////
+// Copyright 2015
+// Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+// Technische Universität Darmstadt
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+////
+
+== Chains
+
+A chain layer includes both, span and relation annotations, into a single structural layer. Creating
+a span annotation in a chain layer basically creates a chain of length one. Creating a relation
+between two chain elements has different effects depending on whether the *linked list* behavior
+is enabled for the chain layer or not. To enable or disable the *linked list* behaviour, go to *Layers*
+in the *Projects Settings* mode. After choosing *Coreference*, *linked list* behaviour
+is displayed in the checkbox and can either be marked or unmarked.
+
+.Configuration of a chain layer in the project settings
+image::LinkedList_1.png[align="center"]
+
+.Example of chain annotations
+image::annotation_span_many.jpg[align="center"]
+
+To abort the creation of an annotation, hold *CTRL* when you release the mouse button.
+
+.Chain behavior
+|====
+| Linked List | Condition | Result
+
+| disabled
+| the two spans are already in the same chain
+| nothing happens
+
+| disabled
+| the two spans are in different chains
+| the two chains are merged
+
+| enabled
+| the two spans are already in the same chains
+| the chain will be re-linked such that a chain link points from the source to the target span, 
+  potentially creating new chains in the process.
+
+| enabled
+| the two spans are in different chains
+| the chains will be re-linked such that a chain link points from the source to the target span, 
+  merging the two chains and potentially creating new chains from the remaining prefix and suffix
+  of the original chains.
+|====

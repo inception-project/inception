@@ -1,0 +1,3 @@
+== Constraints
+
+To import a constraints file, go to *Project* and click on the particular project name. On the left side of the screen, a tab bar opens. Choose *Constraints*. You can now choose a constraint file by clicking on *Choose Files*. Then, click on *Import*. Upon import, the application checks if the constraints file is well formed. If they conform to the rules of writing constraints, the constraints are applied. 

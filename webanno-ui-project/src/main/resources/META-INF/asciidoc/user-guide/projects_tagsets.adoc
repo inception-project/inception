@@ -1,0 +1,19 @@
+== Tagsets
+
+To administer the tagsets, click on the tab *Tagsets* in the project pane. 
+
+image::project7.jpg[align="center"]
+
+To administer one of the existing tagsets, select it by a click. Then, the tagset characteristics are displayed.
+
+image::project8.jpg[align="center"]
+
+In the Frame *Tagset details*, you can change them,  export a tagset, save the changes you made on it or delete it by clicking on *Delete tagset*.
+To change an individual tag, you select one in the list displayed in the frame *Tags*. You can then change its description or name or delete it by clicking *Delete tag* in *Tag details*.  Please do not forget to save your changes by clicking on *Save tag*.
+To add a new tag, you have to click on *Create tag* in *Tag details*. Then you add the name and the description, which is optional. Again, do not forget to click *Save tag* or the new tag will not be created.
+
+To create an own tagset, click on *Create tagset* and fill in the fields that will be displayed in the new frame. Only the first field is obligatory. Adding new tags works the same way as described for already existing tagsets. If you want to have a free annotation, as it could be used for lemma or meta information annotation, do not add any tags. 
+
+image::project_tagset_new.jpg[align="center"]
+
+To export a tagset, choose the format of the export at the bottom of the frame and click *Export tagset*.

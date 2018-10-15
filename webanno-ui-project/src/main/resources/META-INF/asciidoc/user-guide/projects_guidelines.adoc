@@ -1,0 +1,9 @@
+== Guidelines
+
+To add or delete guidelines, which will be accessible by users in the project, you have to select the tab *Guidelines*. Two new frames will be displayed.
+To upload guidelines, click on *Choose files* in the first frame – *Add guideline document*, select a file from your local disc and then click *Import guidelines*.
+
+image::project9.jpg[align="center"]
+
+Uploaded guidelines are displayed in the second frame – *Guideline documents*.
+To delete a guideline document, click on it and then on *Delete* in the right lower corner of the frame.
