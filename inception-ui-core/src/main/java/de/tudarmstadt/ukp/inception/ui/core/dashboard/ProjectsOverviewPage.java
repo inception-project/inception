@@ -53,7 +53,13 @@ public class ProjectsOverviewPage
     
     private ListView<Project> createProjectList()
     {
-        return new ListView<Project>("project", listProjects())
+        List<Project> projects = listProjects();
+        
+        if (projects.isEmpty()) {
+            warn("There are no projects accessible to you.");
+        }
+        
+        return new ListView<Project>("project", projects)
         {
             private static final long serialVersionUID = -755155675319764642L;
 
