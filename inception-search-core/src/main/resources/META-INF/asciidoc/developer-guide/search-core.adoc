@@ -1,6 +1,6 @@
 [[sect_search-mtas]]
 
-==== Search core module
+== Search core module
 
 The search core module contains the basic methods that implement the search service and search functionalities of INCEpTION.
 

@@ -15,7 +15,8 @@
 // limitations under the License.
 
 [[sect_annotation_concept-linking]]
-=== Concept Linking
+== Concept Linking
+
 Concept Linking is the task of identifying concept mentions in the text and linking them to their
 corresponding concepts in a knowledge base.
 Use cases of Concept Linking are commonly found in the area of biomedical text mining, e.g.
@@ -36,15 +37,16 @@ in the text as well as the context of the candidate concepts in the knowledge ba
 a ranking to be performed even in projects where no concepts have been linked yet (i.e. there is
 no training data that could be used for a machine learning classifier).
 
-When the user wants to link a mention, he marks it and starts typing the name of the concept.
-A ranked list of candidates is then displayed in the form of a drop-down menu.
+To link a concept mention to the knowledge base, first select the mention annotation, then select
+the concept feature in the right sidebar of the annotation editor and start typing the name of
+a concept. A ranked list of candidates is then displayed in the form of a drop-down menu.
 In order to make the disambiguation process easier, descriptions are shown for each candidate.
 
 image::concept-linking2.png[align="center"]
 
 The suggestions are updated every time it receives new input.
 
-==== Automated Concept Suggestions
+=== Automated Concept Suggestions
 
 The Named Entity Linker (NEL) displays three highest-ranked candidates as suggestions boxes
 over each mention annotated as Named Entity.

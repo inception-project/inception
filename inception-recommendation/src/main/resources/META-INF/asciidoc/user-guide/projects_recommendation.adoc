@@ -1,5 +1,5 @@
 [[sect_projects_recommendation]]
-=== Recommendation
+== Recommendation
 Recommenders provide annotation support by predicting potential labels.
 These can be either accepted or rejected by the user.
 The recommenders learn from this interaction to further improve the quality of predictions.
@@ -19,7 +19,7 @@ If you want to edit a recommender, you can do so by clicking on the recommender 
 
 To remove a recommender, click on the recommender and then on *Delete*. This will also remove all predictions by this recommender.
 
-==== ClassificationTool types
+=== ClassificationTool types
 
 * String Matcher
 - This recommender projects the annotations already made to tokens with the same text.
