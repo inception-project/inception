@@ -23,7 +23,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -162,7 +164,7 @@ public class ConceptFeatureEditor extends FeatureEditor {
         }
         // Sort results
         handles.sort(Comparator.comparing(KBObject::getUiLabel));
-        return handles;
+        return distinctByIri(handles);
     }
 
     private List<KBHandle> getInstances(ConceptFeatureTraits traits, Project project,
@@ -289,6 +291,17 @@ public class ConceptFeatureEditor extends FeatureEditor {
     public Component getFocusComponent() {
         return focusComponent;
     }
+    
+    private List<KBHandle> distinctByIri(List<KBHandle> aHandles)
+    {
+        Map<String, KBHandle> hMap = new HashMap<>();
+        for (KBHandle h: aHandles) {
+            if (!hMap.containsKey(h.getIdentifier())) {
+                hMap.put(h.getIdentifier(), h);
+            }
+        }
+        return new ArrayList<>(hMap.values());
+    }    
 
     // TODO: (issue #122 )this method is similar to the method listInstances in
     // SubjectObjectFeatureEditor and QualifierFeatureEditor. It should be refactored.
