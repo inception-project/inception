@@ -101,9 +101,7 @@ public class KnowledgeBaseIriPanel
                 SchemaProfile modelProfile = kbService
                     .checkSchemaProfile(kbModel.getObject().getKb());
                 setModelObject(modelProfile);
-
             }
-
         };
         iriSchemaChoice.setOutputMarkupId(true);
 
@@ -162,11 +160,10 @@ public class KnowledgeBaseIriPanel
                 target.add(comboBoxWrapper, iriSchemaChoice);
             }
         });
-        add(iriSchemaChoice);
+        comboBoxWrapper.add(iriSchemaChoice);
            
         // Add advanced settings panel
-        advancedSettingsPanel = new AdvancedIriSettingsPanel(
-                "advancedSettings", kbModel);
+        advancedSettingsPanel = new AdvancedIriSettingsPanel("advancedSettings", kbModel);
         advancedSettingsPanel.setVisible(false);
         advancedSettingsPanel.setOutputMarkupPlaceholderTag(true);
         add(advancedSettingsPanel);  
