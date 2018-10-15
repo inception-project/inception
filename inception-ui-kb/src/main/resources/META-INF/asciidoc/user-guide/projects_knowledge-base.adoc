@@ -1,0 +1,23 @@
+== Setting up a knowledge base 
+
+In the *Projects Settings*, switch to the *Knowledge Bases* tab, then click *New…* on the bottom
+ and a dialogue box shows as in the figure below.
+
+[.thumb]
+image::kb1.png[align="center"]
+
+To create a *local* or *remote*  knowledge base, one needs to choose *Local* or *Remote* for the type. For the reification,
+*NONE* is the default case, but to support qualifiers, one needs to choose *WIKIDATA*. 
+
+For the local KB, the user can optionally choose a RDF file from which to import the initial data. Alternatively, the user can skip the step to create an empty KB to create a knowledge base from scratch. It is also always possible to import data from an RDF file after the creation of a KB. It is also possible to  multiple RDF files into the same KB, one after another.
+
+For remote KBs, INCEpTION provides the user with some pre-configured knowledge base such as WikiData, British Museum, BabelNet, DBPediaa or Yago. The user can also set up a custom remote KB, in which case the user needs to provide the SPARQL endpoint URL for the knowledge base as in the figure below.
+
+
+[.thumb]
+image::kb2.png[align="center"]
+
+In the next step, the user is offered a configurable mapping which relies on a minimal set of IRIs that must be defined for any KB used with the platform. The user can choose one of the pre-configured mapping or provide her own custom defined mapping as shown in the figure below. In the advanced settings, the user can leverage this feature of KB settings when one doesn't want the entire knowledge base to be used and rather choose to identify some specific root concepts. This feature specially helps in case of large knowledge bases such as Wikidata.
+ 
+[.thumb]
+image::kb3.png[align="center"]

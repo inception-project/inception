@@ -60,6 +60,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
@@ -118,9 +119,11 @@ public class KnowledgeBaseServiceRemoteTest
     {
         KnowledgeBase kb = sutConfig.getKnowledgeBase();
 
+        RepositoryProperties repoProps = new RepositoryProperties();
+        repoProps.setPath(temporaryFolder.getRoot());
         EntityManager entityManager = testEntityManager.getEntityManager();
         testFixtures = new TestFixtures(testEntityManager);
-        sut = new KnowledgeBaseServiceImpl(temporaryFolder.getRoot(), entityManager);
+        sut = new KnowledgeBaseServiceImpl(repoProps, entityManager);
         project = testFixtures.createProject(PROJECT_NAME);
         kb.setProject(project);
         if (kb.getType() == RepositoryType.LOCAL) {
@@ -155,6 +158,7 @@ public class KnowledgeBaseServiceRemoteTest
     public static List<Object[]> data() throws Exception
     {
         PROFILES = readKnowledgeBaseProfiles();
+        int maxResults = 1000;
 
         Set<String> rootConcepts;
         Map<String, String> parentChildConcepts;
@@ -174,6 +178,7 @@ public class KnowledgeBaseServiceRemoteTest
             kb_wine.setPropertyLabelIri(RDFS.LABEL);
             kb_wine.setPropertyDescriptionIri(RDFS.COMMENT);
             kb_wine.setDefaultLanguage("en");
+            kb_wine.setMaxResults(maxResults);
             rootConcepts = new HashSet<String>();
             rootConcepts.add("http://www.w3.org/TR/2003/PR-owl-guide-20031209/food#Grape");
             parentChildConcepts = new HashMap<String, String>();
@@ -203,6 +208,7 @@ public class KnowledgeBaseServiceRemoteTest
             kb_hucit.setPropertyLabelIri(RDFS.LABEL);
             kb_hucit.setPropertyDescriptionIri(RDFS.COMMENT);
             kb_hucit.setDefaultLanguage("en");
+            kb_hucit.setMaxResults(maxResults);
             rootConcepts = new HashSet<String>();
             rootConcepts.add("http://www.w3.org/2000/01/rdf-schema#Class");
             parentChildConcepts = new HashMap<String, String>();
@@ -222,6 +228,7 @@ public class KnowledgeBaseServiceRemoteTest
             kb_wikidata_direct.applyMapping(profile.getMapping());
             kb_wikidata_direct.applyRootConcepts(profile);
             kb_wikidata_direct.setDefaultLanguage("en");
+            kb_wikidata_direct.setMaxResults(maxResults);
             rootConcepts = new HashSet<String>();
             rootConcepts.add("http://www.wikidata.org/entity/Q35120");
             parentChildConcepts = new HashMap<String, String>();
@@ -254,6 +261,7 @@ public class KnowledgeBaseServiceRemoteTest
             kb_dbpedia.applyMapping(profile.getMapping());
             kb_dbpedia.applyRootConcepts(profile);
             kb_dbpedia.setDefaultLanguage("en");
+            kb_dbpedia.setMaxResults(maxResults);
             rootConcepts = new HashSet<String>();
             rootConcepts.add("http://www.w3.org/2002/07/owl#Thing");
             parentChildConcepts = new HashMap<String, String>();
@@ -271,6 +279,7 @@ public class KnowledgeBaseServiceRemoteTest
             kb_yago.setReification(Reification.NONE);
             kb_yago.applyMapping(profile.getMapping());
             kb_yago.applyRootConcepts(profile);
+            kb_yago.setMaxResults(maxResults);
             rootConcepts = new HashSet<String>();
             rootConcepts.add("http://www.w3.org/2002/07/owl#Thing");
             parentChildConcepts = new HashMap<String, String>();
@@ -290,6 +299,7 @@ public class KnowledgeBaseServiceRemoteTest
             kb_zbw_stw_economics.applyMapping(profile.getMapping());
             kb_zbw_stw_economics.applyRootConcepts(profile);
             kb_zbw_stw_economics.setDefaultLanguage("en");
+            kb_zbw_stw_economics.setMaxResults(maxResults);
             rootConcepts = new HashSet<String>();
             rootConcepts.add("http://zbw.eu/stw/thsys/a");
             parentChildConcepts = new HashMap<String, String>();

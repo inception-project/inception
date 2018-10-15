@@ -52,7 +52,10 @@ public class KnowledgeBaseMapping implements Serializable
     private IRI propertyLabelIri;
 
     @JsonProperty("property-description")
-    private IRI propertyDescriptionIri;   
+    private IRI propertyDescriptionIri;
+
+    @JsonProperty("full-text-search")
+    private IRI fullTextSearchIri;
     
     @JsonCreator public KnowledgeBaseMapping(@JsonProperty("class") String aClassIri,
         @JsonProperty("subclass-of") String aSubclassIri,
@@ -61,7 +64,8 @@ public class KnowledgeBaseMapping implements Serializable
         @JsonProperty("label") String aLabelIri,
         @JsonProperty("property-type") String aPropertyTypeIri,
         @JsonProperty("property-label") String aPropertyLabelIri,
-        @JsonProperty("property-description") String aPropertyDescriptionIri)
+        @JsonProperty("property-description") String aPropertyDescriptionIri,
+        @JsonProperty("full-text-search") String aFullTextSearchIri)
     {
         SimpleValueFactory vf = SimpleValueFactory.getInstance();
         classIri = vf.createIRI(aClassIri);
@@ -71,8 +75,9 @@ public class KnowledgeBaseMapping implements Serializable
         labelIri = vf.createIRI(aLabelIri);
         propertyTypeIri = vf.createIRI(aPropertyTypeIri);
         propertyLabelIri = vf.createIRI(aPropertyLabelIri);
-        propertyDescriptionIri = vf.createIRI(aPropertyDescriptionIri);        
-    }        
+        propertyDescriptionIri = vf.createIRI(aPropertyDescriptionIri);
+        fullTextSearchIri = vf.createIRI(aFullTextSearchIri);
+    }
     
     public KnowledgeBaseMapping() {
         
@@ -156,5 +161,15 @@ public class KnowledgeBaseMapping implements Serializable
     public void setPropertyDescriptionIri(IRI aPropertyDescriptionIri)
     {
         propertyDescriptionIri = aPropertyDescriptionIri;
+    }
+
+    public IRI getFullTextSearchIri()
+    {
+        return fullTextSearchIri;
+    }
+
+    public void setFullTextSearchIri(IRI fullTextSearchIri)
+    {
+        fullTextSearchIri = fullTextSearchIri;
     }
 }

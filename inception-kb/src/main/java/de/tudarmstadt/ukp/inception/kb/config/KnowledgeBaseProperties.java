@@ -24,15 +24,27 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties("inception.knowledge-base")
 public class KnowledgeBaseProperties
 {
-    private int sparqlQueryResultLimit = 1000;
+    private int defaultMaxResults = 1000;
 
-    public int getSparqlQueryResultLimit()
+    private int hardMaxResults = 10000;
+
+    public int getDefaultMaxResults()
     {
-        return sparqlQueryResultLimit;
+        return defaultMaxResults;
     }
 
-    public void setSparqlQueryResultLimit(int aSparqlQueryResultLimit)
+    public void setDefaultMaxResults(int aDefaultMaxResults)
     {
-        sparqlQueryResultLimit = aSparqlQueryResultLimit;
+        defaultMaxResults = aDefaultMaxResults;
+    }
+
+    public int getHardMaxResults()
+    {
+        return hardMaxResults;
+    }
+
+    public void setHardMaxResults(int aHardMaxResults)
+    {
+        hardMaxResults = aHardMaxResults;
     }
 }

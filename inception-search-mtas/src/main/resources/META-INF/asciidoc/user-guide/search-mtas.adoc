@@ -1,6 +1,6 @@
 [[sect_search-mtas]]
 
-=== Mtas search syntax
+== Mtas search syntax
 
 The INCEpTION Mtas search provider allows queries to be executed using CQL (Corpus 
 Query Language), as shown in the following examples.
@@ -38,7 +38,7 @@ feature has the given value.
 Notice that the multi-token query syntax can also be used to retrieve single token annotations (e.g.
 POS or lemma annotations).
 
-==== Basic Annotation queries
+=== Basic Annotation queries
 
 .Single token: all occurrences of the token *Galicia*
 ----
@@ -168,7 +168,7 @@ The capital of Galicia
 (<Named_entity.value="OTH"/> | <Named_entity.value="LOC"/>) intersecting <SemArg/>
 ----
 
-==== Relation queries
+=== Relation queries
 
 When relations are index, they are indexed by their target span.
 
@@ -207,7 +207,7 @@ Both layers have a string feature called `value`.
 ----
 
 
-==== Concept Annotation queries
+=== Concept Annotation queries
 
 .Generic Search over annotated KB entities : all occurrences for KB entity *Bordeaux*
 ----
