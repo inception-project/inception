@@ -250,7 +250,7 @@ public class KnowledgeBaseServiceImpl
             createBaseProperty(akb, new KBProperty(akb.getTypeIri().getLocalName(),
                     akb.getTypeIri().stringValue()));
             createBaseProperty(akb, new KBProperty(akb.getSubPropertyIri().getLocalName(),
-                akb.getSubPropertyIri().stringValue()));
+                    akb.getSubPropertyIri().stringValue()));
         }
     }
 
@@ -1045,12 +1045,9 @@ public class KnowledgeBaseServiceImpl
 
             return evaluateListQuery(tupleQuery, aAll);
         });
-
-
         if (resultList.size() > 1) {
             resultList.sort(Comparator.comparing(KBObject::getUiLabel));
         }
-        
         return resultList;
     }
     
@@ -1066,7 +1063,6 @@ public class KnowledgeBaseServiceImpl
         }
         return childConceptInstances;
     }
-    
     
     private List<KBHandle> evaluateListQuery(TupleQuery tupleQuery, boolean aAll)
         throws QueryEvaluationException
@@ -1257,9 +1253,9 @@ public class KnowledgeBaseServiceImpl
         for (int i = 0; i < profiles.length; i++) {
             // Check if kb profile corresponds to a known schema profile
             if (equalsSchemaProfile(profiles[i], mapping.getClassIri(), mapping.getSubclassIri(),
-                mapping.getTypeIri(), mapping.getSubPropertyIri(), mapping.getDescriptionIri(),
-                mapping.getLabelIri(), mapping.getPropertyTypeIri(), mapping.getPropertyLabelIri(),
-                mapping.getPropertyDescriptionIri())) {
+                    mapping.getTypeIri(), mapping.getSubPropertyIri(), mapping.getDescriptionIri(),
+                    mapping.getLabelIri(), mapping.getPropertyTypeIri(),
+                    mapping.getPropertyLabelIri(), mapping.getPropertyDescriptionIri())) {
                 return profiles[i];
             }
         }
@@ -1274,9 +1270,9 @@ public class KnowledgeBaseServiceImpl
         for (int i = 0; i < profiles.length; i++) {
             // Check if kb has a known schema profile
             if (equalsSchemaProfile(profiles[i], aKb.getClassIri(), aKb.getSubclassIri(),
-                aKb.getTypeIri(), aKb.getSubPropertyIri(), aKb.getDescriptionIri(),
-                aKb.getLabelIri(), aKb.getPropertyTypeIri(), aKb.getPropertyLabelIri(),
-                aKb.getDescriptionIri())) {
+                    aKb.getTypeIri(), aKb.getSubPropertyIri(), aKb.getDescriptionIri(),
+                    aKb.getLabelIri(), aKb.getPropertyTypeIri(), aKb.getPropertyLabelIri(),
+                    aKb.getDescriptionIri())) {
                 return profiles[i];
             }
         }
@@ -1292,13 +1288,15 @@ public class KnowledgeBaseServiceImpl
         IRI aTypeIri, IRI aSubPropertyIRI, IRI aDescriptionIri, IRI aLabelIri, IRI aPropertyTypeIri,
         IRI aPropertyLabelIri, IRI aPropertyDescriptionIri)
     {
-        return aProfile.getClassIri().equals(aClassIri) && aProfile.getSubclassIri()
-            .equals(aSubclassIri) && aProfile.getTypeIri().equals(aTypeIri) && aProfile
-            .getSubPropertyIri().equals(aSubPropertyIRI) && aProfile.getDescriptionIri()
-            .equals(aDescriptionIri) && aProfile.getLabelIri().equals(aLabelIri) && aProfile
-            .getPropertyTypeIri().equals(aPropertyTypeIri) && aProfile.getPropertyLabelIri()
-            .equals(aPropertyLabelIri) && aProfile.getPropertyDescriptionIri()
-            .equals(aPropertyDescriptionIri);
+        return aProfile.getClassIri().equals(aClassIri)
+                && aProfile.getSubclassIri().equals(aSubclassIri)
+                && aProfile.getTypeIri().equals(aTypeIri)
+                && aProfile.getSubPropertyIri().equals(aSubPropertyIRI)
+                && aProfile.getDescriptionIri().equals(aDescriptionIri)
+                && aProfile.getLabelIri().equals(aLabelIri)
+                && aProfile.getPropertyTypeIri().equals(aPropertyTypeIri)
+                && aProfile.getPropertyLabelIri().equals(aPropertyLabelIri)
+                && aProfile.getPropertyDescriptionIri().equals(aPropertyDescriptionIri);
     }
 
     @Override

@@ -26,20 +26,20 @@ import org.eclipse.rdf4j.model.vocabulary.SKOS;
 public enum SchemaProfile
 {
     RDFSCHEMA("RDF", RDFS.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.SUBPROPERTYOF, RDFS.COMMENT,
-        RDFS.LABEL, RDF.PROPERTY, RDFS.LABEL, RDFS.COMMENT),
+            RDFS.LABEL, RDF.PROPERTY, RDFS.LABEL, RDFS.COMMENT),
 
     WIKIDATASCHEMA("WIKIDATA", IriConstants.WIKIDATA_CLASS, IriConstants.WIKIDATA_SUBCLASS,
-        IriConstants.WIKIDATA_TYPE, RDFS.SUBPROPERTYOF, RDFS.COMMENT, RDFS.LABEL,
-        IriConstants.WIKIDATA_PROPERTY_TYPE, RDFS.LABEL, RDFS.COMMENT),
+            IriConstants.WIKIDATA_TYPE, RDFS.SUBPROPERTYOF, RDFS.COMMENT, RDFS.LABEL,
+            IriConstants.WIKIDATA_PROPERTY_TYPE, RDFS.LABEL, RDFS.COMMENT),
 
     OWLSCHEMA("OWL", OWL.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.SUBPROPERTYOF, RDFS.COMMENT,
-        RDFS.LABEL, RDF.PROPERTY, RDFS.LABEL, RDFS.COMMENT),
+            RDFS.LABEL, RDF.PROPERTY, RDFS.LABEL, RDFS.COMMENT),
 
     SKOSSCHEMA("SKOS", SKOS.CONCEPT, SKOS.BROADER, RDF.TYPE, RDFS.SUBPROPERTYOF, RDFS.COMMENT,
-        SKOS.PREF_LABEL, RDF.PROPERTY, SKOS.PREF_LABEL, RDFS.COMMENT),
+            SKOS.PREF_LABEL, RDF.PROPERTY, SKOS.PREF_LABEL, RDFS.COMMENT),
 
     CUSTOMSCHEMA("CUSTOM", RDFS.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.SUBPROPERTYOF, RDFS.COMMENT,
-        RDFS.LABEL, RDF.PROPERTY, RDFS.LABEL, RDFS.COMMENT);
+            RDFS.LABEL, RDF.PROPERTY, RDFS.LABEL, RDFS.COMMENT);
 
     private final String uiLabel;
     private final IRI classIri;
@@ -53,8 +53,8 @@ public enum SchemaProfile
     private final IRI propertyDescriptionIri;
 
     private SchemaProfile(String aUiLabel, IRI aClassIri, IRI aSubclassIri, IRI aTypeIri,
-        IRI aSubPropertyIri, IRI aDescriptionIri, IRI aLabelIri, IRI aPropertyTypeIri,
-        IRI aPropertyLabelIri, IRI aPropertyDescriptionIri)
+            IRI aSubPropertyIri, IRI aDescriptionIri, IRI aLabelIri, IRI aPropertyTypeIri,
+            IRI aPropertyLabelIri, IRI aPropertyDescriptionIri)
     {
         uiLabel = aUiLabel;
         classIri = aClassIri;

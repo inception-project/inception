@@ -203,7 +203,6 @@ public class KBConcept
             originalStatements.add(nameStmt);
             aConn.add(nameStmt);
         }
-
         if (isNotBlank(description)) {
             Literal descriptionLiteral;
             if (language == null) {
