@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.app.menubar;
+package de.tudarmstadt.ukp.inception.ui.core.menubar;
 
 import java.util.Objects;
 
@@ -25,7 +25,7 @@ import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeProjectRemovedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.inception.app.session.SessionMetaData;
+import de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData;
 
 @Component
 public class MenuBarEventAdapter
