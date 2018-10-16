@@ -15,26 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.ui.dashboard.dashlet;
+package de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet;
 
-import org.apache.wicket.markup.html.basic.Label;
-import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.springframework.security.core.session.SessionRegistry;
+import org.apache.wicket.markup.html.panel.Panel;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
-
-public class SystemStatusDashlet
-    extends Dashlet_ImplBase
+public abstract class Dashlet_ImplBase
+    extends Panel
 {
-    private static final long serialVersionUID = 1276835215161570732L;
-    
-    private @SpringBean SessionRegistry sessionRegistry;
+    private static final long serialVersionUID = 8674972646207242184L;
 
-    public SystemStatusDashlet(String aId)
+    public Dashlet_ImplBase(String aId)
     {
         super(aId);
-        
-        add(new Label("activeUsers",
-                LambdaModel.of(() -> sessionRegistry.getAllPrincipals().size())));
     }
 }

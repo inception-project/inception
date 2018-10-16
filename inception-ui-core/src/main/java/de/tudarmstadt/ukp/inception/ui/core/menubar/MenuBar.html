@@ -22,25 +22,36 @@
 <body>
   <wicket:panel>
     <div class="navbar-header">
-      <a class="navbar-brand" href="welcome.html">
+      <a wicket:id="homeLink" class="navbar-brand">
         <span>
-          <img class="pageicon" wicket:message="src:page.icon" />
-          <wicket:message key="page.title" />
+          <!-- <img class="logo" src="assets/logo.png" />  -->
+          <wicket:message key="product.name"/>
         </span>
       </a>
     </div>
+
+    <p class="navbar-text navbar-left" wicket:enclosure="projectsLink">
+      <a class="navbar-link" wicket:id="projectsLink">
+        <wicket:message key="projects" />
+      </a>
+    </p>
     
+    <!--  
     <p class="navbar-text">
       <i class="fa fa-home" aria-hidden="true"></i>
       <a class="navbar-link" href="welcome.html">Home</a>
     </p>
+    -->
     
+    <!--  
     <form class="navbar-form navbar-left" wicket:enclosure="project">
       <div class="form-group">
         <select wicket:id="project" class="form-control"></select>
       </div>
     </form>
+    -->
     
+    <!--  
     <div class="navbar-header">
       <div class="navbar-brand navbar-center">
         <span>
@@ -49,10 +60,18 @@
         </span>
       </div>
     </div>
+    -->
     
     <wicket:enclosure child="logoutPanel">
       <wicket:container wicket:id="logoutPanel" />
     </wicket:enclosure>
+
+    <p class="navbar-text navbar-right" wicket:enclosure="adminLink">
+      <i class="fa fa-wrench" aria-hidden="true"></i>
+      <a class="navbar-link" wicket:id="adminLink">
+        <wicket:message key="administration" />
+      </a>
+    </p>
     
     <p class="navbar-text navbar-right" wicket:enclosure="helpLink">
       <i class="fa fa-question-circle" aria-hidden="true"></i>
