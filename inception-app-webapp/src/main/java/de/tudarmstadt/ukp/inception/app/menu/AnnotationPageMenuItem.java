@@ -31,7 +31,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
-import de.tudarmstadt.ukp.inception.app.session.SessionMetaData;
+import de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData;
 
 @Component
 @Order(100)
