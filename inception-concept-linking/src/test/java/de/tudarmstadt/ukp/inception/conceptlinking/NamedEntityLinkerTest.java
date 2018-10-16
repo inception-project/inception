@@ -57,6 +57,7 @@ import de.tudarmstadt.ukp.inception.conceptlinking.recommender.NamedEntityLinker
 import de.tudarmstadt.ukp.inception.conceptlinking.recommender.NamedEntityLinkerTraits;
 import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
+import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
@@ -108,7 +109,7 @@ public class NamedEntityLinkerTest
 
         KnowledgeBaseService kbService = mock(KnowledgeBaseService.class);
         KnowledgeBase kb = new KnowledgeBase();
-        kb.setSupportConceptLinking(true);
+        kb.setFullTextSearchIri(IriConstants.FTS_VIRTUOSO);
         when(kbService.getKnowledgeBaseById(any(), anyString())).thenReturn(Optional.of(kb));
         when(kbService.getEnabledKnowledgeBases(any())).thenReturn(Collections.singletonList(kb));
         when(kbService.read(any(), any())).thenReturn(mockResult);

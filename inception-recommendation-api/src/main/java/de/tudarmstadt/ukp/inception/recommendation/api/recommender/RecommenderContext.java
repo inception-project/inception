@@ -17,18 +17,15 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.api.recommender;
 
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.Nullable;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class RecommenderContext
 {
-    private static final Logger LOG = LoggerFactory.getLogger(RecommenderContext.class);
-
     private final ConcurrentHashMap<String, Object> store;
+    private boolean ready = false;
 
     public RecommenderContext()
     {
@@ -37,14 +34,9 @@ public class RecommenderContext
 
     @SuppressWarnings("unchecked")
     @Nullable
-    public <T> T get(Key<T> aKey)
+    public <T> Optional<T> get(Key<T> aKey)
     {
-        String name = aKey.name;
-        if (!store.containsKey(name)) {
-            LOG.warn("Value with key [{}] not found in context!", name);
-            return null;
-        }
-        return (T) store.get(name);
+        return Optional.ofNullable((T) store.get(aKey.name));
     }
 
     public <T> void put(Key<T> aKey, T aValue)
@@ -60,5 +52,21 @@ public class RecommenderContext
         {
             name = aName;
         }
+    }
+    
+    /**
+     * Mark context as ready meaning that it can be used to generate predictions.
+     */
+    public void markAsReadyForPrediction()
+    {
+        ready = true;
+    }
+    
+    /**
+     * @return whether the context is ready to be used for making predictions.
+     */
+    public boolean isReadyForPrediction()
+    {
+        return ready;
     }
 }

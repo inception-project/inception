@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.inception.recommendation.api.recommender;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.NoSuchElementException;
+import java.util.Optional;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -44,8 +44,9 @@ public class RecommenderContextTest {
 
         sut.put(KEY, value);
 
-        String result = sut.get(KEY);
-        assertThat(result).as("Correct value is returned")
+        Optional<String> result = sut.get(KEY);
+        assertThat(result.isPresent()).isTrue();
+        assertThat(result.get()).as("Correct value is returned")
             .isEqualTo(value);
     }
 
@@ -57,14 +58,29 @@ public class RecommenderContextTest {
         sut.put(KEY, "Dummy");
         sut.put(KEY, value);
 
-        String result = sut.get(KEY);
-        assertThat(result).as("Correct value is returned")
+        Optional<String> result = sut.get(KEY);
+        assertThat(result.isPresent()).isTrue();
+        assertThat(result.get()).as("Correct value is returned")
             .isEqualTo(value);
     }
 
-    @Test(expected = NoSuchElementException.class)
+    @Test
     public void thatGettingNonexistantKeyThrows()
     {
-        sut.get(KEY);
+        Optional<String> result = sut.get(KEY);
+        assertThat(result.isPresent()).isFalse();
+    }
+    
+    @Test
+    public void thatContextStartsOutNotReady()
+    {
+        assertThat(sut.isReadyForPrediction()).isFalse();
+    }
+
+    @Test
+    public void thatContextCanBeMarkedAsReady()
+    {
+        sut.markAsReadyForPrediction();
+        assertThat(sut.isReadyForPrediction()).isTrue();
     }
 }

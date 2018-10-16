@@ -64,6 +64,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext.Key;
 import de.tudarmstadt.ukp.inception.recommendation.api.type.PredictedSpan;
@@ -114,6 +115,7 @@ public class DL4JSequenceRecommender
             aContext.put(KEY_MODEL, model);
             aContext.put(KEY_TAGSET, compileTagset(tagsetCollector));
             aContext.put(KEY_UNKNOWN, randUnk);
+            aContext.markAsReadyForPrediction();
         }
         catch (IOException e) {
             throw new IllegalStateException("Unable to train model", e);
@@ -346,10 +348,12 @@ public class DL4JSequenceRecommender
     }
 
     @Override
-    public void predict(RecommenderContext aContext, CAS aCas)
+    public void predict(RecommenderContext aContext, CAS aCas) throws RecommendationException
     {
-        String[] tagset = aContext.get(KEY_TAGSET);
-        MultiLayerNetwork classifier = aContext.get(KEY_MODEL);
+        String[] tagset = aContext.get(KEY_TAGSET).orElseThrow(() ->
+                new RecommendationException("Key [" + KEY_TAGSET + "] not found in context"));
+        MultiLayerNetwork classifier = aContext.get(KEY_MODEL).orElseThrow(() ->
+                new RecommendationException("Key [" + KEY_MODEL + "] not found in context"));
         
         try {
             Type sentenceType = getType(aCas, Sentence.class);

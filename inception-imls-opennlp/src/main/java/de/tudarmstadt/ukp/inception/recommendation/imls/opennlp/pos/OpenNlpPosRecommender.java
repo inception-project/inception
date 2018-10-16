@@ -85,6 +85,7 @@ public class OpenNlpPosRecommender
 
         if (model != null) {
             aContext.put(KEY_MODEL, model);
+            aContext.markAsReadyForPrediction();
         }
     }
 
@@ -92,18 +93,10 @@ public class OpenNlpPosRecommender
     public void predict(RecommenderContext aContext, CAS aCas)
         throws RecommendationException
     {
-        POSModel model = aContext.get(KEY_MODEL);
-
-        if (model != null) {
-            predict(model, aCas);
-        } else {
-            LOG.warn("No model to predict with!");
-        }
-    }
-
-    private void predict(POSModel aModel, CAS aCas)
-    {
-        POSTaggerME tagger = new POSTaggerME(aModel);
+        POSModel model = aContext.get(KEY_MODEL).orElseThrow(() -> 
+                new RecommendationException("Key [" + KEY_MODEL + "] not found in context"));
+        
+        POSTaggerME tagger = new POSTaggerME(model);
 
         Type sentenceType = getType(aCas, Sentence.class);
         Type predictionType = getAnnotationType(aCas, PredictedSpan.class);
@@ -156,15 +149,15 @@ public class OpenNlpPosRecommender
 
         for (POSSample posSample : data) {
             switch (aDataSplitter.getTargetSet(posSample)) {
-                case TRAIN:
-                    trainingSet.add(posSample);
-                    break;
-                case TEST:
-                    testSet.add(posSample);
-                    break;
-                default:
-                    // Do nothing
-                    break;
+            case TRAIN:
+                trainingSet.add(posSample);
+                break;
+            case TEST:
+                testSet.add(posSample);
+                break;
+            default:
+                // Do nothing
+                break;
             }
         }
 

@@ -81,19 +81,19 @@ public class OpenNlpNerRecommender
     {
         List<NameSample> nameSamples = extractNameSamples(aCasses);
         TokenNameFinderModel model = train(nameSamples, traits.getParameters());
-        aContext.put(KEY_MODEL, model);
+        if (model != null) {
+            aContext.put(KEY_MODEL, model);
+            aContext.markAsReadyForPrediction();
+        }
     }
 
     @Override
-    public void predict(RecommenderContext aContext, CAS aCas)
+    public void predict(RecommenderContext aContext, CAS aCas) throws RecommendationException
     {
-        TokenNameFinderModel model = aContext.get(KEY_MODEL);
-        predict(model, aCas);
-    }
-
-    private void predict(TokenNameFinderModel aModel, CAS aCas)
-    {
-        NameFinderME finder = new NameFinderME(aModel);
+        TokenNameFinderModel model = aContext.get(KEY_MODEL).orElseThrow(() -> 
+                new RecommendationException("Key [" + KEY_MODEL + "] not found in context"));
+        
+        NameFinderME finder = new NameFinderME(model);
 
         Type sentenceType = getType(aCas, Sentence.class);
         Type predictionType = getAnnotationType(aCas, PredictedSpan.class);

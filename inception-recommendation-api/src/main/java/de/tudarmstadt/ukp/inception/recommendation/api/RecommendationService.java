@@ -78,11 +78,14 @@ public interface RecommendationService
         SpanAdapter aAdapter, AnnotatorState aState, JCas aJcas, int address);
 
     /**
-     * Returns the {@code RecommenderContext} for the given recommender if it exists,
-     * else it creates an empty one.
-     * @param aUser The owner of the context
-     * @param aRecommender The recommender to which the desired context belongs
-     * @return The context of the given recommender if ther is one, or an empty one
+     * Returns the {@code RecommenderContext} for the given recommender if it exists, else it
+     * creates an empty one.
+     * 
+     * @param aUser
+     *            The owner of the context
+     * @param aRecommender
+     *            The recommender to which the desired context belongs
+     * @return The context of the given recommender if there is one, or an empty one
      */
     RecommenderContext getContext(User aUser, Recommender aRecommender);
 }

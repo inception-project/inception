@@ -42,6 +42,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext.Key;
 import de.tudarmstadt.ukp.inception.recommendation.api.type.PredictedSpan;
@@ -80,16 +81,18 @@ public class StringMatchingRecommender
         }
         
         aContext.put(KEY_MODEL, dict);
+        aContext.markAsReadyForPrediction();
     }
 
     @Override
-    public void predict(RecommenderContext aContext, CAS aCas)
+    public void predict(RecommenderContext aContext, CAS aCas) throws RecommendationException
     {
+        Trie<DictEntry> dict = aContext.get(KEY_MODEL).orElseThrow(() -> 
+                new RecommendationException("Key [" + KEY_MODEL + "] not found in context"));
+        
         Type predictionType = getAnnotationType(aCas, PredictedSpan.class);
         Feature confidenceFeature = predictionType.getFeatureByBaseName("score");
         Feature labelFeature = predictionType.getFeatureByBaseName("label");
-        
-        Trie<DictEntry> dict = aContext.get(KEY_MODEL);
 
         List<Sample> data = predict(0, aCas, dict);
         

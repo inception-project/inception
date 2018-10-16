@@ -57,6 +57,7 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext.Key;
 import de.tudarmstadt.ukp.inception.recommendation.api.type.PredictedSpan;
@@ -95,6 +96,7 @@ public class NamedEntityLinker
         Collection<ImmutablePair<String, Collection<AnnotationFS>>> nameSamples =
             extractNamedEntities(aCasList);
         aContext.put(KEY_MODEL, nameSamples);
+        aContext.markAsReadyForPrediction();
     }
 
     private Collection<ImmutablePair<String, Collection<AnnotationFS>>> extractNamedEntities(
@@ -128,24 +130,29 @@ public class NamedEntityLinker
 
     // TODO #176 use the document Id once it is available in the CAS
     private boolean isNamedEntity(RecommenderContext aContext, AnnotationFS token,
-        String aDocumentUri)
+            String aDocumentUri)
+        throws RecommendationException
     {
-        return aContext.get(KEY_MODEL).stream().anyMatch(pair -> pair.getLeft().equals(aDocumentUri)
+        Collection<ImmutablePair<String, Collection<AnnotationFS>>> model = aContext.get(KEY_MODEL)
+                .orElseThrow(() -> new RecommendationException(
+                        "Key [" + KEY_MODEL + "] not found in context"));
+        
+        return model.stream().anyMatch(pair -> pair.getLeft().equals(aDocumentUri)
         && pair.getRight().stream().anyMatch(t -> t.getBegin() == token.getBegin()));
     }
 
     @Override
-    public void predict(RecommenderContext aContext, CAS aCas)
+    public void predict(RecommenderContext aContext, CAS aCas) throws RecommendationException
     {
         try {
             JCas jCas = aCas.getJCas();
             Type sentenceType = getType(aCas, Sentence.class);
             Type tokenType = getType(aCas, Token.class);
 
-            select(aCas, sentenceType).forEach(sentence -> {
+            for (AnnotationFS sentence : select(aCas, sentenceType)) {
                 List<AnnotationFS> tokenAnnotations = selectCovered(tokenType, sentence);
                 predictSentence(aContext, tokenAnnotations, jCas);
-            });
+            }
         }
         catch (CASException e) {
             log.error("An error when to trying to access the JCas from Cas.", e);
@@ -153,7 +160,8 @@ public class NamedEntityLinker
     }
 
     private void predictSentence(RecommenderContext aContext, List<AnnotationFS> aTokenAnnotations,
-        JCas aJcas)
+            JCas aJcas)
+        throws RecommendationException
     {
         int sentenceIndex = 0;
         while (sentenceIndex < aTokenAnnotations.size() - 1) {

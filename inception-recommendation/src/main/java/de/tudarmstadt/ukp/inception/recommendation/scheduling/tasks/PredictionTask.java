@@ -111,6 +111,16 @@ public class PredictionTask
 
                 for (Recommender recommender : recommenders) {
                     RecommenderContext ctx = recommendationService.getContext(user, recommender);
+                    
+                    if (!ctx.isReadyForPrediction()) {
+                        log.info("Context for recommender [{}]({}) for user [{}] on document "
+                                + "[{}]({}) in project [{}]({}) is not ready yet - skipping recommender",
+                                recommender.getName(), recommender.getId(), user.getUsername(),
+                                document.getName(), document.getId(), project.getName(),
+                                project.getId());
+                        continue;
+                    }
+                    
                     RecommendationEngineFactory<?> factory = recommendationService
                             .getRecommenderFactory(recommender);
                     RecommendationEngine recommendationEngine = factory.build(recommender);

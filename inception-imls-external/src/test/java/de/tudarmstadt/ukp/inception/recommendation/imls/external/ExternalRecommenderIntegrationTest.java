@@ -45,6 +45,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.datasets.DatasetFactory;
 import de.tudarmstadt.ukp.dkpro.core.io.conll.Conll2002Reader;
 import de.tudarmstadt.ukp.dkpro.core.testing.DkproTestContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import okhttp3.mockwebserver.Dispatcher;
 import okhttp3.mockwebserver.MockResponse;
@@ -179,8 +180,13 @@ public class ExternalRecommenderIntegrationTest
                     remoteRecommender.train(request.getBody().readUtf8());
                     return new MockResponse().setResponseCode(204);
                 } else if (request.getPath().equals("/predict")) {
-                    String response = remoteRecommender.predict(request.getBody().readUtf8());
-                    return new MockResponse().setResponseCode(200).setBody(response);
+                    try {
+                        String response = remoteRecommender.predict(request.getBody().readUtf8());
+                        return new MockResponse().setResponseCode(200).setBody(response);
+                    }
+                    catch (RecommendationException e) {
+                        return new MockResponse().setResponseCode(500);
+                    }
                 } else {
                     System.err.println("Unknown URL: " + request.getPath());
                     return new MockResponse().setResponseCode(404);
