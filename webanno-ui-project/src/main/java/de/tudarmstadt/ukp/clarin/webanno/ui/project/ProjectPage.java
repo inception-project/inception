@@ -17,8 +17,13 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.project;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil.isAdmin;
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
+
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.persistence.NoResultException;
 
 import org.apache.commons.lang3.reflect.ConstructorUtils;
 import org.apache.wicket.Component;
@@ -32,12 +37,16 @@ import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
+import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.apache.wicket.util.string.StringValue;
 import org.wicketstuff.annotation.mount.MountPath;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapAjaxTabbedPanel;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ModelChangedVisitor;
@@ -66,7 +75,10 @@ public class ProjectPage
     // private static final Logger LOG = LoggerFactory.getLogger(ProjectPage.class);
 
     private @SpringBean ProjectSettingsPanelRegistryService projectSettingsPanelRegistryService;
+    private @SpringBean UserDao userRepository;
+    private @SpringBean ProjectService projectService;
 
+    private WebMarkupContainer sidebar;
     private WebMarkupContainer tabContainer;
     private AjaxTabbedPanel<ITab> tabPanel;
     private ProjectSelectionPanel projects;
@@ -76,8 +88,49 @@ public class ProjectPage
     
     public ProjectPage()
     {
-        selectedProject = Model.of();
+        super();
         
+        commonInit();
+    }
+    
+    public ProjectPage(final PageParameters aPageParameters)
+    {
+        super(aPageParameters);
+        
+        commonInit();
+       
+        sidebar.setVisible(false);
+        
+        User user = userRepository.getCurrentUser();
+        
+        // Get current project from parameters
+        StringValue projectParameter = aPageParameters.get(PAGE_PARAM_PROJECT_ID);
+        Project project = null;
+        try {
+            project = getProjectFromParameters(projectParameter);
+        }
+        catch (NoResultException e) {
+            error("Project [" + projectParameter + "] does not exist");
+            return;
+        }
+        
+        // Check access to project
+        if (project != null && !isAdmin(project, projectService, user)) {
+            error("You have no permission to access project [" + project.getId() + "]");
+            return;
+        }
+        
+        selectedProject.setObject(project);
+    }
+    
+    private void commonInit()
+    {
+        selectedProject = Model.of();
+
+        sidebar = new WebMarkupContainer("sidebar");
+        sidebar.setOutputMarkupId(true);
+        add(sidebar);
+
         tabContainer = new WebMarkupContainer("tabContainer");
         tabContainer.setOutputMarkupId(true);
         add(tabContainer);
@@ -111,13 +164,12 @@ public class ProjectPage
             // they had when they were marked invalid.
             tabPanel.visitChildren(new ModelChangedVisitor(selectedProject));
         });
-        add(projects);
+        sidebar.add(projects);
 
         importProjectPanel = new ProjectImportPanel("importPanel", selectedProject);
-        add(importProjectPanel);
+        sidebar.add(importProjectPanel);
         MetaDataRoleAuthorizationStrategy.authorize(importProjectPanel, Component.RENDER,
-                "ROLE_ADMIN");
-    }
+                "ROLE_ADMIN");    }
 
     private List<ITab> makeTabs()
     {
@@ -168,5 +220,15 @@ public class ProjectPage
             tabs.add(tab);
         }
         return tabs;
+    }
+    
+    private Project getProjectFromParameters(StringValue projectParam)
+    {
+        Project project = null;
+        if (projectParam != null && !projectParam.isEmpty()) {
+            long projectId = projectParam.toLong();
+            project = projectService.getProject(projectId);
+        }
+        return project;
     }
 }
