@@ -63,7 +63,6 @@
     <wicket-jquery-ui.version>${wicket.version}</wicket-jquery-ui.version>
     <lucene.version>7.3.0</lucene.version>
     <mtas.version>7.3.0.3</mtas.version>
-    <dkpro.lab.version>0.14.0</dkpro.lab.version>
     <dl4j.version>1.0.0-beta</dl4j.version>
     <rdf4j.version>2.4.0</rdf4j.version>
     <inception-rdf4j.version>${rdf4j.version}</inception-rdf4j.version>
@@ -87,7 +86,6 @@
     <module>inception-recommendation</module>
     <module>inception-active-learning</module>
     <module>inception-concept-linking</module>
-    <module>inception-imls-core</module>
     <!-- module>inception-imls-mira</module -->
     <module>inception-imls-opennlp</module>
     <module>inception-imls-stringmatch</module>
@@ -239,11 +237,6 @@
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-concept-linking</artifactId>
-        <version>0.6.0-SNAPSHOT</version>
-      </dependency>
-      <dependency>
-        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>inception-imls-core</artifactId>
         <version>0.6.0-SNAPSHOT</version>
       </dependency>
       <dependency>
@@ -668,14 +661,6 @@
         <scope>import</scope>
       </dependency>
 
-      <dependency>
-        <groupId>org.dkpro.lab</groupId>
-        <artifactId>dkpro-lab</artifactId>
-        <version>${dkpro.lab.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-      
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno</artifactId>
