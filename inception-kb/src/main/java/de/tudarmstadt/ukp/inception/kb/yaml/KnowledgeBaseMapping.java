@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.kb.yaml;
 
 import java.io.Serializable;
-import java.util.Objects;
 
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
@@ -54,26 +53,30 @@ public class KnowledgeBaseMapping implements Serializable
 
     @JsonProperty("property-description")
     private IRI propertyDescriptionIri;
+
+    @JsonProperty("full-text-search")
+    private IRI fullTextSearchIri;
     
-    
-    @JsonCreator public KnowledgeBaseMapping(@JsonProperty("class") String classIri,
-        @JsonProperty("subclass-of") String subclassIri,
-        @JsonProperty("instance-of") String typeIri,
-        @JsonProperty("description") String descriptionIri,
-        @JsonProperty("label") String labelIri,
-        @JsonProperty("property-type") String propertyTypeIri,
-        @JsonProperty("property-label") String propertyLabelIri,
-        @JsonProperty("property-description") String propertyDescriptionIri)
+    @JsonCreator public KnowledgeBaseMapping(@JsonProperty("class") String aClassIri,
+        @JsonProperty("subclass-of") String aSubclassIri,
+        @JsonProperty("instance-of") String aTypeIri,
+        @JsonProperty("description") String aDescriptionIri,
+        @JsonProperty("label") String aLabelIri,
+        @JsonProperty("property-type") String aPropertyTypeIri,
+        @JsonProperty("property-label") String aPropertyLabelIri,
+        @JsonProperty("property-description") String aPropertyDescriptionIri,
+        @JsonProperty("full-text-search") String aFullTextSearchIri)
     {
         SimpleValueFactory vf = SimpleValueFactory.getInstance();
-        this.classIri = vf.createIRI(classIri);
-        this.subclassIri = vf.createIRI(subclassIri);
-        this.typeIri = vf.createIRI(typeIri);
-        this.descriptionIri = vf.createIRI(descriptionIri);
-        this.labelIri = vf.createIRI(labelIri);
-        this.propertyTypeIri = vf.createIRI(propertyTypeIri);
-        this.propertyLabelIri = vf.createIRI(propertyLabelIri);
-        this.propertyDescriptionIri = vf.createIRI(propertyDescriptionIri);
+        classIri = vf.createIRI(aClassIri);
+        subclassIri = vf.createIRI(aSubclassIri);
+        typeIri = vf.createIRI(aTypeIri);
+        descriptionIri = vf.createIRI(aDescriptionIri);
+        labelIri = vf.createIRI(aLabelIri);
+        propertyTypeIri = vf.createIRI(aPropertyTypeIri);
+        propertyLabelIri = vf.createIRI(aPropertyLabelIri);
+        propertyDescriptionIri = vf.createIRI(aPropertyDescriptionIri);
+        fullTextSearchIri = vf.createIRI(aFullTextSearchIri);
     }
     
     public KnowledgeBaseMapping() {
@@ -160,30 +163,13 @@ public class KnowledgeBaseMapping implements Serializable
         propertyDescriptionIri = aPropertyDescriptionIri;
     }
 
-    @Override
-    public boolean equals(Object o)
+    public IRI getFullTextSearchIri()
     {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        KnowledgeBaseMapping that = (KnowledgeBaseMapping) o;
-        return Objects.equals(classIri, that.classIri)
-                && Objects.equals(subclassIri, that.subclassIri)
-                && Objects.equals(typeIri, that.typeIri) 
-                && Objects.equals(labelIri, that.labelIri)
-                && Objects.equals(propertyTypeIri, that.propertyTypeIri)
-                && Objects.equals(descriptionIri, that.descriptionIri)
-                && Objects.equals(propertyLabelIri, that.propertyLabelIri)
-                && Objects.equals(propertyDescriptionIri, that.propertyDescriptionIri);
+        return fullTextSearchIri;
     }
 
-    @Override
-    public int hashCode()
+    public void setFullTextSearchIri(IRI fullTextSearchIri)
     {
-        return Objects.hash(classIri, subclassIri, typeIri, propertyTypeIri, descriptionIri,
-                labelIri, propertyLabelIri, propertyDescriptionIri);
+        fullTextSearchIri = fullTextSearchIri;
     }
 }

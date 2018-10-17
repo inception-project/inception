@@ -50,26 +50,12 @@
     </context:component-scan>
     <context:component-scan base-package="de.tudarmstadt.ukp.inception" />
 
-  <bean id="formats"
-    class="org.springframework.beans.factory.config.PropertiesFactoryBean">
-    <property name="ignoreResourceNotFound">
-      <value>true</value>
-    </property>
-    <property name="locations">
-      <list>
-        <value>classpath:META-INF/formats.properties</value>
-        <value>file:#{systemProperties['inception.home'] ?: systemProperties['user.home'].concat('/.inception') }/formats.properties</value>
-      </list>
-    </property>
-  </bean> 
-  
   <bean
     class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
     <property name="ignoreUnresolvablePlaceholders" value="true" />
     <property name="ignoreResourceNotFound" value="true" />
     <property name="properties">
       <props>
-      <prop key="data.path">#{systemProperties['inception.home'] ?: systemProperties['user.home'].concat('/.inception') }</prop>
       <prop key="repository.path">#{systemProperties['inception.home'] ?: systemProperties['user.home'].concat('/.inception') }/repository/</prop>
       </props>
     </property>

@@ -46,12 +46,12 @@ import com.googlecode.wicket.kendo.ui.widget.tooltip.TooltipBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.inception.app.Focusable;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
+import de.tudarmstadt.ukp.inception.ui.core.Focusable;
 import de.tudarmstadt.ukp.inception.ui.kb.stmt.StatementDetailPreference;
 import de.tudarmstadt.ukp.inception.ui.kb.stmt.StatementGroupBean;
 import de.tudarmstadt.ukp.inception.ui.kb.stmt.StatementsPanel;
@@ -105,7 +105,7 @@ public abstract class AbstractInfoPanel<T extends KBObject> extends Panel {
             // obtain AjaxRequestTarget and set the focus
             RequestCycle.get()
                     .find(AjaxRequestTarget.class)
-                    .focusComponent(editMode.getFocusComponent());
+                    .ifPresent(target -> target.focusComponent(editMode.getFocusComponent()));
             content = editMode;
         } else {
             content = new ViewMode(CONTENT_MARKUP_ID, CompoundPropertyModel.of(handleModel),

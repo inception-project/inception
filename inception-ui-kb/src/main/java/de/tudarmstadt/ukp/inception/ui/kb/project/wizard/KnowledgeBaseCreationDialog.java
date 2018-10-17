@@ -37,8 +37,8 @@ public class KnowledgeBaseCreationDialog extends ModalWindow {
         
         projectModel = aProjectModel;
 
-        setInitialWidth(400);
-        setInitialHeight(300);
+        setInitialWidth(600);
+        setInitialHeight(450);
         setResizable(false);
         setWidthUnit("px");
         setHeightUnit("px");

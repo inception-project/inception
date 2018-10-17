@@ -66,6 +66,7 @@ public class MtasUimaParserTest
         project = new Project();
         project.setId(1l);
         project.setName("test project");
+        project.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
         
         featureSupportRegistry = new FeatureSupportRegistryImpl(
                 asList(new PrimitiveUimaFeatureSupport()));

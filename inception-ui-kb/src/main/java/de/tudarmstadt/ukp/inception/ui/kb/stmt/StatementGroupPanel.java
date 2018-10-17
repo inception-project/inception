@@ -56,11 +56,11 @@ import com.googlecode.wicket.kendo.ui.widget.tooltip.TooltipBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
-import de.tudarmstadt.ukp.inception.app.Focusable;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
+import de.tudarmstadt.ukp.inception.ui.core.Focusable;
 import de.tudarmstadt.ukp.inception.ui.kb.WriteProtectionBehavior;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxPropertySelectionEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxStatementChangedEvent;
@@ -91,11 +91,10 @@ public class StatementGroupPanel extends Panel {
                     CONTENT_MARKUP_ID);
 
             // obtain AjaxRequestTarget and set the focus
-            AjaxRequestTarget target = RequestCycle.get()
-                    .find(AjaxRequestTarget.class);
-            if (target != null) {
-                target.focusComponent(newStatement.getFocusComponent());
-            }
+            RequestCycle.get()
+                    .find(AjaxRequestTarget.class)
+                    .ifPresent(target -> target.focusComponent(newStatement.getFocusComponent()));
+
             content = newStatement;
         } else {
             content = new ExistingStatementGroupFragment(CONTENT_MARKUP_ID);
@@ -284,11 +283,13 @@ public class StatementGroupPanel extends Panel {
         
         @OnEvent
         public void actionStatementChanged(AjaxStatementChangedEvent event) {
-            // event is not relevant if the statement in the event has a different property than the
-            // property of this statement group
-            boolean isEventForThisStatementGroup = event.getStatement()
-                    .getProperty()
-                    .equals(groupModel.getObject().getProperty());
+            // event is not relevant if the statement in the event has a different property|subject
+            // than the property|subject of this statement group
+            KBStatement statement = event.getStatement();
+            boolean isEventForThisStatementGroup =
+                statement.getProperty().equals(groupModel.getObject().getProperty())
+                    && statement.getInstance().getIdentifier()
+                    .equals(groupModel.getObject().getInstance().getIdentifier());
             if (!isEventForThisStatementGroup) {
                 return;
             }
@@ -297,13 +298,13 @@ public class StatementGroupPanel extends Panel {
                 // update the statement from the event
                 StatementGroupBean bean = groupModel.getObject();
                 bean.getStatements().remove(oldStatement);
-                bean.getStatements().add(event.getStatement());
+                bean.getStatements().add(statement);
                 groupModel.setObject(bean);
             }
             if (event.isDeleted()) {
                 // remove statement found in the event from the model
                 StatementGroupBean bean = groupModel.getObject();
-                bean.getStatements().remove(event.getStatement());
+                bean.getStatements().remove(statement);
                 groupModel.setObject(bean);
 
                 if (bean.getStatements().isEmpty()) {

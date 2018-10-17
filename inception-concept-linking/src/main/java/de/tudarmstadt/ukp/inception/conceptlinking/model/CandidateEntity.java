@@ -89,14 +89,21 @@ public class CandidateEntity
      */
     private int frequency;
 
-    public CandidateEntity(String IRI, String label, String alternativeLabel, String description)
+    /**
+     * language of this candidate entry
+     */
+    private String language;
+
+    public CandidateEntity(String aIRI, String aLabel, String aAlternativeLabel,
+        String aDescription, String aLanguage)
     {
-        this.IRI = IRI;
-        this.label = label;
-        this.alternativeLabel = alternativeLabel;
-        this.description = description;
-        this.levTypedString = Integer.MAX_VALUE;
-        this.frequency = 0;
+        IRI = aIRI;
+        label = aLabel;
+        alternativeLabel = aAlternativeLabel;
+        description = aDescription;
+        language = aLanguage;
+        levTypedString = Integer.MAX_VALUE;
+        frequency = 0;
     }
 
     /**
@@ -134,9 +141,9 @@ public class CandidateEntity
     /**
      * Set a description for this entity
      */
-    public void setDescription(String description)
+    public void setDescription(String aDescription)
     {
-        this.description = description;
+        description = aDescription;
     }
 
     /**
@@ -164,11 +171,11 @@ public class CandidateEntity
     }
 
     /**
-     * @param levMatchLabel edit distance between mention and candidate entity label
+     * @param aLevMatchLabel edit distance between mention and candidate entity label
      */
-    public void setLevMatchLabel(int levMatchLabel)
+    public void setLevMatchLabel(int aLevMatchLabel)
     {
-        this.levMatchLabel = levMatchLabel;
+        levMatchLabel = aLevMatchLabel;
     }
 
     /**
@@ -193,19 +200,19 @@ public class CandidateEntity
     }
 
     /**
-     * @param levContext edit distance between mention + context and candidate entity label
+     * @param aLevContext edit distance between mention + context and candidate entity label
      */
-    public void setLevContext(int levContext)
+    public void setLevContext(int aLevContext)
     {
-        this.levContext = levContext;
+        levContext = aLevContext;
     }
 
     /**
-     * @param numRelatedRelations number of distinct relations to other entities
+     * @param aNumRelatedRelations number of distinct relations to other entities
      */
-    public void setNumRelatedRelations(int numRelatedRelations)
+    public void setNumRelatedRelations(int aNumRelatedRelations)
     {
-        this.numRelatedRelations = numRelatedRelations;
+        numRelatedRelations = aNumRelatedRelations;
     }
 
     /**
@@ -223,7 +230,7 @@ public class CandidateEntity
      */
     public void setSignatureOverlapScore(int aScore)
     {
-        this.signatureOverlapScore = aScore;
+        signatureOverlapScore = aScore;
     }
 
     /**
@@ -237,13 +244,13 @@ public class CandidateEntity
     }
 
     /**
-     * @param idRank
+     * @param aIdRank
      *            logarithm of the wikidata ID - based on the assumption that lower IDs are more
      *            important
      */
-    public void setIdRank(double idRank)
+    public void setIdRank(double aIdRank)
     {
-        this.idRank = idRank;
+        idRank = aIdRank;
     }
 
     /**
@@ -256,11 +263,11 @@ public class CandidateEntity
     }
 
     /**
-     * @param frequency in-link count of wikipedia article of IRI
+     * @param aFrequency in-link count of wikipedia article of IRI
      */
-    public void setFrequency(int frequency)
+    public void setFrequency(int aFrequency)
     {
-        this.frequency = frequency;
+        frequency = aFrequency;
     }
 
     /**
@@ -269,6 +276,16 @@ public class CandidateEntity
     public int getFrequency()
     {
         return frequency;
+    }
+
+    public void setLanguage(String aLanguage)
+    {
+        language = aLanguage;
+    }
+
+    public String getLanguage()
+    {
+        return language;
     }
 
     @Override
