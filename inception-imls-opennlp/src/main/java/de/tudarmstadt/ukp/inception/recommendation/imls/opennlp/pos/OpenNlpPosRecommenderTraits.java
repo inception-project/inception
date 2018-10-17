@@ -17,12 +17,18 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.pos;
 
+import java.io.Serializable;
+
 import opennlp.tools.ml.AbstractTrainer;
 import opennlp.tools.util.TrainingParameters;
 
-public class OpenNlpPosRecommenderTraits {
+public class OpenNlpPosRecommenderTraits
+    implements Serializable
+{
+    private static final long serialVersionUID = -4514466471370195077L;
 
-    public TrainingParameters getParameters() {
+    public TrainingParameters getParameters()
+    {
         TrainingParameters parameters = TrainingParameters.defaultParams();
         parameters.put(AbstractTrainer.VERBOSE_PARAM, "false");
         return parameters;

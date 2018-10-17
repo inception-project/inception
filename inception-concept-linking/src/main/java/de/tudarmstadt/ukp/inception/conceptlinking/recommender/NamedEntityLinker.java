@@ -238,10 +238,4 @@ public class NamedEntityLinker
     {
         throw new UnsupportedOperationException("Evaluation not supported");
     }
-
-    @Override
-    public boolean isEvaluable()
-    {
-        return false;
-    }
 }

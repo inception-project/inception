@@ -50,6 +50,7 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
+import opennlp.tools.ml.BeamSearch;
 import opennlp.tools.namefind.NameFinderME;
 import opennlp.tools.namefind.NameSample;
 import opennlp.tools.namefind.TokenNameFinderEvaluator;
@@ -67,11 +68,14 @@ public class OpenNlpNerRecommender
     private final String layerName;
     private final String featureName;
     private final OpenNlpNerRecommenderTraits traits;
+    private final int maxRecommendations;
 
-    public OpenNlpNerRecommender(Recommender aRecommender,
-                                 OpenNlpNerRecommenderTraits aTraits) {
+    public OpenNlpNerRecommender(Recommender aRecommender, OpenNlpNerRecommenderTraits aTraits)
+    {
         layerName = aRecommender.getLayer().getName();
         featureName = aRecommender.getFeature();
+        maxRecommendations = aRecommender.getMaxRecommendations();
+        
         traits = aTraits;
     }
 
@@ -80,7 +84,16 @@ public class OpenNlpNerRecommender
         throws RecommendationException
     {
         List<NameSample> nameSamples = extractNameSamples(aCasses);
-        TokenNameFinderModel model = train(nameSamples, traits.getParameters());
+        
+        // The beam size controls how many results are returned at most. But even if the user
+        // requests only few results, we always use at least the default bean size recommended by
+        // OpenNLP
+        int beamSize = Math.max(maxRecommendations, NameFinderME.DEFAULT_BEAM_SIZE);
+
+        TrainingParameters params = traits.getParameters();
+        params.put(BeamSearch.BEAM_SIZE_PARAMETER, Integer.toString(beamSize));
+        
+        TokenNameFinderModel model = train(nameSamples, params);
         if (model != null) {
             aContext.put(KEY_MODEL, model);
             aContext.markAsReadyForPrediction();
@@ -185,7 +198,8 @@ public class OpenNlpNerRecommender
     }
 
     private NameSample createNameSample(CAS aCas, AnnotationFS aSentence,
-                                        Collection<AnnotationFS> aTokens) {
+            Collection<AnnotationFS> aTokens)
+    {
         String[] tokenTexts = aTokens.stream()
             .map(AnnotationFS::getCoveredText)
             .toArray(String[]::new);
@@ -223,7 +237,7 @@ public class OpenNlpNerRecommender
     }
 
     private TokenNameFinderModel train(List<NameSample> aNameSamples,
-                                       TrainingParameters aParameters)
+            TrainingParameters aParameters)
         throws RecommendationException
     {
         try (NameSampleStream stream = new NameSampleStream(aNameSamples)) {

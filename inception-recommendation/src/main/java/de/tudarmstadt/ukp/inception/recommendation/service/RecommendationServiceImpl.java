@@ -308,7 +308,8 @@ public class RecommendationServiceImpl
     }
 
     @Override
-    public RecommenderContext getContext(User aUser, Recommender aRecommender) {
+    public RecommenderContext getContext(User aUser, Recommender aRecommender)
+    {
         RecommendationUserState recommendationUserState = getState(aUser.getUsername());
         RecommenderContext context = recommendationUserState.getContext(aRecommender);
         if (context == null) {

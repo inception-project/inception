@@ -98,12 +98,12 @@ public class SelectionTask
                     }
                     
                     if (recommender.isAlwaysSelected()) {
-                        log.debug("[{}][{}]: Skipping evaluation for [{}] - always selected",
+                        log.debug("[{}][{}]: Activating [{}] without evaluating - always selected",
                             recommenderName);
                         activeRecommenders.add(recommender);
                         continue;
-                    } else if (!recommendationEngine.isEvaluable()) {
-                        log.debug("[{}][{}]: Skipping evaluation for [{}] - not evaluable",
+                    } else if (!factory.isEvaluable()) {
+                        log.debug("[{}][{}]: Activating [{}] without evaluating - not evaluable",
                             recommenderName);
                         activeRecommenders.add(recommender);
                         continue;
@@ -145,6 +145,7 @@ public class SelectionTask
             try {
                 JCas jCas = documentService.readAnnotationCas(document, aUserName);
                 annoService.upgradeCas(jCas.getCas(), document, aUserName);
+                casses.add(jCas.getCas());
             } catch (IOException e) {
                 log.error("Cannot read annotation CAS.", e);
                 continue;

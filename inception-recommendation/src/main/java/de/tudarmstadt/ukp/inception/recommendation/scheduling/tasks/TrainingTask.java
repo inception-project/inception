@@ -21,6 +21,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.persistence.NoResultException;
+
 import org.apache.uima.cas.CAS;
 import org.apache.uima.jcas.JCas;
 import org.slf4j.Logger;
@@ -80,7 +82,19 @@ public class TrainingTask
                 continue;
             }
             
-            for (Recommender recommender : recommenders) {
+            for (Recommender r : recommenders) {
+                // Make sure we have the latest recommender config from the DB - the one from the
+                // active recommenders list may be outdated
+                Recommender recommender;
+                try {
+                    recommender = recommendationService.getRecommender(r.getId());
+                }
+                catch (NoResultException e) {
+                    log.info("[{}][{}]: Recommender no longer available... skipping",
+                            user.getUsername(), r.getName());
+                    continue;
+                }
+                
                 long startTime = System.currentTimeMillis();
                 RecommenderContext context = recommendationService.getContext(user, recommender);
                 RecommendationEngineFactory factory = recommendationService

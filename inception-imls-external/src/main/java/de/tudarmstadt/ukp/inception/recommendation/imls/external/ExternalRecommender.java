@@ -25,6 +25,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.uima.cas.CAS;
@@ -238,12 +239,6 @@ public class ExternalRecommender
     }
 
     @Override
-    public boolean isEvaluable()
-    {
-        return false;
-    }
-
-    @Override
     public String getPredictedType()
     {
         return recommender.getLayer().getName();
@@ -253,5 +248,11 @@ public class ExternalRecommender
     public String getPredictedFeature()
     {
         return recommender.getFeature();
+    }
+    
+    @Override
+    public Optional<String> getScoreFeature()
+    {
+        return Optional.empty();
     }
 }
