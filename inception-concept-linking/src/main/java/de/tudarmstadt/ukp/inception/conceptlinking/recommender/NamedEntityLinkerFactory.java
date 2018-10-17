@@ -101,4 +101,10 @@ public class NamedEntityLinkerFactory
     {
         return false;
     }
+    
+    @Override
+    public boolean isMultipleRecommendationProvider()
+    {
+        return true;
+    }
 }

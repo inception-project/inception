@@ -218,7 +218,7 @@ public class NamedEntityLinker
 
         Feature labelFeature = predictionType.getFeatureByBaseName("label");
 
-        for (KBHandle prediction : handles.stream().limit(traits.getMaxNumPredictions())
+        for (KBHandle prediction : handles.stream().limit(recommender.getMaxRecommendations())
             .collect(Collectors.toList())) {
             AnnotationFS annotation = aJcas.getCas().createAnnotation(predictionType, aBegin, aEnd);
             annotation.setStringValue(labelFeature, prediction.getIdentifier());

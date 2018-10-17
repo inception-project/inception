@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.conceptlinking.recommender;
 
 import org.apache.wicket.markup.html.form.Form;
-import org.apache.wicket.markup.html.form.NumberTextField;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
@@ -56,12 +55,6 @@ public class NamedEntityLinkerTraitsEditor
                 toolFactory.writeTraits(aRecommender.getObject(), traits);
             }
         };
-
-        NumberTextField<Integer> maxNumPredictions = new NumberTextField<>("maxNumPredictions");
-        maxNumPredictions.setRequired(true);
-        maxNumPredictions.setMinimum(1);
-        maxNumPredictions.setMaximum(25);
-        form.add(maxNumPredictions);
 
         add(form);
     }
