@@ -16,6 +16,7 @@
 
 [[sect_settings_concept-linking]]
 === Concept Linking
+
 There are several configurable parameters related to the Concept Linking functionality:
 
 .Cache size
