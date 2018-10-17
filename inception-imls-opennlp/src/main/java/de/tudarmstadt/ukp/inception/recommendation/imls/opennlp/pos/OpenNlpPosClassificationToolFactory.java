@@ -18,28 +18,21 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.pos;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
 
 import org.apache.uima.cas.CAS;
-import org.apache.wicket.markup.html.panel.Panel;
-import org.apache.wicket.model.IModel;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.inception.recommendation.api.ClassificationTool;
-import de.tudarmstadt.ukp.inception.recommendation.api.ClassificationToolFactory;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
-import opennlp.tools.util.TrainingParameters;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactoryImplBase;
 
 @Component
 public class OpenNlpPosClassificationToolFactory
-    implements ClassificationToolFactory<TrainingParameters, OpenNlpPosClassificationToolTraits>
+    extends RecommendationEngineFactoryImplBase<OpenNlpPosRecommenderTraits>
 {
-    private Logger log = LoggerFactory.getLogger(getClass());
-
     // This is a string literal so we can rename/refactor the class without it changing its ID
     // and without the database starting to refer to non-existing recommendation tools.
     public static final String ID = 
@@ -50,7 +43,13 @@ public class OpenNlpPosClassificationToolFactory
     {
         return ID;
     }
-    
+
+    @Override
+    public RecommendationEngine build(Recommender aRecommender)
+    {
+        return new OpenNlpPosRecommender(aRecommender, readTraits(aRecommender));
+    }
+
     @Override
     public String getName()
     {
@@ -58,26 +57,19 @@ public class OpenNlpPosClassificationToolFactory
     }
 
     @Override
-    public ClassificationTool<TrainingParameters> createTool(long aRecommenderId, String aFeature,
-        AnnotationLayer aLayer, int aMaxPredictions)
-    {
-        return new OpenNlpPosClassificationTool(aRecommenderId, aMaxPredictions, aFeature, aLayer);
-    }
-    
-    @Override
     public boolean accepts(AnnotationLayer aLayer, AnnotationFeature aFeature)
     {
         if (aLayer == null || aFeature == null) {
             return false;
         }
         
-        return SINGLE_TOKEN.equals(aLayer.getAnchoringMode()) && SPAN_TYPE.equals(aLayer.getType())
+        return TOKENS.equals(aLayer.getAnchoringMode()) && SPAN_TYPE.equals(aLayer.getType())
                 && CAS.TYPE_NAME_STRING.equals(aFeature.getType());
     }
-    
+
     @Override
-    public Panel createTraitsEditor(String aId, IModel<Recommender> aRecommender)
+    public OpenNlpPosRecommenderTraits createTraits()
     {
-        return new OpenNlpPosClassificationToolTraitsEditor(aId, this, aRecommender);
+        return new OpenNlpPosRecommenderTraits();
     }
 }

@@ -63,22 +63,22 @@ public class RecommenderEvaluationResultEventAdapter
         try {
             Details details = new Details();
             
-            details.score = aEvent.getResult().getFscore();
-            details.tp = aEvent.getResult().getTp();
-            details.fp = aEvent.getResult().getFp();
-            details.tn = aEvent.getResult().getTn();
-            details.fn = aEvent.getResult().getFn();
+            details.score = aEvent.getScore();
+//            details.tp = aEvent.getResult().getTp();
+//            details.fp = aEvent.getResult().getFp();
+//            details.tn = aEvent.getResult().getTn();
+//            details.fn = aEvent.getResult().getFn();
             details.active = aEvent.isActive();
             
-            details.trainingSetSize = aEvent.getResult().getTrainingSetSize();
-            details.trainingSetAnnotations = aEvent.getResult().getTrainingSetAnnotationCount();
-            details.testSetSize = aEvent.getResult().getTestSetSize();
-            details.testSetAnnotations = aEvent.getResult().getTestSetAnnotationCount();
-            details.split = aEvent.getResult().getSplit();
-            details.trainingSetShuffled = aEvent.getResult().isShuffleTrainingSet();
+//            details.trainingSetSize = aEvent.getResult().getTrainingSetSize();
+//            details.trainingSetAnnotations = aEvent.getResult().getTrainingSetAnnotationCount();
+//            details.testSetSize = aEvent.getResult().getTestSetSize();
+//            details.testSetAnnotations = aEvent.getResult().getTestSetAnnotationCount();
+//            details.split = aEvent.getResult().getSplit();
+//            details.trainingSetShuffled = aEvent.getResult().isShuffleTrainingSet();
             
-            details.precision = aEvent.getResult().getPrecision();
-            details.recall = aEvent.getResult().getRecall();
+//            details.precision = aEvent.getResult().getPrecision();
+//            details.recall = aEvent.getResult().getRecall();
             
             details.duration = aEvent.getDuration();
             details.threshold = aEvent.getRecommender().getThreshold();

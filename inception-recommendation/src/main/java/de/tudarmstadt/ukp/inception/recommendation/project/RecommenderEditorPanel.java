@@ -29,6 +29,7 @@ import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.ajax.markup.html.form.AjaxButton;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
@@ -56,10 +57,10 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.inception.recommendation.api.ClassificationToolFactory;
-import de.tudarmstadt.ukp.inception.recommendation.api.ClassificationToolRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
+import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderFactoryRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderDeletedEvent;
 
 public class RecommenderEditorPanel
@@ -72,7 +73,7 @@ public class RecommenderEditorPanel
     
     private @SpringBean RecommendationService recommendationService;
     private @SpringBean AnnotationSchemaService annotationSchemaService;
-    private @SpringBean ClassificationToolRegistry toolRegistry;
+    private @SpringBean RecommenderFactoryRegistry recommenderRegistry;
     private @SpringBean ApplicationEventPublisherHolder appEventPublisherHolder;
     private @SpringBean UserDao userDao;
 
@@ -133,9 +134,9 @@ public class RecommenderEditorPanel
                 })));
         
         IModel<Pair<String, String>> toolModel = LambdaModelAdapter.of(() -> {
-            return listTools().stream()
-                    .filter(r -> r.getKey().equals(recommenderModel.getObject().getTool()))
-                    .findFirst().orElse(null);
+            String name = recommenderModel.getObject().getTool();
+            RecommendationEngineFactory factory = recommenderRegistry.getFactory(name);
+            return factory != null ? Pair.of(factory.getId(), factory.getName()) : null;
         }, (v) -> recommenderModel.getObject().setTool(v.getKey()));
         
         toolChoice = new DropDownChoice<Pair<String, String>>("tool", toolModel,
@@ -149,9 +150,9 @@ public class RecommenderEditorPanel
                 // If the feature type has changed, we need to set up a new traits editor
                 Component newTraits;
                 if (form.getModelObject() != null && getModelObject() != null) {
-                    ClassificationToolFactory<?,?> ctf = toolRegistry
-                            .getTool(getModelObject().getKey());
-                    newTraits = ctf.createTraitsEditor(MID_TRAITS, form.getModel());
+                    RecommendationEngineFactory factory = recommenderRegistry
+                            .getFactory(getModelObject().getKey());
+                    newTraits = factory.createTraitsEditor(MID_TRAITS, form.getModel());
                 }
                 else {
                     newTraits = new EmptyPanel(MID_TRAITS);
@@ -160,6 +161,7 @@ public class RecommenderEditorPanel
                 traitsContainer.addOrReplace(newTraits);
             }
         };
+        // TODO: For a deprecated recommender, show itself in the tool dropdown but unselectable
         toolChoice.setChoiceRenderer(new ChoiceRenderer<Pair<String, String>>("value"));
         toolChoice.setRequired(true);
         toolChoice.setOutputMarkupId(true);
@@ -187,6 +189,12 @@ public class RecommenderEditorPanel
         form.add(new AjaxButton("save")
         {
             private static final long serialVersionUID = -3902555252753037183L;
+
+            @Override
+            protected void onError(AjaxRequestTarget aTarget)
+            {
+                aTarget.addChildren(getPage(), IFeedback.class);
+            };
 
             @Override
             protected void onAfterSubmit(AjaxRequestTarget target)
@@ -263,9 +271,11 @@ public class RecommenderEditorPanel
             AnnotationLayer layer = recommenderModel.getObject().getLayer();
             AnnotationFeature feature = annotationSchemaService
                     .getFeature(recommenderModel.getObject().getFeature(), layer);
-            return toolRegistry.getTools(layer, feature).stream()
-                    .map(f -> Pair.of(f.getId(), f.getName()))
-                    .collect(Collectors.toList());
+            return recommenderRegistry.getFactories(layer, feature)
+                .stream()
+                .filter(f -> !f.isDeprecated())
+                .map(f -> Pair.of(f.getId(), f.getName()))
+                .collect(Collectors.toList());
         }
         else {
             return Collections.emptyList();

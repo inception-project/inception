@@ -52,11 +52,12 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.inception.recommendation.api.ClassificationTool;
-import de.tudarmstadt.ukp.inception.recommendation.api.ClassificationToolRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
+import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderFactoryRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderDeletedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.scheduling.RecommendationScheduler;
 
@@ -73,7 +74,7 @@ public class RecommendationServiceImpl
     
     private @Autowired SessionRegistry sessionRegistry;
     private @Autowired UserDao userRepository;
-    private @Autowired ClassificationToolRegistry classificationToolRegistry;
+    private @Autowired RecommenderFactoryRegistry recommenderFactoryRegistry;
     private @Autowired RecommendationScheduler scheduler;
     
     private Map<String, RecommendationUserState> states = new ConcurrentHashMap<>();
@@ -197,12 +198,6 @@ public class RecommendationServiceImpl
         return settings;
     }
 
-    @Override
-    public List<String> getAvailableTools(AnnotationLayer aLayer, AnnotationFeature aFeature)
-    {
-        return classificationToolRegistry.getAvailableTools(aLayer, aFeature);
-    }
-
     @EventListener
     public void afterAnnotationUpdate(AfterAnnotationUpdateEvent aEvent)
     {
@@ -267,23 +262,9 @@ public class RecommendationServiceImpl
     }
     
     @Override
-    public ClassificationTool<?> getTool(Recommender aSettings, int aMaxPredictions)
+    public RecommendationEngineFactory getRecommenderFactory(Recommender aRecommender)
     {
-        return classificationToolRegistry.createClassificationTool(aSettings, aMaxPredictions);
-    }
-    
-    @Override
-    public void storeTrainedModel(User aUser, Recommender aRecommender, Object aModel)
-    {
-        RecommendationUserState state = getState(aUser.getUsername());
-        state.putTrainedModel(aRecommender, aModel);
-    }
-
-    @Override
-    public Object getTrainedModel(User aUser, Recommender aRecommender)
-    {
-        RecommendationUserState state = getState(aUser.getUsername());
-        return state.getTrainedModel(aRecommender);
+        return recommenderFactoryRegistry.getFactory(aRecommender.getTool());
     }
     
     private RecommendationUserState getState(String aUsername)
@@ -326,6 +307,17 @@ public class RecommendationServiceImpl
         aAdapter.setFeatureValue(aState, aJcas, aAddress, aFeature, aPredictedValue);
     }
 
+    @Override
+    public RecommenderContext getContext(User aUser, Recommender aRecommender) {
+        RecommendationUserState recommendationUserState = getState(aUser.getUsername());
+        RecommenderContext context = recommendationUserState.getContext(aRecommender);
+        if (context == null) {
+            context = new RecommenderContext();
+            recommendationUserState.putContext(aRecommender, context);
+        }
+        return context;
+    }
+
     /**
      * We are assuming that the user is actively working on one project at a time.
      * Otherwise, the RecommendationUserState might take up a lot of memory.
@@ -335,7 +327,7 @@ public class RecommendationServiceImpl
         private int maxPredictions = 3;
         private MultiValuedMap<AnnotationLayer, Recommender> activeRecommenders = 
                 new HashSetValuedHashMap<>();
-        private Map<Long, Object> trainedModels = new ConcurrentHashMap<>();
+        private Map<Long, RecommenderContext> recommenderContexts = new ConcurrentHashMap<>();
         private Map<Long, Predictions> activePredictions = new ConcurrentHashMap<>();
         private Map<Long, Predictions> incomingPredictions = new ConcurrentHashMap<>();
         
@@ -385,14 +377,14 @@ public class RecommendationServiceImpl
             incomingPredictions.remove(aProject.getId());            
         }
 
-        public Object getTrainedModel(Recommender aRecommender)
+        public RecommenderContext getContext(Recommender aRecommender)
         {
-            return trainedModels.get(aRecommender.getId());
+            return recommenderContexts.get(aRecommender.getId());
         }
-        
-        public void putTrainedModel(Recommender aRecommender, Object aModel)
+
+        public void putContext(Recommender aRecommender, RecommenderContext aContext)
         {
-            trainedModels.put(aRecommender.getId(), aModel);
+            recommenderContexts.put(aRecommender.getId(), aContext);
         }
 
         public void removePredictions(Recommender aRecommender)
@@ -412,7 +404,7 @@ public class RecommendationServiceImpl
             }
 
             // Remove trainedModel
-            trainedModels.remove(aRecommender.getId());
+            recommenderContexts.remove(aRecommender.getId());
 
             // Remove from activeRecommenders map.
             // We have to do this, otherwise training and prediction continues for the

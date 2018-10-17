@@ -111,12 +111,12 @@ public class RecommendationSpanRenderer
                 .getAllRecordsByDocumentAndUserAndLayer(aState.getDocument(),
                         aState.getUser().getUsername(), layer);
         
-        for (List<AnnotationObject> token: recommendations) {
+        for (List<AnnotationObject> sentenceRecommendations: recommendations) {
             Map<String, Map<Long, AnnotationObject>> labelMap = new HashMap<>();
  
             // For recommendations with the same label by the same classifier,
             // show only the confidence of the highest one
-            for (AnnotationObject ao: token) {
+            for (AnnotationObject ao: sentenceRecommendations) {
                 boolean hasNoAnnotation = ao.getLabel() == null;
                 boolean isOverlappingForFeature = isOverlappingForFeature(
                     vspansWithoutRecommendations, ao.getOffset(), windowBegin, ao.getFeature());
@@ -169,17 +169,17 @@ public class RecommendationSpanRenderer
                 }
 
                 // Create VID using the recommendation with the lowest recommendationId
-                AnnotationObject prediction = token.stream()
+                AnnotationObject canonicalRecommendation = sentenceRecommendations.stream()
                         .filter(p -> p.getLabel().equals(label))
                         .max(Comparator.comparingInt(AnnotationObject::getId)).orElse(null);
 
-                if (prediction == null) {
+                if (canonicalRecommendation == null) {
                     continue;
                 }
 
                 VID vid = new VID(RecommendationEditorExtension.BEAN_NAME, layer.getId(),
-                        (int) prediction.getRecommenderId(), prediction.getId(), VID.NONE,
-                        VID.NONE);
+                        (int) canonicalRecommendation.getRecommenderId(),
+                        canonicalRecommendation.getId(), VID.NONE, VID.NONE);
                 
                 boolean first = true;
                 Map<Long, AnnotationObject> confidencePerClassifier = labelMap.get(label);
