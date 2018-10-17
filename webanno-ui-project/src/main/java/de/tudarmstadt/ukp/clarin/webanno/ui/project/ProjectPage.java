@@ -22,6 +22,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJ
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import javax.persistence.NoResultException;
 
@@ -105,22 +106,21 @@ public class ProjectPage
         
         // Get current project from parameters
         StringValue projectParameter = aPageParameters.get(PAGE_PARAM_PROJECT_ID);
-        Project project = null;
-        try {
-            project = getProjectFromParameters(projectParameter);
+        Optional<Project> project = getProjectFromParameters(projectParameter);
+        
+        if (project.isPresent()) {
+            // Check access to project
+            if (project != null && !isAdmin(project.get(), projectService, user)) {
+                error("You have no permission to access project [" + project.get().getId() + "]");
+                setResponsePage(getApplication().getHomePage());
+            }
+            
+            selectedProject.setObject(project.get());
         }
-        catch (NoResultException e) {
+        else {
             error("Project [" + projectParameter + "] does not exist");
-            return;
+            setResponsePage(getApplication().getHomePage());
         }
-        
-        // Check access to project
-        if (project != null && !isAdmin(project, projectService, user)) {
-            error("You have no permission to access project [" + project.getId() + "]");
-            return;
-        }
-        
-        selectedProject.setObject(project);
     }
     
     private void commonInit()
@@ -222,13 +222,18 @@ public class ProjectPage
         return tabs;
     }
     
-    private Project getProjectFromParameters(StringValue projectParam)
+    
+    private Optional<Project> getProjectFromParameters(StringValue projectParam)
     {
-        Project project = null;
-        if (projectParam != null && !projectParam.isEmpty()) {
-            long projectId = projectParam.toLong();
-            project = projectService.getProject(projectId);
+        if (projectParam == null || projectParam.isEmpty()) {
+            return Optional.empty();
         }
-        return project;
+        
+        try {
+            return Optional.of(projectService.getProject(projectParam.toLong()));
+        }
+        catch (NoResultException e) {
+            return Optional.empty();
+        }
     }
 }
