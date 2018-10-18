@@ -125,8 +125,8 @@ public class RecommendationSpanRenderer
                     vspansWithoutRecommendations, ao.getOffset(), windowBegin, ao.getFeature());
                 boolean isRejected = isRejected(recordedAnnotations, ao);
 
-                if (hasNoAnnotation || (!pref.isShowAllPredictions() && isOverlappingForFeature)
-                        || isRejected) {
+                if (hasNoAnnotation || (!pref.isShowAllPredictions()
+                        && (isOverlappingForFeature || isRejected))) {
                     continue;
                 }
 
