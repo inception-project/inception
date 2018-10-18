@@ -19,26 +19,36 @@
 <html xmlns:wicket="http://wicket.apache.org">
 <wicket:panel>
   <div class="flex-content flex-v-container flex-gutter flex-only-internal-gutter">
-    <div class="panel panel-default panel-flex flex-content">
+    <form wicket:id="form" class="panel panel-default panel-flex flex-content">
       <div class="panel-heading">
         <h3 class="panel-title">Recommendation Information</h3>
       </div>
-      <form wicket:id="form" class="panel-body">
+      <div class="panel-body">
         <div class="col-sm-12">
           <div class="form-horizontal">
-            <div class="form-group">
+            <div class="form-group" wicket:enclosure="maxPredictions">
               <label class="col-sm-6 control-label">Max. suggestions</label>
               <div class="col-sm-6">
-                <input wicket:id="maxNumberAnnotations" type="number" />
+                <input wicket:id="maxPredictions" type="number" class="form-control"/>
               </div>
+            </div>
+            <div class="form-group" wicket:enclosure="showAllPredictions">
+              <label class="col-sm-6 control-label">Show all</label>
+              <div class="col-sm-6">
+                <div class="checkbox">
+                  <label wicket:for="showAllPredictions">
+                    <input wicket:id="showAllPredictions" type="checkbox">
+                  </label>
+                </div>
+              </div>  
             </div>
           </div>
         </div>
-      </form>
-      <div class="panel-footer text-right">
-        <input type="submit" class="btn btn-primary" />
       </div>
-    </div>
+      <div class="panel-footer text-right">
+        <input wicket:id="save" type="submit" class="btn btn-primary"  wicket:message="value:save"/>
+      </div>
+    </form>
   </div>
 </wicket:panel>
 </html>

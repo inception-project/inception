@@ -86,6 +86,11 @@ public class SelectionTask
             
             for (Recommender recommender : recommenders) {
                 String recommenderName = recommender.getName();
+                
+                if (!recommender.isEnabled()) {
+                    log.debug("[{}][{}]: Disabled - skipping", userName, recommenderName);
+                }
+                
                 try {
                     long start = System.currentTimeMillis();
                     RecommendationEngineFactory factory = recommendationService
@@ -99,12 +104,12 @@ public class SelectionTask
                     
                     if (recommender.isAlwaysSelected()) {
                         log.debug("[{}][{}]: Activating [{}] without evaluating - always selected",
-                            recommenderName);
+                                userName, recommenderName, recommenderName);
                         activeRecommenders.add(recommender);
                         continue;
                     } else if (!factory.isEvaluable()) {
                         log.debug("[{}][{}]: Activating [{}] without evaluating - not evaluable",
-                            recommenderName);
+                                userName, recommenderName, recommenderName);
                         activeRecommenders.add(recommender);
                         continue;
                     }
