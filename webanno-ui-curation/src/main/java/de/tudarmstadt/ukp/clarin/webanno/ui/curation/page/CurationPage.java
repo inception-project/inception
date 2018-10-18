@@ -141,6 +141,13 @@ public class CurationPage
     
     public CurationPage()
     {
+        super();
+        
+        commonInit();
+    }
+    
+    private void commonInit()
+    {
         setModel(Model.of(new AnnotatorStateImpl(Mode.CURATION)));
 
         curationContainer = new CurationContainer();
