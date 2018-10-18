@@ -18,19 +18,28 @@
 == Concept Linking
 
 Concept Linking is the task of identifying concept mentions in the text and linking them to their
-corresponding concept in a knowledge base.
+corresponding concepts in a knowledge base.
 Use cases of Concept Linking are commonly found in the area of biomedical text mining, e.g.
-to facilitate understanding of unexplained terminology or abbreviations in scientific literature by linking
-biological entities.
+to facilitate understanding of unexplained terminology or abbreviations in scientific literature by
+linking biological entities.
 
-=== Interactive Concept Linking
-Interactive Concept Linking allows users to manually link concept mentions to a KB. It is especially
-useful in situations where there is no substantial training data available from the start,
-i.e. when no previous linkings have been made. In this case, each concept mention is disambiguated
-with the help of heuristical rules.
 
-When the user wants to link a mention, he marks it and starts typing the name of the concept.
-A ranked list of candidates is then displayed in the form of a drop-down menu.
+==== Contextual Disambiguation
+
+Like many words, concept names can be ambiguous. There can be potentially many different concepts
+having the same name (consider the large number of famous people called John Smith). Thus, it is
+helpful to rank the candidates before showing them to the user in the annotaton interface. If the
+ranking works well, the user can quickly choose on of the top-ranking candidates instead of having
+to scroll through a long list.
+
+The approach we are using for ranking the candidates considers the context of the concept mention
+in the text as well as the context of the candidate concepts in the knowledge base. This allows
+a ranking to be performed even in projects where no concepts have been linked yet (i.e. there is
+no training data that could be used for a machine learning classifier).
+
+To link a concept mention to the knowledge base, first select the mention annotation, then select
+the concept feature in the right sidebar of the annotation editor and start typing the name of
+a concept. A ranked list of candidates is then displayed in the form of a drop-down menu.
 In order to make the disambiguation process easier, descriptions are shown for each candidate.
 
 image::concept-linking2.png[align="center"]
