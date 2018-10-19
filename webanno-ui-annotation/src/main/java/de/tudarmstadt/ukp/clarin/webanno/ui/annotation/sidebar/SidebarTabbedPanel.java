@@ -30,6 +30,7 @@ import org.apache.wicket.request.Url;
 import org.apache.wicket.request.resource.UrlResourceReference;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 
 public class SidebarTabbedPanel<T extends SidebarTab>
     extends AjaxTabbedPanel<T>
@@ -62,7 +63,7 @@ public class SidebarTabbedPanel<T extends SidebarTab>
     private void showHideAction(AjaxRequestTarget aTarget)
     {
         expanded = !expanded;
-        aTarget.add(getPage());
+        WicketUtil.refreshPage(aTarget, getPage());
     }
 
     public boolean isExpanded()
