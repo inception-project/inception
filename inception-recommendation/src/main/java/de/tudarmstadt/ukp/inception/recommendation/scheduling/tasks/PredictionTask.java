@@ -130,6 +130,7 @@ public class PredictionTask
                     
                     if (!recommender.isEnabled()) {
                         log.debug("[{}][{}]: Disabled - skipping", user.getUsername(), r.getName());
+                        continue;
                     }
                     
                     RecommenderContext ctx = recommendationService.getContext(user, recommender);
