@@ -140,6 +140,7 @@ public class KnowledgeBaseServiceImpl
                 log.info("Found legacy KB folder at [" + legacyLocation
                         + "]. Trying to move it to the new location at [" + kbRepositoriesRoot
                         + "]");
+                Files.createDirectories(kbRepositoriesRoot.getParentFile().toPath());
                 Files.move(legacyLocation.toPath(), kbRepositoriesRoot.toPath(), REPLACE_EXISTING);
                 log.info("Move successful.");
             }

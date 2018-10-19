@@ -20,8 +20,8 @@ package de.tudarmstadt.ukp.inception.ui.kb.value.editor;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 
-import de.tudarmstadt.ukp.inception.app.Focusable;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
+import de.tudarmstadt.ukp.inception.ui.core.Focusable;
 
 public abstract class ValueEditor
     extends Panel

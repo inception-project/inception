@@ -15,17 +15,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.ui.dashboard.dashlet;
+package de.tudarmstadt.ukp.inception.ui.core;
 
-import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.Component;
 
-public abstract class Dashlet_ImplBase
-    extends Panel
-{
-    private static final long serialVersionUID = 8674972646207242184L;
+/**
+ * Interface used to indicate which child component to focus initially in a form holding multiple
+ * child components.
+ *
+ */
+public interface Focusable {
 
-    public Dashlet_ImplBase(String aId)
-    {
-        super(aId);
-    }
+    /**
+     * Returns the component which should receive the focus once this {@code Focusable} is rendered
+     * initially.
+     * 
+     * @return the component to focus once this {@code Focusable} is rendered
+     */
+    public Component getFocusComponent();
 }
