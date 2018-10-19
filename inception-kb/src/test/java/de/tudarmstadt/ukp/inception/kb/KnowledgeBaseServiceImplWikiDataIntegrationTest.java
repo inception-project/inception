@@ -185,7 +185,7 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
         Stream<String> instances = sut.listInstances(kb, "http://www.wikidata.org/entity/Q2897", true).stream().map(KBHandle::getIdentifier);
         String[] expectedInstances = {
                 "http://www.wikidata.org/entity/Q22663448" , "http://www.wikidata.org/entity/Q22663448", "http://www.wikidata.org/entity/Q30059050"};
-        assertThat(instances).as("Check that instances have been found").hasSize(16).contains(expectedInstances);
+        assertThat(instances).as("Check that instances have been found").hasSize(17).contains(expectedInstances);
         
     }
     
