@@ -43,6 +43,8 @@ public class DashboardMenu
 {
     private static final long serialVersionUID = 8582941766827165724L;
 
+    private boolean sendProjectIdToPage = true;
+    
     public DashboardMenu(String aId, final IModel<List<MenuItem>> aModel)
     {
         super(aId, aModel);
@@ -63,15 +65,20 @@ public class DashboardMenu
                     @Override
                     public void onClick()
                     {
-                        Project project = Session.get()
-                                .getMetaData(SessionMetaData.CURRENT_PROJECT);
-                        // For legacy WebAnno pages, we set PAGE_PARAM_PROJECT_ID while INCEpTION
-                        // pages may pick the project up from the session.
-                        PageParameters params = new PageParameters();
-                        if (project != null) {
-                            params.set(PAGE_PARAM_PROJECT_ID, project.getId());
+                        if (isSendProjectIdToPage()) {
+                            Project project = Session.get()
+                                    .getMetaData(SessionMetaData.CURRENT_PROJECT);
+                            // For legacy WebAnno pages, we set PAGE_PARAM_PROJECT_ID while
+                            // INCEpTION pages may pick the project up from the session.
+                            PageParameters params = new PageParameters();
+                            if (project != null) {
+                                params.set(PAGE_PARAM_PROJECT_ID, project.getId());
+                            }
+                            setResponsePage(pageClass, params);
                         }
-                        setResponsePage(pageClass, params);
+                        else {
+                            setResponsePage(pageClass);
+                        }
                     }
                 };
                 UrlResourceReference imageRef = new UrlResourceReference(Url.parse(item.getIcon()));
@@ -89,5 +96,15 @@ public class DashboardMenu
             }
 
         });
+    }
+
+    public boolean isSendProjectIdToPage()
+    {
+        return sendProjectIdToPage;
+    }
+
+    public void setSendProjectIdToPage(boolean aSendProjectIdToPage)
+    {
+        sendProjectIdToPage = aSendProjectIdToPage;
     }
 }
