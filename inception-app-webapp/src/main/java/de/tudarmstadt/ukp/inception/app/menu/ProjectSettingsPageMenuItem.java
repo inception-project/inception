@@ -20,22 +20,19 @@ package de.tudarmstadt.ukp.inception.app.menu;
 import org.apache.wicket.Page;
 import org.apache.wicket.Session;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil;
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
+import de.tudarmstadt.ukp.clarin.webanno.ui.project.ProjectPage;
 import de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData;
 
 @Component
-@Order(100)
-public class AnnotationPageMenuItem implements MenuItem
+public class ProjectSettingsPageMenuItem implements MenuItem
 {
     private @Autowired UserDao userRepo;
     private @Autowired ProjectService projectService;
@@ -43,19 +40,19 @@ public class AnnotationPageMenuItem implements MenuItem
     @Override
     public String getPath()
     {
-        return "/annotation";
+        return "/settings";
     }
     
     @Override
     public String getIcon()
     {
-        return "images/categories.png";
+        return "images/setting_tools.png";
     }
     
     @Override
     public String getLabel()
     {
-        return "Annotation";
+        return "Settings";
     }
     
     /**
@@ -75,13 +72,18 @@ public class AnnotationPageMenuItem implements MenuItem
 
         // Visible if the current user is an annotator
         User user = userRepo.getCurrentUser();
-        return SecurityUtil.isAnnotator(project, projectService, user)
-                && WebAnnoConst.PROJECT_TYPE_ANNOTATION.equals(project.getMode());
+        return SecurityUtil.isAdmin(project, projectService, user);
     }
     
     @Override
     public Class<? extends Page> getPageClass()
     {
-        return AnnotationPage.class;
+        return ProjectPage.class;
+    }
+    
+    @Override
+    public boolean isDirectAccessAllowed()
+    {
+        return true;
     }
 }

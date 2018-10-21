@@ -15,16 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.app.bootstrap;
+package de.tudarmstadt.ukp.inception.ui.core.session;
 
-import org.apache.wicket.extensions.wizard.AjaxWizardButtonBar;
-import org.apache.wicket.extensions.wizard.Wizard;
+import org.apache.wicket.MetaDataKey;
 
-public class BootstrapWizardButtonBar extends AjaxWizardButtonBar {
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
-    private static final long serialVersionUID = 7136194479524182883L;
-
-    public BootstrapWizardButtonBar(String id, Wizard wizard) {
-        super(id, wizard);
+public final class SessionMetaData
+{
+    public static final MetaDataKey<Project> CURRENT_PROJECT = new MetaDataKey<Project>()
+    {
+        private static final long serialVersionUID = 1L;
+    };
+    
+    private SessionMetaData()
+    {
+        // No instances
     }
 }
