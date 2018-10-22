@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.recommendation.api.recommender;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
 
@@ -44,11 +45,6 @@ public interface RecommendationEngine {
      */
     double evaluate(List<CAS> aCasses, DataSplitter aDataSplitter) throws RecommendationException;
 
-    default boolean isEvaluable()
-    {
-        return true;
-    }
-
     /**
      * Returns the long name of the type this recommender predict, e.g.
      * {@code "de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity"}
@@ -67,5 +63,15 @@ public interface RecommendationEngine {
     default String getPredictedFeature()
     {
         return "label";
+    }
+
+    /**
+     * Returns the name of the feature that contains the score. This has to be a feature
+     * of the type whose name is returned by {@link #getPredictedType}.
+     * @return The name of the feature that contains the score.
+     */
+    default Optional<String> getScoreFeature()
+    {
+        return Optional.of("score");
     }
 }

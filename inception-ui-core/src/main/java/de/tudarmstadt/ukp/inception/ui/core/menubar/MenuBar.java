@@ -19,82 +19,44 @@ package de.tudarmstadt.ukp.inception.ui.core.menubar;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 
-import org.apache.wicket.markup.html.form.DropDownChoice;
+import org.apache.wicket.Session;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaStatelessLink;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.AdminDashboardPage;
+import de.tudarmstadt.ukp.inception.ui.core.dashboard.ProjectDashboardPage;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.ProjectsOverviewPage;
+import de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData;
 
 public class MenuBar
     extends de.tudarmstadt.ukp.clarin.webanno.ui.core.page.MenuBar
 {
     private static final long serialVersionUID = -8018701379688272826L;
 
-    private static final Logger LOG = LoggerFactory.getLogger(MenuBar.class);
-
     private @SpringBean UserDao userRepository;
     private @SpringBean ProjectService projectService;
-
-    private DropDownChoice<Project> project;
 
     public MenuBar(String aId)
     {
         super(aId);
         
-//        project = new DropDownChoice<Project>("project");
-//        project.add(LambdaBehavior.onConfigure(_this -> 
-//                _this.setVisible(AuthenticatedWebSession.get().isSignedIn())));
-//        project.add(new AjaxFormComponentUpdatingBehavior("change")
-//        {
-//            private static final long serialVersionUID = -2064647315598402594L;
-//
-//            @Override
-//            public boolean getStatelessHint(Component component)
-//            {
-//                return true;
-//            }
-//
-//            @Override
-//            protected void onUpdate(AjaxRequestTarget aTarget)
-//            {
-//                // Reload the current page so the new project selection can take effect
-//                // For legacy WebAnno pages, we set PAGE_PARAM_PROJECT_ID while INCEpTION
-//                // pages may pick the project up from the session.
-//                PageParameters params = new PageParameters();
-//                if (project.getModelObject() != null) {
-//                    params.set(PAGE_PARAM_PROJECT_ID, project.getModelObject().getId());
-//                }
-//                setResponsePage(getPage().getClass(), params);
-//            }
-//        });
-//        project.setModel(LambdaModelAdapter.of(
-//            () -> Session.get().getMetaData(SessionMetaData.CURRENT_PROJECT), 
-//            (v) -> Session.get().setMetaData(SessionMetaData.CURRENT_PROJECT, v)));
-//
-//        project.setChoiceRenderer(new ChoiceRenderer<>("name"));
-//        project.setChoices(LoadableDetachableModel.of(() -> 
-//                projectService.listAccessibleProjects(userRepository.getCurrentUser())));
-//        add(project);
+        add(new LambdaStatelessLink("homeLink", () -> 
+                setResponsePage(getApplication().getHomePage())));
 
-        LambdaStatelessLink homeLink = new LambdaStatelessLink("homeLink", () -> 
-                setResponsePage(getApplication().getHomePage()));
-        add(homeLink);
+        add(new LambdaStatelessLink("dashboardLink", () -> 
+                setResponsePage(ProjectDashboardPage.class))
+                .add(visibleWhen(() -> 
+                        Session.get().getMetaData(SessionMetaData.CURRENT_PROJECT) != null)));
 
-        LambdaStatelessLink projectsLink = new LambdaStatelessLink("projectsLink", () -> 
-                setResponsePage(ProjectsOverviewPage.class));
-        projectsLink.add(visibleWhen(() -> userRepository.getCurrentUser() != null));
-        add(projectsLink);
+        add(new LambdaStatelessLink("projectsLink", () -> 
+                setResponsePage(ProjectsOverviewPage.class))
+                .add(visibleWhen(() -> userRepository.getCurrentUser() != null)));
 
-        LambdaStatelessLink adminLink = new LambdaStatelessLink("adminLink", () -> 
-                setResponsePage(AdminDashboardPage.class));
-        adminLink.add(visibleWhen(this::adminAreaAccessRequired));
-        add(adminLink);
+        add(new LambdaStatelessLink("adminLink", () -> 
+                setResponsePage(AdminDashboardPage.class))
+                .add(visibleWhen(this::adminAreaAccessRequired)));
     }
     
     private boolean adminAreaAccessRequired()

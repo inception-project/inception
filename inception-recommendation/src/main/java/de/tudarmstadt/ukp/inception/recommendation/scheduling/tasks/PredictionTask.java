@@ -22,6 +22,9 @@ import static org.apache.uima.fit.util.CasUtil.getAnnotationType;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+
+import javax.persistence.NoResultException;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
@@ -29,6 +32,7 @@ import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
+import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.slf4j.Logger;
@@ -60,6 +64,8 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderCo
 public class PredictionTask
     extends Task
 {
+    private static final double NO_SCORE = 0.0;
+
     private Logger log = LoggerFactory.getLogger(getClass());
     
     private @Autowired AnnotationSchemaService annoService;
@@ -109,7 +115,24 @@ public class PredictionTask
                 List<Recommender> recommenders = recommendationService
                     .getActiveRecommenders(user, layer);
 
-                for (Recommender recommender : recommenders) {
+                for (Recommender r : recommenders) {
+                    // Make sure we have the latest recommender config from the DB - the one from
+                    // the active recommenders list may be outdated
+                    Recommender recommender;
+                    try {
+                        recommender = recommendationService.getRecommender(r.getId());
+                    }
+                    catch (NoResultException e) {
+                        log.info("[{}][{}]: Recommender no longer available... skipping",
+                                user.getUsername(), r.getName());
+                        continue;
+                    }
+                    
+                    if (!recommender.isEnabled()) {
+                        log.debug("[{}][{}]: Disabled - skipping", user.getUsername(), r.getName());
+                        continue;
+                    }
+                    
                     RecommenderContext ctx = recommendationService.getContext(user, recommender);
                     
                     if (!ctx.isReadyForPrediction()) {
@@ -139,11 +162,15 @@ public class PredictionTask
 
                     String predictedTypeName = recommendationEngine.getPredictedType();
                     String predictedFeatureName = recommendationEngine.getPredictedFeature();
+                    Optional<String> scoreFeatureName = recommendationEngine.getScoreFeature();
                     Type predictionType = getAnnotationType(jCas.getCas(), predictedTypeName);
-                    Feature feature = predictionType.getFeatureByBaseName(predictedFeatureName);
+                    Feature labelFeature = predictionType
+                            .getFeatureByBaseName(predictedFeatureName);
+                    Optional<Feature> scoreFeature = scoreFeatureName
+                            .map(predictionType::getFeatureByBaseName);
 
-                    List<AnnotationObject> predictions = extractAnnotations(jCas.getCas(),
-                        predictionType, feature, document, recommender);
+                    List<AnnotationObject> predictions = extractAnnotations(user, jCas.getCas(),
+                        predictionType, labelFeature, scoreFeature, document, recommender);
                     model.putPredictions(layer.getId(), predictions);
 
                     // In order to just extract the annotations for a single recommender, each
@@ -157,9 +184,15 @@ public class PredictionTask
         recommendationService.putIncomingPredictions(getUser(), project, model);
     }
 
-    private List<AnnotationObject> extractAnnotations(CAS aCas, Type predictionType,
-        Feature predictedFeature, SourceDocument aDocument, Recommender aRecommender)
+    private List<AnnotationObject> extractAnnotations(User aUser, CAS aCas, Type predictionType,
+            Feature predictedFeature, Optional<Feature> aScoreFeature, SourceDocument aDocument,
+            Recommender aRecommender)
     {
+        int predictionCount = 0;
+        
+        DocumentMetaData dmd = DocumentMetaData.get(aCas);
+        String documentUri = dmd.getDocumentUri();
+        
         List<AnnotationObject> result = new ArrayList<>();
         int id = 0;
         for (AnnotationFS annotationFS : CasUtil.select(aCas, predictionType)) {
@@ -171,21 +204,30 @@ public class PredictionTask
             offset.setBeginCharacter(firstToken.getBegin());
             offset.setEndCharacter(lastToken.getEnd());
 
-            DocumentMetaData dmd = DocumentMetaData.get(aCas);
-            String documentUri = dmd.getDocumentUri();
-
             TokenObject to = new TokenObject(offset, annotationFS.getCoveredText(),
                 documentUri, aDocument.getName(), id);
 
             String label = annotationFS.getFeatureValueAsString(predictedFeature);
+            double score = aScoreFeature.map(f -> FSUtil.getFeature(annotationFS, f, Double.class))
+                    .orElse(NO_SCORE);
             String featurename = aRecommender.getFeature();
             String name = aRecommender.getName();
             AnnotationObject ao = new AnnotationObject(to, label, label, id, featurename, name,
-                    aRecommender.getId());
+                    score, aRecommender.getId());
 
             result.add(ao);
             id++;
+            
+            predictionCount++;
         }
+        
+        log.debug(
+                "[{}]({}) for user [{}] on document "
+                        + "[{}]({}) in project [{}]({}) generated {} predictions.",
+                aRecommender.getName(), aRecommender.getId(), aUser.getUsername(),
+                aDocument.getName(), aDocument.getId(), aRecommender.getProject().getName(),
+                aRecommender.getProject().getId(), predictionCount);
+        
         return result;
     }
 

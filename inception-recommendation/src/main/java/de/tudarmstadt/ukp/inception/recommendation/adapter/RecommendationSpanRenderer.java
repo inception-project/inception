@@ -52,6 +52,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
 
 /**
  * Render spans.
@@ -111,6 +112,8 @@ public class RecommendationSpanRenderer
                 .getAllRecordsByDocumentAndUserAndLayer(aState.getDocument(),
                         aState.getUser().getUsername(), layer);
         
+        Preferences pref = recommendationService.getPreferences(aState.getUser());
+        
         for (List<AnnotationObject> sentenceRecommendations: recommendations) {
             Map<String, Map<Long, AnnotationObject>> labelMap = new HashMap<>();
  
@@ -122,7 +125,8 @@ public class RecommendationSpanRenderer
                     vspansWithoutRecommendations, ao.getOffset(), windowBegin, ao.getFeature());
                 boolean isRejected = isRejected(recordedAnnotations, ao);
 
-                if (hasNoAnnotation || isOverlappingForFeature || isRejected) {
+                if (hasNoAnnotation || (!pref.isShowAllPredictions()
+                        && (isOverlappingForFeature || isRejected))) {
                     continue;
                 }
 
@@ -159,7 +163,7 @@ public class RecommendationSpanRenderer
             // Sort and filter labels under threshold value
             List<String> filtered = maxConfidencePerLabel.entrySet().stream()
                     .sorted((e1, e2) -> Double.compare(e2.getValue(), e1.getValue()))
-                    .limit(recommendationService.getMaxSuggestions(aState.getUser()))
+                    .limit(pref.getMaxPredictions())
                     .map(Entry::getKey).collect(Collectors.toList());
 
             // Render annotations for each label
@@ -220,7 +224,6 @@ public class RecommendationSpanRenderer
     
     /**
      * Check if there is already an existing annotation overlapping the prediction
-     * 
      */
     private boolean isOverlappingForFeature(Collection<VSpan> vspans, Offset recOffset,
         int windowBegin, String feature)

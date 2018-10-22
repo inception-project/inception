@@ -184,6 +184,7 @@ public class NamedEntityLinkerTest
         Recommender recommender = new Recommender();
         recommender.setLayer(layer);
         recommender.setFeature("identifier");
+        recommender.setMaxRecommendations(3);
 
         return recommender;
     }

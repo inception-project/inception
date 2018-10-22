@@ -80,4 +80,10 @@ public class ExternalRecommenderFactory
     {
         return new ExternalRecommenderTraits();
     }
+
+    @Override
+    public boolean isEvaluable()
+    {
+        return false;
+    }
 }

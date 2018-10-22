@@ -163,6 +163,7 @@ public class OpenNlpPosRecommenderTest
         Recommender recommender = new Recommender();
         recommender.setLayer(layer);
         recommender.setFeature("PosValue");
+        recommender.setMaxRecommendations(3);
 
         return recommender;
     }

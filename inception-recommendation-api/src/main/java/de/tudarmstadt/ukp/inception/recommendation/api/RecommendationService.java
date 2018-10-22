@@ -28,6 +28,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
@@ -62,9 +63,9 @@ public interface RecommendationService
     
     List<Recommender> getActiveRecommenders(User aUser, AnnotationLayer aLayer);
 
-    void setMaxSuggestions(User aUser, int aMax);
+    void setPreferences(User aUser, Preferences aPreferences);
     
-    int getMaxSuggestions(User aUser);
+    Preferences getPreferences(User aUser);
     
     Predictions getPredictions(User aUser, Project aProject);
 

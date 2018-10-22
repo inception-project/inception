@@ -22,17 +22,5 @@ import java.io.Serializable;
 public class NamedEntityLinkerTraits
     implements Serializable
 {
-    private static final long serialVersionUID = -221744072206988790L;
-    
-    private int maxNumPredictions = 3;
-
-    public int getMaxNumPredictions()
-    {
-        return maxNumPredictions;
-    }
-
-    public void setMaxNumPredictions(int aMaxNumPredictions)
-    {
-        maxNumPredictions = aMaxNumPredictions;
-    }
+    private static final long serialVersionUID = 4379021097577126023L;
 }

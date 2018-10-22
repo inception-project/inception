@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.annotation.Nullable;
 
@@ -48,6 +49,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext.Key;
 import de.tudarmstadt.ukp.inception.recommendation.api.type.PredictedSpan;
+import opennlp.tools.ml.BeamSearch;
 import opennlp.tools.postag.POSEvaluator;
 import opennlp.tools.postag.POSModel;
 import opennlp.tools.postag.POSSample;
@@ -59,7 +61,6 @@ import opennlp.tools.util.TrainingParameters;
 public class OpenNlpPosRecommender
     implements RecommendationEngine
 {
-
     public static final Key<POSModel> KEY_MODEL = new Key<>("opennlp_pos_model");
 
     private static final Logger LOG = LoggerFactory.getLogger(OpenNlpPosRecommender.class);
@@ -67,12 +68,16 @@ public class OpenNlpPosRecommender
 
     private final String layerName;
     private final String featureName;
+    private final int maxRecommendations;
+    
     private final OpenNlpPosRecommenderTraits traits;
 
-    public OpenNlpPosRecommender(Recommender aRecommender,
-                                 OpenNlpPosRecommenderTraits aTraits) {
+    public OpenNlpPosRecommender(Recommender aRecommender, OpenNlpPosRecommenderTraits aTraits)
+    {
         layerName = aRecommender.getLayer().getName();
         featureName = aRecommender.getFeature();
+        maxRecommendations = aRecommender.getMaxRecommendations();
+        
         traits = aTraits;
     }
 
@@ -81,7 +86,15 @@ public class OpenNlpPosRecommender
         throws RecommendationException
     {
         List<POSSample> posSamples = extractPosSamples(aCasses);
-        POSModel model = train(posSamples, traits.getParameters());
+
+        // The beam size controls how many results are returned at most. But even if the user
+        // requests only few results, we always use at least the default bean size recommended by
+        // OpenNLP
+        int beamSize = Math.max(maxRecommendations, POSTaggerME.DEFAULT_BEAM_SIZE);
+
+        TrainingParameters params = traits.getParameters();
+        params.put(BeamSearch.BEAM_SIZE_PARAMETER, Integer.toString(beamSize));
+        POSModel model = train(posSamples, params);
 
         if (model != null) {
             aContext.put(KEY_MODEL, model);
@@ -112,32 +125,40 @@ public class OpenNlpPosRecommender
                 .toArray(String[]::new);
 
             Sequence[] bestSequences = tagger.topKSequences(tokens);
-            Sequence bestSequence = bestSequences[0];
-            List<String> outcomes = bestSequence.getOutcomes();
-            double[] probabilities = bestSequence.getProbs();
 
-            for (int i = 0; i < outcomes.size(); i++) {
-                String label = outcomes.get(i);
+//            LOG.debug("Total number of sequences predicted: {}", bestSequences.length);
 
-                // Do not return PADded tokens
-                if (PAD.equals(label)) {
-                    continue;
+            for (int s = 0; s < Math.min(bestSequences.length, maxRecommendations); s++) {
+                Sequence sequence = bestSequences[s];
+                List<String> outcomes = sequence.getOutcomes();
+                double[] probabilities = sequence.getProbs();
+
+//                LOG.debug("Sequence {} score {}", s, sequence.getScore());
+//                LOG.debug("Outcomes: {}", outcomes);
+//                LOG.debug("Probabilities: {}", asList(probabilities));
+
+                for (int i = 0; i < outcomes.size(); i++) {
+                    String label = outcomes.get(i);
+
+                    // Do not return PADded tokens
+                    if (PAD.equals(label)) {
+                        continue;
+                    }
+
+                    AnnotationFS token = tokenAnnotations.get(i);
+                    int begin = token.getBegin();
+                    int end = token.getEnd();
+                    double confidence = probabilities[i];
+
+                    // Create the PredictedSpan
+                    AnnotationFS annotation = aCas.createAnnotation(predictionType, begin, end);
+                    annotation.setDoubleValue(confidenceFeature, confidence);
+                    annotation.setStringValue(labelFeature, label);
+                    aCas.addFsToIndexes(annotation);
                 }
-
-                AnnotationFS token = tokenAnnotations.get(i);
-                int begin = token.getBegin();
-                int end = token.getEnd();
-                double confidence = probabilities[i];
-
-                // Create the PredictedSpan
-                AnnotationFS annotation = aCas.createAnnotation(predictionType, begin, end);
-                annotation.setDoubleValue(confidenceFeature, confidence);
-                annotation.setStringValue(labelFeature, label);
-                aCas.addFsToIndexes(annotation);
             }
         }
     }
-
 
     @Override
     public double evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
@@ -172,7 +193,6 @@ public class OpenNlpPosRecommender
         // Train model
         POSModel model = train(trainingSet, traits.getParameters());
         if (model == null) {
-            LOG.warn("Model is null, cannot evaluate!");
             throw new RecommendationException("Model is null, cannot evaluate!");
         }
 
@@ -183,9 +203,9 @@ public class OpenNlpPosRecommender
             POSEvaluator evaluator = new POSEvaluator(tagger);
             evaluator.evaluate(stream);
             return evaluator.getWordAccuracy();
-        } catch (IOException e) {
-            LOG.error("Exception during evaluating the OpenNLP Named Entity Recognizer model.", e);
-            throw new RecommendationException("Error while evaluating OpenNlp POS", e);
+        }
+        catch (IOException e) {
+            throw new RecommendationException("Error while evaluating", e);
         }
     }
 
@@ -202,19 +222,18 @@ public class OpenNlpPosRecommender
                 AnnotationFS sentence = e.getKey();
 
                 Collection<AnnotationFS> tokens = e.getValue();
-                POSSample posSample = createPosSample(cas, sentence, tokens);
-
-                if (posSample != null) {
-                    posSamples.add(posSample);
-                }
+                
+                createPosSample(cas, sentence, tokens).map(posSamples::add);
             }
         }
+        
+        LOG.debug("Extracted {} POS samples", posSamples.size());
+        
         return posSamples;
     }
 
-    @Nullable
-    private POSSample createPosSample(CAS aCas, AnnotationFS aSentence,
-                                      Collection<AnnotationFS> aTokens)
+    private Optional<POSSample> createPosSample(CAS aCas, AnnotationFS aSentence,
+            Collection<AnnotationFS> aTokens)
     {
         Type annotationType = getType(aCas, layerName);
         Feature feature = annotationType.getFeatureByBaseName(featureName);
@@ -240,15 +259,12 @@ public class OpenNlpPosRecommender
             i++;
         }
 
-        return hasAnnotations ? new POSSample(tokens, tags) : null;
+        return hasAnnotations ? Optional.of(new POSSample(tokens, tags)) : Optional.empty();
     }
 
-    private String getFeatureValueCovering(CAS aCas, AnnotationFS aToken,
-                                           Type aType, Feature aFeature)
+    private String getFeatureValueCovering(CAS aCas, AnnotationFS aToken, Type aType,
+            Feature aFeature)
     {
-        int begin = aToken.getBegin();
-        int end = aToken.getBegin();
-
         List<AnnotationFS> annotations = CasUtil.selectCovered(aType, aToken);
 
         if (annotations.isEmpty()) {
@@ -270,9 +286,9 @@ public class OpenNlpPosRecommender
         try (POSSampleStream stream = new POSSampleStream(aPosSamples)) {
             POSTaggerFactory taggerFactory = new POSTaggerFactory();
             return POSTaggerME.train("unknown", stream, aParameters, taggerFactory);
-        } catch (IOException e) {
-            LOG.error("Exception during training the OpenNLP Parts Of Speech tagging model.", e);
-            throw new RecommendationException("Error while training OpenNLP pos", e);
+        }
+        catch (IOException e) {
+            throw new RecommendationException("Error training model", e);
         }
     }
 }

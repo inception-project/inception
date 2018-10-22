@@ -22,7 +22,6 @@ import java.io.Serializable;
 public class ExternalRecommenderTraits
     implements Serializable
 {
-
     private static final long serialVersionUID = -3109239605741337123L;
 
     private String remoteUrl;

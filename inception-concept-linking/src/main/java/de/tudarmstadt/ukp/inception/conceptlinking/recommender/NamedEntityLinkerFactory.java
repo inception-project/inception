@@ -95,4 +95,16 @@ public class NamedEntityLinkerFactory
     {
         return new NamedEntityLinkerTraits();
     }
+
+    @Override
+    public boolean isEvaluable()
+    {
+        return false;
+    }
+    
+    @Override
+    public boolean isMultipleRecommendationProvider()
+    {
+        return true;
+    }
 }

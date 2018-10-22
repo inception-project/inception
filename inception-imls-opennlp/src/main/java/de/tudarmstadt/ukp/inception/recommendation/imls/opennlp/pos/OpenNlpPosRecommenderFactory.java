@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.pos;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
 
 import org.apache.uima.cas.CAS;
 import org.springframework.stereotype.Component;
@@ -30,7 +30,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactoryImplBase;
 
 @Component
-public class OpenNlpPosClassificationToolFactory
+public class OpenNlpPosRecommenderFactory
     extends RecommendationEngineFactoryImplBase<OpenNlpPosRecommenderTraits>
 {
     // This is a string literal so we can rename/refactor the class without it changing its ID
@@ -63,7 +63,7 @@ public class OpenNlpPosClassificationToolFactory
             return false;
         }
         
-        return TOKENS.equals(aLayer.getAnchoringMode()) && SPAN_TYPE.equals(aLayer.getType())
+        return SINGLE_TOKEN.equals(aLayer.getAnchoringMode()) && SPAN_TYPE.equals(aLayer.getType())
                 && CAS.TYPE_NAME_STRING.equals(aFeature.getType());
     }
 
@@ -71,5 +71,11 @@ public class OpenNlpPosClassificationToolFactory
     public OpenNlpPosRecommenderTraits createTraits()
     {
         return new OpenNlpPosRecommenderTraits();
+    }
+    
+    @Override
+    public boolean isMultipleRecommendationProvider()
+    {
+        return true;
     }
 }

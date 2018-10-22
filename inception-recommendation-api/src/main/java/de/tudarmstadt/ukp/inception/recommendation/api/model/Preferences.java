@@ -2,7 +2,7 @@
  * Copyright 2018
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
- *
+ * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,22 +15,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.pos;
+package de.tudarmstadt.ukp.inception.recommendation.api.model;
 
 import java.io.Serializable;
 
-import opennlp.tools.ml.AbstractTrainer;
-import opennlp.tools.util.TrainingParameters;
-
-public class OpenNlpPosRecommenderTraits
+public class Preferences
     implements Serializable
 {
-    private static final long serialVersionUID = -4514466471370195077L;
+    private static final long serialVersionUID = 979498856625982141L;
 
-    public TrainingParameters getParameters()
+    private int maxPredictions = 3;
+    private boolean showAllPredictions = false;
+
+    public void setMaxPredictions(int aMaxPredictions)
     {
-        TrainingParameters parameters = TrainingParameters.defaultParams();
-        parameters.put(AbstractTrainer.VERBOSE_PARAM, "false");
-        return parameters;
+        maxPredictions = aMaxPredictions;
+    }
+
+    public int getMaxPredictions()
+    {
+        return maxPredictions;
+    }
+
+    public boolean isShowAllPredictions()
+    {
+        return showAllPredictions;
+    }
+
+    public void setShowAllPredictions(boolean aShowAllPredictions)
+    {
+        showAllPredictions = aShowAllPredictions;
     }
 }
