@@ -95,6 +95,11 @@ public class TrainingTask
                     continue;
                 }
                 
+                if (!recommender.isEnabled()) {
+                    log.debug("[{}][{}]: Disabled - skipping", user.getUsername(), r.getName());
+                    continue;
+                }
+                
                 long startTime = System.currentTimeMillis();
                 RecommenderContext context = recommendationService.getContext(user, recommender);
                 RecommendationEngineFactory factory = recommendationService

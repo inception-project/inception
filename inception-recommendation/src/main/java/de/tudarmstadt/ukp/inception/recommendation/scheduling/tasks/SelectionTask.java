@@ -21,6 +21,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.persistence.NoResultException;
+
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.jcas.JCas;
@@ -84,27 +86,40 @@ public class SelectionTask
     
             List<Recommender> activeRecommenders = new ArrayList<>();
             
-            for (Recommender recommender : recommenders) {
+            for (Recommender r : recommenders) {
+                // Make sure we have the latest recommender config from the DB - the one from
+                // the active recommenders list may be outdated
+                Recommender recommender;
+                try {
+                    recommender = recommendationService.getRecommender(r.getId());
+                }
+                catch (NoResultException e) {
+                    log.info("[{}][{}]: Recommender no longer available... skipping",
+                            user.getUsername(), r.getName());
+                    continue;
+                }
+
+                if (!recommender.isEnabled()) {
+                    log.debug("[{}][{}]: Disabled - skipping", userName, recommender.getName());
+                    continue;
+                }
+
                 String recommenderName = recommender.getName();
+                
                 try {
                     long start = System.currentTimeMillis();
                     RecommendationEngineFactory factory = recommendationService
                         .getRecommenderFactory(recommender);
-                    log.debug("Factory: [{}]", factory);
                     RecommendationEngine recommendationEngine = factory.build(recommender);
 
-                    if (!recommender.isEnabled()) {
-                        continue;
-                    }
-                    
                     if (recommender.isAlwaysSelected()) {
                         log.debug("[{}][{}]: Activating [{}] without evaluating - always selected",
-                            recommenderName);
+                                userName, recommenderName, recommenderName);
                         activeRecommenders.add(recommender);
                         continue;
                     } else if (!factory.isEvaluable()) {
                         log.debug("[{}][{}]: Activating [{}] without evaluating - not evaluable",
-                            recommenderName);
+                                userName, recommenderName, recommenderName);
                         activeRecommenders.add(recommender);
                         continue;
                     }

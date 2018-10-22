@@ -128,6 +128,11 @@ public class PredictionTask
                         continue;
                     }
                     
+                    if (!recommender.isEnabled()) {
+                        log.debug("[{}][{}]: Disabled - skipping", user.getUsername(), r.getName());
+                        continue;
+                    }
+                    
                     RecommenderContext ctx = recommendationService.getContext(user, recommender);
                     
                     if (!ctx.isReadyForPrediction()) {
@@ -216,7 +221,7 @@ public class PredictionTask
             predictionCount++;
         }
         
-        log.error(
+        log.debug(
                 "[{}]({}) for user [{}] on document "
                         + "[{}]({}) in project [{}]({}) generated {} predictions.",
                 aRecommender.getName(), aRecommender.getId(), aUser.getUsername(),

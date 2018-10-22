@@ -55,6 +55,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderFactoryRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
@@ -114,6 +115,7 @@ public class RecommendationServiceImpl
         MultiValuedMap<AnnotationLayer, Recommender> activeRecommenders = 
                 state.getActiveRecommenders();
         synchronized (activeRecommenders) {
+            activeRecommenders.remove(aLayer);
             activeRecommenders.putAll(aLayer, aRecommenders);
         }
     }
@@ -248,17 +250,17 @@ public class RecommendationServiceImpl
     }
 
     @Override
-    public void setMaxSuggestions(User aUser, int aMax)
+    public Preferences getPreferences(User aUser)
     {
         RecommendationUserState state = getState(aUser.getUsername());
-        state.setMaxPredictions(aMax);
+        return state.getPreferences();
     }
     
     @Override
-    public int getMaxSuggestions(User aUser)
+    public void setPreferences(User aUser, Preferences aPreferences)
     {
         RecommendationUserState state = getState(aUser.getUsername());
-        return state.getMaxPredictions();
+        state.setPreferences(aPreferences);
     }
     
     @Override
@@ -325,7 +327,7 @@ public class RecommendationServiceImpl
      */
     private static class RecommendationUserState
     {
-        private int maxPredictions = 3;
+        private Preferences preferences = new Preferences();
         private MultiValuedMap<AnnotationLayer, Recommender> activeRecommenders = 
                 new HashSetValuedHashMap<>();
         private Map<Long, RecommenderContext> recommenderContexts = new ConcurrentHashMap<>();
@@ -337,20 +339,20 @@ public class RecommendationServiceImpl
             return activeRecommenders;
         }
 
+        public Preferences getPreferences()
+        {
+            return preferences;
+        }
+
+        public void setPreferences(Preferences aPreferences)
+        {
+            preferences = aPreferences;
+        }
+
         public void setActiveRecommenders(
             MultiValuedMap<AnnotationLayer, Recommender> aActiveRecommenders)
         {
             activeRecommenders = aActiveRecommenders;
-        }
-        
-        public void setMaxPredictions(int aMaxPredictions)
-        {
-            maxPredictions = aMaxPredictions;
-        }
-        
-        public int getMaxPredictions()
-        {
-            return maxPredictions;
         }
         
         public void putActivePredictions(Project aProject, Predictions aPredictions)
