@@ -65,7 +65,7 @@ public class SpanLayerSupport
     @Override
     public void afterPropertiesSet() throws Exception
     {
-        types = asList(new LayerType(WebAnnoConst.CHAIN_TYPE, "Chain", layerSupportId));
+        types = asList(new LayerType(WebAnnoConst.SPAN_TYPE, "Span", layerSupportId));
     }
     
     @Override

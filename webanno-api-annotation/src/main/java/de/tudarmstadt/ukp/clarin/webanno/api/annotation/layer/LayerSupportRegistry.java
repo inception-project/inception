@@ -17,6 +17,9 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer;
 
+import static java.util.Comparator.comparing;
+
+import java.util.ArrayList;
 import java.util.List;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -30,4 +33,22 @@ public interface LayerSupportRegistry
     LayerSupport getLayerSupport(String aId);
 
     LayerType getLayerType(AnnotationLayer aLayer);
+
+    /**
+     * Get the types of all layers the user should be able to create. There can also be internal
+     * types reserved for built-in features. These are not returned.
+     */
+    default List<LayerType> getAllTypes()
+    {
+        List<LayerType> allTypes = new ArrayList<>();
+
+        for (LayerSupport layerSupport : getLayerSupports()) {
+            List<LayerType> types = layerSupport.getSupportedLayerTypes();
+            types.stream().forEach(allTypes::add);
+        }
+
+        allTypes.sort(comparing(LayerType::getUiName));
+
+        return allTypes;
+    }
 }

@@ -95,6 +95,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureType;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerType;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.LayerConfigurationChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.export.ImportUtil;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedAnnotationFeature;
@@ -139,6 +141,7 @@ public class ProjectLayersPanel
     private @SpringBean ProjectService repository;
     private @SpringBean UserDao userRepository;
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
+    private @SpringBean LayerSupportRegistry layerSupportRegistry;
     private @SpringBean ApplicationEventPublisherHolder applicationEventPublisherHolder;
 
     private final String FIRST = "first";
@@ -477,7 +480,7 @@ public class ProjectLayersPanel
 
         private static final String TYPE_PREFIX = "webanno.custom.";
 
-        private DropDownChoice<String> layerTypes;
+        private DropDownChoice<LayerType> layerTypes;
         private DropDownChoice<AnnotationLayer> attachTypes;
 
         private DropDownChoice<AnchoringMode> anchoringMode;
@@ -513,18 +516,16 @@ public class ProjectLayersPanel
             });
 
             add(new CheckBox("enabled"));
-            add(layerTypes = (DropDownChoice<String>) new DropDownChoice<String>("type",
-                    Arrays.asList(new String[] { SPAN_TYPE, RELATION_TYPE, CHAIN_TYPE }))
-            {
-                private static final long serialVersionUID = 1244555334843130802L;
-
-                @Override
-                public boolean isEnabled()
-                {
-                    return isNull(LayerDetailForm.this.getModelObject().getId());
-                }
-            }.setRequired(true));
-            
+            add(layerTypes = new DropDownChoice<>("type"));
+            layerTypes.setChoices(layerSupportRegistry::getAllTypes);
+            layerTypes.add(LambdaBehavior
+                    .enabledWhen(() -> isNull(LayerDetailForm.this.getModelObject().getId())));
+            layerTypes.setRequired(true);
+            layerTypes.setNullValid(false);
+            layerTypes.setChoiceRenderer(new ChoiceRenderer<>("uiName"));
+            layerTypes.setModel(LambdaModelAdapter.of(
+                () -> layerSupportRegistry.getLayerType(layerDetailForm.getModelObject()), 
+                (v) -> LayerDetailForm.this.getModelObject().setType(v.getName())));
             layerTypes.add(new AjaxFormComponentUpdatingBehavior("change")
             {
                 private static final long serialVersionUID = 6790949494089940303L;
