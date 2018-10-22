@@ -73,6 +73,8 @@ public class Recommender
 
     private boolean enabled = true;
     
+    private int maxRecommendations;
+    
     @Lob
     @Column(length = 64000)
     private String traits;
@@ -187,6 +189,16 @@ public class Recommender
     public void setEnabled(boolean aEnabled)
     {
         enabled = aEnabled;
+    }
+    
+    public int getMaxRecommendations()
+    {
+        return maxRecommendations;
+    }
+
+    public void setMaxRecommendations(int aMaxRecommendations)
+    {
+        maxRecommendations = aMaxRecommendations;
     }
 
     public String getTraits()
