@@ -46,10 +46,13 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationExce
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.PrimitiveUimaFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.SlotFeatureSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.ChainLayerSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistryImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.RelationLayerSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.SpanLayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.AnnotationSchemaServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.DiffUtils;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -67,6 +70,7 @@ import mockit.MockUp;
 public class CopyAnnotationTest
 {
     private AnnotationSchemaService annotationSchemaService;
+    private LayerSupportRegistryImpl layerSupportRegistry;
     private FeatureSupportRegistryImpl featureSupportRegistry;
     private Project project;
     private AnnotationLayer tokenLayer;
@@ -145,8 +149,7 @@ public class CopyAnnotationTest
             @Mock
             TypeAdapter getAdapter(AnnotationLayer aLayer)
             {
-                return AnnotationSchemaServiceImpl.getAdapter(annotationSchemaService,
-                        featureSupportRegistry, null, aLayer);
+                return layerSupportRegistry.getLayerSupport(aLayer).createAdapter(aLayer);
             }
 
         }.getMockInstance();
@@ -155,6 +158,12 @@ public class CopyAnnotationTest
                 asList(new PrimitiveUimaFeatureSupport(),
                         new SlotFeatureSupport(annotationSchemaService)));
         featureSupportRegistry.init();
+        
+        layerSupportRegistry = new LayerSupportRegistryImpl(asList(
+                new SpanLayerSupport(featureSupportRegistry, null, annotationSchemaService),
+                new RelationLayerSupport(featureSupportRegistry, null, annotationSchemaService),
+                new ChainLayerSupport(featureSupportRegistry, null, annotationSchemaService)));
+        layerSupportRegistry.init();
     }
     
     @Test

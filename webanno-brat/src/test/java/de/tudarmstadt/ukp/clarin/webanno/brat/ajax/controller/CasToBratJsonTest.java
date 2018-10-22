@@ -36,7 +36,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -51,13 +50,20 @@ import com.flipkart.zjsonpatch.JsonDiff;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistryImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.PrimitiveUimaFeatureSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.SlotFeatureSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.ChainLayerSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistryImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.RelationLayerSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.SpanLayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.AnnotationSchemaServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.brat.ajax.controller.CasToBratJsonTest.TestContext;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
@@ -81,7 +87,6 @@ public class CasToBratJsonTest
 {
     private @Autowired Project project;
     private @Autowired AnnotationSchemaService annotationSchemaService;
-    private @Autowired FeatureSupportRegistryImpl featureSupportRegistry;
     private @Autowired PreRenderer preRenderer;
     
     @BeforeClass
@@ -224,8 +229,6 @@ public class CasToBratJsonTest
     {
         private @Autowired Project project;
         private @Autowired AnnotationSchemaService annotationSchemaService;
-        private @Autowired FeatureSupportRegistryImpl featureSupportRegistry;
-        private @Autowired ApplicationEventPublisher applicationEventPublisher;
 
         private AnnotationLayer tokenLayer;
         private AnnotationFeature tokenPosFeature;
@@ -291,11 +294,29 @@ public class CasToBratJsonTest
                 @Mock
                 TypeAdapter getAdapter(AnnotationLayer aLayer)
                 {
-                    return AnnotationSchemaServiceImpl.getAdapter(annotationSchemaService,
-                            featureSupportRegistry, applicationEventPublisher, aLayer);
+                    return layerSupportRegistry().getLayerSupport(aLayer).createAdapter(aLayer);
                 }
 
             }.getMockInstance();
+        }
+        
+        @Bean
+        public FeatureSupportRegistry featureSupportRegistry()
+        {
+            return new FeatureSupportRegistryImpl(
+                    asList(new PrimitiveUimaFeatureSupport(),
+                            new SlotFeatureSupport(annotationSchemaService)));
+        }
+        
+        @Bean
+        public LayerSupportRegistry layerSupportRegistry()
+        {
+            return new LayerSupportRegistryImpl(asList(
+                    new SpanLayerSupport(featureSupportRegistry(), null, annotationSchemaService()),
+                    new RelationLayerSupport(featureSupportRegistry(), null,
+                            annotationSchemaService()),
+                    new ChainLayerSupport(featureSupportRegistry(), null,
+                            annotationSchemaService())));
         }
     }
 }

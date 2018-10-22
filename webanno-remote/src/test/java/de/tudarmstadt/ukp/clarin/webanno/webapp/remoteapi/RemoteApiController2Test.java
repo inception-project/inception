@@ -62,6 +62,11 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistryImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.ChainLayerSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistryImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.RelationLayerSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.SpanLayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.AnnotationSchemaServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.BackupProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.CasStorageServiceImpl;
@@ -339,7 +344,7 @@ public class RemoteApiController2Test
             return new RepositoryProperties();
         }
 
-        @Bean
+        @Bean 
         public BackupProperties backupProperties()
         {
             return new BackupProperties();
@@ -349,6 +354,15 @@ public class RemoteApiController2Test
         public ApplicationContextProvider contextProvider()
         {
             return new ApplicationContextProvider();
+        }
+        
+        @Bean
+        public LayerSupportRegistry layerSupportRegistry()
+        {
+            return new LayerSupportRegistryImpl(asList(
+                    new SpanLayerSupport(featureSupportRegistry(), null, annotationService()),
+                    new RelationLayerSupport(featureSupportRegistry(), null, annotationService()),
+                    new ChainLayerSupport(featureSupportRegistry(), null, annotationService())));
         }
     }
 }
