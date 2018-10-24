@@ -126,6 +126,25 @@ public final class SPARQLQueryStore
                 , "LIMIT " + aKB.getMaxResults());
     }
     
+    /** 
+     * Query to read concept from a knowledge base.
+     */
+    public static final String readConcept(KnowledgeBase aKB, int limit)
+    {
+        return String.join("\n"
+                , SPARQL_PREFIX    
+                , "SELECT ((?label) AS ?l) ((?desc) AS ?d) WHERE { "
+                , "  { ?oItem ?pTYPE ?oCLASS . } "
+                , "  UNION {?someSubClass ?pSUBCLASS ?oItem . } "
+                , "  UNION {?oItem ?pSUBCLASS ?oPARENT . }" 
+                , "  UNION {?oItem ?pTYPE ?oCLASS ."
+                , "    ?oItem owl:intersectionOf ?list . "
+                , "    FILTER EXISTS { ?list rdf:rest*/rdf:first ?oPARENT} }"
+                , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage(),"?label")
+                , optionalLanguageFilteredValue("?pDESCRIPTION", aKB.getDefaultLanguage(),"?desc")
+                , "} "
+                , "LIMIT " + limit);
+    }
     
     
     /** 

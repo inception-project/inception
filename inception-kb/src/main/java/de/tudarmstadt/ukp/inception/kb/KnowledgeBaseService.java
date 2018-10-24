@@ -565,4 +565,17 @@ public interface KnowledgeBaseService
      * Can be used to re-index a local KB in case the full text index is corrupt. 
      */
     void rebuildFullTextIndex(KnowledgeBase aKb) throws Exception;
+    
+    /**
+     * Read the concept with the given identifier from the given knowledge base with a 
+     * specific query
+     * 
+     * @param kb
+     *            a knowledge base.
+     * @param aIdentifier
+     *            a concept identifier.
+     * @return the concept.
+     */
+    Optional<KBConcept> readConceptExist(KnowledgeBase aKB, String aIdentifier)
+            throws QueryEvaluationException;
 }

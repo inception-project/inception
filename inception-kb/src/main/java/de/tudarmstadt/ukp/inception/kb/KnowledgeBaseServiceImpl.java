@@ -462,6 +462,56 @@ public class KnowledgeBaseServiceImpl
         });
     }
     
+    public Optional<KBConcept> readConceptExist(KnowledgeBase aKB, String aIdentifier)
+        throws QueryEvaluationException
+    {
+        KBHandle resultHandle = read(aKB, (conn) -> {
+            String QUERY = SPARQLQueryStore.readConcept(aKB, 1);
+            ValueFactory vf = SimpleValueFactory.getInstance();
+            TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
+            tupleQuery.setBinding("oItem", vf.createIRI(aIdentifier));
+            tupleQuery.setBinding("pTYPE", aKB.getTypeIri());
+            tupleQuery.setBinding("oCLASS", aKB.getClassIri());
+            tupleQuery.setBinding("pSUBCLASS", aKB.getSubclassIri());
+            tupleQuery.setBinding("pLABEL", aKB.getLabelIri());
+            tupleQuery.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
+            tupleQuery.setIncludeInferred(false);
+            TupleQueryResult result = tupleQuery.evaluate();
+
+            KBHandle handle = new KBHandle();
+            while (result.hasNext()) {
+                BindingSet bindings = result.next();
+                if (bindings.size() == 0) {
+                    continue;
+                }
+                Binding label = bindings.getBinding("l");
+                Binding description = bindings.getBinding("d");
+                handle.setIdentifier(aIdentifier);
+                if (label != null) {
+                    handle.setName(label.getValue().stringValue());
+                }
+                else {
+                    handle.setName(handle.getUiLabel());
+                }
+                if (description != null) {
+                    handle.setDescription(description.getValue().stringValue());
+                }
+
+            }
+            return handle;
+        });
+        if (resultHandle.getIdentifier() == null) {
+            return Optional.empty();
+        }
+        else {
+            KBConcept kbConcept = new KBConcept();
+            kbConcept.setIdentifier(aIdentifier);
+            kbConcept.setName(resultHandle.getName());
+            kbConcept.setDescription(resultHandle.getDescription());
+            return Optional.of(kbConcept);
+        }
+    }
+    
     @Override
     public Optional<KBConcept> readConcept(Project aProject, String aIdentifier)
     {
@@ -889,7 +939,7 @@ public class KnowledgeBaseServiceImpl
 
         if (!aKB.getExplicitlyDefinedRootConcepts().isEmpty()) {
             for (IRI conceptIRI : aKB.getExplicitlyDefinedRootConcepts()) {
-                KBConcept concept = readConcept(aKB, conceptIRI.stringValue()).get();
+                KBConcept concept = readConceptExist(aKB, conceptIRI.stringValue()).get();
                 KBHandle conceptHandle = new KBHandle(concept.getIdentifier(), concept.getName(),
                         concept.getDescription());
                 resultList.add(conceptHandle);
