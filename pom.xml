@@ -55,6 +55,7 @@
   </distributionManagement>
   <properties>
     <webanno.version>3.5.0-SNAPSHOT</webanno.version>
+    <uima.version>2.10.2</uima.version>
     <dkpro.version>1.10.0</dkpro.version>
     <spring.version>5.0.7.RELEASE</spring.version>
     <spring.boot.version>1.5.14.RELEASE</spring.boot.version>
@@ -62,12 +63,12 @@
     <wicket-jquery-ui.version>${wicket.version}</wicket-jquery-ui.version>
     <lucene.version>7.3.0</lucene.version>
     <mtas.version>7.3.0.3</mtas.version>
-    <dkpro.lab.version>0.14.0</dkpro.lab.version>
-    <dl4j.version>0.9.1</dl4j.version>
+    <dl4j.version>1.0.0-beta</dl4j.version>
     <rdf4j.version>2.4.0</rdf4j.version>
     <inception-rdf4j.version>${rdf4j.version}</inception-rdf4j.version>
     <mockito.version>2.18.3</mockito.version>
     <assertj.version>3.10.0</assertj.version>
+    <okhttp.version>3.11.0</okhttp.version>
   </properties>
   <modules>
     <module>inception-build</module>
@@ -85,11 +86,10 @@
     <module>inception-recommendation</module>
     <module>inception-active-learning</module>
     <module>inception-concept-linking</module>
-    <module>inception-imls-core</module>
     <!-- module>inception-imls-mira</module -->
     <module>inception-imls-opennlp</module>
     <module>inception-imls-stringmatch</module>
-    <!-- module>inception-imls-dl4j</module -->
+    <module>inception-imls-dl4j</module>
     <module>inception-imls-external</module>
     <module>inception-log</module>
     <module>inception-support</module>
@@ -124,13 +124,13 @@
   <dependencies>
     <!-- The logging subsystem used by WebAnno -->
     <dependency>
-      <!-- Use Log4J v2 as logging backend -->
+      <!-- Use Log4J http as logging backend -->
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-core</artifactId>
       <scope>runtime</scope>
     </dependency>
     <dependency>
-      <!-- Use Log4J v2 as logging backend -->
+      <!-- Use Log4J http as logging backend -->
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-slf4j-impl</artifactId>
       <scope>runtime</scope>
@@ -241,11 +241,6 @@
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>inception-imls-core</artifactId>
-        <version>0.6.0-SNAPSHOT</version>
-      </dependency>
-      <dependency>
-        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-imls-opennlp</artifactId>
         <version>0.6.0-SNAPSHOT</version>
       </dependency>
@@ -296,6 +291,11 @@
         <groupId>org.assertj</groupId>
         <artifactId>assertj-core</artifactId>
         <version>${assertj.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.squareup.okhttp3</groupId>
+        <artifactId>mockwebserver</artifactId>
+        <version>${okhttp.version}</version>
       </dependency>
 
       <!-- Wicket jQuery -->
@@ -497,14 +497,14 @@
         <version>1.14</version>
       </dependency>
       <dependency>
-        <groupId>org.apache.httpcomponents</groupId>
-        <artifactId>httpclient</artifactId>
-        <version>4.5.3</version>
+        <groupId>com.squareup.okio</groupId>
+        <artifactId>okio</artifactId>
+        <version>1.14.0</version>
       </dependency>
       <dependency>
-        <groupId>org.apache.httpcomponents</groupId>
-        <artifactId>httpcore</artifactId>
-        <version>4.4.9</version>
+        <groupId>com.squareup.okhttp3</groupId>
+        <artifactId>okhttp</artifactId>
+        <version>${okhttp.version}</version>
       </dependency>
       <dependency>
         <groupId>com.github.ben-manes.caffeine</groupId>
@@ -662,14 +662,6 @@
       </dependency>
 
       <dependency>
-        <groupId>org.dkpro.lab</groupId>
-        <artifactId>dkpro-lab</artifactId>
-        <version>${dkpro.lab.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-      
-      <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno</artifactId>
         <version>${webanno.version}</version>
@@ -689,6 +681,31 @@
   
   <build>
     <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <configuration>
+          <notimestamp>true</notimestamp>
+          <!-- Exclude UIMA types -->
+          <sourceFileExcludes>
+            <exclude>**/*_Type.java</exclude>
+          </sourceFileExcludes>
+          <tags>
+            <tag>
+              <name>generated</name>
+              <placement>X</placement>
+            </tag>
+            <tag>
+              <name>ordered</name>
+              <placement>X</placement>
+            </tag>
+            <tag>
+              <name>modifiable</name>
+              <placement>X</placement>
+            </tag>
+          </tags>
+        </configuration>
+      </plugin>
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>buildnumber-maven-plugin</artifactId>
@@ -863,6 +880,63 @@
                     <exclude>src/main/resources/**/*</exclude>
                     <exclude>src/test/resources/**/*</exclude>
                   </excludes>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>run-jcasgen</id>
+      <activation>
+        <file>
+          <exists>.activate-run-jcasgen</exists>
+        </file>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <!--generate types dynamically -->
+            <groupId>org.apache.uima</groupId>
+            <artifactId>jcasgen-maven-plugin</artifactId>
+            <version>${uima.version}</version>
+            <configuration>
+              <limitToProject>true</limitToProject>
+              <typeSystemIncludes>
+                <include>src/main/resources/desc/type/**/*.xml</include>
+              </typeSystemIncludes>
+              <typeSystemExcludes>
+                <exclude>src/main/resources/desc/type/**/*_customized.xml</exclude>
+              </typeSystemExcludes>
+            </configuration>
+            <executions>
+              <execution>
+                <!--call it in the generate-source phase -->
+                <phase>generate-sources</phase>
+                <goals>
+                  <goal>generate</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>build-helper-maven-plugin</artifactId>
+            <version>1.10</version>
+            <executions>
+              <execution>
+                <id>addToSourceFolder</id>
+                <goals>
+                  <!--add the generated sources -->
+                  <goal>add-source</goal>
+                </goals>
+                <phase>process-sources</phase>
+                <configuration>
+                  <sources>
+                    <!--default path to generated sources -->
+                    <source>${project.build.directory}/generated-sources/jcasgen</source>
+                  </sources>
                 </configuration>
               </execution>
             </executions>

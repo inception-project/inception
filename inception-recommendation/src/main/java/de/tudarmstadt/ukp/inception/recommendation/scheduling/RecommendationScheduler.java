@@ -84,7 +84,10 @@ public class RecommendationScheduler
         // If the no equivalent task is scheduled, then we schedule the new one.
         if (!queue.contains(aRunnable)) {
             queue.offer(aRunnable);
-            log.info("Enqueued new task: {}", aRunnable);
+            log.info("Enqueued new task: {} (queue size {})", aRunnable, queue.size());
+        }
+        else {
+            log.info("Task already in queue: {}", aRunnable);
         }
     }
     

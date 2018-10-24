@@ -84,6 +84,13 @@ public class AdminDashboardPage
         }
         
         menu = new DashboardMenu("menu", LoadableDetachableModel.of(this::getMenuItems));
+        // Pages linked from the admin menu are global ones - we do not want to set the current
+        // project ID there because the same page may support a global and a project-specific view
+        // and we might access the project-specific view through another path. E.g. the project
+        // setting page should be global (with project selection list) when access throught the
+        // administration dashboard, but when accesses through the project dashboard, it should only
+        // show the local project view without the project selection.
+        menu.setSendProjectIdToPage(false);
         add(menu);
         
         add(new SystemStatusDashlet("systemStatusDashlet"));
