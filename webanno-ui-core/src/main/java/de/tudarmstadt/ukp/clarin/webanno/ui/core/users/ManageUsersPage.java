@@ -17,16 +17,18 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.core.users;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+
 import java.util.ArrayList;
 import java.util.Collection;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.markup.html.WebMarkupContainer;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.EmailTextField;
 import org.apache.wicket.markup.html.form.Form;
-import org.apache.wicket.markup.html.form.FormComponent;
 import org.apache.wicket.markup.html.form.ListMultipleChoice;
 import org.apache.wicket.markup.html.form.PasswordTextField;
 import org.apache.wicket.markup.html.form.TextField;
@@ -34,10 +36,10 @@ import org.apache.wicket.markup.html.form.validation.EqualPasswordInputValidator
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.validation.IValidatable;
-import org.apache.wicket.validation.IValidator;
 import org.apache.wicket.validation.ValidationError;
 import org.wicketstuff.annotation.mount.MountPath;
 
@@ -48,7 +50,6 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ModelChangedVisitor;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.NameUtil;
@@ -72,8 +73,14 @@ public class ManageUsersPage
     {
         private static final long serialVersionUID = -1L;
 
-        public transient Model<String> passwordModel = new Model<>();
-        public transient Model<String> repeatPasswordModel = new Model<>();
+        private boolean isCreate = false;
+        private PasswordTextField passwordField;
+        private PasswordTextField repeatPasswordField;
+        
+        public transient String password;
+        
+        @SuppressWarnings("unused")
+        public transient String repeatPassword;
 
         public DetailForm(String id, IModel<User> aModel)
         {
@@ -82,83 +89,79 @@ public class ManageUsersPage
             setOutputMarkupId(true);
             setOutputMarkupPlaceholderTag(true);
             
-            add(new TextField<String>("username"));
-            add(new PasswordTextField("password", passwordModel).setRequired(false));
-            add(new PasswordTextField("repeatPassword", repeatPasswordModel).setRequired(false));
+            add(new TextField<String>("username")
+                    .setRequired(true)
+                    .add(this::validateUsername)
+                    .add(enabledWhen(() -> isCreate)));
             add(new Label("lastLogin"));
             add(new EmailTextField("email"));
             
-            WebMarkupContainer adminOnly = new WebMarkupContainer("adminOnly");
-            adminOnly.add(new ListMultipleChoice<>("roles", new ArrayList<>(Role.getRoles()))
-                    .add(new IValidator<Collection<Role>>()
-                    {
-                        private static final long serialVersionUID = 1L;
+            passwordField = new PasswordTextField("password");
+            passwordField.setModel(PropertyModel.of(DetailForm.this, "password"));
+            passwordField.setRequired(false);
+            add(passwordField);
+            
+            repeatPasswordField = new PasswordTextField("repeatPassword");
+            repeatPasswordField.setModel(PropertyModel.of(DetailForm.this, "repeatPassword"));
+            repeatPasswordField.setRequired(false);
+            add(repeatPasswordField);
+            
+            add(new EqualPasswordInputValidator(passwordField, repeatPasswordField));
+            
+            add(new ListMultipleChoice<>("roles", new ArrayList<>(Role.getRoles()))
+                    .add(this::validateRoles)
+                    .add(visibleWhen(ManageUsersPage.this::isAdmin)));
+            
+            add(new CheckBox("enabled")
+                    .add(this::validateEnabled)
+                    .add(visibleWhen(ManageUsersPage.this::isAdmin)));
 
-                        @Override
-                        public void validate(IValidatable<Collection<Role>> aValidatable)
-                        {
-                            Collection<Role> newRoles = aValidatable.getValue();
-                            if (newRoles.isEmpty()) {
-                                aValidatable.error(new ValidationError()
-                                        .setMessage("A user has to have at least one role."));
-                            }
-                            // enforce users to have at least the ROLE_USER role
-                            if (!newRoles.contains(Role.ROLE_USER)) {
-                                aValidatable.error(new ValidationError()
-                                        .setMessage("Every user has to be a user."));
-                            }
-                            // don't let an admin user strip himself of admin rights
-                            if (userRepository.getCurrentUser().equals(getModelObject())
-                                    && !newRoles.contains(Role.ROLE_ADMIN)) {
-                                aValidatable.error(new ValidationError()
-                                        .setMessage("You can't remove your own admin status."));
-                            }
-
-                        }
-                    }));
-            adminOnly.add(new CheckBox("enabled").add(new IValidator<Boolean>()
-            {
-                private static final long serialVersionUID = 1L;
-
-                @Override
-                public void validate(IValidatable<Boolean> aValidatable)
-                {
-                    if (!aValidatable.getValue()
-                            && userRepository.getCurrentUser().equals(getModelObject())) {
-                        aValidatable.error(new ValidationError()
-                                .setMessage("You cannot disable your own account."));
-                    }
-                }
-            }));
-            adminOnly.setVisible(isAdmin());
-            add(adminOnly);
-
-            add(new LambdaAjaxButton<>("save", (_target, form) -> {
-                _target.add(getPage());
-                if (userRepository.exists(DetailForm.this.getModelObject().getUsername())
-                        && isCreate) {
-                    info("User already exists.");
-                }
-                else if (DetailForm.this.getModelObject().getUsername().contains(" ")) {
-                    info("User username cannot contain SPACE character.");
-                }
-                else if (NameUtil.isNameValid(DetailForm.this.getModelObject().getUsername())) {
-                    actionSave();
-                }
-                else {
-                    info("Username cannot contain special characters.");
-                }
-            }));
+            add(new LambdaAjaxButton<>("save", ManageUsersPage.this::actionSave));
             
             add(new LambdaAjaxLink("cancel", ManageUsersPage.this::actionCancel));
-
-            add(new EqualPasswordInputValidator((FormComponent<?>) get("password"),
-                    (FormComponent<?>) get("repeatPassword")));
+        }
+        
+        private void validateUsername(IValidatable<String> aValidatable)
+        {
+            if (userRepository.exists(aValidatable.getValue()) && isCreate) {
+                aValidatable.error(new ValidationError().addKey("username.alreadyExistsError")
+                        .setVariable("name", aValidatable.getValue()));
+            }
+            else if (aValidatable.getValue().contains(" ")) {
+                aValidatable.error(new ValidationError().addKey("username.containsSpaceError"));
+            }
+            else if (!NameUtil.isNameValid(aValidatable.getValue())) {
+                aValidatable.error(new ValidationError().addKey("username.invalidCharactersError"));
+            }
+        }
+        
+        private void validateEnabled(IValidatable<Boolean> aValidatable)
+        {
+            if (!aValidatable.getValue()
+                    && userRepository.getCurrentUser().equals(getModelObject())) {
+                aValidatable.error(new ValidationError()
+                        .setMessage("You cannot disable your own account."));
+            }
         }
 
-        public String getPassword()
+        private void validateRoles(IValidatable<Collection<Role>> aValidatable)
         {
-            return passwordModel.getObject();
+            Collection<Role> newRoles = aValidatable.getValue();
+            if (newRoles.isEmpty()) {
+                aValidatable.error(new ValidationError()
+                        .setMessage("A user has to have at least one role."));
+            }
+            // enforce users to have at least the ROLE_USER role
+            if (!newRoles.contains(Role.ROLE_USER)) {
+                aValidatable.error(new ValidationError()
+                        .setMessage("Every user must have 'ROLE_USER'."));
+            }
+            // don't let an admin user strip himself of admin rights
+            if (userRepository.getCurrentUser().equals(getModelObject())
+                    && !newRoles.contains(Role.ROLE_ADMIN)) {
+                aValidatable.error(new ValidationError()
+                        .setMessage("You cannot remove your own admin status."));
+            }
         }
         
         @Override
@@ -174,7 +177,6 @@ public class ManageUsersPage
     private UserSelectionPanel users;
     
     private IModel<User> selectedUser;
-    private boolean isCreate = false;
 
     public ManageUsersPage()
     {
@@ -227,14 +229,17 @@ public class ManageUsersPage
 
         users = new UserSelectionPanel("users", selectedUser);
         // Show the selection for different users only to administrators
-        users.add(LambdaBehavior.onConfigure(_this -> _this.setVisible(isAdmin())));
-        users.setCreateAction(target -> {
+        users.add(visibleWhen(this::isAdmin));
+        users.setCreateAction(_target -> {
             selectedUser.setObject(new User());
-            isCreate = true;
-            target.add(detailForm);
+            _target.add(users);
+            _target.add(detailForm);
+            // Need to defer setting this field because otherwise setChangeAction below
+            // sets it back to false.
+            _target.registerRespondListener(__target -> detailForm.isCreate = true);
         });
         users.setChangeAction(target -> { 
-            isCreate = false;
+            detailForm.isCreate = false;
             // Make sure that any invalid forms are cleared now that we load the new project.
             // If we do not do this, then e.g. input fields may just continue showing the values
             // they had when they were marked invalid.
@@ -247,12 +252,12 @@ public class ManageUsersPage
         add(detailForm);
     }
 
-    public void actionSave()
+    public void actionSave(AjaxRequestTarget aTarget, Form<User> aForm)
     {
         User user = detailForm.getModelObject();
 
-        if (detailForm.getPassword() != null) {
-            user.setPassword(detailForm.getPassword());
+        if (detailForm.password != null) {
+            user.setPassword(detailForm.password);
         }
 
         if (!userRepository.exists(user.getUsername())) {
@@ -265,11 +270,16 @@ public class ManageUsersPage
         if (isAdmin()) {
             selectedUser.setObject(null);
         }
-        
+
         info("User details have been saved.");
+        
+        aTarget.add(detailForm);
+        aTarget.add(users);
+        aTarget.addChildren(getPage(), IFeedback.class);
     }
 
-    private void actionCancel(AjaxRequestTarget aTarget) {
+    private void actionCancel(AjaxRequestTarget aTarget)
+    {
         if (isAdmin()) {
             selectedUser.setObject(null);
             aTarget.add(detailForm);
