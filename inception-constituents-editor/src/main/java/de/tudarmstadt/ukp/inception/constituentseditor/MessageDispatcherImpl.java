@@ -36,7 +36,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.Application;
 import org.apache.wicket.ThreadContext;
-import org.apache.wicket.ajax.json.JSONObject;
 import org.apache.wicket.protocol.ws.api.IWebSocketConnection;
 import org.apache.wicket.protocol.ws.api.WebSocketRequestHandler;
 import org.apache.wicket.protocol.ws.api.message.TextMessage;
@@ -46,6 +45,7 @@ import org.apache.wicket.protocol.ws.api.registry.SimpleWebSocketConnectionRegis
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.github.openjson.JSONObject;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 
