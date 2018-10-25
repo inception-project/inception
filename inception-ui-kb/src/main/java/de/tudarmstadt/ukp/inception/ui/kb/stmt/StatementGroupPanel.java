@@ -25,6 +25,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import de.tudarmstadt.ukp.inception.ui.kb.stmt.coloring.StatementColoringRegistry;
+import de.tudarmstadt.ukp.inception.ui.kb.stmt.coloring.StatementColoringStrategy;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AttributeAppender;
@@ -78,6 +80,7 @@ public class StatementGroupPanel extends Panel {
     private static final String CONTENT_MARKUP_ID = "content";
 
     private @SpringBean KnowledgeBaseService kbService;
+    private @SpringBean StatementColoringRegistry coloringRegistry;
 
     private CompoundPropertyModel<StatementGroupBean> groupModel;
     private IModel<ImportantStatementComparator> statementGroupComparator;
@@ -280,10 +283,20 @@ public class StatementGroupPanel extends Panel {
             statementGroupFooter.add(addLink);
 
             if (statementGroupComparator.getObject().getImportant().apply(statementGroupBean)) {
+                StatementColoringStrategy coloringStrategy = coloringRegistry
+                    .getStatementColoringStrategy(statementGroupBean.getProperty().getIdentifier());
+
+                String frameColor = coloringStrategy.getFrameColor();
+                AttributeAppender framehighlightAppender = new AttributeAppender("style",
+                    "background-color:#" + frameColor);
+                statementGroupFooter.add(framehighlightAppender);
+                form.add(framehighlightAppender);
+
+                String textColor = coloringStrategy.getTextColor();
+                String backgroundColor = coloringStrategy.getBackgroundColor();
                 AttributeAppender highlightAppender = new AttributeAppender("style",
-                    "background-color:LightGrey;font-weight:bold;");
-                statementGroupFooter.add(highlightAppender);
-                form.add(highlightAppender);
+                    "background-color:#" + backgroundColor + ";color:#" + textColor);
+                statementListWrapper.add(highlightAppender);
             }
 
             form.add(statementGroupFooter);
