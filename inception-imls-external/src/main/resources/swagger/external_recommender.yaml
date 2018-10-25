@@ -60,6 +60,8 @@ paths:
       responses:
         204:
           description: "Successful training"
+        429:
+          description: "Too many training requests have been sent, the sender should wait a while until the next request"
 definitions:
   PredictRequest:
     type: object
@@ -88,12 +90,9 @@ definitions:
   PredictResponse:
     type: object
     properties:
-      documents:
-        type: "array"
-        items:
-          type: "string"
-        example:
-          - "Cjw/eG1sIHZlcnNpb249IjEuMCIgZW5jb2Rpbmc9IlVURi04Ij8+Cjx4bWk6WE1JIHhtbG5zOnRjYXM9Imh0dHA6Ly8vdWltYS90Y2FzLmVjb3JlIiB4bWxuczp4bWk9Imh0dHA6Ly93d3cub21nLm9yZy9YTUkiIHhtbG5zOmNhcz0iaHR0cDovLy91aW1hL2Nhcy5lY29yZSIKICAgICAgICAgeG1sbnM6Y2Fzc2lzPSJodHRwOi8vL2Nhc3Npcy5lY29yZSIgeG1pOnZlcnNpb249IjIuMCI+CiAgICA8Y2FzOk5VTEwgeG1pOmlkPSIwIi8+CiAgICA8dGNhczpEb2N1bWVudEFubm90YXRpb24geG1pOmlkPSI4IiBzb2ZhPSIxIiBiZWdpbj0iMCIgZW5kPSI0NyIgbGFuZ3VhZ2U9IngtdW5zcGVjaWZpZWQiLz4KICAgIDxjYXM6U29mYSB4bWk6aWQ9IjEiIHNvZmFOdW09IjEiIHNvZmFJRD0ibXlTb2ZhIiBtaW1lVHlwZT0idGV4dC9wbGFpbiIKICAgICAgICAgICAgICBzb2ZhU3RyaW5nPSJKb2Ugd2FpdGVkIGZvciB0aGUgdHJhaW4gLiBUaGUgdHJhaW4gd2FzIGxhdGUgLiIvPgogICAgPGNhczpWaWV3IHNvZmE9IjEiIG1lbWJlcnM9IjgiLz4KPC94bWk6WE1JPg=="
+      document:
+        type: "string"
+        example: "Cjw/eG1sIHZlcnNpb249IjEuMCIgZW5jb2Rpbmc9IlVURi04Ij8+Cjx4bWk6WE1JIHhtbG5zOnRjYXM9Imh0dHA6Ly8vdWltYS90Y2FzLmVjb3JlIiB4bWxuczp4bWk9Imh0dHA6Ly93d3cub21nLm9yZy9YTUkiIHhtbG5zOmNhcz0iaHR0cDovLy91aW1hL2Nhcy5lY29yZSIKICAgICAgICAgeG1sbnM6Y2Fzc2lzPSJodHRwOi8vL2Nhc3Npcy5lY29yZSIgeG1pOnZlcnNpb249IjIuMCI+CiAgICA8Y2FzOk5VTEwgeG1pOmlkPSIwIi8+CiAgICA8dGNhczpEb2N1bWVudEFubm90YXRpb24geG1pOmlkPSI4IiBzb2ZhPSIxIiBiZWdpbj0iMCIgZW5kPSI0NyIgbGFuZ3VhZ2U9IngtdW5zcGVjaWZpZWQiLz4KICAgIDxjYXM6U29mYSB4bWk6aWQ9IjEiIHNvZmFOdW09IjEiIHNvZmFJRD0ibXlTb2ZhIiBtaW1lVHlwZT0idGV4dC9wbGFpbiIKICAgICAgICAgICAgICBzb2ZhU3RyaW5nPSJKb2Ugd2FpdGVkIGZvciB0aGUgdHJhaW4gLiBUaGUgdHJhaW4gd2FzIGxhdGUgLiIvPgogICAgPGNhczpWaWV3IHNvZmE9IjEiIG1lbWJlcnM9IjgiLz4KPC94bWk6WE1JPg=="
         description: "CAS with annotations from the external recommender as XMI which has been base64 encoded"
     required:
       - documents
