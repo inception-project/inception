@@ -1262,6 +1262,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         List<IRI> concepts = new ArrayList<IRI>();
         concepts.add(rootConcept1);
         concepts.add(rootConcept2);
+        kb.setDefaultLanguage("en");
         kb.setExplicitlyDefinedRootConcepts(concepts);
         sut.updateKnowledgeBase(kb);
 
