@@ -46,6 +46,7 @@ public interface FeatureSupportRegistry
 
         return allTypes;
     }
+    
     /**
      * Get the types of all features the user should be able to create. There can also be internal
      * types reserved for built-in features. These are not returned.

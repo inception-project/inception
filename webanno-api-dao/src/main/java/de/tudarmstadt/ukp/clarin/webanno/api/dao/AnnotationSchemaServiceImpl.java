@@ -70,12 +70,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ArcAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ChainAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.initializers.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -102,6 +100,7 @@ public class AnnotationSchemaServiceImpl
     private @PersistenceContext EntityManager entityManager;
     private @Autowired FeatureSupportRegistry featureSupportRegistry;
     private @Autowired ApplicationEventPublisher applicationEventPublisher;
+    private @Autowired LayerSupportRegistry layerSupportRegistry;
     private @Lazy @Autowired(required = false) List<ProjectInitializer> initializerProxy;
     private List<ProjectInitializer> initializers;
 
@@ -748,43 +747,6 @@ public class AnnotationSchemaServiceImpl
     @Transactional
     public TypeAdapter getAdapter(AnnotationLayer aLayer)
     {
-        return getAdapter(this, featureSupportRegistry, applicationEventPublisher, aLayer);
-    }
-    
-    public static TypeAdapter getAdapter(AnnotationSchemaService aSchemaService,
-            FeatureSupportRegistry aFeatureSupportRegistry,
-            ApplicationEventPublisher aEventPublisher, AnnotationLayer aLayer)
-    {
-        switch (aLayer.getType()) {
-        case WebAnnoConst.SPAN_TYPE: {
-            SpanAdapter adapter = new SpanAdapter(aFeatureSupportRegistry, aEventPublisher, aLayer,
-                    aSchemaService.listAnnotationFeature(aLayer));
-            return adapter;
-        }
-        case WebAnnoConst.RELATION_TYPE: {
-            ArcAdapter adapter = new ArcAdapter(aFeatureSupportRegistry, aEventPublisher, aLayer,
-                    aLayer.getId(), aLayer.getName(), WebAnnoConst.FEAT_REL_TARGET,
-                    WebAnnoConst.FEAT_REL_SOURCE,
-                    aLayer.getAttachFeature() == null ? null : aLayer.getAttachFeature().getName(),
-                    aLayer.getAttachType().getName(), aSchemaService.listAnnotationFeature(aLayer));
-
-            adapter.setCrossMultipleSentence(aLayer.isCrossSentence());
-            adapter.setAllowStacking(aLayer.isAllowStacking());
-
-            return adapter;
-        }
-        case WebAnnoConst.CHAIN_TYPE: {
-            ChainAdapter adapter = new ChainAdapter(aFeatureSupportRegistry, aEventPublisher,
-                    aLayer, aLayer.getId(), aLayer.getName() + ChainAdapter.CHAIN, aLayer.getName(),
-                    "first", "next", aSchemaService.listAnnotationFeature(aLayer));
-
-            adapter.setLinkedListBehavior(aLayer.isLinkedListBehavior());
-
-            return adapter;
-        }
-        default:
-            throw new IllegalArgumentException(
-                    "No adapter for type with name [" + aLayer.getName() + "]");
-        }
+        return layerSupportRegistry.getLayerSupport(aLayer).createAdapter(aLayer);
     }
 }
