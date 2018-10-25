@@ -65,6 +65,11 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.PrimitiveUimaFeatureSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.ChainLayerSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistryImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.RelationLayerSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.SpanLayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.AnnotationSchemaServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.BackupProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.CasStorageServiceImpl;
@@ -538,6 +543,18 @@ public class MtasDocumentIndexTest
         public ApplicationContextProvider contextProvider()
         {
             return new ApplicationContextProvider();
+        }
+        
+        @Bean
+        public LayerSupportRegistry layerSupportRegistry(
+                @Autowired FeatureSupportRegistry aFeatureSupportRegistry)
+        {
+            return new LayerSupportRegistryImpl(asList(
+                    new SpanLayerSupport(aFeatureSupportRegistry, null, annotationSchemaService()),
+                    new RelationLayerSupport(aFeatureSupportRegistry, null,
+                            annotationSchemaService()),
+                    new ChainLayerSupport(aFeatureSupportRegistry, null,
+                            annotationSchemaService())));
         }
     }
 }
