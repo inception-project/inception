@@ -570,7 +570,7 @@ public interface KnowledgeBaseService
      * Read the concept with the given identifier from the given knowledge base with a 
      * specific query
      * 
-     * @param kb
+     * @param aKB
      *            a knowledge base.
      * @param aIdentifier
      *            a concept identifier.
