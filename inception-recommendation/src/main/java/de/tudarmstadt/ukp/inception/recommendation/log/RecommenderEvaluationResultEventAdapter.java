@@ -32,60 +32,46 @@ public class RecommenderEvaluationResultEventAdapter
     implements EventLoggingAdapter<RecommenderEvaluationResultEvent>
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
+
     @Override
     public boolean accepts(Object aEvent)
     {
         return aEvent instanceof RecommenderEvaluationResultEvent;
     }
-    
+
     @Override
     public long getProject(RecommenderEvaluationResultEvent aEvent)
     {
         return aEvent.getRecommender().getProject().getId();
     }
-    
+
     @Override
     public String getAnnotator(RecommenderEvaluationResultEvent aEvent)
     {
         return aEvent.getUser();
     }
-    
+
     @Override
     public String getUser(RecommenderEvaluationResultEvent aEvent)
     {
         return aEvent.getUser();
     }
-    
+
     @Override
     public String getDetails(RecommenderEvaluationResultEvent aEvent)
     {
         try {
             Details details = new Details();
-            
+
             details.score = aEvent.getScore();
-//            details.tp = aEvent.getResult().getTp();
-//            details.fp = aEvent.getResult().getFp();
-//            details.tn = aEvent.getResult().getTn();
-//            details.fn = aEvent.getResult().getFn();
             details.active = aEvent.isActive();
-            
-//            details.trainingSetSize = aEvent.getResult().getTrainingSetSize();
-//            details.trainingSetAnnotations = aEvent.getResult().getTrainingSetAnnotationCount();
-//            details.testSetSize = aEvent.getResult().getTestSetSize();
-//            details.testSetAnnotations = aEvent.getResult().getTestSetAnnotationCount();
-//            details.split = aEvent.getResult().getSplit();
-//            details.trainingSetShuffled = aEvent.getResult().isShuffleTrainingSet();
-            
-//            details.precision = aEvent.getResult().getPrecision();
-//            details.recall = aEvent.getResult().getRecall();
-            
+
             details.duration = aEvent.getDuration();
             details.threshold = aEvent.getRecommender().getThreshold();
             details.layer = aEvent.getRecommender().getLayer().getName();
             details.feature = aEvent.getRecommender().getFeature();
             details.tool = aEvent.getRecommender().getTool();
-            
+
             return JSONUtil.toJsonString(details);
         }
         catch (IOException e) {
@@ -93,33 +79,20 @@ public class RecommenderEvaluationResultEventAdapter
             return "<ERROR>";
         }
     }
-    
-    public static class Details {
+
+    public static class Details
+    {
         // Recommender configuration
         public String layer;
         public String feature;
         public String tool;
         public double threshold;
-        
-        // Evaluation configuration
-        public long trainingSetSize;
-        public long testSetSize;
-        public long trainingSetAnnotations;
-        public long testSetAnnotations;
-        public boolean trainingSetShuffled;
-        public double split;
-        
+
         // Evaluation process telemetry
         public long duration;
-        
+
         // Evaluation results
         public boolean active;
         public double score;
-        public double recall;
-        public double precision;
-        public long tp = 0;
-        public long fp = 0;
-        public long tn = 0;
-        public long fn = 0;
     }
 }
