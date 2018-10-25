@@ -1060,63 +1060,6 @@
       </build>
     </profile>
     <profile>
-      <id>run-jcasgen</id>
-      <activation>
-        <file>
-          <exists>.activate-run-jcasgen</exists>
-        </file>
-      </activation>
-      <build>
-        <plugins>
-          <plugin>
-            <!--generate types dynamically -->
-            <groupId>org.apache.uima</groupId>
-            <artifactId>jcasgen-maven-plugin</artifactId>
-            <version>${uima.version}</version>
-            <configuration>
-              <limitToProject>true</limitToProject>
-              <typeSystemIncludes>
-                <include>src/main/resources/desc/type/**/*.xml</include>
-              </typeSystemIncludes>
-              <typeSystemExcludes>
-                <exclude>src/main/resources/desc/type/**/*_customized.xml</exclude>
-              </typeSystemExcludes>
-            </configuration>
-            <executions>
-              <execution>
-                <!--call it in the generate-source phase -->
-                <phase>generate-sources</phase>
-                <goals>
-                  <goal>generate</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
-          <plugin>
-            <groupId>org.codehaus.mojo</groupId>
-            <artifactId>build-helper-maven-plugin</artifactId>
-            <version>1.12</version>
-            <executions>
-              <execution>
-                <id>addToSourceFolder</id>
-                <goals>
-                  <!--add the generated sources -->
-                  <goal>add-source</goal>
-                </goals>
-                <phase>process-sources</phase>
-                <configuration>
-                  <sources>
-                    <!--default path to generated sources -->
-                    <source>${project.build.directory}/generated-sources/jcasgen</source>
-                  </sources>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-    <profile>
       <id>doc-only</id>
       <properties>
         <mdep.analyze.skip>true</mdep.analyze.skip>
