@@ -357,4 +357,17 @@
       </column>
     </addColumn>
   </changeSet>
+  
+  <changeSet author="INCEpTION Team" id="20181007-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="recommender" columnName="maxRecommendations" />
+      </not>
+    </preConditions>
+    <addColumn tableName="recommender">
+      <column name="maxRecommendations" type="INT" defaultValueNumeric="3">
+        <constraints nullable="false" />
+      </column>
+    </addColumn>
+  </changeSet>
 </databaseChangeLog>
