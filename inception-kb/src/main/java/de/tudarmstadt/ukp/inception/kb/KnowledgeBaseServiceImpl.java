@@ -49,7 +49,7 @@ import org.apache.commons.compress.compressors.CompressorStreamFactory;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.rdf4j.common.iteration.Iterations;
 import org.eclipse.rdf4j.model.IRI;
-import org.eclipse.rdf4j.model.Resource;
+import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
@@ -445,24 +445,8 @@ public class KnowledgeBaseServiceImpl
         });
     }
     
-    @Override
-    public Optional<KBConcept> readConcept(KnowledgeBase kb, String aIdentifier)
-        throws QueryEvaluationException
-    {
-        return read(kb, (conn) -> {
-            ValueFactory vf = conn.getValueFactory();
-            Resource subject = vf.createIRI(aIdentifier);
-            if (RdfUtils.existsStatementsWithSubject(conn, subject, false)) {
-                KBConcept kbConcept = KBConcept.read(conn, vf.createIRI(aIdentifier),kb);
-                return Optional.of(kbConcept);
-            }
-            else {
-                return Optional.empty();
-            }
-        });
-    }
-    
-    public Optional<KBConcept> readConceptExist(KnowledgeBase aKB, String aIdentifier)
+    @Override 
+    public Optional<KBConcept> readConcept(KnowledgeBase aKB, String aIdentifier)
         throws QueryEvaluationException
     {
         KBHandle resultHandle = read(aKB, (conn) -> {
@@ -489,6 +473,11 @@ public class KnowledgeBaseServiceImpl
                 handle.setIdentifier(aIdentifier);
                 if (label != null) {
                     handle.setName(label.getValue().stringValue());
+                    if (label.getValue() instanceof Literal) {
+                        Literal literal = (Literal) label.getValue();
+                        Optional<String> language = literal.getLanguage();
+                        language.ifPresent(handle::setLanguage);
+                    }
                 }
                 else {
                     handle.setName(handle.getUiLabel());
@@ -508,6 +497,7 @@ public class KnowledgeBaseServiceImpl
             kbConcept.setIdentifier(aIdentifier);
             kbConcept.setName(resultHandle.getName());
             kbConcept.setDescription(resultHandle.getDescription());
+            kbConcept.setLanguage(resultHandle.getLanguage());
             return Optional.of(kbConcept);
         }
     }
@@ -939,7 +929,7 @@ public class KnowledgeBaseServiceImpl
 
         if (!aKB.getExplicitlyDefinedRootConcepts().isEmpty()) {
             for (IRI conceptIRI : aKB.getExplicitlyDefinedRootConcepts()) {
-                KBConcept concept = readConceptExist(aKB, conceptIRI.stringValue()).get();
+                KBConcept concept = readConcept(aKB, conceptIRI.stringValue()).get();
                 KBHandle conceptHandle = new KBHandle(concept.getIdentifier(), concept.getName(),
                         concept.getDescription());
                 resultList.add(conceptHandle);

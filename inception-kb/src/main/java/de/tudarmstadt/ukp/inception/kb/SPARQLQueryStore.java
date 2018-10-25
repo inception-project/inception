@@ -31,7 +31,21 @@ public final class SPARQLQueryStore
             "PREFIX rdf: <" + RDF.NAMESPACE + ">",
             "PREFIX rdfs: <" + RDFS.NAMESPACE + ">",
             "PREFIX owl: <" + OWL.NAMESPACE + ">");
-    
+
+    /**
+     * Return formatted String for the OPTIONAL part of SPARQL query for language and description
+     * filter
+     * 
+     * @param aProperty
+     *            The property IRI for the optional filter
+     * @param aLanguage
+     *            The variable indicating the language
+     * @param variable
+     *            The variable for the IRI like '?s'
+     * @param filterVariable
+     *            The variable for the language (?l) and description (?d)
+     * @return String format for OPTIONAL part of SPARQL query
+     */
     private static final String optionalLanguageFilteredValue(String aProperty, String aLanguage,
             String variable, String filterVariable)
     {
