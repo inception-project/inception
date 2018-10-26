@@ -62,7 +62,7 @@ public abstract class ExternalSearchProviderFactoryImplBase
      * @return the properties editor component .
      */
     @Override
-    public Panel createPropertiesEditor(String aId, IModel<DocumentRepository> aDocumentRepository)
+    public Panel createTraitsEditor(String aId, IModel<DocumentRepository> aDocumentRepository)
     {
         return new EmptyPanel(aId);
     }
@@ -77,7 +77,7 @@ public abstract class ExternalSearchProviderFactoryImplBase
      *            the repository whose properties should be obtained.
      * @return the properties.
      */
-    public Object readProperties(DocumentRepository aDocumentRepository)
+    public Object readTraits(DocumentRepository aDocumentRepository)
     {
         return null;
     }
@@ -93,7 +93,7 @@ public abstract class ExternalSearchProviderFactoryImplBase
      * @param aProperties
      *            the properties.
      */
-    public void writeProperties(DocumentRepository aDocumentRepository, Object aProperties)
+    public void writeTraits(DocumentRepository aDocumentRepository, Object aProperties)
     {
         aDocumentRepository.setProperties(null);
     }

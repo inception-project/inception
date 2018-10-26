@@ -28,7 +28,7 @@ import org.springframework.web.client.RestTemplate;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchProvider;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
-import de.tudarmstadt.ukp.inception.externalsearch.elastic.configuration.ElasticSearchProviderProperties;
+import de.tudarmstadt.ukp.inception.externalsearch.elastic.configuration.ElasticSearchProviderTraits;
 
 public class ElasticSearchProvider
     implements ExternalSearchProvider
@@ -74,7 +74,7 @@ public class ElasticSearchProvider
 
         ElasticSearchResult queryResult;
 
-        ElasticSearchProviderProperties properties = (ElasticSearchProviderProperties) aProperties; 
+        ElasticSearchProviderTraits properties = (ElasticSearchProviderTraits) aProperties; 
 
         remoteUrl = properties.getRemoteUrl();
         indexName = properties.getIndexName();
@@ -137,7 +137,7 @@ public class ElasticSearchProvider
 
     public ExternalSearchResult getDocumentById(Object aProperties, String aId)
     {
-        ElasticSearchProviderProperties properties = (ElasticSearchProviderProperties) aProperties; 
+        ElasticSearchProviderTraits properties = (ElasticSearchProviderTraits) aProperties; 
 
         remoteUrl = properties.getRemoteUrl();
         indexName = properties.getIndexName();

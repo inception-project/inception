@@ -27,7 +27,7 @@ import org.apache.wicket.model.IModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.BeanNameAware;
-import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
@@ -36,14 +36,14 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchProvider;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchProviderFactory;
-import de.tudarmstadt.ukp.inception.externalsearch.elastic.configuration.ElasticSearchProviderProperties;
-import de.tudarmstadt.ukp.inception.externalsearch.elastic.configuration.ElasticSearchProviderPropertiesEditor;
+import de.tudarmstadt.ukp.inception.externalsearch.elastic.configuration.ElasticSearchProviderTraits;
+import de.tudarmstadt.ukp.inception.externalsearch.elastic.configuration.ElasticSearchProviderTraitsEditor;
 import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
 
-@Component("ElasticSearchProviderFactory")
+@Component
+@Order(100)
 public class ElasticSearchProviderFactory
-    implements BeanNameAware, Ordered,
-    ExternalSearchProviderFactory<ElasticSearchProviderProperties>
+    implements BeanNameAware, ExternalSearchProviderFactory<ElasticSearchProviderTraits>
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -62,15 +62,9 @@ public class ElasticSearchProviderFactory
     }
 
     @Override
-    public int getOrder()
-    {
-        return Ordered.LOWEST_PRECEDENCE;
-    }
-
-    @Override
     public String getDisplayName()
     {
-        return "ElasticSearchProviderFactory";
+        return "Elastic Search";
     }
 
     @Override
@@ -78,44 +72,37 @@ public class ElasticSearchProviderFactory
             AnnotationSchemaService aAnnotationSchemaService, DocumentService aDocumentService,
             ProjectService aProjectService, String aDir)
     {
-        ExternalSearchProvider provider = null;
-        try {
-            provider = new ElasticSearchProvider();
-        }
-        catch (Exception e) {
-            log.error("Unable to get Elastic Search provider", e);
-        }
-        return provider;
+        return new ElasticSearchProvider(); 
     }
 
     @Override
-    public Panel createPropertiesEditor(String aId, IModel<DocumentRepository> aDocumentRepository)
+    public Panel createTraitsEditor(String aId, IModel<DocumentRepository> aDocumentRepository)
     {
-        return new ElasticSearchProviderPropertiesEditor(aId, aDocumentRepository);
+        return new ElasticSearchProviderTraitsEditor(aId, aDocumentRepository);
     }
 
     @Override
-    public ElasticSearchProviderProperties readProperties(DocumentRepository aDocumentRepository)
+    public ElasticSearchProviderTraits readTraits(DocumentRepository aDocumentRepository)
     {
-        ElasticSearchProviderProperties properties = null;
+        ElasticSearchProviderTraits traits = null;
         try {
-            properties = fromJsonString(ElasticSearchProviderProperties.class,
+            traits = fromJsonString(ElasticSearchProviderTraits.class,
                     aDocumentRepository.getProperties());
         }
         catch (IOException e) {
             log.error("Error while reading traits", e);
         }
 
-        if (properties == null) {
-            properties = new ElasticSearchProviderProperties();
+        if (traits == null) {
+            traits = new ElasticSearchProviderTraits();
         }
 
-        return properties;
+        return traits;
     }
 
     @Override
-    public void writeProperties(DocumentRepository aDocumentRepository,
-            ElasticSearchProviderProperties aProperties)
+    public void writeTraits(DocumentRepository aDocumentRepository,
+            ElasticSearchProviderTraits aProperties)
     {
         try {
             String json = toJsonString(aProperties);

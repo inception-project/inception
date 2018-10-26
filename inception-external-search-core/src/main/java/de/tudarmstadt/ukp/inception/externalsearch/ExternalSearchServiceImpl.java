@@ -55,6 +55,9 @@ public class ExternalSearchServiceImpl
     private ExternalSearchProviderFactory externalSearchProviderFactory;
     private String externalSearchProviderFactoryName = "ElasticSearchProviderFactory";
 
+    // FIXME REC: We should not need a static map for these providers. If we need to hold on to 
+    // a provider for a longer time (e.g. to support paging), we need to find another way to handle
+    // this.
     // The indexes for each project
     private static Map<Long, ExternalSearchProvider> searchProviders;
 
@@ -91,7 +94,7 @@ public class ExternalSearchServiceImpl
 
             log.debug("Running query: {}", aQuery);
 
-            Object properties = externalSearchProviderFactory.readProperties(aDocumentRepository);
+            Object properties = externalSearchProviderFactory.readTraits(aDocumentRepository);
 
             List<ExternalSearchResult> results = provider.executeQuery(properties, aUser,
                     aQuery, null, null);
@@ -149,7 +152,7 @@ public class ExternalSearchServiceImpl
 
         if (provider.isConnected()) {
 
-            Object properties = externalSearchProviderFactory.readProperties(aDocumentRepository);
+            Object properties = externalSearchProviderFactory.readTraits(aDocumentRepository);
 
             ExternalSearchResult result = provider.getDocumentById(properties, aId);
             

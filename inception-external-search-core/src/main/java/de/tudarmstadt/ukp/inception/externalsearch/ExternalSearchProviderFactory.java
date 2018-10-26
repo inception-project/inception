@@ -39,9 +39,9 @@ public interface ExternalSearchProviderFactory<P>
             AnnotationSchemaService aAnnotationSchemaService, DocumentService aDocumentService,
             ProjectService aProjectService, String aDir);
 
-    Panel createPropertiesEditor(String aId, IModel<DocumentRepository> aDocumentRepository);
+    Panel createTraitsEditor(String aId, IModel<DocumentRepository> aDocumentRepository);
 
-    P readProperties(DocumentRepository aDocumentRepository);
+    P readTraits(DocumentRepository aDocumentRepository);
 
-    void writeProperties(DocumentRepository aDocumentRepository, P aProperties);
+    void writeTraits(DocumentRepository aDocumentRepository, P aTraits);
 }

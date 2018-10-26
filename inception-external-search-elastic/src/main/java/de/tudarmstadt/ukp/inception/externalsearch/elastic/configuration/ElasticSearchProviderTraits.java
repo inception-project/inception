@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.inception.externalsearch.elastic.configuration;
 
 import java.io.Serializable;
 
-public class ElasticSearchProviderProperties
+public class ElasticSearchProviderTraits
     implements Serializable
 {
 

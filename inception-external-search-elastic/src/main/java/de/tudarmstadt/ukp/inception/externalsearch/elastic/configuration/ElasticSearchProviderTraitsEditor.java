@@ -29,26 +29,26 @@ import org.apache.wicket.validation.validator.UrlValidator;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchProviderFactory;
 import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
 
-public class ElasticSearchProviderPropertiesEditor
+public class ElasticSearchProviderTraitsEditor
     extends Panel
 {
     private static final long serialVersionUID = 1677442652521110324L;
 
     private static final String MID_FORM = "form";
 
-    private @SpringBean ExternalSearchProviderFactory<ElasticSearchProviderProperties> 
+    private @SpringBean ExternalSearchProviderFactory<ElasticSearchProviderTraits> 
             externalSearchProviderFactory;
     private final DocumentRepository documentRepository;
-    private final ElasticSearchProviderProperties properties;
+    private final ElasticSearchProviderTraits properties;
 
-    public ElasticSearchProviderPropertiesEditor(String aId,
+    public ElasticSearchProviderTraitsEditor(String aId,
             IModel<DocumentRepository> aDocumentRepository)
     {
         super(aId, aDocumentRepository);
         documentRepository = aDocumentRepository.getObject();
-        properties = externalSearchProviderFactory.readProperties(documentRepository);
+        properties = externalSearchProviderFactory.readTraits(documentRepository);
 
-        Form<ElasticSearchProviderProperties> form = new Form<ElasticSearchProviderProperties>(
+        Form<ElasticSearchProviderTraits> form = new Form<ElasticSearchProviderTraits>(
                 MID_FORM, CompoundPropertyModel.of(Model.of(properties)))
         {
             private static final long serialVersionUID = -3109239608742291123L;
@@ -57,7 +57,7 @@ public class ElasticSearchProviderPropertiesEditor
             protected void onSubmit()
             {
                 super.onSubmit();
-                externalSearchProviderFactory.writeProperties(documentRepository, properties);
+                externalSearchProviderFactory.writeTraits(documentRepository, properties);
             }
         };
 
