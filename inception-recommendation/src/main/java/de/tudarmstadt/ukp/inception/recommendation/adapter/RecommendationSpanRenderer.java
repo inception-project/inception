@@ -52,6 +52,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
 
 /**
  * Render spans.
@@ -111,18 +112,21 @@ public class RecommendationSpanRenderer
                 .getAllRecordsByDocumentAndUserAndLayer(aState.getDocument(),
                         aState.getUser().getUsername(), layer);
         
-        for (List<AnnotationObject> token: recommendations) {
+        Preferences pref = recommendationService.getPreferences(aState.getUser());
+        
+        for (List<AnnotationObject> sentenceRecommendations: recommendations) {
             Map<String, Map<Long, AnnotationObject>> labelMap = new HashMap<>();
  
             // For recommendations with the same label by the same classifier,
             // show only the confidence of the highest one
-            for (AnnotationObject ao: token) {
+            for (AnnotationObject ao: sentenceRecommendations) {
                 boolean hasNoAnnotation = ao.getLabel() == null;
                 boolean isOverlappingForFeature = isOverlappingForFeature(
                     vspansWithoutRecommendations, ao.getOffset(), windowBegin, ao.getFeature());
                 boolean isRejected = isRejected(recordedAnnotations, ao);
 
-                if (hasNoAnnotation || isOverlappingForFeature || isRejected) {
+                if (hasNoAnnotation || (!pref.isShowAllPredictions()
+                        && (isOverlappingForFeature || isRejected))) {
                     continue;
                 }
 
@@ -159,7 +163,7 @@ public class RecommendationSpanRenderer
             // Sort and filter labels under threshold value
             List<String> filtered = maxConfidencePerLabel.entrySet().stream()
                     .sorted((e1, e2) -> Double.compare(e2.getValue(), e1.getValue()))
-                    .limit(recommendationService.getMaxSuggestions(aState.getUser()))
+                    .limit(pref.getMaxPredictions())
                     .map(Entry::getKey).collect(Collectors.toList());
 
             // Render annotations for each label
@@ -169,17 +173,17 @@ public class RecommendationSpanRenderer
                 }
 
                 // Create VID using the recommendation with the lowest recommendationId
-                AnnotationObject prediction = token.stream()
+                AnnotationObject canonicalRecommendation = sentenceRecommendations.stream()
                         .filter(p -> p.getLabel().equals(label))
                         .max(Comparator.comparingInt(AnnotationObject::getId)).orElse(null);
 
-                if (prediction == null) {
+                if (canonicalRecommendation == null) {
                     continue;
                 }
 
                 VID vid = new VID(RecommendationEditorExtension.BEAN_NAME, layer.getId(),
-                        (int) prediction.getRecommenderId(), prediction.getId(), VID.NONE,
-                        VID.NONE);
+                        (int) canonicalRecommendation.getRecommenderId(),
+                        canonicalRecommendation.getId(), VID.NONE, VID.NONE);
                 
                 boolean first = true;
                 Map<Long, AnnotationObject> confidencePerClassifier = labelMap.get(label);
@@ -220,7 +224,6 @@ public class RecommendationSpanRenderer
     
     /**
      * Check if there is already an existing annotation overlapping the prediction
-     * 
      */
     private boolean isOverlappingForFeature(Collection<VSpan> vspans, Offset recOffset,
         int windowBegin, String feature)
