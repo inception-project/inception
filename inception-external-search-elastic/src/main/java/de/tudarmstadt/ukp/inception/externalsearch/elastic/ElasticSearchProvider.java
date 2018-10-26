@@ -28,7 +28,9 @@ import org.springframework.web.client.RestTemplate;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchProvider;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
-import de.tudarmstadt.ukp.inception.externalsearch.elastic.configuration.ElasticSearchProviderTraits;
+import de.tudarmstadt.ukp.inception.externalsearch.elastic.model.ElasticSearchHit;
+import de.tudarmstadt.ukp.inception.externalsearch.elastic.model.ElasticSearchResult;
+import de.tudarmstadt.ukp.inception.externalsearch.elastic.traits.ElasticSearchProviderTraits;
 
 public class ElasticSearchProvider
     implements ExternalSearchProvider

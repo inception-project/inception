@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.externalsearch.elastic.configuration;
+package de.tudarmstadt.ukp.inception.externalsearch.elastic.traits;
 
 import java.io.Serializable;
 

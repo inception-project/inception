@@ -15,34 +15,53 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.externalsearch.elastic;
+package de.tudarmstadt.ukp.inception.externalsearch.elastic.model;
+
+import java.util.ArrayList;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class ElasticSearchSource
+public class ElasticSearchHits
 {
-    private ElasticSearchDoc doc;
-    
-    private ElasticSearchMetadata metadata;
+    private int total;
+    private float max_score;
+    private ArrayList<ElasticSearchHit> hits;
 
-    public ElasticSearchDoc getDoc()
+    public int getTotal()
     {
-        return doc;
+        return total;
     }
 
-    public void setDoc(ElasticSearchDoc doc)
+    public void setTotal(int total)
     {
-        this.doc = doc;
+        this.total = total;
     }
 
-    public ElasticSearchMetadata getMetadata()
+    public float getMax_score()
     {
-        return metadata;
+        return max_score;
     }
 
-    public void setMetadata(ElasticSearchMetadata metadata)
+    public void setMax_score(float max_score)
     {
-        this.metadata = metadata;
+        this.max_score = max_score;
     }
+
+    public ArrayList<ElasticSearchHit> getHits()
+    {
+        return hits;
+    }
+
+    public void setHits(ArrayList<ElasticSearchHit> hits)
+    {
+        this.hits = hits;
+    }
+
+    public String toString()
+    {
+        return String.format("{total: %d, max_score: %f, hits: %s}", this.total, this.max_score,
+                this.hits);
+    }
+
 }

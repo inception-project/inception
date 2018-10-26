@@ -36,8 +36,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchProvider;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchProviderFactory;
-import de.tudarmstadt.ukp.inception.externalsearch.elastic.configuration.ElasticSearchProviderTraits;
-import de.tudarmstadt.ukp.inception.externalsearch.elastic.configuration.ElasticSearchProviderTraitsEditor;
+import de.tudarmstadt.ukp.inception.externalsearch.elastic.traits.ElasticSearchProviderTraits;
+import de.tudarmstadt.ukp.inception.externalsearch.elastic.traits.ElasticSearchProviderTraitsEditor;
 import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
 
 @Component

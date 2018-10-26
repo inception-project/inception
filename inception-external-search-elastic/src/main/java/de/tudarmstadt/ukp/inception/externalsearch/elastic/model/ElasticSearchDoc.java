@@ -15,46 +15,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.externalsearch.elastic;
+package de.tudarmstadt.ukp.inception.externalsearch.elastic.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class ElasticSearchResult
+public class ElasticSearchDoc
 {
-    private int took;
-    private boolean timed_out;
-    private ElasticSearchHits hits;
+    private String text;
 
-    public void setTook(int took)
+    public String getText()
     {
-        this.took = took;
+        return text;
     }
 
-    public boolean isTimed_out()
+    public void setText(String text)
     {
-        return timed_out;
-    }
-
-    public void setTimed_out(boolean timed_out)
-    {
-        this.timed_out = timed_out;
-    }
-
-    public ElasticSearchHits getHits()
-    {
-        return hits;
-    }
-
-    public void setHits(ElasticSearchHits hits)
-    {
-        this.hits = hits;
-    }
-
-    public String toString()
-    {
-        return String.format("{took: %d, timed_out: %s, hits: %s}", this.took, this.timed_out,
-                this.hits);
+        this.text = text;
     }
 
 }

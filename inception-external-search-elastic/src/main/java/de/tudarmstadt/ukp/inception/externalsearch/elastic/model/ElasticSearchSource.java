@@ -15,26 +15,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.externalsearch.elastic;
-
-import java.util.ArrayList;
+package de.tudarmstadt.ukp.inception.externalsearch.elastic.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class ElasticSearchHighlight
+public class ElasticSearchSource
 {
-    @JsonProperty("doc.text")
-    private ArrayList<String> doctext;
+    private ElasticSearchDoc doc;
+    
+    private ElasticSearchMetadata metadata;
 
-    public ArrayList<String> getDoctext()
+    public ElasticSearchDoc getDoc()
     {
-        return doctext;
+        return doc;
     }
 
-    public void setDoctext(ArrayList<String> doctext)
+    public void setDoc(ElasticSearchDoc doc)
     {
-        this.doctext = doctext;
+        this.doc = doc;
+    }
+
+    public ElasticSearchMetadata getMetadata()
+    {
+        return metadata;
+    }
+
+    public void setMetadata(ElasticSearchMetadata metadata)
+    {
+        this.metadata = metadata;
     }
 }

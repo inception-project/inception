@@ -15,52 +15,45 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.externalsearch.elastic;
-
-import java.util.ArrayList;
+package de.tudarmstadt.ukp.inception.externalsearch.elastic.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class ElasticSearchHits
+public class ElasticSearchResult
 {
-    private int total;
-    private float max_score;
-    private ArrayList<ElasticSearchHit> hits;
+    private int took;
+    private boolean timed_out;
+    private ElasticSearchHits hits;
 
-    public int getTotal()
+    public void setTook(int took)
     {
-        return total;
+        this.took = took;
     }
 
-    public void setTotal(int total)
+    public boolean isTimed_out()
     {
-        this.total = total;
+        return timed_out;
     }
 
-    public float getMax_score()
+    public void setTimed_out(boolean timed_out)
     {
-        return max_score;
+        this.timed_out = timed_out;
     }
 
-    public void setMax_score(float max_score)
-    {
-        this.max_score = max_score;
-    }
-
-    public ArrayList<ElasticSearchHit> getHits()
+    public ElasticSearchHits getHits()
     {
         return hits;
     }
 
-    public void setHits(ArrayList<ElasticSearchHit> hits)
+    public void setHits(ElasticSearchHits hits)
     {
         this.hits = hits;
     }
 
     public String toString()
     {
-        return String.format("{total: %d, max_score: %f, hits: %s}", this.total, this.max_score,
+        return String.format("{took: %d, timed_out: %s, hits: %s}", this.took, this.timed_out,
                 this.hits);
     }
 
