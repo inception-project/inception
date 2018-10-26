@@ -68,15 +68,12 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.AJAXDownload;
 import de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelCondition;
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.ProjectPage;
 
 /**
  * A Panel used to add Project Guidelines in a selected {@link Project}
  */
-@ProjectSettingsPanel(label = "Export")
 public class ProjectExportPanel
     extends ProjectSettingsPanelBase
 {
@@ -383,11 +380,5 @@ public class ProjectExportPanel
         {
             return model.getMessages();
         }
-    }
-    
-    @ProjectSettingsPanelCondition
-    public static boolean settingsPanelCondition(Project aProject)
-    {
-        return true;
     }
 }

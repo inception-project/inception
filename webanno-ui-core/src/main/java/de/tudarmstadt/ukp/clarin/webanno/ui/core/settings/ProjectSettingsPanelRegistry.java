@@ -17,15 +17,13 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.core.settings;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.util.List;
 
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE)
-public @interface ProjectSettingsPanel
+public interface ProjectSettingsPanelRegistry
 {
-    String label();
-    int prio() default Integer.MAX_VALUE;
+    String SERVICE_NAME = "projectSettingsPanelRegistryService";
+
+    List<ProjectSettingsPanelFactory> getPanels();
+
+    ProjectSettingsPanelFactory getPanel(String aPath);
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012
+ * Copyright 2018
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
  *
@@ -17,24 +17,34 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.project.documents;
 
+import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelFactory;
 
-/**
- * A Panel used to add Documents to the selected {@link Project}
- */
-public class ProjectDocumentsPanel
-    extends ProjectSettingsPanelBase
+@Component
+@Order(200)
+public class DocumentsProjectSettingsPanelFactory
+    implements ProjectSettingsPanelFactory
 {
-    private static final long serialVersionUID = 2116717853865353733L;
-
-    public ProjectDocumentsPanel(String id, IModel<Project> aProject)
+    @Override
+    public String getPath()
     {
-        super(id, aProject);
+        return "/documents";
+    }
 
-        add(new ImportDocumentsPanel("import", aProject));
-        add(new DocumentListPanel("documents", aProject));
+    @Override
+    public String getLabel()
+    {
+        return "Documents";
+    }
+
+    @Override
+    public Panel createSettingsPanel(String aID, final IModel<Project> aProjectModel)
+    {
+        return new ProjectDocumentsPanel(aID, aProjectModel);
     }
 }

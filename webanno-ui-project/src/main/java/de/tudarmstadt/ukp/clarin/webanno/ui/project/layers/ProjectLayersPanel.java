@@ -120,7 +120,6 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxDownloadLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.InputStreamResourceStream;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
 import de.tudarmstadt.ukp.clarin.webanno.xmi.TypeSystemAnalysis;
 import de.tudarmstadt.ukp.clarin.webanno.xmi.TypeSystemAnalysis.RelationDetails;
@@ -130,7 +129,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 /**
  * A Panel Used to add Layers to a selected {@link Project} in the project settings page
  */
-@ProjectSettingsPanel(label = "Layers", prio = 300)
 public class ProjectLayersPanel
     extends ProjectSettingsPanelBase
 {

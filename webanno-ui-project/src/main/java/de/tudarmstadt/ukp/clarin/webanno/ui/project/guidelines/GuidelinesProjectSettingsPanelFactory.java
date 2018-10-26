@@ -1,5 +1,5 @@
 /*
- * Copyright 2012
+ * Copyright 2018
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
  *
@@ -17,25 +17,34 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.project.guidelines;
 
+import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanel;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelFactory;
 
-/**
- * A Panel used to add Project Guidelines in a selected {@link Project}
- */
-@ProjectSettingsPanel(label = "Guidelines", prio = 600)
-public class AnnotationGuideLinePanel
-    extends ProjectSettingsPanelBase
+@Component
+@Order(600)
+public class GuidelinesProjectSettingsPanelFactory
+    implements ProjectSettingsPanelFactory
 {
-    private static final long serialVersionUID = 5132384175522619171L;
-
-    public AnnotationGuideLinePanel(String aId, IModel<Project> aProjectModel)
+    @Override
+    public String getPath()
     {
-        super(aId);
-        add(new ImportGuidelinesPanel("import", aProjectModel));
-        add(new GuidelinesListPanel("guidelines", aProjectModel));
+        return "/guidelines";
+    }
+
+    @Override
+    public String getLabel()
+    {
+        return "Guidelines";
+    }
+
+    @Override
+    public Panel createSettingsPanel(String aID, final IModel<Project> aProjectModel)
+    {
+        return new ProjectGuidelinesPanel(aID, aProjectModel);
     }
 }

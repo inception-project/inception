@@ -52,13 +52,11 @@ import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ParseException;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.TokenMgrError;
 import de.tudarmstadt.ukp.clarin.webanno.model.ConstraintSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
 
 /**
  * A Panel used to add Project Constraints Rules in a selected {@link Project}.
  */
-@ProjectSettingsPanel(label = "Constraints", prio = 500)
 public class ProjectConstraintsPanel
     extends ProjectSettingsPanelBase
 {

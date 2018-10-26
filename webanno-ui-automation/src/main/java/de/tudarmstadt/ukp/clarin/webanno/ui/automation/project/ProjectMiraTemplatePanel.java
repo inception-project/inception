@@ -69,16 +69,13 @@ import de.tudarmstadt.ukp.clarin.webanno.support.EntityModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapAjaxTabbedPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.automation.util.AutomationUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.automation.util.TabSepDocModel;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelCondition;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
  * A Panel used to define automation properties for the {@code MIRA} machine learning algorithm
  */
-@ProjectSettingsPanel(label = "Automation", prio = 700)
 public class ProjectMiraTemplatePanel
     extends ProjectSettingsPanelBase
 {
@@ -806,11 +803,5 @@ public class ProjectMiraTemplatePanel
         public AnnotationFeature features = new AnnotationFeature();
         public AnnotationFeature selectedFeatures = new AnnotationFeature();
 
-    }
-    
-    @ProjectSettingsPanelCondition
-    public static boolean settingsPanelCondition(Project aProject)
-    {
-        return WebAnnoConst.PROJECT_TYPE_AUTOMATION.equals(aProject.getMode());
     }
 }

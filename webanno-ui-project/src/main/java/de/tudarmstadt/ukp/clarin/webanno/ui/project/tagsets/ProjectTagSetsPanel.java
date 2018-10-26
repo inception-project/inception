@@ -23,13 +23,11 @@ import org.apache.wicket.model.Model;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
 
 /**
  * A Panel user to manage Tagsets.
  */
-@ProjectSettingsPanel(label = "Tagsets", prio = 400)
 public class ProjectTagSetsPanel
     extends ProjectSettingsPanelBase
 {
