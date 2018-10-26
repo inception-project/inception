@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.project.documents;
+package de.tudarmstadt.ukp.clarin.webanno.ui.project.guidelines;
 
 import org.apache.wicket.model.IModel;
 
@@ -23,18 +23,17 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
 
 /**
- * A Panel used to add Documents to the selected {@link Project}
+ * A Panel used to add Project Guidelines in a selected {@link Project}
  */
-public class ProjectDocumentsPanel
+public class ProjectGuidelinesPanel
     extends ProjectSettingsPanelBase
 {
-    private static final long serialVersionUID = 2116717853865353733L;
+    private static final long serialVersionUID = 5132384175522619171L;
 
-    public ProjectDocumentsPanel(String id, IModel<Project> aProject)
+    public ProjectGuidelinesPanel(String aId, IModel<Project> aProjectModel)
     {
-        super(id, aProject);
-
-        add(new ImportDocumentsPanel("import", aProject));
-        add(new DocumentListPanel("documents", aProject));
+        super(aId);
+        add(new ImportGuidelinesPanel("import", aProjectModel));
+        add(new GuidelinesListPanel("guidelines", aProjectModel));
     }
 }

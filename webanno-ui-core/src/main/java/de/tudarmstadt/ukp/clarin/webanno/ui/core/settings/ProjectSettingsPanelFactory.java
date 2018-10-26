@@ -17,13 +17,25 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.core.settings;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.model.IModel;
 
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.METHOD)
-public @interface ProjectSettingsPanelCondition
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+
+public interface ProjectSettingsPanelFactory
 {
+    String getPath();
+
+    String getLabel();
+
+    default String getIcon()
+    {
+        return null;
+    }
+
+    default boolean applies(Project aProject) {
+        return true;
+    }
+
+    Panel createSettingsPanel(String aID, final IModel<Project> aProjectModel);
 }

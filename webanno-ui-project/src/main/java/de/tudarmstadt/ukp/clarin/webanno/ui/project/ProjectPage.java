@@ -26,7 +26,6 @@ import java.util.Optional;
 
 import javax.persistence.NoResultException;
 
-import org.apache.commons.lang3.reflect.ConstructorUtils;
 import org.apache.wicket.Component;
 import org.apache.wicket.authroles.authorization.strategies.role.metadata.MetaDataRoleAuthorizationStrategy;
 import org.apache.wicket.extensions.ajax.markup.html.tabs.AjaxTabbedPanel;
@@ -49,19 +48,20 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
 import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapAjaxTabbedPanel;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ModelChangedVisitor;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelRegistryService;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelRegistryService.ProjectSettingsPanelDecl;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelFactory;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.detail.ProjectDetailPanel;
-import de.tudarmstadt.ukp.clarin.webanno.ui.project.guidelines.AnnotationGuideLinePanel;
+import de.tudarmstadt.ukp.clarin.webanno.ui.project.guidelines.ProjectGuidelinesPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.tagsets.ProjectTagSetsPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.users.ProjectUsersPanel;
 
 /**
  * This is the main page for Project Settings. The Page has Four Panels. The
- * {@link AnnotationGuideLinePanel} is used to update documents to a project. The
+ * {@link ProjectGuidelinesPanel} is used to update documents to a project. The
  * {@code ProjectDetailsPanel} used for updating Project details such as descriptions of a project
  * and name of the Project The {@link ProjectTagSetsPanel} is used to add {@link TagSet} and
  * {@link Tag} details to a Project as well as updating them The {@link ProjectUsersPanel} is used
@@ -75,7 +75,7 @@ public class ProjectPage
 
     // private static final Logger LOG = LoggerFactory.getLogger(ProjectPage.class);
 
-    private @SpringBean ProjectSettingsPanelRegistryService projectSettingsPanelRegistryService;
+    private @SpringBean ProjectSettingsPanelRegistry projectSettingsPanelRegistry;
     private @SpringBean UserDao userRepository;
     private @SpringBean ProjectService projectService;
 
@@ -193,20 +193,25 @@ public class ProjectPage
         });
         
         // Add the project settings panels from the registry
-        for (ProjectSettingsPanelDecl psp : projectSettingsPanelRegistryService.getPanels()) {
-            AbstractTab tab = new AbstractTab(Model.of(psp.label)) {
+        for (ProjectSettingsPanelFactory psp : projectSettingsPanelRegistry.getPanels()) {
+            String path = psp.getPath();
+            AbstractTab tab = new AbstractTab(Model.of(psp.getLabel())) {
                 private static final long serialVersionUID = -1503555976570640065L;
 
+                private ProjectSettingsPanelRegistry getRegistry()
+                {
+                    // @SpringBean doesn't work here and we cannot keep a reference on the 
+                    // projectSettingsPanelRegistry either because it is not serializable,
+                    // so we have no other chance here than fetching it statically
+                    return ApplicationContextProvider.getApplicationContext()
+                            .getBean(ProjectSettingsPanelRegistry.class);
+                }
+                
                 @Override
                 public Panel getPanel(String aPanelId)
                 {
-                    try {
-                        return ConstructorUtils.invokeConstructor(psp.panel, aPanelId,
-                                selectedProject);
-                    }
-                    catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
+                    return getRegistry().getPanel(path).createSettingsPanel(aPanelId,
+                            selectedProject);
                 }
 
                 @Override
@@ -214,7 +219,8 @@ public class ProjectPage
                 {
                     return selectedProject.getObject() != null
                             && selectedProject.getObject().getId() != null
-                            && psp.condition.applies(selectedProject.getObject());
+                            && getRegistry().getPanel(path)
+                                    .applies(selectedProject.getObject());
                 }
             };
             tabs.add(tab);

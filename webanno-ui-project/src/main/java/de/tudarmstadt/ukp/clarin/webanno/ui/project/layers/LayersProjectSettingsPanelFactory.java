@@ -1,5 +1,5 @@
 /*
- * Copyright 2012
+ * Copyright 2018
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
  *
@@ -15,26 +15,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.project.documents;
+package de.tudarmstadt.ukp.clarin.webanno.ui.project.layers;
 
+import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelFactory;
 
-/**
- * A Panel used to add Documents to the selected {@link Project}
- */
-public class ProjectDocumentsPanel
-    extends ProjectSettingsPanelBase
+@Component
+@Order(300)
+public class LayersProjectSettingsPanelFactory
+    implements ProjectSettingsPanelFactory
 {
-    private static final long serialVersionUID = 2116717853865353733L;
-
-    public ProjectDocumentsPanel(String id, IModel<Project> aProject)
+    @Override
+    public String getPath()
     {
-        super(id, aProject);
+        return "/layers";
+    }
 
-        add(new ImportDocumentsPanel("import", aProject));
-        add(new DocumentListPanel("documents", aProject));
+    @Override
+    public String getLabel()
+    {
+        return "Layers";
+    }
+
+    @Override
+    public Panel createSettingsPanel(String aID, final IModel<Project> aProjectModel)
+    {
+        return new ProjectLayersPanel(aID, aProjectModel);
     }
 }
