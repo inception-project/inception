@@ -27,6 +27,11 @@
   <name>INCEpTION - External Search - UI</name>
   <dependencies>
     <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-ui-core</artifactId>
+    </dependency>
+
+    <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
       <artifactId>webanno-api-annotation</artifactId>
     </dependency>
