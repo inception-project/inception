@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.app.ui.externalsearch;
 
 import org.apache.wicket.Page;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
@@ -25,32 +26,35 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 
 @Component
 @Order(50)
-public class SearchPageMenuItem implements MenuItem
+@ConditionalOnProperty(prefix = "inception.external-search", name = "enabled", 
+    havingValue = "true", matchIfMissing = false)
+public class SearchPageMenuItem
+    implements MenuItem
 {
     @Override
     public String getPath()
     {
         return "/search";
     }
-    
+
     @Override
     public String getIcon()
     {
         return "images/magnifier.png";
     }
-    
+
     @Override
     public String getLabel()
     {
         return "Search";
     }
-    
+
     @Override
     public boolean applies()
     {
         return true;
     }
-    
+
     @Override
     public Class<? extends Page> getPageClass()
     {
