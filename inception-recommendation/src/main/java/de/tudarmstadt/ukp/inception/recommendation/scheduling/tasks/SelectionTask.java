@@ -43,6 +43,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.PercentageBase
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
+import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderEvaluationResultEvent;
 
 /**
  * This task is run every 60 seconds, if the document has changed. It evaluates all available
@@ -130,19 +131,24 @@ public class SelectionTask
                     double score = recommendationEngine.evaluate(casses, splitter);
 
                     Double threshold = recommender.getThreshold();
+                    boolean activated;
                     if (score >= threshold) {
+                        activated = true;
                         activeRecommenders.add(recommender);
                         log.info("[{}][{}]: Activated ({} is above threshold {})",
                                 user.getUsername(), recommenderName, score,
                                 threshold);
                     }
                     else {
+                        activated = false;
                         log.info("[{}][{}]: Not activated ({} is not above threshold {})",
                                 user.getUsername(), recommenderName, score,
                                 threshold);
                     }
 
-                    // TODO: Publish an evaluation event
+                    appEventPublisher.publishEvent(new RecommenderEvaluationResultEvent(this,
+                            recommender, user.getUsername(), score,
+                            System.currentTimeMillis() - start, activated));
                 }
                 catch (Throwable e) {
                     log.error("[{}][{}]: Failed", user.getUsername(), recommenderName, e);
