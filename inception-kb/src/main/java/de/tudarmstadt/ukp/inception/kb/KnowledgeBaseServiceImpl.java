@@ -449,7 +449,7 @@ public class KnowledgeBaseServiceImpl
     public Optional<KBConcept> readConcept(KnowledgeBase aKB, String aIdentifier)
         throws QueryEvaluationException
     {
-        KBHandle resultHandle = read(aKB, (conn) -> {
+        List<KBHandle> resultList = read(aKB, (conn) -> {
             String QUERY = SPARQLQueryStore.readConcept(aKB, 1);
             ValueFactory vf = SimpleValueFactory.getInstance();
             TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
@@ -460,44 +460,18 @@ public class KnowledgeBaseServiceImpl
             tupleQuery.setBinding("pLABEL", aKB.getLabelIri());
             tupleQuery.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
             tupleQuery.setIncludeInferred(false);
-            TupleQueryResult result = tupleQuery.evaluate();
-
-            KBHandle handle = new KBHandle();
-            while (result.hasNext()) {
-                BindingSet bindings = result.next();
-                if (bindings.size() == 0) {
-                    continue;
-                }
-                Binding label = bindings.getBinding("l");
-                Binding description = bindings.getBinding("d");
-                handle.setIdentifier(aIdentifier);
-                if (label != null) {
-                    handle.setName(label.getValue().stringValue());
-                    if (label.getValue() instanceof Literal) {
-                        Literal literal = (Literal) label.getValue();
-                        Optional<String> language = literal.getLanguage();
-                        language.ifPresent(handle::setLanguage);
-                    }
-                }
-                else {
-                    handle.setName(handle.getUiLabel());
-                }
-                if (description != null) {
-                    handle.setDescription(description.getValue().stringValue());
-                }
-
-            }
-            return handle;
+            return evaluateListQuery(tupleQuery, false, "oItem", "l", "d");
         });
-        if (resultHandle.getIdentifier() == null) {
+        
+        if (resultList.isEmpty()) {
             return Optional.empty();
         }
         else {
             KBConcept kbConcept = new KBConcept();
-            kbConcept.setIdentifier(aIdentifier);
-            kbConcept.setName(resultHandle.getName());
-            kbConcept.setDescription(resultHandle.getDescription());
-            kbConcept.setLanguage(resultHandle.getLanguage());
+            kbConcept.setIdentifier(resultList.get(0).getIdentifier());
+            kbConcept.setName(resultList.get(0).getName());
+            kbConcept.setDescription(resultList.get(0).getDescription());
+            kbConcept.setLanguage(resultList.get(0).getLanguage());
             return Optional.of(kbConcept);
         }
     }
@@ -550,7 +524,7 @@ public class KnowledgeBaseServiceImpl
             tupleQuery.setBinding("pLABEL", aKB.getLabelIri());
             tupleQuery.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
             tupleQuery.setIncludeInferred(false);
-            return evaluateListQuery(tupleQuery, aAll);
+            return evaluateListQuery(tupleQuery, aAll, "s", "l", "d");
         });
         resultList.sort(Comparator.comparing(KBObject::getUiLabel));
         return resultList;
@@ -634,7 +608,7 @@ public class KnowledgeBaseServiceImpl
             tupleQuery.setBinding("pLABEL", aKB.getLabelIri());
             tupleQuery.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
             tupleQuery.setIncludeInferred(aIncludeInferred);
-            return evaluateListQuery(tupleQuery, aAll);
+            return evaluateListQuery(tupleQuery, aAll, "s", "l", "d");
         });
         resultList.sort(Comparator.comparing(KBObject::getUiLabel));
         return resultList;
@@ -846,7 +820,7 @@ public class KnowledgeBaseServiceImpl
             tupleQuery.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
             tupleQuery.setIncludeInferred(aIncludeInferred);
 
-            return evaluateListQuery(tupleQuery, aAll);
+            return evaluateListQuery(tupleQuery, aAll, "s", "l", "d");
         });
 
         resultList.sort(Comparator.comparing(KBObject::getUiLabel));
@@ -868,7 +842,7 @@ public class KnowledgeBaseServiceImpl
             tupleQuery.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
             tupleQuery.setIncludeInferred(aIncludeInferred);
 
-            return evaluateListQuery(tupleQuery, aAll);
+            return evaluateListQuery(tupleQuery, aAll,  "s", "l", "d");
         });
         
         // Sorting is not done as part of SPARQL queries as it will be more expensive on
@@ -892,7 +866,7 @@ public class KnowledgeBaseServiceImpl
             tupleQuery.setBinding("pLABEL", aKB.getLabelIri());
             tupleQuery.setIncludeInferred(aIncludeInferred);
 
-            return evaluateListQuery(tupleQuery, aAll);
+            return evaluateListQuery(tupleQuery, aAll, "s", "l", "d");
         });
         
         resultList.sort(Comparator.comparing(KBObject::getUiLabel));
@@ -913,7 +887,7 @@ public class KnowledgeBaseServiceImpl
             tupleQuery.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
             tupleQuery.setIncludeInferred(aIncludeInferred);
 
-            return evaluateListQuery(tupleQuery, aAll);
+            return evaluateListQuery(tupleQuery, aAll, "s", "l", "d");
         });
 
         resultList.sort(Comparator.comparing(KBObject::getUiLabel));
@@ -946,7 +920,7 @@ public class KnowledgeBaseServiceImpl
                 tupleQuery.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
                 tupleQuery.setIncludeInferred(false);
     
-                return evaluateListQuery(tupleQuery, aAll);
+                return evaluateListQuery(tupleQuery, aAll, "s", "l", "d");
             });
         }
         resultList.sort(Comparator.comparing(KBObject::getUiLabel));
@@ -983,7 +957,7 @@ public class KnowledgeBaseServiceImpl
             tupleQuery.setBinding("pLABEL", aKB.getLabelIri());
             tupleQuery.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
             tupleQuery.setIncludeInferred(false);
-            return evaluateListQuery(tupleQuery, aAll);
+            return evaluateListQuery(tupleQuery, aAll, "s", "l", "d");
         });
         return resultList;
     }
@@ -1003,7 +977,7 @@ public class KnowledgeBaseServiceImpl
             tupleQuery.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
             tupleQuery.setIncludeInferred(true);
 
-            return evaluateListQuery(tupleQuery, aAll);
+            return evaluateListQuery(tupleQuery, aAll, "s", "l", "d");
         });
         resultList.sort(Comparator.comparing(KBObject::getUiLabel));
         return resultList;
@@ -1073,7 +1047,7 @@ public class KnowledgeBaseServiceImpl
             tupleQuery.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
             tupleQuery.setIncludeInferred(false);
 
-            return evaluateListQuery(tupleQuery, aAll);
+            return evaluateListQuery(tupleQuery, aAll, "s", "l", "d");
         });
 
         
@@ -1097,8 +1071,19 @@ public class KnowledgeBaseServiceImpl
         return childConceptInstances;
     }
     
-    
-    private List<KBHandle> evaluateListQuery(TupleQuery tupleQuery, boolean aAll)
+    /**
+     * Method process the Tuple Query Results
+     * 
+     * @param tupleQuery Tuple Query Variable
+     * @param aAll True if entities with implicit namespaces (e.g. defined by RDF)
+     * @param itemVariable The variable to define the item IRI (eg.'s')
+     * @param langVariable The variable to define the item IRI (In general: 'l')
+     * @param descVariable The variable to define the item IRI (In general: 'd')
+     * @return list of all the {@link KBHandle} 
+     * @throws QueryEvaluationException
+     */
+    private List<KBHandle> evaluateListQuery(TupleQuery tupleQuery, boolean aAll,
+            String itemVariable, String langVariable, String descVariable)
         throws QueryEvaluationException
     {
         TupleQueryResult result = tupleQuery.evaluate();        
@@ -1109,9 +1094,9 @@ public class KnowledgeBaseServiceImpl
             if (bindings.size() == 0) {
                 continue;
             }
-            String id = bindings.getBinding("s").getValue().stringValue();
-            Binding label = bindings.getBinding("l");
-            Binding description = bindings.getBinding("d");
+            String id = bindings.getBinding(itemVariable).getValue().stringValue();
+            Binding label = bindings.getBinding(langVariable);
+            Binding description = bindings.getBinding(descVariable);
 
             if (!id.contains(":") || (!aAll && hasImplicitNamespace(id))) {
                 continue;
@@ -1120,6 +1105,11 @@ public class KnowledgeBaseServiceImpl
             KBHandle handle = new KBHandle(id);
             if (label != null) {
                 handle.setName(label.getValue().stringValue());
+                if (label.getValue() instanceof Literal) {
+                    Literal literal = (Literal) label.getValue();
+                    Optional<String> language = literal.getLanguage();
+                    language.ifPresent(handle::setLanguage);
+                }
             }
             else {
                 handle.setName(handle.getUiLabel());
