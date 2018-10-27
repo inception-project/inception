@@ -21,11 +21,9 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 
-@ProjectSettingsPanel(label = "Recommenders", prio = 400)
 public class ProjectRecommendersPanel
     extends ProjectSettingsPanelBase
 {
