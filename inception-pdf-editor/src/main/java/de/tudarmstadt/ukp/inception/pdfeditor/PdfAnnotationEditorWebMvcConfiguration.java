@@ -28,7 +28,7 @@ public class PdfAnnotationEditorWebMvcConfiguration
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry aRegistry)
     {
-        aRegistry.addResourceHandler("/resources/pdfjs/**")
-                .addResourceLocations("classpath:/de/tudarmstadt/ukp/inception/pdfeditor/pdfjs/resources/");
+        aRegistry.addResourceHandler("/resources/pdfanno/**")
+                .addResourceLocations("classpath:/de/tudarmstadt/ukp/inception/pdfeditor/pdfanno/resources/");
     }
 }
