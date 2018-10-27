@@ -41,7 +41,7 @@
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
       <artifactId>webanno-model</artifactId>
     </dependency>
-    
+
     <dependency>
       <groupId>org.apache.uima</groupId>
       <artifactId>uimaj-core</artifactId>
@@ -55,12 +55,12 @@
       <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
       <artifactId>de.tudarmstadt.ukp.dkpro.core.io.pdf-asl</artifactId>
     </dependency>
-    
+
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
     </dependency>
-    
+
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-context</artifactId>
@@ -69,7 +69,7 @@
       <groupId>org.springframework</groupId>
       <artifactId>spring-webmvc</artifactId>
     </dependency>
-    
+
     <dependency>
       <groupId>org.apache.wicket</groupId>
       <artifactId>wicket-core</artifactId>
@@ -86,13 +86,57 @@
       <groupId>org.apache.wicket</groupId>
       <artifactId>wicket-spring</artifactId>
     </dependency>
-        
+
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
     </dependency>
   </dependencies>
   <build>
+    <plugins>
+      <plugin>
+        <groupId>com.github.eirslett</groupId>
+        <artifactId>frontend-maven-plugin</artifactId>
+        <version>1.6</version>
+          <configuration>
+            <workingDirectory>src/main/java/de/tudarmstadt/ukp/inception/pdfeditor/pdfanno/resources/</workingDirectory>
+            <installDirectory>src/main/java/de/tudarmstadt/ukp/inception/pdfeditor/pdfanno/resources/</installDirectory>
+          </configuration>
+        <executions>
+          <execution>
+            <id>install node and npm</id>
+            <goals>
+              <goal>install-node-and-npm</goal>
+            </goals>
+            <phase>generate-resources</phase>
+            <configuration>
+              <nodeVersion>v11.0.0</nodeVersion>
+              <npmVersion>6.4.1</npmVersion>
+            </configuration>
+          </execution>
+          <execution>
+            <id>npm install</id>
+            <goals>
+              <goal>npm</goal>
+            </goals>
+            <phase>generate-resources</phase>
+            <configuration>
+              <arguments>install</arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>npm run</id>
+            <goals>
+              <goal>npm</goal>
+            </goals>
+            <phase>generate-resources</phase>
+            <configuration>
+              <arguments>run front:publish</arguments>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
     <pluginManagement>
       <plugins>
         <plugin>
@@ -105,6 +149,7 @@
                 <excludes combine.children="append">
                   <!-- These upstream files do not contain license headers -->
                   <exclude>src/main/java/de/tudarmstadt/ukp/inception/pdfeditor/pdfjs/resources/web/images/*.svg</exclude>
+                  <exclude>src/main/java/de/tudarmstadt/ukp/inception/pdfeditor/pdfanno/resources/**/*</exclude>
                 </excludes>
               </configuration>
             </execution>
