@@ -58,7 +58,7 @@ public class OpenNlpDoccatRecommenderFactory
     @Override
     public String getName()
     {
-        return "Multi-Token Sequence Classifier (OpenNLP NER)";
+        return "Sentence Classifier (OpenNLP Document Categorizer)";
     }
 
     @Override
