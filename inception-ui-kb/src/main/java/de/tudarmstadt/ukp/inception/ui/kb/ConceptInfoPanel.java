@@ -19,6 +19,8 @@ package de.tudarmstadt.ukp.inception.ui.kb;
 
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
+import java.util.Comparator;
+
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.event.Broadcast;
 import org.apache.wicket.markup.html.form.Form;
@@ -31,6 +33,7 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxConceptSelectionEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.stmt.StatementDetailPreference;
+import de.tudarmstadt.ukp.inception.ui.kb.stmt.StatementGroupBean;
 
 public class ConceptInfoPanel extends AbstractInfoPanel<KBConcept> {
 
@@ -87,7 +90,7 @@ public class ConceptInfoPanel extends AbstractInfoPanel<KBConcept> {
     }
 
     @Override
-    protected ImportantStatementComparator getStatementGroupComparator() {
+    protected Comparator<StatementGroupBean> getStatementGroupComparator() {
         return new ImportantStatementComparator(sgb -> {
             KnowledgeBase kb = kbModel.getObject();
             String identifier = sgb.getProperty().getIdentifier();

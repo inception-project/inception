@@ -25,8 +25,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import de.tudarmstadt.ukp.inception.ui.kb.stmt.coloring.StatementColoringRegistry;
-import de.tudarmstadt.ukp.inception.ui.kb.stmt.coloring.StatementColoringStrategy;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AttributeAppender;
@@ -64,11 +62,12 @@ import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
-import de.tudarmstadt.ukp.inception.ui.kb.ImportantStatementComparator;
 import de.tudarmstadt.ukp.inception.ui.kb.WriteProtectionBehavior;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxPropertySelectionEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxStatementChangedEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxStatementGroupChangedEvent;
+import de.tudarmstadt.ukp.inception.ui.kb.stmt.coloring.StatementColoringRegistry;
+import de.tudarmstadt.ukp.inception.ui.kb.stmt.coloring.StatementColoringStrategy;
 import de.tudarmstadt.ukp.inception.ui.kb.stmt.editor.StatementEditor;
 
 public class StatementGroupPanel extends Panel {
@@ -83,15 +82,12 @@ public class StatementGroupPanel extends Panel {
     private @SpringBean StatementColoringRegistry coloringRegistry;
 
     private CompoundPropertyModel<StatementGroupBean> groupModel;
-    private IModel<ImportantStatementComparator> statementGroupComparator;
     private Component content;
 
-    public StatementGroupPanel(String aId, CompoundPropertyModel<StatementGroupBean> aGroupModel,
-        IModel<ImportantStatementComparator> aStatementGroupComparator)
+    public StatementGroupPanel(String aId, CompoundPropertyModel<StatementGroupBean> aGroupModel)
     {
         super(aId, aGroupModel);
         groupModel = aGroupModel;
-        statementGroupComparator = aStatementGroupComparator;
         setOutputMarkupId(true);
         
         if (groupModel.getObject().isNew()) {
@@ -282,22 +278,22 @@ public class StatementGroupPanel extends Panel {
             addLink.add(new WriteProtectionBehavior(groupModel.bind("kb")));
             statementGroupFooter.add(addLink);
 
-            if (statementGroupComparator.getObject().getImportant().apply(statementGroupBean)) {
-                StatementColoringStrategy coloringStrategy = coloringRegistry
-                    .getStatementColoringStrategy(statementGroupBean.getProperty().getIdentifier());
+            // Apply a specific coloring strategy depending on the property
+            StatementColoringStrategy coloringStrategy = coloringRegistry
+                .getStatementColoringStrategy(statementGroupBean.getProperty().getIdentifier());
 
-                String frameColor = coloringStrategy.getFrameColor();
-                AttributeAppender framehighlightAppender = new AttributeAppender("style",
-                    "background-color:#" + frameColor);
-                statementGroupFooter.add(framehighlightAppender);
-                form.add(framehighlightAppender);
+            String frameColor = coloringStrategy.getFrameColor();
+            AttributeAppender framehighlightAppender = new AttributeAppender("style",
+                "background-color:#" + frameColor);
+            statementGroupFooter.add(framehighlightAppender);
+            form.add(framehighlightAppender);
 
-                String textColor = coloringStrategy.getTextColor();
-                String backgroundColor = coloringStrategy.getBackgroundColor();
-                AttributeAppender highlightAppender = new AttributeAppender("style",
-                    "background-color:#" + backgroundColor + ";color:#" + textColor);
-                statementListWrapper.add(highlightAppender);
-            }
+            String textColor = coloringStrategy.getTextColor();
+            String backgroundColor = coloringStrategy.getBackgroundColor();
+            AttributeAppender highlightAppender = new AttributeAppender("style",
+                "background-color:#" + backgroundColor + ";color:#" + textColor);
+            statementListWrapper.add(highlightAppender);
+
 
             form.add(statementGroupFooter);
             add(form);

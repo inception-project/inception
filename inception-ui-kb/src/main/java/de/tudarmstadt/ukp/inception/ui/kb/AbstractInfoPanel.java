@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.ui.kb;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
+import java.util.Comparator;
 import java.util.List;
 
 import org.apache.wicket.AttributeModifier;
@@ -52,6 +53,7 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.ui.kb.stmt.StatementDetailPreference;
+import de.tudarmstadt.ukp.inception.ui.kb.stmt.StatementGroupBean;
 import de.tudarmstadt.ukp.inception.ui.kb.stmt.StatementsPanel;
 
 /**
@@ -201,7 +203,7 @@ public abstract class AbstractInfoPanel<T extends KBObject> extends Panel {
             // show statements about this KBObject
             StatementsPanel statementsPanel = new StatementsPanel("statements", kbModel,
                     handleModel, getDetailPreference());
-            ImportantStatementComparator comparator = getStatementGroupComparator();
+            Comparator<StatementGroupBean> comparator = getStatementGroupComparator();
             if (comparator != null) {
                 statementsPanel.setStatementGroupComparator(comparator);
             }
@@ -209,7 +211,7 @@ public abstract class AbstractInfoPanel<T extends KBObject> extends Panel {
         }
     }
 
-    protected ImportantStatementComparator getStatementGroupComparator()
+    protected Comparator<StatementGroupBean> getStatementGroupComparator()
     {
         return null;
     }

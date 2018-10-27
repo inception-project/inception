@@ -2,8 +2,6 @@ package de.tudarmstadt.ukp.inception.ui.kb.stmt.coloring;
 
 import org.springframework.beans.factory.BeanNameAware;
 
-import java.util.List;
-
 public interface StatementColoringStrategy extends BeanNameAware
 {
 

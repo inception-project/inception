@@ -22,6 +22,7 @@ import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -56,7 +57,6 @@ import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
-import de.tudarmstadt.ukp.inception.ui.kb.ImportantStatementComparator;
 import de.tudarmstadt.ukp.inception.ui.kb.WriteProtectionBehavior;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxStatementGroupChangedEvent;
 
@@ -70,7 +70,7 @@ public class StatementsPanel extends Panel {
     private IModel<KBHandle> instance;
     private IModel<StatementDetailPreference> detailPreference;
     private WebMarkupContainer statementGroupListWrapper;
-    private IModel<ImportantStatementComparator> statementGroupComparator;
+    private IModel<Comparator<StatementGroupBean>> statementGroupComparator;
     
     private IModel<List<StatementGroupBean>> statementGroups;
     
@@ -96,7 +96,7 @@ public class StatementsPanel extends Panel {
 
         // default ordering for statement groups: lexical ordering by UI label
         statementGroupComparator = LambdaModel
-            .of(() -> new ImportantStatementComparator(sgb -> true));
+            .of(() -> Comparator.comparing(sgb -> sgb.getProperty().getUiLabel()));
         
         setUpDetailPreference(aDetailPreference);
 
@@ -119,13 +119,13 @@ public class StatementsPanel extends Panel {
                 };
             }
 
-            @Override protected void populateItem(Item<StatementGroupBean> aItem)
+            @Override
+            protected void populateItem(Item<StatementGroupBean> aItem)
             {
                 CompoundPropertyModel<StatementGroupBean> groupModel = new CompoundPropertyModel<>(
                     LambdaModel.of(() -> aItem.getModelObject()));
 
-                StatementGroupPanel panel = new StatementGroupPanel("statementGroup", groupModel,
-                    statementGroupComparator);
+                StatementGroupPanel panel = new StatementGroupPanel("statementGroup", groupModel);
                 aItem.add(panel);
             }
         };
@@ -233,7 +233,7 @@ public class StatementsPanel extends Panel {
     }
 
     public void setStatementGroupComparator(
-            ImportantStatementComparator statementGroupComparator) {
+            Comparator<StatementGroupBean> statementGroupComparator) {
         this.statementGroupComparator.setObject(statementGroupComparator);
     }
 
