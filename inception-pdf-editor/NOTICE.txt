@@ -3,3 +3,9 @@
 Package: de.tudarmstadt.ukp.inception.pdfeditor.pdfjs.resources
 
 All files under this package are from PDF.js and are licensed under the Apache License 2.0.
+
+== PDFAnno
+
+Package: de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.resources
+
+All files under this package are from PDFAnno and are licensed under the MIT.
