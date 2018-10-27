@@ -23,13 +23,12 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
-@ProjectSettingsPanel(label = "Knowledge Bases", prio = 399)
-public class ProjectKnowledgeBasePanel extends ProjectSettingsPanelBase {
-
+public class ProjectKnowledgeBasePanel
+    extends ProjectSettingsPanelBase
+{
     private static final long serialVersionUID = 2300684106019320208L;
 
     private static final String DETAILS_PANEL_MARKUP_ID = "details";
@@ -37,7 +36,8 @@ public class ProjectKnowledgeBasePanel extends ProjectSettingsPanelBase {
     private IModel<Project> projectModel;
     private Panel detailsPanel;
 
-    public ProjectKnowledgeBasePanel(String aId, IModel<Project> aProject) {
+    public ProjectKnowledgeBasePanel(String aId, IModel<Project> aProject)
+    {
         super(aId);
         setOutputMarkupId(true);
         projectModel = aProject;
