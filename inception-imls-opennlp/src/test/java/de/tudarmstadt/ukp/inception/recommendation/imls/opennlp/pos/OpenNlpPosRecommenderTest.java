@@ -76,7 +76,7 @@ public class OpenNlpPosRecommenderTest
 
         assertThat(context.get(OpenNlpPosRecommender.KEY_MODEL))
             .as("Model has been set")
-            .isNotNull();
+            .isPresent();
     }
 
     @Test
