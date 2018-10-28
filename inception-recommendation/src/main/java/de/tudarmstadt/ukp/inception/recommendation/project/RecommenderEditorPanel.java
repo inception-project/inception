@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.project;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -27,8 +29,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.ajax.markup.html.form.AjaxButton;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
@@ -51,15 +53,13 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormSubmittingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.inception.recommendation.api.ClassificationToolFactory;
-import de.tudarmstadt.ukp.inception.recommendation.api.ClassificationToolRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
+import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderFactoryRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderDeletedEvent;
 
 public class RecommenderEditorPanel
@@ -67,18 +67,30 @@ public class RecommenderEditorPanel
 {
     private static final long serialVersionUID = -5278078988218713188L;
 
+    private static final String MID_CANCEL = "cancel";
+    private static final String MID_DELETE = "delete";
+    private static final String MID_SAVE = "save";
+    private static final String MID_MAX_RECOMMENDATIONS = "maxRecommendations";
+    private static final String MID_THRESHOLD = "threshold";
     private static final String MID_TRAITS_CONTAINER = "traitsContainer";
     private static final String MID_TRAITS = "traits";
+    private static final String MID_FORM = "form";
+    private static final String MID_NAME = "name";
+    private static final String MID_FEATURE = "feature";
+    private static final String MID_ENABLED = "enabled";
+    private static final String MID_ALWAYS_SELECTED = "alwaysSelected";
+    private static final String MID_TOOL = "tool";
+    private static final String MID_ACTIVATION_CONTAINER = "activationContainer";
     
     private @SpringBean RecommendationService recommendationService;
     private @SpringBean AnnotationSchemaService annotationSchemaService;
-    private @SpringBean ClassificationToolRegistry toolRegistry;
+    private @SpringBean RecommenderFactoryRegistry recommenderRegistry;
     private @SpringBean ApplicationEventPublisherHolder appEventPublisherHolder;
     private @SpringBean UserDao userDao;
 
     private WebMarkupContainer traitsContainer;
-    DropDownChoice<Pair<String, String>> toolChoice;
-    private Component threshold;
+    private WebMarkupContainer activationContainer;
+    private DropDownChoice<Pair<String, String>> toolChoice;
 
     private IModel<Project> projectModel;
     private IModel<Recommender> recommenderModel;
@@ -94,17 +106,13 @@ public class RecommenderEditorPanel
         projectModel = aProject;
         recommenderModel = aRecommender;
 
-        Form<Recommender> form = new Form<>("form", CompoundPropertyModel.of(aRecommender));
+        Form<Recommender> form = new Form<>(MID_FORM, CompoundPropertyModel.of(aRecommender));
         add(form);
         
-        form.add(new Label("name"));
-        form.add(new CheckBox("alwaysSelected")
-                .add(new LambdaAjaxFormSubmittingBehavior("change", t -> {
-                    t.add(form);
-                })));
-        form.add(new CheckBox("enabled"));
+        form.add(new Label(MID_NAME));
+        form.add(new CheckBox(MID_ENABLED));
         form.add(new DropDownChoice<>("layer")
-                .setChoices(LambdaModel.of(this::listLayers))
+                .setChoices(this::listLayers)
                 .setChoiceRenderer(new ChoiceRenderer<>("uiName"))
                 .setRequired(true)
                 // The available features and tools tools depend on the layer, so reload them
@@ -116,30 +124,29 @@ public class RecommenderEditorPanel
                         recommenderModel.getObject().setFeature(null);
                     }
                     recommenderModel.getObject().setTool(null);
-                    t.add(form.get("tool"));
-                    t.add(form.get("feature")); 
+                    t.add(form.get(MID_TOOL));
+                    t.add(form.get(MID_FEATURE)); 
                     t.add(traitsContainer);
                 })));
-        form.add(new DropDownChoice<>("feature")
-                .setChoices(LambdaModel.of(this::listFeatures))
+        form.add(new DropDownChoice<>(MID_FEATURE)
+                .setChoices(this::listFeatures)
                 .setRequired(true)
                 .setOutputMarkupId(true)
                 // The available tools depend on the feature, so reload the tools when the layer
                 // is changed
                 .add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> {
                     recommenderModel.getObject().setTool(null);
-                    t.add(form.get("tool"));
+                    t.add(form.get(MID_TOOL));
                     t.add(traitsContainer);
                 })));
         
         IModel<Pair<String, String>> toolModel = LambdaModelAdapter.of(() -> {
-            return listTools().stream()
-                    .filter(r -> r.getKey().equals(recommenderModel.getObject().getTool()))
-                    .findFirst().orElse(null);
+            String name = recommenderModel.getObject().getTool();
+            RecommendationEngineFactory factory = recommenderRegistry.getFactory(name);
+            return factory != null ? Pair.of(factory.getId(), factory.getName()) : null;
         }, (v) -> recommenderModel.getObject().setTool(v.getKey()));
         
-        toolChoice = new DropDownChoice<Pair<String, String>>("tool", toolModel,
-                LambdaModel.of(this::listTools))
+        toolChoice = new DropDownChoice<Pair<String, String>>(MID_TOOL, toolModel, this::listTools)
         {
             private static final long serialVersionUID = -1869081847783375166L;
 
@@ -149,9 +156,9 @@ public class RecommenderEditorPanel
                 // If the feature type has changed, we need to set up a new traits editor
                 Component newTraits;
                 if (form.getModelObject() != null && getModelObject() != null) {
-                    ClassificationToolFactory<?,?> ctf = toolRegistry
-                            .getTool(getModelObject().getKey());
-                    newTraits = ctf.createTraitsEditor(MID_TRAITS, form.getModel());
+                    RecommendationEngineFactory factory = recommenderRegistry
+                            .getFactory(getModelObject().getKey());
+                    newTraits = factory.createTraitsEditor(MID_TRAITS, form.getModel());
                 }
                 else {
                     newTraits = new EmptyPanel(MID_TRAITS);
@@ -160,33 +167,55 @@ public class RecommenderEditorPanel
                 traitsContainer.addOrReplace(newTraits);
             }
         };
+        // TODO: For a deprecated recommender, show itself in the tool dropdown but unselectable
         toolChoice.setChoiceRenderer(new ChoiceRenderer<Pair<String, String>>("value"));
         toolChoice.setRequired(true);
         toolChoice.setOutputMarkupId(true);
-        toolChoice.add(new AjaxFormComponentUpdatingBehavior("change")
-        {
-            private static final long serialVersionUID = 229921732568860645L;
-
-            @Override
-            protected void onUpdate(AjaxRequestTarget aTarget)
-            {
-                aTarget.add(traitsContainer);
-            }
-        });
+        toolChoice.add(new LambdaAjaxFormComponentUpdatingBehavior("change",_target -> 
+                _target.add(traitsContainer, activationContainer, 
+                        form.get(MID_MAX_RECOMMENDATIONS))));
         form.add(toolChoice);
         
-        form.add(threshold = new NumberTextField<>("threshold", Float.class)
+        form.add(activationContainer = new WebMarkupContainer(MID_ACTIVATION_CONTAINER));
+        activationContainer.setOutputMarkupPlaceholderTag(true);
+        activationContainer.add(visibleWhen(() -> toolChoice.getModel().map(_tool -> 
+                recommenderRegistry.getFactory(_tool.getKey()).isEvaluable())
+                .orElse(false).getObject()));
+
+        activationContainer.add(new CheckBox(MID_ALWAYS_SELECTED)
+                .setOutputMarkupPlaceholderTag(true)
+                .add(new LambdaAjaxFormSubmittingBehavior("change", t -> {
+                    t.add(activationContainer.get(MID_THRESHOLD));
+                })));
+
+        activationContainer.add(new NumberTextField<>(MID_THRESHOLD, Float.class)
                 .setMinimum(0.0f)
                 .setMaximum(100.0f)
                 .setStep(0.01f)
-                .setOutputMarkupId(true)
-                .add(LambdaBehavior.onConfigure(_this -> 
-                        _this.setEnabled(!recommenderModel.getObject().isAlwaysSelected()))));
+                .setOutputMarkupPlaceholderTag(true)
+                .add(visibleWhen(() -> !recommenderModel.map(Recommender::isAlwaysSelected)
+                        .orElse(false).getObject())));
+        
+        form.add(new NumberTextField<>(MID_MAX_RECOMMENDATIONS, Integer.class)
+                .setMinimum(1)
+                .setMaximum(10)
+                .setStep(1)
+                .setOutputMarkupPlaceholderTag(true)
+                .add(visibleWhen(() -> toolChoice.getModel()
+                                .map(_tool -> recommenderRegistry.getFactory(_tool.getKey())
+                                        .isMultipleRecommendationProvider())
+                                .orElse(false).getObject())));
         
         // Cannot use LambdaAjaxButton because it does not support onAfterSubmit.
-        form.add(new AjaxButton("save")
+        form.add(new AjaxButton(MID_SAVE)
         {
             private static final long serialVersionUID = -3902555252753037183L;
+
+            @Override
+            protected void onError(AjaxRequestTarget aTarget)
+            {
+                aTarget.addChildren(getPage(), IFeedback.class);
+            };
 
             @Override
             protected void onAfterSubmit(AjaxRequestTarget target)
@@ -194,14 +223,14 @@ public class RecommenderEditorPanel
                 actionSave(target);
             };
         });
-        form.add(new LambdaAjaxLink("delete", this::actionDelete)
+        
+        form.add(new LambdaAjaxLink(MID_DELETE, this::actionDelete)
                 .onConfigure(_this -> _this.setVisible(form.getModelObject().getId() != null)));
-        form.add(new LambdaAjaxLink("cancel", this::actionCancel)
+        form.add(new LambdaAjaxLink(MID_CANCEL, this::actionCancel)
                 .onConfigure(_this -> _this.setVisible(form.getModelObject().getId() == null)));
         
         form.add(traitsContainer = new WebMarkupContainer(MID_TRAITS_CONTAINER));
-        traitsContainer.setOutputMarkupId(true);
-        
+        traitsContainer.setOutputMarkupPlaceholderTag(true);
         traitsContainer.add(new EmptyPanel(MID_TRAITS));
     }
     
@@ -263,9 +292,11 @@ public class RecommenderEditorPanel
             AnnotationLayer layer = recommenderModel.getObject().getLayer();
             AnnotationFeature feature = annotationSchemaService
                     .getFeature(recommenderModel.getObject().getFeature(), layer);
-            return toolRegistry.getTools(layer, feature).stream()
-                    .map(f -> Pair.of(f.getId(), f.getName()))
-                    .collect(Collectors.toList());
+            return recommenderRegistry.getFactories(layer, feature)
+                .stream()
+                .filter(f -> !f.isDeprecated())
+                .map(f -> Pair.of(f.getId(), f.getName()))
+                .collect(Collectors.toList());
         }
         else {
             return Collections.emptyList();

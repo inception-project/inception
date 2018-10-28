@@ -347,7 +347,7 @@
     </addColumn>
   </changeSet>
   
-  <changeSet author="INCEpTION Team" id="20180924">
+  <changeSet author="INCEpTION Team" id="20180924-1">
     <preConditions onFail="MARK_RAN">
       <not>
         <columnExists tableName="knowledgebase" columnName="fullTextSearchIri"/>
@@ -359,10 +359,9 @@
               type="VARCHAR(255)">
       </column>
     </addColumn>
-    <sql>
-      update knowledgebase set 
-      fullTextSearchIri = "bif:contains" 
-      where supportConceptLinking = true
-    </sql>
+    <update tableName="knowledgebase">
+      <column name="fullTextSearchIri" type="VARCHAR(255)" value="bif:contains"/>
+      <where>supportConceptLinking = true</where>
+    </update>
   </changeSet>
 </databaseChangeLog>

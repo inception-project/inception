@@ -30,8 +30,9 @@
     <property name="message" value="CRLF line endings are prohibited"/>
   </module>
 
+  <module name="SuppressWithPlainTextCommentFilter"/>
+
   <module name="TreeWalker">
-    <module name="SuppressionCommentFilter"/>
     <module name="OuterTypeFilename"/>
     <module name="IllegalTokenText">
       <property name="tokens" value="STRING_LITERAL, CHAR_LITERAL"/>

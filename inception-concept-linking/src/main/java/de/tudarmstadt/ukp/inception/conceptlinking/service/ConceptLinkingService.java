@@ -608,6 +608,7 @@ public class ConceptLinkingService
             query = aQuery;
         }
 
+
         public KnowledgeBase getKnowledgeBase()
         {
             return knowledgeBase;
