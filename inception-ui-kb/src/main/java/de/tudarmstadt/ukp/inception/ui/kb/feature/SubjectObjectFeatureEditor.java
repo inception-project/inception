@@ -366,10 +366,19 @@ public class SubjectObjectFeatureEditor
                 .getFeature(FactLinkingConstants.LINKED_LAYER_FEATURE, linkedLayer);
         }
         List<KBHandle> handles = new ArrayList<>();
+
         try {
             FeatureSupport<ConceptFeatureTraits> fs = featureSupportRegistry
                 .getFeatureSupport(linkedAnnotationFeature);
             ConceptFeatureTraits traits = fs.readTraits(linkedAnnotationFeature);
+            Optional<KnowledgeBase> kb = kbService
+                .getKnowledgeBaseById(project, traits.getRepositoryId());
+
+            // Check if kb is actually enabled
+            if (kb.isPresent() && !kb.get().isEnabled()) {
+                return Collections.emptyList();
+            }
+
             switch (traits.getAllowedValueType()) {
             case INSTANCE:
                 handles = getInstances(traits, project, aHandler, aTypedString);

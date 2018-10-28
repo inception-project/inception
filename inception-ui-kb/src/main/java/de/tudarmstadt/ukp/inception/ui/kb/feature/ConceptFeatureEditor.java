@@ -57,6 +57,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
@@ -87,6 +88,7 @@ public class ConceptFeatureEditor extends FeatureEditor {
         super(aId, aItem, new CompoundPropertyModel<>(aModel));
         add(new Label(MID_FEATURE, getModelObject().feature.getUiName()));
         add(focusComponent = createAutoCompleteTextField(aStateModel.getObject(), aHandler));
+        add(disabledKbWarningLabel(aStateModel.getObject()));
     }
 
     @Override
@@ -136,9 +138,15 @@ public class ConceptFeatureEditor extends FeatureEditor {
         List<KBHandle> handles = new ArrayList<>();
         try {
             Project project = feat.getProject();
-            FeatureSupport<ConceptFeatureTraits> fs = featureSupportRegistry
-                    .getFeatureSupport(feat);
-            ConceptFeatureTraits traits = fs.readTraits(feat);
+            ConceptFeatureTraits traits = readFeatureTraits(feat);
+            Optional<KnowledgeBase> kb = kbService.getKnowledgeBaseById(project,
+                traits.getRepositoryId());
+
+            // Check if kb is actually enabled
+            if (kb.isPresent() && !kb.get().isEnabled()) {
+                return Collections.emptyList();
+            }
+
             switch (traits.getAllowedValueType()) {
             case INSTANCE:
                 handles = getInstances(traits, project, aState, aHandler, aTypedString);
@@ -155,7 +163,7 @@ public class ConceptFeatureEditor extends FeatureEditor {
             LOG.error("Unable to read traits", e);
             error("Unable to read traits: " + ExceptionUtils.getRootCauseMessage(e));
             IPartialPageRequestHandler target = RequestCycle.get()
-                    .find(IPartialPageRequestHandler.class);
+                .find(IPartialPageRequestHandler.class);
             if (target != null) {
                 target.addChildren(getPage(), IFeedback.class);
             }
@@ -163,6 +171,13 @@ public class ConceptFeatureEditor extends FeatureEditor {
         // Sort results
         handles.sort(Comparator.comparing(KBObject::getUiLabel));
         return handles;
+    }
+
+    private ConceptFeatureTraits readFeatureTraits(AnnotationFeature aAnnotationFeature) {
+        FeatureSupport<ConceptFeatureTraits> fs = featureSupportRegistry
+            .getFeatureSupport(aAnnotationFeature);
+        ConceptFeatureTraits traits = fs.readTraits(aAnnotationFeature);
+        return traits;
     }
 
     private List<KBHandle> getInstances(ConceptFeatureTraits traits, Project project,
@@ -304,5 +319,21 @@ public class ConceptFeatureEditor extends FeatureEditor {
                 return Collections.emptyList();
             }
         });
+    }
+
+    private Label disabledKbWarningLabel(AnnotatorState aState) {
+        Label warningLabel = new Label("disabledKBWarningLabel",
+            "&#9888; <strong>The currently selected knowledge base for this concept feature is"
+                + " disabled.</strong>"
+                + " Enable the knowledge base or change the configurations of the concept "
+                + "feature in the project settings.");
+        warningLabel.setEscapeModelStrings(false);
+        AnnotationFeature feature = getModelObject().feature;
+        ConceptFeatureTraits traits = readFeatureTraits(feature);
+        Optional<KnowledgeBase> kb = kbService.getKnowledgeBaseById(feature.getProject(),
+            traits.getRepositoryId());
+        warningLabel.add(LambdaBehavior
+            .onConfigure(label -> label.setVisible(kb.isPresent() && !kb.get().isEnabled())));
+        return warningLabel;
     }
 }
