@@ -33,9 +33,6 @@ import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
-
 import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.builder.CompareToBuilder;
 import org.apache.commons.lang3.builder.EqualsBuilder;
@@ -54,6 +51,7 @@ import org.eclipse.rdf4j.repository.config.RepositoryImplConfig;
 import org.eclipse.rdf4j.repository.sparql.config.SPARQLRepositoryConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
@@ -79,11 +77,12 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 @Component
 public class ConceptLinkingService
+    implements InitializingBean
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private @Resource KnowledgeBaseService kbService;
-    private @Resource EntityLinkingProperties properties;
+    private @Autowired KnowledgeBaseService kbService;
+    private @Autowired EntityLinkingProperties properties;
 
     @org.springframework.beans.factory.annotation.Value
         (value = "${repository.path}/resources/stopwords-en.txt")
@@ -114,6 +113,7 @@ public class ConceptLinkingService
     private LoadingCache<SemanticSignatureCacheKey, SemanticSignature> semanticSignatureCache;
 
     private boolean loadResources;
+    
     @Autowired
     public ConceptLinkingService()
     {
@@ -126,11 +126,10 @@ public class ConceptLinkingService
         kbService = aKbService;
         properties = aProperties;
         loadResources = false;
-        init();
     }
 
-    @PostConstruct
-    public void init()
+    @Override
+    public void afterPropertiesSet() throws Exception
     {
         if (loadResources) {
             stopwords = FileUtils.loadStopwordFile(stopwordsFile);
@@ -147,7 +146,7 @@ public class ConceptLinkingService
                 .maximumSize(properties.getCacheSize())
                 .build(key -> loadSemanticSignature(key));
     }
-
+    
     /**
      * Given a mention in the text, this method returns a list of ranked candidate entities
      * generated from a Knowledge Base.
