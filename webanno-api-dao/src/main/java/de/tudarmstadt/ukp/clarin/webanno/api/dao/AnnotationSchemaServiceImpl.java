@@ -33,6 +33,7 @@ import java.util.Deque;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
@@ -44,13 +45,17 @@ import org.apache.commons.collections4.SetUtils;
 import org.apache.commons.lang3.ClassUtils;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
+import org.apache.uima.cas.Type;
 import org.apache.uima.cas.TypeSystem;
 import org.apache.uima.cas.impl.CASCompleteSerializer;
 import org.apache.uima.cas.impl.CASImpl;
 import org.apache.uima.cas.impl.Serialization;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.factory.TypeSystemDescriptionFactory;
+import org.apache.uima.resource.ResourceInitializationException;
+import org.apache.uima.resource.metadata.FeatureDescription;
 import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.resource.metadata.impl.TypeSystemDescription_impl;
@@ -704,14 +709,54 @@ public class AnnotationSchemaServiceImpl
     public void upgradeCas(CAS aCas, SourceDocument aSourceDocument, String aUser)
         throws UIMAException, IOException
     {
-        TypeSystemDescription builtInTypes = TypeSystemDescriptionFactory
-                .createTypeSystemDescription();
-        TypeSystemDescription projectTypes = getProjectTypes(aSourceDocument.getProject());
-        TypeSystemDescription allTypes = CasCreationUtils
-                .mergeTypeSystems(asList(projectTypes, builtInTypes));
+        TypeSystemDescription ts = getFullProjectTypeSystem(aSourceDocument.getProject());
 
+        upgradeCas(aCas, ts);
+
+        try (MDC.MDCCloseable closable = MDC.putCloseable(
+                Logging.KEY_PROJECT_ID,
+                String.valueOf(aSourceDocument.getProject().getId()))) {
+            Project project = aSourceDocument.getProject();
+            log.info(
+                    "Upgraded CAS of user [{}] for "
+                            + "document [{}]({}) in project [{}]({})",
+                    aUser, aSourceDocument.getName(), aSourceDocument.getId(), project.getName(),
+                    project.getId());
+        }
+    }
+    
+    @Override
+    public void upgradeCasIfRequired(CAS aCas, AnnotationDocument aAnnotationDocument)
+        throws UIMAException, IOException
+    {
+        upgradeCasIfRequired(aCas, aAnnotationDocument.getDocument(),
+                aAnnotationDocument.getUser());
+    }
+    
+    @Override
+    public void upgradeCasIfRequired(CAS aCas, SourceDocument aSourceDocument, String aUser)
+        throws UIMAException, IOException
+    {
+        TypeSystemDescription ts = getFullProjectTypeSystem(aSourceDocument.getProject());
+        
+        // Check if the current CAS already contains the required type system
+        if (!isUpgradeRequired(aCas, ts)) {
+            log.debug(
+                    "CAS of user [{}] for document [{}]({}) in project [{}]({}) is already "
+                            + "compatible with project type system - skipping upgrade",
+                    aUser, aSourceDocument.getName(), aSourceDocument.getId(),
+                    aSourceDocument.getProject().getName(), aSourceDocument.getProject().getId());
+            return;
+        }
+
+        upgradeCas(aCas, ts);
+    }
+    
+    private void upgradeCas(CAS aCas, TypeSystemDescription aTargetTypeSystem)
+        throws UIMAException, IOException
+    {
         // Prepare template for new CAS
-        CAS newCas = JCasFactory.createJCas(allTypes).getCas();
+        CAS newCas = JCasFactory.createJCas(aTargetTypeSystem).getCas();
         CASCompleteSerializer serializer = Serialization.serializeCASComplete((CASImpl) newCas);
 
         // Save old type system
@@ -730,17 +775,82 @@ public class AnnotationSchemaServiceImpl
 
         // Make sure JCas is properly initialized too
         aCas.getJCas();
-
-        try (MDC.MDCCloseable closable = MDC.putCloseable(
-                Logging.KEY_PROJECT_ID,
-                String.valueOf(aSourceDocument.getProject().getId()))) {
-            Project project = aSourceDocument.getProject();
-            log.info(
-                    "Upgraded CAS of user [{}] for "
-                            + "document [{}]({}) in project [{}]({})",
-                    aUser, aSourceDocument.getName(), aSourceDocument.getId(), project.getName(),
-                    project.getId());
+    }
+    
+    private TypeSystemDescription getFullProjectTypeSystem(Project aProject)
+        throws ResourceInitializationException
+    {
+        TypeSystemDescription builtInTypes = TypeSystemDescriptionFactory
+                .createTypeSystemDescription();
+        TypeSystemDescription projectTypes = getProjectTypes(aProject);
+        TypeSystemDescription_impl allTypes = (TypeSystemDescription_impl) CasCreationUtils
+                .mergeTypeSystems(asList(projectTypes, builtInTypes));
+        return allTypes;
+    }
+    
+    /**
+     * Check if the current CAS already contains the required type system.
+     */
+    private boolean isUpgradeRequired(CAS aCas, TypeSystemDescription aTargetTypeSystem)
+    {
+        TypeSystem ts = aCas.getTypeSystem();
+        boolean isCompatible = true;
+        nextType: for (TypeDescription tdesc : aTargetTypeSystem.getTypes()) {
+            Type t = ts.getType(tdesc.getName());
+            
+            // Type does not exist
+            if (t == null) {
+                log.info("CAS update required: type {} does not exist", tdesc.getName());
+                isCompatible = false;
+                break nextType;
+            }
+            
+            // Super-type does not match
+            if (!Objects.equals(tdesc.getSupertypeName(), ts.getParent(t).getName())) {
+                log.info("CAS update required: supertypes of {} do not match: {} <-> {}",
+                        tdesc.getName(), tdesc.getSupertypeName(), ts.getParent(t).getName());
+                isCompatible = false;
+                break nextType;
+            }
+            
+            // Check features
+            for (FeatureDescription fdesc : tdesc.getFeatures()) {
+                Feature f = t.getFeatureByBaseName(fdesc.getName());
+                
+                // Feature does not exist
+                if (f == null) {
+                    log.info("CAS update required: feature {} on type {} does not exist",
+                            fdesc.getName(), tdesc.getName());
+                    isCompatible = false;
+                    break nextType;
+                }
+                
+                // Range does not match
+                if (CAS.TYPE_NAME_FS_ARRAY.equals(fdesc.getRangeTypeName())) {
+                    if (!Objects.equals(fdesc.getElementType(),
+                            f.getRange().getComponentType().getName())) {
+                        log.info(
+                                "CAS update required: ranges of feature {} on type {} do not match: {} <-> {}",
+                                fdesc.getName(), tdesc.getName(), fdesc.getRangeTypeName(),
+                                f.getRange().getName());
+                        isCompatible = false;
+                        break nextType;
+                    }
+                }
+                else {
+                    if (!Objects.equals(fdesc.getRangeTypeName(), f.getRange().getName())) {
+                        log.info(
+                                "CAS update required: ranges of feature {} on type {} do not match: {} <-> {}",
+                                fdesc.getName(), tdesc.getName(), fdesc.getRangeTypeName(),
+                                f.getRange().getName());
+                        isCompatible = false;
+                        break nextType;
+                    }
+                }
+            }
         }
+        
+        return isCompatible;
     }
 
     @Override
