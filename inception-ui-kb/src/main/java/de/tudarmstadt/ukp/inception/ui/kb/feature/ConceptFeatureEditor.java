@@ -88,7 +88,7 @@ public class ConceptFeatureEditor extends FeatureEditor {
         super(aId, aItem, new CompoundPropertyModel<>(aModel));
         add(new Label(MID_FEATURE, getModelObject().feature.getUiName()));
         add(focusComponent = createAutoCompleteTextField(aStateModel.getObject(), aHandler));
-        add(disabledKbWarningLabel(aStateModel.getObject()));
+        add(disabledKbWarningLabel());
     }
 
     @Override
@@ -321,7 +321,7 @@ public class ConceptFeatureEditor extends FeatureEditor {
         });
     }
 
-    private Label disabledKbWarningLabel(AnnotatorState aState) {
+    private Label disabledKbWarningLabel() {
         Label warningLabel = new Label("disabledKBWarningLabel",
             "&#9888; <strong>The currently selected knowledge base for this concept feature is"
                 + " disabled.</strong>"
