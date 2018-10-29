@@ -144,18 +144,6 @@ public interface KnowledgeBaseService
     KBHandle createConcept(KnowledgeBase kb, KBConcept aType);
 
     /**
-     * Read the concept with the given identifier from the given knowledge base.
-     * 
-     * @param kb
-     *            a knowledge base.
-     * @param aIdentifier
-     *            a concept identifier.
-     * @return the concept.
-     */
-    Optional<KBConcept> readConcept(KnowledgeBase kb, String aIdentifier)
-        throws QueryEvaluationException;
-
-    /**
      * Find the specified concept form the first KB in the project which provides it.
      * 
      * @param aProject
@@ -573,4 +561,18 @@ public interface KnowledgeBaseService
      * Can be used to re-index a local KB in case the full text index is corrupt.
      */
     void rebuildFullTextIndex(KnowledgeBase aKb) throws Exception;
+    
+    /**
+     * Read the concept with the given identifier from the given knowledge base with a 
+     * specific query
+     * 
+     * @param aKB
+     *            a knowledge base.
+     * @param aIdentifier
+     *            a concept identifier.
+     * @param aAll True if entities with implicit namespaces (e.g. defined by RDF)
+     * @return the concept.
+     */
+    Optional<KBConcept> readConcept(KnowledgeBase aKB, String aIdentifier, boolean aAll)
+            throws QueryEvaluationException;
 }
