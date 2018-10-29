@@ -159,8 +159,8 @@ public class OpenNlpDoccatRecommender
             return 0.0;
         }
 
-        LOG.info("Training on [{}] items, predicting on [{}] of total [{}]", trainingSet.size(),
-                testSet.size(), data.size());
+        LOG.info("Evaluating on {} items (training set size {}, test set size {})", data.size(),
+                trainingSet.size(), testSet.size());
 
         // Train model
         DoccatModel model = train(trainingSet, traits.getParameters());
@@ -171,7 +171,8 @@ public class OpenNlpDoccatRecommender
             DocumentCategorizerEvaluator evaluator = new DocumentCategorizerEvaluator(doccat);
             evaluator.evaluate(stream);
             return evaluator.getAccuracy();
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
             LOG.error("Exception during evaluating the OpenNLP Named Entity Recognizer model.", e);
             throw new RecommendationException("Error while evaluating OpenNlp NER", e);
         }
