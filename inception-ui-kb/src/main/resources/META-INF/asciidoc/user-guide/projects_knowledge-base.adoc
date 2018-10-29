@@ -1,4 +1,4 @@
-== Setting up a knowledge base 
+== Knowledge Bases
 
 In the *Projects Settings*, switch to the *Knowledge Bases* tab, then click *New…* on the bottom
  and a dialogue box shows as in the figure below.
