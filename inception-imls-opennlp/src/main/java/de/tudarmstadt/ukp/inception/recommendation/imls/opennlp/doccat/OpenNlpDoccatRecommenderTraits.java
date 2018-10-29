@@ -17,15 +17,45 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.doccat;
 
+import java.io.Serializable;
+
 import opennlp.tools.ml.AbstractTrainer;
 import opennlp.tools.util.TrainingParameters;
 
 public class OpenNlpDoccatRecommenderTraits
+    implements Serializable
 {
+    private static final long serialVersionUID = 220089332064652542L;
+    
+    private int iterations = 100;
+    private int cutoff = 5;
+
+    public int getIterations()
+    {
+        return iterations;
+    }
+
+    public void setIterations(int aIterations)
+    {
+        iterations = aIterations;
+    }
+
+    public int getCutoff()
+    {
+        return cutoff;
+    }
+
+    public void setCutoff(int aCutoff)
+    {
+        cutoff = aCutoff;
+    }
+    
     public TrainingParameters getParameters()
     {
         TrainingParameters parameters = TrainingParameters.defaultParams();
-        parameters.put(AbstractTrainer.VERBOSE_PARAM, "false");
+        parameters.put(AbstractTrainer.VERBOSE_PARAM, false);
+        parameters.put(TrainingParameters.ITERATIONS_PARAM, iterations);
+        parameters.put(TrainingParameters.CUTOFF_PARAM, cutoff);
         return parameters;
     }
 }
