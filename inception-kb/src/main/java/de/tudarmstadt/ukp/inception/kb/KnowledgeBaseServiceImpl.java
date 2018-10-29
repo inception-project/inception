@@ -1097,6 +1097,9 @@ public class KnowledgeBaseServiceImpl
             String id = bindings.getBinding(itemVariable).getValue().stringValue();
             Binding label = bindings.getBinding(langVariable);
             Binding description = bindings.getBinding(descVariable);
+            // Bindings without language specifications
+            Binding labelGeneral = bindings.getBinding("lGen");
+            Binding descGeneral = bindings.getBinding("dGen");
 
             if (!id.contains(":") || (!aAll && hasImplicitNamespace(id))) {
                 continue;
@@ -1111,12 +1114,18 @@ public class KnowledgeBaseServiceImpl
                     language.ifPresent(handle::setLanguage);
                 }
             }
+            else if (labelGeneral != null) {
+                handle.setName(labelGeneral.getValue().stringValue());
+            }
             else {
                 handle.setName(handle.getUiLabel());
             }
             
             if (description != null) {
                 handle.setDescription(description.getValue().stringValue());
+            }
+            else if (descGeneral != null) {
+                handle.setDescription(descGeneral.getValue().stringValue());
             }
             
             handles.add(handle);

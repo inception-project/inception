@@ -93,10 +93,12 @@ public final class SPARQLQueryStore
     {
         return String.join("\n"
                 , SPARQL_PREFIX
-                , "SELECT DISTINCT ?s ?l ?d WHERE {"
+                , "SELECT DISTINCT ?s ?l ?d ?lGen ?dGen WHERE {"
                 , "  ?s ?pTYPE ?oPROPERTY ."
                 , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage(),"?s","?l")
                 , optionalLanguageFilteredValue("?pDESCRIPTION", aKB.getDefaultLanguage(),"?s","?d")
+                , optionalLanguageFilteredValue("?pLABEL", null,"?s","?lGen")
+                , optionalLanguageFilteredValue("?pDESCRIPTION", null,"?s","?dGen")
                 , "}"
                 , "LIMIT " + aKB.getMaxResults());
     }
@@ -109,7 +111,7 @@ public final class SPARQLQueryStore
     {
         return String.join("\n"
                 , SPARQL_PREFIX    
-                , "SELECT DISTINCT ?s (MIN(?label) AS ?l) (MIN(?desc) AS ?d) WHERE { "
+                , "SELECT DISTINCT ?s (MIN(?label) AS ?l) (MIN(?desc) AS ?d) (MIN(?labelGeneral) AS ?lGen) (MIN(?descGeneral) AS ?dGen) WHERE { "
                 , "  { ?s ?pTYPE ?oCLASS . } "
                 , "  UNION { ?someSubClass ?pSUBCLASS ?s . } ."
                 , "  FILTER NOT EXISTS { "
@@ -119,6 +121,8 @@ public final class SPARQLQueryStore
                 , "    ?s owl:intersectionOf ?list . }"
                 , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage(),"?s","?label")
                 , optionalLanguageFilteredValue("?pDESCRIPTION", aKB.getDefaultLanguage(),"?s","?desc")
+                , optionalLanguageFilteredValue("?pLABEL", null,"?s","?labelGeneral")
+                , optionalLanguageFilteredValue("?pDESCRIPTION", null,"?s","?descGeneral")
                 , "} GROUP BY ?s"
                 , "LIMIT " + aKB.getMaxResults());
     }
@@ -130,13 +134,15 @@ public final class SPARQLQueryStore
     {
         return String.join("\n"
                 , SPARQL_PREFIX    
-                , "SELECT DISTINCT ?s (MIN(?label) AS ?l) (MIN(?desc) AS ?d) WHERE { "
+                , "SELECT DISTINCT ?s (MIN(?label) AS ?l) (MIN(?desc) AS ?d) (MIN(?labelGeneral) AS ?lGen) (MIN(?descGeneral) AS ?dGen) WHERE { "
                 , "  {?s ?pSUBCLASS ?oPARENT . }" 
                 , "  UNION { ?s ?pTYPE ?oCLASS ."
                 , "    ?s owl:intersectionOf ?list . "
                 , "    FILTER EXISTS { ?list rdf:rest*/rdf:first ?oPARENT} }"
                 , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage(),"?s","?label")
                 , optionalLanguageFilteredValue("?pDESCRIPTION", aKB.getDefaultLanguage(),"?s","?desc")
+                , optionalLanguageFilteredValue("?pLABEL", null,"?s","?labelGeneral")
+                , optionalLanguageFilteredValue("?pDESCRIPTION", null,"?s","?descGeneral")
                 , "} GROUP BY ?s"
                 , "LIMIT " + aKB.getMaxResults());
     }
@@ -148,7 +154,7 @@ public final class SPARQLQueryStore
     {
         return String.join("\n"
                 , SPARQL_PREFIX    
-                , "SELECT ?oItem ((?label) AS ?l) ((?desc) AS ?d) WHERE { "
+                , "SELECT ?oItem ((?label) AS ?l) ((?desc) AS ?d) ?lGen ?dGen WHERE { "
                 , "  { ?oItem ?pTYPE ?oCLASS . } "
                 , "  UNION {?someSubClass ?pSUBCLASS ?oItem . } "
                 , "  UNION {?oItem ?pSUBCLASS ?oPARENT . }" 
@@ -157,6 +163,8 @@ public final class SPARQLQueryStore
                 , "    FILTER EXISTS { ?list rdf:rest*/rdf:first ?oPARENT} }"
                 , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage(),"?oItem","?label")
                 , optionalLanguageFilteredValue("?pDESCRIPTION", aKB.getDefaultLanguage(),"?oItem","?desc")
+                , optionalLanguageFilteredValue("?pLABEL", null,"?s","?lGen")
+                , optionalLanguageFilteredValue("?pDESCRIPTION", null,"?s","?dGen")
                 , "} "
                 , "LIMIT " + limit);
     }
@@ -169,7 +177,7 @@ public final class SPARQLQueryStore
     {
         return String.join("\n"
                 , SPARQL_PREFIX
-                , "SELECT DISTINCT ?s ?l ?d WHERE {"
+                , "SELECT DISTINCT ?s ?l ?d ?lGen ?dGen WHERE {"
                 , "  { ?s ?pTYPE ?oPROPERTY .}"
                 , "  UNION "
                 , "  { ?s a ?prop" 
@@ -177,6 +185,8 @@ public final class SPARQLQueryStore
                 , "  }"
                 , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage(),"?s","?l")
                 , optionalLanguageFilteredValue("?pDESCRIPTION", aKB.getDefaultLanguage(),"?s","?d")
+                , optionalLanguageFilteredValue("?pLABEL", null,"?s","?lGen")
+                , optionalLanguageFilteredValue("?pDESCRIPTION", null,"?s","?dGen")
                 , "}"
                 , "LIMIT " + aKB.getMaxResults());
     }
@@ -189,7 +199,7 @@ public final class SPARQLQueryStore
     {
         return String.join("\n"
                 , SPARQL_PREFIX
-                , "SELECT DISTINCT ?s ?l ?d WHERE {"
+                , "SELECT DISTINCT ?s ?l ?d ?lGen ?dGen WHERE {"
                 , "{  ?s rdfs:domain/(owl:unionOf/rdf:rest*/rdf:first)* ?aDomain }"
                 , " UNION "
                 , "{ ?s a ?prop "
@@ -197,6 +207,8 @@ public final class SPARQLQueryStore
                 , "    FILTER NOT EXISTS {  ?s rdfs:domain/(owl:unionOf/rdf:rest*/rdf:first)* ?x } }"
                 , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage(),"?s","?l")
                 , optionalLanguageFilteredValue("?pDESCRIPTION", aKB.getDefaultLanguage(),"?s","?d")
+                , optionalLanguageFilteredValue("?pLABEL", null,"?s","?lGen")
+                , optionalLanguageFilteredValue("?pDESCRIPTION", null,"?s","?dGen")
                 , "}"
                 , "LIMIT " + aKB.getMaxResults());
     }
@@ -208,10 +220,12 @@ public final class SPARQLQueryStore
     {
         return String.join("\n"
                 , SPARQL_PREFIX
-                , "SELECT DISTINCT ?s ?l ?d WHERE {"
+                , "SELECT DISTINCT ?s ?l ?d ?lGen ?dGen WHERE {"
                 , "  ?aProperty rdfs:range/(owl:unionOf/rdf:rest*/rdf:first)* ?s "
                 , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage(),"?s","?l")
                 , optionalLanguageFilteredValue("?pDESCRIPTION", aKB.getDefaultLanguage(),"?s","?d")
+                , optionalLanguageFilteredValue("?pLABEL", null,"?s","?lGen")
+                , optionalLanguageFilteredValue("?pDESCRIPTION", null,"?s","?dGen")
                 , "}"
                 , "LIMIT " + aKB.getMaxResults());
 
@@ -224,13 +238,15 @@ public final class SPARQLQueryStore
     {
         return String.join("\n"
                 , SPARQL_PREFIX
-                , "SELECT DISTINCT ?s ?l ?d WHERE { "
+                , "SELECT DISTINCT ?s ?l ?d ?lGen ?dGen WHERE { "
                 , "   {?oChild ?pSUBCLASS ?s . }"
                 , "   UNION { ?s ?pTYPE ?oCLASS ."
                 , "     ?oChild owl:intersectionOf ?list . "
                 , "     FILTER EXISTS {?list rdf:rest*/rdf:first ?s. } }"
                 , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage(),"?s","?l")
                 , optionalLanguageFilteredValue("?pDESCRIPTION", aKB.getDefaultLanguage(),"?s","?d")
+                , optionalLanguageFilteredValue("?pLABEL", null,"?s","?lGen")
+                , optionalLanguageFilteredValue("?pDESCRIPTION", null,"?s","?dGen")
                 , "}");
 
     }
@@ -242,10 +258,12 @@ public final class SPARQLQueryStore
     {
         return String.join("\n"
                 , SPARQL_PREFIX
-                , "SELECT DISTINCT ?s ?l ?d WHERE {"
+                , "SELECT DISTINCT ?s ?l ?d ?lGen ?dGen WHERE {"
                 , "  ?pInstance ?pTYPE ?s ."
                 , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage(),"?s","?l")
                 , optionalLanguageFilteredValue("?pDESCRIPTION", aKB.getDefaultLanguage(),"?s","?d")
+                , optionalLanguageFilteredValue("?pLABEL", null,"?s","?lGen")
+                , optionalLanguageFilteredValue("?pDESCRIPTION", null,"?s","?dGen")
                 , "}");
 
     }
