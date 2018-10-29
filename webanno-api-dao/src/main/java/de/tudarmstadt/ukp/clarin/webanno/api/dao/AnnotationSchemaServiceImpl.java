@@ -794,14 +794,14 @@ public class AnnotationSchemaServiceImpl
     private boolean isUpgradeRequired(CAS aCas, TypeSystemDescription aTargetTypeSystem)
     {
         TypeSystem ts = aCas.getTypeSystem();
-        boolean isCompatible = true;
+        boolean upgradeRequired = false;
         nextType: for (TypeDescription tdesc : aTargetTypeSystem.getTypes()) {
             Type t = ts.getType(tdesc.getName());
             
             // Type does not exist
             if (t == null) {
                 log.info("CAS update required: type {} does not exist", tdesc.getName());
-                isCompatible = false;
+                upgradeRequired = true;
                 break nextType;
             }
             
@@ -809,7 +809,7 @@ public class AnnotationSchemaServiceImpl
             if (!Objects.equals(tdesc.getSupertypeName(), ts.getParent(t).getName())) {
                 log.info("CAS update required: supertypes of {} do not match: {} <-> {}",
                         tdesc.getName(), tdesc.getSupertypeName(), ts.getParent(t).getName());
-                isCompatible = false;
+                upgradeRequired = true;
                 break nextType;
             }
             
@@ -821,7 +821,7 @@ public class AnnotationSchemaServiceImpl
                 if (f == null) {
                     log.info("CAS update required: feature {} on type {} does not exist",
                             fdesc.getName(), tdesc.getName());
-                    isCompatible = false;
+                    upgradeRequired = true;
                     break nextType;
                 }
                 
@@ -833,7 +833,7 @@ public class AnnotationSchemaServiceImpl
                                 "CAS update required: ranges of feature {} on type {} do not match: {} <-> {}",
                                 fdesc.getName(), tdesc.getName(), fdesc.getRangeTypeName(),
                                 f.getRange().getName());
-                        isCompatible = false;
+                        upgradeRequired = true;
                         break nextType;
                     }
                 }
@@ -843,14 +843,14 @@ public class AnnotationSchemaServiceImpl
                                 "CAS update required: ranges of feature {} on type {} do not match: {} <-> {}",
                                 fdesc.getName(), tdesc.getName(), fdesc.getRangeTypeName(),
                                 f.getRange().getName());
-                        isCompatible = false;
+                        upgradeRequired = true;
                         break nextType;
                     }
                 }
             }
         }
         
-        return isCompatible;
+        return upgradeRequired;
     }
 
     @Override
