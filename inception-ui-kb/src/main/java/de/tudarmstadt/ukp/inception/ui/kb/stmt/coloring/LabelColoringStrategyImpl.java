@@ -41,12 +41,12 @@ public class LabelColoringStrategyImpl implements StatementColoringStrategy
     @Override
     public String getBackgroundColor()
     {
-        return "EF4444";
+        return "ffffff";
     }
 
     @Override
     public String getFrameColor() {
-        return "f0ffff";
+        return "98FB98";
     }
 
     @Override

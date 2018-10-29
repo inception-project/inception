@@ -42,12 +42,12 @@ public class TypeColoringStrategyImpl
     @Override
     public String getBackgroundColor()
     {
-        return "EF4444";
+        return "ffffff";
     }
 
     @Override
     public String getFrameColor() {
-        return "f0ffff";
+        return "D3D3D3";
     }
 
     @Override

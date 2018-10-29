@@ -42,7 +42,7 @@ public class SubclassOfColoringStrategyImpl
     @Override
     public String getBackgroundColor()
     {
-        return "EF4444";
+        return "ffffff";
     }
 
     @Override

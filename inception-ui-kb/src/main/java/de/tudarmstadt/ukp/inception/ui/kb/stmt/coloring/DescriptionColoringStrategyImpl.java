@@ -41,12 +41,12 @@ public class DescriptionColoringStrategyImpl implements StatementColoringStrateg
     @Override
     public String getBackgroundColor()
     {
-        return "EF4444";
+        return "ffffff";
     }
 
     @Override
     public String getFrameColor() {
-        return "f0ffff";
+        return "f0e68c";
     }
 
     @Override
