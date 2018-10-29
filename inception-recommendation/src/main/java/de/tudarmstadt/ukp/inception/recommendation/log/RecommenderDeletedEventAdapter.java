@@ -16,11 +16,12 @@
  * limitations under the License.
  */
 
-package de.tudarmstadt.ukp.inception.recommendation.event;
+package de.tudarmstadt.ukp.inception.recommendation.log;
 
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.inception.log.adapter.EventLoggingAdapter;
+import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderDeletedEvent;
 
 @Component
 public class RecommenderDeletedEventAdapter
