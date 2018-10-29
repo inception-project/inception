@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
 
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.event.Broadcast;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
@@ -65,6 +66,8 @@ import de.tudarmstadt.ukp.inception.ui.kb.WriteProtectionBehavior;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxPropertySelectionEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxStatementChangedEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxStatementGroupChangedEvent;
+import de.tudarmstadt.ukp.inception.ui.kb.stmt.coloring.StatementColoringRegistry;
+import de.tudarmstadt.ukp.inception.ui.kb.stmt.coloring.StatementColoringStrategy;
 import de.tudarmstadt.ukp.inception.ui.kb.stmt.editor.StatementEditor;
 
 public class StatementGroupPanel extends Panel {
@@ -76,14 +79,15 @@ public class StatementGroupPanel extends Panel {
     private static final String CONTENT_MARKUP_ID = "content";
 
     private @SpringBean KnowledgeBaseService kbService;
+    private @SpringBean StatementColoringRegistry coloringRegistry;
 
     private CompoundPropertyModel<StatementGroupBean> groupModel;
     private Component content;
 
-    public StatementGroupPanel(String aId, CompoundPropertyModel<StatementGroupBean> aGroupModel) {
+    public StatementGroupPanel(String aId, CompoundPropertyModel<StatementGroupBean> aGroupModel)
+    {
         super(aId, aGroupModel);
         groupModel = aGroupModel;
-               
         setOutputMarkupId(true);
         
         if (groupModel.getObject().isNew()) {
@@ -212,7 +216,8 @@ public class StatementGroupPanel extends Panel {
         
         public ExistingStatementGroupFragment(String aId) {
             super(aId, "existingStatementGroup", StatementGroupPanel.this, groupModel);
-                        
+
+            StatementGroupBean statementGroupBean = groupModel.getObject();
             Form<StatementGroupBean> form = new Form<StatementGroupBean>("form");
             LambdaAjaxLink propertyLink = new LambdaAjaxLink("propertyLink",
                     this::actionPropertyLinkClicked);
@@ -222,8 +227,8 @@ public class StatementGroupPanel extends Panel {
             // TODO what about handling type intersection when multiple range statements are
             // present?
             // obtain IRI of property range, if existent
-            Optional<KBProperty> property = kbService.readProperty(groupModel.getObject().getKb(),
-                    groupModel.getObject().getProperty().getIdentifier());
+            Optional<KBProperty> property = kbService.readProperty(statementGroupBean.getKb(),
+                statementGroupBean.getProperty().getIdentifier());
             IModel<KBProperty> propertyModel = Model.of(property.orElse(null));
 
             WebMarkupContainer statementIdentifier = new WebMarkupContainer("statementIdtext"); 
@@ -241,7 +246,7 @@ public class StatementGroupPanel extends Panel {
                 @Override
                 protected Iterator<IModel<KBStatement>> getItemModels() {
                     return new ModelIteratorAdapter<KBStatement>(
-                            groupModel.getObject().getStatements()) {
+                        statementGroupBean.getStatements()) {
                         @Override
                         protected IModel<KBStatement> model(KBStatement object) {
                             return LambdaModel.of(() -> object);
@@ -266,11 +271,32 @@ public class StatementGroupPanel extends Panel {
             statementListWrapper.setOutputMarkupId(true);
             statementListWrapper.add(statementList);
             form.add(statementListWrapper);
-                    
+
+            WebMarkupContainer statementGroupFooter = new WebMarkupContainer("statementGroupFooter");
             LambdaAjaxLink addLink = new LambdaAjaxLink("add", this::actionAddValue);
             addLink.add(new Label("label", new ResourceModel("statement.value.add")));
             addLink.add(new WriteProtectionBehavior(groupModel.bind("kb")));
-            form.add(addLink);
+            statementGroupFooter.add(addLink);
+
+            // Apply a specific coloring strategy depending on the property
+            StatementColoringStrategy coloringStrategy = coloringRegistry
+                .getStatementColoringStrategy(statementGroupBean.getProperty().getIdentifier(),
+                    statementGroupBean.getKb());
+
+            String frameColor = coloringStrategy.getFrameColor();
+            AttributeAppender framehighlightAppender = new AttributeAppender("style",
+                "background-color:#" + frameColor);
+            statementGroupFooter.add(framehighlightAppender);
+            form.add(framehighlightAppender);
+
+            String textColor = coloringStrategy.getTextColor();
+            String backgroundColor = coloringStrategy.getBackgroundColor();
+            AttributeAppender highlightAppender = new AttributeAppender("style",
+                "background-color:#" + backgroundColor + ";color:#" + textColor);
+            statementListWrapper.add(highlightAppender);
+
+
+            form.add(statementGroupFooter);
             add(form);
 
         }

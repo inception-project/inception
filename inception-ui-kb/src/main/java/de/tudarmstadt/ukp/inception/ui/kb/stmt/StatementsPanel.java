@@ -96,7 +96,7 @@ public class StatementsPanel extends Panel {
 
         // default ordering for statement groups: lexical ordering by UI label
         statementGroupComparator = LambdaModel
-                .of(() -> Comparator.comparing(sgb -> sgb.getProperty().getUiLabel()));
+            .of(() -> Comparator.comparing(sgb -> sgb.getProperty().getUiLabel()));
         
         setUpDetailPreference(aDetailPreference);
 
@@ -120,9 +120,10 @@ public class StatementsPanel extends Panel {
             }
 
             @Override
-            protected void populateItem(Item<StatementGroupBean> aItem) {
+            protected void populateItem(Item<StatementGroupBean> aItem)
+            {
                 CompoundPropertyModel<StatementGroupBean> groupModel = new CompoundPropertyModel<>(
-                        LambdaModel.of(() -> aItem.getModelObject()));
+                    LambdaModel.of(() -> aItem.getModelObject()));
 
                 StatementGroupPanel panel = new StatementGroupPanel("statementGroup", groupModel);
                 aItem.add(panel);
