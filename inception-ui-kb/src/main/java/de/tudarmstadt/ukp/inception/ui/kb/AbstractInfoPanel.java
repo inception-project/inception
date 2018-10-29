@@ -210,8 +210,9 @@ public abstract class AbstractInfoPanel<T extends KBObject> extends Panel {
             add(statementsPanel);
         }
     }
-    
-    protected Comparator<StatementGroupBean> getStatementGroupComparator() {
+
+    protected Comparator<StatementGroupBean> getStatementGroupComparator()
+    {
         return null;
     }
     

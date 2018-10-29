@@ -1304,6 +1304,15 @@ public class KnowledgeBaseServiceImpl
         return kbFile;
     }
 
+    @Override
+    public boolean isBaseProperty(String propertyIdentifier, KnowledgeBase aKB)
+    {
+        return propertyIdentifier.equals(aKB.getLabelIri().stringValue()) || propertyIdentifier
+            .equals(aKB.getSubclassIri().stringValue()) || propertyIdentifier
+            .equals(aKB.getDescriptionIri().stringValue()) || propertyIdentifier
+            .equals(aKB.getTypeIri().stringValue());
+    }
+
     private void reconfigureLocalKnowledgeBase(KnowledgeBase aKB)
     {
         /*
@@ -1368,4 +1377,5 @@ public class KnowledgeBaseServiceImpl
                     aKB + "] does not support rebuilding its full text index.");
         }
     }
+
 }
