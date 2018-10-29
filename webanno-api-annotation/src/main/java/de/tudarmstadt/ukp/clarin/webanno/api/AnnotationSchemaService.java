@@ -378,10 +378,34 @@ public interface AnnotationSchemaService
     
     TypeSystemDescription getProjectTypes(Project aProject);
     
-    void upgradeCas(CAS aCurCas, AnnotationDocument annotationDocument)
+    /**
+     * Upgrade the CAS to the current project type system. This also compacts the CAS and removes
+     * any unreachable feature structures. This should be called at key points such as when the user
+     * opens an annotation document via the open document dialog. It is a slow call. The upgraded
+     * CAS is not automatically persisted - the calling code needs to take care of this. If the CAS
+     * will not be persisted, it is usually a better idea to use {@link #upgradeCasIfRequired}.
+     */
+    void upgradeCas(CAS aCas, AnnotationDocument aAnnotationDocument)
             throws UIMAException, IOException;
     
+    /**
+     * @see #upgradeCas(CAS, SourceDocument, String)
+     */
     void upgradeCas(CAS aCas, SourceDocument aSourceDocument, String aUser)
+            throws UIMAException, IOException;
+
+    /**
+     * Checks if the given CAS is compatible with the current type system of the project to which
+     * it belongs and upgrades it if necessary. This should be preferred over the mandatory CAS 
+     * upgrade if the CAS is loaded in a read-only mode or in scenarios where it is not saved later.
+     */
+    void upgradeCasIfRequired(CAS aCas, AnnotationDocument aAnnotationDocument)
+            throws UIMAException, IOException;
+
+    /**
+     * @see #upgradeCasIfRequired(CAS, SourceDocument, String)
+     */
+    void upgradeCasIfRequired(CAS aCas, SourceDocument aSourceDocument, String aUser)
             throws UIMAException, IOException;
 
     TypeAdapter getAdapter(AnnotationLayer aLayer);
