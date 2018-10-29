@@ -446,7 +446,7 @@ public class KnowledgeBaseServiceImpl
     }
     
     @Override 
-    public Optional<KBConcept> readConcept(KnowledgeBase aKB, String aIdentifier)
+    public Optional<KBConcept> readConcept(KnowledgeBase aKB, String aIdentifier, boolean aAll)
         throws QueryEvaluationException
     {
         List<KBHandle> resultList = read(aKB, (conn) -> {
@@ -460,7 +460,7 @@ public class KnowledgeBaseServiceImpl
             tupleQuery.setBinding("pLABEL", aKB.getLabelIri());
             tupleQuery.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
             tupleQuery.setIncludeInferred(false);
-            return evaluateListQuery(tupleQuery, false, "oItem", "l", "d");
+            return evaluateListQuery(tupleQuery, aAll, "oItem", "l", "d");
         });
         
         if (resultList.isEmpty()) {
@@ -480,7 +480,7 @@ public class KnowledgeBaseServiceImpl
     public Optional<KBConcept> readConcept(Project aProject, String aIdentifier)
     {
         for (KnowledgeBase kb : getKnowledgeBases(aProject)) {
-            Optional<KBConcept> concept = readConcept(kb, aIdentifier);
+            Optional<KBConcept> concept = readConcept(kb, aIdentifier, true);
             if (concept.isPresent()) {
                 return concept;
             }
@@ -903,7 +903,7 @@ public class KnowledgeBaseServiceImpl
 
         if (!aKB.getExplicitlyDefinedRootConcepts().isEmpty()) {
             for (IRI conceptIRI : aKB.getExplicitlyDefinedRootConcepts()) {
-                KBConcept concept = readConcept(aKB, conceptIRI.stringValue()).get();
+                KBConcept concept = readConcept(aKB, conceptIRI.stringValue(),aAll).get();
                 KBHandle conceptHandle = new KBHandle(concept.getIdentifier(), concept.getName(),
                         concept.getDescription());
                 resultList.add(conceptHandle);

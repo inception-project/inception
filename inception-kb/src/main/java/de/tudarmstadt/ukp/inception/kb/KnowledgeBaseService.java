@@ -562,8 +562,9 @@ public interface KnowledgeBaseService
      *            a knowledge base.
      * @param aIdentifier
      *            a concept identifier.
+     * @param aAll True if entities with implicit namespaces (e.g. defined by RDF)
      * @return the concept.
      */
-    Optional<KBConcept> readConcept(KnowledgeBase aKB, String aIdentifier)
+    Optional<KBConcept> readConcept(KnowledgeBase aKB, String aIdentifier, boolean aAll)
             throws QueryEvaluationException;
 }
