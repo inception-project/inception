@@ -1,4 +1,4 @@
-=== Export
+== Export
 
 image::project_export.jpg[align="center"]
 
