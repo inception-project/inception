@@ -101,8 +101,14 @@ public class RdfUtils
             filter = "FILTER(LANG(?o) = \"\" || LANGMATCHES(LANG(?o), \""
                     + NTriplesUtil.escapeString(language) + "\")).";
         }
-        String labelQuery = String.join("\n", "SELECT ?s ?p ?o ?lp WHERE { ", "{ ?s ?p ?o .",
-                "?p ?spl ?lp ", "} UNION { ?s ?lp ?o } ", filter, "} LIMIT " + 1000);
+        String labelQuery = String.join("\n",
+                SPARQLQueryStore.SPARQL_PREFIX,
+                "SELECT ?s ?p ?o ?lp WHERE { ",
+                    "{ ?s ?p ?o .",
+                    "?p ?spl ?lp ",
+                    "} UNION { ?s ?lp ?o } ",
+                    filter,
+                    "} LIMIT " + 1000);
 
         TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, labelQuery);
         if (subj != null) {

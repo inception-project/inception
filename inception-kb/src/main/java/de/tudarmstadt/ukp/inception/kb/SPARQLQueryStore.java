@@ -66,6 +66,7 @@ public final class SPARQLQueryStore
             // labels in all the languages being retrieved if we simply didn't apply any filter.
             fragment.append("    FILTER(LANG(").append(filterVariable).append(") = \"\")\n");
         }
+        fragment.append(" }\n");
         return fragment.toString();
     }
 
@@ -151,7 +152,8 @@ public final class SPARQLQueryStore
                 , "  FILTER NOT EXISTS { "
                 , "    ?s owl:intersectionOf ?list . }"
                 , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage(),"?s","?label")
-                , optionalLanguageFilteredSubPropertyValue("?pLABEL", aKB.getDefaultLanguage(), "?subproplabel")                          
+                , optionalLanguageFilteredSubPropertyValue("?pLABEL", aKB.getDefaultLanguage(),
+                        "?subproplabel")                          
                 , optionalLanguageFilteredValue("?pDESCRIPTION", aKB.getDefaultLanguage(),"?s","?desc")
                 , "} GROUP BY ?s"
                 , "LIMIT " + aKB.getMaxResults());
@@ -170,7 +172,8 @@ public final class SPARQLQueryStore
                 , "    ?s owl:intersectionOf ?list . "
                 , "    FILTER EXISTS { ?list rdf:rest*/rdf:first ?oPARENT} }"
                 , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage(),"?s","?label")
-                , optionalLanguageFilteredSubPropertyValue("?pLABEL", aKB.getDefaultLanguage(), "?subproplabel")                           
+                , optionalLanguageFilteredSubPropertyValue("?pLABEL", aKB.getDefaultLanguage(),
+                        "?subproplabel")                 
                 , optionalLanguageFilteredValue("?pDESCRIPTION", aKB.getDefaultLanguage(),"?s","?desc")
                 , "} GROUP BY ?s"
                 , "LIMIT " + aKB.getMaxResults());
@@ -211,7 +214,8 @@ public final class SPARQLQueryStore
                 , "    VALUES ?prop { rdf:Property owl:ObjectProperty owl:DatatypeProperty owl:AnnotationProperty }"
                 , "  }"
                 , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage(),"?s","?l")
-                , optionalLanguageFilteredSubPropertyValue("?pLABEL", aKB.getDefaultLanguage(), "?spl")                           
+                , optionalLanguageFilteredSubPropertyValue("?pLABEL", aKB.getDefaultLanguage(),
+                        "?spl")                           
                 , optionalLanguageFilteredValue("?pDESCRIPTION", aKB.getDefaultLanguage(),"?s","?d")
                 , "}"
                 , "LIMIT " + aKB.getMaxResults());
@@ -248,7 +252,8 @@ public final class SPARQLQueryStore
                 , "SELECT DISTINCT ?s ?l ?d ?spl WHERE {"
                 , "  ?aProperty rdfs:range/(owl:unionOf/rdf:rest*/rdf:first)* ?s "
                 , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage(),"?s","?l")
-                , optionalLanguageFilteredSubPropertyValue("?pLABEL", aKB.getDefaultLanguage(), "?spl")                           
+                , optionalLanguageFilteredSubPropertyValue("?pLABEL", aKB.getDefaultLanguage(),
+                        "?spl")                           
                 , optionalLanguageFilteredValue("?pDESCRIPTION", aKB.getDefaultLanguage(),"?s","?d")
                 , "}"
                 , "LIMIT " + aKB.getMaxResults());
@@ -268,7 +273,8 @@ public final class SPARQLQueryStore
                 , "     ?oChild owl:intersectionOf ?list . "
                 , "     FILTER EXISTS {?list rdf:rest*/rdf:first ?s. } }"
                 , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage(),"?s","?l")
-                , optionalLanguageFilteredSubPropertyValue("?pLABEL", aKB.getDefaultLanguage(), "?spl")                           
+                , optionalLanguageFilteredSubPropertyValue("?pLABEL", aKB.getDefaultLanguage(),
+                        "?spl")                           
                 , optionalLanguageFilteredValue("?pDESCRIPTION", aKB.getDefaultLanguage(),"?s","?d")
                 , "}");
 
@@ -284,7 +290,8 @@ public final class SPARQLQueryStore
                 , "SELECT DISTINCT ?s ?l ?d ?spl WHERE {"
                 , "  ?pInstance ?pTYPE ?s ."
                 , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage(),"?s","?l")
-                , optionalLanguageFilteredSubPropertyValue("?pLABEL", aKB.getDefaultLanguage(), "?spl")                           
+                , optionalLanguageFilteredSubPropertyValue("?pLABEL", aKB.getDefaultLanguage(),
+                        "?spl")                           
                 , optionalLanguageFilteredValue("?pDESCRIPTION", aKB.getDefaultLanguage(),"?s","?d")
                 , "}");
 
