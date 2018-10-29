@@ -23,6 +23,7 @@ import java.util.List;
 
 import javax.persistence.NoResultException;
 
+import org.apache.commons.lang3.concurrent.LazyInitializer;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.jcas.JCas;
 import org.slf4j.Logger;
@@ -66,7 +67,17 @@ public class TrainingTask
         Project project = getProject();
         User user = getUser();
 
-        List<CAS> casses = readCasses(project, user);
+        // Read the CASes only when they are accessed the first time. This allows us to skip reading
+        // the CASes in case that no layer / recommender is available or if no recommender requires
+        // evaluation.
+        LazyInitializer<List<CAS>> casses = new LazyInitializer<List<CAS>>()
+        {
+            @Override
+            protected List<CAS> initialize()
+            {
+                return readCasses(project, user);
+            }
+        };
         
         for (AnnotationLayer layer : annoService.listAnnotationLayer(project)) {
             if (!layer.isEnabled()) {
@@ -109,7 +120,7 @@ public class TrainingTask
                 try {
                     log.info("[{}][{}]: Training model...", user.getUsername(),
                             recommender.getName());
-                    recommendationEngine.train(context, casses);
+                    recommendationEngine.train(context, casses.get());
                     log.info("[{}][{}]: Training complete ({} ms)", user.getUsername(),
                             recommender.getName(), (System.currentTimeMillis() - startTime));
                 }
