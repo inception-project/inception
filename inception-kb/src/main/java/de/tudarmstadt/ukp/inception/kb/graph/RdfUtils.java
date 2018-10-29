@@ -104,9 +104,8 @@ public class RdfUtils
         String labelQuery = String.join("\n",
                 SPARQLQueryStore.SPARQL_PREFIX,
                 "SELECT ?s ?p ?o ?lp WHERE { ",
-                    "{ ?s ?p ?o .",
-                    "?p ?spl ?lp ",
-                    "} UNION { ?s ?lp ?o } ",
+                    " ?s ?p ?o .",
+                    "?p ?spl* ?lp ",
                     filter,
                     "} LIMIT " + 1000);
 

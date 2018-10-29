@@ -80,7 +80,7 @@ public final class SPARQLQueryStore
         StringBuilder fragment = new StringBuilder();
         fragment.append("  OPTIONAL {\n");
         fragment.append("    ?s ").append("?p ").append(aVariable).append(" .\n");
-        fragment.append("    ?p ").append("?pSUBPROPERTY ").append(aProperty).append(" .\n");
+        fragment.append("    ?p ").append("?pSUBPROPERTY* ").append(aProperty).append(" .\n");
         fragment.append(languageFilterForVariable(aVariable, aLanguage));
         fragment.append(" }\n");
         return fragment.toString();
@@ -194,6 +194,7 @@ public final class SPARQLQueryStore
                 , "    ?oItem owl:intersectionOf ?list . "
                 , "    FILTER EXISTS { ?list rdf:rest*/rdf:first ?oPARENT} }"
                 , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage(),"?oItem","?label")
+                , optionalLanguageFilteredSubPropertyValue("?pLABEL", aKB.getDefaultLanguage(), "?spl")
                 , optionalLanguageFilteredValue("?pDESCRIPTION", aKB.getDefaultLanguage(),"?oItem","?desc")
                 , "} "
                 , "LIMIT " + limit);

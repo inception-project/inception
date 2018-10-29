@@ -461,6 +461,7 @@ public class KnowledgeBaseServiceImpl
             tupleQuery.setBinding("pSUBCLASS", aKB.getSubclassIri());
             tupleQuery.setBinding("pLABEL", aKB.getLabelIri());
             tupleQuery.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
+            tupleQuery.setBinding("pSUBPROPERTY", aKB.getSubPropertyIri());
             tupleQuery.setIncludeInferred(false);
             return evaluateListQuery(tupleQuery, aAll, "oItem", "l", "d");
         });
@@ -610,6 +611,7 @@ public class KnowledgeBaseServiceImpl
             tupleQuery.setBinding("oPROPERTY", aKB.getPropertyTypeIri());
             tupleQuery.setBinding("pLABEL", aKB.getLabelIri());
             tupleQuery.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
+            tupleQuery.setBinding("pSUBPROPERTY", aKB.getSubPropertyIri());
             tupleQuery.setIncludeInferred(aIncludeInferred);
             return evaluateListQuery(tupleQuery, aAll, "s", "l", "d");
         });
