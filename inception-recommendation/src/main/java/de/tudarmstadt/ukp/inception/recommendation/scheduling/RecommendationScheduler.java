@@ -21,11 +21,10 @@ import java.util.Iterator;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.DisposableBean;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
@@ -41,6 +40,7 @@ import de.tudarmstadt.ukp.inception.recommendation.scheduling.tasks.TrainingTask
  */
 @Component
 public class RecommendationScheduler
+    implements InitializingBean, DisposableBean
 {
     private Logger log = LoggerFactory.getLogger(getClass());
     
@@ -50,8 +50,8 @@ public class RecommendationScheduler
     private BlockingQueue<Task> queue = new ArrayBlockingQueue<Task>(100);
     private int counter = 0;
 
-    @PostConstruct
-    private void startSchedulerThread()
+    @Override
+    public void afterPropertiesSet() throws Exception
     {
         consumer = new Thread(new TaskConsumer(applicationContext, queue),
                 "Recommendation task consumer");
@@ -60,7 +60,7 @@ public class RecommendationScheduler
         log.info("Started Recommendation Thread");
     }
     
-    @PreDestroy
+    @Override
     public void destroy()
     {
         consumer.interrupt();
