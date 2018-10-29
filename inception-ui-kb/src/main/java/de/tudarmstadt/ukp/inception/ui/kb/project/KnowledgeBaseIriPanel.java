@@ -319,7 +319,8 @@ public class KnowledgeBaseIriPanel
         public boolean isConceptValid(KnowledgeBase kb, IRI conceptIRI, boolean aAll)
             throws QueryEvaluationException
         {
-            return kbService.readConcept(kbModel.getObject().getKb(), conceptIRI.stringValue())
+            return kbService
+                    .readConcept(kbModel.getObject().getKb(), conceptIRI.stringValue(), true)
                     .isPresent()
                     && !concepts.contains(conceptIRI);  
         }

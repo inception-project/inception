@@ -133,7 +133,7 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
 
     @Test
     public void readConcept_WithNonexistentConcept_ShouldReturnEmptyResult() {
-        Optional<KBConcept> savedConcept = sut.readConcept(kb, "https://nonexistent.identifier.test");
+        Optional<KBConcept> savedConcept = sut.readConcept(kb, "https://nonexistent.identifier.test", true);
         assertThat(savedConcept.isPresent())
             .as("Check that no concept was read")
             .isFalse();
@@ -141,7 +141,7 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
     
     @Test
     public void readConcept_WithExistentConcept_ShouldReturnResult() {
-        Optional<KBConcept> concept = sut.readConcept(kb, "http://www.wikidata.org/entity/Q171644");
+        Optional<KBConcept> concept = sut.readConcept(kb, "http://www.wikidata.org/entity/Q171644", true);
         assertThat(concept.get().getName())
             .as("Check that concept has the same UI label")
             .isIn("12 Hours of Reims");
