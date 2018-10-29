@@ -11,6 +11,9 @@ from the inception-imls-external module. The output file then is
 When making changes to the API, just copy the stuff from there over to this document starting from [[_external_recommender_api_paths]]
 ////
 
+[[_external_recommender]]
+= External Recommender
+
 
 [[_external_recommender_api_overview]]
 == Overview
@@ -143,6 +146,7 @@ __required__|List of documents CAS whose annotations will be used for training|<
 |===
 |HTTP Code|Description|Schema
 |**204**|Successful training|No Content
+|**429**|Too many training requests have been sent, the sender should wait a while until the next request|No Content
 |===
 
 

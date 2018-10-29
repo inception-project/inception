@@ -150,7 +150,6 @@ include::{include-dir}projects_export.adoc[leveloffset=+1]
 include::{include-dir}projects_concept-linking.adoc[leveloffset=+1]
 
 include::{include-dir}projects_recommendation.adoc[leveloffset=+1]
-include::{include-dir}external_recommender.adoc[leveloffset=+1]
 
 include::{include-dir}projects_knowledge-base.adoc[leveloffset=+2]
 
