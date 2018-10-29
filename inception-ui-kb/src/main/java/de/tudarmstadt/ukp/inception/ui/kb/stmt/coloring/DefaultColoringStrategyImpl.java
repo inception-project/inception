@@ -47,7 +47,7 @@ public class DefaultColoringStrategyImpl implements StatementColoringStrategy
 
     @Override
     public String getFrameColor() {
-        return "f0f0f0";
+        return "f5f5f5";
     }
 
     @Override
