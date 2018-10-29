@@ -22,7 +22,8 @@ import org.springframework.stereotype.Component;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 @Component
-public class LabelColoringStrategyImpl implements StatementColoringStrategy
+public class SubclassOfColoringStrategyImpl
+    implements StatementColoringStrategy
 {
     private String coloringStrategyId;
 
@@ -52,6 +53,6 @@ public class LabelColoringStrategyImpl implements StatementColoringStrategy
     @Override
     public boolean acceptsProperty(String aPropertyIdentifier, KnowledgeBase aKB)
     {
-        return aPropertyIdentifier.equals(aKB.getLabelIri().stringValue());
+        return aPropertyIdentifier.equals(aKB.getSubclassIri().stringValue());
     }
 }
