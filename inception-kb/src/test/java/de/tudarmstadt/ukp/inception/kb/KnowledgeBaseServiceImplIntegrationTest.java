@@ -343,7 +343,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         KBHandle handle = sut.createConcept(kb, concept);
 
-        KBConcept savedConcept = sut.readConcept(kb, handle.getIdentifier()).get();
+        KBConcept savedConcept = sut.readConcept(kb, handle.getIdentifier(), true).get();
         assertThat(savedConcept)
             .as("Check that concept was saved correctly")
             .hasFieldOrPropertyWithValue("description", concept.getDescription())
@@ -360,7 +360,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         kb.setBasePrefix(customPrefix);
         KBHandle handle = sut.createConcept(kb, concept);
 
-        KBConcept savedConcept = sut.readConcept(kb, handle.getIdentifier()).get();
+        KBConcept savedConcept = sut.readConcept(kb, handle.getIdentifier(), true).get();
         assertThat(savedConcept).as("Check that concept was saved correctly")
                 .hasFieldOrPropertyWithValue("description", concept.getDescription())
                 .hasFieldOrPropertyWithValue("name", concept.getName());
@@ -402,7 +402,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         KBHandle handle = sut.createConcept(kb, concept);
 
-        KBConcept savedConcept = sut.readConcept(kb, handle.getIdentifier()).get();
+        KBConcept savedConcept = sut.readConcept(kb, handle.getIdentifier(), true).get();
 
         assertThat(savedConcept)
             .as("Check that concept was read correctly")
@@ -414,7 +414,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     public void readConcept_WithNonexistentConcept_ShouldReturnEmptyResult() {
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
 
-        Optional<KBConcept> savedConcept = sut.readConcept(kb, "https://nonexistent.identifier.test");
+        Optional<KBConcept> savedConcept = sut.readConcept(kb, "https://nonexistent.identifier.test", true);
 
         assertThat(savedConcept.isPresent())
             .as("Check that no concept was read")
@@ -431,7 +431,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         concept.setName("New name");
         sut.updateConcept(kb, concept);
 
-        KBConcept savedConcept = sut.readConcept(kb, handle.getIdentifier()).get();
+        KBConcept savedConcept = sut.readConcept(kb, handle.getIdentifier(), true).get();
         assertThat(savedConcept)
             .as("Check that concept was updated correctly")
             .hasFieldOrPropertyWithValue("description", "New description")
@@ -447,7 +447,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
 
         sut.updateConcept(kb, concept);
 
-        KBConcept savedConcept = sut.readConcept(kb, "https://nonexistent.identifier.test").get();
+        KBConcept savedConcept = sut.readConcept(kb, "https://nonexistent.identifier.test", true).get();
         assertThat(savedConcept)
             .hasFieldOrPropertyWithValue("description", concept.getDescription())
             .hasFieldOrPropertyWithValue("name", concept.getName());
@@ -488,7 +488,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         concept.setName("New name");
         sut.updateConcept(kb, concept);
 
-        KBConcept savedConcept = sut.readConcept(kb, handle.getIdentifier()).get();
+        KBConcept savedConcept = sut.readConcept(kb, handle.getIdentifier(), true).get();
         assertThat(savedConcept)
             .as("Check that concept has not been updated")
             .hasFieldOrPropertyWithValue("description", "Concept description")
@@ -514,7 +514,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         assertThat(sut.listStatementsWithPredicateOrObjectReference(kb, conceptId))
             .isEmpty();
 
-        Optional<KBConcept> savedConcept = sut.readConcept(kb, conceptId);
+        Optional<KBConcept> savedConcept = sut.readConcept(kb, conceptId, true);
         assertThat(savedConcept.isPresent())
             .as("Check that concept was not found after delete")
             .isFalse();
@@ -529,7 +529,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
 
         sut.deleteConcept(kb, concept);
 
-        Optional<KBConcept> savedConcept = sut.readConcept(kb, handle.getIdentifier());
+        Optional<KBConcept> savedConcept = sut.readConcept(kb, handle.getIdentifier(), true);
         assertThat(savedConcept.isPresent())
             .as("Check that concept was not found after delete")
             .isFalse();
@@ -555,7 +555,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
 
         sut.deleteConcept(kb, concept);
 
-        Optional<KBConcept> savedConcept = sut.readConcept(kb, handle.getIdentifier());
+        Optional<KBConcept> savedConcept = sut.readConcept(kb, handle.getIdentifier(), true);
         assertThat(savedConcept.isPresent())
             .as("Check that concept was not deleted")
             .isTrue();
@@ -1262,6 +1262,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         List<IRI> concepts = new ArrayList<IRI>();
         concepts.add(rootConcept1);
         concepts.add(rootConcept2);
+        kb.setDefaultLanguage("en");
         kb.setExplicitlyDefinedRootConcepts(concepts);
         sut.updateKnowledgeBase(kb);
 
@@ -1299,7 +1300,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         importKnowledgeBase("data/sparql_playground.ttl");
         setSchema(kb, RDFS.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT, RDFS.LABEL, RDF.PROPERTY);
-        KBConcept concept = sut.readConcept(kb, "http://example.org/tuto/ontology#Animal").get();
+        KBConcept concept = sut.readConcept(kb, "http://example.org/tuto/ontology#Animal", true).get();
 
         Stream<String> childConcepts = sut.listChildConcepts(kb, concept.getIdentifier(), false)
             .stream()
@@ -1317,7 +1318,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     public void getChildConcepts_WithStreams_ReturnsOnlyImmediateChildren() throws Exception {
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         importKnowledgeBase("data/streams.ttl");
-        KBConcept concept = sut.readConcept(kb, "http://mrklie.com/schemas/streams#input").get();
+        KBConcept concept = sut.readConcept(kb, "http://mrklie.com/schemas/streams#input", true).get();
         setSchema(kb, RDFS.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT, RDFS.LABEL, RDF.PROPERTY);
 
         Stream<String> childConcepts = sut.listChildConcepts(kb, concept.getIdentifier(), false)
@@ -1504,7 +1505,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         // Make sure we retrieve the German version now
         kb.setDefaultLanguage("de");
         
-        KBConcept germanConcept = sut.readConcept(kb, englishHandle.getIdentifier()).get();
+        KBConcept germanConcept = sut.readConcept(kb, englishHandle.getIdentifier(), true).get();
         assertThat(germanConcept.getLanguage())
             .as("Check that the language has successfully been changed.")
             .isEqualTo("de");

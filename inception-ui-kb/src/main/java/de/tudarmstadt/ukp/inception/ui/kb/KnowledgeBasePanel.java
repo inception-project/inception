@@ -202,11 +202,11 @@ public class KnowledgeBasePanel
             // TODO: Fix this Optional get() to actual checking
             try {
                 Optional<KBConcept> concept = kbService.readConcept(kbModel.getObject(),
-                        selectedConceptHandle.getObject().getIdentifier());
+                        selectedConceptHandle.getObject().getIdentifier(), true);
                 KBConcept selectedConcept;
                 if (concept.isPresent()) {
                     selectedConcept = kbService.readConcept(kbModel.getObject(),
-                            selectedConceptHandle.getObject().getIdentifier()).get();
+                            selectedConceptHandle.getObject().getIdentifier(), true).get();
                 }
                 else {
                     selectedConcept = new KBConcept();
