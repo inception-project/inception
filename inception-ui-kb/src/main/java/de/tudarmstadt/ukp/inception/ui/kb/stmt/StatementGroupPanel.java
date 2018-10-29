@@ -280,7 +280,8 @@ public class StatementGroupPanel extends Panel {
 
             // Apply a specific coloring strategy depending on the property
             StatementColoringStrategy coloringStrategy = coloringRegistry
-                .getStatementColoringStrategy(statementGroupBean.getProperty().getIdentifier());
+                .getStatementColoringStrategy(statementGroupBean.getProperty().getIdentifier(),
+                    statementGroupBean.getKb());
 
             String frameColor = coloringStrategy.getFrameColor();
             AttributeAppender framehighlightAppender = new AttributeAppender("style",
