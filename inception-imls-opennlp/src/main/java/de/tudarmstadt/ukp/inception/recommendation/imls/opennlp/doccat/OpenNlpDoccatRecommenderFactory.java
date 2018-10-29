@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static java.util.Arrays.asList;
 
 import org.apache.uima.cas.CAS;
+import org.apache.wicket.model.IModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -77,5 +78,12 @@ public class OpenNlpDoccatRecommenderFactory
     public OpenNlpDoccatRecommenderTraits createTraits()
     {
         return new OpenNlpDoccatRecommenderTraits();
+    }
+    
+    @Override
+    public OpenNlpDoccatRecommenderTraitsEditor createTraitsEditor(String aId,
+            IModel<Recommender> aModel)
+    {
+        return new OpenNlpDoccatRecommenderTraitsEditor(aId, aModel);
     }
 }
