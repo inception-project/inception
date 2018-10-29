@@ -71,7 +71,7 @@ public class ConceptLinkingServiceTest
     private KnowledgeBase kb;
 
     @Before
-    public void setUp()
+    public void setUp() throws Exception
     {
         RepositoryProperties repoProps = new RepositoryProperties();
         repoProps.setPath(temporaryFolder.getRoot());
@@ -79,6 +79,7 @@ public class ConceptLinkingServiceTest
         TestFixtures testFixtures = new TestFixtures(testEntityManager);
         kbService = new KnowledgeBaseServiceImpl(repoProps, entityManager);
         clService = new ConceptLinkingService(kbService, new EntityLinkingProperties());
+        clService.afterPropertiesSet();
         Project project = testFixtures.createProject(PROJECT_NAME);
         kb = testFixtures.buildKnowledgeBase(project, KB_NAME, Reification.NONE);
     }
