@@ -72,12 +72,12 @@ public class QueryUtil
     private static String getExactMatchingQueryPart(String aString)
     {
         return String.join("\n",
-            "    SELECT DISTINCT ?e2 ?description WHERE",
+            "    SELECT DISTINCT ?iri ?description WHERE",
             "    {",
-            "      ?e2 ?labelIri " + aString + " .",
+            "      ?iri ?labelIri " + aString + " .",
             "      OPTIONAL",
             "      {",
-            "        ?e2 ?descriptionIri ?description.",
+            "        ?iri ?descriptionIri ?description.",
             "      }",
             "    }");
     }
@@ -110,7 +110,7 @@ public class QueryUtil
 
         String query = String.join("\n",
             SPARQL_PREFIX,
-            "SELECT DISTINCT ?e2 ?label ?description WHERE",
+            "SELECT DISTINCT ?iri ?label ?description WHERE",
             "{",
             "  {",
             exactMatchingTypedString,
@@ -119,16 +119,16 @@ public class QueryUtil
             "  {",
             exactMatchingMention,
             "  }",
-            "  FILTER EXISTS { ?e2 ?p ?v }",
+            "  FILTER EXISTS { ?iri ?p ?v }",
             "  FILTER NOT EXISTS ",
             "  {",
             "    VALUES ?topic {" + String.join(" ", WIKIMEDIA_INTERNAL,
                 WIKIMEDIA_PROJECT_PAGE, WIKIMEDIA_CATEGORY, WIKIMEDIA_DISAMBIGUATION_PAGE,
                 WIKIMEDIA_LIST_ARTICLE, WIKIMEDIA_TEMPLATE, WIKIMEDIA_NEWS_ARTICLE,
                 WIKIMEDIA_NAVIGATIONAL_TEMPLATE) + "}",
-            "    ?e2 ?typeIri ?topic",
+            "    ?iri ?typeIri ?topic",
             "  }",
-            "  ?e2 ?labelIri ?label.",
+            "  ?iri ?labelIri ?label.",
             "}");
 
         ValueFactory vf = SimpleValueFactory.getInstance();
@@ -148,13 +148,13 @@ public class QueryUtil
     private static String getFullTextMatchingQueryPartDefault(int aLimit)
     {
         return  String.join("\n",
-            "    SELECT DISTINCT ?e2 ?altLabel ?description WHERE",
+            "    SELECT DISTINCT ?iri ?altLabel ?description WHERE",
             "    {",
-            "      ?e2 ?labelIri ?altLabel.",
+            "      ?iri ?labelIri ?altLabel.",
             "      ?altLabel ?ftsIri ?string. ",
             "      OPTIONAL",
             "      {",
-            "        ?e2 ?descriptionIri ?description.",
+            "        ?iri ?descriptionIri ?description.",
             "      }",
             "    }",
             "    LIMIT " + aLimit);
@@ -164,15 +164,23 @@ public class QueryUtil
     private static String getFullTextMatchingQueryPartLucene(int aLimit)
     {
         return  String.join("\n",
-            "    SELECT DISTINCT ?e2 ?altLabel ?description WHERE",
+            "    SELECT DISTINCT ?iri ?altLabel ?description WHERE",
             "    {",
-            "      ?e2 search:matches ?match .",
-            "      ?match search:query ?string ;",
-            "             search:property ?labelIri ;",
-            "             search:snippet ?altLabel",
+            "      {  ?iri ?a ?concept .",
+            "          FILTER NOT EXISTS { ?iri ?labelIri [] }",  // only concepts without label
+            "          FILTER regex( str(?iri) , ?string, \"i\") ",  // case-insensitive matching
+            "      }",
+            "      UNION",
+            "      {",
+            "        ?iri search:matches [",
+            "              search:query ?string ;",
+            "              search:property ?labelIri ;",
+            "              search:snippet ?altLabel ;",
+            "            ]",
+            "      }",
             "      OPTIONAL",
             "      {",
-            "        ?e2 ?descriptionIri ?description.",
+            "        ?iri ?descriptionIri ?description.",
             "      }",
             "    }",
             "    LIMIT " + aLimit);
@@ -206,22 +214,15 @@ public class QueryUtil
 
         String query = String.join("\n",
             SPARQL_PREFIX,
-            "SELECT DISTINCT ?e2 ?altLabel ?label ?description WHERE",
+            "SELECT DISTINCT ?iri ?altLabel ?label ?description WHERE",
             "{",
             "  {",
                  fullTextMatchingString,
             "  }",
-            "  FILTER EXISTS { ?e2 ?p ?v }",
-            "  FILTER NOT EXISTS ",
+            "  OPTIONAL ",  // makes it possible to get concepts without label
             "  {",
-            "    VALUES ?topic {" + String.join(" ", WIKIMEDIA_INTERNAL,
-                WIKIMEDIA_PROJECT_PAGE, WIKIMEDIA_CATEGORY, WIKIMEDIA_DISAMBIGUATION_PAGE,
-                WIKIMEDIA_LIST_ARTICLE, WIKIMEDIA_TEMPLATE, WIKIMEDIA_NEWS_ARTICLE,
-                WIKIMEDIA_NAVIGATIONAL_TEMPLATE) +
-                "}",
-            "    ?e2 ?typeIri ?topic",
+            "    ?iri ?labelIri ?label.",
             "  }",
-            "  ?e2 ?labelIri ?label.",
             "}");
 
 
@@ -251,17 +252,17 @@ public class QueryUtil
             SPARQL_PREFIX,
             "SELECT DISTINCT ?label ?p WHERE ",
             "  {",
-            "    { ?e1  ?rd ?m . ?m ?p ?e2 . }",
+            "    { ?other  ?rd ?m . ?m ?p ?iri . }",
             "    UNION",
-            "    { ?e2 ?p ?m . ?m ?rr ?e1 . }",
-            "    ?e1 ?labelIri ?label. ",
+            "    { ?iri ?p ?m . ?m ?rr ?other . }",
+            "    ?other ?labelIri ?label. ",
             "  }",
             " LIMIT " + aLimit);
 
         TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, query);
         tupleQuery.setBinding("language", vf.createLiteral((aKb.getDefaultLanguage() != null)
             ? aKb.getDefaultLanguage() : "en"));
-        tupleQuery.setBinding("e2", vf.createIRI(aIri));
+        tupleQuery.setBinding("iri", vf.createIRI(aIri));
         tupleQuery.setBinding("labelIri", aKb.getLabelIri());
         return tupleQuery;
     }

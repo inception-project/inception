@@ -198,8 +198,8 @@ public class ConceptLinkingService
         return rankedCandidates.stream()
             .map(c -> new KBHandle(c.getIRI(), c.getLabel(), c.getDescription()))
             .distinct()
-            .limit(properties.getCandidateDisplayLimit())
             .filter(h -> h.getIdentifier().contains(":"))
+            .limit(properties.getCandidateDisplayLimit())
             .collect(Collectors.toList());
     }
 
@@ -279,20 +279,32 @@ public class ConceptLinkingService
         try (TupleQueryResult entityResult = aTupleQuery.evaluate()) {
             while (entityResult.hasNext()) {
                 BindingSet solution = entityResult.next();
-                Optional<Value> e2 = Optional.ofNullable(solution.getValue("e2"));
-                Optional<Value> label = Optional.ofNullable(solution.getValue("label"));
-                Optional<Value> altLabel = Optional.ofNullable(solution.getValue("altLabel"));
-                Optional<Value> description = Optional.ofNullable(solution.getValue("description"));
-                Optional<String> language = ((SimpleLiteral) solution.getValue("label"))
-                    .getLanguage();
 
-                CandidateEntity newEntity = new CandidateEntity(
-                        e2.map(Value::stringValue).orElse(""),
-                        label.map(Value::stringValue).orElse(""),
-                        // Exact matching does not use altLabel
-                        altLabel.map(Value::stringValue)
-                                .orElse(label.map(Value::stringValue).orElse("")),
-                        description.map(Value::stringValue).orElse("").concat("\n" + e2.map(Value::stringValue).orElse("")), language.orElse(""));
+                String identifier = Optional.ofNullable(solution.getValue("identifier"))
+                    .map(Value::stringValue).orElse("");
+
+                Optional<Value> opLabel = Optional.ofNullable(solution.getValue("label"));
+
+                // If there is no label, use identifier as label
+                String label = opLabel.map(Value::stringValue).orElse(identifier);
+
+                int lastHashtag = label.lastIndexOf("#");
+                if (lastHashtag != -1) {
+                    label = label.substring(lastHashtag + 1, label.length());
+                }
+
+                // If there is no alternative label, use label / identifier
+                String altLabel = Optional.ofNullable(solution.getValue("altLabel"))
+                    .map(Value::stringValue).orElse(label);
+
+                String description = Optional.ofNullable(solution.getValue("description"))
+                    .map(Value::stringValue).orElse("").concat("\n" + identifier);
+
+                Optional<String> language = (opLabel.isPresent())
+                    ? ((SimpleLiteral) opLabel.get()).getLanguage() : Optional.of("");
+
+                CandidateEntity newEntity = new CandidateEntity(identifier, label, altLabel,
+                    description, language.orElse(""));
 
                 candidates.add(newEntity);
             }
