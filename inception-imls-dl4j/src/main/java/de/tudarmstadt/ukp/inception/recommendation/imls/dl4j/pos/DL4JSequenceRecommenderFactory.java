@@ -17,9 +17,13 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.dl4j.pos;
 
+import java.io.File;
+
 import org.apache.uima.cas.CAS;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
@@ -27,14 +31,21 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactoryImplBase;
 
 @Component
+@ConditionalOnProperty(prefix = "recommenders.dl4j.token-sequence", name = "enabled", 
+        matchIfMissing = false)
 public class DL4JSequenceRecommenderFactory
     extends RecommendationEngineFactoryImplBase<Void>
 {
-
     // This is a string literal so we can rename/refactor the class without it changing its ID
-    // and without the database starting to refer to nonexisting recommendation tools.
-    public static final String ID = 
-        "de.tudarmstadt.ukp.inception.recommendation.imls.dl4j.pos.DL4JPosClassificationTool";
+    // and without the database starting to refer to non-existing recommendation tools.
+    public static final String ID = "de.tudarmstadt.ukp.inception.recommendation.imls.dl4j.pos.DL4JPosClassificationTool";
+
+    private final RepositoryProperties repositoryProperties;
+
+    public DL4JSequenceRecommenderFactory(RepositoryProperties aRepositoryProperties)
+    {
+        repositoryProperties = aRepositoryProperties;
+    }
 
     @Override
     public String getId()
@@ -54,13 +65,15 @@ public class DL4JSequenceRecommenderFactory
         if (aLayer == null || aFeature == null) {
             return false;
         }
-        
+
         return "span".equals(aLayer.getType()) && CAS.TYPE_NAME_STRING.equals(aFeature.getType());
     }
 
     @Override
-    public RecommendationEngine build(Recommender aRecommender) {
+    public RecommendationEngine build(Recommender aRecommender)
+    {
         DL4JSequenceRecommenderTraits traits = new DL4JSequenceRecommenderTraits();
-        return new DL4JSequenceRecommender(aRecommender, traits);
+        return new DL4JSequenceRecommender(aRecommender, traits,
+                new File(repositoryProperties.getPath(), "datasets"));
     }
 }
