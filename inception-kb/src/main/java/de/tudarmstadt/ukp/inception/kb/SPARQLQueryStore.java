@@ -111,7 +111,7 @@ public final class SPARQLQueryStore
     {
         return String.join("\n"
                 , SPARQL_PREFIX    
-                , "SELECT DISTINCT ?s WHERE { "
+                , "SELECT DISTINCT ?s (MIN(?label) AS ?l) (MIN(?desc) AS ?d) WHERE { "
                 , "  { ?s ?pTYPE ?oCLASS . } "
                 , "  UNION { ?someSubClass ?pSUBCLASS ?s . } ."
                 , "  FILTER NOT EXISTS { "
@@ -119,9 +119,10 @@ public final class SPARQLQueryStore
                 , "    FILTER (?s != ?otherSub) }"
                 , "  FILTER NOT EXISTS { "
                 , "    ?s owl:intersectionOf ?list . }"
-                , "} "
-                , "LIMIT " + aKB.getMaxResults());
-    }
+                , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage(),"?s","?label")
+                , optionalLanguageFilteredValue("?pDESCRIPTION", aKB.getDefaultLanguage(),"?s","?desc")
+                , "} GROUP BY ?s"
+                , "LIMIT " + aKB.getMaxResults());    }
     
     /** 
      * Query to list child concepts from a knowledge base.
@@ -149,33 +150,40 @@ public final class SPARQLQueryStore
     public static final String readConcept(KnowledgeBase aKB, int limit)
     {
         return String.join("\n"
-                , SPARQL_PREFIX    
-                , "SELECT ?oItem WHERE { "
-                , "  { ?oItem ?pTYPE ?oCLASS . } "
-                , "  UNION {?someSubClass ?pSUBCLASS ?oItem . } "
-                , "  UNION {?oItem ?pSUBCLASS ?oPARENT . }" 
-                , "  UNION {?oItem ?pTYPE ?oCLASS ."
-                , "    ?oItem owl:intersectionOf ?list . "
-                , "    FILTER EXISTS { ?list rdf:rest*/rdf:first ?oPARENT} }"
-                , "} "
-                , "LIMIT " + limit);
+            , SPARQL_PREFIX    
+            , "SELECT ?oItem ((?label) AS ?l) ((?desc) AS ?d) WHERE { "
+            , "  { ?oItem ?pTYPE ?oCLASS . } "
+            , "  UNION {?someSubClass ?pSUBCLASS ?oItem . } "
+            , "  UNION {?oItem ?pSUBCLASS ?oPARENT . }" 
+            , "  UNION {?oItem ?pTYPE ?oCLASS ."
+            , "    ?oItem owl:intersectionOf ?list . "
+            , "    FILTER EXISTS { ?list rdf:rest*/rdf:first ?oPARENT} }"
+            , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage(),"?oItem","?label")
+            , optionalLanguageFilteredValue("?pDESCRIPTION", aKB.getDefaultLanguage(),"?oItem","?desc")
+            , "} "
+            , "LIMIT " + limit);
     }
     
     /** 
      * Query to read concept label and description from a knowledge base.
      */
-    public static final String readLabel(KnowledgeBase aKB, int limit)
+    public static final String readLabelWithoutLanguage(KnowledgeBase aKB, int limit, boolean label,
+            boolean desc)
     {
-        return String.join("\n"
-                , SPARQL_PREFIX    
-                , "SELECT ?oItem ((?label) AS ?l) ((?desc) AS ?d) ?lGen ?dGen WHERE { "
-                , "?oItem ?p ?o . "
-                , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage(),"?oItem","?label")
-                , optionalLanguageFilteredValue("?pDESCRIPTION", aKB.getDefaultLanguage(),"?oItem","?desc")
-                , optionalLanguageFilteredValue("?pLABEL", null,"?oItem","?lGen")
-                , optionalLanguageFilteredValue("?pDESCRIPTION", null,"?oItem","?dGen")
-                , "} "
-                , "LIMIT " + limit);
+        StringBuilder query = new StringBuilder();
+        query.append(SPARQL_PREFIX + "\n" +
+                "SELECT ?oItem ((?label) AS ?l) ((?desc) AS ?d) ?lGen ?dGen WHERE { " + "\n"
+                + "?oItem ?p ?o . ");
+        if (label) {
+            query.append("\n" + optionalLanguageFilteredValue("?pLABEL", null, "?oItem", "?lGen"));
+        }
+        if (desc) {
+            query.append("\n" +
+                    optionalLanguageFilteredValue("?pDESCRIPTION", null, "?oItem", "?dGen"));
+        }
+        query.append("\n" + "} " + "\n" + "LIMIT " + limit);        
+        return query.toString();
+         
     }
     
     

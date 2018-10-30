@@ -462,16 +462,18 @@ public class KnowledgeBaseServiceImpl
             tupleQuery.setIncludeInferred(false);
             return evaluateListQuery(aKB, tupleQuery, true, aAll,  "oItem", "l", "d");
         });
+        List<KBHandle> resultLabelList = readLabelsWithoutLanguage(aKB, aAll, resultList);
+        resultLabelList.sort(Comparator.comparing(KBObject::getUiLabel));
         
-        if (resultList.isEmpty()) {
+        if (resultLabelList.isEmpty()) {
             return Optional.empty();
         }
         else {
             KBConcept kbConcept = new KBConcept();
-            kbConcept.setIdentifier(resultList.get(0).getIdentifier());
-            kbConcept.setName(resultList.get(0).getName());
-            kbConcept.setDescription(resultList.get(0).getDescription());
-            kbConcept.setLanguage(resultList.get(0).getLanguage());
+            kbConcept.setIdentifier(resultLabelList.get(0).getIdentifier());
+            kbConcept.setName(resultLabelList.get(0).getName());
+            kbConcept.setDescription(resultLabelList.get(0).getDescription());
+            kbConcept.setLanguage(resultLabelList.get(0).getLanguage());
             return Optional.of(kbConcept);
         }
     }
@@ -526,8 +528,10 @@ public class KnowledgeBaseServiceImpl
             tupleQuery.setIncludeInferred(false);
             return evaluateListQuery(aKB, tupleQuery, true, aAll, "s", "l", "d");
         });
-        resultList.sort(Comparator.comparing(KBObject::getUiLabel));
-        return resultList;
+        
+        List<KBHandle> resultLabelList = readLabelsWithoutLanguage(aKB, aAll, resultList);
+        resultLabelList.sort(Comparator.comparing(KBObject::getUiLabel));
+        return resultLabelList;
     }
     
     @Override
@@ -923,36 +927,54 @@ public class KnowledgeBaseServiceImpl
                 return evaluateListQuery(aKB, tupleQuery, true, aAll, "s", "l", "d");
             });
         }
+        
+        List<KBHandle> resultLabelList = readLabelsWithoutLanguage(aKB, aAll, resultList);
+        resultLabelList.sort(Comparator.comparing(KBObject::getUiLabel));
+        return resultLabelList;
+    }
+    
+    private List<KBHandle> readLabelsWithoutLanguage(KnowledgeBase aKB, boolean aAll,
+            List<KBHandle> resultList)
+    {
         List<KBHandle> resultLabelList = new ArrayList<>();        
         for (KBHandle result : resultList) {
-            Optional<KBHandle> labelHandle = getLabels(aKB, aAll, result.getIdentifier());
+            boolean label = false;
+            boolean desc = false;
+            if (result.getName() == null) {
+                label = true;
+            }
+            if (result.getDescription() == null) {
+                desc = true;
+            }
+            Optional<KBHandle> labelHandle = readLabelsWithoutLanguage(aKB, aAll,
+                    result.getIdentifier(), label, desc);
             if (labelHandle.isPresent()) {
                 result.setDescription(labelHandle.get().getDescription());
                 result.setName(labelHandle.get().getName());
             }
             resultLabelList.add(result);
         }
-        resultLabelList.sort(Comparator.comparing(KBObject::getUiLabel));
         return resultLabelList;
     }
     
-    
-    private Optional<KBHandle> getLabels(KnowledgeBase aKB, boolean aAll, String aIdentifier)
+    private Optional<KBHandle> readLabelsWithoutLanguage(KnowledgeBase aKB, boolean aAll,
+            String aIdentifier, boolean getLabel, boolean getDescription)
         throws QueryEvaluationException
     {
 
         List<KBHandle> handleList = read(aKB, (conn) -> {
-            String QUERY = SPARQLQueryStore.readLabel(aKB, 1);
+            String QUERY = SPARQLQueryStore.readLabelWithoutLanguage(aKB, 1, getLabel,
+                    getDescription);
             ValueFactory vf = SimpleValueFactory.getInstance();
-            TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
-            tupleQuery.setBinding("oItem", vf.createIRI(aIdentifier));
-            tupleQuery.setBinding("pTYPE", aKB.getTypeIri());
-            tupleQuery.setBinding("oCLASS", aKB.getClassIri());
-            tupleQuery.setBinding("pSUBCLASS", aKB.getSubclassIri());
-            tupleQuery.setBinding("pLABEL", aKB.getLabelIri());
-            tupleQuery.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
-            tupleQuery.setIncludeInferred(false);
-            return evaluateListQuery(aKB, tupleQuery, false, aAll, "oItem", "l", "d");
+            TupleQuery tupleQueryLabel = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
+            tupleQueryLabel.setBinding("oItem", vf.createIRI(aIdentifier));
+            tupleQueryLabel.setBinding("pTYPE", aKB.getTypeIri());
+            tupleQueryLabel.setBinding("oCLASS", aKB.getClassIri());
+            tupleQueryLabel.setBinding("pSUBCLASS", aKB.getSubclassIri());
+            tupleQueryLabel.setBinding("pLABEL", aKB.getLabelIri());
+            tupleQueryLabel.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
+            tupleQueryLabel.setIncludeInferred(false);
+            return evaluateListQuery(aKB, tupleQueryLabel, false, aAll, "oItem", "l", "d");
         });
         if (handleList.isEmpty()) {
             return Optional.empty();
@@ -992,7 +1014,10 @@ public class KnowledgeBaseServiceImpl
             tupleQuery.setIncludeInferred(false);
             return evaluateListQuery(aKB, tupleQuery, true, aAll, "s", "l", "d");
         });
-        return resultList;
+        
+        List<KBHandle> resultLabelList = readLabelsWithoutLanguage(aKB, aAll, resultList);
+        resultLabelList.sort(Comparator.comparing(KBObject::getUiLabel));
+        return resultLabelList;
     }
     
     @Override
@@ -1130,52 +1155,45 @@ public class KnowledgeBaseServiceImpl
                 continue;
             }
             String id = bindings.getBinding(itemVariable).getValue().stringValue();
-            
+
             if (!id.contains(":") || (!aAll && hasImplicitNamespace(id))) {
                 continue;
             }
-            KBHandle handle;
-            if (sepLabelQuery) {
-                //Optional<KBHandle> labelHandle = getLabels(aKB, aAll, id);
-                //if (labelHandle.isPresent()) {
-                //    handle = labelHandle.get();
-                //}
-                //else {
-                handle = new KBHandle(id);
-                //    handle.setName(handle.getUiLabel());
-                //}
-                handles.add(handle);
+
+            Binding label = bindings.getBinding(langVariable);
+            Binding description = bindings.getBinding(descVariable);
+            // Bindings without language specifications
+            Binding labelGeneral = bindings.getBinding("lGen");
+            Binding descGeneral = bindings.getBinding("dGen");
+            
+            KBHandle handle = new KBHandle(id);
+            
+            if (label != null) {
+                handle.setName(label.getValue().stringValue());
+                if (label.getValue() instanceof Literal) {
+                    Literal literal = (Literal) label.getValue();
+                    Optional<String> language = literal.getLanguage();
+                    language.ifPresent(handle::setLanguage);
+                }
             }
-            else {
-                Binding label = bindings.getBinding(langVariable);
-                Binding description = bindings.getBinding(descVariable);
-                // Bindings without language specifications
-                Binding labelGeneral = bindings.getBinding("lGen");
-                Binding descGeneral = bindings.getBinding("dGen");
-                handle = new KBHandle(id);
-                if (label != null) {
-                    handle.setName(label.getValue().stringValue());
-                    if (label.getValue() instanceof Literal) {
-                        Literal literal = (Literal) label.getValue();
-                        Optional<String> language = literal.getLanguage();
-                        language.ifPresent(handle::setLanguage);
-                    }
-                }
-                else if (labelGeneral != null) {
-                    handle.setName(labelGeneral.getValue().stringValue());
-                }
-                else {
-                    handle.setName(handle.getUiLabel());
-                }
-                
-                if (description != null) {
-                    handle.setDescription(description.getValue().stringValue());
-                }
-                else if (descGeneral != null) {
-                    handle.setDescription(descGeneral.getValue().stringValue());
-                }
-                handles.add(handle);
+            
+            else if (labelGeneral != null && handle.getName() == null) {
+                handle.setName(labelGeneral.getValue().stringValue());
             }
+            
+            // needs to be fixed
+            else if (!sepLabelQuery && handle.getName() == null) {
+                handle.setName(handle.getUiLabel());
+            }
+
+            if (description != null ) {
+                handle.setDescription(description.getValue().stringValue());
+            }
+            else if (descGeneral != null && handle.getDescription() == null) {
+                handle.setDescription(descGeneral.getValue().stringValue());
+            }
+            handles.add(handle);
+
         }
         return handles;
     }
