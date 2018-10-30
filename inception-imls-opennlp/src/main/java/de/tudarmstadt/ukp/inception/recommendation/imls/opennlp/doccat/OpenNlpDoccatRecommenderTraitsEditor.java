@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.doccat;
 
-import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.NumberTextField;
 import org.apache.wicket.markup.html.panel.Panel;
@@ -67,9 +66,6 @@ public class OpenNlpDoccatRecommenderTraitsEditor
         cutoff.setMaximum(100_000);
         form.add(cutoff);
         
-        CheckBox bowUseOnlyAllLetter = new CheckBox("bowUseOnlyAllLetter");
-        form.add(bowUseOnlyAllLetter);
-
         add(form);
     }
 }
