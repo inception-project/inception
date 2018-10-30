@@ -37,15 +37,19 @@ import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.Model;
+import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.googlecode.wicket.jquery.core.JQueryBehavior;
+import com.googlecode.wicket.jquery.core.Options;
 import com.googlecode.wicket.jquery.core.renderer.TextRenderer;
 import com.googlecode.wicket.jquery.core.template.IJQueryTemplate;
 import com.googlecode.wicket.kendo.ui.form.autocomplete.AutoCompleteTextField;
+import com.googlecode.wicket.kendo.ui.widget.tooltip.TooltipBehavior;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.JCasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
@@ -321,19 +325,24 @@ public class ConceptFeatureEditor extends FeatureEditor {
         });
     }
 
-    private Label disabledKbWarningLabel() {
-        Label warningLabel = new Label("disabledKBWarningLabel",
-            "&#9888; <strong>The currently selected knowledge base for this concept feature is"
-                + " disabled.</strong>"
-                + " Enable the knowledge base or change the configurations of the concept "
-                + "feature in the project settings.");
-        warningLabel.setEscapeModelStrings(false);
+    private Label disabledKbWarningLabel()
+    {
+        Label warningLabel = new Label("disabledKBWarning", Model.of());
         AnnotationFeature feature = getModelObject().feature;
         ConceptFeatureTraits traits = readFeatureTraits(feature);
-        Optional<KnowledgeBase> kb = kbService.getKnowledgeBaseById(feature.getProject(),
-            traits.getRepositoryId());
+        Optional<KnowledgeBase> kb = kbService
+            .getKnowledgeBaseById(feature.getProject(), traits.getRepositoryId());
         warningLabel.add(LambdaBehavior
             .onConfigure(label -> label.setVisible(kb.isPresent() && !kb.get().isEnabled())));
+
+        TooltipBehavior tip = new TooltipBehavior();
+        tip.setOption("content", Options.asString(
+            new StringResourceModel("value.null.disabledKbWarning", this)
+                .setParameters(kb.get().getName()).getString()));
+        tip.setOption("width", Options.asString("300px"));
+        warningLabel.add(tip);
+
         return warningLabel;
     }
+
 }
