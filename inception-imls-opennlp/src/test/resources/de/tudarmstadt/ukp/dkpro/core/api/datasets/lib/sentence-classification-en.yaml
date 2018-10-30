@@ -1,0 +1,56 @@
+groupId: org.dkpro.core.datasets.sentenceclassification
+datasetId: sentence-classification
+# There is no uniform version for the whole datased, using the date of the most recent artifact
+version: 20141105
+language: en
+# mediaType: text/x.org.dkpro.germeval-2014
+encoding: UTF-8
+
+name: Sentence Classification Data Set 
+url: https://archive.ics.uci.edu/ml/datasets/Sentence+Classification
+attribution: |
+  A. Chambers. Statistical models for text classification: Applications and analysis, Ph.D., 
+  University of California, Irvine (2013). ProQuest Dissertations and Theses.
+description: |
+  This corpus contains sentences from the abstract and introduction of 30 scientific articles that 
+  have been annotated (i.e. labeled or tagged) according to a modified version of the Argumentative 
+  Zones annotation scheme [1]. These 30 scientific articles come from three different domains:
+  
+  1. PLoS Computational Biology (PLOS)
+  2. The machine learning repository on arXiv (ARXIV)
+  3. The psychology journal Judgment and Decision Making (JDM)
+  
+  There are 10 articles from each domain. In addition to the labeled data, this corpus also contains
+  a corresponding set of unlabeled articles. These unlabeled articles also come from PLOS, ARXIV,
+  and JDM. There are 300 unlabeled articles from each domain (again, only the sentences from the
+  abstract and introduction). These unlabeled articles can be used for unsupervised or
+  semi-supervised approaches to sentence classification which rely on a small set of labeled data
+  and a larger set of unlabeled data.
+
+  (This description has been sourced from the dataset README file).
+
+#licenses:
+#  - name: CC-BY 4.0
+#    url: http://creativecommons.org/licenses/by/4.0/
+
+artifacts:
+#  LICENSE.txt:
+#    url: "https://creativecommons.org/licenses/by/4.0/legalcode.txt"
+#    sha1: 563e2664fed2ce3e65bd1dd396422f46c5db9040
+  SentenceCorpus.zip:
+    url: "https://archive.ics.uci.edu/ml/machine-learning-databases/00311/SentenceCorpus.zip"
+    sha1: c1595c2e6ba7a81856f07d9fbcfbc3b1c9ef1ec9
+    actions:
+    - action: explode
+      configuration: { strip: 1, includes: [ "labeled_articles/*.txt" ] }
+
+roles:
+#  training:
+#    - NER-de-train.tsv
+#  testing: 
+#    - NER-de-test.tsv
+  development:
+    - "SentenceCorpus/labeled_articles/*.txt"
+#  licenses: 
+#    - LICENSE.txt
+    

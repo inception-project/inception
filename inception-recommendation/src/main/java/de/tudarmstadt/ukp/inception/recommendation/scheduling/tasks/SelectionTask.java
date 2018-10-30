@@ -20,9 +20,9 @@ package de.tudarmstadt.ukp.inception.recommendation.scheduling.tasks;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
 import javax.persistence.NoResultException;
 
+import org.apache.commons.lang3.concurrent.LazyInitializer;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.jcas.JCas;
@@ -71,7 +71,18 @@ public class SelectionTask
         Project project = getProject();
         User user = getUser();
         String userName = user.getUsername();
-        List<CAS> casses = readCasses(project, userName);
+        
+        // Read the CASes only when they are accessed the first time. This allows us to skip reading
+        // the CASes in case that no layer / recommender is available or if no recommender requires
+        // evaluation.
+        LazyInitializer<List<CAS>> casses = new LazyInitializer<List<CAS>>()
+        {
+            @Override
+            protected List<CAS> initialize()
+            {
+                return readCasses(project, userName);
+            }
+        };
 
         for (AnnotationLayer layer : annoService.listAnnotationLayer(getProject())) {
             if (!layer.isEnabled()) {
@@ -128,7 +139,7 @@ public class SelectionTask
                     log.info("[{}][{}]: Evaluating...", userName, recommenderName);
 
                     DataSplitter splitter = new PercentageBasedSplitter(0.8, 10);
-                    double score = recommendationEngine.evaluate(casses, splitter);
+                    double score = recommendationEngine.evaluate(casses.get(), splitter);
 
                     Double threshold = recommender.getThreshold();
                     boolean activated;
@@ -165,7 +176,7 @@ public class SelectionTask
         for (SourceDocument document : documentService.listSourceDocuments(aProject)) {
             try {
                 JCas jCas = documentService.readAnnotationCas(document, aUserName);
-                annoService.upgradeCas(jCas.getCas(), document, aUserName);
+                annoService.upgradeCasIfRequired(jCas.getCas(), document, aUserName);
                 casses.add(jCas.getCas());
             } catch (IOException e) {
                 log.error("Cannot read annotation CAS.", e);

@@ -65,7 +65,6 @@ import de.agilecoders.wicket.core.markup.html.bootstrap.form.BootstrapCheckbox;
 import de.agilecoders.wicket.core.markup.html.bootstrap.form.radio.BootstrapRadioGroup;
 import de.agilecoders.wicket.core.markup.html.bootstrap.form.radio.EnumRadioChoiceRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
@@ -226,12 +225,17 @@ public class KnowledgeBaseDetailsPanel
             private static final long serialVersionUID = 3393631640806116694L;
             
             @Override
-            protected void onAfterSubmit(AjaxRequestTarget target)
+            protected void onError(AjaxRequestTarget aTarget) {
+                aTarget.addChildren(getPage(), IFeedback.class);
+            }
+            
+            @Override
+            protected void onAfterSubmit(AjaxRequestTarget aTarget)
             {
                 // the call needs to occur in onAfterSubmit, otherwise the file uploads are
                 // submitted after actionSave is called
                 KnowledgeBaseDetailsPanel.this
-                    .actionSave(target, (Form<KnowledgeBaseWrapper>) form);
+                    .actionSave(aTarget, (Form<KnowledgeBaseWrapper>) form);
                 applicationEventPublisherHolder.get().publishEvent(
                     new KnowledgeBaseConfigurationChangedEvent(this,
                         aKbModel.getObject().getProject()));
@@ -260,6 +264,9 @@ public class KnowledgeBaseDetailsPanel
 
     private void actionSave(AjaxRequestTarget aTarget, Form<KnowledgeBaseWrapper> aForm)
     {
+        aTarget.addChildren(getPage(), IFeedback.class);
+        aTarget.add(findParentWithAssociatedMarkup());
+        
         try {
             KnowledgeBaseWrapper kbw = kbwModel.getObject();
 
@@ -276,12 +283,10 @@ public class KnowledgeBaseDetailsPanel
             KnowledgeBaseWrapper.updateKb(kbw, cfg, kbService);
             modelChanged();
             stopEditing(aTarget);
-            aTarget.add(findParentWithAssociatedMarkup());
         }
         catch (Exception e) {
             error("Unable to save knowledge base: " + e.getLocalizedMessage());
             log.error("Unable to save knowledge base.", e);
-            aTarget.addChildren(getPage(), IFeedback.class);
         }
     }
 
@@ -559,11 +564,6 @@ public class KnowledgeBaseDetailsPanel
             ComboBox<String> comboBox = new ComboBox<String>("language",
                 kbwModel.bind("kb.defaultLanguage"),
                 Arrays.asList("en", "de"));
-            comboBox.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> {
-                // Do nothing just update the model values
-            }));
-            comboBox.setOutputMarkupId(true);
-            comboBox.setRequired(true);
             wmc.add(comboBox);
 
             // Schema configuration
@@ -573,7 +573,7 @@ public class KnowledgeBaseDetailsPanel
             queryLimitField = queryLimitField("maxResults",
                 model.bind("kb.maxResults"));
             wmc.add(queryLimitField);
-            maxQueryLimitCheckBox = maxQueryLimitCheckbox("maxQueryLimit", new Model(false));
+            maxQueryLimitCheckBox = maxQueryLimitCheckbox("maxQueryLimit", Model.of(false));
             wmc.add(maxQueryLimitCheckBox);
         }
 

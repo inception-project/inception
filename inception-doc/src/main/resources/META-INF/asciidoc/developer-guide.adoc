@@ -36,7 +36,7 @@ include::{include-dir}search-mtas.adoc[leveloffset=+1]
 
 <<<
 
-include::{include-dir}external_recommender.adoc[]
+include::{include-dir}external_recommender.adoc[leveloffset=+1]
 
 <<<
 
