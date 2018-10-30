@@ -8,7 +8,9 @@ module.exports = (env, argv) => {
     entry: {
       'pdfanno.page': './src/pdfanno.js',
       'pdfanno.core': './src/core/index.js',
-      'embedded-sample': './src/embedded-sample.js',
+// BEGIN PDFANNO EXTENSION - #593 - Add PDFAnno sources
+      // 'embedded-sample': './src/embedded-sample.js',
+// END PDFANNO EXTENSION
       'viewer': './src/viewer.js',
       'debugger': './src/debugger.js',
       'compatibility': './src/compatibility.js',
