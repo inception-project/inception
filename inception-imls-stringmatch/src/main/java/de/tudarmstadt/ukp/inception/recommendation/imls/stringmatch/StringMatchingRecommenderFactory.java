@@ -56,7 +56,7 @@ public class StringMatchingRecommenderFactory
     @Override
     public String getName()
     {
-        return "Multi-Token String Matcher";
+        return "String Matcher";
     }
 
     @Override
