@@ -111,7 +111,7 @@ public final class SPARQLQueryStore
     {
         return String.join("\n"
                 , SPARQL_PREFIX    
-                , "SELECT DISTINCT ?s (MIN(?label) AS ?l) (MIN(?desc) AS ?d) (MIN(?labelGeneral) AS ?lGen) (MIN(?descGeneral) AS ?dGen) WHERE { "
+                , "SELECT DISTINCT ?s WHERE { "
                 , "  { ?s ?pTYPE ?oCLASS . } "
                 , "  UNION { ?someSubClass ?pSUBCLASS ?s . } ."
                 , "  FILTER NOT EXISTS { "
@@ -119,11 +119,7 @@ public final class SPARQLQueryStore
                 , "    FILTER (?s != ?otherSub) }"
                 , "  FILTER NOT EXISTS { "
                 , "    ?s owl:intersectionOf ?list . }"
-                , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage(),"?s","?label")
-                , optionalLanguageFilteredValue("?pDESCRIPTION", aKB.getDefaultLanguage(),"?s","?desc")
-                , optionalLanguageFilteredValue("?pLABEL", null,"?s","?labelGeneral")
-                , optionalLanguageFilteredValue("?pDESCRIPTION", null,"?s","?descGeneral")
-                , "} GROUP BY ?s"
+                , "} "
                 , "LIMIT " + aKB.getMaxResults());
     }
     
@@ -154,17 +150,30 @@ public final class SPARQLQueryStore
     {
         return String.join("\n"
                 , SPARQL_PREFIX    
-                , "SELECT ?oItem ((?label) AS ?l) ((?desc) AS ?d) ?lGen ?dGen WHERE { "
+                , "SELECT ?oItem WHERE { "
                 , "  { ?oItem ?pTYPE ?oCLASS . } "
                 , "  UNION {?someSubClass ?pSUBCLASS ?oItem . } "
                 , "  UNION {?oItem ?pSUBCLASS ?oPARENT . }" 
                 , "  UNION {?oItem ?pTYPE ?oCLASS ."
                 , "    ?oItem owl:intersectionOf ?list . "
                 , "    FILTER EXISTS { ?list rdf:rest*/rdf:first ?oPARENT} }"
+                , "} "
+                , "LIMIT " + limit);
+    }
+    
+    /** 
+     * Query to read concept label and description from a knowledge base.
+     */
+    public static final String readLabel(KnowledgeBase aKB, int limit)
+    {
+        return String.join("\n"
+                , SPARQL_PREFIX    
+                , "SELECT ?oItem ((?label) AS ?l) ((?desc) AS ?d) ?lGen ?dGen WHERE { "
+                , "?oItem ?p ?o . "
                 , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage(),"?oItem","?label")
                 , optionalLanguageFilteredValue("?pDESCRIPTION", aKB.getDefaultLanguage(),"?oItem","?desc")
-                , optionalLanguageFilteredValue("?pLABEL", null,"?s","?lGen")
-                , optionalLanguageFilteredValue("?pDESCRIPTION", null,"?s","?dGen")
+                , optionalLanguageFilteredValue("?pLABEL", null,"?oItem","?lGen")
+                , optionalLanguageFilteredValue("?pDESCRIPTION", null,"?oItem","?dGen")
                 , "} "
                 , "LIMIT " + limit);
     }
