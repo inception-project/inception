@@ -105,6 +105,8 @@ gulp.task('watch-sw', () => {
 
 gulp.task('publish', cb => {
   checkIsStableVersion()
-  baseDir = path.join('dist', version)
+// BEGIN PDFANNO EXTENSION - #593 - Add PDFAnno sources
+  baseDir = path.join('../resources/dist', version)
+// END PEDFANNO EXTENSION
   publish(cb)
 })
