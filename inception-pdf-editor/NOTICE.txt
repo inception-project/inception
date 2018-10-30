@@ -1,5 +1,5 @@
 == PDFAnno
 
-Package: de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.srcresources
+Package: de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.src
 
 All files under this package are from PDFAnno and are licensed under the MIT.
