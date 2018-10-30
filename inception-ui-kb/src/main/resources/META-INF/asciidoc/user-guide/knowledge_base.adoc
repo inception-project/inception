@@ -19,23 +19,7 @@ The concept tree in this page is designed using the *subClass* relationship for 
 
 In case the user has the privilege to edit the knowledge base, the user may add statements for concepts, instances and properties. 
 
-
-=== Knowledge Base scope setting for feature layer
-
-In the *Projects Settings*, switch to the *Layers* tab where the user can edit the configuration for the pre-defined layers or create a new layer clicking the *Create* button on the bottom of the panel. The user can define several features for each of the layers as shown in the figure below.
-
-[.thumb]
-image::kb5.png[align="center"]
-
-The feature configuration needs a name along with the *Type* which sets the primary scope of the feature. The dropdown provides the user with one of the option as *KB: Concept/Instance*, which sets the scope of the feature to knowledge base entities. 
-
-Furthermore, this feature which has been configured, if set to *KB: Concept/Instance*, asks for the *Allowed values* which has three values as options: *Any Concept/Instance*, *Only Concept* and *Only Instance*. When the user annotates the text with the particular layer for this feature which has been configures for *Any Concept/Instance* , the auto complete field lists all the concept and instances, while for *Only Concept* and *Only Instance* it list only concept or only instance respectively.
-
-The feature configuration allows her to set up the configuration to list the values from a specific knowledge base. 
-
-The *Scope* field allows her to set the scope of KB entities with a specific concept limiting the annotation values to sub class and instances of the concept defined as scope. In case the user selects *Any Concept/Instance*, the values will be instances of the specified concept and the child concepts (which includes the hierarchy of child concepts) including their instances, of the specified concept in the *Scope*. Likewise, the choice of *Only Concept* limit the values to the child concepts (which includes the hierarchy of child concepts) and  *Only Instance* limit the values to all of the instances and the instances for the child concepts of the specified concept. 
-
-=== Knowledge Base Statement Validation
+=== Statement editors
 
 INCEpTION provides the user to edit the local knowledge base which includes adding statements to the concepts, sub class and their instances. The platform provides *Create Statement* button for adding in statements for a particular knowledge base entity. 
 
@@ -50,4 +34,20 @@ Selecting a specific property then further showcase the user with the range of v
 3. *String*: This is the default resource type where the user has an option to provide a string with a language tag or a URI as a resource which does not exist in KB.  
 
 4. *KB Resource*: This is provided as an option when the property has a range as a particular concept from the knowledge base. In this option, the user is provided with an auto-complete field with a list of knowledge base entities which includes the subclass and instances of the range specified for the property. 
+
+=== Concept features
+
+In the *Projects Settings*, switch to the *Layers* tab where the user can edit the configuration for the pre-defined layers or create a new layer clicking the *Create* button on the bottom of the panel. The user can define several features for each of the layers as shown in the figure below.
+
+[.thumb]
+image::kb5.png[align="center"]
+
+The feature configuration needs a name along with the *Type* which sets the primary scope of the feature. The dropdown provides the user with one of the option as *KB: Concept/Instance*, which sets the scope of the feature to knowledge base entities. 
+
+Furthermore, this feature which has been configured, if set to *KB: Concept/Instance*, asks for the *Allowed values* which has three values as options: *Any Concept/Instance*, *Only Concept* and *Only Instance*. When the user annotates the text with the particular layer for this feature which has been configures for *Any Concept/Instance* , the auto complete field lists all the concept and instances, while for *Only Concept* and *Only Instance* it list only concept or only instance respectively.
+
+The feature configuration allows her to set up the configuration to list the values from a specific knowledge base. 
+
+The *Scope* field allows her to set the scope of KB entities with a specific concept limiting the annotation values to sub class and instances of the concept defined as scope. In case the user selects *Any Concept/Instance*, the values will be instances of the specified concept and the child concepts (which includes the hierarchy of child concepts) including their instances, of the specified concept in the *Scope*. Likewise, the choice of *Only Concept* limit the values to the child concepts (which includes the hierarchy of child concepts) and  *Only Instance* limit the values to all of the instances and the instances for the child concepts of the specified concept. 
+
 
