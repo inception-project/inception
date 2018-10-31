@@ -85,15 +85,18 @@ public class DL4JSequenceRecommender
     
     private final String layerName;
     private final String featureName;
+    private final File datasetCache;
     private DL4JSequenceRecommenderTraits traits;
     private BinaryVectorizer wordVectors;
     private INDArray randUnk;
     
-    public DL4JSequenceRecommender(Recommender aRecommender, DL4JSequenceRecommenderTraits aTraits)
+    public DL4JSequenceRecommender(Recommender aRecommender, DL4JSequenceRecommenderTraits aTraits,
+            File aDatasetCache)
     {
         layerName = aRecommender.getLayer().getName();
         featureName = aRecommender.getFeature();
         traits = aTraits;
+        datasetCache = aDatasetCache;
     }
 
     @Override
@@ -128,8 +131,8 @@ public class DL4JSequenceRecommender
             // Load the embeddings. Mind that we are using a memory-mapped embedding store, so this
             // is a fast operation and also doesn't consume lots of memory. Hence we can do it for
             // each recommender instance and do not have to share it between recommenders.
-            DatasetFactory loader = new DatasetFactory(); 
-            File embeddingsFile =  loader.load("glove.6B.50d.dl4jw2v").getDataFiles()[0];
+            DatasetFactory loader = new DatasetFactory(datasetCache); 
+            File embeddingsFile = loader.load("glove.6B.50d.dl4jw2v").getDataFiles()[0];
             wordVectors = BinaryVectorizer.load(embeddingsFile);
         }
         
