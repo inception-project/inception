@@ -48,7 +48,6 @@ public class ExternalRecommenderFactory
     public RecommendationEngine build(Recommender aRecommender)
     {
         ExternalRecommenderTraits traits = readTraits(aRecommender);
-        traits.setRemoteUrl("http://localhost:30500");
         return new ExternalRecommender(aRecommender, traits);
     }
 
