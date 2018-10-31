@@ -76,6 +76,8 @@ public class ExternalRecommender
     public void train(RecommenderContext aContext, List<CAS> aCasses)
         throws RecommendationException
     {
+        aContext.markAsReadyForPrediction();
+
         TrainingRequest trainingRequest = new TrainingRequest();
         List<String> documents = new ArrayList<>();
         trainingRequest.setDocuments(documents);
