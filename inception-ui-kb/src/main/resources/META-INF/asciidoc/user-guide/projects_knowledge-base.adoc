@@ -28,8 +28,7 @@ image::kb3.png[align="center"]
 
 === Full text search
 
-Full text search support in the knowledge base enables a more efficient access to the knowledge
-base contents and is a prerequisite for some advanced features such as re-ranking linking candidates. Two full text search modes are supported:
+Full text search in knowledge bases enables searching for entities by their textual context, e.g. their label. This is a prerequisite for some advanced features such as re-ranking linking candidates during entity linking. Two full text search modes are supported:
 
 * the `bif:contains` mode can be used with some remote triple stores such as Virtuoso.
 * the `lucenesail#matches` mode can be used with local knowledge bases or possible with remote knowledge bases using the RDF4J Lucene SAIL.
