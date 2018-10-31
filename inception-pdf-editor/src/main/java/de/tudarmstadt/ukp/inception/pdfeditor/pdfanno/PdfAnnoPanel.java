@@ -74,7 +74,7 @@ public class PdfAnnoPanel
                 checkComponentTag(tag, "iframe");
 
                 String viewerUrl = RequestCycle.get().getUrlRenderer()
-                        .renderFullUrl(Url.parse("resources/pdfanno/dist/0.5.0/index.html"));
+                        .renderFullUrl(Url.parse("resources/pdfanno/index.html"));
 
                 String pdfUrl = getPage().getRequestCycle().getUrlRenderer()
                         .renderFullUrl(Url.parse(pdfProvider.getCallbackUrl()));

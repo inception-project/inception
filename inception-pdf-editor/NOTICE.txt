@@ -1,5 +1,5 @@
 == PDFAnno
 
-Package: de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.src
+Package: src/main/js/pdfanno
 
 All files under this package are from PDFAnno and are licensed under the MIT.
