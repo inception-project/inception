@@ -280,13 +280,13 @@ public class ConceptLinkingService
             while (entityResult.hasNext()) {
                 BindingSet solution = entityResult.next();
 
-                String identifier = Optional.ofNullable(solution.getValue("identifier"))
+                String iri = Optional.ofNullable(solution.getValue("iri"))
                     .map(Value::stringValue).orElse("");
 
                 Optional<Value> opLabel = Optional.ofNullable(solution.getValue("label"));
 
                 // If there is no label, use identifier as label
-                String label = opLabel.map(Value::stringValue).orElse(identifier);
+                String label = opLabel.map(Value::stringValue).orElse(iri);
 
                 int lastHashtag = label.lastIndexOf("#");
                 if (lastHashtag != -1) {
@@ -298,12 +298,12 @@ public class ConceptLinkingService
                     .map(Value::stringValue).orElse(label);
 
                 String description = Optional.ofNullable(solution.getValue("description"))
-                    .map(Value::stringValue).orElse("").concat("\n" + identifier);
+                    .map(Value::stringValue).orElse("").concat("\n" + iri);
 
                 Optional<String> language = (opLabel.isPresent())
                     ? ((SimpleLiteral) opLabel.get()).getLanguage() : Optional.of("");
 
-                CandidateEntity newEntity = new CandidateEntity(identifier, label, altLabel,
+                CandidateEntity newEntity = new CandidateEntity(iri, label, altLabel,
                     description, language.orElse(""));
 
                 candidates.add(newEntity);
