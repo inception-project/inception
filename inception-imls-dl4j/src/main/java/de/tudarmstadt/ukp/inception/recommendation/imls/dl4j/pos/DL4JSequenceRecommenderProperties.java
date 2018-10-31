@@ -1,6 +1,6 @@
 /*
  * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab
+ * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,26 +15,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package de.tudarmstadt.ukp.inception.recommendation.imls.dl4j.pos;
 
-package de.tudarmstadt.ukp.inception.recommendation.event;
-
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.inception.log.adapter.EventLoggingAdapter;
-
 @Component
-public class RecommenderDeletedEventAdapter
-    implements EventLoggingAdapter<RecommenderDeletedEvent>
+@ConfigurationProperties("recommenders.dl4j.token-sequence")
+public class DL4JSequenceRecommenderProperties
 {
-    @Override
-    public boolean accepts(Object aEvent)
+    private boolean enabled = false;
+
+    public boolean isEnabled()
     {
-        return aEvent instanceof RecommenderDeletedEvent;
+        return enabled;
     }
 
-    @Override
-    public String getUser(RecommenderDeletedEvent aEvent)
+    public void setEnabled(boolean aEnabled)
     {
-        return aEvent.getUser();
+        enabled = aEnabled;
     }
 }

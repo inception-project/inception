@@ -1,5 +1,5 @@
-// Copyright 2015
-// Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+// Copyright 2018
+// Ubiquitous Knowledge Processing (UKP) Lab
 // Technische Universität Darmstadt
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,30 +14,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-= {product-name} Developer Guide
-The {product-name} Team
+[[sect_projects_concept-linking]]
+== Named Entity Linker
 
-This document targets developers working on {product-name}.
-
-include::{include-dir}setup.adoc[]
-
-<<<
-
-include::{include-dir}casdoctor.adoc[]
-
-<<<
-
-include::{include-dir}database.adoc[]
-
-<<<
-
-include::{include-dir}search-core.adoc[leveloffset=+1]
-include::{include-dir}search-mtas.adoc[leveloffset=+1]
-
-<<<
-
-include::{include-dir}external_recommender.adoc[leveloffset=+1]
-
-<<<
-
-include::{include-dir}systemproperties.adoc[]
+This recommender can be used with concept features on span layers. It does not learn from training
+data, but instead attempts to match the context of the entity mention in the text with the context
+of candidate entities in the knowledge base and suggests the highest ranked candidate entities. 
+In order for this recommender to function, it is necessary that the knowledge base configured for
+the respective concept feature supports full text search.

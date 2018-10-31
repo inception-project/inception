@@ -1,4 +1,4 @@
-// Copyright 2015
+// Copyright 2018
 // Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
 // Technische Universität Darmstadt
 // 
@@ -14,30 +14,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-= {product-name} Developer Guide
-The {product-name} Team
+== External Recommender
 
-This document targets developers working on {product-name}.
-
-include::{include-dir}setup.adoc[]
-
-<<<
-
-include::{include-dir}casdoctor.adoc[]
-
-<<<
-
-include::{include-dir}database.adoc[]
-
-<<<
-
-include::{include-dir}search-core.adoc[leveloffset=+1]
-include::{include-dir}search-mtas.adoc[leveloffset=+1]
-
-<<<
-
-include::{include-dir}external_recommender.adoc[leveloffset=+1]
-
-<<<
-
-include::{include-dir}systemproperties.adoc[]
+This recommender allows to use external web-services to generate predictions. For details on the
+protocol used in the communication with the external services, please refer to the developer
+documentation.
