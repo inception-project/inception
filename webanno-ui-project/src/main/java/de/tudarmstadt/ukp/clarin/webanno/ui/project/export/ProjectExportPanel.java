@@ -67,6 +67,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.AJAXDownload;
 import de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.ProjectPage;
@@ -103,7 +104,7 @@ public class ProjectExportPanel
     private transient FileGenerator runnable = null;
 
     private boolean enabled = true;
-    private boolean canceled = false;
+    private State exportState = State.NOT_STARTED;
 
     public ProjectExportPanel(String id, final IModel<Project> aProjectModel)
     {
@@ -266,22 +267,46 @@ public class ProjectExportPanel
                 @Override
                 protected void onFinished(AjaxRequestTarget target)
                 {
-                    if (!canceled && !fileName.equals(downloadedFile)) {
-                        exportProject.initiate(target, fileName);
-                        downloadedFile = fileName;
-                        
-                        while (!runnable.getMessages().isEmpty()) {
-                            info(runnable.getMessages().poll());
-                        }
+                    target.addChildren(getPage(), IFeedback.class);
 
-                        enabled = true;
-                        target.addChildren(getPage(), IFeedback.class);
-                        info("Project export complete");
+                    while (!runnable.getMessages().isEmpty()) {
+                        LogMessage msg = runnable.getMessages().poll();
+                        switch (msg.getLevel()) {
+                        case INFO:
+                            info(msg.getMessage());
+                            break;
+                        case WARN:
+                            warn(msg.getMessage());
+                            break;
+                        case ERROR:
+                            error(msg.getMessage());
+                            break;
+                        default: 
+                            error(msg.getMessage());
+                            break;
+                        }
                     }
-                    else if (canceled) {
+                    
+                    switch (exportState) {
+                    case COMPLETED:
+                        if (!fileName.equals(downloadedFile)) {
+                            exportProject.initiate(target, fileName);
+                            downloadedFile = fileName;
+                            
+                            enabled = true;
+                            info("Project export complete");
+                        }
+                        break;
+                    case FAILED:
                         enabled = true;
-                        target.addChildren(getPage(), IFeedback.class);
+                        error("Project export failed");
+                        break;
+                    case CANCELLED:
+                        enabled = true;
                         info("Project export cancelled");
+                        break;
+                    default:
+                        error("Invalid project export state after export: " + exportProject);
                     }
                 }
             };
@@ -300,7 +325,7 @@ public class ProjectExportPanel
                 @Override
                 public void onClick(final AjaxRequestTarget target) {
                     enabled = false;
-                    canceled = true;
+                    exportState = State.FAILED;
                     ProjectExportForm.this.getModelObject().progress = 0;
                     target.add(ProjectExportPanel.this.getPage());
                     fileGenerationProgress.start(target);
@@ -321,6 +346,7 @@ public class ProjectExportPanel
                 public void onClick(final AjaxRequestTarget target) {
                     if (thread != null) {
                         ProjectExportForm.this.getModelObject().progress = 100;
+                        exportState = State.CANCELLED;
                         thread.interrupt();
                     }
                 }
@@ -333,6 +359,10 @@ public class ProjectExportPanel
                 }
             });
         }
+    }
+    
+    enum State {
+        NOT_STARTED, COMPLETED, CANCELLED, FAILED;
     }
     
     public class FileGenerator
@@ -358,25 +388,26 @@ public class ProjectExportPanel
             File file;
             try {
                 Thread.sleep(100); // Why do we sleep here?
-                //file = exportService.generateZipFile(model);
                 file = exportService.exportProject(model);
                 fileName = file.getAbsolutePath();
                 projectName = model.getProject().getName();
-                canceled = false;
+                exportState = State.COMPLETED;
             }
             catch (Throwable e) {
                 LOG.error("Unexpected error during project export", e);
-                model.addMessage("Unexpected error during project export: "
-                        + ExceptionUtils.getRootCauseMessage(e));
+                model.addMessage(LogMessage.error(this, "Unexpected error during project export: %s",
+                                ExceptionUtils.getRootCauseMessage(e)));
                 if (thread != null) {
-                    canceled = true;
-                    model.progress = 100;
+                    exportState = State.FAILED;
+                    // This marks the progression as complete and causes ProgressBar#onFinished
+                    // to be called where we display the messages
+                    model.progress = 100; 
                     thread.interrupt();
                 }
             }
         }
 
-        public Queue<String> getMessages()
+        public Queue<LogMessage> getMessages()
         {
             return model.getMessages();
         }

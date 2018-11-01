@@ -46,8 +46,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.CasPersistenceUtils;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor;
-import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor.LogLevel;
-import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor.LogMessage;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.Repair;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.Repair.Safe;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -55,6 +53,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogLevel;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
 
 public class ProjectCasDoctorPanel

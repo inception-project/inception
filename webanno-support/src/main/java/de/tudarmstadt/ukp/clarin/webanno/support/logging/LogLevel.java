@@ -1,5 +1,5 @@
 /*
- * Copyright 2015
+ * Copyright 2018
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
  *
@@ -15,16 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.diag.checks;
+package de.tudarmstadt.ukp.clarin.webanno.support.logging;
 
-import java.util.List;
-
-import org.apache.uima.cas.CAS;
-
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
-
-public interface Check
+public enum LogLevel
 {
-    boolean check(Project aProject, CAS aCas, List<LogMessage> aMessages);
+    INFO, WARN, ERROR
 }
