@@ -22,6 +22,7 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 
 public class ProjectExportRequest
     implements Serializable
@@ -36,7 +37,7 @@ public class ProjectExportRequest
     private String format;
     private boolean includeInProgress;
     
-    private final Queue<String> messages = new ConcurrentLinkedQueue<>();
+    private final Queue<LogMessage> messages = new ConcurrentLinkedQueue<>();
 
     public ProjectExportRequest()
     {
@@ -91,7 +92,7 @@ public class ProjectExportRequest
         return includeInProgress;
     }
 
-    public void addMessage(String aMessage)
+    public void addMessage(LogMessage aMessage)
     {
         // Avoid repeating the same message over for different users
         if (!messages.contains(aMessage)) {
@@ -99,7 +100,7 @@ public class ProjectExportRequest
         }
     }
     
-    public Queue<String> getMessages()
+    public Queue<LogMessage> getMessages()
     {
         return messages;
     }

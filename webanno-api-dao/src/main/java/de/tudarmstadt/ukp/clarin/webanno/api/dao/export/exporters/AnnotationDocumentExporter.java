@@ -52,6 +52,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.clarin.webanno.tsv.WebAnnoTsv3FormatSupport;
 
 @Component
@@ -165,10 +166,9 @@ public class AnnotationDocumentExporter
             else {
                 format = importExportService.getWritableFormatByName(aRequest.getFormat())
                         .orElseGet(() -> {
-                            String msg = "[" + sourceDocument.getName()
-                                    + "] No writer found for format [" + aRequest.getFormat()
-                                    + "] - exporting as WebAnno TSV instead.";
-                            aRequest.addMessage(msg);
+                            aRequest.addMessage(LogMessage.error(this,"[%s] No writer found for "
+                                    + "format [%s] - exporting as WebAnno TSV instead.",
+                                    sourceDocument.getName(), aRequest.getFormat()));
                             return new WebAnnoTsv3FormatSupport();
                         });
             }

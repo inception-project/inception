@@ -26,9 +26,9 @@ import java.util.Map.Entry;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
 
-import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor.LogLevel;
-import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor.LogMessage;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogLevel;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 
 public class AllFeatureStructuresIndexedCheck
     implements Check

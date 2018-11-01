@@ -43,6 +43,7 @@ import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedSourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 
 @Component
 public class SourceDocumentExporter
@@ -106,17 +107,13 @@ public class SourceDocumentExporter
                         + "]");
             }
             catch (FileNotFoundException e) {
-                // error(e.getMessage());
-                StringBuilder errorMessage = new StringBuilder();
-                errorMessage.append("Source file '");
-                errorMessage.append(sourceDocument.getName());
-                errorMessage.append("' related to project couldn't be located in repository");
-                log.error(errorMessage.toString(), ExceptionUtils.getRootCause(e));
-                aRequest.addMessage(errorMessage.toString());
+                log.error("Source file [{}] related to project couldn't be located in repository",
+                        sourceDocument.getName(), ExceptionUtils.getRootCause(e));
+                aRequest.addMessage(LogMessage.error(this,
+                        "Source file [%s] related to project couldn't be located in repository",
+                        sourceDocument.getName()));
                 throw new ProjectExportException(
                         "Couldn't find some source file(s) related to project");
-                // continue;
-
             }
         }
     }
