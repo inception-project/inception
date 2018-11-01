@@ -66,7 +66,7 @@
     <wicket.version>8.1.0</wicket.version>
     <wicketstuff.version>${wicket.version}</wicketstuff.version>
     <wicket-jquery-ui.version>${wicket.version}</wicket-jquery-ui.version>
-    <wicket-bootstrap.version>2.0.5</wicket-bootstrap.version>
+    <wicket-bootstrap.version>2.0.4</wicket-bootstrap.version>
     <wicket-webjars.version>2.0.8</wicket-webjars.version>    
     <wicket-spring-boot.version>2.1.2</wicket-spring-boot.version>
     <hibernate.version>5.3.7.Final</hibernate.version>
@@ -570,20 +570,22 @@
         <version>${batik.version}</version>
       </dependency>
       <dependency>
-        <groupId>dom4j</groupId>
+        <groupId>org.dom4j</groupId>
         <artifactId>dom4j</artifactId>
-        <version>1.6.1</version>
+        <version>2.1.1</version>
+        <!--  
         <exclusions>
           <exclusion>
             <groupId>xml-apis</groupId>
             <artifactId>xml-apis</artifactId>
           </exclusion>
         </exclusions>
+        -->
       </dependency>
       <dependency>
         <groupId>jaxen</groupId>
         <artifactId>jaxen</artifactId>
-        <version>1.1.1</version>
+        <version>1.1.6</version>
         <exclusions>
           <exclusion>
             <groupId>xml-apis</groupId>
