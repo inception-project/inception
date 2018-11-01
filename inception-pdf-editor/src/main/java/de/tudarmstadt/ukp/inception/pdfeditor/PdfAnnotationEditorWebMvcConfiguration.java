@@ -29,6 +29,6 @@ public class PdfAnnotationEditorWebMvcConfiguration
     public void addResourceHandlers(ResourceHandlerRegistry aRegistry)
     {
         aRegistry.addResourceHandler("/resources/pdfanno/**")
-                .addResourceLocations("classpath:/dist/pdfanno-0.5.0/");
+                .addResourceLocations("classpath:/pdfanno/");
     }
 }

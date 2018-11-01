@@ -8,7 +8,3 @@ target
 *.iml
 .idea
 cache
-node/
-node_modules/
-build/
-dist/

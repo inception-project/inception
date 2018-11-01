@@ -94,13 +94,56 @@
   </dependencies>
   <build>
     <plugins>
+        <plugin>
+            <artifactId>maven-resources-plugin</artifactId>
+            <version>3.1.0</version>
+            <executions>
+                <execution>
+                    <id>copy-pdfanno-to-target</id>
+                    <phase>generate-resources</phase>
+                    <goals>
+                        <goal>copy-resources</goal>
+                    </goals>
+                    <configuration>
+                        <outputDirectory>target/js/pdfanno</outputDirectory>
+                        <resources>
+                            <resource>
+                                <directory>src/main/js/pdfanno</directory>
+                            </resource>
+                        </resources>
+                    </configuration>
+                </execution>
+            </executions>
+        </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <version>3.0.0</version>
+        <executions>
+          <execution>
+            <id>add-pdfanno-resources</id>
+            <phase>generate-resources</phase>
+            <goals>
+              <goal>add-resource</goal>
+            </goals>
+            <configuration>
+              <resources>
+                <resource>
+                  <directory>target/js/pdfanno/dist/pdfanno</directory>
+                  <targetPath>pdfanno</targetPath>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
       <plugin>
         <groupId>com.github.eirslett</groupId>
         <artifactId>frontend-maven-plugin</artifactId>
         <version>1.6</version>
           <configuration>
-            <workingDirectory>src/main/js/pdfanno/</workingDirectory>
-            <installDirectory>src/main/js/pdfanno/</installDirectory>
+            <workingDirectory>target/js/pdfanno/</workingDirectory>
+            <installDirectory>target/js/pdfanno/</installDirectory>
           </configuration>
         <executions>
           <execution>
@@ -149,7 +192,6 @@
                 <excludes combine.children="append">
                   <!-- These upstream files do not contain license headers -->
                   <exclude>src/main/js/pdfanno/**/*</exclude>
-                  <exclude>src/main/resources/pdfanno/**/*</exclude>
                 </excludes>
               </configuration>
             </execution>
