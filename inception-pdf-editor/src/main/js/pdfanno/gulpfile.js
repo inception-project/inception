@@ -66,7 +66,9 @@ gulp.task('_minify-html', () => {
 gulp.task('prepare', () => {
   fs.removeSync('build')
   fs.copySync('pdfjs', path.join('build', 'pdfjs'))
-  fs.copySync('pdfs', path.join('build', 'pdfs'))
+// BEGIN PDFANNO EXTENSION - #593 - Add PDFAnno sources
+//   fs.copySync('pdfs', path.join('build', 'pdfs'))
+// END PDFANNO EXTENSION
   fs.copySync('pages', path.join('build'))
   fs.copySync('schemas/pdfanno-schema.json', path.join('build', 'schema.json'))
 })

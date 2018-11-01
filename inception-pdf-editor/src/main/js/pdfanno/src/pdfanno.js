@@ -111,7 +111,10 @@ async function displayViewer () {
 
   // Display a PDF specified via URL query parameter.
   const q        = urijs(document.URL).query(true)
-  const pdfURL   = q.pdf || getDefaultPDFURL()
+// BEGIN PDFANNO EXTENSION - #593 - Add PDFAnno sources
+//   const pdfURL   = q.pdf || getDefaultPDFURL()
+    const pdfURL   = q.pdf
+// END PDFANNO EXTENSION
   const annoURL  = q.anno
   const moveTo   = q.move
 

@@ -174,7 +174,10 @@ export default class PDFAnnoPage {
   /**
    * Start the viewer.
    */
-  initializeViewer (initialPDFPath = '../pdfs/P12-1046.pdf', viewerSelector = '#viewer') {
+// BEGIN PDFANNO EXTENSION - #593 - Add PDFAnno sources
+//   initializeViewer (initialPDFPath = '../pdfs/P12-1046.pdf', viewerSelector = '#viewer') {
+    initializeViewer (viewerSelector = '#viewer') {
+// END PDFANNO EXTENSION
 
     window.pdf = null
     window.pdfName = null
