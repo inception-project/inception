@@ -493,6 +493,8 @@ public class LinkFeatureEditor
     @Override
     public void onConfigure()
     {
+        super.onConfigure();
+        
         // Update entries for important tags.
         removeAutomaticallyAddedUnusedEntries();
         FeatureState featureState = getModelObject();
