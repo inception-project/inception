@@ -718,5 +718,11 @@
         </plugins>
       </build>
     </profile>
+    <profile>
+      <id>doc-only</id>
+      <properties>
+        <maven.install.skip>true</maven.install.skip>
+      </properties>
+    </profile>
   </profiles>
 </project>

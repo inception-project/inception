@@ -1211,5 +1211,19 @@
         </pluginManagement>
       </build>
     </profile>
+    <profile>
+      <id>doc-only</id>
+      <properties>
+        <mdep.analyze.skip>true</mdep.analyze.skip>
+        <maven.main.skip>true</maven.main.skip>
+        <maven.test.skip>true</maven.test.skip>
+        <rat.skip>true</rat.skip>
+        <maven.buildNumber.skip>true</maven.buildNumber.skip>
+        <checkstyle.skip>true</checkstyle.skip>
+        <spring-boot.repackage.skip>true</spring-boot.repackage.skip>
+        <maven.war.skip>true</maven.war.skip>
+        <remoteresources.skip>true</remoteresources.skip>
+      </properties>
+    </profile>
   </profiles>
 </project>
