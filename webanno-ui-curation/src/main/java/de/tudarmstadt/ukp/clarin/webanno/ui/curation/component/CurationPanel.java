@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.component;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.verifyAndUpdateDocumentTimestamp;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentenceAt;
 import static org.apache.uima.fit.util.JCasUtil.selectFollowing;
@@ -46,6 +47,7 @@ import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.util.ListModel;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -177,8 +179,8 @@ public class CurationPanel
         };
         add(suggestionViewPanel);
     
-        editor = new AnnotationDetailEditorPanel(
-                "annotationDetailEditorPanel", new Model<>(state))
+        editor = new AnnotationDetailEditorPanel("annotationDetailEditorPanel",
+                PropertyModel.of(CurationPanel.this, "state"))
         {
             private static final long serialVersionUID = 2857345299480098279L;
     
@@ -215,6 +217,12 @@ public class CurationPanel
                         .getSourceDocument(state.getDocument().getProject(),
                                 state.getDocument().getName())
                         .getState().equals(SourceDocumentState.CURATION_FINISHED));
+            }
+            
+            @Override
+            public JCas getEditorCas() throws IOException
+            {
+                return CurationPanel.this.getEditorCas();
             }
         };
         sidebarCell.add(editor);
@@ -419,6 +427,10 @@ public class CurationPanel
         if (state.getDocument() == null) {
             throw new IllegalStateException("Please open a document first!");
         }
+
+        // If we have a timestamp, then use it to detect if there was a concurrent access
+        verifyAndUpdateDocumentTimestamp(state, curationDocumentService
+                .getCurationCasTimestamp(state.getDocument()));
 
         return curationDocumentService.readCurationCas(state.getDocument());
     }

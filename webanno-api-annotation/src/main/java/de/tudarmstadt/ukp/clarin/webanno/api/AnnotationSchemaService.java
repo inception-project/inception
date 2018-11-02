@@ -396,6 +396,15 @@ public interface AnnotationSchemaService
             throws UIMAException, IOException;
 
     /**
+     * Better call {@link #upgradeCas(CAS, SourceDocument, String)} which also logs the action
+     * nicely to the log files. This method here is rather for unconditional bulk use such as
+     * by the CAS doctor.
+     * 
+     * @see #upgradeCas(CAS, SourceDocument, String)
+     */
+    void upgradeCas(CAS aCas, Project aProject) throws UIMAException, IOException;
+    
+    /**
      * Checks if the given CAS is compatible with the current type system of the project to which
      * it belongs and upgrades it if necessary. This should be preferred over the mandatory CAS 
      * upgrade if the CAS is loaded in a read-only mode or in scenarios where it is not saved later.

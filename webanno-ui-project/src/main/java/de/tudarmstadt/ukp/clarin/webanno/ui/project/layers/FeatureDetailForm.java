@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.project.layers;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.Objects.isNull;
@@ -248,6 +249,16 @@ public class FeatureDetailForm
                         catch (FileNotFoundException e) {
                             // If there is no CAS file, we do not have to upgrade it. Ignoring.
                         }
+                    }
+                    
+                    // Also upgrade the curation CAS if it exists
+                    try {
+                        JCas cas = casStorageService.readCas(doc, CURATION_USER);
+                        annotationService.upgradeCas(cas.getCas(), doc, CURATION_USER);
+                        casStorageService.writeCas(doc, cas, CURATION_USER);
+                    }
+                    catch (FileNotFoundException e) {
+                        // If there is no CAS file, we do not have to upgrade it. Ignoring.
                     }
                 }
             });

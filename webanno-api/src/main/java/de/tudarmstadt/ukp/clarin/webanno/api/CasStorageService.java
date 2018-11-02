@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Optional;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
@@ -124,4 +125,6 @@ public interface CasStorageService
     {
         void execute() throws IOException, UIMAException;
     }
+
+    Optional<Long> getCasTimestamp(SourceDocument aDocument, String aUser) throws IOException;
 }

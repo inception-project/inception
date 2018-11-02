@@ -29,6 +29,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -220,6 +221,12 @@ public class CasStorageServiceImpl
                         oldVersion.length(), currentVersion.length(),
                         currentVersion.length() - oldVersion.length());
             }
+            
+            // Update the timestamp in the CAS in case we attempt to save it a second time. This
+            // happens for example in an annotation replacement operation (change layer of existing
+            // annotation) which is implemented as a delete/create operation with an intermediate
+            // save.
+            CasMetadataUtils.addOrUpdateCasMetadata(aJcas, currentVersion, aDocument, aUserName);
             
             // If the saving was successful, we delete the old version
             if (oldVersion.exists()) {
@@ -534,6 +541,24 @@ public class CasStorageServiceImpl
         }
     }
 
+    @Override
+    public Optional<Long> getCasTimestamp(SourceDocument aDocument, String aUser) throws IOException
+    {
+        Validate.notNull(aDocument, "Source document must be specified");
+        Validate.notBlank(aUser, "User must be specified");
+        
+        // Ensure that the CAS is not being re-written and temporarily unavailable while we check
+        // for its existence
+        synchronized (lock) {
+            File casFile = getCasFile(aDocument, aUser);
+            if (!casFile.exists()) {
+                return Optional.empty();
+            }
+            else {
+                return Optional.of(casFile.lastModified());
+            }
+        }
+    }
     
     /**
      * Get the folder where the annotations are stored. Creates the folder if necessary.
@@ -545,6 +570,8 @@ public class CasStorageServiceImpl
     public File getAnnotationFolder(SourceDocument aDocument)
         throws IOException
     {
+        Validate.notNull(aDocument, "Source document must be specified");
+        
         File annotationFolder = new File(repositoryProperties.getPath(),
                 "/" + PROJECT_FOLDER + "/" + aDocument.getProject().getId() + "/" + DOCUMENT_FOLDER
                         + "/" + aDocument.getId() + "/" + ANNOTATION_FOLDER);

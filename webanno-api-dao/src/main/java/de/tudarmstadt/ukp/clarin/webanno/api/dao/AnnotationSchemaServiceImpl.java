@@ -711,10 +711,8 @@ public class AnnotationSchemaServiceImpl
     public void upgradeCas(CAS aCas, SourceDocument aSourceDocument, String aUser)
         throws UIMAException, IOException
     {
-        TypeSystemDescription ts = getFullProjectTypeSystem(aSourceDocument.getProject());
-
-        upgradeCas(aCas, ts);
-
+        upgradeCas(aCas, aSourceDocument.getProject());
+        
         try (MDC.MDCCloseable closable = MDC.putCloseable(
                 Logging.KEY_PROJECT_ID,
                 String.valueOf(aSourceDocument.getProject().getId()))) {
@@ -725,6 +723,13 @@ public class AnnotationSchemaServiceImpl
                     aUser, aSourceDocument.getName(), aSourceDocument.getId(), project.getName(),
                     project.getId());
         }
+    }
+    
+    @Override
+    public void upgradeCas(CAS aCas, Project aProject) throws UIMAException, IOException
+    {
+        TypeSystemDescription ts = getFullProjectTypeSystem(aProject);
+        upgradeCas(aCas, ts);
     }
     
     @Override

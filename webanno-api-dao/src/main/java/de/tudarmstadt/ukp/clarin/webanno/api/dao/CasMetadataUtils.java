@@ -38,6 +38,17 @@ public class CasMetadataUtils
             SourceDocument aDocument, String aUsername)
         throws IOException
     {
+        // If the type system of the CAS does not yet support CASMetadata, then we do not add it
+        // and wait for the next regular CAS upgrade before we include this data.
+        if (aJcas.getTypeSystem().getType(CASMetadata.class.getName()) == null) {
+            LOG.info("Annotation file [{}] of user [{}] for document [{}]({}) in project [{}]({}) "
+                    + "does not support CASMetadata yet - unable to detect concurrent modifications",
+                    aCasFile.getName(), aUsername, aDocument.getName(),
+                    aDocument.getId(), aDocument.getProject().getName(),
+                    aDocument.getProject().getId());
+            return;
+        }
+        
         List<CASMetadata> cmds = new ArrayList<>(JCasUtil.select(aJcas, CASMetadata.class));
         if (cmds.size() > 1) {
             throw new IOException("CAS contains more than one CASMetadata instance");
@@ -45,8 +56,11 @@ public class CasMetadataUtils
         else if (cmds.size() == 1) {
             CASMetadata cmd = cmds.get(0);
             if (aCasFile.lastModified() != cmd.getLastChangedOnDisk()) {
-                throw new IOException("Detected concurrent modification to file on disk - "
-                        + "please try reloading brefore saving again.");
+                throw new IOException(
+                        "Detected concurrent modification to file on disk (expected timestamp: "
+                                + cmd.getLastChangedOnDisk() + "; actual timestamp "
+                                + aCasFile.lastModified() + ") - "
+                                + "please try reloading brefore saving again.");
             }
         }
         else {

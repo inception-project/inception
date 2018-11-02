@@ -37,6 +37,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.TreeMap;
 
 import javax.persistence.EntityManager;
@@ -628,6 +629,16 @@ public class DocumentServiceImpl
         String userName = aAnnotationDocument.getUser();
         
         return readAnnotationCas(aDocument, userName);
+    }
+    
+    @Override
+    public Optional<Long> getAnnotationCasTimestamp(SourceDocument aDocument, String aUsername)
+        throws IOException
+    {
+        Validate.notNull(aDocument, "Source document must be specified");
+        Validate.notNull(aUsername, "Username must be specified");
+        
+        return casStorageService.getCasTimestamp(aDocument, aUsername);
     }
 
     @Override
