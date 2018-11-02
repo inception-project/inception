@@ -19,7 +19,10 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.project.layers;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.Objects.isNull;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.wicket.util.string.Strings.escapeMarkup;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.cas.CAS;
@@ -28,7 +31,6 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
-import org.apache.wicket.markup.html.form.Button;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
@@ -48,7 +50,11 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRe
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureType;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.LayerConfigurationChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
 
@@ -69,6 +75,7 @@ public class FeatureDetailForm
     private DropDownChoice<FeatureType> featureType;
     private CheckBox required;
     private WebMarkupContainer traitsContainer;
+    private ConfirmationDialog confirmationDialog;
 
     public FeatureDetailForm(String id, IModel<AnnotationFeature> aFeature)
     {
@@ -78,24 +85,14 @@ public class FeatureDetailForm
         
         add(traitsContainer = new WebMarkupContainer(MID_TRAITS_CONTAINER));
         traitsContainer.setOutputMarkupId(true);
-
-        add(new Label("name")
-        {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            protected void onConfigure()
-            {
-                super.onConfigure();
-                
-                setVisible(StringUtils
-                        .isNotBlank(FeatureDetailForm.this.getModelObject().getName()));
-            }
-        });
+        
+        add(new Label("name").add(visibleWhen(() -> isNotBlank(getModelObject().getName()))));
         add(new TextField<String>("uiName").setRequired(true));
-        add(new TextArea<String>("description").setOutputMarkupPlaceholderTag(true));
+        add(new TextArea<String>("description"));
         add(new CheckBox("enabled"));
         add(new CheckBox("visible"));
+        add(new CheckBox("hideUnconstraintFeature"));
+        add(new CheckBox("remember"));
         add(new CheckBox("includeInHover")
         {
             private static final long serialVersionUID = -8273152168889478682L;
@@ -112,29 +109,17 @@ public class FeatureDetailForm
             }
 
         });
-        add(new CheckBox("remember"));
-        add(required = new CheckBox("required")
-        {
-            private static final long serialVersionUID = -2716373442353375910L;
-
-            {
-                setOutputMarkupId(true);
+        required = new CheckBox("required");
+        required.setOutputMarkupId(true);
+        required.add(LambdaBehavior.onConfigure(_this -> {
+            boolean relevant = CAS.TYPE_NAME_STRING
+                    .equals(FeatureDetailForm.this.getModelObject().getType());
+            _this.setEnabled(relevant);
+            if (!relevant) {
+                FeatureDetailForm.this.getModelObject().setRequired(false);
             }
-
-            @Override
-            protected void onConfigure()
-            {
-                super.onConfigure();
-                
-                boolean relevant = CAS.TYPE_NAME_STRING
-                        .equals(FeatureDetailForm.this.getModelObject().getType());
-                setEnabled(relevant);
-                if (!relevant) {
-                    FeatureDetailForm.this.getModelObject().setRequired(false);
-                }
-            }
-        });
-        add(new CheckBox("hideUnconstraintFeature"));
+        }));
+        add(required);
 
         add(featureType = new DropDownChoice<FeatureType>("type") {
             private static final long serialVersionUID = 9029205407108101183L;
@@ -162,19 +147,18 @@ public class FeatureDetailForm
         featureType.setNullValid(false);
         featureType.setChoiceRenderer(new ChoiceRenderer<>("uiName"));
         featureType.setModel(LambdaModelAdapter.of(
-            () -> featureSupportRegistry.getFeatureType(
-                    FeatureDetailForm.this.getModelObject()), 
-            (v) -> FeatureDetailForm.this.getModelObject().setType(v.getName())));
+            () -> featureSupportRegistry.getFeatureType(getModelObject()), 
+            (v) -> getModelObject().setType(v.getName())));
         featureType.add(LambdaBehavior.onConfigure(_this -> {
-            if (isNull(FeatureDetailForm.this.getModelObject().getId())) {
+            if (isNull(getModelObject().getId())) {
                 featureType.setEnabled(true);
-                featureType.setChoices(() -> featureSupportRegistry.getUserSelectableTypes(
-                        FeatureDetailForm.this.getModelObject().getLayer()));
+                featureType.setChoices(() -> featureSupportRegistry
+                        .getUserSelectableTypes(getModelObject().getLayer()));
             }
             else {
                 featureType.setEnabled(false);
-                featureType.setChoices(() -> featureSupportRegistry
-                        .getAllTypes(FeatureDetailForm.this.getModelObject().getLayer()));
+                featureType.setChoices(() -> featureSupportRegistry.getAllTypes(
+                        getModelObject().getLayer()));
             }
         }));
         featureType.add(new AjaxFormComponentUpdatingBehavior("change")
@@ -189,32 +173,16 @@ public class FeatureDetailForm
             }
         });
 
-        add(new Button("save", new StringResourceModel("label"))
-        {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            public void onAfterSubmit()
-            {
-                actionSave();
-            }
-        });
-
-        add(new Button("cancel", new StringResourceModel("label"))
-        {
-            private static final long serialVersionUID = 1L;
-
-            {
-                // Avoid saving data
-                setDefaultFormProcessing(false);
-            }
-
-            @Override
-            public void onSubmit()
-            {
-                actionCancel();
-            }
-        });
+        add(new LambdaButton("save", this::actionSave));
+        add(new LambdaAjaxButton<>("delete", this::actionDelete).add(
+                visibleWhen(() -> !isNull(getModelObject().getId()))));
+        // Set default form processing to false to avoid saving data
+        add(new LambdaButton("cancel", this::actionCancel).setDefaultFormProcessing(false));
+        
+        confirmationDialog = new ConfirmationDialog("confirmationDialog");
+        confirmationDialog
+                .setTitleModel(new StringResourceModel("DeleteFeatureDialog.title", this));
+        add(confirmationDialog);
     }
 
     @Override
@@ -237,7 +205,29 @@ public class FeatureDetailForm
     private void actionCancel()
     {
         // cancel selection of feature list
-        FeatureDetailForm.this.setModelObject(null);
+        setModelObject(null);
+    }
+    
+    private void actionDelete(AjaxRequestTarget aTarget, Form aForm)
+    {
+        confirmationDialog
+                .setContentModel(new StringResourceModel("DeleteFeatureDialog.text", this)
+                .setParameters(escapeMarkup(getModelObject().getName())));
+        confirmationDialog.show(aTarget);
+        
+        confirmationDialog.setConfirmAction((_target) -> {
+            annotationService.removeAnnotationFeature(getModelObject());
+
+            Project project = getModelObject().getProject();
+            
+            setModelObject(null);
+            
+            // Trigger LayerConfigurationChangedEvent
+            applicationEventPublisherHolder.get()
+                    .publishEvent(new LayerConfigurationChangedEvent(this, project));
+            
+            _target.add(getPage());
+        });
     }
     
     private void actionSave()
@@ -246,7 +236,7 @@ public class FeatureDetailForm
         // override onSubmit in its nested form and store the traits before
         // we clear the currently selected feature.
 
-        AnnotationFeature feature = FeatureDetailForm.this.getModelObject();
+        AnnotationFeature feature = getModelObject();
         String name = feature.getUiName();
         name = name.replaceAll("\\W", "");
         // Check if feature name is not from the restricted names list
@@ -256,11 +246,10 @@ public class FeatureDetailForm
                     + "for the feature.");
             return;
         }
-        if (RELATION_TYPE
-                .equals(FeatureDetailForm.this.getModelObject().getLayer().getType())
+        if (RELATION_TYPE.equals(getModelObject().getLayer().getType())
                 && (name.equals(WebAnnoConst.FEAT_REL_SOURCE)
-                        || name.equals(WebAnnoConst.FEAT_REL_TARGET)
-                        || name.equals(FIRST) || name.equals(NEXT))) {
+                        || name.equals(WebAnnoConst.FEAT_REL_TARGET) || name.equals(FIRST)
+                        || name.equals(NEXT))) {
             error("'" + feature.getUiName().toLowerCase() + " (" + name + ")'"
                     + " is a reserved feature name on relation layers. . Please "
                     + "use a different name for the feature.");
@@ -276,9 +265,8 @@ public class FeatureDetailForm
             return;
         }
         if (isNull(feature.getId())) {
-            feature.setLayer(FeatureDetailForm.this.getModelObject().getLayer());
-            feature.setProject(
-                    FeatureDetailForm.this.getModelObject().getLayer().getProject());
+            feature.setLayer(getModelObject().getLayer());
+            feature.setProject(getModelObject().getLayer().getProject());
 
             if (annotationService.existsFeature(feature.getName(),
                     feature.getLayer())) {
@@ -293,8 +281,7 @@ public class FeatureDetailForm
             feature.setName(name);
 
             FeatureSupport<?> fs = featureSupportRegistry
-                    .getFeatureSupport(FeatureDetailForm.this.featureType
-                            .getModelObject().getFeatureSupportId());
+                    .getFeatureSupport(featureType.getModelObject().getFeatureSupportId());
 
             // Let the feature support finalize the configuration of the feature
             fs.configureFeature(feature);
@@ -305,7 +292,7 @@ public class FeatureDetailForm
         annotationService.createFeature(feature);
 
         // Clear currently selected feature / feature details
-        FeatureDetailForm.this.setModelObject(null);
+        setModelObject(null);
 
         // Trigger LayerConfigurationChangedEvent
         applicationEventPublisherHolder.get().publishEvent(

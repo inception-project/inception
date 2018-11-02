@@ -630,7 +630,8 @@ public class AnnotationSchemaServiceImpl
     @Transactional
     public void removeAnnotationFeature(AnnotationFeature aFeature)
     {
-        entityManager.remove(aFeature);
+        entityManager.remove(
+                entityManager.contains(aFeature) ? aFeature : entityManager.merge(aFeature));
     }
 
     @Override
