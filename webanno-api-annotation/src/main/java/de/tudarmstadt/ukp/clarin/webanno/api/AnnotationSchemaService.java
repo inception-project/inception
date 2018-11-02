@@ -24,6 +24,7 @@ import java.util.Optional;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
+import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.springframework.security.access.prepost.PreAuthorize;
 
@@ -409,4 +410,12 @@ public interface AnnotationSchemaService
             throws UIMAException, IOException;
 
     TypeAdapter getAdapter(AnnotationLayer aLayer);
+
+    /**
+     * Performs a CAS upgrade and removes all internal feature structures from the CAS. The 
+     * resulting CAS should be <b>only</b> used for export and never be persisted within the
+     * repository.
+     */
+    CAS prepareCasForExport(CAS aCas, SourceDocument aSourceDocument)
+        throws ResourceInitializationException, UIMAException, IOException;
 }

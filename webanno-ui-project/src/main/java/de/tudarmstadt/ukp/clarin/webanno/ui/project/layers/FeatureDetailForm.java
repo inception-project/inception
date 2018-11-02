@@ -24,8 +24,11 @@ import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.wicket.util.string.Strings.escapeMarkup;
 
+import java.io.FileNotFoundException;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.jcas.JCas;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
@@ -44,13 +47,17 @@ import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureType;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.LayerConfigurationChangedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
@@ -70,6 +77,8 @@ public class FeatureDetailForm
 
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
     private @SpringBean AnnotationSchemaService annotationService;
+    private @SpringBean DocumentService documentService;
+    private @SpringBean CasStorageService casStorageService;
     private @SpringBean ApplicationEventPublisherHolder applicationEventPublisherHolder;
     
     private DropDownChoice<FeatureType> featureType;
@@ -217,11 +226,32 @@ public class FeatureDetailForm
         
         confirmationDialog.setConfirmAction((_target) -> {
             annotationService.removeAnnotationFeature(getModelObject());
-
+            
             Project project = getModelObject().getProject();
-            
+
             setModelObject(null);
-            
+
+            // Perform a forced upgrade on all CASes in the project. This action affects all users
+            // currently logged in and working on the project. E.g. an annotator working on a
+            // document will be unable to make changes to the document anymore until the user
+            // re-opens the document because the force upgrade invalidates the VIDs used in the
+            // annotation editor. How exactly (if at all) the user gets information of this is
+            // currently undefined.
+            casStorageService.performExclusiveBulkOperation(() -> {
+                for (SourceDocument doc : documentService.listSourceDocuments(project)) {
+                    for (AnnotationDocument ann : documentService.listAllAnnotationDocuments(doc)) {
+                        try {
+                            JCas cas = casStorageService.readCas(doc, ann.getUser());
+                            annotationService.upgradeCas(cas.getCas(), doc, ann.getUser());
+                            casStorageService.writeCas(doc, cas, ann.getUser());
+                        }
+                        catch (FileNotFoundException e) {
+                            // If there is no CAS file, we do not have to upgrade it. Ignoring.
+                        }
+                    }
+                }
+            });
+
             // Trigger LayerConfigurationChangedEvent
             applicationEventPublisherHolder.get()
                     .publishEvent(new LayerConfigurationChangedEvent(this, project));

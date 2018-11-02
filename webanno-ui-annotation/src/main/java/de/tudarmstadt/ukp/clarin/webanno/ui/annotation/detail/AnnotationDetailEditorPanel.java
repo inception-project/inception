@@ -1457,16 +1457,15 @@ public class AnnotationDetailEditorPanel
     protected static void handleException(Component aComponent, AjaxRequestTarget aTarget,
             Exception aException)
     {
+        if (aTarget != null) {
+            aTarget.addChildren(aComponent.getPage(), IFeedback.class);
+        }
+        
         try {
             throw aException;
         }
         catch (AnnotationException e) {
-            if (aTarget != null) {
-                aTarget.prependJavaScript("alert('Error: " + e.getMessage() + "')");
-            }
-            else {
-                aComponent.error("Error: " + e.getMessage());
-            }
+            aComponent.error("Error: " + e.getMessage());
             LOG.error("Error: " + ExceptionUtils.getRootCauseMessage(e), e);
         }
         catch (UIMAException e) {

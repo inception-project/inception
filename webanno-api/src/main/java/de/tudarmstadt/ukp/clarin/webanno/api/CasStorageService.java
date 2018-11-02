@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api;
 import java.io.File;
 import java.io.IOException;
 
+import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.jcas.JCas;
 
@@ -114,4 +115,13 @@ public interface CasStorageService
      * Enables the CAS cache for the current request cycle.
      */
     void enableCache();
+
+    void performExclusiveBulkOperation(CasStorageOperation aOperation)
+        throws UIMAException, IOException;
+    
+    @FunctionalInterface
+    public static interface CasStorageOperation
+    {
+        void execute() throws IOException, UIMAException;
+    }
 }

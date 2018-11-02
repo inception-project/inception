@@ -22,6 +22,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static java.util.Arrays.asList;
 import static java.util.Objects.isNull;
+import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTypeSystemDescription;
+import static org.apache.uima.util.CasCreationUtils.mergeTypeSystems;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -53,7 +55,6 @@ import org.apache.uima.cas.impl.CASCompleteSerializer;
 import org.apache.uima.cas.impl.CASImpl;
 import org.apache.uima.cas.impl.Serialization;
 import org.apache.uima.fit.factory.JCasFactory;
-import org.apache.uima.fit.factory.TypeSystemDescriptionFactory;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.FeatureDescription;
 import org.apache.uima.resource.metadata.TypeDescription;
@@ -753,40 +754,79 @@ public class AnnotationSchemaServiceImpl
         upgradeCas(aCas, ts);
     }
     
+    @Override
+    public CAS prepareCasForExport(CAS aCas, SourceDocument aSourceDocument)
+        throws ResourceInitializationException, UIMAException, IOException
+    {
+        CAS exportCas = CasCreationUtils.createCas((TypeSystemDescription) null, null, null);
+        upgradeCas(aCas, exportCas, getFullProjectTypeSystem(aSourceDocument.getProject(), false));
+        return exportCas;
+    }
+    
+    /**
+     * In-place upgrade of the given CAS to the target type system.
+     */
     private void upgradeCas(CAS aCas, TypeSystemDescription aTargetTypeSystem)
         throws UIMAException, IOException
     {
-        // Prepare template for new CAS
-        CAS newCas = JCasFactory.createJCas(aTargetTypeSystem).getCas();
-        CASCompleteSerializer serializer = Serialization.serializeCASComplete((CASImpl) newCas);
+        upgradeCas(aCas, aCas, aTargetTypeSystem);
+    }
 
-        // Save old type system
-        TypeSystem oldTypeSystem = aCas.getTypeSystem();
+    /**
+     * Load the contents from the source CAS, upgrade it to the target type system and write the
+     * results to the target CAS. An in-place upgrade can be achieved by using the same CAS as
+     * source and target.
+     */
+    private void upgradeCas(CAS aSourceCas, CAS aTargetCas, TypeSystemDescription aTargetTypeSystem)
+        throws UIMAException, IOException
+    {
+        // Save source CAS type system (do this early since we might do an in-place upgrade)
+        TypeSystem souceTypeSystem = aSourceCas.getTypeSystem();
 
-        // Save old CAS contents
-        ByteArrayOutputStream os2 = new ByteArrayOutputStream();
-        Serialization.serializeWithCompression(aCas, os2, oldTypeSystem);
+        // Save source CAS contents
+        ByteArrayOutputStream serializedCasContents = new ByteArrayOutputStream();
+        Serialization.serializeWithCompression(aSourceCas, serializedCasContents, souceTypeSystem);
 
-        // Prepare CAS with new type system
-        Serialization.deserializeCASComplete(serializer, (CASImpl) aCas);
+        // Re-initialize the target CAS with new type system
+        CAS tempCas = JCasFactory.createJCas(aTargetTypeSystem).getCas();
+        CASCompleteSerializer serializer = Serialization.serializeCASComplete((CASImpl) tempCas);
+        Serialization.deserializeCASComplete(serializer, (CASImpl) aTargetCas);
 
-        // Restore CAS data to new type system
-        Serialization.deserializeCAS(aCas, new ByteArrayInputStream(os2.toByteArray()),
-                oldTypeSystem, null);
+        // Leniently load the source CAS contents into the target CAS
+        Serialization.deserializeCAS(aTargetCas,
+                new ByteArrayInputStream(serializedCasContents.toByteArray()), souceTypeSystem,
+                null);
 
         // Make sure JCas is properly initialized too
-        aCas.getJCas();
+        aTargetCas.getJCas();
     }
-    
+
     private TypeSystemDescription getFullProjectTypeSystem(Project aProject)
         throws ResourceInitializationException
     {
-        TypeSystemDescription builtInTypes = TypeSystemDescriptionFactory
-                .createTypeSystemDescription();
-        TypeSystemDescription projectTypes = getProjectTypes(aProject);
-        TypeSystemDescription_impl allTypes = (TypeSystemDescription_impl) CasCreationUtils
-                .mergeTypeSystems(asList(projectTypes, builtInTypes));
-        return allTypes;
+        return getFullProjectTypeSystem(aProject, true);
+    }
+
+    private TypeSystemDescription getFullProjectTypeSystem(Project aProject,
+            boolean aIncludeInternalTypes)
+        throws ResourceInitializationException
+    {
+        List<TypeSystemDescription> typeSystems = new ArrayList<>();
+        
+        // Types detected by uimaFIT
+        typeSystems.add(createTypeSystemDescription());
+        
+        if (aIncludeInternalTypes) {
+            // Types internally used by WebAnno (which we intentionally exclude from being detected
+            // by uimaFIT because we want to have an easy way to create a type system excluding
+            // these types when we export files from the project
+            typeSystems.add(createTypeSystemDescription("desc/type/webanno-internal"));
+        }
+
+        // Types declared within the project
+        typeSystems.add(getProjectTypes(aProject));
+
+        return (TypeSystemDescription_impl) mergeTypeSystems(typeSystems);
     }
     
     /**

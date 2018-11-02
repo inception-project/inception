@@ -179,6 +179,12 @@ public class CasStorageServiceImpl
 
         // Save current version
         try {
+            // Check if there was a concurrent change to the file on disk
+            if (currentVersion.exists()) {
+                CasMetadataUtils.failOnConcurrentModification(aJcas, currentVersion, aDocument,
+                        username);
+            }
+            
             // Make a backup of the current version of the file before overwriting
             if (currentVersion.exists()) {
                 renameFile(currentVersion, oldVersion);
@@ -367,7 +373,8 @@ public class CasStorageServiceImpl
             // If the CAS is not in the cache, load it from disk
             JCas jcas;
             String source;
-            if (getCasFile(aDocument, aUsername).exists()) {
+            File casFile = getCasFile(aDocument, aUsername);
+            if (casFile.exists()) {
                 jcas = realReadCas(aDocument, aUsername, aAnalyzeAndRepair);
                 source = "disk";
             }
@@ -380,6 +387,9 @@ public class CasStorageServiceImpl
                 throw new FileNotFoundException("CAS [" + aDocument.getId() + "," + aUsername
                         + "] does not exist and no initializer is specified.");
             }
+            
+            // Add/update the CAS metadata
+            CasMetadataUtils.addOrUpdateCasMetadata(jcas, casFile, aDocument, aUsername);
             
             // Update the cache
             if (isCacheEnabled()) {
@@ -559,6 +569,15 @@ public class CasStorageServiceImpl
         // We are not sure if File is mutable. This makes sure we get a new file
         // in any case.
         return new File(aTo.getPath());
+    }
+    
+    @Override
+    public void performExclusiveBulkOperation(CasStorageOperation aOperation)
+        throws UIMAException, IOException
+    {
+        synchronized (lock) {
+            aOperation.execute();
+        }
     }
     
     @Override

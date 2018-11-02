@@ -228,9 +228,6 @@ public class ImportExportServiceImpl
         CAS cas = CasCreationUtils.createCas((TypeSystemDescription) null, null, null);
         CasPersistenceUtils.readSerializedCas(cas, serializedCasFile);
 
-        // Update type system the CAS
-        annotationService.upgradeCas(cas, aDocument, aUser);
-        
         File exportFile = exportCasToFile(cas, aDocument, aFileName, aFormat, aStripExtension);
 
         Project project = aDocument.getProject();
@@ -392,16 +389,15 @@ public class ImportExportServiceImpl
         }
     }    
     
-    /**
-     * A new directory is created using UUID so that every exported file will reside in its own
-     * directory. This is useful as the written file can have multiple extensions based on the
-     * Writer class used.
-     */
     @Override
-    public File exportCasToFile(CAS cas, SourceDocument aDocument, String aFileName,
+    public File exportCasToFile(CAS aCas, SourceDocument aDocument, String aFileName,
             FormatSupport aFormat, boolean aStripExtension)
         throws IOException, UIMAException
     {
+        // Update type system the CAS, compact it (remove all non-reachable feature strucutres)
+        // and remove all internal feature structures in the process
+        CAS cas = annotationService.prepareCasForExport(aCas, aDocument);
+        
         // Update the source file name in case it is changed for some reason. This is necessary
         // for the writers to create the files under the correct names.
         Project project = aDocument.getProject();
