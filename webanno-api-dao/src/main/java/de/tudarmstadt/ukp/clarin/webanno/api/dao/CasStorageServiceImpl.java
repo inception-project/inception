@@ -42,7 +42,7 @@ import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.util.CasCreationUtils;
 import org.apache.wicket.MetaDataKey;
-import org.apache.wicket.request.cycle.AbstractRequestCycleListener;
+import org.apache.wicket.request.cycle.IRequestCycleListener;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -646,7 +646,7 @@ public class CasStorageServiceImpl
         if (cache == null) {
             cache = new HashMap<>();
             requestCycle.setMetaData(CACHE, cache);
-            requestCycle.getListeners().add(new AbstractRequestCycleListener() {
+            requestCycle.getListeners().add(new IRequestCycleListener() {
                 @Override
                 public void onEndRequest(RequestCycle aCycle)
                 {

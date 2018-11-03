@@ -17,19 +17,26 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 
+import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTypeSystemDescription;
+import static org.apache.uima.fit.util.JCasUtil.select;
+import static org.apache.uima.util.CasCreationUtils.mergeTypeSystems;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
+import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
+import de.tudarmstadt.ukp.clarin.webanno.api.type.CASMetadata;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
@@ -38,6 +45,7 @@ public class CasStorageServiceImplTest
     private CasStorageService sut;
     private BackupProperties backupProperties;
     private RepositoryProperties repositoryProperties;
+    private AnnotationSchemaServiceImpl schemaService;
 
     @Rule
     public TemporaryFolder testFolder = new TemporaryFolder();
@@ -49,6 +57,8 @@ public class CasStorageServiceImplTest
         
         repositoryProperties = new RepositoryProperties();
         repositoryProperties.setPath(testFolder.newFolder());
+        
+        schemaService = new AnnotationSchemaServiceImpl();
         
         sut = new CasStorageServiceImpl(null, repositoryProperties, backupProperties);
     }
@@ -70,6 +80,28 @@ public class CasStorageServiceImplTest
         sut.deleteCas(doc, user);
         assertThat(sut.getCasFile(doc, user)).doesNotExist();
         assertThat(sut.existsCas(doc, user)).isFalse();
+    }
+    
+    @Test
+    public void testCasMetadataGetsCreated() throws Exception
+    {
+        List<TypeSystemDescription> typeSystems = new ArrayList<>();
+        typeSystems.add(createTypeSystemDescription());
+        typeSystems.add(createTypeSystemDescription("desc/type/webanno-internal"));
+        JCas cas = JCasFactory.createJCas(mergeTypeSystems(typeSystems));
+        
+        SourceDocument doc = makeSourceDocument(1l, 1l);
+        String user = "test";
+        
+        sut.writeCas(doc, cas, user);
+        JCas cas2 = sut.readCas(doc, user);
+        
+        List<CASMetadata> cmd = new ArrayList<>(select(cas2, CASMetadata.class));
+        assertThat(cmd).hasSize(1);
+        assertThat(cmd.get(0).getProjectId()).isEqualTo(doc.getProject().getId());
+        assertThat(cmd.get(0).getSourceDocumentId()).isEqualTo(doc.getId());
+        assertThat(cmd.get(0).getLastChangedOnDisk())
+                .isEqualTo(sut.getCasTimestamp(doc, user).get());
     }
     
     @Test
