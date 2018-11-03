@@ -150,6 +150,7 @@ public class PreferencesUtil
             
             preference.setWindowSize(aDefaultPreferences.getPageSize());
             preference.setScrollPage(aDefaultPreferences.isAutoScroll());
+            preference.setRememberLayer(aDefaultPreferences.isRememberLayer());
             
             // add default coloring strategy
             Map<Long, ColoringStrategyType> colorPerLayer = new HashMap<>();
