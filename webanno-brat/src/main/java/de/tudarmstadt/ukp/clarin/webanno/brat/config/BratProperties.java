@@ -27,6 +27,7 @@ public class BratProperties
     private boolean singleClickSelection = false;
     private int pageSize = 5;
     private boolean autoScroll = true;
+    private boolean rememberLayer = false;
 
     public boolean isSingleClickSelection()
     {
@@ -56,5 +57,15 @@ public class BratProperties
     public void setAutoScroll(boolean aAutoScroll)
     {
         autoScroll = aAutoScroll;
+    }
+
+    public boolean isRememberLayer()
+    {
+        return rememberLayer;
+    }
+
+    public void setRememberLayer(boolean aRememberLayer)
+    {
+        rememberLayer = aRememberLayer;
     }
 }

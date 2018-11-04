@@ -114,6 +114,11 @@
 | false
 | 
 
+| ui.brat.rememberLayer
+| Whether "remember layer" is activated by default
+| false
+| 
+
 | style.logo
 | Logo image displayed in the upper-right corner
 | _unset_
