@@ -92,7 +92,7 @@ public class ConceptFeatureEditor extends FeatureEditor {
         super(aId, aItem, new CompoundPropertyModel<>(aModel));
         add(new Label(MID_FEATURE, getModelObject().feature.getUiName()));
         add(focusComponent = createAutoCompleteTextField(aStateModel.getObject(), aHandler));
-        add(disabledKbWarningLabel());
+        add(createDisabledKbWarningLabel());
     }
 
     @Override
@@ -143,11 +143,9 @@ public class ConceptFeatureEditor extends FeatureEditor {
         try {
             Project project = feat.getProject();
             ConceptFeatureTraits traits = readFeatureTraits(feat);
-            Optional<KnowledgeBase> kb = kbService.getKnowledgeBaseById(project,
-                traits.getRepositoryId());
 
             // Check if kb is actually enabled
-            if (kb.isPresent() && !kb.get().isEnabled()) {
+            if (featureUsesDisabledKB(traits)) {
                 return Collections.emptyList();
             }
 
@@ -175,6 +173,18 @@ public class ConceptFeatureEditor extends FeatureEditor {
         // Sort results
         handles.sort(Comparator.comparing(KBObject::getUiLabel));
         return handles;
+    }
+
+    private boolean featureUsesDisabledKB(ConceptFeatureTraits aTraits)
+    {
+        Optional<KnowledgeBase> kb = null;
+        String repositoryId = aTraits.getRepositoryId();
+        if (repositoryId != null) {
+            kb = kbService.getKnowledgeBaseById(getModelObject().feature.getProject(),
+                aTraits.getRepositoryId());
+        }
+        return kb != null && kb.isPresent() && !kb.get().isEnabled()
+            || repositoryId != null && !kb.isPresent();
     }
 
     private ConceptFeatureTraits readFeatureTraits(AnnotationFeature aAnnotationFeature) {
@@ -325,20 +335,24 @@ public class ConceptFeatureEditor extends FeatureEditor {
         });
     }
 
-    private Label disabledKbWarningLabel()
+    private Label createDisabledKbWarningLabel()
     {
         Label warningLabel = new Label("disabledKBWarning", Model.of());
         AnnotationFeature feature = getModelObject().feature;
         ConceptFeatureTraits traits = readFeatureTraits(feature);
-        Optional<KnowledgeBase> kb = kbService
-            .getKnowledgeBaseById(feature.getProject(), traits.getRepositoryId());
         warningLabel.add(LambdaBehavior
-            .onConfigure(label -> label.setVisible(kb.isPresent() && !kb.get().isEnabled())));
+            .onConfigure(label -> label.setVisible(featureUsesDisabledKB(traits))));
 
         TooltipBehavior tip = new TooltipBehavior();
+        Optional<KnowledgeBase> kb = null;
+        if (traits.getRepositoryId() != null) {
+            kb = kbService.getKnowledgeBaseById(feature.getProject(), traits.getRepositoryId());
+        }
+        String kbName = kb != null && kb.isPresent() ? kb.get().getName() : "";
+
         tip.setOption("content", Options.asString(
             new StringResourceModel("value.null.disabledKbWarning", this)
-                .setParameters(kb.get().getName()).getString()));
+                .setParameters(kbName).getString()));
         tip.setOption("width", Options.asString("300px"));
         warningLabel.add(tip);
 

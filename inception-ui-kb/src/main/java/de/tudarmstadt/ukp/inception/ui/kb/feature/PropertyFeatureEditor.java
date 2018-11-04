@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.inception.ui.kb.feature.FactLinkingConstants.FA
 import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.Component;
@@ -29,14 +30,18 @@ import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.Model;
+import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.googlecode.wicket.jquery.core.JQueryBehavior;
+import com.googlecode.wicket.jquery.core.Options;
 import com.googlecode.wicket.jquery.core.renderer.TextRenderer;
 import com.googlecode.wicket.jquery.core.template.IJQueryTemplate;
 import com.googlecode.wicket.kendo.ui.form.autocomplete.AutoCompleteTextField;
+import com.googlecode.wicket.kendo.ui.widget.tooltip.TooltipBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
@@ -85,6 +90,7 @@ public class PropertyFeatureEditor
         add(focusComponent = createAutoCompleteTextField());
         add(createStatementIndicatorLabel());
         add(createNoStatementLabel());
+        add(createDisabledKbWarningLabel());
     }
 
     @Override
@@ -201,6 +207,42 @@ public class PropertyFeatureEditor
             }
         }
         return kbHandle;
+    }
+
+    private Label createDisabledKbWarningLabel()
+    {
+        Label warningLabel = new Label("disabledKBWarning", Model.of());
+        AnnotationFeature feature = getModelObject().feature;
+        warningLabel.add(LambdaBehavior
+            .onConfigure(label -> label.setVisible(featureUsesDisabledKB(traits))));
+
+        TooltipBehavior tip = new TooltipBehavior();
+
+        Optional<KnowledgeBase> kb = null;
+        if (traits.getRepositoryId() != null) {
+            kb = kbService.getKnowledgeBaseById(feature.getProject(), traits.getRepositoryId());
+        }
+        String kbName = kb != null && kb.isPresent() ? kb.get().getName() : "";
+
+        tip.setOption("content", Options.asString(
+            new StringResourceModel("value.null.disabledKbWarning", this)
+                .setParameters(kbName).getString()));
+        tip.setOption("width", Options.asString("300px"));
+        warningLabel.add(tip);
+
+        return warningLabel;
+    }
+
+    private boolean featureUsesDisabledKB(ConceptFeatureTraits aTraits)
+    {
+        Optional<KnowledgeBase> kb = null;
+        String repositoryId = aTraits.getRepositoryId();
+        if (repositoryId != null) {
+            kb = kbService.getKnowledgeBaseById(getModelObject().feature.getProject(),
+                aTraits.getRepositoryId());
+        }
+        return kb != null && kb.isPresent() && !kb.get().isEnabled()
+            || repositoryId != null && !kb.isPresent();
     }
 }
 
