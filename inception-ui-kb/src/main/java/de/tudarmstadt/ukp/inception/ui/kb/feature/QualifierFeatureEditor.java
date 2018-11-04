@@ -423,7 +423,7 @@ public class QualifierFeatureEditor
                 aTraits.getRepositoryId());
         }
         return kb != null && kb.isPresent() && !kb.get().isEnabled()
-            || repositoryId != null && kb == null;
+            || repositoryId != null && !kb.isPresent();
     }
 
     private ConceptFeatureTraits readFeatureTraits(AnnotationFeature aAnnotationFeature)
@@ -720,7 +720,7 @@ public class QualifierFeatureEditor
             kb = kbService.getKnowledgeBaseById(linkedAnnotationFeature.getProject(),
                 traits.getRepositoryId());
         }
-        String kbName = kb != null && kb.isPresent() ? kb.get().getName() : "";
+        String kbName = kb != null && kb.isPresent() ? kb.get().getName() : "unknown ID";
 
         tip.setOption("content", Options.asString(
             new StringResourceModel("value.null.disabledKbWarning", this).setParameters(kbName)

@@ -344,11 +344,12 @@ public class ConceptFeatureEditor extends FeatureEditor {
             .onConfigure(label -> label.setVisible(featureUsesDisabledKB(traits))));
 
         TooltipBehavior tip = new TooltipBehavior();
+        warningLabel.add(tip);
         Optional<KnowledgeBase> kb = null;
         if (traits.getRepositoryId() != null) {
             kb = kbService.getKnowledgeBaseById(feature.getProject(), traits.getRepositoryId());
         }
-        String kbName = kb != null && kb.isPresent() ? kb.get().getName() : "";
+        String kbName = kb != null && kb.isPresent() ? kb.get().getName() : "unknown ID";
 
         tip.setOption("content", Options.asString(
             new StringResourceModel("value.null.disabledKbWarning", this)

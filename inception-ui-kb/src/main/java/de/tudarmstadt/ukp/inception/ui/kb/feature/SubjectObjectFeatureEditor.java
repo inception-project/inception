@@ -592,7 +592,7 @@ public class SubjectObjectFeatureEditor
             kb = kbService.getKnowledgeBaseById(linkedAnnotationFeature.getProject(),
                 traits.getRepositoryId());
         }
-        String kbName = kb != null && kb.isPresent() ? kb.get().getName() : "";
+        String kbName = kb != null && kb.isPresent() ? kb.get().getName() : "unknown ID";
 
         tip.setOption("content", Options.asString(
             new StringResourceModel("value.null.disabledKbWarning", this).setParameters(kbName)
