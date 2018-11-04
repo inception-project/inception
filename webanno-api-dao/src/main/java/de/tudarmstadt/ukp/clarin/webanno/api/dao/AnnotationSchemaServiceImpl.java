@@ -61,6 +61,7 @@ import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.resource.metadata.impl.TypeSystemDescription_impl;
 import org.apache.uima.util.CasCreationUtils;
+import org.apache.uima.util.CasIOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -786,11 +787,11 @@ public class AnnotationSchemaServiceImpl
         throws UIMAException, IOException
     {
         // Save source CAS type system (do this early since we might do an in-place upgrade)
-        TypeSystem souceTypeSystem = aSourceCas.getTypeSystem();
+        TypeSystem sourceTypeSystem = aSourceCas.getTypeSystem();
 
         // Save source CAS contents
         ByteArrayOutputStream serializedCasContents = new ByteArrayOutputStream();
-        Serialization.serializeWithCompression(aSourceCas, serializedCasContents, souceTypeSystem);
+        Serialization.serializeWithCompression(aSourceCas, serializedCasContents, sourceTypeSystem);
 
         // Re-initialize the target CAS with new type system
         CAS tempCas = JCasFactory.createJCas(aTargetTypeSystem).getCas();
@@ -798,9 +799,8 @@ public class AnnotationSchemaServiceImpl
         Serialization.deserializeCASComplete(serializer, (CASImpl) aTargetCas);
 
         // Leniently load the source CAS contents into the target CAS
-        Serialization.deserializeCAS(aTargetCas,
-                new ByteArrayInputStream(serializedCasContents.toByteArray()), souceTypeSystem,
-                null);
+        CasIOUtils.load(new ByteArrayInputStream(serializedCasContents.toByteArray()), aTargetCas,
+                sourceTypeSystem);
 
         // Make sure JCas is properly initialized too
         aTargetCas.getJCas();
@@ -825,7 +825,7 @@ public class AnnotationSchemaServiceImpl
             // Types internally used by WebAnno (which we intentionally exclude from being detected
             // by uimaFIT because we want to have an easy way to create a type system excluding
             // these types when we export files from the project
-            typeSystems.add(createTypeSystemDescription("desc/type/webanno-internal"));
+            typeSystems.add(CasMetadataUtils.getInternalTypeSystem());
         }
 
         // Types declared within the project

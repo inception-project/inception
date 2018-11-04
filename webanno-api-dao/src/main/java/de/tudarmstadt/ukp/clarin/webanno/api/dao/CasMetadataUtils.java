@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 
+import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTypeSystemDescription;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -24,6 +26,7 @@ import java.util.List;
 
 import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
+import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,6 +36,12 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 public class CasMetadataUtils
 {
     private static final Logger LOG = LoggerFactory.getLogger(CasMetadataUtils.class);
+    
+    public static TypeSystemDescription getInternalTypeSystem()
+    {
+        return createTypeSystemDescription(
+                "de/tudarmstadt/ukp/clarin/webanno/api/type/webanno-internal");
+    }
     
     public static void failOnConcurrentModification(JCas aJcas, File aCasFile,
             SourceDocument aDocument, String aUsername)

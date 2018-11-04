@@ -87,7 +87,7 @@ public class CasStorageServiceImplTest
     {
         List<TypeSystemDescription> typeSystems = new ArrayList<>();
         typeSystems.add(createTypeSystemDescription());
-        typeSystems.add(createTypeSystemDescription("desc/type/webanno-internal"));
+        typeSystems.add(CasMetadataUtils.getInternalTypeSystem());
         JCas cas = JCasFactory.createJCas(mergeTypeSystems(typeSystems));
         
         SourceDocument doc = makeSourceDocument(1l, 1l);
@@ -96,11 +96,11 @@ public class CasStorageServiceImplTest
         sut.writeCas(doc, cas, user);
         JCas cas2 = sut.readCas(doc, user);
         
-        List<CASMetadata> cmd = new ArrayList<>(select(cas2, CASMetadata.class));
-        assertThat(cmd).hasSize(1);
-        assertThat(cmd.get(0).getProjectId()).isEqualTo(doc.getProject().getId());
-        assertThat(cmd.get(0).getSourceDocumentId()).isEqualTo(doc.getId());
-        assertThat(cmd.get(0).getLastChangedOnDisk())
+        List<CASMetadata> cmds = new ArrayList<>(select(cas2, CASMetadata.class));
+        assertThat(cmds).hasSize(1);
+        assertThat(cmds.get(0).getProjectId()).isEqualTo(doc.getProject().getId());
+        assertThat(cmds.get(0).getSourceDocumentId()).isEqualTo(doc.getId());
+        assertThat(cmds.get(0).getLastChangedOnDisk())
                 .isEqualTo(sut.getCasTimestamp(doc, user).get());
     }
     
