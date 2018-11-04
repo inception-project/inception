@@ -24,7 +24,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
   <artifactId>webanno</artifactId>
-  <version>3.5.0-beta-7</version>
+  <version>3.5.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>WebAnno</name>
   <url>https://webanno.github.io/</url>
@@ -45,7 +45,7 @@
     <connection>scm:git:git://github.com/webanno/webanno</connection>
     <developerConnection>scm:git:git@github.com:webanno/webanno.git</developerConnection>
     <url>https://github.com/webanno/webanno</url>
-    <tag>webanno-3.5.0-beta-7</tag>
+    <tag>HEAD</tag>
   </scm>
   <distributionManagement>
     <repository>
@@ -187,157 +187,157 @@
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-api</artifactId>
-        <version>3.5.0-beta-7</version>
+        <version>3.5.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-api-annotation</artifactId>
-        <version>3.5.0-beta-7</version>
+        <version>3.5.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-api-formats</artifactId>
-        <version>3.5.0-beta-7</version>
+        <version>3.5.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-api-dao</artifactId>
-        <version>3.5.0-beta-7</version>
+        <version>3.5.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-brat</artifactId>
-        <version>3.5.0-beta-7</version>
+        <version>3.5.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-doc</artifactId>
-        <version>3.5.0-beta-7</version>
+        <version>3.5.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-io-json</artifactId>
-        <version>3.5.0-beta-7</version>
+        <version>3.5.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-io-text</artifactId>
-        <version>3.5.0-beta-7</version>
+        <version>3.5.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-io-tsv</artifactId>
-        <version>3.5.0-beta-7</version>
+        <version>3.5.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-io-conll</artifactId>
-        <version>3.5.0-beta-7</version>
+        <version>3.5.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-dkprocore</artifactId>
-        <version>3.5.0-beta-7</version>
+        <version>3.5.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-diag</artifactId>
-        <version>3.5.0-beta-7</version>
+        <version>3.5.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-remote</artifactId>
-        <version>3.5.0-beta-7</version>
+        <version>3.5.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-security</artifactId>
-        <version>3.5.0-beta-7</version>
+        <version>3.5.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-model</artifactId>
-        <version>3.5.0-beta-7</version>
+        <version>3.5.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-project</artifactId>
-        <version>3.5.0-beta-7</version>
+        <version>3.5.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-ui-monitoring</artifactId>
-        <version>3.5.0-beta-7</version>
+        <version>3.5.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-curation</artifactId>
-        <version>3.5.0-beta-7</version>
+        <version>3.5.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-ui-curation</artifactId>
-        <version>3.5.0-beta-7</version>
+        <version>3.5.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-ui-correction</artifactId>
-        <version>3.5.0-beta-7</version>
+        <version>3.5.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-io-tcf</artifactId>
-        <version>3.5.0-beta-7</version>
+        <version>3.5.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-io-tei</artifactId>
-        <version>3.5.0-beta-7</version>
+        <version>3.5.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-webapp</artifactId>
-        <version>3.5.0-beta-7</version>
+        <version>3.5.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-support</artifactId>
-        <version>3.5.0-beta-7</version>
+        <version>3.5.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-fontawesome</artifactId>
-        <version>3.5.0-beta-7</version>
+        <version>3.5.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-support-standalone</artifactId>
-        <version>3.5.0-beta-7</version>
+        <version>3.5.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-ui-core</artifactId>
-        <version>3.5.0-beta-7</version>
+        <version>3.5.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-ui-menu</artifactId>
-        <version>3.5.0-beta-7</version>
+        <version>3.5.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-ui-annotation</artifactId>
-        <version>3.5.0-beta-7</version>
+        <version>3.5.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-ui-automation</artifactId>
-        <version>3.5.0-beta-7</version>
+        <version>3.5.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-automation</artifactId>
-        <version>3.5.0-beta-7</version>
+        <version>3.5.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
@@ -347,32 +347,32 @@
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-api-automation</artifactId>
-        <version>3.5.0-beta-7</version>
+        <version>3.5.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-ui-project</artifactId>
-        <version>3.5.0-beta-7</version>
+        <version>3.5.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-constraints</artifactId>
-        <version>3.5.0-beta-7</version>
+        <version>3.5.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-model-export</artifactId>
-        <version>3.5.0-beta-7</version>
+        <version>3.5.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-export</artifactId>
-        <version>3.5.0-beta-7</version>
+        <version>3.5.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-io-xmi</artifactId>
-        <version>3.5.0-beta-7</version>
+        <version>3.5.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>org.json</groupId>
