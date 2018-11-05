@@ -60,6 +60,7 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.conceptlinking.config.EntityLinkingProperties;
@@ -574,6 +575,41 @@ public class ConceptLinkingService
             }
         }
         return new HashSet<>(cMap.values());
+    }
+
+    /**
+     * Get all linking instances within the scope of a given knowledge base. If null is passed for
+     * the knowledge base, all enabled knowledge bases in the project are considered.
+     * This method calls {@link #disambiguate(KnowledgeBase, String, String, int, JCas)} to
+     * determine the instances for a single knowledge base
+     *
+     * @param aKB                 the knowledge base that defines the scope (can be null)
+     * @param aTypedString        What the user has typed so far in the text field. Might be null.
+     * @param aMention            Marked Surface form of an entity to be linked.
+     * @param aMentionBeginOffset the offset where the mention begins in the text.
+     * @param aJCas               used to extract information about mention sentence tokens.
+     * @param aProject            the project where the knowledge bases are configured
+     * @return all linking instances within the scope
+     */
+    public List<KBHandle> getLinkingInstancesInKBScope(KnowledgeBase aKB, String aTypedString,
+        String aMention, int aMentionBeginOffset, JCas aJCas, Project aProject)
+    {
+
+        List<KBHandle> handles = new ArrayList<>();
+        if (aKB == null) {
+            for (KnowledgeBase kb : kbService.getEnabledKnowledgeBases(aProject)) {
+                if (kb.isSupportConceptLinking()) {
+                    handles.addAll(
+                        disambiguate(kb, aTypedString, aMention, aMentionBeginOffset, aJCas));
+                }
+            }
+        }
+        else {
+            if (aKB.isSupportConceptLinking()) {
+                handles = disambiguate(aKB, aTypedString, aMention, aMentionBeginOffset, aJCas);
+            }
+        }
+        return handles;
     }
 
     /**

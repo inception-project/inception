@@ -575,4 +575,14 @@ public interface KnowledgeBaseService
      */
     Optional<KBConcept> readConcept(KnowledgeBase aKB, String aIdentifier, boolean aAll)
             throws QueryEvaluationException;
+
+    /**
+     * List all Instances of a given knowledge base
+     * @param aKB the knowledge base
+     * @param aAll indicates whether to include everything
+     * @return list of all the instances {@link KBHandle}
+     */
+    List<KBHandle> listAllInstances(KnowledgeBase aKB, boolean aAll);
+
+    List<KBHandle> getEntitiesInScope(ConceptFeatureTraits aFeatureTraits, Project aProject);
 }

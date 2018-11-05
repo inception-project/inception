@@ -47,6 +47,7 @@ import javax.persistence.Query;
 import org.apache.commons.compress.compressors.CompressorException;
 import org.apache.commons.compress.compressors.CompressorStreamFactory;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.eclipse.rdf4j.common.iteration.Iterations;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Literal;
@@ -92,6 +93,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
@@ -110,6 +112,7 @@ import de.tudarmstadt.ukp.inception.kb.reification.WikiDataReification;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseMapping;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 
+
 @Component(KnowledgeBaseService.SERVICE_NAME)
 public class KnowledgeBaseServiceImpl
     implements KnowledgeBaseService, DisposableBean
@@ -122,6 +125,8 @@ public class KnowledgeBaseServiceImpl
     private final RepositoryManager repoManager;
     private final Set<String> implicitNamespaces;
     private final File kbRepositoriesRoot;
+
+    private @SpringBean FeatureSupportRegistry featureSupportRegistry;
 
     @Autowired
     public KnowledgeBaseServiceImpl(RepositoryProperties aRepoProperties)
@@ -1376,6 +1381,68 @@ public class KnowledgeBaseServiceImpl
             throw new IllegalArgumentException(
                     aKB + "] does not support rebuilding its full text index.");
         }
+    }
+
+    public List<KBHandle> getEntitiesInScope(ConceptFeatureTraits traits, Project project)
+    {
+        List<KBHandle> handles = new ArrayList<>();
+        if (traits.getRepositoryId() != null) {
+            // If a specific KB is selected, get its instances/concepts
+            Optional<KnowledgeBase> kb = getKnowledgeBaseById(project, traits.getRepositoryId());
+            if (kb.isPresent()) {
+                handles = getEntitiesForKnowledgeBase(traits, kb.get());
+            }
+        }
+        else {
+            // If no specific KB is selected, collect instances/concepts from all KBs
+            for (KnowledgeBase kb : getEnabledKnowledgeBases(project)) {
+                handles.addAll(getEntitiesForKnowledgeBase(traits, kb));
+            }
+        }
+        return handles;
+    }
+
+    private List<KBHandle> getEntitiesForKnowledgeBase(ConceptFeatureTraits aFeatureTraits,
+        KnowledgeBase aKB)
+    {
+        List<KBHandle> handles = new ArrayList<>();
+        if (aFeatureTraits.getScope() != null) {
+            switch (aFeatureTraits.getAllowedValueType()) {
+            case INSTANCE:
+                handles = listInstancesForChildConcepts(aKB, aFeatureTraits.getScope(), false, 50);
+                break;
+            case CONCEPT:
+                handles = listChildConcepts(aKB, aFeatureTraits.getScope(), false);
+                break;
+            default:
+                handles.addAll(
+                    listInstancesForChildConcepts(aKB, aFeatureTraits.getScope(), false, 50));
+                handles.addAll(listChildConcepts(aKB, aFeatureTraits.getScope(), false));
+            }
+        }
+        else {
+            switch (aFeatureTraits.getAllowedValueType()) {
+            case INSTANCE:
+                handles.addAll(listAllInstances(aKB, false));
+                break;
+            case CONCEPT:
+                handles.addAll(listConcepts(aKB, false));
+                break;
+            default:
+                handles.addAll(listAllInstances(aKB, false));
+                handles.addAll(listConcepts(aKB, false));
+            }
+        }
+        return handles;
+    }
+
+    @Override
+    public List<KBHandle> listAllInstances(KnowledgeBase aKB, boolean aAll) {
+        List<KBHandle> instanceList = new ArrayList<>();
+        for (KBHandle concept : listConcepts(aKB, aAll)) {
+            instanceList.addAll(listInstances(aKB, concept.getIdentifier(), aAll));
+        }
+        return instanceList;
     }
 
 }
