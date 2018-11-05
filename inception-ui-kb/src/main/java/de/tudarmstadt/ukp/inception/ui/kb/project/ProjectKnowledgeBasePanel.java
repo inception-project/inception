@@ -34,7 +34,7 @@ public class ProjectKnowledgeBasePanel
     private static final String DETAILS_PANEL_MARKUP_ID = "details";
 
     private IModel<Project> projectModel;
-    private IModel<KnowledgeBase> selectedKnowledgeBase;
+    private IModel<KnowledgeBase> selectedKnowledgeBaseModel;
     private Panel detailsPanel;
 
     public ProjectKnowledgeBasePanel(String aId, final IModel<Project> aProject)
@@ -47,13 +47,13 @@ public class ProjectKnowledgeBasePanel
         detailsPanel = new EmptyPanel(DETAILS_PANEL_MARKUP_ID);
         add(detailsPanel);
 
-        selectedKnowledgeBase = Model.of();
+        selectedKnowledgeBaseModel = Model.of();
         KnowledgeBaseListPanel listPanel = new KnowledgeBaseListPanel("list", projectModel,
-            selectedKnowledgeBase);
+            selectedKnowledgeBaseModel);
         listPanel.setChangeAction(t -> {
             addOrReplace(detailsPanel);
             detailsPanel.replaceWith(
-                new KnowledgeBaseDetailsPanel(DETAILS_PANEL_MARKUP_ID, selectedKnowledgeBase));
+                new KnowledgeBaseDetailsPanel(DETAILS_PANEL_MARKUP_ID, selectedKnowledgeBaseModel));
             t.add(this);
         });
         add(listPanel);
@@ -62,6 +62,6 @@ public class ProjectKnowledgeBasePanel
     @Override protected void onModelChanged()
     {
         super.onModelChanged();
-        selectedKnowledgeBase.setObject(null);
+        selectedKnowledgeBaseModel.setObject(null);
     }
 }
