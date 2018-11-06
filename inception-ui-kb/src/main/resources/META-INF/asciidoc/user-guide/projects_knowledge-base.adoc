@@ -17,7 +17,18 @@ For remote KBs, INCEpTION provides the user with some pre-configured knowledge b
 [.thumb]
 image::kb2.png[align="center"]
 
-In the next step, the user is offered a configurable mapping which relies on a minimal set of IRIs that must be defined for any KB used with the platform. The user can choose one of the pre-configured mapping or provide her own custom defined mapping as shown in the figure below. In the advanced settings, the user can leverage this feature of KB settings when one doesn't want the entire knowledge base to be used and rather choose to identify some specific root concepts. This feature specially helps in case of large knowledge bases such as Wikidata.
+=== Schema mapping
+
+Different types of knowledge base schemata are supported via a configurable mapping mechanism. The user can choose one of the pre-configured mapping or provide her own custom defined mapping as shown in the screenshot below. 
+
+In the advanced settings, the user can leverage this feature of KB settings when one doesn't want the entire knowledge base to be used and rather choose to identify some specific root concepts. This feature specially helps in case of large knowledge bases such as Wikidata.
  
 [.thumb]
 image::kb3.png[align="center"]
+
+=== Full text search
+
+Full text search in knowledge bases enables searching for entities by their textual context, e.g. their label. This is a prerequisite for some advanced features such as re-ranking linking candidates during entity linking. Two full text search modes are supported:
+
+* the `bif:contains` mode can be used with some remote triple stores such as Virtuoso.
+* the `lucenesail#matches` mode can be used with local knowledge bases or possible with remote knowledge bases using the RDF4J Lucene SAIL.
