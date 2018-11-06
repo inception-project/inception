@@ -1,0 +1,129 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+rdfs:subClassOf a rdf:Property;
+  rdfs:label "subClassOf" .
+
+rdf:type a rdf:Property;
+  rdfs:label "type" .
+
+rdfs:label a rdf:Property;
+  rdfs:label "label";
+  rdfs:range "http://www.w3.org/2001/XMLSchema#string" .
+
+rdfs:comment a rdf:Property;
+  rdfs:label "comment";
+  rdfs:range "http://www.w3.org/2001/XMLSchema#string" .
+
+<http://mbugert.de/pets#animal> a rdfs:Class;
+  rdfs:label "Animal" .
+
+<http://mbugert.de/pets#cat> a rdfs:Class;
+  rdfs:label "Cat";
+  rdfs:subClassOf <http://mbugert.de/pets#animal> .
+
+<http://mbugert.de/pets#character> a rdfs:Class;
+  rdfs:label "Character" .
+
+<http://mbugert.de/pets#classis> a rdfs:Class;
+  rdfs:label "Biological class" .
+
+<http://mbugert.de/pets#crocodile> a rdfs:Class;
+  <http://mbugert.de/pets#has-class> <http://mbugert.de/pets#reptilia>;
+  rdfs:label "Crocodile";
+  rdfs:subClassOf <http://mbugert.de/pets#animal> .
+
+<http://mbugert.de/pets#has-class> a rdf:Property;
+  rdfs:domain <http://mbugert.de/pets#animal>;
+  rdfs:label "Has biological class";
+  rdfs:range <http://mbugert.de/pets#classis> .
+
+<http://mbugert.de/pets#reptilia> a <http://mbugert.de/pets#classis>;
+  rdfs:label "Reptilia" .
+
+<http://mbugert.de/pets#dog> a rdfs:Class;
+  rdfs:label "Dog";
+  rdfs:subClassOf <http://mbugert.de/pets#animal> .
+
+<http://mbugert.de/pets#has-character> a rdf:Property;
+  rdfs:domain <http://mbugert.de/pets#animal>;
+  rdfs:label "Has Character";
+  rdfs:range <http://mbugert.de/pets#character> .
+
+<http://mbugert.de/pets#hates> a rdf:Property;
+  rdfs:domain <http://mbugert.de/pets#animal>;
+  rdfs:label "Hates";
+  rdfs:range <http://mbugert.de/pets#animal> .
+
+<http://mbugert.de/pets#insane> a <http://mbugert.de/pets#character>;
+  rdfs:label "insane" .
+
+<http://mbugert.de/pets#kahmi> a <http://mbugert.de/pets#cat>;
+  <http://mbugert.de/pets#has-character> <http://mbugert.de/pets#malicious>;
+  <http://mbugert.de/pets#hates> <http://mbugert.de/pets#lailaps>, <http://mbugert.de/pets#socke>;
+  <http://mbugert.de/pets#yob> 2011;
+  rdfs:comment "A cat with a food addiction. Is too lazy to catch mice."@en;
+  rdfs:label "Kahmi" .
+
+<http://mbugert.de/pets#malicious> a <http://mbugert.de/pets#character>;
+  rdfs:label "malicious" .
+
+<http://mbugert.de/pets#lailaps> a <http://mbugert.de/pets#dog>;
+  <http://mbugert.de/pets#has-character> <http://mbugert.de/pets#wild>;
+  <http://mbugert.de/pets#loves> <http://mbugert.de/pets#kahmi>, <http://mbugert.de/pets#socke>;
+  <http://mbugert.de/pets#yob> 2015;
+  rdfs:comment "A dog that loved belly rubs and neck massages."@en;
+  rdfs:label "Lailaps" .
+
+<http://mbugert.de/pets#socke> a <http://mbugert.de/pets#cat>;
+  <http://mbugert.de/pets#has-character> <http://mbugert.de/pets#shy>;
+  <http://mbugert.de/pets#hates> <http://mbugert.de/pets#kahmi>, <http://mbugert.de/pets#lailaps>;
+  <http://mbugert.de/pets#yob> 2012;
+  rdfs:comment "A solitary feline and aspiring ninja master.  Likes to mock Kahmi."@en;
+  rdfs:label "Socke" .
+
+<http://mbugert.de/pets#yob> a rdf:Property;
+  rdfs:domain <http://mbugert.de/pets#animal>;
+  rdfs:label "Year Of Birth";
+  rdfs:range xsd:gYear .
+
+<http://mbugert.de/pets#wild> a <http://mbugert.de/pets#character>;
+  rdfs:label "wild" .
+
+<http://mbugert.de/pets#loves> a rdf:Property;
+  rdfs:domain <http://mbugert.de/pets#animal>;
+  rdfs:label "Loves";
+  rdfs:range <http://mbugert.de/pets#animal> .
+
+<http://mbugert.de/pets#mammalia> a <http://mbugert.de/pets#classis>;
+  rdfs:label "Mammalia" .
+
+<http://mbugert.de/pets#manatee> a rdfs:Class;
+  <http://mbugert.de/pets#has-class> <http://mbugert.de/pets#mammalia>;
+  rdfs:label "Manatee";
+  rdfs:subClassOf <http://mbugert.de/pets#animal> .
+
+<http://mbugert.de/pets#niklas> a <http://mbugert.de/pets#crocodile>;
+  <http://mbugert.de/pets#has-character> <http://mbugert.de/pets#insane>;
+  <http://mbugert.de/pets#yob> 1997;
+  rdfs:comment "Mysterious origin. Adopted in 1999.  Behaves irrational, but is still adorable."@en;
+  rdfs:label "Niklas" .
+
+<http://mbugert.de/pets#shy> a <http://mbugert.de/pets#character>;
+  rdfs:label "shy" .
+
+<http://mbugert.de/pets#tim> a <http://mbugert.de/pets#crocodile>;
+  <http://mbugert.de/pets#has-character> <http://mbugert.de/pets#insane>;
+  <http://mbugert.de/pets#yob> 1997;
+  rdfs:comment "Mysterious origin. Adopted in 1999. Can eat large amounts of food."@en;
+  rdfs:label "Tim" .
+
+<http://mbugert.de/pets#turtle> a rdfs:Class;
+  <http://mbugert.de/pets#has-class> <http://mbugert.de/pets#reptilia>;
+  rdfs:label "Turtle";
+  rdfs:subClassOf <http://mbugert.de/pets#animal> .
+
+<http://www.ukp.informatik.tu-darmstadt.de/inception/1.0#node1cr5m8690x1> a <http://mbugert.de/pets#manatee>;
+  rdfs:comment "Sweet Liska loves swimming in the pool."@en;
+  rdfs:label "Liska" .
