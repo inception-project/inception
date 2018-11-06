@@ -416,14 +416,13 @@ public class QualifierFeatureEditor
 
     private boolean featureUsesDisabledKB(ConceptFeatureTraits aTraits)
     {
-        Optional<KnowledgeBase> kb = null;
+        Optional<KnowledgeBase> kb = Optional.empty();
         String repositoryId = aTraits.getRepositoryId();
         if (repositoryId != null) {
             kb = kbService.getKnowledgeBaseById(getModelObject().feature.getProject(),
                 aTraits.getRepositoryId());
         }
-        return kb != null && kb.isPresent() && !kb.get().isEnabled()
-            || repositoryId != null && !kb.isPresent();
+        return kb.isPresent() && !kb.get().isEnabled() || repositoryId != null && !kb.isPresent();
     }
 
     private ConceptFeatureTraits readFeatureTraits(AnnotationFeature aAnnotationFeature)
@@ -715,12 +714,12 @@ public class QualifierFeatureEditor
 
         TooltipBehavior tip = new TooltipBehavior();
 
-        Optional<KnowledgeBase> kb = null;
+        Optional<KnowledgeBase> kb = Optional.empty();
         if (traits != null && traits.getRepositoryId() != null) {
             kb = kbService.getKnowledgeBaseById(linkedAnnotationFeature.getProject(),
                 traits.getRepositoryId());
         }
-        String kbName = kb != null && kb.isPresent() ? kb.get().getName() : "unknown ID";
+        String kbName = kb.isPresent() ? kb.get().getName() : "unknown ID";
 
         tip.setOption("content", Options.asString(
             new StringResourceModel("value.null.disabledKbWarning", this).setParameters(kbName)
