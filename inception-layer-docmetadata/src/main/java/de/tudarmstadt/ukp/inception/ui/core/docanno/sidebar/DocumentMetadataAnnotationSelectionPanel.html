@@ -19,11 +19,32 @@
 <html xmlns:wicket="http://wicket.apache.org">
 <wicket:panel>
   <div class="flex-content flex-v-container flex-gutter flex-only-internal-gutter">
-    <div wicket:id="mainContainer" class="panel panel-default panel-flex flex-content">
+    <div class="panel panel-default panel-flex flex-content">
       <div class="panel-heading">
         <h3 class="panel-title">Annotations</h3>
       </div>
       <div class="panel-body flex-v-container">
+        <div class="col-sm-12">
+          <div class="form-horizontal">
+            <div class="form-group">
+              <label wicket:for="defaultAnnotationLayer" class="col-sm-3 control-label">
+                <wicket:label key="layer"/>
+              </label>
+              <div class="col-sm-9">
+                <select wicket:id="layer" class="form-control"></select>
+              </div>
+            </div>
+            <div class="scrolling flex-content flex-v-container">
+              <ul class="list-group">
+                <li wicket:id="annotations" class="list-group-item">
+                  <h4 class="list-group-item-heading">
+                    <a wicket:id="annotationLink"><wicket:container wicket:id="label"/></a>
+                  </h4>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
