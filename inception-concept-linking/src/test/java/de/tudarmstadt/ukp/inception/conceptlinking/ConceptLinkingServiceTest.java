@@ -88,7 +88,7 @@ public class ConceptLinkingServiceTest
     public void thatLuceneSailIndexedConceptIsRetrievableWithFullTextSearch() throws Exception
     {
         kbService.registerKnowledgeBase(kb, kbService.getNativeConfig());
-        importKnowledgeBase("data/pets.ttl");
+        importKnowledgeBase("data/Pets.ttl");
 
         List<KBHandle> handles = clService.disambiguate(kb, null, "soc", 0, null);
 
@@ -101,7 +101,7 @@ public class ConceptLinkingServiceTest
     public void thatAddedLuceneSailIndexedConceptIsRetrievableWithFullTextSearch() throws Exception
     {
         kbService.registerKnowledgeBase(kb, kbService.getNativeConfig());
-        importKnowledgeBase("data/pets.ttl");
+        importKnowledgeBase("data/Pets.ttl");
 
         kbService.createConcept(kb, new KBConcept("manatee"));
         List<KBHandle> handles = clService.disambiguate(kb, null, "man", 0, null);
@@ -109,6 +109,21 @@ public class ConceptLinkingServiceTest
         assertThat(handles.stream().map(KBHandle::getName))
             .as("Check whether \"manatee\" has been retrieved.")
             .contains("manatee");
+    }
+
+    @Test
+    public void thatLuceneSailIndexedConceptWithoutLabelIsRetrievableWithFullTextSearch()
+        throws Exception
+    {
+        kbService.registerKnowledgeBase(kb, kbService.getNativeConfig());
+        importKnowledgeBase("data/wine-ontology.ttl");
+
+        // Concept "Chardonnay" has no label
+        List<KBHandle> handles = clService.disambiguate(kb, null, "chardonnay", 0, null);
+
+        assertThat(handles.stream().map(KBHandle::getName))
+            .as("Check whether \"chardonnay\" has been retrieved.")
+            .contains("Chardonnay");
     }
 
     private void importKnowledgeBase(String resourceName) throws Exception {
