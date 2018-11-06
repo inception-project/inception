@@ -21,11 +21,9 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
 import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
 
-@ProjectSettingsPanel(label = "Document Repositories", prio = 400)
 public class ProjectDocumentRepositoriesPanel
     extends ProjectSettingsPanelBase
 {
