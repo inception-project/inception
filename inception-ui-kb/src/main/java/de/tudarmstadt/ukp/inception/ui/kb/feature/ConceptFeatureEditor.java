@@ -308,7 +308,7 @@ public class ConceptFeatureEditor extends FeatureEditor {
         return kbService.read(kb, (conn) -> {
             try {
                 return clService.disambiguate(kb, aTypedString, aState.getSelection().getText(),
-                        aState.getSelection().getBegin(), aJCas.get());
+                        aState.getSelection().getBegin(), aState.getUser(), aJCas.get());
             } catch (IOException e) {
                 log.error("An error occurred while retrieving entity candidates.", e);
                 error(e);

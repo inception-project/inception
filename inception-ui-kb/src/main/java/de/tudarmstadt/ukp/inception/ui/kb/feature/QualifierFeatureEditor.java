@@ -182,7 +182,7 @@ public class QualifierFeatureEditor
                 // Add a label to select mention of a qualifier
                 aItem.add(label);
                 // Add a text filed to link concept in KB with mention
-                aItem.add(createMentionKBLinkTextField(aItem));
+                aItem.add(createMentionKBLinkTextField(aItem, aStateModel.getObject()));
             }
         });
 
@@ -270,7 +270,7 @@ public class QualifierFeatureEditor
     }
 
     private AutoCompleteTextField<KBHandle> createMentionKBLinkTextField(
-        Item<LinkWithRoleModel> aItem)
+        Item<LinkWithRoleModel> aItem, AnnotatorState aState)
     {
         String linkedType = this.getModelObject().feature.getType();
         AnnotationLayer linkedLayer = annotationService
@@ -292,7 +292,7 @@ public class QualifierFeatureEditor
             protected List<KBHandle> getChoices(String input)
             {
                 return listInstances(actionHandler, input, linkedAnnotationFeature,
-                    aItem.getModelObject().label, aItem.getModelObject().targetAddr);
+                    aItem.getModelObject().label, aItem.getModelObject().targetAddr, aState);
             }
 
             @Override
@@ -366,7 +366,7 @@ public class QualifierFeatureEditor
     //It should be refactored.
     private List<KBHandle> listInstances(AnnotationActionHandler aHandler,
         String aTypedString, AnnotationFeature linkedAnnotationFeature, String roleLabe, int
-        roleAddr)
+        roleAddr, AnnotatorState aState)
     {
         if (linkedAnnotationFeature == null) {
             String linkedType = this.getModelObject().feature.getType();
@@ -382,17 +382,19 @@ public class QualifierFeatureEditor
             ConceptFeatureTraits traits = fs.readTraits(linkedAnnotationFeature);
             switch (traits.getAllowedValueType()) {
             case INSTANCE:
-                handles = getInstances(traits, project, aHandler, aTypedString, roleLabe, roleAddr);
+                handles = getInstances(traits, project, aHandler, aTypedString, roleLabe, roleAddr,
+                    aState);
                 break;
             case CONCEPT:
-                handles = getConcepts(traits, project, aHandler, aTypedString, roleLabe, roleAddr);
+                handles = getConcepts(traits, project, aHandler, aTypedString, roleLabe, roleAddr,
+                    aState);
                 break;
             default:
                 // Allow both
-                handles.addAll(
-                        getInstances(traits, project, aHandler, aTypedString, roleLabe, roleAddr));
-                handles.addAll(
-                        getConcepts(traits, project, aHandler, aTypedString, roleLabe, roleAddr));
+                handles.addAll(getInstances(traits, project, aHandler, aTypedString, roleLabe,
+                    roleAddr, aState));
+                handles.addAll(getConcepts(traits, project, aHandler, aTypedString, roleLabe,
+                    roleAddr, aState));
             }
         }
         catch (Exception e) {
@@ -407,7 +409,7 @@ public class QualifierFeatureEditor
 
     private List<KBHandle> getInstances(ConceptFeatureTraits traits, Project project,
         AnnotationActionHandler aHandler, String aTypedString, String roleLabe, int
-        roleAddr)
+        roleAddr, AnnotatorState aState)
     {
         List<KBHandle> handles = new ArrayList<>();
         if (traits.getRepositoryId() != null) {
@@ -418,7 +420,7 @@ public class QualifierFeatureEditor
                 //TODO: (#122) see ConceptFeatureEditor
                 if (kb.get().isSupportConceptLinking()) {
                     handles.addAll(listLinkingInstances(kb.get(), () -> getEditorCas(aHandler),
-                            aTypedString, roleLabe, roleAddr));
+                            aTypedString, roleLabe, roleAddr, aState));
                 }
                 else if (traits.getScope() != null) {
                     handles = kbService
@@ -439,7 +441,7 @@ public class QualifierFeatureEditor
                 //TODO: (#122) see ConceptFeatureEditor
                 if (kb.isSupportConceptLinking()) {
                     handles.addAll(listLinkingInstances(kb, () -> getEditorCas
-                        (aHandler), aTypedString, roleLabe, roleAddr));
+                        (aHandler), aTypedString, roleLabe, roleAddr, aState));
                 }
                 else if (traits.getScope() != null) {
                     handles.addAll(kbService
@@ -459,7 +461,7 @@ public class QualifierFeatureEditor
 
     private List<KBHandle> getConcepts(ConceptFeatureTraits traits, Project project,
         AnnotationActionHandler aHandler, String aTypedString, String roleLabe, int
-        roleAddr)
+        roleAddr, AnnotatorState aState)
     {
         List<KBHandle> handles = new ArrayList<>();
         if (traits.getRepositoryId() != null) {
@@ -470,7 +472,7 @@ public class QualifierFeatureEditor
                 //TODO: (#122) see ConceptFeatureEditor
                 if (kb.get().isSupportConceptLinking()) {
                     handles.addAll(listLinkingInstances(kb.get(), () -> getEditorCas
-                        (aHandler), aTypedString, roleLabe, roleAddr));
+                        (aHandler), aTypedString, roleLabe, roleAddr, aState));
                 }
                 else if (traits.getScope() != null) {
                     handles = kbService.listChildConcepts(kb.get(), traits.getScope(), false)
@@ -487,7 +489,7 @@ public class QualifierFeatureEditor
                 //TODO: (#122) see ConceptFeatureEditor
                 if (kb.isSupportConceptLinking()) {
                     handles.addAll(listLinkingInstances(kb, () -> getEditorCas
-                        (aHandler), aTypedString, roleLabe, roleAddr));
+                        (aHandler), aTypedString, roleLabe, roleAddr, aState));
                 }
                 else if (traits.getScope() != null) {
                     handles = kbService.listChildConcepts(kb, traits.getScope(), false).stream()
@@ -504,11 +506,12 @@ public class QualifierFeatureEditor
     //TODO: (issue #122 )this method is similar to the method listInstances in ConceptFeatureEditor.
     //It should be refactored.
     private List<KBHandle> listLinkingInstances(KnowledgeBase kb, JCasProvider aJCas,
-        String aTypedString, String roleLabel, int roleAddr)
+        String aTypedString, String roleLabel, int roleAddr, AnnotatorState aState)
     {
         return kbService.read(kb, (conn) -> {
             try {
-                return clService.disambiguate(kb, aTypedString, roleLabel, roleAddr, aJCas.get());
+                return clService.disambiguate(kb, aTypedString, roleLabel, roleAddr,
+                    aState.getUser(), aJCas.get());
             }
             catch (IOException e) {
                 LOG.error("An error occurred while retrieving entity candidates.", e);

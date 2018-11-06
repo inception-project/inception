@@ -46,6 +46,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -74,13 +75,14 @@ public class NamedEntityLinker
     private ConceptLinkingService clService;
     private AnnotationSchemaService annoService;
     private FeatureSupportRegistry fsRegistry;
+    private User user;
 
     public static final Key<Collection<ImmutablePair<String, Collection<AnnotationFS>>>> KEY_MODEL
         = new Key<>("model");
 
     public NamedEntityLinker(Recommender aRecommender, NamedEntityLinkerTraits aTraits,
             KnowledgeBaseService aKbService, ConceptLinkingService aClService,
-            AnnotationSchemaService aAnnoService, FeatureSupportRegistry aFsRegistry)
+            AnnotationSchemaService aAnnoService, FeatureSupportRegistry aFsRegistry, User aUser)
     {
         recommender = aRecommender;
         traits = aTraits;
@@ -88,6 +90,7 @@ public class NamedEntityLinker
         clService = aClService;
         annoService = aAnnoService;
         fsRegistry = aFsRegistry;
+        user = aUser;
     }
 
     @Override
@@ -229,8 +232,8 @@ public class NamedEntityLinker
     private List<KBHandle> readCandidates(KnowledgeBase kb, String aCoveredText, int aBegin,
         JCas aJcas)
     {
-        return kbService
-            .read(kb, (conn) -> clService.disambiguate(kb, null, aCoveredText, aBegin, aJcas));
+        return kbService.read(kb, (conn) -> clService.disambiguate(kb, null, aCoveredText,
+            aBegin, user, aJcas));
     }
 
     @Override

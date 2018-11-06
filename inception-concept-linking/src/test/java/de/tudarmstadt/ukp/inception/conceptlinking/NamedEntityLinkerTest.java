@@ -48,6 +48,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.dkpro.core.api.datasets.Dataset;
 import de.tudarmstadt.ukp.dkpro.core.api.datasets.DatasetFactory;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
@@ -84,7 +85,8 @@ public class NamedEntityLinkerTest
     {
         NamedEntityLinker sut = new NamedEntityLinker(recommender, new NamedEntityLinkerTraits(),
                 mock(KnowledgeBaseService.class), mock(ConceptLinkingService.class),
-                mock(AnnotationSchemaService.class), mock(FeatureSupportRegistry.class));
+                mock(AnnotationSchemaService.class), mock(FeatureSupportRegistry.class),
+                mock(User.class));
 
         List<CAS> casList = loadDevelopmentData();
 
@@ -115,7 +117,7 @@ public class NamedEntityLinkerTest
         when(kbService.read(any(), any())).thenReturn(mockResult);
 
         ConceptLinkingService clService = mock(ConceptLinkingService.class);
-        when(clService.disambiguate(any(), anyString(), anyString(), anyInt(), any()))
+        when(clService.disambiguate(any(), anyString(), anyString(), anyInt(), any(), any()))
             .thenReturn(mockResult);
 
         AnnotationSchemaService annoSchemaService = mock(AnnotationSchemaService.class);
@@ -128,8 +130,11 @@ public class NamedEntityLinkerTest
         when(fsRegistry.getFeatureSupport(mockAnnoFeature)).thenReturn(fs);
         when(fs.readTraits(mockAnnoFeature)).thenReturn(new ConceptFeatureTraits());
 
+        User aUser = mock(User.class);
+        when(aUser.getUsername()).thenReturn("testUser");
+
         NamedEntityLinker sut = new NamedEntityLinker(recommender, new NamedEntityLinkerTraits(),
-                kbService, clService, annoSchemaService, fsRegistry);
+                kbService, clService, annoSchemaService, fsRegistry, aUser);
 
         List<CAS> casList = loadDevelopmentData();
         CAS cas = casList.get(0);

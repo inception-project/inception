@@ -125,7 +125,7 @@ public class SubjectObjectFeatureEditor
 
         content.add(createSubjectObjectLabel());
         content.add(createRemoveLabelIcon());
-        content.add(focusComponent = createAutoCompleteTextField());
+        content.add(focusComponent = createAutoCompleteTextField(aStateModel.getObject()));
     }
     
     @Override
@@ -265,7 +265,7 @@ public class SubjectObjectFeatureEditor
             .getFeature(FactLinkingConstants.LINKED_LAYER_FEATURE, linkedLayer);
     }
 
-    private AutoCompleteTextField<KBHandle> createAutoCompleteTextField()
+    private AutoCompleteTextField<KBHandle> createAutoCompleteTextField(AnnotatorState aState)
     {
         AutoCompleteTextField<KBHandle> field = new AutoCompleteTextField<KBHandle>("value",
             LambdaModelAdapter.of(this::getSelectedKBItem, this::setSelectedKBItem),
@@ -276,7 +276,7 @@ public class SubjectObjectFeatureEditor
 
             @Override protected List<KBHandle> getChoices(String input)
             {
-                return listInstances(actionHandler, input);
+                return listInstances(actionHandler, input, aState);
             }
 
             @Override
@@ -360,7 +360,8 @@ public class SubjectObjectFeatureEditor
 
     //TODO: (issue #122 )this method is similar to the method listInstances in ConceptFeatureEditor.
     //It should be refactored.
-    private List<KBHandle> listInstances(AnnotationActionHandler aHandler, String aTypedString)
+    private List<KBHandle> listInstances(AnnotationActionHandler aHandler, String aTypedString,
+        AnnotatorState aState)
     {
         if (linkedAnnotationFeature == null) {
             String linkedType = this.getModelObject().feature.getType();
@@ -376,15 +377,15 @@ public class SubjectObjectFeatureEditor
             ConceptFeatureTraits traits = fs.readTraits(linkedAnnotationFeature);
             switch (traits.getAllowedValueType()) {
             case INSTANCE:
-                handles = getInstances(traits, project, aHandler, aTypedString);
+                handles = getInstances(traits, project, aHandler, aTypedString, aState);
                 break;
             case CONCEPT:
-                handles = getConcepts(traits, project, aHandler, aTypedString);
+                handles = getConcepts(traits, project, aHandler, aTypedString, aState);
                 break;
             default:
                 // Allow both
-                handles.addAll(getInstances(traits, project, aHandler, aTypedString));
-                handles.addAll(getConcepts(traits, project, aHandler, aTypedString));
+                handles.addAll(getInstances(traits, project, aHandler, aTypedString, aState));
+                handles.addAll(getConcepts(traits, project, aHandler, aTypedString, aState));
             }
         }
         catch (Exception e) {
@@ -398,7 +399,7 @@ public class SubjectObjectFeatureEditor
     }
 
     private List<KBHandle> getInstances(ConceptFeatureTraits traits, Project project,
-        AnnotationActionHandler aHandler, String aTypedString)
+        AnnotationActionHandler aHandler, String aTypedString, AnnotatorState aState)
     {
         List<KBHandle> handles = new ArrayList<>();
         if (traits.getRepositoryId() != null) {
@@ -408,8 +409,8 @@ public class SubjectObjectFeatureEditor
             if (kb.isPresent()) {
                 //TODO: (#122) see ConceptFeatureEditor
                 if (kb.get().isSupportConceptLinking()) {
-                    handles.addAll(
-                        listLinkingInstances(kb.get(), () -> getEditorCas(aHandler), aTypedString));
+                    handles.addAll(listLinkingInstances(kb.get(), () -> getEditorCas(aHandler),
+                        aTypedString, aState));
                 }
                 else if (traits.getScope() != null) {
                     handles = kbService
@@ -430,8 +431,8 @@ public class SubjectObjectFeatureEditor
             for (KnowledgeBase kb : kbService.getEnabledKnowledgeBases(project)) {
                 //TODO: (#122) see ConceptFeatureEditor
                 if (kb.isSupportConceptLinking()) {
-                    handles.addAll(
-                        listLinkingInstances(kb, () -> getEditorCas(aHandler), aTypedString));
+                    handles.addAll(listLinkingInstances(kb, () -> getEditorCas(aHandler),
+                        aTypedString, aState));
                 }
                 else if (traits.getScope() != null) {
                     handles.addAll(
@@ -441,7 +442,8 @@ public class SubjectObjectFeatureEditor
                 }
                 else {
                     for (KBHandle concept : kbService.listConcepts(kb, false)) {
-                        handles.addAll(kbService.listInstances(kb, concept.getIdentifier(), false));
+                        handles.addAll(kbService.listInstances(kb, concept.getIdentifier(),
+                            false));
                     }
                 }
             }
@@ -450,7 +452,7 @@ public class SubjectObjectFeatureEditor
     }
 
     private List<KBHandle> getConcepts(ConceptFeatureTraits traits, Project project,
-        AnnotationActionHandler aHandler, String aTypedString)
+        AnnotationActionHandler aHandler, String aTypedString, AnnotatorState aState)
     {
         List<KBHandle> handles = new ArrayList<>();
         if (traits.getRepositoryId() != null) {
@@ -460,8 +462,8 @@ public class SubjectObjectFeatureEditor
             if (kb.isPresent()) {
                 //TODO: (#122) see ConceptFeatureEditor
                 if (kb.get().isSupportConceptLinking()) {
-                    handles.addAll(
-                        listLinkingInstances(kb.get(), () -> getEditorCas(aHandler), aTypedString));
+                    handles.addAll(listLinkingInstances(kb.get(), () -> getEditorCas(aHandler),
+                        aTypedString, aState));
                 }
                 else if (traits.getScope() != null) {
                     handles = kbService.listChildConcepts(kb.get(), traits.getScope(), false)
@@ -479,8 +481,8 @@ public class SubjectObjectFeatureEditor
             for (KnowledgeBase kb : kbService.getEnabledKnowledgeBases(project)) {
                 //TODO: (#122) see ConceptFeatureEditor
                 if (kb.isSupportConceptLinking()) {
-                    handles.addAll(
-                        listLinkingInstances(kb, () -> getEditorCas(aHandler), aTypedString));
+                    handles.addAll(listLinkingInstances(kb, () -> getEditorCas(aHandler),
+                        aTypedString, aState));
                 }
                 else if (traits.getScope() != null) {
                     handles = kbService.listChildConcepts(kb, traits.getScope(), false).stream()
@@ -499,13 +501,13 @@ public class SubjectObjectFeatureEditor
     //TODO: (issue #122 )this method is similar to the method listInstances in ConceptFeatureEditor.
     //It should be refactored.
     private List<KBHandle> listLinkingInstances(KnowledgeBase kb, JCasProvider aJCas,
-        String aTypedString)
+        String aTypedString, AnnotatorState aState)
     {
         return kbService.read(kb, (conn) -> {
             try {
                 return clService
                     .disambiguate(kb, aTypedString, roleModel.label, roleModel.targetAddr,
-                        aJCas.get());
+                        aState.getUser(), aJCas.get());
             }
             catch (IOException e) {
                 LOG.error("An error occurred while retrieving entity candidates.", e);

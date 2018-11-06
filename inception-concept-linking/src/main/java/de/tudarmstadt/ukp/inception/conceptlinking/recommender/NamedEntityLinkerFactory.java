@@ -31,6 +31,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
@@ -52,6 +53,7 @@ public class NamedEntityLinkerFactory
     private @Autowired ConceptLinkingService clService;
     private @Autowired AnnotationSchemaService annoService;
     private @Autowired FeatureSupportRegistry fsRegistry;
+    private @Autowired UserDao userDao;
 
     @Override
     public String getId()
@@ -64,7 +66,7 @@ public class NamedEntityLinkerFactory
     {
         NamedEntityLinkerTraits traits = readTraits(aRecommender);
         return new NamedEntityLinker(aRecommender, traits, kbService, clService, annoService,
-                fsRegistry);
+                fsRegistry, userDao.getCurrentUser());
     }
 
     @Override

@@ -19,6 +19,8 @@
 package de.tudarmstadt.ukp.inception.conceptlinking;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.io.InputStream;
 import java.util.List;
@@ -39,6 +41,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.conceptlinking.config.EntityLinkingProperties;
 import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
 import de.tudarmstadt.ukp.inception.conceptlinking.util.TestFixtures;
@@ -90,7 +93,10 @@ public class ConceptLinkingServiceTest
         kbService.registerKnowledgeBase(kb, kbService.getNativeConfig());
         importKnowledgeBase("data/Pets.ttl");
 
-        List<KBHandle> handles = clService.disambiguate(kb, null, "soc", 0, null);
+        User user = mock(User.class);
+        when(user.getUsername()).thenReturn("test user");
+        List<KBHandle> handles = clService.disambiguate(kb, null, "soc", 0,
+            user, null);
 
         assertThat(handles.stream().map(KBHandle::getName))
             .as("Check whether \"Socke\" has been retrieved.")
@@ -104,7 +110,10 @@ public class ConceptLinkingServiceTest
         importKnowledgeBase("data/Pets.ttl");
 
         kbService.createConcept(kb, new KBConcept("manatee"));
-        List<KBHandle> handles = clService.disambiguate(kb, null, "man", 0, null);
+
+        User user = mock(User.class);
+        when(user.getUsername()).thenReturn("test user");
+        List<KBHandle> handles = clService.disambiguate(kb, null, "man", 0, user, null);
 
         assertThat(handles.stream().map(KBHandle::getName))
             .as("Check whether \"manatee\" has been retrieved.")
@@ -119,7 +128,9 @@ public class ConceptLinkingServiceTest
         importKnowledgeBase("data/wine-ontology.ttl");
 
         // Concept "Chardonnay" has no label
-        List<KBHandle> handles = clService.disambiguate(kb, null, "chardonnay", 0, null);
+        User user = mock(User.class);
+        when(user.getUsername()).thenReturn("test user");
+        List<KBHandle> handles = clService.disambiguate(kb, null, "chardonnay", 0, user,null);
 
         assertThat(handles.stream().map(KBHandle::getName))
             .as("Check whether \"chardonnay\" has been retrieved.")

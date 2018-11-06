@@ -85,6 +85,11 @@ public class CandidateEntity
     private double idRank;
 
     /**
+     *
+     */
+    private double mentionFrequency;
+
+    /**
      * in-link count of wikipedia article of IRI
      */
     private int frequency;

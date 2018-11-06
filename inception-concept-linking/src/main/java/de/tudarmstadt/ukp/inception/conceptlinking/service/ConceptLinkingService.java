@@ -60,6 +60,8 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.conceptlinking.config.EntityLinkingProperties;
@@ -74,6 +76,8 @@ import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 import de.tudarmstadt.ukp.inception.kb.event.KnowledgeBaseConfigurationChangedEvent;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
+import de.tudarmstadt.ukp.inception.search.SearchResult;
+import de.tudarmstadt.ukp.inception.search.SearchService;
 
 @Component
 public class ConceptLinkingService
@@ -83,6 +87,7 @@ public class ConceptLinkingService
 
     private @Autowired KnowledgeBaseService kbService;
     private @Autowired EntityLinkingProperties properties;
+    private @Autowired SearchService searchService;
 
     @org.springframework.beans.factory.annotation.Value
         (value = "${repository.path}/resources/stopwords-en.txt")
@@ -146,7 +151,18 @@ public class ConceptLinkingService
                 .maximumSize(properties.getCacheSize())
                 .build(key -> loadSemanticSignature(key));
     }
-    
+
+    private List<SearchResult> getSearchResults(User aUser, Project aProject, String aQuery)
+    {
+        try {
+            return searchService.query(aUser, aProject, aQuery);
+        }
+        catch (Exception e) {
+            log.debug("Error in the query.", e);
+            return Collections.emptyList();
+        }
+    }
+
     /**
      * Given a mention in the text, this method returns a list of ranked candidate entities
      * generated from a Knowledge Base.
@@ -160,11 +176,12 @@ public class ConceptLinkingService
      * @param aTypedString What the user has typed so far in the text field. Might be null.
      * @param aMention Marked Surface form of an entity to be linked.
      * @param aMentionBeginOffset the offset where the mention begins in the text.
+     * @param aUser the user
      * @param aJcas used to extract information about mention sentence tokens.
      * @return a ranked list of entities.
      */
     public List<KBHandle> disambiguate(KnowledgeBase aKB, String aTypedString, String
-        aMention, int aMentionBeginOffset, JCas aJcas)
+        aMention, int aMentionBeginOffset, User aUser, JCas aJcas)
     {
         long startTime = System.currentTimeMillis();
 
@@ -188,7 +205,7 @@ public class ConceptLinkingService
                 afterRetrieval - startTime, aMention, aTypedString);
 
         List<CandidateEntity> rankedCandidates = rankCandidates(aKB, aTypedString, aMention,
-            candidatesExact, candidatesFullText, aJcas, aMentionBeginOffset);
+            candidatesExact, candidatesFullText, aJcas, aMentionBeginOffset, aUser);
 
         log
             .debug("It took [{}] ms to rank candidates for mention [{}] and typed string [{}]",
@@ -384,7 +401,7 @@ public class ConceptLinkingService
      */
     private List<CandidateEntity> rankCandidates(KnowledgeBase aKB, String aTypedString,
         String mention, Set<CandidateEntity> aCandidatesExact,
-        Set<CandidateEntity> aCandidatesFullText, JCas aJCas, int aBegin)
+        Set<CandidateEntity> aCandidatesFullText, JCas aJCas, int aBegin, User aUser)
     {
         Set<String> sentenceContentTokens = new HashSet<>();
         List<Token> mentionContext = new ArrayList<>();
@@ -409,21 +426,24 @@ public class ConceptLinkingService
         }
 
         // Set frequency
-        if (entityFrequencyMap != null) {
-            for (CandidateEntity l : aCandidatesFullText) {
-                String key = l.getIRI();
-                // For UKP Wikidata
-                if (aKB.getType() == RepositoryType.REMOTE
-                    && aKB.getFullTextSearchIri().equals(IriConstants.FTS_VIRTUOSO)) {
-                    RepositoryImplConfig cfg = kbService.getKnowledgeBaseConfig(aKB);
-                    if (((SPARQLRepositoryConfig) cfg).getQueryEndpointUrl()
-                        .equals(IriConstants.UKP_WIKIDATA_SPARQL_ENDPOINT)) {
-                        key = key.replace(IriConstants.PREFIX_WIKIDATA_ENTITY, "");
-                        if (entityFrequencyMap.get(key) != null) {
-                            l.setFrequency(entityFrequencyMap.get(key));
-                        }
+
+        if (aKB.getType() == RepositoryType.REMOTE && entityFrequencyMap != null) {
+            RepositoryImplConfig cfg = kbService.getKnowledgeBaseConfig(aKB);
+            if (((SPARQLRepositoryConfig) cfg).getQueryEndpointUrl()
+                .equals(IriConstants.UKP_WIKIDATA_SPARQL_ENDPOINT)) {    // For UKP Wikidata
+                for (CandidateEntity l : aCandidatesFullText) {
+                    String key = l.getIRI();
+                    key = key.replace(IriConstants.PREFIX_WIKIDATA_ENTITY, "");
+                    if (entityFrequencyMap.get(key) != null) {
+                        l.setFrequency(entityFrequencyMap.get(key));
                     }
                 }
+            }
+        } else if (aKB.getType() == RepositoryType.LOCAL) {
+            for (CandidateEntity l : aCandidatesFullText) {
+                List<SearchResult> results 
+                    = getSearchResults(aUser, aKB.getProject(), l.getAltLabel());
+                l.setIdRank(results.size());
             }
         }
 
