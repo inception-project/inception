@@ -561,7 +561,15 @@ public interface KnowledgeBaseService
     File readKbFileFromClassPathResource(String aLocation) throws IOException;
 
     /**
-     * Can be used to re-index a local KB in case the full text index is corrupt. 
+     * Checks whether a property is a base property
+     * @param propertyIdentifier the property that is to be checked
+     * @param aKB the KB
+     * @return true if the property is a base property, false otherwise
+     */
+    boolean isBaseProperty(String propertyIdentifier, KnowledgeBase aKB);
+
+    /**
+     * Can be used to re-index a local KB in case the full text index is corrupt.
      */
     void rebuildFullTextIndex(KnowledgeBase aKb) throws Exception;
     
