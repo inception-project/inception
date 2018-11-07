@@ -1465,8 +1465,8 @@ public class KnowledgeBaseServiceImpl
             SailRepositoryConfig cfg = (SailRepositoryConfig) aCfg;
             if (cfg.getSailImplConfig() instanceof LuceneSailConfig) {
                 LuceneSailConfig luceneSailCfg = (LuceneSailConfig) cfg.getSailImplConfig();
-                luceneSailCfg
-                        .setIndexDir(new File(kbRepositoriesRoot, "indexes" + aKB.getRepositoryId())
+                luceneSailCfg.setIndexDir(
+                        new File(kbRepositoriesRoot, "indexes/" + aKB.getRepositoryId())
                                 .getAbsolutePath());
             }
         }

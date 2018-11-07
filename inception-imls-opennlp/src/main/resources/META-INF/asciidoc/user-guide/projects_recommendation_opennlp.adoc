@@ -1,0 +1,35 @@
+// Copyright 2018
+// Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+// Technische Universität Darmstadt
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+== Sentence Classifier (OpenNLP Document Categorizer)
+
+This recommender is available for sentence-level annotation layers where cross-sentence annotations
+are disabled. It learns labels using a sentence-level bag-of-word model using the OpenNLP Document Categorizer. 
+
+== Token Sequence Classifier (OpenNLP POS)
+
+This recommender uses the OpenNLP Part-of-Speech Tagger to learn a token-level sequence tagging
+model for layers that anchor to single tokens. The model will attempt to assign a label to every
+single token. The model considers all sentences for training in which at least a one annotation
+with a feature value exists. 
+
+== Multi-Token Sequence Classifier (OpenNLP NER)
+
+This recommender uses the OpenNLP Name Finder to learn a sequence tagging model for multi-token
+annotations. The model generates a BIO-encoded representation of the annotations in the sentence.
+
+NOTE: If a layer contains overlapping annotations, the recommender does not fail, but it is also not
+      able to learn properly.
