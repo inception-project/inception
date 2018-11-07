@@ -172,8 +172,12 @@ public final class SPARQLQueryStore
     {
         StringBuilder query = new StringBuilder();
         query.append(SPARQL_PREFIX + "\n" +
-                "SELECT ?oItem ((?label) AS ?l) ((?desc) AS ?d) ?lGen ?dGen WHERE { " + "\n"
-                + "?oItem ?p ?o . ");
+                "SELECT ?oItem ((?label) AS ?l) ((?desc) AS ?d) ?lGen ?dGen WHERE { "
+                + "\n"
+                + "{?oItem ?p ?o . }"
+                + "\n"
+                + "UNION"
+                + "{?s ?p ?oItem . }");
         if (label) {
             query.append("\n" + optionalLanguageFilteredValue("?pLABEL", null, "?oItem", "?lGen"));
         }
