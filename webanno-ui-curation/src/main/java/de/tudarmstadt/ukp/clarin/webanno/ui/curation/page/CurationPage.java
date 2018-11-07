@@ -451,7 +451,6 @@ public class CurationPage
         gotoPageTextField.setModelObject(state.getFirstVisibleUnitIndex());
         curationPanel.setDefaultModelObject(curationContainer);
         aTarget.add(gotoPageTextField);
-        aTarget.add(curationPanel);
     }
 
     /**
@@ -518,8 +517,6 @@ public class CurationPage
         state.setFocusUnitIndex(selectedSentence);        
         
         actionRefreshDocument(aTarget);
-        
-        curationPanel.updatePanel(aTarget, curationContainer);
     }
 
     private void actionToggleScriptDirection(AjaxRequestTarget aTarget)
