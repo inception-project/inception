@@ -1241,8 +1241,6 @@ public class KnowledgeBaseServiceImpl
                     language.ifPresent(handle::setLanguage);
                 }
             }
-            
-            // needs to be fixed
             else if (handle.getName() == null) {
                 handle.setName(handle.getUiLabel());
             }
