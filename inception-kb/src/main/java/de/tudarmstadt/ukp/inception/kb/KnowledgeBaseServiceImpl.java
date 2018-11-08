@@ -967,8 +967,7 @@ public class KnowledgeBaseServiceImpl
             String aIdentifier, boolean getLabel, boolean getDescription)
         throws QueryEvaluationException
     {
-
-        Optional<KBHandle> handle = read(aKB, (conn) -> {
+        return read(aKB, (conn) -> {
             String QUERY = SPARQLQueryStore.readLabelWithoutLanguage(aKB, 1, getLabel,
                     getDescription);
             ValueFactory vf = SimpleValueFactory.getInstance();
@@ -982,8 +981,6 @@ public class KnowledgeBaseServiceImpl
             tupleQueryLabel.setIncludeInferred(false);
             return evaluateGenericLabelQuery(aKB, tupleQueryLabel, aAll, "oItem", "l", "d");
         });
-        
-        return handle;
     }
     
     @Override
@@ -1138,22 +1135,29 @@ public class KnowledgeBaseServiceImpl
     
     /**
      * Method process the Tuple Query Results
-     * @param kb KnowledgeBase variable
-     * @param tupleQuery Tuple Query Variable
-     * @param aAll True if entities with implicit namespaces (e.g. defined by RDF)
-     * @param sepLabelQuery True if we have a separate label/Description query
-     * @param itemVariable The variable to define the item IRI (eg.'s')
-     * @param langVariable The variable to define the item IRI (In general: 'l')
-     * @param descVariable The variable to define the item IRI (In general: 'd')
-     * @return list of all the {@link KBHandle} 
-     * @throws QueryEvaluationException
+     * 
+     * @param aKB
+     *            KnowledgeBase variable
+     * @param aTupleQuery
+     *            Tuple Query Variable
+     * @param aAll
+     *            True if entities with implicit namespaces (e.g. defined by RDF)
+     * @param aSepLabelQuery
+     *            True if we have a separate label/Description query
+     * @param aItemVariable
+     *            The variable to define the item IRI (eg.'s')
+     * @param aLangVariable
+     *            The variable to define the item IRI (In general: 'l')
+     * @param aDescVariable
+     *            The variable to define the item IRI (In general: 'd')
+     * @return list of all the {@link KBHandle}
      */
-    private List<KBHandle> evaluateListQuery(KnowledgeBase aKB, TupleQuery tupleQuery,
-            boolean sepLabelQuery, boolean aAll, String itemVariable, String langVariable,
-            String descVariable)
+    private List<KBHandle> evaluateListQuery(KnowledgeBase aKB, TupleQuery aTupleQuery,
+            boolean aSepLabelQuery, boolean aAll, String aItemVariable, String aLangVariable,
+            String aDescVariable)
         throws QueryEvaluationException
     {
-        TupleQueryResult result = tupleQuery.evaluate();        
+        TupleQueryResult result = aTupleQuery.evaluate();        
         
         List<KBHandle> handles = new ArrayList<>();
         while (result.hasNext()) {
@@ -1161,13 +1165,13 @@ public class KnowledgeBaseServiceImpl
             if (bindings.size() == 0) {
                 continue;
             }
-            String id = bindings.getBinding(itemVariable).getValue().stringValue();
+            String id = bindings.getBinding(aItemVariable).getValue().stringValue();
 
             if (!id.contains(":") || (!aAll && hasImplicitNamespace(id))) {
                 continue;
             }
-            Binding label = bindings.getBinding(langVariable);
-            Binding description = bindings.getBinding(descVariable);
+            Binding label = bindings.getBinding(aLangVariable);
+            Binding description = bindings.getBinding(aDescVariable);
             KBHandle handle = new KBHandle(id);
             if (label != null) {
                 handle.setName(label.getValue().stringValue());
@@ -1178,32 +1182,38 @@ public class KnowledgeBaseServiceImpl
                 }
             }
             
-            if (description != null ) {
+            if (description != null) {
                 handle.setDescription(description.getValue().stringValue());
             }
+            
             handles.add(handle);
-
         }
         return handles;
     }
 
     /**
      * Method process the Tuple Query Results
-     * @param kb KnowledgeBase variable
-     * @param tupleQuery Tuple Query Variable
-     * @param aAll True if entities with implicit namespaces (e.g. defined by RDF)
-     * @param itemVariable The variable to define the item IRI (eg.'s')
-     * @param langVariable The variable to define the item IRI (In general: 'l')
-     * @param descVariable The variable to define the item IRI (In general: 'd')
-     * @return list of all the {@link KBHandle} 
-     * @throws QueryEvaluationException
+     * 
+     * @param aKB
+     *            KnowledgeBase variable
+     * @param aTupleQuery
+     *            Tuple Query Variable
+     * @param aAll
+     *            True if entities with implicit namespaces (e.g. defined by RDF)
+     * @param aItemVariable
+     *            The variable to define the item IRI (eg.'s')
+     * @param aLangVariable
+     *            The variable to define the item IRI (In general: 'l')
+     * @param aDescVariable
+     *            The variable to define the item IRI (In general: 'd')
+     * @return list of all the {@link KBHandle}
      */
-    private Optional<KBHandle> evaluateGenericLabelQuery(KnowledgeBase aKB, TupleQuery tupleQuery,
-            boolean aAll, String itemVariable, String langVariable,
-            String descVariable)
+    private Optional<KBHandle> evaluateGenericLabelQuery(KnowledgeBase aKB, TupleQuery aTupleQuery,
+            boolean aAll, String aItemVariable, String aLangVariable,
+            String aDescVariable)
         throws QueryEvaluationException
     {
-        TupleQueryResult result = tupleQuery.evaluate();        
+        TupleQueryResult result = aTupleQuery.evaluate();        
         
         Optional<KBHandle> handleValue =  Optional.of(new KBHandle());
         while (result.hasNext()) {
@@ -1211,7 +1221,7 @@ public class KnowledgeBaseServiceImpl
             if (bindings.size() == 0) {
                 return Optional.empty();
             }
-            String id = bindings.getBinding(itemVariable).getValue().stringValue();
+            String id = bindings.getBinding(aItemVariable).getValue().stringValue();
 
             if (!id.contains(":") || (!aAll && hasImplicitNamespace(id))) {
                 continue;
