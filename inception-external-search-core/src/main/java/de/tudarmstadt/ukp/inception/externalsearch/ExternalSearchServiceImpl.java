@@ -53,7 +53,7 @@ public class ExternalSearchServiceImpl
 
     // Index factory
     private ExternalSearchProviderFactory externalSearchProviderFactory;
-    private String externalSearchProviderFactoryName = "ElasticSearchProviderFactory";
+    private String externalSearchProviderFactoryName = "elasticSearchProviderFactory";
 
     // FIXME REC: We should not need a static map for these providers. If we need to hold on to 
     // a provider for a longer time (e.g. to support paging), we need to find another way to handle
