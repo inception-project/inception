@@ -165,4 +165,8 @@ include::{include-dir}webannotsv.adoc[]
 
 <<<
 
+include::{include-dir}casdoctor.adoc[]
+
+<<<
+
 include::{include-dir}troubleshooting.adoc[]

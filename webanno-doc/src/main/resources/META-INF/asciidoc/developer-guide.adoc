@@ -23,10 +23,6 @@ include::{include-dir}setup.adoc[]
 
 <<<
 
-include::{include-dir}casdoctor.adoc[]
-
-<<<
-
 include::{include-dir}database.adoc[]
 
 <<<
