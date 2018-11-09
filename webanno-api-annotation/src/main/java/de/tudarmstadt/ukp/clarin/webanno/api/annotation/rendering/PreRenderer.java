@@ -1,5 +1,5 @@
 /*
- * Copyright 2017
+ * Copyright 2018
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
  *
@@ -20,38 +20,13 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 import java.util.List;
 
 import org.apache.uima.jcas.JCas;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
-@Component
-public class PreRenderer
+public interface PreRenderer
 {
-    private final AnnotationSchemaService annotationService;
-    private final LayerSupportRegistry layerSupportRegistry;
-
-    @Autowired
-    public PreRenderer(LayerSupportRegistry aLayerSupportRegistry,
-            AnnotationSchemaService aAnnotationService)
-    {
-        layerSupportRegistry = aLayerSupportRegistry;
-        annotationService = aAnnotationService;
-    }
-    
-    public void render(VDocument aResponse, AnnotatorState aState, JCas aJCas,
-            List<AnnotationLayer> aLayers)
-    {
-        // Render (custom) layers
-        for (AnnotationLayer layer : aLayers) {
-            List<AnnotationFeature> features = annotationService.listAnnotationFeature(layer);
-            Renderer renderer = layerSupportRegistry.getLayerSupport(layer).getRenderer(layer);
-            renderer.render(aJCas, features, aResponse, aState);
-        }
-    }
+    void render(VDocument aResponse, AnnotatorState aState, JCas aJCas,
+            List<AnnotationLayer> aLayers);
 }
