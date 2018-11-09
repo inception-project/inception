@@ -64,7 +64,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotationEditor;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationSelection;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.CurationContainer;
@@ -122,23 +121,12 @@ public class CurationPanel
         WebMarkupContainer sidebarCell = new WebMarkupContainer("rightSidebar");    
         sidebarCell.setOutputMarkupId(true);
         // Override sidebar width from preferences
-        sidebarCell.add(new AttributeModifier("style", LambdaModel.of(() -> String
-                .format("flex-basis: %d%%;", state.getPreferences().getSidebarSize()))));
+        sidebarCell.add(new AttributeModifier("style", () -> String
+                .format("flex-basis: %d%%;", state.getPreferences().getSidebarSize())));
         add(sidebarCell);
         
         curationView = new SourceListView();
         
-        // add container for list of sentences panel
-        sentencesListView = new WebMarkupContainer("sentencesListView");
-        sentencesListView.setOutputMarkupId(true);
-        add(sentencesListView);
-    
-        // add container for the list of sentences where annotations exists crossing multiple
-        // sentences outside of the current page
-        crossSentAnnoView = new WebMarkupContainer("crossSentAnnoView");
-        crossSentAnnoView.setOutputMarkupId(true);
-        add(crossSentAnnoView);
-    
         List<UserAnnotationSegment> segments = new LinkedList<>();
         UserAnnotationSegment userAnnotationSegments = new UserAnnotationSegment();
 
@@ -233,31 +221,13 @@ public class CurationPanel
         // reset sentenceAddress and lastSentenceAddress to the orginal once
         add(annotationEditor);
     
-        IModel<List<String>> sentenceDiffModel = LambdaModel.of(() -> {
-            int fSN = state.getFirstVisibleUnitIndex();
-            int lSN = state.getLastVisibleUnitIndex();
-
-            List<String> crossSentAnnos = new ArrayList<>();
-            if (SuggestionBuilder.crossSentenceLists != null) {
-                for (int sn : SuggestionBuilder.crossSentenceLists.keySet()) {
-                    if (sn >= fSN && sn <= lSN) {
-                        List<Integer> cr = new ArrayList<>();
-                        for (int c : SuggestionBuilder.crossSentenceLists.get(sn)) {
-                            if (c < fSN || c > lSN) {
-                                cr.add(c);
-                            }
-                        }
-                        if (!cr.isEmpty()) {
-                            crossSentAnnos.add(sn + "-->" + cr);
-                        }
-                    }
-                }
-            }
-
-            return crossSentAnnos;
-        });
-    
-        crossSentAnnoList = new ListView<String>("crossSentAnnoList", sentenceDiffModel)
+        // add container for the list of sentences where annotations exists crossing multiple
+        // sentences outside of the current page
+        crossSentAnnoView = new WebMarkupContainer("crossSentAnnoView");
+        crossSentAnnoView.setOutputMarkupId(true);
+        add(crossSentAnnoView);
+        crossSentAnnoList = new ListView<String>("crossSentAnnoList",
+                this::invisibleCrossSentenceAnnotations)
         {
             private static final long serialVersionUID = 8539162089561432091L;
     
@@ -287,9 +257,12 @@ public class CurationPanel
         crossSentAnnoList.setOutputMarkupId(true);
         crossSentAnnoView.add(crossSentAnnoList);
     
-        // add subcomponents to the component
-        sentencesListView.add(new ListView<SourceListView>("sentencesList",
-               LambdaModel.of(() -> getModelObject().getCurationViews()))
+        // add container for list of sentences panel
+        sentencesListView = new WebMarkupContainer("sentencesListView");
+        sentencesListView.setOutputMarkupId(true);
+        add(sentencesListView);
+        sentencesListView.add(new ListView<SourceListView>("sentencesList", () -> 
+                getModelObject().getCurationViews())
         {
             private static final long serialVersionUID = 8539162089561432091L;
     
@@ -299,6 +272,31 @@ public class CurationPanel
                 item.add(new SentenceLink("sentenceNumber", item.getModel()));
             }
         });
+    }
+    
+    private List<String> invisibleCrossSentenceAnnotations()
+    {
+        int fSN = state.getFirstVisibleUnitIndex();
+        int lSN = state.getLastVisibleUnitIndex();
+
+        List<String> crossSentAnnos = new ArrayList<>();
+        if (SuggestionBuilder.crossSentenceLists != null) {
+            for (int sn : SuggestionBuilder.crossSentenceLists.keySet()) {
+                if (sn >= fSN && sn <= lSN) {
+                    List<Integer> cr = new ArrayList<>();
+                    for (int c : SuggestionBuilder.crossSentenceLists.get(sn)) {
+                        if (c < fSN || c > lSN) {
+                            cr.add(c);
+                        }
+                    }
+                    if (!cr.isEmpty()) {
+                        crossSentAnnos.add(sn + "-->" + cr);
+                    }
+                }
+            }
+        }
+
+        return crossSentAnnos;
     }
     
     public class SentenceLink extends AjaxLink<SourceListView>
@@ -449,15 +447,15 @@ public class CurationPanel
     {
         commonUpdate();
         
-        // Render the sentence list sidebar
-        aTarget.add(sentencesListView);
-
         // Render the main annotation editor (upper part)
         annotationEditor.requestRender(aTarget);
         
         // Render the user annotation segments (lower part)
         suggestionViewPanel.updatePanel(aTarget, aCC, annotationSelectionByUsernameAndAddress,
                 curationView);
+        
+        // Render the sentence list sidebar
+        aTarget.add(sentencesListView);
     }
     
     private void commonUpdate() throws IOException

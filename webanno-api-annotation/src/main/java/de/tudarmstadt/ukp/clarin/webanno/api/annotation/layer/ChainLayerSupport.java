@@ -21,6 +21,9 @@ import static java.util.Arrays.asList;
 
 import java.util.List;
 
+import org.apache.uima.cas.CAS;
+import org.apache.uima.resource.metadata.TypeDescription;
+import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
@@ -29,7 +32,11 @@ import org.springframework.stereotype.Component;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ChainAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.ChainRenderer;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.Renderer;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
 @Component
@@ -92,5 +99,39 @@ public class ChainLayerSupport
         adapter.setLinkedListBehavior(aLayer.isLinkedListBehavior());
 
         return adapter;
+    }
+    
+    
+    @Override
+    public void generateTypes(TypeSystemDescription aTsd, AnnotationLayer aLayer)
+    {
+        TypeDescription tdChains = aTsd.addType(aLayer.getName() + "Chain", "",
+                CAS.TYPE_NAME_ANNOTATION_BASE);
+        tdChains.addFeature("first", "", aLayer.getName() + "Link");
+        
+        // Custom features on chain layers are currently not supported
+        // generateFeatures(aTsd, tdChains, type);
+        
+        TypeDescription tdLink = aTsd.addType(aLayer.getName() + "Link", "",
+                CAS.TYPE_NAME_ANNOTATION);
+        tdLink.addFeature("next", "", aLayer.getName() + "Link");
+        tdLink.addFeature("referenceType", "", CAS.TYPE_NAME_STRING);
+        tdLink.addFeature("referenceRelation", "", CAS.TYPE_NAME_STRING);
+    }
+    
+    void generateFeatures(TypeSystemDescription aTSD, TypeDescription aTD,
+            AnnotationLayer aLayer)
+    {
+        List<AnnotationFeature> features = schemaService.listAnnotationFeature(aLayer);
+        for (AnnotationFeature feature : features) {
+            FeatureSupport<?> fs = featureSupportRegistry.getFeatureSupport(feature);
+            fs.generateFeature(aTSD, aTD, feature);
+        }
+    }
+    
+    @Override
+    public Renderer getRenderer(AnnotationLayer aLayer)
+    {
+        return new ChainRenderer(createAdapter(aLayer), featureSupportRegistry);
     }
 }

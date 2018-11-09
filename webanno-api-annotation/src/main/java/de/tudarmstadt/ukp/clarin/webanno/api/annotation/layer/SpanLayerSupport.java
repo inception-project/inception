@@ -21,6 +21,9 @@ import static java.util.Arrays.asList;
 
 import java.util.List;
 
+import org.apache.uima.cas.CAS;
+import org.apache.uima.resource.metadata.TypeDescription;
+import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
@@ -28,7 +31,10 @@ import org.springframework.stereotype.Component;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.SpanRenderer;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
 @Component
@@ -87,5 +93,29 @@ public class SpanLayerSupport
                 schemaService.listAnnotationFeature(aLayer));
         
         return adapter;
+    }
+    
+    @Override
+    public void generateTypes(TypeSystemDescription aTsd, AnnotationLayer aLayer)
+    {
+        TypeDescription td = aTsd.addType(aLayer.getName(), "", CAS.TYPE_NAME_ANNOTATION);
+        
+        generateFeatures(aTsd, td, aLayer);
+    }
+    
+    void generateFeatures(TypeSystemDescription aTSD, TypeDescription aTD,
+            AnnotationLayer aLayer)
+    {
+        List<AnnotationFeature> features = schemaService.listAnnotationFeature(aLayer);
+        for (AnnotationFeature feature : features) {
+            FeatureSupport<?> fs = featureSupportRegistry.getFeatureSupport(feature);
+            fs.generateFeature(aTSD, aTD, feature);
+        }
+    }
+    
+    @Override
+    public SpanRenderer getRenderer(AnnotationLayer aLayer)
+    {
+        return new SpanRenderer(createAdapter(aLayer), featureSupportRegistry);
     }
 }
