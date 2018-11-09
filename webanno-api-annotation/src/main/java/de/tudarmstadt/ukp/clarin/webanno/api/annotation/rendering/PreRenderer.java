@@ -33,9 +33,17 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 @Component
 public class PreRenderer
 {
-    private @Autowired AnnotationSchemaService annotationService;
-    private @Autowired LayerSupportRegistry layerSupportRegistry;
+    private final AnnotationSchemaService annotationService;
+    private final LayerSupportRegistry layerSupportRegistry;
 
+    @Autowired
+    public PreRenderer(LayerSupportRegistry aLayerSupportRegistry,
+            AnnotationSchemaService aAnnotationService)
+    {
+        layerSupportRegistry = aLayerSupportRegistry;
+        annotationService = aAnnotationService;
+    }
+    
     public void render(VDocument aResponse, AnnotatorState aState, JCas aJCas,
             List<AnnotationLayer> aLayers)
     {
