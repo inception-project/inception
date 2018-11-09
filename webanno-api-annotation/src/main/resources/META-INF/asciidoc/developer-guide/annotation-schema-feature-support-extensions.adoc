@@ -1,0 +1,6 @@
+== Features
+
+FeatureSupport
+FeatureSupportRegistry
+
+traits editor

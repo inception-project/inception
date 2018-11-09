@@ -19,12 +19,24 @@ The {product-name} Team
 
 This document targets developers working on {product-name}.
 
+= Introduction
+
 include::{include-dir}setup.adoc[]
 
 <<<
 
-include::{include-dir}database.adoc[]
+= Modules
+
+include::{include-dir}documents.adoc[]
+
+include::{include-dir}annotation-schema.adoc[]
+include::{include-dir}annotation-schema-layer-support-extensions.adoc[leveloffset=+1]
+include::{include-dir}annotation-schema-layer-span.adoc[leveloffset=+2]
+include::{include-dir}annotation-schema-layer-relation.adoc[leveloffset=+2]
+include::{include-dir}annotation-schema-feature-support-extensions.adoc[leveloffset=+1]
 
 <<<
+
+= Appendices 
 
 include::{include-dir}systemproperties.adoc[]

@@ -188,7 +188,8 @@ public class AnnotationFeature
     }
 
     /**
-     * The type of feature (string, integer, float, boolean, or a span type used as a label)
+     * The type of feature (string, integer, float, boolean, or a span type used as a label).
+     * Must be a UIMA type name such as {@code uima.cas.String} or the name of a custom type.
      * 
      * @param type the type of feature.
      */
@@ -345,7 +346,11 @@ public class AnnotationFeature
     }
 
     /**
-     * @param tagset the tagset.
+     * The tagset which is used for this layer. If this is null, the label can be freely set (text
+     * input field), otherwise only values from the tagset can be used as labels.
+     * 
+     * @param tagset
+     *            the tagset.
      */
     public void setTagset(TagSet tagset)
     {
@@ -362,6 +367,9 @@ public class AnnotationFeature
         }
     }
 
+    /**
+     * Used to control if a feature can have multiple values and how these are represented.
+     */
     public void setMode(MultiValueMode aMode)
     {
         multiValueMode = aMode;
@@ -377,6 +385,10 @@ public class AnnotationFeature
         }
     }
 
+    /**
+     * If the feature is a link to another feature structure, this indicates what kind of relation
+     * is used, e.g. {@link LinkMode#NONE}, {@link LinkMode#SIMPLE}, {@link LinkMode#WITH_ROLE}.
+     */
     public void setLinkMode(LinkMode aLinkMode)
     {
         linkMode = aLinkMode;
@@ -387,6 +399,10 @@ public class AnnotationFeature
         return linkTypeName;
     }
 
+    /**
+     * If a {@link LinkMode#WITH_ROLE} type is used, then the an additional UIMA type must be
+     * created that bears a role feature and points to the target type.
+     */
     public void setLinkTypeName(String aLinkTypeName)
     {
         linkTypeName = aLinkTypeName;
@@ -397,6 +413,9 @@ public class AnnotationFeature
         return linkTypeRoleFeatureName;
     }
 
+    /**
+     * The name of the feature bearing the role.
+     */
     public void setLinkTypeRoleFeatureName(String aLinkTypeRoleFeatureName)
     {
         linkTypeRoleFeatureName = aLinkTypeRoleFeatureName;
@@ -407,6 +426,9 @@ public class AnnotationFeature
         return linkTypeTargetFeatureName;
     }
 
+    /**
+     * The name of the feature pointing to the target.
+     */
     public void setLinkTypeTargetFeatureName(String aLinkTypeTargetFeatureName)
     {
         linkTypeTargetFeatureName = aLinkTypeTargetFeatureName;
@@ -417,6 +439,11 @@ public class AnnotationFeature
         return remember;
     }
 
+    /**
+     * Whether the annotation detail editor should carry values of this feature over when creating a
+     * new annotation of the same type. This can be useful when creating many annotations of the
+     * same type in a row.
+     */
     public void setRemember(boolean aRemember)
     {
         remember = aRemember;
@@ -427,6 +454,10 @@ public class AnnotationFeature
         return hideUnconstraintFeature;
     }
 
+    /**
+     * Whether the feature should be showed if constraints rules are enabled and based on the
+     * evaluation of constraint rules on a feature.
+     */
     public void setHideUnconstraintFeature(boolean aHideUnconstraintFeature)
     {
         hideUnconstraintFeature = aHideUnconstraintFeature;
