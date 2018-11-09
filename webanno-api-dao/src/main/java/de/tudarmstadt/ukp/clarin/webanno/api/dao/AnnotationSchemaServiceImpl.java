@@ -17,9 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static java.util.Arrays.asList;
 import static java.util.Objects.isNull;
 
@@ -74,10 +72,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.initializers.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -655,47 +652,15 @@ public class AnnotationSchemaServiceImpl
         // Create a new type system from scratch
         TypeSystemDescription tsd = new TypeSystemDescription_impl();
         for (AnnotationLayer type : listAnnotationLayer(aProject)) {
-            if (type.getType().equals(SPAN_TYPE) && !type.isBuiltIn()) {
-                TypeDescription td = tsd.addType(type.getName(), "", CAS.TYPE_NAME_ANNOTATION);
-                
-                generateFeatures(tsd, td, type);
+            if (type.isBuiltIn()) {
+                continue;
             }
-            else if (type.getType().equals(RELATION_TYPE) && !type.isBuiltIn()) {
-                TypeDescription td = tsd.addType(type.getName(), "", CAS.TYPE_NAME_ANNOTATION);
-                AnnotationLayer attachType = type.getAttachType();
 
-                td.addFeature(WebAnnoConst.FEAT_REL_TARGET, "", attachType.getName());
-                td.addFeature(WebAnnoConst.FEAT_REL_SOURCE, "", attachType.getName());
-
-                generateFeatures(tsd, td, type);
-            }
-            else if (type.getType().equals(CHAIN_TYPE) && !type.isBuiltIn()) {
-                TypeDescription tdChains = tsd.addType(type.getName() + "Chain", "",
-                        CAS.TYPE_NAME_ANNOTATION_BASE);
-                tdChains.addFeature("first", "", type.getName() + "Link");
-                
-                // Custom features on chain layers are currently not supported
-                // generateFeatures(tsd, tdChains, type);
-                
-                TypeDescription tdLink = tsd.addType(type.getName() + "Link", "",
-                        CAS.TYPE_NAME_ANNOTATION);
-                tdLink.addFeature("next", "", type.getName() + "Link");
-                tdLink.addFeature("referenceType", "", CAS.TYPE_NAME_STRING);
-                tdLink.addFeature("referenceRelation", "", CAS.TYPE_NAME_STRING);
-            }
+            LayerSupport<?> layerSupport = layerSupportRegistry.getLayerSupport(type);
+            layerSupport.generateTypes(tsd, type);
         }
 
         return tsd;
-    }
-    
-    private void generateFeatures(TypeSystemDescription aTSD, TypeDescription aTD,
-            AnnotationLayer aLayer)
-    {
-        List<AnnotationFeature> features = listAnnotationFeature(aLayer);
-        for (AnnotationFeature feature : features) {
-            FeatureSupport fs = featureSupportRegistry.getFeatureSupport(feature);
-            fs.generateFeature(aTSD, aTD, feature);
-        }
     }
 
     @Override

@@ -125,7 +125,7 @@ public class BratRendererTest
             return layerRegistry.getLayerSupport(layer).createAdapter(layer);
         });
         
-        preRenderer = new PreRenderer(featureSupportRegistry, schemaService);
+        preRenderer = new PreRenderer(layerRegistry, schemaService);
     }
     
     /**

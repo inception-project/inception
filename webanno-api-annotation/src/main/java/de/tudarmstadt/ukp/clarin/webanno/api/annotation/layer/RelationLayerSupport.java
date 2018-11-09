@@ -21,6 +21,9 @@ import static java.util.Arrays.asList;
 
 import java.util.List;
 
+import org.apache.uima.cas.CAS;
+import org.apache.uima.resource.metadata.TypeDescription;
+import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
@@ -29,7 +32,11 @@ import org.springframework.stereotype.Component;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ArcAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RelationRenderer;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.Renderer;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
 @Component
@@ -95,5 +102,33 @@ public class RelationLayerSupport
         adapter.setAllowStacking(aLayer.isAllowStacking());
 
         return adapter;
+    }
+    
+    @Override
+    public void generateTypes(TypeSystemDescription aTsd, AnnotationLayer aLayer)
+    {
+        TypeDescription td = aTsd.addType(aLayer.getName(), "", CAS.TYPE_NAME_ANNOTATION);
+        AnnotationLayer attachType = aLayer.getAttachType();
+
+        td.addFeature(WebAnnoConst.FEAT_REL_TARGET, "", attachType.getName());
+        td.addFeature(WebAnnoConst.FEAT_REL_SOURCE, "", attachType.getName());
+
+        generateFeatures(aTsd, td, aLayer);
+    }
+    
+    void generateFeatures(TypeSystemDescription aTSD, TypeDescription aTD,
+            AnnotationLayer aLayer)
+    {
+        List<AnnotationFeature> features = schemaService.listAnnotationFeature(aLayer);
+        for (AnnotationFeature feature : features) {
+            FeatureSupport<?> fs = featureSupportRegistry.getFeatureSupport(feature);
+            fs.generateFeature(aTSD, aTD, feature);
+        }
+    }
+    
+    @Override
+    public Renderer getRenderer(AnnotationLayer aLayer)
+    {
+        return new RelationRenderer(createAdapter(aLayer), featureSupportRegistry);
     }
 }
