@@ -150,6 +150,16 @@ Checks that the offsets of relations match the target of the relation. This mirr
 Core convention that the offsets of a dependency relation must match the offsets of the 
 dependent.
 
+[[check_CASMetadataTypeIsPresentCheck]]
+==== CASMetadata Type Is PresentCheck
+[horizontal]
+ID:: `CASMetadataTypeIsPresentCheck`
+Related repairs:: <<repair_UpgradeCasRepair>>
+
+Checks if the ìnternal type `CASMetadata is defined in the type system of this CAS. If this is
+not the case, then the application may not be able to detect concurrent modifications.
+
+
 [[sect_repairs]]
 === Repairs
 
@@ -237,3 +247,14 @@ lemma, POS, or stem are removed, thus this action could theoretically leave dang
 behind. Thus, the <<repair_RemoveDanglingRelationsRepair>> repair action should be configured
 *after* this repair action in the settings file.
 
+[[repair_UpgradeCasRepair]]
+==== Upgrade CAS
+
+[horizontal]
+ID:: `UpgradeCasRepair`
+
+Ensures that the CAS is up-to-date with the project type system. It performs the same operation
+which is regularly performed when a user opens a document for annotation/curation.
+
+This is considered to be safe repair action as it only garbage-collects data from the CAS that is
+no longer reachable anyway.

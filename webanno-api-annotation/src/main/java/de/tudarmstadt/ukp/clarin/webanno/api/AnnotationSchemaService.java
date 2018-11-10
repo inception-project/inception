@@ -24,6 +24,7 @@ import java.util.Optional;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
+import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.springframework.security.access.prepost.PreAuthorize;
 
@@ -395,6 +396,15 @@ public interface AnnotationSchemaService
             throws UIMAException, IOException;
 
     /**
+     * Better call {@link #upgradeCas(CAS, SourceDocument, String)} which also logs the action
+     * nicely to the log files. This method here is rather for unconditional bulk use such as
+     * by the CAS doctor.
+     * 
+     * @see #upgradeCas(CAS, SourceDocument, String)
+     */
+    void upgradeCas(CAS aCas, Project aProject) throws UIMAException, IOException;
+    
+    /**
      * Checks if the given CAS is compatible with the current type system of the project to which
      * it belongs and upgrades it if necessary. This should be preferred over the mandatory CAS 
      * upgrade if the CAS is loaded in a read-only mode or in scenarios where it is not saved later.
@@ -409,4 +419,12 @@ public interface AnnotationSchemaService
             throws UIMAException, IOException;
 
     TypeAdapter getAdapter(AnnotationLayer aLayer);
+
+    /**
+     * Performs a CAS upgrade and removes all internal feature structures from the CAS. The 
+     * resulting CAS should be <b>only</b> used for export and never be persisted within the
+     * repository.
+     */
+    CAS prepareCasForExport(CAS aCas, SourceDocument aSourceDocument)
+        throws ResourceInitializationException, UIMAException, IOException;
 }

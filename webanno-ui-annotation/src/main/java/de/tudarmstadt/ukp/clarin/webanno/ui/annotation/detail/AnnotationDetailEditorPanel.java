@@ -32,6 +32,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.persistence.NoResultException;
@@ -93,7 +94,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.event.AjaxAfterAnnotation
 /**
  * Annotation Detail Editor Panel.
  */
-public class AnnotationDetailEditorPanel
+public abstract class AnnotationDetailEditorPanel
     extends Panel
     implements AnnotationActionHandler
 {
@@ -901,22 +902,6 @@ public class AnnotationDetailEditorPanel
         onChange(aTarget);
     }
 
-    @Override
-    public JCas getEditorCas()
-        throws IOException
-    {
-        AnnotatorState state = getModelObject();
-
-        if (state.getMode().equals(Mode.ANNOTATION) || state.getMode().equals(Mode.AUTOMATION)
-                || state.getMode().equals(Mode.CORRECTION)) {
-
-            return documentService.readAnnotationCas(state.getDocument(), state.getUser());
-        }
-        else {
-            return curationDocumentService.readCurationCas(state.getDocument());
-        }
-    }
-
     private void writeEditorCas(JCas aJCas)
         throws IOException
     {
@@ -924,9 +909,23 @@ public class AnnotationDetailEditorPanel
         if (state.getMode().equals(Mode.ANNOTATION) || state.getMode().equals(Mode.AUTOMATION)
             || state.getMode().equals(Mode.CORRECTION)) {
             documentService.writeAnnotationCas(aJCas, state.getDocument(), state.getUser(), true);
+            
+            // Update timestamp in state
+            Optional<Long> diskTimestamp = documentService
+                    .getAnnotationCasTimestamp(state.getDocument(), state.getUser().getUsername());
+            if (diskTimestamp.isPresent()) {
+                state.setAnnotationDocumentTimestamp(diskTimestamp.get());
+            }
         }
         else if (state.getMode().equals(Mode.CURATION)) {
             curationDocumentService.writeCurationCas(aJCas, state.getDocument(), true);
+            
+            // Update timestamp in state
+            Optional<Long> diskTimestamp = curationDocumentService
+                    .getCurationCasTimestamp(state.getDocument());
+            if (diskTimestamp.isPresent()) {
+                state.setAnnotationDocumentTimestamp(diskTimestamp.get());
+            }
         }
     }
 
@@ -1457,16 +1456,15 @@ public class AnnotationDetailEditorPanel
     protected static void handleException(Component aComponent, AjaxRequestTarget aTarget,
             Exception aException)
     {
+        if (aTarget != null) {
+            aTarget.addChildren(aComponent.getPage(), IFeedback.class);
+        }
+        
         try {
             throw aException;
         }
         catch (AnnotationException e) {
-            if (aTarget != null) {
-                aTarget.prependJavaScript("alert('Error: " + e.getMessage() + "')");
-            }
-            else {
-                aComponent.error("Error: " + e.getMessage());
-            }
+            aComponent.error("Error: " + e.getMessage());
             LOG.error("Error: " + ExceptionUtils.getRootCauseMessage(e), e);
         }
         catch (UIMAException e) {

@@ -1114,4 +1114,14 @@
       columnName="anchoring_mode"
       columnDataType="VARCHAR(255)" />
   </changeSet>  
+  
+  <changeSet author="WebAnno Team" id="20181101-1">
+    <preConditions onFail="WARN">
+      <changeSetExecuted author="WebAnno Team" id="1512223050574-3"/>
+    </preConditions>
+    <addForeignKeyConstraint baseColumnNames="annotation_feature" baseTableName="annotation_type"
+      constraintName="FK_annotation_type_attach_feature" deferrable="false" initiallyDeferred="false"
+      onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" 
+      referencedTableName="annotation_feature" />
+  </changeSet>
 </databaseChangeLog>

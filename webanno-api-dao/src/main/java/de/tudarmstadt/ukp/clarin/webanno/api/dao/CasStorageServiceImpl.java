@@ -29,6 +29,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -41,7 +42,7 @@ import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.util.CasCreationUtils;
 import org.apache.wicket.MetaDataKey;
-import org.apache.wicket.request.cycle.AbstractRequestCycleListener;
+import org.apache.wicket.request.cycle.IRequestCycleListener;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -179,6 +180,12 @@ public class CasStorageServiceImpl
 
         // Save current version
         try {
+            // Check if there was a concurrent change to the file on disk
+            if (currentVersion.exists()) {
+                CasMetadataUtils.failOnConcurrentModification(aJcas, currentVersion, aDocument,
+                        username);
+            }
+            
             // Make a backup of the current version of the file before overwriting
             if (currentVersion.exists()) {
                 renameFile(currentVersion, oldVersion);
@@ -214,6 +221,12 @@ public class CasStorageServiceImpl
                         oldVersion.length(), currentVersion.length(),
                         currentVersion.length() - oldVersion.length());
             }
+            
+            // Update the timestamp in the CAS in case we attempt to save it a second time. This
+            // happens for example in an annotation replacement operation (change layer of existing
+            // annotation) which is implemented as a delete/create operation with an intermediate
+            // save.
+            CasMetadataUtils.addOrUpdateCasMetadata(aJcas, currentVersion, aDocument, aUserName);
             
             // If the saving was successful, we delete the old version
             if (oldVersion.exists()) {
@@ -367,7 +380,8 @@ public class CasStorageServiceImpl
             // If the CAS is not in the cache, load it from disk
             JCas jcas;
             String source;
-            if (getCasFile(aDocument, aUsername).exists()) {
+            File casFile = getCasFile(aDocument, aUsername);
+            if (casFile.exists()) {
                 jcas = realReadCas(aDocument, aUsername, aAnalyzeAndRepair);
                 source = "disk";
             }
@@ -380,6 +394,9 @@ public class CasStorageServiceImpl
                 throw new FileNotFoundException("CAS [" + aDocument.getId() + "," + aUsername
                         + "] does not exist and no initializer is specified.");
             }
+            
+            // Add/update the CAS metadata
+            CasMetadataUtils.addOrUpdateCasMetadata(jcas, casFile, aDocument, aUsername);
             
             // Update the cache
             if (isCacheEnabled()) {
@@ -524,6 +541,24 @@ public class CasStorageServiceImpl
         }
     }
 
+    @Override
+    public Optional<Long> getCasTimestamp(SourceDocument aDocument, String aUser) throws IOException
+    {
+        Validate.notNull(aDocument, "Source document must be specified");
+        Validate.notBlank(aUser, "User must be specified");
+        
+        // Ensure that the CAS is not being re-written and temporarily unavailable while we check
+        // for its existence
+        synchronized (lock) {
+            File casFile = getCasFile(aDocument, aUser);
+            if (!casFile.exists()) {
+                return Optional.empty();
+            }
+            else {
+                return Optional.of(casFile.lastModified());
+            }
+        }
+    }
     
     /**
      * Get the folder where the annotations are stored. Creates the folder if necessary.
@@ -535,6 +570,8 @@ public class CasStorageServiceImpl
     public File getAnnotationFolder(SourceDocument aDocument)
         throws IOException
     {
+        Validate.notNull(aDocument, "Source document must be specified");
+        
         File annotationFolder = new File(repositoryProperties.getPath(),
                 "/" + PROJECT_FOLDER + "/" + aDocument.getProject().getId() + "/" + DOCUMENT_FOLDER
                         + "/" + aDocument.getId() + "/" + ANNOTATION_FOLDER);
@@ -559,6 +596,15 @@ public class CasStorageServiceImpl
         // We are not sure if File is mutable. This makes sure we get a new file
         // in any case.
         return new File(aTo.getPath());
+    }
+    
+    @Override
+    public void performExclusiveBulkOperation(CasStorageOperation aOperation)
+        throws UIMAException, IOException
+    {
+        synchronized (lock) {
+            aOperation.execute();
+        }
     }
     
     @Override
@@ -600,7 +646,7 @@ public class CasStorageServiceImpl
         if (cache == null) {
             cache = new HashMap<>();
             requestCycle.setMetaData(CACHE, cache);
-            requestCycle.getListeners().add(new AbstractRequestCycleListener() {
+            requestCycle.getListeners().add(new IRequestCycleListener() {
                 @Override
                 public void onEndRequest(RequestCycle aCycle)
                 {

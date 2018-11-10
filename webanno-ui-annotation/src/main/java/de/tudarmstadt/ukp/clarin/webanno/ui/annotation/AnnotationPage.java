@@ -22,6 +22,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil.isAnnotator;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_DOCUMENT_ID;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_FOCUS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.verifyAndUpdateDocumentTimestamp;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS;
@@ -32,7 +33,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-
 import javax.persistence.NoResultException;
 
 import org.apache.uima.jcas.JCas;
@@ -339,6 +339,12 @@ public class AnnotationPage
             {
                 actionRefreshDocument(aTarget);
             }
+            
+            @Override
+            public JCas getEditorCas() throws IOException
+            {
+                return AnnotationPage.this.getEditorCas();
+            }
         };
     }
     
@@ -413,14 +419,13 @@ public class AnnotationPage
         if (state.getDocument() == null) {
             throw new IllegalStateException("Please open a document first!");
         }
+
+        // If we have a timestamp, then use it to detect if there was a concurrent access
+        verifyAndUpdateDocumentTimestamp(state, documentService
+                .getAnnotationCasTimestamp(state.getDocument(), state.getUser().getUsername()));
         
-        SourceDocument aDocument = getModelObject().getDocument();
-
-        AnnotationDocument annotationDocument = documentService.getAnnotationDocument(aDocument,
-                state.getUser());
-
-        // If there is no CAS yet for the annotation document, create one.
-        return documentService.readAnnotationCas(annotationDocument);
+        return documentService.readAnnotationCas(state.getDocument(),
+                state.getUser().getUsername());
     }
 
     private void actionInitialLoadComplete(AjaxRequestTarget aTarget)

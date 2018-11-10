@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.persistence.NoResultException;
 
@@ -505,4 +506,11 @@ public interface DocumentService
      * @return whether any curation documents exist.
      */
     boolean existsCurationDocument(Project aProject);
+
+    /**
+     * Fetches the time at which the CAS was last changed on disk. If the CAS does not exist yet, an
+     * empty optional is returned.
+     */
+    Optional<Long> getAnnotationCasTimestamp(SourceDocument aDocument, String aUsername)
+        throws IOException;
 }

@@ -1,0 +1,5 @@
+# Types internally used by WebAnno (which we intentionally exclude from being detected
+# by uimaFIT because we want to have an easy way to create a type system excluding
+# these types when we export files from the project
+#
+# classpath*:de/tudarmstadt/ukp/clarin/webanno/api/type/webanno-internal.xml

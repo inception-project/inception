@@ -322,8 +322,8 @@ public class RemoteApiController2Test
         @Bean
         public ImportExportService importExportService()
         {
-            return new ImportExportServiceImpl(asList(new TextFormatSupport()), casStorageService(),
-                    annotationService());
+            return new ImportExportServiceImpl(repositoryProperties(),
+                    asList(new TextFormatSupport()), casStorageService(), annotationService());
         }
         
         @Bean

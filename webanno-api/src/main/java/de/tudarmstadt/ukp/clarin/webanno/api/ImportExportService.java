@@ -104,12 +104,19 @@ public interface ImportExportService
     JCas importCasFromFile(File aFile, Project aProject, String aFormatId)
         throws UIMAException, IOException;
 
+    /**
+     * Exports the given CAS to a file on disk. 
+     * 
+     * A new directory is created using UUID so that every exported file will reside in its own
+     * directory. This is useful as the written file can have multiple extensions based on the
+     * Writer class used.
+     */
     File exportCasToFile(CAS cas, SourceDocument aDocument, String aFileName, FormatSupport aFormat,
             boolean aStripExtension)
         throws IOException, UIMAException;
     
     /**
-     * Exports an {@link AnnotationDocument } CAS Object as TCF/TXT/XMI... file formats.
+     * Exports an {@link AnnotationDocument } CAS Object as TCF/TXT/XMI... file formats. 
      *
      * @param document
      *            The {@link SourceDocument} where we get the id which hosts both the source
