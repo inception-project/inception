@@ -48,7 +48,6 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2.DiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2.DiffResult;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2.LinkCompareBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2.SpanDiffAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.DiffUtils;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;

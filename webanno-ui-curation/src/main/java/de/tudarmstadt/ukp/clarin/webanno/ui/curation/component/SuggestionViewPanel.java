@@ -30,6 +30,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.Feature;
@@ -345,9 +346,23 @@ public class SuggestionViewPanel
         if (aState.getMode().equals(Mode.ANNOTATION) || aState.getMode().equals(Mode.AUTOMATION)
                 || aState.getMode().equals(Mode.CORRECTION)) {
             documentService.writeAnnotationCas(aJCas, aState.getDocument(), aState.getUser(), true);
+
+            // Update timestamp in state
+            Optional<Long> diskTimestamp = documentService.getAnnotationCasTimestamp(
+                    aState.getDocument(), aState.getUser().getUsername());
+            if (diskTimestamp.isPresent()) {
+                aState.setAnnotationDocumentTimestamp(diskTimestamp.get());
+            }
         }
         else if (aState.getMode().equals(Mode.CURATION)) {
             curationDocumentService.writeCurationCas(aJCas, aState.getDocument(), true);
+
+            // Update timestamp in state
+            Optional<Long> diskTimestamp = curationDocumentService
+                    .getCurationCasTimestamp(aState.getDocument());
+            if (diskTimestamp.isPresent()) {
+                aState.setAnnotationDocumentTimestamp(diskTimestamp.get());
+            }
         }
     }
 

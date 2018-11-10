@@ -47,6 +47,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.SpanLayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRendererImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratRenderer;
@@ -125,7 +126,7 @@ public class BratRendererTest
             return layerRegistry.getLayerSupport(layer).createAdapter(layer);
         });
         
-        preRenderer = new PreRenderer(featureSupportRegistry, schemaService);
+        preRenderer = new PreRendererImpl(layerRegistry, schemaService);
     }
     
     /**

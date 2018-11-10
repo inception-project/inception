@@ -196,13 +196,6 @@
       <artifactId>webanno-io-tsv</artifactId>
       <scope>test</scope>
     </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-      <artifactId>webanno-curation</artifactId>
-      <version>${project.version}</version>
-      <type>test-jar</type>
-      <scope>test</scope>
-    </dependency>
   </dependencies>
   <build>
     <pluginManagement>

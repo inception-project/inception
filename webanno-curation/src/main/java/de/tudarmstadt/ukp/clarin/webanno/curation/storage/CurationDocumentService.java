@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.curation.storage;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
@@ -82,4 +83,6 @@ public interface CurationDocumentService
         throws IOException;
     
     List<SourceDocument> listCuratableSourceDocuments(Project aProject);
+
+    Optional<Long> getCurationCasTimestamp(SourceDocument aDocument) throws IOException;
 }

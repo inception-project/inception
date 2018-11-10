@@ -59,7 +59,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
@@ -92,27 +91,27 @@ public class ImportExportServiceImpl
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    @Value(value = "${repository.path}")
-    private File dir;
-    
-    private CasStorageService casStorageService;
-    private AnnotationSchemaService annotationService;
+    private final RepositoryProperties repositoryProperties;
+    private final CasStorageService casStorageService;
+    private final AnnotationSchemaService annotationService;
 
     private final List<FormatSupport> formatsProxy;
     private Map<String, FormatSupport> formats;
     
     public ImportExportServiceImpl(
+            @Autowired RepositoryProperties aRepositoryProperties, 
             @Lazy @Autowired(required = false) List<FormatSupport> aFormats,
             @Autowired CasStorageService aCasStorageService,
             @Autowired AnnotationSchemaService aAnnotationService)
     {
+        repositoryProperties = aRepositoryProperties;
         casStorageService = aCasStorageService;
         annotationService = aAnnotationService;
         formatsProxy = aFormats;
     }
 
-    @EventListener
-    public void onContextRefreshedEvent(ContextRefreshedEvent aEvent)
+    @EventListener(ContextRefreshedEvent.class)
+    public void onContextRefreshedEvent()
     {
         init();
     }
@@ -228,9 +227,6 @@ public class ImportExportServiceImpl
         CAS cas = CasCreationUtils.createCas((TypeSystemDescription) null, null, null);
         CasPersistenceUtils.readSerializedCas(cas, serializedCasFile);
 
-        // Update type system the CAS
-        annotationService.upgradeCas(cas, aDocument, aUser);
-        
         File exportFile = exportCasToFile(cas, aDocument, aFileName, aFormat, aStripExtension);
 
         Project project = aDocument.getProject();
@@ -392,30 +388,30 @@ public class ImportExportServiceImpl
         }
     }    
     
-    /**
-     * A new directory is created using UUID so that every exported file will reside in its own
-     * directory. This is useful as the written file can have multiple extensions based on the
-     * Writer class used.
-     */
     @Override
-    public File exportCasToFile(CAS cas, SourceDocument aDocument, String aFileName,
+    public File exportCasToFile(CAS aCas, SourceDocument aDocument, String aFileName,
             FormatSupport aFormat, boolean aStripExtension)
         throws IOException, UIMAException
     {
+        // Update type system the CAS, compact it (remove all non-reachable feature strucutres)
+        // and remove all internal feature structures in the process
+        CAS cas = annotationService.prepareCasForExport(aCas, aDocument);
+        
         // Update the source file name in case it is changed for some reason. This is necessary
         // for the writers to create the files under the correct names.
         Project project = aDocument.getProject();
-        File currentDocumentUri = new File(
-                dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/" + project.getId() + "/"
-                        + DOCUMENT_FOLDER + "/" + aDocument.getId() + "/" + SOURCE_FOLDER);
+        File currentDocumentUri = new File(repositoryProperties.getPath().getAbsolutePath() + "/"
+                + PROJECT_FOLDER + "/" + project.getId() + "/" + DOCUMENT_FOLDER + "/"
+                + aDocument.getId() + "/" + SOURCE_FOLDER);
         DocumentMetaData documentMetadata = DocumentMetaData.get(cas.getJCas());
         documentMetadata.setDocumentUri(new File(currentDocumentUri, aFileName).toURI().toURL()
                 .toExternalForm());
         documentMetadata.setDocumentBaseUri(currentDocumentUri.toURI().toURL().toExternalForm());
         documentMetadata.setCollectionId(currentDocumentUri.toURI().toURL().toExternalForm());
-        documentMetadata.setDocumentUri(new File(dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/"
-                + project.getId() + "/" + DOCUMENT_FOLDER + "/" + aDocument.getId() + "/"
-                + SOURCE_FOLDER + "/" + aFileName).toURI().toURL().toExternalForm());
+        documentMetadata.setDocumentUri(
+                new File(repositoryProperties.getPath().getAbsolutePath() + "/" + PROJECT_FOLDER
+                        + "/" + project.getId() + "/" + DOCUMENT_FOLDER + "/" + aDocument.getId()
+                        + "/" + SOURCE_FOLDER + "/" + aFileName).toURI().toURL().toExternalForm());
 
         // update with the correct tagset name
         List<AnnotationFeature> features = annotationService.listAnnotationFeature(project);

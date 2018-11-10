@@ -17,11 +17,11 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static java.util.Arrays.asList;
 import static java.util.Objects.isNull;
+import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTypeSystemDescription;
+import static org.apache.uima.util.CasCreationUtils.mergeTypeSystems;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -53,13 +53,13 @@ import org.apache.uima.cas.impl.CASCompleteSerializer;
 import org.apache.uima.cas.impl.CASImpl;
 import org.apache.uima.cas.impl.Serialization;
 import org.apache.uima.fit.factory.JCasFactory;
-import org.apache.uima.fit.factory.TypeSystemDescriptionFactory;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.FeatureDescription;
 import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.resource.metadata.impl.TypeSystemDescription_impl;
 import org.apache.uima.util.CasCreationUtils;
+import org.apache.uima.util.CasIOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -74,10 +74,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.initializers.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -630,7 +629,8 @@ public class AnnotationSchemaServiceImpl
     @Transactional
     public void removeAnnotationFeature(AnnotationFeature aFeature)
     {
-        entityManager.remove(aFeature);
+        entityManager.remove(
+                entityManager.contains(aFeature) ? aFeature : entityManager.merge(aFeature));
     }
 
     @Override
@@ -655,47 +655,15 @@ public class AnnotationSchemaServiceImpl
         // Create a new type system from scratch
         TypeSystemDescription tsd = new TypeSystemDescription_impl();
         for (AnnotationLayer type : listAnnotationLayer(aProject)) {
-            if (type.getType().equals(SPAN_TYPE) && !type.isBuiltIn()) {
-                TypeDescription td = tsd.addType(type.getName(), "", CAS.TYPE_NAME_ANNOTATION);
-                
-                generateFeatures(tsd, td, type);
+            if (type.isBuiltIn()) {
+                continue;
             }
-            else if (type.getType().equals(RELATION_TYPE) && !type.isBuiltIn()) {
-                TypeDescription td = tsd.addType(type.getName(), "", CAS.TYPE_NAME_ANNOTATION);
-                AnnotationLayer attachType = type.getAttachType();
 
-                td.addFeature(WebAnnoConst.FEAT_REL_TARGET, "", attachType.getName());
-                td.addFeature(WebAnnoConst.FEAT_REL_SOURCE, "", attachType.getName());
-
-                generateFeatures(tsd, td, type);
-            }
-            else if (type.getType().equals(CHAIN_TYPE) && !type.isBuiltIn()) {
-                TypeDescription tdChains = tsd.addType(type.getName() + "Chain", "",
-                        CAS.TYPE_NAME_ANNOTATION_BASE);
-                tdChains.addFeature("first", "", type.getName() + "Link");
-                
-                // Custom features on chain layers are currently not supported
-                // generateFeatures(tsd, tdChains, type);
-                
-                TypeDescription tdLink = tsd.addType(type.getName() + "Link", "",
-                        CAS.TYPE_NAME_ANNOTATION);
-                tdLink.addFeature("next", "", type.getName() + "Link");
-                tdLink.addFeature("referenceType", "", CAS.TYPE_NAME_STRING);
-                tdLink.addFeature("referenceRelation", "", CAS.TYPE_NAME_STRING);
-            }
+            LayerSupport<?> layerSupport = layerSupportRegistry.getLayerSupport(type);
+            layerSupport.generateTypes(tsd, type);
         }
 
         return tsd;
-    }
-    
-    private void generateFeatures(TypeSystemDescription aTSD, TypeDescription aTD,
-            AnnotationLayer aLayer)
-    {
-        List<AnnotationFeature> features = listAnnotationFeature(aLayer);
-        for (AnnotationFeature feature : features) {
-            FeatureSupport fs = featureSupportRegistry.getFeatureSupport(feature);
-            fs.generateFeature(aTSD, aTD, feature);
-        }
     }
 
     @Override
@@ -709,10 +677,8 @@ public class AnnotationSchemaServiceImpl
     public void upgradeCas(CAS aCas, SourceDocument aSourceDocument, String aUser)
         throws UIMAException, IOException
     {
-        TypeSystemDescription ts = getFullProjectTypeSystem(aSourceDocument.getProject());
-
-        upgradeCas(aCas, ts);
-
+        upgradeCas(aCas, aSourceDocument.getProject());
+        
         try (MDC.MDCCloseable closable = MDC.putCloseable(
                 Logging.KEY_PROJECT_ID,
                 String.valueOf(aSourceDocument.getProject().getId()))) {
@@ -723,6 +689,13 @@ public class AnnotationSchemaServiceImpl
                     aUser, aSourceDocument.getName(), aSourceDocument.getId(), project.getName(),
                     project.getId());
         }
+    }
+    
+    @Override
+    public void upgradeCas(CAS aCas, Project aProject) throws UIMAException, IOException
+    {
+        TypeSystemDescription ts = getFullProjectTypeSystem(aProject);
+        upgradeCas(aCas, ts);
     }
     
     @Override
@@ -752,40 +725,78 @@ public class AnnotationSchemaServiceImpl
         upgradeCas(aCas, ts);
     }
     
+    @Override
+    public CAS prepareCasForExport(CAS aCas, SourceDocument aSourceDocument)
+        throws ResourceInitializationException, UIMAException, IOException
+    {
+        CAS exportCas = CasCreationUtils.createCas((TypeSystemDescription) null, null, null);
+        upgradeCas(aCas, exportCas, getFullProjectTypeSystem(aSourceDocument.getProject(), false));
+        return exportCas;
+    }
+    
+    /**
+     * In-place upgrade of the given CAS to the target type system.
+     */
     private void upgradeCas(CAS aCas, TypeSystemDescription aTargetTypeSystem)
         throws UIMAException, IOException
     {
-        // Prepare template for new CAS
-        CAS newCas = JCasFactory.createJCas(aTargetTypeSystem).getCas();
-        CASCompleteSerializer serializer = Serialization.serializeCASComplete((CASImpl) newCas);
+        upgradeCas(aCas, aCas, aTargetTypeSystem);
+    }
 
-        // Save old type system
-        TypeSystem oldTypeSystem = aCas.getTypeSystem();
+    /**
+     * Load the contents from the source CAS, upgrade it to the target type system and write the
+     * results to the target CAS. An in-place upgrade can be achieved by using the same CAS as
+     * source and target.
+     */
+    private void upgradeCas(CAS aSourceCas, CAS aTargetCas, TypeSystemDescription aTargetTypeSystem)
+        throws UIMAException, IOException
+    {
+        // Save source CAS type system (do this early since we might do an in-place upgrade)
+        TypeSystem sourceTypeSystem = aSourceCas.getTypeSystem();
 
-        // Save old CAS contents
-        ByteArrayOutputStream os2 = new ByteArrayOutputStream();
-        Serialization.serializeWithCompression(aCas, os2, oldTypeSystem);
+        // Save source CAS contents
+        ByteArrayOutputStream serializedCasContents = new ByteArrayOutputStream();
+        Serialization.serializeWithCompression(aSourceCas, serializedCasContents, sourceTypeSystem);
 
-        // Prepare CAS with new type system
-        Serialization.deserializeCASComplete(serializer, (CASImpl) aCas);
+        // Re-initialize the target CAS with new type system
+        CAS tempCas = JCasFactory.createJCas(aTargetTypeSystem).getCas();
+        CASCompleteSerializer serializer = Serialization.serializeCASComplete((CASImpl) tempCas);
+        Serialization.deserializeCASComplete(serializer, (CASImpl) aTargetCas);
 
-        // Restore CAS data to new type system
-        Serialization.deserializeCAS(aCas, new ByteArrayInputStream(os2.toByteArray()),
-                oldTypeSystem, null);
+        // Leniently load the source CAS contents into the target CAS
+        CasIOUtils.load(new ByteArrayInputStream(serializedCasContents.toByteArray()), aTargetCas,
+                sourceTypeSystem);
 
         // Make sure JCas is properly initialized too
-        aCas.getJCas();
+        aTargetCas.getJCas();
     }
-    
+
     private TypeSystemDescription getFullProjectTypeSystem(Project aProject)
         throws ResourceInitializationException
     {
-        TypeSystemDescription builtInTypes = TypeSystemDescriptionFactory
-                .createTypeSystemDescription();
-        TypeSystemDescription projectTypes = getProjectTypes(aProject);
-        TypeSystemDescription_impl allTypes = (TypeSystemDescription_impl) CasCreationUtils
-                .mergeTypeSystems(asList(projectTypes, builtInTypes));
-        return allTypes;
+        return getFullProjectTypeSystem(aProject, true);
+    }
+
+    private TypeSystemDescription getFullProjectTypeSystem(Project aProject,
+            boolean aIncludeInternalTypes)
+        throws ResourceInitializationException
+    {
+        List<TypeSystemDescription> typeSystems = new ArrayList<>();
+        
+        // Types detected by uimaFIT
+        typeSystems.add(createTypeSystemDescription());
+        
+        if (aIncludeInternalTypes) {
+            // Types internally used by WebAnno (which we intentionally exclude from being detected
+            // by uimaFIT because we want to have an easy way to create a type system excluding
+            // these types when we export files from the project
+            typeSystems.add(CasMetadataUtils.getInternalTypeSystem());
+        }
+
+        // Types declared within the project
+        typeSystems.add(getProjectTypes(aProject));
+
+        return (TypeSystemDescription_impl) mergeTypeSystems(typeSystems);
     }
     
     /**

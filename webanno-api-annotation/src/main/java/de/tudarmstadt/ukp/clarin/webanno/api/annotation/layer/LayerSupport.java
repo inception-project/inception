@@ -20,9 +20,11 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer;
 import java.util.List;
 import java.util.Optional;
 
+import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.springframework.beans.factory.BeanNameAware;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.Renderer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
 public interface LayerSupport<T extends TypeAdapter>
@@ -66,4 +68,11 @@ public interface LayerSupport<T extends TypeAdapter>
      * @return the adapter.
      */
     T createAdapter(AnnotationLayer aLayer);
+
+    /**
+     * Add the types required for this layer to the given type system.
+     */
+    void generateTypes(TypeSystemDescription aTsd, AnnotationLayer aLayer);
+
+    Renderer getRenderer(AnnotationLayer aLayer);
 }

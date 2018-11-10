@@ -269,6 +269,7 @@
         </form>
         
         <form wicket:id="featureDetailForm" class="flex-content panel panel-default panel-flex">
+          <div wicket:id="confirmationDialog"></div>
           <div class="panel-heading">
             <h3 class="panel-title">
               <wicket:message key="feature.details"/>
@@ -363,10 +364,10 @@
           </div>
           <div class="panel-footer text-right">
             <input wicket:id="save" type="submit" class="btn btn-primary" wicket:message="value:save"/>
+            <input wicket:id="delete" type="button" class="btn btn-danger" wicket:message="value:delete"/>
             <input wicket:id="cancel" type="submit" class="btn btn-default" wicket:message="value:cancel"/>
           </div>            
         </form>
-        
       </div>
     </div>
   </wicket:panel>

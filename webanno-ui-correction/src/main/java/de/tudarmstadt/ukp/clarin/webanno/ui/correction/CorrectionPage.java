@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.correction;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.verifyAndUpdateDocumentTimestamp;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED;
 import static org.apache.uima.fit.util.JCasUtil.select;
@@ -403,6 +404,12 @@ public class CorrectionPage
             {
                 annotationEditor.requestRender(aTarget);
             }
+            
+            @Override
+            public JCas getEditorCas() throws IOException
+            {
+                return CorrectionPage.this.getEditorCas();
+            }
         };
     }
 
@@ -439,13 +446,12 @@ public class CorrectionPage
             throw new IllegalStateException("Please open a document first!");
         }
         
-        SourceDocument aDocument = getModelObject().getDocument();
-
-        AnnotationDocument annotationDocument = documentService.getAnnotationDocument(aDocument,
-                state.getUser());
-
-        // If there is no CAS yet for the annotation document, create one.
-        return documentService.readAnnotationCas(annotationDocument);
+        // If we have a timestamp, then use it to detect if there was a concurrent access
+        verifyAndUpdateDocumentTimestamp(state, documentService
+                .getAnnotationCasTimestamp(state.getDocument(), state.getUser().getUsername()));
+        
+        return documentService.readAnnotationCas(getModelObject().getDocument(),
+                state.getUser().getUsername());
     }
 
     private void setCurationSegmentBeginEnd(JCas aEditorCas)

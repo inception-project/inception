@@ -24,11 +24,13 @@ import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.Validate;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.jcas.JCas;
@@ -131,5 +133,13 @@ public class CurationDocumentServiceImpl
                 .setParameter("state", AnnotationDocumentState.FINISHED).getResultList();
         docs.sort(SourceDocument.NAME_COMPARATOR);
         return docs;
+    }
+    
+    @Override
+    public Optional<Long> getCurationCasTimestamp(SourceDocument aDocument) throws IOException
+    {
+        Validate.notNull(aDocument, "Source document must be specified");
+        
+        return casStorageService.getCasTimestamp(aDocument, CURATION_USER);
     }
 }

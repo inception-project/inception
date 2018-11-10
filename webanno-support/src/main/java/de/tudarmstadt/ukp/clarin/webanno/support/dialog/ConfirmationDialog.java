@@ -24,7 +24,6 @@ import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Form;
-import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
@@ -215,14 +214,13 @@ public class ConfirmationDialog
     {
         private static final long serialVersionUID = 5202661827792148838L;
 
-        private FeedbackPanel feedbackPanel;
         private Form<State> form;
 
         public ContentPanel(String aId, IModel<State> aModel)
         {
             super(aId, aModel);
 
-            form = new Form<>("form", aModel);
+            form = new Form<>("form", CompoundPropertyModel.of(aModel));
             form.add(new Label("content").setEscapeModelStrings(false));
             form.add(new Label("feedback"));
             form.add(new LambdaAjaxButton<>("confirm", ConfirmationDialog.this::onConfirmInternal));
