@@ -49,7 +49,6 @@ import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.resource.IResourceStream;
 import org.apache.wicket.validation.validator.RangeValidator;
-import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.repository.RepositoryException;
 import org.eclipse.rdf4j.repository.config.RepositoryConfigException;
 import org.eclipse.rdf4j.repository.config.RepositoryImplConfig;
@@ -77,7 +76,6 @@ import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
 import de.tudarmstadt.ukp.inception.kb.event.KnowledgeBaseConfigurationChangedEvent;
 import de.tudarmstadt.ukp.inception.kb.io.FileUploadDownloadHelper;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
-import de.tudarmstadt.ukp.inception.ui.core.bootstrap.DisabledBootstrapCheckbox;
 
 public class KnowledgeBaseDetailsPanel
     extends Panel
@@ -122,7 +120,6 @@ public class KnowledgeBaseDetailsPanel
 
     private Component title;
     private Component content;
-    private boolean isEditing;
 
     private ConfirmationDialog confirmationDialog;
 
@@ -189,7 +186,7 @@ public class KnowledgeBaseDetailsPanel
         add(form);
 
         // add (disabled) radio choice for local/remote repository
-        form.add(new BootstrapRadioGroup<RepositoryType>("type", kbwModel.bind("kb.type"),
+        form.add(new BootstrapRadioGroup<>("type", kbwModel.bind("kb.type"),
             Arrays.asList(RepositoryType.values()),
             new EnumRadioChoiceRenderer<RepositoryType>(Buttons.Type.Default, this)
             {
@@ -205,21 +202,16 @@ public class KnowledgeBaseDetailsPanel
         form.add(new Label("reification", kbwModel.bind("kb.reification")));
 
         // title/content
-        title = new ViewModeTitle(TITLE_MARKUP_ID, kbwModel);
-        content = new ViewMode(CONTENT_MARKUP_ID, kbwModel);
+        title = new KBSettingsTitle(TITLE_MARKUP_ID, kbwModel);
+        content = new KBSettingsContent(CONTENT_MARKUP_ID, kbwModel);
         form.add(title);
         form.add(content);
 
-        // set up form buttons: 
-        // edit button only visible when not editing,
-        // cancel/save buttons only visible when editing
         // re-index button only visible for local KBs
         form.add(new LambdaAjaxLink("delete", KnowledgeBaseDetailsPanel.this::actionDelete));
         form.add(new LambdaAjaxLink("reindex", KnowledgeBaseDetailsPanel.this::actionReindex)
                 .add(LambdaBehavior.visibleWhen(() -> RepositoryType.LOCAL
                         .equals(kbwModel.getObject().getKb().getType()))));
-        form.add(new LambdaAjaxLink("edit", KnowledgeBaseDetailsPanel.this::startEditing)
-                .add(LambdaBehavior.visibleWhen(() -> !isEditing)));
         form.add(new AjaxButton("save", form)
         {
             private static final long serialVersionUID = 3393631640806116694L;
@@ -240,9 +232,7 @@ public class KnowledgeBaseDetailsPanel
                     new KnowledgeBaseConfigurationChangedEvent(this,
                         aKbModel.getObject().getProject()));
             }
-        }.add(LambdaBehavior.visibleWhen(() -> isEditing)));
-        form.add(new LambdaAjaxLink("cancel", KnowledgeBaseDetailsPanel.this::stopEditing)
-                .add(LambdaBehavior.visibleWhen(() -> isEditing)));
+        });
 
         confirmationDialog = new ConfirmationDialog("confirmationDialog");
         add(confirmationDialog);
@@ -282,7 +272,7 @@ public class KnowledgeBaseDetailsPanel
             }
             KnowledgeBaseWrapper.updateKb(kbw, cfg, kbService);
             modelChanged();
-            stopEditing(aTarget);
+            aTarget.add(this);
         }
         catch (Exception e) {
             error("Unable to save knowledge base: " + e.getLocalizedMessage());
@@ -354,38 +344,31 @@ public class KnowledgeBaseDetailsPanel
             .exportData(kbModel.getObject(), getRdfFormatForFileExt(rdfFormatFileExt), os));
     }
 
-    private void startEditing(AjaxRequestTarget aTarget)
-    {
-        title = title.replaceWith(new EditModeTitle(TITLE_MARKUP_ID, kbwModel));
-        content = content.replaceWith(new EditMode(CONTENT_MARKUP_ID, kbwModel));
-        aTarget.add(this);
-        isEditing = true;
-    }
-
-    private void stopEditing(AjaxRequestTarget aTarget)
-    {
-        title = title.replaceWith(new ViewModeTitle(TITLE_MARKUP_ID, kbwModel));
-        content = content.replaceWith(new ViewMode(CONTENT_MARKUP_ID, kbwModel));
-        aTarget.add(this);
-        isEditing = false;
-    }
-
-    /**
-     * Fragment for viewing/editing knowledge bases, with built-in separation for form components
-     * relevant to only local or remote knowledge bases.
-     */
-    private abstract class DetailFragment
+    private class KBSettingsTitle
         extends Fragment
     {
 
-        private static final long serialVersionUID = 4325217938170626840L;
+        private static final long serialVersionUID = -5459222108913316798L;
 
-        protected CompoundPropertyModel<KnowledgeBaseWrapper> model;
-
-        public DetailFragment(String id, String markupId,
-            CompoundPropertyModel<KnowledgeBaseWrapper> model)
+        public KBSettingsTitle(String id, CompoundPropertyModel<KnowledgeBaseWrapper> model)
         {
-            super(id, markupId, KnowledgeBaseDetailsPanel.this, model);
+            super(id, "kbSettingsTitle", KnowledgeBaseDetailsPanel.this, model);
+            add(new RequiredTextField<>("name", model.bind("kb.name")));
+        }
+    }
+
+    private class KBSettingsContent
+        extends Fragment
+    {
+
+        private static final long serialVersionUID = 7838564354437836375L;
+        protected CompoundPropertyModel<KnowledgeBaseWrapper> model;
+        private TextField<Integer> queryLimitField;
+        private CheckBox maxQueryLimitCheckBox;
+
+        public KBSettingsContent(String id, CompoundPropertyModel<KnowledgeBaseWrapper> model)
+        {
+            super(id, "kbSettingsContent",KnowledgeBaseDetailsPanel.this, model);
 
             this.model = model;
             boolean isHandlingLocalRepository =
@@ -409,65 +392,26 @@ public class KnowledgeBaseDetailsPanel
             setUpRemoteKnowledgeBaseComponents(remote);
         }
 
-        protected abstract void setUpCommonComponents(WebMarkupContainer wmc);
 
-        protected abstract void setUpLocalKnowledgeBaseComponents(WebMarkupContainer wmc);
-
-        protected abstract void setUpRemoteKnowledgeBaseComponents(WebMarkupContainer wmc);
-    }
-
-    private class ViewModeTitle
-        extends Fragment
-    {
-
-        private static final long serialVersionUID = -346255717342200090L;
-
-        public ViewModeTitle(String id, CompoundPropertyModel<KnowledgeBaseWrapper> model)
+        protected void setUpCommonComponents(WebMarkupContainer wmc)
         {
-            super(id, "viewModeTitle", KnowledgeBaseDetailsPanel.this, model);
-            add(new Label("name", model.bind("kb.name")));
-        }
-    }
+            ComboBox<String> comboBox = new ComboBox<String>("language",
+                kbwModel.bind("kb.defaultLanguage"),
+                Arrays.asList("en", "de"));
+            wmc.add(comboBox);
 
-    private class ViewMode
-        extends DetailFragment
-    {
-
-        private static final long serialVersionUID = -6584701320032256335L;
-
-        public ViewMode(String id, CompoundPropertyModel<KnowledgeBaseWrapper> model)
-        {
-            super(id, "viewModeContent", model);
-        }
-
-        @Override
-        protected void setUpCommonComponents(WebMarkupContainer wmc) {
-            wmc.add(new DisabledBootstrapCheckbox("writeprotection", model.bind("kb.readOnly"),
-                    new StringResourceModel("kb.details.permissions.writeprotection")));
-            
             // Schema configuration
-            Component iriPanel = new KnowledgeBaseIriPanel("iriPanel", model,
-                KnowledgeBaseIriPanelMode.PROJECTSETTINGS)
-                            .add(LambdaBehavior.onConfigure(it -> it.setEnabled(false)));
-
-            // add disabled language field
-            wmc.add(new Label("language", kbwModel.bind("kb.defaultLanguage"))
-                .add(LambdaBehavior.onConfigure(tf -> tf.setEnabled(false))));
-
-            // don't show radio group in view mode - normally we'd just disable it, but that doesn't
-            // seem to work
-            iriPanel.get("comboBoxWrapper:iriSchema").setVisible(false);
-            wmc.add(iriPanel);
-
-            wmc.add(new CheckBox("enabled", model.bind("kb.enabled"))
-                .add(LambdaBehavior.onConfigure(it -> it.setEnabled(false))));
-            wmc.add(new RequiredTextField<>("maxResults",
-                model.bind("kb.maxResults"))
-                .add(LambdaBehavior.onConfigure(it -> it.setEnabled(false))));
-
+            wmc.add(new KnowledgeBaseIriPanel("iriPanel", model,
+                KnowledgeBaseIriPanelMode.PROJECTSETTINGS));
+            wmc.add(new CheckBox("enabled", model.bind("kb.enabled")));
+            queryLimitField = queryLimitField("maxResults",
+                model.bind("kb.maxResults"));
+            wmc.add(queryLimitField);
+            maxQueryLimitCheckBox = maxQueryLimitCheckbox("maxQueryLimit", Model.of(false));
+            wmc.add(maxQueryLimitCheckBox);
         }
 
-        @Override protected void setUpLocalKnowledgeBaseComponents(WebMarkupContainer wmc)
+        protected void setUpLocalKnowledgeBaseComponents(WebMarkupContainer wmc)
         {
             // creates a list of export buttons, one for each viable RDF format
             // MB 2018-01: would've been nicer to go for a split button with one recommended format
@@ -495,90 +439,7 @@ public class KnowledgeBaseDetailsPanel
                 }
             };
             wmc.add(lv);
-        }
 
-        @Override
-        protected void setUpRemoteKnowledgeBaseComponents(WebMarkupContainer wmc) {
-            addDisabledTextField(wmc, "url");
-        }
-
-        private void addDisabledIriField(WebMarkupContainer wmc, String id, IModel<IRI> model)
-        {
-            TextField<IRI> textField = new RequiredTextField<IRI>(id, model)
-            {
-                private static final long serialVersionUID = 5886070596284072382L;
-
-                @Override
-                protected String getModelValue()
-                {
-                    return getModelObject().stringValue();
-                }
-
-                @Override
-                protected void onConfigure()
-                {
-                    super.onConfigure();
-                    
-                    setEnabled(false);
-                }
-            };
-            wmc.add(textField);
-        }
-
-        private void addDisabledTextField(WebMarkupContainer wmc, String id)
-        {
-            TextField<String> textField = new RequiredTextField<String>(id);
-            textField.add(LambdaBehavior.onConfigure(tf -> tf.setEnabled(false)));
-            wmc.add(textField);
-        }
-    }
-
-    private class EditModeTitle
-        extends Fragment
-    {
-
-        private static final long serialVersionUID = -5459222108913316798L;
-
-        public EditModeTitle(String id, CompoundPropertyModel<KnowledgeBaseWrapper> model)
-        {
-            super(id, "editModeTitle", KnowledgeBaseDetailsPanel.this, model);
-            add(new RequiredTextField<>("name", model.bind("kb.name")));
-        }
-    }
-
-    private class EditMode
-        extends DetailFragment
-    {
-
-        private static final long serialVersionUID = 7838564354437836375L;
-        private TextField<Integer> queryLimitField;
-        private CheckBox maxQueryLimitCheckBox;
-
-        public EditMode(String id, CompoundPropertyModel<KnowledgeBaseWrapper> model)
-        {
-            super(id, "editModeContent", model);
-        }
-
-        @Override protected void setUpCommonComponents(WebMarkupContainer wmc)
-        {
-            ComboBox<String> comboBox = new ComboBox<String>("language",
-                kbwModel.bind("kb.defaultLanguage"),
-                Arrays.asList("en", "de"));
-            wmc.add(comboBox);
-
-            // Schema configuration
-            wmc.add(new KnowledgeBaseIriPanel("iriPanel", model,
-                KnowledgeBaseIriPanelMode.PROJECTSETTINGS));
-            wmc.add(new CheckBox("enabled", model.bind("kb.enabled")));
-            queryLimitField = queryLimitField("maxResults",
-                model.bind("kb.maxResults"));
-            wmc.add(queryLimitField);
-            maxQueryLimitCheckBox = maxQueryLimitCheckbox("maxQueryLimit", Model.of(false));
-            wmc.add(maxQueryLimitCheckBox);
-        }
-
-        @Override protected void setUpLocalKnowledgeBaseComponents(WebMarkupContainer wmc)
-        {
             wmc.add(new FileUploadField(FILE_UPLOAD_FIELD_MARKUP_ID, Model.of()));
 
             // add link for clearing the knowledge base contents, enabled only, if there is
@@ -600,7 +461,7 @@ public class KnowledgeBaseDetailsPanel
                     new StringResourceModel("kb.details.permissions.writeprotection")));
         }
 
-        @Override protected void setUpRemoteKnowledgeBaseComponents(WebMarkupContainer wmc)
+        protected void setUpRemoteKnowledgeBaseComponents(WebMarkupContainer wmc)
         {
             // this text field allows for _editing_the location for remote repositories
             addUrlField(wmc, "url");

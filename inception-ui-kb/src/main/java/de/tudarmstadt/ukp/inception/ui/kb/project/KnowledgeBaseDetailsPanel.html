@@ -42,7 +42,6 @@
               <span class="form-control" wicket:id="reification" disabled="disabled"></span>
             </div>
           </div>
-  
           <hr />
           <wicket:container wicket:id="content"></wicket:container>
         </div>
@@ -60,23 +59,41 @@
           </a>
         </div>
         <div class="pull-right">
-          <a wicket:id="edit" class="btn btn-default" href="#" role="button">
-            <!-- <i class="fa fa-pencil"></i> --> <wicket:message
-              key="kb.edit" />
-          </a>
           <input type="submit" wicket:id="save" class="btn btn-primary" wicket:message="value:kb.save" />
-          <input type="button" wicket:id="cancel" class="btn btn-default" wicket:message="value:kb.cancel" />
         </div>
       </div>
     </form>
     <div wicket:id="confirmationDialog"></div>
   </wicket:panel>
   
-  <wicket:fragment wicket:id="viewModeTitle">
-    <h3 wicket:id="name" class="panel-title"></h3>
+  <wicket:fragment wicket:id="kbSettingsTitle">
+    <input type="text" wicket:id="name" wicket:message="placeholder:kb.name.placeholder" />
   </wicket:fragment>
+  
+  <wicket:fragment wicket:id="kbSettingsContent">
 
-  <wicket:fragment wicket:id="viewModeContent">
+    <!--Container for REMOTE-KB components -->
+    <wicket:container wicket:id="remote">
+      <div class="form-group row">
+        <label wicket:for="url" class="col-sm-3 control-label">
+          <wicket:message key="kb.remote.url" />
+        </label>
+        <div class="col-sm-9">
+          <input wicket:id="url" type="text" class="form-control" />
+        </div>
+      </div>
+      <div class="form-group row">
+        <label class="col-sm-3 control-label">
+          <wicket:message key="kb.details.contents.permissions" />
+        </label>
+        <div class="col-sm-9">
+          <div wicket:id="writeprotection" class="col-sm-offset-2"></div>
+        </div>
+      </div>
+    </wicket:container>
+
+
+    <!--Container for LOCAL-KB components -->
     <wicket:container wicket:id="local">
       <!-- Export -->
       <div class="form-group row">
@@ -91,80 +108,7 @@
           </div>
         </div>
       </div>
-    </wicket:container>
-    <wicket:container wicket:id="remote">
-      <div class="form-group row">
-        <label wicket:for="url" class="col-sm-3 control-label">
-          <wicket:message key="kb.remote.url" />
-        </label>
-        <div class="col-sm-9">
-          <input wicket:id="url" type="text" class="form-control" />
-        </div>
-      </div>
-    </wicket:container>
-    <wicket:container wicket:id="common-content">
-      <div class="form-group row">
-        <label class="col-sm-3 control-label">
-          <wicket:message key="kb.details.contents.permissions" />
-        </label>
-        <div class="col-sm-9">
-          <div wicket:id="writeprotection" class="col-sm-offset-2"></div>
-        </div>
-      </div>
-      <div class="form-group row">
-        <label class="col-sm-3 control-label">
-          <wicket:message key="kb.details.enabled" />
-        </label>
-        <div class="col-sm-9">
-          <input wicket:id="enabled" type="checkbox" />
-        </div>
-      </div>
-      <div class="form-group row">
-        <div>
-          <label class="col-sm-3 control-label">
-            <wicket:message key="kb.language" />
-          </label>
-          <div wicket:id="language" class="col-sm-9"></div>
-        </div>
-      </div>
-      <div class="form-group row">
-        <label class="col-sm-3 control-label">
-          <wicket:message key="kb.queryLimit" />
-        </label>
-        <div class="col-sm-9">
-          <input class="form-control" style="width:20%;" type="text" wicket:id="maxResults"/>
-        </div>
-      </div>
-      <span wicket:id="iriPanel"></span>
-    </wicket:container>
-  </wicket:fragment>
-  
-  <wicket:fragment wicket:id="editModeTitle">
-    <input type="text" wicket:id="name" wicket:message="placeholder:kb.name.placeholder" />
-  </wicket:fragment>
-  
-  <wicket:fragment wicket:id="editModeContent">
-    <wicket:container wicket:id="remote">
-      <div class="form-group row">
-        <label wicket:for="url" class="col-sm-3 control-label">
-          <wicket:message key="kb.remote.url" />
-        </label>
-        <div class="col-sm-9">
-          <input wicket:id="url" type="text" class="form-control" />
-        </div>
-      </div>
-      <div class="form-group row">
-        <label class="col-sm-3 control-label">
-          <wicket:message key="kb.details.contents.permissions" />
-        </label>
-        <div class="col-sm-9">
-          <div wicket:id="writeprotection" class="col-sm-offset-2"></div>
-        </div>
-      </div>
-    </wicket:container>
-    
-    <wicket:container wicket:id="local">
-      <!-- Contents -->
+      <!-- Import -->
       <div class="form-group row">
         <label class="col-sm-3 control-label">
           <wicket:message key="kb.details.local.contents" />
@@ -191,7 +135,6 @@
           </wicket:enclosure>    
         </div>
       </div>
-
       <!-- Permissions -->
       <div class="form-group row">
         <label class="col-sm-3 control-label">
@@ -202,7 +145,9 @@
         </div>
       </div>
     </wicket:container>
-    
+
+
+    <!--Container for common components of local and remote KBs-->
     <wicket:container wicket:id="common-content">
       <div class="form-group row">
         <label class="col-sm-3 control-label">
@@ -236,6 +181,7 @@
       </div>
       <span wicket:id="iriPanel"></span>
     </wicket:container>
+
   </wicket:fragment>
 </body>
 </html>
