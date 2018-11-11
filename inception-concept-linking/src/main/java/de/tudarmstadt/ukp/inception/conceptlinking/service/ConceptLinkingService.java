@@ -579,11 +579,12 @@ public class ConceptLinkingService
 
     /**
      * Get all linking instances within the scope of a given knowledge base. If null is passed for
-     * the knowledge base, all enabled knowledge bases in the project are considered.
+     * aRepositoryId, all enabled knowledge bases in the project are considered. If the given
+     * aRepositoryId can not be found the method will return an empty list.
      * This method calls {@link #disambiguate(KnowledgeBase, String, String, int, JCas)} to
      * determine the instances for a single knowledge base
      *
-     * @param aKB                 the knowledge base that defines the scope (can be null)
+     * @param aRepositoryId       the RepositoryId of the knowledge base that defines the scope
      * @param aTypedString        What the user has typed so far in the text field. Might be null.
      * @param aMention            Marked Surface form of an entity to be linked.
      * @param aMentionBeginOffset the offset where the mention begins in the text.
@@ -591,22 +592,23 @@ public class ConceptLinkingService
      * @param aProject            the project where the knowledge bases are configured
      * @return all linking instances within the scope
      */
-    public List<KBHandle> getLinkingInstancesInKBScope(KnowledgeBase aKB, String aTypedString,
+    public List<KBHandle> getLinkingInstancesInKBScope(String aRepositoryId, String aTypedString,
         String aMention, int aMentionBeginOffset, JCas aJCas, Project aProject)
     {
-
         List<KBHandle> handles = new ArrayList<>();
-        if (aKB == null) {
+        if (aRepositoryId != null) {
+            Optional<KnowledgeBase> kb = kbService.getKnowledgeBaseById(aProject, aRepositoryId);
+            if (kb.isPresent() && kb.get().isSupportConceptLinking()) {
+                handles = disambiguate(kb.get(), aTypedString, aMention, aMentionBeginOffset,
+                    aJCas);
+            }
+        }
+        else {
             for (KnowledgeBase kb : kbService.getEnabledKnowledgeBases(aProject)) {
                 if (kb.isSupportConceptLinking()) {
                     handles.addAll(
                         disambiguate(kb, aTypedString, aMention, aMentionBeginOffset, aJCas));
                 }
-            }
-        }
-        else {
-            if (aKB.isSupportConceptLinking()) {
-                handles = disambiguate(aKB, aTypedString, aMention, aMentionBeginOffset, aJCas);
             }
         }
         return handles;

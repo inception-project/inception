@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.kb;
 
+import static de.tudarmstadt.ukp.inception.kb.ConceptFeatureValueType.CONCEPT;
+import static de.tudarmstadt.ukp.inception.kb.ConceptFeatureValueType.INSTANCE;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 import java.io.BufferedInputStream;
@@ -97,6 +99,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRe
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
+import de.tudarmstadt.ukp.inception.kb.ConceptFeatureValueType;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
@@ -1383,50 +1386,51 @@ public class KnowledgeBaseServiceImpl
         }
     }
 
-    public List<KBHandle> getEntitiesInScope(ConceptFeatureTraits traits, Project project)
+    @Override
+    public List<KBHandle> getEntitiesInScope(String aRepositoryId, String aConceptScope,
+        ConceptFeatureValueType aValueType, Project project)
     {
         List<KBHandle> handles = new ArrayList<>();
-        if (traits.getRepositoryId() != null) {
+        if (aRepositoryId != null) {
             // If a specific KB is selected, get its instances/concepts
-            Optional<KnowledgeBase> kb = getKnowledgeBaseById(project, traits.getRepositoryId());
+            Optional<KnowledgeBase> kb = getKnowledgeBaseById(project, aRepositoryId);
             if (kb.isPresent()) {
-                handles = getEntitiesForKnowledgeBase(traits, kb.get());
+                handles = getEntitiesForKnowledgeBase(kb.get(), aConceptScope, aValueType);
             }
         }
         else {
             // If no specific KB is selected, collect instances/concepts from all KBs
             for (KnowledgeBase kb : getEnabledKnowledgeBases(project)) {
-                handles.addAll(getEntitiesForKnowledgeBase(traits, kb));
+                handles.addAll(getEntitiesForKnowledgeBase(kb, aConceptScope, aValueType));
             }
         }
         return handles;
     }
 
-    private List<KBHandle> getEntitiesForKnowledgeBase(ConceptFeatureTraits aFeatureTraits,
-        KnowledgeBase aKB)
+    private List<KBHandle> getEntitiesForKnowledgeBase(KnowledgeBase aKB, String aConceptScope,
+        ConceptFeatureValueType aValueType)
     {
         List<KBHandle> handles = new ArrayList<>();
-        if (aFeatureTraits.getScope() != null) {
-            switch (aFeatureTraits.getAllowedValueType()) {
+        if (aConceptScope != null) {
+            switch (aValueType) {
             case INSTANCE:
-                handles = listInstancesForChildConcepts(aKB, aFeatureTraits.getScope(), false, 50);
+                handles = listInstancesForChildConcepts(aKB, aConceptScope, false, 50);
                 break;
             case CONCEPT:
-                handles = listChildConcepts(aKB, aFeatureTraits.getScope(), false);
+                handles = listChildConcepts(aKB, aConceptScope, false);
                 break;
             default:
-                handles.addAll(
-                    listInstancesForChildConcepts(aKB, aFeatureTraits.getScope(), false, 50));
-                handles.addAll(listChildConcepts(aKB, aFeatureTraits.getScope(), false));
+                handles.addAll(listInstancesForChildConcepts(aKB, aConceptScope, false, 50));
+                handles.addAll(listChildConcepts(aKB, aConceptScope, false));
             }
         }
         else {
-            switch (aFeatureTraits.getAllowedValueType()) {
+            switch (aValueType) {
             case INSTANCE:
-                handles.addAll(listAllInstances(aKB, false));
+                handles = listAllInstances(aKB, false);
                 break;
             case CONCEPT:
-                handles.addAll(listConcepts(aKB, false));
+                handles = listConcepts(aKB, false);
                 break;
             default:
                 handles.addAll(listAllInstances(aKB, false));
