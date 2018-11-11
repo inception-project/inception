@@ -516,7 +516,7 @@ public class MtasDocumentIndexTest
         @Bean
         public ImportExportService importExportService()
         {
-            return new ImportExportServiceImpl(
+            return new ImportExportServiceImpl(repositoryProperties(),
                     asList(new TextFormatSupport(), new Conll2002FormatSupport()),
                     casStorageService(), annotationSchemaService());
         }
