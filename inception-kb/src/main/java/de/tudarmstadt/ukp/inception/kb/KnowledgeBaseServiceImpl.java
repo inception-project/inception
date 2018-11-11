@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.kb;
 
-import static de.tudarmstadt.ukp.inception.kb.ConceptFeatureValueType.CONCEPT;
-import static de.tudarmstadt.ukp.inception.kb.ConceptFeatureValueType.INSTANCE;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 import java.io.BufferedInputStream;
@@ -99,7 +97,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRe
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
-import de.tudarmstadt.ukp.inception.kb.ConceptFeatureValueType;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
