@@ -16,22 +16,25 @@
  * limitations under the License.
  */package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.ner;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
+import static java.util.Arrays.asList;
+
 import org.apache.uima.cas.CAS;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.inception.recommendation.api.ClassificationTool;
-import de.tudarmstadt.ukp.inception.recommendation.api.ClassificationToolFactory;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactoryImplBase;
+import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.StringMatchingRecommender;
+import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.StringMatchingRecommenderTraits;
 
 @Component
 public class StringMatchingNerClassificationToolFactory
-    implements ClassificationToolFactory<Object, Void>
+    extends RecommendationEngineFactoryImplBase<Void>
 {
-    private Logger log = LoggerFactory.getLogger(getClass());
-
     // This is a string literal so we can rename/refactor the class without it changing its ID
     // and without the database starting to refer to non-existing recommendation tools.
     public static final String ID = 
@@ -50,10 +53,10 @@ public class StringMatchingNerClassificationToolFactory
     }
 
     @Override
-    public ClassificationTool<Object> createTool(long aRecommenderId, String aFeature,
-        AnnotationLayer aLayer, int aMaxPredictions)
+    public RecommendationEngine build(Recommender aRecommender)
     {
-        return new StringMatchingNerClassificationTool(aRecommenderId, aFeature, aLayer);
+        StringMatchingRecommenderTraits traits = new StringMatchingRecommenderTraits();
+        return new StringMatchingRecommender(aRecommender, traits);
     }
     
     @Override
@@ -63,8 +66,14 @@ public class StringMatchingNerClassificationToolFactory
             return false;
         }
         
-        return (aLayer.isLockToTokenOffset() || aLayer.isMultipleTokens())
+        return (asList(SINGLE_TOKEN, TOKENS).contains(aLayer.getAnchoringMode()))
                 && !aLayer.isCrossSentence() && "span".equals(aLayer.getType())
                 && (CAS.TYPE_NAME_STRING.equals(aFeature.getType()) || aFeature.isVirtualFeature());
+    }
+
+    @Override
+    public boolean isDeprecated()
+    {
+        return true;
     }
 }

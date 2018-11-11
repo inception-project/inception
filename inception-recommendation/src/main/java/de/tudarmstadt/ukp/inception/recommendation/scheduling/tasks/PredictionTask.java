@@ -17,10 +17,23 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.scheduling.tasks;
 
+import static org.apache.uima.fit.util.CasUtil.getAnnotationType;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
+import javax.persistence.NoResultException;
+
+import org.apache.uima.UIMAException;
+import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.Feature;
+import org.apache.uima.cas.Type;
+import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.fit.util.CasUtil;
+import org.apache.uima.fit.util.FSUtil;
+import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,16 +41,21 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.inception.recommendation.api.ClassificationTool;
-import de.tudarmstadt.ukp.inception.recommendation.api.Classifier;
+import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.TokenObject;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 
 /**
  * This consumer predicts new annotations for a given annotation layer, if a classification tool for
@@ -46,6 +64,8 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 public class PredictionTask
     extends Task
 {
+    private static final double NO_SCORE = 0.0;
+
     private Logger log = LoggerFactory.getLogger(getClass());
     
     private @Autowired AnnotationSchemaService annoService;
@@ -62,66 +82,169 @@ public class PredictionTask
     {
         User user = getUser();
 
-        Predictions model = new Predictions(getProject(), getUser()); 
+        Project project = getProject();
+        Predictions model = new Predictions(project, getUser());
+        List<SourceDocument> documents = documentService.listSourceDocuments(project);
 
-        for (AnnotationLayer layer : annoService.listAnnotationLayer(getProject())) {
-            if (!layer.isEnabled()) {
-                continue;
-            }
-            
-            List<Recommender> recommenders = recommendationService.getActiveRecommenders(user,
-                    layer);
-
-            if (recommenders.isEmpty()) {
-                log.debug("[{}][{}]: No active recommenders, skipping prediction.",
-                        user.getUsername(), layer.getUiName());
-                continue;
-            }
-            
-            for (Recommender recommender : recommenders) {
-                long startTime = System.currentTimeMillis();
-                
-                ClassificationTool<?> ct = recommendationService.getTool(recommender,
-                        recommendationService.getMaxSuggestions(user));
-                Classifier<?> classifier = ct.getClassifier();
-
-                classifier.setUser(getUser());
-                classifier.setProject(getProject());
-                classifier.setModel(recommendationService.getTrainedModel(user, recommender));
-    
-                List<AnnotationObject> predictions = new ArrayList<>();
-                
-                log.info("[{}][{}]: Predicting labels...", user.getUsername(),
-                        recommender.getName());
-                
-                List<AnnotationDocument> docs = documentService
-                        .listAnnotationDocuments(layer.getProject(), user);
-
-                docs.forEach(doc -> {
-                    try {
-                        JCas jcas = documentService.readAnnotationCas(doc);
-                        predictions.addAll(classifier.predict(jcas, layer));
-                    } catch (IOException e) {
-                        log.error("Cannot read annotation CAS.", e);
-                    }
-                });
-      
-                // Tell the predictions who created them
-                predictions.forEach(token -> token.setRecommenderId(recommender.getId()));
-
-                if (predictions.isEmpty()) {
-                    log.info("[{}][{}]: No prediction data.", user.getUsername(),
-                            recommender.getName());
-                    return;
+        nextDocument: for (SourceDocument document : documents) {
+            Optional<JCas> jCas = Optional.empty();
+            nextLayer: for (AnnotationLayer layer : annoService.listAnnotationLayer(project)) {
+                if (!layer.isEnabled()) {
+                    continue nextLayer;
                 }
-                
-                model.putPredictions(layer.getId(), predictions);
-                
-                log.info("[{}][{}]: Prediction complete ({} ms)", user.getUsername(),
-                        recommender.getName(), (System.currentTimeMillis() - startTime));
+
+                List<Recommender> recommenders = recommendationService
+                    .getActiveRecommenders(user, layer);
+
+                nextRecommender: for (Recommender r : recommenders) {
+                    // Make sure we have the latest recommender config from the DB - the one from
+                    // the active recommenders list may be outdated
+                    Recommender recommender;
+                    try {
+                        recommender = recommendationService.getRecommender(r.getId());
+                    }
+                    catch (NoResultException e) {
+                        log.info("[{}][{}]: Recommender no longer available... skipping",
+                                user.getUsername(), r.getName());
+                        continue nextRecommender;
+                    }
+                    
+                    if (!recommender.isEnabled()) {
+                        log.debug("[{}][{}]: Disabled - skipping", user.getUsername(), r.getName());
+                        continue nextRecommender;
+                    }
+                    
+                    RecommenderContext ctx = recommendationService.getContext(user, recommender);
+                    
+                    if (!ctx.isReadyForPrediction()) {
+                        log.info("Context for recommender [{}]({}) for user [{}] on document "
+                                + "[{}]({}) in project [{}]({}) is not ready yet - skipping recommender",
+                                recommender.getName(), recommender.getId(), user.getUsername(),
+                                document.getName(), document.getId(), project.getName(),
+                                project.getId());
+                        continue nextRecommender;
+                    }
+                    
+                    RecommendationEngineFactory<?> factory = recommendationService
+                            .getRecommenderFactory(recommender);
+                    RecommendationEngine recommendationEngine = factory.build(recommender);
+
+                    // We lazily load the CAS only at this point because that allows us to skip
+                    // loading the CAS entirely if there is no enabled layer or recommender.
+                    // If the CAS cannot be loaded, then we skip to the next document.
+                    if (!jCas.isPresent()) {
+                        try {
+                            jCas = Optional.of(documentService.readAnnotationCas(document,
+                                    user.getUsername()));
+                        }
+                        catch (IOException e) {
+                            log.error("Cannot read annotation CAS for user [{}] of document "
+                                    + "[{}]({}) in project [{}]({}) - skipping document",
+                                    user.getUsername(), document.getName(), document.getId(),
+                                    project.getName(), project.getId(), e);
+                            continue nextDocument;
+                        }
+                        try {
+                            annoService.upgradeCasIfRequired(jCas.get().getCas(), document,
+                                    user.getUsername());
+                        }
+                        catch (UIMAException | IOException e) {
+                            log.error("Cannot upgrade annotation CAS for user [{}] of document "
+                                    + "[{}]({}) in project [{}]({}) - skipping document",
+                                    user.getUsername(), document.getName(), document.getId(),
+                                    project.getName(), project.getId(), e);
+                            continue nextDocument;
+                        }
+                    }
+                    
+                    try {
+                        recommendationEngine.predict(ctx, jCas.get().getCas());
+                    }
+                    catch (Throwable e) {
+                        log.error("Error applying recommender [{}]({}) for user [{}] to document "
+                                        + "[{}]({}) in project [{}]({}) - skipping recommender",
+                                recommender.getName(), recommender.getId(), user.getUsername(),
+                                document.getName(), document.getId(), project.getName(),
+                                project.getId(), e);
+                        continue nextRecommender;
+                    }
+
+                    String predictedTypeName = recommendationEngine.getPredictedType();
+                    String predictedFeatureName = recommendationEngine.getPredictedFeature();
+                    Optional<String> scoreFeatureName = recommendationEngine.getScoreFeature();
+                    Type predictionType = getAnnotationType(jCas.get().getCas(), predictedTypeName);
+                    Feature labelFeature = predictionType
+                            .getFeatureByBaseName(predictedFeatureName);
+                    Optional<Feature> scoreFeature = scoreFeatureName
+                            .map(predictionType::getFeatureByBaseName);
+
+                    List<AnnotationObject> predictions = extractAnnotations(user,
+                            jCas.get().getCas(), predictionType, labelFeature, scoreFeature,
+                            document, recommender);
+                    model.putPredictions(layer.getId(), predictions);
+
+                    // In order to just extract the annotations for a single recommender, each
+                    // recommender undoes the changes applied in `recommendationEngine.predict`
+
+                    removePredictions(jCas.get().getCas(), predictionType);
+                }
             }
         }
+
+        recommendationService.putIncomingPredictions(getUser(), project, model);
+    }
+
+    private List<AnnotationObject> extractAnnotations(User aUser, CAS aCas, Type predictionType,
+            Feature predictedFeature, Optional<Feature> aScoreFeature, SourceDocument aDocument,
+            Recommender aRecommender)
+    {
+        int predictionCount = 0;
         
-        recommendationService.putIncomingPredictions(getUser(), getProject(), model);
+        DocumentMetaData dmd = DocumentMetaData.get(aCas);
+        String documentUri = dmd.getDocumentUri();
+        
+        List<AnnotationObject> result = new ArrayList<>();
+        int id = 0;
+        for (AnnotationFS annotationFS : CasUtil.select(aCas, predictionType)) {
+            List<Token> tokens = JCasUtil.selectCovered(Token.class, annotationFS);
+            Token firstToken = tokens.get(0);
+            Token lastToken = tokens.get(tokens.size() - 1);
+
+            Offset offset = new Offset();
+            offset.setBeginCharacter(firstToken.getBegin());
+            offset.setEndCharacter(lastToken.getEnd());
+
+            TokenObject to = new TokenObject(offset, annotationFS.getCoveredText(),
+                documentUri, aDocument.getName(), id);
+
+            String label = annotationFS.getFeatureValueAsString(predictedFeature);
+            double score = aScoreFeature.map(f -> FSUtil.getFeature(annotationFS, f, Double.class))
+                    .orElse(NO_SCORE);
+            String featurename = aRecommender.getFeature();
+            String name = aRecommender.getName();
+            AnnotationObject ao = new AnnotationObject(to, label, label, id, featurename, name,
+                    score, aRecommender.getId());
+
+            result.add(ao);
+            id++;
+            
+            predictionCount++;
+        }
+        
+        log.debug(
+                "[{}]({}) for user [{}] on document "
+                        + "[{}]({}) in project [{}]({}) generated {} predictions.",
+                aRecommender.getName(), aRecommender.getId(), aUser.getUsername(),
+                aDocument.getName(), aDocument.getId(), aRecommender.getProject().getName(),
+                aRecommender.getProject().getId(), predictionCount);
+        
+        return result;
+    }
+
+    private void removePredictions(CAS aCas, Type aPredictionType)
+    {
+        for (AnnotationFS fs : CasUtil.select(aCas, aPredictionType)) {
+            aCas.removeFsFromIndexes(fs);
+        }
     }
 }

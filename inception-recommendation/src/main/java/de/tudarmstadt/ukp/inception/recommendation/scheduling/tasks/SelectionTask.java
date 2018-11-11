@@ -20,7 +20,11 @@ package de.tudarmstadt.ukp.inception.recommendation.scheduling.tasks;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import javax.persistence.NoResultException;
 
+import org.apache.commons.lang3.concurrent.LazyInitializer;
+import org.apache.uima.UIMAException;
+import org.apache.uima.cas.CAS;
 import org.apache.uima.jcas.JCas;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,20 +33,17 @@ import org.springframework.context.ApplicationEventPublisher;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.inception.recommendation.api.ClassificationTool;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
+import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
+import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.PercentageBasedSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderEvaluationResultEvent;
-import de.tudarmstadt.ukp.inception.recommendation.imls.conf.EvaluationConfiguration;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.dataobjects.ExtendedResult;
-import de.tudarmstadt.ukp.inception.recommendation.imls.core.evaluation.EvaluationService;
-import de.tudarmstadt.ukp.inception.recommendation.util.EvaluationHelper;
 
 /**
  * This task is run every 60 seconds, if the document has changed. It evaluates all available
@@ -67,7 +68,22 @@ public class SelectionTask
     @Override
     public void run()
     {
+        Project project = getProject();
         User user = getUser();
+        String userName = user.getUsername();
+        
+        // Read the CASes only when they are accessed the first time. This allows us to skip reading
+        // the CASes in case that no layer / recommender is available or if no recommender requires
+        // evaluation.
+        LazyInitializer<List<CAS>> casses = new LazyInitializer<List<CAS>>()
+        {
+            @Override
+            protected List<CAS> initialize()
+            {
+                return readCasses(project, userName);
+            }
+        };
+
         for (AnnotationLayer layer : annoService.listAnnotationLayer(getProject())) {
             if (!layer.isEnabled()) {
                 continue;
@@ -75,70 +91,78 @@ public class SelectionTask
             
             List<Recommender> recommenders = recommendationService.listRecommenders(layer);
             if (recommenders == null || recommenders.isEmpty()) {
-                log.debug("[{}][{}]: No recommenders, skipping selection.", user.getUsername(),
+                log.debug("[{}][{}]: No recommenders, skipping selection.", userName,
                         layer.getUiName());
                 continue;
             }
     
             List<Recommender> activeRecommenders = new ArrayList<>();
             
-            for (Recommender recommender : recommenders) {
+            for (Recommender r : recommenders) {
+                // Make sure we have the latest recommender config from the DB - the one from
+                // the active recommenders list may be outdated
+                Recommender recommender;
+                try {
+                    recommender = recommendationService.getRecommender(r.getId());
+                }
+                catch (NoResultException e) {
+                    log.info("[{}][{}]: Recommender no longer available... skipping",
+                            user.getUsername(), r.getName());
+                    continue;
+                }
+
+                if (!recommender.isEnabled()) {
+                    log.debug("[{}][{}]: Disabled - skipping", userName, recommender.getName());
+                    continue;
+                }
+
+                String recommenderName = recommender.getName();
+                
                 try {
                     long start = System.currentTimeMillis();
-                    
-                    ClassificationTool<?> ct = recommendationService.getTool(recommender,
-                            recommendationService.getMaxSuggestions(user));
-    
-                    if (ct == null || !recommender.isEnabled()) {
+                    RecommendationEngineFactory factory = recommendationService
+                        .getRecommenderFactory(recommender);
+                    RecommendationEngine recommendationEngine = factory.build(recommender);
+
+                    if (recommender.isAlwaysSelected()) {
+                        log.debug("[{}][{}]: Activating [{}] without evaluating - always selected",
+                                userName, recommenderName, recommenderName);
+                        activeRecommenders.add(recommender);
                         continue;
-                    }
-                    
-                    if (recommender.isAlwaysSelected() || !ct.isEvaluable()) {
-                        log.info(
-                                "[{}][{}]: Skipping evaluation (always selected: {}; evaluatable: {})",
-                                user.getUsername(), ct.getId(), recommender.isAlwaysSelected(),
-                                ct.isEvaluable());
+                    } else if (!factory.isEvaluable()) {
+                        log.debug("[{}][{}]: Activating [{}] without evaluating - not evaluable",
+                                userName, recommenderName, recommenderName);
                         activeRecommenders.add(recommender);
                         continue;
                     }
     
-                    log.info("[{}][{}]: Evaluating...", user.getUsername(), recommender.getName());
-                    
-                    EvaluationConfiguration suiteConf = EvaluationHelper
-                            .getTrainingSuiteConfiguration("classificationToolSelection",
-                                    documentService, getProject());
-                    suiteConf.setFeature(ct.getFeature());
-                    EvaluationHelper.customizeConfiguration(ct, "_selectionModel.bin",
-                            documentService, layer.getProject());
-    
-                    ExtendedResult result = evaluate(suiteConf, ct,
-                            documentService.listSourceDocuments(layer.getProject()));
-                    
-                    if (result == null || result.getFscore() < 0) {
-                        log.info("[{}][{}]: Not activated (unable to determine score)",
-                                user.getUsername(), recommender.getName());
-                        continue;
-                    }
-    
+                    log.info("[{}][{}]: Evaluating...", userName, recommenderName);
+
+                    DataSplitter splitter = new PercentageBasedSplitter(0.8, 10);
+                    double score = recommendationEngine.evaluate(casses.get(), splitter);
+
                     Double threshold = recommender.getThreshold();
-                    if (result.getFscore() >= threshold) {
+                    boolean activated;
+                    if (score >= threshold) {
+                        activated = true;
                         activeRecommenders.add(recommender);
                         log.info("[{}][{}]: Activated ({} is above threshold {})",
-                                user.getUsername(), recommender.getName(), result.getFscore(),
+                                user.getUsername(), recommenderName, score,
                                 threshold);
                     }
                     else {
+                        activated = false;
                         log.info("[{}][{}]: Not activated ({} is not above threshold {})",
-                                user.getUsername(), recommender.getName(), result.getFscore(),
+                                user.getUsername(), recommenderName, score,
                                 threshold);
                     }
-                    
+
                     appEventPublisher.publishEvent(new RecommenderEvaluationResultEvent(this,
-                            recommender, user.getUsername(), result,
-                            System.currentTimeMillis() - start));
+                            recommender, user.getUsername(), score,
+                            System.currentTimeMillis() - start, activated));
                 }
                 catch (Throwable e) {
-                    log.error("[{}][{}]: Failed", user.getUsername(), recommender.getName(), e);
+                    log.error("[{}][{}]: Failed", user.getUsername(), recommenderName, e);
                 }
             }
     
@@ -146,28 +170,22 @@ public class SelectionTask
         }
     }
 
-    private ExtendedResult evaluate(EvaluationConfiguration suiteConf, ClassificationTool<?> ct,
-            List<SourceDocument> docs)
+    private List<CAS> readCasses(Project aProject, String aUserName)
     {
-        EvaluationService es = new EvaluationService(ct, suiteConf);
-        
-        List<List<AnnotationObject>> data = new ArrayList<>();
-        for (SourceDocument doc : docs) {
-            AnnotationDocument annoDoc = documentService.createOrGetAnnotationDocument(doc,
-                    getUser());
-            JCas jCas;
-
+        List<CAS> casses = new ArrayList<>();
+        for (SourceDocument document : documentService.listSourceDocuments(aProject)) {
             try {
-                jCas = documentService.readAnnotationCas(annoDoc);
-            }
-            catch (IOException e) {
+                JCas jCas = documentService.readAnnotationCas(document, aUserName);
+                annoService.upgradeCasIfRequired(jCas.getCas(), document, aUserName);
+                casses.add(jCas.getCas());
+            } catch (IOException e) {
                 log.error("Cannot read annotation CAS.", e);
                 continue;
+            } catch (UIMAException e) {
+                log.error("Cannot upgrade annotation CAS.", e);
+                continue;
             }
-            
-            data.addAll(ct.getLoader().loadAnnotationObjectsForEvaluation(jCas));
         }
-
-        return es.evaluate(data);
+        return casses;
     }
 }

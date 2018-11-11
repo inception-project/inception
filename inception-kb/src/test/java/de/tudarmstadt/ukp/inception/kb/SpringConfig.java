@@ -32,7 +32,8 @@ import de.tudarmstadt.ukp.inception.kb.exporter.KnowledgeBaseExporter;
             // We do now text exporting here and the exporter depends on the annotation schema 
             // service which is otherwise not needed. So we exclude this component here.
             @Filter(type = FilterType.ASSIGNABLE_TYPE, classes = { 
-                    KnowledgeBaseExporter.class
+                    KnowledgeBaseExporter.class,
+                    KnowledgeBaseService.class,
             })
         },
         basePackages = {

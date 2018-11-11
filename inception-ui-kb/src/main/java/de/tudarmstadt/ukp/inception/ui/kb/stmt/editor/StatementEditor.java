@@ -51,13 +51,13 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
-import de.tudarmstadt.ukp.inception.app.Focusable;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBQualifier;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
+import de.tudarmstadt.ukp.inception.ui.core.Focusable;
 import de.tudarmstadt.ukp.inception.ui.kb.WriteProtectionBehavior;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxQualifierChangedEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxStatementChangedEvent;
@@ -100,11 +100,10 @@ public class StatementEditor extends Panel
             EditMode editMode = new EditMode(CONTENT_MARKUP_ID, statement, true);
 
             // obtain AjaxRequestTarget and set the focus
-            AjaxRequestTarget target = RequestCycle.get()
-                    .find(AjaxRequestTarget.class);
-            if (target != null) {
-                target.focusComponent(editMode.getFocusComponent());
-            }
+            RequestCycle.get()
+                    .find(AjaxRequestTarget.class)
+                    .ifPresent(target -> target.focusComponent(editMode.getFocusComponent()));
+            
             content = editMode;
         } else {
             content = new ViewMode(CONTENT_MARKUP_ID, statement);

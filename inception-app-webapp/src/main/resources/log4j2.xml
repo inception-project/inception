@@ -38,18 +38,11 @@
   </Appenders>
 
   <Loggers>
-    <Logger name="eu.openminted.annotationeditor" level="INFO"/>
     <Logger name="de.tudarmstadt" level="INFO"/>
-    <Logger name="de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage" level="DEBUG"/>
-    <Logger name="de.tudarmstadt.ukp.inception" level="DEBUG"/>
+    <Logger name="de.tudarmstadt.ukp.inception" level="INFO"/>
+    <Logger name="org.apache.uima" level="ERROR"/>
     <Logger name="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer" level="ERROR"/>
     <Logger name="org.springframework.beans.factory.config.PropertiesFactoryBean" level="ERROR"/>
-    <Logger name="de.tudarmstadt.ukp.clarin.webanno.ui.core.login.LoginPage" level="DEBUG"/>
-    <Logger name="de.tudarmstadt.ukp.clarin.webanno.api.dao.ProjectLifecycleAwareRegistryImpl" level="DEBUG"/>
-    <Logger name="de.tudarmstadt.ukp.inception.app.search.Mimir" level="DEBUG"/>
-    <Logger name="org.apache.uima" level="ERROR"/>
-    <Logger name="org.opennlp.uima.util" level="WARN"/>
-    <Logger name="de.tudarmstadt.ukp.inception.recommendation.imls.core.evaluation" level="WARN"/>
     <Root level="warn">
       <AppenderRef ref="ConsoleAppender" />
       <AppenderRef ref="ProjectAppender" />

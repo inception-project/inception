@@ -90,7 +90,15 @@ public interface KnowledgeBaseService
     boolean knowledgeBaseExists(Project project, String kbName);
 
     Optional<KnowledgeBase> getKnowledgeBaseById(Project project, String aId);
-    
+
+    /**
+     * Update the configuration of a knowledge base.
+     * The given knowledge base must have been added before.
+     * @param kb the {@link KnowledgeBase} to update
+     */
+    void updateKnowledgeBase(KnowledgeBase kb)
+        throws RepositoryException, RepositoryConfigException;
+
     /**
      * Update the configuration of a knowledge base.
      * The given knowledge base must have been added before.
@@ -134,18 +142,6 @@ public interface KnowledgeBaseService
      * @return the KBHandle for the created concept 
      */
     KBHandle createConcept(KnowledgeBase kb, KBConcept aType);
-
-    /**
-     * Read the concept with the given identifier from the given knowledge base.
-     * 
-     * @param kb
-     *            a knowledge base.
-     * @param aIdentifier
-     *            a concept identifier.
-     * @return the concept.
-     */
-    Optional<KBConcept> readConcept(KnowledgeBase kb, String aIdentifier)
-        throws QueryEvaluationException;
 
     /**
      * Find the specified concept form the first KB in the project which provides it.
@@ -469,7 +465,7 @@ public interface KnowledgeBaseService
      */
     void defineBaseProperties(KnowledgeBase akb);
 
-    /**F
+    /**
      * Read an identifier value to return {@link KBObject}
      * @param aProject Project to read the KB identifier
      * @param aIdentifier String value for IRI
@@ -484,7 +480,7 @@ public interface KnowledgeBaseService
      * @return {@link Optional} of {@link KBObject} of type {@link KBConcept} or {@link KBInstance}
      */
     Optional<KBObject> readKBIdentifier(KnowledgeBase akb, String aIdentifier);
-    
+
      /** Retrieves the parent concept for a concept identifier
      * 
      * @param aKB The knowledge base
@@ -496,9 +492,9 @@ public interface KnowledgeBaseService
         throws QueryEvaluationException;
     
     /**
-     * Retrieves the distinct parent concepts till the root element for an identifier regardless of 
-     * it being an instance or concept 
-     * 
+     * Retrieves the distinct parent concepts till the root element for an identifier regardless of
+     * it being an instance or concept
+     *
      * @param aKB The knowledge base
      * @param aIdentifier a concept/instance identifier.
      * @param aAll True if entities with implicit namespaces (e.g. defined by RDF)
@@ -553,4 +549,30 @@ public interface KnowledgeBaseService
      */
     File readKbFileFromClassPathResource(String aLocation) throws IOException;
 
+    /**
+     * Checks whether a property is a base property
+     * @param propertyIdentifier the property that is to be checked
+     * @param aKB the KB
+     * @return true if the property is a base property, false otherwise
+     */
+    boolean isBaseProperty(String propertyIdentifier, KnowledgeBase aKB);
+
+    /**
+     * Can be used to re-index a local KB in case the full text index is corrupt.
+     */
+    void rebuildFullTextIndex(KnowledgeBase aKb) throws Exception;
+    
+    /**
+     * Read the concept with the given identifier from the given knowledge base with a 
+     * specific query
+     * 
+     * @param aKB
+     *            a knowledge base.
+     * @param aIdentifier
+     *            a concept identifier.
+     * @param aAll True if entities with implicit namespaces (e.g. defined by RDF)
+     * @return the concept.
+     */
+    Optional<KBConcept> readConcept(KnowledgeBase aKB, String aIdentifier, boolean aAll)
+            throws QueryEvaluationException;
 }

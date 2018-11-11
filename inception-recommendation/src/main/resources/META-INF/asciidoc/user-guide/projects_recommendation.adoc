@@ -1,10 +1,10 @@
 [[sect_projects_recommendation]]
-=== Recommendation
+== Recommenders
 Recommenders provide annotation support by predicting potential labels.
 These can be either accepted or rejected by the user.
 The recommenders learn from this interaction to further improve the quality of predictions.
 
-After clicking on *Recommendation*, you are displayed a new pane in which you can add new recommenders
+After clicking on *Recommenders*, you are displayed a new pane in which you can add new recommenders
 by clicking on the button *Create*. You have to select the layer, feature and the classification tool.
 The recommenders are trained every time you create, update or delete an annotation;
 and evaluated every second time. During recommender evaluation the f-score of each recommender is calcultated,
@@ -18,20 +18,3 @@ Please do not forget to save after configuring a recommender. Close the pane by 
 If you want to edit a recommender, you can do so by clicking on the recommender and save after editing.
 
 To remove a recommender, click on the recommender and then on *Delete*. This will also remove all predictions by this recommender.
-
-==== ClassificationTool types
-
-* String Matcher
-- This recommender projects the annotations already made to tokens with the same text.
-
-* Multi-Token Sequence Classifier (OpenNlp Name Finder)
-- This recommender makes predictions based on the Apache OpenNlp library.
-
-* Token Sequence Classifier (OpenNlp POS Tagger)
-- This recommender assigns part-of-speech tags, like NN(noun) or JJ(adjective) based on the Apache OpenNlp library.
-The tag set used by the english pos model is the Penn Treebank tag set.
-This recommender is specifically for the POS layer.
-
-* Named Entity Linker
-- A recommender specific to the `identifier` feature of the Named Entity layer.
-It predicts the 3 highest ranked candidate entities for each each token annotated as Named Entity.

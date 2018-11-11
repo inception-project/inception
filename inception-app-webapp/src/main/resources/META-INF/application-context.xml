@@ -56,7 +56,6 @@
     <property name="ignoreResourceNotFound" value="true" />
     <property name="properties">
       <props>
-      <prop key="data.path">#{systemProperties['inception.home'] ?: systemProperties['user.home'].concat('/.inception') }</prop>
       <prop key="repository.path">#{systemProperties['inception.home'] ?: systemProperties['user.home'].concat('/.inception') }/repository/</prop>
       </props>
     </property>

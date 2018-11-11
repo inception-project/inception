@@ -23,7 +23,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -110,12 +112,14 @@ public class ConceptFeatureEditor extends FeatureEditor {
 
             @Override
             protected List<KBHandle> getChoices(String input) {
-                return listInstances(aState, aHandler, input.toLowerCase());
+                return listInstances(aState, aHandler, input != null ? input.toLowerCase() : null);
             }
 
             @Override
-            public void onConfigure(JQueryBehavior behavior) {
+            public void onConfigure(JQueryBehavior behavior)
+            {
                 super.onConfigure(behavior);
+
                 behavior.setOption("autoWidth", true);
                 behavior.setOption("ignoreCase", false);
             }
@@ -164,15 +168,13 @@ public class ConceptFeatureEditor extends FeatureEditor {
         } catch (Exception e) {
             LOG.error("Unable to read traits", e);
             error("Unable to read traits: " + ExceptionUtils.getRootCauseMessage(e));
-            IPartialPageRequestHandler target = RequestCycle.get()
-                .find(IPartialPageRequestHandler.class);
-            if (target != null) {
-                target.addChildren(getPage(), IFeedback.class);
-            }
+            RequestCycle.get()
+                    .find(IPartialPageRequestHandler.class)
+                    .ifPresent(target -> target.addChildren(getPage(), IFeedback.class));
         }
         // Sort results
         handles.sort(Comparator.comparing(KBObject::getUiLabel));
-        return handles;
+        return distinctByIri(handles);
     }
 
     private boolean featureUsesDisabledKB(ConceptFeatureTraits aTraits)
@@ -317,6 +319,15 @@ public class ConceptFeatureEditor extends FeatureEditor {
     public Component getFocusComponent() {
         return focusComponent;
     }
+    
+    private List<KBHandle> distinctByIri(List<KBHandle> aHandles)
+    {
+        Map<String, KBHandle> hMap = new LinkedHashMap<>();
+        for (KBHandle h : aHandles) {
+            hMap.put(h.getIdentifier(), h);
+        }
+        return new ArrayList<>(hMap.values());
+    }    
 
     // TODO: (issue #122 )this method is similar to the method listInstances in
     // SubjectObjectFeatureEditor and QualifierFeatureEditor. It should be refactored.

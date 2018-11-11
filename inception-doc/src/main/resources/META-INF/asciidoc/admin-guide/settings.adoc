@@ -255,7 +255,7 @@ backup.keep.time   = 604800
 
 === External pre-authentication
 
-It is possible to use the application with header-based external per-authentication. In this mode,
+It is possible to use the application with header-based external pre-authentication. In this mode,
 the application looks for a special HTTP header (by default `remote_user`) and if that header exists, 
 it is taken for granted that this user has been authenticated. It will check its internal
 database if a user by the given name exists, otherwise it will create the user.
@@ -263,7 +263,7 @@ database if a user by the given name exists, otherwise it will create the user.
 Pre-authentication can be enabled by setting the property `auth.mode` to `preauth`. When enabling
 pre-authentication mode, the default roles for new users can be controlled using the 
 `auth.preauth.newuser.roles` property. The `ROLE_USER` is always added, even if not specified
-explicitly. Adding also the role `ROLE_PROEJCT_CREATOR` allows all auto-created users also to
+explicitly. Adding also the role `ROLE_PROJECT_CREATOR` allows all auto-created users also to
 create their own projects. 
 
 Since the default administrator user is not created in pre-authentication, it is useful to also

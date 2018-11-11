@@ -1,35 +1,11 @@
 [[sect_knowledge_base]]
-=== Knowledge Base 
+== Knowledge Base 
 
-The knowledge base (KB) module of INCEpTION enables the user to create a KB from scratch or to import it from an RDF file. Alternatively, the user can connect to a remote KB using SPARQL. However, editing the content of remote KBs is currently not supported. The knowledge base enables the user to annotate the text with entities from KB. 
+The knowledge base (KB) module of INCEpTION enables the user to create a KB from scratch or to import it from an RDF file. Alternatively, the user can connect to a remote KB using SPARQL. However, editing the content of remote KBs is currently not supported. This knowledge base can then be for instance used for entity or fact linking and knowledge base population.
 
-This section briefly describes how to set up a KB in the KB management page on *Projects Settings*, explains the functionalities provided by the *Knowledge Base* page and covers the *concept* and *property* feature types. 
+This section briefly describes how to set up a KB in the KB management page on *Projects Settings*, explains the functionalities provided by the *Knowledge Base* page and covers the *concept* and *property* feature types.
 
-==== Setting up a knowledge base 
-
-In the *Projects Settings*, switch to the *Knowledge Bases* tab, then click *New…* on the bottom
- and a dialogue box shows as in the figure below.
-
-[.thumb]
-image::kb1.png[align="center"]
-
-To create a *local* or *remote*  knowledge base, one needs to choose *Local* or *Remote* for the type. For the reification,
-*NONE* is the default case, but to support qualifiers, one needs to choose *WIKIDATA*. 
-
-For the local KB, the user can optionally choose a RDF file from which to import the initial data. Alternatively, the user can skip the step to create an empty KB to create a knowledge base from scratch. It is also always possible to import data from an RDF file after the creation of a KB. It is also possible to  multiple RDF files into the same KB, one after another.
-
-For remote KBs, INCEpTION provides the user with some pre-configured knowledge base such as WikiData, British Museum, BabelNet, DBPediaa or Yago. The user can also set up a custom remote KB, in which case the user needs to provide the SPARQL endpoint URL for the knowledge base as in the figure below.
-
-
-[.thumb]
-image::kb2.png[align="center"]
-
-In the next step, the user is offered a configurable mapping which relies on a minimal set of IRIs that must be defined for any KB used with the platform. The user can choose one of the pre-configured mapping or provide her own custom defined mapping as shown in the figure below. In the advanced settings, the user can leverage this feature of KB settings when one doesn't want the entire knowledge base to be used and rather choose to identify some specific root concepts. This feature specially helps in case of large knowledge bases such as Wikidata.
- 
-[.thumb]
-image::kb3.png[align="center"]
-
-==== Knowledge Base Page
+=== Knowledge Base Page
 
 The knowledge base page provides a concept tree hierarchy with a list of instances and statements, together with the list of properties as shown in the figure below. For local knowledge bases, the user can edit the KB contents here, which includes adding, editing and deleting concepts, properties, statements and instances.
 
@@ -43,35 +19,33 @@ The concept tree in this page is designed using the *subClass* relationship for 
 
 In case the user has the privilege to edit the knowledge base, the user may add statements for concepts, instances and properties. 
 
+=== Statement editors
 
-==== Knowledge Base scope setting for feature layer
+INCEpTION allows the user to edit local knowledge bases. This includes adding statements or subclassing concepts and their instances.
 
-In the *Projects Settings*, switch to the *Layers* tab where the user can edit the configuration for the pre-defined layers or create a new layer clicking the *Create* button on the bottom of the panel. The user can define several features for each of the layers as shown in the figure below.
+In order to create a statement for a particular knowledge base entity, the *Create Statement* can be used.
+
+When creating a new statement about an instance, a list of available properties is shown. After selecting the property of choice, the object of the statement has to be specified. The possible properties for a given subject are restricted by domain the domain of property, i.e. the property *born_in* would need an instance of *human* as the subject.
+
+The same is true for the object of a statement: After choosing the property for a concept, the object has to be specified. The possible objects are limited by the range of the property if given. Right now, four different editors are available to specify features for:
+
+1. *Boolean*: Allows either *true* or *false*
+
+2. *Numeric*: Accepts integers or decimals
+
+3. *String*: String with a language tag or an URI identifying a resource that is not in the knowledge base
+
+4. *KB Resource*: This is provided as an option when the property has a range as a particular concept from the knowledge base. In this option, the user is provided with an auto-complete field with a list of knowledge base entities. This includes the subclass and instances of the range specified for the property.
+
+=== Concept features
+
+Concept features are features that allow referencing concepts in the knowledge base during annotation.
+
+To create a new concept feature, a new feature has to be created under *Projects Settings* -> *Layers*. The type of the new feature should be *KB: Concept/Instance*. Features of this type also can be configured to either take only concepts (select *Only Concept*), only instances (select *Only Instances*) or both (select *Any Concept/Instance*).
 
 [.thumb]
 image::kb5.png[align="center"]
 
-The feature configuration needs a name along with the *Type* which sets the primary scope of the feature. The dropdown provides the user with one of the option as *KB: Concept/Instance*, which sets the scope of the feature to knowledge base entities. 
+When creating a new annotation with this feature, then the user is offered a dropdown with possible entities from the knowledge base. This dropdown is then limited to only concepts or features or both when selecting the respective filter in the feature configuration.
 
-Furthermore, this feature which has been configured, if set to *KB: Concept/Instance*, asks for the *Allowed values* which has three values as options: *Any Concept/Instance*, *Only Concept* and *Only Instance*. When the user annotates the text with the particular layer for this feature which has been configures for *Any Concept/Instance* , the auto complete field lists all the concept and instances, while for *Only Concept* and *Only Instance* it list only concept or only instance respectively.
-
-The feature configuration allows her to set up the configuration to list the values from a specific knowledge base. 
-
-The *Scope* field allows her to set the scope of KB entities with a specific concept limiting the annotation values to sub class and instances of the concept defined as scope. In case the user selects *Any Concept/Instance*, the values will be instances of the specified concept and the child concepts (which includes the hierarchy of child concepts) including their instances, of the specified concept in the *Scope*. Likewise, the choice of *Only Concept* limit the values to the child concepts (which includes the hierarchy of child concepts) and  *Only Instance* limit the values to all of the instances and the instances for the child concepts of the specified concept. 
-
-==== Knowledge Base Statement Validation
-
-INCEpTION provides the user to edit the local knowledge base which includes adding statements to the concepts, sub class and their instances. The platform provides *Create Statement* button for adding in statements for a particular knowledge base entity. 
-
-The user clicks the button and will be offered a set of properties which depends on the domain of each of the properties. Suppose 'X' property in wine ontology has the domain specified as *wine*, then all the sub concepts heirarchy entities including *wine* will include 'X' as the property for *Create Statement*. The set of properties in the dropdown includes the properties which do not specify any domain and is open to adapt to any concept. 
-
-Selecting a specific property then further showcase the user with the range of values considering the range of properties. The list of options depends on the range of the property in case its present otherwise the user has the list of all the options. The platform currently provides four options as described below: 
-
-1. *Boolean*: This presents the user to choose a boolean value for the statement when the property supports the boolean type as range or does not define any range at all.
-
-2. *Numeric*: This accepts numeric type of values including the decimal values. It appears on the dropdown if the property has numeric type of range. 
-
-3. *String*: This is the default resource type where the user has an option to provide a string with a language tag or a URI as a resource which does not exist in KB.  
-
-4. *KB Resource*: This is provided as an option when the property has a range as a particular concept from the knowledge base. In this option, the user is provided with an auto-complete field with a list of knowledge base entities which includes the subclass and instances of the range specified for the property. 
 

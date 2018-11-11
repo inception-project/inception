@@ -31,7 +31,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.page.AgreementPage;
-import de.tudarmstadt.ukp.inception.app.session.SessionMetaData;
+import de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData;
 
 @Component
 @Order(300)
@@ -40,6 +40,12 @@ public class AgreementPageMenuItem implements MenuItem
     private @Autowired UserDao userRepo;
     private @Autowired ProjectService projectService;
 
+    @Override
+    public String getPath()
+    {
+        return "/agreement";
+    }
+    
     @Override
     public String getIcon()
     {

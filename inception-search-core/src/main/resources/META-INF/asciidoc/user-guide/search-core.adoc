@@ -1,6 +1,6 @@
 [[sect_search-core]]
 
-=== Search
+== Search
 
 The INCEpTION search module allows to search for words, passages and annotations made in the 
 documents of a given project. For doing a search, the user must access the search sidebar located 

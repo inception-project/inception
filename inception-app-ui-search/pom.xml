@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>0.5.4-SNAPSHOT</version>
+    <version>0.6.2-SNAPSHOT</version>
   </parent>
   <artifactId>inception-app-ui-search</artifactId>
   <name>INCEpTION - Search - UI</name>
@@ -102,6 +102,10 @@
     <dependency>
       <groupId>org.wicketstuff</groupId>
       <artifactId>wicketstuff-annotationeventdispatcher</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.danekja</groupId>
+      <artifactId>jdk-serializable-functional</artifactId>
     </dependency>
   </dependencies>
 </project>

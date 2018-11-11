@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>0.5.4-SNAPSHOT</version>
+    <version>0.6.2-SNAPSHOT</version>
   </parent>
   <artifactId>inception-recommendation</artifactId>
   <name>INCEpTION - Recommendation - Core</name>
@@ -51,11 +51,11 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-      <artifactId>webanno-ui-annotation</artifactId>
+      <artifactId>webanno-ui-core</artifactId>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-      <artifactId>webanno-ui-core</artifactId>
+      <artifactId>webanno-ui-annotation</artifactId>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
@@ -69,15 +69,6 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-recommendation-api</artifactId>
-    </dependency>
-    
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-imls-core</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-ui-core</artifactId>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -141,16 +132,8 @@
       <artifactId>wicket-spring</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.apache.wicket</groupId>
-      <artifactId>wicket-extensions</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.wicketstuff</groupId>
-      <artifactId>wicketstuff-annotation</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.googlecode.wicket-jquery-ui</groupId>
-      <artifactId>wicket-kendo-ui</artifactId>
+      <groupId>org.danekja</groupId>
+      <artifactId>jdk-serializable-functional</artifactId>
     </dependency>
 
     <dependency>

@@ -65,6 +65,11 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.PrimitiveUimaFeatureSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.ChainLayerSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistryImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.RelationLayerSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.SpanLayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.AnnotationSchemaServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.BackupProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.CasStorageServiceImpl;
@@ -110,8 +115,10 @@ import de.tudarmstadt.ukp.inception.search.scheduling.IndexScheduler;
 @RunWith(SpringRunner.class)
 @EnableAutoConfiguration
 @SpringBootTest(webEnvironment = WebEnvironment.MOCK)
-@EntityScan({ "de.tudarmstadt.ukp.clarin.webanno.model",
+@EntityScan({ 
+        "de.tudarmstadt.ukp.clarin.webanno.model",
         "de.tudarmstadt.ukp.inception.search.model",
+        "de.tudarmstadt.ukp.inception.kb.model",
         "de.tudarmstadt.ukp.clarin.webanno.security.model" })
 @TestPropertySource(locations = "classpath:MtasDocumentIndexTest.properties")
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -477,7 +484,7 @@ public class MtasDocumentIndexTest
         @Bean
         public KnowledgeBaseService knowledgeBaseService()
         {
-            return new KnowledgeBaseServiceImpl(temporaryFolder);
+            return new KnowledgeBaseServiceImpl(repositoryProperties());
         }
 
         @Bean
@@ -536,6 +543,18 @@ public class MtasDocumentIndexTest
         public ApplicationContextProvider contextProvider()
         {
             return new ApplicationContextProvider();
+        }
+        
+        @Bean
+        public LayerSupportRegistry layerSupportRegistry(
+                @Autowired FeatureSupportRegistry aFeatureSupportRegistry)
+        {
+            return new LayerSupportRegistryImpl(asList(
+                    new SpanLayerSupport(aFeatureSupportRegistry, null, annotationSchemaService()),
+                    new RelationLayerSupport(aFeatureSupportRegistry, null,
+                            annotationSchemaService()),
+                    new ChainLayerSupport(aFeatureSupportRegistry, null,
+                            annotationSchemaService())));
         }
     }
 }

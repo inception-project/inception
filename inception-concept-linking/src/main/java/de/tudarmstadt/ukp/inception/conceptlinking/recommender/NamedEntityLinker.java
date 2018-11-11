@@ -18,213 +18,224 @@
 
 package de.tudarmstadt.ukp.inception.conceptlinking.recommender;
 
-import java.io.IOException;
+import static org.apache.uima.fit.util.CasUtil.getAnnotationType;
+import static org.apache.uima.fit.util.CasUtil.getType;
+import static org.apache.uima.fit.util.CasUtil.indexCovered;
+import static org.apache.uima.fit.util.CasUtil.select;
+import static org.apache.uima.fit.util.CasUtil.selectCovered;
+
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.CASException;
+import org.apache.uima.cas.Feature;
+import org.apache.uima.cas.Type;
+import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
-import de.tudarmstadt.ukp.inception.recommendation.api.Classifier;
-import de.tudarmstadt.ukp.inception.recommendation.api.ClassifierConfiguration;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.TokenObject;
+import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext.Key;
+import de.tudarmstadt.ukp.inception.recommendation.api.type.PredictedSpan;
 
 public class NamedEntityLinker
-    extends Classifier<Object>
+    implements RecommendationEngine
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private int tokenId = 0;
-    private User user;
-    private Project project;
-    private String feature;
-
-    // Annotations in the project marked as NamedEntity
-    private Set<AnnotationObject> nerAnnotations = new HashSet<>();
-
-    // How many predictions for this recommender should be displayed
-    private int numPredictions = 3;
+    private Recommender recommender;
+    private NamedEntityLinkerTraits traits;
+    
     private KnowledgeBaseService kbService;
     private ConceptLinkingService clService;
-    private DocumentService documentService;
     private AnnotationSchemaService annoService;
     private FeatureSupportRegistry fsRegistry;
 
-    public NamedEntityLinker(ClassifierConfiguration<Object> aConf, KnowledgeBaseService aKbService,
-        ConceptLinkingService aClService, DocumentService aDocService,
-        AnnotationSchemaService aAnnoService, FeatureSupportRegistry aFsRegistry, String aFeature)
+    public static final Key<Collection<ImmutablePair<String, Collection<AnnotationFS>>>> KEY_MODEL
+        = new Key<>("model");
+
+    public NamedEntityLinker(Recommender aRecommender, NamedEntityLinkerTraits aTraits,
+            KnowledgeBaseService aKbService, ConceptLinkingService aClService,
+            AnnotationSchemaService aAnnoService, FeatureSupportRegistry aFsRegistry)
     {
-        super(aConf);
+        recommender = aRecommender;
+        traits = aTraits;
         kbService = aKbService;
         clService = aClService;
-        documentService = aDocService;
         annoService = aAnnoService;
         fsRegistry = aFsRegistry;
-        conf.setNumPredictions(numPredictions);
-        feature = aFeature;
     }
 
     @Override
-    public void reconfigure()
+    public void train(RecommenderContext aContext, List<CAS> aCasList)
     {
-
+        Collection<ImmutablePair<String, Collection<AnnotationFS>>> nameSamples =
+            extractNamedEntities(aCasList);
+        aContext.put(KEY_MODEL, nameSamples);
+        aContext.markAsReadyForPrediction();
     }
 
-    @Override
-    public void setModel(Object aModel)
+    private Collection<ImmutablePair<String, Collection<AnnotationFS>>> extractNamedEntities(
+        List<CAS> aCasList)
     {
-        if (aModel instanceof Set) {
-            nerAnnotations = (Set<AnnotationObject>) aModel;
-        }
-        else {
-            log.error("Expected model type: Set<TokenObject> - but was: [{}]",
-                aModel != null ? aModel.getClass() : aModel);
-        }
-    }
+        Type tokenType = org.apache.uima.fit.util.CasUtil
+            .getType(aCasList.get(0), recommender.getLayer().getName());
+        Feature feature = tokenType.getFeatureByBaseName(recommender.getFeature());
 
-    @Override
-    public void setUser(User aUser)
-    {
-        user = aUser;
-    }
+        Collection<ImmutablePair<String, Collection<AnnotationFS>>> nameSamples = new HashSet<>();
+        for (CAS cas : aCasList) {
+            Collection<AnnotationFS> namesPerDocument = new ArrayList<>();
+            Type sentenceType = getType(cas, Sentence.class);
 
-    @Override
-    public void setProject(Project project)
-    {
-        this.project = project;
-    }
-
-    /**
-     *
-     * @param inputData
-     *            All sentences to predict annotations for.
-     * @param <T>
-     * @return Predicted sentence.
-     *         Outer list: Represents a document
-     *         Middle list: Represents a sentence
-     *         Inner list: Represents a token (predictions for each token)
-     */
-    @Override
-    public <T extends TokenObject> List<List<List<AnnotationObject>>> predictSentences(
-        List<List<T>> inputData)
-    {
-        List<List<List<AnnotationObject>>> result = new ArrayList<>();
-
-        inputData.parallelStream().forEachOrdered(sentence -> {
-            List<List<AnnotationObject>> annotatedSentence = new ArrayList<>();
-            int sentenceIndex = 0;
-            while (sentenceIndex < sentence.size() - 1) {
-                TokenObject token = sentence.get(sentenceIndex);
-                List<AnnotationObject> word;
-
-                if (isNamedEntity(token)) {
-                    StringBuilder coveredText = new StringBuilder(token.getCoveredText());
-                    int endCharacter = token.getOffset().getEndCharacter();
-                    int endToken = token.getOffset().getEndToken();
-
-                    TokenObject nextTokenObject = sentence.get(sentenceIndex + 1);
-                    // Checking whether the next TokenObject is a NE
-                    // and whether the sentenceIndex for the next TokenObject is still
-                    // in the range of the sentence
-                    while (isNamedEntity(nextTokenObject)
-                        && sentenceIndex + 1 < sentence.size() - 1) {
-                        coveredText.append(" ").append(nextTokenObject.getCoveredText());
-                        endCharacter = nextTokenObject.getOffset().getEndCharacter();
-                        endToken = nextTokenObject.getOffset().getEndToken();
-                        sentenceIndex++;
-                        nextTokenObject = sentence.get(sentenceIndex + 1);
-                    }
-
-                    token.setCoveredText(coveredText.toString());
-                    token.setOffset(new Offset(token.getOffset().getBeginCharacter(), endCharacter,
-                        token.getOffset().getBeginToken(), endToken));
-                    word = predictToken(token);
-                    annotatedSentence.add(word);
-                }
-                sentenceIndex++;
+            Map<AnnotationFS, Collection<AnnotationFS>> sentences = indexCovered(cas, sentenceType,
+                tokenType);
+            for (Map.Entry<AnnotationFS, Collection<AnnotationFS>> e : sentences.entrySet()) {
+                Collection<AnnotationFS> tokens = e.getValue().stream()
+                    // If the identifier has not been set
+                    .filter(a -> a.getStringValue(feature) == null)
+                    .collect(Collectors.toSet());
+                namesPerDocument.addAll(tokens);
             }
-            result.add(annotatedSentence);
-        });
-        return result;
+
+            // TODO #176 use the document Id once it is available in the CAS
+            nameSamples.add(
+                new ImmutablePair<>(DocumentMetaData.get(cas).getDocumentUri(), namesPerDocument));
+        }
+        return nameSamples;
     }
 
-    private List<AnnotationObject> predictToken(TokenObject token)
+    // TODO #176 use the document Id once it is available in the CAS
+    private boolean isNamedEntity(RecommenderContext aContext, AnnotationFS token,
+            String aDocumentUri)
+        throws RecommendationException
+    {
+        Collection<ImmutablePair<String, Collection<AnnotationFS>>> model = aContext.get(KEY_MODEL)
+                .orElseThrow(() -> new RecommendationException(
+                        "Key [" + KEY_MODEL + "] not found in context"));
+        
+        return model.stream().anyMatch(pair -> pair.getLeft().equals(aDocumentUri)
+        && pair.getRight().stream().anyMatch(t -> t.getBegin() == token.getBegin()));
+    }
+
+    @Override
+    public void predict(RecommenderContext aContext, CAS aCas) throws RecommendationException
+    {
+        try {
+            JCas jCas = aCas.getJCas();
+            Type sentenceType = getType(aCas, Sentence.class);
+            Type tokenType = getType(aCas, Token.class);
+
+            for (AnnotationFS sentence : select(aCas, sentenceType)) {
+                List<AnnotationFS> tokenAnnotations = selectCovered(tokenType, sentence);
+                predictSentence(aContext, tokenAnnotations, jCas);
+            }
+        }
+        catch (CASException e) {
+            log.error("An error when to trying to access the JCas from Cas.", e);
+        }
+    }
+
+    private void predictSentence(RecommenderContext aContext, List<AnnotationFS> aTokenAnnotations,
+            JCas aJcas)
+        throws RecommendationException
+    {
+        int sentenceIndex = 0;
+        while (sentenceIndex < aTokenAnnotations.size() - 1) {
+            AnnotationFS token = aTokenAnnotations.get(sentenceIndex);
+
+            if (isNamedEntity(aContext, token, DocumentMetaData.get(aJcas).getDocumentUri())) {
+                StringBuilder coveredText = new StringBuilder(token.getCoveredText());
+                int begin = token.getBegin();
+                int end = token.getEnd();
+
+                AnnotationFS nextTokenObject = aTokenAnnotations.get(sentenceIndex + 1);
+                // Checking whether the next TokenObject is a NE
+                // and whether the sentenceIndex for the next TokenObject is still
+                // in the range of the sentence
+                while (isNamedEntity(aContext, nextTokenObject,
+                    DocumentMetaData.get(aJcas).getDocumentUri())
+                    && sentenceIndex + 1 < aTokenAnnotations.size() - 1) {
+                    coveredText.append(" ").append(nextTokenObject.getCoveredText());
+                    end = nextTokenObject.getEnd();
+                    sentenceIndex++;
+                    nextTokenObject = aTokenAnnotations.get(sentenceIndex + 1);
+                }
+                predictToken(coveredText.toString(), begin, end, aJcas);
+
+            }
+            sentenceIndex++;
+        }
+    }
+
+    private void predictToken(String aCoveredText, int aBegin, int aEnd, JCas aJcas)
     {
         List<KBHandle> handles = new ArrayList<>();
 
-        AnnotationLayer layer = annoService
-            .getLayer("de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity", project);
-        AnnotationFeature feat = annoService.getFeature(feature, layer);
+        AnnotationFeature feat = annoService
+            .getFeature(recommender.getFeature(), recommender.getLayer());
         FeatureSupport<ConceptFeatureTraits> fs = fsRegistry.getFeatureSupport(feat);
-        ConceptFeatureTraits traits = fs.readTraits(feat);
+        ConceptFeatureTraits conceptFeatureTraits = fs.readTraits(feat);
 
-        if (traits.getRepositoryId() != null) {
-            Optional<KnowledgeBase> kb = kbService.getKnowledgeBaseById(project,
-                traits.getRepositoryId());
+        if (conceptFeatureTraits.getRepositoryId() != null) {
+            Optional<KnowledgeBase> kb = kbService.getKnowledgeBaseById(recommender.getProject(),
+                    conceptFeatureTraits.getRepositoryId());
             if (kb.isPresent() && kb.get().isSupportConceptLinking()) {
-                handles.addAll(readCandidates(kb.get(), token));
+                handles.addAll(readCandidates(kb.get(), aCoveredText, aBegin, aJcas));
             }
-        }
-        for (KnowledgeBase kb : kbService.getEnabledKnowledgeBases(project)) {
-            if (kb.isSupportConceptLinking()) {
-                handles.addAll(readCandidates(kb, token));
+        } else {
+            for (KnowledgeBase kb : kbService.getEnabledKnowledgeBases(recommender.getProject())) {
+                if (kb.isSupportConceptLinking()) {
+                    handles.addAll(readCandidates(kb, aCoveredText, aBegin, aJcas));
+                }
             }
         }
 
-        return handles.stream()
-            .limit(conf.getNumPredictions())
-            .map(h -> new AnnotationObject(token, h.getIdentifier(), h.getDescription(), tokenId++,
-                feature, "NamedEntityLinker", conf.getRecommenderId()))
-            .collect(Collectors.toList());
+        Type predictionType = getAnnotationType(aJcas.getCas(), PredictedSpan.class);
+
+        Feature labelFeature = predictionType.getFeatureByBaseName("label");
+
+        for (KBHandle prediction : handles.stream().limit(recommender.getMaxRecommendations())
+            .collect(Collectors.toList())) {
+            AnnotationFS annotation = aJcas.getCas().createAnnotation(predictionType, aBegin, aEnd);
+            annotation.setStringValue(labelFeature, prediction.getIdentifier());
+            aJcas.getCas().addFsToIndexes(annotation);
+        }
     }
 
-    private boolean isNamedEntity(TokenObject token)
+    private List<KBHandle> readCandidates(KnowledgeBase kb, String aCoveredText, int aBegin,
+        JCas aJcas)
     {
-        return nerAnnotations.stream()
-            .map(AnnotationObject::getTokenObject)
-            .anyMatch(t -> t.getOffset().equals(token.getOffset())
-                   && t.getDocumentURI().equals(token.getDocumentURI()));
+        return kbService
+            .read(kb, (conn) -> clService.disambiguate(kb, null, aCoveredText, aBegin, aJcas));
     }
 
-    private List<KBHandle> readCandidates(KnowledgeBase kb, TokenObject token) {
-        return kbService.read(kb, (conn) -> {
-            SourceDocument doc = documentService
-                .getSourceDocument(project, token.getDocumentName());
-            AnnotationDocument annoDoc = documentService
-                .createOrGetAnnotationDocument(doc, user);
-            JCas jCas;
-            try {
-                jCas = documentService.readAnnotationCas(annoDoc);
-                return clService.disambiguate(kb, "", token.getCoveredText(),
-                    token.getOffset().getBeginCharacter(), jCas);
-            }
-            catch (IOException e) {
-                log.error("An error occurred while retrieving entity candidates.", e);
-                return Collections.emptyList();
-            }
-        });
+    @Override
+    public double evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
+    {
+        throw new UnsupportedOperationException("Evaluation not supported");
     }
 }

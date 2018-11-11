@@ -21,12 +21,11 @@ import java.util.Iterator;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-
 import org.apache.uima.jcas.JCas;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.DisposableBean;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
@@ -43,6 +42,7 @@ import de.tudarmstadt.ukp.inception.search.scheduling.tasks.Task;
  */
 @Component
 public class IndexScheduler
+    implements InitializingBean, DisposableBean
 {
     private Logger log = LoggerFactory.getLogger(getClass());
 
@@ -51,8 +51,9 @@ public class IndexScheduler
     private Thread consumer;
     private BlockingQueue<Task> queue = new ArrayBlockingQueue<Task>(100);
 
-    @PostConstruct
-    private void startSchedulerThread()
+    
+    @Override
+    public void afterPropertiesSet()
     {
         consumer = new Thread(new TaskConsumer(applicationContext, queue), "Index task consumer");
         consumer.setPriority(Thread.MIN_PRIORITY);
@@ -60,7 +61,7 @@ public class IndexScheduler
         log.info("Started Search Indexing Thread");
     }
 
-    @PreDestroy
+    @Override
     public void destroy()
     {
         consumer.interrupt();

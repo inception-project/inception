@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>0.5.4-SNAPSHOT</version>
+    <version>0.6.2-SNAPSHOT</version>
   </parent>
   <artifactId>inception-search-mtas</artifactId>
   <name>INCEpTION - Search - MTAS</name>
@@ -115,8 +115,8 @@
     </dependency>
 
     <dependency>
-      <groupId>org.apache.wicket</groupId>
-      <artifactId>wicket-core</artifactId>
+      <groupId>com.github.openjson</groupId>
+      <artifactId>openjson</artifactId>
     </dependency>
 
     <dependency>

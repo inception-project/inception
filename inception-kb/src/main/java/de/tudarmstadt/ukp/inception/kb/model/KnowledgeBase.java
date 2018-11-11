@@ -115,7 +115,15 @@ public class KnowledgeBase
      */
     @Column(nullable = false)
     private IRI descriptionIri;
-    
+
+    /**
+     * The IRI used for full text search, e.g. {@code bif:contains} or 
+     * {@code http://www.openrdf.org/contrib/lucenesail#}. If this field is null, then FTS is not
+     * supported.
+     */
+    @Column(nullable = true)
+    private IRI fullTextSearchIri;
+
     /**
      * The IRI for a property describing B being a label for A, e.g. rdfs:label 
      */
@@ -139,7 +147,7 @@ public class KnowledgeBase
      */
     @Column(nullable = false)
     private IRI propertyDescriptionIri;
-    
+
     @Column(nullable = false)
     private boolean readOnly;
 
@@ -152,9 +160,6 @@ public class KnowledgeBase
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private Reification reification = NONE;
-    
-    @Column(name = "supportConceptLinking", nullable = false)
-    private boolean supportConceptLinking = false;
     
     /**
      * All statements created in a local KB are prefixed with this string 
@@ -175,6 +180,12 @@ public class KnowledgeBase
      */
     @Column
     private String defaultLanguage;
+
+    /**
+     * Limits the number of results that can be retrieved from a SPARQL query.
+     */
+    @Column(nullable = false)
+    private int maxResults;
 
     public String getRepositoryId() {
         return repositoryId;
@@ -275,6 +286,16 @@ public class KnowledgeBase
         propertyTypeIri = aPropertyTypeIri;
     }
 
+    public IRI getFullTextSearchIri()
+    {
+        return fullTextSearchIri;
+    }
+
+    public void setFullTextSearchIri(IRI aFtsIri)
+    {
+        fullTextSearchIri = aFtsIri;
+    }
+
     public String getDefaultLanguage()
     {
         return defaultLanguage;
@@ -344,12 +365,8 @@ public class KnowledgeBase
         return !(repositoryId == null || isEmpty(repositoryId));
     }
     
-    public void setSupportConceptLinking(boolean aSupportConceptLinking) {
-        supportConceptLinking = aSupportConceptLinking;
-    }
-    
     public boolean isSupportConceptLinking() {
-        return supportConceptLinking;
+        return fullTextSearchIri != null;
     }
     
     public String getBasePrefix()
@@ -370,6 +387,16 @@ public class KnowledgeBase
     public void setExplicitlyDefinedRootConcepts(List<IRI> aExplicitlyDefinedRootConcepts)
     {
         explicitlyDefinedRootConcepts = aExplicitlyDefinedRootConcepts;
+    }
+
+    public int getMaxResults()
+    {
+        return maxResults;
+    }
+
+    public void setMaxResults(int aSparqlQueryResultLimit)
+    {
+        maxResults = aSparqlQueryResultLimit;
     }
 
     public void applyMapping(KnowledgeBaseMapping aMapping)
@@ -393,11 +420,11 @@ public class KnowledgeBase
             ValueFactory vf = SimpleValueFactory.getInstance();
             for (String rootConcept : aProfile.getRootConcepts()) {
                 explicitlyDefinedRootConcepts.add(vf.createIRI(rootConcept));
-            } 
+            }
         }
     }
-    
-    
+
+
     @Override
     public String toString()
     {

@@ -20,12 +20,38 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>0.5.4-SNAPSHOT</version>
+    <version>0.6.2-SNAPSHOT</version>
   </parent>
   <artifactId>inception-concept-linking</artifactId>
-  <name>INCEpTION - Entity Linking</name>
+  <name>INCEpTION - Concept Linking</name>
 
   <dependencies>
+    <!-- 
+      These dependencies (in particular "rdf4j-repository-sparql") need to come early (in 
+      particular before inception-kb) otherwise the Maven dependency checking plugin gets 
+      with some RDF4J classes existing in multiple RDF4J JARs.
+     -->
+    <dependency>
+      <groupId>org.eclipse.rdf4j</groupId>
+      <artifactId>rdf4j-repository-sparql</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.rdf4j</groupId>
+      <artifactId>rdf4j-repository-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.rdf4j</groupId>
+      <artifactId>rdf4j-model</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.rdf4j</groupId>
+      <artifactId>rdf4j-query</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.rdf4j</groupId>
+      <artifactId>rdf4j-queryrender</artifactId>
+    </dependency>
+  
     <dependency>
       <groupId>org.apache.uima</groupId>
       <artifactId>uimaj-core</artifactId>
@@ -41,20 +67,16 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-imls-core</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-recommendation-api</artifactId>
     </dependency>
 
     <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-      <artifactId>webanno-api</artifactId>
+      <artifactId>webanno-api-annotation</artifactId>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-      <artifactId>webanno-api-annotation</artifactId>
+      <artifactId>webanno-api-dao</artifactId>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
@@ -62,16 +84,25 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-      <artifactId>webanno-security</artifactId>
+      <artifactId>webanno-api</artifactId>
     </dependency>
 
     <dependency>
       <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
-      <artifactId>de.tudarmstadt.ukp.dkpro.core.api.ner-asl</artifactId>
+      <artifactId>de.tudarmstadt.ukp.dkpro.core.api.metadata-asl</artifactId>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
       <artifactId>de.tudarmstadt.ukp.dkpro.core.api.segmentation-asl</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.wicket</groupId>
+      <artifactId>wicket-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.wicket</groupId>
+      <artifactId>wicket-spring</artifactId>
     </dependency>
 
     <dependency>
@@ -92,6 +123,11 @@
     </dependency>
 
     <dependency>
+      <groupId>javax.persistence</groupId>
+      <artifactId>javax.persistence-api</artifactId>
+    </dependency>
+
+    <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot</artifactId>
     </dependency>
@@ -103,22 +139,105 @@
       <groupId>org.springframework</groupId>
       <artifactId>spring-context</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-tx</artifactId>
+    </dependency>
 
+    <!-- Testing -->
     <dependency>
-      <groupId>org.eclipse.rdf4j</groupId>
-      <artifactId>rdf4j-repository-api</artifactId>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.eclipse.rdf4j</groupId>
-      <artifactId>rdf4j-model</artifactId>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.eclipse.rdf4j</groupId>
-      <artifactId>rdf4j-query</artifactId>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.eclipse.rdf4j</groupId>
-      <artifactId>rdf4j-queryrender</artifactId>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-data-jpa</artifactId>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>ch.qos.logback</groupId>
+          <artifactId>logback-classic</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-autoconfigure</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-test-autoconfigure</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.h2database</groupId>
+      <artifactId>h2</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
+      <artifactId>de.tudarmstadt.ukp.dkpro.core.api.datasets-asl</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
+      <artifactId>de.tudarmstadt.ukp.dkpro.core.testing-asl</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+        <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
+        <artifactId>de.tudarmstadt.ukp.dkpro.core.api.ner-asl</artifactId>
+        <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
+      <artifactId>de.tudarmstadt.ukp.dkpro.core.io.conll-asl</artifactId>
+      <scope>test</scope>
     </dependency>
   </dependencies>
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-dependency-plugin</artifactId>
+          <configuration>
+            <usedDependencies>
+              <!-- Testing - used via reflection -->
+              <usedDependency>com.h2database:h2</usedDependency>
+              <usedDependency>org.springframework.boot:spring-boot-starter-test</usedDependency>
+              <usedDependency>org.springframework.boot:spring-boot-starter-data-jpa</usedDependency>
+            </usedDependencies>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
 </project>

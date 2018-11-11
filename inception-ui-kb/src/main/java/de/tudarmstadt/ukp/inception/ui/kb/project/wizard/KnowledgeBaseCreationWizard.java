@@ -30,11 +30,12 @@ import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.ajax.markup.html.form.AjaxCheckBox;
 import org.apache.wicket.behavior.AttributeAppender;
-import org.apache.wicket.extensions.wizard.CancelButton;
 import org.apache.wicket.extensions.wizard.FinishButton;
 import org.apache.wicket.extensions.wizard.IWizard;
 import org.apache.wicket.extensions.wizard.IWizardStep;
+import org.apache.wicket.extensions.wizard.WizardButton;
 import org.apache.wicket.extensions.wizard.dynamic.DynamicWizardModel;
 import org.apache.wicket.extensions.wizard.dynamic.DynamicWizardStep;
 import org.apache.wicket.extensions.wizard.dynamic.IDynamicWizardStep;
@@ -52,12 +53,14 @@ import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.validation.IValidator;
 import org.apache.wicket.validation.ValidationError;
+import org.apache.wicket.validation.validator.RangeValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,15 +72,18 @@ import de.agilecoders.wicket.core.markup.html.bootstrap.form.radio.EnumRadioChoi
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
-import de.tudarmstadt.ukp.inception.app.bootstrap.BootstrapWizard;
-import de.tudarmstadt.ukp.inception.app.bootstrap.BootstrapWizardButtonBar;
+import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
+import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
 import de.tudarmstadt.ukp.inception.kb.io.FileUploadDownloadHelper;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
+import de.tudarmstadt.ukp.inception.ui.core.bootstrap.BootstrapWizard;
+import de.tudarmstadt.ukp.inception.ui.core.bootstrap.BootstrapWizardButtonBar;
 import de.tudarmstadt.ukp.inception.ui.kb.project.KnowledgeBaseIriPanel;
 import de.tudarmstadt.ukp.inception.ui.kb.project.KnowledgeBaseIriPanelMode;
 import de.tudarmstadt.ukp.inception.ui.kb.project.KnowledgeBaseListPanel;
@@ -106,6 +112,7 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
     private static final int MAXIMUM_REMOTE_REPO_SUGGESTIONS = 10;
 
     private @SpringBean KnowledgeBaseService kbService;
+    private @SpringBean KnowledgeBaseProperties kbproperties;
 
     private final Map<String, File> uploadedFiles;
     private final IModel<Project> projectModel;
@@ -114,7 +121,7 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
     private final Map<String, KnowledgeBaseProfile> knowledgeBaseProfiles;
     private final Map<String, KnowledgeBaseProfile> downloadedProfiles;
     private final List<String> languages = Arrays.asList("en", "de");
-    
+
     public KnowledgeBaseCreationWizard(String id, IModel<Project> aProjectModel)
     {
         super(id);
@@ -160,6 +167,8 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
         private static final long serialVersionUID = 2632078392967948962L;
         
         private CompoundPropertyModel<KnowledgeBaseWrapper> model;
+        private TextField<Integer> queryLimitField;
+        private CheckBox maxQueryLimitCheckBox;
 
         public TypeStep(IDynamicWizardStep previousStep,
                 CompoundPropertyModel<KnowledgeBaseWrapper> model)
@@ -171,6 +180,10 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
             add(repositoryTypeRadioButtons("type", "kb.type"));
             add(languageComboBox("language", model.bind("kb.defaultLanguage")));
             add(selectReificationStrategy("reification", "kb.reification"));
+            queryLimitField = queryLimitField("maxResults", model.bind("kb.maxResults"));
+            add(queryLimitField);
+            maxQueryLimitCheckBox = maxQueryLimitCheckbox("maxQueryLimit", Model.of(false));
+            add(maxQueryLimitCheckBox);
         }
 
         private DropDownChoice<Reification> selectReificationStrategy(String id, String property)
@@ -220,15 +233,15 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
             });
         }
 
-        private ComboBox<String> languageComboBox(String id, IModel<String> model)
+        private ComboBox<String> languageComboBox(String id, IModel<String> aModel)
         {
             // Only set model object if it has not been initialized yet
-            if (model.getObject() == null) {
-                model.setObject(languages.get(0));
+            if (aModel.getObject() == null) {
+                aModel.setObject(languages.get(0));
             }
 
-            IModel<String> adapter = new LambdaModelAdapter<String>(model::getObject,
-                model::setObject);
+            IModel<String> adapter = new LambdaModelAdapter<String>(aModel::getObject,
+                aModel::setObject);
 
             ComboBox<String> comboBox = new ComboBox<String>(id, adapter, languages);
             comboBox.setOutputMarkupId(true);
@@ -237,6 +250,35 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
                 // Do nothing just update the model values
             }));
             return comboBox;
+        }
+
+        private TextField<Integer> queryLimitField(String id, IModel<Integer> aModel)
+        {
+            if (aModel.getObject() == 0) {
+                aModel.setObject(kbproperties.getDefaultMaxResults());
+            }
+            TextField<Integer> queryLimit = new RequiredTextField<Integer>(id, aModel);
+            queryLimit.add(RangeValidator.range(0, kbproperties.getHardMaxResults()));
+            queryLimit.setOutputMarkupId(true);
+            return queryLimit;
+        }
+
+        private CheckBox maxQueryLimitCheckbox(String aId, IModel<Boolean> aModel) {
+            return new AjaxCheckBox(aId, aModel) {
+                private static final long serialVersionUID = 1L;
+
+                @Override
+                public void onUpdate(AjaxRequestTarget aTarget) {
+                    if (getModelObject()) {
+                        queryLimitField.setModelObject(kbproperties.getHardMaxResults());
+                        queryLimitField.setEnabled(false);
+                    }
+                    else {
+                        queryLimitField.setEnabled(true);
+                    }
+                    aTarget.add(queryLimitField);
+                }
+            };
         }
 
         private BootstrapRadioGroup<RepositoryType> repositoryTypeRadioButtons(String id,
@@ -249,9 +291,10 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
                 private static final long serialVersionUID = -3015289695381851498L;
 
                 @Override
-                protected RadioGroup<RepositoryType> newRadioGroup(String id,
-                                                                   IModel<RepositoryType> model) {
-                    RadioGroup<RepositoryType> group = super.newRadioGroup(id, model);
+                protected RadioGroup<RepositoryType> newRadioGroup(String aId,
+                        IModel<RepositoryType> aModel)
+                {
+                    RadioGroup<RepositoryType> group = super.newRadioGroup(aId, aModel);
                     group.setRequired(true);
                     group.add(new AttributeAppender("class", " btn-group-justified"));
                     return group;
@@ -267,7 +310,7 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
 
         private static final long serialVersionUID = 8212277960059805657L;
         private static final String CLASSPATH_PREFIX = "classpath:";
-        
+
         private CompoundPropertyModel<KnowledgeBaseWrapper> model;
         private FileUploadField fileUpload;
         private WebMarkupContainer listViewContainer;
@@ -280,6 +323,7 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
             super(previousStep);
             model = aModel;
             model.getObject().setFiles(new ArrayList<>());
+            model.getObject().getKb().setFullTextSearchIri(IriConstants.FTS_LUCENE);
             completed = true;
 
             fileUpload = new FileUploadField("upload");
@@ -293,19 +337,16 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
             ListView<KnowledgeBaseProfile> suggestions = new ListView<KnowledgeBaseProfile>(
                 "downloadableKBs", downloadableKBs)
             {
+                private static final long serialVersionUID = 1L;
+
                 @Override protected void populateItem(ListItem<KnowledgeBaseProfile> item)
                 {
                     LambdaAjaxLink link = new LambdaAjaxLink("suggestionLink", t -> {
                         selectedKnowledgeBaseProfile = item.getModelObject();
-                    })
-                    {
-                        @Override protected void onConfigure()
-                        {
-                            // Can not download the same KB more than once
-                            setEnabled(
-                                !downloadedProfiles.containsKey(item.getModelObject().getName()));
-                        }
-                    };
+                    });
+                    // Can not download the same KB more than once
+                    link.add(LambdaBehavior.onConfigure(_this -> setEnabled(
+                            !downloadedProfiles.containsKey(item.getModelObject().getName()))));
 
                     String itemLabel = item.getModelObject().getName();
                     // Adjust label to indicate whether the KB has already been downloaded
@@ -446,6 +487,9 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
         {
             super(previousStep, "", "", model);
             this.model = model;
+
+            // In case the user stepped back from the local mode
+            model.getObject().getKb().setFullTextSearchIri(null);
             
             RequiredTextField<String> urlField = new RequiredTextField<>("url");
             urlField.add(Validators.URL_VALIDATOR);
@@ -464,8 +508,8 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
 
                 private static final long serialVersionUID = 4179629475064638272L;
 
-                @Override protected void populateItem(ListItem<KnowledgeBaseProfile> item)
-                {
+                @Override
+                protected void populateItem(ListItem<KnowledgeBaseProfile> item) {
                     // add a link for one knowledge base with proper label
                     LambdaAjaxLink link = new LambdaAjaxLink("suggestionLink", t -> {
                         // set all the fields according to the chosen profile
@@ -482,7 +526,6 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
                     item.add(link);
                 }
             });
-            add(new CheckBox("supportConceptLinking", model.bind("kb.supportConceptLinking")));
         }
         
         @Override
@@ -568,11 +611,12 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
             private static final long serialVersionUID = 5657260438232087635L;
 
             @Override
-            protected FinishButton newFinishButton(String id, IWizard wizard)
+            protected FinishButton newFinishButton(String aId, IWizard aWizard)
             {
-                FinishButton button = new FinishButton(id, wizard)
+                FinishButton button = new FinishButton(aId, aWizard)
                 {
                     private static final long serialVersionUID = -7070739469409737740L;
+
                     @Override
                     public void onAfterSubmit() {
                         // update the list panel and close the dialog - this must be done in
@@ -581,7 +625,8 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
                         IWizardStep step = wizardModel.getActiveStep();
                         if (step.isComplete()) {
                             AjaxRequestTarget target = RequestCycle.get()
-                                    .find(AjaxRequestTarget.class);
+                                    .find(AjaxRequestTarget.class)
+                                    .get();
                             target.add(findParent(KnowledgeBaseListPanel.class));
                             findParent(KnowledgeBaseCreationDialog.class).close(target);
                         }
@@ -591,9 +636,9 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
             }
 
             @Override
-            protected CancelButton newCancelButton(String id, IWizard wizard)
+            protected WizardButton newCancelButton(String aId, IWizard aWizard)
             {
-                CancelButton button = super.newCancelButton(id, wizard);
+                WizardButton button = super.newCancelButton(aId, aWizard);
                 button.add(new AjaxEventBehavior("click") {
 
                     private static final long serialVersionUID = 3425946914411261187L;

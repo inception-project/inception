@@ -52,10 +52,12 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
+import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.inception.search.SearchResult;
 import de.tudarmstadt.ukp.inception.search.SearchService;
+import de.tudarmstadt.ukp.inception.search.event.SearchQueryEvent;
 import wicket.contrib.input.events.EventType;
 import wicket.contrib.input.events.InputBehavior;
 import wicket.contrib.input.events.key.KeyType;
@@ -69,6 +71,7 @@ public class SearchAnnotationSidebar
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean SearchService searchService;
     private @SpringBean UserDao userRepository;
+    private @SpringBean ApplicationEventPublisherHolder applicationEventPublisher;
 
     private Project currentProject;
     private User currentUser;
@@ -150,6 +153,8 @@ public class SearchAnnotationSidebar
         
         try {
             currentProject = getModel().getObject().getProject();
+            applicationEventPublisher.get().publishEvent(new SearchQueryEvent(this, currentProject,
+                    currentUser.getUsername(), targetQuery.getObject()));
             return searchService.query(currentUser, currentProject, targetQuery.getObject());
         }
         catch (Exception e) {

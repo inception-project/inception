@@ -55,6 +55,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
@@ -111,9 +112,11 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
 
     @Before
     public void setUp() throws Exception {
+        RepositoryProperties repoProps = new RepositoryProperties();
+        repoProps.setPath(temporaryFolder.getRoot());
         EntityManager entityManager = testEntityManager.getEntityManager();
         testFixtures = new TestFixtures(testEntityManager);
-        sut = new KnowledgeBaseServiceImpl(temporaryFolder.getRoot(), entityManager);
+        sut = new KnowledgeBaseServiceImpl(repoProps, entityManager);
         project = createProject(PROJECT_NAME);
         kb = buildKnowledgeBase(project, KB_NAME);
         String wikidataAccessUrl = PROFILES.get("wikidata").getAccess().getAccessUrl();
@@ -130,7 +133,7 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
 
     @Test
     public void readConcept_WithNonexistentConcept_ShouldReturnEmptyResult() {
-        Optional<KBConcept> savedConcept = sut.readConcept(kb, "https://nonexistent.identifier.test");
+        Optional<KBConcept> savedConcept = sut.readConcept(kb, "https://nonexistent.identifier.test", true);
         assertThat(savedConcept.isPresent())
             .as("Check that no concept was read")
             .isFalse();
@@ -138,7 +141,7 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
     
     @Test
     public void readConcept_WithExistentConcept_ShouldReturnResult() {
-        Optional<KBConcept> concept = sut.readConcept(kb, "http://www.wikidata.org/entity/Q171644");
+        Optional<KBConcept> concept = sut.readConcept(kb, "http://www.wikidata.org/entity/Q171644", true);
         assertThat(concept.get().getName())
             .as("Check that concept has the same UI label")
             .isIn("12 Hours of Reims");
@@ -166,7 +169,7 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
     public void listProperties() {
         Stream<String> properties = sut.listProperties(kb, true).stream().map(KBHandle::getIdentifier);
         
-        assertThat(properties).as("Check that properties have been found").hasSize(SPARQLQueryStore.LIMIT);
+        assertThat(properties).as("Check that properties have been found").hasSize(kb.getMaxResults());
     }
     
     @Test
@@ -225,7 +228,8 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
         kb_wikidata_direct.applyRootConcepts(PROFILES.get("wikidata"));
         kb_wikidata_direct.setReification(reification);
         kb_wikidata_direct.setDefaultLanguage("en");
-        
+        kb_wikidata_direct.setMaxResults(1000);
+       
         return kb_wikidata_direct;
     }
 

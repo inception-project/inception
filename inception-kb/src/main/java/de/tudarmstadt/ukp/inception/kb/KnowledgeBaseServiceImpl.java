@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.kb;
 
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
+
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -25,15 +27,17 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Paths;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
@@ -45,7 +49,7 @@ import org.apache.commons.compress.compressors.CompressorStreamFactory;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.rdf4j.common.iteration.Iterations;
 import org.eclipse.rdf4j.model.IRI;
-import org.eclipse.rdf4j.model.Resource;
+import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
@@ -64,17 +68,22 @@ import org.eclipse.rdf4j.repository.config.RepositoryConfigException;
 import org.eclipse.rdf4j.repository.config.RepositoryImplConfig;
 import org.eclipse.rdf4j.repository.manager.RepositoryManager;
 import org.eclipse.rdf4j.repository.manager.RepositoryProvider;
+import org.eclipse.rdf4j.repository.sail.SailRepository;
 import org.eclipse.rdf4j.repository.sail.config.SailRepositoryConfig;
 import org.eclipse.rdf4j.repository.sparql.config.SPARQLRepositoryConfig;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.RDFParseException;
 import org.eclipse.rdf4j.rio.RDFWriter;
 import org.eclipse.rdf4j.rio.Rio;
+import org.eclipse.rdf4j.sail.lucene.LuceneSail;
+import org.eclipse.rdf4j.sail.lucene.config.LuceneSailConfig;
 import org.eclipse.rdf4j.sail.nativerdf.config.NativeStoreConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -83,7 +92,9 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
@@ -110,38 +121,86 @@ public class KnowledgeBaseServiceImpl
     private @PersistenceContext EntityManager entityManager;
     private final RepositoryManager repoManager;
     private final Set<String> implicitNamespaces;
-
-    @org.springframework.beans.factory.annotation.Value(value = "${data.path}/kb")
-    private File dataDir;
+    private final File kbRepositoriesRoot;
 
     @Autowired
-    public KnowledgeBaseServiceImpl(
-            @org.springframework.beans.factory.annotation.Value("${data.path}") File dataDir)
+    public KnowledgeBaseServiceImpl(RepositoryProperties aRepoProperties)
     {
-        // If there is still the deprecated SYSTEM repository from RDF4J, then we rename it because
-        // if it is present, RDF4J may internally generate an exception which prevents us from 
-        // creating new KBs. https://github.com/eclipse/rdf4j/issues/1077
-        File systemRepo = new File(dataDir, "kb/repositories/SYSTEM");
-        if (systemRepo.exists()) {
-            log.info("Detected deprecated RDF4J SYSTEM repo - renaming to SYSTEM.off "
-                    + "(this is a one-time action)");
-            systemRepo.renameTo(new File(dataDir, "kb/repositories/SYSTEM.off"));
+        kbRepositoriesRoot = new File(aRepoProperties.getPath(), "kb");
+        
+        // Originally, the KBs were stored next to the repository folder - but they should be
+        // *under* the repository folder
+        File legacyLocation = new File(System.getProperty(SettingsUtil.getPropApplicationHome(),
+                System.getProperty("user.home") + "/"
+                        + SettingsUtil.getApplicationUserHomeSubdir()),
+                "kb");
+
+        if (legacyLocation.exists() && legacyLocation.isDirectory()) {
+            try {
+                log.info("Found legacy KB folder at [" + legacyLocation
+                        + "]. Trying to move it to the new location at [" + kbRepositoriesRoot
+                        + "]");
+                Files.createDirectories(kbRepositoriesRoot.getParentFile().toPath());
+                Files.move(legacyLocation.toPath(), kbRepositoriesRoot.toPath(), REPLACE_EXISTING);
+                log.info("Move successful.");
+            }
+            catch (IOException e) {
+                throw new RuntimeException("Detected legacy KB folder at [" + legacyLocation
+                        + "] but cannot move it to the new location at [" + kbRepositoriesRoot
+                        + "]. Please perform the move manually and ensure that the application "
+                        + "has all necessary permissions to the new location - then try starting "
+                        + "the application again.");
+            }
         }
         
-        String url = Paths.get(dataDir.getAbsolutePath(), "kb").toUri().toString();
-        repoManager = RepositoryProvider.getRepositoryManager(url);
-        log.info("Knowledge base repository path: " + url);
+        repoManager = RepositoryProvider.getRepositoryManager(kbRepositoriesRoot);
+        log.info("Knowledge base repository path: {}", kbRepositoriesRoot);
         implicitNamespaces = IriConstants.IMPLICIT_NAMESPACES;
     }
-
+    
     public KnowledgeBaseServiceImpl(
-            @org.springframework.beans.factory.annotation.Value("${data.path}") File dataDir,
+            RepositoryProperties aRepoProperties,
             EntityManager entityManager)
     {
-        this(dataDir);
+        this(aRepoProperties);
         this.entityManager = entityManager;
     }
 
+    @EventListener({ContextRefreshedEvent.class})
+    void onContextRefreshed()
+    {
+        Set<String> orphanedIDs = new HashSet<>();
+        try {
+            orphanedIDs.addAll(repoManager.getRepositoryIDs());
+        }
+        catch (Exception e) {
+            log.error("Unable to enumerate KB repositories. This may not be a critical issue, "
+                    + "but it means that I cannot check if there are orphaned repositories. I "
+                    + "will continue loading the application. Please try to fix the problem.", e);
+        }
+        
+        // We loop over all the local repositories and ensure that they have the latest
+        // configuration. One effect of this is that the directory where the full text indexes
+        // is stored is updated with respect to the location of the application data repository
+        // in case the application data was moved to another location by the user (i.e. the
+        // index dir is normally stored as an absolute path in the KB repo config and here we fix
+        // this).
+        for (KnowledgeBase kb : listKnowledgeBases()) {
+            orphanedIDs.remove(kb.getRepositoryId());
+            
+            if (RepositoryType.LOCAL.equals(kb.getType())) {
+                reconfigureLocalKnowledgeBase(kb);
+            }
+        }
+        
+        if (!orphanedIDs.isEmpty()) {
+            log.info("Found orphaned KB repositories: {}",
+                    orphanedIDs.stream().sorted().collect(Collectors.toList()));
+        }
+        
+        repoManager.refresh();
+    }
+    
     @Override
     public void destroy() throws Exception
     {
@@ -151,27 +210,31 @@ public class KnowledgeBaseServiceImpl
     /**
      * Sanity check to test if a knowledge base is already registered with RDF4J.
      *
-     * @param kb
+     * @param aKB a knowledge base
      */
-    private void assertRegistration(KnowledgeBase kb)
+    private void assertRegistration(KnowledgeBase aKB)
     {
-        if (!kb.isManagedRepository()) {
-            throw new IllegalStateException(kb.toString() + " has to be registered first.");
+        if (!aKB.isManagedRepository()) {
+            throw new IllegalStateException(aKB.toString() + " has to be registered first.");
         }
     }
 
     @Transactional
     @Override
-    public void registerKnowledgeBase(KnowledgeBase kb, RepositoryImplConfig cfg)
+    public void registerKnowledgeBase(KnowledgeBase aKB, RepositoryImplConfig aCfg)
         throws RepositoryException, RepositoryConfigException
     {
-        // obtain unique repository id
-        String baseName = "pid-" + Long.toString(kb.getProject().getId()) + "-kbid-";
+        // Obtain unique repository id
+        String baseName = "pid-" + Long.toString(aKB.getProject().getId()) + "-kbid-";
         String repositoryId = repoManager.getNewRepositoryID(baseName);
-        kb.setRepositoryId(repositoryId);
+        aKB.setRepositoryId(repositoryId);
+        
+        // We want to have a separate Lucene index for every local repo, so we need to hack the
+        // index dir in here because this is the place where we finally know the repo ID.
+        setIndexDir(aKB, aCfg);
 
-        repoManager.addRepositoryConfig(new RepositoryConfig(repositoryId, cfg));
-        entityManager.persist(kb);
+        repoManager.addRepositoryConfig(new RepositoryConfig(repositoryId, aCfg));
+        entityManager.persist(aKB);
     }
     
     @Override
@@ -209,6 +272,15 @@ public class KnowledgeBaseServiceImpl
 
     @Transactional
     @Override
+    public void updateKnowledgeBase(KnowledgeBase kb)
+        throws RepositoryException, RepositoryConfigException
+    {
+        assertRegistration(kb);
+        entityManager.merge(kb);
+    }
+
+    @Transactional
+    @Override
     public void updateKnowledgeBase(KnowledgeBase kb, RepositoryImplConfig cfg)
         throws RepositoryException, RepositoryConfigException
     {
@@ -227,6 +299,17 @@ public class KnowledgeBaseServiceImpl
         return (List<KnowledgeBase>) query.getResultList();
     }
 
+    @Transactional
+    public List<KnowledgeBase> listKnowledgeBases()
+    {
+        String query = 
+                "FROM KnowledgeBase " +
+                "ORDER BY name ASC";
+        return entityManager
+                .createQuery(query, KnowledgeBase.class)
+                .getResultList();
+    }
+
     @SuppressWarnings("unchecked")
     @Transactional
     @Override
@@ -239,13 +322,14 @@ public class KnowledgeBaseServiceImpl
 
     @Transactional
     @Override
-    public void removeKnowledgeBase(KnowledgeBase kb)
+    public void removeKnowledgeBase(KnowledgeBase aKB)
         throws RepositoryException, RepositoryConfigException
     {
-        assertRegistration(kb);
-        repoManager.removeRepository(kb.getRepositoryId());
+        assertRegistration(aKB);
+        
+        repoManager.removeRepository(aKB.getRepositoryId());
 
-        entityManager.remove(entityManager.contains(kb) ? kb : entityManager.merge(kb));
+        entityManager.remove(entityManager.contains(aKB) ? aKB : entityManager.merge(aKB));
     }
 
     @Override
@@ -254,8 +338,11 @@ public class KnowledgeBaseServiceImpl
         // See #221 - Disabled because it is too slow during import
         // return new SailRepositoryConfig(
         //   new ForwardChainingRDFSInferencerConfig(new NativeStoreConfig()));
-        
-        return new SailRepositoryConfig(new NativeStoreConfig());
+
+        LuceneSailConfig config = new LuceneSailConfig(new NativeStoreConfig());
+        // NOTE: We do not set the index dir here but when the KB is registered because we want each
+        // repo to have its own index folder and we don't know the repo ID until it is registered
+        return new SailRepositoryConfig(config);
     }
 
     @Override
@@ -310,7 +397,11 @@ public class KnowledgeBaseServiceImpl
 
         // Load files into the repository
         try (RepositoryConnection conn = getConnection(kb)) {
-            conn.add(is, "", format);
+            // If the RDF file contains relative URLs, then they probably start with a hash.
+            // To avoid having two hashes here, we drop the hash from the base prefix configured
+            // by the user.
+            String prefix = StringUtils.removeEnd(kb.getBasePrefix(), "#");
+            conn.add(is, prefix, format);
         }
     }
 
@@ -358,28 +449,42 @@ public class KnowledgeBaseServiceImpl
         });
     }
     
-    @Override
-    public Optional<KBConcept> readConcept(KnowledgeBase kb, String aIdentifier)
+    @Override 
+    public Optional<KBConcept> readConcept(KnowledgeBase aKB, String aIdentifier, boolean aAll)
         throws QueryEvaluationException
     {
-        return read(kb, (conn) -> {
-            ValueFactory vf = conn.getValueFactory();
-            Resource subject = vf.createIRI(aIdentifier);
-            if (RdfUtils.existsStatementsWithSubject(conn, subject, false)) {
-                KBConcept kbConcept = KBConcept.read(conn, vf.createIRI(aIdentifier),kb);
-                return Optional.of(kbConcept);
-            }
-            else {
-                return Optional.empty();
-            }
+        List<KBHandle> resultList = read(aKB, (conn) -> {
+            String QUERY = SPARQLQueryStore.readConcept(aKB, 1);
+            ValueFactory vf = SimpleValueFactory.getInstance();
+            TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
+            tupleQuery.setBinding("oItem", vf.createIRI(aIdentifier));
+            tupleQuery.setBinding("pTYPE", aKB.getTypeIri());
+            tupleQuery.setBinding("oCLASS", aKB.getClassIri());
+            tupleQuery.setBinding("pSUBCLASS", aKB.getSubclassIri());
+            tupleQuery.setBinding("pLABEL", aKB.getLabelIri());
+            tupleQuery.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
+            tupleQuery.setIncludeInferred(false);
+            return evaluateListQuery(tupleQuery, aAll, "oItem", "l", "d");
         });
+        
+        if (resultList.isEmpty()) {
+            return Optional.empty();
+        }
+        else {
+            KBConcept kbConcept = new KBConcept();
+            kbConcept.setIdentifier(resultList.get(0).getIdentifier());
+            kbConcept.setName(resultList.get(0).getName());
+            kbConcept.setDescription(resultList.get(0).getDescription());
+            kbConcept.setLanguage(resultList.get(0).getLanguage());
+            return Optional.of(kbConcept);
+        }
     }
     
     @Override
     public Optional<KBConcept> readConcept(Project aProject, String aIdentifier)
     {
         for (KnowledgeBase kb : getKnowledgeBases(aProject)) {
-            Optional<KBConcept> concept = readConcept(kb, aIdentifier);
+            Optional<KBConcept> concept = readConcept(kb, aIdentifier, true);
             if (concept.isPresent()) {
                 return concept;
             }
@@ -423,7 +528,7 @@ public class KnowledgeBaseServiceImpl
             tupleQuery.setBinding("pLABEL", aKB.getLabelIri());
             tupleQuery.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
             tupleQuery.setIncludeInferred(false);
-            return evaluateListQuery(tupleQuery, aAll);
+            return evaluateListQuery(tupleQuery, aAll, "s", "l", "d");
         });
         resultList.sort(Comparator.comparing(KBObject::getUiLabel));
         return resultList;
@@ -507,12 +612,12 @@ public class KnowledgeBaseServiceImpl
             tupleQuery.setBinding("pLABEL", aKB.getLabelIri());
             tupleQuery.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
             tupleQuery.setIncludeInferred(aIncludeInferred);
-            return evaluateListQuery(tupleQuery, aAll);
+            return evaluateListQuery(tupleQuery, aAll, "s", "l", "d");
         });
         resultList.sort(Comparator.comparing(KBObject::getUiLabel));
         return resultList;
     }
-    
+
     @Override
     public KBHandle createInstance(KnowledgeBase kb, KBInstance aInstance)
     {
@@ -537,8 +642,9 @@ public class KnowledgeBaseServiceImpl
             ValueFactory vf = conn.getValueFactory();
             // Try to figure out the type of the instance - we ignore the inferred types here
             // and only make use of the explicitly asserted types
-            RepositoryResult<Statement> conceptStmts = RdfUtils.getStatementsSparql(conn,
-                    vf.createIRI(aIdentifier), kb.getTypeIri(), null, 1000, false, null);
+            RepositoryResult<Statement> conceptStmts = RdfUtils
+                .getStatementsSparql(conn, vf.createIRI(aIdentifier), kb.getTypeIri(), null,
+                    kb.getMaxResults(), false, null);
 
             String conceptIdentifier = null;
             while (conceptStmts.hasNext() && conceptIdentifier == null) {
@@ -558,7 +664,7 @@ public class KnowledgeBaseServiceImpl
             // Read the instance
             try (RepositoryResult<Statement> instanceStmts = RdfUtils.getStatements(conn,
                     vf.createIRI(aIdentifier), kb.getTypeIri(), vf.createIRI(conceptIdentifier),
-                    true)) {
+                    true, kb.getMaxResults())) {
                 if (instanceStmts.hasNext()) {
                     Statement kbStmt = instanceStmts.next();
                     KBInstance kbInst = KBInstance.read(conn, kbStmt, kb);
@@ -607,7 +713,7 @@ public class KnowledgeBaseServiceImpl
     public List<KBHandle> listInstances(KnowledgeBase kb, String aConceptIri, boolean aAll)
     {
         IRI conceptIri = SimpleValueFactory.getInstance().createIRI(aConceptIri);
-        return list(kb, conceptIri, false, aAll, SPARQLQueryStore.LIMIT);
+        return list(kb, conceptIri, false, aAll, kb.getMaxResults());
     }
 
     // Statements
@@ -703,8 +809,6 @@ public class KnowledgeBaseServiceImpl
             return aAction.accept(conn);
         }
     }
-    
-    
 
     @Override
     public List<KBHandle> list(KnowledgeBase aKB, IRI aType, boolean aIncludeInferred, boolean aAll,
@@ -720,7 +824,7 @@ public class KnowledgeBaseServiceImpl
             tupleQuery.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
             tupleQuery.setIncludeInferred(aIncludeInferred);
 
-            return evaluateListQuery(tupleQuery, aAll);
+            return evaluateListQuery(tupleQuery, aAll, "s", "l", "d");
         });
 
         resultList.sort(Comparator.comparing(KBObject::getUiLabel));
@@ -742,7 +846,7 @@ public class KnowledgeBaseServiceImpl
             tupleQuery.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
             tupleQuery.setIncludeInferred(aIncludeInferred);
 
-            return evaluateListQuery(tupleQuery, aAll);
+            return evaluateListQuery(tupleQuery, aAll,  "s", "l", "d");
         });
         
         // Sorting is not done as part of SPARQL queries as it will be more expensive on
@@ -766,7 +870,7 @@ public class KnowledgeBaseServiceImpl
             tupleQuery.setBinding("pLABEL", aKB.getLabelIri());
             tupleQuery.setIncludeInferred(aIncludeInferred);
 
-            return evaluateListQuery(tupleQuery, aAll);
+            return evaluateListQuery(tupleQuery, aAll, "s", "l", "d");
         });
         
         resultList.sort(Comparator.comparing(KBObject::getUiLabel));
@@ -787,7 +891,7 @@ public class KnowledgeBaseServiceImpl
             tupleQuery.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
             tupleQuery.setIncludeInferred(aIncludeInferred);
 
-            return evaluateListQuery(tupleQuery, aAll);
+            return evaluateListQuery(tupleQuery, aAll, "s", "l", "d");
         });
 
         resultList.sort(Comparator.comparing(KBObject::getUiLabel));
@@ -803,7 +907,7 @@ public class KnowledgeBaseServiceImpl
 
         if (!aKB.getExplicitlyDefinedRootConcepts().isEmpty()) {
             for (IRI conceptIRI : aKB.getExplicitlyDefinedRootConcepts()) {
-                KBConcept concept = readConcept(aKB, conceptIRI.stringValue()).get();
+                KBConcept concept = readConcept(aKB, conceptIRI.stringValue(),aAll).get();
                 KBHandle conceptHandle = new KBHandle(concept.getIdentifier(), concept.getName(),
                         concept.getDescription());
                 resultList.add(conceptHandle);
@@ -820,7 +924,7 @@ public class KnowledgeBaseServiceImpl
                 tupleQuery.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
                 tupleQuery.setIncludeInferred(false);
     
-                return evaluateListQuery(tupleQuery, aAll);
+                return evaluateListQuery(tupleQuery, aAll, "s", "l", "d");
             });
         }
         resultList.sort(Comparator.comparing(KBObject::getUiLabel));
@@ -838,7 +942,7 @@ public class KnowledgeBaseServiceImpl
             boolean aAll)
         throws QueryEvaluationException
     {
-        return listChildConcepts(aKB, aParentIdentifier, aAll, SPARQLQueryStore.LIMIT);
+        return listChildConcepts(aKB, aParentIdentifier, aAll, aKB.getMaxResults());
     }
     
     @Override
@@ -857,7 +961,7 @@ public class KnowledgeBaseServiceImpl
             tupleQuery.setBinding("pLABEL", aKB.getLabelIri());
             tupleQuery.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
             tupleQuery.setIncludeInferred(false);
-            return evaluateListQuery(tupleQuery, aAll);
+            return evaluateListQuery(tupleQuery, aAll, "s", "l", "d");
         });
         return resultList;
     }
@@ -877,7 +981,7 @@ public class KnowledgeBaseServiceImpl
             tupleQuery.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
             tupleQuery.setIncludeInferred(true);
 
-            return evaluateListQuery(tupleQuery, aAll);
+            return evaluateListQuery(tupleQuery, aAll, "s", "l", "d");
         });
         resultList.sort(Comparator.comparing(KBObject::getUiLabel));
         return resultList;
@@ -947,7 +1051,7 @@ public class KnowledgeBaseServiceImpl
             tupleQuery.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
             tupleQuery.setIncludeInferred(false);
 
-            return evaluateListQuery(tupleQuery, aAll);
+            return evaluateListQuery(tupleQuery, aAll, "s", "l", "d");
         });
 
         
@@ -971,8 +1075,19 @@ public class KnowledgeBaseServiceImpl
         return childConceptInstances;
     }
     
-    
-    private List<KBHandle> evaluateListQuery(TupleQuery tupleQuery, boolean aAll)
+    /**
+     * Method process the Tuple Query Results
+     * 
+     * @param tupleQuery Tuple Query Variable
+     * @param aAll True if entities with implicit namespaces (e.g. defined by RDF)
+     * @param itemVariable The variable to define the item IRI (eg.'s')
+     * @param langVariable The variable to define the item IRI (In general: 'l')
+     * @param descVariable The variable to define the item IRI (In general: 'd')
+     * @return list of all the {@link KBHandle} 
+     * @throws QueryEvaluationException
+     */
+    private List<KBHandle> evaluateListQuery(TupleQuery tupleQuery, boolean aAll,
+            String itemVariable, String langVariable, String descVariable)
         throws QueryEvaluationException
     {
         TupleQueryResult result = tupleQuery.evaluate();        
@@ -983,9 +1098,9 @@ public class KnowledgeBaseServiceImpl
             if (bindings.size() == 0) {
                 continue;
             }
-            String id = bindings.getBinding("s").getValue().stringValue();
-            Binding label = bindings.getBinding("l");
-            Binding description = bindings.getBinding("d");
+            String id = bindings.getBinding(itemVariable).getValue().stringValue();
+            Binding label = bindings.getBinding(langVariable);
+            Binding description = bindings.getBinding(descVariable);
 
             if (!id.contains(":") || (!aAll && hasImplicitNamespace(id))) {
                 continue;
@@ -994,6 +1109,11 @@ public class KnowledgeBaseServiceImpl
             KBHandle handle = new KBHandle(id);
             if (label != null) {
                 handle.setName(label.getValue().stringValue());
+                if (label.getValue() instanceof Literal) {
+                    Literal literal = (Literal) label.getValue();
+                    Optional<String> language = literal.getLanguage();
+                    language.ifPresent(handle::setLanguage);
+                }
             }
             else {
                 handle.setName(handle.getUiLabel());
@@ -1112,7 +1232,8 @@ public class KnowledgeBaseServiceImpl
         try (RepositoryConnection conn = getConnection(aKb)) {
             ValueFactory vf = conn.getValueFactory();
             RepositoryResult<Statement> stmts = RdfUtils.getStatements(conn,
-                    vf.createIRI(aIdentifier), aKb.getTypeIri(), aKb.getClassIri(), true);
+                    vf.createIRI(aIdentifier), aKb.getTypeIri(), aKb.getClassIri(), true,
+                aKb.getMaxResults());
             if (stmts.hasNext()) {
                 KBConcept kbConcept = KBConcept.read(conn, vf.createIRI(aIdentifier), aKb);
                 if (kbConcept != null) {
@@ -1185,6 +1306,80 @@ public class KnowledgeBaseServiceImpl
         PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
         File kbFile = resolver.getResource(aLocation).getFile();
         return kbFile;
+    }
+
+    @Override
+    public boolean isBaseProperty(String propertyIdentifier, KnowledgeBase aKB)
+    {
+        return propertyIdentifier.equals(aKB.getLabelIri().stringValue()) || propertyIdentifier
+            .equals(aKB.getSubclassIri().stringValue()) || propertyIdentifier
+            .equals(aKB.getDescriptionIri().stringValue()) || propertyIdentifier
+            .equals(aKB.getTypeIri().stringValue());
+    }
+
+    private void reconfigureLocalKnowledgeBase(KnowledgeBase aKB)
+    {
+        /*
+        log.info("Forcing update of configuration for {}", aKB);
+        Model model = new TreeModel();
+        ValueFactory vf = SimpleValueFactory.getInstance();
+        IRI root = vf
+                .createIRI("http://inception-project.github.io/kbexport#" + aKB.getRepositoryId());
+        repoManager.getRepositoryConfig(aKB.getRepositoryId()).export(model, root);
+        StringWriter out = new StringWriter();
+        Rio.write(model, out, RDFFormat.TURTLE);
+        log.info("Current configuration: {}", out.toString());
+        */
+        
+        RepositoryImplConfig config = getNativeConfig();
+        setIndexDir(aKB, config);
+        repoManager.addRepositoryConfig(new RepositoryConfig(aKB.getRepositoryId(), config));
+    }
+    
+    private void setIndexDir(KnowledgeBase aKB, RepositoryImplConfig aCfg)
+    {
+        assertRegistration(aKB);
+        
+        // We want to have a separate Lucene index for every local repo, so we need to hack the
+        // index dir in here because this is the place where we finally know the repo ID.
+        if (aCfg instanceof SailRepositoryConfig) {
+            SailRepositoryConfig cfg = (SailRepositoryConfig) aCfg;
+            if (cfg.getSailImplConfig() instanceof LuceneSailConfig) {
+                LuceneSailConfig luceneSailCfg = (LuceneSailConfig) cfg.getSailImplConfig();
+                luceneSailCfg.setIndexDir(
+                        new File(kbRepositoriesRoot, "indexes/" + aKB.getRepositoryId())
+                                .getAbsolutePath());
+            }
+        }
+    }
+    
+    @Override
+    public void rebuildFullTextIndex(KnowledgeBase aKB) throws Exception
+    {
+        if (!RepositoryType.LOCAL.equals(aKB.getType())) {
+            throw new IllegalArgumentException("Reindexing is only supported on local KBs");
+        }
+        
+        boolean reindexSupported = false;
+        
+        // Handle re-indexing of local repos that use a Lucene FTS
+        if (repoManager.getRepository(aKB.getRepositoryId()) instanceof SailRepository) {
+            SailRepository sailRepo = (SailRepository) repoManager
+                .getRepository(aKB.getRepositoryId());
+            if (sailRepo.getSail() instanceof LuceneSail) {
+                reindexSupported = true;
+                LuceneSail luceneSail = (LuceneSail) (sailRepo.getSail());
+                try (RepositoryConnection conn = getConnection(aKB)) {
+                    luceneSail.reindex();
+                    conn.commit();
+                }
+            }
+        }
+        
+        if (!reindexSupported) {
+            throw new IllegalArgumentException(
+                    aKB + "] does not support rebuilding its full text index.");
+        }
     }
 
 }

@@ -61,13 +61,15 @@ document. The extraction of curated documents is also explained in <<sect_projec
 
 include::{include-dir}installation.adoc[]
 
-<<<
-
-include::{include-dir}upgrade.adoc[]
+include::{include-dir}upgrade.adoc[leveloffset=+1]
 
 <<<
 
 include::{include-dir}login.adoc[]
+
+<<<
+
+include::{include-dir}menubar.adoc[]
 
 <<<
 
@@ -76,13 +78,38 @@ include::{include-dir}menu.adoc[]
 <<<
 
 include::{include-dir}annotation.adoc[]
-include::{include-dir}annotation_concept-linking.adoc[]
-include::{include-dir}annotation_fact-extraction.adoc[]
-include::{include-dir}knowledge_base.adoc[]
-include::{include-dir}annotation_recommendation.adoc[]
-include::{include-dir}search-core.adoc[]
-include::{include-dir}search-mtas.adoc[]
-include::{include-dir}annotation_activeLearning.adoc[]
+
+include::{include-dir}annotation_open.adoc[leveloffset=+1]
+
+include::{include-dir}annotation_navigation.adoc[leveloffset=+1]
+
+include::{include-dir}annotation_create-annotations.adoc[leveloffset=+1]
+
+include::{include-dir}annotation_create-annotations_span.adoc[leveloffset=+2]
+
+include::{include-dir}annotation_create-annotations_relation.adoc[leveloffset=+2]
+
+include::{include-dir}annotation_create-annotations_chain.adoc[leveloffset=+2]
+
+include::{include-dir}annotation_create-annotations_primitive-features.adoc[leveloffset=+2]
+
+include::{include-dir}annotation_create-annotations_link-features.adoc[leveloffset=+2]
+
+include::{include-dir}annotation_settings.adoc[leveloffset=+1]
+
+include::{include-dir}annotation_export.adoc[leveloffset=+1]
+
+include::{include-dir}search-core.adoc[leveloffset=+1]
+
+include::{include-dir}search-mtas.adoc[leveloffset=+2]
+
+include::{include-dir}annotation_recommendation.adoc[leveloffset=+1]
+
+include::{include-dir}annotation_activeLearning.adoc[leveloffset=+2]
+
+include::{include-dir}annotation_concept-linking.adoc[leveloffset=+1]
+
+include::{include-dir}annotation_fact-extraction.adoc[leveloffset=+1]
 
 <<<
 
@@ -94,9 +121,43 @@ include::{include-dir}monitoring.adoc[]
 
 <<<
 
+include::{include-dir}agreement.adoc[]
+
+<<<
+
+include::{include-dir}knowledge_base.adoc[]
+
+<<<
+
 include::{include-dir}projects.adoc[]
-include::{include-dir}projects_concept-linking.adoc[]
-include::{include-dir}projects_recommendation.adoc[]
+
+include::{include-dir}projects_import.adoc[leveloffset=+1]
+
+include::{include-dir}projects_users.adoc[leveloffset=+1]
+
+include::{include-dir}projects_documents.adoc[leveloffset=+1]
+
+include::{include-dir}projects_layers.adoc[leveloffset=+1]
+
+include::{include-dir}projects_knowledge-base.adoc[leveloffset=+1]
+
+include::{include-dir}projects_recommendation.adoc[leveloffset=+1]
+
+include::{include-dir}projects_recommendation_string.adoc[leveloffset=+2]
+
+include::{include-dir}projects_recommendation_opennlp.adoc[leveloffset=+2]
+
+include::{include-dir}projects_recommendation_conceptlinker.adoc[leveloffset=+2]
+
+include::{include-dir}projects_recommendation_external.adoc[leveloffset=+2]
+
+include::{include-dir}projects_tagsets.adoc[leveloffset=+1]
+
+include::{include-dir}projects_guidelines.adoc[leveloffset=+1]
+
+include::{include-dir}projects_constraints.adoc[leveloffset=+1]
+
+include::{include-dir}projects_export.adoc[leveloffset=+1]
 
 <<<
 
