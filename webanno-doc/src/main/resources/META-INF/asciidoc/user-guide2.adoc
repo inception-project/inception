@@ -21,6 +21,10 @@ include::{include-dir}intro.adoc[]
 
 <<<
 
+include::{include-dir}getting-started.adoc[]
+
+<<<
+
 include::common/systemrequirements.adoc[]
 
 <<<
@@ -33,15 +37,13 @@ include::{include-dir}installation.adoc[]
 
 include::{include-dir}upgrade.adoc[leveloffset=+1]
 
-<<<
+
+
+= Core functionalities
 
 include::{include-dir}login.adoc[]
 
-<<<
-
 include::{include-dir}menubar.adoc[]
-
-<<<
 
 include::{include-dir}menu.adoc[]
 
@@ -75,14 +77,6 @@ include::{include-dir}curation.adoc[]
 
 <<<
 
-include::{include-dir}correction.adoc[]
-
-<<<
-
-include::{include-dir}automation.adoc[]
-
-<<<
-
 include::{include-dir}monitoring.adoc[]
 
 <<<
@@ -111,11 +105,33 @@ include::{include-dir}projects_export.adoc[leveloffset=+1]
 
 <<<
 
+include::{include-dir}users.adoc[]
+
+
+
+= Advanced functionalities
+
+<<<
+
+include::{include-dir}correction.adoc[]
+
+<<<
+
+include::{include-dir}automation.adoc[]
+
+<<<
+
 include::{include-dir}constraints.adoc[]
 
 <<<
 
-include::{include-dir}users.adoc[]
+include::{include-dir}casdoctor.adoc[]
+
+
+
+= Appendices
+
+include::{include-dir}webannotsv.adoc[]
 
 <<<
 
@@ -123,12 +139,6 @@ include::{include-dir}formats.adoc[]
 
 <<<
 
-include::{include-dir}webannotsv.adoc[]
-
-<<<
-
-include::{include-dir}casdoctor.adoc[]
-
-<<<
-
 include::{include-dir}troubleshooting.adoc[]
+
+
