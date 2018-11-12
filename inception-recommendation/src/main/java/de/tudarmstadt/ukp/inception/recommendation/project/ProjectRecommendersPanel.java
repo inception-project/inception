@@ -34,7 +34,7 @@ public class ProjectRecommendersPanel
     
     public ProjectRecommendersPanel(String aId, IModel<Project> aProject)
     {
-        super(aId);
+        super(aId, aProject);
 
         selectedRecommenderModel = Model.of();
         projectModel = aProject;
@@ -54,5 +54,12 @@ public class ProjectRecommendersPanel
             _target.add(recommenderEditorPanel);
         });
         add(recommenderListPanel);
+    }
+
+    @Override
+    protected void onModelChanged()
+    {
+        super.onModelChanged();
+        selectedRecommenderModel.setObject(null);
     }
 }

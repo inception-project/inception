@@ -427,7 +427,7 @@ public class DL4JSequenceRecommender
         
         // Predict labels
         long predictionStart = System.currentTimeMillis();
-        INDArray predicted = aClassifier.output(data.getFeatureMatrix(), false,
+        INDArray predicted = aClassifier.output(data.getFeatures(), false,
                 data.getFeaturesMaskArray(), data.getLabelsMaskArray());
         log.trace("Prediction took {}ms", System.currentTimeMillis() - predictionStart);
         
