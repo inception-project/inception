@@ -245,10 +245,11 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-dependency-plugin</artifactId>
           <configuration>
-            <usedDependencies>
+            <ignoredDependencies>
               <!-- ND4J plugins - used via reflection -->
-              <usedDependency>org.nd4j:nd4j-native-platform</usedDependency>
-            </usedDependencies>
+              <dependency>org.nd4j:nd4j-native:*:*</dependency>
+              <dependency>org.bytedeco.javacpp-presets:*:*:*</dependency>
+            </ignoredDependencies>
           </configuration>
         </plugin>
       </plugins>
