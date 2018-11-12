@@ -190,8 +190,8 @@ public class DL4JSequenceRecommender
         // Configure the neural network
         MultiLayerNetwork model = createConfiguredNetwork(traits, wordVectors.dimensions());
 
-        final int limit = Integer.MAX_VALUE;
-        final int batchSize = 250;
+        final int limit = traits.getTrainingSetSizeLimit();
+        final int batchSize = traits.getBatchSize();
 
         // First vectorizing all sentences and then passing them to the model would consume
         // huge amounts of memory. Thus, every sentence is vectorized and then immediately
@@ -366,10 +366,9 @@ public class DL4JSequenceRecommender
             Feature labelFeature = predictionType.getFeatureByBaseName("label");
     
             final int limit = Integer.MAX_VALUE;
-            final int batchSize = 250;
+            final int batchSize = traits.getBatchSize();
 
             Collection<AnnotationFS> sentences = select(aCas, sentenceType);
-            int sentCount = sentences.size();
             int sentNum = 0;
             
             Iterator<AnnotationFS> sentenceIterator = sentences.iterator();
@@ -408,7 +407,7 @@ public class DL4JSequenceRecommender
                     outcomeIdx++;
                 }
                 
-                log.trace("Predicted {} of {} sentences", sentNum, sentCount);
+                log.trace("Predicted {} of {} sentences", sentNum, sentences.size());
             }
         }
         catch (IOException e) {
