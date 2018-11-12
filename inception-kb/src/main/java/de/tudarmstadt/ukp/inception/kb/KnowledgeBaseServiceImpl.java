@@ -47,6 +47,7 @@ import javax.persistence.Query;
 import org.apache.commons.compress.compressors.CompressorException;
 import org.apache.commons.compress.compressors.CompressorStreamFactory;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.StopWatch;
 import org.eclipse.rdf4j.common.iteration.Iterations;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Literal;
@@ -453,32 +454,40 @@ public class KnowledgeBaseServiceImpl
     public Optional<KBConcept> readConcept(KnowledgeBase aKB, String aIdentifier, boolean aAll)
         throws QueryEvaluationException
     {
-        List<KBHandle> resultList = read(aKB, (conn) -> {
-            String QUERY = SPARQLQueryStore.readConcept(aKB, 1);
-            ValueFactory vf = SimpleValueFactory.getInstance();
-            TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
-            tupleQuery.setBinding("oItem", vf.createIRI(aIdentifier));
-            tupleQuery.setBinding("pTYPE", aKB.getTypeIri());
-            tupleQuery.setBinding("oCLASS", aKB.getClassIri());
-            tupleQuery.setBinding("pSUBCLASS", aKB.getSubclassIri());
-            tupleQuery.setBinding("pLABEL", aKB.getLabelIri());
-            tupleQuery.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
-            tupleQuery.setIncludeInferred(false);
-            return evaluateListQuery(aKB, tupleQuery, true, aAll,  "oItem", "l", "d");
-        });
-        List<KBHandle> resultLabelList = readLabelsWithoutLanguage(aKB, aAll, resultList);
-        resultLabelList.sort(Comparator.comparing(KBObject::getUiLabel));
+        StopWatch timer = new StopWatch();
+        timer.start();
         
-        if (resultLabelList.isEmpty()) {
-            return Optional.empty();
+        try {
+            List<KBHandle> resultList = read(aKB, (conn) -> {
+                String QUERY = SPARQLQueryStore.readConcept(aKB, 1);
+                ValueFactory vf = SimpleValueFactory.getInstance();
+                TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
+                tupleQuery.setBinding("oItem", vf.createIRI(aIdentifier));
+                tupleQuery.setBinding("pTYPE", aKB.getTypeIri());
+                tupleQuery.setBinding("oCLASS", aKB.getClassIri());
+                tupleQuery.setBinding("pSUBCLASS", aKB.getSubclassIri());
+                tupleQuery.setBinding("pLABEL", aKB.getLabelIri());
+                tupleQuery.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
+                tupleQuery.setIncludeInferred(false);
+                return evaluateListQuery(aKB, tupleQuery, true, aAll,  "oItem", "l", "d");
+            });
+            List<KBHandle> resultLabelList = readLabelsWithoutLanguage(aKB, aAll, resultList);
+            resultLabelList.sort(Comparator.comparing(KBObject::getUiLabel));
+            
+            if (resultLabelList.isEmpty()) {
+                return Optional.empty();
+            }
+            else {
+                KBConcept kbConcept = new KBConcept();
+                kbConcept.setIdentifier(resultLabelList.get(0).getIdentifier());
+                kbConcept.setName(resultLabelList.get(0).getName());
+                kbConcept.setDescription(resultLabelList.get(0).getDescription());
+                kbConcept.setLanguage(resultLabelList.get(0).getLanguage());
+                return Optional.of(kbConcept);
+            }
         }
-        else {
-            KBConcept kbConcept = new KBConcept();
-            kbConcept.setIdentifier(resultLabelList.get(0).getIdentifier());
-            kbConcept.setName(resultLabelList.get(0).getName());
-            kbConcept.setDescription(resultLabelList.get(0).getDescription());
-            kbConcept.setLanguage(resultLabelList.get(0).getLanguage());
-            return Optional.of(kbConcept);
+        finally {
+            log.trace("KnowledgeBaseServiceImpl.readConcept took {} ms", timer.getTime());
         }
     }
     
@@ -519,23 +528,31 @@ public class KnowledgeBaseServiceImpl
     public List<KBHandle> listAllConcepts(KnowledgeBase aKB, boolean aAll)
         throws QueryEvaluationException
     {
-        List<KBHandle> resultList;
+        StopWatch timer = new StopWatch();
+        timer.start();
         
-        resultList = read(aKB, (conn) -> {
-            String QUERY = SPARQLQueryStore.queryForAllConceptList(aKB);
-            TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
-            tupleQuery.setBinding("pTYPE", aKB.getTypeIri());
-            tupleQuery.setBinding("oCLASS", aKB.getClassIri());
-            tupleQuery.setBinding("pSUBCLASS", aKB.getSubclassIri());
-            tupleQuery.setBinding("pLABEL", aKB.getLabelIri());
-            tupleQuery.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
-            tupleQuery.setIncludeInferred(false);
-            return evaluateListQuery(aKB, tupleQuery, true, aAll, "s", "l", "d");
-        });
-        
-        List<KBHandle> resultLabelList = readLabelsWithoutLanguage(aKB, aAll, resultList);
-        resultLabelList.sort(Comparator.comparing(KBObject::getUiLabel));
-        return resultLabelList;
+        try {
+            List<KBHandle> resultList;
+            
+            resultList = read(aKB, (conn) -> {
+                String QUERY = SPARQLQueryStore.queryForAllConceptList(aKB);
+                TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
+                tupleQuery.setBinding("pTYPE", aKB.getTypeIri());
+                tupleQuery.setBinding("oCLASS", aKB.getClassIri());
+                tupleQuery.setBinding("pSUBCLASS", aKB.getSubclassIri());
+                tupleQuery.setBinding("pLABEL", aKB.getLabelIri());
+                tupleQuery.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
+                tupleQuery.setIncludeInferred(false);
+                return evaluateListQuery(aKB, tupleQuery, true, aAll, "s", "l", "d");
+            });
+            
+            List<KBHandle> resultLabelList = readLabelsWithoutLanguage(aKB, aAll, resultList);
+            resultLabelList.sort(Comparator.comparing(KBObject::getUiLabel));
+            return resultLabelList;
+        }
+        finally {
+            log.trace("KnowledgeBaseServiceImpl.listAllConcepts took {} ms", timer.getTime());
+        }
     }
     
     @Override
@@ -562,20 +579,29 @@ public class KnowledgeBaseServiceImpl
     @Override
     public Optional<KBProperty> readProperty(KnowledgeBase kb, String aIdentifier)
     {
-        return read(kb, (conn) -> {
-            ValueFactory vf = conn.getValueFactory();
-            try (RepositoryResult<Statement> stmts = RdfUtils.getPropertyStatementsSparql(conn,
-                    vf.createIRI(aIdentifier), kb.getTypeIri(), kb.getPropertyTypeIri(), 1000, true,
-                    null)) {
-                if (stmts.hasNext()) {
-                    Statement propStmt = stmts.next();
-                    KBProperty kbProp = KBProperty.read(conn, propStmt, kb);
-                    return Optional.of(kbProp);
-                } else {
-                    return Optional.empty();
+        StopWatch timer = new StopWatch();
+        timer.start();
+        
+        try {
+            return read(kb, (conn) -> {
+                ValueFactory vf = conn.getValueFactory();
+                try (RepositoryResult<Statement> stmts = RdfUtils.getPropertyStatementsSparql(conn,
+                        vf.createIRI(aIdentifier), kb.getTypeIri(), kb.getPropertyTypeIri(), 1000,
+                        true, null)) {
+                    if (stmts.hasNext()) {
+                        Statement propStmt = stmts.next();
+                        KBProperty kbProp = KBProperty.read(conn, propStmt, kb);
+                        return Optional.of(kbProp);
+                    }
+                    else {
+                        return Optional.empty();
+                    }
                 }
-            } 
-        });
+            });
+        }
+        finally {
+            log.trace("KnowledgeBaseServiceImpl.readProperty took {} ms", timer.getTime());
+        }
     }
 
     @Override
@@ -608,19 +634,27 @@ public class KnowledgeBaseServiceImpl
     public List<KBHandle> listProperties(KnowledgeBase aKB, boolean aIncludeInferred, boolean aAll)
         throws QueryEvaluationException
     {
-        List<KBHandle> resultList = read(aKB, (conn) -> {
-            String QUERY = SPARQLQueryStore.queryForPropertyList(aKB);
-            TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
-            tupleQuery.setBinding("pTYPE", aKB.getTypeIri());
-            tupleQuery.setBinding("oPROPERTY", aKB.getPropertyTypeIri());
-            tupleQuery.setBinding("pLABEL", aKB.getLabelIri());
-            tupleQuery.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
-            tupleQuery.setIncludeInferred(aIncludeInferred);
-            return evaluateListQuery(aKB, tupleQuery, false, aAll, "s", "l", "d");
-        });
-        List<KBHandle> resultLabelList = readLabelsWithoutLanguage(aKB, aAll, resultList);
-        resultLabelList.sort(Comparator.comparing(KBObject::getUiLabel));
-        return resultLabelList;
+        StopWatch timer = new StopWatch();
+        timer.start();
+        
+        try {
+            List<KBHandle> resultList = read(aKB, (conn) -> {
+                String QUERY = SPARQLQueryStore.queryForPropertyList(aKB);
+                TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
+                tupleQuery.setBinding("pTYPE", aKB.getTypeIri());
+                tupleQuery.setBinding("oPROPERTY", aKB.getPropertyTypeIri());
+                tupleQuery.setBinding("pLABEL", aKB.getLabelIri());
+                tupleQuery.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
+                tupleQuery.setIncludeInferred(aIncludeInferred);
+                return evaluateListQuery(aKB, tupleQuery, false, aAll, "s", "l", "d");
+            });
+            List<KBHandle> resultLabelList = readLabelsWithoutLanguage(aKB, aAll, resultList);
+            resultLabelList.sort(Comparator.comparing(KBObject::getUiLabel));
+            return resultLabelList;
+        }
+        finally {
+            log.trace("KnowledgeBaseServiceImpl.listProperties took {} ms", timer.getTime());
+        }
     }
 
     @Override
@@ -717,8 +751,16 @@ public class KnowledgeBaseServiceImpl
     @Override
     public List<KBHandle> listInstances(KnowledgeBase kb, String aConceptIri, boolean aAll)
     {
-        IRI conceptIri = SimpleValueFactory.getInstance().createIRI(aConceptIri);
-        return list(kb, conceptIri, false, aAll, kb.getMaxResults());
+        StopWatch timer = new StopWatch();
+        timer.start();
+        
+        try {
+            IRI conceptIri = SimpleValueFactory.getInstance().createIRI(aConceptIri);
+            return list(kb, conceptIri, false, aAll, kb.getMaxResults());
+        }
+        finally {
+            log.trace("KnowledgeBaseServiceImpl.listInstances took {} ms", timer.getTime());
+        }
     }
 
     // Statements
@@ -745,7 +787,15 @@ public class KnowledgeBaseServiceImpl
     @Override
     public List<KBStatement> listStatements(KnowledgeBase kb, KBHandle aInstance, boolean aAll)
     {
-        return getReificationStrategy(kb).listStatements(kb, aInstance, aAll);
+        StopWatch timer = new StopWatch();
+        timer.start();
+        
+        try {
+            return getReificationStrategy(kb).listStatements(kb, aInstance, aAll);
+        }
+        finally {
+            log.trace("KnowledgeBaseServiceImpl.listStatements took {} ms", timer.getTime());
+        }
     }
 
     @Override
@@ -759,6 +809,9 @@ public class KnowledgeBaseServiceImpl
     public List<Statement> listStatementsWithPredicateOrObjectReference(KnowledgeBase kb,
             String aIdentifier)
     {
+        StopWatch timer = new StopWatch();
+        timer.start();
+        
         try (RepositoryConnection conn = getConnection(kb)) {
             ValueFactory vf = conn.getValueFactory();
             IRI iri = vf.createIRI(aIdentifier);
@@ -770,6 +823,11 @@ public class KnowledgeBaseServiceImpl
                 return allStmts;
 
             }
+        }
+        finally {
+            log.trace(
+                    "KnowledgeBaseServiceImpl.listStatementsWithPredicateOrObjectReference took {} ms",
+                    timer.getTime());
         }
     }
 
@@ -971,20 +1029,29 @@ public class KnowledgeBaseServiceImpl
             String aIdentifier, boolean getLabel, boolean getDescription)
         throws QueryEvaluationException
     {
-        return read(aKB, (conn) -> {
-            String QUERY = SPARQLQueryStore.readLabelWithoutLanguage(aKB, 1, getLabel,
-                    getDescription);
-            ValueFactory vf = SimpleValueFactory.getInstance();
-            TupleQuery tupleQueryLabel = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
-            tupleQueryLabel.setBinding("oItem", vf.createIRI(aIdentifier));
-            tupleQueryLabel.setBinding("pTYPE", aKB.getTypeIri());
-            tupleQueryLabel.setBinding("oCLASS", aKB.getClassIri());
-            tupleQueryLabel.setBinding("pSUBCLASS", aKB.getSubclassIri());
-            tupleQueryLabel.setBinding("pLABEL", aKB.getLabelIri());
-            tupleQueryLabel.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
-            tupleQueryLabel.setIncludeInferred(false);
-            return evaluateGenericLabelQuery(aKB, tupleQueryLabel, aAll, "oItem", "l", "d");
-        });
+        StopWatch timer = new StopWatch();
+        timer.start();
+        
+        try {
+            return read(aKB, (conn) -> {
+                String QUERY = SPARQLQueryStore.readLabelWithoutLanguage(aKB, 1, getLabel,
+                        getDescription);
+                ValueFactory vf = SimpleValueFactory.getInstance();
+                TupleQuery tupleQueryLabel = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
+                tupleQueryLabel.setBinding("oItem", vf.createIRI(aIdentifier));
+                tupleQueryLabel.setBinding("pTYPE", aKB.getTypeIri());
+                tupleQueryLabel.setBinding("oCLASS", aKB.getClassIri());
+                tupleQueryLabel.setBinding("pSUBCLASS", aKB.getSubclassIri());
+                tupleQueryLabel.setBinding("pLABEL", aKB.getLabelIri());
+                tupleQueryLabel.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
+                tupleQueryLabel.setIncludeInferred(false);
+                return evaluateGenericLabelQuery(aKB, tupleQueryLabel, aAll, "oItem", "l", "d");
+            });
+        }
+        finally {
+            log.trace("KnowledgeBaseServiceImpl.readLabelsWithoutLanguage took {} ms",
+                    timer.getTime());
+        }
     }
     
     @Override
