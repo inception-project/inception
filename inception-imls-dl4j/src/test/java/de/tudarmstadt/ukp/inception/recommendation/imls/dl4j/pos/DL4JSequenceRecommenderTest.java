@@ -66,6 +66,8 @@ public class DL4JSequenceRecommenderTest
     public void setUp() {
         context = new RecommenderContext();
         traits = new DL4JSequenceRecommenderTraits();
+        traits.setTrainingSetSizeLimit(250);
+        traits.setBatchSize(50);
     }
 
     @Test
@@ -333,7 +335,7 @@ public class DL4JSequenceRecommenderTest
     @Test
     public void thatIncrementalNerEvaluationWorks() throws Exception
     {
-        IncrementalSplitter splitStrategy = new IncrementalSplitter(0.8, 500, 10);
+        IncrementalSplitter splitStrategy = new IncrementalSplitter(0.8, 50, 10);
         DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildNerRecommender(), traits,
                 cache);
         JCas cas = loadNerDevelopmentData();
