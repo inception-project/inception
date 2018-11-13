@@ -27,6 +27,8 @@ import org.nd4j.linalg.lossfunctions.LossFunctions.LossFunction;
 public class DL4JSequenceRecommenderTraits
 {
     // General parameters
+    private int trainingSetSizeLimit = Integer.MAX_VALUE;
+    private int batchSize = 250;
     private int maxTagsetSize = 70;
     private int maxSentenceLength = 150;
     private int nEpochs = 1;
@@ -43,6 +45,26 @@ public class DL4JSequenceRecommenderTraits
     private Activation activationL0 = Activation.SOFTSIGN;
     private Activation activationL1 = Activation.SOFTMAX;
     private LossFunction lossFunction = LossFunction.MCXENT;
+
+    public int getTrainingSetSizeLimit()
+    {
+        return trainingSetSizeLimit;
+    }
+
+    public void setTrainingSetSizeLimit(int aLimit)
+    {
+        trainingSetSizeLimit = aLimit;
+    }
+
+    public int getBatchSize()
+    {
+        return batchSize;
+    }
+
+    public void setBatchSize(int aBatchSize)
+    {
+        batchSize = aBatchSize;
+    }
 
     public int getMaxTagsetSize()
     {
