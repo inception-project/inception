@@ -57,7 +57,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -140,8 +139,8 @@ public class RemoteApiController
 
         // Check for the access
         boolean hasAccess = 
-                SecurityUtil.isProjectCreator(projectRepository, user) ||
-                SecurityUtil.isSuperAdmin(projectRepository, user);
+                userRepository.isProjectCreator(user) ||
+                userRepository.isAdministrator(user);
         if (!hasAccess) {
             return ResponseEntity
                     .status(HttpStatus.FORBIDDEN)
@@ -314,8 +313,8 @@ public class RemoteApiController
 
         // Check for the access
         boolean hasAccess = 
-                SecurityUtil.isProjectAdmin(project, projectRepository, user) ||
-                SecurityUtil.isSuperAdmin(projectRepository, user);
+                projectRepository.isProjectAdmin(project, user) ||
+                userRepository.isAdministrator(user);
         if (!hasAccess) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User [" + username
                     + "] is not allowed to access project [" + aProjectId + "]");
@@ -365,8 +364,8 @@ public class RemoteApiController
         
         // Check for the access
         boolean hasAccess = 
-                SecurityUtil.isProjectAdmin(project, projectRepository, user) ||
-                SecurityUtil.isSuperAdmin(projectRepository, user);
+                projectRepository.isProjectAdmin(project, user) ||
+                userRepository.isAdministrator(user);
         if (!hasAccess) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User [" + username
                     + "] is not allowed to access project [" + aProjectId + "]");
@@ -430,8 +429,8 @@ public class RemoteApiController
 
         // Check for the access
         boolean hasAccess = 
-                SecurityUtil.isProjectAdmin(project, projectRepository, user) ||
-                SecurityUtil.isSuperAdmin(projectRepository, user);
+                projectRepository.isProjectAdmin(project, user) ||
+                userRepository.isAdministrator(user);
         if (!hasAccess) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User [" + username
                     + "] is not allowed to access project [" + aProjectId + "]");
@@ -511,8 +510,8 @@ public class RemoteApiController
 
         // Check for the access
         boolean hasAccess = 
-                SecurityUtil.isProjectAdmin(project, projectRepository, user) ||
-                SecurityUtil.isSuperAdmin(projectRepository, user);
+                projectRepository.isProjectAdmin(project, user) ||
+                userRepository.isAdministrator(user);
         if (!hasAccess) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User [" + username
                     + "] is not allowed to access project [" + aProjectId + "]");
@@ -582,8 +581,8 @@ public class RemoteApiController
 
         // Check for the access
         boolean hasAccess = 
-                SecurityUtil.isProjectAdmin(project, projectRepository, user) ||
-                SecurityUtil.isSuperAdmin(projectRepository, user);
+                projectRepository.isProjectAdmin(project, user) ||
+                userRepository.isAdministrator(user);
         if (!hasAccess) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User [" + username
                     + "] is not allowed to access project [" + aProjectId + "]");
@@ -681,8 +680,8 @@ public class RemoteApiController
 
         // Check for the access
         boolean hasAccess = 
-                SecurityUtil.isProjectAdmin(project, projectRepository, user) ||
-                SecurityUtil.isSuperAdmin(projectRepository, user);
+                projectRepository.isProjectAdmin(project, user) ||
+                userRepository.isAdministrator(user);
         if (!hasAccess) {
             response.sendError(HttpStatus.FORBIDDEN.value(), "User [" + username
                     + "] is not allowed to access project [" + aProjectId + "]");
@@ -823,8 +822,8 @@ public class RemoteApiController
 
         // Check for the access
         boolean hasAccess = 
-                SecurityUtil.isProjectAdmin(project, projectRepository, user) ||
-                SecurityUtil.isSuperAdmin(projectRepository, user);
+                projectRepository.isProjectAdmin(project, user) ||
+                userRepository.isAdministrator(user);
         if (!hasAccess) {
             response.sendError(HttpStatus.FORBIDDEN.value(), "User [" + username
                     + "] is not allowed to access project [" + aProjectId + "]");

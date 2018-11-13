@@ -430,6 +430,57 @@ public interface ProjectService
     @Deprecated
     List<Authority> listAuthorities(User user);
     
+    /**
+     * Can the given user access the project setting of <b>some</b> project. 
+     */
+    public boolean managesAnyProject(User user);
+    
+    /**
+     * Determine if the user is allowed to update a project.
+     *
+     * @param aProject
+     *            the project
+     * @param aUser
+     *            the user.
+     * @return if the user may update a project.
+     */
+    boolean isProjectAdmin(Project aProject, User aUser);
+
+    /**
+     * Determine if the User is an admin of a project
+     *
+     * @param aProject
+     *            the project.
+     * @param aUser
+     *            the user.
+     * @return if the user is an admin.
+     */
+    boolean isAdmin(Project aProject, User aUser);
+
+    /**
+     * Determine if the user is a curator or not.
+     *
+     * @param aProject
+     *            the project.
+     * @param aUser
+     *            the user.
+     * @return if the user is a curator.
+     */
+    boolean isCurator(Project aProject, User aUser);
+
+    /**
+     * Determine if the User is member of a project
+     *
+     * @param aProject
+     *            the project.
+     * @param aUser
+     *            the user.
+     * @return if the user is a member.
+     */
+    boolean isAnnotator(Project aProject, User aUser);
+
+    
+    
     // --------------------------------------------------------------------------------------------
     // Methods related to other things
     // --------------------------------------------------------------------------------------------

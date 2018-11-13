@@ -58,7 +58,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.CorrectionDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectType;
-import de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
@@ -285,8 +284,9 @@ public class CorrectionPage
                 super.onConfigure();
                 
                 AnnotatorState state = CorrectionPage.this.getModelObject();
-                setVisible(state.getProject() != null && (SecurityUtil.isAdmin(state.getProject(),
-                        projectService, state.getUser()) || !state.getProject().isDisableExport()));
+                setVisible(state.getProject() != null
+                        && (projectService.isAdmin(state.getProject(), state.getUser())
+                                || !state.getProject().isDisableExport()));
             }
         });
 
@@ -351,7 +351,7 @@ public class CorrectionPage
                         SecurityContextHolder.getContext().getAuthentication().getName());
                 List<DecoratedObject<Project>> allowedProject = new ArrayList<>();
                 for (Project project : projectService.listProjects()) {
-                    if (SecurityUtil.isAnnotator(project, projectService, user)
+                    if (projectService.isAnnotator(project, user)
                             && WebAnnoConst.PROJECT_TYPE_CORRECTION.equals(project.getMode())) {
                         allowedProject.add(DecoratedObject.of(project));
                     }

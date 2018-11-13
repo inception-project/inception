@@ -34,6 +34,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExporter;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProjectPermission;
+import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -80,15 +81,29 @@ public class PermissionsExporter
             ExportedProject aExProject, ZipFile aZip)
         throws Exception
     {
-        for (ExportedProjectPermission importedPermission : aExProject
-                .getProjectPermissions()) {
+        if (aRequest.isImportPermissions()) {
+            for (ExportedProjectPermission importedPermission : aExProject
+                    .getProjectPermissions()) {
+                ProjectPermission permission = new ProjectPermission();
+                permission.setLevel(importedPermission.getLevel());
+                permission.setProject(aProject);
+                permission.setUser(importedPermission.getUser());
+                projectService.createProjectPermission(permission);
+            }
+        }
+        
+        // Add the importing user as project manager if requested
+        if (aRequest.getManager().isPresent()
+                && !projectService.isProjectAdmin(aProject, aRequest.getManager().get())) {
             ProjectPermission permission = new ProjectPermission();
-            permission.setLevel(importedPermission.getLevel());
+            permission.setLevel(PermissionLevel.ADMIN);
             permission.setProject(aProject);
-            permission.setUser(importedPermission.getUser());
+            permission.setUser(aRequest.getManager().get().getUsername());
             projectService.createProjectPermission(permission);
         }
         
+        // Add any users that are referenced by the project but missing in the current instance.
+        // Users are added without passwords and disabled.
         if (aRequest.isCreateMissingUsers()) {
             Set<String> users = new HashSet<>();
             

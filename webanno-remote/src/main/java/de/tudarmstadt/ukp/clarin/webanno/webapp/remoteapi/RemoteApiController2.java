@@ -17,9 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil.isProjectAdmin;
-import static de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil.isProjectCreator;
-import static de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil.isSuperAdmin;
 import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.model.RMessageLevel.ERROR;
 import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.model.RMessageLevel.INFO;
 import static org.apache.uima.fit.util.JCasUtil.select;
@@ -228,8 +225,8 @@ public class RemoteApiController2
         assertPermission(
                 "User [" + user.getUsername() + "] is not allowed to access project [" + aProjectId
                         + "]",
-                isProjectAdmin(project, projectService, user)
-                        || isSuperAdmin(projectService, user));
+                projectService.isProjectAdmin(project, user)
+                        || userRepository.isAdministrator(user));
         
         return project;
     }
@@ -316,13 +313,13 @@ public class RemoteApiController2
 
         // Check for the access
         assertPermission("User [" + user.getUsername() + "] is not allowed to create projects",
-                isProjectCreator(projectService, user) || isSuperAdmin(projectService, user));
+                userRepository.isProjectCreator(user) || userRepository.isAdministrator(user));
         
         // Check if the user can create projects for another user
         assertPermission(
                 "User [" + user.getUsername() + "] is not allowed to create projects for user ["
                         + aCreator.orElse("<unspecified>") + "]",
-                isSuperAdmin(projectService, user)
+                userRepository.isAdministrator(user)
                         || (aCreator.isPresent() && aCreator.get().equals(user.getUsername())));
         
         // Existing project
@@ -402,7 +399,7 @@ public class RemoteApiController2
 
         // Check for the access
         assertPermission("User [" + user.getUsername() + "] is not allowed to import projects",
-                isSuperAdmin(projectService, user));
+                userRepository.isAdministrator(user));
         
         Project importedProject;
         File tempFile = File.createTempFile("webanno-training", null);

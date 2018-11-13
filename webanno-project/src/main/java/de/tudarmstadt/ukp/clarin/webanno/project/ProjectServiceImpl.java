@@ -56,6 +56,7 @@ import javax.persistence.Query;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -74,7 +75,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectType;
-import de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterProjectCreatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeProjectRemovedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.ProjectStateChangedEvent;
@@ -768,15 +768,15 @@ public class ProjectServiceImpl
         List<Project> allProjects = listProjects();
 
         // if global admin, list all projects
-        if (SecurityUtil.isSuperAdmin(this, user)) {
+        if (managesAnyProject(user)) {
             return allProjects;
         }
 
         // else only list projects where she is admin / user / curator
         for (Project project : allProjects) {
-            if (SecurityUtil.isProjectAdmin(project, this, user)
-                    || SecurityUtil.isAnnotator(project, this, user)
-                    || SecurityUtil.isCurator(project, this, user)) {
+            if (this.isProjectAdmin(project, user)
+                    || this.isAnnotator(project, user)
+                    || this.isCurator(project, user)) {
                 allowedProject.add(project);
             }
         }
@@ -790,13 +790,13 @@ public class ProjectServiceImpl
         List<Project> allProjects = listProjects();
 
         // if global admin, show all projects
-        if (SecurityUtil.isSuperAdmin(this, user)) {
+        if (managesAnyProject(user)) {
             return allProjects;
         }
 
         // else only projects she is admin of
         for (Project project : allProjects) {
-            if (SecurityUtil.isProjectAdmin(project, this, user)) {
+            if (this.isProjectAdmin(project, user)) {
                 allowedProject.add(project);
             }
         }
@@ -1011,5 +1011,111 @@ public class ProjectServiceImpl
     public List<ProjectType> listProjectTypes()
     {
         return Collections.unmodifiableList(projectTypes);
+    }
+    
+    @Override
+    public boolean managesAnyProject(User user)
+    {
+        if (userRepository.isAdministrator(user)) {
+            return true;
+        }
+
+        if (userRepository.isProjectCreator(user)) {
+            return true;
+        }
+
+        for (Project project : listProjects()) {
+            if (isProjectAdmin(project, user)) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+
+    @Override
+    public boolean isProjectAdmin(Project aProject, User aUser)
+    {
+        boolean projectAdmin = false;
+        try {
+            List<ProjectPermission> permissionLevels = listProjectPermissionLevel(aUser, aProject);
+            for (ProjectPermission permissionLevel : permissionLevels) {
+                if (StringUtils.equalsIgnoreCase(permissionLevel.getLevel().getName(),
+                        PermissionLevel.ADMIN.getName())) {
+                    projectAdmin = true;
+                    break;
+                }
+            }
+        }
+        catch (NoResultException ex) {
+            log.info("No permision is given to this user " + ex);
+        }
+
+        return projectAdmin;
+    }
+
+    @Override
+    public boolean isAdmin(Project aProject, User aUser)
+    {
+        boolean user = false;
+        try {
+            List<ProjectPermission> permissionLevels = listProjectPermissionLevel(aUser, aProject);
+            for (ProjectPermission permissionLevel : permissionLevels) {
+                if (StringUtils.equalsIgnoreCase(permissionLevel.getLevel().getName(),
+                        PermissionLevel.ADMIN.getName())) {
+                    user = true;
+                    break;
+                }
+            }
+        }
+    
+        catch (NoResultException ex) {
+            log.info("No permision is given to this user " + ex);
+        }
+    
+        return user;
+    }
+
+    @Override
+    public boolean isCurator(Project aProject, User aUser)
+    {
+        boolean curator = false;
+        try {
+            List<ProjectPermission> permissionLevels = listProjectPermissionLevel(aUser, aProject);
+            for (ProjectPermission permissionLevel : permissionLevels) {
+                if (StringUtils.equalsIgnoreCase(permissionLevel.getLevel().getName(),
+                        PermissionLevel.CURATOR.getName())) {
+                    curator = true;
+                    break;
+                }
+            }
+        }
+        catch (NoResultException ex) {
+            log.info("No permision is given to this user " + ex);
+        }
+
+        return curator;
+    }
+
+    @Override
+    public boolean isAnnotator(Project aProject, User aUser)
+    {
+        boolean user = false;
+        try {
+            List<ProjectPermission> permissionLevels = listProjectPermissionLevel(aUser, aProject);
+            for (ProjectPermission permissionLevel : permissionLevels) {
+                if (StringUtils.equalsIgnoreCase(permissionLevel.getLevel().getName(),
+                        PermissionLevel.USER.getName())) {
+                    user = true;
+                    break;
+                }
+            }
+        }
+
+        catch (NoResultException ex) {
+            log.info("No permision is given to this user " + ex);
+        }
+
+        return user;
     }
 }

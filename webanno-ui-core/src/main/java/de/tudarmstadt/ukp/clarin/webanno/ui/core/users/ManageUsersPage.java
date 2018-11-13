@@ -292,6 +292,6 @@ public class ManageUsersPage
     
     private boolean isAdmin()
     {
-        return SecurityUtil.isSuperAdmin(projectRepository, userRepository.getCurrentUser());
+        return userRepository.isAdministrator(userRepository.getCurrentUser());
     }
 }
