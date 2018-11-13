@@ -397,7 +397,11 @@ public class KnowledgeBaseServiceImpl
 
         // Load files into the repository
         try (RepositoryConnection conn = getConnection(kb)) {
-            conn.add(is, "", format);
+            // If the RDF file contains relative URLs, then they probably start with a hash.
+            // To avoid having two hashes here, we drop the hash from the base prefix configured
+            // by the user.
+            String prefix = StringUtils.removeEnd(kb.getBasePrefix(), "#");
+            conn.add(is, prefix, format);
         }
     }
 
@@ -1342,8 +1346,8 @@ public class KnowledgeBaseServiceImpl
             SailRepositoryConfig cfg = (SailRepositoryConfig) aCfg;
             if (cfg.getSailImplConfig() instanceof LuceneSailConfig) {
                 LuceneSailConfig luceneSailCfg = (LuceneSailConfig) cfg.getSailImplConfig();
-                luceneSailCfg
-                        .setIndexDir(new File(kbRepositoriesRoot, "indexes" + aKB.getRepositoryId())
+                luceneSailCfg.setIndexDir(
+                        new File(kbRepositoriesRoot, "indexes/" + aKB.getRepositoryId())
                                 .getAbsolutePath());
             }
         }

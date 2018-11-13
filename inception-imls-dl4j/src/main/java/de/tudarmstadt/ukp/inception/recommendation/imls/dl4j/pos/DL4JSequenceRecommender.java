@@ -85,15 +85,18 @@ public class DL4JSequenceRecommender
     
     private final String layerName;
     private final String featureName;
+    private final File datasetCache;
     private DL4JSequenceRecommenderTraits traits;
     private BinaryVectorizer wordVectors;
     private INDArray randUnk;
     
-    public DL4JSequenceRecommender(Recommender aRecommender, DL4JSequenceRecommenderTraits aTraits)
+    public DL4JSequenceRecommender(Recommender aRecommender, DL4JSequenceRecommenderTraits aTraits,
+            File aDatasetCache)
     {
         layerName = aRecommender.getLayer().getName();
         featureName = aRecommender.getFeature();
         traits = aTraits;
+        datasetCache = aDatasetCache;
     }
 
     @Override
@@ -128,8 +131,8 @@ public class DL4JSequenceRecommender
             // Load the embeddings. Mind that we are using a memory-mapped embedding store, so this
             // is a fast operation and also doesn't consume lots of memory. Hence we can do it for
             // each recommender instance and do not have to share it between recommenders.
-            DatasetFactory loader = new DatasetFactory(); 
-            File embeddingsFile =  loader.load("glove.6B.50d.dl4jw2v").getDataFiles()[0];
+            DatasetFactory loader = new DatasetFactory(datasetCache); 
+            File embeddingsFile = loader.load("glove.6B.50d.dl4jw2v").getDataFiles()[0];
             wordVectors = BinaryVectorizer.load(embeddingsFile);
         }
         
@@ -187,8 +190,8 @@ public class DL4JSequenceRecommender
         // Configure the neural network
         MultiLayerNetwork model = createConfiguredNetwork(traits, wordVectors.dimensions());
 
-        final int limit = Integer.MAX_VALUE;
-        final int batchSize = 250;
+        final int limit = traits.getTrainingSetSizeLimit();
+        final int batchSize = traits.getBatchSize();
 
         // First vectorizing all sentences and then passing them to the model would consume
         // huge amounts of memory. Thus, every sentence is vectorized and then immediately
@@ -363,10 +366,9 @@ public class DL4JSequenceRecommender
             Feature labelFeature = predictionType.getFeatureByBaseName("label");
     
             final int limit = Integer.MAX_VALUE;
-            final int batchSize = 250;
+            final int batchSize = traits.getBatchSize();
 
             Collection<AnnotationFS> sentences = select(aCas, sentenceType);
-            int sentCount = sentences.size();
             int sentNum = 0;
             
             Iterator<AnnotationFS> sentenceIterator = sentences.iterator();
@@ -405,7 +407,7 @@ public class DL4JSequenceRecommender
                     outcomeIdx++;
                 }
                 
-                log.trace("Predicted {} of {} sentences", sentNum, sentCount);
+                log.trace("Predicted {} of {} sentences", sentNum, sentences.size());
             }
         }
         catch (IOException e) {
@@ -425,7 +427,7 @@ public class DL4JSequenceRecommender
         
         // Predict labels
         long predictionStart = System.currentTimeMillis();
-        INDArray predicted = aClassifier.output(data.getFeatureMatrix(), false,
+        INDArray predicted = aClassifier.output(data.getFeatures(), false,
                 data.getFeaturesMaskArray(), data.getLabelsMaskArray());
         log.trace("Prediction took {}ms", System.currentTimeMillis() - predictionStart);
         

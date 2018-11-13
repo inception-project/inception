@@ -30,7 +30,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.JCasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.inception.pdfeditor.pdfjs.PdfJsPanel;
+import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.PdfAnnoPanel;
 
 public class PdfAnnotationEditor
     extends AnnotationEditorBase
@@ -45,7 +45,7 @@ public class PdfAnnotationEditor
     {
         super(aId, aModel, aActionHandler, aJCasProvider);
         
-        add(new PdfJsPanel("vis", aModel));
+        add(new PdfAnnoPanel("vis", aModel));
     }
 
     @Override

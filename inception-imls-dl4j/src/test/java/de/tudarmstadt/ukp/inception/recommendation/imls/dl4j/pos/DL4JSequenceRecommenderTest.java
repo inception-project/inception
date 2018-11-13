@@ -66,6 +66,8 @@ public class DL4JSequenceRecommenderTest
     public void setUp() {
         context = new RecommenderContext();
         traits = new DL4JSequenceRecommenderTraits();
+        traits.setTrainingSetSizeLimit(250);
+        traits.setBatchSize(50);
     }
 
     @Test
@@ -107,7 +109,8 @@ public class DL4JSequenceRecommenderTest
         ne.setValue("C");
         ne.addToIndexes();
         
-        DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildPosRecommender(), traits);
+        DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildPosRecommender(), traits,
+                cache);
         List<String> labels = sut.extractTokenLabels(
                 new ArrayList<>(select(jcas, Token.class)), 
                 new ArrayList<>(select(jcas, NamedEntity.class)));
@@ -143,7 +146,8 @@ public class DL4JSequenceRecommenderTest
         ne.setValue("B");
         ne.addToIndexes();
         
-        DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildPosRecommender(), traits);
+        DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildPosRecommender(), traits,
+                cache);
         List<String> labels = sut.extractTokenLabels(
                 new ArrayList<>(select(jcas, Token.class)), 
                 new ArrayList<>(select(jcas, NamedEntity.class)));
@@ -170,7 +174,8 @@ public class DL4JSequenceRecommenderTest
         ne.setValue("B");
         ne.addToIndexes();
         
-        DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildPosRecommender(), traits);
+        DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildPosRecommender(), traits,
+                cache);
         
         assertThatThrownBy(() -> sut.extractTokenLabels(
                 new ArrayList<>(select(jcas, Token.class)), 
@@ -197,7 +202,8 @@ public class DL4JSequenceRecommenderTest
         ne.setValue("B");
         ne.addToIndexes();
         
-        DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildPosRecommender(), traits);
+        DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildPosRecommender(), traits,
+                cache);
         
         assertThatThrownBy(() -> sut.extractTokenLabels(
                 new ArrayList<>(select(jcas, Token.class)), 
@@ -224,7 +230,8 @@ public class DL4JSequenceRecommenderTest
         ne.setValue("B");
         ne.addToIndexes();
         
-        DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildPosRecommender(), traits);
+        DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildPosRecommender(), traits,
+                cache);
         
         assertThatThrownBy(() -> sut.extractTokenLabels(
                 new ArrayList<>(select(jcas, Token.class)), 
@@ -236,7 +243,8 @@ public class DL4JSequenceRecommenderTest
     @Test
     public void thatPosTrainingWorks() throws Exception
     {
-        DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildPosRecommender(), traits);
+        DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildPosRecommender(), traits,
+                cache);
         JCas cas = loadPosDevelopmentData();
 
         sut.train(context, asList(cas.getCas()));
@@ -249,7 +257,8 @@ public class DL4JSequenceRecommenderTest
     @Test
     public void thatPosPredictionWorks() throws Exception
     {
-        DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildPosRecommender(), traits);
+        DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildPosRecommender(), traits,
+                cache);
         JCas cas = loadPosDevelopmentData();
         
         sut.train(context, asList(cas.getCas()));
@@ -266,7 +275,8 @@ public class DL4JSequenceRecommenderTest
     public void thatPosEvaluationWorks() throws Exception
     {
         DataSplitter splitStrategy = new PercentageBasedSplitter(0.8, 10);
-        DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildPosRecommender(), traits);
+        DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildPosRecommender(), traits,
+                cache);
         JCas cas = loadPosDevelopmentData();
 
         double score = sut.evaluate(asList(cas.getCas()), splitStrategy);
@@ -279,7 +289,8 @@ public class DL4JSequenceRecommenderTest
     @Test
     public void thatNerTrainingWorks() throws Exception
     {
-        DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildNerRecommender(), traits);
+        DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildNerRecommender(), traits,
+                cache);
         JCas cas = loadNerDevelopmentData();
 
         sut.train(context, asList(cas.getCas()));
@@ -292,7 +303,8 @@ public class DL4JSequenceRecommenderTest
     @Test
     public void thatNerPredictionWorks() throws Exception
     {
-        DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildNerRecommender(), traits);
+        DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildNerRecommender(), traits,
+                cache);
         JCas cas = loadNerDevelopmentData();
         
         sut.train(context, asList(cas.getCas()));
@@ -309,7 +321,8 @@ public class DL4JSequenceRecommenderTest
     public void thatNerEvaluationWorks() throws Exception
     {
         DataSplitter splitStrategy = new PercentageBasedSplitter(0.8, 10);
-        DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildNerRecommender(), traits);
+        DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildNerRecommender(), traits,
+                cache);
         JCas cas = loadNerDevelopmentData();
 
         double score = sut.evaluate(asList(cas.getCas()), splitStrategy);
@@ -322,8 +335,9 @@ public class DL4JSequenceRecommenderTest
     @Test
     public void thatIncrementalNerEvaluationWorks() throws Exception
     {
-        IncrementalSplitter splitStrategy = new IncrementalSplitter(0.8, 500, 10);
-        DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildNerRecommender(), traits);
+        IncrementalSplitter splitStrategy = new IncrementalSplitter(0.8, 50, 10);
+        DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildNerRecommender(), traits,
+                cache);
         JCas cas = loadNerDevelopmentData();
 
         int i = 0;
