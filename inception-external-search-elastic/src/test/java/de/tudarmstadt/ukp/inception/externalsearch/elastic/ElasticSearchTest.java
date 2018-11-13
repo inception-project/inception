@@ -227,7 +227,7 @@ public class ElasticSearchTest
         @Bean
         public ImportExportService importExportService()
         {
-            return new ImportExportServiceImpl(
+            return new ImportExportServiceImpl(repositoryProperties(),
                     asList(new TextFormatSupport()),
                     casStorageService(), annotationSchemaService());
         }
