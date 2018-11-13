@@ -366,7 +366,7 @@ public class SearchPage extends ApplicationPageBase
                 
             });
             link.add(new Label("documentId", documentId));
-            
+
             add(link);
         }
     }
@@ -394,7 +394,7 @@ public class SearchPage extends ApplicationPageBase
                 }
             });
             link.add(new Label("documentId", documentId));
-            
+
             add(link);
         }
     }
