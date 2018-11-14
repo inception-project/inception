@@ -17,8 +17,9 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.project;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil.isAdmin;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
+import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_ADMIN;
+import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_PROJECT_CREATOR;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -110,7 +111,7 @@ public class ProjectPage
         
         if (project.isPresent()) {
             // Check access to project
-            if (project != null && !isAdmin(project.get(), projectService, user)) {
+            if (project != null && !projectService.isAdmin(project.get(), user)) {
                 error("You have no permission to access project [" + project.get().getId() + "]");
                 setResponsePage(getApplication().getHomePage());
             }
@@ -169,7 +170,8 @@ public class ProjectPage
         importProjectPanel = new ProjectImportPanel("importPanel", selectedProject);
         sidebar.add(importProjectPanel);
         MetaDataRoleAuthorizationStrategy.authorize(importProjectPanel, Component.RENDER,
-                "ROLE_ADMIN");    }
+                String.join(",", ROLE_ADMIN.name(), ROLE_PROJECT_CREATOR.name()));    
+    }
 
     private List<ITab> makeTabs()
     {

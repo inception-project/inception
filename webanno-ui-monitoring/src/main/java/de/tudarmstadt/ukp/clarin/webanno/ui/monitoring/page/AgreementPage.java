@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.page;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil.isCurator;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
 import static java.util.Arrays.asList;
 
@@ -71,7 +70,6 @@ import de.agilecoders.wicket.core.markup.html.bootstrap.components.TooltipConfig
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.AgreementUtils;
 import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.AgreementUtils.AgreementReportExportFormat;
@@ -137,7 +135,7 @@ public class AgreementPage
         
         if (project.isPresent()) {
             // Check access to project
-            if (project != null && !isCurator(project.get(), projectService, user)) {
+            if (project != null && !projectService.isCurator(project.get(), user)) {
                 error("You have no permission to access project [" + project.get().getId() + "]");
                 setResponsePage(getApplication().getHomePage());
             }
@@ -625,8 +623,8 @@ public class AgreementPage
 
             List<Project> allProjects = projectService.listProjects();
             for (Project project : allProjects) {
-                if (SecurityUtil.isProjectAdmin(project, projectService, user)
-                        || SecurityUtil.isCurator(project, projectService, user)) {
+                if (projectService.isProjectAdmin(project, user)
+                        || projectService.isCurator(project, user)) {
                     allowedProject.add(project);
                 }
             }

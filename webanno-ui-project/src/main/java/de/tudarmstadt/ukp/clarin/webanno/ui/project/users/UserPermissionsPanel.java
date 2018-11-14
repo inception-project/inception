@@ -17,7 +17,11 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.project.users;
 
-import java.util.Arrays;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ADMIN;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.USER;
+import static java.util.Arrays.asList;
+
 import java.util.Collection;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -37,7 +41,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 
 public class UserPermissionsPanel
@@ -75,8 +78,7 @@ public class UserPermissionsPanel
             projectRepository.setProjectPermissionLevels(user.getObject(), project.getObject(),
                     lvls);
         }));
-        levels.setChoices(LambdaModel.of(() -> Arrays.asList(PermissionLevel.ADMIN,
-                    PermissionLevel.CURATOR, PermissionLevel.USER)));
+        levels.setChoices(asList(ADMIN, CURATOR, USER));
         levels.setChoiceRenderer(new ChoiceRenderer<PermissionLevel>("name"));
         form.add(levels);
         

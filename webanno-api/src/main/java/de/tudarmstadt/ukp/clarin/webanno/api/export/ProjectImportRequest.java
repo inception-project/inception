@@ -18,8 +18,11 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.export;
 
 import java.io.Serializable;
+import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
+
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 public class ProjectImportRequest
     implements Serializable
@@ -30,14 +33,36 @@ public class ProjectImportRequest
 
     public int progress = 0;
 
-    private final Queue<String> messages;
+    private final Queue<String> messages = new ConcurrentLinkedQueue<>();
+    
     private final boolean createMissingUsers;
+    private final boolean importPermissions;
+    private final Optional<User> manager;
 
+    /**
+     * Request the import of a project, optionally creating any users referenced in the project
+     * but missing in the current instance.
+     */
     public ProjectImportRequest(boolean aCreateMissingUsers)
     {
-        progress = 0;
         createMissingUsers = aCreateMissingUsers;
-        messages = new ConcurrentLinkedQueue<>();
+        importPermissions = true;
+        manager = Optional.empty();
+    }
+
+    public ProjectImportRequest(boolean aCreateMissingUsers, boolean aImportPermissions)
+    {
+        createMissingUsers = aCreateMissingUsers;
+        importPermissions = aImportPermissions;
+        manager = Optional.empty();
+    }
+
+    public ProjectImportRequest(boolean aCreateMissingUsers, boolean aImportPermissions,
+            Optional<User> aManager)
+    {
+        createMissingUsers = aCreateMissingUsers;
+        importPermissions = aImportPermissions;
+        manager = aManager;
     }
 
     public void addMessage(String aMessage)
@@ -56,5 +81,15 @@ public class ProjectImportRequest
     public boolean isCreateMissingUsers()
     {
         return createMissingUsers;
+    }
+    
+    public boolean isImportPermissions()
+    {
+        return importPermissions;
+    }
+    
+    public Optional<User> getManager()
+    {
+        return manager;
     }
 }

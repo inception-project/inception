@@ -24,20 +24,24 @@
         <h3 class="panel-title"><wicket:message key="projects.import.title" /></h3>
       </div>
       <form wicket:id="form">
-        <div class="panel-body">
+        <div class="panel-body form-horizontal">
           <div class="form-group">
-            <label wicket:for="content" class="col-sm-4 control-label">
-              <wicket:label key="content" />
-            </label>
-            <div class="col-sm-8">
-              <div class="row">
-                <input wicket:id="content" type="file" multiple
-                  class="col-sm-12" />
+            <div class="col-sm-12">
+              <input wicket:id="content" type="file" multiple class="col-sm-12" />
+            </div>
+          </div>
+          <div class="form-group">
+            <div class="col-sm-12" wicket:enclosure="importPermissions">
+              <div class="checkbox">
+                <label wicket:for="importPermissions">
+                  <input wicket:id="importPermissions" type="checkbox">
+                  <wicket:label key="importPermissions" />
+                </label>
               </div>
             </div>
           </div>
-          <div wicket:enclosure="generateUsers">
-            <div class="col-sm-offset-4 col-sm-8">
+          <div class="form-group">
+            <div class="col-sm-12" wicket:enclosure="generateUsers">
               <div class="checkbox">
                 <label wicket:for="generateUsers">
                   <input wicket:id="generateUsers" type="checkbox">
