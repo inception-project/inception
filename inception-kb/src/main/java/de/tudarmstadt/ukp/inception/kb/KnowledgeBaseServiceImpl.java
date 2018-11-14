@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.kb;
 
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
+import static java.util.Collections.unmodifiableSet;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -155,11 +156,11 @@ public class KnowledgeBaseServiceImpl
         
         repoManager = RepositoryProvider.getRepositoryManager(kbRepositoriesRoot);
         log.info("Knowledge base repository path: {}", kbRepositoriesRoot);
-        implicitNamespaces = IriConstants.IMPLICIT_NAMESPACES;
+        
+        implicitNamespaces = new LinkedHashSet<>(IriConstants.IMPLICIT_NAMESPACES);
     }
     
-    public KnowledgeBaseServiceImpl(
-            RepositoryProperties aRepoProperties,
+    public KnowledgeBaseServiceImpl(RepositoryProperties aRepoProperties,
             EntityManager entityManager)
     {
         this(aRepoProperties);
@@ -1277,6 +1278,11 @@ public class KnowledgeBaseServiceImpl
             }
         }
         return false;
+    }
+    
+    public Set<String> getImplicitNamespaces()
+    {
+        return unmodifiableSet(implicitNamespaces);
     }
 
     @Override
