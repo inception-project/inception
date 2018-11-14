@@ -100,6 +100,6 @@ public class ProjectsOverviewPage
     
     private List<Project> listProjects()
     {
-        return projectService.listManageableProjects(userRepository.getCurrentUser());
+        return projectService.listAccessibleProjects(userRepository.getCurrentUser());
     }
 }
