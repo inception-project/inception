@@ -2,6 +2,7 @@
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
 
 <#animal> rdf:type rdfs:Class ;
 	rdfs:label "Animal" .
@@ -18,7 +19,7 @@
 <#has-class> rdf:type rdf:Property ;
     rdfs:domain <#animal> ;
     rdfs:range <#classis> ;
-    rdfs:label "Has biological class" .
+    skos:prefLabel "Has biological class" .
 
 <#manatee> rdf:type rdfs:Class ;
     rdfs:subClassOf <#animal> ;
