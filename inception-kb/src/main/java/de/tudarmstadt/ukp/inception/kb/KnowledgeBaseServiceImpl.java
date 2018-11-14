@@ -397,10 +397,14 @@ public class KnowledgeBaseServiceImpl
 
         // Load files into the repository
         try (RepositoryConnection conn = getConnection(kb)) {
-            conn.add(is, "", format);
+            // If the RDF file contains relative URLs, then they probably start with a hash.
+            // To avoid having two hashes here, we drop the hash from the base prefix configured
+            // by the user.
+            String prefix = StringUtils.removeEnd(kb.getBasePrefix(), "#");
+            conn.add(is, prefix, format);
         }
     }
-
+    
     @Override
     public void exportData(KnowledgeBase kb, RDFFormat format, OutputStream os)
     {
@@ -462,7 +466,6 @@ public class KnowledgeBaseServiceImpl
             tupleQuery.setIncludeInferred(false);
             return evaluateListQuery(aKB, tupleQuery, true, aAll, "oItem");
         });
-        resultList.sort(Comparator.comparing(KBObject::getUiLabel));
         
         if (resultList.isEmpty()) {
             return Optional.empty();
