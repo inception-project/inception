@@ -40,7 +40,6 @@ import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.upload.FileUpload;
-import org.apache.wicket.markup.html.form.upload.FileUploadField;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
@@ -50,6 +49,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.fileinput.BootstrapFileInputField;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.export.ImportUtil;
@@ -72,7 +72,7 @@ public class ProjectImportPanel
     
     private IModel<Project> selectedModel;
     private IModel<Preferences> preferences;
-    private FileUploadField fileUpload;
+    private BootstrapFileInputField fileUpload;
 
     public ProjectImportPanel(String aId, IModel<Project> aModel)
     {
@@ -102,7 +102,10 @@ public class ProjectImportPanel
         form.add(importPermissions);
         authorize(importPermissions, Component.RENDER, ROLE_ADMIN.name());
 
-        form.add(fileUpload = new FileUploadField("content", new ListModel<>()));
+        form.add(fileUpload = new BootstrapFileInputField("content", new ListModel<>()));
+        fileUpload.getConfig().showPreview(false);
+        fileUpload.getConfig().showUpload(false);
+        fileUpload.getConfig().showRemove(false);
         fileUpload.setRequired(true);
         
         form.add(new LambdaAjaxButton<>("import", this::actionImport));
