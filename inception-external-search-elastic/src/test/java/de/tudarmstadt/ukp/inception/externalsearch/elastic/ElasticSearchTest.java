@@ -25,6 +25,7 @@ import java.util.List;
 
 import org.junit.Before;
 import org.junit.FixMethodOrder;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
@@ -86,6 +87,7 @@ import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchServiceImpl;
 @TestPropertySource(locations = "classpath:ElasticSearchTest.properties")
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 
+@Ignore
 public class ElasticSearchTest
 {
     @Rule
