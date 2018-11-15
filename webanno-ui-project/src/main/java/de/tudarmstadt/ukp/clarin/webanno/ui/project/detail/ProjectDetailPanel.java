@@ -30,7 +30,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.wicket.RuntimeConfigurationType;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.DropDownChoice;
@@ -41,8 +40,6 @@ import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.PropertyModel;
-import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.validation.IValidatable;
 import org.apache.wicket.validation.IValidator;
@@ -58,9 +55,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ChallengeResponseDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.NameUtil;
 
@@ -77,7 +72,6 @@ public class ProjectDetailPanel
     
     private IModel<Project> projectModel;
     
-    private ChallengeResponseDialog deleteProjectDialog;
     private Label idLabel;
     private DropDownChoice<String> projectTypes;
 
@@ -113,29 +107,6 @@ public class ProjectDetailPanel
         form.add(projectTypes = makeProjectTypeChoice());
         
         form.add(new LambdaAjaxButton<>("save", this::actionSave));
-        form.add(new LambdaAjaxLink("cancel", this::actionCancel));
-        form.add(new LambdaAjaxLink("delete", this::actionDelete).onConfigure((_this) -> 
-            _this.setEnabled(projectModel.getObject() != null && 
-                    projectModel.getObject().getId() != null )));
-
-        IModel<String> projectNameModel = PropertyModel.of(projectModel, "name");
-        add(deleteProjectDialog = new ChallengeResponseDialog("deleteProjectDialog",
-                new StringResourceModel("DeleteProjectDialog.title", this),
-                new StringResourceModel("DeleteProjectDialog.text", this)
-                        .setModel(projectModel).setParameters(projectNameModel),
-                projectNameModel));
-        deleteProjectDialog.setConfirmAction((target) -> {
-            try {
-                projectService.removeProject(projectModel.getObject());
-                projectModel.setObject(null);
-                target.add(getPage());
-            }
-            catch (IOException e) {
-                LOG.error("Unable to remove project :" + ExceptionUtils.getRootCauseMessage(e));
-                error("Unable to remove project " + ":" + ExceptionUtils.getRootCauseMessage(e));
-                target.addChildren(getPage(), IFeedback.class);
-            }
-        });
     }
         
     private DropDownChoice<String> makeProjectTypeChoice()
@@ -197,19 +168,6 @@ public class ProjectDetailPanel
         }
     }
 
-    private void actionCancel(AjaxRequestTarget aTarget)
-    {
-        projectModel.setObject(null);
-        
-        // Reload whole page because master panel also needs to be reloaded.
-        aTarget.add(getPage());
-    }
-
-    private void actionDelete(AjaxRequestTarget aTarget)
-    {
-        deleteProjectDialog.show(aTarget);
-    }
-    
     private class ProjectNameValidator
         implements IValidator<String>
     {
