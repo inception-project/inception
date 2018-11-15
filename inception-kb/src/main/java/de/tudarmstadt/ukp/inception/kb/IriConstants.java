@@ -20,10 +20,7 @@ package de.tudarmstadt.ukp.inception.kb;
 
 import static java.util.Arrays.asList;
 
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.ValueFactory;
@@ -45,8 +42,8 @@ public class IriConstants
     public static final String PREFIX_LUCENE_SEARCH = "http://www.openrdf.org/contrib/lucenesail#";
 
     public static final String UKP_WIKIDATA_SPARQL_ENDPOINT = "http://knowledgebase.ukp.informatik.tu-darmstadt.de:8890/sparql";
-    public static final Set<String> IMPLICIT_NAMESPACES = new HashSet<>(Arrays.asList(RDF.NAMESPACE,
-            RDFS.NAMESPACE, XMLSchema.NAMESPACE, OWL.NAMESPACE, INCEPTION_SCHEMA_NAMESPACE));
+    public static final List<String> IMPLICIT_NAMESPACES = asList(RDF.NAMESPACE, RDFS.NAMESPACE,
+            XMLSchema.NAMESPACE, OWL.NAMESPACE, INCEPTION_SCHEMA_NAMESPACE);
 
     /**
      * http://www.wikidata.org/entity/Q35120
