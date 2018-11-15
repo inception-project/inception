@@ -69,7 +69,7 @@ public class ProjectImportPanel
         Form<Void> form = new Form<>("form");
         
         FileInputConfig config = new FileInputConfig();
-        config.initialCaption("Browse project files to import ...");
+        config.initialCaption("Import project archives ...");
         config.allowedFileExtensions(asList("zip"));
         config.showPreview(false);
         config.showUpload(true);
