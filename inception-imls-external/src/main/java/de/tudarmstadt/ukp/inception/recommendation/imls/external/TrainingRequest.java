@@ -32,7 +32,10 @@ public class TrainingRequest {
     private String typeSystem;
 
     @JsonProperty("documents")
-    private List<String> documents;
+    private List<Document> documents;
+
+    @JsonProperty("projectId")
+    private Long projectId;
 
     public String getLayer()
     {
@@ -64,13 +67,23 @@ public class TrainingRequest {
         typeSystem = aTypeSystem;
     }
 
-    public List<String> getDocuments()
+    public List<Document> getDocuments()
     {
         return documents;
     }
 
-    public void setDocuments(List<String> aDocuments)
+    public void setDocuments(List<Document> aDocuments)
     {
         documents = aDocuments;
+    }
+
+    public Long getProjectId()
+    {
+        return projectId;
+    }
+
+    public void setProjectId(Long aProjectId)
+    {
+        projectId = aProjectId;
     }
 }

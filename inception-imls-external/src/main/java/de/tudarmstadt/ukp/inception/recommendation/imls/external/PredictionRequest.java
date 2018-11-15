@@ -25,13 +25,16 @@ public class PredictionRequest
     private String typeSystem;
 
     @JsonProperty("document")
-    private String document;
+    private Document document;
 
     @JsonProperty("layer")
     private String layer;
 
     @JsonProperty("feature")
     private String feature;
+
+    @JsonProperty("projectId")
+    private Long projectId;
 
     public String getTypeSystem()
     {
@@ -43,12 +46,12 @@ public class PredictionRequest
         typeSystem = aTypeSystem;
     }
 
-    public String getDocument()
+    public Document getDocument()
     {
         return document;
     }
 
-    public void setDocument(String aDocument)
+    public void setDocument(Document aDocument)
     {
         document = aDocument;
     }
@@ -71,5 +74,15 @@ public class PredictionRequest
     public void setFeature(String aFeature)
     {
         feature = aFeature;
+    }
+
+    public Long getProjectId()
+    {
+        return projectId;
+    }
+
+    public void setProjectId(Long aProjectId)
+    {
+        projectId = aProjectId;
     }
 }

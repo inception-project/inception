@@ -74,8 +74,8 @@ public class RemoteStringMatchingNerRecommender
         TrainingRequest request = deserializeTrainingRequest(aTrainingRequestJson);
 
         List<CAS> casses = new ArrayList<>();
-        for (String doc : request.getDocuments()) {
-            CAS cas = deserializeCas(doc, request.getTypeSystem());
+        for (Document doc : request.getDocuments()) {
+            CAS cas = deserializeCas(doc.getXmi(), request.getTypeSystem());
             casses.add(cas);
         }
 
@@ -95,7 +95,7 @@ public class RemoteStringMatchingNerRecommender
     public String predict(String aPredictionRequestJson) throws RecommendationException
     {
         PredictionRequest request = deserializePredictionRequest(aPredictionRequestJson);
-        CAS cas = deserializeCas(request.getDocument(), request.getTypeSystem());
+        CAS cas = deserializeCas(request.getDocument().getXmi(), request.getTypeSystem());
 
         recommendationEngine.predict(context, cas);
 

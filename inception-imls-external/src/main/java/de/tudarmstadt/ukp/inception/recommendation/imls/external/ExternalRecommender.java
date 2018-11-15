@@ -29,20 +29,23 @@ import java.util.Optional;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.CASException;
 import org.apache.uima.cas.CASRuntimeException;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.impl.XmiCasDeserializer;
 import org.apache.uima.cas.impl.XmiCasSerializer;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
+import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.util.TypeSystemUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.type.CASMetadata;
+import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
@@ -79,20 +82,33 @@ public class ExternalRecommender
         aContext.markAsReadyForPrediction();
 
         TrainingRequest trainingRequest = new TrainingRequest();
-        List<String> documents = new ArrayList<>();
-        trainingRequest.setDocuments(documents);
+        List<Document> documents = new ArrayList<>();
+
+        // We assume that the type system for all CAS are the same
+        String typeSystem = serializeTypeSystem(aCasses.get(0));
+        trainingRequest.setTypeSystem(typeSystem);
+        trainingRequest.setLayer(recommender.getLayer().getName());
+        trainingRequest.setFeature(recommender.getFeature());
+
+        // Fill in metadata. We use the type system of the first CAS in the list
+        // for all the other CAS. It could happen that training happens while
+        // the type system changes, e.g. by adding a layer or feature during training.
+        // Then the type system of the first CAS might not match the type system
+        // of the other CAS. This should happen really rarely, therefore this potential
+        // error is neglected.
+        CASMetadata casMetadata = getCasMetadata(aCasses.get(0));
+        trainingRequest.setProjectId(casMetadata.getProjectId());
 
         for (CAS cas : aCasses) {
-            String typeSystem = serializeTypeSystem(cas);
-            String xmi = serializeCas(cas);
-
-            trainingRequest.setTypeSystem(typeSystem);
-            trainingRequest.setLayer(recommender.getLayer().getName());
-            trainingRequest.setFeature(recommender.getFeature());
-            documents.add(xmi);
+            documents.add(buildDocument(cas));
         }
 
-        HttpUrl url = HttpUrl.parse(traits.getRemoteUrl()).resolve("/train");
+        trainingRequest.setDocuments(documents);
+
+
+        HttpUrl url = HttpUrl.parse(traits.getRemoteUrl()).newBuilder()
+            .addPathSegment("train")
+            .build();
         RequestBody body = RequestBody.create(JSON, toJson(trainingRequest));
         Request request = new Request.Builder().url(url).post(body).build();
 
@@ -119,15 +135,20 @@ public class ExternalRecommender
         removePredictedAnnotations(aCas);
 
         String typeSystem = serializeTypeSystem(aCas);
-        String xmi = serializeCas(aCas);
 
         PredictionRequest predictionRequest = new PredictionRequest();
-        predictionRequest.setDocument(xmi);
         predictionRequest.setTypeSystem(typeSystem);
         predictionRequest.setLayer(recommender.getLayer().getName());
         predictionRequest.setFeature(recommender.getFeature());
+        predictionRequest.setDocument(buildDocument(aCas));
 
-        HttpUrl url = HttpUrl.parse(traits.getRemoteUrl()).resolve("/predict");
+        // Fill in metadata
+        CASMetadata casMetadata = getCasMetadata(aCas);
+        predictionRequest.setProjectId(casMetadata.getProjectId());
+
+        HttpUrl url = HttpUrl.parse(traits.getRemoteUrl()).newBuilder()
+            .addPathSegment("predict")
+            .build();
         RequestBody body = RequestBody.create(JSON, toJson(predictionRequest));
         Request request = new Request.Builder().url(url).post(body).build();
 
@@ -186,6 +207,28 @@ public class ExternalRecommender
         }
     }
 
+    private Document buildDocument(CAS aCas) throws RecommendationException
+    {
+        CASMetadata casMetadata = getCasMetadata(aCas);
+
+        Document document = new Document();
+        document.setXmi(serializeCas(aCas));
+        document.setDocumentId(casMetadata.getSourceDocumentId());
+        document.setUserId(casMetadata.getUsername());
+
+        return document;
+    }
+
+    private CASMetadata getCasMetadata(CAS aCas) throws RecommendationException
+    {
+        try {
+            return JCasUtil.selectSingle(aCas.getJCas(), CASMetadata.class);
+        } catch (CASException | IllegalArgumentException e) {
+            LOG.error("Error while reading CAS metadata!", e);
+            throw new RecommendationException("Error while reading CAS metadata!", e);
+        }
+    }
+
     private PredictionResponse deserializePredictionResponse(Response response)
         throws RecommendationException {
         ObjectMapper objectMapper = new ObjectMapper();
@@ -200,10 +243,9 @@ public class ExternalRecommender
     private String toJson(Object aObject) throws RecommendationException
     {
         try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            return objectMapper.writeValueAsString(aObject);
+            return JSONUtil.toJsonString(aObject);
         }
-        catch (JsonProcessingException e) {
+        catch (IOException e) {
             LOG.error("Error while serializing JSON!", e);
             throw new RecommendationException("Error while serializing JSON!", e);
         }
