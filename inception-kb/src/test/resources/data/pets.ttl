@@ -2,6 +2,7 @@
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
 
 <#animal> rdf:type rdfs:Class ;
     rdfs:label "Animal" .
@@ -29,22 +30,22 @@
 <#has-character> rdf:type rdf:Property ;
     rdfs:domain <#animal> ;
     rdfs:range <#character> ;
-    rdfs:label "Has Character" .
+    skos:prefLabel "Has Character" .
 
 <#yob> rdf:type rdf:Property ;
     rdfs:domain <#animal> ;
     rdfs:range xsd:gYear ;
-    rdfs:label "Year Of Birth" .
+    skos:prefLabel "Year Of Birth" .
 
 <#loves> rdf:type rdf:Property ;
     rdfs:domain <#animal> ;
     rdfs:range <#animal> ;
-    rdfs:label "Loves" .
+    skos:prefLabel "Loves" .
 
 <#hates> rdf:type rdf:Property ;
     rdfs:domain <#animal> ;
     rdfs:range <#animal> ;
-    rdfs:label "Hates" .
+    skos:prefLabel "Hates" .
 
 <#kahmi> rdf:type <#cat> ;
     rdfs:label "Kahmi" ;

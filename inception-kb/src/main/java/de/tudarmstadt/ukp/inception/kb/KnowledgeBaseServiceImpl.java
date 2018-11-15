@@ -610,8 +610,8 @@ public class KnowledgeBaseServiceImpl
             TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
             tupleQuery.setBinding("pTYPE", aKB.getTypeIri());
             tupleQuery.setBinding("oPROPERTY", aKB.getPropertyTypeIri());
-            tupleQuery.setBinding("pLABEL", aKB.getLabelIri());
-            tupleQuery.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
+            tupleQuery.setBinding("pLABEL", aKB.getPropertyLabelIri());
+            tupleQuery.setBinding("pDESCRIPTION", aKB.getPropertyDescriptionIri());
             tupleQuery.setIncludeInferred(aIncludeInferred);
             return evaluateListQuery(aKB, tupleQuery, false, aAll, "s");
         });
