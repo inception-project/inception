@@ -35,6 +35,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -1375,8 +1376,9 @@ public class KnowledgeBaseServiceImpl
         for (int i = 0; i < profiles.length; i++) {
             // Check if kb profile corresponds to a known schema profile
             if (equalsSchemaProfile(profiles[i], mapping.getClassIri(), mapping.getSubclassIri(),
-                mapping.getTypeIri(), mapping.getDescriptionIri(), mapping.getLabelIri(),
-                mapping.getPropertyTypeIri())) {
+                    mapping.getTypeIri(), mapping.getDescriptionIri(), mapping.getLabelIri(),
+                    mapping.getPropertyTypeIri(), mapping.getPropertyLabelIri(),
+                    mapping.getPropertyDescriptionIri())) {
                 return profiles[i];
             }
         }
@@ -1391,8 +1393,9 @@ public class KnowledgeBaseServiceImpl
         for (int i = 0; i < profiles.length; i++) {
             // Check if kb has a known schema profile
             if (equalsSchemaProfile(profiles[i], aKb.getClassIri(), aKb.getSubclassIri(),
-                aKb.getTypeIri(), aKb.getDescriptionIri(), aKb.getLabelIri(),
-                aKb.getPropertyTypeIri())) {
+                    aKb.getTypeIri(), aKb.getDescriptionIri(), aKb.getLabelIri(),
+                    aKb.getPropertyTypeIri(), aKb.getPropertyLabelIri(),
+                    aKb.getPropertyDescriptionIri())) {
                 return profiles[i];
             }
         }
@@ -1405,12 +1408,17 @@ public class KnowledgeBaseServiceImpl
      * profile
      */
     private boolean equalsSchemaProfile(SchemaProfile profile, IRI classIri, IRI subclassIri,
-        IRI typeIri, IRI descriptionIri, IRI labelIri, IRI propertyTypeIri)
+        IRI typeIri, IRI descriptionIri, IRI labelIri, IRI propertyTypeIri, IRI propertyLabelIri,
+        IRI propertyDescriptionIri)
     {
-        return profile.getClassIri().equals(classIri) && profile.getSubclassIri()
-            .equals(subclassIri) && profile.getTypeIri().equals(typeIri) && profile
-            .getDescriptionIri().equals(descriptionIri) && profile.getLabelIri().equals(labelIri)
-            && profile.getPropertyTypeIri().equals(propertyTypeIri);
+        return Objects.equals(profile.getClassIri(), classIri) && 
+                Objects.equals(profile.getSubclassIri(), subclassIri) && 
+                Objects.equals(profile.getTypeIri(), typeIri) && 
+                Objects.equals(profile.getDescriptionIri(), descriptionIri) && 
+                Objects.equals(profile.getLabelIri(), labelIri) &&
+                Objects.equals(profile.getPropertyTypeIri(), propertyTypeIri) &&
+                Objects.equals(profile.getPropertyLabelIri(), propertyLabelIri) &&
+                Objects.equals(profile.getPropertyDescriptionIri(), propertyDescriptionIri);
     }
 
     @Override
