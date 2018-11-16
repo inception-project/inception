@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.recommendation.project;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.MAX_RECOMMENDATIONS_CAP;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -198,7 +199,7 @@ public class RecommenderEditorPanel
         
         form.add(new NumberTextField<>(MID_MAX_RECOMMENDATIONS, Integer.class)
                 .setMinimum(1)
-                .setMaximum(10)
+                .setMaximum(MAX_RECOMMENDATIONS_CAP)
                 .setStep(1)
                 .setOutputMarkupPlaceholderTag(true)
                 .add(visibleWhen(() -> toolChoice.getModel()
