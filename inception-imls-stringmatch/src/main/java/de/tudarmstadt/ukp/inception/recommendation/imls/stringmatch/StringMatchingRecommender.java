@@ -130,11 +130,9 @@ public class StringMatchingRecommender
                     
                     // Need to check that the match actually ends at a token boundary!
                     if (tokens.stream().filter(t -> t.getEnd() == end).findAny().isPresent()) {
-                        int total = IntStream.of(node.value.counts).sum();
-                        for (LabelCount lc : node.value.getBest(maxRecommendations)) {
-                            double score = (double) lc.count / (double) total;
-                            spans.add(new Span(begin, end, text.substring(begin, end), lc.label,
-                                    score));
+                        for (LabelStats lc : node.value.getBest(maxRecommendations)) {
+                            spans.add(new Span(begin, end, text.substring(begin, end),
+                                    lc.getLabel(), lc.getRelFreq()));
                         }
                     }
                 }
@@ -204,12 +202,11 @@ public class StringMatchingRecommender
                     
                     // Need to check that the match actually ends at a token boundary!
                     if (sample.hasTokenEndingAt(end)) {
-                        int total = IntStream.of(node.value.counts).sum();
-                        for (LabelCount lc : node.value.getBest(maxRecommendations)) {
-                            double score = (double) lc.count / (double) total;
-                            spans.add(new Span(begin, end, sample.getText()
-                                    .substring(begin - sample.getBegin(), end - sample.getBegin()),
-                                    lc.label, score));
+                        for (LabelStats lc : node.value.getBest(maxRecommendations)) {
+                            spans.add(new Span(begin, end,
+                                    sample.getText().substring(begin - sample.getBegin(),
+                                            end - sample.getBegin()),
+                                    lc.getLabel(), lc.getRelFreq()));
                         }
                     }
                 }
@@ -395,26 +392,43 @@ public class StringMatchingRecommender
         }
     }
     
-    private static class LabelCount
+    private static class LabelStats
     {
         private final String label;
         private final int count;
+        private final double relFreq;
 
-        public LabelCount(String aLabel, int aCount)
+        public LabelStats(String aLabel, int aCount, double aRelFreq)
         {
             super();
             label = aLabel;
             count = aCount;
+            relFreq = aRelFreq;
         }
 
+        /**
+         * The label (e.g. NN, PER, OTH, etc.)
+         */
+        public String getLabel()
+        {
+            return label;
+        }
+        
+        /**
+         * How often the label was observed.
+         */
         public int getCount()
         {
             return count;
         }
 
-        public String getLabel()
+        /**
+         * How often the label was observed in relation to the total number of observations of the
+         * mention.
+         */
+        public double getRelFreq()
         {
-            return label;
+            return relFreq;
         }
     }
 
@@ -504,37 +518,21 @@ public class StringMatchingRecommender
             counts[counts.length - 1] = 1;
         }
         
-        public List<LabelCount> getBest(int aN)
+        public List<LabelStats> getBest(int aN)
         {
-            List<LabelCount> best = new ArrayList<>();
-            for (int i = 0; i < labels.length; i++) {
-                best.add(new LabelCount(labels[i], counts[i]));
-            }
+            int total = IntStream.of(counts).sum();
             
-            if (labels.length > 1) {
-                System.out.println(".");
+            List<LabelStats> best = new ArrayList<>();
+            for (int i = 0; i < labels.length; i++) {
+                best.add(new LabelStats(labels[i], counts[i], (double) counts[i] / (double) total));
             }
             
             return best.stream()
-                    .sorted(comparingInt(LabelCount::getCount).reversed())
+                    .sorted(comparingInt(LabelStats::getCount).reversed())
                     .limit(aN)
                     .collect(Collectors.toList());
         }
         
-        public String getBestLabel()
-        {
-            int maxIndex = 0;
-            int maxValue = 0;
-            for (int i = 0; i < counts.length; i++) {
-                if (counts[i] > maxValue) {
-                    maxValue = counts[i];
-                    maxIndex = i;
-                }
-            }
-            
-            return labels[maxIndex];
-        }
-
         @Override
         public String toString()
         {
