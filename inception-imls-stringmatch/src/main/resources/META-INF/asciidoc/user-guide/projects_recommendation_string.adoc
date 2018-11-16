@@ -16,4 +16,15 @@
 
 == String Matcher
 
-This recommender projects the annotations already made to tokens with the same text.
+The string matching recommender is able to provide a very high accuracy for tasks such as named 
+entity identification where a word or phrase always receives the same label. If an annotation is 
+made, then the string matching recommender projects the label to all other identical spans, 
+therefore making it easier to annotate repeated phenomena. So if we annotate _Kermit_ once as a 
+_PER_, then it will suggest that any other mentions of _Kermit_ should also be annotated as _PER_.
+When the same word or phrase is observed with different labels, then the matcher will assign the
+relative frequency of the observations as the score for each label. Thus, if _Kermit_ is annotated
+twice as _PER_ and once as _OTH_, than the score for _PER_ is 0.66 and the score for _OTH_ is 0.33.
+
+The recommender can be used for span layers that anchor to single or multiple tokens and where
+cross-sentence annotations are not allowed. It can be used for string features or features which get
+internally represented as strings (e.g. concept features).
