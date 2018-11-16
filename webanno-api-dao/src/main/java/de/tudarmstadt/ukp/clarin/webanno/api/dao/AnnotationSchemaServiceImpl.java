@@ -665,7 +665,36 @@ public class AnnotationSchemaServiceImpl
 
         return tsd;
     }
+    
+    @Override
+    public TypeSystemDescription getFullProjectTypeSystem(Project aProject)
+        throws ResourceInitializationException
+    {
+        return getFullProjectTypeSystem(aProject, true);
+    }
 
+    @Override
+    public TypeSystemDescription getFullProjectTypeSystem(Project aProject,
+            boolean aIncludeInternalTypes)
+        throws ResourceInitializationException
+    {
+        List<TypeSystemDescription> typeSystems = new ArrayList<>();
+        
+        // Types detected by uimaFIT
+        typeSystems.add(createTypeSystemDescription());
+        
+        if (aIncludeInternalTypes) {
+            // Types internally used by WebAnno (which we intentionally exclude from being detected
+            // by uimaFIT because we want to have an easy way to create a type system excluding
+            // these types when we export files from the project
+            typeSystems.add(CasMetadataUtils.getInternalTypeSystem());
+        }
+
+        // Types declared within the project
+        typeSystems.add(getProjectTypes(aProject));
+
+        return (TypeSystemDescription_impl) mergeTypeSystems(typeSystems);
+    }
     @Override
     public void upgradeCas(CAS aCas, AnnotationDocument aAnnotationDocument)
         throws UIMAException, IOException
@@ -769,34 +798,6 @@ public class AnnotationSchemaServiceImpl
 
         // Make sure JCas is properly initialized too
         aTargetCas.getJCas();
-    }
-
-    private TypeSystemDescription getFullProjectTypeSystem(Project aProject)
-        throws ResourceInitializationException
-    {
-        return getFullProjectTypeSystem(aProject, true);
-    }
-
-    private TypeSystemDescription getFullProjectTypeSystem(Project aProject,
-            boolean aIncludeInternalTypes)
-        throws ResourceInitializationException
-    {
-        List<TypeSystemDescription> typeSystems = new ArrayList<>();
-        
-        // Types detected by uimaFIT
-        typeSystems.add(createTypeSystemDescription());
-        
-        if (aIncludeInternalTypes) {
-            // Types internally used by WebAnno (which we intentionally exclude from being detected
-            // by uimaFIT because we want to have an easy way to create a type system excluding
-            // these types when we export files from the project
-            typeSystems.add(CasMetadataUtils.getInternalTypeSystem());
-        }
-
-        // Types declared within the project
-        typeSystems.add(getProjectTypes(aProject));
-
-        return (TypeSystemDescription_impl) mergeTypeSystems(typeSystems);
     }
     
     /**
