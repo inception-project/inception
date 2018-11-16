@@ -43,7 +43,7 @@ public interface RecommendationEngineFactory<T>
     
     default boolean isMultipleRecommendationProvider()
     {
-        return false;
+        return true;
     }
 
     RecommendationEngine build(Recommender aRecommender);
