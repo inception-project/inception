@@ -96,6 +96,11 @@ public abstract class AnnotationSidebar_ImplBase
         return jcasProvider;
     }
 
+    public AnnotationPage getAnnotationPage()
+    {
+        return annotationPage;
+    }
+    
     /**
      * Show the next document if it exists
      */

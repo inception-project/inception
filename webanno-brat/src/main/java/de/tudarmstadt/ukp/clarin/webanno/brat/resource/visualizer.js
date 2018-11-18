@@ -3614,18 +3614,20 @@ Util.profileStart('chunkFinish');
               textRowDesc[1] - 2, textRowDesc[0].textY - sizes.fragments.height,
               textRowDesc[2] - textRowDesc[1] + 4, sizes.fragments.height + 4,
 // WEBANNO EXTENSION BEGIN - #876 - Add ability to highlight text in brat view
+// WEBANNO EXTENSION BEGIN - #1119 - Improve control over markers
 /*          
               { fill: 'yellow' } // TODO: put into css file, as default - turn into class
 */
-              { fill: 'skyblue', 'class': 'animated flash' }
+              { 'class': textRowDesc[3] }
+// WEBANNO EXTENSION END - #1119 - Improve control over markers
 // WEBANNO EXTENSION END - #876 - Add ability to highlight text in brat view
           );
+// WEBANNO EXTENSION BEGIN - Issue #1319 - Glowing highlight causes 100% CPU load
+/*          
           // NOTE: changing highlightTextSequence here will give
           // different-colored highlights
           // TODO: entirely different settings for non-animations?
           var markedType = textRowDesc[3];
-// WEBANNO EXTENSION BEGIN - Issue #1319 - Glowing highlight causes 100% CPU load
-/*          
           svg.other(textHighlight, 'animate', {
             'data-type': markedType,
             attributeName: 'fill',

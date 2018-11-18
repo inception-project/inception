@@ -629,3 +629,20 @@ fieldset legend {
 #commentpopup.comment_ChangedAnnotation {
   background-color: #ffcccc;
 }
+
+/* WEBANNO EXTENSION BEGIN - #1119 - Improve control over markers */
+.highlight .matchfocus {
+  fill: orange;
+  -webkit-animation-name: flash;
+  animation-name: flash;
+  -webkit-animation-duration: 1s;
+  animation-duration: 1s;
+  -webkit-animation-fill-mode: both;
+  animation-fill-mode: both;
+}
+
+.highlight rect.match {
+  fill: orange;
+  opacity: 0.25;
+}
+/* WEBANNO EXTENSION END - #1119 - Improve control over markers */
