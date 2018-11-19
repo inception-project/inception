@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.ui.core.dashboard;
+package de.tudarmstadt.ukp.inception.ui.core.dashboard.project;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil.annotationEnabeled;
 import static de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil.curationEnabeled;
@@ -38,7 +38,9 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.login.LoginPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
+import de.tudarmstadt.ukp.inception.ui.core.dashboard.DashboardMenu;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet.CurrentProjectDashlet;
+import de.tudarmstadt.ukp.inception.ui.core.dashboard.projectlist.ProjectsOverviewPage;
 
 /**
  * Project dashboard page

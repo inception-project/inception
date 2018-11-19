@@ -17,6 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.exporter;
 
+import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.MAX_RECOMMENDATIONS_CAP;
+import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.MAX_RECOMMENDATIONS_DEFAULT;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
@@ -24,7 +27,6 @@ import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 import java.io.File;
-import java.util.Arrays;
 import java.util.List;
 import java.util.zip.ZipFile;
 
@@ -45,7 +47,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 
 public class RecommenderExporterTest
 {
-
     private @Mock AnnotationSchemaService annotationService;
     private @Mock RecommendationService recommendationService;
     private Project project;
@@ -65,8 +66,6 @@ public class RecommenderExporterTest
         project.setName("Test Project");
         project.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
         
-        when(recommendationService.listRecommenders(project)).thenReturn(recommenders());
-
         when(annotationService.getLayer(layer.getName(), project)).thenReturn(layer);
 
         sut = new RecommenderExporter(annotationService, recommendationService);
@@ -74,6 +73,61 @@ public class RecommenderExporterTest
 
     @Test
     public void thatExportingWorks()
+    {
+        when(recommendationService.listRecommenders(project)).thenReturn(recommenders());
+        
+        // Export the project and import it again
+        ArgumentCaptor<Recommender> captor = runExportImportAndFetchRecommenders();
+
+        // Check that after re-importing the exported projects, they are identical to the original
+        assertThat(captor.getAllValues())
+                .usingFieldByFieldElementComparator()
+                .containsExactlyInAnyOrderElementsOf(recommenders());
+    }
+    
+    @Test
+    public void thatMaxRecommendationCapIsEnforcedOnImport()
+    {
+        Recommender recommender = buildRecommender("1");
+        recommender.setAlwaysSelected(true);
+        recommender.setEnabled(true);
+        recommender.setThreshold(1);
+        recommender.setSkipEvaluation(true);
+        recommender.setMaxRecommendations(1000);
+        
+        when(recommendationService.listRecommenders(project)).thenReturn(asList(recommender));
+        
+        // Export the project and import it again
+        ArgumentCaptor<Recommender> captor = runExportImportAndFetchRecommenders();
+
+        // Check that after re-importing the exported projects, they are identical to the original
+        assertThat(captor.getAllValues()).hasSize(1);
+        assertThat(captor.getAllValues().get(0))
+                .matches(rec -> rec.getMaxRecommendations() == MAX_RECOMMENDATIONS_CAP);
+    }
+    
+    @Test
+    public void thatMissingMaxRecommendationIsSetToDefault()
+    {
+        Recommender recommender = buildRecommender("1");
+        recommender.setAlwaysSelected(true);
+        recommender.setEnabled(true);
+        recommender.setThreshold(1);
+        recommender.setSkipEvaluation(true);
+        recommender.setMaxRecommendations(0);
+        
+        when(recommendationService.listRecommenders(project)).thenReturn(asList(recommender));
+        
+        // Export the project and import it again
+        ArgumentCaptor<Recommender> captor = runExportImportAndFetchRecommenders();
+
+        // Check that after re-importing the exported projects, they are identical to the original
+        assertThat(captor.getAllValues()).hasSize(1);
+        assertThat(captor.getAllValues().get(0))
+                .matches(rec -> rec.getMaxRecommendations() == MAX_RECOMMENDATIONS_DEFAULT);
+    }
+    
+    private ArgumentCaptor<Recommender> runExportImportAndFetchRecommenders()
     {
         // Export the project
         ProjectExportRequest exportRequest = new ProjectExportRequest();
@@ -90,36 +144,41 @@ public class RecommenderExporterTest
         ProjectImportRequest importRequest = new ProjectImportRequest(true);
         ZipFile zipFile = mock(ZipFile.class);
         sut.importData(importRequest, project, exportedProject, zipFile);
-
-        // Check that after reimporting the exported projects, they are identical to the original
-        assertThat(captor.getAllValues())
-                .usingFieldByFieldElementComparator()
-                .containsExactlyInAnyOrderElementsOf(recommenders());
+        
+        return captor;
     }
-
+    
     private List<Recommender> recommenders()
     {
         Recommender recommender1 = buildRecommender("1");
         recommender1.setAlwaysSelected(true);
         recommender1.setEnabled(true);
         recommender1.setThreshold(1);
+        recommender1.setSkipEvaluation(true);
+        recommender1.setMaxRecommendations(3);
 
         Recommender recommender2 = buildRecommender("2");
         recommender2.setAlwaysSelected(false);
         recommender2.setEnabled(false);
         recommender2.setThreshold(2);
+        recommender2.setSkipEvaluation(false);
+        recommender2.setMaxRecommendations(4);
 
         Recommender recommender3 = buildRecommender("3");
         recommender3.setAlwaysSelected(true);
         recommender3.setEnabled(false);
         recommender3.setThreshold(3);
+        recommender3.setSkipEvaluation(false);
+        recommender3.setMaxRecommendations(5);
 
         Recommender recommender4 = buildRecommender("4");
         recommender4.setAlwaysSelected(false);
         recommender4.setEnabled(true);
         recommender4.setThreshold(4);
+        recommender4.setSkipEvaluation(true);
+        recommender4.setMaxRecommendations(6);
 
-        return Arrays.asList(recommender1, recommender2, recommender3, recommender4);
+        return asList(recommender1, recommender2, recommender3, recommender4);
     }
 
     private Recommender buildRecommender(String id)

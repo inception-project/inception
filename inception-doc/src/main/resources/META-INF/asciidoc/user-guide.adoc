@@ -69,11 +69,13 @@ include::{include-dir}login.adoc[]
 
 <<<
 
-include::{include-dir}menubar.adoc[]
+include::{include-dir}dashboard.adoc[]
 
-<<<
+include::{include-dir}dashboard_menubar.adoc[leveloffset=+1]
 
-include::{include-dir}menu.adoc[]
+include::{include-dir}dashboard_projects-list.adoc[leveloffset=+1]
+
+include::{include-dir}dashboard_project-view.adoc[leveloffset=+1]
 
 <<<
 

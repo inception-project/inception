@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.exporter;
 
+import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.MAX_RECOMMENDATIONS_CAP;
+import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.MAX_RECOMMENDATIONS_DEFAULT;
 import static java.util.Arrays.asList;
 
 import java.io.File;
@@ -81,6 +83,8 @@ public class RecommenderExporter implements ProjectExporter {
             exportedRecommender.setName(recommender.getName());
             exportedRecommender.setThreshold(recommender.getThreshold());
             exportedRecommender.setTool(recommender.getTool());
+            exportedRecommender.setSkipEvaluation(recommender.isSkipEvaluation());
+            exportedRecommender.setMaxRecommendations(recommender.getMaxRecommendations());
             exportedRecommender.setTraits(recommender.getTraits());
             exportedRecommenders.add(exportedRecommender);
         }
@@ -104,8 +108,22 @@ public class RecommenderExporter implements ProjectExporter {
             recommender.setName(exportedRecommender.getName());
             recommender.setThreshold(exportedRecommender.getThreshold());
             recommender.setTool(exportedRecommender.getTool());
+            recommender.setSkipEvaluation(exportedRecommender.isSkipEvaluation());
+            recommender.setMaxRecommendations(exportedRecommender.getMaxRecommendations());
             recommender.setTraits(exportedRecommender.getTraits());
 
+            // The value for max recommendations must be between 1 and 100
+            if (recommender.getMaxRecommendations() < 1) {
+                // We had a bug for some time where during export this value was not included.
+                // For such cases, we import using the default value.
+                recommender.setMaxRecommendations(MAX_RECOMMENDATIONS_DEFAULT);
+            }
+            if (recommender.getMaxRecommendations() > MAX_RECOMMENDATIONS_CAP) {
+                // If the instance from where this was exported allowed more max recommendations
+                // than our instance, we just reset it to our max cap.
+                recommender.setMaxRecommendations(MAX_RECOMMENDATIONS_CAP);
+            }
+            
             String layerName = exportedRecommender.getLayerName();
             AnnotationLayer layer = annotationService.getLayer(layerName, aProject);
             recommender.setLayer(layer);

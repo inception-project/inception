@@ -41,6 +41,9 @@ public interface RecommendationService
 {
     String SERVICE_NAME = "recommendationService";
     
+    int MAX_RECOMMENDATIONS_DEFAULT = 3; 
+    int MAX_RECOMMENDATIONS_CAP = 10; 
+    
     void createOrUpdateRecommender(Recommender aRecommender);
 
     void deleteRecommender(Recommender aRecommender);

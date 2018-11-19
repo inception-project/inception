@@ -239,7 +239,8 @@ public class ExternalRecommenderIntegrationTest
         Recommender recommender = new Recommender();
         recommender.setLayer(layer);
         recommender.setFeature("value");
-
+        recommender.setMaxRecommendations(3);
+        
         return recommender;
     }
 
