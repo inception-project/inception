@@ -81,26 +81,26 @@ public class RecommendationServiceImpl
     private @Autowired RecommenderFactoryRegistry recommenderFactoryRegistry;
     private @Autowired RecommendationScheduler scheduler;
     
-    private Map<RecommentationStateKey, RecommendationUserState> states = new ConcurrentHashMap<>();
+    private Map<RecommendationStateKey, RecommendationState> states = new ConcurrentHashMap<>();
 
     @Override
     public Predictions getPredictions(User aUser, Project aProject)
     {
-        RecommendationUserState state = getState(aUser.getUsername(), aProject);
+        RecommendationState state = getState(aUser.getUsername(), aProject);
         return state.getActivePredictions();
     }
     
     @Override
     public Predictions getIncomingPredictions(User aUser, Project aProject)
     {
-        RecommendationUserState state = getState(aUser.getUsername(), aProject);
+        RecommendationState state = getState(aUser.getUsername(), aProject);
         return state.getIncomingPredictions();
     }
     
     @Override
     public void putIncomingPredictions(User aUser, Project aProject, Predictions aPredictions)
     {
-        RecommendationUserState state = getState(aUser.getUsername(), aProject);
+        RecommendationState state = getState(aUser.getUsername(), aProject);
         synchronized (state) {
             state.setIncomingPredictions(aPredictions);
         }
@@ -110,7 +110,7 @@ public class RecommendationServiceImpl
     public void setActiveRecommenders(User aUser, AnnotationLayer aLayer,
             List<Recommender> aRecommenders)
     {
-        RecommendationUserState state = getState(aUser.getUsername(), aLayer.getProject());
+        RecommendationState state = getState(aUser.getUsername(), aLayer.getProject());
         synchronized (state) {
             MultiValuedMap<AnnotationLayer, Recommender> activeRecommenders = state
                     .getActiveRecommenders();
@@ -122,7 +122,7 @@ public class RecommendationServiceImpl
     @Override
     public List<Recommender> getActiveRecommenders(User aUser, AnnotationLayer aLayer)
     {
-        RecommendationUserState state = getState(aUser.getUsername(), aLayer.getProject());
+        RecommendationState state = getState(aUser.getUsername(), aLayer.getProject());
         synchronized (state) {
             MultiValuedMap<AnnotationLayer, Recommender> activeRecommenders = 
                     state.getActiveRecommenders();
@@ -213,7 +213,7 @@ public class RecommendationServiceImpl
     @EventListener
     public void onRecommenderDelete(RecommenderDeletedEvent aEvent)
     {
-        RecommendationUserState state = getState(aEvent.getUser(), aEvent.getProject());
+        RecommendationState state = getState(aEvent.getUser(), aEvent.getProject());
         synchronized (state) {
             state.removePredictions(aEvent.getRecommender());
         }
@@ -251,14 +251,14 @@ public class RecommendationServiceImpl
     @Override
     public Preferences getPreferences(User aUser, Project aProject)
     {
-        RecommendationUserState state = getState(aUser.getUsername(), aProject);
+        RecommendationState state = getState(aUser.getUsername(), aProject);
         return state.getPreferences();
     }
     
     @Override
     public void setPreferences(User aUser, Project aProject, Preferences aPreferences)
     {
-        RecommendationUserState state = getState(aUser.getUsername(), aProject);
+        RecommendationState state = getState(aUser.getUsername(), aProject);
         state.setPreferences(aPreferences);
     }
     
@@ -268,11 +268,11 @@ public class RecommendationServiceImpl
         return recommenderFactoryRegistry.getFactory(aRecommender.getTool());
     }
     
-    private RecommendationUserState getState(String aUsername, Project aProject)
+    private RecommendationState getState(String aUsername, Project aProject)
     {
         synchronized (states) {
-            return states.computeIfAbsent(new RecommentationStateKey(aUsername, aProject), (v) -> 
-                    new RecommendationUserState());
+            return states.computeIfAbsent(new RecommendationStateKey(aUsername, aProject), (v) -> 
+                    new RecommendationState());
         }
     }
     
@@ -288,7 +288,7 @@ public class RecommendationServiceImpl
     @Override
     public void switchPredictions(User aUser, Project aProject)
     {
-        RecommendationUserState state = getState(aUser.getUsername(), aProject);
+        RecommendationState state = getState(aUser.getUsername(), aProject);
         synchronized (state) {
             state.switchPredictions();
         }
@@ -304,25 +304,24 @@ public class RecommendationServiceImpl
     @Override
     public RecommenderContext getContext(User aUser, Recommender aRecommender)
     {
-        RecommendationUserState state = getState(aUser.getUsername(), aRecommender.getProject());
+        RecommendationState state = getState(aUser.getUsername(), aRecommender.getProject());
         synchronized (state) {
             return state.getContext(aRecommender);
         }
     }
 
-    private static class RecommentationStateKey
+    private static class RecommendationStateKey
     {
         private final String user;
         private final long projectId;
         
-        public RecommentationStateKey(String aUser, long aProjectId)
+        public RecommendationStateKey(String aUser, long aProjectId)
         {
-            super();
             user = aUser;
             projectId = aProjectId;
         }
 
-        public RecommentationStateKey(String aUser, Project aProject)
+        public RecommendationStateKey(String aUser, Project aProject)
         {
             this(aUser, aProject.getId());
         }
@@ -340,10 +339,10 @@ public class RecommendationServiceImpl
         @Override
         public boolean equals(final Object other)
         {
-            if (!(other instanceof RecommentationStateKey)) {
+            if (!(other instanceof RecommendationStateKey)) {
                 return false;
             }
-            RecommentationStateKey castOther = (RecommentationStateKey) other;
+            RecommendationStateKey castOther = (RecommendationStateKey) other;
             return new EqualsBuilder().append(user, castOther.user)
                     .append(projectId, castOther.projectId).isEquals();
         }
@@ -359,7 +358,7 @@ public class RecommendationServiceImpl
      * We are assuming that the user is actively working on one project at a time.
      * Otherwise, the RecommendationUserState might take up a lot of memory.
      */
-    private static class RecommendationUserState
+    private static class RecommendationState
     {
         private Preferences preferences = new Preferences();
         private MultiValuedMap<AnnotationLayer, Recommender> activeRecommenders = 
