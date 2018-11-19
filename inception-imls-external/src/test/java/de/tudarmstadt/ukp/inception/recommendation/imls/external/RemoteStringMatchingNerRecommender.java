@@ -25,7 +25,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
@@ -129,9 +128,8 @@ public class RemoteStringMatchingNerRecommender
 
     private CAS deserializeCas(String xmi, String typeSystem)
     {
-        byte[] casBytes = Base64.getDecoder().decode(xmi);
         CAS cas = buildCas(typeSystem);
-        try (InputStream bais = new ByteArrayInputStream(casBytes)) {
+        try (InputStream bais = new ByteArrayInputStream(xmi.getBytes())) {
             XmiCasDeserializer.deserialize(bais, cas);
         } catch (IOException | SAXException e) {
             throw new RuntimeException(e);
@@ -145,7 +143,7 @@ public class RemoteStringMatchingNerRecommender
         // JCasFactory needs a file and not a string
         try {
             File typeSystemFile = File.createTempFile("typeSystem", ".xmi");
-            FileUtils.writeByteArrayToFile(typeSystemFile, Base64.getDecoder().decode(typeSystem));
+            FileUtils.writeByteArrayToFile(typeSystemFile, typeSystem.getBytes());
             JCas jCas = JCasFactory.createJCasFromPath(typeSystemFile.getAbsolutePath());
             return jCas.getCas();
         } catch (IOException | UIMAException e) {
@@ -157,9 +155,8 @@ public class RemoteStringMatchingNerRecommender
     {
         try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             XmiCasSerializer.serialize(aCas, null, out, true, null);
-            String base64Xmi = Base64.getEncoder().encodeToString(out.toByteArray());
             PredictionResponse response = new PredictionResponse();
-            response.setDocument(base64Xmi);
+            response.setDocument(new String(out.toByteArray()));
             ObjectMapper mapper = new ObjectMapper();
             return mapper.writeValueAsString(response);
         }

@@ -23,7 +23,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 
@@ -165,9 +164,8 @@ public class ExternalRecommender
 
         PredictionResponse predictionResponse = deserializePredictionResponse(response);
 
-        try (InputStream is = IOUtils.toInputStream(predictionResponse.getDocument(), "utf-8");
-             InputStream bis = Base64.getDecoder().wrap(is)) {
-            XmiCasDeserializer.deserialize(bis, aCas, true);
+        try (InputStream is = IOUtils.toInputStream(predictionResponse.getDocument(), "utf-8")) {
+            XmiCasDeserializer.deserialize(is, aCas, true);
         }
         catch (SAXException | IOException e) {
             throw new RecommendationException("Error while deserializing CAS!", e);
@@ -186,7 +184,7 @@ public class ExternalRecommender
     {
         try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             TypeSystemUtil.typeSystem2TypeSystemDescription(aCas.getTypeSystem()).toXML(out);
-            return new String(Base64.getEncoder().encode(out.toByteArray()), "utf-8");
+            return new String(out.toByteArray(), "utf-8");
         }
         catch (CASRuntimeException | SAXException | IOException e) {
             throw new RecommendationException("Coud not serialize type system", e);
@@ -197,7 +195,7 @@ public class ExternalRecommender
     {
         try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             XmiCasSerializer.serialize(aCas, null, out, true, null);
-            return new String(Base64.getEncoder().encode(out.toByteArray()), "utf-8");
+            return new String(out.toByteArray(), "utf-8");
         }
         catch (CASRuntimeException | SAXException | IOException e) {
             throw new RecommendationException("Error while serializing CAS!", e);
