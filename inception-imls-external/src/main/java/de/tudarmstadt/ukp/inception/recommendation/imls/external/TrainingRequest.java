@@ -22,11 +22,6 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class TrainingRequest {
-    @JsonProperty("layer")
-    private String layer;
-
-    @JsonProperty("feature")
-    private String feature;
 
     @JsonProperty("typeSystem")
     private String typeSystem;
@@ -34,28 +29,8 @@ public class TrainingRequest {
     @JsonProperty("documents")
     private List<Document> documents;
 
-    @JsonProperty("projectId")
-    private Long projectId;
-
-    public String getLayer()
-    {
-        return layer;
-    }
-
-    public void setLayer(String aLayer)
-    {
-        layer = aLayer;
-    }
-
-    public String getFeature()
-    {
-        return feature;
-    }
-
-    public void setFeature(String aFeature)
-    {
-        feature = aFeature;
-    }
+    @JsonProperty("config")
+    private Metadata metadata;
 
     public String getTypeSystem()
     {
@@ -77,13 +52,12 @@ public class TrainingRequest {
         documents = aDocuments;
     }
 
-    public Long getProjectId()
+    public Metadata getMetadata()
     {
-        return projectId;
+        return metadata;
     }
 
-    public void setProjectId(Long aProjectId)
-    {
-        projectId = aProjectId;
+    public void setMetadata(Metadata aMetadata) {
+        metadata = aMetadata;
     }
 }

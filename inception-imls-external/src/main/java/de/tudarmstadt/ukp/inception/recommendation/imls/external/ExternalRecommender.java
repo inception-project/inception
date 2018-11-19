@@ -44,6 +44,7 @@ import org.xml.sax.SAXException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.type.CASMetadata;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
@@ -86,8 +87,6 @@ public class ExternalRecommender
         // We assume that the type system for all CAS are the same
         String typeSystem = serializeTypeSystem(aCasses.get(0));
         trainingRequest.setTypeSystem(typeSystem);
-        trainingRequest.setLayer(recommender.getLayer().getName());
-        trainingRequest.setFeature(recommender.getFeature());
 
         // Fill in metadata. We use the type system of the first CAS in the list
         // for all the other CAS. It could happen that training happens while
@@ -95,8 +94,8 @@ public class ExternalRecommender
         // Then the type system of the first CAS might not match the type system
         // of the other CAS. This should happen really rarely, therefore this potential
         // error is neglected.
-        CASMetadata casMetadata = getCasMetadata(aCasses.get(0));
-        trainingRequest.setProjectId(casMetadata.getProjectId());
+
+        trainingRequest.setMetadata(buildMetadata(aCasses.get(0)));
 
         for (CAS cas : aCasses) {
             documents.add(buildDocument(cas));
@@ -137,13 +136,10 @@ public class ExternalRecommender
 
         PredictionRequest predictionRequest = new PredictionRequest();
         predictionRequest.setTypeSystem(typeSystem);
-        predictionRequest.setLayer(recommender.getLayer().getName());
-        predictionRequest.setFeature(recommender.getFeature());
         predictionRequest.setDocument(buildDocument(aCas));
 
         // Fill in metadata
-        CASMetadata casMetadata = getCasMetadata(aCas);
-        predictionRequest.setProjectId(casMetadata.getProjectId());
+        predictionRequest.setMetadata(buildMetadata(aCas));
 
         HttpUrl url = HttpUrl.parse(traits.getRemoteUrl()).newBuilder()
             .addPathSegment("predict")
@@ -219,6 +215,19 @@ public class ExternalRecommender
         } catch (CASException | IllegalArgumentException e) {
             throw new RecommendationException("Error while reading CAS metadata!", e);
         }
+    }
+
+    private Metadata buildMetadata(CAS aCas) throws RecommendationException
+    {
+        CASMetadata casMetadata = getCasMetadata(aCas);
+        AnnotationLayer layer =  recommender.getLayer();
+        return new Metadata(
+            layer.getName(),
+            recommender.getFeature(),
+            casMetadata.getProjectId(),
+            layer.getAnchoringMode().getId(),
+            layer.isCrossSentence()
+        );
     }
 
     private PredictionResponse deserializePredictionResponse(Response response)

@@ -27,14 +27,8 @@ public class PredictionRequest
     @JsonProperty("document")
     private Document document;
 
-    @JsonProperty("layer")
-    private String layer;
-
-    @JsonProperty("feature")
-    private String feature;
-
-    @JsonProperty("projectId")
-    private Long projectId;
+    @JsonProperty("config")
+    private Metadata metadata;
 
     public String getTypeSystem()
     {
@@ -56,33 +50,13 @@ public class PredictionRequest
         document = aDocument;
     }
 
-    public String getLayer()
+    public Metadata getMetadata()
     {
-        return layer;
+        return metadata;
     }
 
-    public void setLayer(String aLayer)
+    public void setMetadata(Metadata aMetadata)
     {
-        layer = aLayer;
-    }
-
-    public String getFeature()
-    {
-        return feature;
-    }
-
-    public void setFeature(String aFeature)
-    {
-        feature = aFeature;
-    }
-
-    public Long getProjectId()
-    {
-        return projectId;
-    }
-
-    public void setProjectId(Long aProjectId)
-    {
-        projectId = aProjectId;
+        metadata = aMetadata;
     }
 }

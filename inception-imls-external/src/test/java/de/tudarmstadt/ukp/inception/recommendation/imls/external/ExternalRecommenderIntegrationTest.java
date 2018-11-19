@@ -45,6 +45,7 @@ import org.junit.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.CasMetadataUtils;
 import de.tudarmstadt.ukp.clarin.webanno.api.type.CASMetadata;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.datasets.Dataset;
 import de.tudarmstadt.ukp.dkpro.core.api.datasets.DatasetFactory;
@@ -66,6 +67,8 @@ public class ExternalRecommenderIntegrationTest
 
     private static final String USER_NAME = "test_user";
     private static final long PROJECT_ID = 42L;
+    private static final boolean CROSS_SENTENCE = true;
+    private static final AnchoringMode ANCHORING_MODE = AnchoringMode.TOKENS;
 
     private Recommender recommender;
     private RecommenderContext context;
@@ -133,10 +136,13 @@ public class ExternalRecommenderIntegrationTest
 
         TrainingRequest request = fromJsonString(TrainingRequest.class, requestBodies.get(0));
 
-        assertThat(request).hasNoNullFieldsOrProperties()
+        assertThat(request.getMetadata()).hasNoNullFieldsOrProperties()
             .hasFieldOrPropertyWithValue("projectId", PROJECT_ID)
             .hasFieldOrPropertyWithValue("layer", recommender.getLayer().getName())
-            .hasFieldOrPropertyWithValue("feature", recommender.getFeature());
+            .hasFieldOrPropertyWithValue("feature", recommender.getFeature())
+            .hasFieldOrPropertyWithValue("crossSentence", CROSS_SENTENCE)
+            .hasFieldOrPropertyWithValue("anchoringMode", ANCHORING_MODE.getId());
+
 
         for (int i = 0; i < request.getDocuments().size(); i++) {
             Document doc = request.getDocuments().get(i);
@@ -156,10 +162,12 @@ public class ExternalRecommenderIntegrationTest
 
         PredictionRequest request = fromJsonString(PredictionRequest.class, requestBodies.get(1));
 
-        assertThat(request).hasNoNullFieldsOrProperties()
+        assertThat(request.getMetadata()).hasNoNullFieldsOrProperties()
             .hasFieldOrPropertyWithValue("projectId", PROJECT_ID)
             .hasFieldOrPropertyWithValue("layer", recommender.getLayer().getName())
-            .hasFieldOrPropertyWithValue("feature", recommender.getFeature());
+            .hasFieldOrPropertyWithValue("feature", recommender.getFeature())
+            .hasFieldOrPropertyWithValue("crossSentence", CROSS_SENTENCE)
+            .hasFieldOrPropertyWithValue("anchoringMode", ANCHORING_MODE.getId());
         assertThat(request.getDocument())
             .hasFieldOrPropertyWithValue("userId", USER_NAME)
             .hasFieldOrPropertyWithValue("documentId", 0L);
@@ -225,6 +233,8 @@ public class ExternalRecommenderIntegrationTest
     {
         AnnotationLayer layer = new AnnotationLayer();
         layer.setName(TYPE);
+        layer.setCrossSentence(CROSS_SENTENCE);
+        layer.setAnchoringMode(ANCHORING_MODE);
 
         Recommender recommender = new Recommender();
         recommender.setLayer(layer);
