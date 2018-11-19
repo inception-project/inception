@@ -170,7 +170,6 @@ public class ExternalRecommender
             XmiCasDeserializer.deserialize(bis, aCas, true);
         }
         catch (SAXException | IOException e) {
-            LOG.error("Error while deserializing CAS!", e);
             throw new RecommendationException("Error while deserializing CAS!", e);
         }
     }
@@ -190,7 +189,6 @@ public class ExternalRecommender
             return new String(Base64.getEncoder().encode(out.toByteArray()), "utf-8");
         }
         catch (CASRuntimeException | SAXException | IOException e) {
-            LOG.error("Error while serializing type system!", e);
             throw new RecommendationException("Coud not serialize type system", e);
         }
     }
@@ -202,7 +200,6 @@ public class ExternalRecommender
             return new String(Base64.getEncoder().encode(out.toByteArray()), "utf-8");
         }
         catch (CASRuntimeException | SAXException | IOException e) {
-            LOG.error("Error while serializing CAS!", e);
             throw new RecommendationException("Error while serializing CAS!", e);
         }
     }
@@ -222,7 +219,6 @@ public class ExternalRecommender
         try {
             return JCasUtil.selectSingle(aCas.getJCas(), CASMetadata.class);
         } catch (CASException | IllegalArgumentException e) {
-            LOG.error("Error while reading CAS metadata!", e);
             throw new RecommendationException("Error while reading CAS metadata!", e);
         }
     }
@@ -233,7 +229,6 @@ public class ExternalRecommender
         try {
             return objectMapper.readValue(response.body().byteStream(), PredictionResponse.class);
         } catch (IOException e) {
-            LOG.error("Error while deserializing prediction response!", e);
             throw new RecommendationException("Error while deserializing prediction response!", e);
         }
     }
@@ -244,7 +239,6 @@ public class ExternalRecommender
             return JSONUtil.toJsonString(aObject);
         }
         catch (IOException e) {
-            LOG.error("Error while serializing JSON!", e);
             throw new RecommendationException("Error while serializing JSON!", e);
         }
     }
@@ -255,7 +249,6 @@ public class ExternalRecommender
             return client.newCall(aRequest).execute();
         }
         catch (IOException e) {
-            LOG.error("Error while sending request!", e);
             throw new RecommendationException("Error while sending request!", e);
         }
     }
@@ -269,7 +262,6 @@ public class ExternalRecommender
                 return "";
             }
         } catch (IOException e) {
-            LOG.error("Error while reading response body!", e);
             throw new RecommendationException("Error while reading response body!", e);
         }
     }
