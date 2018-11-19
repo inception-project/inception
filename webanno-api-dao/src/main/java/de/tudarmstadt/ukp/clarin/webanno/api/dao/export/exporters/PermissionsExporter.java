@@ -81,9 +81,14 @@ public class PermissionsExporter
             ExportedProject aExProject, ZipFile aZip)
         throws Exception
     {
-        if (aRequest.isImportPermissions()) {
-            for (ExportedProjectPermission importedPermission : aExProject
-                    .getProjectPermissions()) {
+        // Import permissions - always import permissions for the importing user but skip
+        // permissions for other users unless permission import was requested.
+        for (ExportedProjectPermission importedPermission : aExProject.getProjectPermissions()) {
+            boolean isPermissionOfImportingUser = aRequest.getManager()
+                    .map(User::getUsername)
+                    .map(importedPermission.getUser()::equals)
+                    .orElse(false);
+            if (isPermissionOfImportingUser || aRequest.isImportPermissions()) {
                 ProjectPermission permission = new ProjectPermission();
                 permission.setLevel(importedPermission.getLevel());
                 permission.setProject(aProject);
