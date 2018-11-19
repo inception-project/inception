@@ -57,10 +57,6 @@ public class PdfAnnoPanel
     {
         super(aId, aModel);
 
-        SourceDocument doc = aModel.getObject().getDocument();
-
-        File pdfFile = documentService.getSourceDocumentFile(doc);
-
         add(pdfProvider = new AbstractAjaxBehavior()
         {
             private static final long serialVersionUID = 1L;
@@ -68,6 +64,10 @@ public class PdfAnnoPanel
             @Override
             public void onRequest()
             {
+                SourceDocument doc = aModel.getObject().getDocument();
+
+                File pdfFile = documentService.getSourceDocumentFile(doc);
+
                 getRequestCycle().scheduleRequestHandlerAfterCurrent(
                         new ResourceStreamRequestHandler(new FileResourceStream(pdfFile),
                                 doc.getName()));
@@ -81,6 +81,10 @@ public class PdfAnnoPanel
             @Override
             public void onRequest()
             {
+                SourceDocument doc = aModel.getObject().getDocument();
+
+                File pdfFile = documentService.getSourceDocumentFile(doc);
+
                 try
                 {
                     String pdftext = PDFExtractor.processFileToString(pdfFile, false);
