@@ -21,6 +21,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.apache.wicket.MarkupContainer;
@@ -34,6 +35,7 @@ import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.Fragment;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.wicketstuff.event.annotation.OnEvent;
@@ -100,10 +102,11 @@ public class SearchAnnotationSidebar
         Form<Void> searchForm = new Form<Void>("searchForm");
         searchForm.add(new TextArea<String>("queryInput", targetQuery));
         searchForm.add(new LambdaAjaxButton<>("search", this::actionSearch));
+        searchForm.add(new LambdaAjaxLink("close", this::actionCloseSearch));
         mainContainer.add(searchForm);
 
         
-        searchResults = LambdaModel.of(this::getSearchResults);
+        searchResults = LoadableDetachableModel.of(this::getSearchResults);
         
         // Add link for reindexing the project
         mainContainer.add(new LambdaAjaxLink("reindexProject", t -> {
@@ -119,7 +122,7 @@ public class SearchAnnotationSidebar
             @Override
             protected void populateItem(ListItem<String> item)
             {
-                item.add(new Label("documentTitle", LambdaModel.of(() -> item.getModelObject())));
+                item.add(new Label("documentTitle", () -> item.getModelObject()));
                 item.add(new SearchResultGroup("group", "resultGroup", 
                         SearchAnnotationSidebar.this,
                         LambdaModel.of(() -> searchResults.getObject().stream().filter((result) -> {
@@ -132,9 +135,12 @@ public class SearchAnnotationSidebar
                         }).collect(Collectors.toList()))));
             }
         };
-        searchResultGroups.setModel(LambdaModel.of(() -> 
-                searchResults.getObject().stream().map((result -> result.getDocumentTitle()))
-                        .distinct().collect(Collectors.toList())));
+        
+        searchResultGroups.setModel(LoadableDetachableModel.of(() -> searchResults.getObject()
+                .stream()
+                .map((result -> result.getDocumentTitle()))
+                .distinct()
+                .collect(Collectors.toList())));
         mainContainer.add(searchResultGroups);
     }
 
@@ -143,6 +149,17 @@ public class SearchAnnotationSidebar
         searchResults.detach();
         aTarget.add(mainContainer);
         aTarget.addChildren(getPage(), IFeedback.class);
+        getAnnotationPage().actionRefreshDocument(aTarget);
+    }
+    
+    private void actionCloseSearch(AjaxRequestTarget aTarget)
+    {
+        selectedResult = null;
+        targetQuery.setObject("");
+        searchResults.detach();
+        aTarget.add(mainContainer);
+        aTarget.addChildren(getPage(), IFeedback.class);
+        getAnnotationPage().actionRefreshDocument(aTarget);
     }
     
     private List<SearchResult> getSearchResults()
@@ -166,14 +183,31 @@ public class SearchAnnotationSidebar
     @OnEvent
     public void onRenderAnnotations(RenderAnnotationsEvent aEvent)
     {
+        AnnotatorState state = aEvent.getState();
+        
         if (selectedResult != null) {
-            AnnotatorState state = aEvent.getState();
             if (state.getWindowBeginOffset() <= selectedResult.getOffsetStart()
                     && selectedResult.getOffsetEnd() <= state.getWindowEndOffset()) {
                 aEvent.getVDocument()
                         .add(new VTextMarker(VMarker.MATCH_FOCUS,
                                 selectedResult.getOffsetStart() - state.getWindowBeginOffset(),
                                 selectedResult.getOffsetEnd() - state.getWindowBeginOffset()));
+            }
+        }
+        
+        for (SearchResult r : searchResults.getObject()) {
+            if (
+                    !Objects.equals(r, selectedResult) &&
+                    // Check if match is in current document
+                    r.getDocumentId() == state.getDocument().getId() &&
+                    // Check if match is in currently visible part of the document
+                    state.getWindowBeginOffset() <= r.getOffsetStart() && 
+                    r.getOffsetEnd() <= state.getWindowEndOffset()
+            ) {
+                aEvent.getVDocument()
+                        .add(new VTextMarker(VMarker.MATCH,
+                                r.getOffsetStart() - state.getWindowBeginOffset(),
+                                r.getOffsetEnd() - state.getWindowBeginOffset()));
             }
         }
     }
