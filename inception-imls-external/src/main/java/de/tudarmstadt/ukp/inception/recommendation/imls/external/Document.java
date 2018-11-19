@@ -25,8 +25,9 @@ public class Document {
     private final long documentId;
     private final String userId;
 
-    public Document(@JsonProperty("xmi") String aXmi,  @JsonProperty("documentId") long aDocumentId,
-                    @JsonProperty("userId") String aUserId)
+    public Document(@JsonProperty(value = "xmi", required = true) String aXmi,
+                    @JsonProperty(value = "documentId", required = true) long aDocumentId,
+                    @JsonProperty(value = "userId", required = true) String aUserId)
     {
         xmi = aXmi;
         documentId = aDocumentId;

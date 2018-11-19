@@ -27,16 +27,17 @@ public class Metadata {
     private final String anchoringMode;
     private final boolean crossSentence;
 
-    public Metadata(@JsonProperty("layer") String aLayer,
-                    @JsonProperty("feature") String aFeature,
-                    @JsonProperty("projectId") long aProjectId,
-                    @JsonProperty("anchoringMode") String aAnchoringMode,
-                    @JsonProperty("crossSentence") boolean aIsCrossSentence) {
+    public Metadata(@JsonProperty(value = "layer", required = true) String aLayer,
+                    @JsonProperty(value = "feature", required = true) String aFeature,
+                    @JsonProperty(value = "projectId", required = true) long aProjectId,
+                    @JsonProperty(value = "anchoringMode", required = true) String aAnchoringMode,
+                    @JsonProperty(value = "crossSentence", required = true) boolean aCrossSentence)
+    {
         layer = aLayer;
         feature = aFeature;
         projectId = aProjectId;
         anchoringMode = aAnchoringMode;
-        crossSentence = aIsCrossSentence;
+        crossSentence = aCrossSentence;
     }
 
     public String getLayer()
