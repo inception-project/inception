@@ -115,13 +115,16 @@ async function displayViewer () {
 //   const pdfURL   = q.pdf || getDefaultPDFURL()
     const pdfURL   = q.pdf
 // END PDFANNO EXTENSION
+// BEGIN PDFANNO EXTENSION - #624 - Integration of PDFExtractor
+  const pdftxtURL = q.pdftxt
   const annoURL  = q.anno
   const moveTo   = q.move
 
   // Load a PDF file.
   try {
 
-    let { pdf, analyzeResult } = await window.annoPage.loadPDFFromServer(pdfURL)
+    let { pdf, analyzeResult } = await window.annoPage.loadPDFFromServer(pdfURL, pdftxtURL)
+// END PDFANNO EXTENSION
 
     setTimeout(() => {
       window.annoPage.displayViewer({

@@ -613,30 +613,34 @@ export default class PDFAnnoPage {
       method : 'GET',
       mode   : 'cors'
     }).then(response => {
+// BEGIN PDFANNO EXTENSION - #624 - Integration of PDFExtractor
       if (response.ok) {
-        return response.arrayBuffer()
+        // return response.arrayBuffer()
+        return response.text()
       } else {
         // throw new Error(`HTTP ${response.status} - ${response.statusText}`)
-        throw new Error(`HTTP ${response.status} - pdftxtファイルのロードに失敗しました。`)
+        throw new Error(`HTTP ${response.status} - pdftxt`)
       }
-    }).then(buffer => {
-      return new Uint8Array(buffer)
-    }).then(data => {
-      return pako.inflate(data, {to : 'string'})
+    // }).then(buffer => {
+    //   return new Uint8Array(buffer)
+    // }).then(data => {
+    //   return pako.inflate(data, {to : 'string', raw: true})
     })
   }
+// END PDFANNO EXTENSION
 
+// BEGIN PDFANNO EXTENSION - #624 - Integration of PDFExtractor
   /**
    * Load PDF and pdftxt from url.
-   * @param {String} url
+   * @param {String} pdfURL
    * @returns Promise<Object>
    * @memberof PDFAnnoPage
    */
-  loadPDFFromServer (url) {
-    const pdftxtUrl = url + '.' + PDFEXTRACT_VERSION.replace(/\./g, '-') + '.txt.gz'
+  loadPDFFromServer (pdfURL, pdftxtURL) {
+    // const pdftxtUrl = pdfURL + '.' + PDFEXTRACT_VERSION.replace(/\./g, '-') + '.txt.gz'
     return Promise.all([
-      this.loadPdf(url),
-      this.loadPdftxt(pdftxtUrl)
+      this.loadPdf(pdfURL),
+      this.loadPdftxt(pdftxtURL)
     ]).then(results => {
       return {
         pdf           : results[0],
@@ -644,6 +648,7 @@ export default class PDFAnnoPage {
       }
     })
   }
+// END PDFANNO EXTENSION
 
   /**
    * Load PDF annotaion file from url.
