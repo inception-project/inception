@@ -28,6 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,6 +40,8 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
 
 @Component(ExternalSearchService.SERVICE_NAME)
+@ConditionalOnProperty(prefix = "external-search", name = "enabled", havingValue = "true", 
+        matchIfMissing = false)
 public class ExternalSearchServiceImpl
     implements ExternalSearchService
 {

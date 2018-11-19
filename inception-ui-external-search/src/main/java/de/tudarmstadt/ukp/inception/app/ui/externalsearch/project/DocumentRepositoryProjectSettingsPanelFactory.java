@@ -20,12 +20,10 @@ package de.tudarmstadt.ukp.inception.app.ui.externalsearch.project;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelFactory;
 
-@Component
 @Order(400)
 public class DocumentRepositoryProjectSettingsPanelFactory
     implements ProjectSettingsPanelFactory

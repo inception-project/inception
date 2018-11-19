@@ -18,16 +18,11 @@
 package de.tudarmstadt.ukp.inception.app.ui.externalsearch;
 
 import org.apache.wicket.Page;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 
-@Component
 @Order(50)
-@ConditionalOnProperty(prefix = "inception.external-search", name = "enabled", 
-    havingValue = "true", matchIfMissing = false)
 public class SearchPageMenuItem
     implements MenuItem
 {

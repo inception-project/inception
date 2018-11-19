@@ -28,7 +28,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.BeanNameAware;
 import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
@@ -40,7 +39,6 @@ import de.tudarmstadt.ukp.inception.externalsearch.elastic.traits.ElasticSearchP
 import de.tudarmstadt.ukp.inception.externalsearch.elastic.traits.ElasticSearchProviderTraitsEditor;
 import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
 
-@Component
 @Order(100)
 public class ElasticSearchProviderFactory
     implements BeanNameAware, ExternalSearchProviderFactory<ElasticSearchProviderTraits>
@@ -112,5 +110,4 @@ public class ElasticSearchProviderFactory
             log.error("Error while writing traits", e);
         }
     }
-
 }
