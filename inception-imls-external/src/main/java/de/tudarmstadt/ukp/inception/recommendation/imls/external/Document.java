@@ -17,47 +17,36 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.external;
 
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class TrainingRequest {
+public class Document {
 
-    @JsonProperty("typeSystem")
-    private String typeSystem;
+    private final String xmi;
+    private final long documentId;
+    private final String userId;
 
-    @JsonProperty("documents")
-    private List<Document> documents;
-
-    @JsonProperty("metadata")
-    private Metadata metadata;
-
-    public String getTypeSystem()
+    public Document(@JsonProperty(value = "xmi", required = true) String aXmi,
+                    @JsonProperty(value = "documentId", required = true) long aDocumentId,
+                    @JsonProperty(value = "userId", required = true) String aUserId)
     {
-        return typeSystem;
+        xmi = aXmi;
+        documentId = aDocumentId;
+        userId = aUserId;
     }
 
-    public void setTypeSystem(String aTypeSystem)
+    public String getXmi()
     {
-        typeSystem = aTypeSystem;
+        return xmi;
     }
 
-    public List<Document> getDocuments()
+    public Long getDocumentId()
     {
-        return documents;
+        return documentId;
     }
 
-    public void setDocuments(List<Document> aDocuments)
+    public String getUserId()
     {
-        documents = aDocuments;
+        return userId;
     }
 
-    public Metadata getMetadata()
-    {
-        return metadata;
-    }
-
-    public void setMetadata(Metadata aMetadata) {
-        metadata = aMetadata;
-    }
 }
