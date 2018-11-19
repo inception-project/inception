@@ -112,7 +112,8 @@ public class RecommendationSpanRenderer
                 .getAllRecordsByDocumentAndUserAndLayer(aState.getDocument(),
                         aState.getUser().getUsername(), layer);
         
-        Preferences pref = recommendationService.getPreferences(aState.getUser());
+        Preferences pref = recommendationService.getPreferences(aState.getUser(),
+                layer.getProject());
         
         for (List<AnnotationObject> sentenceRecommendations: recommendations) {
             Map<String, Map<Long, AnnotationObject>> labelMap = new HashMap<>();
