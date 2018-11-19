@@ -210,13 +210,11 @@ public class ExternalRecommender
     private Document buildDocument(CAS aCas) throws RecommendationException
     {
         CASMetadata casMetadata = getCasMetadata(aCas);
+        String xmi = serializeCas(aCas);
+        long documentId = casMetadata.getSourceDocumentId();
+        String userId = casMetadata.getUsername();
 
-        Document document = new Document();
-        document.setXmi(serializeCas(aCas));
-        document.setDocumentId(casMetadata.getSourceDocumentId());
-        document.setUserId(casMetadata.getUsername());
-
-        return document;
+        return new Document(xmi, documentId, userId);
     }
 
     private CASMetadata getCasMetadata(CAS aCas) throws RecommendationException

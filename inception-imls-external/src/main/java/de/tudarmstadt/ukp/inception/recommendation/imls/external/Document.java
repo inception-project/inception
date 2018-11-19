@@ -1,26 +1,41 @@
+/*
+ * Copyright 2018
+ * Ubiquitous Knowledge Processing (UKP) Lab
+ * Technische Universität Darmstadt
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package de.tudarmstadt.ukp.inception.recommendation.imls.external;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class Document {
 
-    @JsonProperty("xmi")
-    private String xmi;
+    private final String xmi;
+    private final long documentId;
+    private final String userId;
 
-    @JsonProperty("documentId")
-    private Long documentId;
-
-    @JsonProperty("userId")
-    private String userId;
+    public Document(@JsonProperty("xmi") String aXmi,  @JsonProperty("documentId") long aDocumentId,
+                    @JsonProperty("userId") String aUserId)
+    {
+        xmi = aXmi;
+        documentId = aDocumentId;
+        userId = aUserId;
+    }
 
     public String getXmi()
     {
         return xmi;
-    }
-
-    public void setXmi(String aXmi)
-    {
-        xmi = aXmi;
     }
 
     public Long getDocumentId()
@@ -28,18 +43,9 @@ public class Document {
         return documentId;
     }
 
-    public void setDocumentId(Long aDocumentId)
-    {
-        documentId = aDocumentId;
-    }
-
     public String getUserId()
     {
         return userId;
     }
 
-    public void setUserId(String aUserId)
-    {
-        userId = aUserId;
-    }
 }
