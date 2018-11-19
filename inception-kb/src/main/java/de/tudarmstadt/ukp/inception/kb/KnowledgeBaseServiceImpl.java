@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.kb;
 
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
+import static java.util.Collections.unmodifiableSet;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -156,11 +157,11 @@ public class KnowledgeBaseServiceImpl
         
         repoManager = RepositoryProvider.getRepositoryManager(kbRepositoriesRoot);
         log.info("Knowledge base repository path: {}", kbRepositoriesRoot);
-        implicitNamespaces = IriConstants.IMPLICIT_NAMESPACES;
+        
+        implicitNamespaces = new LinkedHashSet<>(IriConstants.IMPLICIT_NAMESPACES);
     }
     
-    public KnowledgeBaseServiceImpl(
-            RepositoryProperties aRepoProperties,
+    public KnowledgeBaseServiceImpl(RepositoryProperties aRepoProperties,
             EntityManager entityManager)
     {
         this(aRepoProperties);
@@ -609,8 +610,8 @@ public class KnowledgeBaseServiceImpl
             TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
             tupleQuery.setBinding("pTYPE", aKB.getTypeIri());
             tupleQuery.setBinding("oPROPERTY", aKB.getPropertyTypeIri());
-            tupleQuery.setBinding("pLABEL", aKB.getLabelIri());
-            tupleQuery.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
+            tupleQuery.setBinding("pLABEL", aKB.getPropertyLabelIri());
+            tupleQuery.setBinding("pDESCRIPTION", aKB.getPropertyDescriptionIri());
             tupleQuery.setIncludeInferred(aIncludeInferred);
             return evaluateListQuery(aKB, tupleQuery, false, aAll, "s");
         });
@@ -1278,6 +1279,11 @@ public class KnowledgeBaseServiceImpl
             }
         }
         return false;
+    }
+    
+    public Set<String> getImplicitNamespaces()
+    {
+        return unmodifiableSet(implicitNamespaces);
     }
 
     @Override
