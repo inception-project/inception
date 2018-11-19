@@ -175,7 +175,7 @@ export default class PDFAnnoPage {
    * Start the viewer.
    */
 // BEGIN PDFANNO EXTENSION - #593 - Add PDFAnno sources
-//   initializeViewer (initialPDFPath = '../pdfs/P12-1046.pdf', viewerSelector = '#viewer') {
+    /* initializeViewer (initialPDFPath = '../pdfs/P12-1046.pdf', viewerSelector = '#viewer') { */
     initializeViewer (viewerSelector = '#viewer') {
 // END PDFANNO EXTENSION
 
@@ -614,33 +614,45 @@ export default class PDFAnnoPage {
       mode   : 'cors'
     }).then(response => {
 // BEGIN PDFANNO EXTENSION - #624 - Integration of PDFExtractor
+    /*   if (response.ok) {
+     *     return response.arrayBuffer()
+     *   } else {
+     *     // throw new Error(`HTTP ${response.status} - ${response.statusText}`)
+     *     throw new Error(`HTTP ${response.status} - pdftxtファイルのロードに失敗しました。`)
+     *   }
+     * }).then(buffer => {
+     *   return new Uint8Array(buffer)
+     * }).then(data => {
+     *   return pako.inflate(data, {to : 'string'})
+     */
       if (response.ok) {
-        // return response.arrayBuffer()
         return response.text()
       } else {
-        // throw new Error(`HTTP ${response.status} - ${response.statusText}`)
         throw new Error(`HTTP ${response.status} - pdftxt`)
       }
-    // }).then(buffer => {
-    //   return new Uint8Array(buffer)
-    // }).then(data => {
-    //   return pako.inflate(data, {to : 'string', raw: true})
+// END PDFANNO EXTENSION
     })
   }
-// END PDFANNO EXTENSION
 
-// BEGIN PDFANNO EXTENSION - #624 - Integration of PDFExtractor
   /**
    * Load PDF and pdftxt from url.
    * @param {String} pdfURL
+   * @param {String} pdftxtURL
    * @returns Promise<Object>
    * @memberof PDFAnnoPage
    */
+// BEGIN PDFANNO EXTENSION - #624 - Integration of PDFExtractor
+  /* loadPDFFromServer (pdfURL) {
+   * const pdftxtUrl = url + '.' + PDFEXTRACT_VERSION.replace(/\./g, '-') + '.txt.gz'
+   * return Promise.all([
+   *   this.loadPdf(url),
+   *   this.loadPdftxt(pdftxtUrl)
+   */
   loadPDFFromServer (pdfURL, pdftxtURL) {
-    // const pdftxtUrl = pdfURL + '.' + PDFEXTRACT_VERSION.replace(/\./g, '-') + '.txt.gz'
     return Promise.all([
       this.loadPdf(pdfURL),
       this.loadPdftxt(pdftxtURL)
+// END PDFANNO EXTENSION
     ]).then(results => {
       return {
         pdf           : results[0],
@@ -648,7 +660,6 @@ export default class PDFAnnoPage {
       }
     })
   }
-// END PDFANNO EXTENSION
 
   /**
    * Load PDF annotaion file from url.
