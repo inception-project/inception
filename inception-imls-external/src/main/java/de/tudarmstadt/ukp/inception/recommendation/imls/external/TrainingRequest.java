@@ -29,7 +29,7 @@ public class TrainingRequest {
     @JsonProperty("documents")
     private List<Document> documents;
 
-    @JsonProperty("config")
+    @JsonProperty("metadata")
     private Metadata metadata;
 
     public String getTypeSystem()

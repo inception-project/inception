@@ -66,8 +66,8 @@ definitions:
   PredictRequest:
     type: object
     properties:
-      config:
-        $ref: "#/definitions/Config"
+      metadata:
+        $ref: "#/definitions/Metadata"
       document:
         $ref: "#/definitions/Document"
       typeSystem:
@@ -75,7 +75,7 @@ definitions:
         example: '<?xml version="1.0" encoding="UTF-8"?> <typeSystemDescription xmlns="http://uima.apache.org/resourceSpecifier"> <types> <typeDescription> <name>uima.tcas.DocumentAnnotation</name> <description/> <supertypeName>uima.tcas.Annotation</supertypeName> <features> <featureDescription> <name>language</name> <description/> <rangeTypeName>uima.cas.String</rangeTypeName> </featureDescription> </features> </typeDescription> </types> </typeSystemDescription>'
         description: "Type system XML of the CAS"
     required:
-      - config
+      - metadata
       - document
       - typeSystem
   PredictResponse:
@@ -90,8 +90,8 @@ definitions:
   Train:
     type: object
     properties:
-      config:
-        $ref: "#/definitions/Config"
+      metadata:
+        $ref: "#/definitions/Metadata"
       documents:
         type: "array"
         items:
@@ -102,11 +102,11 @@ definitions:
         example: '<?xml version="1.0" encoding="UTF-8"?> <typeSystemDescription xmlns="http://uima.apache.org/resourceSpecifier"> <types> <typeDescription> <name>uima.tcas.DocumentAnnotation</name> <description/> <supertypeName>uima.tcas.Annotation</supertypeName> <features> <featureDescription> <name>language</name> <description/> <rangeTypeName>uima.cas.String</rangeTypeName> </featureDescription> </features> </typeDescription> </types> </typeSystemDescription>'
         description: "Type system XML of the CAS "
     required:
-      - config
+      - metadata
       - documents
       - typeSystem
 
-  Config:
+  Metadata:
     type: object
     properties:
       layer:

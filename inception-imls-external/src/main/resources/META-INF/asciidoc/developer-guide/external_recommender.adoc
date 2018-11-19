@@ -11,6 +11,7 @@ from the inception-imls-external module. The output file then is
 When making changes to the API, just copy the stuff from there over to this document starting from [[_external_recommender_api_paths]]
 ////
 
+
 [[_external_recommender_api_overview]]
 == Overview
 This section describes the External Recommender API for INCEpTION. An external recommender is a classifier whose functionality is exposed via a HTTP web service. It can predict annotations for given documents and optionally be trained on new data. This document describes the endpoints a web service needs to expose so it can be used with INCEpTION.
@@ -96,7 +97,7 @@ __required__|Document CAS for which annotations will be predicted|<<_external_re
 [source,json]
 ----
 {
-  "config" : {
+  "metadata" : {
     "layer" : "de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity",
     "feature" : "value",
     "projectId" : 1337,
@@ -177,7 +178,7 @@ __required__|List of documents CAS whose annotations will be used for training|<
 [source,json]
 ----
 {
-  "config" : {
+  "metadata" : {
     "layer" : "de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity",
     "feature" : "value",
     "projectId" : 1337,
@@ -199,8 +200,26 @@ __required__|List of documents CAS whose annotations will be used for training|<
 [[_external_recommender_api_definitions]]
 == Definitions
 
-[[_external_recommender_api_config]]
-=== Config
+[[_external_recommender_api_document]]
+=== Document
+
+[options="header", cols=".^3,.^11,.^4"]
+|===
+|Name|Description|Schema
+|**documentId** +
+__optional__|Identifier for this document. It is unique in the context of the project. +
+**Example** : `42`|integer
+|**userId** +
+__optional__|Identifier for the user for which recommendations should be made. +
+**Example** : `"testuser"`|string
+|**xmi** +
+__optional__|CAS as XMI +
+**Example** : `"<?xml version=\"1.0\" encoding=\"UTF-8\"?> <xmi:XMI xmlns:tcas=\"http:///uima/tcas.ecore\" xmlns:xmi=\"http://www.omg.org/XMI\" xmlns:cas=\"http:///uima/cas.ecore\" xmlns:cassis=\"http:///cassis.ecore\" xmi:version=\"2.0\"> <cas:NULL xmi:id=\"0\"/> <tcas:DocumentAnnotation xmi:id=\"8\" sofa=\"1\" begin=\"0\" end=\"47\" language=\"x-unspecified\"/> <cas:Sofa xmi:id=\"1\" sofaNum=\"1\" sofaID=\"mySofa\" mimeType=\"text/plain\" sofaString=\"Joe waited for the train . The train was late .\"/> <cas:View sofa=\"1\" members=\"8\"/> </xmi:XMI>"`|string
+|===
+
+
+[[_external_recommender_api_metadata]]
+=== Metadata
 
 [options="header", cols=".^3,.^11,.^4"]
 |===
@@ -223,34 +242,16 @@ __required__|The id of the project to which the document(s) belong. +
 |===
 
 
-[[_external_recommender_api_document]]
-=== Document
-
-[options="header", cols=".^3,.^11,.^4"]
-|===
-|Name|Description|Schema
-|**documentId** +
-__optional__|Identifier for this document. It is unique in the context of the project. +
-**Example** : `42`|integer
-|**userId** +
-__optional__|Identifier for the user for which recommendations should be made. +
-**Example** : `"testuser"`|string
-|**xmi** +
-__optional__|CAS as XMI +
-**Example** : `"<?xml version=\"1.0\" encoding=\"UTF-8\"?> <xmi:XMI xmlns:tcas=\"http:///uima/tcas.ecore\" xmlns:xmi=\"http://www.omg.org/XMI\" xmlns:cas=\"http:///uima/cas.ecore\" xmlns:cassis=\"http:///cassis.ecore\" xmi:version=\"2.0\"> <cas:NULL xmi:id=\"0\"/> <tcas:DocumentAnnotation xmi:id=\"8\" sofa=\"1\" begin=\"0\" end=\"47\" language=\"x-unspecified\"/> <cas:Sofa xmi:id=\"1\" sofaNum=\"1\" sofaID=\"mySofa\" mimeType=\"text/plain\" sofaString=\"Joe waited for the train . The train was late .\"/> <cas:View sofa=\"1\" members=\"8\"/> </xmi:XMI>"`|string
-|===
-
-
 [[_external_recommender_api_predictrequest]]
 === PredictRequest
 
 [options="header", cols=".^3,.^11,.^4"]
 |===
 |Name|Description|Schema
-|**config** +
-__required__|**Example** : `"<<_external_recommender_api_config>>"`|<<_external_recommender_api_config,Config>>
 |**document** +
 __required__|**Example** : `"<<_external_recommender_api_document>>"`|<<_external_recommender_api_document,Document>>
+|**metadata** +
+__required__|**Example** : `"<<_external_recommender_api_metadata>>"`|<<_external_recommender_api_metadata,Metadata>>
 |**typeSystem** +
 __required__|Type system XML of the CAS +
 **Example** : `"<?xml version=\"1.0\" encoding=\"UTF-8\"?> <typeSystemDescription xmlns=\"http://uima.apache.org/resourceSpecifier\"> <types> <typeDescription> <name>uima.tcas.DocumentAnnotation</name> <description/> <supertypeName>uima.tcas.Annotation</supertypeName> <features> <featureDescription> <name>language</name> <description/> <rangeTypeName>uima.cas.String</rangeTypeName> </featureDescription> </features> </typeDescription> </types> </typeSystemDescription>"`|string
@@ -275,11 +276,11 @@ __required__|CAS with annotations from the external recommender as XMI +
 [options="header", cols=".^3,.^11,.^4"]
 |===
 |Name|Description|Schema
-|**config** +
-__required__|**Example** : `"<<_external_recommender_api_config>>"`|<<_external_recommender_api_config,Config>>
 |**documents** +
 __required__|CAS as XMI +
 **Example** : `[ "<<_external_recommender_api_document>>" ]`|< <<_external_recommender_api_document,Document>> > array
+|**metadata** +
+__required__|**Example** : `"<<_external_recommender_api_metadata>>"`|<<_external_recommender_api_metadata,Metadata>>
 |**typeSystem** +
 __required__|Type system XML of the CAS +
 **Example** : `"<?xml version=\"1.0\" encoding=\"UTF-8\"?> <typeSystemDescription xmlns=\"http://uima.apache.org/resourceSpecifier\"> <types> <typeDescription> <name>uima.tcas.DocumentAnnotation</name> <description/> <supertypeName>uima.tcas.Annotation</supertypeName> <features> <featureDescription> <name>language</name> <description/> <rangeTypeName>uima.cas.String</rangeTypeName> </featureDescription> </features> </typeDescription> </types> </typeSystemDescription>"`|string

@@ -27,7 +27,7 @@ public class PredictionRequest
     @JsonProperty("document")
     private Document document;
 
-    @JsonProperty("config")
+    @JsonProperty("metadata")
     private Metadata metadata;
 
     public String getTypeSystem()
