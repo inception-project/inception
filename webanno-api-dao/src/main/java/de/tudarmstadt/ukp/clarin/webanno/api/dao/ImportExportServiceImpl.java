@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.DOCUMENT_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.SOURCE_FOLDER;
-import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableList;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
 import static org.apache.uima.fit.pipeline.SimplePipeline.runPipeline;
@@ -49,7 +48,6 @@ import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.collection.CollectionReaderDescription;
 import org.apache.uima.fit.factory.ConfigurationParameterFactory;
 import org.apache.uima.fit.factory.JCasFactory;
-import org.apache.uima.fit.factory.TypeSystemDescriptionFactory;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
@@ -246,11 +244,7 @@ public class ImportExportServiceImpl
         throws UIMAException, IOException
     {
         // Prepare a CAS with the project type system
-        TypeSystemDescription builtInTypes = TypeSystemDescriptionFactory
-                .createTypeSystemDescription();
-        TypeSystemDescription projectTypes = annotationService.getProjectTypes(aProject);
-        TypeSystemDescription allTypes = CasCreationUtils
-                .mergeTypeSystems(asList(projectTypes, builtInTypes));
+        TypeSystemDescription allTypes = annotationService.getFullProjectTypeSystem(aProject);
         CAS cas = JCasFactory.createJCas(allTypes).getCas();
 
         // Convert the source document to CAS
