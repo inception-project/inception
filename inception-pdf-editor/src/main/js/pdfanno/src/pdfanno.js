@@ -112,16 +112,25 @@ async function displayViewer () {
   // Display a PDF specified via URL query parameter.
   const q        = urijs(document.URL).query(true)
 // BEGIN PDFANNO EXTENSION - #593 - Add PDFAnno sources
-//   const pdfURL   = q.pdf || getDefaultPDFURL()
-    const pdfURL   = q.pdf
+/*
+  const pdfURL   = q.pdf || getDefaultPDFURL()
+*/
+  const pdfURL   = q.pdf
+// END PDFANNO EXTENSION
+// BEGIN PDFANNO EXTENSION - #624 - Integration of PDFExtractor
+  const pdftxtURL = q.pdftxt
 // END PDFANNO EXTENSION
   const annoURL  = q.anno
   const moveTo   = q.move
 
   // Load a PDF file.
   try {
-
+// BEGIN PDFANNO EXTENSION - #624 - Integration of PDFExtractor
+/*
     let { pdf, analyzeResult } = await window.annoPage.loadPDFFromServer(pdfURL)
+*/
+    let { pdf, analyzeResult } = await window.annoPage.loadPDFFromServer(pdfURL, pdftxtURL)
+// END PDFANNO EXTENSION
 
     setTimeout(() => {
       window.annoPage.displayViewer({
