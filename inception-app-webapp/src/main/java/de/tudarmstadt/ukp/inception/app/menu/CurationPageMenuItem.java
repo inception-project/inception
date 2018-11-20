@@ -24,7 +24,6 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -75,7 +74,7 @@ public class CurationPageMenuItem implements MenuItem
 
         // Visible if the current user is a curator
         User user = userRepo.getCurrentUser();
-        return SecurityUtil.isCurator(project, projectService, user)
+        return projectService.isCurator(project, user)
                 && WebAnnoConst.PROJECT_TYPE_ANNOTATION.equals(project.getMode());
     }
     

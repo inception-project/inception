@@ -122,11 +122,15 @@ public class OpenNlpNerRecommender
                 .toArray(String[]::new);
 
             for (Span prediction : finder.find(tokens)) {
+                String label = prediction.getType();
+                if ("default".equals(label)) {
+                    continue;
+                }
                 int begin = tokenAnnotations.get(prediction.getStart()).getBegin();
                 int end = tokenAnnotations.get(prediction.getEnd() - 1).getEnd();
                 AnnotationFS annotation = aCas.createAnnotation(predictionType, begin, end);
                 annotation.setDoubleValue(confidenceFeature, prediction.getProb());
-                annotation.setStringValue(labelFeature, prediction.getType());
+                annotation.setStringValue(labelFeature, label);
                 aCas.addFsToIndexes(annotation);
             }
         }

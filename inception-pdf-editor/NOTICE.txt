@@ -1,5 +1,5 @@
-== PDF.js
+== PDFAnno
 
-Package: de.tudarmstadt.ukp.inception.pdfeditor.pdfjs.resources
+Package: src/main/js/pdfanno
 
-All files under this package are from PDF.js and are licensed under the Apache License 2.0.
+All files under this package are from PDFAnno and are licensed under the MIT.

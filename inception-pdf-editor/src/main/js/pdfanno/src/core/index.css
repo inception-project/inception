@@ -1,0 +1,147 @@
+@charset "utf-8";
+
+/*
+ *  Search UI.
+ */
+.pdfanno-search-result {
+    position: absolute;
+    background-color: rgba(0, 255, 0, 0.7)
+}
+.pdfanno-search-result--highlight {
+    background-color: rgba(255, 0, 0, 0.7)
+}
+
+/*
+ * Text Layer.
+ */
+.pdfanno-text-layer {
+    position: absolute;
+    text-align: center;
+}
+
+/**
+ * Annotation Layer.
+ */
+.annoLayer > * {
+  opacity: 0.5;
+}
+.annoLayer > *.--hover,
+.annoLayer > *.--selected {
+  opacity: 1;
+}
+
+/**
+    Annotation Knob for control.
+*/
+.anno-knob {
+    position: absolute;
+    background-color: blue;
+    border-radius: 50%;
+    transition: 0.2s;
+    transform-origin: center center;
+}
+.--hover .anno-knob,
+.--selected .anno-knob {
+  box-shadow: rgba(113,135,164,.2) 1px 1px 1px;
+  transform: scale(2);
+}
+.anno-knob.is-readonly {
+    border-radius: 0;
+    transform: rotate(45deg) scale(0.7);
+}
+.--hover .anno-knob.is-readonly,
+.--selected .anno-knob.is-readonly {
+  transform: rotate(45deg) scale(1.4);
+}
+
+/*
+ * Span Annotation.
+ */
+.anno-span {
+    position: absolute;
+    top: 0;
+    left: 0;
+    visibility: visible;
+}
+.anno-span__area {
+    position: absolute;
+    border: 1px solid black;
+}
+.--hover .anno-span__area,
+.--selected .anno-span__area {
+  border: 1px dashed black !important;
+  box-sizing: border-box;
+}
+.anno-span__area.no-border,
+.--hover .anno-span__area.no-border,
+.--selected .anno-span__area.no-border {
+  border-width: 0 !important;
+}
+.anno-span__border {
+  position: absolute;
+  /*
+  #135 Change the style of Reference Anno
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+  */
+  border: 1px solid black;
+}
+
+/*TODO Relationを描画した直後は、位置が少しずれる。その後にフォーカスが外れると正しい位置へ移動する。*/
+
+/**
+  Relation Annotation.
+*/
+.--hover .anno-relation,
+.--selected .anno-relation {
+  stroke-width: 2px;
+}
+.anno-relation-outline {
+  fill: none;
+  visibility: hidden;
+}
+.--selected .anno-relation-outline {
+  visibility: visible;
+  stroke: black;
+  stroke-width: 3px;
+  pointer-events: stroke;
+  stroke-dasharray: 5;
+}
+
+/**
+ * Span Annotation.
+ */
+.anno-span rect {
+    /* Enable the hover event on circles and text even if they are overwraped other spans. */
+    pointer-events: none;
+}
+
+/**
+  Rect Annotation.
+*/
+.anno-rect-base {
+    position: absolute;
+    top: 0;
+    left: 0;
+    visibility: visible;
+}
+.anno-rect {
+    position: absolute;
+}
+.--hover .anno-rect {
+  box-shadow: 0 0 0 1px #ccc inset;
+  stroke: #ccc;
+  stroke-width: 0.75px;
+}
+.--selected .anno-rect {
+  stroke: black;
+  stroke-width: 0.5px;
+  stroke-dasharray: 3;
+}
+
+/**
+ Disable text layers.
+*/
+body.disable-text-layer .textLayer {
+    display: none;
+}

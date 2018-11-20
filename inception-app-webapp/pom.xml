@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>0.6.3-SNAPSHOT</version>
+    <version>0.7.0-SNAPSHOT</version>
     <relativePath>..</relativePath>
   </parent>
   <artifactId>inception-app-webapp</artifactId>
@@ -96,11 +96,21 @@
     <!-- INCEPTION - IN-PROJECT SEARCH FUNCTIONALITY -->
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-app-ui-search</artifactId>
+      <artifactId>inception-ui-search</artifactId>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-search-mtas</artifactId>
+    </dependency>
+
+    <!-- INCEPTION - IN-PROJECT SEARCH FUNCTIONALITY -->
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-ui-external-search</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-external-search-elastic</artifactId>
     </dependency>
 
     <!-- INCEPTION - EVENT LOG -->
@@ -566,8 +576,10 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-opennlp</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-stringmatch</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-kb</usedDependency>
-              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-app-ui-search</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-search</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-external-search</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-search-mtas</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-external-search-elastic</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-active-learning</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-log</usedDependency>
               <!-- INCEpTION annotation editor modules - used via Spring -->
