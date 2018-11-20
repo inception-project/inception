@@ -186,8 +186,13 @@ public class SearchAnnotationSidebar
         AnnotatorState state = aEvent.getState();
         
         if (selectedResult != null) {
-            if (state.getWindowBeginOffset() <= selectedResult.getOffsetStart()
-                    && selectedResult.getOffsetEnd() <= state.getWindowEndOffset()) {
+            if (
+                    // Check if match is in current document
+                    selectedResult.getDocumentId() == state.getDocument().getId() &&
+                    // Check if match is in currently visible part of the document
+                    state.getWindowBeginOffset() <= selectedResult.getOffsetStart() && 
+                    selectedResult.getOffsetEnd() <= state.getWindowEndOffset()
+            ) {
                 aEvent.getVDocument()
                         .add(new VTextMarker(VMarker.MATCH_FOCUS,
                                 selectedResult.getOffsetStart() - state.getWindowBeginOffset(),
