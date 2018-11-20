@@ -33,6 +33,7 @@ import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.Form;
+import org.apache.wicket.markup.html.form.NumberTextField;
 import org.apache.wicket.markup.html.form.RequiredTextField;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.form.upload.FileUpload;
@@ -48,7 +49,6 @@ import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.resource.IResourceStream;
-import org.apache.wicket.validation.validator.RangeValidator;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.repository.RepositoryException;
 import org.eclipse.rdf4j.repository.config.RepositoryConfigException;
@@ -460,10 +460,10 @@ public class KnowledgeBaseDetailsPanel
             wmc.add(iriPanel);
 
             wmc.add(new CheckBox("enabled", model.bind("kb.enabled"))
-                .add(LambdaBehavior.onConfigure(it -> it.setEnabled(false))));
+                    .add(LambdaBehavior.onConfigure(it -> it.setEnabled(false))));
             wmc.add(new RequiredTextField<>("maxResults",
                 model.bind("kb.maxResults"))
-                .add(LambdaBehavior.onConfigure(it -> it.setEnabled(false))));
+                    .add(LambdaBehavior.onConfigure(it -> it.setEnabled(false))));
 
         }
 
@@ -570,8 +570,7 @@ public class KnowledgeBaseDetailsPanel
             wmc.add(new KnowledgeBaseIriPanel("iriPanel", model,
                 KnowledgeBaseIriPanelMode.PROJECTSETTINGS));
             wmc.add(new CheckBox("enabled", model.bind("kb.enabled")));
-            queryLimitField = queryLimitField("maxResults",
-                model.bind("kb.maxResults"));
+            queryLimitField = queryLimitField("maxResults", model.bind("kb.maxResults"));
             wmc.add(queryLimitField);
             maxQueryLimitCheckBox = maxQueryLimitCheckbox("maxQueryLimit", Model.of(false));
             wmc.add(maxQueryLimitCheckBox);
@@ -618,10 +617,15 @@ public class KnowledgeBaseDetailsPanel
             wmc.add(textField);
         }
 
-        private CheckBox maxQueryLimitCheckbox(String id, IModel<Boolean> model) {
-            return new AjaxCheckBox(id, model) {
+        private CheckBox maxQueryLimitCheckbox(String id, IModel<Boolean> aModel)
+        {
+            return new AjaxCheckBox(id, aModel)
+            {
+                private static final long serialVersionUID = -8390353018496338400L;
+
                 @Override
-                public void onUpdate(AjaxRequestTarget aTarget) {
+                public void onUpdate(AjaxRequestTarget aTarget)
+                {
                     if (getModelObject()) {
                         queryLimitField.setModelObject(kbProperties.getHardMaxResults());
                         queryLimitField.setEnabled(false);
@@ -631,18 +635,16 @@ public class KnowledgeBaseDetailsPanel
                     }
                     aTarget.add(queryLimitField);
                 }
-
             };
         }
 
-        private TextField<Integer> queryLimitField(String id, IModel<Integer> model)
+        private NumberTextField<Integer> queryLimitField(String id, IModel<Integer> aModel)
         {
-            if (model.getObject() == 0) {
-                model.setObject(kbProperties.getDefaultMaxResults());
-            }
-            TextField<Integer> queryLimit = new RequiredTextField<Integer>(id, model);
-            queryLimit.add(RangeValidator.range(0, kbProperties.getHardMaxResults()));
+            NumberTextField<Integer> queryLimit = new NumberTextField<>(id, aModel, Integer.class);
             queryLimit.setOutputMarkupId(true);
+            queryLimit.setRequired(true);
+            queryLimit.setMinimum(KnowledgeBaseProperties.HARD_MIN_RESULTS);
+            queryLimit.setMaximum(kbProperties.getHardMaxResults());
             return queryLimit;
         }
     }
