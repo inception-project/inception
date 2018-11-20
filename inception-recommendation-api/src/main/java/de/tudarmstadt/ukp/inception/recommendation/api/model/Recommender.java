@@ -241,6 +241,8 @@ public class Recommender
         sb.append(", threshold=").append(threshold);
         sb.append(", alwaysSelected=").append(alwaysSelected);
         sb.append(", enabled=").append(enabled);
+        sb.append(", maxRecommendations=").append(maxRecommendations);
+        sb.append(", skipEvaluation=").append(skipEvaluation);
         sb.append(", traits='").append(traits).append('\'');
         sb.append('}');
         return sb.toString();
