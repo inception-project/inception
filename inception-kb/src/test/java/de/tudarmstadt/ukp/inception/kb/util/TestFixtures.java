@@ -28,6 +28,7 @@ import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
+import org.eclipse.rdf4j.model.vocabulary.SKOS;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
@@ -73,8 +74,11 @@ public class TestFixtures
         kb.setPropertyTypeIri(RDF.PROPERTY);
         kb.setDescriptionIri(RDFS.COMMENT);
         kb.setFullTextSearchIri(IriConstants.FTS_LUCENE);
-        kb.setPropertyLabelIri(RDFS.LABEL);
-        kb.setPropertyDescriptionIri(RDFS.COMMENT);
+        // Intentionally using different IRIs for label/description and property-label/description
+        // to detect cases where we accidentally construct queries using the wrong mapping, e.g.
+        // querying for properties with the class label.
+        kb.setPropertyLabelIri(SKOS.PREF_LABEL);
+        kb.setPropertyDescriptionIri(SKOS.DEFINITION);
         kb.setExplicitlyDefinedRootConcepts(new ArrayList<>());
         kb.setReification(reification);
         kb.setMaxResults(1000);

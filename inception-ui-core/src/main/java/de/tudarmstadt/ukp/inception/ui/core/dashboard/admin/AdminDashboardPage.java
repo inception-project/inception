@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.ui.core.dashboard;
+package de.tudarmstadt.ukp.inception.ui.core.dashboard.admin;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil.annotationEnabeled;
 import static de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil.curationEnabeled;
@@ -30,7 +30,6 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.wicketstuff.annotation.mount.MountPath;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -40,6 +39,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.login.LoginPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
+import de.tudarmstadt.ukp.inception.ui.core.dashboard.DashboardMenu;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet.SystemStatusDashlet;
 
 /**
@@ -108,12 +108,12 @@ public class AdminDashboardPage
         User user = aUserRepo.getCurrentUser();
         
         // Project managers need access to the admin area to manage projects
-        if (SecurityUtil.projectSettingsEnabeled(aProjectService, user)) {
+        if (aProjectService.managesAnyProject(user)) {
             return true;
         }
         
         // Admins need access to the admin area to manage projects 
-        if (SecurityUtil.isSuperAdmin(aProjectService, user)) {
+        if (aUserRepo.isAdministrator(user)) {
             return true;
         }
     

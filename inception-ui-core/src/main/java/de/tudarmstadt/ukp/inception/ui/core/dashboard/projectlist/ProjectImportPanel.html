@@ -18,17 +18,10 @@
 -->
 <html xmlns:wicket="http://wicket.apache.org">
 <body>
-  <wicket:extend>
-    <div class="scrolling flex-content flex-v-container">
-      <ul class="list-group">
-        <li wicket:id="project" class="list-group-item">
-          <span wicket:id="role" class="badge"><wicket:container wicket:id="label"/></span>
-          <h4 class="list-group-item-heading">
-            <a wicket:id="projectLink"><wicket:container wicket:id="name"/></a>
-          </h4>
-        </li>
-      </ul>
-    </div>
-  </wicket:extend>
+  <wicket:panel>
+    <form wicket:id="form" class="flex-content">
+      <input type="file" wicket:id="content" multiple="multiple"/>
+    </form>
+  </wicket:panel>
 </body>
 </html>

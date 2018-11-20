@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.pos;
 
+import static org.apache.commons.lang3.StringUtils.isNoneBlank;
 import static org.apache.uima.fit.util.CasUtil.getAnnotationType;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.indexCovered;
@@ -272,7 +273,7 @@ public class OpenNlpPosRecommender
         }
 
         String value = annotations.get(0).getFeatureValueAsString(aFeature);
-        return value != null ? value : PAD;
+        return isNoneBlank(value) ? value : PAD;
     }
 
     @Nullable

@@ -29,7 +29,6 @@ import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.Value;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
-import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.eclipse.rdf4j.query.Binding;
 import org.eclipse.rdf4j.query.BindingSet;
 import org.eclipse.rdf4j.query.QueryEvaluationException;
@@ -135,10 +134,9 @@ public class WikiDataReification
         boolean aAll)
     {
         String QUERY = String.join("\n",
-            "SELECT DISTINCT ?p ?o ?id ?ps ?l WHERE {",
+            "SELECT DISTINCT ?p ?o ?id ?ps WHERE {",
             "  ?s  ?p  ?id .",
             "  ?id ?ps ?o .",
-            "  ?p  ?pLABEL ?l.",
             "  FILTER(STRSTARTS(STR(?ps), STR(?ps_ns)))",
             "}",
             "LIMIT " + kb.getMaxResults());
@@ -148,8 +146,6 @@ public class WikiDataReification
             TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
             tupleQuery.setBinding("s", instance);
             tupleQuery.setBinding("ps_ns", vf.createIRI(PREDICATE_NAMESPACE));
-            tupleQuery.setBinding("pLABEL", RDFS.LABEL);
-
             tupleQuery.setIncludeInferred(false);
             TupleQueryResult result;
 
@@ -169,13 +165,11 @@ public class WikiDataReification
                 Binding o = bindings.getBinding("o");
                 Binding id = bindings.getBinding("id");
                 Binding ps = bindings.getBinding("ps");
-                Binding l = bindings.getBinding("l");
                 Value value = o.getValue();
 
                 // Fill kbStatement
                 KBHandle property = new KBHandle();
                 property.setIdentifier(p.getValue().stringValue());
-                property.setName(l.getValue().stringValue());
                 KBStatement kbStatement = new KBStatement(aInstance, property, value);
 
                 // Recreate original statements
@@ -466,56 +460,46 @@ public class WikiDataReification
     {
         List<KBQualifier> qualifiers = new ArrayList<>();
         String QUERY = String.join("\n",
-            "SELECT DISTINCT ?p ?o ?l WHERE {",
+            "SELECT DISTINCT ?p ?o WHERE {",
             "  ?id ?p ?o .",
-            "  OPTIONAL {",
-            "    ?p ?pLABEL ?l .",
-            "    FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"en\"))",
-            "  }",
             "}",
             "LIMIT " + kb.getMaxResults());
         Resource id = vf.createBNode(aStatement.getStatementId());
         try (RepositoryConnection conn = kbService.getConnection(kb)) {
             TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
             tupleQuery.setBinding("id", id);
-            tupleQuery.setBinding("pLABEL", RDFS.LABEL);
-
             tupleQuery.setIncludeInferred(false);
-            TupleQueryResult result;
 
-            try {
-                result = tupleQuery.evaluate();
+            try (TupleQueryResult result = tupleQuery.evaluate()) {
+                while (result.hasNext()) {
+                    BindingSet bindings = result.next();
+                    Binding p = bindings.getBinding("p");
+                    Binding o = bindings.getBinding("o");
+    
+                    if (!p.getValue().stringValue().contains(PREDICATE_NAMESPACE)) {
+                        KBHandle property = new KBHandle();
+                        property.setIdentifier(p.getValue().stringValue());
+                        Value value = o.getValue();
+                        KBQualifier qualifier = new KBQualifier(aStatement, property, value);
+    
+                        IRI predicate = vf.createIRI(p.getValue().stringValue());
+                        Value object = o.getValue();
+                        Statement qualifierStatement = vf.createStatement(id, predicate, object);
+    
+                        Set<Statement> statements = new HashSet<>();
+                        statements.add(qualifierStatement);
+                        qualifier.setOriginalStatements(statements);
+    
+                        qualifiers.add(qualifier);
+                    }
+                }
+                return qualifiers;
             }
             catch (QueryEvaluationException e) {
                 log.warn("No such statementId in knowledge base", e);
-                return null;
+                return Collections.emptyList();
             }
-
-            while (result.hasNext()) {
-                BindingSet bindings = result.next();
-                Binding p = bindings.getBinding("p");
-                Binding o = bindings.getBinding("o");
-                Binding l = bindings.getBinding("l");
-
-                if (!p.getValue().stringValue().contains(PREDICATE_NAMESPACE)) {
-                    KBHandle property = new KBHandle();
-                    property.setIdentifier(p.getValue().stringValue());
-                    property.setName(l.getValue().stringValue());
-                    Value value = o.getValue();
-                    KBQualifier qualifier = new KBQualifier(aStatement, property, value);
-
-                    IRI predicate = vf.createIRI(p.getValue().stringValue());
-                    Value object = o.getValue();
-                    Statement qualifierStatement = vf.createStatement(id, predicate, object);
-
-                    Set<Statement> statements = new HashSet<>();
-                    statements.add(qualifierStatement);
-                    qualifier.setOriginalStatements(statements);
-
-                    qualifiers.add(qualifier);
-                }
-            }
-            return qualifiers;
+                
         }
     }
 

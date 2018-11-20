@@ -100,6 +100,7 @@ public class KnowledgeBaseIriPanel
                 // Initialize according to current model values
                 SchemaProfile modelProfile = kbService
                     .checkSchemaProfile(kbModel.getObject().getKb());
+
                 setModelObject(modelProfile);
             }
         };
@@ -146,17 +147,22 @@ public class KnowledgeBaseIriPanel
             private static final long serialVersionUID = 1653808650286121732L;
 
             @Override
-            public void onSelectionChanged(AjaxRequestTarget target, SchemaProfile bean)
+            public void onSelectionChanged(AjaxRequestTarget target, SchemaProfile aProfile)
             {
-                classField.setModelObject(bean.getClassIri().stringValue());
-                subclassField.setModelObject(bean.getSubclassIri().stringValue());
-                typeField.setModelObject(bean.getTypeIri().stringValue());
-                descriptionField.setModelObject(bean.getDescriptionIri().stringValue());
-                labelField.setModelObject(bean.getLabelIri().stringValue());
-                propertyTypeField.setModelObject(bean.getPropertyTypeIri().stringValue());
-                propertyLabelField.setModelObject(bean.getPropertyLabelIri().stringValue());
-                propertyDescriptionField
-                    .setModelObject(bean.getPropertyDescriptionIri().stringValue());
+                // If the user switches to the custom profile, we retain the values from the
+                // previously selected profile and just make the IRI mapping ediable. If the user
+                // switches to a pre-defined profile, we reset the values.
+                if (SchemaProfile.CUSTOMSCHEMA != aProfile) {
+                    classField.setModelObject(aProfile.getClassIri().stringValue());
+                    subclassField.setModelObject(aProfile.getSubclassIri().stringValue());
+                    typeField.setModelObject(aProfile.getTypeIri().stringValue());
+                    descriptionField.setModelObject(aProfile.getDescriptionIri().stringValue());
+                    labelField.setModelObject(aProfile.getLabelIri().stringValue());
+                    propertyTypeField.setModelObject(aProfile.getPropertyTypeIri().stringValue());
+                    propertyLabelField.setModelObject(aProfile.getPropertyLabelIri().stringValue());
+                    propertyDescriptionField
+                        .setModelObject(aProfile.getPropertyDescriptionIri().stringValue());
+                }
                 target.add(comboBoxWrapper, iriSchemaChoice);
             }
         });

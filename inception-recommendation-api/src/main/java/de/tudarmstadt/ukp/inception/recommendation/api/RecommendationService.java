@@ -41,6 +41,9 @@ public interface RecommendationService
 {
     String SERVICE_NAME = "recommendationService";
     
+    int MAX_RECOMMENDATIONS_DEFAULT = 3; 
+    int MAX_RECOMMENDATIONS_CAP = 10; 
+    
     void createOrUpdateRecommender(Recommender aRecommender);
 
     void deleteRecommender(Recommender aRecommender);
@@ -63,9 +66,9 @@ public interface RecommendationService
     
     List<Recommender> getActiveRecommenders(User aUser, AnnotationLayer aLayer);
 
-    void setPreferences(User aUser, Preferences aPreferences);
+    void setPreferences(User aUser, Project aProject, Preferences aPreferences);
     
-    Preferences getPreferences(User aUser);
+    Preferences getPreferences(User aUser, Project aProject);
     
     Predictions getPredictions(User aUser, Project aProject);
 
