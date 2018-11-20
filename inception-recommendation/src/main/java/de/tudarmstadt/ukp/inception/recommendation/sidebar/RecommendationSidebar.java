@@ -48,8 +48,10 @@ public class RecommendationSidebar
         super(aId, aModel, aActionHandler, aJCasProvider, aAnnotationPage);
 
         IModel<Preferences> model = LambdaModelAdapter.of(
-            () -> recommendationService.getPreferences(aModel.getObject().getUser()),
-            (v) -> recommendationService.setPreferences(aModel.getObject().getUser(), v));
+            () -> recommendationService.getPreferences(aModel.getObject().getUser(), 
+                    aModel.getObject().getProject()),
+            (v) -> recommendationService.setPreferences(aModel.getObject().getUser(), 
+                    aModel.getObject().getProject(), v));
 
         Form<Preferences> form = new Form<>("form",
                 CompoundPropertyModel.of(model));

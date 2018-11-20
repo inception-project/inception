@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch;
 
 import static java.util.Arrays.asList;
 import static java.util.Comparator.comparingInt;
+import static org.apache.commons.lang3.StringUtils.isNoneBlank;
 import static org.apache.uima.fit.util.CasUtil.getAnnotationType;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
@@ -251,13 +252,15 @@ public class StringMatchingRecommender
     }
     
     private void learn(Trie<DictEntry> aDict, String aText, String aLabel) {
-        DictEntry entry = aDict.get(aText);
-        if (entry == null) {
-            entry = new DictEntry(aText);
-            aDict.put(aText, entry);
+        if (isNoneBlank(aLabel)) {
+            DictEntry entry = aDict.get(aText);
+            if (entry == null) {
+                entry = new DictEntry(aText);
+                aDict.put(aText, entry);
+            }
+            
+            entry.put(aLabel);
         }
-        
-        entry.put(aLabel);
     }
     
     private List<Sample> extractData(List<CAS> aCasses, String aLayerName, String aFeatureName)

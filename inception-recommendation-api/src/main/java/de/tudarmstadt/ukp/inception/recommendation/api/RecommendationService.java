@@ -66,9 +66,9 @@ public interface RecommendationService
     
     List<Recommender> getActiveRecommenders(User aUser, AnnotationLayer aLayer);
 
-    void setPreferences(User aUser, Preferences aPreferences);
+    void setPreferences(User aUser, Project aProject, Preferences aPreferences);
     
-    Preferences getPreferences(User aUser);
+    Preferences getPreferences(User aUser, Project aProject);
     
     Predictions getPredictions(User aUser, Project aProject);
 
