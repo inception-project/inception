@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang3.time.StopWatch;
 import org.eclipse.rdf4j.model.BNode;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Statement;
@@ -139,6 +140,9 @@ public class NoReification implements ReificationStrategy {
     private List<Statement> listStatementsForInstance(KnowledgeBase kb, String aInstanceIdentifier,
         boolean aIncludeInferred)
     {
+        StopWatch timer = new StopWatch();
+        timer.start();
+        
         try (RepositoryConnection conn = kbService.getConnection(kb)) {
             ValueFactory vf = conn.getValueFactory();
             String QUERY = "SELECT * WHERE { ?s ?p ?o . }";
@@ -167,6 +171,9 @@ public class NoReification implements ReificationStrategy {
                 statements.add(stmt);
             }
             return statements;
+        }
+        finally {
+            log.trace("NoReification.listStatementsForInstance took {} ms", timer.getTime());
         }
     }
     

@@ -25,7 +25,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ExportedRecommender
 {
-
     @JsonProperty("name")
     private String name;
 
@@ -44,9 +43,15 @@ public class ExportedRecommender
     @JsonProperty("alwaysSelected")
     private boolean alwaysSelected;
 
+    @JsonProperty("skipEvaluation")
+    private boolean skipEvaluation;
+    
     @JsonProperty("enabled")
     private boolean enabled;
 
+    @JsonProperty("maxRecommendations")
+    private int maxRecommendations;
+    
     @JsonProperty("traits")
     private String traits;
 
@@ -118,6 +123,26 @@ public class ExportedRecommender
     public void setEnabled(boolean aEnabled)
     {
         enabled = aEnabled;
+    }
+
+    public boolean isSkipEvaluation()
+    {
+        return skipEvaluation;
+    }
+
+    public void setSkipEvaluation(boolean aSkipEvaluation)
+    {
+        skipEvaluation = aSkipEvaluation;
+    }
+
+    public int getMaxRecommendations()
+    {
+        return maxRecommendations;
+    }
+
+    public void setMaxRecommendations(int aMaxRecommendations)
+    {
+        maxRecommendations = aMaxRecommendations;
     }
 
     public String getTraits()

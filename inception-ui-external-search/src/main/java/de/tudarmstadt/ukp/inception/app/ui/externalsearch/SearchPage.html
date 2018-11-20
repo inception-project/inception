@@ -1,0 +1,73 @@
+<!--
+ - Copyright 2017
+ - Ubiquitous Knowledge Processing (UKP) Lab
+ - Technische Universität Darmstadt
+ - 
+ - Licensed under the Apache License, Version 2.0 (the "License");
+ - you may not use this file except in compliance with the License.
+ - You may obtain a copy of the License at
+ -  
+ -  http://www.apache.org/licenses/LICENSE-2.0
+ - 
+ - Unless required by applicable law or agreed to in writing, software
+ - distributed under the License is distributed on an "AS IS" BASIS,
+ - WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ - See the License for the specific language governing permissions and
+ - limitations under the License.
+-->
+<html
+	xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+<head>
+  <wicket:head>
+    <style>
+      .page-content {
+        display: flex;
+      }
+      
+      span.inline-edit {
+        border: 1px solid green;
+        padding: 4px;
+      }
+      
+      span.inline-edit input {
+        border: 0;
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+  </wicket:head>
+</head>
+<body>
+	<wicket:extend>
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-md-12">
+					<div wicket:id="mainContainer">
+						<form class="form-group form-inline"
+							wicket:id="repositorySelectionForm" style="float: right;">
+							<label for="repositoryCombo">Repository: </label><select
+								class="form-control" wicket:id="repositoryCombo"></select>
+						</form>
+						<h4>Search parameters</h4>
+						<form class="form-group form-inline" wicket:id="searchForm">
+							<fieldset style="display: inline-block;">
+								<div>
+									<label for="queryInput">Search query:</label> <input
+										class="form-control" wicket:id="queryInput" type="text"
+										id="queryInput" />
+									<button wicket:id="submitSearch" class="btn btn-primary"
+										type="submit" name="Search" value="Search">Search</button>
+								</div>
+							</fieldset>
+						</form>
+						<table class="dataview" cellspacing="0" wicket:id="resultsTable">[Results
+							table]
+						</table>
+					</div>
+					<div wicket:id="modalDocumentWindow"></div>
+				</div>
+			</div>
+		</div>
+	</wicket:extend>
+</body>
+</html>

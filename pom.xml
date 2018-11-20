@@ -70,14 +70,18 @@
     <assertj.version>3.11.1</assertj.version>
     <okhttp.version>3.11.0</okhttp.version>
     <maven.surefire.heap>6g</maven.surefire.heap>
+    <dkpro.core.testCachePath>${session.executionRootDirectory}/cache/dkpro-core-datasets</dkpro.core.testCachePath>
   </properties>
   <modules>
     <module>inception-build</module>
     <module>inception-app-webapp</module>
-    <module>inception-app-ui-search</module>
+    <module>inception-ui-search</module>
     <module>inception-search-core</module>
     <!-- >module>inception-search-mimir</module -->
     <module>inception-search-mtas</module>
+    <module>inception-external-search-core</module>
+    <module>inception-external-search-elastic</module>
+    <module>inception-ui-external-search</module>
     <module>inception-kb</module>
     <module>inception-ui-core</module>
     <module>inception-ui-kb</module>
@@ -192,7 +196,22 @@
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>inception-app-ui-search</artifactId>
+        <artifactId>inception-ui-search</artifactId>
+        <version>0.7.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-external-search-core</artifactId>
+        <version>0.7.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-external-search-elastic</artifactId>
+        <version>0.7.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-ui-external-search</artifactId>
         <version>0.7.0-SNAPSHOT</version>
       </dependency>
       <dependency>
@@ -779,7 +798,15 @@
             <arguments>${arguments} -Dmaven.surefire.heap=${maven.surefire.heap} -Pdkpro-release</arguments>
           </configuration>
         </plugin>
-      
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-surefire-plugin</artifactId>
+          <configuration>
+            <systemPropertyVariables>
+              <dkpro.core.testCachePath>${dkpro.core.testCachePath}</dkpro.core.testCachePath>
+            </systemPropertyVariables>
+          </configuration>
+        </plugin>
       </plugins>
     </pluginManagement>
   </build>
