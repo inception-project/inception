@@ -94,6 +94,12 @@
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
     </dependency>
+
+    <dependency>
+        <groupId>paperai</groupId>
+        <artifactId>pdfextract</artifactId>
+        <version>0.3.2-SNAPSHOT</version>
+    </dependency>
   </dependencies>
   <build>
     <plugins>
