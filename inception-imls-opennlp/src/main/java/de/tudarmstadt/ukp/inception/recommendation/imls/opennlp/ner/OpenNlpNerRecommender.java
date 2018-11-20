@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.ner;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.uima.fit.util.CasUtil.getAnnotationType;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.indexCovered;
@@ -235,7 +236,9 @@ public class OpenNlpNerRecommender
             int begin = idxToken.get(idxTokenOffset.get(annotation.getBegin()));
             int end = idxToken.get(idxTokenOffset.get(annotation.getEnd()));
             String label = annotation.getFeatureValueAsString(feature);
-            result[i] = new Span(begin, end + 1, label);
+            if (isNotBlank(label)) {
+                result[i] = new Span(begin, end + 1, label);
+            }
         }
         return result;
     }

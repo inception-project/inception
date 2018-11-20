@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.pdfeditor.pdfanno;
 
 import java.io.File;
+import java.io.IOException;
 
 import org.apache.wicket.behavior.AbstractAjaxBehavior;
 import org.apache.wicket.markup.ComponentTag;
@@ -29,10 +30,15 @@ import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.handler.resource.ResourceStreamRequestHandler;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.resource.FileResourceStream;
+import org.apache.wicket.util.resource.StringResourceStream;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import paperai.pdfextract.PDFExtractor;
 
 public class PdfAnnoPanel
     extends Panel
@@ -42,6 +48,10 @@ public class PdfAnnoPanel
     private @SpringBean DocumentService documentService;
 
     private AbstractAjaxBehavior pdfProvider;
+
+    private AbstractAjaxBehavior pdftxtProvider;
+
+    private final Logger log = LoggerFactory.getLogger(getClass());
     
     public PdfAnnoPanel(String aId, IModel<AnnotatorState> aModel)
     {
@@ -55,12 +65,39 @@ public class PdfAnnoPanel
             public void onRequest()
             {
                 SourceDocument doc = aModel.getObject().getDocument();
-                
+
                 File pdfFile = documentService.getSourceDocumentFile(doc);
-                
+
                 getRequestCycle().scheduleRequestHandlerAfterCurrent(
                         new ResourceStreamRequestHandler(new FileResourceStream(pdfFile),
                                 doc.getName()));
+            }
+        });
+
+        add(pdftxtProvider = new AbstractAjaxBehavior()
+        {
+            private static final long serialVersionUID = 2L;
+
+            @Override
+            public void onRequest()
+            {
+                SourceDocument doc = aModel.getObject().getDocument();
+
+                File pdfFile = documentService.getSourceDocumentFile(doc);
+
+                try
+                {
+                    String pdftext = PDFExtractor.processFileToString(pdfFile, false);
+                    getRequestCycle().scheduleRequestHandlerAfterCurrent(
+                            new ResourceStreamRequestHandler(
+                                    new StringResourceStream(pdftext))
+                    );
+                }
+                catch (IOException e)
+                {
+                    log.error("Unable to get PDF text for " + pdfFile.getName()
+                        + "with PDFExtractor.", e);
+                }
             }
         });
 
@@ -79,7 +116,10 @@ public class PdfAnnoPanel
                 String pdfUrl = getPage().getRequestCycle().getUrlRenderer()
                         .renderFullUrl(Url.parse(pdfProvider.getCallbackUrl()));
 
-                viewerUrl += "?pdf=" + pdfUrl;
+                String pdftxtUrl = getPage().getRequestCycle().getUrlRenderer()
+                    .renderFullUrl(Url.parse(pdftxtProvider.getCallbackUrl()));
+
+                viewerUrl += "?pdf=" + pdfUrl + "&pdftxt=" + pdftxtUrl;
 
                 tag.put("src", viewerUrl);
 
