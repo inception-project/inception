@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.ner;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.uima.fit.util.CasUtil.getAnnotationType;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.indexCovered;
@@ -121,11 +122,15 @@ public class OpenNlpNerRecommender
                 .toArray(String[]::new);
 
             for (Span prediction : finder.find(tokens)) {
+                String label = prediction.getType();
+                if ("default".equals(label)) {
+                    continue;
+                }
                 int begin = tokenAnnotations.get(prediction.getStart()).getBegin();
                 int end = tokenAnnotations.get(prediction.getEnd() - 1).getEnd();
                 AnnotationFS annotation = aCas.createAnnotation(predictionType, begin, end);
                 annotation.setDoubleValue(confidenceFeature, prediction.getProb());
-                annotation.setStringValue(labelFeature, prediction.getType());
+                annotation.setStringValue(labelFeature, label);
                 aCas.addFsToIndexes(annotation);
             }
         }
@@ -231,7 +236,9 @@ public class OpenNlpNerRecommender
             int begin = idxToken.get(idxTokenOffset.get(annotation.getBegin()));
             int end = idxToken.get(idxTokenOffset.get(annotation.getEnd()));
             String label = annotation.getFeatureValueAsString(feature);
-            result[i] = new Span(begin, end + 1, label);
+            if (isNotBlank(label)) {
+                result[i] = new Span(begin, end + 1, label);
+            }
         }
         return result;
     }

@@ -40,11 +40,6 @@ public class CasAssert
         super(cas, CasAssert.class);
     }
 
-    public static CasAssert assertThat(CAS actual) 
-    {
-        return new CasAssert(actual);
-    }
-
     public CasAssert containsNamedEntity(String text, String value)
     {
         isNotNull();
@@ -84,8 +79,7 @@ public class CasAssert
         isNotNull();
 
         Type type = CasUtil.getType(actual, TYPE_NE);
-        List<AnnotationFS> result = new ArrayList<>();
-        result.addAll(CasUtil.select(actual, type));
+        List<AnnotationFS> result = new ArrayList<>(CasUtil.select(actual, type));
         return new ListAssert<>(result);
     }
 }

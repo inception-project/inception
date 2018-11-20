@@ -38,7 +38,6 @@ import org.slf4j.LoggerFactory;
 import org.wicketstuff.annotation.mount.MountPath;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -94,7 +93,7 @@ public class KnowledgeBasePage
                 project = projectService.getProject(projectId);
                 
                 // Check access to project
-                if (!SecurityUtil.isAnnotator(project, projectService, user)) {
+                if (!projectService.isAnnotator(project, user)) {
                     error("You have no permission to access project [" + project.getId() + "]");
                     abort();
                 }

@@ -1606,7 +1606,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     }
 
     private boolean hasImplicitNamespace(KBHandle handle) {
-        return IriConstants.IMPLICIT_NAMESPACES.stream()
+        return sut.getImplicitNamespaces().stream()
             .anyMatch(ns -> handle.getIdentifier().startsWith(ns));
     }
 

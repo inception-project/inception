@@ -94,6 +94,12 @@ public class StringMatchingRecommenderTest
 
         assertThat(predictions).as("Predictions have been written to CAS")
             .isNotEmpty();
+        
+        assertThat(predictions).as("Score is positive")
+            .allMatch(prediction -> prediction.getScore() > 0.0 && prediction.getScore() <= 1.0 );
+
+        assertThat(predictions).as("Some score is not perfect")
+            .anyMatch(prediction -> prediction.getScore() > 0.0 && prediction.getScore() < 1.0 );
     }
 
     @Test
@@ -172,6 +178,7 @@ public class StringMatchingRecommenderTest
         Recommender recommender = new Recommender();
         recommender.setLayer(layer);
         recommender.setFeature("value");
+        recommender.setMaxRecommendations(3);
 
         return recommender;
     }

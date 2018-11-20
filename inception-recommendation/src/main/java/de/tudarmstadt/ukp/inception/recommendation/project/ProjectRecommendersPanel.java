@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.project;
 
+import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.MAX_RECOMMENDATIONS_DEFAULT;
+
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 
@@ -46,8 +48,10 @@ public class ProjectRecommendersPanel
         RecommenderListPanel recommenderListPanel = new RecommenderListPanel("recommenders",
                 projectModel, selectedRecommenderModel);
         recommenderListPanel.setCreateAction(_target -> {
+            Recommender recommender = new Recommender();
+            recommender.setMaxRecommendations(MAX_RECOMMENDATIONS_DEFAULT);
+            selectedRecommenderModel.setObject(recommender);
             recommenderEditorPanel.modelChanged();
-            selectedRecommenderModel.setObject(new Recommender());
         });
         recommenderListPanel.setChangeAction(_target -> {
             recommenderEditorPanel.modelChanged();
