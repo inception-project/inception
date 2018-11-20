@@ -39,15 +39,19 @@ import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.Model;
+import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.googlecode.wicket.jquery.core.JQueryBehavior;
+import com.googlecode.wicket.jquery.core.Options;
 import com.googlecode.wicket.jquery.core.renderer.TextRenderer;
 import com.googlecode.wicket.jquery.core.template.IJQueryTemplate;
 import com.googlecode.wicket.kendo.ui.form.autocomplete.AutoCompleteTextField;
+import com.googlecode.wicket.kendo.ui.widget.tooltip.TooltipBehavior;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.JCasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
@@ -59,6 +63,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
@@ -89,6 +94,7 @@ public class ConceptFeatureEditor extends FeatureEditor {
         super(aId, aItem, new CompoundPropertyModel<>(aModel));
         add(new Label(MID_FEATURE, getModelObject().feature.getUiName()));
         add(focusComponent = createAutoCompleteTextField(aStateModel.getObject(), aHandler));
+        add(createDisabledKbWarningLabel());
     }
 
     @Override
@@ -140,9 +146,13 @@ public class ConceptFeatureEditor extends FeatureEditor {
         List<KBHandle> handles = new ArrayList<>();
         try {
             Project project = feat.getProject();
-            FeatureSupport<ConceptFeatureTraits> fs = featureSupportRegistry
-                    .getFeatureSupport(feat);
-            ConceptFeatureTraits traits = fs.readTraits(feat);
+            ConceptFeatureTraits traits = readFeatureTraits(feat);
+
+            // Check if kb is actually enabled
+            if (featureUsesDisabledKB(traits)) {
+                return Collections.emptyList();
+            }
+
             switch (traits.getAllowedValueType()) {
             case INSTANCE:
                 handles = getInstances(traits, project, aState, aHandler, aTypedString);
@@ -165,6 +175,24 @@ public class ConceptFeatureEditor extends FeatureEditor {
         // Sort results
         handles.sort(Comparator.comparing(KBObject::getUiLabel));
         return distinctByIri(handles);
+    }
+
+    private boolean featureUsesDisabledKB(ConceptFeatureTraits aTraits)
+    {
+        Optional<KnowledgeBase> kb = Optional.empty();
+        String repositoryId = aTraits.getRepositoryId();
+        if (repositoryId != null) {
+            kb = kbService.getKnowledgeBaseById(getModelObject().feature.getProject(),
+                aTraits.getRepositoryId());
+        }
+        return kb.isPresent() && !kb.get().isEnabled() || repositoryId != null && !kb.isPresent();
+    }
+
+    private ConceptFeatureTraits readFeatureTraits(AnnotationFeature aAnnotationFeature) {
+        FeatureSupport<ConceptFeatureTraits> fs = featureSupportRegistry
+            .getFeatureSupport(aAnnotationFeature);
+        ConceptFeatureTraits traits = fs.readTraits(aAnnotationFeature);
+        return traits;
     }
 
     private List<KBHandle> getInstances(ConceptFeatureTraits traits, Project project,
@@ -316,4 +344,30 @@ public class ConceptFeatureEditor extends FeatureEditor {
             }
         });
     }
+
+    private Label createDisabledKbWarningLabel()
+    {
+        Label warningLabel = new Label("disabledKBWarning", Model.of());
+        AnnotationFeature feature = getModelObject().feature;
+        ConceptFeatureTraits traits = readFeatureTraits(feature);
+        warningLabel.add(LambdaBehavior
+            .onConfigure(label -> label.setVisible(featureUsesDisabledKB(traits))));
+
+        TooltipBehavior tip = new TooltipBehavior();
+        warningLabel.add(tip);
+        Optional<KnowledgeBase> kb = Optional.empty();
+        if (traits.getRepositoryId() != null) {
+            kb = kbService.getKnowledgeBaseById(feature.getProject(), traits.getRepositoryId());
+        }
+        String kbName = kb.isPresent() ? kb.get().getName() : "unknown ID";
+
+        tip.setOption("content", Options.asString(
+            new StringResourceModel("value.null.disabledKbWarning", this)
+                .setParameters(kbName).getString()));
+        tip.setOption("width", Options.asString("300px"));
+        warningLabel.add(tip);
+
+        return warningLabel;
+    }
+
 }
