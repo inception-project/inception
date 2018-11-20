@@ -5,7 +5,11 @@
 The INCEpTION Mtas search provider allows queries to be executed using CQL (Corpus 
 Query Language), as shown in the following examples.
 More examples and information about CQL syntax can be found 
-in https://meertensinstituut.github.io/mtas/search_cql.html.
+at https://meertensinstituut.github.io/mtas/search_cql.html.
+
+It is possible to query for annotations on span and relation layers. However, zero-witdh span
+annotations are not indexed and cannot be queried for. This includes relations which start or
+end in zero-width spans. 
 
 When performing queries, the user must reference the annotation types using the layer names, 
 as defined in the project schema. In the same way, the features must be referenced using their names 
@@ -16,27 +20,32 @@ Thus, *Lemma* refers to the *Lemma* layer, *Lemma.Lemma* refers to the the *Lemm
 *Lemma* layer. In the same way, *Named_entity* refers to *Named entity* layer, and 
 *Named_entity.value* refers to the *value* feature in the *Named entity* layer.
 
-Annotations made over single tokens can be queried using the [...] syntax, while annotations 
-made over multiple tokens must be queried using the <../> syntax. 
+Annotations made over single tokens can be queried using the `[...]` syntax, while annotations 
+made over multiple tokens must be queried using the `<.../>` syntax. Note that the multi-token
+query syntax can also be used to retrieve single token annotations (e.g. POS or lemma annotations).
 
 In the first case, the user must always provide a feature and a value. The following syntax returns 
 all single token annotations of the *LayerX* layer whose *FeatureX* feature have the given value.
 
- [LayerX.FeatureX="value"]
+----
+[LayerX.FeatureX="value"]
+----
  
 In the second case, the user may or not provide a feature and a value. Thus, the following syntax 
 will return all multi-token annotations of the *LayerX* layer, regardless of their features and 
 values. 
 
- <LayerX/>
+----
+<LayerX/>
+----
  
 On the other hand, the following syntax will return the multi-token annotations whose *FeatureX* 
 feature has the given value.
 
- <LayerX.FeatureX="value"/>
+----
+<LayerX.FeatureX="value"/>
+----
 
-Notice that the multi-token query syntax can also be used to retrieve single token annotations (e.g.
-POS or lemma annotations).
 
 === Basic Annotation queries
 
