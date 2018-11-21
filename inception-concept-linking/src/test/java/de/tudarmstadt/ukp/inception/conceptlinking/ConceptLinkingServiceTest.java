@@ -40,7 +40,7 @@ import org.springframework.transaction.annotation.Transactional;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.conceptlinking.config.EntityLinkingProperties;
-import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
+import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingServiceImpl;
 import de.tudarmstadt.ukp.inception.conceptlinking.util.TestFixtures;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseServiceImpl;
@@ -66,7 +66,7 @@ public class ConceptLinkingServiceTest
     @Autowired
     private KnowledgeBaseService kbService;
 
-    private ConceptLinkingService clService;
+    private ConceptLinkingServiceImpl clService;
 
     private KnowledgeBase kb;
 
@@ -78,7 +78,7 @@ public class ConceptLinkingServiceTest
         EntityManager entityManager = testEntityManager.getEntityManager();
         TestFixtures testFixtures = new TestFixtures(testEntityManager);
         kbService = new KnowledgeBaseServiceImpl(repoProps, entityManager);
-        clService = new ConceptLinkingService(kbService, new EntityLinkingProperties());
+        clService = new ConceptLinkingServiceImpl(kbService, new EntityLinkingProperties());
         clService.afterPropertiesSet();
         Project project = testFixtures.createProject(PROJECT_NAME);
         kb = testFixtures.buildKnowledgeBase(project, KB_NAME, Reification.NONE);

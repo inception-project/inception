@@ -55,7 +55,7 @@ import de.tudarmstadt.ukp.dkpro.core.io.conll.Conll2002Reader;
 import de.tudarmstadt.ukp.dkpro.core.testing.DkproTestContext;
 import de.tudarmstadt.ukp.inception.conceptlinking.recommender.NamedEntityLinker;
 import de.tudarmstadt.ukp.inception.conceptlinking.recommender.NamedEntityLinkerTraits;
-import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
+import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingServiceImpl;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
@@ -83,7 +83,7 @@ public class NamedEntityLinkerTest
     public void thatTrainingWorks() throws Exception
     {
         NamedEntityLinker sut = new NamedEntityLinker(recommender, new NamedEntityLinkerTraits(),
-                mock(KnowledgeBaseService.class), mock(ConceptLinkingService.class),
+                mock(KnowledgeBaseService.class), mock(ConceptLinkingServiceImpl.class),
                 mock(AnnotationSchemaService.class), mock(FeatureSupportRegistry.class));
 
         List<CAS> casList = loadDevelopmentData();
@@ -114,7 +114,7 @@ public class NamedEntityLinkerTest
         when(kbService.getEnabledKnowledgeBases(any())).thenReturn(Collections.singletonList(kb));
         when(kbService.read(any(), any())).thenReturn(mockResult);
 
-        ConceptLinkingService clService = mock(ConceptLinkingService.class);
+        ConceptLinkingServiceImpl clService = mock(ConceptLinkingServiceImpl.class);
         when(clService.disambiguate(any(), anyString(), anyString(), anyInt(), any()))
             .thenReturn(mockResult);
 

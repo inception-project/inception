@@ -53,7 +53,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
+import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingServiceImpl;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
@@ -75,7 +75,7 @@ public class ConceptFeatureEditor extends FeatureEditor {
 
     private @SpringBean KnowledgeBaseService kbService;
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
-    private @SpringBean ConceptLinkingService clService;
+    private @SpringBean ConceptLinkingServiceImpl clService;
 
     public ConceptFeatureEditor(String aId, MarkupContainer aItem, IModel<FeatureState> aModel,
             IModel<AnnotatorState> aStateModel, AnnotationActionHandler aHandler) {
@@ -157,6 +157,7 @@ public class ConceptFeatureEditor extends FeatureEditor {
                 .filter(handle -> handle.getUiLabel().toLowerCase().startsWith(aTypedString))
                 .sorted(Comparator.comparing(KBObject::getUiLabel)).collect(Collectors.toList());
         }
+        
         return KBHandle.distinctByIri(handles);
     }
 
