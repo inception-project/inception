@@ -53,6 +53,19 @@
       <url>https://zoidberg.ukp.informatik.tu-darmstadt.de/artifactory/public-ukp-releases-local</url>
     </repository>
   </distributionManagement>
+  <repositories>
+    <!-- For SNAPSHOT versions of libraries that are not yet on Maven Central -->
+    <repository>
+      <id>ukp-oss-snapshots</id>
+      <url>http://zoidberg.ukp.informatik.tu-darmstadt.de/artifactory/public-snapshots</url>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
+  </repositories>
   <properties>
     <webanno.version>3.5.0-SNAPSHOT</webanno.version>
     <uima.version>2.10.2</uima.version>
