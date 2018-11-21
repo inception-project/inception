@@ -24,8 +24,9 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties("inception.knowledge-base")
 public class KnowledgeBaseProperties
 {
+    public static final int HARD_MIN_RESULTS = 10;
+    
     private int defaultMaxResults = 1000;
-
     private int hardMaxResults = 10000;
 
     public int getDefaultMaxResults()
