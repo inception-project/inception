@@ -292,18 +292,19 @@ public class KnowledgeBaseDetailsPanel
 
     private void actionReindex(AjaxRequestTarget aTarget)
     {
+        aTarget.addChildren(getPage(), IFeedback.class);
         KnowledgeBase kb = kbwModel.getObject().getKb();
         try {
             log.info("Starting rebuilding full-text index of {} ... this may take a while ...", kb);
             kbService.rebuildFullTextIndex(kb);
             log.info("Completed rebuilding full-text index of {}", kb);
+            success("Completed rebuilding full-text index");
         }
         catch (Exception e) {
             error("Unable to rebuild full text index: " + e.getLocalizedMessage());
             log.error("Unable to rebuild full text index for KB [{}]({}) in project [{}]({})",
                     kb.getName(), kb.getRepositoryId(), kb.getProject().getName(),
                     kb.getProject().getId(), e);
-            aTarget.addChildren(getPage(), IFeedback.class);
         }
     }
     
