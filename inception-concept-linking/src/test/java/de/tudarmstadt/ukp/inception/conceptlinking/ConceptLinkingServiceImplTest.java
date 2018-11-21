@@ -54,7 +54,7 @@ import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 @SpringBootTest(classes = SpringConfig.class)
 @Transactional
 @DataJpaTest
-public class ConceptLinkingServiceTest
+public class ConceptLinkingServiceImplTest
 {
     private static final String PROJECT_NAME = "Test project";
     private static final String KB_NAME = "Test knowledge base";

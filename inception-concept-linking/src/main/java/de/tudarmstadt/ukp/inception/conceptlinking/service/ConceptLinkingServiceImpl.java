@@ -172,19 +172,28 @@ public class ConceptLinkingServiceImpl
                 candidatesExact.size(), aMention, aTypedString,
                 currentTimeMillis() - startTime);
 
-        // Collect matches using full text search
+        // Collect matches using full text search based on the typed string
         startTime = currentTimeMillis();
-        Set<CandidateEntity> candidatesFullText = new HashSet<>();
+        Set<CandidateEntity> candidatesFullTextTyped = new HashSet<>();
         if (!aTypedString.isEmpty()) {
-            candidatesFullText.addAll(getCandidatesFullText(aKB, aTypedString));
+            candidatesFullTextTyped.addAll(getCandidatesFullText(aKB, aTypedString));
         }
-        candidatesFullText.addAll(getCandidatesFullText(aKB, aMention));
-        log.debug("Retrieved [{}] candidates for mention [{}] and typed string "
-                + "[{}] using full text search in [{}] ms",
-                candidatesFullText.size(), aMention, aTypedString, currentTimeMillis() - startTime);
+        log.debug(
+                "Retrieved [{}] candidates for typed string [{}] using full text search in [{}] ms",
+                candidatesFullTextTyped.size(), aTypedString, currentTimeMillis() - startTime);
+        
+        // Collect matches using full text search based on the mention
+        startTime = currentTimeMillis();
+        Set<CandidateEntity> candidatesFullTextMention = new HashSet<>();
+        candidatesFullTextMention.addAll(getCandidatesFullText(aKB, aMention));
+        log.debug("Retrieved [{}] candidates for mention [{}] using full text search in [{}] ms",
+                candidatesFullTextMention.size(), aMention, currentTimeMillis() - startTime);
 
         // Rank all candidates
         startTime = currentTimeMillis();
+        Set<CandidateEntity> candidatesFullText = new HashSet<>();
+        candidatesFullText.addAll(candidatesFullTextTyped);
+        candidatesFullText.addAll(candidatesFullTextMention);
         List<CandidateEntity> rankedCandidates = rankCandidates(aKB, aTypedString, aMention,
             candidatesExact, candidatesFullText, aJcas, aMentionBeginOffset);
         log.debug("Ranked [{}] candidates for mention [{}] and typed string [{}] in [{}] ms",
@@ -223,7 +232,7 @@ public class ConceptLinkingServiceImpl
         return candidatesFullText;
     }
 
-    private Set<CandidateEntity> getCandidatesFullText(KnowledgeBase aKB, String aQuery)
+    public Set<CandidateEntity> getCandidatesFullText(KnowledgeBase aKB, String aQuery)
     {
         Set<CandidateEntity> allCandidates = new HashSet<>();
 
@@ -242,13 +251,13 @@ public class ConceptLinkingServiceImpl
                             .get(new CandidateCacheKey(aKB, t));
                     allCandidates.addAll(candidatesForToken);
                     log.trace("Found [{}] candidates for token [{}] using full text search",
-                            candidatesForToken, t);
+                            candidatesForToken.size(), t);
                 }
             }
         }
         else {
             log.trace("Found [{}] candidates for typed string [{}] using full text search",
-                    allCandidates, aQuery);
+                    allCandidates.size(), aQuery);
         }
         
         return distinctByIri(allCandidates, aKB);
@@ -261,7 +270,7 @@ public class ConceptLinkingServiceImpl
      * @param aTypedString typed string from the user
      * @param aMention the marked surface form, which is pre-processed first.
      */
-    private Set<CandidateEntity> retrieveCandidatesExact(KnowledgeBase aKB, String aConceptScope,
+    public Set<CandidateEntity> retrieveCandidatesExact(KnowledgeBase aKB, String aConceptScope,
             ConceptFeatureValueType aValueType, String aTypedString, String aMention)
     {
         Set<CandidateEntity> candidates = new HashSet<>();
