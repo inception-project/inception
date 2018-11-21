@@ -74,6 +74,7 @@ import de.tudarmstadt.ukp.inception.conceptlinking.model.Property;
 import de.tudarmstadt.ukp.inception.conceptlinking.model.SemanticSignature;
 import de.tudarmstadt.ukp.inception.conceptlinking.util.FileUtils;
 import de.tudarmstadt.ukp.inception.conceptlinking.util.QueryUtil;
+import de.tudarmstadt.ukp.inception.kb.ConceptFeatureValueType;
 import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
@@ -154,8 +155,9 @@ public class ConceptLinkingServiceImpl
     }
     
     @Override
-    public List<KBHandle> disambiguate(KnowledgeBase aKB, String aTypedString, String
-        aMention, int aMentionBeginOffset, JCas aJcas)
+    public List<KBHandle> disambiguate(KnowledgeBase aKB, String aConceptScope,
+            ConceptFeatureValueType aValueType, String aTypedString, String aMention,
+            int aMentionBeginOffset, JCas aJcas)
     {
         if (aTypedString == null) {
             aTypedString = "";
@@ -163,7 +165,8 @@ public class ConceptLinkingServiceImpl
 
         // Collect exact matches
         long startTime = currentTimeMillis();
-        Set<CandidateEntity> candidatesExact = retrieveCandidatesExact(aKB, aTypedString, aMention);
+        Set<CandidateEntity> candidatesExact = retrieveCandidatesExact(aKB, aConceptScope,
+                aValueType, aTypedString, aMention);
         log.debug("Retrieved [{}] candidates for mention [{}] and typed string "
                         + "[{}] using exact search in [{}] ms",
                 candidatesExact.size(), aMention, aTypedString,
@@ -173,10 +176,9 @@ public class ConceptLinkingServiceImpl
         startTime = currentTimeMillis();
         Set<CandidateEntity> candidatesFullText = new HashSet<>();
         if (!aTypedString.isEmpty()) {
-            candidatesFullText
-                .addAll(getCandidatesFullText(new CandidateCacheKey(aKB, aTypedString)));
+            candidatesFullText.addAll(getCandidatesFullText(aKB, aTypedString));
         }
-        candidatesFullText.addAll(getCandidatesFullText(new CandidateCacheKey(aKB, aMention)));
+        candidatesFullText.addAll(getCandidatesFullText(aKB, aMention));
         log.debug("Retrieved [{}] candidates for mention [{}] and typed string "
                 + "[{}] using full text search in [{}] ms",
                 candidatesFullText.size(), aMention, aTypedString, currentTimeMillis() - startTime);
@@ -221,26 +223,35 @@ public class ConceptLinkingServiceImpl
         return candidatesFullText;
     }
 
-    private Set<CandidateEntity> getCandidatesFullText(CandidateCacheKey aKey)
+    private Set<CandidateEntity> getCandidatesFullText(KnowledgeBase aKB, String aQuery)
     {
-        Set<CandidateEntity> candidatesFullText = new HashSet<>();
+        Set<CandidateEntity> allCandidates = new HashSet<>();
 
-        if (candidateFullTextCache.get(aKey) != null) {
-            candidatesFullText.addAll(candidateFullTextCache.get(aKey));
-        }
-        else {
-            candidatesFullText.addAll(loadCandidatesFullText(aKey));
-        }
-        if (candidatesFullText.isEmpty()) {
-            String[] split = aKey.getQuery().split(" ");
-            if (split.length > 1) {
-                for (String s : split) {
-                    candidatesFullText.addAll(loadCandidatesFullText(
-                        new CandidateCacheKey(aKey.getKnowledgeBase(), s)));
+        // Try getting candidates using the entire string
+        allCandidates.addAll(candidateFullTextCache.get(new CandidateCacheKey(aKB, aQuery)));
+        
+        // If there were no results for the entire string, try splitting it up and query for token
+        if (allCandidates.isEmpty()) {
+            log.trace("No candidates found for [{}] using full text search - trying to split up",
+                    aQuery);
+            
+            String[] tokens = aQuery.split(" ");
+            if (tokens.length > 1) {
+                for (String t : tokens) {
+                    Set<CandidateEntity> candidatesForToken = candidateFullTextCache
+                            .get(new CandidateCacheKey(aKB, t));
+                    allCandidates.addAll(candidatesForToken);
+                    log.trace("Found [{}] candidates for token [{}] using full text search",
+                            candidatesForToken, t);
                 }
             }
         }
-        return distinctByIri(candidatesFullText, aKey.getKnowledgeBase());
+        else {
+            log.trace("Found [{}] candidates for typed string [{}] using full text search",
+                    allCandidates, aQuery);
+        }
+        
+        return distinctByIri(allCandidates, aKB);
     }
 
     /**
@@ -250,11 +261,23 @@ public class ConceptLinkingServiceImpl
      * @param aTypedString typed string from the user
      * @param aMention the marked surface form, which is pre-processed first.
      */
-    private Set<CandidateEntity> retrieveCandidatesExact(KnowledgeBase aKB, String aTypedString,
-        String aMention)
+    private Set<CandidateEntity> retrieveCandidatesExact(KnowledgeBase aKB, String aConceptScope,
+            ConceptFeatureValueType aValueType, String aTypedString, String aMention)
     {
         Set<CandidateEntity> candidates = new HashSet<>();
-
+        
+//        // BEGIN: THIS CODE DOES NOT MAKE USE OF THE FULL TEXT INDEX
+//        List<KBHandle> handles = kbService.getEntitiesInScope(aKB.getRepositoryId(),
+//                aConceptScope, aValueType, aKB.getProject());
+//        for (KBHandle handle : handles) {
+//            CandidateEntity newEntity = new CandidateEntity(handle.getIdentifier(),
+//                    handle.getUiLabel(), "", handle.getDescription(), handle.getLanguage());
+//            candidates.add(newEntity);
+//        }
+//        // END: THIS CODE DOES NOT MAKE USE OF THE FULL TEXT INDEX
+        
+        // BEGIN: THIS CODE SHOULD MAKE USE OF THE FULL TEXT INDEX, BUT DOES CURRENTLY NOT
+        // SEEM TO WORK
         try (RepositoryConnection conn = kbService.getConnection(aKB)) {
             TupleQuery exactQuery = QueryUtil
                 .generateCandidateExactQuery(conn, aTypedString, aMention, aKB);
@@ -263,6 +286,8 @@ public class ConceptLinkingServiceImpl
         catch (QueryEvaluationException e) {
             log.error("Query evaluation was unsuccessful: ", e);
         }
+        // END
+        
         return distinctByIri(candidates, aKB);
     }
 
@@ -314,14 +339,17 @@ public class ConceptLinkingServiceImpl
     {
         List<Token> tokens = selectCovered(Token.class, aSentence);
 
+        
         // Extract lower-case tokens from sentence
         List<String> tokenTexts = tokens.stream()
                 .map(AnnotationFS::getCoveredText)
+                // TODO Use the right locale based on the KB language
                 .map(s -> s.toLowerCase(Locale.ENGLISH))
                 .collect(toList());
 
         // Extract lower-case tokens from mention
         List<String> mention = aMention.stream()
+                // TODO Use the right locale based on the KB language
                 .map(s -> s.toLowerCase(Locale.ENGLISH))
                 .collect(toList());
         
@@ -553,22 +581,23 @@ public class ConceptLinkingServiceImpl
     }
 
     @Override
-    public List<KBHandle> getLinkingInstancesInKBScope(String aRepositoryId, String aTypedString,
+    public List<KBHandle> getLinkingInstancesInKBScope(String aRepositoryId, String aConceptScope,
+            ConceptFeatureValueType aValueType, String aTypedString,
         String aMention, int aMentionBeginOffset, JCas aJCas, Project aProject)
     {
         List<KBHandle> handles = new ArrayList<>();
         if (aRepositoryId != null) {
             Optional<KnowledgeBase> kb = kbService.getKnowledgeBaseById(aProject, aRepositoryId);
             if (kb.isPresent() && kb.get().isSupportConceptLinking()) {
-                handles = disambiguate(kb.get(), aTypedString, aMention, aMentionBeginOffset,
-                    aJCas);
+                handles = disambiguate(kb.get(), aConceptScope, aValueType, aTypedString, aMention,
+                        aMentionBeginOffset, aJCas);
             }
         }
         else {
             for (KnowledgeBase kb : kbService.getEnabledKnowledgeBases(aProject)) {
                 if (kb.isSupportConceptLinking()) {
-                    handles.addAll(
-                        disambiguate(kb, aTypedString, aMention, aMentionBeginOffset, aJCas));
+                    handles.addAll(disambiguate(kb, aConceptScope, aValueType, aTypedString,
+                            aMention, aMentionBeginOffset, aJCas));
                 }
             }
         }

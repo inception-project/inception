@@ -372,8 +372,9 @@ public class SubjectObjectFeatureEditor
 
         // Use concept linking if enabled
         try {
-            handles = clService.getLinkingInstancesInKBScope(traits.getRepositoryId(), aTypedString,
-                roleModel.label, roleModel.targetAddr, getEditorCas(aHandler), project);
+            handles = clService.getLinkingInstancesInKBScope(traits.getRepositoryId(),
+                    traits.getScope(), traits.getAllowedValueType(), aTypedString, roleModel.label,
+                    roleModel.targetAddr, getEditorCas(aHandler), project);
         }
         catch (IOException e) {
             LOG.error("An error occurred while retrieving entity candidates.", e);

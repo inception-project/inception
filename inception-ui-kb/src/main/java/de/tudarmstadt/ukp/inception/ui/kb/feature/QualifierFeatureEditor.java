@@ -377,8 +377,9 @@ public class QualifierFeatureEditor
 
         // Use concept linking if enabled
         try {
-            handles = clService.getLinkingInstancesInKBScope(traits.getRepositoryId(), aTypedString,
-                roleLabel, roleAddr, getEditorCas(aHandler), project);
+            handles = clService.getLinkingInstancesInKBScope(traits.getRepositoryId(),
+                    traits.getScope(), traits.getAllowedValueType(), aTypedString, roleLabel,
+                    roleAddr, getEditorCas(aHandler), project);
         }
         catch (IOException e) {
             LOG.error("An error occurred while retrieving entity candidates.", e);

@@ -22,6 +22,7 @@ import java.util.List;
 import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.kb.ConceptFeatureValueType;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
@@ -49,14 +50,15 @@ public interface ConceptLinkingService
      *            used to extract information about mention sentence tokens.
      * @return a ranked list of entities.
      */
-    List<KBHandle> disambiguate(KnowledgeBase aKB, String aTypedString, String aMention,
+    List<KBHandle> disambiguate(KnowledgeBase aKB, String aConceptScope,
+            ConceptFeatureValueType aValueType, String aTypedString, String aMention,
             int aMentionBeginOffset, JCas aJcas);
 
     /**
      * Get all linking instances within the scope of a given knowledge base. If null is passed for
      * aRepositoryId, all enabled knowledge bases in the project are considered. If the given
      * aRepositoryId can not be found the method will return an empty list. This method calls
-     * {@link #disambiguate(KnowledgeBase, String, String, int, JCas)} to determine the instances
+     * {@link #disambiguate} to determine the instances
      * for a single knowledge base
      *
      * @param aRepositoryId
@@ -73,6 +75,7 @@ public interface ConceptLinkingService
      *            the project where the knowledge bases are configured
      * @return all linking instances within the scope
      */
-    List<KBHandle> getLinkingInstancesInKBScope(String aRepositoryId, String aTypedString,
+    List<KBHandle> getLinkingInstancesInKBScope(String aRepositoryId, String aConceptScope,
+            ConceptFeatureValueType aValueType, String aTypedString,
             String aMention, int aMentionBeginOffset, JCas aJCas, Project aProject);
 }

@@ -57,6 +57,7 @@ import de.tudarmstadt.ukp.inception.conceptlinking.recommender.NamedEntityLinker
 import de.tudarmstadt.ukp.inception.conceptlinking.recommender.NamedEntityLinkerTraits;
 import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingServiceImpl;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
+import de.tudarmstadt.ukp.inception.kb.ConceptFeatureValueType;
 import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
@@ -84,7 +85,8 @@ public class NamedEntityLinkerTest
     {
         NamedEntityLinker sut = new NamedEntityLinker(recommender, new NamedEntityLinkerTraits(),
                 mock(KnowledgeBaseService.class), mock(ConceptLinkingServiceImpl.class),
-                mock(AnnotationSchemaService.class), mock(FeatureSupportRegistry.class));
+                mock(AnnotationSchemaService.class), mock(FeatureSupportRegistry.class),
+                new ConceptFeatureTraits());
 
         List<CAS> casList = loadDevelopmentData();
 
@@ -115,8 +117,8 @@ public class NamedEntityLinkerTest
         when(kbService.read(any(), any())).thenReturn(mockResult);
 
         ConceptLinkingServiceImpl clService = mock(ConceptLinkingServiceImpl.class);
-        when(clService.disambiguate(any(), anyString(), anyString(), anyInt(), any()))
-            .thenReturn(mockResult);
+        when(clService.disambiguate(any(), anyString(), any(ConceptFeatureValueType.class),
+                anyString(), anyString(), anyInt(), any())).thenReturn(mockResult);
 
         AnnotationSchemaService annoSchemaService = mock(AnnotationSchemaService.class);
         AnnotationFeature mockAnnoFeature = mock(AnnotationFeature.class);
@@ -129,7 +131,7 @@ public class NamedEntityLinkerTest
         when(fs.readTraits(mockAnnoFeature)).thenReturn(new ConceptFeatureTraits());
 
         NamedEntityLinker sut = new NamedEntityLinker(recommender, new NamedEntityLinkerTraits(),
-                kbService, clService, annoSchemaService, fsRegistry);
+                kbService, clService, annoSchemaService, fsRegistry, new ConceptFeatureTraits());
 
         List<CAS> casList = loadDevelopmentData();
         CAS cas = casList.get(0);

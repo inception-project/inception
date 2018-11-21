@@ -74,13 +74,15 @@ public class NamedEntityLinker
     private ConceptLinkingServiceImpl clService;
     private AnnotationSchemaService annoService;
     private FeatureSupportRegistry fsRegistry;
+    private ConceptFeatureTraits featureTraits;
 
     public static final Key<Collection<ImmutablePair<String, Collection<AnnotationFS>>>> KEY_MODEL
         = new Key<>("model");
 
     public NamedEntityLinker(Recommender aRecommender, NamedEntityLinkerTraits aTraits,
             KnowledgeBaseService aKbService, ConceptLinkingServiceImpl aClService,
-            AnnotationSchemaService aAnnoService, FeatureSupportRegistry aFsRegistry)
+            AnnotationSchemaService aAnnoService, FeatureSupportRegistry aFsRegistry,
+            ConceptFeatureTraits aFeatureTraits)
     {
         recommender = aRecommender;
         traits = aTraits;
@@ -88,6 +90,7 @@ public class NamedEntityLinker
         clService = aClService;
         annoService = aAnnoService;
         fsRegistry = aFsRegistry;
+        featureTraits = aFeatureTraits;
     }
 
     @Override
@@ -229,8 +232,8 @@ public class NamedEntityLinker
     private List<KBHandle> readCandidates(KnowledgeBase kb, String aCoveredText, int aBegin,
         JCas aJcas)
     {
-        return kbService
-            .read(kb, (conn) -> clService.disambiguate(kb, null, aCoveredText, aBegin, aJcas));
+        return kbService.read(kb, (conn) -> clService.disambiguate(kb, featureTraits.getScope(),
+                featureTraits.getAllowedValueType(), null, aCoveredText, aBegin, aJcas));
     }
 
     @Override

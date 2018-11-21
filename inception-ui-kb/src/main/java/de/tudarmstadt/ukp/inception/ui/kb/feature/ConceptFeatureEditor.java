@@ -136,9 +136,10 @@ public class ConceptFeatureEditor extends FeatureEditor {
         List<KBHandle> handles = new ArrayList<>();
         // Use concept linking if enabled
         try {
-            handles = clService.getLinkingInstancesInKBScope(traits.getRepositoryId(), aTypedString,
-                aState.getSelection().getText(), aState.getSelection().getBegin(),
-                getEditorCas(aHandler), project);
+            handles = clService.getLinkingInstancesInKBScope(traits.getRepositoryId(),
+                    traits.getScope(), traits.getAllowedValueType(), aTypedString,
+                    aState.getSelection().getText(), aState.getSelection().getBegin(),
+                    getEditorCas(aHandler), project);
         }
         catch (IOException e) {
             LOG.error("An error occurred while retrieving entity candidates.", e);
