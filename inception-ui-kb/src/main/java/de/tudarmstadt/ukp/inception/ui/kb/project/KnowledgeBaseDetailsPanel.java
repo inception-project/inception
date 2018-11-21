@@ -451,20 +451,17 @@ public class KnowledgeBaseDetailsPanel
                             .add(LambdaBehavior.onConfigure(it -> it.setEnabled(false)));
 
             // add disabled language field
-            wmc.add(new Label("language", kbwModel.bind("kb.defaultLanguage"))
-                .add(LambdaBehavior.onConfigure(tf -> tf.setEnabled(false))));
+            wmc.add(new TextField<>("language", kbwModel.bind("kb.defaultLanguage"))
+                    .setEnabled(false));
 
             // don't show radio group in view mode - normally we'd just disable it, but that doesn't
             // seem to work
             iriPanel.get("comboBoxWrapper:iriSchema").setVisible(false);
             wmc.add(iriPanel);
 
-            wmc.add(new CheckBox("enabled", model.bind("kb.enabled"))
-                    .add(LambdaBehavior.onConfigure(it -> it.setEnabled(false))));
-            wmc.add(new RequiredTextField<>("maxResults",
-                model.bind("kb.maxResults"))
-                    .add(LambdaBehavior.onConfigure(it -> it.setEnabled(false))));
-
+            wmc.add(new CheckBox("enabled", model.bind("kb.enabled")).setEnabled(false));
+            wmc.add(new NumberTextField<>("maxResults", model.bind("kb.maxResults"), Integer.class)
+                    .setEnabled(false));
         }
 
         @Override protected void setUpLocalKnowledgeBaseComponents(WebMarkupContainer wmc)
@@ -645,6 +642,20 @@ public class KnowledgeBaseDetailsPanel
             queryLimit.setRequired(true);
             queryLimit.setMinimum(KnowledgeBaseProperties.HARD_MIN_RESULTS);
             queryLimit.setMaximum(kbProperties.getHardMaxResults());
+            queryLimit.add(LambdaBehavior.onConfigure(it -> {
+                // If not setting, initialize with default
+                if (queryLimit.getModelObject() == null || queryLimit.getModelObject() == 0) {
+                    queryLimit.setModelObject(kbProperties.getDefaultMaxResults());
+                }
+                // Cap at local min results
+                else if (queryLimit.getModelObject() < KnowledgeBaseProperties.HARD_MIN_RESULTS) {
+                    queryLimit.setModelObject(KnowledgeBaseProperties.HARD_MIN_RESULTS);
+                }
+                // Cap at local max results
+                else if (queryLimit.getModelObject() > kbProperties.getHardMaxResults()) {
+                    queryLimit.setModelObject(kbProperties.getHardMaxResults());
+                }
+            }));
             return queryLimit;
         }
     }
