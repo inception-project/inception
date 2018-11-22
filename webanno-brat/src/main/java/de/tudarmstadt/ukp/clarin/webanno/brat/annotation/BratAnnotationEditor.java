@@ -17,12 +17,10 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
 import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -32,13 +30,9 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
-import org.apache.wicket.Page;
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AbstractAjaxBehavior;
-import org.apache.wicket.core.request.handler.IPageRequestHandler;
-import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
-import org.apache.wicket.event.Broadcast;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.head.CssHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
@@ -68,10 +62,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAnnotationsEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VAnnotationMarker;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VMarker;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.config.BratProperties;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.ArcAnnotationResponse;
@@ -101,10 +92,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQuerySvgResourceReferenc
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JSONPatchResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
  * Brat annotator component.
@@ -573,65 +561,11 @@ public class BratAnnotationEditor
         return "Wicket.$('" + vis.getMarkupId() + "').dispatcher.post('" + cmd + "', [" + data
                 + "]);";
     }
-    
+
     private void render(GetDocumentResponse response, JCas aJCas)
     {
-        VDocument vdoc = new VDocument();
-        preRenderer.render(vdoc, getModelObject(), aJCas, getLayersToRender());
-        
-        // Fire render event into backend
-        extensionRegistry.fireRender(aJCas, getModelObject(), vdoc);
-
-        // Fire render event into UI
-        Page page = null;
-        Optional<IPageRequestHandler> handler = RequestCycle.get().find(IPageRequestHandler.class);
-        if (handler.isPresent()) {
-            page = (Page) handler.get().getPage();
-        };
-        
-        if (page == null) {
-            page = getPage();
-        }
-        send(page, Broadcast.BREADTH,
-                new RenderAnnotationsEvent(
-                        RequestCycle.get().find(IPartialPageRequestHandler.class).get(), aJCas,
-                        getModelObject(), vdoc));
-
-        if (isHighlightEnabled()) {
-            AnnotatorState state = getModelObject();
-            
-            // Disabling for 3.3.0 by default per #406
-            // FIXME: should be enabled by default and made optional per #606
-            // if (state.getFocusUnitIndex() > 0) {
-            // response.addMarker(new SentenceMarker(Marker.FOCUS, state.getFocusUnitIndex()));
-            // }
-            
-            if (state.getSelection().getAnnotation().isSet()) {
-                vdoc.add(new VAnnotationMarker(
-                        VMarker.FOCUS, state.getSelection().getAnnotation()));
-            }
-        }
-
+        VDocument vdoc = render(aJCas);
         BratRenderer.render(response, getModelObject(), vdoc, aJCas, annotationService);
-    }
-
-    private List<AnnotationLayer> getLayersToRender()
-    {
-        AnnotatorState state = getModelObject();
-        List<AnnotationLayer> layersToRender = new ArrayList<>();
-        for (AnnotationLayer layer : state.getAnnotationLayers()) {
-            boolean isSegmentationLayer = layer.getName().equals(Token.class.getName())
-                    || layer.getName().equals(Sentence.class.getName());
-            boolean isUnsupportedLayer = layer.getType().equals(CHAIN_TYPE)
-                    && (state.getMode().equals(Mode.AUTOMATION)
-                            || state.getMode().equals(Mode.CORRECTION)
-                            || state.getMode().equals(Mode.CURATION));
-            
-            if (layer.isEnabled() && !isSegmentationLayer && !isUnsupportedLayer) {
-                layersToRender.add(layer);
-            }
-        }
-        return layersToRender;
     }
     
     private String bratInitCommand()
