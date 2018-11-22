@@ -55,6 +55,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
+import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
 import de.tudarmstadt.ukp.inception.kb.exporter.KnowledgeBaseExporter;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
@@ -94,7 +95,7 @@ public class KnowledgeBaseExporterTest
 
         when(schemaService.listAnnotationFeature(sourceProject)).thenReturn(features(sourceProject));
 
-        sut = new KnowledgeBaseExporter(kbService, schemaService);
+        sut = new KnowledgeBaseExporter(kbService, new KnowledgeBaseProperties(), schemaService);
     }
 
     @Test

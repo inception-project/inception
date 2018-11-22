@@ -7,7 +7,8 @@ documents of a given project. For doing a search, the user must access the searc
 in the left of the screen, write a query and press the *Search* button. The results will be shown 
 below the query, grouped by the document where they come from. Every result is shown in KWIC 
 (keyword in context) style, i.e., surrounded by a left and right context to facilitate its 
-identification.
+identification. Additionally, results are highlighted in the text of the annotation editor area.
+Using the *Close* button, the results can be cleared.
 
 Clicking on a result will make the central main editor automatically jump to the position of that
 result inside the original document. Only documents contained in the current project will be
