@@ -179,6 +179,13 @@ $ chown www-data:www-data /srv/inception/inception.jar
 ----
 $ ln -s /srv/inception/inception.jar /etc/init.d/inception
 ----
+* Enable the {product-name} service using
++
+[source,bash]
+----
+$ systemctl enable inception
+----
++
 +
 * Start {product-name} using
 +
