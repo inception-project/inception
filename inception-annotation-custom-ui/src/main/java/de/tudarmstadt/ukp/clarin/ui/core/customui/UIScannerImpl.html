@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html xmlns:wicket="http://wicket.apache.org">
+<body>
+
+  <wicket:extend>
+    <div ng-app="myApp" ng-controller="selectionCtrl" class="flex-content flex-h-container flex-gutter">
+      <form wicket:id="requestForm" class="flex-content flex-v-container flex-gutter">
+        <div class="flex-content panel panel-default panel-flex">
+          <div class="panel-heading">
+            <h3 class="panel-title">Custom UI selection</h3>
+          </div>
+          <div class="scrolling panel-body form-horizontal">
+            <div class="col-sm-12">
+            
+            <wicket:container wicket:id="cuilist">
+                <div class="form-group">
+                  <label wicket:for="cuis" class="col-sm-2 control-label">Pick a custom UI</label>
+                  <div class="col-sm-10">
+                    <select ng-click="getProjectDocs()" ng-model="selectedUI" wicket:id="cuis" class="form-control"></select>
+                  </div>
+                </div>
+              </wicket:container>
+              
+              <div class="form-group">
+              	<label class="col-sm-2 control-label">Pick a document</label>
+  					<div class="col-sm-10">
+	  					<ul class="form-control">
+  							<li ng-repeat="x in documentData" style="list-style-type:none">
+        						<a href="{{baseUrl}}/CustomUIPage.html?projId={{projId}}&docId={{x.id}}&ui={{selectedUI[0]}}">{{x.name}}</a> 
+  							</li>
+  						</ul>
+					</div>
+				</div>
+              
+            </div>
+          </div>
+          <div class="panel-footer text-right"></div>
+        </div>
+      </form>
+    </div>
+    
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.min.js"></script>
+
+<script>
+	
+var app = angular.module('myApp', []);
+app.controller('selectionCtrl', function($scope, $http) {
+	// Parse base url
+	$scope.baseUrl = window.location.pathname.substring(0, window.location.pathname.indexOf("/",2));
+	
+	// API GET Request on projects
+	$http.get($scope.baseUrl+"/api/ruita/projects/").then(function (response) {
+    	console.log("API GET projects");
+    	console.log(response);
+    	
+    	// Parse current project id
+    	$scope.projects = response.data.content;	
+    	$scope.projId = findSelProjId($scope.projects);
+    });
+	
+	// Fetches all documents which belong to the project
+	$scope.getProjectDocs = function() {
+		if ($scope.documentData == undefined) {
+			// API GET request for fetching the documents which belong to the current project
+			$http.get($scope.baseUrl+"/api/ruita/projects/"+$scope.projId+"/documents").then(function (response) {
+		      	console.log("API GET documents");
+		      	console.log(response);
+				
+				$scope.documentData = response.data.content;
+		      });
+		}
+	}
+	
+});
+
+// Finds the id of the current project
+function findSelProjId(projects) {
+	// Find the name of the current project
+	var sel = document.querySelectorAll('[name="menubar:project"]')[0];
+	var currProj = sel.options[sel.selectedIndex].text;
+	
+	// Loop over all projects to find the id
+	for (i=0; i<projects.length; i++) {
+		if (projects[i].name==currProj) return projects[i].id;
+	}
+	return -1;
+}
+    
+</script>
+    
+  </wicket:extend>
+  
+</body>
+</html>

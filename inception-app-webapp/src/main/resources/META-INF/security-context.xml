@@ -36,6 +36,14 @@
     <security:form-login login-page='/login.html' />
   </security:http>
 
+  <!-- HTTP handler for the Annotation MVC-API -->
+  <security:http pattern="/api/ruita/**" auto-config="true">
+    <security:csrf disabled="true" />
+    <security:http-basic />
+    <security:intercept-url access="hasAnyRole('ROLE_USER')" pattern="/**" />
+  </security:http>
+
+
   <!-- HTTP handler for the remote API -->
   <security:http pattern="/api/**" create-session="stateless">
     <security:csrf disabled="true" />

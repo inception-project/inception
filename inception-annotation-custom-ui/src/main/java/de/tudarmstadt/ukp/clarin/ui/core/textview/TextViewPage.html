@@ -1,0 +1,886 @@
+<html xmlns:wicket="http://wicket.apache.org">
+<head>
+  <wicket:head>
+  
+    <style>
+      .page-content {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      annobox {
+      	display: block;
+      	background-color: lightblue;
+      	color:black;
+      	padding: 1px;
+      	margin: 1px;
+      }
+      annobox:hover{
+      	cursor:pointer;
+      }
+      div.txt {
+      	line-height: 50px;
+      }
+      input.floatRight {
+      	float: right;
+      	margin-right: 10px;
+      }
+      span.focused {
+      	color: red;
+      }
+     </style>
+
+    <link rel="stylesheet" href="https://kendo.cdn.telerik.com/2018.1.117/styles/kendo.material.min.css" />
+    <link rel="stylesheet" href="https://kendo.cdn.telerik.com/2018.1.117/styles/kendo.material.mobile.min.css" />
+    <link rel="stylesheet" href="https://kendo.cdn.telerik.com/2018.1.117/styles/kendo.common-material.min.css" />
+
+    <script src="https://kendo.cdn.telerik.com/2018.1.117/js/jquery.min.js"></script>
+    <script src="https://kendo.cdn.telerik.com/2018.1.117/js/angular.min.js"></script>
+    <script src="https://kendo.cdn.telerik.com/2018.1.117/js/kendo.all.min.js"></script> 
+  </wicket:head>
+ 
+</head>
+<body>
+  <wicket:extend>
+    <label wicket:id="detailForm" >DETFORM</label>
+    
+    <div ng-app="textApp" ng-controller="textdisplayCtrl" class="flex-content flex-v-container">
+
+		<div class="actionbar">
+	    <div>
+	    <ul class="horizontal">
+             <!-- Input field for text paging -->
+            <li>
+              <fieldset>
+                <legend>Text paging</legend>
+                	<ul class="horizontal">
+                	<li>
+                			<label class="control-label">
+			  					<span> Number of loaded tokens per request: </span>
+			  				</label>
+			  			</li>
+			  			<li>
+                			<input class="k-textbox" id="toksPR" value="50">
+                			<input class="btn btn-default" value="Set" type="button" ng-click = "setToksPR()">
+                		</li>
+                	</ul>
+                  </fieldset>
+                  </li>
+               <!-- Input field for text paging -->
+
+                <!-- Input field for tagset paging -->
+              <li>
+              <fieldset>
+                <legend>Tagset paging</legend>
+                <ul class="horizontal">
+                	<li>
+                			<label class="control-label">
+			  					<span> Number of loaded tags per request: </span>
+			  				</label>
+			  			</li>
+			  			<li>
+                			<input class="k-textbox" id="tagsPR" value="10">
+                			<input class="btn btn-default" value="Set" type="button" ng-click = "setTagsPR()">
+                		</li>
+                	</ul>
+                  </fieldset>
+                  </li>
+                   <!-- Input field for tagset paging -->
+                  </ul>
+
+             </div>
+	    </div>
+
+
+	    <div class="flex-content flex-h-container flex-gutter">
+
+        <div class="flex-sidebar flex-v-container flex-gutter" style="flex-basis: 65%;">
+          <div class="flex-content panel panel-primary panel-flex">
+            <div class="panel-heading">
+              <h3 class="panel-title">Annotation</h3>
+            </div>
+            <div class="panel-body flex-v-container" id="editor53">
+    <div class="scrolling flex-content fit-child-loose text-center" style="min-height: 540px;">
+
+      	<!-- Show the annotated text -->
+
+		<div class = "txt">
+	       <span ng-repeat = "tok in tokens" ng-click = "showAnno($event, this, annos, layers)" ng-style = "markToken(this, annos)">
+	       {{ tok.coveredText }}
+	       </span>
+	    </div>
+
+		<!-- Show the annotated text -->
+
+    </div>
+    		<div class="form-group">
+                <div>
+                  <input class="btn btn-default floatRight" id="more" value="Show more" type="button" ng-click = "showMore()" ng-disabled = "startToken == numOfTokens">
+                </div>
+           	</div>
+
+  </div>
+          </div>
+        </div>
+
+        <!-- Show the annotations of the chosen token -->
+
+        <div class="flex-sidebar flex-v-container" style="flex-basis: 20%;">
+
+    <div id="annotationShowPannel" class="flex-content flex-v-container">
+      <form id="annotationShowForm" class="annotation-detail-panel flex-content flex-v-container flex-gutter" method="post" action="">
+
+        <div class="flex-content panel panel-default panel-flex">
+          <div class="panel-heading">
+            <h3 class="panel-title"> Selected annotations </h3>
+          </div>
+          <div class="scrolling panel-body">
+            <div class="col-sm-12" id="annoField">
+
+				<annobox ng-repeat="a in focusedAnnos" ng-click="updateSelAnnoId(this)">
+					<span ng-repeat= "(key, value) in a" ng-if="key!='FeatureValues'">
+						{{key}}: {{value}} <br>
+					</span>
+					<span ng-repeat= "(key, value) in a" ng-if="key=='FeatureValues'">
+						{{key}}:
+						<span ng-repeat="val in value">
+							{{val}} <br>
+						</span>
+					</span>
+				</annobox>
+
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+
+        </div>
+
+        <!-- Show the annotations of the chosen token -->
+
+<div class="flex-sidebar flex-v-container" style="flex-basis: 12%;">
+
+    <div id="annotationDetailEditorPanel" class="flex-content flex-v-container">
+      <form id="annotationFeatureForm" class="annotation-detail-panel flex-content flex-v-container flex-gutter" method="post" action="">
+
+        <div class="flex-content panel panel-default panel-flex">
+          <div class="panel-heading">
+            <h3 class="panel-title">Actions</h3>
+          </div>
+          <div class="scrolling panel-body">
+            <div class="col-sm-12">
+
+              <div class="col-sm-12">
+                	<label class="col-sm-9 control-label">
+			      		<span> Token ID: </span>
+			   		</label>
+                  	<div class="col-sm-3 control-label">
+						{{ selectedTokenId }}
+					</div>
+                </div>
+
+                <div class="col-sm-12">
+                	<label class="col-sm-9 control-label">
+			      		<span> Annotation ID: </span>
+			   		</label>
+                  	<div class="col-sm-3 control-label">
+						{{ selectedAnnoId }}
+					</div>
+                </div>
+
+              <div class="form-horizontal">
+                <div class="form-group">
+                  <label class="col-sm-3 control-label">
+                    Layer
+                  </label>
+
+                  <!-- Dropdown menu for annotation layer -->
+
+                  <div class="col-sm-9">
+
+                    <select ng-change="getTagSet($event, annoLayerDD.layerId)" ng-model="annoLayerDD" class="form-control" ng-options="l.uiName for l in layers track by l.layerId">
+					</select>
+                  </div>
+
+                  <!-- Dropdown menu for annotation layer -->
+
+
+                </div>
+
+              </div>
+
+
+			<!-- Feature values dependent on the dropdown choice -->
+
+			<div class="form-horizontal">
+				<div id="featureValues">
+					<div id="editor73">
+			  			<div ng-hide="noFeatVal(annoLayerDD.layerId)" class="form-group">
+
+			  				<label class="col-sm-3 control-label">
+			  					<span> Value </span>
+			  				</label>
+
+					    	<!-- Dropdown for tag set -->
+
+   					<div class="col-sm-9">
+   					<select ng-model="featureChoice"
+
+   							kendo-combo-box
+
+			                k-filter="'contains'"
+			                k-auto-bind="true"
+			                k-min-length="3"
+			                k-data-source="tagSet"
+			                style="width: 100%">
+			        </select>
+			        </div>
+
+					    	<!-- Dropdown for tag set -->
+
+					  	</div>
+					</div>
+			  </div>
+			</div>
+
+			<!-- Feature values dependent on the dropdown choice -->
+
+              <div class="form-group">
+              	<!-- Anno creation -->
+                <input class="btn btn-default" id="create" value="Create" type="button" ng-click="createAnno(selectedTokenId, annoLayerDD.layerId, featureChoice)"
+                	ng-disabled ="selectedTokenId == -1 || annoLayerDD == -1 || !(stackable(annoLayerDD.layerId) || numOfAnnos(annoLayerDD.layerId)==0) || multiValFeature(annoLayerDD.layerId)">
+                <!-- Anno creation -->
+
+               <!-- Anno update -->
+              	<input class="btn btn-default" id="update" value="Update" type="button" ng-click = "updateAnno(selectedTokenId, selectedAnnoId, annoLayerDD.layerId, featureChoice, 'update')"
+              		ng-disabled ="selectedAnnoId == -1 || annoLayerDD == -1 || noFeatVal(annoLayerDD.layerId) || numOfAnnos(annoLayerDD.layerId)==0 || multiValFeature(annoLayerDD.layerId) || !sameLayer(selectedAnnoId, annoLayerDD.layerId)">
+              <!-- Anno update -->
+
+               <!-- Anno deletion -->
+              	<input class="btn btn-default" id="delete" value="Delete" type="button" ng-click = "deleteAnno(selectedAnnoId)" ng-disabled ="selectedAnnoId == -1">
+               <!-- Anno deletion -->
+             </div>
+
+
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+
+        </div>
+      </div>
+
+      </div>
+
+	       	   <!--  Plug in the controller  -->
+
+<script>
+/**
+* @author Zlatko Kolev
+* Controller for the textview
+*/
+// Angular app and controller
+var app = angular.module('textApp', [ "kendo.directives" ]);
+app.controller('textdisplayCtrl', function($scope, $http) {
+
+	// Parse base url
+	$scope.baseUrl = window.location.pathname.substring(0, window.location.pathname.indexOf("/",2));
+
+     // Get the document- and project ID
+    $scope.myDocId = findGetParameter("docId");
+    $scope.myProjId = findGetParameter("projId");
+
+    // Number of all tokens in the document
+    $scope.numOfTokens = 0;
+    // Parameters used for get requests
+    $scope.tokensPerRequest = 50;
+    $scope.tagsPerRequest = 10;
+    $scope.startToken = 0;
+    $scope.endToken = 0;
+    $scope.startAnno = 0;
+    $scope.endAnno = -1;
+    $scope.endOfText = false;
+
+    // Annotations, shown in the "Selected annotations" field
+    $scope.focusedAnnos = [];
+
+    // Needed to indicate current state
+    $scope.selectedTokenId = -1;
+    $scope.selectedAnnoId = -1;
+    $scope.featureChoice = "init feature value";
+    $scope.annoLayerDD = -1;
+
+ 	// Fetch number of tokens: API get request
+    $http.get($scope.baseUrl+"/api/ruita/projects/"+$scope.myProjId+"/documents")
+    .then(function (response) {
+    	console.log("API get project info");
+		console.log(response);
+		var cont = response.data.content;
+		for (i=0; i<cont.length; i++) {
+			if (cont[i].id == $scope.myDocId) {
+				$scope.numOfTokens = cont[i].tokenCount;
+				break;
+			}
+		}
+		$scope.endToken = $scope.numOfTokens<$scope.tokensPerRequest?$scope.numOfTokens:$scope.tokensPerRequest;
+
+	    // Fetch the tokens: API get request
+		$http.get($scope.baseUrl+"/api/ruita/projects/"+$scope.myProjId+"/documents/"+$scope.myDocId+"/tokens?from="+$scope.startToken+"&to="+$scope.endToken)
+		.then(function (response) {
+			console.log("API get tokens");
+			console.log(response);
+			$scope.tokens = response.data;
+			$scope.startToken = $scope.endToken;
+		    $scope.endToken = ($scope.endToken+$scope.tokensPerRequest>$scope.numOfTokens)?$scope.numOfTokens:$scope.endToken+$scope.tokensPerRequest;
+		    $scope.endAnno = $scope.tokens[$scope.tokens.length-1].end;
+
+			// Fetch the annotations: API get request
+			$http.get($scope.baseUrl+"/api/ruita/projects/"+$scope.myProjId+"/documents/"+$scope.myDocId+"/annotations?textIndexFrom="+$scope.startAnno+"&textIndexTo="+$scope.endAnno)
+			.then(function (response) {
+				console.log("API get annotations");
+				console.log(response);
+				$scope.annos = response.data;
+
+				// Fetch the layer names from the project: API get request
+				$http.get($scope.baseUrl+"/api/ruita/projects/"+$scope.myProjId+"/layers")
+				.then(function (response) {
+					console.log("API get layers");
+					console.log(response);
+					$scope.layers = response.data;
+				});
+			});
+	    });
+	});
+
+
+	/*
+      Shows the annotations which belong to the given token in the annotations-field
+     */
+	$scope.showAnno = function ($event, tokObj, annos, layers) {
+		// Make sure no annotation is active
+		if (!(typeof annos == "undefined") && $event.target.childNodes.length == 1) {
+			// Update current token ID
+			$scope.selectedTokenId = tokObj.tok.tokenId;
+
+			var a = [];
+			for (i=0; i<annos.length; i++) {
+				for (j=0; j<annos[i].coveredTokens.length; j++) {
+					if (annos[i].coveredTokens[j] == tokObj.tok.tokenId) {
+						a.push(annos[i]);
+						break;
+					}
+				}
+			}
+			// Found existing annotations and token is not focused -> Show name and features in the annotation field and focus the token
+			if (a.length>0 && $event.target.getAttribute("class") != "focused") {
+				for (j = 0; j<a.length; j++) {
+					var ln = getLayerName(layers, a[j].layerId);
+					var aId = a[j].annotationId;
+					$scope.selectedAnnoId = aId;
+
+					// Show name features in the annotation field
+					var ab;
+					// No features found
+					if (a[j].features.length == 0) {
+						ab = {
+							"AnnotationID": aId,
+							"LayerName": ln,
+						};
+					}
+					// Feature(s) found
+					else {
+						var featVals = [];
+						for (k=0; k<a[j].features.length; k++) {
+							// No value
+							if (a[j].features[k].value == null) {
+								continue;
+							}
+							// Single value
+							else if (!a[j].features[k].multi) {
+								featVals.push(a[j].features[k].value);
+							}
+							// Multi value
+							else if (a[j].features[k].multi) {
+								for (l=0; l<a[j].features[k].value.length; l++) {
+									featVals.push(a[j].features[k].value[l]);
+								}
+							}
+						}
+						// Define annotation json
+						ab = (featVals.length == 0 || featVals[0].length == 0)? {
+							"AnnotationID": aId,
+							"LayerName": ln,
+
+						}:
+						{
+							"AnnotationID": aId,
+							"LayerName": ln,
+							"FeatureValues": featVals
+						};
+					}
+					$scope.focusedAnnos.push(ab);
+
+					// Mark current target red
+					$scope.focusToken($event);
+				}
+			}
+
+			// Annotations found and element is focused
+			else if (a.length>0 && $event.target.getAttribute("class") == "focused") {
+				// Return element and its style back to normal
+				$scope.unfocusToken($event);
+
+				// Clear annotations from the annotation field
+				$scope.hideAnno(a);
+			}
+
+			// No annotations found and element is not focused
+			else if (a.length==0 && $event.target.getAttribute("class") != "focused") {
+				$scope.selectedAnnoId = -1;
+
+				// Mark current target red
+				$scope.focusToken($event);
+			}
+
+			// No annotations found and element is focused
+			else {
+				$scope.selectedAnnoId = -1;
+
+				// Return element and its style back to normal
+				$scope.unfocusToken($event);
+			}
+		}
+	}
+
+	/*
+      Hides open annotations
+     */
+	$scope.hideAnno = function (annoList) {
+		var done = false;
+		for (i=0; i<annoList.length; i++) {
+			for (j=0; j<$scope.focusedAnnos.length; j++) {
+				if ($scope.focusedAnnos[j].AnnotationID==annoList[i].annotationId) {
+					$scope.focusedAnnos.splice(j, annoList.length);
+					done = true;
+					break;
+				}
+			if (done) break;
+			}
+		}
+	}
+
+	/*
+      Focuses a token by painting it red
+     */
+	$scope.focusToken = function ($event) {
+		// Mark current target red
+		var hull = document.createElement("span");
+		hull.setAttribute("class", "focused");
+		hull.appendChild(document.createTextNode($event.target.firstChild.textContent));
+		$event.target.replaceChild(hull, $event.target.firstChild);
+	}
+
+	/*
+      Clears the red color of a focused token
+     */
+	$scope.unfocusToken = function ($event) {
+		var oldChild = $event.target.firstChild;
+		$event.target = $event.target.parentNode;
+		$event.target.replaceChild(oldChild, $event.target.childNodes[0]);
+		$scope.selectedTokenId = -1;
+		$scope.selectedAnnoId = -1;
+	}
+
+	/*
+      Marks a token blue if it has an annotation
+     */
+	$scope.markToken = function (tokObj, annos) {
+		if (!(typeof annos == "undefined")) {
+			// Search for an annotation
+			for (i=0; i<annos.length; i++) {
+				// Iterate over coveredTokens
+				for (j=0; j<annos[i].coveredTokens.length; j++) {
+					if (annos[i].coveredTokens[j] == tokObj.tok.tokenId) {
+						return { color: "#337ab7" };
+					}
+				}
+			}
+			// No annotations -> Mark black
+			return { color: "black" };
+		}
+	}
+
+	/*
+      Deletes the annotation with the given ID
+     */
+	$scope.deleteAnno = function (annoId) {
+		// Make sure an annotation is focused
+		if (annoId != -1) {
+			// API delete request
+			$http.delete($scope.baseUrl+"/api/ruita/projects/"+$scope.myProjId+"/documents/"+$scope.myDocId+"/annotations/"+annoId)
+			.then(function (response) {
+				console.log("API delete annotation");
+				console.log(response);
+
+				// Update view lists
+				$scope.updateViewDelete(annoId);
+			});
+		}
+	}
+
+	// Creates a new annotation
+	$scope.createAnno = function (tokenId, layerId, featureVal) {
+		// Find the start and end of the token
+		var tok = findTok($scope.tokens, tokenId);
+		var begin = tok.begin;
+		var end = tok.end;
+
+		// Create the new annotation on the server
+		var createInfo = {
+			"begin":begin,
+			"end":end,
+			"layerId":layerId
+		};
+
+		// API anno create request
+		$http.post($scope.baseUrl+"/api/ruita/projects/"+$scope.myProjId+"/documents/"+$scope.myDocId+"/annotations/", createInfo)
+		.then(function (response) {
+			console.log("API post annotation");
+			console.log(response);
+
+			var annoId = response.data.createdAnnotationId;
+			// Set the feature values if there are some
+			if (!$scope.noFeatVal($scope.annoLayerDD.layerId)) {
+				$scope.updateAnno(tokenId, annoId, layerId, featureVal, "create");
+			}
+
+			// No feature values needed
+			else if ($scope.noFeatVal($scope.annoLayerDD.layerId)) {
+				$scope.updateView(begin, end, tokenId, annoId, layerId, null, "create");
+			}
+
+		});
+	}
+
+	/*
+      Shows the next n Tokens and their annotations
+     */
+	$scope.showMore = function() {
+		if ($scope.startToken != $scope.numOfTokens) {
+			// Fetch the next 100 tokens: API get request
+			$http.get($scope.baseUrl+"/api/ruita/projects/"+$scope.myProjId+"/documents/"+$scope.myDocId+"/tokens?from="+$scope.startToken+"&to="+$scope.endToken)
+			.then(function (response) {
+				console.log("API get tokens");
+				console.log(response);
+				$scope.tokens = $scope.tokens.concat(response.data);
+				$scope.startToken = $scope.endToken;
+			    $scope.endToken = ($scope.endToken+$scope.tokensPerRequest>$scope.numOfTokens)?$scope.numOfTokens:$scope.endToken+$scope.tokensPerRequest;
+
+			    $scope.startAnno = response.data[0].begin;
+			    $scope.endAnno = response.data[response.data.length-1].end;
+
+			    // Fetch the next annotations: API get request
+				$http.get($scope.baseUrl+"/api/ruita/projects/"+$scope.myProjId+"/documents/"+$scope.myDocId+"/annotations?textIndexFrom="+$scope.startAnno+"&textIndexTo="+$scope.endAnno)
+				.then(function (response) {
+					console.log("API get annotations");
+					console.log(response);
+					$scope.annos = $scope.annos.concat(response.data);
+				});
+			});
+		}
+	}
+
+	/*
+      Updates the ID of the selected Annotation
+     */
+	$scope.updateSelAnnoId = function(obj) {
+		$scope.selectedAnnoId = obj.a.AnnotationID;
+	}
+
+	/*
+      Updates an annotation
+     */
+	$scope.updateAnno = function(tokenId, annoId, layerId, featureVal, button) {
+		var tok = findTok($scope.tokens, tokenId);
+		var begin = tok.begin;
+		var end = tok.end;
+		var featId = getLayerFeatures($scope.layers, layerId)[0].id;
+		var updateInfo = {
+		  "annotationId": annoId,
+		  "featureId": featId,
+		  "value": featureVal
+		};
+
+		// API anno set feature request
+		$http.put($scope.baseUrl+"/api/ruita/projects/"+$scope.myProjId+"/documents/"+$scope.myDocId+"/annotations/", updateInfo)
+		.then(function (response) {
+			console.log("API put feature");
+			console.log(response);
+
+			// Update view lists
+			$scope.updateView(begin, end, tokenId, annoId, layerId, featureVal, button);
+		});
+	}
+
+     /*
+     Updates the view on a deletion
+     */
+	$scope.updateViewDelete = function(annoId) {
+		// Remove anno from the list of annotations
+		var index = -1;
+		for (i=0; i<$scope.annos.length; i++) {
+			if ($scope.annos[i].annotationId == annoId) {
+				index = i;
+				break;
+			}
+		}
+		$scope.annos.splice(index, 1);
+		// Remove anno from list of selected annotations
+		$scope.hideAnno([{"annotationId": annoId}])
+	}
+
+     /*
+     Updates the view on an edit event
+     */
+	$scope.updateView = function(begin, end, tokenId, annoId, layerId, featureVal, button) {
+		if (featureVal != null) {
+			var featId = getLayerFeatures($scope.layers, layerId)[0].id;
+		}
+		switch (button) {
+			case "create":
+				var features = (featureVal != null)? [
+			    	{
+			            "id": featId,
+		            	"value": featureVal,
+		            	"multi": false
+			          }
+			    ]:[];
+
+				// Update anno list
+				var newAnno = {
+					"begin": begin,
+				    "end": end,
+				    "annotationId": annoId,
+				    "coversMultipleTokens": false,
+				    "coversPartialTokens": false,
+				    "coveredTokens": [
+				      tokenId
+				    ],
+				    "layerId": layerId,
+				    "features": features
+				};
+				$scope.annos.push(newAnno);
+
+				// Show feature value in the annotation field
+				var ln = getLayerName($scope.layers, layerId);
+				var ab = (featureVal != null)? {
+					"AnnotationID": annoId,
+					"LayerName": ln,
+					"FeatureValues": [featureVal]
+				}:
+				{
+					"AnnotationID": annoId,
+					"LayerName": ln
+				};
+				$scope.focusedAnnos.push(ab);
+				break;
+
+			case "update":
+				// Update anno list
+				var done = false;
+				for (i=0; i<$scope.annos.length; i++) {
+					if ($scope.annos[i].annotationId == annoId) {
+						for (j=0; j<$scope.annos[i].features.length; j++) {
+							if ($scope.annos[i].features[j].id == featId) {
+								$scope.annos[i].features[j].value = featureVal;
+								done = true;
+								break;
+							}
+						}
+					}
+					if (done) break;
+				}
+
+				// Update selected annos
+				for (i=0; i<$scope.focusedAnnos.length; i++) {
+					if ($scope.focusedAnnos[i].AnnotationID == annoId) {
+						$scope.focusedAnnos[i].FeatureValues = [featureVal];
+						break;
+					}
+				}
+				break;
+			default: break;
+		}
+	}
+
+	/*
+      Returns true, if no feature value is needed for the layer specified by layerId
+     */
+	$scope.noFeatVal = function (layerId) {
+		if (typeof $scope.layers != "undefined" && $scope.featureChoice != "undefined") {
+			return (getLayerFeatures($scope.layers, layerId).length == 0)?true:false;
+		}
+	}
+
+	/*
+      Returns the number of focused annos, which have the layer specified by layerid
+     */
+	$scope.numOfAnnos = function (layerId) {
+		num = 0;
+		for (i=0; i<$scope.focusedAnnos.length; i++) {
+			for (j=0; j<$scope.layers.length; j++) {
+				if (layerId == $scope.layers[j].layerId && $scope.focusedAnnos[i].LayerName == $scope.layers[j].uiName) {
+					num++;
+					break;
+				}
+			}
+		}
+		return num;
+	}
+
+	/*
+      Returns true, if the layer specified by its id is stackable
+      */
+	$scope.stackable = function (layerId) {
+		for (i=0; i<$scope.layers.length; i++) {
+			if ($scope.layers[i].layerId == layerId) {
+				return $scope.layers[i].allowStacking;
+			}
+		}
+		return false;
+	}
+
+	/*
+      Fetches the tag names of the tagset specified by a layerId
+      */
+	$scope.getTagSet = function ($event, layerId) {
+		var features = getLayerFeatures($scope.layers, layerId);
+		if (features.length > 0) {
+			var tsId = features[0].tagSetId;
+
+			// API get tag set by ID request
+			$http.get($scope.baseUrl+"/api/ruita/projects/"+$scope.myProjId+"/tagSets/"+tsId+"?number="+$scope.tagsPerRequest)
+			.then(function (response) {
+				console.log("API get tag set");
+				console.log(response);
+
+				$scope.tagSet = response.data.tagNames;
+			}, function (response) {
+				console.log("API get tag set: ERROR");
+				console.log(response);
+
+				$scope.tagSet = [];
+			});
+		}
+	}
+
+	/*
+      Returns true, if the layer specified by layerId has multivalue features
+      */
+	$scope.multiValFeature = function (layerId) {
+		var layerFeatures = getLayerFeatures($scope.layers, layerId);
+		for (i=0; i<layerFeatures.length; i++) {
+			if (layerFeatures[i].multi) return true;
+		}
+		return false;
+	}
+
+	/*
+      Returns true, if the layerId and the layer of the current annotation are the same
+      */
+	$scope.sameLayer = function(annoId, layerId) {
+		return (findAnno($scope.annos, annoId).layerId == layerId);
+	}
+
+	/*
+      Sets the number of tokens per request
+      */
+	$scope.setToksPR = function () {
+		var num = parseInt(document.getElementById("toksPR").value);
+		$scope.tokensPerRequest = (isNaN(num) || num<1 || num>1000)? $scope.tokensPerRequest: num;
+		document.getElementById("toksPR").value = $scope.tokensPerRequest;
+		$scope.endToken = ($scope.startToken+$scope.tokensPerRequest>$scope.numOfTokens)?$scope.numOfTokens:$scope.startToken+$scope.tokensPerRequest;
+	}
+
+	/*
+      Sets the number of tags per request
+      */
+	$scope.setTagsPR = function () {
+		var num = parseInt(document.getElementById("tagsPR").value);
+		$scope.tagsPerRequest = (isNaN(num) || num<1 || num>100)? $scope.tagsPerRequest: num;
+		document.getElementById("tagsPR").value = $scope.tagsPerRequest;
+	}
+
+
+});
+
+/*
+Finds the name of the layer with the given id
+*/
+function getLayerName(layers, id) {
+	for (i=0; i<layers.length; i++) {
+		if (layers[i].layerId == id) {
+			return layers[i].uiName;
+		}
+	}
+	return -1;
+}
+
+/*
+ Finds the feature list of the layer with the given id
+ */
+function getLayerFeatures(layers, id) {
+	for (i=0; i<layers.length; i++) {
+		if (layers[i].layerId == id) {
+			return layers[i].features;
+		}
+	}
+	return -1;
+}
+
+/*
+Returns the token object which has the given id
+*/
+function findTok(tokens, id) {
+	for (i=0; i<tokens.length; i++) {
+		if (tokens[i].tokenId == id) {
+			return tokens[i];
+		}
+	}
+	return null;
+}
+
+/*
+ Finds the specified annotation in the annotation list
+ */
+function findAnno(annoList, annoId) {
+	for (i=0; i<annoList.length; i++) {
+		if (annoList[i].annotationId == annoId) return annoList[i];
+	}
+	return -1;
+}
+
+/*
+ For parsing of the url
+ */
+function findGetParameter(parameterName) {
+    var result = null,
+        tmp = [];
+    location.search
+        .substr(1)
+        .split("&")
+        .forEach(function (item) {
+          tmp = item.split("=");
+          if (tmp[0] === parameterName) result = decodeURIComponent(tmp[1]);
+        });
+    return result;
+}
+
+</script>
+    
+
+  </wicket:extend>
+</body>
+</html>

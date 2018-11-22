@@ -1,0 +1,74 @@
+<html xmlns:wicket="http://wicket.apache.org">
+<head>
+  <wicket:head>
+    <style>
+      .page-content {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+     </style>
+  </wicket:head>
+
+</head>
+
+<body>
+  <wicket:extend>  	
+  	<div ng-app="myApp" ng-controller="customersCtrl">  
+  		<div class="flex-content flex-h-container flex-gutter">
+		
+    			<div class="flex-content panel panel-default panel-flex" style="min-height: 10em;min-width: 20em">
+      				<div class="panel-heading">
+        				<h3 class="panel-title">
+         					Projects
+        				</h3>
+      				</div>
+      				<div class="scrolling panel-body fit-child-snuck">
+      					<select class="form-control" ng-change="getProjectDocs()" ng-model="selectedProject" ng-options="x.name for x in myData" name="projects:project" id="project50" size="8"></select>
+       				</div>
+        		</div> 	 
+        		
+      	
+    			<div class="flex-content panel panel-default panel-flex" style="min-height: 40em;min-width: 20em">
+      				<div class="panel-heading">
+        				<h3 class="panel-title">
+          				Documents
+        				</h3>
+      				</div>
+      				<div class="scrolling panel-body fit-child-snuck">
+       					<ul>
+  							<li ng-repeat="x in documentData" >
+        						<a href="{{baseUrl}}/TextViewPage.html?projId={{selectedProject.id}}&docId={{x.id}}">{{x.name}}</a> 
+  							</li>
+  						</ul>
+      				</div>      			
+      		</div>
+  </div>
+  
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.min.js"></script>
+
+<script>
+	
+    var app = angular.module('myApp', []);
+    app.controller('customersCtrl', function($scope, $http) {
+    	// Parse base url
+    	$scope.baseUrl = window.location.pathname.substring(0, window.location.pathname.indexOf("/",2));
+    	
+        $scope.myD = ["eins","zwei","drei"];
+    	$http.get($scope.baseUrl+"/api/ruita/projects/").then(function (response) {
+        	$scope.myData = response.data.content;	
+        	
+        });
+    	$scope.getProjectDocs = function(){
+    		$http.get($scope.baseUrl+"/api/ruita/projects/"+$scope.selectedProject.id+"/documents").then(function (response) {
+  	        	$scope.documentData = response.data.content;
+  	        });
+    	}
+     });
+    
+    </script>
+</div>
+
+  </wicket:extend>
+</body>
+</html>

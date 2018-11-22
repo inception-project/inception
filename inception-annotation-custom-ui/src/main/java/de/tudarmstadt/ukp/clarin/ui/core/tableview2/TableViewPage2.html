@@ -1,0 +1,376 @@
+<html xmlns:wicket="http://wicket.apache.org">
+  <head>
+    <wicket:head>
+ 	    <style>
+        /*Temporary size for the grid, until we get to know how to change it with wicket*/
+ 	      .grid {
+  		      width: 1600px;
+  		      height: 720px;
+  		  }
+
+ 	    </style>
+    </wicket:head>
+
+  </head>
+  <body>
+    <wicket:extend>
+      <label wicket:id="detailForm" >DETFORM</label>
+        <!-- Angularjs module -->
+        <div ng-app="app">
+          <!-- module controller -->
+          <div ng-controller="MainCtrl">
+            <!-- Grid -->
+            <div ui-grid="gridOptions" ui-grid-cellNav ui-grid-pinning ui-grid-edit ui-grid-infinite-scroll class="grid"></div>
+          </div>
+        </div>
+      <!-- necessary scripts for ui-grid and angularjs -->
+      <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.6.7/angular.js"></script>
+      <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.6.7/angular-touch.js"></script>
+      <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.6.7/angular-animate.js"></script>
+      <script src="http://ui-grid.info/docs/grunt-scripts/csv.js"></script>
+      <script src="http://ui-grid.info/docs/grunt-scripts/pdfmake.js"></script>
+      <script src="http://ui-grid.info/docs/grunt-scripts/vfs_fonts.js"></script>
+      <script src="http://ui-grid.info/docs/grunt-scripts/lodash.min.js"></script>
+      <script src="http://ui-grid.info/docs/grunt-scripts/jszip.min.js"></script>
+      <script src="http://ui-grid.info/docs/grunt-scripts/excel-builder.dist.js"></script>
+      <script src="http://ui-grid.info/release/ui-grid.js"></script>
+      <link rel="stylesheet" href="http://ui-grid.info/release/ui-grid.css" type="text/css">
+      <!-- Start of the code -->
+      <script>
+
+      /**
+      Function for parsing of the url for API calls
+      */
+      function findGetParameter(parameterName) {
+        var result = null,
+            tmp = [];
+        location.search
+            .substr(1)
+            .split("&")
+            .forEach(function (item) {
+              tmp = item.split("=");
+              if (tmp[0] === parameterName) result = decodeURIComponent(tmp[1]);
+            });
+        return result;
+      }
+
+      //AngularJs module with necessary ng and ui-grid arguments
+      var app = angular.module('app', ['ngTouch', 'ui.grid', 'ui.grid.cellNav','ui.grid.edit', 'ui.grid.pinning','ui.grid.infiniteScroll']);
+      //Controller for the module "app"
+      app.controller('MainCtrl', ['$scope', '$http', '$log', function ($scope, $http, $log) {
+
+    	// Parse base url
+      	$scope.baseUrl = window.location.pathname.substring(0, window.location.pathname.indexOf("/",2));
+
+    	//Document Id
+      	  $scope.myDocId = findGetParameter("docId");
+          //Project Id
+      	  $scope.myProjId = findGetParameter("projId");
+          //Counter for the beginning of the token list
+          $scope.dataBegin = 0;
+          //Counter for the end of the token list
+          $scope.dataEnd = 100;
+          //array for tokens
+          $scope.tokens = [];
+          //array for annotations
+          $scope.annotations = [];
+          //last loaded annotation index
+          $scope.lastAnno = 0
+
+        //grid options for ui-grid
+        $scope.gridOptions = {
+          infiniteScrollDown: true,
+          enableSorting : false,
+    	    modifierKeysToMultiSelectCells: true,
+          keyDownOverrides: [ { keyCode: 39, ctrlKey: true }],
+          showGridFooter: true,
+          enableGridMenu: true,
+          enableColumnMenus: false
+        };
+
+        /**
+        @author Micha Tim Dippell
+        @param index Index of the current token, @param annoType Annotation Layer Name as String, @param response the list of tokens returned from the server
+        @return Annotation Value for given index and Annotation Layer
+        */
+        function getAnnotationValue(index, annoType, response){
+            //find the layer corresponding to the name given in annoType
+           var lay= $scope.layers.find(function(element){
+               return element.uiName==annoType
+           })
+           //find an annotation matching the current token and the found layer
+           var ann= $scope.annotations.find(function(element){
+               return element.coveredTokens[0]==response[index].tokenId&&lay.layerId==element.layerId
+           })
+           //check if such an annotation was found
+           if (typeof ann=='undefined'){
+               return ''
+           }
+               else{
+               //check if the found annotation has an allocated feature value
+               if(ann.features[0].value==null){
+                   return 'null'
+               }
+               //return the value
+               else{
+                   return ann.features[0].value
+               }
+           }
+       }
+
+
+	   	 /**
+	      	Returns the uiName for a given layerId
+	      */
+	      function getUiName(layerId){
+	      	uiName = $scope.layers.find(function (layer) {
+	      		return layer.layerId == layerId;
+	      	}).uiName;
+	      	return (typeof uiName)=="undefined"?null:uiName;
+	        }
+
+	   	 /*
+	   	 	Returns coveredText of the token with the given token id
+	   	 */
+	     function getCoveredTokens(tokenId) {
+	   	 	found = $scope.tokens.find(function (tok) {
+	   	 			return tok.tokenId == tokenId;
+	   	 		}).coveredText;
+	   	 		return (typeof found)=="undefined"?null:found;
+	   	 }
+
+      
+      /**
+      	function for getting the next data set for infinite scrolling
+      	@author Sebastian Ochs
+      */
+      $scope.getDataDown = function(){
+      	//GET-Request for documents for the current project
+          	$http.get($scope.baseUrl+"/api/ruita/projects/"+$scope.myProjId+"/documents/").then(function(response){
+          	    console.log("API get documents");
+          		console.log(response);
+          	    	
+          		//Search for the tokenCount for the current document
+          	    for (i = 0; i < response.data.content.length; i ++){
+          	       if($scope.myDocId == response.data.content[i].id){
+          	       	//maxTokenCount needed to limit dataEnd
+          	            $scope.maxTokenCount = response.data.content[i].tokenCount;
+          	          }
+          	        }         	
+          
+      	
+
+        //API call to get all defined layers from the project
+    	  $http.get($scope.baseUrl+"/api/ruita/projects/"+$scope.myProjId+"/layers")
+  		    .then(function (response) {
+  		    	console.log("API get layers");
+  				console.log(response);
+
+  			  $scope.layers = response.data;
+
+  			  //API call to get tokens from the opened document from a project
+    	    $http.get($scope.baseUrl+"/api/ruita/projects/"+$scope.myProjId+"/documents/"+$scope.myDocId+"/tokens?from="+$scope.dataBegin+"&to="+$scope.dataEnd)
+  	        .then(function (response) {
+  	        	console.log("API get tokens");
+  	  			console.log(response);
+
+  		       $scope.tokens = $scope.tokens.concat(response.data);
+
+  		   		//check, if dataEnd succeeded maxTokenCount, if yes, set dataEnd to maxTokenCount
+  		        if($scope.maxTokenCount < $scope.dataEnd){
+  		            $scope.dataEnd = $scope.maxTokenCount;
+  		          }
+  		          //this is just for safety, as this should never occur
+  		          if($scope.maxTokenCount <= $scope.dataBegin){
+  		            console.log("No more Tokens");
+  		            return;
+  		          }
+
+  		       //API call to get annotations from the document
+  		  	     $http.get($scope.baseUrl+"/api/ruita/projects/"+$scope.myProjId+"/documents/"+$scope.myDocId+"/annotations?textIndexFrom="+$scope.tokens[$scope.dataBegin].begin+"&textIndexTo="+$scope.tokens[$scope.dataEnd -1].end)
+                 //function to build a JSON file for ui-grid to represent the tokens and their annotations
+  	             .then(function (response) {
+  	            	console.log("API get annotations");
+  	  	  			console.log(response);
+
+                    $scope.annotations = $scope.annotations.concat(response.data);
+
+                       //for-loop to build the objects that are used to display the data
+  		               for(i=$scope.lastAnno;i<$scope.annotations.length;i++){
+  			                  var obj = {
+                            //['begin']: $scope.tokens[i].begin,
+                            //['end']: $scope.tokens[i].end,
+                            ['Annotation ID']: $scope.annotations[i].annotationId,
+                            ['Annotation Type']: getUiName($scope.annotations[i].layerId),
+                            ['Covered Tokens']: "",
+                            ['Features']: ""
+                            }
+  			                  for(j=0;j<$scope.annotations[i].coveredTokens.length;j++){
+  			                	covTok = getCoveredTokens($scope.annotations[i].coveredTokens[j])
+  			                	if(covTok != "undefined"){
+  			                	  obj['Covered Tokens'] += covTok+" "
+  			                	}
+  			                  }
+  			                  for(l=0;l<$scope.annotations[i].features.length;l++){
+  			                	layerFeatures = $scope.layers.find(function (layer) {
+  			      	      			return layer.layerId == $scope.annotations[i].layerId;
+  			      	      			}).features;
+  			                	if(typeof(layerFeatures!="undefined")){
+  			                		layerFeature = layerFeatures.find(function (feature){
+  			                			return feature.id==$scope.annotations[i].features[l].id
+  			                		})
+  			                		obj['Features']+="| "+layerFeature.uiName+" : "+$scope.annotations[i].features[l].value+" "
+  			                	}
+  			                  }
+
+  			              //push the object into the grid data
+                          $scope.gridOptions.data.push(obj);
+                     }
+
+                     //Update parameters for the next data set
+                     $scope.dataBegin = $scope.dataEnd;
+                     $scope.dataEnd = $scope.dataEnd + 100;
+                     $scope.lastAnno = $scope.annotations.length;
+                   //Create the columns to display data, token data may not be edited and can't be hidden
+                   $scope.gridOptions.columnDefs = [
+                     //{ name: 'begin', enableCellEdit : false, enableHiding : false},
+                     //{ name: 'end', enableCellEdit : false, enableHiding : false},
+                     { name: 'Annotation ID', enableCellEdit : false, enableHiding : false},
+                     { name: 'Annotation Type', enableCellEdit : false, enableHiding : false},
+                     { name: 'Covered Tokens', enableCellEdit : false, enableHiding : false},
+                     { name: 'Features', enableCellEdit : false, enableHiding : false}
+                   ];
+
+                   //notify gridAPI that the data has been built and loaded
+                   $scope.gridApi.infiniteScroll.dataLoaded();
+                 });
+  	           });
+            });
+          });
+        }
+
+      	//execute getDataDown just once
+        $scope.getDataDown();
+
+      	//Following functions up until gridOptions.onRegisterApi are for focusing a grid cell
+        $scope.info = {};
+
+      	$scope.currentFocused = "";
+
+      	// Determines the current focus
+        $scope.getCurrentFocus = function(){
+          var rowCol = $scope.gridApi.cellNav.getFocusedCell();
+          if(rowCol !== null) {
+              $scope.currentFocused = 'Row Id:' + rowCol.row.entity.id + ' col:' + rowCol.col.colDef.name;
+          }
+        };
+
+        // Determines the current selection
+        $scope.getCurrentSelection = function() {
+          var values = [];
+          var currentSelection = $scope.gridApi.cellNav.getCurrentSelection();
+          for (var i = 0; i < currentSelection.length; i++) {
+            values.push(currentSelection[i].row.entity[currentSelection[i].col.name])
+          }
+          $scope.printSelection = values.toString();
+        };
+
+        // Function for Scrolling
+        $scope.scrollTo = function( rowIndex, colIndex ) {
+          $scope.gridApi.core.scrollTo( $scope.gridOptions.data[rowIndex], $scope.gridOptions.columnDefs[colIndex]);
+        };
+
+        // Scrolls to a focused index
+        $scope.scrollToFocus = function( rowIndex, colIndex ) {
+          $scope.gridApi.cellNav.scrollToFocus( $scope.gridOptions.data[rowIndex], $scope.gridOptions.columnDefs[colIndex]);
+        };
+
+		// grid API. Defines inner functions.
+        $scope.gridOptions.onRegisterApi = function(gridApi){
+           $scope.gridApi = gridApi;
+           $scope.msg = "";
+
+           //log entry for navigation
+           gridApi.cellNav.on.navigate($scope,function(newRowCol, oldRowCol){
+                 // var rowCol = {row: newRowCol.row.index, col:newRowCol.col.colDef.name};
+                 // var msg = 'New RowCol is ' + angular.toJson(rowCol);
+                 // if(oldRowCol){
+                 //    rowCol = {row: oldRowCol.row.index, col:oldRowCol.col.colDef.name};
+                 //    msg += ' Old RowCol is ' + angular.toJson(rowCol);
+                 // }
+                  $log.log('navigation event');
+                });
+
+           //hotkey strg+arrowLeft
+           gridApi.cellNav.on.viewPortKeyDown($scope,function(event, newRowCol){
+                    var row = newRowCol.row;
+                    var col = newRowCol.col
+                    if (event.keyCode === 39) {
+                        $scope.gridApi.cellNav.scrollToFocus(row.entity, $scope.gridApi.grid.columns[$scope.gridApi.grid.columns.length - 1]);
+                    }
+                });
+
+           //notify navigation, when a column visibility has changed
+           gridApi.core.on.columnVisibilityChanged( $scope, function( changedColumn ){
+                $scope.columnChanged = { name: changedColumn.colDef.name, visible: changedColumn.colDef.visible };
+              });
+
+           //infiniteScrolling
+           gridApi.infiniteScroll.on.needLoadMoreData($scope, $scope.getDataDown);
+
+           /*
+           	Edit events of grid UI
+           */
+           gridApi.edit.on.afterCellEdit($scope,function(rowEntity, colDef, newValue, oldValue){
+              $scope.msg.lastCellEdited = 'edited row id:' + rowEntity.id + ' Column:' + colDef.name + ' newValue:' + newValue + ' oldValue:' + oldValue ;
+
+              /**
+           	  	function to return the layer id for an annotation Type
+              */
+              function getLayerId(annoType){
+                for (i = 0; i < $scope.layers.length; i++){
+                  if ($scope.layers[i].uiName == annoType){
+                    console.log("layerId: " + $scope.layers[i].layerId);
+                    return $scope.layers[i].layerId;
+                  }
+                }
+                console.error("A layer with the type " + annoType + " is not defined for this project");
+              }
+
+              /**
+              	function to return the feature id for a given layer id
+              */
+              function getFeatureIdOfLayer(layerId){
+                for (i = 0; i < $scope.layers.length; i++){
+                  if ($scope.layers[i].layerId == layerId){
+                    console.log("featureId: " + $scope.layers[i].features[0].id);
+                    return $scope.layers[i].features[0].id;
+
+                  }
+                }
+                console.error("A layer with the id " + layerId + " is not defined for this project")
+              }
+
+              /**
+              	function to return the annotationId for a given annotation begin and layer id
+              */
+              function getAnnotationId(begin, layerId){
+                for (i = 0; i < $scope.annotations.length; i++){
+                  if ($scope.annotations[i].begin == begin){
+                    if ($scope.annotations[i].layerId == layerId){
+                      console.log("annotationId: " + $scope.annotations[i].annotationId);
+                      return $scope.annotations[i].annotationId;
+                    }
+                  }
+                }
+                console.error("There is no annotation with the id " + layerId + " at " + begin);
+              }
+            });
+        };
+
+      }]);
+
+      </script>
+	 	</wicket:extend>
+  </body>
+</html>

@@ -69,12 +69,15 @@
     <mockito.version>2.23.0</mockito.version>
     <assertj.version>3.11.1</assertj.version>
     <okhttp.version>3.11.0</okhttp.version>
+    <springfox.version>2.7.0</springfox.version>
     <maven.surefire.heap>6g</maven.surefire.heap>
     <dkpro.core.testCachePath>${session.executionRootDirectory}/cache/dkpro-core-datasets</dkpro.core.testCachePath>
   </properties>
   <modules>
     <module>inception-build</module>
     <module>inception-app-webapp</module>
+    <module>inception-annotation-mvc</module>
+    <module>inception-annotation-custom-ui</module>
     <module>inception-ui-search</module>
     <module>inception-search-core</module>
     <!-- >module>inception-search-mimir</module -->
@@ -100,7 +103,6 @@
     <module>inception-support</module>
     <!-- Documentation -->
     <module>inception-doc</module>
-
   </modules>
   <repositories>
     <!-- For RELEASEes of WebAnno / DKPro Core-->
@@ -197,6 +199,16 @@
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-ui-search</artifactId>
+        <version>0.7.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-annotation-mvc</artifactId>
+        <version>0.7.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-annotation-custom-ui</artifactId>
         <version>0.7.0-SNAPSHOT</version>
       </dependency>
       <dependency>
