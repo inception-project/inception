@@ -17,7 +17,7 @@
 [[sect_projects]]
 == Projects
 
-NOTE: This functionality is only available to *project managers* (managers of existing projects), 
+NOTE: This functionality is only available to *managers* of existing projects, 
       *project creators* (users with the ability to create new projects), and *administrators*.
       Project managers only see projects in which they hold the respective roles. Project creators
       only see projects in which they hold the project manager role.
@@ -27,7 +27,6 @@ You can either select one of the existing projects for editing, or click *Create
 
 Although correction and automation projects function similarly, the management differs after the creation of the document. For further description, look at the corresponding chapters <<sect_automation>> and <<sect_correction>>.
 
-Only admins are allowed to create projects.	
 Click on *Create Project* to create a new project. 
 
 image::project1.jpg[align="center"]
