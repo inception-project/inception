@@ -1,3 +1,20 @@
+/*
+ * Copyright 2018
+ * Ubiquitous Knowledge Processing (UKP) Lab
+ * Technische Universität Darmstadt
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package de.tudarmstadt.ukp.inception.ui.core.docanno.sidebar;
 
 import org.apache.wicket.markup.html.panel.Panel;
@@ -31,16 +48,16 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
 //                // Look up a suitable editor and instantiate it
 //                FeatureSupport featureSupport = featureSupportRegistry
 //                        .getFeatureSupport(featureState.feature);
-//                editor = featureSupport.createEditor("editor", AnnotationFeatureForm.this, editorPanel,
-//                        AnnotationFeatureForm.this.getModel(), item.getModel());
+//                editor = featureSupport.createEditor("editor", AnnotationFeatureForm.this, 
+//                        editorPanel, AnnotationFeatureForm.this.getModel(), item.getModel());
 //
 //                if (!featureState.feature.getLayer().isReadonly()) {
 //                    AnnotatorState state = getModelObject();
 //
 //                    // Whenever it is updating an annotation, it updates automatically when a
 //                    // component for the feature lost focus - but updating is for every component
-//                    // edited LinkFeatureEditors must be excluded because the auto-update will break
-//                    // the ability to add slots. Adding a slot is NOT an annotation action.
+//                    // edited LinkFeatureEditors must be excluded because the auto-update will 
+//                    // break the ability to add slots. Adding a slot is NOT an annotation action.
 //                    if (state.getSelection().getAnnotation().isSet()
 //                        && !(editor instanceof LinkFeatureEditor)) {
 //                        addAnnotateActionBehavior(editor);
@@ -73,10 +90,12 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
 //                editor.setOutputMarkupId(true);
 //                editor.setOutputMarkupPlaceholderTag(true);
 //                
-//                // Ensure that markup IDs of feature editor focus components remain constant across
-//                // refreshes of the feature editor panel. This is required to restore the focus.
+//                // Ensure that markup IDs of feature editor focus components remain constant 
+//                // across refreshes of the feature editor panel. This is required to restore the
+//                // focus.
 //                editor.getFocusComponent().setOutputMarkupId(true);
-//                editor.getFocusComponent().setMarkupId(ID_PREFIX + editor.getModelObject().feature.getId());
+//                editor.getFocusComponent().setMarkupId(
+//                        ID_PREFIX + editor.getModelObject().feature.getId());
 //                
 //                item.add(editor);            
 //            }
