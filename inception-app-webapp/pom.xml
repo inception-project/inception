@@ -240,6 +240,10 @@
       <groupId>com.googlecode.wicket-jquery-ui</groupId>
       <artifactId>wicket-kendo-ui-theme-bootstrap</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.apache.wicket</groupId>
+      <artifactId>wicket-native-websocket-javax</artifactId>
+    </dependency>
 
     <!-- Spring dependencies -->
     <dependency>
@@ -400,6 +404,10 @@
     <dependency>
       <groupId>com.giffing.wicket.spring.boot.starter</groupId>
       <artifactId>wicket-spring-boot-starter</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-websocket</artifactId>
     </dependency>
     <!--  
     <dependency>
@@ -623,6 +631,9 @@
               <usedDependency>org.apache.logging.log4j:log4j-slf4j-impl</usedDependency>
               <usedDependency>org.apache.logging.log4j:log4j-core</usedDependency>
               <usedDependency>commons-logging:commons-logging</usedDependency>
+              <!-- Websocket -->
+              <usedDependency>org.apache.wicket:wicket-native-websocket-javax</usedDependency>
+              <usedDependency>org.springframework.boot:spring-boot-starter-websocket</usedDependency>
               <!-- Themes -->
               <usedDependency>com.googlecode.wicket-jquery-ui:wicket-kendo-ui-theme-bootstrap</usedDependency>
               <usedDependency>com.googlecode.wicket-jquery-ui:wicket-jquery-ui-theme-uilightness</usedDependency>
