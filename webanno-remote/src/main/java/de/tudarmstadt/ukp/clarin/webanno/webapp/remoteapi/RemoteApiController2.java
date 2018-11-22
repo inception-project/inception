@@ -225,7 +225,7 @@ public class RemoteApiController2
         assertPermission(
                 "User [" + user.getUsername() + "] is not allowed to access project [" + aProjectId
                         + "]",
-                projectService.isProjectAdmin(project, user)
+                projectService.isManager(project, user)
                         || userRepository.isAdministrator(user));
         
         return project;

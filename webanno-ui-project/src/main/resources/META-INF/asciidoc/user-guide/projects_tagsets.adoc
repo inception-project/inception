@@ -1,10 +1,10 @@
 == Tagsets
 
-To administer the tagsets, click on the tab *Tagsets* in the project pane. 
+To manager the tagsets, click on the tab *Tagsets* in the project pane. 
 
 image::project7.jpg[align="center"]
 
-To administer one of the existing tagsets, select it by a click. Then, the tagset characteristics are displayed.
+To edit one of the existing tagsets, select it by a click. Then, the tagset characteristics are displayed.
 
 image::project8.jpg[align="center"]
 

@@ -17,18 +17,17 @@
 [[sect_monitoring]]
 == Monitoring
 
-NOTE: This functionality is only available to *project managers* (managers of existing projects), 
-      *curators*, and *administrators*. Curators and project managers only see projects in which
-      they hold the respective roles.
+NOTE: This functionality is only available to *curators* and * managers*.
 
-As an administrator, you are able to observe the progress and document status of projects you are 
-responsible for. Moreover, you are able to see the time of the last login of every user and observe the agreement between the annotators.
-After clicking on *Monitoring* in the main menu, the following page is displayed:
+This page allows to observe the progress and document status of projects you are responsible for. 
+Moreover, you are able to see the time of the last login of every user and observe the agreement 
+between the annotators. After clicking on *Monitoring* in the main menu, the following page is 
+displayed:
 
 image::monitoring1.png[align="center"]
 
 In the right frame, the overall progress of all projects is displayed.
-In the left frame one sees all projects, that one has an administrator role in.  
+In the left frame one sees all projects that you are allowed to curate.  
 By clicking on one of the projects on the left, it may be selected and the following view is opened:
 
 image::monitoring2.png[align="center"]

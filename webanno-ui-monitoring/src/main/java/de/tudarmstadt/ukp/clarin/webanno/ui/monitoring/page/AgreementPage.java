@@ -623,7 +623,7 @@ public class AgreementPage
 
             List<Project> allProjects = projectService.listProjects();
             for (Project project : allProjects) {
-                if (projectService.isProjectAdmin(project, user)
+                if (projectService.isManager(project, user)
                         || projectService.isCurator(project, user)) {
                     allowedProject.add(project);
                 }

@@ -444,7 +444,12 @@ public interface ProjectService
      *            the user.
      * @return if the user may update a project.
      */
-    boolean isProjectAdmin(Project aProject, User aUser);
+    boolean isManager(Project aProject, User aUser);
+    
+    @Deprecated
+    default boolean isProjectAdmin(Project aProject, User aUser) {
+        return isManager(aProject, aUser);
+    }
 
     /**
      * Determine if the User is an admin of a project

@@ -774,7 +774,7 @@ public class ProjectServiceImpl
 
         // else only list projects where she is admin / user / curator
         for (Project project : allProjects) {
-            if (this.isProjectAdmin(project, user)
+            if (this.isManager(project, user)
                     || this.isAnnotator(project, user)
                     || this.isCurator(project, user)) {
                 allowedProject.add(project);
@@ -796,7 +796,7 @@ public class ProjectServiceImpl
 
         // else only projects she is admin of
         for (Project project : allProjects) {
-            if (this.isProjectAdmin(project, user)) {
+            if (this.isManager(project, user)) {
                 allowedProject.add(project);
             }
         }
@@ -1025,7 +1025,7 @@ public class ProjectServiceImpl
         }
 
         for (Project project : listProjects()) {
-            if (isProjectAdmin(project, user)) {
+            if (isManager(project, user)) {
                 return true;
             }
         }
@@ -1034,7 +1034,7 @@ public class ProjectServiceImpl
     }
 
     @Override
-    public boolean isProjectAdmin(Project aProject, User aUser)
+    public boolean isManager(Project aProject, User aUser)
     {
         boolean projectAdmin = false;
         try {

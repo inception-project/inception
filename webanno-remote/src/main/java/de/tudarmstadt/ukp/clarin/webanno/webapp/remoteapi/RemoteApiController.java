@@ -313,7 +313,7 @@ public class RemoteApiController
 
         // Check for the access
         boolean hasAccess = 
-                projectRepository.isProjectAdmin(project, user) ||
+                projectRepository.isManager(project, user) ||
                 userRepository.isAdministrator(user);
         if (!hasAccess) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User [" + username
@@ -364,7 +364,7 @@ public class RemoteApiController
         
         // Check for the access
         boolean hasAccess = 
-                projectRepository.isProjectAdmin(project, user) ||
+                projectRepository.isManager(project, user) ||
                 userRepository.isAdministrator(user);
         if (!hasAccess) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User [" + username
@@ -429,7 +429,7 @@ public class RemoteApiController
 
         // Check for the access
         boolean hasAccess = 
-                projectRepository.isProjectAdmin(project, user) ||
+                projectRepository.isManager(project, user) ||
                 userRepository.isAdministrator(user);
         if (!hasAccess) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User [" + username
@@ -510,7 +510,7 @@ public class RemoteApiController
 
         // Check for the access
         boolean hasAccess = 
-                projectRepository.isProjectAdmin(project, user) ||
+                projectRepository.isManager(project, user) ||
                 userRepository.isAdministrator(user);
         if (!hasAccess) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User [" + username
@@ -581,7 +581,7 @@ public class RemoteApiController
 
         // Check for the access
         boolean hasAccess = 
-                projectRepository.isProjectAdmin(project, user) ||
+                projectRepository.isManager(project, user) ||
                 userRepository.isAdministrator(user);
         if (!hasAccess) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User [" + username
@@ -680,7 +680,7 @@ public class RemoteApiController
 
         // Check for the access
         boolean hasAccess = 
-                projectRepository.isProjectAdmin(project, user) ||
+                projectRepository.isManager(project, user) ||
                 userRepository.isAdministrator(user);
         if (!hasAccess) {
             response.sendError(HttpStatus.FORBIDDEN.value(), "User [" + username
@@ -822,7 +822,7 @@ public class RemoteApiController
 
         // Check for the access
         boolean hasAccess = 
-                projectRepository.isProjectAdmin(project, user) ||
+                projectRepository.isManager(project, user) ||
                 userRepository.isAdministrator(user);
         if (!hasAccess) {
             response.sendError(HttpStatus.FORBIDDEN.value(), "User [" + username

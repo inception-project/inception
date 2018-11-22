@@ -348,7 +348,7 @@ public class MonitoringPage
 
                             List<Project> allProjects = projectService.listProjects();
                             for (Project project : allProjects) {
-                                if (projectService.isProjectAdmin(project, user)
+                                if (projectService.isManager(project, user)
                                         || projectService.isCurator(project, user)) {
                                     allowedProject.add(project);
                                 }
@@ -567,7 +567,7 @@ public class MonitoringPage
         User user = userRepository.get(username);
         for (Project project : projectService.listProjects()) {
             if (projectService.isCurator(project, user)
-                    || projectService.isProjectAdmin(project, user)) {
+                    || projectService.isManager(project, user)) {
                 int annoFinished = documentService.listFinishedAnnotationDocuments(project).size();
                 int allAnno = documentService.numberOfExpectedAnnotationDocuments(project);
                 int progress = (int) Math.round((double) (annoFinished * 100) / (allAnno));
