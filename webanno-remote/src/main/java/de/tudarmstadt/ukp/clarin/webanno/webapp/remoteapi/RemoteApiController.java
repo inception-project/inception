@@ -170,11 +170,11 @@ public class RemoteApiController
         
         // Create permission for the project creator
         projectRepository.createProjectPermission(
-                new ProjectPermission(project, username, PermissionLevel.ADMIN));
+                new ProjectPermission(project, username, PermissionLevel.MANAGER));
         projectRepository.createProjectPermission(
                 new ProjectPermission(project, username, PermissionLevel.CURATOR));
         projectRepository.createProjectPermission(
-                new ProjectPermission(project, username, PermissionLevel.USER));
+                new ProjectPermission(project, username, PermissionLevel.ANNOTATOR));
 
         // Iterate through all the files in the ZIP
 

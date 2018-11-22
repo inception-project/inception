@@ -133,7 +133,7 @@ class UserSelectionPanel
     {
         for (User user : aForm.getModelObject()) {
             projectRepository.createProjectPermission(new ProjectPermission(
-                    projectModel.getObject(), user.getUsername(), PermissionLevel.USER));
+                    projectModel.getObject(), user.getUsername(), PermissionLevel.ANNOTATOR));
         }
         
         aForm.getModelObject().clear();

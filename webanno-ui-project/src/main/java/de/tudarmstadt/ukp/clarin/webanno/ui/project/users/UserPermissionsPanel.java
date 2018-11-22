@@ -17,9 +17,9 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.project.users;
 
-import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ADMIN;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
-import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.USER;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static java.util.Arrays.asList;
 
 import java.util.Collection;
@@ -28,7 +28,7 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.AbstractChoice.LabelPosition;
 import org.apache.wicket.markup.html.form.CheckBoxMultipleChoice;
-import org.apache.wicket.markup.html.form.ChoiceRenderer;
+import org.apache.wicket.markup.html.form.EnumChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
@@ -78,8 +78,8 @@ public class UserPermissionsPanel
             projectRepository.setProjectPermissionLevels(user.getObject(), project.getObject(),
                     lvls);
         }));
-        levels.setChoices(asList(ADMIN, CURATOR, USER));
-        levels.setChoiceRenderer(new ChoiceRenderer<PermissionLevel>("name"));
+        levels.setChoices(asList(MANAGER, CURATOR, ANNOTATOR));
+        levels.setChoiceRenderer(new EnumChoiceRenderer<>(levels));
         form.add(levels);
         
         form.add(new Label("username", PropertyModel.of(aUser, "username")));

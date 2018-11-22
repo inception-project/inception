@@ -193,7 +193,7 @@ public class AgreementPage
         Project project = projectSelectionForm.getModelObject().project;
 
         List<User> users = projectService.listProjectUsersWithPermissions(project,
-                PermissionLevel.USER);
+                PermissionLevel.ANNOTATOR);
 
         List<SourceDocument> sourceDocuments = documentService.listSourceDocuments(project);
 

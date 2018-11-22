@@ -340,11 +340,11 @@ public class RemoteApiController2
         // Create permission for the project creator
         String owner = aCreator.isPresent() ? aCreator.get() : user.getUsername();
         projectService.createProjectPermission(
-                new ProjectPermission(project, owner, PermissionLevel.ADMIN));
+                new ProjectPermission(project, owner, PermissionLevel.MANAGER));
         projectService.createProjectPermission(
                 new ProjectPermission(project, owner, PermissionLevel.CURATOR));
         projectService.createProjectPermission(
-                new ProjectPermission(project, owner, PermissionLevel.USER));
+                new ProjectPermission(project, owner, PermissionLevel.ANNOTATOR));
         
         RResponse<RProject> response = new RResponse<>(new RProject(project));
         return ResponseEntity.created(aUcb.path(API_BASE + "/" + PROJECTS + "/{id}")

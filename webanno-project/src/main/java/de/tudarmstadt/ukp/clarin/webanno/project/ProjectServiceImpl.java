@@ -1041,7 +1041,7 @@ public class ProjectServiceImpl
             List<ProjectPermission> permissionLevels = listProjectPermissionLevel(aUser, aProject);
             for (ProjectPermission permissionLevel : permissionLevels) {
                 if (StringUtils.equalsIgnoreCase(permissionLevel.getLevel().getName(),
-                        PermissionLevel.ADMIN.getName())) {
+                        PermissionLevel.MANAGER.getName())) {
                     projectAdmin = true;
                     break;
                 }
@@ -1062,7 +1062,7 @@ public class ProjectServiceImpl
             List<ProjectPermission> permissionLevels = listProjectPermissionLevel(aUser, aProject);
             for (ProjectPermission permissionLevel : permissionLevels) {
                 if (StringUtils.equalsIgnoreCase(permissionLevel.getLevel().getName(),
-                        PermissionLevel.ADMIN.getName())) {
+                        PermissionLevel.MANAGER.getName())) {
                     user = true;
                     break;
                 }
@@ -1105,7 +1105,7 @@ public class ProjectServiceImpl
             List<ProjectPermission> permissionLevels = listProjectPermissionLevel(aUser, aProject);
             for (ProjectPermission permissionLevel : permissionLevels) {
                 if (StringUtils.equalsIgnoreCase(permissionLevel.getLevel().getName(),
-                        PermissionLevel.USER.getName())) {
+                        PermissionLevel.ANNOTATOR.getName())) {
                     user = true;
                     break;
                 }

@@ -101,7 +101,7 @@ public class PermissionsExporter
         if (aRequest.getManager().isPresent()
                 && !projectService.isProjectAdmin(aProject, aRequest.getManager().get())) {
             ProjectPermission permission = new ProjectPermission();
-            permission.setLevel(PermissionLevel.ADMIN);
+            permission.setLevel(PermissionLevel.MANAGER);
             permission.setProject(aProject);
             permission.setUser(aRequest.getManager().get().getUsername());
             projectService.createProjectPermission(permission);
