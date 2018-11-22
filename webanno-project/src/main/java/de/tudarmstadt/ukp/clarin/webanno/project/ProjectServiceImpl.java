@@ -774,7 +774,7 @@ public class ProjectServiceImpl
 
         // else only list projects where she is admin / user / curator
         for (Project project : allProjects) {
-            if (this.isProjectAdmin(project, user)
+            if (this.isManager(project, user)
                     || this.isAnnotator(project, user)
                     || this.isCurator(project, user)) {
                 allowedProject.add(project);
@@ -796,7 +796,7 @@ public class ProjectServiceImpl
 
         // else only projects she is admin of
         for (Project project : allProjects) {
-            if (this.isProjectAdmin(project, user)) {
+            if (this.isManager(project, user)) {
                 allowedProject.add(project);
             }
         }
@@ -1025,7 +1025,7 @@ public class ProjectServiceImpl
         }
 
         for (Project project : listProjects()) {
-            if (isProjectAdmin(project, user)) {
+            if (isManager(project, user)) {
                 return true;
             }
         }
@@ -1034,14 +1034,14 @@ public class ProjectServiceImpl
     }
 
     @Override
-    public boolean isProjectAdmin(Project aProject, User aUser)
+    public boolean isManager(Project aProject, User aUser)
     {
         boolean projectAdmin = false;
         try {
             List<ProjectPermission> permissionLevels = listProjectPermissionLevel(aUser, aProject);
             for (ProjectPermission permissionLevel : permissionLevels) {
                 if (StringUtils.equalsIgnoreCase(permissionLevel.getLevel().getName(),
-                        PermissionLevel.ADMIN.getName())) {
+                        PermissionLevel.MANAGER.getName())) {
                     projectAdmin = true;
                     break;
                 }
@@ -1062,7 +1062,7 @@ public class ProjectServiceImpl
             List<ProjectPermission> permissionLevels = listProjectPermissionLevel(aUser, aProject);
             for (ProjectPermission permissionLevel : permissionLevels) {
                 if (StringUtils.equalsIgnoreCase(permissionLevel.getLevel().getName(),
-                        PermissionLevel.ADMIN.getName())) {
+                        PermissionLevel.MANAGER.getName())) {
                     user = true;
                     break;
                 }
@@ -1105,7 +1105,7 @@ public class ProjectServiceImpl
             List<ProjectPermission> permissionLevels = listProjectPermissionLevel(aUser, aProject);
             for (ProjectPermission permissionLevel : permissionLevels) {
                 if (StringUtils.equalsIgnoreCase(permissionLevel.getLevel().getName(),
-                        PermissionLevel.USER.getName())) {
+                        PermissionLevel.ANNOTATOR.getName())) {
                     user = true;
                     break;
                 }

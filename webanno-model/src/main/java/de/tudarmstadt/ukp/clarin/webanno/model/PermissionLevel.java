@@ -22,13 +22,13 @@ import java.io.Serializable;
 import de.tudarmstadt.ukp.clarin.webanno.support.PersistentEnum;
 
 /**
- * Permission levels for a project. {@link PermissionLevel#USER} is an annotator while
- * {@link PermissionLevel#ADMIN} is a project administrator
+ * Permission levels for a project. {@link PermissionLevel#ANNOTATOR} is an annotator while
+ * {@link PermissionLevel#MANAGER} is a project administrator
  */
 public enum PermissionLevel
     implements PersistentEnum, Serializable
 {
-    USER("user"), CURATOR("curator"), ADMIN("admin");
+    ANNOTATOR("user"), CURATOR("curator"), MANAGER("admin");
     
     private final String id;
 

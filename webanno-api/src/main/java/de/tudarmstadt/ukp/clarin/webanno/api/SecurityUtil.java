@@ -83,13 +83,13 @@ public class SecurityUtil
     }
 
     /**
-     * @deprecated Use {@link ProjectService#isProjectAdmin(Project, User)}
+     * @deprecated Use {@link ProjectService#isManager(Project, User)}
      */
     @Deprecated
     public static boolean isProjectAdmin(Project aProject, ProjectService aProjectRepository,
             User aUser)
     {
-        return aProjectRepository.isProjectAdmin(aProject, aUser);
+        return aProjectRepository.isManager(aProject, aUser);
     }
 
     /**
@@ -156,7 +156,7 @@ public class SecurityUtil
     {
         for (Project project : repository.listProjects()) {
             if (repository.isCurator(project, user)
-                    || repository.isProjectAdmin(project, user)) {
+                    || repository.isManager(project, user)) {
                 return true;
             }
         }

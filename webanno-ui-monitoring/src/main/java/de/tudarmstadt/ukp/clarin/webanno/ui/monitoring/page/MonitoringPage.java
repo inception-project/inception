@@ -348,7 +348,7 @@ public class MonitoringPage
 
                             List<Project> allProjects = projectService.listProjects();
                             for (Project project : allProjects) {
-                                if (projectService.isProjectAdmin(project, user)
+                                if (projectService.isManager(project, user)
                                         || projectService.isCurator(project, user)) {
                                     allowedProject.add(project);
                                 }
@@ -423,7 +423,7 @@ public class MonitoringPage
 
             // List of users with USER permission level
             List<User> users = projectService.listProjectUsersWithPermissions(
-                    projectSelectionModel.project, PermissionLevel.USER);
+                    projectSelectionModel.project, PermissionLevel.ANNOTATOR);
 
             for (User user : users) {
                 documentListAsColumnHeader.add(user.getUsername());
@@ -510,7 +510,7 @@ public class MonitoringPage
         Map<String, Integer> annotatorsProgress = new HashMap<>();
         if (aProject != null) {
             for (User user : projectService.listProjectUsersWithPermissions(aProject,
-                    PermissionLevel.USER)) {
+                    PermissionLevel.ANNOTATOR)) {
                 for (SourceDocument document : documentService.listSourceDocuments(aProject)) {
                     if (documentService.isAnnotationFinished(document, user)) {
                         if (annotatorsProgress.get(user.getUsername()) == null) {
@@ -535,7 +535,7 @@ public class MonitoringPage
         Map<String, Integer> annotatorsProgress = new HashMap<>();
         if (aProject != null) {
             for (User user : projectService.listProjectUsersWithPermissions(aProject,
-                    PermissionLevel.USER)) {
+                    PermissionLevel.ANNOTATOR)) {
                 int finished = 0;
                 int ignored = 0;
                 int totalDocs = 0;
@@ -567,7 +567,7 @@ public class MonitoringPage
         User user = userRepository.get(username);
         for (Project project : projectService.listProjects()) {
             if (projectService.isCurator(project, user)
-                    || projectService.isProjectAdmin(project, user)) {
+                    || projectService.isManager(project, user)) {
                 int annoFinished = documentService.listFinishedAnnotationDocuments(project).size();
                 int allAnno = documentService.numberOfExpectedAnnotationDocuments(project);
                 int progress = (int) Math.round((double) (annoFinished * 100) / (allAnno));

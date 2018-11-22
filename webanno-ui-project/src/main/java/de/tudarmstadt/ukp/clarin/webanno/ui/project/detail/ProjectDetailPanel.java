@@ -148,11 +148,11 @@ public class ProjectDetailPanel
                 projectService.createProject(project);
 
                 projectService.createProjectPermission(
-                        new ProjectPermission(project, username, PermissionLevel.ADMIN));
+                        new ProjectPermission(project, username, PermissionLevel.MANAGER));
                 projectService.createProjectPermission(
                         new ProjectPermission(project, username, PermissionLevel.CURATOR));
                 projectService.createProjectPermission(
-                        new ProjectPermission(project, username, PermissionLevel.USER));
+                        new ProjectPermission(project, username, PermissionLevel.ANNOTATOR));
 
                 annotationService.initializeProject(project);
             }

@@ -843,7 +843,7 @@ public class DocumentServiceImpl
                 .createQuery(
                         "SELECT DISTINCT user FROM ProjectPermission WHERE project = :project "
                                 + "AND level = :level", String.class)
-                .setParameter("project", aProject).setParameter("level", PermissionLevel.USER)
+                .setParameter("project", aProject).setParameter("level", PermissionLevel.ANNOTATOR)
                 .getResultList();
 
         // check if the username is in the Users database (imported projects

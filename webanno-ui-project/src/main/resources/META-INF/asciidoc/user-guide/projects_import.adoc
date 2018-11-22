@@ -1,12 +1,10 @@
 == Import
 
-NOTE: This functionality is only available to *administrators* and *project creators*.
-
 Here, you can import project archives such as the example projects provided on our website or
 projects exported from the <<sect_projects_export>> tab.
 
 When a user with the role *project creator* imports a project, that user automatically becomes a
-*project manager* of the imported project. However, no permissions for the project are imported!
+*manager* of the imported project. However, no permissions for the project are imported!
 
 NOTE: If the current instance has users with the same name as those who originally worked on the
       import project, the manager can add these users to the project and they can access their annotations.
