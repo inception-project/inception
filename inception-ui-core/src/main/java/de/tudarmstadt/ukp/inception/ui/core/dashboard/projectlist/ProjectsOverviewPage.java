@@ -195,7 +195,7 @@ public class ProjectsOverviewPage
             {
                 PermissionLevel level = aItem.getModelObject().getLevel();
                 aItem.add(new Label(MID_LABEL, getString(
-                        Classes.simpleName(level.getDeclaringClass()) + '.' + level.getName())));
+                        Classes.simpleName(level.getDeclaringClass()) + '.' + level.toString())));
             }
         };
     }
