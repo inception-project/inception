@@ -209,11 +209,6 @@ public class MtasUimaParser
         
         // Loop over the annotations
         for (Annotation annotation : JCasUtil.select(aJCas, Annotation.class)) {
-            // MTAS cannot index zero-width annotations, so we skip them here.
-            if (annotation.getBegin() == annotation.getEnd()) {
-                continue;
-            }
-            
             mtasId = indexAnnotation(tokenCollection, annotation, mtasId);
         }
         
@@ -275,12 +270,7 @@ public class MtasUimaParser
                 AnnotationFS targetFs = FSUtil.getFeature(aAnnotation,
                         adapter.getTargetFeatureName(), AnnotationFS.class);
 
-                if (
-                        sourceFs != null && targetFs != null && 
-                        // MTAS cannot index zero-width annotations, so we skip them here.
-                        sourceFs.getBegin() != sourceFs.getEnd() &&
-                        targetFs.getBegin() != targetFs.getEnd()
-                ) {
+                if (sourceFs != null && targetFs != null) {
                     Range range = getRange(targetFs);
                     
                     // Index the source annotation text (equals the target)
