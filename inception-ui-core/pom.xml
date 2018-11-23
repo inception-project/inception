@@ -89,6 +89,11 @@
     </dependency>
     <dependency>
       <groupId>org.wicketstuff</groupId>
+      <artifactId>wicket-datetime</artifactId>
+      <version>${wicketstuff.version}</version>
+    </dependency> 
+   <dependency>
+      <groupId>org.wicketstuff</groupId>
       <artifactId>wicketstuff-annotation</artifactId>
     </dependency>
     <dependency>
