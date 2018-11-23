@@ -44,6 +44,7 @@ import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.DropDownChoice;
+import org.apache.wicket.markup.html.form.NumberTextField;
 import org.apache.wicket.markup.html.form.RadioGroup;
 import org.apache.wicket.markup.html.form.RequiredTextField;
 import org.apache.wicket.markup.html.form.TextField;
@@ -60,7 +61,6 @@ import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.validation.IValidator;
 import org.apache.wicket.validation.ValidationError;
-import org.apache.wicket.validation.validator.RangeValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -112,7 +112,7 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
     private static final int MAXIMUM_REMOTE_REPO_SUGGESTIONS = 10;
 
     private @SpringBean KnowledgeBaseService kbService;
-    private @SpringBean KnowledgeBaseProperties kbproperties;
+    private @SpringBean KnowledgeBaseProperties kbProperties;
 
     private final Map<String, File> uploadedFiles;
     private final IModel<Project> projectModel;
@@ -254,12 +254,25 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
 
         private TextField<Integer> queryLimitField(String id, IModel<Integer> aModel)
         {
-            if (aModel.getObject() == 0) {
-                aModel.setObject(kbproperties.getDefaultMaxResults());
-            }
-            TextField<Integer> queryLimit = new RequiredTextField<Integer>(id, aModel);
-            queryLimit.add(RangeValidator.range(0, kbproperties.getHardMaxResults()));
+            NumberTextField<Integer> queryLimit = new NumberTextField<>(id, aModel, Integer.class);
             queryLimit.setOutputMarkupId(true);
+            queryLimit.setRequired(true);
+            queryLimit.setMinimum(KnowledgeBaseProperties.HARD_MIN_RESULTS);
+            queryLimit.setMaximum(kbProperties.getHardMaxResults());
+            queryLimit.add(LambdaBehavior.onConfigure(it -> {
+                // If not setting, initialize with default
+                if (queryLimit.getModelObject() == null || queryLimit.getModelObject() == 0) {
+                    queryLimit.setModelObject(kbProperties.getDefaultMaxResults());
+                }
+                // Cap at local min results
+                else if (queryLimit.getModelObject() < KnowledgeBaseProperties.HARD_MIN_RESULTS) {
+                    queryLimit.setModelObject(KnowledgeBaseProperties.HARD_MIN_RESULTS);
+                }
+                // Cap at local max results
+                else if (queryLimit.getModelObject() > kbProperties.getHardMaxResults()) {
+                    queryLimit.setModelObject(kbProperties.getHardMaxResults());
+                }
+            }));
             return queryLimit;
         }
 
@@ -270,7 +283,7 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
                 @Override
                 public void onUpdate(AjaxRequestTarget aTarget) {
                     if (getModelObject()) {
-                        queryLimitField.setModelObject(kbproperties.getHardMaxResults());
+                        queryLimitField.setModelObject(kbProperties.getHardMaxResults());
                         queryLimitField.setEnabled(false);
                     }
                     else {

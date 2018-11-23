@@ -182,7 +182,7 @@ public class KBProperty
             else {
                 nameLiteral = vf.createLiteral(name);
             }
-            Statement nameStmt = vf.createStatement(subject, kb.getLabelIri(), nameLiteral);
+            Statement nameStmt = vf.createStatement(subject, kb.getPropertyLabelIri(), nameLiteral);
             originalStatements.add(nameStmt);
             aConn.add(nameStmt);
         }
@@ -195,8 +195,8 @@ public class KBProperty
             else {
                 descriptionLiteral = vf.createLiteral(description, language);
             }
-            Statement descStmt = vf
-                .createStatement(subject, kb.getDescriptionIri(), descriptionLiteral);
+            Statement descStmt = vf.createStatement(subject, kb.getPropertyDescriptionIri(),
+                    descriptionLiteral);
             originalStatements.add(descStmt);
             aConn.add(descStmt);
         }
@@ -223,7 +223,8 @@ public class KBProperty
         kbProp.setKB(kb);
         kbProp.originalStatements.add(aStmt);
 
-        readFirstLabel(aConn, kb, aStmt.getSubject(), kb.getDefaultLanguage())
+        readFirst(aConn, aStmt.getSubject(), kb.getPropertyLabelIri(), null, 
+                kb.getDefaultLanguage())
             .ifPresent((stmt) -> {
                 kbProp.setName(stmt.getObject().stringValue());
                 kbProp.originalStatements.add(stmt);
@@ -234,7 +235,8 @@ public class KBProperty
                 }
             });
 
-        readFirst(aConn, aStmt.getSubject(), kb.getDescriptionIri(), null, kb.getDefaultLanguage())
+        readFirst(aConn, aStmt.getSubject(), kb.getPropertyDescriptionIri(), null, 
+                kb.getDefaultLanguage())
             .ifPresent((stmt) -> {
                 kbProp.setDescription(stmt.getObject().stringValue());
                 kbProp.originalStatements.add(stmt);

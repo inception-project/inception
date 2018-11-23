@@ -199,9 +199,15 @@ public class PredictionTask
             Recommender aRecommender)
     {
         int predictionCount = 0;
-        
-        DocumentMetaData dmd = DocumentMetaData.get(aCas);
-        String documentUri = dmd.getDocumentUri();
+
+        // Replace this with CasMetadata
+        String documentUri = aDocument.getName();
+        try {
+            DocumentMetaData dmd = DocumentMetaData.get(aCas);
+            documentUri = dmd.getDocumentUri();
+        } catch (IllegalArgumentException e) {
+            log.warn("No DocumentMetaData in CAS, using document name as document URI!");
+        }
         
         List<AnnotationObject> result = new ArrayList<>();
         int id = 0;

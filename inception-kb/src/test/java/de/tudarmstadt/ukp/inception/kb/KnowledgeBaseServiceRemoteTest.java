@@ -187,7 +187,8 @@ public class KnowledgeBaseServiceRemoteTest
                     "http://www.w3.org/TR/2003/PR-owl-guide-20031209/wine#ChateauMargaux",
                     rootConcepts, parentChildConcepts));
         }
-      
+
+
 //        {
 //            ValueFactory vf = SimpleValueFactory.getInstance();
 //            KnowledgeBase kb_hucit = new KnowledgeBase();
@@ -278,6 +279,7 @@ public class KnowledgeBaseServiceRemoteTest
             kb_yago.setReification(Reification.NONE);
             kb_yago.applyMapping(profile.getMapping());
             kb_yago.applyRootConcepts(profile);
+            kb_yago.setDefaultLanguage("en");
             kb_yago.setMaxResults(maxResults);
             rootConcepts = new HashSet<String>();
             rootConcepts.add("http://www.w3.org/2002/07/owl#Thing");

@@ -379,4 +379,15 @@
       <where>supportConceptLinking = true</where>
     </update>
   </changeSet>
+  
+  <!--
+   - We had a bug that this setting was not properly initialized when importing projects that
+   - where this setting did not exist yet. For such cases, we set the value to the default here. 
+   -->
+  <changeSet author="INCEpTION Team" id="20181120-1">
+    <update tableName="knowledgebase">
+      <column name="maxResults" type="INT" valueNumeric="1000"/>
+      <where>maxResults = 0</where>
+    </update>
+  </changeSet>
 </databaseChangeLog>

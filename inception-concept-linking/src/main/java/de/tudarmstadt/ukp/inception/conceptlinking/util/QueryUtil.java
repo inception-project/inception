@@ -201,7 +201,27 @@ public class QueryUtil
             searchLiteral = vf.createLiteral(string + "*");
         } else {
             fullTextMatchingString = getFullTextMatchingQueryPartDefault(aLimit);
-            searchLiteral = vf.createLiteral(string);
+            
+            StringBuilder queryString = new StringBuilder();
+            // Virtuoso requires that strings are quoted if the contain spaces. We just always
+            // quote them to be on the safe side.
+            queryString.append("'");
+            
+            // Strip single quotes and asterisks because they have special semantics
+            String query = string.replace("'", " ").replace("*", " ");
+            queryString.append(query);
+            
+            // If the last token in the query has 4 chars or more, then we add an asterisk to
+            // perform a prefix search. If we try that with less than 4 chars, Virtuoso will
+            // send us back an error.
+            String[] queryTokens = query.split(" ");
+            if (queryTokens[queryTokens.length - 1].length() >= 4) {
+                queryString.append("*");
+            }
+            
+            queryString.append("'");
+            
+            searchLiteral = vf.createLiteral(queryString.toString());
         }
 
         String query = String.join("\n",
