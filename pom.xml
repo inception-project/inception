@@ -677,6 +677,12 @@
 
       <dependency>
         <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
+        <artifactId>de.tudarmstadt.ukp.dkpro.core.io.html-asl</artifactId>
+        <version>${dkpro.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
         <artifactId>de.tudarmstadt.ukp.dkpro.core-asl</artifactId>
         <version>${dkpro.version}</version>
         <type>pom</type>
@@ -908,6 +914,7 @@
                   <goal>check</goal>
                 </goals>
                 <configuration>
+                  <consoleOutput>true</consoleOutput>
                   <excludes>
                     <exclude>.gitignore</exclude>
                     <exclude>.checkstyle</exclude>
