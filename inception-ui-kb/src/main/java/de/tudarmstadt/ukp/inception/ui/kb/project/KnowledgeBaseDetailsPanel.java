@@ -82,7 +82,6 @@ import de.tudarmstadt.ukp.inception.ui.core.bootstrap.DisabledBootstrapCheckbox;
 public class KnowledgeBaseDetailsPanel
     extends Panel
 {
-
     private @SpringBean ApplicationEventPublisherHolder applicationEventPublisherHolder;
 
     private static final long serialVersionUID = -3550082954966752196L;
@@ -293,6 +292,7 @@ public class KnowledgeBaseDetailsPanel
     private void actionReindex(AjaxRequestTarget aTarget)
     {
         aTarget.addChildren(getPage(), IFeedback.class);
+
         KnowledgeBase kb = kbwModel.getObject().getKb();
         try {
             log.info("Starting rebuilding full-text index of {} ... this may take a while ...", kb);

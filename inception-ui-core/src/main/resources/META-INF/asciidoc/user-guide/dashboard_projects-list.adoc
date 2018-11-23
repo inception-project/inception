@@ -23,9 +23,14 @@ see all the projects to which you have access. For every project, the roles you 
 Users with the role *project creator* can conveniently *create new projects* or
 *import project archives* on this page.
 
-When uploading projects via this page, no permissions for the project are imported! If the 
-current instance has users with the same name as those who originally worked on the
+When uploading projects via this page, user roles for the project are not fully imported! 
+If the importing user has the role *project creator*, then the *manager* role is added
+for the importing user. Otherwise, only the roles of the importing user are retained.
+
+If the current instance has users with the same name as those who originally worked on the
 import project, the manager can add these users to the project and they can access their annotations.
-Otherwise, only the imported source documents are accessible. Users with the role *administrator*
-who wish to import projects with all permissions and optionally create missing users have to do this
-through the <<sect_projects>> which can be access through the *Administration* link in the menu bar.
+Otherwise, only the imported source documents are accessible. 
+
+Users with the role *administrator* who wish to import projects with all permissions and optionally 
+create missing users have to do this through the <<sect_projects>> which can be access through
+the *Administration* link in the menu bar.
