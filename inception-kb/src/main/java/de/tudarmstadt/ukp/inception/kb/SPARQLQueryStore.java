@@ -239,6 +239,20 @@ public final class SPARQLQueryStore
                 , "LIMIT " + aKB.getMaxResults());
     }
         
+    /** 
+     * Query to get sub property from a knowledge base.
+     */
+    public static final String getSubProperty(KnowledgeBase aKB)
+    {
+        return String.join("\n"
+                , SPARQL_PREFIX    
+                , "SELECT ?s WHERE { "
+                , "  ?s ?pSUBPROPERTY ?oItem. " 
+                , "}"
+                , "LIMIT " + aKB.getMaxResults());
+    }
+    
+    
     /**
      * Query to get property specific domain elements including properties which do not have a 
      * domain specified.

@@ -623,7 +623,50 @@ public class KnowledgeBaseServiceImpl
         resultList.sort(Comparator.comparing(KBObject::getUiLabel));
         return resultList;
     }
+    
+    //@Override
+    public Set<KBHandle> getSubPropertyLabels(KnowledgeBase aKB )
+    {
+        Set<KBHandle> subPropertyLabels = new HashSet<KBHandle>();
+        Optional<KBObject> identifierKBObj = readKBIdentifier(aKB.getProject(),
+                aKB.getLabelIri().stringValue());
+        getIterativeSubPropertyLabels(subPropertyLabels, aKB,
+                identifierKBObj.get().toKBHandle());
+        return subPropertyLabels;
+       
+    }
+    
+    public Set<KBHandle> getIterativeSubPropertyLabels(Set<KBHandle> subPropertyLabelSet,
+            KnowledgeBase aKB, KBHandle aHandle)
+    {
+        List<KBHandle> subPropertylist = getSubProperty(aKB, aHandle.getIdentifier(), true);
+        for (KBHandle subProp : subPropertylist) {
+            if (!subPropertyLabelSet.contains(subProp)) {
+                subPropertyLabelSet.add(subProp);
+                getIterativeSubPropertyLabels(subPropertyLabelSet, aKB, subProp);
+            }
+        }
+        return subPropertyLabelSet;
+    }
 
+    
+    
+    public List<KBHandle> getSubProperty(KnowledgeBase aKB, String aIdentifier, boolean aAll)
+        throws QueryEvaluationException
+    {
+        List<KBHandle> resultList = read(aKB, (conn) -> {
+            ValueFactory vf = conn.getValueFactory();
+            String QUERY = SPARQLQueryStore.getSubProperty(aKB);
+            TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
+            tupleQuery.setBinding("oItem", vf.createIRI(aIdentifier));
+            tupleQuery.setBinding("pSUBPROPERTY", aKB.getSubPropertyIri());
+            tupleQuery.setIncludeInferred(true);
+            return evaluateListQuery(aKB, tupleQuery, false, aAll, "s");
+        });
+        resultList.sort(Comparator.comparing(KBObject::getUiLabel));
+        return resultList;
+    } 
+    
     @Override
     public KBHandle createInstance(KnowledgeBase kb, KBInstance aInstance)
     {
@@ -1163,10 +1206,6 @@ public class KnowledgeBaseServiceImpl
             }
 
             String id = bindings.getBinding(itemVariable).getValue().stringValue();
-            Binding label = bindings.getBinding(langVariable);
-            Binding description = bindings.getBinding(descVariable);
-            Binding subpropertyLabel = bindings.getBinding("spl");
-
             if (!id.contains(":") || (!aAll && hasImplicitNamespace(id))) {
                 continue;
             }
@@ -1417,9 +1456,9 @@ public class KnowledgeBaseServiceImpl
         for (int i = 0; i < profiles.length; i++) {
             // Check if kb profile corresponds to a known schema profile
             if (equalsSchemaProfile(profiles[i], mapping.getClassIri(), mapping.getSubclassIri(),
-                    mapping.getTypeIri(), mapping.getSubPropertyIri(), mapping.getDescriptionIri(), mapping.getLabelIri(),
-                    mapping.getPropertyTypeIri(), mapping.getPropertyLabelIri(),
-                    mapping.getPropertyDescriptionIri())) {
+                    mapping.getTypeIri(), mapping.getSubPropertyIri(), mapping.getDescriptionIri(),
+                    mapping.getLabelIri(), mapping.getPropertyTypeIri(),
+                    mapping.getPropertyLabelIri(), mapping.getPropertyDescriptionIri())) {
 
                 return profiles[i];
             }
@@ -1435,8 +1474,8 @@ public class KnowledgeBaseServiceImpl
         for (int i = 0; i < profiles.length; i++) {
             // Check if kb has a known schema profile
             if (equalsSchemaProfile(profiles[i], aKb.getClassIri(), aKb.getSubclassIri(),
-                    aKb.getTypeIri(), aKb.getSubPropertyIri(), aKb.getDescriptionIri(), aKb.getLabelIri(),
-                    aKb.getPropertyTypeIri(), aKb.getPropertyLabelIri(),
+                    aKb.getTypeIri(), aKb.getSubPropertyIri(), aKb.getDescriptionIri(),
+                    aKb.getLabelIri(), aKb.getPropertyTypeIri(), aKb.getPropertyLabelIri(),
                     aKb.getPropertyDescriptionIri())) {
                 return profiles[i];
             }
@@ -1450,8 +1489,8 @@ public class KnowledgeBaseServiceImpl
      * profile
      */
     private boolean equalsSchemaProfile(SchemaProfile profile, IRI classIri, IRI subclassIri,
-        IRI typeIri, IRI subPropertyIRI, IRI descriptionIri, IRI labelIri, IRI propertyTypeIri, IRI propertyLabelIri,
-        IRI propertyDescriptionIri)
+            IRI typeIri, IRI subPropertyIRI, IRI descriptionIri, IRI labelIri, IRI propertyTypeIri,
+            IRI propertyLabelIri, IRI propertyDescriptionIri)
     {
         return Objects.equals(profile.getClassIri(), classIri) && 
                 Objects.equals(profile.getSubclassIri(), subclassIri) && 

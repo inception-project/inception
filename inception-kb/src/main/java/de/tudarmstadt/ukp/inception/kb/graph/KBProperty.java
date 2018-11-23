@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.kb.graph;
 
 import static de.tudarmstadt.ukp.inception.kb.graph.RdfUtils.readFirst;
-import static de.tudarmstadt.ukp.inception.kb.graph.RdfUtils.readFirstLabel;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import java.util.ArrayList;
