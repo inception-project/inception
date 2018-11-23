@@ -20,33 +20,7 @@
 <html xmlns:wicket="http://wicket.apache.org">
 <body>
   <wicket:panel>
-    <div class="form-group col-xs-12">
-      <label wicket:for="upload" class="control-label">
-        <wicket:message key="kb.wizard.steps.local.fileupload" />
-      </label>
-      <input wicket:id="upload" type="file" multiple />
-    </div>
-    <div class="form-group col-xs-12">
-      <label class="control-label">
-        <wicket:message key="kb.local.fileupload.supported.header" />
-      </label>
-      <p><wicket:message key="kb.local.fileupload.supported.list" /></p>
-    </div>
-    <div class="form-group col-xs-12">
-      <label class="control-label">
-        <wicket:message key="kb.wizard.steps.local.predefinedKBs" />
-      </label>
-      <div wicket:id = "listViewContainer">
-        <div class="list-group" style="margin-bottom: 2px;">
-          <wicket:container wicket:id="downloadableKBs">
-            <button wicket:id="suggestionLink" type="button" class="list-group-item">
-              <wicket:container wicket:id="suggestionLabel" />
-            </button>
-          </wicket:container>
-        </div>
-      </div>
-      <button wicket:id="addKbButton" type="button" class="btn btn-outline-secondary"><wicket:container wicket:id="addKbLabel"></wicket:container></button>
-    </div>
+      <span wicket:id="accessSpecificSettings"></span>
   </wicket:panel>
 </body>
 </html>

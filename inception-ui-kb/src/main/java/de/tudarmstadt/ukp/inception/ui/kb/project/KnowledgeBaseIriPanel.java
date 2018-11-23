@@ -76,16 +76,6 @@ public class KnowledgeBaseIriPanel
 
         kbModel = aModel;
 
-        // Add textfield and label for basePrefix
-        ComboBox<String> basePrefix = new ComboBox<String>("basePrefix",
-                kbModel.bind("kb.basePrefix"), Arrays.asList(IriConstants.INCEPTION_NAMESPACE));
-        basePrefix.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> {
-            // Do nothing just update the model values
-        }));
-        basePrefix.setConvertEmptyInputStringToNull(false);
-        basePrefix.setOutputMarkupId(true);
-        add(basePrefix);
-
         // RadioGroup to select the IriSchemaType
         BootstrapRadioGroup<SchemaProfile> iriSchemaChoice = new BootstrapRadioGroup<SchemaProfile>(
                 "iriSchema", selectedSchemaProfile, Arrays.asList(SchemaProfile.values()),
