@@ -55,6 +55,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderFactoryRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
@@ -163,6 +164,16 @@ public class RecommendationServiceImpl
                 .createQuery("FROM Recommender WHERE project = :project ORDER BY name ASC",
                         Recommender.class)
                 .setParameter("project", aProject).getResultList();
+        return settings;
+    }
+    
+    @Override
+    @Transactional
+    public List<LoggedEvent> listLoggedEvents(Project aProject, User user)
+    {
+        List<LoggedEvent> settings = entityManager
+                .createQuery("FROM LoggedEvent WHERE user=:user AND project = :project AND event = :event ORDER BY created DESC",
+                        LoggedEvent.class).setParameter("user", user.getUsername()).setParameter("project", aProject.getId()).setParameter("event", "RecommenderEvaluationResultEvent").getResultList();
         return settings;
     }
     
