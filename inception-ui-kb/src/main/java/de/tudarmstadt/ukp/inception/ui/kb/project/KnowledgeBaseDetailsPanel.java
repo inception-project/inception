@@ -33,6 +33,7 @@ import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.Form;
+import org.apache.wicket.markup.html.form.NumberTextField;
 import org.apache.wicket.markup.html.form.RequiredTextField;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.form.upload.FileUpload;
@@ -49,6 +50,7 @@ import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.resource.IResourceStream;
 import org.apache.wicket.validation.validator.RangeValidator;
+import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.repository.RepositoryException;
 import org.eclipse.rdf4j.repository.config.RepositoryConfigException;
 import org.eclipse.rdf4j.repository.config.RepositoryImplConfig;
@@ -80,7 +82,6 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 public class KnowledgeBaseDetailsPanel
     extends Panel
 {
-
     private @SpringBean ApplicationEventPublisherHolder applicationEventPublisherHolder;
 
     private static final long serialVersionUID = -3550082954966752196L;
@@ -282,18 +283,20 @@ public class KnowledgeBaseDetailsPanel
 
     private void actionReindex(AjaxRequestTarget aTarget)
     {
+        aTarget.addChildren(getPage(), IFeedback.class);
+
         KnowledgeBase kb = kbwModel.getObject().getKb();
         try {
             log.info("Starting rebuilding full-text index of {} ... this may take a while ...", kb);
             kbService.rebuildFullTextIndex(kb);
             log.info("Completed rebuilding full-text index of {}", kb);
+            success("Completed rebuilding full-text index");
         }
         catch (Exception e) {
             error("Unable to rebuild full text index: " + e.getLocalizedMessage());
             log.error("Unable to rebuild full text index for KB [{}]({}) in project [{}]({})",
                     kb.getName(), kb.getRepositoryId(), kb.getProject().getName(),
                     kb.getProject().getId(), e);
-            aTarget.addChildren(getPage(), IFeedback.class);
         }
     }
     
@@ -479,10 +482,15 @@ public class KnowledgeBaseDetailsPanel
             wmc.add(textField);
         }
 
-        private CheckBox maxQueryLimitCheckbox(String id, IModel<Boolean> model) {
-            return new AjaxCheckBox(id, model) {
+        private CheckBox maxQueryLimitCheckbox(String id, IModel<Boolean> aModel)
+        {
+            return new AjaxCheckBox(id, aModel)
+            {
+                private static final long serialVersionUID = -8390353018496338400L;
+
                 @Override
-                public void onUpdate(AjaxRequestTarget aTarget) {
+                public void onUpdate(AjaxRequestTarget aTarget)
+                {
                     if (getModelObject()) {
                         queryLimitField.setModelObject(kbProperties.getHardMaxResults());
                         queryLimitField.setEnabled(false);
@@ -492,18 +500,30 @@ public class KnowledgeBaseDetailsPanel
                     }
                     aTarget.add(queryLimitField);
                 }
-
             };
         }
 
-        private TextField<Integer> queryLimitField(String id, IModel<Integer> model)
+        private NumberTextField<Integer> queryLimitField(String id, IModel<Integer> aModel)
         {
-            if (model.getObject() == 0) {
-                model.setObject(kbProperties.getDefaultMaxResults());
-            }
-            TextField<Integer> queryLimit = new RequiredTextField<Integer>(id, model);
-            queryLimit.add(RangeValidator.range(0, kbProperties.getHardMaxResults()));
+            NumberTextField<Integer> queryLimit = new NumberTextField<>(id, aModel, Integer.class);
             queryLimit.setOutputMarkupId(true);
+            queryLimit.setRequired(true);
+            queryLimit.setMinimum(KnowledgeBaseProperties.HARD_MIN_RESULTS);
+            queryLimit.setMaximum(kbProperties.getHardMaxResults());
+            queryLimit.add(LambdaBehavior.onConfigure(it -> {
+                // If not setting, initialize with default
+                if (queryLimit.getModelObject() == null || queryLimit.getModelObject() == 0) {
+                    queryLimit.setModelObject(kbProperties.getDefaultMaxResults());
+                }
+                // Cap at local min results
+                else if (queryLimit.getModelObject() < KnowledgeBaseProperties.HARD_MIN_RESULTS) {
+                    queryLimit.setModelObject(KnowledgeBaseProperties.HARD_MIN_RESULTS);
+                }
+                // Cap at local max results
+                else if (queryLimit.getModelObject() > kbProperties.getHardMaxResults()) {
+                    queryLimit.setModelObject(kbProperties.getHardMaxResults());
+                }
+            }));
             return queryLimit;
         }
     }

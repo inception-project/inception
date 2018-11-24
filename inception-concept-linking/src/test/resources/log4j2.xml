@@ -8,7 +8,8 @@
   </Appenders>
 
   <Loggers>
-    <Logger name="org.eclipse.rdf4j.sail.lucene" level="DEBUG"/>
+    <Logger name="de.tudarmstadt.ukp.inception.conceptlinking" level="TRACE"/>
+    <Logger name="org.eclipse.rdf4j.sail.lucene" level="INFO"/>
     <Root level="warn">
       <AppenderRef ref="ConsoleAppender" />
     </Root>
