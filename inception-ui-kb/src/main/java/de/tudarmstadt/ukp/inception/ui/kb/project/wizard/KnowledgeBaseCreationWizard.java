@@ -17,14 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.project.wizard;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
-import de.tudarmstadt.ukp.inception.ui.kb.project.*;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -35,8 +32,6 @@ import org.apache.wicket.extensions.wizard.WizardButton;
 import org.apache.wicket.extensions.wizard.dynamic.DynamicWizardModel;
 import org.apache.wicket.extensions.wizard.dynamic.DynamicWizardStep;
 import org.apache.wicket.extensions.wizard.dynamic.IDynamicWizardStep;
-import org.apache.wicket.markup.html.form.upload.FileUpload;
-import org.apache.wicket.markup.html.form.upload.FileUploadField;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.request.cycle.RequestCycle;
@@ -45,13 +40,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
-import de.tudarmstadt.ukp.inception.kb.io.FileUploadDownloadHelper;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 import de.tudarmstadt.ukp.inception.ui.core.bootstrap.BootstrapWizard;
 import de.tudarmstadt.ukp.inception.ui.core.bootstrap.BootstrapWizardButtonBar;
+import de.tudarmstadt.ukp.inception.ui.kb.project.AccessSpecificSettingsPanel;
+import de.tudarmstadt.ukp.inception.ui.kb.project.GeneralSettingsPanel;
+import de.tudarmstadt.ukp.inception.ui.kb.project.KnowledgeBaseIriPanel;
+import de.tudarmstadt.ukp.inception.ui.kb.project.KnowledgeBaseListPanel;
+import de.tudarmstadt.ukp.inception.ui.kb.project.KnowledgeBaseWrapper;
 
 /**
  * Wizard for registering a new knowledge base for a project.
@@ -123,7 +121,8 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
             super(previousStep, "", "", aKbModel);
             kbModel = aKbModel;
 
-            Component generalSettings = new GeneralSettingsPanel("generalSettings", projectModel, aKbModel);
+            Component generalSettings = new GeneralSettingsPanel("generalSettings", projectModel,
+                aKbModel);
             add(generalSettings);
             generalSettings.get("enabled").setVisible(false);
             generalSettings.get("writeprotection").setVisible(false);
@@ -137,28 +136,29 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
 
         @Override
         public IDynamicWizardStep next() {
-            return new LocalRepositoryStep(this, kbModel);
+            return new AccessSpecificSettingsStep(this, kbModel);
         }
     }
     
     /**
      * Wizard step providing a file upload functionality for local (native) knowledge bases.
      */
-    private final class LocalRepositoryStep extends DynamicWizardStep {
+    private final class AccessSpecificSettingsStep
+        extends DynamicWizardStep {
 
         private static final long serialVersionUID = 8212277960059805657L;
 
         private CompoundPropertyModel<KnowledgeBaseWrapper> kbModel;
 
-        public LocalRepositoryStep(IDynamicWizardStep previousStep,
+        public AccessSpecificSettingsStep(IDynamicWizardStep previousStep,
                 CompoundPropertyModel<KnowledgeBaseWrapper> aKbModel)
         {
             super(previousStep, "", "", aKbModel);
             kbModel = aKbModel;
             kbModel.getObject().setFiles(new ArrayList<>());
 
-            Component accessSpecificSettings = new  AccessSpecificSettingsPanel("accessSpecificSettings", projectModel, kbModel,
-                knowledgeBaseProfiles);
+            Component accessSpecificSettings = new AccessSpecificSettingsPanel(
+                "accessSpecificSettings", projectModel, kbModel, knowledgeBaseProfiles);
             add(accessSpecificSettings);
             accessSpecificSettings.get("localSpecificSettings:exportButtons").setVisible(false);
             accessSpecificSettings.get("localSpecificSettings:clear").setVisible(false);
@@ -175,7 +175,7 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
                 break;
             case REMOTE:
                 // MB: as of 2018-02, all remote knowledge bases are read-only, hence the
-                // PermissionsStep is currently not shown. Therefore, set the read-only property here
+                // PermissionsStep is currently not shown. Therefore, set read-only property here
                 // manually.
                 kbModel.getObject().getKb().setReadOnly(true);
             }
@@ -216,7 +216,7 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
             super(previousStep, "", "", aModel);
             model = aModel;
 
-            add(new KnowledgeBaseIriPanel("iriPanel", model, KnowledgeBaseIriPanelMode.WIZARD));
+            add(new KnowledgeBaseIriPanel("iriPanel", model));
         }
 
         @Override

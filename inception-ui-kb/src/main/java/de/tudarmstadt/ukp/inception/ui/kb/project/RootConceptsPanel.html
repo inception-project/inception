@@ -21,16 +21,12 @@
 <body>
   <wicket:panel>
 	<div class="form-group col-xs-12">
-      <label class="control-label">
-        <wicket:message key="kb.iri.advancedSettings" />
-      </label>
-      <hr/>
       <div>
       	<label class="control-label">
-          <wicket:message key="kb.iri.advancedSettingsConcepts" />
+          <wicket:message key="kb.settings.rootConcepts" />
       	</label>
 	    <div class="list-group">
-	      <div wicket:id="explicitlyDefinedRootConcepts">
+	      <div wicket:id="rootConcepts">
             <form wicket:id="conceptForm" class="form-inline" style="width: 100%;">
 	             <input type="text" wicket:id="textField" class="form-control" style="width: 87%;"/>
 	             <button wicket:id="removeConcept" class="fa fa-trash col-auto"></button>

@@ -1,5 +1,39 @@
 package de.tudarmstadt.ukp.inception.ui.kb.project;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import org.apache.wicket.AttributeModifier;
+import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.ajax.markup.html.AjaxLink;
+import org.apache.wicket.feedback.IFeedback;
+import org.apache.wicket.markup.html.WebMarkupContainer;
+import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.form.RequiredTextField;
+import org.apache.wicket.markup.html.form.TextField;
+import org.apache.wicket.markup.html.form.upload.FileUpload;
+import org.apache.wicket.markup.html.form.upload.FileUploadField;
+import org.apache.wicket.markup.html.list.ListItem;
+import org.apache.wicket.markup.html.list.ListView;
+import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.model.CompoundPropertyModel;
+import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.Model;
+import org.apache.wicket.model.ResourceModel;
+import org.apache.wicket.model.StringResourceModel;
+import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.apache.wicket.util.resource.IResourceStream;
+import org.eclipse.rdf4j.repository.RepositoryException;
+import org.eclipse.rdf4j.rio.RDFFormat;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
@@ -10,33 +44,7 @@ import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
 import de.tudarmstadt.ukp.inception.kb.io.FileUploadDownloadHelper;
-import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseAccess;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
-import de.tudarmstadt.ukp.inception.ui.kb.project.wizard.KnowledgeBaseCreationWizard;
-import org.apache.wicket.AttributeModifier;
-import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.ajax.markup.html.AjaxLink;
-import org.apache.wicket.feedback.IFeedback;
-import org.apache.wicket.markup.html.WebMarkupContainer;
-import org.apache.wicket.markup.html.basic.Label;
-import org.apache.wicket.markup.html.form.RequiredTextField;
-import org.apache.wicket.markup.html.form.upload.FileUpload;
-import org.apache.wicket.markup.html.form.upload.FileUploadField;
-import org.apache.wicket.markup.html.list.ListItem;
-import org.apache.wicket.markup.html.list.ListView;
-import org.apache.wicket.markup.html.panel.Panel;
-import org.apache.wicket.model.*;
-import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.apache.wicket.util.resource.IResourceStream;
-import org.eclipse.rdf4j.repository.RepositoryException;
-import org.eclipse.rdf4j.rio.RDFFormat;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.*;
-import java.util.stream.Collectors;
 
 public class AccessSpecificSettingsPanel extends Panel
 {
@@ -117,13 +125,20 @@ public class AccessSpecificSettingsPanel extends Panel
                 .collect(Collectors.toList()));
         suggestions = suggestions.subList(0,
             Math.min(suggestions.size(), MAXIMUM_REMOTE_REPO_SUGGESTIONS));
-        wmc.add(new ListView<KnowledgeBaseProfile>("suggestions", suggestions)
+
+        wmc.add(remoteSuggestionsList("suggestions", suggestions, urlField));
+    }
+
+    private ListView<KnowledgeBaseProfile> remoteSuggestionsList(String aId,
+        List<KnowledgeBaseProfile> aSuggestions, TextField aUrlField)
+    {
+        return new ListView<KnowledgeBaseProfile>("suggestions", aSuggestions)
         {
 
             private static final long serialVersionUID = 4179629475064638272L;
 
-            @Override
-            protected void populateItem(ListItem<KnowledgeBaseProfile> item) {
+            @Override protected void populateItem(ListItem<KnowledgeBaseProfile> item)
+            {
                 // add a link for one knowledge base with proper label
                 LambdaAjaxLink link = new LambdaAjaxLink("suggestionLink", t -> {
                     // set all the fields according to the chosen profile
@@ -132,16 +147,16 @@ public class AccessSpecificSettingsPanel extends Panel
                     // values to IRI and populate the list
                     kbModel.getObject().getKb().applyRootConcepts(item.getModelObject());
                     kbModel.getObject().getKb().applyMapping(item.getModelObject().getMapping());
-                    t.add(urlField);
+                    t.add(aUrlField);
                 });
                 link.add(new Label("suggestionLabel", item.getModelObject().getName()));
                 item.add(link);
             }
-        });
+        };
     }
 
     private void setUpLocalSpecificSettings(WebMarkupContainer wmc) {
-        fileUploadField = new FileUploadField("upload");
+        fileUploadField = new FileUploadField("upload", Model.of());
         wmc.add(fileUploadField);
 
         wmc.add(new LambdaAjaxLink("uploadButton", AccessSpecificSettingsPanel.this::actionUpload));
@@ -155,33 +170,13 @@ public class AccessSpecificSettingsPanel extends Panel
 
             @Override public boolean isEnabled()
             {
-                return true; //kbService.isEmpty(kbModel.getObject().getKb());
+                return true;//kbService.isEmpty(kbModel.getObject().getKb());
             }
         };
         wmc.add(clearLink);
 
-        ListView<String> lv = new ListView<String>("exportButtons",
-            EXPORT_FORMAT_FILE_EXTENSIONS)
-        {
 
-            private static final long serialVersionUID = -1869762759620557362L;
-
-            @Override protected void populateItem(ListItem<String> item)
-            {
-                // creates an appropriately labeled {@link AjaxDownloadLink} which triggers the
-                // download of the contents of the current KB in the given format
-                String fileExtension = item.getModelObject();
-                Model<String> exportFileNameModel = Model
-                    .of(kbModel.getObject().getKb().getName() + "." + fileExtension);
-                AjaxDownloadLink exportLink = new AjaxDownloadLink("link", exportFileNameModel,
-                    LambdaModel
-                        .of(() -> actionExport(fileExtension)));
-                exportLink
-                    .add(new Label("label", new ResourceModel("kb.export." + fileExtension)));
-                item.add(exportLink);
-            }
-        };
-        wmc.add(lv);
+        wmc.add(fileExtensionsExportList("exportButtons"));
 
         List<KnowledgeBaseProfile> downloadableKBs = knowledgeBaseProfiles.values().stream()
             .filter(kb -> RepositoryType.LOCAL.equals(kb.getType()))
@@ -227,6 +222,31 @@ public class AccessSpecificSettingsPanel extends Panel
             this::actionDownloadKbAndSetIRIs);
         addKbButton.add(new Label("addKbLabel", new ResourceModel("kb.wizard.steps.local.addKb")));
         wmc.add(addKbButton);
+    }
+
+    private ListView<String> fileExtensionsExportList(String aId) {
+        ListView<String> fileExListView = new ListView<String>(aId,
+            EXPORT_FORMAT_FILE_EXTENSIONS)
+        {
+
+            private static final long serialVersionUID = -1869762759620557362L;
+
+            @Override protected void populateItem(ListItem<String> item)
+            {
+                // creates an appropriately labeled {@link AjaxDownloadLink} which triggers the
+                // download of the contents of the current KB in the given format
+                String fileExtension = item.getModelObject();
+                Model<String> exportFileNameModel = Model
+                    .of(kbModel.getObject().getKb().getName() + "." + fileExtension);
+                AjaxDownloadLink exportLink = new AjaxDownloadLink("link", exportFileNameModel,
+                    LambdaModel
+                        .of(() -> actionExport(fileExtension)));
+                exportLink
+                    .add(new Label("label", new ResourceModel("kb.export." + fileExtension)));
+                item.add(exportLink);
+            }
+        };
+        return fileExListView;
     }
 
     private void actionUpload(AjaxRequestTarget aTarget) {

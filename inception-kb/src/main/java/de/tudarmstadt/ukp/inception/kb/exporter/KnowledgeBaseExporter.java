@@ -120,7 +120,7 @@ public class KnowledgeBaseExporter implements ProjectExporter
             exportedKB.setSupportConceptLinking(kb.isSupportConceptLinking());
             exportedKB.setBasePrefix(kb.getBasePrefix());
             exportedKB.setRootConcepts(
-                kb.getExplicitlyDefinedRootConcepts()
+                kb.getRootConcepts()
                     .stream()
                     .map(conceptIRI -> conceptIRI.stringValue())
                     .collect(Collectors.toList()));
@@ -217,12 +217,12 @@ public class KnowledgeBaseExporter implements ProjectExporter
             kb.setBasePrefix(exportedKB.getBasePrefix());
 
             if (exportedKB.getRootConcepts() != null) {
-                kb.setExplicitlyDefinedRootConcepts(
+                kb.setRootConcepts(
                     exportedKB.getRootConcepts().stream()
                         .map(conceptId -> vf.createIRI(conceptId)).collect(Collectors.toList()));
             }
             else {
-                kb.setExplicitlyDefinedRootConcepts(new ArrayList<>());
+                kb.setRootConcepts(new ArrayList<>());
             }
             kb.setDefaultLanguage(exportedKB.getDefaultLanguage());
             kb.setMaxResults(exportedKB.getMaxResults());

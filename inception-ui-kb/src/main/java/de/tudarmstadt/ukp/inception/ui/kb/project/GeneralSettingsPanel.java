@@ -3,7 +3,6 @@ package de.tudarmstadt.ukp.inception.ui.kb.project;
 import java.util.Arrays;
 import java.util.List;
 
-import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.DropDownChoice;
@@ -24,6 +23,7 @@ import de.agilecoders.wicket.core.markup.html.bootstrap.form.radio.EnumRadioChoi
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
+import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
@@ -53,15 +53,7 @@ public class GeneralSettingsPanel extends Panel
         add(createCheckbox("enabled", "kb.enabled"));
         add(basePrefixField("basePrefix", "kb.basePrefix"));
         add(createCheckbox("writeprotection", "kb.readOnly"));
-
         add(selectReificationStrategy("reification", "kb.reification"));
-        //TODO: Move query limit to other panel
-        /**
-        queryLimitField = queryLimitField("maxResults", kbModel.bind("kb.maxResults"));
-        add(queryLimitField);
-        maxQueryLimitCheckBox = maxQueryLimitCheckbox("maxQueryLimit", Model.of(false));
-        add(maxQueryLimitCheckBox);
-         **/
     }
 
     private TextField<String> nameField(String id, String property) {
@@ -124,7 +116,7 @@ public class GeneralSettingsPanel extends Panel
         };
     }
 
-    private CheckBox createCheckbox(String aId, String aProperty){
+    private CheckBox createCheckbox(String aId, String aProperty) {
         return new CheckBox(aId, kbModel.bind(aProperty));
     }
 

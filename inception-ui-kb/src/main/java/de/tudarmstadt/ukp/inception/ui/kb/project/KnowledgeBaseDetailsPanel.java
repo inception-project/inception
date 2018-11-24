@@ -20,37 +20,26 @@ package de.tudarmstadt.ukp.inception.ui.kb.project;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.ajax.markup.html.form.AjaxButton;
-import org.apache.wicket.ajax.markup.html.form.AjaxCheckBox;
 import org.apache.wicket.feedback.IFeedback;
-import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
-import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.Form;
-import org.apache.wicket.markup.html.form.NumberTextField;
 import org.apache.wicket.markup.html.form.RequiredTextField;
-import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.form.upload.FileUpload;
 import org.apache.wicket.markup.html.form.upload.FileUploadField;
-import org.apache.wicket.markup.html.list.ListItem;
-import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.Fragment;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.apache.wicket.util.resource.IResourceStream;
-import org.apache.wicket.validation.validator.RangeValidator;
-import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.repository.RepositoryException;
 import org.eclipse.rdf4j.repository.config.RepositoryConfigException;
 import org.eclipse.rdf4j.repository.config.RepositoryImplConfig;
@@ -59,19 +48,13 @@ import org.eclipse.rdf4j.rio.RDFFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.googlecode.wicket.kendo.ui.form.combobox.ComboBox;
-
 import de.agilecoders.wicket.core.markup.html.bootstrap.button.Buttons;
-import de.agilecoders.wicket.core.markup.html.bootstrap.form.BootstrapCheckbox;
 import de.agilecoders.wicket.core.markup.html.bootstrap.form.radio.BootstrapRadioGroup;
 import de.agilecoders.wicket.core.markup.html.bootstrap.form.radio.EnumRadioChoiceRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxDownloadLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.TempFileResource;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
@@ -327,26 +310,6 @@ public class KnowledgeBaseDetailsPanel
         });
     }
 
-    private void actionClear(AjaxRequestTarget aTarget)
-    {
-        try {
-            kbService.clear(kbwModel.getObject().getKb());
-            info(new StringResourceModel("kb.details.local.contents.clear.feedback",
-                kbwModel.bind("kb")));
-            aTarget.add(this);
-        }
-        catch (RepositoryException e) {
-            error(e);
-            aTarget.addChildren(getPage(), IFeedback.class);
-        }
-    }
-
-    private IResourceStream actionExport(String rdfFormatFileExt)
-    {
-        return new TempFileResource((os) -> kbService
-            .exportData(kbModel.getObject(), getRdfFormatForFileExt(rdfFormatFileExt), os));
-    }
-
     private class KBSettingsTitle
         extends Fragment
     {
@@ -365,166 +328,35 @@ public class KnowledgeBaseDetailsPanel
     {
 
         private static final long serialVersionUID = 7838564354437836375L;
-        protected CompoundPropertyModel<KnowledgeBaseWrapper> model;
-        private TextField<Integer> queryLimitField;
-        private CheckBox maxQueryLimitCheckBox;
+        protected CompoundPropertyModel<KnowledgeBaseWrapper> kbwModel;
 
-        public KBSettingsContent(String id, CompoundPropertyModel<KnowledgeBaseWrapper> model)
+        public KBSettingsContent(String id, CompoundPropertyModel<KnowledgeBaseWrapper> aKbwModel)
         {
-            super(id, "kbSettingsContent",KnowledgeBaseDetailsPanel.this, model);
+            super(id, "kbSettingsContent", KnowledgeBaseDetailsPanel.this, aKbwModel);
 
-            this.model = model;
-            boolean isHandlingLocalRepository =
-                model.getObject().getKb().getType() == RepositoryType.LOCAL;
+            kbwModel = aKbwModel;
 
-            // container for form components common to both local and remote KBs
-            WebMarkupContainer common = new WebMarkupContainer(COMMON_WEBMARKUPCONTAINER_MARKUP_ID);
-            add(common);
-            setUpCommonComponents(common);
-
-            // container for form components related to local KBs
-            WebMarkupContainer local = new WebMarkupContainer(LOCAL_WEBMARKUPCONTAINER_MARKUP_ID);
-            add(local);
-            local.setVisibilityAllowed(isHandlingLocalRepository);
-            setUpLocalKnowledgeBaseComponents(local);
-
-            // container for form components related to remote KBs
-            WebMarkupContainer remote = new WebMarkupContainer(REMOTE_WEBMARKUPCONTAINER_MARKUP_ID);
-            add(remote);
-            remote.setVisibilityAllowed(!isHandlingLocalRepository);
-            setUpRemoteKnowledgeBaseComponents(remote);
-        }
+            Component generalSettings = new GeneralSettingsPanel("generalSettings",
+                Model.of(kbModel.getObject().getProject()), kbwModel);
+            add(generalSettings);
+            generalSettings.get("name").setVisible(false);
 
 
-        protected void setUpCommonComponents(WebMarkupContainer wmc)
-        {
-            ComboBox<String> comboBox = new ComboBox<String>("language",
-                kbwModel.bind("kb.defaultLanguage"),
-                Arrays.asList("en", "de"));
-            wmc.add(comboBox);
+            Component accessSpecificSettings = new AccessSpecificSettingsPanel(
+                "accessSpecificSettings", Model.of(kbModel.getObject().getProject()), kbwModel,
+                Collections.emptyMap());
+            add(accessSpecificSettings);
+            accessSpecificSettings.get("remoteSpecificSettings:suggestions").setVisible(false);
 
-            // Schema configuration
-            wmc.add(new KnowledgeBaseIriPanel("iriPanel", model,
-                KnowledgeBaseIriPanelMode.PROJECTSETTINGS));
-            wmc.add(new CheckBox("enabled", model.bind("kb.enabled")));
-            queryLimitField = queryLimitField("maxResults",
-                model.bind("kb.maxResults"));
-            wmc.add(queryLimitField);
-            maxQueryLimitCheckBox = maxQueryLimitCheckbox("maxQueryLimit", Model.of(false));
-            wmc.add(maxQueryLimitCheckBox);
-        }
+            Component querySettings = new QuerySettingsPanel("querySettings",
+                Model.of(kbModel.getObject().getProject()), kbwModel);
+            add(querySettings);
 
-        protected void setUpLocalKnowledgeBaseComponents(WebMarkupContainer wmc)
-        {
-            // creates a list of export buttons, one for each viable RDF format
-            // MB 2018-01: would've been nicer to go for a split button with one recommended format
-            // and several others to choose from, but SplitButton in wicket-bootstrap 0.10.16 is
-            // totally broken, so we're doing this instead
-            ListView<String> lv = new ListView<String>("exportButtons",
-                EXPORT_FORMAT_FILE_EXTENSIONS)
-            {
+            Component schemaMapping = new KnowledgeBaseIriPanel("schemaMapping", kbwModel);
+            add(schemaMapping);
 
-                private static final long serialVersionUID = -1869762759620557362L;
-
-                @Override protected void populateItem(ListItem<String> item)
-                {
-                    // creates an appropriately labeled {@link AjaxDownloadLink} which triggers the
-                    // download of the contents of the current KB in the given format
-                    String fileExtension = item.getModelObject();
-                    Model<String> exportFileNameModel = Model
-                        .of(kbModel.getObject().getName() + "." + fileExtension);
-                    AjaxDownloadLink exportLink = new AjaxDownloadLink("link", exportFileNameModel,
-                        LambdaModel
-                            .of(() -> KnowledgeBaseDetailsPanel.this.actionExport(fileExtension)));
-                    exportLink
-                        .add(new Label("label", new ResourceModel("kb.export." + fileExtension)));
-                    item.add(exportLink);
-                }
-            };
-            wmc.add(lv);
-
-            wmc.add(new FileUploadField(FILE_UPLOAD_FIELD_MARKUP_ID, Model.of()));
-
-            // add link for clearing the knowledge base contents, enabled only, if there is
-            // something to clear            
-            AjaxLink<Void> clearLink = new LambdaAjaxLink("clear",
-                KnowledgeBaseDetailsPanel.this::actionClear)
-            {
-
-                private static final long serialVersionUID = -6272361381689154558L;
-
-                @Override public boolean isEnabled()
-                {
-                    return kbService.isEmpty(model.getObject().getKb());
-                }
-            };
-            wmc.add(clearLink);
-
-            wmc.add(new BootstrapCheckbox("writeprotection", model.bind("kb.readOnly"),
-                    new StringResourceModel("kb.details.permissions.writeprotection")));
-        }
-
-        protected void setUpRemoteKnowledgeBaseComponents(WebMarkupContainer wmc)
-        {
-            // this text field allows for _editing_the location for remote repositories
-            addUrlField(wmc, "url");
-            
-            // add "readonly"-checkbox that is always disabled
-            wmc.add(new BootstrapCheckbox("writeprotection", model.bind("kb.readOnly"),
-                    new StringResourceModel("kb.details.permissions.writeprotection"))
-                            .add(LambdaBehavior.onConfigure(cb -> cb.setEnabled(false))));
-        }
-
-        private void addUrlField(WebMarkupContainer wmc, String id)
-        {
-            TextField<String> textField = new RequiredTextField<String>(id);
-            textField.add(Validators.URL_VALIDATOR);
-            wmc.add(textField);
-        }
-
-        private CheckBox maxQueryLimitCheckbox(String id, IModel<Boolean> aModel)
-        {
-            return new AjaxCheckBox(id, aModel)
-            {
-                private static final long serialVersionUID = -8390353018496338400L;
-
-                @Override
-                public void onUpdate(AjaxRequestTarget aTarget)
-                {
-                    if (getModelObject()) {
-                        queryLimitField.setModelObject(kbProperties.getHardMaxResults());
-                        queryLimitField.setEnabled(false);
-                    }
-                    else {
-                        queryLimitField.setEnabled(true);
-                    }
-                    aTarget.add(queryLimitField);
-                }
-            };
-        }
-
-        private NumberTextField<Integer> queryLimitField(String id, IModel<Integer> aModel)
-        {
-            NumberTextField<Integer> queryLimit = new NumberTextField<>(id, aModel, Integer.class);
-            queryLimit.setOutputMarkupId(true);
-            queryLimit.setRequired(true);
-            queryLimit.setMinimum(KnowledgeBaseProperties.HARD_MIN_RESULTS);
-            queryLimit.setMaximum(kbProperties.getHardMaxResults());
-            queryLimit.add(LambdaBehavior.onConfigure(it -> {
-                // If not setting, initialize with default
-                if (queryLimit.getModelObject() == null || queryLimit.getModelObject() == 0) {
-                    queryLimit.setModelObject(kbProperties.getDefaultMaxResults());
-                }
-                // Cap at local min results
-                else if (queryLimit.getModelObject() < KnowledgeBaseProperties.HARD_MIN_RESULTS) {
-                    queryLimit.setModelObject(KnowledgeBaseProperties.HARD_MIN_RESULTS);
-                }
-                // Cap at local max results
-                else if (queryLimit.getModelObject() > kbProperties.getHardMaxResults()) {
-                    queryLimit.setModelObject(kbProperties.getHardMaxResults());
-                }
-            }));
-            return queryLimit;
+            Component rootConcepts = new RootConceptsPanel("rootConcepts", kbwModel);
+            add(rootConcepts);
         }
     }
 }

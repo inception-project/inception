@@ -71,117 +71,13 @@
   </wicket:fragment>
   
   <wicket:fragment wicket:id="kbSettingsContent">
-
-    <!--Container for REMOTE-KB components -->
-    <wicket:container wicket:id="remote">
-      <div class="form-group row">
-        <label wicket:for="url" class="col-sm-3 control-label">
-          <wicket:message key="kb.remote.url" />
-        </label>
-        <div class="col-sm-9">
-          <input wicket:id="url" type="text" class="form-control" />
-        </div>
+      <div class="form-group col-xs-12">
+        <div wicket:id="generalSettings"></div>
+        <div wicket:id="accessSpecificSettings"></div>
+        <div wicket:id="querySettings"></div>
+        <div wicket:id="schemaMapping"></div>
+        <div wicket:id="rootConcepts"></div>
       </div>
-      <div class="form-group row">
-        <label class="col-sm-3 control-label">
-          <wicket:message key="kb.details.contents.permissions" />
-        </label>
-        <div class="col-sm-9">
-          <div wicket:id="writeprotection" class="col-sm-offset-2"></div>
-        </div>
-      </div>
-    </wicket:container>
-
-
-    <!--Container for LOCAL-KB components -->
-    <wicket:container wicket:id="local">
-      <!-- Export -->
-      <div class="form-group row">
-        <label class="col-sm-3 control-label">
-          <wicket:message key="kb.details.local.contents.export" />
-        </label>
-        <div class="col-sm-9">
-          <div class="flex-h-container flex-gutter flex-only-internal-gutter">
-            <div wicket:id="exportButtons">
-              <button wicket:id="link" type="button" class="btn btn-default"><i class="fa fa-download" aria-hidden="true"></i> <wicket:container wicket:id="label"></wicket:container></button>
-            </div>
-          </div>
-        </div>
-      </div>
-      <!-- Import -->
-      <div class="form-group row">
-        <label class="col-sm-3 control-label">
-          <wicket:message key="kb.details.local.contents" />
-        </label>
-        <div class="col-sm-9">
-          <div class="form-group row">
-            <span class="col-sm-2 control-label">
-              <wicket:message key="kb.details.local.contents.fileupload" />
-              <i class="fa fa-info-circle" wicket:message="title:kb.local.fileupload.supported.headerlist"></i>
-            </span>
-            <div class="col-sm-10">
-              <input wicket:id="upload" type="file" multiple />
-            </div>
-          </div>
-          <wicket:enclosure wicket:id="clear">
-            <div class="form-group row">
-              <span class="col-sm-2 control-label">
-                <wicket:message key="kb.details.local.contents.clear" />
-              </span>
-              <div class="col-sm-10">
-                <input type="button" wicket:id="clear" class="btn btn-default" wicket:message="value:kb.clear" />
-              </div>
-            </div>   
-          </wicket:enclosure>    
-        </div>
-      </div>
-      <!-- Permissions -->
-      <div class="form-group row">
-        <label class="col-sm-3 control-label">
-          <wicket:message key="kb.details.contents.permissions" />
-        </label>
-        <div class="col-sm-9">
-          <div wicket:id="writeprotection"></div>
-        </div>
-      </div>
-    </wicket:container>
-
-
-    <!--Container for common components of local and remote KBs-->
-    <wicket:container wicket:id="common-content">
-      <div class="form-group row">
-        <label class="col-sm-3 control-label">
-          <wicket:message key="kb.details.enabled" />
-        </label>
-        <div class="col-sm-9">
-          <input wicket:id="enabled" type="checkbox" />
-        </div>
-      </div>
-      <div class="form-group row">
-        <label class="col-sm-3 control-label">
-          <wicket:message key="kb.language" />
-        </label>
-        <div class="col-sm-9">
-          <input wicket:id="language" type="text" class="form-control"/>
-        </div>
-      </div>
-      <div class="form-group row">
-        <label class="control-label col-sm-3">
-          <wicket:message key="kb.queryLimit" />
-        </label>
-        <div class="form-inline col-sm-9">
-          <input type="text" wicket:id="maxResults" class="form-control"/>
-            <div class="checkbox" style="margin-left: 15px;">
-              <label wicket:for="maxQueryLimit">
-              <input type="checkbox" wicket:id="maxQueryLimit"/>
-                <i><wicket:label key="kb.details.contents.maxQueryLimit"/></i>
-              </label>
-            </div>
-        </div>
-      </div>
-      <span wicket:id="iriPanel"></span>
-    </wicket:container>
-
   </wicket:fragment>
 </body>
 </html>
