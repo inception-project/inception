@@ -17,18 +17,19 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.external;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.uima.fit.util.CasUtil.getType;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.uima.UIMAException;
+import org.apache.uima.UIMAFramework;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
@@ -38,6 +39,8 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
+import org.apache.uima.resource.metadata.TypeSystemDescription;
+import org.apache.uima.util.XMLInputSource;
 import org.xml.sax.SAXException;
 
 import com.fasterxml.jackson.core.JsonParseException;
@@ -125,7 +128,7 @@ public class RemoteStringMatchingNerRecommender
         throws SAXException, IOException, UIMAException
     {
         CAS cas = buildCas(typeSystem);
-        try (InputStream bais = new ByteArrayInputStream(xmi.getBytes())) {
+        try (InputStream bais = new ByteArrayInputStream(xmi.getBytes(UTF_8))) {
             XmiCasDeserializer.deserialize(bais, cas);
         }
         return cas;
@@ -135,10 +138,9 @@ public class RemoteStringMatchingNerRecommender
     {
         // We need to save the typeSystem XML to disk as the
         // JCasFactory needs a file and not a string
-        File typeSystemFile = File.createTempFile("typeSystem", ".xmi");
-        FileUtils.writeByteArrayToFile(typeSystemFile, typeSystem.getBytes());
-        JCas jCas = JCasFactory
-                .createJCasFromPath(typeSystemFile.getAbsoluteFile().toURI().toString());
+        TypeSystemDescription tsd = UIMAFramework.getXMLParser().parseTypeSystemDescription(
+                new XMLInputSource(IOUtils.toInputStream(typeSystem, UTF_8), null));
+        JCas jCas = JCasFactory.createJCas(tsd);
         return jCas.getCas();
     }
 
@@ -147,7 +149,7 @@ public class RemoteStringMatchingNerRecommender
         try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             XmiCasSerializer.serialize(aCas, null, out, true, null);
             PredictionResponse response = new PredictionResponse();
-            response.setDocument(new String(out.toByteArray()));
+            response.setDocument(new String(out.toByteArray(), UTF_8));
             ObjectMapper mapper = new ObjectMapper();
             return mapper.writeValueAsString(response);
         }
