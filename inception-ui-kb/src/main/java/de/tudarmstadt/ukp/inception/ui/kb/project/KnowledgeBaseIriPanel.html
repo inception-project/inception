@@ -21,9 +21,11 @@
 <body>
   <wicket:panel>
     <div class="form-group col-xs-12">
-    <h4>
+        <div class="form-group row">
+    <h4 class="control-label col-sm-3">
       <wicket:message key="kb.settings.schemaMapping" />
     </h4>
+        </div>
     <div wicket:id="comboBoxWrapper" class="form-horizontal">
       <div class="form-group col-xs-12" wicket:enclosure="iriSchema">
         <label class="control-label col-sm-3">
@@ -34,9 +36,11 @@
         </div>
       </div>
 
-      <h4>
-        <wicket:message key="kb.settings.schemaMapping.classMapping" />
-      </h4>
+        <div class="form-group row">
+            <h4 class="control-label col-sm-3">
+                <wicket:message key="kb.settings.schemaMapping.classMapping" />
+            </h4>
+        </div>
       <div class="form-group col-xs-12">
         <label class="control-label col-sm-3">
           <wicket:message key="kb.iri.classIri" />
@@ -82,9 +86,11 @@
         </div>
       </div>
 
-      <h4>
-        <wicket:message key="kb.settings.schemaMapping.propertyMapping" />
-      </h4>
+        <div class="form-group row">
+            <h4 class="control-label col-sm-3">
+                <wicket:message key="kb.settings.schemaMapping.propertyMapping" />
+            </h4>
+        </div>
       <div class="form-group col-xs-12">
         <label class="control-label col-sm-3">
           <wicket:message key="kb.iri.propertyTypeIri" />

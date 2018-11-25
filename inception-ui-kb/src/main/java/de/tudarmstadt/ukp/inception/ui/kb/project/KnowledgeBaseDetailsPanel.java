@@ -169,22 +169,6 @@ public class KnowledgeBaseDetailsPanel
         };
         add(form);
 
-        // add (disabled) radio choice for local/remote repository
-        form.add(new BootstrapRadioGroup<>("type", kbwModel.bind("kb.type"),
-            Arrays.asList(RepositoryType.values()),
-            new EnumRadioChoiceRenderer<RepositoryType>(Buttons.Type.Default, this)
-            {
-                private static final long serialVersionUID = 1073440402072678330L;
-
-                @Override public String getButtonClass(RepositoryType option)
-                {
-                    return super.getButtonClass(option) + " disabled";
-                }
-            }));
-
-        // add (disabled) reification strategy
-        form.add(new Label("reification", kbwModel.bind("kb.reification")));
-
         // title/content
         title = new KBSettingsTitle(TITLE_MARKUP_ID, kbwModel);
         content = new KBSettingsContent(CONTENT_MARKUP_ID, kbwModel);
@@ -340,6 +324,10 @@ public class KnowledgeBaseDetailsPanel
                 Model.of(kbModel.getObject().getProject()), kbwModel);
             add(generalSettings);
             generalSettings.get("name").setVisible(false);
+            generalSettings.get("type").setEnabled(false);
+            generalSettings.get("reification").setEnabled(false);
+            generalSettings.get("writeprotection")
+                .setEnabled(kbwModel.getObject().getKb().getType() == RepositoryType.LOCAL);
 
 
             Component accessSpecificSettings = new AccessSpecificSettingsPanel(
