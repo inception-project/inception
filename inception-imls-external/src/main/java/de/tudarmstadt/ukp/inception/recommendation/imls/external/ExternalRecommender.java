@@ -192,6 +192,8 @@ public class ExternalRecommender
     private String serializeCas(CAS aCas) throws RecommendationException
     {
         try (StringWriter out = new StringWriter()) {
+            // Passing "null" as the type system to the XmiCasSerializer means that we want 
+            // to serialize all types (i.e. no filtering for a specific target type system).
             XmiCasSerializer xmiCasSerializer = new XmiCasSerializer(null);
             XMLSerializer sax2xml = new XMLSerializer(out, true);
             xmiCasSerializer.serialize(aCas, sax2xml.getContentHandler(), null, null, null);
