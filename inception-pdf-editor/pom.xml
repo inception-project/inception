@@ -105,6 +105,7 @@
                 <excludes combine.children="append">
                   <!-- These upstream files do not contain license headers -->
                   <exclude>src/main/java/de/tudarmstadt/ukp/inception/pdfeditor/pdfjs/resources/web/images/*.svg</exclude>
+                  <exclude>cache/**/*</exclude>
                 </excludes>
               </configuration>
             </execution>
