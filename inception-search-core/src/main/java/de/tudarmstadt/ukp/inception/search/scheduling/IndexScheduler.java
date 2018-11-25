@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.search.scheduling;
 
 import java.util.Iterator;
+import java.util.Optional;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
@@ -33,12 +34,13 @@ import org.springframework.stereotype.Component;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.inception.search.scheduling.tasks.IndexDocumentTask;
+import de.tudarmstadt.ukp.inception.search.scheduling.tasks.IndexAnnotationDocumentTask;
+import de.tudarmstadt.ukp.inception.search.scheduling.tasks.IndexSourceDocumentTask;
 import de.tudarmstadt.ukp.inception.search.scheduling.tasks.ReindexTask;
 import de.tudarmstadt.ukp.inception.search.scheduling.tasks.Task;
 
 /**
- * Indexer scheduler. Does the project reindexing in an asynchronous way.
+ * Indexer scheduler. Does the project re-indexing in an asynchronous way.
  */
 @Component
 public class IndexScheduler
@@ -51,7 +53,6 @@ public class IndexScheduler
     private Thread consumer;
     private BlockingQueue<Task> queue = new ArrayBlockingQueue<Task>(100);
 
-    
     @Override
     public void afterPropertiesSet()
     {
@@ -76,13 +77,13 @@ public class IndexScheduler
     public void enqueueIndexDocument(SourceDocument aSourceDocument, JCas aJCas)
     {
         // Index source document
-        enqueue(new IndexDocumentTask(aSourceDocument, aJCas));
+        enqueue(new IndexSourceDocumentTask(aSourceDocument, aJCas));
     }
 
     public void enqueueIndexDocument(AnnotationDocument aAnnotationDocument, JCas aJCas)
     {
         // Index annotation document
-        enqueue(new IndexDocumentTask(aAnnotationDocument, aJCas));
+        enqueue(new IndexAnnotationDocumentTask(aAnnotationDocument, aJCas));
     }
     
     /**
@@ -97,52 +98,51 @@ public class IndexScheduler
      */
     public synchronized void enqueue(Task aRunnable)
     {
-        if (aRunnable.getAnnotationDocument() == null && aRunnable.getSourceDocument() == null) {
-            // Project indexing task
-            
-            // If there is no indexing in the queue on for this project, enqueue it
-            if (!isIndexing(aRunnable.getProject())) {
+        Optional<Task> alreadyScheduledTask = findAlreadyScheduled(aRunnable);
+        
+        // Project indexing task
+        if (aRunnable instanceof ReindexTask) {
+            if (alreadyScheduledTask.isPresent()) {
+                log.debug("Matching project indexing task already scheduled: [{}] - skipping ...",
+                        aRunnable);
+            }
+            else {
                 queue.offer(aRunnable);
-                log.info("Enqueued new indexing task: {}", aRunnable);
+                log.info("Enqueued new project indexing task: {}", aRunnable);
             }
         }
-        else if (aRunnable.getSourceDocument() != null) {
-            // Source document indexing task
-            
-            // If there is no indexing in the queue on for this project, enqueue it
-            if (!isIndexingDocument(aRunnable.getSourceDocument())) {
+        // Source document indexing task
+        else if (aRunnable instanceof IndexSourceDocumentTask) {
+            if (alreadyScheduledTask.isPresent()) {
+                log.debug(
+                        "Matching source document indexing task already scheduled: [{}] - skipping ...",
+                        aRunnable);
+            }
+            else {
                 queue.offer(aRunnable);
                 log.info("Enqueued new source document indexing task: {}", aRunnable);
             }
-            else {
-                log.debug("No source document indexing task enqueued due to a previous "
-                        + "enqueued task: {}", aRunnable);
-            }
         }
-        else if (aRunnable.getAnnotationDocument() != null) {
-            // Annotation document indexing task
-
+        // Annotation document indexing task
+        else if (aRunnable instanceof IndexAnnotationDocumentTask) {
             // Try to update the document CAS in the task currently enqueued for the same 
             // annotation document/user (if there is an enqueued task).
             // This must be done so that the task will take into account the
             // latest changes to the annotation document.
-
-            if (updateIndexingDocumentTask(aRunnable.getAnnotationDocument(),
-                    aRunnable.getAnnotationDocument().getUser(),
-                    aRunnable.getJCas())) {
-                // There was a task in the queue, it was updated with the current document.
-                log.debug("Annotation document indexing task already in the queue. Just updated "
-                        + " the document: {}", aRunnable);
+            if (alreadyScheduledTask.isPresent()) {
+                alreadyScheduledTask.get().setJCas(aRunnable.getJCas());
+                log.debug(
+                        "Matching source document indexing task already scheduled: [{}] - updating CAS",
+                        aRunnable);
             }
             else {
-                // There was no indexing task in the queue for this document/user. Enqueue new task.
                 queue.offer(aRunnable);
-                log.info("Enqueued new document indexing task: {}", aRunnable);
+                log.info("Enqueued new annotation document indexing task: {}", aRunnable);
             }
         }
     }
 
-    public void stopAllTasksForUser(String username)
+    public synchronized void stopAllTasksForUser(String username)
     {
         Iterator<Task> taskIterator = queue.iterator();
         while (taskIterator.hasNext()) {
@@ -153,75 +153,8 @@ public class IndexScheduler
         }
     }
 
-    /**
-     * Check if there is an indexing task for this project.
-     * 
-     * @param aProject
-     *          The project
-     * @return
-     *          True if there is an indexing task for this project.
-     *          False otherwise
-     */
-    public boolean isIndexing(Project aProject)
+    private Optional<Task> findAlreadyScheduled(Task aTask)
     {
-        Iterator<Task> taskIterator = queue.iterator();
-        while (taskIterator.hasNext()) {
-            Task t = taskIterator.next();
-            if (t.getProject().equals(aProject)) {
-                return true;
-            }
-        }
-        return false;
+        return queue.stream().filter(aTask::matches).findAny();
     }
-
-    /**
-     * Check if there is an indexing task for this source document.
-     * 
-     * @param aSourceDocument
-     *          The source document
-     * @return
-     *          True if there is an indexing task for the source document.
-     *          False otherwise.
-     */
-    public boolean isIndexingDocument(SourceDocument aSourceDocument)
-    {
-        Iterator<Task> taskIterator = queue.iterator();
-        while (taskIterator.hasNext()) {
-            Task task = taskIterator.next();
-            if (task.getProject().equals(aSourceDocument.getProject())
-                    && task.getAnnotationDocument().getId() == aSourceDocument.getId()) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Update the CAS in the indexing task that is currently in the queue for this annotation 
-     * document/user, if there is one.
-     * 
-     * @param aAnnotationDocument
-     *          The annotation document
-     * @param aUser
-     *          The user
-     * @return
-     *          True if there was an indexing task in the queue for this annotation document/user.
-     *          False otherwise.
-     */
-    public boolean updateIndexingDocumentTask(AnnotationDocument aAnnotationDocument, String aUser,
-            JCas aJCas)
-    {
-        Iterator<Task> it = queue.iterator();
-        while (it.hasNext()) {
-            Task task = it.next();
-            if (task.getProject().equals(aAnnotationDocument.getProject())
-                    && task.getAnnotationDocument().getId() == aAnnotationDocument.getId()
-                    && task.getUser().equals(aUser)) {
-                task.setJCas(aJCas);
-                return true;
-            }
-        }
-        return false;
-    }
-
 }
