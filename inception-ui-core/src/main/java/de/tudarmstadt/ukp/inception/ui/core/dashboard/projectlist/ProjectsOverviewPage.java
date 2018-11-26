@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.ui.core.dashboard.projectlist;
 
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_ADMIN;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_PROJECT_CREATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData.CURRENT_PROJECT;
 import static java.lang.String.join;
 import static java.util.Arrays.asList;
@@ -175,8 +176,10 @@ public class ProjectsOverviewPage
                 LambdaStatelessLink projectLink = new LambdaStatelessLink(MID_PROJECT_LINK, () -> 
                         selectProject(aItem.getModelObject()));
                 projectLink.add(new Label(MID_NAME, aItem.getModelObject().getName()));
-                aItem.add(DateLabel.forDatePattern(MID_CREATED, () -> 
-                        aItem.getModelObject().getCreated(), "yyyy-MM-dd"));
+                DateLabel createdLabel = DateLabel.forDatePattern(MID_CREATED, () -> 
+                        aItem.getModelObject().getCreated(), "yyyy-MM-dd");
+                createdLabel.add(visibleWhen(() -> createdLabel.getModelObject() != null));
+                aItem.add(createdLabel);
                 aItem.add(projectLink);
                 aItem.add(createRoleBadges(aItem.getModelObject()));
             }
