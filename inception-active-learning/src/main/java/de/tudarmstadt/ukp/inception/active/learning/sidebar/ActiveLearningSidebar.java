@@ -228,7 +228,7 @@ public class ActiveLearningSidebar
 
         DropDownChoice<AnnotationLayer> layersDropdown = new DropDownChoice<AnnotationLayer>(
             CID_SELECT_LAYER);
-        layersDropdown.setModel(userStateModel.bind("selectedLayer"));
+        layersDropdown.setModel(userStateModel.bind("layer"));
         layersDropdown.setChoices(LambdaModel.of(this::listLayersWithRecommenders));
         layersDropdown.setChoiceRenderer(new LambdaChoiceRenderer<>(AnnotationLayer::getUiName));
         layersDropdown.add(LambdaBehavior.onConfigure(it -> it.setEnabled(!userStateModel
