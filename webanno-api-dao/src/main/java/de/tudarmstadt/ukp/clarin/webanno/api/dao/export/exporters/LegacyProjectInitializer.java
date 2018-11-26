@@ -212,7 +212,7 @@ public class LegacyProjectInitializer
         annotationSchemaService.createFeature(tokenLemmaFeature);
 
         AnnotationLayer lemmaLayer = new AnnotationLayer(Lemma.class.getName(), "Lemma", SPAN_TYPE,
-                aProject, true);
+                aProject, true, AnchoringMode.SINGLE_TOKEN);
         lemmaLayer.setAttachType(tokenLayer);
         lemmaLayer.setAttachFeature(tokenLemmaFeature);
         annotationSchemaService.createLayer(lemmaLayer);
@@ -234,10 +234,9 @@ public class LegacyProjectInitializer
     {
         AnnotationLayer base = new AnnotationLayer(
                 "de.tudarmstadt.ukp.dkpro.core.api.coref.type.Coreference", "Coreference",
-                CHAIN_TYPE, aProject, true);
+                CHAIN_TYPE, aProject, true, AnchoringMode.TOKENS);
         base.setCrossSentence(true);
         base.setAllowStacking(true);
-        base.setAnchoringMode(AnchoringMode.TOKENS);
         annotationSchemaService.createLayer(base);
         
         annotationSchemaService.createFeature(new AnnotationFeature(aProject, base, "referenceType",
@@ -253,9 +252,8 @@ public class LegacyProjectInitializer
         throws IOException
     {
         AnnotationLayer neLayer = new AnnotationLayer(NamedEntity.class.getName(), "Named entity",
-                SPAN_TYPE, aProject, true);
+                SPAN_TYPE, aProject, true, AnchoringMode.TOKENS);
         neLayer.setAllowStacking(true);
-        neLayer.setAnchoringMode(AnchoringMode.TOKENS);
         annotationSchemaService.createLayer(neLayer);
         
         annotationSchemaService.createFeature(new AnnotationFeature(aProject, neLayer, "value",
@@ -266,9 +264,8 @@ public class LegacyProjectInitializer
         throws IOException
     {
         AnnotationLayer chunkLayer = new AnnotationLayer(Chunk.class.getName(), "Chunk", SPAN_TYPE,
-                aProject, true);
+                aProject, true, AnchoringMode.TOKENS);
         chunkLayer.setAllowStacking(false);
-        chunkLayer.setAnchoringMode(AnchoringMode.TOKENS);
         annotationSchemaService.createLayer(chunkLayer);
 
         AnnotationFeature chunkValueFeature = new AnnotationFeature();
@@ -286,7 +283,7 @@ public class LegacyProjectInitializer
     {
         // Dependency Layer
         AnnotationLayer depLayer = new AnnotationLayer(Dependency.class.getName(), "Dependency",
-                RELATION_TYPE, aProject, true);
+                RELATION_TYPE, aProject, true, AnchoringMode.SINGLE_TOKEN);
         AnnotationLayer tokenLayer = annotationSchemaService.getLayer(Token.class.getName(),
                 aProject);
         List<AnnotationFeature> tokenFeatures = annotationSchemaService
@@ -322,7 +319,7 @@ public class LegacyProjectInitializer
                 aProject);
         
         AnnotationLayer posLayer = new AnnotationLayer(POS.class.getName(), "POS", SPAN_TYPE,
-                aProject, true);
+                aProject, true, AnchoringMode.SINGLE_TOKEN);
         
         AnnotationFeature tokenPosFeature = new AnnotationFeature(aProject, tokenLayer, "pos",
                 "pos", POS.class.getName());
@@ -340,7 +337,7 @@ public class LegacyProjectInitializer
         throws IOException
     {
         AnnotationLayer tokenLayer = new AnnotationLayer(Token.class.getName(), "Token", SPAN_TYPE,
-                aProject, true);
+                aProject, true, AnchoringMode.SINGLE_TOKEN);
 
         annotationSchemaService.createLayer(tokenLayer);
         return tokenLayer;

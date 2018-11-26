@@ -1124,4 +1124,27 @@
       onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" 
       referencedTableName="annotation_feature" />
   </changeSet>
+  
+  <!--
+   - We had a bug causing the anchoring mode of Token, POS, Lemma, and MorphologicalFeatures to be
+   - set to TOKENS instead of SINGLE_TOKEN. This change set fixes the anchoring mode. 
+   -->
+  <changeSet author="INCEpTION Team" id="20181126-1">
+    <update tableName="annotation_type">
+      <column name="anchoring_mode" type="VARCHAR(255)" value="singleToken"/>
+      <where>name = "de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token"</where>
+    </update>
+    <update tableName="annotation_type">
+      <column name="anchoring_mode" type="VARCHAR(255)" value="singleToken"/>
+      <where>name = "de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS"</where>
+    </update>
+    <update tableName="annotation_type">
+      <column name="anchoring_mode" type="VARCHAR(255)" value="singleToken"/>
+      <where>name = "de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma"</where>
+    </update>
+    <update tableName="annotation_type">
+      <column name="anchoring_mode" type="VARCHAR(255)" value="singleToken"/>
+      <where>name = "de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.morph.MorphologicalFeatures"</where>
+    </update>
+  </changeSet>
 </databaseChangeLog>

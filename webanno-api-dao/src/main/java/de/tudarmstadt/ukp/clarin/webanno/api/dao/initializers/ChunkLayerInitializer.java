@@ -57,9 +57,8 @@ public class ChunkLayerInitializer
     public void configure(Project aProject) throws IOException
     {
         AnnotationLayer chunkLayer = new AnnotationLayer(Chunk.class.getName(), "Chunk", SPAN_TYPE,
-                aProject, true);
+                aProject, true, AnchoringMode.TOKENS);
         chunkLayer.setAllowStacking(false);
-        chunkLayer.setAnchoringMode(AnchoringMode.TOKENS);
         annotationSchemaService.createLayer(chunkLayer);
 
         AnnotationFeature chunkValueFeature = new AnnotationFeature();

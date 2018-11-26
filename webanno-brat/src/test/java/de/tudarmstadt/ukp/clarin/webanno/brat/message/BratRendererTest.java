@@ -51,6 +51,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRendererImp
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratRenderer;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -79,7 +80,8 @@ public class BratRendererTest
         
         project = new Project();
         
-        tokenLayer = new AnnotationLayer(Token.class.getName(), "Token", SPAN_TYPE, null, true);
+        tokenLayer = new AnnotationLayer(Token.class.getName(), "Token", SPAN_TYPE, null, true,
+                AnchoringMode.SINGLE_TOKEN);
         tokenLayer.setId(1l);
 
         tokenPosFeature = new AnnotationFeature();
@@ -92,7 +94,8 @@ public class BratRendererTest
         tokenPosFeature.setProject(project);
         tokenPosFeature.setVisible(true);
 
-        posLayer = new AnnotationLayer(POS.class.getName(), "POS", SPAN_TYPE, project, true);
+        posLayer = new AnnotationLayer(POS.class.getName(), "POS", SPAN_TYPE, project, true,
+                AnchoringMode.SINGLE_TOKEN);
         posLayer.setId(2l);
         posLayer.setAttachType(tokenLayer);
         posLayer.setAttachFeature(tokenPosFeature);

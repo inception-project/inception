@@ -56,11 +56,10 @@ public class SurfaceFormLayerInitializer
     @Override
     public void configure(Project aProject) throws IOException
     {
-        AnnotationLayer surfaceFormLayer = new AnnotationLayer(SurfaceForm.class.getName(),
-                "Surface form", SPAN_TYPE, aProject, true);
-        surfaceFormLayer.setAllowStacking(false);
         // The surface form must be locked to tokens for CoNLL-U writer to work properly
-        surfaceFormLayer.setAnchoringMode(AnchoringMode.TOKENS);
+        AnnotationLayer surfaceFormLayer = new AnnotationLayer(SurfaceForm.class.getName(),
+                "Surface form", SPAN_TYPE, aProject, true, AnchoringMode.TOKENS);
+        surfaceFormLayer.setAllowStacking(false);
         annotationSchemaService.createLayer(surfaceFormLayer);
 
         AnnotationFeature surfaceFormValueFeature = new AnnotationFeature();
