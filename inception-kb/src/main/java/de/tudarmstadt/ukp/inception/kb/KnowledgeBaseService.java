@@ -586,4 +586,13 @@ public interface KnowledgeBaseService
      */
     Optional<KBConcept> readConcept(KnowledgeBase aKB, String aIdentifier, boolean aAll)
             throws QueryEvaluationException;
+
+    /**
+     * Gets a list of sub-property of label 
+     * 
+     * @param aKB
+     *            a knowledge base.
+     * @return set of properties
+     */
+    Set<KBHandle> getSubPropertyLabels(KnowledgeBase aKB);
 }
