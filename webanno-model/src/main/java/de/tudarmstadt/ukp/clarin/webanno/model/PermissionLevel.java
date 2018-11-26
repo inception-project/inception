@@ -19,6 +19,8 @@ package de.tudarmstadt.ukp.clarin.webanno.model;
 
 import java.io.Serializable;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import de.tudarmstadt.ukp.clarin.webanno.support.PersistentEnum;
 
 /**
@@ -28,7 +30,16 @@ import de.tudarmstadt.ukp.clarin.webanno.support.PersistentEnum;
 public enum PermissionLevel
     implements PersistentEnum, Serializable
 {
-    ANNOTATOR("user"), CURATOR("curator"), MANAGER("admin");
+    // We keep the legacy values for the project export/import for compatibility reasons
+    @JsonProperty("USER")
+    ANNOTATOR("user"), 
+    
+    @JsonProperty("CURATOR")
+    CURATOR("curator"),
+    
+    // We keep the legacy values for the project export/import for compatibility reasons
+    @JsonProperty("ADMIN")
+    MANAGER("admin");
     
     private final String id;
 
