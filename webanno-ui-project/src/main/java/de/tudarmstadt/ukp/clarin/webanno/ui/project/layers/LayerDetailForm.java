@@ -236,8 +236,7 @@ public class LayerDetailForm
             // Makes no sense for relation layers or that attach directly to tokens
             _this.setVisible(
                     !isBlank(layer.getType()) && 
-                    !RELATION_TYPE.equals(layer.getType()) && 
-                    layer.getAttachFeature() == null);
+                    !RELATION_TYPE.equals(layer.getType()));
             _this.setEnabled(
                     // Surface form must be locked to token boundaries for CONLL-U writer
                     // to work.
