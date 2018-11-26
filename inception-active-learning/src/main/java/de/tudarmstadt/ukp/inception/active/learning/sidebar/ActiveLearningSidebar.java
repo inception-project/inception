@@ -628,6 +628,13 @@ public class ActiveLearningSidebar
 
         // Save CAS after annotation has been created
         documentService.writeAnnotationCas(jCas, annoDoc, true);
+        
+        // Update timestamp in state
+        Optional<Long> diskTimestamp = documentService
+                .getAnnotationCasTimestamp(state.getDocument(), state.getUser().getUsername());
+        if (diskTimestamp.isPresent()) {
+            state.setAnnotationDocumentTimestamp(diskTimestamp.get());
+        }
 
         moveToNextRecommendation(aTarget);
     }
