@@ -768,7 +768,7 @@ public class ProjectServiceImpl
         List<Project> allProjects = listProjects();
 
         // if global admin, list all projects
-        if (managesAnyProject(user)) {
+        if (userRepository.isAdministrator(user)) {
             return allProjects;
         }
 
@@ -790,7 +790,7 @@ public class ProjectServiceImpl
         List<Project> allProjects = listProjects();
 
         // if global admin, show all projects
-        if (managesAnyProject(user)) {
+        if (userRepository.isAdministrator(user)) {
             return allProjects;
         }
 
