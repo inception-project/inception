@@ -58,10 +58,8 @@ public class OrthographyLayerInitializer
     public void configure(Project aProject) throws IOException
     {
         AnnotationLayer orthography = new AnnotationLayer(SofaChangeAnnotation.class.getName(),
-                "Orthography Correction", SPAN_TYPE, aProject, true);
-
+                "Orthography Correction", SPAN_TYPE, aProject, true, AnchoringMode.SINGLE_TOKEN);
         orthography.setAllowStacking(false);
-        orthography.setAnchoringMode(AnchoringMode.SINGLE_TOKEN);
         annotationSchemaService.createLayer(orthography);
 
         AnnotationFeature correction = new AnnotationFeature();

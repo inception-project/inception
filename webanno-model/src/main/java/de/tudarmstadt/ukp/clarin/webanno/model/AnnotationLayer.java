@@ -131,13 +131,14 @@ public class AnnotationLayer
     }
     
     public AnnotationLayer(String aName, String aUiName, String aType, Project aProject,
-            boolean aBuiltIn)
+            boolean aBuiltIn, AnchoringMode aAnchoringMode)
     {
         setName(aName);
         setUiName(aUiName);
         setProject(aProject);
         setBuiltIn(aBuiltIn);
         setType(aType);
+        setAnchoringMode(aAnchoringMode);
     }
     
     /**

@@ -67,10 +67,9 @@ public class CoreferenceLayerInitializer
         
         AnnotationLayer base = new AnnotationLayer(
                 "de.tudarmstadt.ukp.dkpro.core.api.coref.type.Coreference", "Coreference",
-                CHAIN_TYPE, aProject, true);
+                CHAIN_TYPE, aProject, true, AnchoringMode.TOKENS);
         base.setCrossSentence(true);
         base.setAllowStacking(true);
-        base.setAnchoringMode(AnchoringMode.TOKENS);
         annotationSchemaService.createLayer(base);
         
         annotationSchemaService.createFeature(new AnnotationFeature(aProject, base, "referenceType",

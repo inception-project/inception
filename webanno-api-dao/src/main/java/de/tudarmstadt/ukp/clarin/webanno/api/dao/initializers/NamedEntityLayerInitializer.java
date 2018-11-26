@@ -64,9 +64,8 @@ public class NamedEntityLayerInitializer
                 annotationSchemaService);
 
         AnnotationLayer neLayer = new AnnotationLayer(NamedEntity.class.getName(), "Named entity",
-                SPAN_TYPE, aProject, true);
+                SPAN_TYPE, aProject, true, AnchoringMode.TOKENS);
         neLayer.setAllowStacking(true);
-        neLayer.setAnchoringMode(AnchoringMode.TOKENS);
         annotationSchemaService.createLayer(neLayer);
 
         annotationSchemaService.createFeature(new AnnotationFeature(aProject, neLayer, "value",
