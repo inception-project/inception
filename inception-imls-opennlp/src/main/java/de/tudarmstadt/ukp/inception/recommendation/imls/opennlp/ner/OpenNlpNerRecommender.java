@@ -226,17 +226,17 @@ public class OpenNlpNerRecommender
         Feature feature = annotationType.getFeatureByBaseName(featureName);
         List<AnnotationFS> annotations = selectCovered(annotationType, aSentence);
         int numberOfAnnotations = annotations.size();
-        Span[] result = new Span[numberOfAnnotations];
+        List<Span> result = new ArrayList<>();
         for (int i = 0; i < numberOfAnnotations; i++) {
             AnnotationFS annotation = annotations.get(i);
             int begin = idxToken.get(idxTokenOffset.get(annotation.getBegin()));
             int end = idxToken.get(idxTokenOffset.get(annotation.getEnd()));
             String label = annotation.getFeatureValueAsString(feature);
             if (isNotBlank(label)) {
-                result[i] = new Span(begin, end + 1, label);
+                result.add(new Span(begin, end + 1, label));
             }
         }
-        return result;
+        return result.toArray(new Span[result.size()]);
     }
 
     private TokenNameFinderModel train(List<NameSample> aNameSamples,
