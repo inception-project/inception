@@ -22,6 +22,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -629,11 +630,14 @@ public class ActiveLearningSidebar
         // Save CAS after annotation has been created
         documentService.writeAnnotationCas(jCas, annoDoc, true);
         
-        // Update timestamp in state
-        Optional<Long> diskTimestamp = documentService
-                .getAnnotationCasTimestamp(sourceDoc, state.getUser().getUsername());
-        if (diskTimestamp.isPresent() && state.getDocument().getId() == sourceDoc.getId()) {
-            state.setAnnotationDocumentTimestamp(diskTimestamp.get());
+        // If the currently displayed document is the same one where the annotation was created,
+        // then update timestamp in state to avoid concurrent modification errors
+        if (Objects.equals(state.getDocument().getId(), sourceDoc.getId())) {
+            Optional<Long> diskTimestamp = documentService.getAnnotationCasTimestamp(sourceDoc,
+                    state.getUser().getUsername());
+            if (diskTimestamp.isPresent()) {
+                state.setAnnotationDocumentTimestamp(diskTimestamp.get());
+            }
         }
 
         moveToNextRecommendation(aTarget);
