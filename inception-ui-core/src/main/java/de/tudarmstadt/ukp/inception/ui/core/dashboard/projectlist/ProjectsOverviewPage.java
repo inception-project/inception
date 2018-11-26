@@ -141,6 +141,9 @@ public class ProjectsOverviewPage
         config.allowedFileExtensions(asList("zip"));
         config.showPreview(false);
         config.showUpload(true);
+        config.removeIcon("<i class=\"fa fa-remove\"></i>");
+        config.uploadIcon("<i class=\"fa fa-upload\"></i>");
+        config.browseIcon("<i class=\"fa fa-folder-open\"></i>");
         importProjectForm.add(fileUpload = new BootstrapFileInputField(MID_PROJECT_ARCHIVE_UPLOAD,
                 new ListModel<>(), config)
         {
