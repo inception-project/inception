@@ -631,8 +631,8 @@ public class ActiveLearningSidebar
         
         // Update timestamp in state
         Optional<Long> diskTimestamp = documentService
-                .getAnnotationCasTimestamp(state.getDocument(), state.getUser().getUsername());
-        if (diskTimestamp.isPresent()) {
+                .getAnnotationCasTimestamp(sourceDoc, state.getUser().getUsername());
+        if (diskTimestamp.isPresent() && state.getDocument().getId() == sourceDoc.getId()) {
             state.setAnnotationDocumentTimestamp(diskTimestamp.get());
         }
 
