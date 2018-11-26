@@ -57,13 +57,13 @@ import org.apache.uima.fit.testing.factory.TokenBuilder;
 import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.tcas.Annotation;
-import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.search.index.mtas.MtasUimaParser;
 import mtas.analysis.token.MtasTokenString;
 import mtas.analysis.util.MtasTokenizerFactory;
 import mtas.codec.MtasCodec;
@@ -91,54 +91,17 @@ public class MtasUimaParserLuceneTest
 
     private static final String MTAS_PARSER = MtasUimaParser.class.getName();
 
-    private TokenBuilder<Token, Sentence> tb = new TokenBuilder<>(Token.class, Sentence.class);
-    private Directory directory;
-    private IndexWriter w;
-    private List<String> prefixes;
-    
-    @Before
-    public void setup()
-    {
-        prefixes = null;
-    }
-    
     @Test
     public void testUimaParser() throws Exception
     {
-        openIndexForWriting();
-        
-        // Add first UIMA document
-        JCas jcas1 = JCasFactory.createJCas();
-        tb.buildTokens(jcas1, "This is a test . This is sentence two .");
-        indexDocument("1", jcas1);
-
-        // Add second UIMA document
-        JCas jcas2 = JCasFactory.createJCas();
-        tb.buildTokens(jcas2, "This is second document .");
-        indexDocument("2", jcas2);
-
-        commitAndCloseIndex();
-
-        String cql = "([][Token=\"test\" | Token=\"Test\"]) within <Sentence/>";
-        cql = "([Token=\"this\" | Token=\"This\"])";
-        // cql = "([])";
-        IndexReader indexReader = DirectoryReader.open(directory);
-
-        MtasSpanQuery q = createQuery(FIELD_CONTENT, cql);
-        
-        doQuery(indexReader, FIELD_CONTENT, q, prefixes);
-    }
-    
-    public void openIndexForWriting() throws Exception
-    {
-        directory = new RAMDirectory();
+        Directory directory = new RAMDirectory();
 
         // analyzer
         Map<String, String> paramsTokenizer = new HashMap<String, String>();
         paramsTokenizer.put(MtasTokenizerFactory.ARGUMENT_PARSER, MTAS_PARSER);
 
-        paramsTokenizer.put(MtasTokenizerFactory.ARGUMENT_PARSER_ARGS,
-                "{\"projectId\": -1, \"layers\":[{\"layerName\":\"Token\",\"features\":[\"value\",\"lemma\",\"pos\"]}]}");
+        String args = "{\"projectId\": -1, \"layers\":[{\"layerName\":\"Token\",\"features\":[\"value\",\"lemma\",\"pos\"]}]}";
+        paramsTokenizer.put(MtasTokenizerFactory.ARGUMENT_PARSER_ARGS, args);
 
         Analyzer mtasAnalyzer = CustomAnalyzer.builder().withTokenizer("mtas", paramsTokenizer)
                 .build();
@@ -147,54 +110,78 @@ public class MtasUimaParserLuceneTest
         PerFieldAnalyzerWrapper analyzer = new PerFieldAnalyzerWrapper(new StandardAnalyzer(),
                 analyzerPerField);
 
+        // indexwriter
         IndexWriterConfig config = new IndexWriterConfig(analyzer);
         config.setUseCompoundFile(false);
         config.setCodec(Codec.forName(MtasCodec.MTAS_CODEC_NAME));
-        
         // config.setCodec(Codec.forName("MtasSimpleTextCodec"));
-        w = new IndexWriter(directory, config);
+        IndexWriter w = new IndexWriter(directory, config);
         // delete
         w.deleteAll();
-    }
-    
-    public void commitAndCloseIndex() throws Exception
-    {
-        // commit
-        w.commit();
 
-        // close
-        w.close();
-    }
-    
-    private void indexDocument(String aId, JCas jcas) throws Exception
-    {
-        // First time we index a document, we extract the prefixes from the CAS
-        if (prefixes == null) {
-            // Gets all annotation types from the cas
-            HashSet<String> annotationTypes = new HashSet<String>();
-            for (Annotation annotation : JCasUtil.select(jcas, Annotation.class)) {
-                annotationTypes.add(annotation.getType().getShortName());
-            }
+        // Add first uima document
+        JCas jcas = JCasFactory.createJCas();
+        TokenBuilder<Token, Sentence> tb = new TokenBuilder<>(Token.class, Sentence.class);
+        tb.buildTokens(jcas, "This is a test . This is sentence two .");
 
-            // Build the query prefixes list from the annotation types
-            prefixes = new ArrayList<String>(annotationTypes);
-        }
-        
         DocumentMetaData dmd = DocumentMetaData.create(jcas);
-        dmd.setDocumentTitle("Test " + aId);
-        dmd.setDocumentId(aId);
+        dmd.setDocumentTitle("Test");
+        dmd.setDocumentId("1");
 
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         XmiCasSerializer.serialize(jcas.getCas(), null, bos, true, null);
         bos.close();
 
         Document doc = new Document();
-        doc.add(new StringField(FIELD_ID, aId, Field.Store.YES));
+        doc.add(new StringField(FIELD_ID, "11", Field.Store.YES));
         doc.add(new StringField(FIELD_TITLE, dmd.getDocumentTitle(), Field.Store.YES));
         doc.add(new TextField(FIELD_CONTENT, new String(bos.toByteArray(), "UTF-8"),
                 Field.Store.YES));
         w.addDocument(doc);
-        w.commit();        
+        w.commit();
+
+        // Add second uima document
+        jcas = JCasFactory.createJCas();
+        tb = new TokenBuilder<>(Token.class, Sentence.class);
+        tb.buildTokens(jcas, "This is second document .");
+
+        dmd = DocumentMetaData.create(jcas);
+        dmd.setDocumentTitle("Test");
+        dmd.setDocumentId("1");
+
+        bos = new ByteArrayOutputStream();
+        XmiCasSerializer.serialize(jcas.getCas(), null, bos, true, null);
+        bos.close();
+
+        doc = new Document();
+        doc.add(new StringField(FIELD_ID, "12", Field.Store.YES));
+        doc.add(new StringField(FIELD_TITLE, dmd.getDocumentTitle(), Field.Store.YES));
+        doc.add(new TextField(FIELD_CONTENT, new String(bos.toByteArray(), "UTF-8"),
+                Field.Store.YES));
+        w.addDocument(doc);
+
+        // commit
+        w.commit();
+
+        // close
+        w.close();
+
+        // Gets all annotation types from the cas
+        HashSet<String> annotationTypes = new HashSet<String>();
+        for (Annotation annotation : JCasUtil.select(jcas, Annotation.class)) {
+            annotationTypes.add(annotation.getType().getShortName());
+        }
+
+        // Build the query prefixes list from the annotation types
+        List<String> prefixes = new ArrayList<String>(annotationTypes);
+
+        String cql = "([][Token=\"test\" | Token=\"Test\"]) within <Sentence/>";
+        cql = "([Token=\"this\" | Token=\"This\"])";
+        // cql = "([])";
+        IndexReader indexReader = DirectoryReader.open(directory);
+
+        MtasSpanQuery q = createQuery(FIELD_CONTENT, cql);
+        doQuery(indexReader, FIELD_CONTENT, q, prefixes);
     }
 
     private static void doQuery(IndexReader indexReader, String field, MtasSpanQuery q,

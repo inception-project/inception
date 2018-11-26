@@ -209,6 +209,7 @@ public class ConceptInstancePanel
                 ? URI.create(selectedConceptHandle.getObject().getIdentifier())
                 : null;
         instance.setType(type);
+        instance.setLanguage(kbModel.getObject().getDefaultLanguage());
 
         // replace instance info view
         Component replacement = new InstancePanel(INSTANCE_INFO_MARKUP_ID, kbModel,
