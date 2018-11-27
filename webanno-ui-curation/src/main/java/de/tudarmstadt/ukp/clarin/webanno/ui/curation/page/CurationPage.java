@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.persistence.NoResultException;
 
@@ -676,6 +677,13 @@ public class CurationPage
             state.reset();
             state.getPreferences()
                     .setCurationWindowSize(WebAnnoCasUtil.getSentenceCount(mergeJCas));
+            
+            // Initialize timestamp in state
+            Optional<Long> diskTimestamp = documentService
+                    .getAnnotationCasTimestamp(state.getDocument(), state.getUser().getUsername());
+            if (diskTimestamp.isPresent()) {
+                state.setAnnotationDocumentTimestamp(diskTimestamp.get());
+            }
             
             // Initialize the visible content
             state.moveToUnit(mergeJCas, aFocus);

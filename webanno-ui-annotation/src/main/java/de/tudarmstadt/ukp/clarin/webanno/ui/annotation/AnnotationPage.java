@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.persistence.NoResultException;
 
@@ -560,6 +561,13 @@ public class AnnotationPage
 
             // (Re)initialize brat model after potential creating / upgrading CAS
             state.reset();
+            
+            // Initialize timestamp in state
+            Optional<Long> diskTimestamp = documentService
+                    .getAnnotationCasTimestamp(state.getDocument(), state.getUser().getUsername());
+            if (diskTimestamp.isPresent()) {
+                state.setAnnotationDocumentTimestamp(diskTimestamp.get());
+            }
 
             // Load constraints
             state.setConstraints(constraintsService.loadConstraints(state.getProject()));

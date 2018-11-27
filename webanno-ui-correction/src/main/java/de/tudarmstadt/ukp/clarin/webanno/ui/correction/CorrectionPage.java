@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
@@ -643,6 +644,13 @@ public class CorrectionPage
 
             // (Re)initialize brat model after potential creating / upgrading CAS
             state.reset();
+
+            // Initialize timestamp in state
+            Optional<Long> diskTimestamp = documentService
+                    .getAnnotationCasTimestamp(state.getDocument(), state.getUser().getUsername());
+            if (diskTimestamp.isPresent()) {
+                state.setAnnotationDocumentTimestamp(diskTimestamp.get());
+            }
 
             // Load constraints
             state.setConstraints(constraintsService.loadConstraints(state.getProject()));
