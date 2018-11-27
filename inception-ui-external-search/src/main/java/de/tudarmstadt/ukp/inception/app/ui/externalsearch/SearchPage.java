@@ -29,13 +29,13 @@ import org.apache.uima.UIMAException;
 import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.Session;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.extensions.markup.html.repeater.data.grid.ICellPopulator;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.AbstractColumn;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.DataTable;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.DefaultDataTable;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.IColumn;
-import org.apache.wicket.extensions.markup.html.repeater.data.table.PropertyColumn;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
@@ -64,7 +64,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchService;
@@ -87,7 +86,7 @@ public class SearchPage extends ApplicationPageBase
     final WebMarkupContainer mainContainer = new WebMarkupContainer("mainContainer");
 
     final String PLAIN_TEXT = "text";
-    
+
     private ListView<ExternalSearchResult> resultList;
     private ArrayList<ExternalSearchResult> results = new ArrayList<ExternalSearchResult>();
 
@@ -127,7 +126,7 @@ public class SearchPage extends ApplicationPageBase
         repositoriesModel = new LoadableDetachableModel<ArrayList<DocumentRepository>>()
         {
             /**
-             * 
+             *
              */
             private static final long serialVersionUID = 1L;
 
@@ -153,7 +152,7 @@ public class SearchPage extends ApplicationPageBase
         modalDocumentWindow = new ModalWindow("modalDocumentWindow");
 
         add(modalDocumentWindow);
-        
+
         modalDocumentWindow.setCloseButtonCallback(new ModalWindow.CloseButtonCallback()
         {
             @Override
@@ -176,65 +175,33 @@ public class SearchPage extends ApplicationPageBase
 
         List<IColumn<ExternalSearchResult, String>> columns = new ArrayList<>();
 
-        columns.add(new AbstractColumn<ExternalSearchResult, String>(new Model<>("Text Id"))
+        columns.add(new AbstractColumn<ExternalSearchResult, String>(new Model<>("Result"))
         {
             @Override
             public void populateItem(Item<ICellPopulator<ExternalSearchResult>> cellItem,
                     String componentId, IModel<ExternalSearchResult> model)
             {
-                cellItem.add(new ShowPanel(componentId, model));
+                @SuppressWarnings("rawtypes")
+                Item rowItem = cellItem.findParent( Item.class );
+                int rowIndex = rowItem.getIndex();
+                ResultRowView rowView = new ResultRowView(componentId, rowIndex + 1, model);
+                cellItem.add(rowView);
             }
         });
-        
-        columns.add(new PropertyColumn<ExternalSearchResult, String>(new Model<>("Doc. Id"),
-                "documentId", "documentId"));
-
-        columns.add(new PropertyColumn<ExternalSearchResult, String>(new Model<>("Source"),
-                "source", "source"));
-
-        columns.add(new PropertyColumn<ExternalSearchResult, String>(new Model<>("Timestamp"),
-                "timestamp", "timestamp"));
-
-        columns.add(new PropertyColumn<ExternalSearchResult, String>(new Model<>("URI"),
-                "uri", "uri"));
-
-        columns.add(new PropertyColumn<ExternalSearchResult, String>(new Model<>("Score"),
-                "score", "score"));
-
-        columns.add(new AbstractColumn<ExternalSearchResult, String>(new Model<>("Highlights"))
-        {
-            @Override
-            public void populateItem(Item<ICellPopulator<ExternalSearchResult>> cellItem,
-                    String componentId, IModel<ExternalSearchResult> model)
-            {
-                cellItem.add(new HighlightsPanel(componentId, model));
-            }
-        });
-        
-        columns.add(new AbstractColumn<ExternalSearchResult, String>(new Model<>("Action"))
-        {
-            @Override
-            public void populateItem(Item<ICellPopulator<ExternalSearchResult>> cellItem,
-                    String componentId, IModel<ExternalSearchResult> model)
-            {
-                cellItem.add(new ImportPanel(componentId, model));
-            }
-        });
-        
 
         dataProvider = new ExternalResultDataProvider(
                 externalSearchService, currentUser, currentRepository, "merck");
-        
+
         DataTable<ExternalSearchResult, String> resultTable = new DefaultDataTable<>("resultsTable",
                 columns, dataProvider, 8);
 
         mainContainer.add(resultTable);
-        
+
         mainContainer.setOutputMarkupId(true);
 
     }
 
-    private void importDocument(String aFileName, String aText) 
+    private void importDocument(String aFileName, String aText)
     {
         InputStream stream = new ByteArrayInputStream(aText.getBytes(StandardCharsets.UTF_8));
 
@@ -254,7 +221,7 @@ public class SearchPage extends ApplicationPageBase
         }
 
     }
-    
+
     private class SearchForm
         extends Form
     {
@@ -279,7 +246,7 @@ public class SearchPage extends ApplicationPageBase
                     }
 
                     searchDocuments(targetQuery.getObject());
-                    
+
                     dataProvider.searchDocuments(targetQuery.getObject());
                 }
             };
@@ -313,7 +280,7 @@ public class SearchPage extends ApplicationPageBase
         {
             super(aId);
 
-            DropDownChoice<DocumentRepository> repositoryCombo = 
+            DropDownChoice<DocumentRepository> repositoryCombo =
                     new DropDownChoice<DocumentRepository>(
                     "repositoryCombo",
                     new PropertyModel<DocumentRepository>(SearchPage.this, "currentRepository"),
@@ -345,28 +312,61 @@ public class SearchPage extends ApplicationPageBase
         throw new RestartResponseException(getApplication().getHomePage());
     }
 
+    public class ResultRowView
+        extends Panel
+    {
+
+        public ResultRowView(String id, long rowNumber, IModel<ExternalSearchResult> model)
+        {
+            super(id, model);
+
+            ExternalSearchResult result = (ExternalSearchResult) getDefaultModelObject();
+            String documentTitle = result.getDocumentTitle();
+            String documentId = result.getDocumentId();
+            String uri = result.getUri();
+            String score = result.getScore().toString();
+            String highlight = result.getHighlights().get(0);
+            add(new Label("rowNum", rowNumber));
+            add(new Label("textId", documentId));
+            add(new Label("uri", uri));
+            add(new Label("score", score));
+            add(new Label("highlight", highlight).setEscapeModelStrings(false));
+            if (documentService.existsSourceDocument(project, documentTitle)) {
+                add(new Label("importStatus", " imported "));
+            }
+            else {
+                add(new Label("importStatus", " not imported "));
+            }
+            error(model.toString());
+            add(new ImportPanel("importDocument", model));
+            add(new ShowPanel("showDocument", model));
+        }
+    }
+
+
     class ShowPanel extends Panel
     {
         public ShowPanel(String id, IModel<ExternalSearchResult> model)
         {
             super(id, model);
-            
+
             ExternalSearchResult result = (ExternalSearchResult) getDefaultModelObject();
 
             String documentId = result.getDocumentTitle();
 
-            LambdaAjaxLink link = new LambdaAjaxLink("openDocument", _target -> {
-                String text = externalSearchService.getDocumentById(currentUser, 
+            AjaxLink link = new AjaxLink("showLink") {
+                @Override
+                public void onClick(AjaxRequestTarget target) {
+                    String text = externalSearchService.getDocumentById(currentUser,
                         currentRepository, documentId).getText();
 
-                modalDocumentWindow.setContent(new ModalDocumentWindow("content", text));
-                modalDocumentWindow.setTitle(documentId);
-                
-                modalDocumentWindow.show(_target);
-                
-            });
-            link.add(new Label("documentId", documentId));
+                    modalDocumentWindow.setContent(new ModalDocumentWindow("content", text));
+                    modalDocumentWindow.setTitle(documentId);
 
+                    modalDocumentWindow.show(target);
+
+                }
+            };
             add(link);
         }
     }
@@ -376,42 +376,36 @@ public class SearchPage extends ApplicationPageBase
         public ImportPanel(String id, IModel<ExternalSearchResult> model)
         {
             super(id, model);
-            
+
             ExternalSearchResult result = (ExternalSearchResult) getDefaultModelObject();
 
             String documentId = result.getDocumentTitle();
 
-            LambdaAjaxLink link = new LambdaAjaxLink("importDocument", _target -> {
-                String text = externalSearchService.getDocumentById(currentUser, 
+            AjaxLink link = new AjaxLink("importLink")
+            {
+                @Override
+                public void onClick(AjaxRequestTarget target) {
+                    String text = externalSearchService.getDocumentById(currentUser,
                         currentRepository, documentId).getText();
 
-                if (documentService.existsSourceDocument(project, documentId)) {
-                    error("Document " + documentId + " already uploaded ! Delete "
+                    if (documentService.existsSourceDocument(project, documentId)) {
+                        error("Document " + documentId + " already uploaded ! Delete "
                             + "the document if you want to upload again");
+                    }
+                    else {
+                        importDocument(documentId, text);
+                    }
                 }
-                else {
-                    importDocument(documentId, text);
+
+                @Override
+                protected void onConfigure ()
+                {
+                    super.onConfigure();
+                    setVisible(!documentService.existsSourceDocument(project, documentId));
                 }
-            });
-            link.add(new Label("documentId", documentId));
+            };
 
             add(link);
-        }
-    }
-
-    class HighlightsPanel extends Panel
-    {
-        public HighlightsPanel(String id, IModel<ExternalSearchResult> model)
-        {
-            super(id, model);
-            
-            ExternalSearchResult result = (ExternalSearchResult) getDefaultModelObject();
-
-            ArrayList<String> highlights = result.getHighlights();
-
-            String highlight = highlights.get(0);
-            
-            add(new Label("highlight", highlight).setEscapeModelStrings(false));
         }
     }
 }
