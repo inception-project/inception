@@ -393,6 +393,7 @@ public class SearchPage extends ApplicationPageBase
                     }
                     else {
                         importDocument(documentId, text);
+                        setResponsePage(getPage());
                     }
                 }
 
