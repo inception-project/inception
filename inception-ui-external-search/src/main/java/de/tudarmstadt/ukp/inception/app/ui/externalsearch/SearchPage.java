@@ -351,35 +351,6 @@ public class SearchPage extends ApplicationPageBase
                 add(new Label("importStatus", " not imported "));
             }
             add(new ImportPanel("importDocument", model));
-            add(new ShowPanel("showDocument", model));
-        }
-    }
-
-
-    class ShowPanel extends Panel
-    {
-        public ShowPanel(String id, IModel<ExternalSearchResult> model)
-        {
-            super(id, model);
-
-            ExternalSearchResult result = (ExternalSearchResult) getDefaultModelObject();
-
-            String documentTitle = result.getDocumentTitle();
-
-            AjaxLink link = new AjaxLink("showLink") {
-                @Override
-                public void onClick(AjaxRequestTarget target) {
-                    String text = externalSearchService.getDocumentById(currentUser,
-                        currentRepository, documentTitle).getText();
-
-                    modalDocumentWindow.setContent(new ModalDocumentWindow("content", text));
-                    modalDocumentWindow.setTitle(documentTitle);
-
-                    modalDocumentWindow.show(target);
-
-                }
-            };
-            add(link);
         }
     }
 
