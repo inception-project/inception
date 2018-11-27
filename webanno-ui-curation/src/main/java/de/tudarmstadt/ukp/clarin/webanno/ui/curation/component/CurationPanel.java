@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.component;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.verifyAndUpdateDocumentTimestamp;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentenceAt;
 import static org.apache.uima.fit.util.JCasUtil.selectFollowing;
@@ -46,6 +45,7 @@ import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.util.ListModel;
@@ -261,11 +261,11 @@ public class CurationPanel
         sentencesListView = new WebMarkupContainer("sentencesListView");
         sentencesListView.setOutputMarkupId(true);
         add(sentencesListView);
-        sentencesListView.add(new ListView<SourceListView>("sentencesList", () -> 
-                getModelObject().getCurationViews())
+        sentencesListView.add(new ListView<SourceListView>("sentencesList",
+                LoadableDetachableModel.of(() -> getModelObject().getCurationViews()))
         {
             private static final long serialVersionUID = 8539162089561432091L;
-    
+
             @Override
             protected void populateItem(ListItem<SourceListView> item)
             {
@@ -426,9 +426,11 @@ public class CurationPanel
             throw new IllegalStateException("Please open a document first!");
         }
 
+        /*
         // If we have a timestamp, then use it to detect if there was a concurrent access
         verifyAndUpdateDocumentTimestamp(state, curationDocumentService
                 .getCurationCasTimestamp(state.getDocument()));
+        */
 
         return curationDocumentService.readCurationCas(state.getDocument());
     }
