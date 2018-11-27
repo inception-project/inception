@@ -23,6 +23,7 @@ import static java.util.Arrays.asList;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.zip.ZipFile;
 
@@ -37,6 +38,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExporter;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
@@ -85,6 +87,7 @@ public class RecommenderExporter implements ProjectExporter {
             exportedRecommender.setTool(recommender.getTool());
             exportedRecommender.setSkipEvaluation(recommender.isSkipEvaluation());
             exportedRecommender.setMaxRecommendations(recommender.getMaxRecommendations());
+            exportedRecommender.setStatesForTraining(recommender.getStatesForTraining());
             exportedRecommender.setTraits(recommender.getTraits());
             exportedRecommenders.add(exportedRecommender);
         }
@@ -110,6 +113,7 @@ public class RecommenderExporter implements ProjectExporter {
             recommender.setTool(exportedRecommender.getTool());
             recommender.setSkipEvaluation(exportedRecommender.isSkipEvaluation());
             recommender.setMaxRecommendations(exportedRecommender.getMaxRecommendations());
+            recommender.setStatesForTraining(exportedRecommender.getStatesForTraining());
             recommender.setTraits(exportedRecommender.getTraits());
 
             // The value for max recommendations must be between 1 and 100
@@ -123,7 +127,16 @@ public class RecommenderExporter implements ProjectExporter {
                 // than our instance, we just reset it to our max cap.
                 recommender.setMaxRecommendations(MAX_RECOMMENDATIONS_CAP);
             }
-            
+
+            // This property was at a later point, therefore, it can be null for legacy projects.
+            // In that case, keep the previous behaviour by considering all document states for
+            // training.
+            if (recommender.getStatesForTraining() == null) {
+                recommender.setStatesForTraining(
+                        new HashSet<>(asList(AnnotationDocumentState.values()))
+                );
+            }
+
             String layerName = exportedRecommender.getLayerName();
             AnnotationLayer layer = annotationService.getLayer(layerName, aProject);
             recommender.setLayer(layer);

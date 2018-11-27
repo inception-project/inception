@@ -17,9 +17,13 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.exporter;
 
+import java.util.Set;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 
 @JsonPropertyOrder(alphabetic = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -51,7 +55,10 @@ public class ExportedRecommender
 
     @JsonProperty("maxRecommendations")
     private int maxRecommendations;
-    
+
+    @JsonProperty("statesForTraining")
+    private Set<AnnotationDocumentState> statesForTraining;
+
     @JsonProperty("traits")
     private String traits;
 
@@ -143,6 +150,16 @@ public class ExportedRecommender
     public void setMaxRecommendations(int aMaxRecommendations)
     {
         maxRecommendations = aMaxRecommendations;
+    }
+
+    public Set<AnnotationDocumentState> getStatesForTraining()
+    {
+        return statesForTraining;
+    }
+
+    public void setStatesForTraining(Set<AnnotationDocumentState> aStatesForTraining)
+    {
+        statesForTraining = aStatesForTraining;
     }
 
     public String getTraits()

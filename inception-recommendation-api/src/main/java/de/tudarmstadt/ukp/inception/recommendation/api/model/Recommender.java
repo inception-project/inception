@@ -17,11 +17,20 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.api.model;
 
-import java.io.Serializable;
-import java.util.Objects;
+import static java.util.Arrays.asList;
 
+import java.io.Serializable;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
+
+import javax.persistence.CollectionTable;
 import javax.persistence.Column;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -34,6 +43,7 @@ import javax.persistence.UniqueConstraint;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
@@ -74,7 +84,19 @@ public class Recommender
     private boolean enabled = true;
     
     private int maxRecommendations;
-    
+
+    /**
+     * Only documents that have an annotation state contained in this list are
+     * used for training.
+     */
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "recommender_document_states")
+    @Column(name = "name", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private Set<AnnotationDocumentState> statesForTraining = new HashSet<>(
+            asList(AnnotationDocumentState.values()));
+
+
     @Lob
     @Column(length = 64000)
     private String traits;
@@ -201,6 +223,16 @@ public class Recommender
         maxRecommendations = aMaxRecommendations;
     }
 
+    public Set<AnnotationDocumentState> getStatesForTraining()
+    {
+        return statesForTraining;
+    }
+
+    public void setStatesForTraining(Set<AnnotationDocumentState> aStatesForTraining)
+    {
+        statesForTraining = aStatesForTraining;
+    }
+
     public String getTraits()
     {
         return traits;
@@ -240,9 +272,10 @@ public class Recommender
         sb.append(", tool='").append(tool).append('\'');
         sb.append(", threshold=").append(threshold);
         sb.append(", alwaysSelected=").append(alwaysSelected);
+        sb.append(", skipEvaluation=").append(skipEvaluation);
         sb.append(", enabled=").append(enabled);
         sb.append(", maxRecommendations=").append(maxRecommendations);
-        sb.append(", skipEvaluation=").append(skipEvaluation);
+        sb.append(", statesForTraining=").append(statesForTraining);
         sb.append(", traits='").append(traits).append('\'');
         sb.append('}');
         return sb.toString();

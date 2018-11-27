@@ -17,6 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.exporter;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IN_PROGRESS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.NEW;
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.MAX_RECOMMENDATIONS_CAP;
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.MAX_RECOMMENDATIONS_DEFAULT;
 import static java.util.Arrays.asList;
@@ -27,7 +30,9 @@ import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 import java.io.File;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.zip.ZipFile;
 
 import org.junit.Before;
@@ -40,6 +45,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
@@ -91,7 +97,7 @@ public class RecommenderExporterTest
         Recommender recommender = buildRecommender("1");
         recommender.setAlwaysSelected(true);
         recommender.setEnabled(true);
-        recommender.setThreshold(1);
+        recommender.setThreshold(.1);
         recommender.setSkipEvaluation(true);
         recommender.setMaxRecommendations(1000);
         
@@ -112,7 +118,7 @@ public class RecommenderExporterTest
         Recommender recommender = buildRecommender("1");
         recommender.setAlwaysSelected(true);
         recommender.setEnabled(true);
-        recommender.setThreshold(1);
+        recommender.setThreshold(.1);
         recommender.setSkipEvaluation(true);
         recommender.setMaxRecommendations(0);
         
@@ -124,7 +130,29 @@ public class RecommenderExporterTest
         // Check that after re-importing the exported projects, they are identical to the original
         assertThat(captor.getAllValues()).hasSize(1);
         assertThat(captor.getAllValues().get(0))
-                .matches(rec -> rec.getMaxRecommendations() == MAX_RECOMMENDATIONS_DEFAULT);
+            .hasFieldOrPropertyWithValue("maxRecommendations", MAX_RECOMMENDATIONS_DEFAULT);
+    }
+
+    @Test
+    public void thatNullStatesForTrainingAreSetToDefault()
+    {
+        Recommender recommender = buildRecommender("1");
+        recommender.setAlwaysSelected(false);
+        recommender.setEnabled(true);
+        recommender.setThreshold(.4);
+        recommender.setSkipEvaluation(true);
+        recommender.setMaxRecommendations(6);
+        recommender.setStatesForTraining(null);
+
+        when(recommendationService.listRecommenders(project)).thenReturn(asList(recommender));
+
+        // Export the project and import it again
+        ArgumentCaptor<Recommender> captor = runExportImportAndFetchRecommenders();
+
+        // Check that after re-importing the exported projects, they are identical to the original
+        assertThat(captor.getAllValues()).hasSize(1);
+        assertThat(captor.getAllValues().get(0).getStatesForTraining())
+            .containsExactlyInAnyOrder(AnnotationDocumentState.values());
     }
     
     private ArgumentCaptor<Recommender> runExportImportAndFetchRecommenders()
@@ -153,30 +181,34 @@ public class RecommenderExporterTest
         Recommender recommender1 = buildRecommender("1");
         recommender1.setAlwaysSelected(true);
         recommender1.setEnabled(true);
-        recommender1.setThreshold(1);
+        recommender1.setThreshold(.1);
         recommender1.setSkipEvaluation(true);
         recommender1.setMaxRecommendations(3);
+        recommender1.setStatesForTraining(asSet(NEW, IN_PROGRESS, FINISHED));
 
         Recommender recommender2 = buildRecommender("2");
         recommender2.setAlwaysSelected(false);
         recommender2.setEnabled(false);
-        recommender2.setThreshold(2);
+        recommender2.setThreshold(.2);
         recommender2.setSkipEvaluation(false);
         recommender2.setMaxRecommendations(4);
+        recommender2.setStatesForTraining(asSet(NEW, IN_PROGRESS));
 
         Recommender recommender3 = buildRecommender("3");
         recommender3.setAlwaysSelected(true);
         recommender3.setEnabled(false);
-        recommender3.setThreshold(3);
+        recommender3.setThreshold(.3);
         recommender3.setSkipEvaluation(false);
         recommender3.setMaxRecommendations(5);
+        recommender3.setStatesForTraining(asSet(AnnotationDocumentState.values()));
 
         Recommender recommender4 = buildRecommender("4");
         recommender4.setAlwaysSelected(false);
         recommender4.setEnabled(true);
-        recommender4.setThreshold(4);
+        recommender4.setThreshold(.4);
         recommender4.setSkipEvaluation(true);
         recommender4.setMaxRecommendations(6);
+        recommender4.setStatesForTraining(asSet());
 
         return asList(recommender1, recommender2, recommender3, recommender4);
     }
@@ -193,4 +225,7 @@ public class RecommenderExporterTest
         return recommender;
     }
 
+    private static <T> Set<T> asSet(T... a) {
+        return new HashSet(asList(a));
+    }
 }

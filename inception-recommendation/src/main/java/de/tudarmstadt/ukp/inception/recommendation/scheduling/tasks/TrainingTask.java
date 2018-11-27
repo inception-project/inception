@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.recommendation.scheduling.tasks;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.persistence.NoResultException;
 
@@ -33,6 +34,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -70,10 +72,10 @@ public class TrainingTask
         // Read the CASes only when they are accessed the first time. This allows us to skip reading
         // the CASes in case that no layer / recommender is available or if no recommender requires
         // evaluation.
-        LazyInitializer<List<CAS>> casses = new LazyInitializer<List<CAS>>()
+        LazyInitializer<List<AnnotationCas>> casses = new LazyInitializer<List<AnnotationCas>>()
         {
             @Override
-            protected List<CAS> initialize()
+            protected List<AnnotationCas> initialize()
             {
                 return readCasses(project, user);
             }
@@ -118,9 +120,16 @@ public class TrainingTask
                 RecommendationEngine recommendationEngine = factory.build(recommender);
 
                 try {
-                    log.info("[{}][{}]: Training model...", user.getUsername(),
-                            recommender.getName());
-                    recommendationEngine.train(context, casses.get());
+                    List<CAS> cassesForTraining = casses.get()
+                            .stream()
+                            .filter(e -> recommender.getStatesForTraining().contains(e.state))
+                            .map(e -> e.cas)
+                            .collect(Collectors.toList());
+                    log.info("[{}][{}]: Training model on [{}] out of [{}] documents ...",
+                            user.getUsername(), recommender.getName(), cassesForTraining.size(),
+                            casses.get().size());
+
+                    recommendationEngine.train(context, cassesForTraining);
                     log.info("[{}][{}]: Training complete ({} ms)", user.getUsername(),
                             recommender.getName(), (System.currentTimeMillis() - startTime));
                 }
@@ -133,17 +142,28 @@ public class TrainingTask
         recommendationScheduler.enqueue(new PredictionTask(user, getProject()));
     }
 
-    private List<CAS> readCasses(Project aProject, User aUser)
+    private List<AnnotationCas> readCasses(Project aProject, User aUser)
     {
-        List<CAS> casses = new ArrayList<>();
+        List<AnnotationCas> casses = new ArrayList<>();
         for (AnnotationDocument doc : documentService.listAnnotationDocuments(aProject, aUser)) {
             try {
                 JCas jCas = documentService.readAnnotationCas(doc);
-                casses.add(jCas.getCas());
+                casses.add(new AnnotationCas(jCas.getCas(), doc.getState()));
             } catch (IOException e) {
                 log.error("Cannot read annotation CAS.", e);
             }
         }
         return casses;
+    }
+
+    private static class AnnotationCas
+    {
+        private final CAS cas;
+        private final AnnotationDocumentState state;
+
+        private AnnotationCas(CAS aCas, AnnotationDocumentState aState) {
+            cas = aCas;
+            state = aState;
+        }
     }
 }
