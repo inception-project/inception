@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.automation.page;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.updateDocumentTimestampAfterWrite;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.verifyAndUpdateDocumentTimestamp;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED;
@@ -29,7 +30,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.Feature;
@@ -743,11 +743,8 @@ public class AutomationPage
             state.reset();
 
             // Initialize timestamp in state
-            Optional<Long> diskTimestamp = documentService
-                    .getAnnotationCasTimestamp(state.getDocument(), state.getUser().getUsername());
-            if (diskTimestamp.isPresent()) {
-                state.setAnnotationDocumentTimestamp(diskTimestamp.get());
-            }
+            updateDocumentTimestampAfterWrite(state, documentService
+                    .getAnnotationCasTimestamp(state.getDocument(), state.getUser().getUsername()));
 
             // Load constraints
             state.setConstraints(constraintsService.loadConstraints(state.getProject()));
