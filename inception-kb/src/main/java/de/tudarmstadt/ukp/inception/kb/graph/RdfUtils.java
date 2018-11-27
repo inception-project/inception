@@ -28,7 +28,6 @@ import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.Value;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
-
 import org.eclipse.rdf4j.query.BindingSet;
 import org.eclipse.rdf4j.query.QueryEvaluationException;
 import org.eclipse.rdf4j.query.QueryLanguage;
@@ -41,7 +40,6 @@ import org.eclipse.rdf4j.rio.ntriples.NTriplesUtil;
 
 import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.SPARQLQueryStore;
-import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 public class RdfUtils
 {
@@ -69,81 +67,6 @@ public class RdfUtils
                 return Optional.empty();
             }
         }
-    }
-
-    public static Optional<Statement> readFirstLabel(RepositoryConnection conn, KnowledgeBase aKB,
-            Resource subj, String language)
-    {
-        try (RepositoryResult<Statement> results = getLabelsSparql(conn, aKB, subj, language)) {
-            Statement stmt = null;
-            while (results.hasNext()) {
-                stmt = results.next();
-                // look for label declared with kb.getLabelIri() first
-                if (stmt.getPredicate().equals(aKB.getLabelIri())) {
-                    return Optional.of(stmt);
-                }
-            }
-            if (stmt == null) {
-                return Optional.empty();
-            }
-            else {
-                // return subproperty label if no other label has been found
-                return Optional.of(stmt);
-            }
-        }
-    }
-
-    private static RepositoryResult<Statement> getLabelsSparql(RepositoryConnection conn,
-            KnowledgeBase aKB, Resource subj, String language)
-    {
-        String filter = "";
-        if (language != null) {
-            filter = "FILTER(LANG(?o) = \"\" || LANGMATCHES(LANG(?o), \""
-                    + NTriplesUtil.escapeString(language) + "\")).";
-        }
-        String labelQuery = String.join("\n",
-                SPARQLQueryStore.SPARQL_PREFIX,
-                "SELECT ?s ?p ?o ?lp WHERE { ",
-                    " ?s ?p ?o .",
-                    "?p ?spl* ?lp ",
-                    filter,
-                    "} LIMIT " + 1000);
-
-        TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, labelQuery);
-        if (subj != null) {
-            tupleQuery.setBinding("s", subj);
-        }
-        tupleQuery.setBinding("lp", aKB.getLabelIri());
-        tupleQuery.setBinding("spl", aKB.getSubPropertyIri());
-
-        tupleQuery.setIncludeInferred(false);
-        TupleQueryResult result = tupleQuery.evaluate();
-        Iteration<Statement, QueryEvaluationException> i1 = new ConvertingIteration<BindingSet, 
-                Statement, QueryEvaluationException>(result)
-        {
-            @Override
-            protected Statement convert(BindingSet b) throws QueryEvaluationException
-            {
-                Resource s = subj == null ? (Resource) b.getValue("s") : subj;
-                IRI p = (IRI) b.getValue("p") == null ? (IRI) b.getValue("lp")
-                        : (IRI) b.getValue("p");
-
-                Value o = b.getValue("o");
-                return SimpleValueFactory.getInstance().createStatement(s, p, o);
-            }
-        };
-
-        ExceptionConvertingIteration<Statement, RepositoryException> i2 = 
-                new ExceptionConvertingIteration<Statement, RepositoryException>(i1)
-        {
-            @Override
-            protected RepositoryException convert(Exception aE)
-            {
-                return new RepositoryException(aE);
-            }
-        };
-
-        return new RepositoryResult<>(i2);
     }
 
     public static Optional<Statement> readFirst(RepositoryConnection conn, Resource subj, IRI pred,

@@ -621,7 +621,7 @@ public class KnowledgeBaseServiceImpl
             TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
             tupleQuery.setBinding("pTYPE", aKB.getTypeIri());
             tupleQuery.setBinding("oPROPERTY", aKB.getPropertyTypeIri());
-            tupleQuery.setBinding("pLABEL", aKB.getLabelIri());
+            tupleQuery.setBinding("pLABEL", aKB.getPropertyLabelIri());
             tupleQuery.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
             tupleQuery.setBinding("pSUBPROPERTY", aKB.getSubPropertyIri());
             tupleQuery.setIncludeInferred(aIncludeInferred);
@@ -898,7 +898,7 @@ public class KnowledgeBaseServiceImpl
             TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
             tupleQuery.setBinding("aDomain", vf.createIRI(aDomain));
             tupleQuery.setBinding("pLABEL", aKB.getLabelIri());
-            tupleQuery.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
+            tupleQuery.setBinding("pDESCRIPTION", aKB.getPropertyDescriptionIri());
             tupleQuery.setBinding("pSUBPROPERTY", aKB.getSubPropertyIri());
             tupleQuery.setIncludeInferred(aIncludeInferred);
             return evaluateListQuery(aKB, tupleQuery, false, aAll,  "s");
@@ -922,7 +922,7 @@ public class KnowledgeBaseServiceImpl
             String QUERY = SPARQLQueryStore.queryForPropertySpecificRange(aKB);
             TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
             tupleQuery.setBinding("aProperty", vf.createIRI(aProperty));
-            tupleQuery.setBinding("pLABEL", aKB.getLabelIri());
+            tupleQuery.setBinding("pLABEL", aKB.getPropertyLabelIri());
             tupleQuery.setBinding("pSUBPROPERTY", aKB.getSubPropertyIri());
             tupleQuery.setIncludeInferred(aIncludeInferred);
 
@@ -944,8 +944,8 @@ public class KnowledgeBaseServiceImpl
             TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
             tupleQuery.setBinding("pTYPE", aKB.getTypeIri());
             tupleQuery.setBinding("oPROPERTY", aType);
-            tupleQuery.setBinding("pLABEL", aKB.getLabelIri());
-            tupleQuery.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
+            tupleQuery.setBinding("pLABEL", aKB.getPropertyLabelIri());
+            tupleQuery.setBinding("pDESCRIPTION", aKB.getPropertyDescriptionIri());
             tupleQuery.setBinding("pSUBPROPERTY", aKB.getSubPropertyIri());
             tupleQuery.setIncludeInferred(aIncludeInferred);
 

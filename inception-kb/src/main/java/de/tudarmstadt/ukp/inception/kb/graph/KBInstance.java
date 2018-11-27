@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.kb.graph;
 
 import static de.tudarmstadt.ukp.inception.kb.graph.RdfUtils.readFirst;
-import static de.tudarmstadt.ukp.inception.kb.graph.RdfUtils.readFirstLabel;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import java.net.URI;
@@ -186,16 +185,16 @@ public class KBInstance
         kbInst.setKB(aKb);
         kbInst.originalStatements.add(aStmt);
 
-        readFirstLabel(aConn, aKb, aStmt.getSubject(), aKb.getDefaultLanguage())
-            .ifPresent((stmt) -> {
-                kbInst.setName(stmt.getObject().stringValue());
-                kbInst.originalStatements.add(stmt);
-                if (stmt.getObject() instanceof Literal) {
-                    Literal literal = (Literal) stmt.getObject();
-                    Optional<String> language = literal.getLanguage();
-                    language.ifPresent(kbInst::setLanguage);
-                }
-            });
+        readFirst(aConn, aStmt.getSubject(), aKb.getLabelIri(), null, aKb.getDefaultLanguage())
+                .ifPresent((stmt) -> {
+                    kbInst.setName(stmt.getObject().stringValue());
+                    kbInst.originalStatements.add(stmt);
+                    if (stmt.getObject() instanceof Literal) {
+                        Literal literal = (Literal) stmt.getObject();
+                        Optional<String> language = literal.getLanguage();
+                        language.ifPresent(kbInst::setLanguage);
+                    }
+                });
 
         readFirst(aConn, aStmt.getSubject(), aKb.getDescriptionIri(), null, 
                 aKb.getDefaultLanguage())
