@@ -337,7 +337,6 @@ public class SearchPage extends ApplicationPageBase
             else {
                 add(new Label("importStatus", " not imported "));
             }
-            error(model.toString());
             add(new ImportPanel("importDocument", model));
             add(new ShowPanel("showDocument", model));
         }
