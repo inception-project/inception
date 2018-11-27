@@ -587,7 +587,8 @@ public interface KnowledgeBaseService
     Optional<KBConcept> readConcept(KnowledgeBase aKB, String aIdentifier, boolean aAll)
             throws QueryEvaluationException;
 
-     * List all Instances of a given knowledge base
+   /**
+     *  List all Instances of a given knowledge base
      * @param aKB the knowledge base
      * @param aAll indicates whether to include everything
      * @return list of all the instances {@link KBHandle}
@@ -608,7 +609,7 @@ public interface KnowledgeBaseService
     List<KBHandle> getEntitiesInScope(String aRepositoryId, String aConceptScope,
         ConceptFeatureValueType aValueType, Project project);
 
-      /**
+    /**
      * Gets a list of sub-property of label 
      * 
      * @param aKB
