@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.curation.page;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_DOCUMENT_ID;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_FOCUS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.updateDocumentTimestampAfterWrite;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.CURATION_FINISHED_TO_CURATION_IN_PROGRESS;
@@ -30,8 +31,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-
 import javax.persistence.NoResultException;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -679,12 +678,9 @@ public class CurationPage
                     .setCurationWindowSize(WebAnnoCasUtil.getSentenceCount(mergeJCas));
             
             // Initialize timestamp in state
-            Optional<Long> diskTimestamp = documentService
-                    .getAnnotationCasTimestamp(state.getDocument(), state.getUser().getUsername());
-            if (diskTimestamp.isPresent()) {
-                state.setAnnotationDocumentTimestamp(diskTimestamp.get());
-            }
-            
+            updateDocumentTimestampAfterWrite(state, curationDocumentService
+                    .getCurationCasTimestamp(state.getDocument()));
+                        
             // Initialize the visible content
             state.moveToUnit(mergeJCas, aFocus);
             gotoPageTextField.setModelObject(getModelObject().getFirstVisibleUnitIndex());

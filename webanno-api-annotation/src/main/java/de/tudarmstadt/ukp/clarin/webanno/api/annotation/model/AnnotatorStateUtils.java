@@ -22,20 +22,29 @@ import java.util.Optional;
 
 public class AnnotatorStateUtils
 {
-    public static void verifyAndUpdateDocumentTimestamp(AnnotatorState state,
-            Optional<Long> diskTimestamp)
+    public static void verifyAndUpdateDocumentTimestamp(AnnotatorState aState,
+            Optional<Long> aDiskTimestamp)
         throws IOException
     {
         // If we have a timestamp, then use it to detect if there was a concurrent access
-        Optional<Long> stateTimestamp = state.getAnnotationDocumentTimestamp();
-        if (stateTimestamp.isPresent() && diskTimestamp.isPresent()
-                && diskTimestamp.get() > stateTimestamp.get()) {
+        Optional<Long> stateTimestamp = aState.getAnnotationDocumentTimestamp();
+        if (stateTimestamp.isPresent() && aDiskTimestamp.isPresent()
+                && aDiskTimestamp.get() > stateTimestamp.get()) {
             throw new IOException("There was a concurrent change to the document. Re-open the "
                     + "document to continue editing.");
         }
 
-        if (diskTimestamp.isPresent()) {
-            state.setAnnotationDocumentTimestamp(diskTimestamp.get());
+        if (aDiskTimestamp.isPresent()) {
+            aState.setAnnotationDocumentTimestamp(aDiskTimestamp.get());
+        }
+    }
+
+    public static void updateDocumentTimestampAfterWrite(AnnotatorState aState,
+            Optional<Long> aDiskTimestamp)
+        throws IOException
+    {
+        if (aDiskTimestamp.isPresent()) {
+            aState.setAnnotationDocumentTimestamp(aDiskTimestamp.get());
         }
     }
 }

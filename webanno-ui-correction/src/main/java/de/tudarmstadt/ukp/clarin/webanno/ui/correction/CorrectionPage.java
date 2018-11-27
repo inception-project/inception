@@ -28,7 +28,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
@@ -64,6 +63,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotationEditor;
 import de.tudarmstadt.ukp.clarin.webanno.brat.config.BratProperties;
@@ -646,11 +646,8 @@ public class CorrectionPage
             state.reset();
 
             // Initialize timestamp in state
-            Optional<Long> diskTimestamp = documentService
-                    .getAnnotationCasTimestamp(state.getDocument(), state.getUser().getUsername());
-            if (diskTimestamp.isPresent()) {
-                state.setAnnotationDocumentTimestamp(diskTimestamp.get());
-            }
+            AnnotatorStateUtils.updateDocumentTimestampAfterWrite(state, documentService
+                    .getAnnotationCasTimestamp(state.getDocument(), state.getUser().getUsername()));
 
             // Load constraints
             state.setConstraints(constraintsService.loadConstraints(state.getProject()));
