@@ -114,6 +114,12 @@ public abstract class Task
         builder.append("]");
         return builder.toString();
     }
+    
+    /**
+     * Used to avoid scheduling duplicate tasks. Returns true if the current task is a duplicate of
+     * the given task.
+     */
+    public abstract boolean matches(Task aTask);
 
     @Override
     public int hashCode()

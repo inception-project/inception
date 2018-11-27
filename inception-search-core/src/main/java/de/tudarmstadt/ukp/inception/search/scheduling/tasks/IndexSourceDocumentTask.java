@@ -17,41 +17,40 @@
  */
 package de.tudarmstadt.ukp.inception.search.scheduling.tasks;
 
-import java.io.IOException;
-
+import org.apache.uima.jcas.JCas;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.search.SearchService;
 
 /**
- * Search indexer task. Runs the reindexing process for a given project
+ * Document indexer task. Indexes the given document in a project
  */
-public class ReindexTask
+public class IndexSourceDocumentTask
     extends Task
 {
     private @Autowired SearchService searchService;
-
-    public ReindexTask(Project aProject)
+    
+    public IndexSourceDocumentTask(SourceDocument aSourceDocument, JCas aJCas)
     {
-        super(aProject, null);
+        super(aSourceDocument, aJCas);
+    }
+
+    public IndexSourceDocumentTask(AnnotationDocument aAnnotationDocument, JCas aJCas)
+    {
+        super(aAnnotationDocument, aJCas);
     }
 
     @Override
     public void run()
     {
-        try {
-            // Reindex project
-            searchService.reindex(super.getProject());
-        }
-        catch (IOException e) {
-            e.printStackTrace();
-        }
+        searchService.indexDocument(super.getSourceDocument(), super.getJCas());
     }
     
     @Override
     public boolean matches(Task aTask)
     {
-        return getProject().getId() == aTask.getProject().getId();
+        return getSourceDocument().getId() == aTask.getSourceDocument().getId();
     }
 }
