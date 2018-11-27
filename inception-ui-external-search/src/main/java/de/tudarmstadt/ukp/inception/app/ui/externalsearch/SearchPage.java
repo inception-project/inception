@@ -64,6 +64,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchService;
@@ -322,12 +323,24 @@ public class SearchPage extends ApplicationPageBase
 
             ExternalSearchResult result = (ExternalSearchResult) getDefaultModelObject();
             String documentTitle = result.getDocumentTitle();
-            String documentId = result.getDocumentId();
             String uri = result.getUri();
             String score = result.getScore().toString();
             String highlight = result.getHighlights().get(0);
             add(new Label("rowNum", rowNumber));
-            add(new Label("textId", documentId));
+
+            LambdaAjaxLink link = new LambdaAjaxLink("documentDetails", _target -> {
+                String text = externalSearchService.getDocumentById(currentUser,
+                    currentRepository, documentTitle).getText();
+
+                modalDocumentWindow.setContent(new ModalDocumentWindow("content", text));
+                modalDocumentWindow.setTitle(documentTitle);
+
+                modalDocumentWindow.show(_target);
+
+            });
+            link.add(new Label("textId", documentTitle));
+            add(link);
+
             add(new Label("uri", uri));
             add(new Label("score", score));
             add(new Label("highlight", highlight).setEscapeModelStrings(false));
@@ -351,16 +364,16 @@ public class SearchPage extends ApplicationPageBase
 
             ExternalSearchResult result = (ExternalSearchResult) getDefaultModelObject();
 
-            String documentId = result.getDocumentTitle();
+            String documentTitle = result.getDocumentTitle();
 
             AjaxLink link = new AjaxLink("showLink") {
                 @Override
                 public void onClick(AjaxRequestTarget target) {
                     String text = externalSearchService.getDocumentById(currentUser,
-                        currentRepository, documentId).getText();
+                        currentRepository, documentTitle).getText();
 
                     modalDocumentWindow.setContent(new ModalDocumentWindow("content", text));
-                    modalDocumentWindow.setTitle(documentId);
+                    modalDocumentWindow.setTitle(documentTitle);
 
                     modalDocumentWindow.show(target);
 
@@ -378,21 +391,21 @@ public class SearchPage extends ApplicationPageBase
 
             ExternalSearchResult result = (ExternalSearchResult) getDefaultModelObject();
 
-            String documentId = result.getDocumentTitle();
+            String documentTitle = result.getDocumentTitle();
 
             AjaxLink link = new AjaxLink("importLink")
             {
                 @Override
                 public void onClick(AjaxRequestTarget target) {
                     String text = externalSearchService.getDocumentById(currentUser,
-                        currentRepository, documentId).getText();
+                        currentRepository, documentTitle).getText();
 
-                    if (documentService.existsSourceDocument(project, documentId)) {
-                        error("Document " + documentId + " already uploaded ! Delete "
+                    if (documentService.existsSourceDocument(project, documentTitle)) {
+                        error("Document " + documentTitle + " already uploaded ! Delete "
                             + "the document if you want to upload again");
                     }
                     else {
-                        importDocument(documentId, text);
+                        importDocument(documentTitle, text);
                         setResponsePage(getPage());
                     }
                 }
@@ -401,7 +414,7 @@ public class SearchPage extends ApplicationPageBase
                 protected void onConfigure ()
                 {
                     super.onConfigure();
-                    setVisible(!documentService.existsSourceDocument(project, documentId));
+                    setVisible(!documentService.existsSourceDocument(project, documentTitle));
                 }
             };
 
