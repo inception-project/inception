@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2.LinkCompareBehavior.LINK_ROLE_AS_LABEL;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.apache.uima.fit.util.JCasUtil.selectCovered;
@@ -50,6 +51,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2.Configuration;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2.ConfigurationSet;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2.DiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2.DiffResult;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2.LinkCompareBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
@@ -177,6 +179,8 @@ public class SuggestionBuilder
                     (System.currentTimeMillis() - start));
         }
 
+        List<DiffAdapter> adapters = CasDiff2.getAdapters(annotationService, aBModel.getProject());
+
         long diffStart = System.currentTimeMillis();
         log.debug("Calculating differences...");
         int count = 0;
@@ -189,8 +193,8 @@ public class SuggestionBuilder
                         segmentBeginEnd.size());
             }
 
-            DiffResult diff = CasDiff2.doDiffSingle(annotationService, aBModel.getProject(),
-                    entryTypes, LinkCompareBehavior.LINK_ROLE_AS_LABEL, jCases, begin, end);
+            DiffResult diff = CasDiff2.doDiffSingle(entryTypes, adapters, LINK_ROLE_AS_LABEL,
+                    jCases, begin, end);
 
             SourceListView curationSegment = new SourceListView();
             curationSegment.setBegin(begin);
