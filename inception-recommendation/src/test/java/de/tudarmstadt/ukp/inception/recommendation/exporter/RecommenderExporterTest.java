@@ -225,7 +225,8 @@ public class RecommenderExporterTest
         return recommender;
     }
 
-    private static <T> Set<T> asSet(T... a) {
+    private static <T> Set<T> asSet(T... a)
+    {
         return new HashSet(asList(a));
     }
 }

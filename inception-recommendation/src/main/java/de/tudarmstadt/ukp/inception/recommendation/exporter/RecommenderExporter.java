@@ -62,17 +62,20 @@ public class RecommenderExporter implements ProjectExporter {
     }
 
     @Override
-    public List<Class<? extends ProjectExporter>> getImportDependencies() {
+    public List<Class<? extends ProjectExporter>> getImportDependencies()
+    {
         return asList(LayerExporter.class);
     }
 
     @Override
-    public List<Class<? extends ProjectExporter>> getExportDependencies() {
+    public List<Class<? extends ProjectExporter>> getExportDependencies()
+    {
         return asList(LayerExporter.class);
     }
 
     @Override
-    public void exportData(ProjectExportRequest aRequest, ExportedProject aExProject, File aFile) {
+    public void exportData(ProjectExportRequest aRequest, ExportedProject aExProject, File aFile)
+    {
         Project project = aRequest.getProject();
 
         List<ExportedRecommender> exportedRecommenders = new ArrayList<>();

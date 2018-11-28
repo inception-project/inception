@@ -244,7 +244,8 @@ public class Recommender
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(Object o)
+    {
         if (this == o) {
             return true;
         }
@@ -257,12 +258,14 @@ public class Recommender
     }
 
     @Override
-    public int hashCode() {
+    public int hashCode()
+    {
         return Objects.hash(id, name);
     }
 
     @Override
-    public String toString() {
+    public String toString()
+    {
         final StringBuilder sb = new StringBuilder("Recommender{");
         sb.append("id=").append(id);
         sb.append(", project=").append(project);
