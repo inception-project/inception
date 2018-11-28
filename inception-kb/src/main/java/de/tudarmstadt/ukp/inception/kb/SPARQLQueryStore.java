@@ -93,7 +93,7 @@ public final class SPARQLQueryStore
      * adds an OPTIONAL block which looks for a value that is declared with a
      * subproperty of the given property
      */
-    private static final String optionalSubPropertyLabelFilter(Set<KBHandle> labelProperties,
+    private static final String queryForOptionalSubPropertyLabel(Set<KBHandle> labelProperties,
             String aLanguage, String variable, String filterVariable)
     {
         StringBuilder fragment = new StringBuilder();
@@ -136,7 +136,7 @@ public final class SPARQLQueryStore
                 , "  UNION { ?someSubClass ?pSUBCLASS ?s . } ."
                 , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage(),"?s","?l")
                 , optionalLanguageFilteredValue("?pLABEL", null,"?s","?labelGeneral")
-                , optionalSubPropertyLabelFilter(labelProperties, aKB.getDefaultLanguage(),"?s","?spl")
+                , queryForOptionalSubPropertyLabel(labelProperties, aKB.getDefaultLanguage(),"?s","?spl")
                 , "}"
                 , "LIMIT " + aKB.getMaxResults());
     }
@@ -152,7 +152,7 @@ public final class SPARQLQueryStore
                 , "  ?s ?pTYPE ?oPROPERTY ."
                 , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage(),"?s","?l")
                 , optionalLanguageFilteredValue("?pLABEL", null,"?s","?labelGeneral")
-                , optionalSubPropertyLabelFilter(labelProperties, aKB.getDefaultLanguage(),"?s","?spl")
+                , queryForOptionalSubPropertyLabel(labelProperties, aKB.getDefaultLanguage(),"?s","?spl")
                 , "}"
                 , "LIMIT " + aKB.getMaxResults());
     }
@@ -175,7 +175,7 @@ public final class SPARQLQueryStore
                 , "    ?s owl:intersectionOf ?list . }"
                 , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage(),"?s","?label")
                 , optionalLanguageFilteredValue("?pLABEL", null,"?s","?labelGeneral")
-                , optionalSubPropertyLabelFilter(labelProperties, aKB.getDefaultLanguage(),"?s","?splabel")
+                , queryForOptionalSubPropertyLabel(labelProperties, aKB.getDefaultLanguage(),"?s","?splabel")
                 , "} GROUP BY ?s"
                 , "LIMIT " + aKB.getMaxResults());    }
     
@@ -193,7 +193,7 @@ public final class SPARQLQueryStore
                 , "    FILTER EXISTS { ?list rdf:rest*/rdf:first ?oPARENT} }"
                 , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage(),"?s","?label")
                 , optionalLanguageFilteredValue("?pLABEL", null,"?s","?labelGeneral")
-                , optionalSubPropertyLabelFilter(labelProperties, aKB.getDefaultLanguage(),"?s","?splabel")
+                , queryForOptionalSubPropertyLabel(labelProperties, aKB.getDefaultLanguage(),"?s","?splabel")
                 , "} GROUP BY ?s"
                 , "LIMIT " + aKB.getMaxResults());
     }
@@ -217,7 +217,7 @@ public final class SPARQLQueryStore
             , optionalLanguageFilteredValue("?pDESCRIPTION", aKB.getDefaultLanguage(),"?oItem","?desc")
             , optionalLanguageFilteredValue("?pLABEL", null,"?oItem","?labelGeneral")
             , optionalLanguageFilteredValue("?pDESCRIPTION", null,"?oItem","?descGeneral")
-            , optionalSubPropertyLabelFilter(labelProperties, aKB.getDefaultLanguage(),"?oItem","?spl")
+            , queryForOptionalSubPropertyLabel(labelProperties, aKB.getDefaultLanguage(),"?oItem","?spl")
             , "} "
             , "LIMIT " + limit);
     }

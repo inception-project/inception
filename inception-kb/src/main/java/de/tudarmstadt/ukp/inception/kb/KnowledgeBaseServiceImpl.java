@@ -636,20 +636,20 @@ public class KnowledgeBaseServiceImpl
     {
         Set<KBHandle> subPropertyLabels = new HashSet<KBHandle>();
         KBHandle labelHandle = new KBHandle(aKB.getLabelIri().stringValue());
-        getIterativeSubPropertyLabels(subPropertyLabels, aKB,
+        getSubPropertyLabelsRecursively(subPropertyLabels, aKB,
                 labelHandle);
         return subPropertyLabels;
        
     }
     
-    public Set<KBHandle> getIterativeSubPropertyLabels(Set<KBHandle> subPropertyLabelSet,
+    public Set<KBHandle> getSubPropertyLabelsRecursively(Set<KBHandle> subPropertyLabelSet,
             KnowledgeBase aKB, KBHandle aHandle)
     {
         List<KBHandle> subPropertylist = getSubProperty(aKB, aHandle.getIdentifier(), true);
         for (KBHandle subProp : subPropertylist) {
             if (!subPropertyLabelSet.contains(subProp)) {
                 subPropertyLabelSet.add(subProp);
-                getIterativeSubPropertyLabels(subPropertyLabelSet, aKB, subProp);
+                getSubPropertyLabelsRecursively(subPropertyLabelSet, aKB, subProp);
             }
         }
         return subPropertyLabelSet;
@@ -1171,9 +1171,7 @@ public class KnowledgeBaseServiceImpl
             return evaluateListQuery(aKB, tupleQuery, false, aAll, "s");
         });
 
-        if (resultList.size() > 1) {
-            resultList.sort(Comparator.comparing(KBObject::getUiLabel));
-        }
+        resultList.sort(Comparator.comparing(KBObject::getUiLabel));
         return resultList;
     }
     
@@ -1433,6 +1431,7 @@ public class KnowledgeBaseServiceImpl
                     return Optional.of(kbConcept);
                 }
             }
+            // In case we don't get the identifier as a concept we look for property/instance. 
             else {
                 Optional<KBProperty> kbProperty = readProperty(aKb, aIdentifier);
                 if (kbProperty.isPresent()) {

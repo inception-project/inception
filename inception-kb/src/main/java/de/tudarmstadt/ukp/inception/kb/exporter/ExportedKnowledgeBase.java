@@ -86,6 +86,13 @@ public class ExportedKnowledgeBase
 
     @JsonProperty("max_results")
     private int maxResults;
+    
+    /**
+     *  The IRI for a property describing B being a subproperty of A
+     */
+    @JsonProperty("sub_Property_IRI")
+    private String subPropertyIri;
+
 
     // set to null for local knowledge bases
     @JsonProperty("remote_url")
@@ -289,6 +296,16 @@ public class ExportedKnowledgeBase
     public void setMaxResults(int aMaxResults)
     {
         maxResults = aMaxResults;
+    }
+
+    public String getSubPropertyIri()
+    {
+        return subPropertyIri;
+    }
+
+    public void setSubPropertyIri(String subPropertyIri)
+    {
+        this.subPropertyIri = subPropertyIri;
     }
 
     public String getRemoteURL()
