@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.model;
+package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model;
 
 import java.util.ArrayList;
 import java.util.List;

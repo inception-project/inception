@@ -42,7 +42,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Controller;
 import org.springframework.util.FileCopyUtils;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -75,10 +74,11 @@ import de.tudarmstadt.ukp.clarin.webanno.tsv.WebAnnoTsv3FormatSupport;
 /**
  * Expose some functions of WebAnno via a RESTful remote API.
  */
-@RequestMapping("/api/v1")
-@Controller
-public class RemoteApiController
+@RequestMapping(LegacyRemoteApiController.API_BASE)
+public class LegacyRemoteApiController
 {
+    public static final String API_BASE = "/api/aero/v1";
+
     private static final String META_INF = "META-INF/";
 
     private static final String PROJECTS = "projects";

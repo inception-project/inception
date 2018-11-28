@@ -15,11 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.model;
+package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.RemoteApiController2;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroRemoteApiController;
 
 public class RDocument
 {
@@ -31,7 +31,7 @@ public class RDocument
     {
         id = aDocument.getId();
         name = aDocument.getName();
-        state = RemoteApiController2.sourceDocumentStateToString(aDocument.getState());
+        state = AeroRemoteApiController.sourceDocumentStateToString(aDocument.getState());
     }
     
     public RDocument(long aId, String aName, SourceDocumentState aState)
@@ -39,6 +39,6 @@ public class RDocument
         super();
         id = aId;
         name = aName;
-        state = RemoteApiController2.sourceDocumentStateToString(aState);
+        state = AeroRemoteApiController.sourceDocumentStateToString(aState);
     }
 }

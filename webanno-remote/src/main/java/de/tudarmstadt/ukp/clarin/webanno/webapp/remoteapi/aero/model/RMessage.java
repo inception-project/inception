@@ -15,17 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.exception;
+package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model;
 
-import org.springframework.http.HttpStatus;
-
-public class ObjectExistsException
-    extends RemoteApiException
+public class RMessage
 {
-    private static final long serialVersionUID = 95669678848612997L;
-
-    public ObjectExistsException(String aMessage)
+    public RMessageLevel level;
+    public String message;
+    
+    public RMessage(RMessageLevel aLevel, String aMsg)
     {
-        super(aMessage, HttpStatus.CONFLICT);
+        level = aLevel;
+        message = aMsg;
     }
 }

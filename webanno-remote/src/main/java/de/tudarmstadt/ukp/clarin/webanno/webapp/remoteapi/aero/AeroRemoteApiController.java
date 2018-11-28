@@ -15,10 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi;
+package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero;
 
-import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.model.RMessageLevel.ERROR;
-import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.model.RMessageLevel.INFO;
+import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RMessageLevel.ERROR;
+import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RMessageLevel.INFO;
 import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 import static org.springframework.http.HttpStatus.OK;
@@ -71,7 +71,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -106,31 +105,27 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils;
 import de.tudarmstadt.ukp.clarin.webanno.tsv.WebAnnoTsv3FormatSupport;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.exception.AccessForbiddenException;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.exception.IllegalObjectStateException;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.exception.IncompatibleDocumentException;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.exception.ObjectExistsException;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.exception.ObjectNotFoundException;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.exception.RemoteApiException;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.exception.UnsupportedFormatException;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.model.RAnnotation;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.model.RDocument;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.model.RProject;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.model.RResponse;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.exception.AccessForbiddenException;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.exception.IllegalObjectStateException;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.exception.IncompatibleDocumentException;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.exception.ObjectExistsException;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.exception.ObjectNotFoundException;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.exception.RemoteApiException;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.exception.UnsupportedFormatException;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RAnnotation;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RDocument;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RProject;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RResponse;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.Info;
-import io.swagger.annotations.SwaggerDefinition;
 
-@SwaggerDefinition(info = @Info(title = "WebAnno Remote API", version = "2"))
-@RequestMapping(RemoteApiController2.API_BASE)
-@Controller
-public class RemoteApiController2
+@RequestMapping(AeroRemoteApiController.API_BASE)
+public class AeroRemoteApiController
 {
-    public static final String API_BASE = "/api/v2";
+    public static final String API_BASE = "/api/aero/v1";
     
     private static final String PROJECTS = "projects";
     private static final String DOCUMENTS = "documents";
