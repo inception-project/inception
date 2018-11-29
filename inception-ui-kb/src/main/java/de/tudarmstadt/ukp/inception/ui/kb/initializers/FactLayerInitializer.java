@@ -64,10 +64,9 @@ public class FactLayerInitializer
         throws IOException
     {
         AnnotationLayer factLayer = new AnnotationLayer(FactLinkingConstants.FACT_LAYER, "Fact",
-            SPAN_TYPE, aProject, false);
+            SPAN_TYPE, aProject, false, AnchoringMode.TOKENS);
         factLayer.setAllowStacking(true);
         factLayer.setCrossSentence(false);
-        factLayer.setAnchoringMode(AnchoringMode.TOKENS);
 
         annotationSchemaService.createFeature(
             new AnnotationFeature(aProject, factLayer, "predicate", "1) Predicate",

@@ -52,7 +52,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.datasets.DatasetFactory;
 import de.tudarmstadt.ukp.dkpro.core.io.conll.Conll2002Reader;
 import de.tudarmstadt.ukp.dkpro.core.testing.DkproTestContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
-import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import okhttp3.mockwebserver.Dispatcher;
 import okhttp3.mockwebserver.MockResponse;
@@ -260,7 +259,7 @@ public class ExternalRecommenderIntegrationTest
                         String response = remoteRecommender.predict(body);
                         return new MockResponse().setResponseCode(200).setBody(response);
                     }
-                } catch (RecommendationException e) {
+                } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
 
