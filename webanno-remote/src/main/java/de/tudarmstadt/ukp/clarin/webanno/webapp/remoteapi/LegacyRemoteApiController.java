@@ -77,7 +77,7 @@ import de.tudarmstadt.ukp.clarin.webanno.tsv.WebAnnoTsv3FormatSupport;
 @RequestMapping(LegacyRemoteApiController.API_BASE)
 public class LegacyRemoteApiController
 {
-    public static final String API_BASE = "/api/aero/v1";
+    public static final String API_BASE = "/api/v1";
 
     private static final String META_INF = "META-INF/";
 
