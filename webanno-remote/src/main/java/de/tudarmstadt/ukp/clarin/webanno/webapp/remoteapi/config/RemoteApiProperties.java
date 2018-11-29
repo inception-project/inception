@@ -1,5 +1,5 @@
 /*
- * Copyright 2017
+ * Copyright 2018
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
  *
@@ -15,25 +15,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.exception;
+package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.config;
 
-import org.springframework.http.HttpStatus;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
 
-public class RemoteApiException
-    extends Exception
+@Component
+@ConfigurationProperties("remote-api")
+public class RemoteApiProperties
 {
-    private static final long serialVersionUID = 3117987891600569825L;
-    
-    private HttpStatus status;
+    private boolean enabled = false;
 
-    public RemoteApiException(String aMessage, HttpStatus aStatus)
+    public boolean isEnabled()
     {
-        super(aMessage);
-        status = aStatus;
+        boolean enabledViaLegacySystemProperty = "true"
+                .equals(System.getProperty("webanno.remote-api.enable"));
+        
+        return enabled || enabledViaLegacySystemProperty;
     }
-    
-    public HttpStatus getStatus()
+
+    public void setEnabled(boolean aRemoteApiEnabled)
     {
-        return status;
+        enabled = aRemoteApiEnabled;
     }
 }
