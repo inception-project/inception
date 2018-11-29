@@ -23,6 +23,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
 import static java.util.Arrays.asList;
 
 import org.apache.uima.cas.CAS;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -35,6 +37,8 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 public class OpenNlpNerRecommenderFactory
     extends RecommendationEngineFactoryImplBase<OpenNlpNerRecommenderTraits>
 {
+    private Logger log = LoggerFactory.getLogger(getClass());
+
     // This is a string literal so we can rename/refactor the class without it changing its ID
     // and without the database starting to refer to non-existing recommendation tools.
     public static final String ID = 
@@ -65,10 +69,9 @@ public class OpenNlpNerRecommenderFactory
             return false;
         }
         
-        return (asList(SINGLE_TOKEN, TOKENS).contains(aLayer.getAnchoringMode())) && 
-                !aLayer.isCrossSentence() && 
-                SPAN_TYPE.equals(aLayer.getType()) && 
-                (CAS.TYPE_NAME_STRING.equals(aFeature.getType()) || aFeature.isVirtualFeature());
+        return (asList(SINGLE_TOKEN, TOKENS).contains(aLayer.getAnchoringMode()))
+                && !aLayer.isCrossSentence() && SPAN_TYPE.equals(aLayer.getType())
+                && CAS.TYPE_NAME_STRING.equals(aFeature.getType()) || aFeature.isVirtualFeature();
     }
 
     @Override

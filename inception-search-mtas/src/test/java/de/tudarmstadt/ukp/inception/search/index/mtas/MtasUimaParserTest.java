@@ -39,6 +39,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.PrimitiveUimaFeatureSupport;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -135,7 +136,7 @@ public class MtasUimaParserTest
         builder.add(".", Token.class);
         
         AnnotationLayer layer = new AnnotationLayer(NamedEntity.class.getName(),
-                "Named Entity", WebAnnoConst.SPAN_TYPE, project, true);
+                "Named Entity", WebAnnoConst.SPAN_TYPE, project, true, AnchoringMode.TOKENS);
         when(annotationSchemaService.listAnnotationLayer(any(Project.class)))
                 .thenReturn(asList(layer));
 
@@ -162,40 +163,5 @@ public class MtasUimaParserTest
             .filteredOn(t -> t.getPrefix().startsWith("Named_Entity"))
             .extracting(MtasToken::getPostfix)
             .containsExactly("", "PER");
-    }
-    
-    @Test
-    public void testZeroWidthSpanNotIndexed() throws Exception
-    {
-        TokenBuilder<Token, Sentence> builder = TokenBuilder.create(Token.class, Sentence.class);
-        builder.buildTokens(jcas, "This is a test . \n This is sentence two .");
-
-        NamedEntity zeroWidthNe = new NamedEntity(jcas, 4, 4);
-        zeroWidthNe.setValue("OTH");
-        zeroWidthNe.addToIndexes();
-        
-        AnnotationLayer layer = new AnnotationLayer(NamedEntity.class.getName(),
-                "Named Entity", WebAnnoConst.SPAN_TYPE, project, true);
-        when(annotationSchemaService.listAnnotationLayer(any(Project.class)))
-                .thenReturn(asList(layer));
-
-        when(annotationSchemaService.listAnnotationFeature(any(AnnotationLayer.class)))
-                .thenReturn(asList(
-                        new AnnotationFeature(1l, layer, "value", CAS.TYPE_NAME_STRING),
-                        new AnnotationFeature(2l, layer, "identifier", CAS.TYPE_NAME_STRING)));
-        
-        MtasUimaParser sut = new MtasUimaParser(project, annotationSchemaService,
-                featureIndexingSupportRegistry);
-        MtasTokenCollection tc = sut.createTokenCollection(jcas);
-        
-        MtasUtils.print(tc);
-        
-        List<MtasToken> tokens = new ArrayList<>();
-        tc.iterator().forEachRemaining(tokens::add);
-
-        assertThat(tokens)
-            .filteredOn(t -> t.getPrefix().startsWith("Named_Entity"))
-            .extracting(MtasToken::getPrefix)
-            .isEmpty();
     }
 }

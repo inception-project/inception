@@ -21,19 +21,41 @@
   <wicket:extend>
     <div class="flex-content flex-v-container flex-gutter">
       <div class="flex-h-container flex-gutter">
-        <div class="flex-content">
+        <div>
           <input wicket:id="newProject" type="button" class="btn btn-primary" wicket:message="value:newProject"/> 
         </div>
         <div class="flex-content"></div>
-        <wicket:container wicket:id="importPanel" />
+        <div style="flex-basis: 30%; min-width: 20em;">
+          <form wicket:id="importProjectForm">
+            <input type="file" wicket:id="projectArchiveUpload" multiple="multiple"/>
+          </form>
+        </div>
+      </div>
+      <div class="flex-h-container flex-gutter">
+        <div class="flex-content"></div>
+        <div style="flex-basis: 0%;">
+          <div wicket:id="roleFilters" class="input-group">
+            <span class="input-group-addon">
+              <i class="fa fa-filter"></i>
+            </span>
+            <span class="input-group-btn">
+              <wicket:container wicket:id="roleFilter">
+                <button type="button" class="btn btn-default" wicket:id="roleFilterLink"><wicket:container wicket:id="label"/></button>
+              </wicket:container>
+            </span>
+          </div>
+        </div>
       </div>
       <div class="scrolling flex-content flex-h-container flex-gutter">
-        <div class="flex-content list-group">
+        <div wicket:id="projects" class="flex-content list-group">
           <div wicket:id="project" class="list-group-item">
             <span wicket:id="role" class="badge"><wicket:container wicket:id="label"/></span>
             <h4 class="list-group-item-heading">
               <a wicket:id="projectLink"><wicket:container wicket:id="name"/></a>
             </h4>
+            <div class="text-right">
+              <i wicket:enclosure="created">Created: <wicket:container wicket:id="created"/></i>
+            </div>
           </div>
         </div>
       </div>

@@ -20,9 +20,9 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.external;
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -38,6 +38,7 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.util.TypeSystemUtil;
+import org.apache.uima.util.XMLSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
@@ -179,9 +180,9 @@ public class ExternalRecommender
 
     private String serializeTypeSystem(CAS aCas) throws RecommendationException
     {
-        try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+        try (StringWriter out = new StringWriter()) {
             TypeSystemUtil.typeSystem2TypeSystemDescription(aCas.getTypeSystem()).toXML(out);
-            return new String(out.toByteArray(), UTF_8);
+            return out.toString();
         }
         catch (CASRuntimeException | SAXException | IOException e) {
             throw new RecommendationException("Coud not serialize type system", e);
@@ -190,9 +191,13 @@ public class ExternalRecommender
 
     private String serializeCas(CAS aCas) throws RecommendationException
     {
-        try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-            XmiCasSerializer.serialize(aCas, null, out, true, null);
-            return new String(out.toByteArray(), UTF_8);
+        try (StringWriter out = new StringWriter()) {
+            // Passing "null" as the type system to the XmiCasSerializer means that we want 
+            // to serialize all types (i.e. no filtering for a specific target type system).
+            XmiCasSerializer xmiCasSerializer = new XmiCasSerializer(null);
+            XMLSerializer sax2xml = new XMLSerializer(out, true);
+            xmiCasSerializer.serialize(aCas, sax2xml.getContentHandler(), null, null, null);
+            return out.toString();
         }
         catch (CASRuntimeException | SAXException | IOException e) {
             throw new RecommendationException("Error while serializing CAS!", e);
