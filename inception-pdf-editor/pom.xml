@@ -199,6 +199,7 @@
                 <excludes combine.children="append">
                   <!-- These upstream files do not contain license headers -->
                   <exclude>src/main/js/pdfanno/**/*</exclude>
+                  <exclude>cache/**/*</exclude>
                 </excludes>
               </configuration>
             </execution>

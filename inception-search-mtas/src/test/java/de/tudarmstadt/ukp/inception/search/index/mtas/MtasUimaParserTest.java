@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.search.index.mtas;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -37,14 +39,19 @@ import org.mockito.Mock;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ArcAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.PrimitiveUimaFeatureSupport;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupportRegistryImpl;
 import de.tudarmstadt.ukp.inception.search.PrimitiveUimaIndexingSupport;
 import mtas.analysis.token.MtasToken;
@@ -135,7 +142,7 @@ public class MtasUimaParserTest
         builder.add(".", Token.class);
         
         AnnotationLayer layer = new AnnotationLayer(NamedEntity.class.getName(),
-                "Named Entity", WebAnnoConst.SPAN_TYPE, project, true);
+                "Named Entity", WebAnnoConst.SPAN_TYPE, project, true, AnchoringMode.TOKENS);
         when(annotationSchemaService.listAnnotationLayer(any(Project.class)))
                 .thenReturn(asList(layer));
 
@@ -175,7 +182,7 @@ public class MtasUimaParserTest
         zeroWidthNe.addToIndexes();
         
         AnnotationLayer layer = new AnnotationLayer(NamedEntity.class.getName(),
-                "Named Entity", WebAnnoConst.SPAN_TYPE, project, true);
+                "Named Entity", WebAnnoConst.SPAN_TYPE, project, true, TOKENS);
         when(annotationSchemaService.listAnnotationLayer(any(Project.class)))
                 .thenReturn(asList(layer));
 
@@ -197,5 +204,96 @@ public class MtasUimaParserTest
             .filteredOn(t -> t.getPrefix().startsWith("Named_Entity"))
             .extracting(MtasToken::getPrefix)
             .isEmpty();
+    }
+
+    
+    @Test
+    public void testDependencyRelation() throws Exception
+    {
+        // Set up document with a dummy dependency relation
+        jcas.setDocumentText("a b");
+        Token t1 = new Token(jcas, 0, 1);
+        t1.addToIndexes();
+        
+        POS p1 = new POS(jcas, t1.getBegin(), t1.getEnd());
+        p1.setPosValue("A");
+        t1.setPos(p1);
+        p1.addToIndexes();
+
+        Token t2 = new Token(jcas, 2, 3);
+        t2.addToIndexes();
+
+        POS p2 = new POS(jcas, t2.getBegin(), t2.getEnd());
+        p2.setPosValue("B");
+        t2.setPos(p2);
+        p2.addToIndexes();
+        
+        Dependency d1 = new Dependency(jcas, t2.getBegin(), t2.getEnd());
+        d1.setDependent(t2);
+        d1.setGovernor(t1);
+        d1.addToIndexes();
+        
+        // Set up annotation schema with POS and Dependency
+        AnnotationLayer tokenLayer = new AnnotationLayer(Token.class.getName(), "Token",
+                WebAnnoConst.SPAN_TYPE, project, true, SINGLE_TOKEN);
+        tokenLayer.setId(1l);
+        AnnotationFeature tokenLayerPos = new AnnotationFeature(1l, tokenLayer, "pos",
+                POS.class.getName());
+        
+        AnnotationLayer posLayer = new AnnotationLayer(POS.class.getName(), "POS",
+                WebAnnoConst.SPAN_TYPE, project, true, SINGLE_TOKEN);
+        posLayer.setId(2l);
+        AnnotationFeature posLayerValue = new AnnotationFeature(1l, posLayer, "PosValue",
+                CAS.TYPE_NAME_STRING);
+        
+        AnnotationLayer depLayer = new AnnotationLayer(Dependency.class.getName(),
+                "Dependency", WebAnnoConst.RELATION_TYPE, project, true, SINGLE_TOKEN);
+        depLayer.setId(3l);
+        depLayer.setAttachType(tokenLayer);
+        depLayer.setAttachFeature(tokenLayerPos);
+        AnnotationFeature dependencyLayerGovernor = new AnnotationFeature(2l, depLayer,
+                "Governor", Token.class.getName());
+        AnnotationFeature dependencyLayerDependent = new AnnotationFeature(3l, depLayer,
+                "Dependent", Token.class.getName());
+            
+        when(annotationSchemaService.listAnnotationLayer(any(Project.class)))
+                .thenReturn(asList(tokenLayer, posLayer, depLayer));
+
+        when(annotationSchemaService.listAnnotationFeature(tokenLayer))
+                .thenReturn(asList(tokenLayerPos));
+
+        when(annotationSchemaService.listAnnotationFeature(posLayer))
+                .thenReturn(asList(posLayerValue));
+
+        when(annotationSchemaService.listAnnotationFeature(depLayer))
+                .thenReturn(asList(dependencyLayerGovernor, dependencyLayerDependent));
+
+        when(annotationSchemaService.getAdapter(posLayer)).thenReturn(
+                new SpanAdapter(featureSupportRegistry, null, posLayer, asList(posLayerValue)));
+
+        when(annotationSchemaService.getAdapter(depLayer)).thenReturn(new ArcAdapter(
+                featureSupportRegistry, null, depLayer, depLayer.getId(), depLayer.getName(),
+                WebAnnoConst.FEAT_REL_TARGET, WebAnnoConst.FEAT_REL_SOURCE,
+                depLayer.getAttachFeature().getName(), depLayer.getAttachType().getName(),
+                asList(dependencyLayerGovernor, dependencyLayerDependent)));
+        
+        MtasUimaParser sut = new MtasUimaParser(project, annotationSchemaService,
+                featureIndexingSupportRegistry);
+        MtasTokenCollection tc = sut.createTokenCollection(jcas);
+        
+        MtasUtils.print(tc);
+        
+        List<MtasToken> tokens = new ArrayList<>();
+        tc.iterator().forEachRemaining(tokens::add);
+
+        assertThat(tokens)
+            .filteredOn(t -> t.getPrefix().startsWith("Dependency"))
+            .extracting(t -> t.getPrefix() + "=" + t.getPostfix())
+            .containsExactly(
+                    "Dependency=b", 
+                    "Dependency-source=a", 
+                    "Dependency-source.PosValue=A",
+                    "Dependency-target=b", 
+                    "Dependency-target.PosValue=B");
     }
 }

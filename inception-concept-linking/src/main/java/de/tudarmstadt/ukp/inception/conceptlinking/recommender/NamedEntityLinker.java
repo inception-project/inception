@@ -49,7 +49,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
+import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingServiceImpl;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
@@ -71,16 +71,18 @@ public class NamedEntityLinker
     private NamedEntityLinkerTraits traits;
     
     private KnowledgeBaseService kbService;
-    private ConceptLinkingService clService;
+    private ConceptLinkingServiceImpl clService;
     private AnnotationSchemaService annoService;
     private FeatureSupportRegistry fsRegistry;
+    private ConceptFeatureTraits featureTraits;
 
     public static final Key<Collection<ImmutablePair<String, Collection<AnnotationFS>>>> KEY_MODEL
         = new Key<>("model");
 
     public NamedEntityLinker(Recommender aRecommender, NamedEntityLinkerTraits aTraits,
-            KnowledgeBaseService aKbService, ConceptLinkingService aClService,
-            AnnotationSchemaService aAnnoService, FeatureSupportRegistry aFsRegistry)
+            KnowledgeBaseService aKbService, ConceptLinkingServiceImpl aClService,
+            AnnotationSchemaService aAnnoService, FeatureSupportRegistry aFsRegistry,
+            ConceptFeatureTraits aFeatureTraits)
     {
         recommender = aRecommender;
         traits = aTraits;
@@ -88,6 +90,7 @@ public class NamedEntityLinker
         clService = aClService;
         annoService = aAnnoService;
         fsRegistry = aFsRegistry;
+        featureTraits = aFeatureTraits;
     }
 
     @Override
@@ -229,8 +232,8 @@ public class NamedEntityLinker
     private List<KBHandle> readCandidates(KnowledgeBase kb, String aCoveredText, int aBegin,
         JCas aJcas)
     {
-        return kbService
-            .read(kb, (conn) -> clService.disambiguate(kb, null, aCoveredText, aBegin, aJcas));
+        return kbService.read(kb, (conn) -> clService.disambiguate(kb, featureTraits.getScope(),
+                featureTraits.getAllowedValueType(), null, aCoveredText, aBegin, aJcas));
     }
 
     @Override

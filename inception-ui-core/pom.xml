@@ -89,6 +89,11 @@
     </dependency>
     <dependency>
       <groupId>org.wicketstuff</groupId>
+      <artifactId>wicket-datetime</artifactId>
+      <version>${wicketstuff.version}</version>
+    </dependency> 
+   <dependency>
+      <groupId>org.wicketstuff</groupId>
       <artifactId>wicketstuff-annotation</artifactId>
     </dependency>
     <dependency>
@@ -118,6 +123,11 @@
       <artifactId>spring-security-core</artifactId>
     </dependency>
     
+    <dependency>
+      <groupId>com.github.rjeschke</groupId>
+      <artifactId>txtmark</artifactId>
+    </dependency>
+
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>

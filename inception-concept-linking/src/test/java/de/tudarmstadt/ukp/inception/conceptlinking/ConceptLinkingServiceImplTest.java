@@ -40,8 +40,9 @@ import org.springframework.transaction.annotation.Transactional;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.conceptlinking.config.EntityLinkingProperties;
-import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
+import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingServiceImpl;
 import de.tudarmstadt.ukp.inception.conceptlinking.util.TestFixtures;
+import de.tudarmstadt.ukp.inception.kb.ConceptFeatureValueType;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseServiceImpl;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
@@ -53,7 +54,7 @@ import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 @SpringBootTest(classes = SpringConfig.class)
 @Transactional
 @DataJpaTest
-public class ConceptLinkingServiceTest
+public class ConceptLinkingServiceImplTest
 {
     private static final String PROJECT_NAME = "Test project";
     private static final String KB_NAME = "Test knowledge base";
@@ -66,7 +67,7 @@ public class ConceptLinkingServiceTest
     @Autowired
     private KnowledgeBaseService kbService;
 
-    private ConceptLinkingService clService;
+    private ConceptLinkingServiceImpl clService;
 
     private KnowledgeBase kb;
 
@@ -78,7 +79,7 @@ public class ConceptLinkingServiceTest
         EntityManager entityManager = testEntityManager.getEntityManager();
         TestFixtures testFixtures = new TestFixtures(testEntityManager);
         kbService = new KnowledgeBaseServiceImpl(repoProps, entityManager);
-        clService = new ConceptLinkingService(kbService, new EntityLinkingProperties());
+        clService = new ConceptLinkingServiceImpl(kbService, new EntityLinkingProperties());
         clService.afterPropertiesSet();
         Project project = testFixtures.createProject(PROJECT_NAME);
         kb = testFixtures.buildKnowledgeBase(project, KB_NAME, Reification.NONE);
@@ -90,7 +91,8 @@ public class ConceptLinkingServiceTest
         kbService.registerKnowledgeBase(kb, kbService.getNativeConfig());
         importKnowledgeBase("data/pets.ttl");
 
-        List<KBHandle> handles = clService.disambiguate(kb, null, "soc", 0, null);
+        List<KBHandle> handles = clService.disambiguate(kb, null,
+                ConceptFeatureValueType.ANY_OBJECT, null, "soc", 0, null);
 
         assertThat(handles.stream().map(KBHandle::getName))
             .as("Check whether \"Socke\" has been retrieved.")
@@ -104,7 +106,8 @@ public class ConceptLinkingServiceTest
         importKnowledgeBase("data/pets.ttl");
 
         kbService.createConcept(kb, new KBConcept("manatee"));
-        List<KBHandle> handles = clService.disambiguate(kb, null, "man", 0, null);
+        List<KBHandle> handles = clService.disambiguate(kb, null,
+                ConceptFeatureValueType.ANY_OBJECT, null, "man", 0, null);
 
         assertThat(handles.stream().map(KBHandle::getName))
             .as("Check whether \"manatee\" has been retrieved.")
