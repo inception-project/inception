@@ -398,14 +398,11 @@ public class ImportExportServiceImpl
                 + PROJECT_FOLDER + "/" + project.getId() + "/" + DOCUMENT_FOLDER + "/"
                 + aDocument.getId() + "/" + SOURCE_FOLDER);
         DocumentMetaData documentMetadata = DocumentMetaData.get(cas.getJCas());
+        documentMetadata.setDocumentBaseUri(currentDocumentUri.toURI().toURL().toExternalForm());
         documentMetadata.setDocumentUri(new File(currentDocumentUri, aFileName).toURI().toURL()
                 .toExternalForm());
-        documentMetadata.setDocumentBaseUri(currentDocumentUri.toURI().toURL().toExternalForm());
         documentMetadata.setCollectionId(currentDocumentUri.toURI().toURL().toExternalForm());
-        documentMetadata.setDocumentUri(
-                new File(repositoryProperties.getPath().getAbsolutePath() + "/" + PROJECT_FOLDER
-                        + "/" + project.getId() + "/" + DOCUMENT_FOLDER + "/" + aDocument.getId()
-                        + "/" + SOURCE_FOLDER + "/" + aFileName).toURI().toURL().toExternalForm());
+        documentMetadata.setDocumentId(aFileName);
 
         // update with the correct tagset name
         List<AnnotationFeature> features = annotationService.listAnnotationFeature(project);
@@ -428,8 +425,11 @@ public class ImportExportServiceImpl
             AnalysisEngineDescription writer = aFormat.getWriterDescription(aDocument.getProject(),
                     cas);
             ConfigurationParameterFactory.addConfigurationParameters(writer,
+                    JCasFileWriter_ImplBase.PARAM_USE_DOCUMENT_ID, true,
+                    JCasFileWriter_ImplBase.PARAM_ESCAPE_DOCUMENT_ID, false,
                     JCasFileWriter_ImplBase.PARAM_TARGET_LOCATION, exportTempDir,
                     JCasFileWriter_ImplBase.PARAM_STRIP_EXTENSION, aStripExtension);
+
             runPipeline(cas, writer);
     
             // If the writer produced more than one file, we package it up as a ZIP file
