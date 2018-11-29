@@ -287,6 +287,15 @@ public class MtasUimaParser
                         sourceFs.getBegin() != sourceFs.getEnd() &&
                         targetFs.getBegin() != targetFs.getEnd()
                 ) {
+                    // If the relation layer uses an attach-feature, index the annotation
+                    // referenced by that feature
+                    if (layer.getAttachFeature() != null) {
+                        sourceFs = FSUtil.getFeature(sourceFs, layer.getAttachFeature().getName(),
+                                AnnotationFS.class);
+                        targetFs = FSUtil.getFeature(targetFs, layer.getAttachFeature().getName(),
+                                AnnotationFS.class);
+                    }
+
                     Range range = getRange(targetFs);
                     
                     // Index the source annotation text (equals the target)
@@ -336,7 +345,7 @@ public class MtasUimaParser
             int aMtasId)
     {
         int mtasId = aMtasId;
-        
+
         // Iterate over the features of this layer and index them one-by-one
         for (AnnotationFeature feature : layerFeatures.get(aAnnotation.getType().getName())) {
             Optional<FeatureIndexingSupport> fis = featureIndexingSupportRegistry
