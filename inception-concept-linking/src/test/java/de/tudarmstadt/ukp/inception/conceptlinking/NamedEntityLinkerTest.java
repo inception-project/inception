@@ -141,8 +141,6 @@ public class NamedEntityLinkerTest
 
         assertThat(predictions).as("Predictions have been written to CAS")
             .isNotEmpty();
-
-        System.out.println(predictions);
     }
 
     private List<CAS> loadAllData() throws IOException, UIMAException
