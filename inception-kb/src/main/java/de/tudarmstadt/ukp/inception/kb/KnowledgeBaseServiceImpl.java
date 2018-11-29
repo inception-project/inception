@@ -1456,8 +1456,13 @@ public class KnowledgeBaseServiceImpl
     public boolean isSubpropertyLabel(KnowledgeBase aKB, String aIdentifier)
     {
         try (RepositoryConnection conn = getConnection(aKB)) {
-            return RdfUtils.readFirst(conn, SimpleValueFactory.getInstance().createIRI(aIdentifier),
-                aKB.getSubPropertyIri(), aKB.getLabelIri()).isPresent();
+            Set<KBHandle> subProperties = getSubPropertyLabels(aKB);
+            for (KBHandle subPropery : subProperties) {
+                if (subPropery.getIdentifier().equals(aIdentifier)) {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 
