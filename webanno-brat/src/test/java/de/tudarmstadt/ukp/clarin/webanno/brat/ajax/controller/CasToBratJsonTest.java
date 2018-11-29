@@ -53,7 +53,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.PrimitiveUimaFea
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.SlotFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRendererImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
@@ -75,7 +75,7 @@ public class CasToBratJsonTest
     private @Mock AnnotationSchemaService annotationSchemaService;
     
     private FeatureSupportRegistryImpl featureSupportRegistry;
-    private PreRenderer preRenderer;
+    private PreRendererImpl preRenderer;
 
     private Project project;
     private AnnotationLayer tokenLayer;
@@ -100,7 +100,7 @@ public class CasToBratJsonTest
                 asList(new PrimitiveUimaFeatureSupport(), new SlotFeatureSupport()));
         featureSupportRegistry.init();
 
-        preRenderer = new PreRenderer(featureSupportRegistry, annotationSchemaService);
+        preRenderer = new PreRendererImpl(featureSupportRegistry, annotationSchemaService);
 
         project = new Project();
 
