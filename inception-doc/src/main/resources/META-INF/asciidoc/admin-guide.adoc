@@ -33,6 +33,11 @@ include::{include-dir}upgrade.adoc[]
 
 <<<
 
+include::{include-dir}remote-api.adoc[]
+include::{include-dir}remote-api-webhooks.adoc[leveloffset=+1]
+
+<<<
+
 include::{include-dir}systemproperties.adoc[]
 
 <<<
@@ -40,3 +45,5 @@ include::{include-dir}systemproperties.adoc[]
 include::{include-dir}settings.adoc[]
 include::{include-dir}settings_concept-linking.adoc[]
 include::{include-dir}settings_knowledgebase.adoc[]
+include::{include-dir}security-preauth.adoc[leveloffset=+1]
+
