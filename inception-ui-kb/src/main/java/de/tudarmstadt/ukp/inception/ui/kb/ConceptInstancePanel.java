@@ -136,7 +136,7 @@ public class ConceptInstancePanel
             return;
         }
 
-        if (!isRenamingEvent(statement)) {
+        if (!isRenamingEvent(event)) {
             return;
         }
         Optional<KBInstance> kbInstance = kbService
@@ -149,12 +149,25 @@ public class ConceptInstancePanel
         event.getTarget().add(this);
     }
 
-    private boolean isRenamingEvent(KBStatement aStatement)
+    /**
+     * Checks whether the given event is about renaming a knowledge base instance i.e. checks
+     * whether the label of an instance has been changed in the event.
+     * An event is considered a renaming event if the changed property is:
+     *
+     * a main label (declared with {@link KnowledgeBase#getLabelIri()})
+     * or
+     * a subproperty label and there is no main label present for this instance
+     *
+     * @param aEvent the event that is checked
+     * @return true if the event is a renaming event, false otherwise
+     */
+    private boolean isRenamingEvent(AjaxStatementChangedEvent aEvent)
     {
-        String propertyIdentifier = aStatement.getProperty().getIdentifier();
+        KBStatement changedStatement = aEvent.getStatement();
+        String propertyIdentifier = changedStatement.getProperty().getIdentifier();
         SimpleValueFactory vf = SimpleValueFactory.getInstance();
         boolean hasMainLabel = RdfUtils.readFirst(kbService.getConnection(kbModel.getObject()),
-            vf.createIRI(aStatement.getInstance().getIdentifier()),
+            vf.createIRI(changedStatement.getInstance().getIdentifier()),
             kbModel.getObject().getLabelIri(), null).isPresent();
         return propertyIdentifier.equals(kbModel.getObject().getLabelIri().stringValue()) || (
             kbService.isSubpropertyLabel(kbModel.getObject(), propertyIdentifier)
