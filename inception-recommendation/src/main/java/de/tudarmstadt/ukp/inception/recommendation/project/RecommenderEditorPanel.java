@@ -54,7 +54,6 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormSubmittingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -93,8 +92,6 @@ public class RecommenderEditorPanel
     private WebMarkupContainer traitsContainer;
     private WebMarkupContainer activationContainer;
     private DropDownChoice<Pair<String, String>> toolChoice;
-    private DropDownChoice<String> featureChoice;
-    private DropDownChoice<AnnotationLayer> layerChoice;
 
     private IModel<Project> projectModel;
     private IModel<Recommender> recommenderModel;
@@ -115,42 +112,40 @@ public class RecommenderEditorPanel
         
         form.add(new Label(MID_NAME));
         form.add(new CheckBox(MID_ENABLED));
+        form.add(new DropDownChoice<>("layer")
+                .setChoices(this::listLayers)
+                .setChoiceRenderer(new ChoiceRenderer<>("uiName"))
+                .setRequired(true)
+                // The available features and tools tools depend on the layer, so reload them
+                // when the layer is changed
+                .add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> { 
+                    if (listFeatures().size() == 1) {
+                        recommenderModel.getObject().setFeature(listFeatures().get(0));
+                    } else {
+                        recommenderModel.getObject().setFeature(null);
+                    }
+                    recommenderModel.getObject().setTool(null);
+                    t.add(form.get(MID_TOOL));
+                    t.add(form.get(MID_FEATURE)); 
+                    t.add(traitsContainer);
+                })));
+        form.add(new DropDownChoice<>(MID_FEATURE)
+                .setChoices(this::listFeatures)
+                .setRequired(true)
+                .setOutputMarkupId(true)
+                // The available tools depend on the feature, so reload the tools when the layer
+                // is changed
+                .add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> {
+                    recommenderModel.getObject().setTool(null);
+                    t.add(form.get(MID_TOOL));
+                    t.add(traitsContainer);
+                })));
         
-        layerChoice = new DropDownChoice<>("layer",this::listLayers);
-        layerChoice.setChoiceRenderer(new ChoiceRenderer<>("uiName"));
-        layerChoice.setRequired(true);
-        // The features and tools depend on the layer, so reload them when the layer is changed
-        layerChoice.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> { 
-            toolChoice.setModelObject(null);
-            featureChoice.setModelObject(null);
-            t.add(form.get(MID_TOOL), form.get(MID_FEATURE), form.get(MID_MAX_RECOMMENDATIONS),
-                    activationContainer, traitsContainer);
-        }));
-        form.add(layerChoice);
-        
-        featureChoice = new DropDownChoice<>(MID_FEATURE, this::listFeatures);
-        featureChoice.setRequired(true);
-        featureChoice.setOutputMarkupId(true);
-        featureChoice.add(LambdaBehavior.onConfigure(_this -> {
-            if (featureChoice.getChoicesModel().getObject().size() == 1) {
-                featureChoice.setModelObject(featureChoice.getChoicesModel().getObject().get(0));
-            }
-        }));
-        // The tools depend on the feature, so reload the tools when the feature is changed
-        featureChoice.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> {
-            toolChoice.setModelObject(null);
-            t.add(form.get(MID_TOOL), form.get(MID_MAX_RECOMMENDATIONS), activationContainer,
-                    traitsContainer);
-        }));
-        form.add(featureChoice);
-        
-        IModel<Pair<String, String>> toolModel = LambdaModelAdapter.of(
-            () -> {
-                String name = recommenderModel.getObject().getTool();
-                RecommendationEngineFactory factory = recommenderRegistry.getFactory(name);
-                return factory != null ? Pair.of(factory.getId(), factory.getName()) : null;
-            }, 
-            (v) -> recommenderModel.getObject().setTool(v != null ? v.getKey() : null));
+        IModel<Pair<String, String>> toolModel = LambdaModelAdapter.of(() -> {
+            String name = recommenderModel.getObject().getTool();
+            RecommendationEngineFactory factory = recommenderRegistry.getFactory(name);
+            return factory != null ? Pair.of(factory.getId(), factory.getName()) : null;
+        }, (v) -> recommenderModel.getObject().setTool(v.getKey()));
         
         toolChoice = new DropDownChoice<Pair<String, String>>(MID_TOOL, toolModel, this::listTools)
         {
@@ -177,8 +172,9 @@ public class RecommenderEditorPanel
         toolChoice.setChoiceRenderer(new ChoiceRenderer<Pair<String, String>>("value"));
         toolChoice.setRequired(true);
         toolChoice.setOutputMarkupId(true);
-        toolChoice.add(new LambdaAjaxFormComponentUpdatingBehavior("change", _target -> _target
-                .add(form.get(MID_MAX_RECOMMENDATIONS), activationContainer, traitsContainer)));
+        toolChoice.add(new LambdaAjaxFormComponentUpdatingBehavior("change",_target -> 
+                _target.add(traitsContainer, activationContainer, 
+                        form.get(MID_MAX_RECOMMENDATIONS))));
         form.add(toolChoice);
         
         form.add(activationContainer = new WebMarkupContainer(MID_ACTIVATION_CONTAINER));

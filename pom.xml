@@ -60,6 +60,7 @@
     <spring.version>5.1.1.RELEASE</spring.version>
     <spring.boot.version>1.5.17.RELEASE</spring.boot.version>
     <wicket.version>8.1.0</wicket.version>
+    <wicketstuff.version>${wicket.version}</wicketstuff.version>
     <wicket-jquery-ui.version>${wicket.version}</wicket-jquery-ui.version>
     <lucene.version>7.3.0</lucene.version>
     <mtas.version>7.3.0.3</mtas.version>
@@ -127,6 +128,21 @@
       </snapshots>
     </repository>
   </repositories>
+  <pluginRepositories>
+    <pluginRepository>
+      <id>jcenter-snapshots</id>
+      <name>jcenter</name>
+      <url>http://oss.jfrog.org/artifactory/oss-snapshot-local/</url>
+    </pluginRepository>
+    <pluginRepository>
+      <id>jcenter-releases</id>
+      <name>jcenter</name>
+      <url>http://jcenter.bintray.com</url>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </pluginRepository>
+  </pluginRepositories>
   <dependencies>
     <!-- The logging subsystem used by WebAnno -->
     <dependency>

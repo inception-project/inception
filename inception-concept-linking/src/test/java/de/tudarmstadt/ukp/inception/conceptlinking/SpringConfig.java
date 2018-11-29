@@ -31,7 +31,7 @@ import org.springframework.context.annotation.Primary;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
+import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingServiceImpl;
 import de.tudarmstadt.ukp.inception.kb.exporter.KnowledgeBaseExporter;
 
 @SpringBootConfiguration
@@ -76,8 +76,8 @@ public class SpringConfig {
     }
 
     @Bean
-    public ConceptLinkingService clService()
+    public ConceptLinkingServiceImpl clService()
     {
-        return new ConceptLinkingService();
+        return new ConceptLinkingServiceImpl();
     }
 }
