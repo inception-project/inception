@@ -1,5 +1,5 @@
 /*
- * Copyright 2017
+ * Copyright 2018
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
  *
@@ -20,52 +20,13 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 import java.util.List;
 
 import org.apache.uima.jcas.JCas;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ArcAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ChainAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
-@Component
-public class PreRenderer
+public interface PreRenderer
 {
-    private @Autowired FeatureSupportRegistry featureSupportRegistry;
-    private @Autowired AnnotationSchemaService annotationService;
-
-    public void render(VDocument aResponse, AnnotatorState aState, JCas aJCas,
-            List<AnnotationLayer> aLayers)
-    {
-        // Render (custom) layers
-        for (AnnotationLayer layer : aLayers) {
-            List<AnnotationFeature> features = annotationService.listAnnotationFeature(layer);
-            TypeAdapter adapter = annotationService.getAdapter(layer);
-            Renderer renderer = getRenderer(adapter);
-            renderer.render(aJCas, features, aResponse, aState);
-        }
-    }
-
-    public Renderer getRenderer(TypeAdapter aTypeAdapter)
-    {
-        if (aTypeAdapter instanceof SpanAdapter) {
-            return new SpanRenderer((SpanAdapter) aTypeAdapter, featureSupportRegistry);
-        }
-        else if (aTypeAdapter instanceof ArcAdapter) {
-            return new RelationRenderer((ArcAdapter) aTypeAdapter, featureSupportRegistry);
-        }
-        else if (aTypeAdapter instanceof ChainAdapter) {
-            return new ChainRenderer((ChainAdapter) aTypeAdapter, featureSupportRegistry);
-        }
-        else {
-            throw new IllegalArgumentException(
-                    "Unknown adapter type [" + aTypeAdapter.getClass().getName() + "]");
-        }
-    }
+    void render(VDocument aResponse, AnnotatorState aState, JCas aJCas,
+            List<AnnotationLayer> aLayers);
 }
