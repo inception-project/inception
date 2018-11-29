@@ -21,6 +21,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.linesOf;
+import static org.mockito.Mockito.when;
+import static org.mockito.MockitoAnnotations.initMocks;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,17 +34,12 @@ import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.factory.CollectionReaderFactory;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
+import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -50,15 +47,15 @@ import com.flipkart.zjsonpatch.JsonDiff;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistryImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.PrimitiveUimaFeatureSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.SlotFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.AnnotationSchemaServiceImpl;
-import de.tudarmstadt.ukp.clarin.webanno.brat.ajax.controller.CasToBratJsonTest.TestContext;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratRenderer;
@@ -72,17 +69,19 @@ import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.tcf.TcfReader;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import mockit.Mock;
-import mockit.MockUp;
 
-@RunWith(SpringRunner.class)
-@ContextConfiguration(classes = TestContext.class)
 public class CasToBratJsonTest
 {
-    private @Autowired Project project;
-    private @Autowired AnnotationSchemaService annotationSchemaService;
-    private @Autowired FeatureSupportRegistryImpl featureSupportRegistry;
-    private @Autowired PreRenderer preRenderer;
+    private @Mock AnnotationSchemaService annotationSchemaService;
+    
+    private FeatureSupportRegistryImpl featureSupportRegistry;
+    private PreRenderer preRenderer;
+
+    private Project project;
+    private AnnotationLayer tokenLayer;
+    private AnnotationFeature tokenPosFeature;
+    private AnnotationLayer posLayer;
+    private AnnotationFeature posFeature;
     
     @BeforeClass
     public static void setupClass()
@@ -90,6 +89,63 @@ public class CasToBratJsonTest
         // Route logging through log4j
         System.setProperty("org.apache.uima.logger.class", 
                 "org.apache.uima.util.impl.Log4jLogger_impl");
+    }
+    
+    @Before
+    public void setup() 
+    {
+        initMocks(this);
+        
+        featureSupportRegistry = new FeatureSupportRegistryImpl(
+                asList(new PrimitiveUimaFeatureSupport(), new SlotFeatureSupport()));
+        featureSupportRegistry.init();
+
+        preRenderer = new PreRenderer(featureSupportRegistry, annotationSchemaService);
+
+        project = new Project();
+
+        tokenLayer = new AnnotationLayer(Token.class.getName(), "Token", SPAN_TYPE, null, true);
+        tokenLayer.setId(1l);
+
+        tokenPosFeature = new AnnotationFeature();
+        tokenPosFeature.setId(1l);
+        tokenPosFeature.setName("pos");
+        tokenPosFeature.setEnabled(true);
+        tokenPosFeature.setType(POS.class.getName());
+        tokenPosFeature.setUiName("pos");
+        tokenPosFeature.setLayer(tokenLayer);
+        tokenPosFeature.setProject(project);
+        tokenPosFeature.setVisible(true);
+
+        posLayer = new AnnotationLayer(POS.class.getName(), "POS", SPAN_TYPE, project, true);
+        posLayer.setId(2l);
+        posLayer.setAttachType(tokenLayer);
+        posLayer.setAttachFeature(tokenPosFeature);
+
+        posFeature = new AnnotationFeature();
+        posFeature.setId(2l);
+        posFeature.setName("PosValue");
+        posFeature.setEnabled(true);
+        posFeature.setType(CAS.TYPE_NAME_STRING);
+        posFeature.setUiName("PosValue");
+        posFeature.setLayer(posLayer);
+        posFeature.setProject(project);
+        posFeature.setVisible(true);
+        
+        SpanAdapter adapter = new SpanAdapter(featureSupportRegistry, null, posLayer,
+                asList(posFeature));
+        adapter.setLockToTokenOffsets(true);
+        adapter.setAllowStacking(false);
+        adapter.setAllowMultipleToken(false);
+        adapter.setCrossMultipleSentence(false);
+        
+        when(annotationSchemaService.listAnnotationLayer(Mockito.any(Project.class)))
+                .thenReturn(asList(posLayer));
+        
+        when(annotationSchemaService.listAnnotationFeature(posLayer))
+                .thenReturn(asList(posFeature));
+        
+        when(annotationSchemaService.getAdapter(posLayer)).thenReturn(adapter);
     }
     
     /**
@@ -218,88 +274,5 @@ public class CasToBratJsonTest
         System.out.println(d_addedMiddle);
         System.out.println(d_removedMiddle);
         System.out.println(d_removedEnd);
-    }
-    
-    @Configuration
-    @ComponentScan({
-        "de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature", 
-        "de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering"})
-    public static class TestContext
-    {
-        private @Autowired Project project;
-        private @Autowired AnnotationSchemaService annotationSchemaService;
-        private @Autowired FeatureSupportRegistryImpl featureSupportRegistry;
-        private @Autowired ApplicationEventPublisher applicationEventPublisher;
-
-        private AnnotationLayer tokenLayer;
-        private AnnotationFeature tokenPosFeature;
-        private AnnotationLayer posLayer;
-        private AnnotationFeature posFeature;
-
-        {
-            tokenLayer = new AnnotationLayer(Token.class.getName(), "Token", SPAN_TYPE, null, true);
-            tokenLayer.setId(1l);
-
-            tokenPosFeature = new AnnotationFeature();
-            tokenPosFeature.setId(1l);
-            tokenPosFeature.setName("pos");
-            tokenPosFeature.setEnabled(true);
-            tokenPosFeature.setType(POS.class.getName());
-            tokenPosFeature.setUiName("pos");
-            tokenPosFeature.setLayer(tokenLayer);
-            tokenPosFeature.setProject(project);
-            tokenPosFeature.setVisible(true);
-
-            posLayer = new AnnotationLayer(POS.class.getName(), "POS", SPAN_TYPE, project, true);
-            posLayer.setId(2l);
-            posLayer.setAttachType(tokenLayer);
-            posLayer.setAttachFeature(tokenPosFeature);
-
-            posFeature = new AnnotationFeature();
-            posFeature.setId(2l);
-            posFeature.setName("PosValue");
-            posFeature.setEnabled(true);
-            posFeature.setType(CAS.TYPE_NAME_STRING);
-            posFeature.setUiName("PosValue");
-            posFeature.setLayer(posLayer);
-            posFeature.setProject(project);
-            posFeature.setVisible(true);
-        }
-
-        @Bean
-        public Project project()
-        {
-            return new Project();
-        }
-
-        @Bean
-        public AnnotationSchemaService annotationSchemaService()
-        {
-            return new MockUp<AnnotationSchemaService>()
-            {
-                @Mock
-                List<AnnotationLayer> listAnnotationLayer(Project project)
-                {
-                    return asList(posLayer);
-                }
-
-                @Mock
-                List<AnnotationFeature> listAnnotationFeature(AnnotationLayer type)
-                {
-                    if (type.getName().equals(POS.class.getName())) {
-                        return asList(posFeature);
-                    }
-                    throw new IllegalStateException("Unknown layer type: " + type.getName());
-                }
-
-                @Mock
-                TypeAdapter getAdapter(AnnotationLayer aLayer)
-                {
-                    return AnnotationSchemaServiceImpl.getAdapter(annotationSchemaService,
-                            featureSupportRegistry, applicationEventPublisher, aLayer);
-                }
-
-            }.getMockInstance();
-        }
     }
 }
