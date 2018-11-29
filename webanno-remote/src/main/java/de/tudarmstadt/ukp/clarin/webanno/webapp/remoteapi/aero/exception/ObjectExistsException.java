@@ -15,17 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.exception;
+package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.exception;
 
 import org.springframework.http.HttpStatus;
 
-public class IncompatibleDocumentException
+public class ObjectExistsException
     extends RemoteApiException
 {
     private static final long serialVersionUID = 95669678848612997L;
 
-    public IncompatibleDocumentException(String aFormat, Object... aArgs)
+    public ObjectExistsException(String aMessage)
     {
-        super(String.format(aFormat, aArgs), HttpStatus.CONFLICT);
+        super(aMessage, HttpStatus.CONFLICT);
     }
 }

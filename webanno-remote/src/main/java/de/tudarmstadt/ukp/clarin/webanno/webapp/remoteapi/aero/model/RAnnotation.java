@@ -15,14 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.model;
+package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.RemoteApiController2;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroRemoteApiController;
 
 public class RAnnotation
 {
@@ -35,7 +35,7 @@ public class RAnnotation
     public RAnnotation(AnnotationDocument aAnnotationDocument)
     {
         user = aAnnotationDocument.getUser();
-        state = RemoteApiController2
+        state = AeroRemoteApiController
                 .annotationDocumentStateToString(aAnnotationDocument.getState());
         if (aAnnotationDocument.getTimestamp() != null) {
             timestamp = FORMAT.format(aAnnotationDocument.getTimestamp());
@@ -46,7 +46,7 @@ public class RAnnotation
     {
         super();
         user = aUser;
-        state = RemoteApiController2.annotationDocumentStateToString(aState);
+        state = AeroRemoteApiController.annotationDocumentStateToString(aState);
         if (aTimestamp != null) {
             timestamp = FORMAT.format(aTimestamp);
         }

@@ -15,17 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.exception;
+package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model;
 
-import org.springframework.http.HttpStatus;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class AccessForbiddenException
-    extends RemoteApiException
+public enum RMessageLevel
 {
-    private static final long serialVersionUID = 95669678848612997L;
+    @JsonProperty("DEBUG")
+    DEBUG,
+    
+    @JsonProperty("INFO")
+    INFO,
 
-    public AccessForbiddenException(String aMessage)
-    {
-        super(aMessage, HttpStatus.FORBIDDEN);
-    }
+    @JsonProperty("WARN")
+    WARN,
+
+    @JsonProperty("ERROR")
+    ERROR;
 }

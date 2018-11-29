@@ -735,8 +735,13 @@
         <artifactId>javassist</artifactId>
         <version>3.19.0-GA</version>
       </dependency>
+      <dependency>
+        <groupId>net.bytebuddy</groupId>
+        <artifactId>byte-buddy</artifactId>
+        <version>1.8.17</version>
+      </dependency>
 
-          <!-- SPRING -->
+      <!-- SPRING -->
       <dependency>
         <groupId>org.springframework</groupId>
         <artifactId>spring-core</artifactId>

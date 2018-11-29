@@ -55,6 +55,10 @@
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
       <artifactId>webanno-fontawesome</artifactId>
     </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-remote</artifactId>
+    </dependency>
 
     <dependency>
       <groupId>javax.servlet</groupId>

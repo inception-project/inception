@@ -15,17 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.exception;
+package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.exception;
 
 import org.springframework.http.HttpStatus;
 
-public class IllegalObjectStateException
+public class AccessForbiddenException
     extends RemoteApiException
 {
     private static final long serialVersionUID = 95669678848612997L;
 
-    public IllegalObjectStateException(String aFormat, Object... aArgs)
+    public AccessForbiddenException(String aMessage)
     {
-        super(String.format(aFormat, aArgs), HttpStatus.BAD_REQUEST);
+        super(aMessage, HttpStatus.FORBIDDEN);
     }
 }

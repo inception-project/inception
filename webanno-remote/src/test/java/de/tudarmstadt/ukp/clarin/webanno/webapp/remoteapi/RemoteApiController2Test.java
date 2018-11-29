@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi;
 
+import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroRemoteApiController.API_BASE;
 import static java.util.Arrays.asList;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
@@ -84,6 +85,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
 import de.tudarmstadt.ukp.clarin.webanno.text.TextFormatSupport;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroRemoteApiController;
 
 @RunWith(SpringRunner.class) 
 @EnableAutoConfiguration
@@ -126,14 +128,14 @@ public class RemoteApiController2Test
     @Test
     public void t001_testProjectCreate() throws Exception
     {
-        mvc.perform(get("/api/v2/projects")
+        mvc.perform(get(API_BASE + "/projects")
                 .with(csrf().asHeader())
                 .with(user("admin").roles("ADMIN")))
             .andExpect(status().isOk())
             .andExpect(content().contentType("application/json;charset=UTF-8"))
             .andExpect(jsonPath("$.messages").isEmpty());
         
-        mvc.perform(post("/api/v2/projects")
+        mvc.perform(post(API_BASE + "/projects")
                 .with(csrf().asHeader())
                 .with(user("admin").roles("ADMIN"))
                 .contentType(MediaType.MULTIPART_FORM_DATA)
@@ -143,7 +145,7 @@ public class RemoteApiController2Test
             .andExpect(jsonPath("$.body.id").value("1"))
             .andExpect(jsonPath("$.body.name").value("project1"));
         
-        mvc.perform(get("/api/v2/projects")
+        mvc.perform(get(API_BASE + "/projects")
                 .with(csrf().asHeader())
                 .with(user("admin").roles("ADMIN")))
             .andExpect(status().isOk())
@@ -155,14 +157,14 @@ public class RemoteApiController2Test
     @Test
     public void t002_testDocumentCreate() throws Exception
     {
-        mvc.perform(get("/api/v2/projects/1/documents")
+        mvc.perform(get(API_BASE + "/projects/1/documents")
                 .with(csrf().asHeader())
                 .with(user("admin").roles("ADMIN")))
             .andExpect(status().isOk())
             .andExpect(content().contentType("application/json;charset=UTF-8"))
             .andExpect(jsonPath("$.messages").isEmpty());
         
-        mvc.perform(multipart("/api/v2/projects/1/documents")
+        mvc.perform(multipart(API_BASE + "/projects/1/documents")
                 .file("content", "This is a test.".getBytes("UTF-8"))
                 .with(csrf().asHeader())
                 .with(user("admin").roles("ADMIN"))
@@ -173,7 +175,7 @@ public class RemoteApiController2Test
             .andExpect(jsonPath("$.body.id").value("1"))
             .andExpect(jsonPath("$.body.name").value("test.txt"));
      
-        mvc.perform(get("/api/v2/projects/1/documents")
+        mvc.perform(get(API_BASE + "/projects/1/documents")
                 .with(csrf().asHeader())
                 .with(user("admin").roles("ADMIN")))
             .andExpect(status().isOk())
@@ -186,14 +188,14 @@ public class RemoteApiController2Test
     @Test
     public void t003_testAnnotationCreate() throws Exception
     {
-        mvc.perform(get("/api/v2/projects/1/documents/1/annotations")
+        mvc.perform(get(API_BASE + "/projects/1/documents/1/annotations")
                 .with(csrf().asHeader())
                 .with(user("admin").roles("ADMIN")))
             .andExpect(status().isOk())
             .andExpect(content().contentType("application/json;charset=UTF-8"))
             .andExpect(jsonPath("$.messages").isEmpty());
         
-        mvc.perform(multipart("/api/v2/projects/1/documents/1/annotations/admin")
+        mvc.perform(multipart(API_BASE + "/projects/1/documents/1/annotations/admin")
                 .file("content", "This is a test.".getBytes("UTF-8"))
                 .with(csrf().asHeader())
                 .with(user("admin").roles("ADMIN"))
@@ -205,7 +207,7 @@ public class RemoteApiController2Test
             .andExpect(jsonPath("$.body.state").value("IN-PROGRESS"))
             .andExpect(jsonPath("$.body.timestamp").doesNotExist());
      
-        mvc.perform(get("/api/v2/projects/1/documents/1/annotations")
+        mvc.perform(get(API_BASE + "/projects/1/documents/1/annotations")
                 .with(csrf().asHeader())
                 .with(user("admin").roles("ADMIN")))
             .andExpect(status().isOk())
@@ -218,7 +220,7 @@ public class RemoteApiController2Test
     @Test
     public void t004_testCurationCreate() throws Exception
     {
-        mvc.perform(get("/api/v2/projects/1/documents")
+        mvc.perform(get(API_BASE + "/projects/1/documents")
                 .with(csrf().asHeader())
                 .with(user("admin").roles("ADMIN")))
             .andExpect(status().isOk())
@@ -227,7 +229,7 @@ public class RemoteApiController2Test
             .andExpect(jsonPath("$.body[0].name").value("test.txt"))
             .andExpect(jsonPath("$.body[0].state").value("NEW"));
         
-        mvc.perform(multipart("/api/v2/projects/1/documents/1/curation")
+        mvc.perform(multipart(API_BASE + "/projects/1/documents/1/curation")
                 .file("content", "This is a test.".getBytes("UTF-8"))
                 .with(csrf().asHeader())
                 .with(user("admin").roles("ADMIN"))
@@ -240,7 +242,7 @@ public class RemoteApiController2Test
             .andExpect(jsonPath("$.body.state").value("COMPLETE"))
             .andExpect(jsonPath("$.body.timestamp").exists());
      
-        mvc.perform(get("/api/v2/projects/1/documents")
+        mvc.perform(get(API_BASE + "/projects/1/documents")
                 .with(csrf().asHeader())
                 .with(user("admin").roles("ADMIN")))
             .andExpect(status().isOk())
@@ -253,7 +255,7 @@ public class RemoteApiController2Test
     @Test
     public void t005_testCurationDelete() throws Exception
     {
-        mvc.perform(delete("/api/v2/projects/1/documents/1/curation")
+        mvc.perform(delete(API_BASE + "/projects/1/documents/1/curation")
                 .with(csrf().asHeader())
                 .with(user("admin").roles("ADMIN"))
                 .param("projectId", "1")
@@ -261,7 +263,7 @@ public class RemoteApiController2Test
             .andExpect(status().isOk())
             .andExpect(content().contentType("application/json;charset=UTF-8"));
      
-        mvc.perform(get("/api/v2/projects/1/documents")
+        mvc.perform(get(API_BASE + "/projects/1/documents")
                 .with(csrf().asHeader())
                 .with(user("admin").roles("ADMIN")))
             .andExpect(status().isOk())
@@ -276,9 +278,9 @@ public class RemoteApiController2Test
         @Autowired ApplicationEventPublisher applicationEventPublisher;
         
         @Bean
-        public RemoteApiController2 remoteApiV2()
+        public AeroRemoteApiController remoteApiV2()
         {
-            return new RemoteApiController2();
+            return new AeroRemoteApiController();
         }
         
         @Bean

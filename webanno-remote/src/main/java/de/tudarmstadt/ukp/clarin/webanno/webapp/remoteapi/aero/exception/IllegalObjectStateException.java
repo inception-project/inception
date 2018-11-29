@@ -15,17 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.exception;
+package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.exception;
 
 import org.springframework.http.HttpStatus;
 
-public class ObjectNotFoundException
+public class IllegalObjectStateException
     extends RemoteApiException
 {
     private static final long serialVersionUID = 95669678848612997L;
 
-    public ObjectNotFoundException(String aMessage)
+    public IllegalObjectStateException(String aFormat, Object... aArgs)
     {
-        super(aMessage, HttpStatus.NOT_FOUND);
+        super(String.format(aFormat, aArgs), HttpStatus.BAD_REQUEST);
     }
 }
