@@ -42,7 +42,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
@@ -66,7 +65,7 @@ public class SubclassCreationDialog
         setOutputMarkupPlaceholderTag(true);
 
         setInitialWidth(300);
-        setInitialHeight(70);
+        setInitialHeight(36);
         setResizable(false);
         setWidthUnit("px");
         setHeightUnit("px");
@@ -109,15 +108,10 @@ public class SubclassCreationDialog
                     "createSubclass", ContentPanel.this::actionCreateSubclass);
             createButton.add(new Label("createLabel", new ResourceModel("create")));
 
-            LambdaAjaxLink cancelButton = new LambdaAjaxLink("cancel",
-                    ContentPanel.this::actionCancel);
-            cancelButton.add(new Label("cancelLabel", new ResourceModel("cancel")));
-
             // initialize input form and add it to the content panel
             Form<KBConcept> form = new Form<KBConcept>("form", newSubclassConceptModel);
             form.add(name);
             form.add(createButton);
-            form.add(cancelButton);
             form.setDefaultButton(createButton);
             add(form);
 
@@ -175,13 +169,6 @@ public class SubclassCreationDialog
                 LOG.error("Unable to find property subclassof.", e);
                 aTarget.addChildren(getPage(), IFeedback.class);
             }
-            // close the dialog
-            findParent(SubclassCreationDialog.class).close(aTarget);
-
-        }
-
-        protected void actionCancel(AjaxRequestTarget aTarget)
-        {
             // close the dialog
             findParent(SubclassCreationDialog.class).close(aTarget);
 
