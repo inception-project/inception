@@ -29,6 +29,6 @@ public interface EventRepository
 
     void create(LoggedEvent aE);
     
-	List<LoggedEvent> listLoggedEvents(Project aProject, String aUsername, String eventType);
+	List<LoggedEvent> listLoggedEvents(Project aProject, String aUsername, String eventType, int size);
 
 }

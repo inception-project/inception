@@ -50,11 +50,11 @@ public class EventRepositoryImpl
     
     @Override
     @Transactional
-    public List<LoggedEvent> listLoggedEvents(Project aProject, String aUsername, String eventType)
+    public List<LoggedEvent> listLoggedEvents(Project aProject, String aUsername, String eventType, int size)
     {
         List<LoggedEvent> settings = entityManager
                 .createQuery("FROM LoggedEvent WHERE user=:user AND project = :project AND event = :event ORDER BY created DESC",
-                        LoggedEvent.class).setParameter("user", aUsername).setParameter("project", aProject.getId()).setParameter("event", eventType).getResultList();
+                        LoggedEvent.class).setParameter("user", aUsername).setParameter("project", aProject.getId()).setParameter("event", eventType).setMaxResults(size).getResultList();
         return settings;
     }
 }
