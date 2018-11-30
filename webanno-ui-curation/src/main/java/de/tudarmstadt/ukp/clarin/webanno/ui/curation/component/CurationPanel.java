@@ -65,6 +65,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotationEditor;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationSelection;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.CurationContainer;
@@ -166,6 +167,8 @@ public class CurationPanel
                 }
             }
         };
+        suggestionViewPanel.setOutputMarkupPlaceholderTag(true);
+        suggestionViewPanel.add(LambdaBehavior.visibleWhen(() -> state.getDocument() != null));
         add(suggestionViewPanel);
     
         editor = new AnnotationDetailEditorPanel("annotationDetailEditorPanel",
@@ -225,7 +228,8 @@ public class CurationPanel
         // add container for the list of sentences where annotations exists crossing multiple
         // sentences outside of the current page
         crossSentAnnoView = new WebMarkupContainer("crossSentAnnoView");
-        crossSentAnnoView.setOutputMarkupId(true);
+        crossSentAnnoView.setOutputMarkupPlaceholderTag(true);
+        crossSentAnnoView.add(LambdaBehavior.visibleWhen(() -> state.getDocument() != null));
         add(crossSentAnnoView);
         crossSentAnnoList = new ListView<String>("crossSentAnnoList",
                 this::invisibleCrossSentenceAnnotations)
@@ -255,12 +259,12 @@ public class CurationPanel
             }
     
         };
-        crossSentAnnoList.setOutputMarkupId(true);
         crossSentAnnoView.add(crossSentAnnoList);
     
         // add container for list of sentences panel
         sentencesListView = new WebMarkupContainer("sentencesListView");
-        sentencesListView.setOutputMarkupId(true);
+        sentencesListView.setOutputMarkupPlaceholderTag(true);
+        sentencesListView.add(LambdaBehavior.visibleWhen(() -> state.getDocument() != null));
         add(sentencesListView);
         sentencesListView.add(new ListView<SourceListView>("sentencesList",
                 LoadableDetachableModel.of(() -> getModelObject().getCurationViews()))

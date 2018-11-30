@@ -91,7 +91,7 @@
   <wicket:panel>
     <div class="annotation-editor-container flex-content flex-h-container flex-gutter">
 
-      <div class="flex-sidebar flex-v-container flex-gutter">
+      <div class="flex-sidebar flex-v-container flex-gutter" wicket:enclosure="sentencesListView">
         <div class="flex-content panel panel-default panel-flex">
           <div class="panel-heading">
             <h3 class="panel-title">Sentences</h3>
@@ -109,7 +109,7 @@
       <div class="flex-content flex-v-container">
         <div class="flex-content flex-v-container flex-gutter">
           <div class="flex-content flex-v-container flex-gutter flex-only-internal-gutter" style="flex: 0.75;">
-            <div class="flex-content panel panel-primary panel-flex">
+            <div class="flex-content panel panel-primary panel-flex" wicket:enclosure="mergeView">
               <div class="panel-heading">
                 <h3 class="panel-title">Annotation</h3>
               </div>
