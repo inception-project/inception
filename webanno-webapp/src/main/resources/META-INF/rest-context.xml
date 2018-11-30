@@ -28,10 +28,4 @@
   <!-- Enables swagger ui-->
   <mvc:resources mapping="swagger-ui.html" location="classpath:/META-INF/resources/"/>
   <mvc:resources mapping="/webjars/**" location="classpath:/META-INF/resources/webjars/"/>
-
-  <!--  
-  <bean class="springfox.documentation.swagger2.configuration.Swagger2DocumentationConfiguration"/>
-  
-  <bean name="/applicationSwaggerConfig" class="de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.SwaggerConfig"/>
-  -->
 </beans>

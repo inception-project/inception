@@ -67,10 +67,14 @@ public class KendoAutoCompleteTextFeatureEditor
 {
     private static final long serialVersionUID = 8686646370500180943L;
 
+    private final int maxResults;
+    
     public KendoAutoCompleteTextFeatureEditor(String aId, MarkupContainer aItem,
-            IModel<FeatureState> aModel)
+            IModel<FeatureState> aModel, int aMaxResults)
     {
         super(aId, aItem, aModel);
+        
+        maxResults = aMaxResults;
     }
     
     @Override
@@ -106,7 +110,7 @@ public class KendoAutoCompleteTextFeatureEditor
                         // If we added the input term as the first result and by freak accident
                         // it is even returned as a result, then skip it.
                         .filter(t -> !(inputAsFirstResult && t.getName().equals(aTerm)))
-                        .limit(25)
+                        .limit(maxResults)
                         .forEach(matches::add);;
                 
                 return matches;
