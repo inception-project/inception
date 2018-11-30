@@ -19,7 +19,7 @@
 <html xmlns:wicket="http://wicket.apache.org">
 <wicket:panel>
   <div class="flex-content flex-v-container flex-gutter flex-only-internal-gutter">
-    <form wicket:id="form" class="panel panel-default panel-flex flex-content">
+    <form wicket:id="form" class="panel panel-default panel-flex">
       <div class="panel-heading">
         <h3 class="panel-title">Recommendation Information</h3>
       </div>
@@ -49,8 +49,9 @@
         <input wicket:id="save" type="submit" class="btn btn-primary"  wicket:message="value:apply"/>
       </div>
     </form>
-	<div wicket:id="chart-container" id="chart-container-js"></div>
+    <div wicket:id="chart-container" ></div>
   </div>
+  
 </wicket:panel>
 
 </html>

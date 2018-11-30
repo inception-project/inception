@@ -41,6 +41,7 @@ import org.slf4j.LoggerFactory;
 import de.tudarmstadt.ukp.clarin.webanno.api.JCasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAnnotationsEvent;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
@@ -95,11 +96,12 @@ public class RecommendationSidebar
         add(form);
 
 		chartContainer = new Label("chart-container" );
+		chartContainer.setOutputMarkupId(true);
 		add(chartContainer);
-
-		add(new AbstractAjaxTimerBehavior(Duration.milliseconds(5000)) {
+		
+		add(new AbstractAjaxTimerBehavior(Duration.milliseconds(15000)) {
 			private static final long serialVersionUID = -3782208159226605584L;
-
+			
 			@Override
 			protected void onTimer(AjaxRequestTarget aTarget) {
 
@@ -145,21 +147,21 @@ public class RecommendationSidebar
 					data += integer;
 				}
 
-				String javascript = "var chart=c3.generate({bindto:\"#chart-container-js\",data:{columns:[[\"data1\""+data +"]]}});;";
+				String javascript = "var chart=c3.generate({bindto:'#"+ chartContainer.getMarkupId() +"',data:{columns:[[\"data1\""+data +"]]}});;";
+				
+				System.out.println(javascript);
 				aTarget.prependJavaScript(javascript);
 			}
 		});
 	}
+     
 
 	private String getJson() {
 		// TODO Auto-generated method stub
 		return "";
 	}
 
-	@Override
-	protected void onAfterRender() {
-		super.onAfterRender();
-	}
+	
 
 	@Override
 	public void renderHead(IHeaderResponse aResponse) {
