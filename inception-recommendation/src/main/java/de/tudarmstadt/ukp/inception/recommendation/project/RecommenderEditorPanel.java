@@ -233,7 +233,7 @@ public class RecommenderEditorPanel
 
         CheckBoxMultipleChoice<AnnotationDocumentState> documentStates =
                 new CheckBoxMultipleChoice<>(MID_DOCUMENT_STATES);
-        documentStates.setPrefix("<div class=\"checkbox col-sm-offset-3 col-sm-9\">");
+        documentStates.setPrefix("<div class=\"checkbox\">");
         documentStates.setSuffix("</div>");
         documentStates.setLabelPosition(AbstractChoice.LabelPosition.WRAP_AFTER);
         documentStates.setChoices(asList(AnnotationDocumentState.values()));
