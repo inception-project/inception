@@ -91,12 +91,13 @@ public class SubclassCreationDialog
                 IModel<KBHandle> aParentConceptHandleModel)
         {
             super(aId);
-            // create property model for the subclass that is going to be created
-            newSubclassConceptModel = new CompoundPropertyModel<KBConcept>(
-                    CompoundPropertyModel.of(Model.of((new KBConcept()))));
-
             kbModel = aKbModel;
             parentConceptHandleModel = aParentConceptHandleModel;
+            // create property model for the subclass that is going to be created
+            newSubclassConceptModel = new CompoundPropertyModel<>(
+                    CompoundPropertyModel.of(Model.of((new KBConcept()))));
+            newSubclassConceptModel.getObject()
+                .setLanguage(kbModel.getObject().getDefaultLanguage());
 
             // add components for input form
             RequiredTextField<String> name = new RequiredTextField<String>("subClassName",
