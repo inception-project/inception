@@ -209,6 +209,10 @@ public class MtasUimaParser
         
         // Loop over the annotations
         for (Annotation annotation : JCasUtil.select(aJCas, Annotation.class)) {
+            // MTAS cannot index zero-width annotations, so we skip them here.
+            if (annotation.getBegin() == annotation.getEnd()) {
+                continue;
+            }
             mtasId = indexAnnotation(tokenCollection, annotation, mtasId);
         }
         
