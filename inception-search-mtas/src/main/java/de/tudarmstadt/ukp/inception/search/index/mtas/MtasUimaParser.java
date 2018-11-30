@@ -209,6 +209,10 @@ public class MtasUimaParser
         
         // Loop over the annotations
         for (Annotation annotation : JCasUtil.select(aJCas, Annotation.class)) {
+            // MTAS cannot index zero-width annotations, so we skip them here.
+            if (annotation.getBegin() == annotation.getEnd()) {
+                continue;
+            }
             mtasId = indexAnnotation(tokenCollection, annotation, mtasId);
         }
         
@@ -270,7 +274,21 @@ public class MtasUimaParser
                 AnnotationFS targetFs = FSUtil.getFeature(aAnnotation,
                         adapter.getTargetFeatureName(), AnnotationFS.class);
 
-                if (sourceFs != null && targetFs != null) {
+                if (
+                        sourceFs != null && targetFs != null && 
+                        // MTAS cannot index zero-width annotations, so we skip them here.
+                        sourceFs.getBegin() != sourceFs.getEnd() &&
+                        targetFs.getBegin() != targetFs.getEnd()
+                ) {
+                    // If the relation layer uses an attach-feature, index the annotation
+                    // referenced by that feature
+                    if (layer.getAttachFeature() != null) {
+                        sourceFs = FSUtil.getFeature(sourceFs, layer.getAttachFeature().getName(),
+                                AnnotationFS.class);
+                        targetFs = FSUtil.getFeature(targetFs, layer.getAttachFeature().getName(),
+                                AnnotationFS.class);
+                    }
+
                     Range range = getRange(targetFs);
                     
                     // Index the source annotation text (equals the target)
@@ -320,7 +338,7 @@ public class MtasUimaParser
             int aMtasId)
     {
         int mtasId = aMtasId;
-        
+
         // Iterate over the features of this layer and index them one-by-one
         for (AnnotationFeature feature : layerFeatures.get(aAnnotation.getType().getName())) {
             Optional<FeatureIndexingSupport> fis = featureIndexingSupportRegistry
