@@ -21,10 +21,9 @@ import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -49,20 +48,16 @@ import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
-import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.googlecode.wicket.jquery.core.JQueryBehavior;
-import com.googlecode.wicket.jquery.core.Options;
 import com.googlecode.wicket.jquery.core.renderer.TextRenderer;
 import com.googlecode.wicket.jquery.core.template.IJQueryTemplate;
 import com.googlecode.wicket.kendo.ui.form.autocomplete.AutoCompleteTextField;
-import com.googlecode.wicket.kendo.ui.widget.tooltip.TooltipBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.JCasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
@@ -76,13 +71,12 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
-import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
+import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingServiceImpl;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
-import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
+import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 
 public class QualifierFeatureEditor
     extends FeatureEditor
@@ -91,7 +85,7 @@ public class QualifierFeatureEditor
     private static final Logger LOG = LoggerFactory.getLogger(QualifierFeatureEditor.class);
 
     private @SpringBean AnnotationSchemaService annotationService;
-    private @SpringBean ConceptLinkingService clService;
+    private @SpringBean ConceptLinkingServiceImpl clService;
     private @SpringBean FactLinkingService factService;
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
     private @SpringBean KnowledgeBaseService kbService;
@@ -263,10 +257,6 @@ public class QualifierFeatureEditor
                 actionDel(aTarget);
             }
         });
-
-        // Add warning that shows up if the knowledge base that is used by the concept feature
-        // is disabled
-        content.add(createDisabledKbWarningLabel());
     }
 
     @Override
@@ -280,7 +270,11 @@ public class QualifierFeatureEditor
     private AutoCompleteTextField<KBHandle> createMentionKBLinkTextField(
         Item<LinkWithRoleModel> aItem)
     {
-        AnnotationFeature linkedAnnotationFeature = getLinkedAnnotationFeature();
+        String linkedType = this.getModelObject().feature.getType();
+        AnnotationLayer linkedLayer = annotationService
+            .getLayer(linkedType, this.stateModel.getObject().getProject());
+        AnnotationFeature linkedAnnotationFeature = annotationService
+            .getFeature(FactLinkingConstants.LINKED_LAYER_FEATURE, linkedLayer);
 
         qualifierModel = new LambdaModelAdapter<>(() -> this.getSelectedKBItem(aItem), (v) -> {
             this.setSelectedKBItem((KBHandle) v, aItem, linkedAnnotationFeature);
@@ -318,15 +312,6 @@ public class QualifierFeatureEditor
         // refreshes of the feature editor panel. This is required to restore the focus.
         field.setOutputMarkupId(true);
         return field;
-    }
-
-    private AnnotationFeature getLinkedAnnotationFeature() {
-        String linkedType = this.getModelObject().feature.getType();
-        AnnotationLayer linkedLayer = annotationService
-            .getLayer(linkedType, this.stateModel.getObject().getProject());
-        AnnotationFeature linkedAnnotationFeature = annotationService
-            .getFeature(FactLinkingConstants.LINKED_LAYER_FEATURE, linkedLayer);
-        return linkedAnnotationFeature;
     }
 
     private KBHandle getSelectedKBItem(Item<LinkWithRoleModel> aItem) {
@@ -374,180 +359,45 @@ public class QualifierFeatureEditor
         }
     }
 
-
-    //TODO: (issue #122 )this method is similar to the method listInstances in ConceptFeatureEditor.
-    //It should be refactored.
     private List<KBHandle> listInstances(AnnotationActionHandler aHandler,
-        String aTypedString, AnnotationFeature linkedAnnotationFeature, String roleLabe, int
+        String aTypedString, AnnotationFeature linkedAnnotationFeature, String roleLabel, int
         roleAddr)
     {
         if (linkedAnnotationFeature == null) {
-            linkedAnnotationFeature = getLinkedAnnotationFeature();
+            String linkedType = this.getModelObject().feature.getType();
+            AnnotationLayer linkedLayer = annotationService
+                .getLayer(linkedType, this.stateModel.getObject().getProject());
+            linkedAnnotationFeature = annotationService
+                .getFeature(FactLinkingConstants.LINKED_LAYER_FEATURE, linkedLayer);
         }
         List<KBHandle> handles = new ArrayList<>();
-        try {
-            ConceptFeatureTraits traits = readFeatureTraits(linkedAnnotationFeature);
-
-            // Check if kb is actually enabled
-            if (featureUsesDisabledKB(traits)) {
-                return Collections.emptyList();
-            }
-
-            switch (traits.getAllowedValueType()) {
-            case INSTANCE:
-                handles = getInstances(traits, project, aHandler, aTypedString, roleLabe, roleAddr);
-                break;
-            case CONCEPT:
-                handles = getConcepts(traits, project, aHandler, aTypedString, roleLabe, roleAddr);
-                break;
-            default:
-                // Allow both
-                handles.addAll(
-                        getInstances(traits, project, aHandler, aTypedString, roleLabe, roleAddr));
-                handles.addAll(
-                        getConcepts(traits, project, aHandler, aTypedString, roleLabe, roleAddr));
-            }
-        }
-        catch (Exception e) {
-            // LOG.error("Unable to read traits", e);
-            error("Unable to read traits: " + ExceptionUtils.getRootCauseMessage(e));
-            RequestCycle.get()
-                    .find(IPartialPageRequestHandler.class)
-                    .ifPresent(target -> target.addChildren(getPage(), IFeedback.class));
-        }
-        return handles;
-    }
-
-    private boolean featureUsesDisabledKB(ConceptFeatureTraits aTraits)
-    {
-        Optional<KnowledgeBase> kb = Optional.empty();
-        String repositoryId = aTraits.getRepositoryId();
-        if (repositoryId != null) {
-            kb = kbService.getKnowledgeBaseById(getModelObject().feature.getProject(),
-                aTraits.getRepositoryId());
-        }
-        return kb.isPresent() && !kb.get().isEnabled() || repositoryId != null && !kb.isPresent();
-    }
-
-    private ConceptFeatureTraits readFeatureTraits(AnnotationFeature aAnnotationFeature)
-    {
         FeatureSupport<ConceptFeatureTraits> fs = featureSupportRegistry
-            .getFeatureSupport(aAnnotationFeature);
-        ConceptFeatureTraits traits = fs.readTraits(aAnnotationFeature);
-        return traits;
-    }
+            .getFeatureSupport(linkedAnnotationFeature);
+        ConceptFeatureTraits traits = fs.readTraits(linkedAnnotationFeature);
 
-    private List<KBHandle> getInstances(ConceptFeatureTraits traits, Project project,
-        AnnotationActionHandler aHandler, String aTypedString, String roleLabe, int
-        roleAddr)
-    {
-        List<KBHandle> handles = new ArrayList<>();
-        if (traits.getRepositoryId() != null) {
-            // If a specific KB is selected, get its instances
-            Optional<KnowledgeBase> kb = kbService
-                .getKnowledgeBaseById(project, traits.getRepositoryId());
-            if (kb.isPresent()) {
-                //TODO: (#122) see ConceptFeatureEditor
-                if (kb.get().isSupportConceptLinking()) {
-                    handles.addAll(listLinkingInstances(kb.get(), () -> getEditorCas(aHandler),
-                            aTypedString, roleLabe, roleAddr));
-                }
-                else if (traits.getScope() != null) {
-                    handles = kbService
-                            .listInstancesForChildConcepts(kb.get(), traits.getScope(), false, 50)
-                            .stream().filter(inst -> inst.getUiLabel().contains(aTypedString))
-                            .collect(Collectors.toList());
-                } else {
-                    for (KBHandle concept : kbService.listConcepts(kb.get(), false)) {
-                        handles.addAll(
-                                kbService.listInstances(kb.get(), concept.getIdentifier(), false));
-                    }
-                }
-            }
+        // Use concept linking if enabled
+        try {
+            handles = clService.getLinkingInstancesInKBScope(traits.getRepositoryId(),
+                    traits.getScope(), traits.getAllowedValueType(), aTypedString, roleLabel,
+                    roleAddr, getEditorCas(aHandler), project);
         }
-        else {
-            // If no specific KB is selected, collect instances from all KBs
-            for (KnowledgeBase kb : kbService.getEnabledKnowledgeBases(project)) {
-                //TODO: (#122) see ConceptFeatureEditor
-                if (kb.isSupportConceptLinking()) {
-                    handles.addAll(listLinkingInstances(kb, () -> getEditorCas
-                        (aHandler), aTypedString, roleLabe, roleAddr));
-                }
-                else if (traits.getScope() != null) {
-                    handles.addAll(kbService
-                            .listInstancesForChildConcepts(kb, traits.getScope(), false, 50)
-                            .stream().filter(inst -> inst.getUiLabel().contains(aTypedString))
-                            .collect(Collectors.toList()));
-                }
-                else {
-                    for (KBHandle concept : kbService.listConcepts(kb, false)) {
-                        handles.addAll(kbService.listInstances(kb, concept.getIdentifier(), false));
-                    }
-                }
-            }
+        catch (IOException e) {
+            LOG.error("An error occurred while retrieving entity candidates.", e);
+            error("An error occurred while retrieving entity candidates: " + e.getMessage());
+            RequestCycle.get().find(IPartialPageRequestHandler.class)
+                .ifPresent(target -> target.addChildren(getPage(), IFeedback.class));
         }
-        return handles;
-    }
 
-    private List<KBHandle> getConcepts(ConceptFeatureTraits traits, Project project,
-        AnnotationActionHandler aHandler, String aTypedString, String roleLabe, int
-        roleAddr)
-    {
-        List<KBHandle> handles = new ArrayList<>();
-        if (traits.getRepositoryId() != null) {
-            // If a specific KB is selected, get its instances
-            Optional<KnowledgeBase> kb = kbService
-                .getKnowledgeBaseById(project, traits.getRepositoryId());
-            if (kb.isPresent()) {
-                //TODO: (#122) see ConceptFeatureEditor
-                if (kb.get().isSupportConceptLinking()) {
-                    handles.addAll(listLinkingInstances(kb.get(), () -> getEditorCas
-                        (aHandler), aTypedString, roleLabe, roleAddr));
-                }
-                else if (traits.getScope() != null) {
-                    handles = kbService.listChildConcepts(kb.get(), traits.getScope(), false)
-                            .stream().filter(conc -> conc.getUiLabel().contains(aTypedString))
-                            .collect(Collectors.toList());
-                } else {
-                    handles.addAll(kbService.listConcepts(kb.get(), false));
-                }
-            }
+        // if concept linking does not return any results or is disabled
+        if (handles.size() == 0) {
+            handles = kbService.getEntitiesInScope(traits.getRepositoryId(), traits.getScope(),
+                traits.getAllowedValueType(), project);
+            // Sort and filter results
+            handles = handles.stream()
+                .filter(handle -> handle.getUiLabel().toLowerCase().startsWith(aTypedString))
+                .sorted(Comparator.comparing(KBObject::getUiLabel)).collect(Collectors.toList());
         }
-        else {
-            // If no specific KB is selected, collect instances from all KBs
-            for (KnowledgeBase kb : kbService.getEnabledKnowledgeBases(project)) {
-                //TODO: (#122) see ConceptFeatureEditor
-                if (kb.isSupportConceptLinking()) {
-                    handles.addAll(listLinkingInstances(kb, () -> getEditorCas
-                        (aHandler), aTypedString, roleLabe, roleAddr));
-                }
-                else if (traits.getScope() != null) {
-                    handles = kbService.listChildConcepts(kb, traits.getScope(), false).stream()
-                            .filter(conc -> conc.getUiLabel().contains(aTypedString))
-                            .collect(Collectors.toList());
-                } else {
-                    handles.addAll(kbService.listConcepts(kb, false));
-                }
-            }
-        }
-        return handles;
-    }
-
-    //TODO: (issue #122 )this method is similar to the method listInstances in ConceptFeatureEditor.
-    //It should be refactored.
-    private List<KBHandle> listLinkingInstances(KnowledgeBase kb, JCasProvider aJCas,
-        String aTypedString, String roleLabel, int roleAddr)
-    {
-        return kbService.read(kb, (conn) -> {
-            try {
-                return clService.disambiguate(kb, aTypedString, roleLabel, roleAddr, aJCas.get());
-            }
-            catch (IOException e) {
-                LOG.error("An error occurred while retrieving entity candidates.", e);
-                error(e);
-                return Collections.emptyList();
-            }
-        });
+        return KBHandle.distinctByIri(handles);
     }
 
     private JCas getEditorCas(AnnotationActionHandler aHandler) throws IOException
@@ -707,32 +557,5 @@ public class QualifierFeatureEditor
             aComponent.error("Error: " + e.getMessage());
             LOG.error("Error: " + e.getMessage(), e);
         }
-    }
-
-    private Label createDisabledKbWarningLabel()
-    {
-        Label warningLabel = new Label("disabledKBWarning", Model.of());
-        AnnotationFeature linkedAnnotationFeature = getLinkedAnnotationFeature();
-
-        ConceptFeatureTraits traits = readFeatureTraits(linkedAnnotationFeature);
-        warningLabel.add(
-            LambdaBehavior.onConfigure(label -> label.setVisible(featureUsesDisabledKB(traits))));
-
-        TooltipBehavior tip = new TooltipBehavior();
-
-        Optional<KnowledgeBase> kb = Optional.empty();
-        if (traits != null && traits.getRepositoryId() != null) {
-            kb = kbService.getKnowledgeBaseById(linkedAnnotationFeature.getProject(),
-                traits.getRepositoryId());
-        }
-        String kbName = kb.isPresent() ? kb.get().getName() : "unknown ID";
-
-        tip.setOption("content", Options.asString(
-            new StringResourceModel("value.null.disabledKbWarning", this).setParameters(kbName)
-                .getString()));
-        tip.setOption("width", Options.asString("300px"));
-        warningLabel.add(tip);
-
-        return warningLabel;
     }
 }

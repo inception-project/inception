@@ -21,24 +21,17 @@ import org.apache.uima.jcas.JCas;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.search.SearchService;
 
 /**
- * Document indexer task. Indexes the given document in a project
+ * (Re)indexes the annotation document for a specific user.
  */
-
-public class IndexDocumentTask
+public class IndexAnnotationDocumentTask
     extends Task
 {
     private @Autowired SearchService searchService;
     
-    public IndexDocumentTask(SourceDocument aSourceDocument, JCas aJCas)
-    {
-        super(aSourceDocument, aJCas);
-    }
-
-    public IndexDocumentTask(AnnotationDocument aAnnotationDocument, JCas aJCas)
+    public IndexAnnotationDocumentTask(AnnotationDocument aAnnotationDocument, JCas aJCas)
     {
         super(aAnnotationDocument, aJCas);
     }
@@ -46,11 +39,13 @@ public class IndexDocumentTask
     @Override
     public void run()
     {
-        if (super.getAnnotationDocument() != null) {
-            searchService.indexDocument(super.getAnnotationDocument(), super.getJCas());
-        }
-        else {
-            searchService.indexDocument(super.getSourceDocument(), super.getJCas());
-        }
+        searchService.indexDocument(super.getAnnotationDocument(), super.getJCas());
     }
+    
+    @Override
+    public boolean matches(Task aTask)
+    {
+        return getAnnotationDocument().getId() == aTask.getAnnotationDocument().getId();
+    }
+
 }

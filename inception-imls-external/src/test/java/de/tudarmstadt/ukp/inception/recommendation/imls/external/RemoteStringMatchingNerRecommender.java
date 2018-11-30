@@ -17,20 +17,20 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.external;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.uima.fit.util.CasUtil.getType;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.uima.UIMAException;
+import org.apache.uima.UIMAFramework;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.CASRuntimeException;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.impl.XmiCasDeserializer;
@@ -39,14 +39,15 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.uima.resource.metadata.TypeSystemDescription;
+import org.apache.uima.util.XMLInputSource;
 import org.xml.sax.SAXException;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
-import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.type.PredictedSpan;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.StringMatchingRecommender;
@@ -54,8 +55,6 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.StringMatchi
 
 public class RemoteStringMatchingNerRecommender
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
-
     private final Recommender recommender;
     private final RecommenderContext context;
     private final StringMatchingRecommender recommendationEngine;
@@ -68,7 +67,8 @@ public class RemoteStringMatchingNerRecommender
         recommendationEngine = new StringMatchingRecommender(recommender, traits);
     }
 
-    public void train(String aTrainingRequestJson)
+    public void train(String aTrainingRequestJson) throws Exception
+
     {
         TrainingRequest request = deserializeTrainingRequest(aTrainingRequestJson);
 
@@ -91,7 +91,8 @@ public class RemoteStringMatchingNerRecommender
         }
     }
 
-    public String predict(String aPredictionRequestJson) throws RecommendationException
+    public String predict(String aPredictionRequestJson)
+        throws Exception
     {
         PredictionRequest request = deserializePredictionRequest(aPredictionRequestJson);
         CAS cas = deserializeCas(request.getDocument().getXmi(), request.getTypeSystem());
@@ -115,54 +116,42 @@ public class RemoteStringMatchingNerRecommender
     }
 
     private PredictionRequest deserializePredictionRequest(String aPredictionRequestJson)
+        throws JsonParseException, JsonMappingException, IOException
     {
-        try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            return objectMapper.readValue(aPredictionRequestJson, PredictionRequest.class);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        ObjectMapper objectMapper = new ObjectMapper();
+        return objectMapper.readValue(aPredictionRequestJson, PredictionRequest.class);
     }
 
     // CAS handling
 
     private CAS deserializeCas(String xmi, String typeSystem)
+        throws SAXException, IOException, UIMAException
     {
         CAS cas = buildCas(typeSystem);
-        try (InputStream bais = new ByteArrayInputStream(xmi.getBytes())) {
+        try (InputStream bais = new ByteArrayInputStream(xmi.getBytes(UTF_8))) {
             XmiCasDeserializer.deserialize(bais, cas);
-        } catch (IOException | SAXException e) {
-            throw new RuntimeException(e);
         }
         return cas;
     }
 
-    private CAS buildCas(String typeSystem)
+    private CAS buildCas(String typeSystem) throws IOException, UIMAException
     {
         // We need to save the typeSystem XML to disk as the
         // JCasFactory needs a file and not a string
-        try {
-            File typeSystemFile = File.createTempFile("typeSystem", ".xmi");
-            FileUtils.writeByteArrayToFile(typeSystemFile, typeSystem.getBytes());
-            JCas jCas = JCasFactory.createJCasFromPath(typeSystemFile.getAbsolutePath());
-            return jCas.getCas();
-        } catch (IOException | UIMAException e) {
-            throw new RuntimeException(e);
-        }
+        TypeSystemDescription tsd = UIMAFramework.getXMLParser().parseTypeSystemDescription(
+                new XMLInputSource(IOUtils.toInputStream(typeSystem, UTF_8), null));
+        JCas jCas = JCasFactory.createJCas(tsd);
+        return jCas.getCas();
     }
 
-    private String buildPredictionResponse(CAS aCas)
+    private String buildPredictionResponse(CAS aCas) throws SAXException, IOException
     {
         try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             XmiCasSerializer.serialize(aCas, null, out, true, null);
             PredictionResponse response = new PredictionResponse();
-            response.setDocument(new String(out.toByteArray()));
+            response.setDocument(new String(out.toByteArray(), UTF_8));
             ObjectMapper mapper = new ObjectMapper();
             return mapper.writeValueAsString(response);
-        }
-        catch (CASRuntimeException | SAXException | IOException e) {
-            log.error("Error while serializing CAS!", e);
-            throw new RuntimeException("Error while serializing CAS!", e);
         }
     }
 }

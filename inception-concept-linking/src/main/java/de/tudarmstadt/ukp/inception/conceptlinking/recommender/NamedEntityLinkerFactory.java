@@ -28,10 +28,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
+import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingServiceImpl;
+import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
@@ -49,7 +51,7 @@ public class NamedEntityLinkerFactory
     private static final String PREFIX = "kb:";
 
     private @Autowired KnowledgeBaseService kbService;
-    private @Autowired ConceptLinkingService clService;
+    private @Autowired ConceptLinkingServiceImpl clService;
     private @Autowired AnnotationSchemaService annoService;
     private @Autowired FeatureSupportRegistry fsRegistry;
 
@@ -63,8 +65,14 @@ public class NamedEntityLinkerFactory
     public RecommendationEngine build(Recommender aRecommender)
     {
         NamedEntityLinkerTraits traits = readTraits(aRecommender);
+        
+        AnnotationFeature feature = annoService.getFeature(aRecommender.getFeature(),
+                aRecommender.getLayer());
+        FeatureSupport<ConceptFeatureTraits> fs = fsRegistry.getFeatureSupport(feature);
+        ConceptFeatureTraits featureTraits = fs.readTraits(feature);
+        
         return new NamedEntityLinker(aRecommender, traits, kbService, clService, annoService,
-                fsRegistry);
+                fsRegistry, featureTraits);
     }
 
     @Override
