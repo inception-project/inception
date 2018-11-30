@@ -18,11 +18,11 @@
 package de.tudarmstadt.ukp.inception.recommendation.sidebar;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.wicket.ajax.AbstractAjaxTimerBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.head.CssHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.JavaScriptHeaderItem;
@@ -38,19 +38,19 @@ import org.apache.wicket.util.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import de.tudarmstadt.ukp.clarin.webanno.api.JCasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
+import de.tudarmstadt.ukp.inception.log.EventRepository;
 import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
+import de.tudarmstadt.ukp.inception.recommendation.log.RecommenderEvaluationResultEventAdapter.Details;
 import de.tudarmstadt.ukp.inception.recommendation.sidebar.resource.C3CssReference;
 import de.tudarmstadt.ukp.inception.recommendation.sidebar.resource.C3JsReference;
 import de.tudarmstadt.ukp.inception.recommendation.sidebar.resource.D3JsReference;
@@ -64,6 +64,8 @@ public class RecommendationSidebar
 	private WebComponent chartContainer;
 
     private @SpringBean RecommendationService recommendationService;
+    private @SpringBean EventRepository eventRepo;
+
 
     public RecommendationSidebar(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, JCasProvider aJCasProvider,
@@ -99,32 +101,41 @@ public class RecommendationSidebar
 			private static final long serialVersionUID = -3782208159226605584L;
 
 			@Override
-			protected void onTimer(AjaxRequestTarget target) {
+			protected void onTimer(AjaxRequestTarget aTarget) {
 
-				List<LoggedEvent> loggedEvents = recommendationService.listLoggedEvents(aModel.getObject().getProject(),
-						aModel.getObject().getUser());
+				//we want to plot RecommenderEvaluationResultEvent for the learning curve
+				String eventType = "RecommenderEvaluationResultEvent";
+				List<LoggedEvent> loggedEvents = eventRepo.listLoggedEvents(aModel.getObject().getProject(),
+						aModel.getObject().getUser().getUsername(),eventType);
 
 				// iterate over the logged events to extract the scores only.
-				List<Double> listDetailJson = new ArrayList<Double>();
+				double[] listDetailJson = new double[loggedEvents.size()];
 
+				int index = 0;
 				for (LoggedEvent loggedEvent : loggedEvents) {
 					String detailJson = loggedEvent.getDetails();
 
-					ObjectMapper mapper = new ObjectMapper();
-					Double scoreDouble;
 					try {
-						LoggedEventDetail detail = mapper.readValue(detailJson, LoggedEventDetail.class);
+						Details detail = JSONUtil.fromJsonString(Details.class, detailJson);
 
 						try {
-							scoreDouble = Double.valueOf(detail.getScore());
-							listDetailJson.add(scoreDouble);
+							double scoreDouble = Double.valueOf(detail.score);
+							listDetailJson[index] = scoreDouble;
+							index++;
+							 
 						} catch (NumberFormatException e) {
-							log.debug("Skipping logged Event due to invalid score, Detail:{}", detail);
+							log.debug(
+									"Skipping logged Event due to invalid score. Skipping record with logged event id:"
+											+ loggedEvent.getId());
+							aTarget.addChildren(getPage(), IFeedback.class);
 							continue;
 						}
 
 					} catch (IOException e) {
 						log.error(e.toString(), e);
+
+						error("Invalid logged Event detail. Skipping record with logged event id: " + loggedEvent.getId());
+						aTarget.addChildren(getPage(), IFeedback.class);
 					}
 				}
 
@@ -135,7 +146,7 @@ public class RecommendationSidebar
 				}
 
 				String javascript = "var chart=c3.generate({bindto:\"#chart-container-js\",data:{columns:[[\"data1\""+data +"]]}});;";
-				target.prependJavaScript(javascript);
+				aTarget.prependJavaScript(javascript);
 			}
 		});
 	}
@@ -163,26 +174,3 @@ public class RecommendationSidebar
 	}
 }
 
-//TODO: Move it to a separate file?
-@JsonIgnoreProperties(ignoreUnknown = true)
-class LoggedEventDetail {
-
-	String score;
-	String tool;
-
-	public String getScore() {
-		return score;
-	}
-
-	public void setScore(String score) {
-		this.score = score;
-	}
-
-	public String getTool() {
-		return tool;
-	}
-
-	public void setTool(String tool) {
-		this.tool = tool;
-	}
-}

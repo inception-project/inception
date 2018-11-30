@@ -168,16 +168,6 @@ public class RecommendationServiceImpl
     }
     
     @Override
-    @Transactional
-    public List<LoggedEvent> listLoggedEvents(Project aProject, User user)
-    {
-        List<LoggedEvent> settings = entityManager
-                .createQuery("FROM LoggedEvent WHERE user=:user AND project = :project AND event = :event ORDER BY created DESC",
-                        LoggedEvent.class).setParameter("user", user.getUsername()).setParameter("project", aProject.getId()).setParameter("event", "RecommenderEvaluationResultEvent").getResultList();
-        return settings;
-    }
-    
-    @Override
     public List<AnnotationLayer> listLayersWithEnabledRecommenders(Project aProject)
     {
         String query = 

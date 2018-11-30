@@ -23,6 +23,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.log.adapter.EventLoggingAdapter;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderEvaluationResultEvent;
@@ -80,6 +82,7 @@ public class RecommenderEvaluationResultEventAdapter
         }
     }
 
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Details
     {
         // Recommender configuration

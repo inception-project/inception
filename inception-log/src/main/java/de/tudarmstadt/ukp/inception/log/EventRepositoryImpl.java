@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.log;
 
+import java.util.List;
+
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
@@ -25,6 +27,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
 
 @Component
@@ -42,5 +46,15 @@ public class EventRepositoryImpl
     {
         log.info("{}", aEvent);
         entityManager.persist(aEvent);
+    }
+    
+    @Override
+    @Transactional
+    public List<LoggedEvent> listLoggedEvents(Project aProject, String aUsername, String eventType)
+    {
+        List<LoggedEvent> settings = entityManager
+                .createQuery("FROM LoggedEvent WHERE user=:user AND project = :project AND event = :event ORDER BY created DESC",
+                        LoggedEvent.class).setParameter("user", aUsername).setParameter("project", aProject.getId()).setParameter("event", eventType).getResultList();
+        return settings;
     }
 }

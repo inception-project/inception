@@ -26,8 +26,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User; 
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
@@ -54,8 +53,6 @@ public interface RecommendationService
     List<Recommender> listRecommenders(Project aProject);
 
     List<Recommender> listRecommenders(AnnotationLayer aLayer);
-    
-	List<LoggedEvent> listLoggedEvents(Project aProject, User user);
     
 	/**
      * Returns all annotation layers in the given project which have any enabled recommenders.
