@@ -84,6 +84,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.ActionBarLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxSubmitLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
@@ -355,7 +356,11 @@ public class AnnotationPage
             factory = editorRegistry.getDefaultEditorFactory();
         }
 
-        return factory.create("editor", getModel(), detailEditor, this::getEditorCas);
+        AnnotationEditorBase editor = factory.create("editor", getModel(), detailEditor,
+                this::getEditorCas);
+        editor.add(LambdaBehavior.visibleWhen(() -> getModelObject().getDocument() != null));
+        editor.setOutputMarkupPlaceholderTag(true);
+        return editor;
     }
 
     private SidebarPanel createLeftSidebar()
