@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
     <artifactId>webanno</artifactId>
-    <version>3.4.7-SNAPSHOT</version>
+    <version>3.4.7</version>
   </parent>
   <artifactId>webanno-dkprocore</artifactId>
   <name>WebAnno - DKPro Core typesystem backports</name>
