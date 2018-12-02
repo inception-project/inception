@@ -71,8 +71,8 @@
     <assertj.version>3.11.1</assertj.version>
     <okhttp.version>3.11.0</okhttp.version>
     <maven.surefire.heap>6g</maven.surefire.heap>
-    <maven.compiler.target>10</maven.compiler.target>
-    <maven.compiler.source>10</maven.compiler.source>
+    <maven.compiler.target>9</maven.compiler.target>
+    <maven.compiler.source>9</maven.compiler.source>
     <dkpro.core.testCachePath>${session.executionRootDirectory}/cache/dkpro-core-datasets</dkpro.core.testCachePath>
   </properties>
   <modules>
