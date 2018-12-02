@@ -17,6 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.sidebar;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.fromJsonString;
+import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.toJsonString;
+import static org.apache.commons.lang3.StringUtils.substring;
+
 import java.io.IOException;
 import java.util.List;
 
@@ -40,7 +44,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.JCasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAnnotationsEvent;
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
@@ -112,37 +115,37 @@ public class RecommendationSidebar
     @OnEvent
     public void onRenderAnnotations(RenderAnnotationsEvent aEvent)
     {
-        log.info("rendered annotation event");
-
-        double[] listScores = getLatestScores(aEvent);
-
-        // create comma separate data for the C3 JS library
-        String data = "";
-        for (Double score : listScores) {
-            data += ",";
-            data += score;
+        try {
+            log.info("rendered annotation event");
+    
+            double[] listScores = getLatestScores(aEvent);
+            String data = substring(toJsonString(listScores), 1, -1);
+    
+            // bind data to chart container
+            String javascript = "var chart=c3.generate({bindto:'#" + chartContainer.getMarkupId()
+                    + "',data:{columns:[[\"Iteration\"," + data + "]]}});;";
+            log.info(javascript);
+    
+            aEvent.getRequestHandler().prependJavaScript(javascript);
         }
+        catch (IOException e) {
+            log.error("Unable to render chart", e);
 
-        // bind data to chart container
-        String javascript = "var chart=c3.generate({bindto:'#" + chartContainer.getMarkupId()
-                + "',data:{columns:[[\"data1\"" + data + "]]}});;";
-        log.info(javascript);
-
-        aEvent.getRequestHandler().prependJavaScript(javascript);
+            error("Unable to render chart: " + e.getMessage());
+            
+            aEvent.getRequestHandler().addChildren(getPage(), IFeedback.class);
+        }
     }
 
     /**
      * Fetches a number of latest evaluation scores from the database
-     * 
-     * @param aEvent
-     * @return
      */
     private double[] getLatestScores(RenderAnnotationsEvent aEvent)
     {
         // we want to plot RecommenderEvaluationResultEvent for the learning curve. The value of the
         // event
         String eventType = "RecommenderEvaluationResultEvent";
-        int maximumRecordsToPlot = 10;
+        int maximumRecordsToPlot = 50;
 
         List<LoggedEvent> loggedEvents = eventRepo.listLoggedEvents(aModel.getObject().getProject(),
                 aModel.getObject().getUser().getUsername(), eventType, maximumRecordsToPlot);
@@ -155,31 +158,19 @@ public class RecommendationSidebar
             String detailJson = loggedEvent.getDetails();
 
             try {
-                Details detail = JSONUtil.fromJsonString(Details.class, detailJson);
+                Details detail = fromJsonString(Details.class, detailJson);
 
-                try {
-                    double scoreDouble = Double.valueOf(detail.score);
-
-                    if (scoreDouble >= 0) {
-                        listDetailJson[index] = scoreDouble;
-                        index++;
-                    }
-
-                }
-                catch (NumberFormatException e) {
-                    log.debug(
-                            "Skipping logged Event due to invalid score. Skipping record with logged event id:"
-                                    + loggedEvent.getId());
-                    aEvent.getRequestHandler().addChildren(getPage(), IFeedback.class);
-                    continue;
-                }
+                listDetailJson[index] = detail.score;
+                index++;
 
             }
             catch (IOException e) {
-                log.error(e.toString(), e);
+                log.error("Invalid logged Event detail. Skipping record with logged event id: "
+                        + loggedEvent.getId(), e);
 
                 error("Invalid logged Event detail. Skipping record with logged event id: "
                         + loggedEvent.getId());
+                
                 aEvent.getRequestHandler().addChildren(getPage(), IFeedback.class);
             }
         }
