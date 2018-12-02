@@ -477,6 +477,14 @@
         <groupId>nl.knaw.meertens.mtas</groupId>
         <artifactId>mtas</artifactId>
         <version>${mtas.version}</version>
+        <exclusions>
+          <!-- We do not use MTAS with Solr -->
+          <!-- Solr depends on jdk.tools via Hadoop which is not available on recent JDKs-->
+          <exclusion>
+            <groupId>org.apache.solr</groupId>
+            <artifactId>solr-core</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
     
       <dependency>
