@@ -34,7 +34,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 
 /**
- * The main contact point of the Recommendation module. This interface can be injected in the wicket
+ * The main contact point of the Recommendation module. This interface can be injected in the Wicket
  * pages. It is used to pull the latest recommendations for an annotation layer and render them.
  */
 public interface RecommendationService
@@ -54,7 +54,7 @@ public interface RecommendationService
 
     List<Recommender> listRecommenders(AnnotationLayer aLayer);
     
-	/**
+    /**
      * Returns all annotation layers in the given project which have any enabled recommenders.
      */
     List<AnnotationLayer> listLayersWithEnabledRecommenders(Project aProject);
