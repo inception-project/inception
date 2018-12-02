@@ -17,13 +17,13 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.brat.resource;
 
-import org.apache.wicket.request.resource.CssResourceReference;
+import de.agilecoders.wicket.less.LessResourceReference;
 
 public class BratCssVisReference
-    extends CssResourceReference
+    extends LessResourceReference
 {
-    private static final long serialVersionUID = 1L;
-
+    private static final long serialVersionUID = 5755999000175373522L;
+    
     private static final BratCssVisReference INSTANCE = new BratCssVisReference();
 
     /**
@@ -41,6 +41,6 @@ public class BratCssVisReference
      */
     private BratCssVisReference()
     {
-        super(BratCssVisReference.class, "style-vis.css");
+        super(BratCssVisReference.class, "style-vis.less");
     }
 }

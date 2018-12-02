@@ -222,6 +222,8 @@ public class CurationPanel
         annotationEditor = new BratAnnotationEditor("mergeView", new Model<>(state), editor,
             this::getEditorCas);
         annotationEditor.setHighlightEnabled(false);
+        annotationEditor.add(LambdaBehavior.visibleWhen(() -> state.getDocument() != null));
+        annotationEditor.setOutputMarkupPlaceholderTag(true);
         // reset sentenceAddress and lastSentenceAddress to the orginal once
         add(annotationEditor);
     
