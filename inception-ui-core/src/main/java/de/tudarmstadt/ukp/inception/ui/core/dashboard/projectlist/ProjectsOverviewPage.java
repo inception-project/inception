@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.ui.core.dashboard.projectlist;
 
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_ADMIN;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_PROJECT_CREATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData.CURRENT_PROJECT;
 import static java.lang.String.join;
 import static java.util.Arrays.asList;
@@ -30,14 +31,18 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.zip.ZipFile;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.wicket.Session;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
@@ -45,7 +50,9 @@ import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.upload.FileUpload;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
+import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
+import org.apache.wicket.model.Model;
 import org.apache.wicket.model.util.ListModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -66,6 +73,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaStatelessLink;
@@ -82,6 +90,7 @@ public class ProjectsOverviewPage
     private static final String MID_PROJECT_LINK = "projectLink";
     private static final String MID_LABEL = "label";
     private static final String MID_ROLE = "role";
+    private static final String MID_ROLE_FILTER = "roleFilter";
     private static final String MID_PROJECTS = "projects";
     private static final String MID_PROJECT = "project";
     private static final String MID_IMPORT_PROJECT_FORM = "importProjectForm";
@@ -98,12 +107,17 @@ public class ProjectsOverviewPage
     
     private BootstrapFileInputField fileUpload;
     private WebMarkupContainer projectListContainer;
+    private WebMarkupContainer roleFilters;
+    private IModel<Set<PermissionLevel>> activeRoleFilters;
     
     public ProjectsOverviewPage()
     {
         add(projectListContainer = createProjectList());
         add(createNewProjectLink());
         add(createImportProjectForm());
+        add(roleFilters = createRoleFilters());
+        
+        activeRoleFilters = Model.ofSet(new HashSet<>());
     }
     
     private LambdaAjaxLink createNewProjectLink()
@@ -128,6 +142,9 @@ public class ProjectsOverviewPage
         config.allowedFileExtensions(asList("zip"));
         config.showPreview(false);
         config.showUpload(true);
+        config.removeIcon("<i class=\"fa fa-remove\"></i>");
+        config.uploadIcon("<i class=\"fa fa-upload\"></i>");
+        config.browseIcon("<i class=\"fa fa-folder-open\"></i>");
         importProjectForm.add(fileUpload = new BootstrapFileInputField(MID_PROJECT_ARCHIVE_UPLOAD,
                 new ListModel<>(), config)
         {
@@ -159,8 +176,10 @@ public class ProjectsOverviewPage
                 LambdaStatelessLink projectLink = new LambdaStatelessLink(MID_PROJECT_LINK, () -> 
                         selectProject(aItem.getModelObject()));
                 projectLink.add(new Label(MID_NAME, aItem.getModelObject().getName()));
-                aItem.add(DateLabel.forDatePattern(MID_CREATED, () -> 
-                        aItem.getModelObject().getCreated(), "yyyy-MM-dd"));
+                DateLabel createdLabel = DateLabel.forDatePattern(MID_CREATED, () -> 
+                        aItem.getModelObject().getCreated(), "yyyy-MM-dd");
+                createdLabel.add(visibleWhen(() -> createdLabel.getModelObject() != null));
+                aItem.add(createdLabel);
                 aItem.add(projectLink);
                 aItem.add(createRoleBadges(aItem.getModelObject()));
             }
@@ -171,7 +190,7 @@ public class ProjectsOverviewPage
                 super.onConfigure();
 
                 if (getModelObject().isEmpty()) {
-                    warn("There are no projects accessible to you.");
+                    warn("There are no projects accessible to you matching the filter criteria.");
                 }
             }
         };
@@ -183,6 +202,35 @@ public class ProjectsOverviewPage
         return projectList;
     }
     
+    private WebMarkupContainer createRoleFilters()
+    {
+        ListView<PermissionLevel> listview = new ListView<PermissionLevel>(MID_ROLE_FILTER,
+                asList(PermissionLevel.values()))
+        {
+            private static final long serialVersionUID = -4762585878276156468L;
+
+            @Override
+            protected void populateItem(ListItem<PermissionLevel> aItem)
+            {
+                PermissionLevel level = aItem.getModelObject();
+                LambdaAjaxLink link = new LambdaAjaxLink("roleFilterLink", _target -> 
+                        actionApplyRoleFilter(_target, aItem.getModelObject()));
+                link.add(new Label(MID_LABEL, getString(
+                        Classes.simpleName(level.getDeclaringClass()) + '.' + level.toString())));
+                link.add(new AttributeAppender("class", () -> 
+                        activeRoleFilters.getObject().contains(aItem.getModelObject())
+                        ? "active" : "", " "));
+                aItem.add(link);
+            }
+        };
+
+        WebMarkupContainer container = new WebMarkupContainer("roleFilters");
+        container.setOutputMarkupPlaceholderTag(true);
+        container.add(listview);
+
+        return container;
+    }
+
     private ListView<ProjectPermission> createRoleBadges(Project aProject)
     {
         return new ListView<ProjectPermission>(MID_ROLE, projectService
@@ -200,6 +248,20 @@ public class ProjectsOverviewPage
         };
     }
     
+    private void actionApplyRoleFilter(AjaxRequestTarget aTarget, PermissionLevel aPermission)
+    {
+        Set<PermissionLevel> activeRoles = activeRoleFilters.getObject();
+        if (activeRoles.contains(aPermission)) {
+            activeRoles.remove(aPermission);
+        }
+        else {
+            activeRoles.add(aPermission);
+        }
+        
+        aTarget.add(projectListContainer, roleFilters);
+        aTarget.addChildren(getPage(), IFeedback.class);
+    }
+    
     private void selectProject(Project aProject)
     {
         Session.get().setMetaData(CURRENT_PROJECT, aProject);
@@ -208,7 +270,18 @@ public class ProjectsOverviewPage
     
     private List<Project> listProjects()
     {
-        return projectService.listAccessibleProjects(userRepository.getCurrentUser());
+        User currentUser = userRepository.getCurrentUser();
+        
+        return projectService.listAccessibleProjects(currentUser)
+                .stream()
+                .filter(proj -> 
+                        // If no filters are selected, all projects are listed
+                        activeRoleFilters.getObject().isEmpty() ||
+                        // ... otherwise only those projects are listed that match the filter
+                        projectService.getProjectPermissionLevels(currentUser, proj)
+                                .stream()
+                                .anyMatch(activeRoleFilters.getObject()::contains))
+                .collect(Collectors.toList());
     }
     
     private void actionCreateProject(AjaxRequestTarget aTarget)

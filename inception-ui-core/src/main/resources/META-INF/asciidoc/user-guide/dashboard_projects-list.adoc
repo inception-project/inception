@@ -20,6 +20,9 @@
 After logging in to {product-name}, the first thing you see is the project overview. Here, you can
 see all the projects to which you have access. For every project, the roles you have are shown.
 
+Using the filter toggle buttons, you can select which projects are listed depending on the
+role that you have in them. By default, all projects are visible.
+
 Users with the role *project creator* can conveniently *create new projects* or
 *import project archives* on this page.
 
