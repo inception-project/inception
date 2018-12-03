@@ -229,8 +229,8 @@ public class RecommendationEditorExtension
         RecommendationRenderer.render(vdoc, aState, jCas, annotationService, recommendationService, 
                 learningRecordService, fsRegistry, documentService);
         applicationEventPublisher.publishEvent(new PredictionsSwitchedEvent(this, aState));
-        AjaxRequestTarget target = RequestCycle.get().find(AjaxRequestTarget.class);
-        target.getPage().send(target.getPage(), Broadcast.BREADTH, new
-            AjaxPredictionsSwitchedEvent(target));
+        RequestCycle.get().find(AjaxRequestTarget.class)
+                .ifPresent(_target -> _target.getPage().send(_target.getPage(), Broadcast.BREADTH,
+                        new AjaxPredictionsSwitchedEvent(_target)));
     }
 }

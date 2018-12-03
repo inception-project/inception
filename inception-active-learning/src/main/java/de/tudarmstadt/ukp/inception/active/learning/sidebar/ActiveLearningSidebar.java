@@ -271,7 +271,7 @@ public class ActiveLearningSidebar
 
             userStateModel.getObject().setListOfRecommendationsForEachToken(activeLearningService
                 .getRecommendationFromRecommendationModel(annotatorState, userStateModel
-                    .getObject().getSelectedLayer()));
+                    .getObject().getLayer()));
 
             ActiveLearningRecommender activeLearningRecommender = new ActiveLearningRecommender(
                 annotatorState, userStateModel.getObject().getLayer());
@@ -645,9 +645,10 @@ public class ActiveLearningSidebar
         }
 
         recommendationService.getPredictions(state.getUser(), state.getProject())
-            .getPredictionsByTokenAndFeature(currentRecommendation.getDocumentName(),
-                userStateModel.getObject().getSelectedLayer(), begin, end,
-                annotationFeature.getName());
+                .getPredictionsByTokenAndFeature(currentRecommendation.getDocumentName(),
+                        userStateModel.getObject().getLayer(),
+                        currentRecommendation.getOffset().getBeginCharacter(),
+                        currentRecommendation.getOffset().getEndCharacter(), feat.getName());
 
         moveToNextRecommendation(aTarget);
     }
@@ -1043,7 +1044,7 @@ public class ActiveLearningSidebar
         if (userStateModel.getObject().isSessionActive()) {
             List<List<AnnotationObject>> aListOfRecommendationsForEachToken = activeLearningService
                 .getRecommendationFromRecommendationModel(getModelObject(),
-                    userStateModel.getObject().getSelectedLayer());
+                    userStateModel.getObject().getLayer());
             userStateModel.getObject()
                 .setListOfRecommendationsForEachToken(aListOfRecommendationsForEachToken);
             RecommendationDifference recommendationDifference = userStateModel.getObject()
