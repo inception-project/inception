@@ -30,7 +30,6 @@ import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.Session;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
-import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.extensions.markup.html.repeater.data.grid.ICellPopulator;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.AbstractColumn;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.DataTable;
@@ -101,8 +100,6 @@ public class SearchPage extends ApplicationPageBase
 
     ExternalResultDataProvider dataProvider;
 
-    ModalWindow modalDocumentWindow;
-
     public SearchPage(PageParameters aParameters)
     {
         project = Session.get().getMetaData(SessionMetaData.CURRENT_PROJECT);
@@ -149,27 +146,6 @@ public class SearchPage extends ApplicationPageBase
         mainContainer.add(projectSelectionForm);
 
         SearchForm searchForm = new SearchForm("searchForm");
-
-        modalDocumentWindow = new ModalWindow("modalDocumentWindow");
-
-        add(modalDocumentWindow);
-
-        modalDocumentWindow.setCloseButtonCallback(new ModalWindow.CloseButtonCallback()
-        {
-            @Override
-            public boolean onCloseButtonClicked(AjaxRequestTarget target)
-            {
-                return true;
-            }
-        });
-
-        modalDocumentWindow.setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
-        {
-            @Override
-            public void onClose(AjaxRequestTarget target)
-            {
-            }
-        });
 
 
         mainContainer.add(searchForm);
@@ -332,10 +308,7 @@ public class SearchPage extends ApplicationPageBase
                 String text = externalSearchService.getDocumentById(currentUser,
                     currentRepository, documentTitle).getText();
 
-                modalDocumentWindow.setContent(new ModalDocumentWindow("content", text));
-                modalDocumentWindow.setTitle(documentTitle);
-
-                modalDocumentWindow.show(_target);
+                setResponsePage(new DocumentDetailsPage(documentTitle, text));
 
             });
             link.add(new Label("textId", documentTitle));
