@@ -62,13 +62,20 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.event.AjaxPredictionsSwitchedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.AjaxRecommendationAcceptedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.AjaxRecommendationRejectedEvent;
-import de.tudarmstadt.ukp.inception.recommendation.event.PredictionsSwitchedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommendationAcceptedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommendationRejectedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.render.RecommendationRenderer;
 
-
-@Component
+/**
+ * This component hooks into the annotation editor in order to:
+ * 
+ * <ul>
+ * <li>Render annotation suggestions into the main editor area;</li>
+ * <li>Intercept user actions on the annotation suggestions, in particular accepting or rejecting
+ *     annotatons.</li>
+ * </ul>
+ */
+@Component(RecommendationEditorExtension.BEAN_NAME)
 public class RecommendationEditorExtension
     extends AnnotationEditorExtensionImplBase
     implements AnnotationEditorExtension
@@ -77,12 +84,27 @@ public class RecommendationEditorExtension
     
     private final Logger log = LoggerFactory.getLogger(getClass());
     
-    private @Autowired AnnotationSchemaService annotationService;
-    private @Autowired RecommendationService recommendationService;
-    private @Autowired LearningRecordService learningRecordService;
-    private @Autowired ApplicationEventPublisher applicationEventPublisher;
-    private @Autowired FeatureSupportRegistry fsRegistry;
-    private @Autowired DocumentService documentService;
+    private final AnnotationSchemaService annotationService;
+    private final RecommendationService recommendationService;
+    private final LearningRecordService learningRecordService;
+    private final ApplicationEventPublisher applicationEventPublisher;
+    private final FeatureSupportRegistry fsRegistry;
+    private final DocumentService documentService;
+
+    @Autowired
+    public RecommendationEditorExtension(AnnotationSchemaService aAnnotationService,
+            RecommendationService aRecommendationService,
+            LearningRecordService aLearningRecordService,
+            ApplicationEventPublisher aApplicationEventPublisher,
+            FeatureSupportRegistry aFsRegistry, DocumentService aDocumentService)
+    {
+        annotationService = aAnnotationService;
+        recommendationService = aRecommendationService;
+        learningRecordService = aLearningRecordService;
+        applicationEventPublisher = aApplicationEventPublisher;
+        fsRegistry = aFsRegistry;
+        documentService = aDocumentService;
+    }
 
     @Override
     public String getBeanName()
@@ -109,11 +131,11 @@ public class RecommendationEditorExtension
             AnnotatorState aState, AjaxRequestTarget aTarget, JCas aJCas, VID aVID, int aBegin,
             int aEnd) throws AnnotationException, IOException
     {
-
         SourceDocument document = aState.getDocument();
-        Predictions model =
-                recommendationService.getPredictions(aState.getUser(), aState.getProject());
+        Predictions model = recommendationService.getPredictions(aState.getUser(),
+                aState.getProject());
         Optional<AnnotationObject> prediction = model.getPredictionByVID(document, aVID);
+
         if (!prediction.isPresent()) {
             log.error("Could not find annotation in [{}] with id [{}]", document, aVID);
             aTarget.getPage().error("Could not find annotation");
@@ -166,7 +188,7 @@ public class RecommendationEditorExtension
         aActionHandler.actionCreateOrUpdate(aTarget, aJCas);
 
         aTarget.getPage().send(aTarget.getPage(), Broadcast.BREADTH,
-            new AjaxRecommendationAcceptedEvent(aTarget, aState, aVID));
+                new AjaxRecommendationAcceptedEvent(aTarget, aState, aVID));
     }
     
     private void actionRejectRecommendation(AnnotationActionHandler aActionHandler,
@@ -174,13 +196,9 @@ public class RecommendationEditorExtension
             int aEnd)
         throws AnnotationException
     {
-        Predictions model = 
-                recommendationService.getPredictions(aState.getUser(), aState.getProject());
+        Predictions model = recommendationService.getPredictions(aState.getUser(),
+                aState.getProject());
         
-        Recommender recommender = recommendationService.getRecommender(aVID.getId());
-        AnnotationLayer layer = annotationService.getLayer(aVID.getLayerId());
-        AnnotationFeature feature = annotationService.getFeature(recommender.getFeature(), layer);
-
         SourceDocument document = aState.getDocument();
         Optional<AnnotationObject> oPrediction = model.getPredictionByVID(document, aVID);
         if (!oPrediction.isPresent()) {
@@ -191,46 +209,64 @@ public class RecommendationEditorExtension
         }
 
         AnnotationObject prediction = oPrediction.get();
-        String predictedValue = prediction.getLabel();
+        Recommender recommender = recommendationService.getRecommender(aVID.getId());
+        AnnotationLayer layer = annotationService.getLayer(aVID.getLayerId());
+        AnnotationFeature feature = annotationService.getFeature(recommender.getFeature(), layer);
 
         // Remove from view
         prediction.setVisible(false);
 
-        String tokenText = aJCas.getDocumentText().substring(aBegin, aEnd);
-        
-        LearningRecord record = new LearningRecord();
-        record.setUser(aState.getUser().getUsername());
-        record.setSourceDocument(document);
-        record.setUserAction(LearningRecordUserAction.REJECTED);
-        record.setOffsetCharacterBegin(prediction.getOffset().getBeginCharacter());
-        record.setOffsetCharacterEnd(prediction.getOffset().getEndCharacter());
-        record.setOffsetTokenBegin(prediction.getOffset().getBeginToken());
-        record.setOffsetTokenEnd(prediction.getOffset().getEndToken());
-        record.setTokenText(tokenText);
-        record.setAnnotation(predictedValue);
-        record.setLayer(layer);
-        record.setChangeLocation(LearningRecordChangeLocation.MAIN_EDITOR);
-        record.setAnnotationFeature(feature);
-        learningRecordService.create(record);
-        aActionHandler.actionSelect(aTarget, aJCas);
-        
-        // Send an event that the recommendation was rejected
-        aTarget.getPage().send(aTarget.getPage(), Broadcast.BREADTH,
-            new AjaxRecommendationRejectedEvent(aTarget, aState, aVID));
-        applicationEventPublisher.publishEvent(
-            new RecommendationRejectedEvent(this, document, aState.getUser().getUsername(), aBegin,
-                aEnd, tokenText, feature, predictedValue));
-    }
+        // Log the action to the learning record
+        logLearningRecord(document, aState.getUser().getUsername(), aVID, prediction, layer,
+                feature);
 
+        // Send an UI event that the recommendation was rejected
+        aTarget.getPage().send(aTarget.getPage(), Broadcast.BREADTH,
+                new AjaxRecommendationRejectedEvent(aTarget, aState, aVID));
+        
+        // Send an application event that the recommendation was rejected
+        applicationEventPublisher.publishEvent(
+                new RecommendationRejectedEvent(this, document, aState.getUser().getUsername(),
+                        aBegin, aEnd, prediction.getCoveredText(), feature, prediction.getLabel()));
+    }
+    
     @Override
-    public void render(JCas jCas, AnnotatorState aState, VDocument vdoc)
+    public void render(JCas jCas, AnnotatorState aState, VDocument aVDoc)
     {
+        // We activate new suggestions during rendering. For one, we don't have a push mechanism
+        // at the moment. For another, even if we had it, it would be quite annoying to the user
+        // if the UI kept updating itself without any the user expecting an update. The user does
+        // expect an update when she makes some interaction, so we piggy-back on this expectation.
         recommendationService.switchPredictions(aState.getUser(), aState.getProject());
-        RecommendationRenderer.render(vdoc, aState, jCas, annotationService, recommendationService, 
+        
+        // Add the suggestions to the visual document
+        RecommendationRenderer.render(aVDoc, aState, jCas, annotationService, recommendationService,
                 learningRecordService, fsRegistry, documentService);
-        applicationEventPublisher.publishEvent(new PredictionsSwitchedEvent(this, aState));
+                
+        // Notify other UI components on the page about the prediction switch such that they can
+        // also update their state to remain in sync with the new predictions
         RequestCycle.get().find(AjaxRequestTarget.class)
                 .ifPresent(_target -> _target.getPage().send(_target.getPage(), Broadcast.BREADTH,
                         new AjaxPredictionsSwitchedEvent(_target)));
+    }
+    
+    private void logLearningRecord(SourceDocument aDocument, String aUsername, VID aVID,
+            AnnotationObject aPrediction, AnnotationLayer aLayer, AnnotationFeature aFeature)
+    {
+        LearningRecord record = new LearningRecord();
+        record.setUser(aUsername);
+        record.setSourceDocument(aDocument);
+        record.setUserAction(LearningRecordUserAction.REJECTED);
+        record.setOffsetCharacterBegin(aPrediction.getOffset().getBeginCharacter());
+        record.setOffsetCharacterEnd(aPrediction.getOffset().getEndCharacter());
+        record.setOffsetTokenBegin(aPrediction.getOffset().getBeginToken());
+        record.setOffsetTokenEnd(aPrediction.getOffset().getEndToken());
+        record.setTokenText(aPrediction.getCoveredText());
+        record.setAnnotation(aPrediction.getLabel());
+        record.setLayer(aLayer);
+        record.setChangeLocation(LearningRecordChangeLocation.MAIN_EDITOR);
+        record.setAnnotationFeature(aFeature);
+        
+        learningRecordService.create(record);    
     }
 }
