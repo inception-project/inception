@@ -151,8 +151,7 @@ public class RecommendationEditorExtension
             address = adapter.add(aState, aJCas, aBegin, aEnd);
         }
 
-        recommendationService
-            .setFeatureValue(feature, predictedValue, adapter, aState, aJCas, address);
+        adapter.setFeatureValue(aState, aJCas, address, feature, predictedValue);
 
         // Send an event that the recommendation was accepted
         AnnotationFS fs = WebAnnoCasUtil.selectByAddr(aJCas, AnnotationFS.class, address);

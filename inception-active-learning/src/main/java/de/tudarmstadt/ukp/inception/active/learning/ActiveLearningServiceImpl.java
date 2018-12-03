@@ -116,7 +116,7 @@ public class ActiveLearningServiceImpl
         private boolean doExistRecommenders = true;
         private AnnotationObject currentRecommendation;
         private RecommendationDifference currentDifference;
-        private AnnotationLayer selectedLayer;
+        private AnnotationLayer layer;
         private ActiveLearningRecommender activeLearningRecommender;
         private Date learnSkippedRecommendationTime;
         private List<List<AnnotationObject>> listOfRecommendationsForEachToken;
@@ -181,14 +181,14 @@ public class ActiveLearningServiceImpl
             this.currentDifference = currentDifference;
         }
 
-        public AnnotationLayer getSelectedLayer()
+        public AnnotationLayer getLayer()
         {
-            return selectedLayer;
+            return layer;
         }
 
-        public void setSelectedLayer(AnnotationLayer selectedLayer)
+        public void setLayer(AnnotationLayer selectedLayer)
         {
-            this.selectedLayer = selectedLayer;
+            this.layer = selectedLayer;
         }
 
         public ActiveLearningRecommender getActiveLearningRecommender()
