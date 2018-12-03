@@ -55,6 +55,7 @@ import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 import de.tudarmstadt.ukp.inception.kb.SchemaProfile;
+import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 
@@ -74,13 +75,15 @@ public class KnowledgeBaseExporter implements ProjectExporter
     private static final RDFFormat knowledgeBaseFileExportFormat = RDFFormat.TURTLE;
 
     private final KnowledgeBaseService kbService;
+    private final KnowledgeBaseProperties kbProperties;
     private final AnnotationSchemaService schemaService;
 
     @Autowired
     public KnowledgeBaseExporter(KnowledgeBaseService aKbService,
-        AnnotationSchemaService aSchemaService)
+            KnowledgeBaseProperties aKbProperties, AnnotationSchemaService aSchemaService)
     {
         kbService = aKbService;
+        kbProperties = aKbProperties;
         schemaService = aSchemaService;
     }
 
@@ -223,6 +226,18 @@ public class KnowledgeBaseExporter implements ProjectExporter
             }
             kb.setDefaultLanguage(exportedKB.getDefaultLanguage());
             kb.setMaxResults(exportedKB.getMaxResults());
+            // If not setting, initialize with default
+            if (kb.getMaxResults() == 0) {
+                kb.setMaxResults(kbProperties.getDefaultMaxResults());
+            }
+            // Cap at local min results
+            if (kb.getMaxResults() < KnowledgeBaseProperties.HARD_MIN_RESULTS) {
+                kb.setMaxResults(KnowledgeBaseProperties.HARD_MIN_RESULTS);
+            }
+            // Cap at local max results
+            if (kb.getMaxResults() > kbProperties.getHardMaxResults()) {
+                kb.setMaxResults(kbProperties.getHardMaxResults());
+            }
             kb.setProject(aProject);
 
             // Get config and register knowledge base

@@ -29,6 +29,9 @@ import javax.persistence.PersistenceContext;
 import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.multimap.HashSetValuedHashMap;
+import org.apache.commons.lang3.Validate;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.uima.jcas.JCas;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,11 +55,13 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.inception.recommendation.api.ClassificationTool;
-import de.tudarmstadt.ukp.inception.recommendation.api.ClassificationToolRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
+import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderFactoryRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderDeletedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.scheduling.RecommendationScheduler;
 
@@ -73,35 +78,31 @@ public class RecommendationServiceImpl
     
     private @Autowired SessionRegistry sessionRegistry;
     private @Autowired UserDao userRepository;
-    private @Autowired ClassificationToolRegistry classificationToolRegistry;
+    private @Autowired RecommenderFactoryRegistry recommenderFactoryRegistry;
     private @Autowired RecommendationScheduler scheduler;
     
-    private Map<String, RecommendationUserState> states = new ConcurrentHashMap<>();
+    private Map<RecommendationStateKey, RecommendationState> states = new ConcurrentHashMap<>();
 
     @Override
     public Predictions getPredictions(User aUser, Project aProject)
     {
-        RecommendationUserState state = getState(aUser.getUsername());
-        return state.getActivePredictions(aProject);
+        RecommendationState state = getState(aUser.getUsername(), aProject);
+        return state.getActivePredictions();
     }
     
     @Override
     public Predictions getIncomingPredictions(User aUser, Project aProject)
     {
-        RecommendationUserState state = getState(aUser.getUsername());
-        Predictions predictions;
-        synchronized (state) {
-            predictions = state.getIncomingPredictions(aProject);
-        }
-        return predictions;
+        RecommendationState state = getState(aUser.getUsername(), aProject);
+        return state.getIncomingPredictions();
     }
     
     @Override
     public void putIncomingPredictions(User aUser, Project aProject, Predictions aPredictions)
     {
-        RecommendationUserState state = getState(aUser.getUsername());
+        RecommendationState state = getState(aUser.getUsername(), aProject);
         synchronized (state) {
-            state.putIncomingPredictions(aProject, aPredictions);
+            state.setIncomingPredictions(aPredictions);
         }
     }
     
@@ -109,10 +110,11 @@ public class RecommendationServiceImpl
     public void setActiveRecommenders(User aUser, AnnotationLayer aLayer,
             List<Recommender> aRecommenders)
     {
-        RecommendationUserState state = getState(aUser.getUsername());
-        MultiValuedMap<AnnotationLayer, Recommender> activeRecommenders = 
-                state.getActiveRecommenders();
-        synchronized (activeRecommenders) {
+        RecommendationState state = getState(aUser.getUsername(), aLayer.getProject());
+        synchronized (state) {
+            MultiValuedMap<AnnotationLayer, Recommender> activeRecommenders = state
+                    .getActiveRecommenders();
+            activeRecommenders.remove(aLayer);
             activeRecommenders.putAll(aLayer, aRecommenders);
         }
     }
@@ -120,14 +122,12 @@ public class RecommendationServiceImpl
     @Override
     public List<Recommender> getActiveRecommenders(User aUser, AnnotationLayer aLayer)
     {
-        RecommendationUserState state = getState(aUser.getUsername());
-        MultiValuedMap<AnnotationLayer, Recommender> activeRecommenders = 
-                state.getActiveRecommenders();
-        List<Recommender> result = new ArrayList<>();
-        synchronized (activeRecommenders) {
-            result.addAll(activeRecommenders.get(aLayer));
+        RecommendationState state = getState(aUser.getUsername(), aLayer.getProject());
+        synchronized (state) {
+            MultiValuedMap<AnnotationLayer, Recommender> activeRecommenders = 
+                    state.getActiveRecommenders();
+            return new ArrayList<>(activeRecommenders.get(aLayer));
         }
-        return result;
     }
 
     @Override
@@ -197,12 +197,6 @@ public class RecommendationServiceImpl
         return settings;
     }
 
-    @Override
-    public List<String> getAvailableTools(AnnotationLayer aLayer, AnnotationFeature aFeature)
-    {
-        return classificationToolRegistry.getAvailableTools(aLayer, aFeature);
-    }
-
     @EventListener
     public void afterAnnotationUpdate(AfterAnnotationUpdateEvent aEvent)
     {
@@ -219,8 +213,10 @@ public class RecommendationServiceImpl
     @EventListener
     public void onRecommenderDelete(RecommenderDeletedEvent aEvent)
     {
-        RecommendationUserState state = getState(aEvent.getUser());
-        state.removePredictions(aEvent.getRecommender());
+        RecommendationState state = getState(aEvent.getUser(), aEvent.getProject());
+        synchronized (state) {
+            state.removePredictions(aEvent.getRecommender());
+        }
         triggerTrainingAndClassification(aEvent.getUser(), aEvent.getProject());
     }
     
@@ -253,69 +249,48 @@ public class RecommendationServiceImpl
     }
 
     @Override
-    public void setMaxSuggestions(User aUser, int aMax)
+    public Preferences getPreferences(User aUser, Project aProject)
     {
-        RecommendationUserState state = getState(aUser.getUsername());
-        state.setMaxPredictions(aMax);
+        RecommendationState state = getState(aUser.getUsername(), aProject);
+        return state.getPreferences();
     }
     
     @Override
-    public int getMaxSuggestions(User aUser)
+    public void setPreferences(User aUser, Project aProject, Preferences aPreferences)
     {
-        RecommendationUserState state = getState(aUser.getUsername());
-        return state.getMaxPredictions();
+        RecommendationState state = getState(aUser.getUsername(), aProject);
+        state.setPreferences(aPreferences);
     }
     
     @Override
-    public ClassificationTool<?> getTool(Recommender aSettings, int aMaxPredictions)
+    public RecommendationEngineFactory getRecommenderFactory(Recommender aRecommender)
     {
-        return classificationToolRegistry.createClassificationTool(aSettings, aMaxPredictions);
+        return recommenderFactoryRegistry.getFactory(aRecommender.getTool());
     }
     
-    @Override
-    public void storeTrainedModel(User aUser, Recommender aRecommender, Object aModel)
-    {
-        RecommendationUserState state = getState(aUser.getUsername());
-        state.putTrainedModel(aRecommender, aModel);
-    }
-
-    @Override
-    public Object getTrainedModel(User aUser, Recommender aRecommender)
-    {
-        RecommendationUserState state = getState(aUser.getUsername());
-        return state.getTrainedModel(aRecommender);
-    }
-    
-    private RecommendationUserState getState(String aUsername)
+    private RecommendationState getState(String aUsername, Project aProject)
     {
         synchronized (states) {
-            RecommendationUserState state;
-            state = states.get(aUsername);
-            if (state == null) {
-                state = new RecommendationUserState();
-                states.put(aUsername, state);
-            }
-            return state;
+            return states.computeIfAbsent(new RecommendationStateKey(aUsername, aProject), (v) -> 
+                    new RecommendationState());
         }
     }
     
     private void clearState(String aUsername)
     {
+        Validate.notNull(aUsername, "Username must be specified");
+        
         synchronized (states) {
-            states.remove(aUsername);
+            states.keySet().removeIf(key -> aUsername.equals(key.getUser()));
         }
     }
     
     @Override
     public void switchPredictions(User aUser, Project aProject)
     {
-        RecommendationUserState state = getState(aUser.getUsername());
+        RecommendationState state = getState(aUser.getUsername(), aProject);
         synchronized (state) {
-            Predictions incomingPredictions = state.getIncomingPredictions(aProject);
-            if (incomingPredictions != null) {
-                state.putActivePredictions(aProject, incomingPredictions);
-                state.clearIncomingPredictions(aProject);
-            }
+            state.switchPredictions();
         }
     }
 
@@ -326,19 +301,82 @@ public class RecommendationServiceImpl
         aAdapter.setFeatureValue(aState, aJcas, aAddress, aFeature, aPredictedValue);
     }
 
+    @Override
+    public RecommenderContext getContext(User aUser, Recommender aRecommender)
+    {
+        RecommendationState state = getState(aUser.getUsername(), aRecommender.getProject());
+        synchronized (state) {
+            return state.getContext(aRecommender);
+        }
+    }
+
+    private static class RecommendationStateKey
+    {
+        private final String user;
+        private final long projectId;
+        
+        public RecommendationStateKey(String aUser, long aProjectId)
+        {
+            user = aUser;
+            projectId = aProjectId;
+        }
+
+        public RecommendationStateKey(String aUser, Project aProject)
+        {
+            this(aUser, aProject.getId());
+        }
+
+        public long getProjectId()
+        {
+            return projectId;
+        }
+        
+        public String getUser()
+        {
+            return user;
+        }
+        
+        @Override
+        public boolean equals(final Object other)
+        {
+            if (!(other instanceof RecommendationStateKey)) {
+                return false;
+            }
+            RecommendationStateKey castOther = (RecommendationStateKey) other;
+            return new EqualsBuilder().append(user, castOther.user)
+                    .append(projectId, castOther.projectId).isEquals();
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return new HashCodeBuilder().append(user).append(projectId).toHashCode();
+        }
+    }
+    
     /**
      * We are assuming that the user is actively working on one project at a time.
      * Otherwise, the RecommendationUserState might take up a lot of memory.
      */
-    private static class RecommendationUserState
+    private static class RecommendationState
     {
-        private int maxPredictions = 3;
+        private Preferences preferences = new Preferences();
         private MultiValuedMap<AnnotationLayer, Recommender> activeRecommenders = 
                 new HashSetValuedHashMap<>();
-        private Map<Long, Object> trainedModels = new ConcurrentHashMap<>();
-        private Map<Long, Predictions> activePredictions = new ConcurrentHashMap<>();
-        private Map<Long, Predictions> incomingPredictions = new ConcurrentHashMap<>();
+        private Map<Recommender, RecommenderContext> contexts = new ConcurrentHashMap<>();
+        private Predictions activePredictions;
+        private Predictions incomingPredictions;
         
+        public Preferences getPreferences()
+        {
+            return preferences;
+        }
+
+        public void setPreferences(Preferences aPreferences)
+        {
+            preferences = aPreferences;
+        }
+
         public MultiValuedMap<AnnotationLayer, Recommender> getActiveRecommenders()
         {
             return activeRecommenders;
@@ -350,77 +388,63 @@ public class RecommendationServiceImpl
             activeRecommenders = aActiveRecommenders;
         }
         
-        public void setMaxPredictions(int aMaxPredictions)
+        public Predictions getActivePredictions()
         {
-            maxPredictions = aMaxPredictions;
+            return activePredictions;
         }
         
-        public int getMaxPredictions()
+        public void setIncomingPredictions(Predictions aIncomingPredictions)
         {
-            return maxPredictions;
+            Validate.notNull(aIncomingPredictions, "Predictions must be specified");
+            
+            incomingPredictions = aIncomingPredictions;
         }
         
-        public void putActivePredictions(Project aProject, Predictions aPredictions)
+        public Predictions getIncomingPredictions()
         {
-            activePredictions.put(aProject.getId(), aPredictions);
-        }
-        
-        public Predictions getActivePredictions(Project aProject)
-        {
-            return activePredictions.get(aProject.getId());
-        }
-        
-        public void putIncomingPredictions(Project aProject, Predictions aPredictions)
-        {
-            incomingPredictions.put(aProject.getId(), aPredictions);
+            return incomingPredictions;
         }
 
-        public Predictions getIncomingPredictions(Project aProject)
+        public void switchPredictions()
         {
-            return incomingPredictions.get(aProject.getId());
-        }
-
-        public void clearIncomingPredictions(Project aProject)
-        {
-            incomingPredictions.remove(aProject.getId());            
-        }
-
-        public Object getTrainedModel(Recommender aRecommender)
-        {
-            return trainedModels.get(aRecommender.getId());
+            if (incomingPredictions != null) {
+                activePredictions = incomingPredictions;
+                incomingPredictions = null;
+            }
         }
         
-        public void putTrainedModel(Recommender aRecommender, Object aModel)
+        /**
+         * Returns the context for the given recommender or creates a new one if there is none so
+         * far.
+         */
+        public RecommenderContext getContext(Recommender aRecommender)
         {
-            trainedModels.put(aRecommender.getId(), aModel);
+            Validate.notNull(aRecommender, "Recommender must be specified");
+            
+            return contexts.computeIfAbsent(aRecommender, (v) -> new RecommenderContext());
         }
-
+                
         public void removePredictions(Recommender aRecommender)
         {
             // Remove incoming predictions
-            Predictions incoming = incomingPredictions.get(aRecommender.getProject().getId());
-            if (incoming != null) {
-                incoming.removePredictions(aRecommender.getId());
-                incomingPredictions.put(aRecommender.getProject().getId(), incoming);
+            if (incomingPredictions != null) {
+                incomingPredictions.removePredictions(aRecommender.getId());
             }
 
             // Remove active predictions
-            Predictions active = activePredictions.get(aRecommender.getProject().getId());
-            if (active != null) {
-                active.removePredictions(aRecommender.getId());
-                activePredictions.put(aRecommender.getProject().getId(), active);
+            if (activePredictions != null) {
+                activePredictions.removePredictions(aRecommender.getId());
             }
 
             // Remove trainedModel
-            trainedModels.remove(aRecommender.getId());
+            contexts.remove(aRecommender);
 
             // Remove from activeRecommenders map.
             // We have to do this, otherwise training and prediction continues for the
             // recommender when a new task is triggered.
-            MultiValuedMap<AnnotationLayer, Recommender> newActiveRecommenders
-                = new HashSetValuedHashMap<>();
-            MapIterator<AnnotationLayer, Recommender> it
-                = activeRecommenders.mapIterator();
+            MultiValuedMap<AnnotationLayer, Recommender> newActiveRecommenders = 
+                    new HashSetValuedHashMap<>();
+            MapIterator<AnnotationLayer, Recommender> it = activeRecommenders.mapIterator();
 
             while (it.hasNext()) {
                 AnnotationLayer layer = it.next();
@@ -429,6 +453,7 @@ public class RecommendationServiceImpl
                     newActiveRecommenders.put(layer, rec);
                 }
             }
+            
             setActiveRecommenders(newActiveRecommenders);
         }
     }

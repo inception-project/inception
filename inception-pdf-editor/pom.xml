@@ -20,10 +20,13 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>0.6.0-SNAPSHOT</version>
+    <version>0.7.0-SNAPSHOT</version>
   </parent>
   <name>INCEpTION - Editor - PDF</name>
   <artifactId>inception-pdf-editor</artifactId>
+  <properties>
+    <frontend.install.path>${session.executionRootDirectory}/cache/maven-frontend-plugin</frontend.install.path>
+  </properties>
   <dependencies>
     <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
@@ -41,7 +44,7 @@
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
       <artifactId>webanno-model</artifactId>
     </dependency>
-    
+
     <dependency>
       <groupId>org.apache.uima</groupId>
       <artifactId>uimaj-core</artifactId>
@@ -55,12 +58,12 @@
       <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
       <artifactId>de.tudarmstadt.ukp.dkpro.core.io.pdf-asl</artifactId>
     </dependency>
-    
+
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
     </dependency>
-    
+
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-context</artifactId>
@@ -69,7 +72,7 @@
       <groupId>org.springframework</groupId>
       <artifactId>spring-webmvc</artifactId>
     </dependency>
-    
+
     <dependency>
       <groupId>org.apache.wicket</groupId>
       <artifactId>wicket-core</artifactId>
@@ -86,13 +89,104 @@
       <groupId>org.apache.wicket</groupId>
       <artifactId>wicket-spring</artifactId>
     </dependency>
-        
+
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
     </dependency>
+
+    <dependency>
+        <groupId>paperai</groupId>
+        <artifactId>pdfextract</artifactId>
+        <version>0.3.2-SNAPSHOT</version>
+    </dependency>
   </dependencies>
   <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-resources-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>copy-pdfanno-to-target</id>
+            <phase>generate-resources</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>target/js/pdfanno</outputDirectory>
+              <resources>
+                <resource>
+                  <directory>src/main/js/pdfanno</directory>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>add-pdfanno-resources</id>
+            <phase>generate-resources</phase>
+            <goals>
+              <goal>add-resource</goal>
+            </goals>
+            <configuration>
+              <resources>
+                <resource>
+                  <directory>target/js/pdfanno/dist/pdfanno</directory>
+                  <targetPath>pdfanno</targetPath>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>com.github.eirslett</groupId>
+        <artifactId>frontend-maven-plugin</artifactId>
+        <version>1.6</version>
+          <configuration>
+            <workingDirectory>target/js/pdfanno/</workingDirectory>
+            <installDirectory>${frontend.install.path}</installDirectory>
+          </configuration>
+        <executions>
+          <execution>
+            <id>install node and npm</id>
+            <goals>
+              <goal>install-node-and-npm</goal>
+            </goals>
+            <phase>generate-resources</phase>
+            <configuration>
+              <nodeVersion>v11.0.0</nodeVersion>
+              <npmVersion>6.4.1</npmVersion>
+            </configuration>
+          </execution>
+          <execution>
+            <id>npm install</id>
+            <goals>
+              <goal>npm</goal>
+            </goals>
+            <phase>generate-resources</phase>
+            <configuration>
+              <arguments>install</arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>npm run</id>
+            <goals>
+              <goal>npm</goal>
+            </goals>
+            <phase>generate-resources</phase>
+            <configuration>
+              <arguments>run front:publish</arguments>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
     <pluginManagement>
       <plugins>
         <plugin>
@@ -104,7 +198,8 @@
               <configuration>
                 <excludes combine.children="append">
                   <!-- These upstream files do not contain license headers -->
-                  <exclude>src/main/java/de/tudarmstadt/ukp/inception/pdfeditor/pdfjs/resources/web/images/*.svg</exclude>
+                  <exclude>src/main/js/pdfanno/**/*</exclude>
+                  <exclude>cache/**/*</exclude>
                 </excludes>
               </configuration>
             </execution>
@@ -113,4 +208,17 @@
       </plugins>
     </pluginManagement>
   </build>
+  <profiles>
+    <profile>
+      <id>jenkins</id>
+      <activation>
+        <property>
+          <name>JENKINS_HOME</name>
+        </property>
+      </activation>
+      <properties>
+        <frontend.install.path>${WORKSPACE}/cache/maven-frontend-plugin</frontend.install.path>
+      </properties>
+    </profile>
+  </profiles>
 </project>

@@ -32,43 +32,46 @@ public class RecommenderEvaluationResultEventAdapter
     implements EventLoggingAdapter<RecommenderEvaluationResultEvent>
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
+
     @Override
     public boolean accepts(Object aEvent)
     {
         return aEvent instanceof RecommenderEvaluationResultEvent;
     }
-    
+
     @Override
     public long getProject(RecommenderEvaluationResultEvent aEvent)
     {
         return aEvent.getRecommender().getProject().getId();
     }
-    
+
     @Override
     public String getAnnotator(RecommenderEvaluationResultEvent aEvent)
     {
         return aEvent.getUser();
     }
-    
+
     @Override
     public String getUser(RecommenderEvaluationResultEvent aEvent)
     {
         return aEvent.getUser();
     }
-    
+
     @Override
     public String getDetails(RecommenderEvaluationResultEvent aEvent)
     {
         try {
             Details details = new Details();
-            details.score = aEvent.getResult().getFscore();
+
+            details.score = aEvent.getScore();
+            details.active = aEvent.isActive();
+
             details.duration = aEvent.getDuration();
-            details.trainingSetSize = aEvent.getResult().getTrainingSetSize();
             details.threshold = aEvent.getRecommender().getThreshold();
             details.layer = aEvent.getRecommender().getLayer().getName();
             details.feature = aEvent.getRecommender().getFeature();
             details.tool = aEvent.getRecommender().getTool();
+
             return JSONUtil.toJsonString(details);
         }
         catch (IOException e) {
@@ -76,14 +79,20 @@ public class RecommenderEvaluationResultEventAdapter
             return "<ERROR>";
         }
     }
-    
-    public static class Details {
+
+    public static class Details
+    {
+        // Recommender configuration
         public String layer;
         public String feature;
         public String tool;
         public double threshold;
-        public double score;
+
+        // Evaluation process telemetry
         public long duration;
-        public int trainingSetSize;
+
+        // Evaluation results
+        public boolean active;
+        public double score;
     }
 }

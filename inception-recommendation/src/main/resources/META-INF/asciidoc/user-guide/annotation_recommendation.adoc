@@ -1,5 +1,5 @@
 [[sect_annotation_recommendation]]
-== Recommendation
+== Recommenders
 If you have configured one or more recommenders in the <<sect_projects_recommendation, Project Settings>>,
 you will see recommendations like in the screenshot below.
 Clicking *Reset* in the _Workflow_ area will remove all predictions,

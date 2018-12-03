@@ -19,6 +19,10 @@ package de.tudarmstadt.ukp.inception.kb.graph;
 
 import static org.apache.commons.lang3.builder.ToStringStyle.SHORT_PREFIX_STYLE;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -118,6 +122,14 @@ public class KBHandle
     public static KBHandle of(KBObject aObject)
     {
         return new KBHandle(aObject.getIdentifier(), aObject.getUiLabel());
+    }
+
+    public static List<KBHandle> distinctByIri(List<KBHandle> aHandles) {
+        Map<String, KBHandle> hMap = new LinkedHashMap<>();
+        for (KBHandle h : aHandles) {
+            hMap.put(h.getIdentifier(), h);
+        }
+        return new ArrayList<>(hMap.values());
     }
 
     @Override

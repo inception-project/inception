@@ -20,15 +20,14 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>0.6.0-SNAPSHOT</version>
+    <version>0.7.0-SNAPSHOT</version>
   </parent>
   <artifactId>inception-imls-opennlp</artifactId>
-  <name>INCEpTION - ML - OpenNLP</name>
+  <name>INCEpTION - ML - OpenNLP (v ${opennlp.version})</name>
+  <properties>
+    <opennlp.version>1.9.0</opennlp.version>
+  </properties>
   <dependencies>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-imls-core</artifactId>
-    </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-recommendation-api</artifactId>
@@ -44,14 +43,15 @@
     </dependency>
 
     <dependency>
+      <groupId>it.unimi.dsi</groupId>
+      <artifactId>fastutil</artifactId>
+    </dependency>
+
+    <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-context</artifactId>
     </dependency>
     
-    <dependency>
-      <groupId>commons-io</groupId>
-      <artifactId>commons-io</artifactId>
-    </dependency>
     <dependency>
       <groupId>org.apache.uima</groupId>
       <artifactId>uimafit-core</artifactId>
@@ -60,7 +60,16 @@
       <groupId>org.apache.uima</groupId>
       <artifactId>uimaj-core</artifactId>
     </dependency>
-    
+
+    <dependency>
+      <groupId>commons-io</groupId>
+      <artifactId>commons-io</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+    </dependency>
+
     <dependency>
       <groupId>org.apache.wicket</groupId>
       <artifactId>wicket-core</artifactId>
@@ -70,6 +79,24 @@
       <artifactId>wicket-spring</artifactId>
     </dependency>
 
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
+      <artifactId>de.tudarmstadt.ukp.dkpro.core.api.segmentation-asl</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
+      <artifactId>de.tudarmstadt.ukp.dkpro.core.api.resources-asl</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
+      <artifactId>de.tudarmstadt.ukp.dkpro.core.api.lexmorph-asl</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>com.google.code.findbugs</groupId>
+      <artifactId>jsr305</artifactId>
+    </dependency>
+
     <!-- LOGGING DEPENDENCIES - SLF4J -->
     <dependency>
       <groupId>org.slf4j</groupId>
@@ -77,18 +104,25 @@
     </dependency>
 
     <dependency>
-      <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
-      <artifactId>de.tudarmstadt.ukp.dkpro.core.io.conll-asl</artifactId>
-    </dependency>
-    <dependency>
       <groupId>org.apache.opennlp</groupId>
       <artifactId>opennlp-tools</artifactId>
-      <version>1.7.2</version>
+      <version>${opennlp.version}</version>
     </dependency>
-    
+
+    <!-- Testing -->
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
+      <artifactId>de.tudarmstadt.ukp.dkpro.core.io.conll-asl</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -99,6 +133,21 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
       <artifactId>de.tudarmstadt.ukp.dkpro.core.testing-asl</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
+      <artifactId>de.tudarmstadt.ukp.dkpro.core.api.ner-asl</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
+      <artifactId>de.tudarmstadt.ukp.dkpro.core.tokit-asl</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
+      <artifactId>de.tudarmstadt.ukp.dkpro.core.api.io-asl</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>

@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.search.index.mtas;
 
 import static de.tudarmstadt.ukp.inception.search.FeatureIndexingSupport.SPECIAL_SEP;
-import static java.util.Arrays.asList;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -39,13 +38,10 @@ import org.apache.uima.UIMAException;
 import org.apache.uima.cas.impl.XmiCasDeserializer;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.factory.JCasFactory;
-import org.apache.uima.fit.factory.TypeSystemDescriptionFactory;
 import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.tcas.Annotation;
-import org.apache.uima.resource.metadata.TypeSystemDescription;
-import org.apache.uima.util.CasCreationUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -172,7 +168,7 @@ public class MtasUimaParser
 
         try {
             createTokenCollection(jcas);
-            log.debug("Created token collection in {}ms", (System.currentTimeMillis() - start));
+            log.debug("Created token collection in {} ms", (System.currentTimeMillis() - start));
             return tokenCollection;
         }
         catch (Exception e) {
@@ -183,19 +179,17 @@ public class MtasUimaParser
     
     private JCas readCas(Reader reader) throws UIMAException, IOException, SAXException
     {
-        TypeSystemDescription builtInTypes = TypeSystemDescriptionFactory
-                .createTypeSystemDescription();
-        TypeSystemDescription projectTypes = annotationSchemaService.getProjectTypes(project);
-        TypeSystemDescription allTypes = CasCreationUtils
-                .mergeTypeSystems(asList(projectTypes, builtInTypes));
-        JCas jcas = JCasFactory.createJCas(allTypes);
+        JCas jcas = JCasFactory
+                .createJCas(annotationSchemaService.getFullProjectTypeSystem(project));
+
         String xmi = IOUtils.toString(reader);
+
         // Get the annotations from the XMI are back in the CAS.
         XmiCasDeserializer.deserialize(new ByteArrayInputStream(xmi.getBytes()), jcas.getCas());
 
         return jcas;
     }
-    
+
     public MtasTokenCollection createTokenCollection(JCas aJCas)
     {
         // Initialize state
@@ -215,6 +209,10 @@ public class MtasUimaParser
         
         // Loop over the annotations
         for (Annotation annotation : JCasUtil.select(aJCas, Annotation.class)) {
+            // MTAS cannot index zero-width annotations, so we skip them here.
+            if (annotation.getBegin() == annotation.getEnd()) {
+                continue;
+            }
             mtasId = indexAnnotation(tokenCollection, annotation, mtasId);
         }
         
@@ -276,7 +274,21 @@ public class MtasUimaParser
                 AnnotationFS targetFs = FSUtil.getFeature(aAnnotation,
                         adapter.getTargetFeatureName(), AnnotationFS.class);
 
-                if (sourceFs != null && targetFs != null) {
+                if (
+                        sourceFs != null && targetFs != null && 
+                        // MTAS cannot index zero-width annotations, so we skip them here.
+                        sourceFs.getBegin() != sourceFs.getEnd() &&
+                        targetFs.getBegin() != targetFs.getEnd()
+                ) {
+                    // If the relation layer uses an attach-feature, index the annotation
+                    // referenced by that feature
+                    if (layer.getAttachFeature() != null) {
+                        sourceFs = FSUtil.getFeature(sourceFs, layer.getAttachFeature().getName(),
+                                AnnotationFS.class);
+                        targetFs = FSUtil.getFeature(targetFs, layer.getAttachFeature().getName(),
+                                AnnotationFS.class);
+                    }
+
                     Range range = getRange(targetFs);
                     
                     // Index the source annotation text (equals the target)
@@ -326,7 +338,7 @@ public class MtasUimaParser
             int aMtasId)
     {
         int mtasId = aMtasId;
-        
+
         // Iterate over the features of this layer and index them one-by-one
         for (AnnotationFeature feature : layerFeatures.get(aAnnotation.getType().getName())) {
             Optional<FeatureIndexingSupport> fis = featureIndexingSupportRegistry

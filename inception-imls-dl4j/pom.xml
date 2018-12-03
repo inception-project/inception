@@ -15,34 +15,59 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>0.5.0-SNAPSHOT</version>
+    <version>0.7.0-SNAPSHOT</version>
   </parent>
   <artifactId>inception-imls-dl4j</artifactId>
-  <name>INCEpTION - ML - Deeplearning4J</name>
+  <name>INCEpTION - ML - Deeplearning4J (v${dl4j.version})</name>
+  <properties>
+    <openblas.version>0.3.3</openblas.version>
+    <javacpp-presets.version>1.4.3</javacpp-presets.version>
+    <mkl.version>2019.0</mkl.version>
+    <mkl-dnn.javacpp.version>0.16-${javacpp-presets.version}</mkl-dnn.javacpp.version>
+    <nd4j.backend>nd4j-native</nd4j.backend>
+  </properties>
   <dependencies>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-imls-core</artifactId>
-    </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-recommendation-api</artifactId>
     </dependency>
-  
+
     <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
       <artifactId>webanno-model</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-api-dao</artifactId>
     </dependency>
 
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-context</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-autoconfigure</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>it.unimi.dsi</groupId>
+      <artifactId>fastutil</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
     </dependency>
 
     <!-- LOGGING DEPENDENCIES - SLF4J -->
@@ -57,6 +82,11 @@
     </dependency>
     <dependency>
       <groupId>org.deeplearning4j</groupId>
+      <artifactId>deeplearning4j-utility-iterators</artifactId>
+      <version>${dl4j.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.deeplearning4j</groupId>
       <artifactId>deeplearning4j-nn</artifactId>
       <version>${dl4j.version}</version>
       <exclusions>
@@ -68,11 +98,6 @@
     </dependency>
     <dependency>
       <groupId>org.nd4j</groupId>
-      <artifactId>nd4j-native-platform</artifactId>
-      <version>${dl4j.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.nd4j</groupId>
       <artifactId>nd4j-api</artifactId>
       <version>${dl4j.version}</version>
       <exclusions>
@@ -81,12 +106,98 @@
           <artifactId>lombok</artifactId>
         </exclusion>
       </exclusions>
+      </dependency>
+  
+  
+  
+  <!--  
+      <dependency>
+      <groupId>org.bytedeco.javacpp-presets</groupId>
+      <artifactId>openblas-platform</artifactId>
+      <version>${openblas.version}-${javacpp-presets.version}</version>
+      </dependency>
+-->    
+    <dependency>
+      <groupId>org.bytedeco.javacpp-presets</groupId>
+      <artifactId>openblas</artifactId>
+      <version>${openblas.version}-${javacpp-presets.version}</version>
+      <classifier>linux-x86</classifier>
     </dependency>
+    <dependency>
+      <groupId>org.bytedeco.javacpp-presets</groupId>
+      <artifactId>openblas</artifactId>
+      <version>${openblas.version}-${javacpp-presets.version}</version>
+      <classifier>linux-x86_64</classifier>
+    </dependency>
+    <dependency>
+      <groupId>org.bytedeco.javacpp-presets</groupId>
+      <artifactId>openblas</artifactId>
+      <version>${openblas.version}-${javacpp-presets.version}</version>
+      <classifier>macosx-x86_64</classifier>
+    </dependency>
+    <dependency>
+      <groupId>org.bytedeco.javacpp-presets</groupId>
+      <artifactId>openblas</artifactId>
+      <version>${openblas.version}-${javacpp-presets.version}</version>
+      <classifier>windows-x86</classifier>
+    </dependency>
+    <dependency>
+      <groupId>org.bytedeco.javacpp-presets</groupId>
+      <artifactId>openblas</artifactId>
+      <version>${openblas.version}-${javacpp-presets.version}</version>
+      <classifier>windows-x86_64</classifier>
+    </dependency>
+    
+    <!--  
+      <dependency>
+        <groupId>org.nd4j</groupId>
+        <artifactId>nd4j-native-platform</artifactId>
+        <version>${dl4j.version}</version>
+      </dependency>
+     -->
+    <dependency>
+      <groupId>org.bytedeco.javacpp-presets</groupId>
+      <artifactId>mkl-platform</artifactId>
+      <version>${mkl.version}-${javacpp-presets.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.bytedeco.javacpp-presets</groupId>
+      <artifactId>mkl-dnn-platform</artifactId>
+      <version>${mkl-dnn.javacpp.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.nd4j</groupId>
+      <artifactId>${nd4j.backend}</artifactId>
+      <version>${dl4j.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.nd4j</groupId>
+      <artifactId>${nd4j.backend}</artifactId>
+      <version>${dl4j.version}</version>
+      <classifier>linux-x86_64</classifier>
+    </dependency>
+    <dependency>
+      <groupId>org.nd4j</groupId>
+      <artifactId>${nd4j.backend}</artifactId>
+      <version>${dl4j.version}</version>
+      <classifier>macosx-x86_64</classifier>
+    </dependency>
+    <dependency>
+      <groupId>org.nd4j</groupId>
+      <artifactId>${nd4j.backend}</artifactId>
+      <version>${dl4j.version}</version>
+      <classifier>windows-x86_64</classifier>
+    </dependency>
+
     <dependency>
       <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
       <artifactId>de.tudarmstadt.ukp.dkpro.core.api.datasets-asl</artifactId>
     </dependency>
-    
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
+      <artifactId>de.tudarmstadt.ukp.dkpro.core.api.segmentation-asl</artifactId>
+    </dependency>
+
     <dependency>
       <groupId>org.apache.uima</groupId>
       <artifactId>uimaj-core</artifactId>
@@ -95,10 +206,6 @@
       <groupId>org.apache.uima</groupId>
       <artifactId>uimafit-core</artifactId>
     </dependency>
-    <dependency>
-      <groupId>org.apache.commons</groupId>
-      <artifactId>commons-compress</artifactId>
-    </dependency>
 
     <dependency>
       <groupId>junit</groupId>
@@ -106,8 +213,23 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
       <artifactId>de.tudarmstadt.ukp.dkpro.core.testing-asl</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
+      <artifactId>de.tudarmstadt.ukp.dkpro.core.api.lexmorph-asl</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
+      <artifactId>de.tudarmstadt.ukp.dkpro.core.api.ner-asl</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -123,13 +245,14 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-dependency-plugin</artifactId>
           <configuration>
-            <usedDependencies>
+            <ignoredDependencies>
               <!-- ND4J plugins - used via reflection -->
-              <usedDependency>org.nd4j:nd4j-native-platform</usedDependency>
-            </usedDependencies>
+              <dependency>org.nd4j:nd4j-native:*:*</dependency>
+              <dependency>org.bytedeco.javacpp-presets:*:*:*</dependency>
+            </ignoredDependencies>
           </configuration>
         </plugin>
       </plugins>
     </pluginManagement>
-  </build>  
+  </build>
 </project>

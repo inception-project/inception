@@ -357,4 +357,28 @@
       </column>
     </addColumn>
   </changeSet>
+  
+  <changeSet author="INCEpTION Team" id="20181007-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="recommender" columnName="maxRecommendations" />
+      </not>
+    </preConditions>
+    <addColumn tableName="recommender">
+      <column name="maxRecommendations" type="INT" defaultValueNumeric="3">
+        <constraints nullable="false" />
+      </column>
+    </addColumn>
+  </changeSet>
+  
+  <!--
+   - We had a bug that this setting was not properly initialized when importing projects that
+   - where this setting did not exist yet. For such cases, we set the value to the default here. 
+   -->
+  <changeSet author="INCEpTION Team" id="20181116-1">
+    <update tableName="recommender">
+      <column name="maxRecommendations" type="INT" valueNumeric="3"/>
+      <where>maxRecommendations = 0</where>
+    </update>
+  </changeSet>
 </databaseChangeLog>

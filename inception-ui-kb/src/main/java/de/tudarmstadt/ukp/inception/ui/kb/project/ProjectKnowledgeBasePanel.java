@@ -23,37 +23,45 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
-@ProjectSettingsPanel(label = "Knowledge Bases", prio = 399)
-public class ProjectKnowledgeBasePanel extends ProjectSettingsPanelBase {
-
+public class ProjectKnowledgeBasePanel
+    extends ProjectSettingsPanelBase
+{
     private static final long serialVersionUID = 2300684106019320208L;
 
     private static final String DETAILS_PANEL_MARKUP_ID = "details";
 
     private IModel<Project> projectModel;
+    private IModel<KnowledgeBase> selectedKnowledgeBaseModel;
     private Panel detailsPanel;
 
-    public ProjectKnowledgeBasePanel(String aId, IModel<Project> aProject) {
-        super(aId);
+    public ProjectKnowledgeBasePanel(String aId, final IModel<Project> aProject)
+    {
+        super(aId, aProject);
+
         setOutputMarkupId(true);
         projectModel = aProject;
 
         detailsPanel = new EmptyPanel(DETAILS_PANEL_MARKUP_ID);
         add(detailsPanel);
 
-        IModel<KnowledgeBase> kbModel = Model.of();
+        selectedKnowledgeBaseModel = Model.of();
         KnowledgeBaseListPanel listPanel = new KnowledgeBaseListPanel("list", projectModel,
-                kbModel);
+            selectedKnowledgeBaseModel);
         listPanel.setChangeAction(t -> {
             addOrReplace(detailsPanel);
-            detailsPanel
-                    .replaceWith(new KnowledgeBaseDetailsPanel(DETAILS_PANEL_MARKUP_ID, kbModel));
+            detailsPanel.replaceWith(
+                new KnowledgeBaseDetailsPanel(DETAILS_PANEL_MARKUP_ID, selectedKnowledgeBaseModel));
             t.add(this);
         });
         add(listPanel);
+    }
+
+    @Override protected void onModelChanged()
+    {
+        super.onModelChanged();
+        selectedKnowledgeBaseModel.setObject(null);
     }
 }

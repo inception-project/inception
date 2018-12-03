@@ -49,6 +49,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
 import de.tudarmstadt.ukp.inception.recommendation.scheduling.tasks.PredictionTask;
 
 /**
@@ -112,7 +113,10 @@ public class RecommendationSpanRenderer
                 aState.getUser().getUsername(), annoDoc, layer, recommendations, windowBegin,
                 windowEnd);
 
-        for (List<AnnotationObject> token: recommendations) {
+        Preferences pref = recommendationService.getPreferences(aState.getUser(),
+                layer.getProject());
+
+        for (List<AnnotationObject> token : recommendations) {
             Map<String, Map<Long, AnnotationObject>> labelMap = new HashMap<>();
  
             // For recommendations with the same label by the same classifier,
@@ -120,7 +124,7 @@ public class RecommendationSpanRenderer
             for (AnnotationObject ao: token) {
 
                 // Skip rendering AnnotationObjects that should not be rendered
-                if (!ao.isVisible()) {
+                if (!pref.isShowAllPredictions() && !ao.isVisible()) {
                     continue;
                 }
 
@@ -157,7 +161,7 @@ public class RecommendationSpanRenderer
             // Sort and filter labels under threshold value
             List<String> filtered = maxConfidencePerLabel.entrySet().stream()
                     .sorted((e1, e2) -> Double.compare(e2.getValue(), e1.getValue()))
-                    .limit(recommendationService.getMaxSuggestions(aState.getUser()))
+                    .limit(pref.getMaxPredictions())
                     .map(Entry::getKey).collect(Collectors.toList());
 
             // Render annotations for each label
@@ -167,17 +171,17 @@ public class RecommendationSpanRenderer
                 }
 
                 // Create VID using the recommendation with the lowest recommendationId
-                AnnotationObject prediction = token.stream()
+                AnnotationObject canonicalRecommendation = token.stream()
                         .filter(p -> p.getLabel().equals(label))
                         .max(Comparator.comparingInt(AnnotationObject::getId)).orElse(null);
 
-                if (prediction == null) {
+                if (canonicalRecommendation == null) {
                     continue;
                 }
 
                 VID vid = new VID(RecommendationEditorExtension.BEAN_NAME, layer.getId(),
-                        (int) prediction.getRecommenderId(), prediction.getId(), VID.NONE,
-                        VID.NONE);
+                        (int) canonicalRecommendation.getRecommenderId(),
+                        canonicalRecommendation.getId(), VID.NONE, VID.NONE);
                 
                 boolean first = true;
                 Map<Long, AnnotationObject> confidencePerClassifier = labelMap.get(label);

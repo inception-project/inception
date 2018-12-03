@@ -69,11 +69,13 @@ include::{include-dir}login.adoc[]
 
 <<<
 
-include::{include-dir}menubar.adoc[]
+include::{include-dir}dashboard.adoc[]
 
-<<<
+include::{include-dir}dashboard_menubar.adoc[leveloffset=+1]
 
-include::{include-dir}menu.adoc[]
+include::{include-dir}dashboard_projects-list.adoc[leveloffset=+1]
+
+include::{include-dir}dashboard_project-view.adoc[leveloffset=+1]
 
 <<<
 
@@ -139,19 +141,25 @@ include::{include-dir}projects_documents.adoc[leveloffset=+1]
 
 include::{include-dir}projects_layers.adoc[leveloffset=+1]
 
-include::{include-dir}projects_tagsets.adoc[leveloffset=+1]
-
-include::{include-dir}projects_constraints.adoc[leveloffset=+1]
-
-include::{include-dir}projects_guidelines.adoc[leveloffset=+1]
-
-include::{include-dir}projects_export.adoc[leveloffset=+1]
-
-include::{include-dir}projects_concept-linking.adoc[leveloffset=+1]
+include::{include-dir}projects_knowledge-base.adoc[leveloffset=+1]
 
 include::{include-dir}projects_recommendation.adoc[leveloffset=+1]
 
-include::{include-dir}projects_knowledge-base.adoc[leveloffset=+2]
+include::{include-dir}projects_recommendation_string.adoc[leveloffset=+2]
+
+include::{include-dir}projects_recommendation_opennlp.adoc[leveloffset=+2]
+
+include::{include-dir}projects_recommendation_conceptlinker.adoc[leveloffset=+2]
+
+include::{include-dir}projects_recommendation_external.adoc[leveloffset=+2]
+
+include::{include-dir}projects_tagsets.adoc[leveloffset=+1]
+
+include::{include-dir}projects_guidelines.adoc[leveloffset=+1]
+
+include::{include-dir}projects_constraints.adoc[leveloffset=+1]
+
+include::{include-dir}projects_export.adoc[leveloffset=+1]
 
 <<<
 

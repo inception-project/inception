@@ -20,10 +20,10 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>0.6.0-SNAPSHOT</version>
+    <version>0.7.0-SNAPSHOT</version>
   </parent>
   <artifactId>inception-concept-linking</artifactId>
-  <name>INCEpTION - Entity Linking</name>
+  <name>INCEpTION - Concept Linking</name>
 
   <dependencies>
     <!-- 
@@ -67,17 +67,9 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-imls-core</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-recommendation-api</artifactId>
     </dependency>
 
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-      <artifactId>webanno-api</artifactId>
-    </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
       <artifactId>webanno-api-annotation</artifactId>
@@ -92,16 +84,25 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-      <artifactId>webanno-security</artifactId>
+      <artifactId>webanno-api</artifactId>
     </dependency>
 
     <dependency>
       <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
-      <artifactId>de.tudarmstadt.ukp.dkpro.core.api.ner-asl</artifactId>
+      <artifactId>de.tudarmstadt.ukp.dkpro.core.api.metadata-asl</artifactId>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
       <artifactId>de.tudarmstadt.ukp.dkpro.core.api.segmentation-asl</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.wicket</groupId>
+      <artifactId>wicket-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.wicket</groupId>
+      <artifactId>wicket-spring</artifactId>
     </dependency>
 
     <dependency>
@@ -198,6 +199,26 @@
     <dependency>
       <groupId>com.h2database</groupId>
       <artifactId>h2</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
+      <artifactId>de.tudarmstadt.ukp.dkpro.core.api.datasets-asl</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
+      <artifactId>de.tudarmstadt.ukp.dkpro.core.testing-asl</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+        <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
+        <artifactId>de.tudarmstadt.ukp.dkpro.core.api.ner-asl</artifactId>
+        <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
+      <artifactId>de.tudarmstadt.ukp.dkpro.core.io.conll-asl</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>

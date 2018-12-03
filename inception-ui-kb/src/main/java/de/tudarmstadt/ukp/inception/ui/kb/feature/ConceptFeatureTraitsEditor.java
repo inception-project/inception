@@ -132,7 +132,7 @@ public class ConceptFeatureTraitsEditor
             if (kb.isPresent()) {
                 result.setKnowledgeBase(kb.get());
                 if (t.getScope() != null) {
-                    kbService.readConcept(kb.get(), t.getScope())
+                    kbService.readConcept(kb.get(), t.getScope(), true)
                             .ifPresent(concept -> result.setScope(KBHandle.of(concept)));
                 }
             }

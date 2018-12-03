@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<!--
+#Copyright 2018
+#Ubiquitous Knowledge Processing (UKP) Lab
+#Technische Universität Darmstadt
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+# 
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+-->
+<html xmlns:wicket="http://wicket.apache.org">
+<body>
+  <wicket:panel>
+    <form wicket:id="form" class="flex-content panel panel-default panel-flex">
+      <div class="panel-heading">
+        <h3 class="panel-title"><wicket:message key="details"/></h3>
+      </div>
+      <div class="panel-body">
+        <div class="col-sm-12 form-horizontal">
+          <div class="form-group" wicket:enclosure="name">
+            <label class="col-sm-2 control-label">
+              <wicket:message key="name"/>
+            </label>
+            <div class="col-sm-10">
+              <input type="text" wicket:id="name" size="30" class="form-control"/>
+            </div>
+          </div>
+          <div class="form-group" wicket:enclosure="type">
+            <label wicket:for="type" class="col-sm-2 control-label">
+              <wicket:label key="type"/>
+            </label>
+            <div class="col-sm-10">
+              <select wicket:id="type" class="form-control"></select>
+            </div>
+          </div>
+          <div wicket:id="propertiesContainer">
+            <div wicket:id="properties"></div>
+          </div>
+        </div>
+      </div>
+      <div class="panel-footer text-right">
+        <input type="button" wicket:id="delete" class="btn btn-danger pull-left" wicket:message="value:delete"></input>
+        <input type="submit" wicket:id="save" class="btn btn-primary" wicket:message="value:save"></input>
+        <input type="button" wicket:id="cancel" class="btn btn-default" wicket:message="value:cancel"></input>
+      </div>            
+    </form>
+  </wicket:panel>
+</body>
+</html>

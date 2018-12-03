@@ -24,16 +24,15 @@ public class AnnotationObject
     implements Serializable, Comparable<AnnotationObject>
 {
     private static final long serialVersionUID = -1145787227041121442L;
-    private static final double DEFAULT_CONFIDENCE = 1.0;
 
-    private TokenObject token;
-    private int id;
-    private String label;
-    private String uiLabel;
-    private String feature;
-    private String source;
-    private double confidence;
-    private long recommenderId;
+    private final TokenObject token;
+    private final int id;
+    private final String label;
+    private final String uiLabel;
+    private final String feature;
+    private final String source;
+    private final double confidence;
+    private final long recommenderId;
     private boolean visible = false;
 
     public AnnotationObject(TokenObject aToken, String aLabel, String aUiLabel, int aId,
@@ -47,41 +46,6 @@ public class AnnotationObject
         source = aSource;
         confidence = aConfidence;
         recommenderId = aRecommenderId;
-    }
-
-    /**
-     * Creates an AnnotationObject with default confidence
-     */
-    public AnnotationObject(TokenObject aToken, String aLabel, String aUiLabel, int aId,
-                            String aFeature, String aSource, long aRecommenderId)
-    {
-        this(aToken, aLabel, aUiLabel, aId, aFeature, aSource, DEFAULT_CONFIDENCE, aRecommenderId);
-    }
-
-    /**
-     * Creates an AnnotationObject with null label and uiLabel
-     */
-    public AnnotationObject(TokenObject aToken, int aId, String aFeature,
-                            String aSource, double aConfidence, long aRecommenderId)
-    {
-        this(aToken, null, null, aId, aFeature, aSource, aConfidence, aRecommenderId);
-    }
-
-    /**
-     * Creates an AnnotationObject with default confidence and null label and uiLabel
-     */
-    public AnnotationObject(TokenObject aToken, int aId, String aFeature, String aSource,
-        long aRecommenderId)
-    {
-        this(aToken, null, null, aId, aFeature, aSource, aRecommenderId);
-    }
-
-    /**
-     * Creates an AnnotationObject with default confidence and null label, uiLabel and source
-     */
-    public AnnotationObject(TokenObject aToken, int aId, String aFeature, long aRecommenderId)
-    {
-        this(aToken, null, null, aId, aFeature, null, aRecommenderId);
     }
 
     /**
@@ -102,19 +66,9 @@ public class AnnotationObject
         return token.offset;
     }
 
-    public void setOffset(Offset aOffset)
-    {
-        token.setOffset(aOffset);
-    }
-
     public String getCoveredText()
     {
         return token.getCoveredText();
-    }
-
-    public void setCoveredText(String aCoveredText)
-    {
-        token.setCoveredText(aCoveredText);
     }
 
     public int getId()
@@ -122,19 +76,9 @@ public class AnnotationObject
         return id;
     }
 
-    public void setId(int aId)
-    {
-        id = aId;
-    }
-
     public String getLabel()
     {
         return label;
-    }
-
-    public void setLabel(String aLabel)
-    {
-        label = aLabel;
     }
 
     public String getUiLabel()
@@ -142,19 +86,9 @@ public class AnnotationObject
         return uiLabel;
     }
 
-    public void setUiLabel(String aUiLabel)
-    {
-        uiLabel = aUiLabel;
-    }
-
     public String getFeature()
     {
         return feature;
-    }
-
-    public void setFeature(String aFeature)
-    {
-        feature = aFeature;
     }
 
     public String getSource()
@@ -162,29 +96,14 @@ public class AnnotationObject
         return source;
     }
 
-    public void setSource(String aSource)
-    {
-        source = aSource;
-    }
-
     public double getConfidence()
     {
         return confidence;
     }
 
-    public void setConfidence(double aConfidence)
-    {
-        confidence = aConfidence;
-    }
-
     public long getRecommenderId()
     {
         return recommenderId;
-    }
-
-    public void setRecommenderId(long aRecommenderId)
-    {
-        recommenderId = aRecommenderId;
     }
 
     public TokenObject getTokenObject()
@@ -204,10 +123,12 @@ public class AnnotationObject
     @Override
     public boolean equals(Object o)
     {
-        if (this == o)
+        if (this == o) {
             return true;
-        if (o == null || getClass() != o.getClass())
+        }
+        if (o == null || getClass() != o.getClass()) {
             return false;
+        }
         AnnotationObject that = (AnnotationObject) o;
         return id == that.id && recommenderId == that.recommenderId
             && token.documentName.equals(that.getDocumentName());

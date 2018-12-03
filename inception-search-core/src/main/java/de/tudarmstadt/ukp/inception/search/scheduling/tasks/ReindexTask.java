@@ -27,7 +27,6 @@ import de.tudarmstadt.ukp.inception.search.SearchService;
 /**
  * Search indexer task. Runs the reindexing process for a given project
  */
-
 public class ReindexTask
     extends Task
 {
@@ -48,5 +47,11 @@ public class ReindexTask
         catch (IOException e) {
             e.printStackTrace();
         }
+    }
+    
+    @Override
+    public boolean matches(Task aTask)
+    {
+        return getProject().getId() == aTask.getProject().getId();
     }
 }

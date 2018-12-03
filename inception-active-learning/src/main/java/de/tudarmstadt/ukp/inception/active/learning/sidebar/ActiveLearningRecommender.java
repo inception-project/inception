@@ -35,8 +35,6 @@ import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.active.learning.ActiveLearningService;
@@ -49,8 +47,6 @@ public class ActiveLearningRecommender
     implements Serializable
 {
     private static final long serialVersionUID = -2308436775710912029L;
-
-    private @Autowired ActiveLearningService activeLearningService;
 
     private List<List<AnnotationObject>> listOfRecommendationsForEachToken;
     private AnnotatorState annotatorState;
@@ -167,11 +163,13 @@ public class ActiveLearningRecommender
         String source = recommendationItem.getSource();
         String annotation = recommendationItem.getLabel();
         String documentName = recommendationItem.getDocumentName();
-
-        for (AnnotationObject existedRecommendation : cleanRecommendationList) {
-            if (existedRecommendation.getSource().equals(source) && existedRecommendation.getLabel()
-                .equals(annotation) && existedRecommendation.getDocumentName()
-                .equals(documentName)) {
+        
+        for (AnnotationObject existingRecommendation : cleanRecommendationList) {
+            if (
+                    existingRecommendation.getSource().equals(source) &&
+                    existingRecommendation.getLabel().equals(annotation) &&
+                    existingRecommendation.getDocumentName().equals(documentName)
+            ) {
                 return true;
             }
         }
@@ -243,22 +241,21 @@ public class ActiveLearningRecommender
     {
         long startTimer = System.currentTimeMillis();
         // create list of recommendationsList, each recommendationsList contains all
-        // recommendations from one classifer for one token
+        // recommendations from one classifier for one token
         List<List<AnnotationObject>> listOfRecommendationsPerTokenPerClassifier =
             createRecommendationListsPerTokenPerClassifier(
             aListOfRecommendationsForEachToken);
         long splitingListTimer = System.currentTimeMillis();
-        LOG.debug("Splitting time costs {}ms.", (splitingListTimer - startTimer));
+        LOG.trace("Splitting time costs {}ms.", (splitingListTimer - startTimer));
 
-        // get a list of differences, sorted ascendingly
-        List<RecommendationDifference> recommendationDifferences =
-            createDifferencesSortedAscendingly(
-            listOfRecommendationsPerTokenPerClassifier);
+        // get a list of differences, sorted ascending
+        List<RecommendationDifference> recommendationDifferences = createDifferencesSortedAscending(
+                listOfRecommendationsPerTokenPerClassifier);
         long rankingDifferenceTimer = System.currentTimeMillis();
-        LOG.debug("Ranking difference costs {}ms.", (rankingDifferenceTimer - splitingListTimer));
+        LOG.trace("Ranking difference costs {}ms.", (rankingDifferenceTimer - splitingListTimer));
 
         Optional<RecommendationDifference> recommendationDifference = recommendationDifferences
-            .stream().findFirst();
+                .stream().findFirst();
         if (recommendationDifference.isPresent()) {
             return recommendationDifference.get();
         }
@@ -308,8 +305,8 @@ public class ActiveLearningRecommender
         return listOfRecommendationsPerTokenPerClassifier;
     }
 
-    private static List<RecommendationDifference> createDifferencesSortedAscendingly(
-        List<List<AnnotationObject>> listOfRecommendationsPerTokenPerClassifier)
+    private static List<RecommendationDifference> createDifferencesSortedAscending(
+            List<List<AnnotationObject>> listOfRecommendationsPerTokenPerClassifier)
     {
         List<RecommendationDifference> recommendationDifferences = new ArrayList<>();
         for (List<AnnotationObject> recommendationsList :

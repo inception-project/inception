@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.inception.search.index.mtas;
 
 import static java.util.Arrays.asList;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.awaitility.Awaitility.await;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -65,6 +67,11 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.PrimitiveUimaFeatureSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.ChainLayerSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistryImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.RelationLayerSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.SpanLayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.AnnotationSchemaServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.BackupProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.CasStorageServiceImpl;
@@ -121,19 +128,12 @@ import de.tudarmstadt.ukp.inception.search.scheduling.IndexScheduler;
 @Transactional(propagation = Propagation.NEVER)
 public class MtasDocumentIndexTest
 {
-    // Number of milliseconds to wait for the indexing to finish. This time must be enough
-    // to allow the index be built before the query is made. Otherwise, it could affect the
-    // test results. If this happens, a largest value could allow the test to pass.
-    private final int WAIT_TIME = 1000;
-
     private @Autowired UserDao userRepository;
     private @Autowired ProjectService projectService;
     private @Autowired DocumentService documentService;
     private @Autowired SearchService searchService;
     private @Autowired AnnotationSchemaService annotationSchemaService;
 
-    private final int NUM_WAITS = 2;
-    
     @Before
     public void setUp()
     {
@@ -156,10 +156,11 @@ public class MtasDocumentIndexTest
                 aFileContent.getBytes(StandardCharsets.UTF_8));
 
         documentService.uploadSourceDocument(fileStream, aSourceDocument);
-        Thread.sleep(WAIT_TIME);
-        while (!searchService.isIndexValid(aProject)) {
-            Thread.sleep(WAIT_TIME);
-        }
+
+        await("Waiting for indexing process to complete")
+                .atMost(60, SECONDS)
+                .pollInterval(5, SECONDS)
+                .until(() -> searchService.isIndexValid(aProject));
     }
 
     private void annotateDocument(Project aProject, User aUser, SourceDocument aSourceDocument)
@@ -202,9 +203,10 @@ public class MtasDocumentIndexTest
         // Write annotated CAS to annotated document
         documentService.writeAnnotationCas(jCas, annotationDocument, false);
 
-        while (!searchService.isIndexValid(aProject)) {
-            Thread.sleep(WAIT_TIME);
-        }
+        await("Waiting for indexing process to complete")
+                .atMost(60, SECONDS)
+                .pollInterval(5, SECONDS)
+                .until(() -> searchService.isIndexValid(aProject));
     }
 
     @Test
@@ -322,35 +324,24 @@ public class MtasDocumentIndexTest
         // Wait for the asynchronous indexing task to finish. We need a sleep before the while 
         // because otherwise there would not be time even for the index becoming invalid 
         // before becoming valid again.
-        
-        Thread.sleep(WAIT_TIME);
-        
-        int numWaits = 0;
-        
-        while (!searchService.isIndexValid(project) && numWaits < NUM_WAITS) {
-            Thread.sleep(WAIT_TIME);
-            numWaits ++;
-        }
+        await("Waiting for indexing process to complete")
+                .atMost(60, SECONDS)
+                .pollInterval(5, SECONDS)
+                .until(() -> searchService.isIndexValid(project));
 
         annotateDocument(project, user, sourceDocument);
 
-        numWaits = 0;
-        
         // Wait for the asynchronous indexing task to finish. We need a sleep before the while 
         // because otherwise there would not be time even for the index becoming invalid 
         // before becoming valid again.
-        
-        Thread.sleep(WAIT_TIME);
-        
-        while (searchService.isIndexValid(project) && numWaits < NUM_WAITS) {
-            Thread.sleep(WAIT_TIME);
-            numWaits++;
-        }
+        await("Waiting for indexing process to complete")
+                .atMost(60, SECONDS)
+                .pollInterval(5, SECONDS)
+                .until(() -> searchService.isIndexValid(project));
 
         String query = "<Named_entity.value=\"LOC\"/>";
 
-        List<SearchResult> results = (ArrayList<SearchResult>) searchService.query(user, project,
-                query);
+        List<SearchResult> results = searchService.query(user, project, query);
 
         // Test results
         SearchResult expectedResult = new SearchResult();
@@ -365,10 +356,8 @@ public class MtasDocumentIndexTest
         expectedResult.setTokenLength(1);
 
         assertNotNull(results);
-        if (results != null) {
-            assertEquals(1, results.size());
-            assertEquals(expectedResult, results.get(0));
-        }
+        assertEquals(1, results.size());
+        assertEquals(expectedResult, results.get(0));
     }
 
     @Configuration
@@ -511,7 +500,7 @@ public class MtasDocumentIndexTest
         @Bean
         public ImportExportService importExportService()
         {
-            return new ImportExportServiceImpl(
+            return new ImportExportServiceImpl(repositoryProperties(),
                     asList(new TextFormatSupport(), new Conll2002FormatSupport()),
                     casStorageService(), annotationSchemaService());
         }
@@ -538,6 +527,18 @@ public class MtasDocumentIndexTest
         public ApplicationContextProvider contextProvider()
         {
             return new ApplicationContextProvider();
+        }
+        
+        @Bean
+        public LayerSupportRegistry layerSupportRegistry(
+                @Autowired FeatureSupportRegistry aFeatureSupportRegistry)
+        {
+            return new LayerSupportRegistryImpl(asList(
+                    new SpanLayerSupport(aFeatureSupportRegistry, null, annotationSchemaService()),
+                    new RelationLayerSupport(aFeatureSupportRegistry, null,
+                            annotationSchemaService()),
+                    new ChainLayerSupport(aFeatureSupportRegistry, null,
+                            annotationSchemaService())));
         }
     }
 }

@@ -73,6 +73,8 @@ public class Recommender
 
     private boolean enabled = true;
     
+    private int maxRecommendations;
+    
     @Lob
     @Column(length = 64000)
     private String traits;
@@ -188,6 +190,16 @@ public class Recommender
     {
         enabled = aEnabled;
     }
+    
+    public int getMaxRecommendations()
+    {
+        return maxRecommendations;
+    }
+
+    public void setMaxRecommendations(int aMaxRecommendations)
+    {
+        maxRecommendations = aMaxRecommendations;
+    }
 
     public String getTraits()
     {
@@ -229,6 +241,8 @@ public class Recommender
         sb.append(", threshold=").append(threshold);
         sb.append(", alwaysSelected=").append(alwaysSelected);
         sb.append(", enabled=").append(enabled);
+        sb.append(", maxRecommendations=").append(maxRecommendations);
+        sb.append(", skipEvaluation=").append(skipEvaluation);
         sb.append(", traits='").append(traits).append('\'');
         sb.append('}');
         return sb.toString();

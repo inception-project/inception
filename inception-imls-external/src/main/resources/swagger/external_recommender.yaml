@@ -1,0 +1,159 @@
+swagger: "2.0"
+info:
+  description: >
+    This section describes the External Recommender API for INCEpTION. An external recommender is a classifier whose
+    functionality is exposed via a HTTP web service. It can predict annotations for given documents and optionally
+    be trained on new data. This document describes the endpoints a web service needs to expose so it can be used
+    with INCEpTION.
+
+    The documents that are exchanged are in form of a UIMA CAS. For sending, they have to be serialized to CAS XMI. For
+    receiving, it has to be deserialized back. There are two main libraries available that manage CAS handling, one is
+    the UIMA Java SDK, the other one dkpro-cassis (Python).
+  version: "1.0.0"
+  title: "INCEpTION external recommender"
+  termsOfService: "https://inception-project.github.io"
+  contact:
+    email: "inception-users@googlegroups.com"
+  license:
+    name: "Apache 2.0"
+    url: "http://www.apache.org/licenses/LICENSE-2.0.html"
+paths:
+  /predict:
+    post:
+      tags:
+      - "predict"
+      summary: "Predict annotations for a single document"
+      description: Sends a CAS together with information about the layer and feature to predict to the external recommender. The external recommender then returns the CAS annotated with predictions.
+      operationId: "predictCas"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "Document CAS for which annotations will be predicted"
+        required: true
+        schema:
+          $ref: "#/definitions/PredictRequest"
+      responses:
+        200:
+          description: "Successful prediction"
+          schema:
+            $ref: "#/definitions/PredictResponse"
+  /train:
+    post:
+      tags:
+      - "train"
+      summary: "Train recommender on a set of documents"
+      description: Sends a list of CASses to the external recommender for training. No response body is expected.
+      operationId: "trainRecommender"
+      consumes:
+        - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "List of documents CAS whose annotations will be used for training"
+        required: true
+        schema:
+          $ref: "#/definitions/Train"
+      responses:
+        204:
+          description: "Successful training"
+        429:
+          description: "Too many training requests have been sent, the sender should wait a while until the next request"
+definitions:
+  PredictRequest:
+    type: object
+    properties:
+      metadata:
+        $ref: "#/definitions/Metadata"
+      document:
+        $ref: "#/definitions/Document"
+      typeSystem:
+        type: "string"
+        example: '<?xml version="1.0" encoding="UTF-8"?> <typeSystemDescription xmlns="http://uima.apache.org/resourceSpecifier"> <types> <typeDescription> <name>uima.tcas.DocumentAnnotation</name> <description/> <supertypeName>uima.tcas.Annotation</supertypeName> <features> <featureDescription> <name>language</name> <description/> <rangeTypeName>uima.cas.String</rangeTypeName> </featureDescription> </features> </typeDescription> </types> </typeSystemDescription>'
+        description: "Type system XML of the CAS"
+    required:
+      - metadata
+      - document
+      - typeSystem
+  PredictResponse:
+    type: object
+    properties:
+      document:
+        type: "string"
+        example: '<?xml version="1.0" encoding="UTF-8"?> <xmi:XMI xmlns:tcas="http:///uima/tcas.ecore" xmlns:xmi="http://www.omg.org/XMI" xmlns:cas="http:///uima/cas.ecore" xmlns:cassis="http:///cassis.ecore" xmi:version="2.0"> <cas:NULL xmi:id="0"/> <tcas:DocumentAnnotation xmi:id="8" sofa="1" begin="0" end="47" language="x-unspecified"/> <cas:Sofa xmi:id="1" sofaNum="1" sofaID="mySofa" mimeType="text/plain" sofaString="Joe waited for the train . The train was late ."/> <cas:View sofa="1" members="8"/> </xmi:XMI>'
+        description: "CAS with annotations from the external recommender as XMI"
+    required:
+      - document
+  Train:
+    type: object
+    properties:
+      metadata:
+        $ref: "#/definitions/Metadata"
+      documents:
+        type: "array"
+        items:
+          $ref: "#/definitions/Document"
+        description: "CAS as XMI"
+      typeSystem:
+        type: "string"
+        example: '<?xml version="1.0" encoding="UTF-8"?> <typeSystemDescription xmlns="http://uima.apache.org/resourceSpecifier"> <types> <typeDescription> <name>uima.tcas.DocumentAnnotation</name> <description/> <supertypeName>uima.tcas.Annotation</supertypeName> <features> <featureDescription> <name>language</name> <description/> <rangeTypeName>uima.cas.String</rangeTypeName> </featureDescription> </features> </typeDescription> </types> </typeSystemDescription>'
+        description: "Type system XML of the CAS "
+    required:
+      - metadata
+      - documents
+      - typeSystem
+
+  Metadata:
+    type: object
+    properties:
+      layer:
+        type: "string"
+        description: "Layer which should be predicted"
+        example: "de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity"
+      feature:
+        type: "string"
+        description: "Feature of the layer which should be predicted"
+        example: "value"
+      projectId:
+        type: "integer"
+        description: "The id of the project to which the document(s) belong."
+        example: "1337"
+      anchoringMode:
+        type: "string"
+        description: "Describes how annotations are anchored to tokens. Is one of 'characters', 'singleToken', 'tokens', 'sentences'."
+        example: "tokens"
+      crossSentence:
+        type: "boolean"
+        description: "True if the project supports cross-sentence annotations, else False"
+        example: "false"
+    required:
+      - layer
+      - feature
+      - projectId
+      - anchoringMode
+      - crossSentence
+
+  Document:
+    type: object
+    properties:
+      xmi:
+        type: "string"
+        description: "CAS as XMI"
+        example: '<?xml version="1.0" encoding="UTF-8"?> <xmi:XMI xmlns:tcas="http:///uima/tcas.ecore" xmlns:xmi="http://www.omg.org/XMI" xmlns:cas="http:///uima/cas.ecore" xmlns:cassis="http:///cassis.ecore" xmi:version="2.0"> <cas:NULL xmi:id="0"/> <tcas:DocumentAnnotation xmi:id="8" sofa="1" begin="0" end="47" language="x-unspecified"/> <cas:Sofa xmi:id="1" sofaNum="1" sofaID="mySofa" mimeType="text/plain" sofaString="Joe waited for the train . The train was late ."/> <cas:View sofa="1" members="8"/> </xmi:XMI>'
+      documentId:
+        type: "integer"
+        description: "Identifier for this document. It is unique in the context of the project."
+        example: "42"
+      userId:
+        type: "string"
+        description: "Identifier for the user for which recommendations should be made."
+        example: "testuser"
+    required:
+    - layer
+    - feature
+    - projectId
+    - anchoringMode
+    - crossSentence

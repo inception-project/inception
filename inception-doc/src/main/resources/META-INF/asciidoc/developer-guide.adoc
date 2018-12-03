@@ -31,9 +31,13 @@ include::{include-dir}database.adoc[]
 
 <<<
 
-include::{include-dir}systemproperties.adoc[]
+include::{include-dir}search-core.adoc[leveloffset=+1]
+include::{include-dir}search-mtas.adoc[leveloffset=+1]
 
 <<<
 
-include::{include-dir}search-core.adoc[leveloffset=+1]
-include::{include-dir}search-mtas.adoc[leveloffset=+1]
+include::{include-dir}external_recommender.adoc[leveloffset=+1]
+
+<<<
+
+include::{include-dir}systemproperties.adoc[]

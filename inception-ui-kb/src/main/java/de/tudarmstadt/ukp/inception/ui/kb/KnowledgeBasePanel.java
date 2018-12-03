@@ -192,11 +192,11 @@ public class KnowledgeBasePanel
             // TODO: Fix this Optional get() to actual checking
             try {
                 Optional<KBConcept> concept = kbService.readConcept(kbModel.getObject(),
-                        selectedConceptHandle.getObject().getIdentifier());
+                        selectedConceptHandle.getObject().getIdentifier(), true);
                 KBConcept selectedConcept;
                 if (concept.isPresent()) {
                     selectedConcept = kbService.readConcept(kbModel.getObject(),
-                            selectedConceptHandle.getObject().getIdentifier()).get();
+                            selectedConceptHandle.getObject().getIdentifier(), true).get();
                 }
                 else {
                     selectedConcept = new KBConcept();
@@ -230,8 +230,10 @@ public class KnowledgeBasePanel
         selectedPropertyHandle.setObject(null);
 
         // show panel for new, empty property
+        KBConcept newConcept = new KBConcept();
+        newConcept.setLanguage(kbModel.getObject().getDefaultLanguage());
         Component replacement = new ConceptInstancePanel(DETAILS_MARKUP_ID, kbModel,
-                selectedConceptHandle, Model.of(new KBConcept()));
+                selectedConceptHandle, Model.of(newConcept));
         details = details.replaceWith(replacement);
 
         event.getTarget().add(KnowledgeBasePanel.this);
@@ -283,8 +285,10 @@ public class KnowledgeBasePanel
         selectedPropertyHandle.setObject(null);
 
         // show panel for new, empty property
+        KBProperty newProperty = new KBProperty();
+        newProperty.setLanguage(kbModel.getObject().getDefaultLanguage());
         Component replacement = new PropertyPanel(DETAILS_MARKUP_ID, kbModel,
-                selectedPropertyHandle, Model.of(new KBProperty()));
+                selectedPropertyHandle, Model.of(newProperty));
         details = details.replaceWith(replacement);
         event.getTarget().add(KnowledgeBasePanel.this);
     }

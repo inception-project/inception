@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>0.6.0-SNAPSHOT</version>
+    <version>0.7.0-SNAPSHOT</version>
   </parent>
   <artifactId>inception-search-mtas</artifactId>
   <name>INCEpTION - Search - MTAS</name>
@@ -63,12 +63,6 @@
     <dependency>
       <groupId>nl.knaw.meertens.mtas</groupId>
       <artifactId>mtas</artifactId>
-      <exclusions>
-        <exclusion>
-          <groupId>org.apache.solr</groupId>
-          <artifactId>solr-core</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.apache.lucene</groupId>
@@ -172,6 +166,16 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
+      <artifactId>de.tudarmstadt.ukp.dkpro.core.api.syntax-asl</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
+      <artifactId>de.tudarmstadt.ukp.dkpro.core.api.lexmorph-asl</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
       <artifactId>webanno-project</artifactId>
       <scope>test</scope>
@@ -217,7 +221,12 @@
       <artifactId>assertj-core</artifactId>
       <scope>test</scope>
     </dependency>
-
+    <dependency>
+      <groupId>org.awaitility</groupId>
+      <artifactId>awaitility</artifactId>
+      <version>3.1.3</version>
+      <scope>test</scope>
+    </dependency>
     <!-- Testing END -->
 
   </dependencies>  

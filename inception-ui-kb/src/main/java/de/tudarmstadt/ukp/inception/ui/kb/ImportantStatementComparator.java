@@ -46,4 +46,14 @@ public class ImportantStatementComparator implements Comparator<StatementGroupBe
             return Integer.compare(h1Importance, h2Importance);
         }
     }
+
+    public Function<StatementGroupBean, Boolean> getImportant()
+    {
+        return important;
+    }
+
+    public void setImportant(Function<StatementGroupBean, Boolean> aImportant)
+    {
+        this.important = aImportant;
+    }
 }

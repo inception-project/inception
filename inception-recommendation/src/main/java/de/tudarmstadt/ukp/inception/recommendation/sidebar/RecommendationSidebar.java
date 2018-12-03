@@ -17,19 +17,22 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.sidebar;
 
+import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.Form;
+import org.apache.wicket.markup.html.form.NumberTextField;
+import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-
-import com.googlecode.wicket.kendo.ui.form.NumberTextField;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.JCasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
 
 public class RecommendationSidebar
     extends AnnotationSidebar_ImplBase
@@ -44,19 +47,25 @@ public class RecommendationSidebar
     {
         super(aId, aModel, aActionHandler, aJCasProvider, aAnnotationPage);
 
-        Form<Void> form = new Form<>("form");
+        IModel<Preferences> model = LambdaModelAdapter.of(
+            () -> recommendationService.getPreferences(aModel.getObject().getUser(), 
+                    aModel.getObject().getProject()),
+            (v) -> recommendationService.setPreferences(aModel.getObject().getUser(), 
+                    aModel.getObject().getProject(), v));
 
-        IModel<Integer> model = LambdaModelAdapter.of(
-            () -> recommendationService.getMaxSuggestions(aModel.getObject().getUser()),
-            (v) -> recommendationService.setMaxSuggestions(aModel.getObject().getUser(), v));
+        Form<Preferences> form = new Form<>("form",
+                CompoundPropertyModel.of(model));
 
-        NumberTextField<Integer> maxNumberAnnotations = new NumberTextField<Integer>(
-                "maxNumberAnnotations", model, Integer.class);
-        maxNumberAnnotations.setMinimum(1);
-        maxNumberAnnotations.setStep(1);
-        maxNumberAnnotations.setOutputMarkupId(true);
-        form.add(maxNumberAnnotations);
+        form.add(new NumberTextField<Integer>("maxPredictions", Integer.class)
+                .setMinimum(1)
+                .setMaximum(10)
+                .setStep(1));
 
+        form.add(new CheckBox("showAllPredictions"));
+
+        form.add(new LambdaAjaxButton<>("save", (_target, _form) -> 
+                aAnnotationPage.actionRefreshDocument(_target)));
+        
         add(form);
     }
 }

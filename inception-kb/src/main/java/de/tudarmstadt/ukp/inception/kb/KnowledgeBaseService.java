@@ -144,18 +144,6 @@ public interface KnowledgeBaseService
     KBHandle createConcept(KnowledgeBase kb, KBConcept aType);
 
     /**
-     * Read the concept with the given identifier from the given knowledge base.
-     * 
-     * @param kb
-     *            a knowledge base.
-     * @param aIdentifier
-     *            a concept identifier.
-     * @return the concept.
-     */
-    Optional<KBConcept> readConcept(KnowledgeBase kb, String aIdentifier)
-        throws QueryEvaluationException;
-
-    /**
      * Find the specified concept form the first KB in the project which provides it.
      * 
      * @param aProject
@@ -562,7 +550,51 @@ public interface KnowledgeBaseService
     File readKbFileFromClassPathResource(String aLocation) throws IOException;
 
     /**
-     * Can be used to re-index a local KB in case the full text index is corrupt. 
+     * Checks whether a property is a base property
+     * @param propertyIdentifier the property that is to be checked
+     * @param aKB the KB
+     * @return true if the property is a base property, false otherwise
+     */
+    boolean isBaseProperty(String propertyIdentifier, KnowledgeBase aKB);
+
+    /**
+     * Can be used to re-index a local KB in case the full text index is corrupt.
      */
     void rebuildFullTextIndex(KnowledgeBase aKb) throws Exception;
+    
+    /**
+     * Read the concept with the given identifier from the given knowledge base with a 
+     * specific query
+     * 
+     * @param aKB
+     *            a knowledge base.
+     * @param aIdentifier
+     *            a concept identifier.
+     * @param aAll True if entities with implicit namespaces (e.g. defined by RDF)
+     * @return the concept.
+     */
+    Optional<KBConcept> readConcept(KnowledgeBase aKB, String aIdentifier, boolean aAll)
+            throws QueryEvaluationException;
+
+    /**
+     * List all Instances of a given knowledge base
+     * @param aKB the knowledge base
+     * @param aAll indicates whether to include everything
+     * @return list of all the instances {@link KBHandle}
+     */
+    List<KBHandle> listAllInstances(KnowledgeBase aKB, boolean aAll);
+
+    /**
+     * List all the concepts/instances in a given scope. The scope is given in form of a knowledge
+     * base id and a concept id. Null can be passed as a wildcard. If the the given
+     * knowledge base id or concept id can not be found the method will return an empty list.
+     *
+     * @param aRepositoryId the id of the knowledge base that is searched in
+     * @param aConceptScope the id of a concept that defines a scope
+     * @param aValueType    whether only concepts/instances or both should be returned
+     * @param project       the corresponding project
+     * @return a list of all entities within the given scope
+     */
+    List<KBHandle> getEntitiesInScope(String aRepositoryId, String aConceptScope,
+        ConceptFeatureValueType aValueType, Project project);
 }
