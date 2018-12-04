@@ -22,7 +22,6 @@ import static org.apache.uima.fit.util.CasUtil.getAnnotationType;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.NavigableSet;
 import java.util.Optional;
@@ -271,16 +270,11 @@ public class PredictionTask
     /**
      * Goes through all AnnotationObjects and determines the visibility of each one
      */
-    public static List<List<AnnotationObject>> setVisibility(
+    public static void calculateVisibility(
         LearningRecordService aLearningRecordService, AnnotationSchemaService aAnnotationService,
         JCas aJcas, String aUser, AnnotationDocument aDoc, AnnotationLayer aLayer,
         List<List<AnnotationObject>> aRecommendations, int aWindowBegin, int aWindowEnd)
     {
-        // No recommendations
-        if (aRecommendations == null || aRecommendations.isEmpty()) {
-            return Collections.emptyList();
-        }
-
         List<LearningRecord> recordedAnnotations = aLearningRecordService
             .getAllRecordsByDocumentAndUserAndLayer(aDoc.getDocument(), aUser, aLayer);
 
@@ -288,11 +282,12 @@ public class PredictionTask
         NavigableSet<AnnotationObject> remainingRecommendations = new TreeSet<>();
         aRecommendations.forEach(remainingRecommendations::addAll);
 
+        // Collect all annotations within the view window (typically the screen)
         Type type = CasUtil.getType(aJcas.getCas(), aLayer.getName());
         Collection<AnnotationFS> existingAnnotations = CasUtil.select(aJcas.getCas(), type)
-            .stream()
-            .filter(fs -> fs.getBegin() >= aWindowBegin && fs.getEnd() <= aWindowEnd)
-            .collect(Collectors.toList());
+                .stream()
+                .filter(fs -> fs.getBegin() >= aWindowBegin && fs.getEnd() <= aWindowEnd)
+                .collect(Collectors.toList());
 
         AnnotationObject swap = remainingRecommendations.pollFirst();
 
@@ -348,8 +343,6 @@ public class PredictionTask
         for (AnnotationObject ao: remainingRecommendations) {
             setVisibility(recordedAnnotations, ao);
         }
-
-        return aRecommendations;
     }
 
     private static boolean isOverlappingForFeature(AnnotationFS aFs, AnnotationObject aAo,

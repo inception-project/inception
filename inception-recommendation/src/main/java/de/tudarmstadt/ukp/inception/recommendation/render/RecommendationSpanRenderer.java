@@ -108,8 +108,7 @@ public class RecommendationSpanRenderer
         AnnotationDocument annoDoc = aDocumentService
             .getAnnotationDocument(aState.getDocument(), aState.getUser());
 
-        recommendations = PredictionTask
-            .setVisibility(learningRecordService, aAnnotationService, aJcas,
+        PredictionTask.calculateVisibility(learningRecordService, aAnnotationService, aJcas,
                 aState.getUser().getUsername(), annoDoc, layer, recommendations, windowBegin,
                 windowEnd);
 
