@@ -25,16 +25,11 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.apache.uima.cas.Type;
-import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.fit.util.CasUtil;
-import org.apache.uima.jcas.JCas;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -129,20 +124,6 @@ public class UncertaintySamplingStrategy
         removeRejectedOrSkippedAnnotations(aRecordService, false, null,
             listOfRecommendationsForEachToken);
         return !listOfRecommendationsForEachToken.isEmpty();
-    }
-
-    @Override
-    public Optional<AnnotationObject> generateRecommendationWithLowestConfidence(
-        ActiveLearningService aActiveLearningService, JCas aJcas)
-    {
-        List<AnnotationObject> recommendations = aActiveLearningService
-            .getFlattenedRecommendationsFromRecommendationModel(aJcas, annotatorState,
-                selectedLayer);
-        removeRecommendationsWithNullAnnotation(recommendations);
-        removeExistingAnnotations(aJcas, selectedLayer, recommendations);
-        Collections
-            .sort(recommendations, Comparator.comparingDouble(AnnotationObject::getConfidence));
-        return recommendations.stream().findFirst();
     }
 
     @Override
@@ -369,36 +350,6 @@ public class UncertaintySamplingStrategy
     {
         Collections.sort(differences,
             (rd1, rd2) -> Double.compare(rd1.getDifference(), rd2.getDifference()));
-    }
-
-    private static void removeExistingAnnotations(JCas aJcas, AnnotationLayer aLayer,
-        List<AnnotationObject> aRecommendations)
-    {
-        Iterator<AnnotationFS> existingAnnotations = getAlreadyExistingAnnotations(aJcas, aLayer);
-        List<Integer> existingAnnotationsSpanBegin = mapToBeginOffsets(existingAnnotations);
-        aRecommendations.removeIf(recommendation -> 
-                existingAnnotationsSpanBegin.contains(recommendation.getBegin()));
-    }
-
-    private static Iterator<AnnotationFS> getAlreadyExistingAnnotations(JCas aJcas,
-        AnnotationLayer aLayer)
-    {
-        int windowBegin = 0;
-        int windowEnd = aJcas.getDocumentText().length() - 1;
-        Type type = CasUtil.getType(aJcas.getCas(), aLayer.getName());
-        Iterator<AnnotationFS> existingAnnotations = CasUtil
-            .selectCovered(aJcas.getCas(), type, windowBegin, windowEnd).iterator();
-        return existingAnnotations;
-    }
-
-    private static List<Integer> mapToBeginOffsets(Iterator<AnnotationFS> existingAnnotations)
-    {
-        List<Integer> existingAnnotationsSpanBegin = new ArrayList<>();
-        while (existingAnnotations.hasNext()) {
-            AnnotationFS fs = (AnnotationFS) existingAnnotations.next();
-            existingAnnotationsSpanBegin.add(fs.getBegin());
-        }
-        return existingAnnotationsSpanBegin;
     }
 
     private static boolean containsRecommendation(

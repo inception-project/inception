@@ -21,8 +21,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
-import org.apache.uima.jcas.JCas;
-
 import de.tudarmstadt.ukp.inception.active.learning.ActiveLearningService;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
@@ -39,9 +37,6 @@ public interface ActiveLearningStrategy
 
     boolean hasRecommendationWhichIsSkipped(LearningRecordService aRecordService,
             ActiveLearningService aActiveLearningService);
-
-    Optional<AnnotationObject> generateRecommendationWithLowestConfidence(
-            ActiveLearningService aActiveLearningService, JCas aJcas);
 
     boolean checkRecommendationExist(ActiveLearningService aActiveLearningService,
             LearningRecord aRecord);

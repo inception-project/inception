@@ -87,27 +87,26 @@ public class Predictions
      * which already have an annotation and don't need further recommendation.
      */
     public Map<String, List<List<AnnotationObject>>> getPredictionsForWholeProject(
-        AnnotationLayer aLayer, DocumentService aDocumentService, boolean aFilterExisting)
+            AnnotationLayer aLayer, DocumentService aDocumentService, boolean aFilterExisting)
     {
-        Map<String, List<List<AnnotationObject>>> predictions = new HashMap<>();
+        Map<String, List<List<AnnotationObject>>> result = new HashMap<>();
 
-        List<AnnotationDocument> docs = aDocumentService
-                .listAnnotationDocuments(project, user);
-        
-        for (AnnotationDocument doc: docs) {
-            JCas jcas;
+        List<AnnotationDocument> docs = aDocumentService.listAnnotationDocuments(project, user);
+
+        for (AnnotationDocument doc : docs) {
             try {
-                jcas = aDocumentService.readAnnotationCas(doc);
+                JCas jcas = aDocumentService.readAnnotationCas(doc);
                 // TODO #176 use the document Id once it it available in the CAS
                 List<List<AnnotationObject>> p = getPredictions(doc.getName(), aLayer, 0,
                         jcas.getDocumentText().length() - 1, jcas, aFilterExisting);
-                predictions.put(doc.getName(), p);
-            } catch (IOException e) {
+                result.put(doc.getName(), p);
+            }
+            catch (IOException e) {
                 logger.info("Cannot read JCas: ", e);
             }
         }
 
-        return predictions;
+        return result;
     }
 
     /**

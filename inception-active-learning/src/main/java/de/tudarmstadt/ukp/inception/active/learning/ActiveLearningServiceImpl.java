@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import org.apache.uima.jcas.JCas;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -72,19 +71,6 @@ public class ActiveLearningServiceImpl
             result.addAll(recommendationsMap.get(documentName));
         }
         return result;
-    }
-
-    @Override
-    public List<AnnotationObject> getFlattenedRecommendationsFromRecommendationModel(JCas aJcas,
-            AnnotatorState aState, AnnotationLayer aSelectedLayer)
-    {
-        int windowBegin = 0;
-        int windowEnd = aJcas.getDocumentText().length() - 1;
-        Predictions model = recommendationService.getPredictions(aState.getUser(),
-                aState.getProject());
-        // TODO #176 use the document Id once it it available in the CAS
-        return model.getFlattenedPredictions(aState.getDocument().getName(), aSelectedLayer,
-            windowBegin, windowEnd, aJcas, true);
     }
 
     public static class ActiveLearningUserState implements Serializable

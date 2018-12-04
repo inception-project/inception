@@ -19,8 +19,6 @@ package de.tudarmstadt.ukp.inception.active.learning;
 
 import java.util.List;
 
-import org.apache.uima.jcas.JCas;
-
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
@@ -29,7 +27,4 @@ public interface ActiveLearningService
 {
     List<List<AnnotationObject>> getRecommendationFromRecommendationModel(AnnotatorState aState,
             AnnotationLayer aLayer);
-
-    List<AnnotationObject> getFlattenedRecommendationsFromRecommendationModel(JCas aJcas,
-            AnnotatorState aState, AnnotationLayer aSelectedLayer);
 }
