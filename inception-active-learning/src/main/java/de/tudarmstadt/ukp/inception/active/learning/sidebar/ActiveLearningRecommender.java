@@ -169,8 +169,8 @@ public class ActiveLearningRecommender
             LearningRecord aRecord)
     {
         return aRecord.getSourceDocument().getName().equals(aRecommendation.getDocumentName()) && 
-                aRecord.getOffsetTokenBegin() == aRecommendation.getOffset().getBeginToken() && 
-                aRecord.getOffsetTokenEnd() == aRecommendation.getOffset().getEndToken() && 
+                aRecord.getOffsetCharacterBegin() == aRecommendation.getBegin() && 
+                aRecord.getOffsetCharacterEnd() == aRecommendation.getEnd() && 
                 aRecord.getAnnotation().equals(aRecommendation.getLabel());
     }
 
