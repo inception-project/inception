@@ -118,11 +118,11 @@ public class ActiveLearningRecommender
         String annotation = recommendationItem.getLabel();
         String documentName = recommendationItem.getDocumentName();
         
-        for (AnnotationObject existedRecommendation : cleanRecommendationList) {
+        for (AnnotationObject existingRecommendation : cleanRecommendationList) {
             if (
-                    existedRecommendation.getSource().equals(source) &&
-                    existedRecommendation.getLabel().equals(annotation) &&
-                    existedRecommendation.getDocumentName().equals(documentName)
+                    existingRecommendation.getSource().equals(source) &&
+                    existingRecommendation.getLabel().equals(annotation) &&
+                    existingRecommendation.getDocumentName().equals(documentName)
             ) {
                 return true;
             }
@@ -169,8 +169,8 @@ public class ActiveLearningRecommender
             LearningRecord aRecord)
     {
         return aRecord.getSourceDocument().getName().equals(aRecommendation.getDocumentName()) && 
-                aRecord.getOffsetTokenBegin() == aRecommendation.getOffset().getBeginToken() && 
-                aRecord.getOffsetTokenEnd() == aRecommendation.getOffset().getEndToken() && 
+                aRecord.getOffsetCharacterBegin() == aRecommendation.getBegin() && 
+                aRecord.getOffsetCharacterEnd() == aRecommendation.getEnd() && 
                 aRecord.getAnnotation().equals(aRecommendation.getLabel());
     }
 
@@ -190,16 +190,15 @@ public class ActiveLearningRecommender
             List<List<AnnotationObject>> aListOfRecommendationsForEachToken)
     {
         // create list of recommendationsList, each recommendationsList contains all
-        // recommendations from one classifer for one token
+        // recommendations from one classifier for one token
         List<List<AnnotationObject>> listOfRecommendationsPerTokenPerClassifier =
             createRecommendationListsPerTokenPerClassifier(aListOfRecommendationsForEachToken);
 
-        // get a list of differences, sorted ascendingly
-        List<RecommendationDifference> recommendationDifferences =
-            createDifferencesSortedAscendingly(
-            listOfRecommendationsPerTokenPerClassifier);
+        // get a list of differences, sorted ascending
+        List<RecommendationDifference> recommendationDifferences = createDifferencesSortedAscending(
+                listOfRecommendationsPerTokenPerClassifier);
         Optional<RecommendationDifference> recommendationDifference = recommendationDifferences
-            .stream().findFirst();
+                .stream().findFirst();
         if (recommendationDifference.isPresent()) {
             return recommendationDifference.get();
         }
@@ -263,7 +262,7 @@ public class ActiveLearningRecommender
         listOfRecommendationsPerTokenPerClassifier.add(stringMatchingClassifierAnnotationObject);
     }
 
-    private static List<RecommendationDifference> createDifferencesSortedAscendingly(
+    private static List<RecommendationDifference> createDifferencesSortedAscending(
             List<List<AnnotationObject>> listOfRecommendationsPerTokenPerClassifier)
     {
         List<RecommendationDifference> recommendationDifferences = new ArrayList<>();

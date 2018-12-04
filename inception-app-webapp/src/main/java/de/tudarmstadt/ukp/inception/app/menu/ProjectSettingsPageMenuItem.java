@@ -23,7 +23,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -72,7 +71,7 @@ public class ProjectSettingsPageMenuItem implements MenuItem
 
         // Visible if the current user is an annotator
         User user = userRepo.getCurrentUser();
-        return SecurityUtil.isAdmin(project, projectService, user);
+        return projectService.isAdmin(project, user);
     }
     
     @Override

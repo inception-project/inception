@@ -24,6 +24,9 @@
   </parent>
   <name>INCEpTION - Editor - PDF</name>
   <artifactId>inception-pdf-editor</artifactId>
+  <properties>
+    <frontend.install.path>${session.executionRootDirectory}/cache/maven-frontend-plugin</frontend.install.path>
+  </properties>
   <dependencies>
     <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
@@ -91,12 +94,17 @@
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
     </dependency>
+
+    <dependency>
+        <groupId>paperai</groupId>
+        <artifactId>pdfextract</artifactId>
+        <version>0.3.2-SNAPSHOT</version>
+    </dependency>
   </dependencies>
   <build>
     <plugins>
       <plugin>
         <artifactId>maven-resources-plugin</artifactId>
-        <version>3.1.0</version>
         <executions>
           <execution>
             <id>copy-pdfanno-to-target</id>
@@ -118,7 +126,6 @@
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>build-helper-maven-plugin</artifactId>
-        <version>3.0.0</version>
         <executions>
           <execution>
             <id>add-pdfanno-resources</id>
@@ -143,7 +150,7 @@
         <version>1.6</version>
           <configuration>
             <workingDirectory>target/js/pdfanno/</workingDirectory>
-            <installDirectory>target/js/pdfanno/</installDirectory>
+            <installDirectory>${frontend.install.path}</installDirectory>
           </configuration>
         <executions>
           <execution>
@@ -192,6 +199,7 @@
                 <excludes combine.children="append">
                   <!-- These upstream files do not contain license headers -->
                   <exclude>src/main/js/pdfanno/**/*</exclude>
+                  <exclude>cache/**/*</exclude>
                 </excludes>
               </configuration>
             </execution>
@@ -200,4 +208,17 @@
       </plugins>
     </pluginManagement>
   </build>
+  <profiles>
+    <profile>
+      <id>jenkins</id>
+      <activation>
+        <property>
+          <name>JENKINS_HOME</name>
+        </property>
+      </activation>
+      <properties>
+        <frontend.install.path>${WORKSPACE}/cache/maven-frontend-plugin</frontend.install.path>
+      </properties>
+    </profile>
+  </profiles>
 </project>

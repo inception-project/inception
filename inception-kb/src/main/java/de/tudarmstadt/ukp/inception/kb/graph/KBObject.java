@@ -17,9 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.kb.graph;
 
-import java.io.Serializable;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.eclipse.rdf4j.model.util.URIUtil.getLocalNameIndex;
+import static org.eclipse.rdf4j.model.util.URIUtil.isValidURIReference;
 
-import org.eclipse.rdf4j.model.util.URIUtil;
+import java.io.Serializable;
 
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
@@ -73,11 +75,11 @@ public interface KBObject
     void setLanguage(String language);
 
     /**
-     * Returns a UI-friendly representation of this {@code KBObject}.
+     * Returns the name of the {@code KBObject} if available, otherwise return the local name of its
+     * IRI or, as a last resort, return the full identifier, e.g. if the identifier is not a valid
+     * IRI or if the local name is empty.
      * 
-     * @return the name of the {@code KBObject} if available, otherwise return the local name of its
-     *         IRI or, as a last resort, return the full identifier if the identifier is not a valid
-     *         IRI
+     * @return a UI-friendly representation of this {@code KBObject}.
      */
     default String getUiLabel() {
         String name = getName();
@@ -85,9 +87,15 @@ public interface KBObject
             return name;
         }
 
-        if (URIUtil.isValidURIReference(getIdentifier())) {
-            int localNameIndex = URIUtil.getLocalNameIndex(getIdentifier());
-            return getIdentifier().substring(localNameIndex).replace('_', ' ');
+        if (isValidURIReference(getIdentifier())) {
+            int localNameIndex = getLocalNameIndex(getIdentifier());
+            String label = getIdentifier().substring(localNameIndex).replace('_', ' ');
+            if (isNotBlank(label)) {
+                return label;
+            }
+            else {
+                return getIdentifier();
+            }
         } else {
             return getIdentifier();
         }

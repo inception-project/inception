@@ -17,9 +17,12 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.external;
 
-import static de.tudarmstadt.ukp.inception.recommendation.imls.external.util.CasAssert.assertThat;
+import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.fromJsonString;
+import static de.tudarmstadt.ukp.inception.recommendation.imls.external.util.InceptionAssertions.assertThat;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
+import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTypeSystemDescription;
 import static org.apache.uima.fit.util.CasUtil.getType;
+import static org.apache.uima.util.CasCreationUtils.mergeTypeSystems;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
 import java.io.File;
@@ -35,17 +38,20 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
+import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.CasMetadataUtils;
+import de.tudarmstadt.ukp.clarin.webanno.api.type.CASMetadata;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.datasets.Dataset;
 import de.tudarmstadt.ukp.dkpro.core.api.datasets.DatasetFactory;
 import de.tudarmstadt.ukp.dkpro.core.io.conll.Conll2002Reader;
 import de.tudarmstadt.ukp.dkpro.core.testing.DkproTestContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
-import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import okhttp3.mockwebserver.Dispatcher;
 import okhttp3.mockwebserver.MockResponse;
@@ -58,12 +64,18 @@ public class ExternalRecommenderIntegrationTest
     private static File cache = DkproTestContext.getCacheFolder();
     private static DatasetFactory loader = new DatasetFactory(cache);
 
+    private static final String USER_NAME = "test_user";
+    private static final long PROJECT_ID = 42L;
+    private static final boolean CROSS_SENTENCE = true;
+    private static final AnchoringMode ANCHORING_MODE = AnchoringMode.TOKENS;
+
     private Recommender recommender;
     private RecommenderContext context;
     private ExternalRecommender sut;
     private ExternalRecommenderTraits traits;
     private RemoteStringMatchingNerRecommender remoteRecommender;
     private MockWebServer server;
+    private List<String> requestBodies;
 
     @Before
     public void setUp() throws Exception
@@ -79,6 +91,8 @@ public class ExternalRecommenderIntegrationTest
         server = new MockWebServer();
         server.setDispatcher(buildDispatcher());
         server.start();
+
+        requestBodies = new ArrayList<>();
 
         String url = server.url("/").toString();
         traits.setRemoteUrl(url);
@@ -114,7 +128,52 @@ public class ExternalRecommenderIntegrationTest
     }
 
     @Test
-    public void thatAnnotationsAreCleardBeforeSending() throws Exception
+    public void thatTrainingSendsCorrectRequest() throws Exception
+    {
+        List<CAS> casses = loadDevelopmentData();
+        sut.train(context, casses);
+
+        TrainingRequest request = fromJsonString(TrainingRequest.class, requestBodies.get(0));
+
+        assertThat(request.getMetadata()).hasNoNullFieldsOrProperties()
+            .hasFieldOrPropertyWithValue("projectId", PROJECT_ID)
+            .hasFieldOrPropertyWithValue("layer", recommender.getLayer().getName())
+            .hasFieldOrPropertyWithValue("feature", recommender.getFeature())
+            .hasFieldOrPropertyWithValue("crossSentence", CROSS_SENTENCE)
+            .hasFieldOrPropertyWithValue("anchoringMode", ANCHORING_MODE.getId());
+
+
+        for (int i = 0; i < request.getDocuments().size(); i++) {
+            Document doc = request.getDocuments().get(i);
+            assertThat(doc)
+                .hasFieldOrPropertyWithValue("documentId", (long) i)
+                .hasFieldOrPropertyWithValue("userId", USER_NAME);
+        }
+    }
+
+    @Test
+    public void thatPredictingSendsCorrectRequest() throws Exception
+    {
+        List<CAS> casses = loadDevelopmentData();
+        sut.train(context, casses);
+        CAS cas = casses.get(0);
+        sut.predict(context, cas);
+
+        PredictionRequest request = fromJsonString(PredictionRequest.class, requestBodies.get(1));
+
+        assertThat(request.getMetadata()).hasNoNullFieldsOrProperties()
+            .hasFieldOrPropertyWithValue("projectId", PROJECT_ID)
+            .hasFieldOrPropertyWithValue("layer", recommender.getLayer().getName())
+            .hasFieldOrPropertyWithValue("feature", recommender.getFeature())
+            .hasFieldOrPropertyWithValue("crossSentence", CROSS_SENTENCE)
+            .hasFieldOrPropertyWithValue("anchoringMode", ANCHORING_MODE.getId());
+        assertThat(request.getDocument())
+            .hasFieldOrPropertyWithValue("userId", USER_NAME)
+            .hasFieldOrPropertyWithValue("documentId", 0L);
+    }
+
+    @Test
+    public void thatAnnotationsAreClearedBeforeSending() throws Exception
     {
         List<CAS> casses = loadDevelopmentData();
         sut.train(context, casses);
@@ -134,10 +193,16 @@ public class ExternalRecommenderIntegrationTest
             });
     }
 
-    private List<CAS> loadDevelopmentData() throws IOException, UIMAException
+    private List<CAS> loadDevelopmentData() throws Exception
     {
         Dataset ds = loader.load("germeval2014-de");
-        return loadData(ds, ds.getDefaultSplit().getDevelopmentFiles());
+        List<CAS> data = loadData(ds, ds.getDefaultSplit().getDevelopmentFiles());
+
+        for (int i = 0; i < data.size(); i++) {
+            CAS cas = data.get(i);
+            addCasMetadata(cas.getJCas(), i);
+        }
+        return data;
     }
 
     private List<CAS> loadData(Dataset ds, File ... files) throws UIMAException, IOException
@@ -152,7 +217,11 @@ public class ExternalRecommenderIntegrationTest
 
         List<CAS> casList = new ArrayList<>();
         while (reader.hasNext()) {
-            JCas cas = JCasFactory.createJCas();
+            // Add the CasMetadata type to the CAS
+            List<TypeSystemDescription> typeSystems = new ArrayList<>();
+            typeSystems.add(createTypeSystemDescription());
+            typeSystems.add(CasMetadataUtils.getInternalTypeSystem());
+            JCas cas = JCasFactory.createJCas(mergeTypeSystems(typeSystems));
             reader.getNext(cas.getCas());
             casList.add(cas.getCas());
         }
@@ -163,11 +232,14 @@ public class ExternalRecommenderIntegrationTest
     {
         AnnotationLayer layer = new AnnotationLayer();
         layer.setName(TYPE);
+        layer.setCrossSentence(CROSS_SENTENCE);
+        layer.setAnchoringMode(ANCHORING_MODE);
 
         Recommender recommender = new Recommender();
         recommender.setLayer(layer);
         recommender.setFeature("value");
-
+        recommender.setMaxRecommendations(3);
+        
         return recommender;
     }
 
@@ -176,21 +248,23 @@ public class ExternalRecommenderIntegrationTest
         return new Dispatcher() {
             @Override
             public MockResponse dispatch(RecordedRequest request) {
-                if (request.getPath().equals("/train")) {
-                    remoteRecommender.train(request.getBody().readUtf8());
-                    return new MockResponse().setResponseCode(204);
-                } else if (request.getPath().equals("/predict")) {
-                    try {
-                        String response = remoteRecommender.predict(request.getBody().readUtf8());
+                try {
+                    String body = request.getBody().readUtf8();
+                    requestBodies.add(body);
+
+                    if (request.getPath().equals("/train")) {
+                        remoteRecommender.train(body);
+                        return new MockResponse().setResponseCode(204);
+                    } else if (request.getPath().equals("/predict")) {
+                        String response = remoteRecommender.predict(body);
                         return new MockResponse().setResponseCode(200).setBody(response);
                     }
-                    catch (RecommendationException e) {
-                        return new MockResponse().setResponseCode(500);
-                    }
-                } else {
-                    System.err.println("Unknown URL: " + request.getPath());
-                    return new MockResponse().setResponseCode(404);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
                 }
+
+                System.err.println("Unknown URL: " + request.getPath());
+                return new MockResponse().setResponseCode(404);
             }
         };
     }
@@ -202,5 +276,14 @@ public class ExternalRecommenderIntegrationTest
         AnnotationFS ne = aCas.createAnnotation(neType, 0, 42);
         ne.setStringValue(valueFeature, aValue);
         aCas.addFsToIndexes(ne);
+    }
+
+    private void addCasMetadata(JCas aJCas, long aDocumentId)
+    {
+        CASMetadata cmd = new CASMetadata(aJCas);
+        cmd.setUsername(USER_NAME);
+        cmd.setProjectId(PROJECT_ID);
+        cmd.setSourceDocumentId(aDocumentId);
+        aJCas.addFsToIndexes(cmd);
     }
 }

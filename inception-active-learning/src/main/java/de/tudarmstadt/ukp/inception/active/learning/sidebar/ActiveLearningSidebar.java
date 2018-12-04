@@ -22,6 +22,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -559,8 +560,8 @@ public class ActiveLearningSidebar
         record.setSourceDocument(sourceDoc);
         record.setTokenText(currentRecommendation.getCoveredText());
         record.setUserAction(userAction);
-        record.setOffsetTokenBegin(currentRecommendation.getOffset().getBeginToken());
-        record.setOffsetTokenEnd(currentRecommendation.getOffset().getEndToken());
+        record.setOffsetTokenBegin(-1);
+        record.setOffsetTokenEnd(-1);
         record.setOffsetCharacterBegin(currentRecommendation.getOffset().getBeginCharacter());
         record.setOffsetCharacterEnd(currentRecommendation.getOffset().getEndCharacter());
         record.setAnnotation(annotationValue);
@@ -628,6 +629,16 @@ public class ActiveLearningSidebar
 
         // Save CAS after annotation has been created
         documentService.writeAnnotationCas(jCas, annoDoc, true);
+        
+        // If the currently displayed document is the same one where the annotation was created,
+        // then update timestamp in state to avoid concurrent modification errors
+        if (Objects.equals(state.getDocument().getId(), sourceDoc.getId())) {
+            Optional<Long> diskTimestamp = documentService.getAnnotationCasTimestamp(sourceDoc,
+                    state.getUser().getUsername());
+            if (diskTimestamp.isPresent()) {
+                state.setAnnotationDocumentTimestamp(diskTimestamp.get());
+            }
+        }
 
         moveToNextRecommendation(aTarget);
     }
@@ -920,8 +931,8 @@ public class ActiveLearningSidebar
         record.setSourceDocument(eventState.getDocument());
         record.setTokenText(acceptedRecommendation.getCoveredText());
         record.setUserAction(LearningRecordUserAction.ACCEPTED);
-        record.setOffsetTokenBegin(acceptedRecommendation.getOffset().getBeginToken());
-        record.setOffsetTokenEnd(acceptedRecommendation.getOffset().getEndToken());
+        record.setOffsetTokenBegin(-1);
+        record.setOffsetTokenEnd(-1);
         record.setOffsetCharacterBegin(acceptedRecommendation.getOffset().getBeginCharacter());
         record.setOffsetCharacterEnd(acceptedRecommendation.getOffset().getEndCharacter());
         record.setAnnotation(acceptedRecommendation.getLabel());
