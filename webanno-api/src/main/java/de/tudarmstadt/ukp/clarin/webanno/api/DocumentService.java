@@ -491,7 +491,25 @@ public interface DocumentService
      * @return annotatable documents.
      */
     Map<SourceDocument, AnnotationDocument> listAnnotatableDocuments(Project aProject, User aUser);
-    
+
+    /**
+     * Returns the {@link SourceDocument source documents} with optionally associated
+     * {@link AnnotationDocument annotation documents} from the given project for the given user.
+     * Mind that annotation documents are created lazily in the database, thus there may be source
+     * documents without associated annotation documents. In order to provide access to the status
+     * of a document for a given user, the results is returned as a map where the source document is
+     * the key and the annotation document is the value. The annotation document may be
+     * {@code null}.
+     * 
+     * @param aProject
+     *            the project for which documents should be returned.
+     * @param aUser
+     *            the user for whom documents should be returned.
+     * @return documents.
+     */
+    Map<SourceDocument, AnnotationDocument> listAllDocuments(Project aProject,
+            User aUser);
+
     AnnotationDocumentState setAnnotationDocumentState(AnnotationDocument aDocument,
             AnnotationDocumentState aState);
 
