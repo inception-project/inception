@@ -177,7 +177,7 @@ public class Predictions
             .filter(f -> f.getKey().getLayerId() == aLayer.getId())
             .filter(f -> f.getKey().getOffset().getBeginCharacter() >= aWindowBegin)
             .filter(f -> f.getKey().getOffset().getEndCharacter() <= aWindowEnd)
-            .sorted(Comparator.comparingInt(e2 -> e2.getValue().getOffset().getBeginCharacter()))
+            .sorted(Comparator.comparingInt(e2 -> e2.getValue().getBegin()))
             .collect(Collectors.toList());
 
         if (aFilterExisting) {
@@ -220,8 +220,7 @@ public class Predictions
     public Optional<AnnotationObject> getPrediction(int aBegin, int aEnd, String aLabel)
     {
         return predictions.values().stream()
-                .filter(f -> f.getOffset().getBeginCharacter() == aBegin
-                        && f.getOffset().getEndCharacter() == aEnd)
+                .filter(f -> f.getBegin() == aBegin && f.getEnd() == aEnd)
                 .filter(f -> f.getLabel().equals(aLabel))
                 .max(Comparator.comparingInt(AnnotationObject::getId));
     }

@@ -199,8 +199,7 @@ public class RecommendationSpanRenderer
                         featureAnnotation.put(ao.getFeature(), annotation);
 
                         VSpan v = new VSpan(layer, vid, bratTypeName,
-                                new VRange(ao.getOffset().getBeginCharacter() - windowBegin,
-                                        ao.getOffset().getEndCharacter() - windowBegin),
+                                new VRange(ao.getBegin() - windowBegin, ao.getEnd() - windowBegin),
                                 featureAnnotation, Collections.emptyMap(), color);
                         vdoc.add(v);
                         first = false;

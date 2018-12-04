@@ -296,9 +296,7 @@ public class PredictionTask
                 AnnotationObject ao = swap;
 
                 // Go to the next token for which an annotation exists
-                while (ao.getOffset().getBeginCharacter() < fs.getBegin()
-                    && !remainingRecommendations.isEmpty()) {
-
+                while (ao.getBegin() < fs.getBegin() && !remainingRecommendations.isEmpty()) {
                     setVisibility(recordedAnnotations, ao);
                     ao = remainingRecommendations.pollFirst();
                     swap = ao;
@@ -306,9 +304,7 @@ public class PredictionTask
 
                 // For tokens with annotations also check whether the annotation is for the same
                 // feature as the predicted label
-                while (ao.getOffset().getBeginCharacter() == fs.getBegin()
-                    && !remainingRecommendations.isEmpty()) {
-
+                while (ao.getBegin() == fs.getBegin() && !remainingRecommendations.isEmpty()) {
                     if (isOverlappingForFeature(fs, ao, feature)) {
                         ao.setVisible(false);
                     } else {
@@ -342,16 +338,16 @@ public class PredictionTask
         AnnotationFeature aFeature)
     {
         return aFeature.getName().equals(aAo.getFeature()) &&
-            ((aFs.getBegin() <= aAo.getOffset().getBeginCharacter())
-                && (aFs.getEnd() >= aAo.getOffset().getEndCharacter())
-            || (aFs.getBegin() >= aAo.getOffset().getBeginCharacter())
-                && (aFs.getEnd() <= aAo.getOffset().getEndCharacter())
-            || (aFs.getBegin() >= aAo.getOffset().getBeginCharacter())
-                && (aFs.getEnd() >= aAo.getOffset().getEndCharacter())
-                && (aFs.getBegin() < aAo.getOffset().getEndCharacter())
-            || (aFs.getBegin() <= aAo.getOffset().getBeginCharacter())
-                && (aFs.getEnd() <= aAo.getOffset().getEndCharacter())
-                && (aFs.getEnd() > aAo.getOffset().getBeginCharacter()));
+            ((aFs.getBegin() <= aAo.getBegin())
+                && (aFs.getEnd() >= aAo.getEnd())
+            || (aFs.getBegin() >= aAo.getBegin())
+                && (aFs.getEnd() <= aAo.getEnd())
+            || (aFs.getBegin() >= aAo.getBegin())
+                && (aFs.getEnd() >= aAo.getEnd())
+                && (aFs.getBegin() < aAo.getEnd())
+            || (aFs.getBegin() <= aAo.getBegin())
+                && (aFs.getEnd() <= aAo.getEnd())
+                && (aFs.getEnd() > aAo.getBegin()));
     }
 
     /**
@@ -361,10 +357,11 @@ public class PredictionTask
         AnnotationObject aAo)
     {
         for (LearningRecord record : aRecordedRecommendations) {
-            if (record.getOffsetCharacterBegin() == aAo.getOffset().getBeginCharacter()
-                && record.getOffsetCharacterEnd() == aAo.getOffset().getEndCharacter()
+            if (record.getOffsetCharacterBegin() == aAo.getBegin()
+                && record.getOffsetCharacterEnd() == aAo.getEnd()
                 && record.getAnnotation().equals(aAo.getLabel())
-                && record.getUserAction().equals(LearningRecordUserAction.REJECTED)) {
+                && record.getUserAction().equals(LearningRecordUserAction.REJECTED)
+            ) {
                 return true;
             }
         }

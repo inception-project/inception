@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import org.apache.uima.jcas.JCas;
@@ -95,6 +96,7 @@ public class ActiveLearningServiceImpl
         return result;
     }
     
+    @Override
     public List<AnnotationObject> getFlattenedRecommendationsFromRecommendationModel(JCas aJcas,
             AnnotatorState aState, AnnotationLayer aSelectedLayer)
     {
@@ -161,24 +163,20 @@ public class ActiveLearningServiceImpl
             this.doExistRecommenders = doExistRecommenders;
         }
 
-        public AnnotationObject getCurrentRecommendation()
+        public Optional<AnnotationObject> getCurrentRecommendation()
         {
-            return currentRecommendation;
+            return currentDifference != null ? Optional.of(currentDifference.getRecommendation1())
+                    : Optional.empty();
         }
 
-        public void setCurrentRecommendation(AnnotationObject currentRecommendation)
+        public Optional<RecommendationDifference> getCurrentDifference()
         {
-            this.currentRecommendation = currentRecommendation;
+            return Optional.ofNullable(currentDifference);
         }
 
-        public RecommendationDifference getCurrentDifference()
+        public void setCurrentDifference(Optional<RecommendationDifference> currentDifference)
         {
-            return currentDifference;
-        }
-
-        public void setCurrentDifference(RecommendationDifference currentDifference)
-        {
-            this.currentDifference = currentDifference;
+            this.currentDifference = currentDifference.orElse(null);
         }
 
         public AnnotationLayer getLayer()
@@ -239,15 +237,18 @@ public class ActiveLearningServiceImpl
         @Override
         public boolean equals(Object o)
         {
-            if (this == o)
+            if (this == o) {
                 return true;
-            if (o == null || getClass() != o.getClass())
+            }
+            if (o == null || getClass() != o.getClass()) {
                 return false;
+            }
 
             ActiveLearningUserStateKey that = (ActiveLearningUserStateKey) o;
 
-            if (projectId != that.projectId)
+            if (projectId != that.projectId) {
                 return false;
+            }
             return userName.equals(that.userName);
         }
 

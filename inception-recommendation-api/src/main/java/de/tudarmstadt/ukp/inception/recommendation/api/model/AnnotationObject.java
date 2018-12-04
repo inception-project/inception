@@ -142,6 +142,10 @@ public class AnnotationObject
         return documentName;
     }
 
+    /**
+     * @deprecated Better use {@link #getBegin()} and {@link #getEnd()} 
+     */
+    @Deprecated
     public Offset getOffset()
     {
         return new Offset(begin, end);

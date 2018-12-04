@@ -62,8 +62,8 @@ public class ActiveLearningRecommendationEventAdapter
         try {
             ActiveLearningRecommendationDetails details = new ActiveLearningRecommendationDetails();
             details.ann = new AnnotationDetails();
-            details.ann.setBegin(aEvent.getCurrentRecommendation().getOffset().getBeginCharacter());
-            details.ann.setEnd(aEvent.getCurrentRecommendation().getOffset().getEndCharacter());
+            details.ann.setBegin(aEvent.getCurrentRecommendation().getBegin());
+            details.ann.setEnd(aEvent.getCurrentRecommendation().getEnd());
             details.ann.setText(aEvent.getCurrentRecommendation().getCoveredText());
             details.ann.setType(aEvent.getLayer().getName());
             details.annotationFeature = aEvent.getAnnotationFeature();

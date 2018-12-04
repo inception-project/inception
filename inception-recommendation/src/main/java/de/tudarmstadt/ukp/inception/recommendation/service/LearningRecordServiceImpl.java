@@ -22,27 +22,72 @@ import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
 
 @Component(LearningRecordService.SERVICE_NAME)
-public class LearningRecordServiceImpl implements LearningRecordService, InitializingBean {
-
-    private final Logger logger = LoggerFactory.getLogger(getClass());
-
+public class LearningRecordServiceImpl
+    implements LearningRecordService
+{
     @PersistenceContext
     private EntityManager entityManager;
 
+    @Transactional
+    @Override
+    public void logLearningRecord(SourceDocument aDocument, String aUsername,
+            AnnotationObject aPrediction, AnnotationLayer aLayer, AnnotationFeature aFeature)
+    {
+        LearningRecord record = new LearningRecord();
+        record.setUser(aUsername);
+        record.setSourceDocument(aDocument);
+        record.setUserAction(LearningRecordUserAction.REJECTED);
+        record.setOffsetCharacterBegin(aPrediction.getBegin());
+        record.setOffsetCharacterEnd(aPrediction.getEnd());
+        record.setOffsetTokenBegin(-1);
+        record.setOffsetTokenEnd(-1);
+        record.setTokenText(aPrediction.getCoveredText());
+        record.setAnnotation(aPrediction.getLabel());
+        record.setLayer(aLayer);
+        record.setChangeLocation(LearningRecordChangeLocation.MAIN_EDITOR);
+        record.setAnnotationFeature(aFeature);
+        
+        create(record);    
+    }
+    
+    @Transactional
+    @Override
+    public void logLearningRecord(SourceDocument aDocument, String aUsername,
+            AnnotationObject aPrediction, String aAlternativeLabel, AnnotationLayer aLayer,
+            AnnotationFeature aFeature)
+    {
+        LearningRecord record = new LearningRecord();
+        record.setUser(aUsername);
+        record.setSourceDocument(aDocument);
+        record.setUserAction(LearningRecordUserAction.REJECTED);
+        record.setOffsetCharacterBegin(aPrediction.getBegin());
+        record.setOffsetCharacterEnd(aPrediction.getEnd());
+        record.setOffsetTokenBegin(-1);
+        record.setOffsetTokenEnd(-1);
+        record.setTokenText(aPrediction.getCoveredText());
+        record.setAnnotation(aAlternativeLabel);
+        record.setLayer(aLayer);
+        record.setChangeLocation(LearningRecordChangeLocation.MAIN_EDITOR);
+        record.setAnnotationFeature(aFeature);
+
+        create(record);
+    }
+
+    @Transactional
     @Override
     public List<LearningRecord> getRecordByDocument(SourceDocument sourceDocument) {
         String sql = "FROM LearningRecord l where l.sourceDocument = :sourceDocument";
@@ -51,6 +96,7 @@ public class LearningRecordServiceImpl implements LearningRecordService, Initial
         return learningRecords;
     }
 
+    @Transactional
     @Override
     public List<LearningRecord> getRecordByDocumentAndUser(SourceDocument sourceDocument, User
             user) {
@@ -62,6 +108,7 @@ public class LearningRecordServiceImpl implements LearningRecordService, Initial
         return learningRecords;
     }
 
+    @Transactional
     @Override
     public List<LearningRecord> getAllRecordsByDocumentAndUserAndLayer(
         SourceDocument sourceDocument, String user, AnnotationLayer layer)
@@ -75,6 +122,7 @@ public class LearningRecordServiceImpl implements LearningRecordService, Initial
         return learningRecords;
     }
 
+    @Transactional
     @Override
     public LearningRecord getRecordById(long recordId) {
         String sql = "FROM LearningRecord l where l.id = :id";
@@ -120,10 +168,5 @@ public class LearningRecordServiceImpl implements LearningRecordService, Initial
         if (learningRecord != null) {
             this.delete(learningRecord);
         }
-    }
-
-    @Override
-    public void afterPropertiesSet() throws Exception {
-
     }
 }

@@ -21,9 +21,11 @@ import java.util.List;
 
 import org.springframework.security.access.prepost.PreAuthorize;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 
 
@@ -52,4 +54,10 @@ public interface LearningRecordService {
 
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
     void deleteById(long id);
+
+    void logLearningRecord(SourceDocument aDocument, String aUsername, AnnotationObject aPrediction,
+            AnnotationLayer aLayer, AnnotationFeature aFeature);
+
+    void logLearningRecord(SourceDocument aDocument, String aUsername, AnnotationObject aPrediction,
+            String aAlternativeLabel, AnnotationLayer aLayer, AnnotationFeature aFeature);
 }

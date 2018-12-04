@@ -54,9 +54,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.event.AjaxPredictionsSwitchedEvent;
@@ -217,8 +214,8 @@ public class RecommendationEditorExtension
         prediction.setVisible(false);
 
         // Log the action to the learning record
-        logLearningRecord(document, aState.getUser().getUsername(), aVID, prediction, layer,
-                feature);
+        learningRecordService.logLearningRecord(document, aState.getUser().getUsername(),
+                prediction, layer, feature);
 
         // Send an UI event that the recommendation was rejected
         aTarget.getPage().send(aTarget.getPage(), Broadcast.BREADTH,
@@ -248,25 +245,5 @@ public class RecommendationEditorExtension
         RequestCycle.get().find(AjaxRequestTarget.class)
                 .ifPresent(_target -> _target.getPage().send(_target.getPage(), Broadcast.BREADTH,
                         new AjaxPredictionsSwitchedEvent(_target)));
-    }
-    
-    private void logLearningRecord(SourceDocument aDocument, String aUsername, VID aVID,
-            AnnotationObject aPrediction, AnnotationLayer aLayer, AnnotationFeature aFeature)
-    {
-        LearningRecord record = new LearningRecord();
-        record.setUser(aUsername);
-        record.setSourceDocument(aDocument);
-        record.setUserAction(LearningRecordUserAction.REJECTED);
-        record.setOffsetCharacterBegin(aPrediction.getOffset().getBeginCharacter());
-        record.setOffsetCharacterEnd(aPrediction.getOffset().getEndCharacter());
-        record.setOffsetTokenBegin(-1);
-        record.setOffsetTokenEnd(-1);
-        record.setTokenText(aPrediction.getCoveredText());
-        record.setAnnotation(aPrediction.getLabel());
-        record.setLayer(aLayer);
-        record.setChangeLocation(LearningRecordChangeLocation.MAIN_EDITOR);
-        record.setAnnotationFeature(aFeature);
-        
-        learningRecordService.create(record);    
     }
 }
