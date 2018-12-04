@@ -133,28 +133,6 @@ public class RecommenderExporterTest
             .hasFieldOrPropertyWithValue("maxRecommendations", MAX_RECOMMENDATIONS_DEFAULT);
     }
 
-    @Test
-    public void thatNullStatesForTrainingAreSetToDefault()
-    {
-        Recommender recommender = buildRecommender("1");
-        recommender.setAlwaysSelected(false);
-        recommender.setEnabled(true);
-        recommender.setThreshold(.4);
-        recommender.setSkipEvaluation(true);
-        recommender.setMaxRecommendations(6);
-        recommender.setStatesForTraining(null);
-
-        when(recommendationService.listRecommenders(project)).thenReturn(asList(recommender));
-
-        // Export the project and import it again
-        ArgumentCaptor<Recommender> captor = runExportImportAndFetchRecommenders();
-
-        // Check that after re-importing the exported projects, they are identical to the original
-        assertThat(captor.getAllValues()).hasSize(1);
-        assertThat(captor.getAllValues().get(0).getStatesForTraining())
-            .containsExactlyInAnyOrder(AnnotationDocumentState.values());
-    }
-    
     private ArgumentCaptor<Recommender> runExportImportAndFetchRecommenders()
     {
         // Export the project
@@ -184,7 +162,7 @@ public class RecommenderExporterTest
         recommender1.setThreshold(.1);
         recommender1.setSkipEvaluation(true);
         recommender1.setMaxRecommendations(3);
-        recommender1.setStatesForTraining(asSet(NEW, IN_PROGRESS, FINISHED));
+        recommender1.setStatesIgnoredForTraining(asSet(NEW, IN_PROGRESS, FINISHED));
 
         Recommender recommender2 = buildRecommender("2");
         recommender2.setAlwaysSelected(false);
@@ -192,7 +170,7 @@ public class RecommenderExporterTest
         recommender2.setThreshold(.2);
         recommender2.setSkipEvaluation(false);
         recommender2.setMaxRecommendations(4);
-        recommender2.setStatesForTraining(asSet(NEW, IN_PROGRESS));
+        recommender2.setStatesIgnoredForTraining(asSet(NEW, IN_PROGRESS));
 
         Recommender recommender3 = buildRecommender("3");
         recommender3.setAlwaysSelected(true);
@@ -200,7 +178,7 @@ public class RecommenderExporterTest
         recommender3.setThreshold(.3);
         recommender3.setSkipEvaluation(false);
         recommender3.setMaxRecommendations(5);
-        recommender3.setStatesForTraining(asSet(AnnotationDocumentState.values()));
+        recommender3.setStatesIgnoredForTraining(asSet(AnnotationDocumentState.values()));
 
         Recommender recommender4 = buildRecommender("4");
         recommender4.setAlwaysSelected(false);
@@ -208,7 +186,7 @@ public class RecommenderExporterTest
         recommender4.setThreshold(.4);
         recommender4.setSkipEvaluation(true);
         recommender4.setMaxRecommendations(6);
-        recommender4.setStatesForTraining(asSet());
+        recommender4.setStatesIgnoredForTraining(asSet());
 
         return asList(recommender1, recommender2, recommender3, recommender4);
     }
@@ -227,6 +205,6 @@ public class RecommenderExporterTest
 
     private static <T> Set<T> asSet(T... a)
     {
-        return new HashSet(asList(a));
+        return new HashSet<>(asList(a));
     }
 }

@@ -17,10 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.api.model;
 
-import static java.util.Arrays.asList;
-
 import java.io.Serializable;
-import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
@@ -86,16 +83,14 @@ public class Recommender
     private int maxRecommendations;
 
     /**
-     * Only documents that have an annotation state contained in this list are
+     * Only documents that have an annotation state not contained in this list are
      * used for training.
      */
     @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name = "recommender_document_states")
+    @CollectionTable(name = "recommender_ignored_document_states")
     @Column(name = "name", nullable = false)
     @Enumerated(EnumType.STRING)
-    private Set<AnnotationDocumentState> statesForTraining = new HashSet<>(
-            asList(AnnotationDocumentState.values()));
-
+    private Set<AnnotationDocumentState> statesIgnoredForTraining;
 
     @Lob
     @Column(length = 64000)
@@ -223,14 +218,14 @@ public class Recommender
         maxRecommendations = aMaxRecommendations;
     }
 
-    public Set<AnnotationDocumentState> getStatesForTraining()
+    public Set<AnnotationDocumentState> getStatesIgnoredForTraining()
     {
-        return statesForTraining;
+        return statesIgnoredForTraining;
     }
 
-    public void setStatesForTraining(Set<AnnotationDocumentState> aStatesForTraining)
+    public void setStatesIgnoredForTraining(Set<AnnotationDocumentState> aStatesIgnoredForTraining)
     {
-        statesForTraining = aStatesForTraining;
+        statesIgnoredForTraining = aStatesIgnoredForTraining;
     }
 
     public String getTraits()
@@ -278,7 +273,7 @@ public class Recommender
         sb.append(", skipEvaluation=").append(skipEvaluation);
         sb.append(", enabled=").append(enabled);
         sb.append(", maxRecommendations=").append(maxRecommendations);
-        sb.append(", statesForTraining=").append(statesForTraining);
+        sb.append(", statesIgnoredForTraining=").append(statesIgnoredForTraining);
         sb.append(", traits='").append(traits).append('\'');
         sb.append('}');
         return sb.toString();

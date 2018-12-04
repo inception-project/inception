@@ -152,7 +152,7 @@ public class ExportedRecommender
         maxRecommendations = aMaxRecommendations;
     }
 
-    public Set<AnnotationDocumentState> getStatesForTraining()
+    public Set<AnnotationDocumentState> getStatesIgnoredForTraining()
     {
         return statesForTraining;
     }

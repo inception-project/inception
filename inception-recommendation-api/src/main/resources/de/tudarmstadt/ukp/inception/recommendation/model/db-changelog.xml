@@ -383,10 +383,10 @@
   <changeSet author="INCEpTION Team" id="20181127-1">
     <preConditions onFail="MARK_RAN">
       <not>
-        <tableExists tableName="recommender_document_states"/>
+        <tableExists tableName="recommender_ignored_document_states"/>
       </not>
     </preConditions>
-    <createTable tableName="recommender_document_states">
+    <createTable tableName="recommender_ignored_document_states">
       <column name="recommender_id" type="BIGINT">
         <constraints nullable="false" />
       </column>

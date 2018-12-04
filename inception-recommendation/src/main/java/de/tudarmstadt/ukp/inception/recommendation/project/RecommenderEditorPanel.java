@@ -23,8 +23,10 @@ import static java.util.Arrays.asList;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
@@ -101,6 +103,7 @@ public class RecommenderEditorPanel
 
     private IModel<Project> projectModel;
     private IModel<Recommender> recommenderModel;
+    private IModel<Set<AnnotationDocumentState>> statesForTraining;
 
     public RecommenderEditorPanel(String aId, IModel<Project> aProject,
             IModel<Recommender> aRecommender)
@@ -191,9 +194,9 @@ public class RecommenderEditorPanel
 
         activationContainer.add(new CheckBox(MID_ALWAYS_SELECTED)
                 .setOutputMarkupPlaceholderTag(true)
-                .add(new LambdaAjaxFormSubmittingBehavior("change", t -> {
-                    t.add(activationContainer.get(MID_THRESHOLD));
-                })));
+                .add(new LambdaAjaxFormSubmittingBehavior("change", t ->
+                    t.add(activationContainer.get(MID_THRESHOLD))
+                )));
 
         activationContainer.add(new NumberTextField<>(MID_THRESHOLD, Float.class)
                 .setMinimum(0.0f)
@@ -231,30 +234,66 @@ public class RecommenderEditorPanel
             }
         });
 
+
+        // We need to invert the states in documentStates, as the recommender stores the
+        // ones to ignore, not the ones to consider
+        statesForTraining = new IModel<Set<AnnotationDocumentState>>() {
+            @Override
+            public void setObject(Set<AnnotationDocumentState> states) {
+                // The model can be null after save and delete
+                if (recommenderModel.getObject() != null) {
+                    recommenderModel.getObject().setStatesIgnoredForTraining(invert(states));
+                }
+            }
+
+            @Override
+            public Set<AnnotationDocumentState> getObject() {
+                Set<AnnotationDocumentState> ignoredStates = recommenderModel.getObject()
+                        .getStatesIgnoredForTraining();
+
+                return invert(ignoredStates);
+            }
+
+            private Set<AnnotationDocumentState> invert(Set<AnnotationDocumentState> states) {
+                Set<AnnotationDocumentState> result = getAllPossibleDocumentStates();
+
+                if (states == null) {
+                    return result;
+                }
+
+                result.removeAll(states);
+                return result;
+            }
+        };
+
         CheckBoxMultipleChoice<AnnotationDocumentState> documentStates =
-                new CheckBoxMultipleChoice<>(MID_DOCUMENT_STATES);
+                new CheckBoxMultipleChoice<>(
+                        MID_DOCUMENT_STATES,
+                        statesForTraining,
+                        asList(AnnotationDocumentState.values())
+                );
         documentStates.setPrefix("<div class=\"checkbox\">");
         documentStates.setSuffix("</div>");
         documentStates.setLabelPosition(AbstractChoice.LabelPosition.WRAP_AFTER);
         documentStates.setChoices(asList(AnnotationDocumentState.values()));
         documentStates.setChoiceRenderer(new EnumChoiceRenderer<>(documentStates));
         form.add(documentStates);
-        
+
         form.add(new LambdaAjaxLink(MID_DELETE, this::actionDelete)
                 .onConfigure(_this -> _this.setVisible(form.getModelObject().getId() != null)));
         form.add(new LambdaAjaxLink(MID_CANCEL, this::actionCancel)
                 .onConfigure(_this -> _this.setVisible(form.getModelObject().getId() == null)));
-        
+
         form.add(traitsContainer = new WebMarkupContainer(MID_TRAITS_CONTAINER));
         traitsContainer.setOutputMarkupPlaceholderTag(true);
         traitsContainer.add(new EmptyPanel(MID_TRAITS));
     }
-    
+
     @Override
     protected void onConfigure()
     {
         super.onConfigure();
-        
+
         setVisible(recommenderModel != null && recommenderModel.getObject() != null);
     }
 
@@ -270,7 +309,7 @@ public class RecommenderEditorPanel
     private List<AnnotationLayer> listLayers()
     {
         List<AnnotationLayer> layers = new ArrayList<>();
-        
+
         for (AnnotationLayer layer : annotationSchemaService
                 .listAnnotationLayer(projectModel.getObject())) {
             if (WebAnnoConst.SPAN_TYPE.equals(layer.getType())
@@ -278,7 +317,7 @@ public class RecommenderEditorPanel
                 layers.add(layer);
             }
         }
-        
+
         return layers;
     }
 
@@ -286,21 +325,21 @@ public class RecommenderEditorPanel
     {
         if (recommenderModel != null && recommenderModel.getObject().getLayer() != null) {
             List<String> features = new ArrayList<>();
-            
+
             annotationSchemaService
                 .listAnnotationFeature(recommenderModel.getObject().getLayer())
                 .forEach(annotationFeature -> {
                     if (annotationFeature.getType() != null) {
                         features.add(annotationFeature.getName());
                     }
-                });   
+                });
             return features;
-            
+
         } else {
             return Collections.emptyList();
         }
     }
-    
+
     private List<Pair<String, String>> listTools()
     {
         if (recommenderModel != null && recommenderModel.getObject().getLayer() != null
@@ -326,15 +365,17 @@ public class RecommenderEditorPanel
                 StringUtils.substringAfterLast(recommender.getTool(), "."),
                 recommender.getThreshold()));
         recommender.setProject(recommender.getLayer().getProject());
+
         recommendationService.createOrUpdateRecommender(recommender);
-        
-        // causes deselection after saving
+
+        // Reset selection after saving
         recommenderModel.setObject(null);
+        statesForTraining.setObject(getAllPossibleDocumentStates());
 
         // Reload whole page because master panel also needs to be reloaded.
         aTarget.add(getPage());
     }
-    
+
     private void actionDelete(AjaxRequestTarget aTarget) {
         recommendationService.deleteRecommender(recommenderModel.getObject());
         appEventPublisherHolder.get().publishEvent(
@@ -348,5 +389,10 @@ public class RecommenderEditorPanel
         
         // Reload whole page because master panel also needs to be reloaded.
         aTarget.add(getPage());
+    }
+    
+    private static Set<AnnotationDocumentState> getAllPossibleDocumentStates()
+    {
+        return new HashSet<>(asList(AnnotationDocumentState.values()));
     }
 }
