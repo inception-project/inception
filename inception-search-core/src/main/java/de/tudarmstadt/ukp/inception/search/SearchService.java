@@ -28,20 +28,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.search.model.Index;
 
-public interface SearchService
+public interface SearchService extends AnnotatedDocumentIndexingService, SourceDocumentIndexingService,
+        SearchQueryService, ProjectIndexingService
 {
     static final String SERVICE_NAME = "searchService";
-
-    List<SearchResult> query(User aUser, Project aProject, String aQuery)
-        throws IOException, ExecutionException;
-
-    void reindex(Project aproject) throws IOException;
-
-    public Index getIndex(Project aProject);
-
-    public boolean isIndexValid(Project aProject);
-    
-    public void indexDocument(SourceDocument aSourceDocument, JCas aJCas);
-
-    public void indexDocument(AnnotationDocument aAnnotationDocument, JCas aJCas);
 }
