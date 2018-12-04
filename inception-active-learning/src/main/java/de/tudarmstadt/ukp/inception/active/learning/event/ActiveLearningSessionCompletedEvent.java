@@ -21,19 +21,28 @@ import org.springframework.context.ApplicationEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
-public class ActiveLearningSessionCompletedEvent extends ApplicationEvent {
-
+public class ActiveLearningSessionCompletedEvent
+    extends ApplicationEvent
+{
     private static final long serialVersionUID = -4736560772442881663L;
+
     private final Project project;
     private final String user;
 
-    public ActiveLearningSessionCompletedEvent(Object source, Project aProject, String aUser) {
+    public ActiveLearningSessionCompletedEvent(Object source, Project aProject, String aUser)
+    {
         super(source);
         project = aProject;
         user = aUser;
     }
 
-    public Project getProject() { return project; }
+    public Project getProject()
+    {
+        return project;
+    }
 
-    public String getUser() { return user; }
+    public String getUser()
+    {
+        return user;
+    }
 }

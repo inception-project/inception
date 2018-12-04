@@ -29,8 +29,8 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserA
 public class ActiveLearningRecommendationEvent
     extends ApplicationEvent
 {
-
     private static final long serialVersionUID = -2741267700429534514L;
+
     private final SourceDocument document;
     private final AnnotationObject currentRecommendation;
     private final String user;
@@ -40,9 +40,9 @@ public class ActiveLearningRecommendationEvent
     private final List<AnnotationObject> allRecommendations;
 
     public ActiveLearningRecommendationEvent(Object aSource, SourceDocument aDocument,
-        AnnotationObject aCurrentRecommendation, String aUser, AnnotationLayer aLayer,
-        String aAnnotationFeature, LearningRecordUserAction aAction,
-        List<AnnotationObject> aAllRecommendations)
+            AnnotationObject aCurrentRecommendation, String aUser, AnnotationLayer aLayer,
+            String aAnnotationFeature, LearningRecordUserAction aAction,
+            List<AnnotationObject> aAllRecommendations)
     {
         super(aSource);
         document = aDocument;
