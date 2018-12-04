@@ -19,11 +19,11 @@ package de.tudarmstadt.ukp.inception.active.learning;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 
 import org.apache.uima.jcas.JCas;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,7 +32,7 @@ import org.springframework.stereotype.Component;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.inception.active.learning.sidebar.ActiveLearningRecommender;
+import de.tudarmstadt.ukp.inception.active.learning.sidebar.ActiveLearningStrategy;
 import de.tudarmstadt.ukp.inception.active.learning.sidebar.RecommendationDifference;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
@@ -61,41 +61,19 @@ public class ActiveLearningServiceImpl
                 aState.getProject());
 
         if (model == null) {
-            return new ArrayList<>();
+            return Collections.emptyList();
         }
-
-        // getRecommendationsForThisDocument(model);
-        return getRecommendationsForWholeProject(model, aLayer);
-    }
-
-//    private List<List<AnnotationObject>> getRecommendationsForThisDocument(AnnotatorState aState,
-//            Predictions model, JCas aJcas, AnnotationLayer aLayer)
-//    {
-//        int windowBegin = 0;
-//        int windowEnd = aJcas.getDocumentText().length() - 1;
-//        // TODO #176 use the document Id once it it available in the CAS
-//        return model.getPredictions(aState.getDocument().getName(), aLayer, windowBegin,
-//                windowEnd, aJcas);
-//    }
-
-    @Override
-    public List<List<AnnotationObject>> getRecommendationsForWholeProject(Predictions model,
-            AnnotationLayer aLayer)
-    {
-        List<List<AnnotationObject>> result = new ArrayList<>();
 
         Map<String, List<List<AnnotationObject>>> recommendationsMap = model
-            .getPredictionsForWholeProject(aLayer, documentService, true);
+                .getPredictionsForWholeProject(aLayer, documentService, true);
 
-        Set<String> documentNameSet = recommendationsMap.keySet();
-
-        for (String documentName : documentNameSet) {
+        List<List<AnnotationObject>> result = new ArrayList<>();
+        for (String documentName : recommendationsMap.keySet()) {
             result.addAll(recommendationsMap.get(documentName));
         }
-
         return result;
     }
-    
+
     @Override
     public List<AnnotationObject> getFlattenedRecommendationsFromRecommendationModel(JCas aJcas,
             AnnotatorState aState, AnnotationLayer aSelectedLayer)
@@ -112,14 +90,14 @@ public class ActiveLearningServiceImpl
     public static class ActiveLearningUserState implements Serializable
     {
         private static final long serialVersionUID = -167705997822964808L;
+        
         private boolean sessionActive = false;
         private boolean hasUnseenRecommendation = false;
         private boolean hasSkippedRecommendation = false;
         private boolean doExistRecommenders = true;
-        private AnnotationObject currentRecommendation;
         private RecommendationDifference currentDifference;
         private AnnotationLayer layer;
-        private ActiveLearningRecommender activeLearningRecommender;
+        private ActiveLearningStrategy strategy;
         private Date learnSkippedRecommendationTime;
         private List<List<AnnotationObject>> listOfRecommendationsForEachToken;
 
@@ -189,15 +167,14 @@ public class ActiveLearningServiceImpl
             this.layer = selectedLayer;
         }
 
-        public ActiveLearningRecommender getActiveLearningRecommender()
+        public ActiveLearningStrategy getStrategy()
         {
-            return activeLearningRecommender;
+            return strategy;
         }
 
-        public void setActiveLearningRecommender(
-            ActiveLearningRecommender activeLearningRecommender)
+        public void setStrategy(ActiveLearningStrategy aStrategy)
         {
-            this.activeLearningRecommender = activeLearningRecommender;
+            strategy = aStrategy;
         }
 
         public Date getLearnSkippedRecommendationTime()

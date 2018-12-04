@@ -82,13 +82,9 @@ public class Predictions
     }
 
     /**
-     * 
-     * Get the predictions of a given window for each document, 
-     * where the outer list is a list of tokens 
-     * and the inner list is a list of predictions for a token.
-     * The method filters all tokens which already have an annotation
-     * and don't need further recommendation.
-     * 
+     * Get the predictions of a given window for each document, where the outer list is a list of
+     * tokens and the inner list is a list of predictions for a token. The method filters all tokens
+     * which already have an annotation and don't need further recommendation.
      */
     public Map<String, List<List<AnnotationObject>>> getPredictionsForWholeProject(
         AnnotationLayer aLayer, DocumentService aDocumentService, boolean aFilterExisting)

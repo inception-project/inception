@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.active.learning.sidebar;
 
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.REJECTED;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -44,22 +46,23 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
 
-public class ActiveLearningRecommender
-    implements Serializable
+public class UncertaintySamplingStrategy
+    implements Serializable, ActiveLearningStrategy
 {
     private static final long serialVersionUID = -2308436775710912029L;
 
     private List<List<AnnotationObject>> listOfRecommendationsForEachToken;
     private AnnotatorState annotatorState;
     private AnnotationLayer selectedLayer;
-    private static final Logger LOG = LoggerFactory.getLogger(ActiveLearningRecommender.class);
+    private static final Logger LOG = LoggerFactory.getLogger(UncertaintySamplingStrategy.class);
 
-    public ActiveLearningRecommender(AnnotatorState aState, AnnotationLayer aLayer)
+    public UncertaintySamplingStrategy(AnnotatorState aState, AnnotationLayer aLayer)
     {
         annotatorState = aState;
         selectedLayer = aLayer;
     }
 
+    @Override
     public Optional<RecommendationDifference> updateRecommendations(
             LearningRecordService aRecordService, Date learnSkippedRecommendationTime)
     {
@@ -73,9 +76,9 @@ public class ActiveLearningRecommender
             filteredRecommendations);
 
         return calculateDifferencesAndReturnLowestVisible(filteredRecommendations);
-
     }
 
+    @Override
     public Optional<RecommendationDifference> generateRecommendationWithLowestDifference(
         LearningRecordService aRecordService, Date learnSkippedRecommendationTime,
         List<List<AnnotationObject>> aListOfRecommendationsForEachToken)
@@ -83,7 +86,7 @@ public class ActiveLearningRecommender
         long startTimer = System.currentTimeMillis();
         listOfRecommendationsForEachToken = aListOfRecommendationsForEachToken;
         long getRecommendationsFromRecommendationService = System.currentTimeMillis();
-        LOG.debug("Getting recommendations from recommender system costs {}ms.",
+        LOG.debug("Getting recommendations from recommender system costs {} ms.",
             (getRecommendationsFromRecommendationService - startTimer));
 
         // remove recommendations with Null Annotation
@@ -92,14 +95,14 @@ public class ActiveLearningRecommender
         listOfRecommendationsForEachToken
             .removeIf(recommendationList -> recommendationList.isEmpty());
         long removeNullRecommendation = System.currentTimeMillis();
-        LOG.debug("Removing recommendations with Null Annotation costs {}ms.",
+        LOG.debug("Removing recommendations with Null Annotation costs {} ms.",
             (removeNullRecommendation - getRecommendationsFromRecommendationService));
 
         // remove duplicate recommendations
         listOfRecommendationsForEachToken = listOfRecommendationsForEachToken.stream()
             .map(it -> removeDuplicateRecommendations(it)).collect(Collectors.toList());
         long removeDuplicateRecommendation = System.currentTimeMillis();
-        LOG.debug("Removing duplicate recommendations costs {}ms.",
+        LOG.debug("Removing duplicate recommendations costs {} ms.",
             (removeDuplicateRecommendation - removeNullRecommendation));
 
         //remove invisible recommendations
@@ -111,21 +114,13 @@ public class ActiveLearningRecommender
         removeRejectedOrSkippedAnnotations(aRecordService, true, learnSkippedRecommendationTime,
             filteredRecommendations);
         long removeRejectedSkippedRecommendation = System.currentTimeMillis();
-        LOG.debug("Removing rejected or skipped ones costs {}ms.",
+        LOG.debug("Removing rejected or skipped ones costs {} ms.",
             (removeRejectedSkippedRecommendation - removeDuplicateRecommendation));
 
         return calculateDifferencesAndReturnLowestVisible(filteredRecommendations);
     }
 
-    public void removeInvisibleAnnotations(
-        List<List<AnnotationObject>> recommendationsWithInvisibleAnnotations)
-    {
-        for (List<AnnotationObject> listOfRecommendations :
-            recommendationsWithInvisibleAnnotations) {
-            listOfRecommendations.removeIf(recommendation -> !recommendation.isVisible());
-        }
-    }
-
+    @Override
     public boolean hasRecommendationWhichIsSkipped(LearningRecordService aRecordService,
         ActiveLearningService aActiveLearningService)
     {
@@ -134,6 +129,45 @@ public class ActiveLearningRecommender
         removeRejectedOrSkippedAnnotations(aRecordService, false, null,
             listOfRecommendationsForEachToken);
         return !listOfRecommendationsForEachToken.isEmpty();
+    }
+
+    @Override
+    public Optional<AnnotationObject> generateRecommendationWithLowestConfidence(
+        ActiveLearningService aActiveLearningService, JCas aJcas)
+    {
+        List<AnnotationObject> recommendations = aActiveLearningService
+            .getFlattenedRecommendationsFromRecommendationModel(aJcas, annotatorState,
+                selectedLayer);
+        removeRecommendationsWithNullAnnotation(recommendations);
+        removeExistingAnnotations(aJcas, selectedLayer, recommendations);
+        Collections
+            .sort(recommendations, Comparator.comparingDouble(AnnotationObject::getConfidence));
+        return recommendations.stream().findFirst();
+    }
+
+    @Override
+    public boolean checkRecommendationExist(ActiveLearningService aActiveLearningService,
+        LearningRecord aRecord)
+    {
+        listOfRecommendationsForEachToken = aActiveLearningService
+            .getRecommendationFromRecommendationModel(annotatorState, selectedLayer);
+        return containsRecommendation(listOfRecommendationsForEachToken, aRecord);
+    }
+
+    private void removeRejectedOrSkippedAnnotations(LearningRecordService aRecordService,
+        boolean filterSkippedRecommendation, Date learnSkippedRecommendationTime,
+        List<List<AnnotationObject>> recommendationsWithRejectedAndSkippedOnes)
+    {
+        List<LearningRecord> records = aRecordService
+            .getAllRecordsByDocumentAndUserAndLayer(annotatorState.getDocument(),
+                annotatorState.getUser().getUsername(), selectedLayer);
+        for (List<AnnotationObject> recommendations : recommendationsWithRejectedAndSkippedOnes) {
+            recommendations.removeIf(
+                recommendation -> doesContainRejectedOrSkippedRecord(records, recommendation,
+                    filterSkippedRecommendation, learnSkippedRecommendationTime));
+        }
+        recommendationsWithRejectedAndSkippedOnes
+            .removeIf(recommendationsList -> recommendationsList.isEmpty());
     }
 
     private static void removeRecommendationsWithNullAnnotation(
@@ -177,31 +211,16 @@ public class ActiveLearningRecommender
         return false;
     }
 
-    private void removeRejectedOrSkippedAnnotations(LearningRecordService aRecordService,
-        boolean filterSkippedRecommendation, Date learnSkippedRecommendationTime,
-        List<List<AnnotationObject>> recommendationsWithRejectedAndSkippedOnes)
-    {
-        List<LearningRecord> records = aRecordService
-            .getAllRecordsByDocumentAndUserAndLayer(annotatorState.getDocument(),
-                annotatorState.getUser().getUsername(), selectedLayer);
-        for (List<AnnotationObject> recommendations : recommendationsWithRejectedAndSkippedOnes) {
-            recommendations.removeIf(
-                recommendation -> doesContainRejectedOrSkippedRecord(records, recommendation,
-                    filterSkippedRecommendation, learnSkippedRecommendationTime));
-        }
-        recommendationsWithRejectedAndSkippedOnes
-            .removeIf(recommendationsList -> recommendationsList.isEmpty());
-    }
-
     private static boolean doesContainRejectedOrSkippedRecord(List<LearningRecord> records,
         AnnotationObject aRecommendation, boolean filterSkippedRecommendation,
         Date learnSkippedRecommendationTime)
     {
         for (LearningRecord record : records) {
-            if ((record.getUserAction().equals(LearningRecordUserAction.REJECTED)
-                || filterSkippedRecord(record, filterSkippedRecommendation) && needFilterByTime(
-                learnSkippedRecommendationTime, record)) && hasSameTokenAndSuggestion(
-                aRecommendation, record)) {
+            if ((record.getUserAction().equals(REJECTED)
+                    || filterSkippedRecord(record, filterSkippedRecommendation) && 
+                needFilterByTime(learnSkippedRecommendationTime, record)) && 
+                hasSameTokenAndSuggestion(aRecommendation, record)
+            ) {
                 return true;
             }
         }
@@ -227,10 +246,6 @@ public class ActiveLearningRecommender
     /**
      * If learnSkippedTime is null, this record needs to be filtered.
      * If the record written time is after the learnSkippedTime, this record needs to be filtered.
-     *
-     * @param learnSkippedTime
-     * @param record
-     * @return
      */
     private static boolean needFilterByTime(Date learnSkippedTime, LearningRecord record)
     {
@@ -356,19 +371,6 @@ public class ActiveLearningRecommender
             (rd1, rd2) -> Double.compare(rd1.getDifference(), rd2.getDifference()));
     }
 
-    public Optional<AnnotationObject> generateRecommendationWithLowestConfidence(
-        ActiveLearningService aActiveLearningService, JCas aJcas)
-    {
-        List<AnnotationObject> recommendations = aActiveLearningService
-            .getFlattenedRecommendationsFromRecommendationModel(aJcas, annotatorState,
-                selectedLayer);
-        removeRecommendationsWithNullAnnotation(recommendations);
-        removeExistingAnnotations(aJcas, selectedLayer, recommendations);
-        Collections
-            .sort(recommendations, Comparator.comparingDouble(AnnotationObject::getConfidence));
-        return recommendations.stream().findFirst();
-    }
-
     private static void removeExistingAnnotations(JCas aJcas, AnnotationLayer aLayer,
         List<AnnotationObject> aRecommendations)
     {
@@ -399,26 +401,25 @@ public class ActiveLearningRecommender
         return existingAnnotationsSpanBegin;
     }
 
-    public boolean checkRecommendationExist(ActiveLearningService aActiveLearningService,
-        LearningRecord aRecord)
-    {
-        listOfRecommendationsForEachToken = aActiveLearningService
-            .getRecommendationFromRecommendationModel(annotatorState, selectedLayer);
-        return containSuggestion(listOfRecommendationsForEachToken, aRecord);
-    }
-
-    private boolean containSuggestion(
+    private static boolean containsRecommendation(
         List<List<AnnotationObject>> aListOfRecommendationsForEachToken, LearningRecord record)
     {
         for (List<AnnotationObject> listOfAO : aListOfRecommendationsForEachToken) {
-            if (listOfAO.stream().anyMatch(ao -> recordCompareToRecommendation(ao, record))) {
+            if (listOfAO.stream().anyMatch(ao -> compareRecordToRecommendation(ao, record))) {
                 return true;
             }
         }
         return false;
     }
 
-    public boolean recordCompareToRecommendation(AnnotationObject aRecommendation,
+    private static void removeInvisibleAnnotations(List<List<AnnotationObject>> aRecommendations)
+    {
+        for (List<AnnotationObject> listOfRecommendations : aRecommendations) {
+            listOfRecommendations.removeIf(recommendation -> !recommendation.isVisible());
+        }
+    }
+    
+    private static boolean compareRecordToRecommendation(AnnotationObject aRecommendation,
         LearningRecord aRecord)
     {
         return aRecommendation.getLabel().equals(aRecord.getAnnotation()) && 

@@ -22,17 +22,17 @@
   <div class="flex-content flex-v-container flex-gutter flex-only-internal-gutter">
     <div wicket:id="mainContainer" class="panel panel-default panel-flex flex-content">
       <div class="panel-heading">
-        <h3 class="panel-title">Active Learning</h3>
+        <h3 class="panel-title"><wicket:message key="activeLearning"/></h3>
       </div>
       <div class="panel-body flex-v-container">
         <span class="col-sm-12" wicket:id="noRecommenders">no Recommenders</span>
         <form class="panel panel-default panel-small" wicket:id="sessionControlForm">
           <div class="panel-heading">
-            <h3 class="panel-title">Session</h3>
+            <h3 class="panel-title"><wicket:message key="session"/></h3>
           </div>
           <div class="panel-body">
             <div class="form-group form-horizontal">
-              <label class="col-sm-3 control-label">Layer</label>
+              <label class="col-sm-3 control-label"><wicket:message key="layer"/></label>
               <div class="col-sm-9">
                 <select class="form-control" wicket:id="selectLayer"></select>
               </div>
@@ -56,11 +56,11 @@
         </form>
         <form class="panel panel-default panel-small" wicket:id="recommendationForm">
           <div class="panel-heading">
-            <h3 class="panel-title">Recommendation</h3>
+            <h3 class="panel-title"><wicket:message key="recommendation"/></h3>
           </div>
           <div class="panel-body form-horizontal">
             <div class="form-group">
-              <label class="col-sm-3 control-label">Text</label>
+              <label class="col-sm-3 control-label"><wicket:message key="text"/></label>
               <div class="col-sm-9" style="position: relative; height: 5em;">
                 <div class="form-control"
                   style="overflow-y: auto; width: unset; word-wrap: break-word; height: 5em; position: absolute; top: 0; left: 10px; right: 10px;"
@@ -70,19 +70,19 @@
               </div>
             </div>
             <div class="form-group">
-              <label class="col-sm-3 control-label">Label</label>
+              <label class="col-sm-3 control-label"><wicket:message key="suggestion"/></label>
               <div class="col-sm-9">
                 <span class="form-control" wicket:id="recommendedPredition"></span>
               </div>
             </div>
             <div class="form-group">
-              <label class="col-sm-3 control-label">Score</label>
+              <label class="col-sm-3 control-label"><wicket:message key="score"/></label>
               <div class="col-sm-9">
                 <span class="form-control" wicket:id="recommendedConfidence"></span>
               </div>
             </div>
             <div class="form-group">
-              <label class="col-sm-3 control-label">Delta</label>
+              <label class="col-sm-3 control-label"><wicket:message key="delta"/></label>
               <div class="col-sm-9">
                 <span class="form-control" wicket:id="recommendedDifference"></span>
               </div>
@@ -99,7 +99,7 @@
         <form class="panel panel-default panel-flex panel-small flex-content"
           wicket:id="learningHistoryForm">
           <div class="panel-heading">
-            <h3 class="panel-title">Learning History</h3>
+            <h3 class="panel-title"><wicket:message key="history"/></h3>
           </div>
           <div class="scrolling panel-body">
             <table class="table table-condensed col-sm-12">
