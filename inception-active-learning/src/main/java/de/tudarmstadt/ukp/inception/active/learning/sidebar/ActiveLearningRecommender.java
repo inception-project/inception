@@ -218,10 +218,10 @@ public class ActiveLearningRecommender
     private static boolean hasSameTokenAndSuggestion(AnnotationObject aRecommendation,
         LearningRecord aRecord)
     {
-        return aRecord.getSourceDocument().getName().equals(aRecommendation.getDocumentName())
-            && aRecord.getOffsetTokenBegin() == aRecommendation.getOffset().getBeginToken()
-            && aRecord.getOffsetTokenEnd() == aRecommendation.getOffset().getEndToken() && aRecord
-            .getAnnotation().equals(aRecommendation.getLabel());
+        return aRecord.getSourceDocument().getName().equals(aRecommendation.getDocumentName()) && 
+                aRecord.getOffsetCharacterBegin() == aRecommendation.getBegin() && 
+                aRecord.getOffsetCharacterEnd() == aRecommendation.getEnd() && 
+                aRecord.getAnnotation().equals(aRecommendation.getLabel());
     }
 
     /**

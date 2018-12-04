@@ -58,10 +58,8 @@ import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.TokenObject;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
@@ -229,20 +227,15 @@ public class PredictionTask
             Token firstToken = tokens.get(0);
             Token lastToken = tokens.get(tokens.size() - 1);
 
-            Offset offset = new Offset();
-            offset.setBeginCharacter(firstToken.getBegin());
-            offset.setEndCharacter(lastToken.getEnd());
-
-            TokenObject to = new TokenObject(offset, annotationFS.getCoveredText(),
-                documentUri, aDocument.getName(), id);
-
             String label = annotationFS.getFeatureValueAsString(predictedFeature);
             double score = aScoreFeature.map(f -> FSUtil.getFeature(annotationFS, f, Double.class))
                     .orElse(NO_SCORE);
             String featurename = aRecommender.getFeature();
             String name = aRecommender.getName();
-            AnnotationObject ao = new AnnotationObject(to, label, label, id, featurename, name,
-                    score, aRecommender.getId());
+
+            AnnotationObject ao = new AnnotationObject(aDocument.getName(), documentUri,
+                    firstToken.getBegin(), lastToken.getEnd(), annotationFS.getCoveredText(), label,
+                    label, id, featurename, name, score, aRecommender.getId());
 
             result.add(ao);
             id++;

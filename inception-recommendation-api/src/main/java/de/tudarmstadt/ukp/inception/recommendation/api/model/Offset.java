@@ -27,30 +27,16 @@ public class Offset
     private int beginCharacter = -1;
     private int endCharacter = -1;
     
-    @Deprecated
-    private int beginToken = -1;
-    
-    @Deprecated
-    private int endToken = -1;
-
-    @Deprecated
-    public Offset()
-    {
-    }
-
-    public Offset(int beginCharacter, int endCharacter, int beginToken, int endToken)
+    public Offset(int beginCharacter, int endCharacter)
     {
         this.beginCharacter = beginCharacter;
         this.endCharacter = endCharacter;
-        this.beginToken = beginToken;
-        this.endToken = endToken;
     }
 
     @Override
     public String toString()
     {
-        return "Char: (" + beginCharacter + "," + endCharacter + "), Token: (" + beginToken + ","
-                + endToken + ")";
+        return "[" + beginCharacter + "," + endCharacter + "]";
     }
 
     public int getBeginCharacter()
@@ -63,18 +49,6 @@ public class Offset
         this.beginCharacter = beginCharacter;
     }
 
-    @Deprecated
-    public int getBeginToken()
-    {
-        return beginToken;
-    }
-
-    @Deprecated
-    public void setBeginToken(int beginToken)
-    {
-        this.beginToken = beginToken;
-    }
-
     public int getEndCharacter()
     {
         return endCharacter;
@@ -85,27 +59,13 @@ public class Offset
         this.endCharacter = endCharacter;
     }
 
-    @Deprecated
-    public int getEndToken()
-    {
-        return endToken;
-    }
-
-    @Deprecated
-    public void setEndToken(int endToken)
-    {
-        this.endToken = endToken;
-    }
-
     @Override
     public int hashCode()
     {
         final int prime = 31;
         int result = 1;
         result = prime * result + beginCharacter;
-        result = prime * result + beginToken;
         result = prime * result + endCharacter;
-        result = prime * result + endToken;
         return result;
     }
 
@@ -125,13 +85,7 @@ public class Offset
         if (beginCharacter != other.beginCharacter) {
             return false;
         }
-        if (beginToken != other.beginToken) {
-            return false;
-        }
         if (endCharacter != other.endCharacter) {
-            return false;
-        }
-        if (endToken != other.endToken) {
             return false;
         }
         return true;
