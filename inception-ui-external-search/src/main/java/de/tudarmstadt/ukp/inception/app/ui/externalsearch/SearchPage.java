@@ -305,10 +305,9 @@ public class SearchPage extends ApplicationPageBase
             add(new Label("rowNum", rowNumber));
 
             LambdaAjaxLink link = new LambdaAjaxLink("documentDetails", _target -> {
-                String text = externalSearchService.getDocumentById(currentUser,
-                    currentRepository, documentTitle).getText();
-
-                setResponsePage(new DocumentDetailsPage(documentTitle, text));
+                PageParameters pageParameters = new PageParameters()
+                    .add(DocumentDetailsPage.DOCUMENT_TITLE, documentTitle);
+                setResponsePage(DocumentDetailsPage.class, pageParameters);
 
             });
             link.add(new Label("textId", documentTitle));
