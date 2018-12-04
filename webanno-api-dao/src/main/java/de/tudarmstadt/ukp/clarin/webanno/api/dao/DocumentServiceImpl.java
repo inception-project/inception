@@ -757,7 +757,7 @@ public class DocumentServiceImpl
         Iterator<Entry<SourceDocument, AnnotationDocument>> i = map.entrySet().iterator();
         while (i.hasNext()) {
             Entry<SourceDocument, AnnotationDocument> e = i.next();
-            if (IGNORE.equals(e.getValue().getState())) {
+            if (e.getValue() != null && IGNORE.equals(e.getValue().getState())) {
                 i.remove();
             }
         }
