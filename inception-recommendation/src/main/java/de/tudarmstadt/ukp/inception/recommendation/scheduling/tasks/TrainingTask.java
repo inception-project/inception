@@ -129,6 +129,7 @@ public class TrainingTask
                             .stream()
                             .filter(e -> !recommender.getStatesIgnoredForTraining()
                                     .contains(e.state))
+                            .filter(e -> containsTargetAnnotation(recommender, e.cas))
                             .map(e -> e.cas)
                             .collect(Collectors.toList());
                     log.info("[{}][{}]: Training model on [{}] out of [{}] documents ...",
