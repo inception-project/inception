@@ -58,30 +58,30 @@ public class SuggestionGroup
 {
     private static final long serialVersionUID = 8729617486073480240L;
     
-    private final List<AnnotationSuggestion> predictions;
+    private final List<AnnotationSuggestion> suggestions;
     private boolean sorted = true;
 
     public SuggestionGroup()
     {
-        predictions = new ArrayList<>();
+        suggestions = new ArrayList<>();
     }
     
     public SuggestionGroup(AnnotationSuggestion... aItems)
     {
-        predictions = new ArrayList<>(asList(aItems));
-        sorted = predictions.size() < 1;
+        suggestions = new ArrayList<>(asList(aItems));
+        sorted = suggestions.size() < 1;
     }
     
     public AnnotationSuggestion get(int aIndex)
     {
-        return predictions.get(aIndex);
+        return suggestions.get(aIndex);
     }
     
     private void ensureSortedState()
     {
         // To the outside, the group should appear to be sorted.
         if (!sorted) {
-            sort(predictions, comparing(AnnotationSuggestion::getConfidence).reversed());
+            sort(suggestions, comparing(AnnotationSuggestion::getConfidence).reversed());
             sorted = true;
         }
     }
@@ -90,14 +90,14 @@ public class SuggestionGroup
     public Stream<AnnotationSuggestion> stream()
     {
         ensureSortedState();
-        return predictions.stream();
+        return suggestions.stream();
     }
     
     /**
      * Get the deltas of all candidates. The deltas are calculated separately for each recommender
      * if the group contains recommendations from multiple recommenders. That is necessary because
      * the confidence scores of different recommenders are not necessarily on the same scale.
-     * Additionally, only predictions that are {@link AnnotationSuggestion#isVisible() visible} are
+     * Additionally, only suggestions that are {@link AnnotationSuggestion#isVisible() visible} are
      * taken into consideration.
      */
     public Map<Long, List<Delta>> getAllDeltas()
@@ -110,13 +110,13 @@ public class SuggestionGroup
             return singletonMap(top.getRecommenderId(), asList(new Delta(top)));
         }
         else {
-            // Group the candidates by recommender because the confidence scores cannot be compared
+            // Group the suggestions by recommender because the confidence scores cannot be compared
             // across recommenders
-            Map<Long, List<AnnotationSuggestion>> predictionsByRecommenders = stream()
+            Map<Long, List<AnnotationSuggestion>> suggestionsByRecommenders = stream()
                     .collect(groupingBy(AnnotationSuggestion::getRecommenderId));
 
             Map<Long, List<Delta>> result = new HashMap<>();
-            for (Entry<Long, List<AnnotationSuggestion>> e : predictionsByRecommenders.entrySet()) {
+            for (Entry<Long, List<AnnotationSuggestion>> e : suggestionsByRecommenders.entrySet()) {
                 long recommenderId = e.getKey();
                 // We consider only candidates that are visible
                 List<AnnotationSuggestion> candidates = e.getValue().stream()
@@ -143,7 +143,7 @@ public class SuggestionGroup
      * Get the top delta per recommender. The deltas are calculated separately for each recommender
      * if the group contains recommendations from multiple recommenders. That is necessary because
      * the confidence scores of different recommenders are not necessarily on the same scale.
-     * Additionally, only predictions that are {@link AnnotationSuggestion#isVisible() visible} are
+     * Additionally, only suggestions that are {@link AnnotationSuggestion#isVisible() visible} are
      * taken into consideration.
      */
     public Map<Long, Delta> getTopDeltas()
@@ -156,9 +156,10 @@ public class SuggestionGroup
             return singletonMap(top.getRecommenderId(), new Delta(top));
         }
         else {
-            // Group the candidates by recommender because the confidence scores cannot be compared
+            // Group the suggestions by recommender because the confidence scores cannot be compared
             // across recommenders - note that the grouped lists are still sorted as the
-            // "predictions" field is sorted.
+            // we ensure that all the access methods (iterator, stream, etc) only return sorted
+            // data.
             Map<Long, List<AnnotationSuggestion>> predictionsByRecommenders = stream()
                     .collect(groupingBy(AnnotationSuggestion::getRecommenderId));
 
@@ -167,21 +168,22 @@ public class SuggestionGroup
                 long recommenderId = e.getKey();
                 // We consider only candidates that are visible - note that the filtered list is
                 // still sorted
-                List<AnnotationSuggestion> candidates = e.getValue().stream()
+                List<AnnotationSuggestion> visibleSuggestions = e.getValue().stream()
                         .filter(AnnotationSuggestion::isVisible)
                         .collect(toList());
                 
-                if (candidates.isEmpty()) {
-                    // If a recommender has no visible candidates, we skip it - nothing to do here
+                if (visibleSuggestions.isEmpty()) {
+                    // If a recommender has no visible suggestions, we skip it - nothing to do here
                 }
-                else if (candidates.size() == 1) {
-                    // If there is only one visible candidate, grab it to create the delta
-                    result.put(recommenderId, new Delta(candidates.get(0)));
+                else if (visibleSuggestions.size() == 1) {
+                    // If there is only one visible suggestions, grab it to create the delta
+                    result.put(recommenderId, new Delta(visibleSuggestions.get(0)));
                 }
                 else {
-                    // Expoiting the fact that the filtered candidates are still sorted, we just
+                    // Exploiting the fact that the filtered suggestions are still sorted, we just
                     // grab the first and second one to construct the delta
-                    result.put(recommenderId, new Delta(candidates.get(0), candidates.get(1)));
+                    result.put(recommenderId,
+                            new Delta(visibleSuggestions.get(0), visibleSuggestions.get(1)));
                 }
             }
             
@@ -190,13 +192,22 @@ public class SuggestionGroup
     }
 
     @Override
-    public boolean add(AnnotationSuggestion aPrediction)
+    public boolean add(AnnotationSuggestion aSuggestion)
     {
         // When we add the second element to the group, then it is probably no longer sorted
         if (!isEmpty()) {
             sorted = false;
         }
-        return predictions.add(aPrediction);
+        
+        // All suggestions in a group must come from the same document
+        if (!isEmpty()) {
+            AnnotationSuggestion representative = get(0);
+            Validate.isTrue(representative.getDocumentName().equals(aSuggestion.getDocumentName()),
+                    "All suggestions in a group must come from the same document: expected [%s] but got [%s]",
+                    representative.getDocumentName(), aSuggestion.getDocumentName());
+        }
+        
+        return suggestions.add(aSuggestion);
     }
 
     @Override
@@ -204,18 +215,24 @@ public class SuggestionGroup
     {
         ensureSortedState();
         // Avoid changes to the group via the iterator since that might interfere with our sorting
-        return unmodifiableIterator(predictions.iterator());
+        return unmodifiableIterator(suggestions.iterator());
+    }
+    
+    @Override
+    public boolean isEmpty()
+    {
+        return suggestions.isEmpty();
     }
 
     @Override
     public int size()
     {
-        return predictions.size();
+        return suggestions.size();
     }
 
-    public static PredictionGroupCollector collector()
+    public static SuggestionGroupCollector collector()
     {
-        return new PredictionGroupCollector();
+        return new SuggestionGroupCollector();
     }
 
     public static class Delta
@@ -263,7 +280,7 @@ public class SuggestionGroup
         }
     }
     
-    public static class PredictionGroupCollector
+    public static class SuggestionGroupCollector
         implements Collector<AnnotationSuggestion, SuggestionGroup, SuggestionGroup>
     {
 
