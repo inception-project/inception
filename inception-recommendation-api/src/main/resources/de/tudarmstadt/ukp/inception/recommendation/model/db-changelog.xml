@@ -1,9 +1,7 @@
 <?xml version="1.1" encoding="UTF-8" standalone="no"?>
-<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="
-    http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd 
-    http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
 
   <changeSet author="INCEpTION Team" id="1512303750846-12">
     <preConditions onFail="MARK_RAN">
@@ -380,5 +378,21 @@
       <column name="maxRecommendations" type="INT" valueNumeric="3"/>
       <where>maxRecommendations = 0</where>
     </update>
+  </changeSet>
+
+  <changeSet author="INCEpTION Team" id="20181127-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="recommender_ignored_document_states"/>
+      </not>
+    </preConditions>
+    <createTable tableName="recommender_ignored_document_states">
+      <column name="recommender_id" type="BIGINT">
+        <constraints nullable="false" />
+      </column>
+      <column name="name" type="VARCHAR(255)">
+        <constraints nullable="false" />
+      </column>
+    </createTable>
   </changeSet>
 </databaseChangeLog>
