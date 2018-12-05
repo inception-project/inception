@@ -17,12 +17,12 @@
  */
 package de.tudarmstadt.ukp.inception.search.scheduling.tasks;
 
+import de.tudarmstadt.ukp.inception.search.SourceDocumentIndexingService;
 import org.apache.uima.jcas.JCas;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.inception.search.SearchService;
 
 /**
  * Document indexer task. Indexes the given document in a project
@@ -30,7 +30,8 @@ import de.tudarmstadt.ukp.inception.search.SearchService;
 public class IndexSourceDocumentTask
     extends Task
 {
-    private @Autowired SearchService searchService;
+    private @Autowired
+    SourceDocumentIndexingService sourceDocumentIndexingService;
     
     public IndexSourceDocumentTask(SourceDocument aSourceDocument, JCas aJCas)
     {
@@ -45,7 +46,7 @@ public class IndexSourceDocumentTask
     @Override
     public void run()
     {
-        searchService.indexDocument(super.getSourceDocument(), super.getJCas());
+        sourceDocumentIndexingService.indexDocument(super.getSourceDocument(), super.getJCas());
     }
     
     @Override

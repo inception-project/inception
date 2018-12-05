@@ -31,6 +31,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
+import de.tudarmstadt.ukp.inception.search.*;
 import org.apache.commons.io.FileUtils;
 import org.apache.uima.fit.factory.JCasBuilder;
 import org.apache.uima.fit.factory.JCasFactory;
@@ -98,13 +99,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseServiceImpl;
-import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupport;
-import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupportRegistry;
-import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupportRegistryImpl;
-import de.tudarmstadt.ukp.inception.search.PrimitiveUimaIndexingSupport;
-import de.tudarmstadt.ukp.inception.search.SearchResult;
-import de.tudarmstadt.ukp.inception.search.SearchService;
-import de.tudarmstadt.ukp.inception.search.SearchServiceImpl;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexFactory;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexRegistry;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexRegistryImpl;
@@ -237,7 +231,7 @@ public class MtasDocumentIndexTest
                 query);
 
         // Test results
-        SearchResult expectedResult = new SearchResult();
+        final DefaultSearchResultImpl expectedResult = new DefaultSearchResultImpl();
         expectedResult.setDocumentId(sourceDocument.getId());
         expectedResult.setDocumentTitle("test");
         expectedResult.setText("Galicia ");
@@ -283,7 +277,7 @@ public class MtasDocumentIndexTest
                 query);
 
         // Test results
-        SearchResult expectedResult = new SearchResult();
+        final DefaultSearchResultImpl expectedResult = new DefaultSearchResultImpl();
         expectedResult.setDocumentId(sourceDocument.getId());
         expectedResult.setDocumentTitle("test");
         expectedResult.setText("Galicia ");
@@ -344,7 +338,7 @@ public class MtasDocumentIndexTest
         List<SearchResult> results = searchService.query(user, project, query);
 
         // Test results
-        SearchResult expectedResult = new SearchResult();
+        final DefaultSearchResultImpl expectedResult = new DefaultSearchResultImpl();
         expectedResult.setDocumentId(sourceDocument.getId());
         expectedResult.setDocumentTitle("test");
         expectedResult.setText("Galicia ");

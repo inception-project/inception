@@ -36,6 +36,7 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.Optional;
 
+import de.tudarmstadt.ukp.inception.search.DefaultSearchResultImpl;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.lucene.analysis.Analyzer;
@@ -335,7 +336,7 @@ public class MtasDocumentIndex
                                     }
                                 });
 
-                                SearchResult result = new SearchResult();
+                                DefaultSearchResultImpl result = new DefaultSearchResultImpl();
                                 String resultText = "";
                                 String leftContext = "";
                                 String rightContext = "";

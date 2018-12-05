@@ -17,11 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.search.scheduling.tasks;
 
+import de.tudarmstadt.ukp.inception.search.AnnotatedDocumentIndexingService;
 import org.apache.uima.jcas.JCas;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
-import de.tudarmstadt.ukp.inception.search.SearchService;
 
 /**
  * (Re)indexes the annotation document for a specific user.
@@ -29,7 +29,8 @@ import de.tudarmstadt.ukp.inception.search.SearchService;
 public class IndexAnnotationDocumentTask
     extends Task
 {
-    private @Autowired SearchService searchService;
+    private @Autowired
+    AnnotatedDocumentIndexingService annotatedDocumentIndexingService;
     
     public IndexAnnotationDocumentTask(AnnotationDocument aAnnotationDocument, JCas aJCas)
     {
@@ -39,7 +40,7 @@ public class IndexAnnotationDocumentTask
     @Override
     public void run()
     {
-        searchService.indexDocument(super.getAnnotationDocument(), super.getJCas());
+        annotatedDocumentIndexingService.indexDocument(super.getAnnotationDocument(), super.getJCas());
     }
     
     @Override

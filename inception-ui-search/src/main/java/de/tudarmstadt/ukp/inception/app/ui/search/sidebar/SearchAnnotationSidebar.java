@@ -69,6 +69,7 @@ public class SearchAnnotationSidebar
 
     private @SpringBean DocumentService documentService;
     private @SpringBean AnnotationSchemaService annotationService;
+    // needs querying and re-indexing capabilities
     private @SpringBean SearchService searchService;
     private @SpringBean UserDao userRepository;
     private @SpringBean ApplicationEventPublisherHolder applicationEventPublisher;

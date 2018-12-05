@@ -19,10 +19,10 @@ package de.tudarmstadt.ukp.inception.search.scheduling.tasks;
 
 import java.io.IOException;
 
+import de.tudarmstadt.ukp.inception.search.ProjectIndexingService;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.inception.search.SearchService;
 
 /**
  * Search indexer task. Runs the reindexing process for a given project
@@ -30,7 +30,7 @@ import de.tudarmstadt.ukp.inception.search.SearchService;
 public class ReindexTask
     extends Task
 {
-    private @Autowired SearchService searchService;
+    private @Autowired ProjectIndexingService projectIndexingService;
 
     public ReindexTask(Project aProject)
     {
@@ -42,7 +42,7 @@ public class ReindexTask
     {
         try {
             // Reindex project
-            searchService.reindex(super.getProject());
+            projectIndexingService.reindex(super.getProject());
         }
         catch (IOException e) {
             e.printStackTrace();
