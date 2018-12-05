@@ -21,6 +21,7 @@ import java.util.List;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.persistence.TypedQuery;
 
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,12 +46,13 @@ public class LearningRecordServiceImpl
     @Transactional
     @Override
     public void logLearningRecord(SourceDocument aDocument, String aUsername,
-            AnnotationSuggestion aPrediction, AnnotationLayer aLayer, AnnotationFeature aFeature)
+            AnnotationSuggestion aPrediction, AnnotationLayer aLayer, AnnotationFeature aFeature,
+            LearningRecordUserAction aUserAction)
     {
         LearningRecord record = new LearningRecord();
         record.setUser(aUsername);
         record.setSourceDocument(aDocument);
-        record.setUserAction(LearningRecordUserAction.REJECTED);
+        record.setUserAction(aUserAction);
         record.setOffsetCharacterBegin(aPrediction.getBegin());
         record.setOffsetCharacterEnd(aPrediction.getEnd());
         record.setOffsetTokenBegin(-1);
@@ -68,12 +70,12 @@ public class LearningRecordServiceImpl
     @Override
     public void logLearningRecord(SourceDocument aDocument, String aUsername,
             AnnotationSuggestion aPrediction, String aAlternativeLabel, AnnotationLayer aLayer,
-            AnnotationFeature aFeature)
+            AnnotationFeature aFeature, LearningRecordUserAction aUserAction)
     {
         LearningRecord record = new LearningRecord();
         record.setUser(aUsername);
         record.setSourceDocument(aDocument);
-        record.setUserAction(LearningRecordUserAction.REJECTED);
+        record.setUserAction(aUserAction);
         record.setOffsetCharacterBegin(aPrediction.getBegin());
         record.setOffsetCharacterEnd(aPrediction.getEnd());
         record.setOffsetTokenBegin(-1);
@@ -102,24 +104,42 @@ public class LearningRecordServiceImpl
             user) {
         String sql = "FROM LearningRecord l where l.user = :user and l" +
             ".sourceDocument = :sourceDocument";
-        List<LearningRecord> learningRecords = entityManager.createQuery(sql, LearningRecord
-                .class).setParameter("user", user).setParameter("sourceDocument",sourceDocument)
+        List<LearningRecord> learningRecords = entityManager.createQuery(sql, LearningRecord.class)
+                .setParameter("user", user)
+                .setParameter("sourceDocument",sourceDocument)
                 .getResultList();
         return learningRecords;
     }
 
     @Transactional
     @Override
-    public List<LearningRecord> getAllRecordsByDocumentAndUserAndLayer(
-        SourceDocument sourceDocument, String user, AnnotationLayer layer)
+    public List<LearningRecord> getRecordsByDocumentAndUserAndLayer(
+            SourceDocument aDocument, String aUsername, AnnotationLayer aLayer, int aLimit)
     {
-        String sql = "FROM LearningRecord l where l.user = :user and l.sourceDocument.project " +
-            "= :project and l.userAction != :action and l.layer = :layer order by l.id desc";
-        List<LearningRecord> learningRecords = entityManager.createQuery(sql, LearningRecord
-            .class).setParameter("user", user).setParameter("project", sourceDocument
-            .getProject()).setParameter("action", LearningRecordUserAction.SHOWN)
-            .setParameter("layer", layer).setMaxResults(50).getResultList();
-        return learningRecords;
+        String sql = String.join("\n",
+                "FROM LearningRecord l WHERE",
+                "l.user = :user AND",
+                "l.sourceDocument.project = :project AND",
+//                "l.userAction != :action AND",
+                "l.layer = :layer",
+                "ORDER BY l.id desc");
+        TypedQuery<LearningRecord> query = entityManager.createQuery(sql, LearningRecord.class)
+                .setParameter("user", aUsername)
+                .setParameter("project", aDocument.getProject())
+//                .setParameter("action", LearningRecordUserAction.SHOWN)
+                .setParameter("layer", aLayer);
+        if (aLimit > 0) {
+            query = query.setMaxResults(aLimit);
+        }
+        return query.getResultList();
+    }
+
+    @Transactional
+    @Override
+    public List<LearningRecord> getAllRecordsByDocumentAndUserAndLayer(
+            SourceDocument aDocument, String aUsername, AnnotationLayer aLayer)
+    {
+        return getRecordsByDocumentAndUserAndLayer(aDocument, aUsername, aLayer, 0);
     }
 
     @Transactional
@@ -127,7 +147,8 @@ public class LearningRecordServiceImpl
     public LearningRecord getRecordById(long recordId) {
         String sql = "FROM LearningRecord l where l.id = :id";
         LearningRecord learningRecord = entityManager.createQuery(sql, LearningRecord.class)
-                .setParameter("id",recordId).getSingleResult();
+                .setParameter("id",recordId)
+                .getSingleResult();
         return learningRecord;
     }
 
@@ -136,8 +157,10 @@ public class LearningRecordServiceImpl
     public void deleteRecordByDocumentAndUser(SourceDocument document, String user) {
         String sql = "DELETE FROM LearningRecord l where l.sourceDocument = :document and l.user " +
             "= :user";
-        entityManager.createQuery(sql).setParameter("document", document).setParameter("user",
-            user).executeUpdate();
+        entityManager.createQuery(sql)
+            .setParameter("document", document)
+            .setParameter("user",user)
+            .executeUpdate();
     }
 
     @Override

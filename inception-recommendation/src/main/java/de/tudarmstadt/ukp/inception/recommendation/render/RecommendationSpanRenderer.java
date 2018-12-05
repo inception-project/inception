@@ -48,9 +48,9 @@ import de.tudarmstadt.ukp.inception.recommendation.RecommendationEditorExtension
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.scheduling.tasks.PredictionTask;
 
@@ -96,19 +96,26 @@ public class RecommendationSpanRenderer
 
         Predictions model = recommendationService.getPredictions(aState.getUser(),
                 aState.getProject());
+        // No recommendations available at all
         if (model == null) {
             return;
         }
         
         // TODO #176 use the document Id once it it available in the CAS
-        Map<Offset, SuggestionGroup> recommendations = model.getPredictions(
+        SuggestionDocumentGroup recommendations = model.getPredictions(
                 DocumentMetaData.get(aJcas).getDocumentTitle(), layer, windowBegin, windowEnd,
                 aJcas, false);
+        
+        // No recommendations to render for this layer
+        if (recommendations.isEmpty()) {
+            return;
+        }
+        
         String color = aColoringStrategy.getColor(null, null);
         String bratTypeName = TypeUtil.getUiTypeName(typeAdapter);
 
-        AnnotationDocument annoDoc = aDocumentService
-            .getAnnotationDocument(aState.getDocument(), aState.getUser());
+        AnnotationDocument annoDoc = aDocumentService.getAnnotationDocument(aState.getDocument(),
+                aState.getUser());
 
         PredictionTask.calculateVisibility(learningRecordService, aAnnotationService, aJcas,
                 aState.getUser().getUsername(), annoDoc, layer, recommendations, windowBegin,
@@ -117,7 +124,7 @@ public class RecommendationSpanRenderer
         Preferences pref = recommendationService.getPreferences(aState.getUser(),
                 layer.getProject());
 
-        for (SuggestionGroup candidates : recommendations.values()) {
+        for (SuggestionGroup candidates : recommendations) {
             Map<String, Map<Long, AnnotationSuggestion>> labelMap = new HashMap<>();
  
             // For recommendations with the same label by the same classifier,

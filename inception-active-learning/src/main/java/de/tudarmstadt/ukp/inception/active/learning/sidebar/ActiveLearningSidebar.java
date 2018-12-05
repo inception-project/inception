@@ -22,7 +22,6 @@ import static de.tudarmstadt.ukp.inception.active.learning.sidebar.ActiveLearnin
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.ACCEPTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.CORRECTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.REJECTED;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.SHOWN;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.SKIPPED;
 
 import java.io.IOException;
@@ -344,7 +343,7 @@ public class ActiveLearningSidebar
                 aTarget.addChildren(getPage(), IFeedback.class);
             }
 
-            writeLearningRecordInDatabaseAndEventLog(currentRecommendation, SHOWN);
+//            writeLearningRecordInDatabaseAndEventLog(currentRecommendation, SHOWN);
             
             highlightCurrentRecommendation(aTarget);
         }
@@ -609,7 +608,7 @@ public class ActiveLearningSidebar
                 aCurrentRecommendation.getDocumentName());
         
         learningRecordService.logLearningRecord(sourceDoc, state.getUser().getUsername(),
-                aCurrentRecommendation, aAnnotationValue, alState.getLayer(), feat);
+                aCurrentRecommendation, aAnnotationValue, alState.getLayer(), feat, aUserAction);
 
         Predictions model = recommendationService.getPredictions(state.getUser(),
                 state.getProject());
@@ -827,9 +826,9 @@ public class ActiveLearningSidebar
     private List<LearningRecord> listLearningRecords()
     {
         AnnotatorState annotatorState = ActiveLearningSidebar.this.getModelObject();
-        return learningRecordService.getAllRecordsByDocumentAndUserAndLayer(
+        return learningRecordService.getRecordsByDocumentAndUserAndLayer(
                 annotatorState.getDocument(), annotatorState.getUser().getUsername(),
-                alStateModel.getObject().getLayer());
+                alStateModel.getObject().getLayer(), 50);
     }
 
     private void actionRemoveHistoryItem(AjaxRequestTarget aTarget, LearningRecord aRecord)
@@ -928,7 +927,7 @@ public class ActiveLearningSidebar
                 new ActiveLearningRecommendationEvent(this, eventState.getDocument(),
                     rejectedRecommendation, annotatorState.getUser().getUsername(),
                     eventState.getSelectedAnnotationLayer(), rejectedRecommendation.getFeature(),
-                    LearningRecordUserAction.REJECTED, model.getPredictionsByTokenAndFeature(
+                    REJECTED, model.getPredictionsByTokenAndFeature(
                     rejectedRecommendation.getDocumentName(),
                     eventState.getSelectedAnnotationLayer(),
                     rejectedRecommendation.getBegin(),
@@ -966,13 +965,6 @@ public class ActiveLearningSidebar
         }
 
         AnnotationSuggestion acceptedRecommendation = oRecommendation.get();
-        AnnotationFeature feature = annotationService
-            .getFeature(acceptedRecommendation.getFeature(),
-                annotationService.getLayer(vid.getLayerId()));
-
-        learningRecordService.logLearningRecord(eventState.getDocument(),
-                eventState.getUser().getUsername(), acceptedRecommendation,
-                eventState.getSelectedAnnotationLayer(), feature);
         
         model = recommendationService.getPredictions(annotatorState.getUser(),
                 annotatorState.getProject());
@@ -980,7 +972,7 @@ public class ActiveLearningSidebar
             new ActiveLearningRecommendationEvent(this, eventState.getDocument(),
                 acceptedRecommendation, annotatorState.getUser().getUsername(),
                 eventState.getSelectedAnnotationLayer(), acceptedRecommendation.getFeature(),
-                LearningRecordUserAction.ACCEPTED, model.getPredictionsByTokenAndFeature(
+                ACCEPTED, model.getPredictionsByTokenAndFeature(
                 acceptedRecommendation.getDocumentName(),
                 eventState.getSelectedAnnotationLayer(),
                 acceptedRecommendation.getBegin(),

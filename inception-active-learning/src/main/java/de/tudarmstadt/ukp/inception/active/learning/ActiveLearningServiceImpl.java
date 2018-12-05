@@ -17,14 +17,14 @@
  */
 package de.tudarmstadt.ukp.inception.active.learning;
 
+import static java.util.stream.Collectors.toList;
+
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.SortedMap;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -35,8 +35,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.active.learning.strategy.ActiveLearningStrategy;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup.Delta;
 
@@ -66,12 +66,12 @@ public class ActiveLearningServiceImpl
             return Collections.emptyList();
         }
 
-        Map<String, SortedMap<Offset, SuggestionGroup>> recommendationsMap = model
+        Map<String, SuggestionDocumentGroup> recommendationsMap = model
                 .getPredictionsForWholeProject(aLayer, documentService, true);
         
         return recommendationsMap.values().stream()
-            .flatMap(docMap -> docMap.values().stream())
-            .collect(Collectors.toList());
+            .flatMap(docMap -> docMap.stream())
+            .collect(toList());
     }
 
     public static class ActiveLearningUserState implements Serializable

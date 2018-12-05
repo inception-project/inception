@@ -89,10 +89,10 @@ public class Predictions
      * tokens and the inner list is a list of predictions for a token. The method filters all tokens
      * which already have an annotation and don't need further recommendation.
      */
-    public Map<String, SortedMap<Offset, SuggestionGroup>> getPredictionsForWholeProject(
+    public Map<String, SuggestionDocumentGroup> getPredictionsForWholeProject(
             AnnotationLayer aLayer, DocumentService aDocumentService, boolean aFilterExisting)
     {
-        Map<String, SortedMap<Offset, SuggestionGroup>> result = new HashMap<>();
+        Map<String, SuggestionDocumentGroup> result = new HashMap<>();
 
         List<AnnotationDocument> docs = aDocumentService.listAnnotationDocuments(project, user);
 
@@ -100,7 +100,7 @@ public class Predictions
             try {
                 JCas jcas = aDocumentService.readAnnotationCas(doc);
                 // TODO #176 use the document Id once it it available in the CAS
-                SortedMap<Offset, SuggestionGroup> p = getPredictions(doc.getName(), aLayer, 0,
+                SuggestionDocumentGroup p = getPredictions(doc.getName(), aLayer, 0,
                         jcas.getDocumentText().length() - 1, jcas, aFilterExisting);
                 result.put(doc.getName(), p);
             }
@@ -143,15 +143,19 @@ public class Predictions
      * Get the predictions of a given window, where the outer list is a list of tokens and the inner
      * list is a list of predictions for a token
      */
-    public SortedMap<Offset, SuggestionGroup> getPredictions(String aDocumentName,
+    public SuggestionDocumentGroup getPredictions(String aDocumentName,
             AnnotationLayer aLayer, int aWindowBegin, int aWindowEnd, JCas aJcas,
             boolean aFilterExisting)
     {
         List<AnnotationSuggestion> p = getFlattenedPredictions(aDocumentName, aLayer, aWindowBegin,
                 aWindowEnd, aJcas, aFilterExisting);
         
-        return p.stream().collect(groupingBy(AnnotationSuggestion::getOffset, TreeMap::new,
-                SuggestionGroup.collector()));
+        SortedMap<Offset, SuggestionGroup> grouped = p.stream().collect(groupingBy(
+                AnnotationSuggestion::getOffset, TreeMap::new, SuggestionGroup.collector()));
+        
+        SuggestionDocumentGroup docGroup = new SuggestionDocumentGroup();
+        grouped.values().stream().forEachOrdered(docGroup::add);
+        return docGroup;
     }
 
     /**

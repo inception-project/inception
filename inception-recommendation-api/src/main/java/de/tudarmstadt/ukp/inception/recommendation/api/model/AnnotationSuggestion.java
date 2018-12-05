@@ -31,6 +31,7 @@ public class AnnotationSuggestion
 
     private final long recommenderId;
     private final String recommenderName;
+    private final long layerId;
     private final String feature;
 
     private final String documentName;
@@ -47,12 +48,13 @@ public class AnnotationSuggestion
     private boolean visible = true;
 
     public AnnotationSuggestion(int aId, long aRecommenderId, String aRecommenderName,
-            String aFeature, String aDocumentName, String aDocumentUri, int aBegin, int aEnd,
-            String aCoveredText, String aLabel, String aUiLabel, double aConfidence)
+            long aLayerId, String aFeature, String aDocumentName, String aDocumentUri, int aBegin,
+            int aEnd, String aCoveredText, String aLabel, String aUiLabel, double aConfidence)
     {
         label = aLabel;
         uiLabel = aUiLabel;
         id = aId;
+        layerId = aLayerId;
         feature = aFeature;
         recommenderName = aRecommenderName;
         confidence = aConfidence;
@@ -75,6 +77,7 @@ public class AnnotationSuggestion
         label = aObject.label;
         uiLabel = aObject.uiLabel;
         id = aObject.id;
+        layerId = aObject.layerId;
         feature = aObject.feature;
         recommenderName = aObject.recommenderName;
         confidence = aObject.confidence;
@@ -118,6 +121,11 @@ public class AnnotationSuggestion
         return uiLabel;
     }
 
+    public long getLayerId()
+    {
+        return layerId;
+    }
+    
     public String getFeature()
     {
         return feature;
@@ -176,12 +184,16 @@ public class AnnotationSuggestion
     @Override
     public int hashCode()
     {
+        // The recommenderId captures uniquely the project, layer and feature, so we do not have to
+        // check them separately
         return Objects.hash(id, recommenderId, documentName);
     }
 
     @Override
     public boolean equals(Object o)
     {
+        // The recommenderId captures uniquely the project, layer and feature, so we do not have to
+        // check them separately
         if (this == o) {
             return true;
         }

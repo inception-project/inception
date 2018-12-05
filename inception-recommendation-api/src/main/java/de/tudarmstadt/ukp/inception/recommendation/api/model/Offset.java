@@ -24,48 +24,94 @@ public class Offset
 {
     private static final long serialVersionUID = -3084534351646334021L;
 
-    private int beginCharacter = -1;
-    private int endCharacter = -1;
+    private int begin = -1;
+    private int end = -1;
     
     public Offset(int beginCharacter, int endCharacter)
     {
-        this.beginCharacter = beginCharacter;
-        this.endCharacter = endCharacter;
+        this.begin = beginCharacter;
+        this.end = endCharacter;
     }
 
     @Override
     public String toString()
     {
-        return "[" + beginCharacter + "," + endCharacter + "]";
+        return "[" + begin + "," + end + "]";
     }
 
+    @Deprecated
     public int getBeginCharacter()
     {
-        return beginCharacter;
+        return getBegin();
     }
 
+    @Deprecated
     public void setBeginCharacter(int beginCharacter)
     {
-        this.beginCharacter = beginCharacter;
+        setBegin(beginCharacter);
     }
 
+    @Deprecated
     public int getEndCharacter()
     {
-        return endCharacter;
+        return getEnd();
     }
 
+    @Deprecated
     public void setEndCharacter(int endCharacter)
     {
-        this.endCharacter = endCharacter;
+        setEnd(endCharacter);
     }
+    
+    @Deprecated
+    public int getStart()
+    {
+        return getBegin();
+    }
+    
+    public void setBegin(int aBegin)
+    {
+        begin = aBegin;
+    }
+    
+    public int getBegin()
+    {
+        return begin;
+    }
+    
+    public void setEnd(int aEnd)
+    {
+        end = aEnd;
+    }
+    
+    public int getEnd()
+    {
+        return end;
+    }
+    
+    public boolean overlaps(final Offset i)
+    {
+        // Cases:
+        //
+        //         start                     end
+        //           |                        |
+        //  1     #######                     |
+        //  2        |                     #######
+        //  3   ####################################
+        //  4        |        #######         |
+        //           |                        |
 
+        return (((i.getStart() <= getStart()) && (getStart() < i.getEnd())) || // Case 1-3
+                ((i.getStart() < getEnd()) && (getEnd() <= i.getEnd())) || // Case 1-3
+                ((getStart() <= i.getStart()) && (i.getEnd() <= getEnd()))); // Case 4
+    }    
     @Override
     public int hashCode()
     {
         final int prime = 31;
         int result = 1;
-        result = prime * result + beginCharacter;
-        result = prime * result + endCharacter;
+        result = prime * result + begin;
+        result = prime * result + end;
         return result;
     }
 
@@ -82,10 +128,10 @@ public class Offset
             return false;
         }
         Offset other = (Offset) obj;
-        if (beginCharacter != other.beginCharacter) {
+        if (begin != other.begin) {
             return false;
         }
-        if (endCharacter != other.endCharacter) {
+        if (end != other.end) {
             return false;
         }
         return true;

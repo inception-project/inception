@@ -17,6 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation;
 
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.ACCEPTED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.REJECTED;
+
 import java.io.IOException;
 import java.util.Optional;
 
@@ -142,9 +145,6 @@ public class RecommendationEditorExtension
 
         AnnotationSuggestion ao = prediction.get();
 
-        // Remove from view
-        ao.setVisible(false);
-
         // Obtain the predicted label
         String predictedValue = ao.getLabel();
         
@@ -172,6 +172,13 @@ public class RecommendationEditorExtension
 
         adapter.setFeatureValue(aState, aJCas, address, feature, predictedValue);
 
+        // Remove from view
+        ao.setVisible(false);
+
+        // Log the action to the learning record
+        learningRecordService.logLearningRecord(document, aState.getUser().getUsername(),
+                ao, layer, feature, ACCEPTED);
+        
         // Send an event that the recommendation was accepted
         AnnotationFS fs = WebAnnoCasUtil.selectByAddr(aJCas, AnnotationFS.class, address);
         applicationEventPublisher.publishEvent(new RecommendationAcceptedEvent(this,
@@ -215,7 +222,7 @@ public class RecommendationEditorExtension
 
         // Log the action to the learning record
         learningRecordService.logLearningRecord(document, aState.getUser().getUsername(),
-                prediction, layer, feature);
+                prediction, layer, feature, REJECTED);
 
         // Send an UI event that the recommendation was rejected
         aTarget.getPage().send(aTarget.getPage(), Broadcast.BREADTH,

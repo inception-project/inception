@@ -17,20 +17,21 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.scheduling.tasks;
 
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.REJECTED;
+import static java.util.Comparator.comparingInt;
+import static java.util.stream.Collectors.toList;
 import static org.apache.uima.fit.util.CasUtil.getAnnotationType;
+import static org.apache.uima.fit.util.CasUtil.select;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.NavigableSet;
 import java.util.Optional;
-import java.util.TreeSet;
-import java.util.stream.Collectors;
-
+import java.util.TreeMap;
 import javax.persistence.NoResultException;
 
+import org.apache.commons.lang3.Validate;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
@@ -58,14 +59,15 @@ import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
+import de.tudarmstadt.ukp.inception.recommendation.util.OverlapIterator;
 
 /**
  * This consumer predicts new annotations for a given annotation layer, if a classification tool for
@@ -237,8 +239,9 @@ public class PredictionTask
             String name = aRecommender.getName();
 
             AnnotationSuggestion ao = new AnnotationSuggestion(id, aRecommender.getId(), name,
-                    featurename, aDocument.getName(), documentUri, firstToken.getBegin(),
-                    lastToken.getEnd(), annotationFS.getCoveredText(), label, label, score);
+                    aRecommender.getLayer().getId(), featurename, aDocument.getName(), documentUri,
+                    firstToken.getBegin(), lastToken.getEnd(), annotationFS.getCoveredText(), label,
+                    label, score);
 
             result.add(ao);
             id++;
@@ -266,126 +269,104 @@ public class PredictionTask
     /**
      * Goes through all AnnotationObjects and determines the visibility of each one
      */
-    public static void calculateVisibility(
-        LearningRecordService aLearningRecordService, AnnotationSchemaService aAnnotationService,
-        JCas aJcas, String aUser, AnnotationDocument aDoc, AnnotationLayer aLayer,
-        Map<Offset, SuggestionGroup> aRecommendations, int aWindowBegin, int aWindowEnd)
+    public static void calculateVisibility(LearningRecordService aLearningRecordService,
+            AnnotationSchemaService aAnnotationService, JCas aJcas, String aUser,
+            AnnotationDocument aDoc, AnnotationLayer aLayer,
+            SuggestionDocumentGroup aRecommendations, int aWindowBegin, int aWindowEnd)
     {
+        Validate.isTrue(aRecommendations.getDocumentName().equals(aDoc.getDocument().getName()),
+                "Recommendations are for document [%s] but visibility calculation requested for [%s]",
+                aRecommendations.getDocumentName(), aDoc.getDocument().getName());
+
+        // Collect all annotations of the given layer within the view window
+        Type type = CasUtil.getType(aJcas.getCas(), aLayer.getName());
+        List<AnnotationFS> annotationsInWindow = select(aJcas.getCas(), type).stream()
+                .filter(fs -> aWindowBegin <= fs.getBegin() && fs.getEnd() <= aWindowEnd)
+                .collect(toList());
+        
+        // Collect all suggestions of the given layer within the view window
+        List<SuggestionGroup> suggestionsInWindow = aRecommendations.stream()
+                // Only suggestions for the given layer
+                .filter(group -> group.getLayerId() == aLayer.getId())
+                // ... and in the given window
+                .filter(group -> {
+                    Offset offset = group.getOffset();
+                    return aWindowBegin <= offset.getBegin() && offset.getEnd() <= aWindowEnd;
+                })
+                .collect(toList());
+        
+        // Get all the skipped/rejected entries for the current layer
         List<LearningRecord> recordedAnnotations = aLearningRecordService
                 .getAllRecordsByDocumentAndUserAndLayer(aDoc.getDocument(), aUser, aLayer);
+        
+        for (AnnotationFeature feature : aAnnotationService.listAnnotationFeature(aLayer)) {
+            Feature feat = type.getFeatureByBaseName(feature.getName());
+            
+            // Reduce the annotations to the once which have a non-null feature value
+            Map<Offset, AnnotationFS> annotations = new TreeMap<>(
+                    comparingInt(Offset::getBegin).thenComparingInt(Offset::getEnd));
+            annotationsInWindow.stream()
+                    .filter(fs -> fs.getFeatureValueAsString(feat) != null)
+                    .forEach(fs -> annotations.put(new Offset(fs.getBegin(), fs.getEnd()), fs));
+            
+            // Reduce the suggestions to the ones for the given feature
+            Map<Offset, SuggestionGroup> suggestions = new TreeMap<>(
+                    comparingInt(Offset::getBegin).thenComparingInt(Offset::getEnd));
+            suggestionsInWindow.stream()
+                    .filter(group -> group.getFeature().equals(feature.getName()))
+                    .forEach(group -> suggestions.put(group.getOffset(), group));
 
-        // Recommendations sorted by Offset, Id, RecommenderId, DocumentName.hashCode (descending)
-        NavigableSet<AnnotationSuggestion> remainingRecommendations = new TreeSet<>();
-        aRecommendations.values().forEach(group -> remainingRecommendations.addAll(group));
-
-        // Collect all annotations within the view window (typically the screen)
-        Type type = CasUtil.getType(aJcas.getCas(), aLayer.getName());
-        Collection<AnnotationFS> existingAnnotations = CasUtil.select(aJcas.getCas(), type)
-                .stream()
-                .filter(fs -> fs.getBegin() >= aWindowBegin && fs.getEnd() <= aWindowEnd)
-                .collect(Collectors.toList());
-
-        AnnotationSuggestion swap = remainingRecommendations.pollFirst();
-
-        for (AnnotationFeature feature: aAnnotationService.listAnnotationFeature(aLayer)) {
-
-            // Keep only AnnotationFS that have at least one feature value set
-            List<AnnotationFS> annoFsForFeature = existingAnnotations.stream()
-                .filter(fs ->
-                    fs.getStringValue(fs.getType().getFeatureByBaseName(feature.getName())) != null)
-                .collect(Collectors.toList());
-            for (AnnotationFS fs : annoFsForFeature) {
-
-                AnnotationSuggestion ao = swap;
-
-                // Go to the next token for which an annotation exists
-                while (ao.getBegin() < fs.getBegin() && !remainingRecommendations.isEmpty()) {
-                    setVisibility(recordedAnnotations, ao);
-                    ao = remainingRecommendations.pollFirst();
-                    swap = ao;
-                }
-
-                // For tokens with annotations also check whether the annotation is for the same
-                // feature as the predicted label
-                while (ao.getBegin() == fs.getBegin() && !remainingRecommendations.isEmpty()) {
-                    if (isOverlappingForFeature(fs, ao, feature)) {
-                        ao.setVisible(false);
-                    } else {
-                        setVisibility(recordedAnnotations, ao);
-                    }
-                    ao = remainingRecommendations.pollFirst();
-                    swap = ao;
-                }
+            // If there are no suggestions or no annotations, there is nothing to do here
+            if (suggestions.isEmpty() || annotations.isEmpty()) {
+                continue;
             }
-
-            // Check last AnnotationObject
-            if (swap != null && !annoFsForFeature.isEmpty()) {
-                if (isOverlappingForFeature(annoFsForFeature.get(annoFsForFeature.size() - 1), swap,
-                    feature)) {
-                    swap.setVisible(false);
+            
+            // This iterator gives us pairs of annotations and suggestions 
+            OverlapIterator oi = new OverlapIterator(
+                    new ArrayList<>(suggestions.keySet()),
+                    new ArrayList<>(annotations.keySet()));
+            
+            // Bulk-hide any groups that overlap with existing annotations on the current layer
+            // and for the current feature
+            while (oi.hasNext()) {
+                if (oi.getA().overlaps(oi.getB())) {
+                    // Fetch the current suggestion
+                    SuggestionGroup group = suggestions.get(oi.getA());
+                    group.forEach(suggestion -> suggestion.setVisible(false));
+                    // Do not want to process the group again since it is already hidden
+                    oi.ignoraA();
                 }
-                else {
-                    setVisibility(recordedAnnotations, swap);
-                }
+                oi.step();
             }
-        }
-
-        // Check for the remaining AnnotationObjects whether they have an annotation
-        // and are not rejected
-        for (AnnotationSuggestion ao: remainingRecommendations) {
-            setVisibility(recordedAnnotations, ao);
+            
+            // Anything that was not hidden so far might still have been rejected or not have a
+            // label
+            suggestions.values().stream()
+                    .flatMap(group -> group.stream())
+                    .filter(AnnotationSuggestion::isVisible)
+                    .forEach(suggestion -> hideSuggestionsRejectedOrWithoutLabel(
+                            suggestion, recordedAnnotations));
         }
     }
 
-    private static boolean isOverlappingForFeature(AnnotationFS aFs, AnnotationSuggestion aAo,
-        AnnotationFeature aFeature)
+    private static void hideSuggestionsRejectedOrWithoutLabel(
+            AnnotationSuggestion aSuggestion, List<LearningRecord> aRecordedRecommendations)
     {
-        return aFeature.getName().equals(aAo.getFeature()) &&
-            ((aFs.getBegin() <= aAo.getBegin())
-                && (aFs.getEnd() >= aAo.getEnd())
-            || (aFs.getBegin() >= aAo.getBegin())
-                && (aFs.getEnd() <= aAo.getEnd())
-            || (aFs.getBegin() >= aAo.getBegin())
-                && (aFs.getEnd() >= aAo.getEnd())
-                && (aFs.getBegin() < aAo.getEnd())
-            || (aFs.getBegin() <= aAo.getBegin())
-                && (aFs.getEnd() <= aAo.getEnd())
-                && (aFs.getEnd() > aAo.getBegin()));
-    }
+        // If there is no label, then hide it
+        if (aSuggestion.getLabel() == null) {
+            aSuggestion.setVisible(false);
+            return;
+        }
 
-    /**
-     * Determines whether this recommendation has been rejected
-     */
-    private static boolean isRejected(List<LearningRecord> aRecordedRecommendations,
-        AnnotationSuggestion aAo)
-    {
+        // If it was rejected or skipped, it hide it
         for (LearningRecord record : aRecordedRecommendations) {
-            if (record.getOffsetCharacterBegin() == aAo.getBegin()
-                && record.getOffsetCharacterEnd() == aAo.getEnd()
-                && record.getAnnotation().equals(aAo.getLabel())
-                && record.getUserAction().equals(LearningRecordUserAction.REJECTED)
-            ) {
-                return true;
+            if (record.getOffsetCharacterBegin() == aSuggestion.getBegin()
+                    && record.getOffsetCharacterEnd() == aSuggestion.getEnd()
+                    && record.getAnnotation().equals(aSuggestion.getLabel())
+                    && REJECTED.equals(record.getUserAction())) {
+                aSuggestion.setVisible(false);
+                return;
             }
-        }
-        return false;
-    }
-
-    /**
-     * Sets visibility of an AnnotationObject based on label and Learning Record
-     */
-    private static boolean setVisibility(List<LearningRecord> aRecordedRecommendations,
-        AnnotationSuggestion aAo)
-    {
-        boolean hasNoAnnotation = aAo.getLabel() == null;
-        boolean isRejected = isRejected(aRecordedRecommendations, aAo);
-        if (hasNoAnnotation || isRejected) {
-            aAo.setVisible(false);
-            return false;
-        }
-        else {
-            aAo.setVisible(true);
-            return true;
         }
     }
 }

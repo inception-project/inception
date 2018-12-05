@@ -65,7 +65,7 @@ public class UncertaintySamplingStrategy
                 listOfRecommendationsForEachToken);
 
         // remove rejected recommendations
-        removeRejectedOrSkippedAnnotations(aRecordService, true, learnSkippedRecommendationTime,
+        hideRejectedOrSkippedAnnotations(aRecordService, true, learnSkippedRecommendationTime,
                 filteredRecommendations);
 
         return calculateDifferencesAndReturnLowestVisible(filteredRecommendations);
@@ -94,7 +94,7 @@ public class UncertaintySamplingStrategy
                 listOfRecommendationsForEachToken);
 
         // remove rejected recommendations
-        removeRejectedOrSkippedAnnotations(aRecordService, true, learnSkippedRecommendationTime,
+        hideRejectedOrSkippedAnnotations(aRecordService, true, learnSkippedRecommendationTime,
                 filteredRecommendations);
         long removeRejectedSkippedRecommendation = System.currentTimeMillis();
         LOG.debug("Removing rejected or skipped ones costs {} ms.",
@@ -109,7 +109,7 @@ public class UncertaintySamplingStrategy
     {
         listOfRecommendationsForEachToken = aActiveLearningService
                 .getRecommendationFromRecommendationModel(annotatorState, selectedLayer);
-        removeRejectedOrSkippedAnnotations(aRecordService, false, null,
+        hideRejectedOrSkippedAnnotations(aRecordService, false, null,
                 listOfRecommendationsForEachToken);
         return !listOfRecommendationsForEachToken.isEmpty();
     }
@@ -123,7 +123,7 @@ public class UncertaintySamplingStrategy
         return containsRecommendation(listOfRecommendationsForEachToken, aRecord);
     }
 
-    private void removeRejectedOrSkippedAnnotations(LearningRecordService aRecordService,
+    private void hideRejectedOrSkippedAnnotations(LearningRecordService aRecordService,
             boolean filterSkippedRecommendation, Date learnSkippedRecommendationTime,
             List<SuggestionGroup> aSuggestionGroups)
     {

@@ -71,6 +71,26 @@ public class SuggestionGroup
         suggestions = new ArrayList<>(asList(aItems));
         sorted = suggestions.size() < 1;
     }
+
+    public String getFeature()
+    {
+        return get(0).getFeature();
+    }
+
+    public long getLayerId()
+    {
+        return get(0).getLayerId();
+    }
+
+    public String getDocumentName()
+    {
+        return get(0).getDocumentName();
+    }
+    
+    public Offset getOffset()
+    {
+        return get(0).getOffset();
+    }
     
     public AnnotationSuggestion get(int aIndex)
     {
@@ -199,12 +219,25 @@ public class SuggestionGroup
             sorted = false;
         }
         
-        // All suggestions in a group must come from the same document
+        // All suggestions in a group must come from the same document (because they must be
+        // on the same position) and layer/feature
         if (!isEmpty()) {
             AnnotationSuggestion representative = get(0);
+            Validate.isTrue(
+                    representative.getBegin() == aSuggestion.getBegin()
+                            && representative.getEnd() == aSuggestion.getEnd(),
+                    "All suggestions in a group must be at the same position: expected [%d-%d] but got [%d-%d]",
+                    representative.getBegin(), representative.getEnd(), aSuggestion.getBegin(),
+                    aSuggestion.getEnd());
             Validate.isTrue(representative.getDocumentName().equals(aSuggestion.getDocumentName()),
                     "All suggestions in a group must come from the same document: expected [%s] but got [%s]",
                     representative.getDocumentName(), aSuggestion.getDocumentName());
+            Validate.isTrue(representative.getLayerId() == aSuggestion.getLayerId(),
+                    "All suggestions in a group must be on the same layer: expected [%d] but got [%d]",
+                    representative.getLayerId(), aSuggestion.getLayerId());
+            Validate.isTrue(representative.getFeature().equals(aSuggestion.getFeature()),
+                    "All suggestions in a group must be for the same feature: expected [%s] but got [%s]",
+                    representative.getFeature(), aSuggestion.getFeature());
         }
         
         return suggestions.add(aSuggestion);
