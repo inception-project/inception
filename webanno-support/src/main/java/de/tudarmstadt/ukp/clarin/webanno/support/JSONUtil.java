@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.support;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.StringWriter;
 
 import org.apache.commons.io.FileUtils;
@@ -88,6 +89,12 @@ public class JSONUtil
         else {
             return getObjectMapper().readValue(aJSON, aClass);
         }
+    }
+
+    public static <T> T fromJsonStream(Class<T> aClass, InputStream aSrc)
+            throws IOException
+    {
+        return getObjectMapper().readValue(aSrc, aClass);
     }
 
     public static String toPrettyJsonString(Object aObject)
