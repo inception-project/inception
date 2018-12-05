@@ -105,8 +105,8 @@ import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup.Delta;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup.Delta;
 import de.tudarmstadt.ukp.inception.recommendation.event.AjaxPredictionsSwitchedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.AjaxRecommendationAcceptedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.AjaxRecommendationRejectedEvent;
@@ -389,8 +389,8 @@ public class ActiveLearningSidebar
             return;
         }
         
-        Optional<AnnotationSuggestion> aoForVID = predictions.getPrediction(state.getDocument(), aBegin,
-                aEnd, aRecommendation);
+        Optional<AnnotationSuggestion> aoForVID = predictions.getPrediction(state.getDocument(),
+                aBegin, aEnd, aRecommendation);
         if (aoForVID.isPresent()) {
             highlightVID = new VID(RecommendationEditorExtension.BEAN_NAME,
                     alStateModel.getObject().getLayer().getId(),
@@ -588,15 +588,16 @@ public class ActiveLearningSidebar
         return featureEditor;
     }
     
-    private void writeLearningRecordInDatabaseAndEventLog(AnnotationSuggestion aCurrentRecommendation,
-            LearningRecordUserAction aUserAction)
+    private void writeLearningRecordInDatabaseAndEventLog(
+            AnnotationSuggestion aCurrentRecommendation, LearningRecordUserAction aUserAction)
     {
         writeLearningRecordInDatabaseAndEventLog(aCurrentRecommendation, aUserAction,
                 aCurrentRecommendation.getLabel());
     }
 
-    private void writeLearningRecordInDatabaseAndEventLog(AnnotationSuggestion aCurrentRecommendation,
-            LearningRecordUserAction aUserAction, String aAnnotationValue)
+    private void writeLearningRecordInDatabaseAndEventLog(
+            AnnotationSuggestion aCurrentRecommendation, LearningRecordUserAction aUserAction,
+            String aAnnotationValue)
     {
         AnnotatorState state = ActiveLearningSidebar.this.getModelObject();
         ActiveLearningUserState alState = alStateModel.getObject();
