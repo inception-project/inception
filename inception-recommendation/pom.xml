@@ -172,5 +172,19 @@
       <groupId>org.wicketstuff</groupId>
       <artifactId>wicketstuff-annotationeventdispatcher</artifactId>
     </dependency>
+  <dependency>
+      <groupId>de.agilecoders.wicket.webjars</groupId>
+      <artifactId>wicket-webjars</artifactId>
+  </dependency>
+	<dependency>
+		<groupId>org.webjars</groupId>
+		<artifactId>c3</artifactId>
+		<version>0.6.6</version>
+	</dependency>
+	<dependency>
+		<groupId>org.webjars</groupId>
+		<artifactId>d3js</artifactId>
+		<version>5.5.0</version>
+	</dependency>
   </dependencies>
 </project>
