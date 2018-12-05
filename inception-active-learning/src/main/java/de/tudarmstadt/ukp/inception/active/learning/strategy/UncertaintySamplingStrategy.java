@@ -21,12 +21,9 @@ import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningReco
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -40,13 +37,15 @@ import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.PredictionGroup;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.PredictionGroup.Delta;
 
 public class UncertaintySamplingStrategy
     implements Serializable, ActiveLearningStrategy
 {
     private static final long serialVersionUID = -2308436775710912029L;
 
-    private List<List<AnnotationObject>> listOfRecommendationsForEachToken;
+    private List<PredictionGroup> listOfRecommendationsForEachToken;
     private AnnotatorState annotatorState;
     private AnnotationLayer selectedLayer;
     private static final Logger LOG = LoggerFactory.getLogger(UncertaintySamplingStrategy.class);
@@ -58,71 +57,60 @@ public class UncertaintySamplingStrategy
     }
 
     @Override
-    public Optional<RecommendationDifference> updateRecommendations(
+    public Optional<Delta> updateRecommendations(
             LearningRecordService aRecordService, Date learnSkippedRecommendationTime)
     {
-        //remove invisible recommendations
-        List<List<AnnotationObject>> filteredRecommendations = new ArrayList<>(
-            listOfRecommendationsForEachToken);
-        removeInvisibleAnnotations(filteredRecommendations);
+        // remove invisible recommendations
+        List<PredictionGroup> filteredRecommendations = new ArrayList<>(
+                listOfRecommendationsForEachToken);
 
         // remove rejected recommendations
         removeRejectedOrSkippedAnnotations(aRecordService, true, learnSkippedRecommendationTime,
-            filteredRecommendations);
+                filteredRecommendations);
 
         return calculateDifferencesAndReturnLowestVisible(filteredRecommendations);
     }
 
     @Override
-    public Optional<RecommendationDifference> generateRecommendationWithLowestDifference(
-        LearningRecordService aRecordService, Date learnSkippedRecommendationTime,
-        List<List<AnnotationObject>> aListOfRecommendationsForEachToken)
+    public Optional<Delta> generateRecommendationWithLowestDifference(
+            LearningRecordService aRecordService, Date learnSkippedRecommendationTime,
+            List<PredictionGroup> aListOfRecommendationsForEachToken)
     {
         long startTimer = System.currentTimeMillis();
         listOfRecommendationsForEachToken = aListOfRecommendationsForEachToken;
         long getRecommendationsFromRecommendationService = System.currentTimeMillis();
         LOG.debug("Getting recommendations from recommender system costs {} ms.",
-            (getRecommendationsFromRecommendationService - startTimer));
-
-        // remove recommendations with Null Annotation
-        listOfRecommendationsForEachToken.forEach(
-            recommendationList -> removeRecommendationsWithNullAnnotation(recommendationList));
-        listOfRecommendationsForEachToken
-            .removeIf(recommendationList -> recommendationList.isEmpty());
-        long removeNullRecommendation = System.currentTimeMillis();
-        LOG.debug("Removing recommendations with Null Annotation costs {} ms.",
-            (removeNullRecommendation - getRecommendationsFromRecommendationService));
+                (getRecommendationsFromRecommendationService - startTimer));
 
         // remove duplicate recommendations
         listOfRecommendationsForEachToken = listOfRecommendationsForEachToken.stream()
-            .map(it -> removeDuplicateRecommendations(it)).collect(Collectors.toList());
+                .map(it -> removeDuplicateRecommendations(it)).collect(Collectors.toList());
         long removeDuplicateRecommendation = System.currentTimeMillis();
         LOG.debug("Removing duplicate recommendations costs {} ms.",
-            (removeDuplicateRecommendation - removeNullRecommendation));
+                (removeDuplicateRecommendation - getRecommendationsFromRecommendationService));
 
-        //remove invisible recommendations
-        List<List<AnnotationObject>> filteredRecommendations = new ArrayList<>(
-            listOfRecommendationsForEachToken);
-        removeInvisibleAnnotations(filteredRecommendations);
+        // remove invisible recommendations
+        List<PredictionGroup> filteredRecommendations = new ArrayList<>(
+                listOfRecommendationsForEachToken);
 
         // remove rejected recommendations
         removeRejectedOrSkippedAnnotations(aRecordService, true, learnSkippedRecommendationTime,
-            filteredRecommendations);
+                filteredRecommendations);
         long removeRejectedSkippedRecommendation = System.currentTimeMillis();
         LOG.debug("Removing rejected or skipped ones costs {} ms.",
-            (removeRejectedSkippedRecommendation - removeDuplicateRecommendation));
+                (removeRejectedSkippedRecommendation - removeDuplicateRecommendation));
 
         return calculateDifferencesAndReturnLowestVisible(filteredRecommendations);
     }
 
     @Override
     public boolean hasRecommendationWhichIsSkipped(LearningRecordService aRecordService,
-        ActiveLearningService aActiveLearningService)
+            ActiveLearningService aActiveLearningService)
     {
         listOfRecommendationsForEachToken = aActiveLearningService
-            .getRecommendationFromRecommendationModel(annotatorState, selectedLayer);
+                .getRecommendationFromRecommendationModel(annotatorState, selectedLayer);
         removeRejectedOrSkippedAnnotations(aRecordService, false, null,
-            listOfRecommendationsForEachToken);
+                listOfRecommendationsForEachToken);
         return !listOfRecommendationsForEachToken.isEmpty();
     }
 
@@ -136,33 +124,28 @@ public class UncertaintySamplingStrategy
     }
 
     private void removeRejectedOrSkippedAnnotations(LearningRecordService aRecordService,
-        boolean filterSkippedRecommendation, Date learnSkippedRecommendationTime,
-        List<List<AnnotationObject>> recommendationsWithRejectedAndSkippedOnes)
+            boolean filterSkippedRecommendation, Date learnSkippedRecommendationTime,
+            List<PredictionGroup> aSuggestionGroups)
     {
-        List<LearningRecord> records = aRecordService
-            .getAllRecordsByDocumentAndUserAndLayer(annotatorState.getDocument(),
-                annotatorState.getUser().getUsername(), selectedLayer);
-        for (List<AnnotationObject> recommendations : recommendationsWithRejectedAndSkippedOnes) {
-            recommendations.removeIf(
-                recommendation -> doesContainRejectedOrSkippedRecord(records, recommendation,
-                    filterSkippedRecommendation, learnSkippedRecommendationTime));
-        }
-        recommendationsWithRejectedAndSkippedOnes
-            .removeIf(recommendationsList -> recommendationsList.isEmpty());
-    }
-
-    private static void removeRecommendationsWithNullAnnotation(
-        List<AnnotationObject> recommendationsList)
-    {
-        if (recommendationsList != null) {
-            recommendationsList.removeIf(recommendation -> recommendation.getLabel() == null);
+        List<LearningRecord> records = aRecordService.getAllRecordsByDocumentAndUserAndLayer(
+                annotatorState.getDocument(), annotatorState.getUser().getUsername(),
+                selectedLayer);
+        
+        for (PredictionGroup group : aSuggestionGroups) {
+            for (AnnotationObject suggestion : group) {
+                // If a suggestion is already invisible, we don't need to check if it needs hiding
+                if (suggestion.isVisible() && doesContainRejectedOrSkippedRecord(records,
+                        suggestion, filterSkippedRecommendation, learnSkippedRecommendationTime)) {
+                    suggestion.setVisible(false);
+                }
+            }
         }
     }
 
-    private static List<AnnotationObject> removeDuplicateRecommendations(
-        List<AnnotationObject> unmodifiedRecommendationList)
+    private static PredictionGroup removeDuplicateRecommendations(
+            PredictionGroup unmodifiedRecommendationList)
     {
-        List<AnnotationObject> cleanRecommendationList = new ArrayList<>();
+        PredictionGroup cleanRecommendationList = new PredictionGroup();
 
         unmodifiedRecommendationList.forEach(recommendationItem -> {
             if (!isAlreadyInCleanList(cleanRecommendationList, recommendationItem)) {
@@ -173,16 +156,16 @@ public class UncertaintySamplingStrategy
         return cleanRecommendationList;
     }
 
-    private static boolean isAlreadyInCleanList(List<AnnotationObject> cleanRecommendationList,
+    private static boolean isAlreadyInCleanList(PredictionGroup cleanRecommendationList,
         AnnotationObject recommendationItem)
     {
-        String source = recommendationItem.getSource();
+        String source = recommendationItem.getRecommenderName();
         String annotation = recommendationItem.getLabel();
         String documentName = recommendationItem.getDocumentName();
         
         for (AnnotationObject existingRecommendation : cleanRecommendationList) {
             if (
-                    existingRecommendation.getSource().equals(source) &&
+                    existingRecommendation.getRecommenderName().equals(source) &&
                     existingRecommendation.getLabel().equals(annotation) &&
                     existingRecommendation.getDocumentName().equals(documentName)
             ) {
@@ -233,141 +216,27 @@ public class UncertaintySamplingStrategy
         return learnSkippedTime == null || learnSkippedTime.compareTo(record.getActionDate()) <= 0;
     }
 
-    private static Optional<RecommendationDifference> calculateDifferencesAndReturnLowestVisible(
-            List<List<AnnotationObject>> aListOfRecommendationsForEachToken)
+    private static Optional<Delta> calculateDifferencesAndReturnLowestVisible(
+            List<PredictionGroup> aGroups)
     {
-        // create list of recommendationsList, each recommendationsList contains all
-        // recommendations from one classifier for one token
-        List<List<AnnotationObject>> listOfRecommendationsPerTokenPerClassifier = 
-                createRecommendationListsPerTokenPerClassifier(aListOfRecommendationsForEachToken);
-
-        // get a list of differences, sorted ascending
-        List<RecommendationDifference> recommendationDifferences = createDifferencesSortedAscending(
-                listOfRecommendationsPerTokenPerClassifier);
-
-        return recommendationDifferences.stream().findFirst();
-    }
-
-    private static List<List<AnnotationObject>> createRecommendationListsPerTokenPerClassifier(
-        List<List<AnnotationObject>> aListOfRecommendationsForEachToken)
-    {
-        long startTimer = System.currentTimeMillis();
-        
-        List<List<AnnotationObject>> listOfRecommendationsPerTokenPerClassifier = new ArrayList<>();
-        for (int i = 0; i < aListOfRecommendationsForEachToken.size(); i++) {
-            List<AnnotationObject> recommendationsPerToken = aListOfRecommendationsForEachToken
-                .get(i);
-            if (recommendationsPerToken.size() == 1) {
-                listOfRecommendationsPerTokenPerClassifier.add(recommendationsPerToken);
-            }
-            else {
-                // split the list of recommendations with different classifiers for each token
-                // into different lists of recommendations with same token same classifier
-                Map<String, List<AnnotationObject>> recommendtionsPerTokenPerClassifier = new
-                    HashMap<>();
-                for (AnnotationObject recommendation : recommendationsPerToken) {
-                    String classifier = recommendation.getSource();
-                    if (recommendtionsPerTokenPerClassifier.containsKey(classifier)) {
-                        List<AnnotationObject> oldListForThisTokenThisClassifier =
-                            recommendtionsPerTokenPerClassifier
-                            .get(classifier);
-                        oldListForThisTokenThisClassifier.add(recommendation);
-                        recommendtionsPerTokenPerClassifier
-                            .put(classifier, oldListForThisTokenThisClassifier);
-                    }
-                    else {
-                        List<AnnotationObject> newListForThisTokenThisClassifier = new
-                            ArrayList<>();
-                        newListForThisTokenThisClassifier.add(recommendation);
-                        recommendtionsPerTokenPerClassifier
-                            .put(classifier, newListForThisTokenThisClassifier);
-                    }
-                }
-                listOfRecommendationsPerTokenPerClassifier.addAll(
-                    recommendtionsPerTokenPerClassifier.values().stream()
-                        .collect(Collectors.toList()));
-            }
-        }
-        
-        LOG.trace("Splitting time costs {} ms.", System.currentTimeMillis() - startTimer);
-        
-        return listOfRecommendationsPerTokenPerClassifier;
-    }
-
-    private static List<RecommendationDifference> createDifferencesSortedAscending(
-            List<List<AnnotationObject>> listOfRecommendationsPerTokenPerClassifier)
-    {
-        long startTimer = System.currentTimeMillis();
-        
-        List<RecommendationDifference> recommendationDifferences = new ArrayList<>();
-        for (List<AnnotationObject> recommendationsList :
-            listOfRecommendationsPerTokenPerClassifier) {
-            RecommendationDifference difference = getSmallestDifferencePerTokenPerClassifier(
-                recommendationsList);
-            recommendationDifferences.add(difference);
-        }
-        sortDifferencesAscending(recommendationDifferences);
-
-        LOG.trace("Ranking difference costs {}ms.", System.currentTimeMillis() - startTimer);
-
-        return recommendationDifferences;
-    }
-
-    private static RecommendationDifference getSmallestDifferencePerTokenPerClassifier(
-        List<AnnotationObject> recommendationsList)
-    {
-        if (recommendationsList.size() == 1) {
-            AnnotationObject recommendation = recommendationsList.get(0);
-            double confidenceDifference = Math.abs(recommendation.getConfidence());
-            return new RecommendationDifference(confidenceDifference, recommendation);
-        }
-        else {
-            Collections.sort(recommendationsList,
-                Comparator.comparingDouble(AnnotationObject::getConfidence).reversed());
-            List<RecommendationDifference> differencesAmongOneClassifierPerToken =
-                generateDifferencesPerTokenPerClassifier(
-                recommendationsList);
-            sortDifferencesAscending(differencesAmongOneClassifierPerToken);
-            return differencesAmongOneClassifierPerToken.get(0);
-        }
-    }
-
-    private static List<RecommendationDifference> generateDifferencesPerTokenPerClassifier(
-        List<AnnotationObject> sortedRecommendationsList)
-    {
-        List<RecommendationDifference> differencesAmongOneClassifierPerToken = new ArrayList<>();
-        for (int i = 0; i < sortedRecommendationsList.size() - 1; i++) {
-            AnnotationObject firstOp = sortedRecommendationsList.get(i);
-            AnnotationObject secondOp = sortedRecommendationsList.get(i + 1);
-            double difference = Math.abs(firstOp.getConfidence() - secondOp.getConfidence());
-            differencesAmongOneClassifierPerToken
-                .add(new RecommendationDifference(difference, firstOp, secondOp));
-        }
-        return differencesAmongOneClassifierPerToken;
-    }
-
-    private static void sortDifferencesAscending(List<RecommendationDifference> differences)
-    {
-        Collections.sort(differences,
-            (rd1, rd2) -> Double.compare(rd1.getDifference(), rd2.getDifference()));
+        return aGroups.stream()
+            // Fetch the top deltas per recommender
+            .flatMap(group -> group.getTopDeltas().values().stream())
+            // ... sort them in ascending order (smallest delta first)
+            .sorted(Comparator.comparingDouble(Delta::getDelta))
+            // ... and return the smallest delta (if there is one)
+            .findFirst();
     }
 
     private static boolean containsRecommendation(
-        List<List<AnnotationObject>> aListOfRecommendationsForEachToken, LearningRecord record)
+        List<PredictionGroup> aListOfRecommendationsForEachToken, LearningRecord record)
     {
-        for (List<AnnotationObject> listOfAO : aListOfRecommendationsForEachToken) {
+        for (PredictionGroup listOfAO : aListOfRecommendationsForEachToken) {
             if (listOfAO.stream().anyMatch(ao -> compareRecordToRecommendation(ao, record))) {
                 return true;
             }
         }
         return false;
-    }
-
-    private static void removeInvisibleAnnotations(List<List<AnnotationObject>> aRecommendations)
-    {
-        for (List<AnnotationObject> listOfRecommendations : aRecommendations) {
-            listOfRecommendations.removeIf(recommendation -> !recommendation.isVisible());
-        }
     }
     
     private static boolean compareRecordToRecommendation(AnnotationObject aRecommendation,

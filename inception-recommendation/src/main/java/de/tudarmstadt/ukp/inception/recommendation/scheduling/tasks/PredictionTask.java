@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.NavigableSet;
 import java.util.Optional;
 import java.util.TreeSet;
@@ -58,6 +59,8 @@ import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.PredictionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
@@ -233,9 +236,9 @@ public class PredictionTask
             String featurename = aRecommender.getFeature();
             String name = aRecommender.getName();
 
-            AnnotationObject ao = new AnnotationObject(aDocument.getName(), documentUri,
-                    firstToken.getBegin(), lastToken.getEnd(), annotationFS.getCoveredText(), label,
-                    label, id, featurename, name, score, aRecommender.getId());
+            AnnotationObject ao = new AnnotationObject(id, aRecommender.getId(), name, featurename,
+                    aDocument.getName(), documentUri, firstToken.getBegin(), lastToken.getEnd(),
+                    annotationFS.getCoveredText(), label, label, score);
 
             result.add(ao);
             id++;
@@ -266,14 +269,14 @@ public class PredictionTask
     public static void calculateVisibility(
         LearningRecordService aLearningRecordService, AnnotationSchemaService aAnnotationService,
         JCas aJcas, String aUser, AnnotationDocument aDoc, AnnotationLayer aLayer,
-        List<List<AnnotationObject>> aRecommendations, int aWindowBegin, int aWindowEnd)
+        Map<Offset, PredictionGroup> aRecommendations, int aWindowBegin, int aWindowEnd)
     {
         List<LearningRecord> recordedAnnotations = aLearningRecordService
-            .getAllRecordsByDocumentAndUserAndLayer(aDoc.getDocument(), aUser, aLayer);
+                .getAllRecordsByDocumentAndUserAndLayer(aDoc.getDocument(), aUser, aLayer);
 
         // Recommendations sorted by Offset, Id, RecommenderId, DocumentName.hashCode (descending)
         NavigableSet<AnnotationObject> remainingRecommendations = new TreeSet<>();
-        aRecommendations.forEach(remainingRecommendations::addAll);
+        aRecommendations.values().forEach(group -> remainingRecommendations.addAll(group));
 
         // Collect all annotations within the view window (typically the screen)
         Type type = CasUtil.getType(aJcas.getCas(), aLayer.getName());

@@ -98,7 +98,6 @@ import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningRecommen
 import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningSessionCompletedEvent;
 import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningSessionStartedEvent;
 import de.tudarmstadt.ukp.inception.active.learning.strategy.ActiveLearningStrategy;
-import de.tudarmstadt.ukp.inception.active.learning.strategy.RecommendationDifference;
 import de.tudarmstadt.ukp.inception.active.learning.strategy.UncertaintySamplingStrategy;
 import de.tudarmstadt.ukp.inception.recommendation.RecommendationEditorExtension;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
@@ -106,6 +105,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.PredictionGroup.Delta;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.event.AjaxPredictionsSwitchedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.AjaxRecommendationAcceptedEvent;
@@ -380,21 +380,22 @@ public class ActiveLearningSidebar
     private void highlightRecommendation(AjaxRequestTarget aTarget, int aBegin, int aEnd,
             String aText, String aRecommendation)
     {
-        AnnotatorState annotatorState = ActiveLearningSidebar.this.getModelObject();
-        Predictions model = recommendationService.getPredictions(annotatorState.getUser(),
-                annotatorState.getProject());
+        AnnotatorState state = ActiveLearningSidebar.this.getModelObject();
+        Predictions predictions = recommendationService.getPredictions(state.getUser(),
+                state.getProject());
 
         // If there are no predictions then there is nothing to highlight.
-        if (model == null) {
+        if (predictions == null) {
             return;
         }
         
-        Optional<AnnotationObject> aoForVID = model.getPrediction(aBegin, aEnd, aRecommendation);
+        Optional<AnnotationObject> aoForVID = predictions.getPrediction(state.getDocument(), aBegin,
+                aEnd, aRecommendation);
         if (aoForVID.isPresent()) {
             highlightVID = new VID(RecommendationEditorExtension.BEAN_NAME,
-                alStateModel.getObject().getLayer().getId(),
-                (int) aoForVID.get().getRecommenderId(), aoForVID.get().getId(), VID.NONE,
-                VID.NONE);
+                    alStateModel.getObject().getLayer().getId(),
+                    (int) aoForVID.get().getRecommenderId(), aoForVID.get().getId(), VID.NONE,
+                    VID.NONE);
             vMarkerType = ANNOTATION_MARKER;
         }
         else {
@@ -462,7 +463,7 @@ public class ActiveLearningSidebar
                         .map(AnnotationObject::getConfidence).orElse(null)));
         recommendationForm.add(new Label(CID_RECOMMENDED_DIFFERENCE, () -> 
                 alStateModel.getObject().getCurrentDifference()
-                        .map(RecommendationDifference::getDifference).orElse(null)));
+                        .map(Delta::getDelta).orElse(null)));
         recommendationForm.add((alStateModel.getObject().getLayer() != null
             && alStateModel.getObject().getCurrentRecommendation().isPresent()) ?
             initializeFeatureEditor() :
@@ -1075,7 +1076,7 @@ public class ActiveLearningSidebar
                     activeLearningService.getRecommendationFromRecommendationModel(getModelObject(),
                             alState.getLayer()));
 
-            Optional<RecommendationDifference> recommendationDifference = alState.getStrategy()
+            Optional<Delta> recommendationDifference = alState.getStrategy()
                     .generateRecommendationWithLowestDifference(learningRecordService,
                             alState.getLearnSkippedRecommendationTime(),
                             alState.getListOfRecommendationsForEachToken());

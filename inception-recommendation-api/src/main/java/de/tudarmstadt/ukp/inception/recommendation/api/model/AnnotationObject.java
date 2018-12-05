@@ -28,8 +28,10 @@ public class AnnotationObject
     private static final long serialVersionUID = -1145787227041121442L;
 
     private final int id;
-    private final String uiLabel;
-    private final String source;
+
+    private final long recommenderId;
+    private final String recommenderName;
+    private final String feature;
 
     private final String documentName;
     private final String documentUri;
@@ -37,24 +39,22 @@ public class AnnotationObject
     private final int begin;
     private final int end;
     private final String coveredText;
-    
-    private final long recommenderId;
 
-    private final String feature;
     private final String label;
+    private final String uiLabel;
     private final double confidence;
-    
-    private boolean visible = false;
 
-    public AnnotationObject(String aDocumentName, String aDocumentUri, int aBegin, int aEnd,
-            String aCoveredText, String aLabel, String aUiLabel, int aId, String aFeature,
-            String aSource, double aConfidence, long aRecommenderId)
+    private boolean visible = true;
+
+    public AnnotationObject(int aId, long aRecommenderId, String aRecommenderName, String aFeature,
+            String aDocumentName, String aDocumentUri, int aBegin, int aEnd, String aCoveredText,
+            String aLabel, String aUiLabel, double aConfidence)
     {
         label = aLabel;
         uiLabel = aUiLabel;
         id = aId;
         feature = aFeature;
-        source = aSource;
+        recommenderName = aRecommenderName;
         confidence = aConfidence;
         recommenderId = aRecommenderId;
         begin = aBegin;
@@ -67,7 +67,8 @@ public class AnnotationObject
     /**
      * Copy constructor.
      *
-     * @param aObject The annotationObject to copy
+     * @param aObject
+     *            The annotationObject to copy
      */
     public AnnotationObject(AnnotationObject aObject)
     {
@@ -75,7 +76,7 @@ public class AnnotationObject
         uiLabel = aObject.uiLabel;
         id = aObject.id;
         feature = aObject.feature;
-        source = aObject.source;
+        recommenderName = aObject.recommenderName;
         confidence = aObject.confidence;
         recommenderId = aObject.recommenderId;
         begin = aObject.begin;
@@ -122,9 +123,9 @@ public class AnnotationObject
         return feature;
     }
 
-    public String getSource()
+    public String getRecommenderName()
     {
-        return source;
+        return recommenderName;
     }
 
     public double getConfidence()
@@ -143,14 +144,14 @@ public class AnnotationObject
     }
 
     /**
-     * @deprecated Better use {@link #getBegin()} and {@link #getEnd()} 
+     * @deprecated Better use {@link #getBegin()} and {@link #getEnd()}
      */
     @Deprecated
     public Offset getOffset()
     {
         return new Offset(begin, end);
     }
-    
+
     public void setVisible(boolean aVisible)
     {
         visible = aVisible;
@@ -159,6 +160,23 @@ public class AnnotationObject
     public boolean isVisible()
     {
         return visible;
+    }
+
+    @Override
+    public String toString()
+    {
+        return new ToStringBuilder(this).append("id", id).append("label", label)
+                .append("uiLabel", uiLabel).append("feature", feature)
+                .append("recommenderName", recommenderName).append("confidence", confidence)
+                .append("recommenderId", recommenderId).append("begin", begin).append("end", end)
+                .append("coveredText", coveredText).append("documentName", documentName)
+                .append("documentUri", documentUri).append("visible", visible).toString();
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(id, recommenderId, documentName);
     }
 
     @Override
@@ -172,24 +190,7 @@ public class AnnotationObject
         }
         AnnotationObject that = (AnnotationObject) o;
         return id == that.id && recommenderId == that.recommenderId
-            && documentName.equals(that.documentName);
-    }
-
-    @Override
-    public int hashCode()
-    {
-        return Objects.hash(id, recommenderId, documentName);
-    }
-
-    @Override
-    public String toString()
-    {
-        return new ToStringBuilder(this).append("id", id).append("label", label)
-                .append("uiLabel", uiLabel).append("feature", feature).append("source", source)
-                .append("confidence", confidence).append("recommenderId", recommenderId)
-                .append("begin", begin).append("end", end).append("coveredText", coveredText)
-                .append("documentName", documentName).append("documentUri", documentUri)
-                .append("visible", visible).toString();
+                && documentName.equals(that.documentName);
     }
 
     @Override

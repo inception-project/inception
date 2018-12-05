@@ -21,10 +21,10 @@ import java.util.List;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.PredictionGroup;
 
 public interface ActiveLearningService
 {
-    List<List<AnnotationObject>> getRecommendationFromRecommendationModel(AnnotatorState aState,
+    List<PredictionGroup> getRecommendationFromRecommendationModel(AnnotatorState aState,
             AnnotationLayer aLayer);
 }

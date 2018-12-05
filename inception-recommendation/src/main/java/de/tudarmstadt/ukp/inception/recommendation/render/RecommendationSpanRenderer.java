@@ -48,6 +48,8 @@ import de.tudarmstadt.ukp.inception.recommendation.RecommendationEditorExtension
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.PredictionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
 import de.tudarmstadt.ukp.inception.recommendation.scheduling.tasks.PredictionTask;
@@ -99,9 +101,9 @@ public class RecommendationSpanRenderer
         }
         
         // TODO #176 use the document Id once it it available in the CAS
-        List<List<AnnotationObject>> recommendations = model
-            .getPredictions(DocumentMetaData.get(aJcas).getDocumentTitle(), layer,
-                windowBegin, windowEnd, aJcas, false);
+        Map<Offset, PredictionGroup> recommendations = model.getPredictions(
+                DocumentMetaData.get(aJcas).getDocumentTitle(), layer, windowBegin, windowEnd,
+                aJcas, false);
         String color = aColoringStrategy.getColor(null, null);
         String bratTypeName = TypeUtil.getUiTypeName(typeAdapter);
 
@@ -115,12 +117,12 @@ public class RecommendationSpanRenderer
         Preferences pref = recommendationService.getPreferences(aState.getUser(),
                 layer.getProject());
 
-        for (List<AnnotationObject> token : recommendations) {
+        for (PredictionGroup candidates : recommendations.values()) {
             Map<String, Map<Long, AnnotationObject>> labelMap = new HashMap<>();
  
             // For recommendations with the same label by the same classifier,
             // show only the confidence of the highest one
-            for (AnnotationObject ao: token) {
+            for (AnnotationObject ao: candidates) {
 
                 // Skip rendering AnnotationObjects that should not be rendered
                 if (!pref.isShowAllPredictions() && !ao.isVisible()) {
@@ -170,7 +172,7 @@ public class RecommendationSpanRenderer
                 }
 
                 // Create VID using the recommendation with the lowest recommendationId
-                AnnotationObject canonicalRecommendation = token.stream()
+                AnnotationObject canonicalRecommendation = candidates.stream()
                         .filter(p -> p.getLabel().equals(label))
                         .max(Comparator.comparingInt(AnnotationObject::getId)).orElse(null);
 
@@ -204,7 +206,7 @@ public class RecommendationSpanRenderer
                         vdoc.add(v);
                         first = false;
                     }
-                    vdoc.add(new VComment(vid, VCommentType.INFO, ao.getSource()));
+                    vdoc.add(new VComment(vid, VCommentType.INFO, ao.getRecommenderName()));
                     if (ao.getConfidence() != -1) {
                         vdoc.add(new VComment(vid, VCommentType.INFO,
                             String.format("Confidence: %.2f", ao.getConfidence())));

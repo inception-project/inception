@@ -18,12 +18,13 @@
 package de.tudarmstadt.ukp.inception.active.learning;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.SortedMap;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -32,9 +33,11 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.active.learning.strategy.ActiveLearningStrategy;
-import de.tudarmstadt.ukp.inception.active.learning.strategy.RecommendationDifference;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.PredictionGroup;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.PredictionGroup.Delta;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 
 @Component
@@ -53,7 +56,7 @@ public class ActiveLearningServiceImpl
     }
 
     @Override
-    public List<List<AnnotationObject>> getRecommendationFromRecommendationModel(
+    public List<PredictionGroup> getRecommendationFromRecommendationModel(
             AnnotatorState aState, AnnotationLayer aLayer)
     {
         Predictions model = recommendationService.getPredictions(aState.getUser(),
@@ -63,14 +66,12 @@ public class ActiveLearningServiceImpl
             return Collections.emptyList();
         }
 
-        Map<String, List<List<AnnotationObject>>> recommendationsMap = model
+        Map<String, SortedMap<Offset, PredictionGroup>> recommendationsMap = model
                 .getPredictionsForWholeProject(aLayer, documentService, true);
-
-        List<List<AnnotationObject>> result = new ArrayList<>();
-        for (String documentName : recommendationsMap.keySet()) {
-            result.addAll(recommendationsMap.get(documentName));
-        }
-        return result;
+        
+        return recommendationsMap.values().stream()
+            .flatMap(docMap -> docMap.values().stream())
+            .collect(Collectors.toList());
     }
 
     public static class ActiveLearningUserState implements Serializable
@@ -81,11 +82,11 @@ public class ActiveLearningServiceImpl
         private boolean hasUnseenRecommendation = false;
         private boolean hasSkippedRecommendation = false;
         private boolean doExistRecommenders = true;
-        private RecommendationDifference currentDifference;
+        private Delta currentDifference;
         private AnnotationLayer layer;
         private ActiveLearningStrategy strategy;
         private Date learnSkippedRecommendationTime;
-        private List<List<AnnotationObject>> listOfRecommendationsForEachToken;
+        private List<PredictionGroup> listOfRecommendationsForEachToken;
 
         public boolean isSessionActive()
         {
@@ -129,16 +130,16 @@ public class ActiveLearningServiceImpl
 
         public Optional<AnnotationObject> getCurrentRecommendation()
         {
-            return currentDifference != null ? Optional.of(currentDifference.getRecommendation1())
+            return currentDifference != null ? Optional.of(currentDifference.getFirst())
                     : Optional.empty();
         }
 
-        public Optional<RecommendationDifference> getCurrentDifference()
+        public Optional<Delta> getCurrentDifference()
         {
             return Optional.ofNullable(currentDifference);
         }
 
-        public void setCurrentDifference(Optional<RecommendationDifference> currentDifference)
+        public void setCurrentDifference(Optional<Delta> currentDifference)
         {
             this.currentDifference = currentDifference.orElse(null);
         }
@@ -173,13 +174,13 @@ public class ActiveLearningServiceImpl
             this.learnSkippedRecommendationTime = learnSkippedRecommendationTime;
         }
 
-        public void setListOfRecommendationsForEachToken(List<List<AnnotationObject>>
+        public void setListOfRecommendationsForEachToken(List<PredictionGroup>
             aListOfRecommendationsForEachToken)
         {
             this.listOfRecommendationsForEachToken = aListOfRecommendationsForEachToken;
         }
 
-        public List<List<AnnotationObject>> getListOfRecommendationsForEachToken()
+        public List<PredictionGroup> getListOfRecommendationsForEachToken()
         {
             return listOfRecommendationsForEachToken;
         }
