@@ -24,26 +24,26 @@ import java.util.Map;
 
 import org.junit.Test;
 
-import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.PredictionGroup;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.PredictionGroup.Delta;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup.Delta;
 
 public class PredictionGroupTest
 {
     @Test
     public void thatAddingElementsToGroupWorks()
     {
-        AnnotationObject rec1Sug1 = new AnnotationObject(1, 1, "rec1", "value", "doc1", "doc1Uri",
+        AnnotationSuggestion rec1Sug1 = new AnnotationSuggestion(1, 1, "rec1", "value", "doc1", "doc1Uri",
                 0, 1, "a", "A", "#A", 0.1);
-        AnnotationObject rec1Sug2 = new AnnotationObject(2, 1, "rec1", "value", "doc1", "doc1Uri",
+        AnnotationSuggestion rec1Sug2 = new AnnotationSuggestion(2, 1, "rec1", "value", "doc1", "doc1Uri",
                 0, 1, "b", "B", "#B", 0.2);
-        AnnotationObject rec2Sug1 = new AnnotationObject(3, 2, "rec2", "value", "doc1", "doc1Uri",
+        AnnotationSuggestion rec2Sug1 = new AnnotationSuggestion(3, 2, "rec2", "value", "doc1", "doc1Uri",
                 0, 1, "c", "C", "#C", 0.1);
-        AnnotationObject rec2Sug2 = new AnnotationObject(4, 2, "rec2", "value", "doc1", "doc1Uri",
+        AnnotationSuggestion rec2Sug2 = new AnnotationSuggestion(4, 2, "rec2", "value", "doc1", "doc1Uri",
                 0, 1, "d", "D", "#D", 0.3);
 
         // Ensure that group grows and that all elements are added properly
-        PredictionGroup sut = new PredictionGroup();
+        SuggestionGroup sut = new SuggestionGroup();
         sut.add(rec1Sug1);
         assertThat(sut).hasSize(1);
         assertThat(sut).contains(rec1Sug1);
@@ -61,16 +61,16 @@ public class PredictionGroupTest
     @Test
     public void thatSortingWorks()
     {
-        AnnotationObject rec1Sug1 = new AnnotationObject(1, 1, "rec1", "value", "doc1", "doc1Uri",
+        AnnotationSuggestion rec1Sug1 = new AnnotationSuggestion(1, 1, "rec1", "value", "doc1", "doc1Uri",
                 0, 1, "a", "A", "#A", 0.1);
-        AnnotationObject rec1Sug2 = new AnnotationObject(2, 1, "rec1", "value", "doc1", "doc1Uri",
+        AnnotationSuggestion rec1Sug2 = new AnnotationSuggestion(2, 1, "rec1", "value", "doc1", "doc1Uri",
                 0, 1, "b", "B", "#B", 0.2);
-        AnnotationObject rec2Sug1 = new AnnotationObject(3, 2, "rec2", "value", "doc1", "doc1Uri",
+        AnnotationSuggestion rec2Sug1 = new AnnotationSuggestion(3, 2, "rec2", "value", "doc1", "doc1Uri",
                 0, 1, "c", "C", "#C", 0.1);
-        AnnotationObject rec2Sug2 = new AnnotationObject(4, 2, "rec2", "value", "doc1", "doc1Uri",
+        AnnotationSuggestion rec2Sug2 = new AnnotationSuggestion(4, 2, "rec2", "value", "doc1", "doc1Uri",
                 0, 1, "d", "D", "#D", 0.3);
 
-        PredictionGroup sut = new PredictionGroup(rec1Sug1, rec1Sug2, rec2Sug1, rec2Sug2);
+        SuggestionGroup sut = new SuggestionGroup(rec1Sug1, rec1Sug2, rec2Sug1, rec2Sug2);
         
         assertThat(sut)
                 .as("Sorted by confidence score (decreasing) but retain insertion order on tie")
@@ -88,16 +88,16 @@ public class PredictionGroupTest
     @Test
     public void thatTopDeltasAreCorrect()
     {
-        AnnotationObject rec1Sug1 = new AnnotationObject(1, 1, "rec1", "value", "doc1", "doc1Uri",
+        AnnotationSuggestion rec1Sug1 = new AnnotationSuggestion(1, 1, "rec1", "value", "doc1", "doc1Uri",
                 0, 1, "a", "A", "#A", 0.1);
-        AnnotationObject rec1Sug2 = new AnnotationObject(2, 1, "rec1", "value", "doc1", "doc1Uri",
+        AnnotationSuggestion rec1Sug2 = new AnnotationSuggestion(2, 1, "rec1", "value", "doc1", "doc1Uri",
                 0, 1, "b", "B", "#B", 0.2);
-        AnnotationObject rec2Sug1 = new AnnotationObject(3, 2, "rec2", "value", "doc1", "doc1Uri",
+        AnnotationSuggestion rec2Sug1 = new AnnotationSuggestion(3, 2, "rec2", "value", "doc1", "doc1Uri",
                 0, 1, "c", "C", "#C", 0.1);
-        AnnotationObject rec2Sug2 = new AnnotationObject(4, 2, "rec2", "value", "doc1", "doc1Uri",
+        AnnotationSuggestion rec2Sug2 = new AnnotationSuggestion(4, 2, "rec2", "value", "doc1", "doc1Uri",
                 0, 1, "d", "D", "#D", 0.3);
 
-        PredictionGroup sut = new PredictionGroup(rec1Sug1, rec1Sug2, rec2Sug1, rec2Sug2);
+        SuggestionGroup sut = new SuggestionGroup(rec1Sug1, rec1Sug2, rec2Sug1, rec2Sug2);
                 
         // Check that the deltas are ok
         Map<Long, Delta> topDeltas = sut.getTopDeltas();

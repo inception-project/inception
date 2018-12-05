@@ -102,10 +102,10 @@ import de.tudarmstadt.ukp.inception.active.learning.strategy.UncertaintySampling
 import de.tudarmstadt.ukp.inception.recommendation.RecommendationEditorExtension;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.PredictionGroup.Delta;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup.Delta;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.event.AjaxPredictionsSwitchedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.AjaxRecommendationAcceptedEvent;
@@ -327,7 +327,7 @@ public class ActiveLearningSidebar
         
         if (alState.getCurrentDifference().isPresent()) {
             alState.setHasUnseenRecommendation(true);
-            AnnotationObject currentRecommendation = alStateModel.getObject()
+            AnnotationSuggestion currentRecommendation = alStateModel.getObject()
                     .getCurrentRecommendation().get();
             try {
                 refreshFeatureEditor(aTarget, currentRecommendation);
@@ -363,7 +363,7 @@ public class ActiveLearningSidebar
 
     private void highlightCurrentRecommendation(AjaxRequestTarget aTarget)
     {
-        Optional<AnnotationObject> currentRecommendation = alStateModel.getObject()
+        Optional<AnnotationSuggestion> currentRecommendation = alStateModel.getObject()
             .getCurrentRecommendation();
         
         // If  there is no current AL recommendation, then there is nothing to highlight.
@@ -371,7 +371,7 @@ public class ActiveLearningSidebar
             return;
         }
         
-        AnnotationObject rec = currentRecommendation.get();
+        AnnotationSuggestion rec = currentRecommendation.get();
         
         highlightRecommendation(aTarget, rec.getBegin(), rec.getEnd(), rec.getCoveredText(),
                 rec.getLabel());
@@ -389,7 +389,7 @@ public class ActiveLearningSidebar
             return;
         }
         
-        Optional<AnnotationObject> aoForVID = predictions.getPrediction(state.getDocument(), aBegin,
+        Optional<AnnotationSuggestion> aoForVID = predictions.getPrediction(state.getDocument(), aBegin,
                 aEnd, aRecommendation);
         if (aoForVID.isPresent()) {
             highlightVID = new VID(RecommendationEditorExtension.BEAN_NAME,
@@ -460,7 +460,7 @@ public class ActiveLearningSidebar
                         .getCurrentRecommendation().map(this::formatLabel).orElse(null))));
         recommendationForm.add(new Label(CID_RECOMMENDED_CONFIDENCE, () -> 
                 alStateModel.getObject().getCurrentRecommendation()
-                        .map(AnnotationObject::getConfidence).orElse(null)));
+                        .map(AnnotationSuggestion::getConfidence).orElse(null)));
         recommendationForm.add(new Label(CID_RECOMMENDED_DIFFERENCE, () -> 
                 alStateModel.getObject().getCurrentDifference()
                         .map(Delta::getDelta).orElse(null)));
@@ -476,7 +476,7 @@ public class ActiveLearningSidebar
         return recommendationForm;
     }
 
-    private String formatLabel(AnnotationObject aCurrentRecommendation)
+    private String formatLabel(AnnotationSuggestion aCurrentRecommendation)
     {
         AnnotationFeature feat = annotationService.getFeature(aCurrentRecommendation.getFeature(),
                 alStateModel.getObject().getLayer());
@@ -500,14 +500,14 @@ public class ActiveLearningSidebar
     private void jumpToRecommendationLocationAndHighlightRecommendation(AjaxRequestTarget aTarget)
         throws IOException
     {
-        Optional<AnnotationObject> currentRecommendation = alStateModel.getObject()
+        Optional<AnnotationSuggestion> currentRecommendation = alStateModel.getObject()
                 .getCurrentRecommendation();
         
         if (!currentRecommendation.isPresent()) {
             return;
         }
         
-        AnnotationObject rec = currentRecommendation.get();
+        AnnotationSuggestion rec = currentRecommendation.get();
         
         actionShowSelectedDocument(aTarget, documentService.getSourceDocument(
                 this.getModelObject().getProject(), rec.getDocumentName()), rec.getBegin());
@@ -522,14 +522,14 @@ public class ActiveLearningSidebar
     }
 
     private void refreshFeatureEditor(IPartialPageRequestHandler aTarget,
-            AnnotationObject aCurrentRecommendation)
+            AnnotationSuggestion aCurrentRecommendation)
     {
         editor = createFeatureEditor(aCurrentRecommendation);
         recommendationForm.addOrReplace(editor);
         aTarget.add(mainContainer);
     }
     
-    private FeatureEditor createFeatureEditor(AnnotationObject aCurrentRecommendation)
+    private FeatureEditor createFeatureEditor(AnnotationSuggestion aCurrentRecommendation)
     {
         AnnotatorState state = ActiveLearningSidebar.this.getModelObject();
         ActiveLearningUserState alState = alStateModel.getObject();
@@ -552,7 +552,7 @@ public class ActiveLearningSidebar
             Predictions model = recommendationService.getPredictions(state.getUser(),
                     state.getProject());
             // get all the predictions
-            List<AnnotationObject> allRecommendations = model.getPredictionsByTokenAndFeature(
+            List<AnnotationSuggestion> allRecommendations = model.getPredictionsByTokenAndFeature(
                     aCurrentRecommendation.getDocumentName(), alState.getLayer(),
                     aCurrentRecommendation.getBegin(), aCurrentRecommendation.getEnd(),
                     aCurrentRecommendation.getFeature());
@@ -588,14 +588,14 @@ public class ActiveLearningSidebar
         return featureEditor;
     }
     
-    private void writeLearningRecordInDatabaseAndEventLog(AnnotationObject aCurrentRecommendation,
+    private void writeLearningRecordInDatabaseAndEventLog(AnnotationSuggestion aCurrentRecommendation,
             LearningRecordUserAction aUserAction)
     {
         writeLearningRecordInDatabaseAndEventLog(aCurrentRecommendation, aUserAction,
                 aCurrentRecommendation.getLabel());
     }
 
-    private void writeLearningRecordInDatabaseAndEventLog(AnnotationObject aCurrentRecommendation,
+    private void writeLearningRecordInDatabaseAndEventLog(AnnotationSuggestion aCurrentRecommendation,
             LearningRecordUserAction aUserAction, String aAnnotationValue)
     {
         AnnotatorState state = ActiveLearningSidebar.this.getModelObject();
@@ -628,13 +628,13 @@ public class ActiveLearningSidebar
         throws IOException, AnnotationException
     {
         ActiveLearningUserState alState = alStateModel.getObject();
-        Optional<AnnotationObject> currentRecommendation = alState.getCurrentRecommendation();
+        Optional<AnnotationSuggestion> currentRecommendation = alState.getCurrentRecommendation();
 
         if (!currentRecommendation.isPresent()) {
             return;
         }
 
-        AnnotationObject rec = currentRecommendation.get();
+        AnnotationSuggestion rec = currentRecommendation.get();
         
         aTarget.add(mainContainer);
 
@@ -914,7 +914,7 @@ public class ActiveLearningSidebar
         ) {
             SourceDocument document = eventState.getDocument();
             VID vid = aEvent.getVid();
-            Optional<AnnotationObject> prediction = model.getPredictionByVID(document, vid);
+            Optional<AnnotationSuggestion> prediction = model.getPredictionByVID(document, vid);
 
             if (!prediction.isPresent()) {
                 LOG.error("Could not find prediction in [{}] with id [{}]", document, vid);
@@ -922,7 +922,7 @@ public class ActiveLearningSidebar
                 return;
             }
 
-            AnnotationObject rejectedRecommendation = prediction.get();
+            AnnotationSuggestion rejectedRecommendation = prediction.get();
             applicationEventPublisherHolder.get().publishEvent(
                 new ActiveLearningRecommendationEvent(this, eventState.getDocument(),
                     rejectedRecommendation, annotatorState.getUser().getUsername(),
@@ -955,7 +955,7 @@ public class ActiveLearningSidebar
         AnnotatorState eventState = aEvent.getAnnotatorState();
         SourceDocument document = annotatorState.getDocument();
         VID vid = aEvent.getVid();
-        Optional<AnnotationObject> oRecommendation = model.getPredictionByVID(document, vid);
+        Optional<AnnotationSuggestion> oRecommendation = model.getPredictionByVID(document, vid);
 
         if (!oRecommendation.isPresent()) {
             LOG.error("Could not find prediction in [{}] with id [{}]", document, vid);
@@ -964,7 +964,7 @@ public class ActiveLearningSidebar
             return;
         }
 
-        AnnotationObject acceptedRecommendation = oRecommendation.get();
+        AnnotationSuggestion acceptedRecommendation = oRecommendation.get();
         AnnotationFeature feature = annotationService
             .getFeature(acceptedRecommendation.getFeature(),
                 annotationService.getLayer(vid.getLayerId()));
@@ -986,7 +986,7 @@ public class ActiveLearningSidebar
                 acceptedRecommendation.getEnd(),
                 acceptedRecommendation.getFeature())));
 
-        Optional<AnnotationObject> currentRecommendation = alStateModel.getObject()
+        Optional<AnnotationSuggestion> currentRecommendation = alStateModel.getObject()
             .getCurrentRecommendation();
         if (
                 alStateModel.getObject().isSessionActive() && 

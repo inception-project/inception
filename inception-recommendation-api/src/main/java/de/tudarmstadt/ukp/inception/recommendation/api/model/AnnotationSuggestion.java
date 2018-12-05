@@ -22,8 +22,8 @@ import java.util.Objects;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
-public class AnnotationObject
-    implements Serializable, Comparable<AnnotationObject>
+public class AnnotationSuggestion
+    implements Serializable, Comparable<AnnotationSuggestion>
 {
     private static final long serialVersionUID = -1145787227041121442L;
 
@@ -46,9 +46,9 @@ public class AnnotationObject
 
     private boolean visible = true;
 
-    public AnnotationObject(int aId, long aRecommenderId, String aRecommenderName, String aFeature,
-            String aDocumentName, String aDocumentUri, int aBegin, int aEnd, String aCoveredText,
-            String aLabel, String aUiLabel, double aConfidence)
+    public AnnotationSuggestion(int aId, long aRecommenderId, String aRecommenderName,
+            String aFeature, String aDocumentName, String aDocumentUri, int aBegin, int aEnd,
+            String aCoveredText, String aLabel, String aUiLabel, double aConfidence)
     {
         label = aLabel;
         uiLabel = aUiLabel;
@@ -70,7 +70,7 @@ public class AnnotationObject
      * @param aObject
      *            The annotationObject to copy
      */
-    public AnnotationObject(AnnotationObject aObject)
+    public AnnotationSuggestion(AnnotationSuggestion aObject)
     {
         label = aObject.label;
         uiLabel = aObject.uiLabel;
@@ -188,13 +188,13 @@ public class AnnotationObject
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        AnnotationObject that = (AnnotationObject) o;
+        AnnotationSuggestion that = (AnnotationSuggestion) o;
         return id == that.id && recommenderId == that.recommenderId
                 && documentName.equals(that.documentName);
     }
 
     @Override
-    public int compareTo(AnnotationObject aAo)
+    public int compareTo(AnnotationSuggestion aAo)
     {
         if (aAo == null) {
             return 1;

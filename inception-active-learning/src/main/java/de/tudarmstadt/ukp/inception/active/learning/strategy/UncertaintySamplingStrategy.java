@@ -34,18 +34,18 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.active.learning.ActiveLearningService;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.PredictionGroup;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.PredictionGroup.Delta;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup.Delta;
 
 public class UncertaintySamplingStrategy
     implements Serializable, ActiveLearningStrategy
 {
     private static final long serialVersionUID = -2308436775710912029L;
 
-    private List<PredictionGroup> listOfRecommendationsForEachToken;
+    private List<SuggestionGroup> listOfRecommendationsForEachToken;
     private AnnotatorState annotatorState;
     private AnnotationLayer selectedLayer;
     private static final Logger LOG = LoggerFactory.getLogger(UncertaintySamplingStrategy.class);
@@ -61,7 +61,7 @@ public class UncertaintySamplingStrategy
             LearningRecordService aRecordService, Date learnSkippedRecommendationTime)
     {
         // remove invisible recommendations
-        List<PredictionGroup> filteredRecommendations = new ArrayList<>(
+        List<SuggestionGroup> filteredRecommendations = new ArrayList<>(
                 listOfRecommendationsForEachToken);
 
         // remove rejected recommendations
@@ -74,7 +74,7 @@ public class UncertaintySamplingStrategy
     @Override
     public Optional<Delta> generateRecommendationWithLowestDifference(
             LearningRecordService aRecordService, Date learnSkippedRecommendationTime,
-            List<PredictionGroup> aListOfRecommendationsForEachToken)
+            List<SuggestionGroup> aListOfRecommendationsForEachToken)
     {
         long startTimer = System.currentTimeMillis();
         listOfRecommendationsForEachToken = aListOfRecommendationsForEachToken;
@@ -90,7 +90,7 @@ public class UncertaintySamplingStrategy
                 (removeDuplicateRecommendation - getRecommendationsFromRecommendationService));
 
         // remove invisible recommendations
-        List<PredictionGroup> filteredRecommendations = new ArrayList<>(
+        List<SuggestionGroup> filteredRecommendations = new ArrayList<>(
                 listOfRecommendationsForEachToken);
 
         // remove rejected recommendations
@@ -125,14 +125,14 @@ public class UncertaintySamplingStrategy
 
     private void removeRejectedOrSkippedAnnotations(LearningRecordService aRecordService,
             boolean filterSkippedRecommendation, Date learnSkippedRecommendationTime,
-            List<PredictionGroup> aSuggestionGroups)
+            List<SuggestionGroup> aSuggestionGroups)
     {
         List<LearningRecord> records = aRecordService.getAllRecordsByDocumentAndUserAndLayer(
                 annotatorState.getDocument(), annotatorState.getUser().getUsername(),
                 selectedLayer);
         
-        for (PredictionGroup group : aSuggestionGroups) {
-            for (AnnotationObject suggestion : group) {
+        for (SuggestionGroup group : aSuggestionGroups) {
+            for (AnnotationSuggestion suggestion : group) {
                 // If a suggestion is already invisible, we don't need to check if it needs hiding
                 if (suggestion.isVisible() && doesContainRejectedOrSkippedRecord(records,
                         suggestion, filterSkippedRecommendation, learnSkippedRecommendationTime)) {
@@ -142,10 +142,10 @@ public class UncertaintySamplingStrategy
         }
     }
 
-    private static PredictionGroup removeDuplicateRecommendations(
-            PredictionGroup unmodifiedRecommendationList)
+    private static SuggestionGroup removeDuplicateRecommendations(
+            SuggestionGroup unmodifiedRecommendationList)
     {
-        PredictionGroup cleanRecommendationList = new PredictionGroup();
+        SuggestionGroup cleanRecommendationList = new SuggestionGroup();
 
         unmodifiedRecommendationList.forEach(recommendationItem -> {
             if (!isAlreadyInCleanList(cleanRecommendationList, recommendationItem)) {
@@ -156,14 +156,14 @@ public class UncertaintySamplingStrategy
         return cleanRecommendationList;
     }
 
-    private static boolean isAlreadyInCleanList(PredictionGroup cleanRecommendationList,
-        AnnotationObject recommendationItem)
+    private static boolean isAlreadyInCleanList(SuggestionGroup cleanRecommendationList,
+        AnnotationSuggestion recommendationItem)
     {
         String source = recommendationItem.getRecommenderName();
         String annotation = recommendationItem.getLabel();
         String documentName = recommendationItem.getDocumentName();
         
-        for (AnnotationObject existingRecommendation : cleanRecommendationList) {
+        for (AnnotationSuggestion existingRecommendation : cleanRecommendationList) {
             if (
                     existingRecommendation.getRecommenderName().equals(source) &&
                     existingRecommendation.getLabel().equals(annotation) &&
@@ -176,7 +176,7 @@ public class UncertaintySamplingStrategy
     }
 
     private static boolean doesContainRejectedOrSkippedRecord(List<LearningRecord> records,
-        AnnotationObject aRecommendation, boolean filterSkippedRecommendation,
+        AnnotationSuggestion aRecommendation, boolean filterSkippedRecommendation,
         Date learnSkippedRecommendationTime)
     {
         for (LearningRecord record : records) {
@@ -198,7 +198,7 @@ public class UncertaintySamplingStrategy
             && filterSkippedRecommendation;
     }
 
-    private static boolean hasSameTokenAndSuggestion(AnnotationObject aRecommendation,
+    private static boolean hasSameTokenAndSuggestion(AnnotationSuggestion aRecommendation,
         LearningRecord aRecord)
     {
         return aRecord.getSourceDocument().getName().equals(aRecommendation.getDocumentName()) && 
@@ -217,7 +217,7 @@ public class UncertaintySamplingStrategy
     }
 
     private static Optional<Delta> calculateDifferencesAndReturnLowestVisible(
-            List<PredictionGroup> aGroups)
+            List<SuggestionGroup> aGroups)
     {
         return aGroups.stream()
             // Fetch the top deltas per recommender
@@ -229,9 +229,9 @@ public class UncertaintySamplingStrategy
     }
 
     private static boolean containsRecommendation(
-        List<PredictionGroup> aListOfRecommendationsForEachToken, LearningRecord record)
+        List<SuggestionGroup> aListOfRecommendationsForEachToken, LearningRecord record)
     {
-        for (PredictionGroup listOfAO : aListOfRecommendationsForEachToken) {
+        for (SuggestionGroup listOfAO : aListOfRecommendationsForEachToken) {
             if (listOfAO.stream().anyMatch(ao -> compareRecordToRecommendation(ao, record))) {
                 return true;
             }
@@ -239,7 +239,7 @@ public class UncertaintySamplingStrategy
         return false;
     }
     
-    private static boolean compareRecordToRecommendation(AnnotationObject aRecommendation,
+    private static boolean compareRecordToRecommendation(AnnotationSuggestion aRecommendation,
         LearningRecord aRecord)
     {
         return aRecommendation.getLabel().equals(aRecord.getAnnotation()) && 

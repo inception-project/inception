@@ -53,7 +53,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.event.AjaxPredictionsSwitchedEvent;
@@ -131,7 +131,7 @@ public class RecommendationEditorExtension
         SourceDocument document = aState.getDocument();
         Predictions model = recommendationService.getPredictions(aState.getUser(),
                 aState.getProject());
-        Optional<AnnotationObject> prediction = model.getPredictionByVID(document, aVID);
+        Optional<AnnotationSuggestion> prediction = model.getPredictionByVID(document, aVID);
 
         if (!prediction.isPresent()) {
             log.error("Could not find annotation in [{}] with id [{}]", document, aVID);
@@ -140,7 +140,7 @@ public class RecommendationEditorExtension
             return;
         }
 
-        AnnotationObject ao = prediction.get();
+        AnnotationSuggestion ao = prediction.get();
 
         // Remove from view
         ao.setVisible(false);
@@ -197,7 +197,7 @@ public class RecommendationEditorExtension
                 aState.getProject());
         
         SourceDocument document = aState.getDocument();
-        Optional<AnnotationObject> oPrediction = model.getPredictionByVID(document, aVID);
+        Optional<AnnotationSuggestion> oPrediction = model.getPredictionByVID(document, aVID);
         if (!oPrediction.isPresent()) {
             log.error("Could not find annotation in [{}] with id [{}]", document, aVID);
             aTarget.getPage().error("Could not find annotation");
@@ -205,7 +205,7 @@ public class RecommendationEditorExtension
             return;
         }
 
-        AnnotationObject prediction = oPrediction.get();
+        AnnotationSuggestion prediction = oPrediction.get();
         Recommender recommender = recommendationService.getRecommender(aVID.getId());
         AnnotationLayer layer = annotationService.getLayer(aVID.getLayerId());
         AnnotationFeature feature = annotationService.getFeature(recommender.getFeature(), layer);

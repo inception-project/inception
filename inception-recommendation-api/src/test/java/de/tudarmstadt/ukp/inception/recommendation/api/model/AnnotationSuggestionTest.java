@@ -17,29 +17,30 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.api.model;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+
+import java.util.List;
 
 import org.junit.Test;
 
-import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
-
-public class AnnotationObjectTest
+public class AnnotationSuggestionTest
 {
     @Test
     public void thatEqualsAndHashCodeAndCompareToWorkCorrectly()
     {
-        AnnotationObject rec1Sug1 = new AnnotationObject(1, 1, "rec1", "value", "doc1", "doc1Uri",
-                0, 1, "a", "A", "#A", 0.1);
-        AnnotationObject rec1Sug2 = new AnnotationObject(2, 1, "rec1", "value", "doc1", "doc1Uri",
-                0, 1, "b", "B", "#B", 0.2);
-        AnnotationObject rec2Sug1 = new AnnotationObject(3, 2, "rec2", "value", "doc1", "doc1Uri",
-                0, 1, "c", "C", "#C", 0.1);
-        AnnotationObject rec2Sug2 = new AnnotationObject(4, 2, "rec2", "value", "doc1", "doc1Uri",
-                0, 1, "d", "D", "#D", 0.3);
+        AnnotationSuggestion rec1Sug1 = new AnnotationSuggestion(1, 1, "rec1", "value", "doc1",
+                "doc1Uri", 0, 1, "a", "A", "#A", 0.1);
+        AnnotationSuggestion rec1Sug2 = new AnnotationSuggestion(2, 1, "rec1", "value", "doc1",
+                "doc1Uri", 0, 1, "b", "B", "#B", 0.2);
+        AnnotationSuggestion rec2Sug1 = new AnnotationSuggestion(3, 2, "rec2", "value", "doc1",
+                "doc1Uri", 0, 1, "c", "C", "#C", 0.1);
+        AnnotationSuggestion rec2Sug2 = new AnnotationSuggestion(4, 2, "rec2", "value", "doc1",
+                "doc1Uri", 0, 1, "d", "D", "#D", 0.3);
 
-        AnnotationObject[] all = new AnnotationObject[] {rec1Sug1, rec1Sug2, rec2Sug1, rec2Sug2};
-        for (AnnotationObject x : all) {
-            for (AnnotationObject y : all) {
+        List<AnnotationSuggestion> all = asList(rec1Sug1, rec1Sug2, rec2Sug1, rec2Sug2);
+        for (AnnotationSuggestion x : all) {
+            for (AnnotationSuggestion y : all) {
                 if (x == y) {
                     assertThat(x).isEqualTo(y);
                     assertThat(x).isEqualByComparingTo(y);

@@ -30,7 +30,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
@@ -45,7 +45,7 @@ public class LearningRecordServiceImpl
     @Transactional
     @Override
     public void logLearningRecord(SourceDocument aDocument, String aUsername,
-            AnnotationObject aPrediction, AnnotationLayer aLayer, AnnotationFeature aFeature)
+            AnnotationSuggestion aPrediction, AnnotationLayer aLayer, AnnotationFeature aFeature)
     {
         LearningRecord record = new LearningRecord();
         record.setUser(aUsername);
@@ -67,7 +67,7 @@ public class LearningRecordServiceImpl
     @Transactional
     @Override
     public void logLearningRecord(SourceDocument aDocument, String aUsername,
-            AnnotationObject aPrediction, String aAlternativeLabel, AnnotationLayer aLayer,
+            AnnotationSuggestion aPrediction, String aAlternativeLabel, AnnotationLayer aLayer,
             AnnotationFeature aFeature)
     {
         LearningRecord record = new LearningRecord();

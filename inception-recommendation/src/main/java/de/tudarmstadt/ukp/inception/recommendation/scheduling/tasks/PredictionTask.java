@@ -56,11 +56,11 @@ import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.PredictionGroup;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
@@ -189,7 +189,7 @@ public class PredictionTask
                     Optional<Feature> scoreFeature = scoreFeatureName
                             .map(predictionType::getFeatureByBaseName);
 
-                    List<AnnotationObject> predictions = extractAnnotations(user,
+                    List<AnnotationSuggestion> predictions = extractAnnotations(user,
                             jCas.get().getCas(), predictionType, labelFeature, scoreFeature,
                             document, recommender);
                     
@@ -208,7 +208,7 @@ public class PredictionTask
         recommendationService.putIncomingPredictions(getUser(), project, model);
     }
 
-    private List<AnnotationObject> extractAnnotations(User aUser, CAS aCas, Type predictionType,
+    private List<AnnotationSuggestion> extractAnnotations(User aUser, CAS aCas, Type predictionType,
             Feature predictedFeature, Optional<Feature> aScoreFeature, SourceDocument aDocument,
             Recommender aRecommender)
     {
@@ -223,7 +223,7 @@ public class PredictionTask
             log.warn("No DocumentMetaData in CAS, using document name as document URI!");
         }
         
-        List<AnnotationObject> result = new ArrayList<>();
+        List<AnnotationSuggestion> result = new ArrayList<>();
         int id = 0;
         for (AnnotationFS annotationFS : CasUtil.select(aCas, predictionType)) {
             List<Token> tokens = JCasUtil.selectCovered(Token.class, annotationFS);
@@ -236,9 +236,9 @@ public class PredictionTask
             String featurename = aRecommender.getFeature();
             String name = aRecommender.getName();
 
-            AnnotationObject ao = new AnnotationObject(id, aRecommender.getId(), name, featurename,
-                    aDocument.getName(), documentUri, firstToken.getBegin(), lastToken.getEnd(),
-                    annotationFS.getCoveredText(), label, label, score);
+            AnnotationSuggestion ao = new AnnotationSuggestion(id, aRecommender.getId(), name,
+                    featurename, aDocument.getName(), documentUri, firstToken.getBegin(),
+                    lastToken.getEnd(), annotationFS.getCoveredText(), label, label, score);
 
             result.add(ao);
             id++;
@@ -269,13 +269,13 @@ public class PredictionTask
     public static void calculateVisibility(
         LearningRecordService aLearningRecordService, AnnotationSchemaService aAnnotationService,
         JCas aJcas, String aUser, AnnotationDocument aDoc, AnnotationLayer aLayer,
-        Map<Offset, PredictionGroup> aRecommendations, int aWindowBegin, int aWindowEnd)
+        Map<Offset, SuggestionGroup> aRecommendations, int aWindowBegin, int aWindowEnd)
     {
         List<LearningRecord> recordedAnnotations = aLearningRecordService
                 .getAllRecordsByDocumentAndUserAndLayer(aDoc.getDocument(), aUser, aLayer);
 
         // Recommendations sorted by Offset, Id, RecommenderId, DocumentName.hashCode (descending)
-        NavigableSet<AnnotationObject> remainingRecommendations = new TreeSet<>();
+        NavigableSet<AnnotationSuggestion> remainingRecommendations = new TreeSet<>();
         aRecommendations.values().forEach(group -> remainingRecommendations.addAll(group));
 
         // Collect all annotations within the view window (typically the screen)
@@ -285,7 +285,7 @@ public class PredictionTask
                 .filter(fs -> fs.getBegin() >= aWindowBegin && fs.getEnd() <= aWindowEnd)
                 .collect(Collectors.toList());
 
-        AnnotationObject swap = remainingRecommendations.pollFirst();
+        AnnotationSuggestion swap = remainingRecommendations.pollFirst();
 
         for (AnnotationFeature feature: aAnnotationService.listAnnotationFeature(aLayer)) {
 
@@ -296,7 +296,7 @@ public class PredictionTask
                 .collect(Collectors.toList());
             for (AnnotationFS fs : annoFsForFeature) {
 
-                AnnotationObject ao = swap;
+                AnnotationSuggestion ao = swap;
 
                 // Go to the next token for which an annotation exists
                 while (ao.getBegin() < fs.getBegin() && !remainingRecommendations.isEmpty()) {
@@ -332,12 +332,12 @@ public class PredictionTask
 
         // Check for the remaining AnnotationObjects whether they have an annotation
         // and are not rejected
-        for (AnnotationObject ao: remainingRecommendations) {
+        for (AnnotationSuggestion ao: remainingRecommendations) {
             setVisibility(recordedAnnotations, ao);
         }
     }
 
-    private static boolean isOverlappingForFeature(AnnotationFS aFs, AnnotationObject aAo,
+    private static boolean isOverlappingForFeature(AnnotationFS aFs, AnnotationSuggestion aAo,
         AnnotationFeature aFeature)
     {
         return aFeature.getName().equals(aAo.getFeature()) &&
@@ -357,7 +357,7 @@ public class PredictionTask
      * Determines whether this recommendation has been rejected
      */
     private static boolean isRejected(List<LearningRecord> aRecordedRecommendations,
-        AnnotationObject aAo)
+        AnnotationSuggestion aAo)
     {
         for (LearningRecord record : aRecordedRecommendations) {
             if (record.getOffsetCharacterBegin() == aAo.getBegin()
@@ -375,7 +375,7 @@ public class PredictionTask
      * Sets visibility of an AnnotationObject based on label and Learning Record
      */
     private static boolean setVisibility(List<LearningRecord> aRecordedRecommendations,
-        AnnotationObject aAo)
+        AnnotationSuggestion aAo)
     {
         boolean hasNoAnnotation = aAo.getLabel() == null;
         boolean isRejected = isRejected(aRecordedRecommendations, aAo);

@@ -24,8 +24,8 @@ import java.util.Optional;
 import de.tudarmstadt.ukp.inception.active.learning.ActiveLearningService;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.PredictionGroup;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.PredictionGroup.Delta;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup.Delta;
 
 public interface ActiveLearningStrategy
 {
@@ -34,7 +34,7 @@ public interface ActiveLearningStrategy
 
     Optional<Delta> generateRecommendationWithLowestDifference(
             LearningRecordService aRecordService, Date learnSkippedRecommendationTime,
-            List<PredictionGroup> aListOfRecommendationsForEachToken);
+            List<SuggestionGroup> aListOfRecommendationsForEachToken);
 
     boolean hasRecommendationWhichIsSkipped(LearningRecordService aRecordService,
             ActiveLearningService aActiveLearningService);
