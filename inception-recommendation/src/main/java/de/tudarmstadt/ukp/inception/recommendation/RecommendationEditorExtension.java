@@ -191,8 +191,8 @@ public class RecommendationEditorExtension
         record.setUserAction(LearningRecordUserAction.REJECTED);
         record.setOffsetCharacterBegin(prediction.getOffset().getBeginCharacter());
         record.setOffsetCharacterEnd(prediction.getOffset().getEndCharacter());
-        record.setOffsetTokenBegin(prediction.getOffset().getBeginToken());
-        record.setOffsetTokenEnd(prediction.getOffset().getEndToken());
+        record.setOffsetTokenBegin(-1);
+        record.setOffsetTokenEnd(-1);
         record.setTokenText(tokenText);
         record.setAnnotation(predictedValue);
         record.setLayer(layer);
