@@ -97,6 +97,9 @@ import de.tudarmstadt.ukp.inception.active.learning.ActiveLearningServiceImpl.Ac
 import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningRecommendationEvent;
 import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningSessionCompletedEvent;
 import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningSessionStartedEvent;
+import de.tudarmstadt.ukp.inception.active.learning.strategy.ActiveLearningStrategy;
+import de.tudarmstadt.ukp.inception.active.learning.strategy.RecommendationDifference;
+import de.tudarmstadt.ukp.inception.active.learning.strategy.UncertaintySamplingStrategy;
 import de.tudarmstadt.ukp.inception.recommendation.RecommendationEditorExtension;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
