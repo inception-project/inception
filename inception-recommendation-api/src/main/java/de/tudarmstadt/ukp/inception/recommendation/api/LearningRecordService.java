@@ -28,7 +28,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType;
 
 
 public interface LearningRecordService {
@@ -41,6 +41,12 @@ public interface LearningRecordService {
     public List<LearningRecord> getAllRecordsByDocumentAndUserAndLayer(
             SourceDocument sourceDocument, String user, AnnotationLayer layer);
 
+    /**
+     * Fetches the learning records for the given document, user and layer. An optional limit can
+     * be used, e.g. for loading only a reduced part of the history in the active learning sidebar.
+     * Learning records with the action {@link LearningRecordType#SHOWN} are <b>not</b>
+     * returned by this method.
+     */
     public List<LearningRecord> getRecordsByDocumentAndUserAndLayer(
             SourceDocument sourceDocument, String user, AnnotationLayer layer, int aLimit);
 
@@ -62,10 +68,10 @@ public interface LearningRecordService {
 
     void logLearningRecord(SourceDocument aDocument, String aUsername,
             AnnotationSuggestion aPrediction, AnnotationLayer aLayer, AnnotationFeature aFeature,
-            LearningRecordUserAction aUserAction, LearningRecordChangeLocation aLocation);
+            LearningRecordType aUserAction, LearningRecordChangeLocation aLocation);
 
     void logLearningRecord(SourceDocument aDocument, String aUsername,
             AnnotationSuggestion aSuggestion, String aAlternativeLabel, AnnotationLayer aLayer,
-            AnnotationFeature aFeature, LearningRecordUserAction aUserAction,
+            AnnotationFeature aFeature, LearningRecordType aUserAction,
             LearningRecordChangeLocation aLocation);
 }

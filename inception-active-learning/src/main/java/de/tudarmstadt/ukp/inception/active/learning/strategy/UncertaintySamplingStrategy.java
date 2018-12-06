@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.active.learning.strategy;
 
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.REJECTED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.REJECTED;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -36,7 +36,7 @@ import de.tudarmstadt.ukp.inception.active.learning.ActiveLearningService;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup.Delta;
 
@@ -194,7 +194,7 @@ public class UncertaintySamplingStrategy
     private static boolean filterSkippedRecord(LearningRecord record,
         boolean filterSkippedRecommendation)
     {
-        return record.getUserAction().equals(LearningRecordUserAction.SKIPPED)
+        return record.getUserAction().equals(LearningRecordType.SKIPPED)
             && filterSkippedRecommendation;
     }
 

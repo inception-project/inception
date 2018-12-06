@@ -19,27 +19,55 @@ package de.tudarmstadt.ukp.inception.recommendation.api.model;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.PersistentEnum;
 
-public enum LearningRecordUserAction implements PersistentEnum
+public enum LearningRecordType
+    implements
+    PersistentEnum
 {
-
+    /**
+     * Rejected suggestion.
+     */
     REJECTED("rejected"),
+    /**
+     * Accepted suggestion.
+     */
     ACCEPTED("accepted"),
+    /**
+     * Skipped suggestion.
+     */
     SKIPPED("skipped"),
+    /**
+     * Suggestion offered to the user by an AL strategy.
+     * 
+     * @deprecated Records of this type are no longer generated. Look for
+     *             {@link ActiveLearningSuggestionOfferedEvent} in the action log instead.
+     */
     SHOWN("shown"),
+    /**
+     * Suggestion corrected by the user via the AL sidebar.
+     */
     CORRECTED("corrected");
 
     private final String id;
 
-    LearningRecordUserAction(String aId)
+    LearningRecordType(String aId)
     {
         id = aId;
     }
 
-    public String getName() { return getId(); }
+    public String getName()
+    {
+        return getId();
+    }
 
     @Override
-    public String getId() { return id; }
+    public String getId()
+    {
+        return id;
+    }
 
     @Override
-    public String toString() { return getId(); }
+    public String toString()
+    {
+        return getId();
+    }
 }

@@ -19,10 +19,10 @@ package de.tudarmstadt.ukp.inception.active.learning.sidebar;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.inception.active.learning.sidebar.ActiveLearningUserStateMetaData.CURRENT_AL_USER_STATE;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.ACCEPTED;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.CORRECTED;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.REJECTED;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.SKIPPED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.ACCEPTED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.CORRECTED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.REJECTED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.SKIPPED;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -95,6 +95,7 @@ import de.tudarmstadt.ukp.inception.active.learning.ActiveLearningServiceImpl.Ac
 import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningRecommendationEvent;
 import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningSessionCompletedEvent;
 import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningSessionStartedEvent;
+import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningSuggestionOfferedEvent;
 import de.tudarmstadt.ukp.inception.active.learning.strategy.ActiveLearningStrategy;
 import de.tudarmstadt.ukp.inception.active.learning.strategy.UncertaintySamplingStrategy;
 import de.tudarmstadt.ukp.inception.recommendation.RecommendationEditorExtension;
@@ -103,7 +104,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup.Delta;
 import de.tudarmstadt.ukp.inception.recommendation.event.AjaxPredictionsSwitchedEvent;
@@ -322,30 +323,44 @@ public class ActiveLearningSidebar
     private void showAndHighlightRecommendationAndJumpToRecommendationLocation(
             AjaxRequestTarget aTarget)
     {
+        AnnotatorState state = getModelObject();
         ActiveLearningUserState alState = alStateModel.getObject();
         
         if (alState.getCurrentDifference().isPresent()) {
             alState.setHasUnseenRecommendation(true);
             AnnotationSuggestion currentRecommendation = alStateModel.getObject()
                     .getCurrentRecommendation().get();
+            
+            SourceDocument sourceDocument = documentService.getSourceDocument(
+                    state.getProject(), currentRecommendation.getDocumentName());
+            
             try {
                 refreshFeatureEditor(aTarget, currentRecommendation);
                 
                 // jump to the document of that recommendation
-                actionShowSelectedDocument(aTarget,
-                        documentService.getSourceDocument(this.getModelObject().getProject(),
-                                currentRecommendation.getDocumentName()),
+                actionShowSelectedDocument(aTarget, sourceDocument,
                         currentRecommendation.getBegin());
+                
+                highlightCurrentRecommendation(aTarget);
             }
             catch (IOException e) {
                 LOG.error("Unable to switch to document : {} ", e.getMessage(), e);
                 error("Unable to switch to document : " + e.getMessage());
                 aTarget.addChildren(getPage(), IFeedback.class);
             }
-
-//            writeLearningRecordInDatabaseAndEventLog(currentRecommendation, SHOWN);
             
-            highlightCurrentRecommendation(aTarget);
+            // Send an application event that the suggestion has been rejected
+            List<AnnotationSuggestion> alternativeSuggestions = recommendationService
+                    .getPredictions(state.getUser(), state.getProject())
+                    .getPredictionsByTokenAndFeature(currentRecommendation.getDocumentName(),
+                            alState.getLayer(), currentRecommendation.getBegin(),
+                            currentRecommendation.getEnd(), currentRecommendation.getFeature());
+
+            applicationEventPublisherHolder.get()
+                    .publishEvent(new ActiveLearningSuggestionOfferedEvent(this, sourceDocument,
+                            currentRecommendation, state.getUser().getUsername(),
+                            alState.getLayer(), currentRecommendation.getFeature(),
+                            alternativeSuggestions));
         }
         else if (alState.getLearnSkippedRecommendationTime() == null) {
             alState.setHasUnseenRecommendation(false);
@@ -588,14 +603,14 @@ public class ActiveLearningSidebar
     }
     
     private void writeLearningRecordInDatabaseAndEventLog(
-            AnnotationSuggestion aCurrentRecommendation, LearningRecordUserAction aUserAction)
+            AnnotationSuggestion aCurrentRecommendation, LearningRecordType aUserAction)
     {
         writeLearningRecordInDatabaseAndEventLog(aCurrentRecommendation, aUserAction,
                 aCurrentRecommendation.getLabel());
     }
 
     private void writeLearningRecordInDatabaseAndEventLog(AnnotationSuggestion aSuggestion,
-            LearningRecordUserAction aUserAction, String aAnnotationValue)
+            LearningRecordType aUserAction, String aAnnotationValue)
     {
         AnnotatorState state = ActiveLearningSidebar.this.getModelObject();
         ActiveLearningUserState alState = alStateModel.getObject();
@@ -611,11 +626,10 @@ public class ActiveLearningSidebar
                 LearningRecordChangeLocation.AL_SIDEBAR);
 
         // Send an application event that the suggestion has been rejected
-        Predictions model = recommendationService.getPredictions(state.getUser(),
-                state.getProject());
-        List<AnnotationSuggestion> alternativeSuggestions = model.getPredictionsByTokenAndFeature(
-                aSuggestion.getDocumentName(), alState.getLayer(), aSuggestion.getBegin(),
-                aSuggestion.getEnd(), aSuggestion.getFeature());
+        List<AnnotationSuggestion> alternativeSuggestions = recommendationService
+                .getPredictions(state.getUser(), state.getProject())
+                .getPredictionsByTokenAndFeature(aSuggestion.getDocumentName(), alState.getLayer(),
+                        aSuggestion.getBegin(), aSuggestion.getEnd(), aSuggestion.getFeature());
 
         applicationEventPublisherHolder.get()
                 .publishEvent(new ActiveLearningRecommendationEvent(this, sourceDoc, aSuggestion,
@@ -789,7 +803,7 @@ public class ActiveLearningSidebar
             record.getOffsetCharacterBegin());
         JCas jCas = this.getJCasProvider().get();
 
-        if (record.getUserAction().equals(LearningRecordUserAction.REJECTED)) {
+        if (record.getUserAction().equals(LearningRecordType.REJECTED)) {
             highlightTextAndDisplayMessage(aTarget, record);
         }
         // if the suggestion still exists, highlight that suggestion.
@@ -852,7 +866,7 @@ public class ActiveLearningSidebar
         annotationPage.actionRefreshDocument(aTarget);
         learningRecordService.delete(aRecord);
         learningRecords.detach();
-        if (aRecord.getUserAction().equals(LearningRecordUserAction.ACCEPTED)) {
+        if (aRecord.getUserAction().equals(LearningRecordType.ACCEPTED)) {
             // IMPORTANT: we must jump to the document which contains the annotation that is to
             // be deleted because deleteAnnotationByHistory will delete the annotation via the
             // methods provided by the AnnotationActionHandler and these operate ONLY on the

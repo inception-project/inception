@@ -24,9 +24,12 @@ import org.springframework.context.ApplicationEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType;
 
-public class ActiveLearningRecommendationEvent
+/**
+ * Event generated when a suggestion is offered to the user via the active learning sidebar as part
+ * of an active learning sampling strategy.
+ */
+public class ActiveLearningSuggestionOfferedEvent
     extends ApplicationEvent
 {
     private static final long serialVersionUID = -2741267700429534514L;
@@ -36,13 +39,11 @@ public class ActiveLearningRecommendationEvent
     private final String user;
     private final AnnotationLayer layer;
     private final String annotationFeature;
-    private final LearningRecordType action;
     private final List<AnnotationSuggestion> allRecommendations;
 
-    public ActiveLearningRecommendationEvent(Object aSource, SourceDocument aDocument,
+    public ActiveLearningSuggestionOfferedEvent(Object aSource, SourceDocument aDocument,
             AnnotationSuggestion aCurrentRecommendation, String aUser, AnnotationLayer aLayer,
-            String aAnnotationFeature, LearningRecordType aAction,
-            List<AnnotationSuggestion> aAllRecommendations)
+            String aAnnotationFeature, List<AnnotationSuggestion> aAllRecommendations)
     {
         super(aSource);
         document = aDocument;
@@ -50,7 +51,6 @@ public class ActiveLearningRecommendationEvent
         user = aUser;
         layer = aLayer;
         annotationFeature = aAnnotationFeature;
-        action = aAction;
         allRecommendations = aAllRecommendations;
     }
 
@@ -77,11 +77,6 @@ public class ActiveLearningRecommendationEvent
     public String getAnnotationFeature()
     {
         return annotationFeature;
-    }
-
-    public LearningRecordType getAction()
-    {
-        return action;
     }
 
     public List<AnnotationSuggestion> getAllRecommendations()

@@ -34,7 +34,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType;
 
 @Component(LearningRecordService.SERVICE_NAME)
 public class LearningRecordServiceImpl
@@ -47,7 +47,7 @@ public class LearningRecordServiceImpl
     @Override
     public void logLearningRecord(SourceDocument aDocument, String aUsername,
             AnnotationSuggestion aSuggestion, AnnotationLayer aLayer, AnnotationFeature aFeature,
-            LearningRecordUserAction aUserAction, LearningRecordChangeLocation aLocation)
+            LearningRecordType aUserAction, LearningRecordChangeLocation aLocation)
     {
         logLearningRecord(aDocument, aUsername, aSuggestion, aSuggestion.getLabel(), aLayer,
                 aFeature, aUserAction, aLocation);
@@ -57,7 +57,7 @@ public class LearningRecordServiceImpl
     @Override
     public void logLearningRecord(SourceDocument aDocument, String aUsername,
             AnnotationSuggestion aSuggestion, String aAlternativeLabel, AnnotationLayer aLayer,
-            AnnotationFeature aFeature, LearningRecordUserAction aUserAction, 
+            AnnotationFeature aFeature, LearningRecordType aUserAction, 
             LearningRecordChangeLocation aLocation)
     {
         LearningRecord record = new LearningRecord();
@@ -108,14 +108,14 @@ public class LearningRecordServiceImpl
                 "FROM LearningRecord l WHERE",
                 "l.user = :user AND",
                 "l.sourceDocument.project = :project AND",
-//                "l.userAction != :action AND",
                 "l.layer = :layer",
+                "l.userAction != :action AND",
                 "ORDER BY l.id desc");
         TypedQuery<LearningRecord> query = entityManager.createQuery(sql, LearningRecord.class)
                 .setParameter("user", aUsername)
                 .setParameter("project", aDocument.getProject())
-//                .setParameter("action", LearningRecordUserAction.SHOWN)
-                .setParameter("layer", aLayer);
+                .setParameter("layer", aLayer)
+                .setParameter("action", LearningRecordType.SHOWN); // SHOWN records NOT returned
         if (aLimit > 0) {
             query = query.setMaxResults(aLimit);
         }
