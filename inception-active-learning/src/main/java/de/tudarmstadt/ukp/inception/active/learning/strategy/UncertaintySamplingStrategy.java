@@ -17,12 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.active.learning.strategy;
 
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.REJECTED;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -35,8 +32,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.active.learning.ActiveLearningService;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup.Delta;
 
@@ -57,23 +52,23 @@ public class UncertaintySamplingStrategy
     }
 
     @Override
-    public Optional<Delta> updateRecommendations(
-            LearningRecordService aRecordService, Date learnSkippedRecommendationTime)
+    public Optional<Delta> updateRecommendations(ActiveLearningService aALService,
+            LearningRecordService aRecordService)
     {
         // remove invisible recommendations
         List<SuggestionGroup> filteredRecommendations = new ArrayList<>(
                 listOfRecommendationsForEachToken);
 
         // remove rejected recommendations
-        hideRejectedOrSkippedAnnotations(aRecordService, true, learnSkippedRecommendationTime,
-                filteredRecommendations);
+        hideRejectedOrSkippedAnnotations(aRecordService, true,
+                filteredRecommendations, aALService);
 
         return calculateDifferencesAndReturnLowestVisible(filteredRecommendations);
     }
 
     @Override
     public Optional<Delta> generateRecommendationWithLowestDifference(
-            LearningRecordService aRecordService, Date learnSkippedRecommendationTime,
+            ActiveLearningService aALService, LearningRecordService aRecordService,
             List<SuggestionGroup> aListOfRecommendationsForEachToken)
     {
         long startTimer = System.currentTimeMillis();
@@ -94,8 +89,7 @@ public class UncertaintySamplingStrategy
                 listOfRecommendationsForEachToken);
 
         // remove rejected recommendations
-        hideRejectedOrSkippedAnnotations(aRecordService, true, learnSkippedRecommendationTime,
-                filteredRecommendations);
+        hideRejectedOrSkippedAnnotations(aRecordService, true, filteredRecommendations, aALService);
         long removeRejectedSkippedRecommendation = System.currentTimeMillis();
         LOG.debug("Removing rejected or skipped ones costs {} ms.",
                 (removeRejectedSkippedRecommendation - removeDuplicateRecommendation));
@@ -103,35 +97,13 @@ public class UncertaintySamplingStrategy
         return calculateDifferencesAndReturnLowestVisible(filteredRecommendations);
     }
 
-    @Override
-    public boolean hasSkippedSuggestions(LearningRecordService aRecordService,
+    private void hideRejectedOrSkippedAnnotations(LearningRecordService aRecordService,
+            boolean aFilterSkippedRecommendation, List<SuggestionGroup> aSuggestionGroups,
             ActiveLearningService aActiveLearningService)
     {
-        listOfRecommendationsForEachToken = aActiveLearningService
-                .getRecommendationFromRecommendationModel(annotatorState.getProject(),
-                        annotatorState.getUser(), selectedLayer);
-        hideRejectedOrSkippedAnnotations(aRecordService, false, null,
-                listOfRecommendationsForEachToken);
-        return !listOfRecommendationsForEachToken.isEmpty();
-    }
-
-    private void hideRejectedOrSkippedAnnotations(LearningRecordService aRecordService,
-            boolean filterSkippedRecommendation, Date learnSkippedRecommendationTime,
-            List<SuggestionGroup> aSuggestionGroups)
-    {
-        List<LearningRecord> records = aRecordService.getAllRecordsByDocumentAndUserAndLayer(
-                annotatorState.getDocument(), annotatorState.getUser().getUsername(),
-                selectedLayer);
-        
-        for (SuggestionGroup group : aSuggestionGroups) {
-            for (AnnotationSuggestion suggestion : group) {
-                // If a suggestion is already invisible, we don't need to check if it needs hiding
-                if (suggestion.isVisible() && doesContainRejectedOrSkippedRecord(records,
-                        suggestion, filterSkippedRecommendation, learnSkippedRecommendationTime)) {
-                    suggestion.setVisible(false);
-                }
-            }
-        }
+        aActiveLearningService.hideRejectedOrSkippedAnnotations(annotatorState.getDocument(),
+                annotatorState.getUser(), selectedLayer, aFilterSkippedRecommendation,
+                aSuggestionGroups);
     }
 
     private static SuggestionGroup removeDuplicateRecommendations(
@@ -165,47 +137,6 @@ public class UncertaintySamplingStrategy
             }
         }
         return false;
-    }
-
-    private static boolean doesContainRejectedOrSkippedRecord(List<LearningRecord> records,
-        AnnotationSuggestion aRecommendation, boolean filterSkippedRecommendation,
-        Date learnSkippedRecommendationTime)
-    {
-        for (LearningRecord record : records) {
-            if ((record.getUserAction().equals(REJECTED)
-                    || filterSkippedRecord(record, filterSkippedRecommendation) && 
-                needFilterByTime(learnSkippedRecommendationTime, record)) && 
-                hasSameTokenAndSuggestion(aRecommendation, record)
-            ) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private static boolean filterSkippedRecord(LearningRecord record,
-        boolean filterSkippedRecommendation)
-    {
-        return record.getUserAction().equals(LearningRecordType.SKIPPED)
-            && filterSkippedRecommendation;
-    }
-
-    private static boolean hasSameTokenAndSuggestion(AnnotationSuggestion aRecommendation,
-        LearningRecord aRecord)
-    {
-        return aRecord.getSourceDocument().getName().equals(aRecommendation.getDocumentName()) && 
-                aRecord.getOffsetCharacterBegin() == aRecommendation.getBegin() && 
-                aRecord.getOffsetCharacterEnd() == aRecommendation.getEnd() && 
-                aRecord.getAnnotation().equals(aRecommendation.getLabel());
-    }
-
-    /**
-     * If learnSkippedTime is null, this record needs to be filtered.
-     * If the record written time is after the learnSkippedTime, this record needs to be filtered.
-     */
-    private static boolean needFilterByTime(Date learnSkippedTime, LearningRecord record)
-    {
-        return learnSkippedTime == null || learnSkippedTime.compareTo(record.getActionDate()) <= 0;
     }
 
     private static Optional<Delta> calculateDifferencesAndReturnLowestVisible(

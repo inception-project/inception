@@ -20,14 +20,19 @@ package de.tudarmstadt.ukp.inception.active.learning;
 import java.util.List;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 
 public interface ActiveLearningService
 {
-    List<SuggestionGroup> getRecommendationFromRecommendationModel(Project aProject, User aUser,
+    /**
+     * Get all suggestions for the given layer and user as a flat list (i.e. not grouped by
+     * documents, but grouped by alternatives).
+     */
+    List<SuggestionGroup> getRecommendationFromRecommendationModel(User aUser,
             AnnotationLayer aLayer);
 
     /**
@@ -36,4 +41,14 @@ public interface ActiveLearningService
      * clicking on a history record.
      */
     boolean isSuggestionVisible(LearningRecord aRecord);
+
+    /**
+     * Checks if the are any records of type {@link LearningRecordType#SKIPPED} in the history of
+     * the given layer for the given user.
+     */
+    boolean hasSkippedSuggestions(User aUser, AnnotationLayer aLayer);
+
+    void hideRejectedOrSkippedAnnotations(SourceDocument aDocument, User aUser,
+            AnnotationLayer aLayer, boolean aFilterSkippedRecommendation,
+            List<SuggestionGroup> aSuggestionGroups);
 }

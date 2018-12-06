@@ -74,4 +74,16 @@ public interface LearningRecordService {
             AnnotationSuggestion aSuggestion, String aAlternativeLabel, AnnotationLayer aLayer,
             AnnotationFeature aFeature, LearningRecordType aUserAction,
             LearningRecordChangeLocation aLocation);
+
+    /**
+     * Checks if the are any records of type {@link LearningRecordType#SKIPPED} in the history of
+     * the given layer for the given user.
+     */
+    boolean hasSkippedSuggestions(User aUser, AnnotationLayer aLayer);
+    
+    /**
+     * Removes all records of type {@link LearningRecordType#SKIPPED} in the history of
+     * the given layer for the given user.
+     */
+    void deleteSkippedSuggestions(User aUser, AnnotationLayer aLayer);
 }

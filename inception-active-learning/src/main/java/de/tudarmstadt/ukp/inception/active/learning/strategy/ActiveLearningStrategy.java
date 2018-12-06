@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.active.learning.strategy;
 
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -28,13 +27,10 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup.Del
 
 public interface ActiveLearningStrategy
 {
-    Optional<Delta> updateRecommendations(LearningRecordService aRecordService,
-            Date learnSkippedRecommendationTime);
+    Optional<Delta> updateRecommendations(ActiveLearningService aALService,
+            LearningRecordService aRecordService);
 
-    Optional<Delta> generateRecommendationWithLowestDifference(
-            LearningRecordService aRecordService, Date learnSkippedRecommendationTime,
+    Optional<Delta> generateRecommendationWithLowestDifference(ActiveLearningService aALService,
+            LearningRecordService aRecordService,
             List<SuggestionGroup> aListOfRecommendationsForEachToken);
-
-    boolean hasSkippedSuggestions(LearningRecordService aRecordService,
-            ActiveLearningService aActiveLearningService);
 }

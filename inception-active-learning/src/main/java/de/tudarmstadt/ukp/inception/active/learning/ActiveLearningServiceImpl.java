@@ -17,11 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.active.learning;
 
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.REJECTED;
 import static java.util.stream.Collectors.toList;
 
 import java.io.Serializable;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -29,16 +29,17 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.active.learning.strategy.ActiveLearningStrategy;
+import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
@@ -51,24 +52,24 @@ public class ActiveLearningServiceImpl
     private final DocumentService documentService;
     private final RecommendationService recommendationService;
     private final UserDao userService;
-    private final AnnotationSchemaService schemaService;
+    private final LearningRecordService learningHistoryService;
 
     @Autowired
     public ActiveLearningServiceImpl(DocumentService aDocumentService,
             RecommendationService aRecommendationService, UserDao aUserDao,
-            AnnotationSchemaService aSchemaService)
+            LearningRecordService aLearningHistoryService)
     {
         documentService = aDocumentService;
         recommendationService = aRecommendationService;
         userService = aUserDao;
-        schemaService = aSchemaService;
+        learningHistoryService = aLearningHistoryService;
     }
 
     @Override
-    public List<SuggestionGroup> getRecommendationFromRecommendationModel(
-            Project aProject, User aUser, AnnotationLayer aLayer)
+    public List<SuggestionGroup> getRecommendationFromRecommendationModel(User aUser,
+            AnnotationLayer aLayer)
     {
-        Predictions model = recommendationService.getPredictions(aUser, aProject);
+        Predictions model = recommendationService.getPredictions(aUser, aLayer.getProject());
 
         if (model == null) {
             return Collections.emptyList();
@@ -76,18 +77,18 @@ public class ActiveLearningServiceImpl
 
         Map<String, SuggestionDocumentGroup> recommendationsMap = model
                 .getPredictionsForWholeProject(aLayer, documentService, true);
-        
+
         return recommendationsMap.values().stream()
-            .flatMap(docMap -> docMap.stream())
-            .collect(toList());
+                .flatMap(docMap -> docMap.stream())
+                .collect(toList());
     }
     
     @Override
     public boolean isSuggestionVisible(LearningRecord aRecord)
     {
         User user = userService.get(aRecord.getUser());
-        List<SuggestionGroup> suggestions = getRecommendationFromRecommendationModel(
-                aRecord.getSourceDocument().getProject(), user, aRecord.getLayer());
+        List<SuggestionGroup> suggestions = getRecommendationFromRecommendationModel(user,
+                aRecord.getLayer());
         for (SuggestionGroup listOfAO : suggestions) {
             if (listOfAO.stream().anyMatch(suggestion -> 
                     suggestion.getDocumentName().equals(aRecord.getSourceDocument().getName()) && 
@@ -102,19 +103,71 @@ public class ActiveLearningServiceImpl
         }
         return false;
     }
+    
+    @Override
+    public boolean hasSkippedSuggestions(User aUser, AnnotationLayer aLayer)
+    {
+        return learningHistoryService.hasSkippedSuggestions(aUser, aLayer);
+    }
+    
+    @Override
+    public void hideRejectedOrSkippedAnnotations(SourceDocument aDocument, User aUser,
+            AnnotationLayer aLayer, boolean filterSkippedRecommendation,
+            List<SuggestionGroup> aSuggestionGroups)
+    {
+        List<LearningRecord> records = learningHistoryService
+                .getAllRecordsByDocumentAndUserAndLayer(aDocument, aUser.getUsername(),
+                        aLayer);
+
+        for (SuggestionGroup group : aSuggestionGroups) {
+            for (AnnotationSuggestion suggestion : group) {
+                // If a suggestion is already invisible, we don't need to check if it needs hiding
+                if (suggestion.isVisible() && doesContainRejectedOrSkippedRecord(records,
+                        suggestion, filterSkippedRecommendation)) {
+                    suggestion.setVisible(false);
+                }
+            }
+        }
+    }
+    
+    private static boolean doesContainRejectedOrSkippedRecord(List<LearningRecord> records,
+            AnnotationSuggestion aRecommendation, boolean filterSkippedRecommendation)
+    {
+        for (LearningRecord record : records) {
+            if ((record.getUserAction().equals(REJECTED)
+                    || filterSkippedRecord(record, filterSkippedRecommendation))
+                    && hasSameTokenAndSuggestion(aRecommendation, record)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean filterSkippedRecord(LearningRecord record,
+            boolean filterSkippedRecommendation)
+    {
+        return record.getUserAction().equals(LearningRecordType.SKIPPED)
+                && filterSkippedRecommendation;
+    }
+
+    private static boolean hasSameTokenAndSuggestion(AnnotationSuggestion aRecommendation,
+            LearningRecord aRecord)
+    {
+        return aRecord.getSourceDocument().getName().equals(aRecommendation.getDocumentName())
+                && aRecord.getOffsetCharacterBegin() == aRecommendation.getBegin()
+                && aRecord.getOffsetCharacterEnd() == aRecommendation.getEnd()
+                && aRecord.getAnnotation().equals(aRecommendation.getLabel());
+    }
 
     public static class ActiveLearningUserState implements Serializable
     {
         private static final long serialVersionUID = -167705997822964808L;
         
         private boolean sessionActive = false;
-        private boolean hasUnseenRecommendation = false;
-        private boolean hasSkippedRecommendation = false;
         private boolean doExistRecommenders = true;
         private Delta currentDifference;
         private AnnotationLayer layer;
         private ActiveLearningStrategy strategy;
-        private Date learnSkippedRecommendationTime;
         private List<SuggestionGroup> listOfRecommendationsForEachToken;
 
         public boolean isSessionActive()
@@ -125,26 +178,6 @@ public class ActiveLearningServiceImpl
         public void setSessionActive(boolean sessionActive)
         {
             this.sessionActive = sessionActive;
-        }
-
-        public boolean isHasUnseenRecommendation()
-        {
-            return hasUnseenRecommendation;
-        }
-
-        public void setHasUnseenRecommendation(boolean hasUnseenRecommendation)
-        {
-            this.hasUnseenRecommendation = hasUnseenRecommendation;
-        }
-
-        public boolean isHasSkippedRecommendation()
-        {
-            return hasSkippedRecommendation;
-        }
-
-        public void setHasSkippedRecommendation(boolean hasSkippedRecommendation)
-        {
-            this.hasSkippedRecommendation = hasSkippedRecommendation;
         }
 
         public boolean isDoExistRecommenders()
@@ -191,16 +224,6 @@ public class ActiveLearningServiceImpl
         public void setStrategy(ActiveLearningStrategy aStrategy)
         {
             strategy = aStrategy;
-        }
-
-        public Date getLearnSkippedRecommendationTime()
-        {
-            return learnSkippedRecommendationTime;
-        }
-
-        public void setLearnSkippedRecommendationTime(Date learnSkippedRecommendationTime)
-        {
-            this.learnSkippedRecommendationTime = learnSkippedRecommendationTime;
         }
 
         public void setListOfRecommendationsForEachToken(List<SuggestionGroup>

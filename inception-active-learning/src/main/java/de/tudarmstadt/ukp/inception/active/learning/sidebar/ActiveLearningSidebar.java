@@ -27,7 +27,6 @@ import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningReco
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -197,7 +196,7 @@ public class ActiveLearningSidebar
         mainContainer.add(createNoRecommendersMessage());
         mainContainer.add(createSessionControlForm());
         mainContainer.add(createNoRecommendationLabel());
-        mainContainer.add(createLearnFromSkippedRecommendationForm());
+        mainContainer.add(clearSkippedRecommendationForm());
         mainContainer.add(createRecommendationOperationForm());
         mainContainer.add(createLearningHistory());
         add(mainContainer);
@@ -286,10 +285,9 @@ public class ActiveLearningSidebar
         AnnotatorState annotatorState = getModelObject();
 
         alState.setSessionActive(true);
-        alState.setLearnSkippedRecommendationTime(null);
 
-        alState.setListOfRecommendationsForEachToken(activeLearningService
-                .getRecommendationFromRecommendationModel(annotatorState.getProject(),
+        alState.setListOfRecommendationsForEachToken(
+                activeLearningService.getRecommendationFromRecommendationModel(
                         annotatorState.getUser(), alStateModel.getObject().getLayer()));
 
         ActiveLearningStrategy alStrategy = new UncertaintySamplingStrategy(annotatorState,
@@ -297,9 +295,8 @@ public class ActiveLearningSidebar
         alState.setStrategy(alStrategy);
 
         alState.setCurrentDifference(
-                alStrategy.generateRecommendationWithLowestDifference(
-                        learningRecordService, alState.getLearnSkippedRecommendationTime(),
-                        alState.getListOfRecommendationsForEachToken()));
+                alStrategy.generateRecommendationWithLowestDifference(activeLearningService,
+                        learningRecordService, alState.getListOfRecommendationsForEachToken()));
         showAndHighlightRecommendationAndJumpToRecommendationLocation(target);
 
         applicationEventPublisherHolder.get().publishEvent(new ActiveLearningSessionStartedEvent(
@@ -327,7 +324,6 @@ public class ActiveLearningSidebar
         ActiveLearningUserState alState = alStateModel.getObject();
         
         if (alState.getCurrentDifference().isPresent()) {
-            alState.setHasUnseenRecommendation(true);
             AnnotationSuggestion currentRecommendation = alStateModel.getObject()
                     .getCurrentRecommendation().get();
             
@@ -361,17 +357,6 @@ public class ActiveLearningSidebar
                             currentRecommendation, state.getUser().getUsername(),
                             alState.getLayer(), currentRecommendation.getFeature(),
                             alternativeSuggestions));
-        }
-        else if (alState.getLearnSkippedRecommendationTime() == null) {
-            alState.setHasUnseenRecommendation(false);
-            boolean hasSkippedRecommendation = alStateModel.getObject()
-                    .getStrategy()
-                    .hasSkippedSuggestions(learningRecordService, activeLearningService);
-            alState.setHasSkippedRecommendation(hasSkippedRecommendation);
-        }
-        else {
-            alState.setHasUnseenRecommendation(false);
-            alState.setHasSkippedRecommendation(false);
         }
     }
 
@@ -426,35 +411,39 @@ public class ActiveLearningSidebar
                 "There are no further suggestions.");
         noRecommendation.add(visibleWhen(() -> {
             ActiveLearningUserState alState = alStateModel.getObject();
-            return alState.isSessionActive() && !alState.isHasUnseenRecommendation()
-                    && !alState.isHasSkippedRecommendation();
+            return alState.isSessionActive() 
+                    && !alState.getCurrentRecommendation().isPresent()
+                    && !activeLearningService.hasSkippedSuggestions(
+                            getModelObject().getUser(), alState.getLayer());
         }));
         noRecommendation.setOutputMarkupPlaceholderTag(true);
         return noRecommendation;
     }
 
-    private Form<?> createLearnFromSkippedRecommendationForm()
+    private Form<Void> clearSkippedRecommendationForm()
     {
-        Form<?> learnFromSkippedRecommendationForm = new Form<Void>(
-                CID_LEARN_FROM_SKIPPED_RECOMMENDATION_FORM);
-        learnFromSkippedRecommendationForm.add(LambdaBehavior.onConfigure(component -> component
-            .setVisible(alStateModel.getObject().isSessionActive() && !alStateModel.getObject
-                ().isHasUnseenRecommendation() &&
-                alStateModel.getObject().isHasSkippedRecommendation())));
-        learnFromSkippedRecommendationForm.setOutputMarkupPlaceholderTag(true);
-        learnFromSkippedRecommendationForm.add(new Label(CID_ONLY_SKIPPED_RECOMMENDATION_LABEL, "There "
-            + "are only skipped suggestions. Do you want to learn these again?"));
-        learnFromSkippedRecommendationForm.add(new LambdaAjaxButton<>(CID_LEARN_SKIPPED_ONES,
-            this::learnSkippedRecommendations));
-        return learnFromSkippedRecommendationForm;
+        Form<Void> form = new Form<>(CID_LEARN_FROM_SKIPPED_RECOMMENDATION_FORM);
+        form.add(LambdaBehavior.visibleWhen(() -> {
+            ActiveLearningUserState alState = alStateModel.getObject();
+            return alState.isSessionActive() 
+                    && !alState.getCurrentRecommendation().isPresent()
+                    && activeLearningService.hasSkippedSuggestions(
+                            getModelObject().getUser(), alState.getLayer());
+        }));
+        form.setOutputMarkupPlaceholderTag(true);
+        form.add(new Label(CID_ONLY_SKIPPED_RECOMMENDATION_LABEL,
+                "There are only skipped suggestions. Do you want to learn these again?"));
+        form.add(new LambdaAjaxButton<>(CID_LEARN_SKIPPED_ONES, this::learnSkippedRecommendations));
+        return form;
     }
 
 
     private void learnSkippedRecommendations(AjaxRequestTarget aTarget, Form<Void> aForm)
         throws IOException
     {
-        alStateModel.getObject().setLearnSkippedRecommendationTime(new Date());
-
+        learningRecordService.deleteSkippedSuggestions(getModelObject().getUser(),
+                alStateModel.getObject().getLayer());
+        
         moveToNextRecommendation(aTarget);
         
         aTarget.add(mainContainer);
@@ -463,9 +452,10 @@ public class ActiveLearningSidebar
     private Form<Void> createRecommendationOperationForm()
     {
         recommendationForm = new Form<Void>(CID_RECOMMENDATION_FORM);
-        recommendationForm.add(LambdaBehavior.onConfigure(component -> component.setVisible(
-            alStateModel.getObject().isSessionActive() && alStateModel.getObject()
-                .isHasUnseenRecommendation())));
+        recommendationForm.add(LambdaBehavior.visibleWhen(() -> {
+            ActiveLearningUserState alState = alStateModel.getObject();
+            return alState.isSessionActive() && alState.getCurrentRecommendation().isPresent();
+        }));
         recommendationForm.setOutputMarkupPlaceholderTag(true);
 
         recommendationForm.add(createRecommendationCoveredTextLink());
@@ -734,8 +724,8 @@ public class ActiveLearningSidebar
 
         ActiveLearningUserState alState = alStateModel.getObject();
         ActiveLearningStrategy activeLearningRecommender = alState.getStrategy();
-        alState.setCurrentDifference(activeLearningRecommender.updateRecommendations(
-                learningRecordService, alState.getLearnSkippedRecommendationTime()));
+        alState.setCurrentDifference(activeLearningRecommender
+                .updateRecommendations(activeLearningService, learningRecordService));
 
         aTarget.add((Component) getActionHandler());
         annotationPage.actionRefreshDocument(aTarget);
@@ -1060,28 +1050,14 @@ public class ActiveLearningSidebar
             // Obtain the next recommendation
             ActiveLearningStrategy activeLearningRecommender = alStateModel.getObject()
                 .getStrategy();
-            alState.setCurrentDifference(activeLearningRecommender.updateRecommendations(
-                    learningRecordService, alState.getLearnSkippedRecommendationTime()));
+            
+            alState.setCurrentDifference(activeLearningRecommender
+                    .updateRecommendations(activeLearningService, learningRecordService));
             
             // If there is a new recommendation, then open it in the sidebar
             if (alState.getCurrentRecommendation().isPresent()) {
-                alState.setHasUnseenRecommendation(true);
-                
                 refreshFeatureEditor(aEvent.getRequestHandler(),
                         alState.getCurrentRecommendation().get());
-            }
-            // If there there is now new recommendation, fall back to any skipped recommendations
-            else if (alState.getLearnSkippedRecommendationTime() == null) {
-                alState.setHasUnseenRecommendation(false);
-                alState.setHasUnseenRecommendation(
-                        alState.getStrategy()
-                        .hasSkippedSuggestions(learningRecordService,
-                            activeLearningService));
-            }
-            // If there are no skipped recommendations either, stop
-            else {
-                alState.setHasUnseenRecommendation(false);
-                alState.setHasSkippedRecommendation(false);
             }
         }
     }
@@ -1093,14 +1069,12 @@ public class ActiveLearningSidebar
         ActiveLearningUserState alState = alStateModel.getObject();
 
         if (alState.isSessionActive()) {
-            alState.setListOfRecommendationsForEachToken(
-                    activeLearningService.getRecommendationFromRecommendationModel(
-                            state.getProject(), state.getUser(), alState.getLayer()));
+            alState.setListOfRecommendationsForEachToken(activeLearningService
+                    .getRecommendationFromRecommendationModel(state.getUser(), alState.getLayer()));
 
             Optional<Delta> recommendationDifference = alState.getStrategy()
-                    .generateRecommendationWithLowestDifference(learningRecordService,
-                            alState.getLearnSkippedRecommendationTime(),
-                            alState.getListOfRecommendationsForEachToken());
+                    .generateRecommendationWithLowestDifference(activeLearningService,
+                            learningRecordService, alState.getListOfRecommendationsForEachToken());
             alState.setCurrentDifference(recommendationDifference);
         }
     }

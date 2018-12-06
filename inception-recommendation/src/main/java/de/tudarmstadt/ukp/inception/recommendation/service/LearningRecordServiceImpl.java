@@ -108,8 +108,8 @@ public class LearningRecordServiceImpl
                 "FROM LearningRecord l WHERE",
                 "l.user = :user AND",
                 "l.sourceDocument.project = :project AND",
-                "l.layer = :layer",
-                "l.userAction != :action AND",
+                "l.layer = :layer AND",
+                "l.userAction != :action",
                 "ORDER BY l.id desc");
         TypedQuery<LearningRecord> query = entityManager.createQuery(sql, LearningRecord.class)
                 .setParameter("user", aUsername)
@@ -179,5 +179,38 @@ public class LearningRecordServiceImpl
         if (learningRecord != null) {
             this.delete(learningRecord);
         }
+    }
+    
+    @Override
+    @Transactional
+    public boolean hasSkippedSuggestions(User aUser, AnnotationLayer aLayer)
+    {
+        String sql = String.join("\n",
+                "SELECT COUNT(*) FROM LearningRecord WHERE",
+                "user = :user AND",
+                "layer = :layer AND",
+                "userAction != :action");
+        long count = entityManager.createQuery(sql, Long.class)
+                .setParameter("user", aUser.getUsername())
+                .setParameter("layer", aLayer)
+                .setParameter("action", LearningRecordType.SKIPPED)
+                .getSingleResult();
+        return count > 0;
+    }
+    
+    @Override
+    @Transactional
+    public void deleteSkippedSuggestions(User aUser, AnnotationLayer aLayer)
+    {
+        String sql = String.join("\n",
+                "DELETE FROM LearningRecord WHERE",
+                "user = :user AND",
+                "layer = :layer AND",
+                "userAction != :action");
+        entityManager.createQuery(sql)
+                .setParameter("user", aUser.getUsername())
+                .setParameter("layer", aLayer)
+                .setParameter("action", LearningRecordType.SKIPPED)
+                .executeUpdate();
     }
 }
