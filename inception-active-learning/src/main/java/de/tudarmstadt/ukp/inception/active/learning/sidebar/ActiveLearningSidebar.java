@@ -61,7 +61,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.JCasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
@@ -103,6 +102,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup.Delta;
@@ -594,70 +594,80 @@ public class ActiveLearningSidebar
                 aCurrentRecommendation.getLabel());
     }
 
-    private void writeLearningRecordInDatabaseAndEventLog(
-            AnnotationSuggestion aCurrentRecommendation, LearningRecordUserAction aUserAction,
-            String aAnnotationValue)
+    private void writeLearningRecordInDatabaseAndEventLog(AnnotationSuggestion aSuggestion,
+            LearningRecordUserAction aUserAction, String aAnnotationValue)
     {
         AnnotatorState state = ActiveLearningSidebar.this.getModelObject();
         ActiveLearningUserState alState = alStateModel.getObject();
 
-        AnnotationFeature feat = annotationService
-                .getFeature(aCurrentRecommendation.getFeature(), alState.getLayer());
-
+        AnnotationFeature feat = annotationService.getFeature(aSuggestion.getFeature(),
+                alState.getLayer());
         SourceDocument sourceDoc = documentService.getSourceDocument(state.getProject(),
-                aCurrentRecommendation.getDocumentName());
-        
-        learningRecordService.logLearningRecord(sourceDoc, state.getUser().getUsername(),
-                aCurrentRecommendation, aAnnotationValue, alState.getLayer(), feat, aUserAction);
+                aSuggestion.getDocumentName());
 
+        // Log the action to the learning record
+        learningRecordService.logLearningRecord(sourceDoc, state.getUser().getUsername(),
+                aSuggestion, aAnnotationValue, alState.getLayer(), feat, aUserAction,
+                LearningRecordChangeLocation.AL_SIDEBAR);
+
+        // Send an application event that the suggestion has been rejected
         Predictions model = recommendationService.getPredictions(state.getUser(),
                 state.getProject());
-        applicationEventPublisherHolder.get().publishEvent(new ActiveLearningRecommendationEvent(
-                this,
-                documentService.getSourceDocument(state.getProject(),
-                        aCurrentRecommendation.getDocumentName()),
-                aCurrentRecommendation, state.getUser().getUsername(), alState.getLayer(),
-                aCurrentRecommendation.getFeature(), aUserAction,
-                model.getPredictionsByTokenAndFeature(aCurrentRecommendation.getDocumentName(),
-                        alState.getLayer(), aCurrentRecommendation.getBegin(),
-                        aCurrentRecommendation.getEnd(),
-                        aCurrentRecommendation.getFeature())));
+        List<AnnotationSuggestion> alternativeSuggestions = model.getPredictionsByTokenAndFeature(
+                aSuggestion.getDocumentName(), alState.getLayer(), aSuggestion.getBegin(),
+                aSuggestion.getEnd(), aSuggestion.getFeature());
+
+        applicationEventPublisherHolder.get()
+                .publishEvent(new ActiveLearningRecommendationEvent(this, sourceDoc, aSuggestion,
+                        state.getUser().getUsername(), alState.getLayer(), aSuggestion.getFeature(),
+                        aUserAction, alternativeSuggestions));
     }
 
+    /**
+     * Accept a suggestion or a corrected suggestion via the sidebar. If the value in the feature
+     * editor corresponds to the originally suggested label, an acceptance is logged, otherwise
+     * a correction is logged.
+     * 
+     * <ul>
+     * <li>Creates a new annotation or updates an existing one with a new feature
+     * value.</li>
+     * <li>Marks the suggestions as hidden (not visible).</li>
+     * <li>Logs the accepting to the learning log.</li>
+     * <li>Sends events to the UI and application informing other components about the action.</li>
+     * </ul>
+     */    
     private void actionAnnotate(AjaxRequestTarget aTarget, Form<Void> aForm)
         throws IOException, AnnotationException
     {
+        AnnotatorState state = ActiveLearningSidebar.this.getModelObject();
         ActiveLearningUserState alState = alStateModel.getObject();
-        Optional<AnnotationSuggestion> currentRecommendation = alState.getCurrentRecommendation();
-
-        if (!currentRecommendation.isPresent()) {
-            return;
-        }
-
-        AnnotationSuggestion rec = currentRecommendation.get();
+        
+        // There is always a current recommendation when we get here because if there is none, the
+        // button to accept the recommendation is not visible.
+        AnnotationSuggestion rec = alState.getCurrentRecommendation().get();
         
         aTarget.add(mainContainer);
-
         
         // Create AnnotationFeature and FeatureSupport
         AnnotationFeature feat = annotationService.getFeature(rec.getFeature(), alState.getLayer());
         FeatureSupport featureSupport = featureSupportRegistry.getFeatureSupport(feat);
 
-        // Load CAS in which to create the annotation
-        AnnotatorState state = ActiveLearningSidebar.this.getModelObject();
+        // Load CAS in which to create the annotation. This might be different from the one that
+        // is currently viewed by the user, e.g. if the user switched to another document after
+        // the suggestion has been loaded into the sidebar.
         SourceDocument sourceDoc = documentService.getSourceDocument(state.getProject(),
                 rec.getDocumentName());
-        JCas jCas = documentService.readAnnotationCas(sourceDoc, state.getUser().getUsername());
+        String username = state.getUser().getUsername();
+        JCas jCas = documentService.readAnnotationCas(sourceDoc, username);
 
+        // Upsert an annotation based on the suggestion
         String selectedValue = (String) featureSupport.unwrapFeatureValue(feat, jCas.getCas(),
                 editor.getModelObject().value);
-        writeLearningRecordInDatabaseAndEventLog(rec, 
-                selectedValue.equals(rec.getLabel()) ? ACCEPTED : CORRECTED, selectedValue);
-
-        SpanAdapter adapter = (SpanAdapter) annotationService.getAdapter(alState.getLayer());
-        int id = adapter.add(state, jCas, rec.getBegin(), rec.getEnd());
-        adapter.setFeatureValue(state, jCas, id, feat, selectedValue);
-
+        AnnotationLayer layer = annotationService.getLayer(rec.getLayerId());
+        AnnotationFeature feature = annotationService.getFeature(rec.getFeature(), layer);
+        recommendationService.upsertFeature(annotationService, sourceDoc, username, jCas, layer,
+                feature, selectedValue, rec.getBegin(), rec.getEnd());
+        
         // Save CAS after annotation has been created
         documentService.writeAnnotationCas(jCas, sourceDoc, state.getUser(), true);
         
@@ -665,12 +675,16 @@ public class ActiveLearningSidebar
         // then update timestamp in state to avoid concurrent modification errors
         if (Objects.equals(state.getDocument().getId(), sourceDoc.getId())) {
             Optional<Long> diskTimestamp = documentService.getAnnotationCasTimestamp(sourceDoc,
-                    state.getUser().getUsername());
+                    username);
             if (diskTimestamp.isPresent()) {
                 state.setAnnotationDocumentTimestamp(diskTimestamp.get());
             }
         }
 
+        // Log the action to the learning record
+        writeLearningRecordInDatabaseAndEventLog(rec, 
+                selectedValue.equals(rec.getLabel()) ? ACCEPTED : CORRECTED, selectedValue);
+        
         recommendationService.getPredictions(state.getUser(), state.getProject())
                 .getPredictionsByTokenAndFeature(rec.getDocumentName(),
                         alStateModel.getObject().getLayer(), rec.getBegin(), rec.getEnd(),

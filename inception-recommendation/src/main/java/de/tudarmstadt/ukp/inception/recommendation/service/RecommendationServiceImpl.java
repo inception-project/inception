@@ -32,6 +32,10 @@ import org.apache.commons.collections4.multimap.HashSetValuedHashMap;
 import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.uima.cas.Type;
+import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.fit.util.CasUtil;
+import org.apache.uima.jcas.JCas;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,11 +48,17 @@ import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.DocumentOpenedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterAnnotationUpdateEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentResetEvent;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
@@ -297,6 +307,35 @@ public class RecommendationServiceImpl
         synchronized (state) {
             return state.getContext(aRecommender);
         }
+    }
+    
+    @Override
+    public int upsertFeature(AnnotationSchemaService annotationService, SourceDocument aDocument,
+            String aUsername, JCas aJCas, AnnotationLayer layer, AnnotationFeature aFeature,
+            String aValue, int aBegin, int aEnd)
+        throws AnnotationException
+    {
+        // The feature of the predicted label
+        SpanAdapter adapter = (SpanAdapter) annotationService.getAdapter(layer);
+        
+        // Check if there is already an annotation of the target type at the given location
+        Type type = CasUtil.getType(aJCas.getCas(), adapter.getAnnotationTypeName());
+        AnnotationFS annoFS = WebAnnoCasUtil.selectSingleFsAt(aJCas, type, aBegin, aEnd);
+        int address;
+        if (annoFS != null) {
+            // ... if yes, then we update the feature on the existing annotation
+            address = WebAnnoCasUtil.getAddr(annoFS);
+        }
+        else {
+            // ... if not, then we create a new annotation - this also takes care of attaching to 
+            // an annotation if necessary
+            address = adapter.add(aDocument, aUsername, aJCas, aBegin, aEnd);
+        }
+
+        // Update the feature value
+        adapter.setFeatureValue(aDocument, aUsername, aJCas, address, aFeature, aValue);
+        
+        return address;
     }
 
     private static class RecommendationStateKey

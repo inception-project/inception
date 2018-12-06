@@ -46,44 +46,32 @@ public class LearningRecordServiceImpl
     @Transactional
     @Override
     public void logLearningRecord(SourceDocument aDocument, String aUsername,
-            AnnotationSuggestion aPrediction, AnnotationLayer aLayer, AnnotationFeature aFeature,
-            LearningRecordUserAction aUserAction)
+            AnnotationSuggestion aSuggestion, AnnotationLayer aLayer, AnnotationFeature aFeature,
+            LearningRecordUserAction aUserAction, LearningRecordChangeLocation aLocation)
     {
-        LearningRecord record = new LearningRecord();
-        record.setUser(aUsername);
-        record.setSourceDocument(aDocument);
-        record.setUserAction(aUserAction);
-        record.setOffsetCharacterBegin(aPrediction.getBegin());
-        record.setOffsetCharacterEnd(aPrediction.getEnd());
-        record.setOffsetTokenBegin(-1);
-        record.setOffsetTokenEnd(-1);
-        record.setTokenText(aPrediction.getCoveredText());
-        record.setAnnotation(aPrediction.getLabel());
-        record.setLayer(aLayer);
-        record.setChangeLocation(LearningRecordChangeLocation.MAIN_EDITOR);
-        record.setAnnotationFeature(aFeature);
-        
-        create(record);    
+        logLearningRecord(aDocument, aUsername, aSuggestion, aSuggestion.getLabel(), aLayer,
+                aFeature, aUserAction, aLocation);
     }
     
     @Transactional
     @Override
     public void logLearningRecord(SourceDocument aDocument, String aUsername,
-            AnnotationSuggestion aPrediction, String aAlternativeLabel, AnnotationLayer aLayer,
-            AnnotationFeature aFeature, LearningRecordUserAction aUserAction)
+            AnnotationSuggestion aSuggestion, String aAlternativeLabel, AnnotationLayer aLayer,
+            AnnotationFeature aFeature, LearningRecordUserAction aUserAction, 
+            LearningRecordChangeLocation aLocation)
     {
         LearningRecord record = new LearningRecord();
         record.setUser(aUsername);
         record.setSourceDocument(aDocument);
         record.setUserAction(aUserAction);
-        record.setOffsetCharacterBegin(aPrediction.getBegin());
-        record.setOffsetCharacterEnd(aPrediction.getEnd());
+        record.setOffsetCharacterBegin(aSuggestion.getBegin());
+        record.setOffsetCharacterEnd(aSuggestion.getEnd());
         record.setOffsetTokenBegin(-1);
         record.setOffsetTokenEnd(-1);
-        record.setTokenText(aPrediction.getCoveredText());
+        record.setTokenText(aSuggestion.getCoveredText());
         record.setAnnotation(aAlternativeLabel);
         record.setLayer(aLayer);
-        record.setChangeLocation(LearningRecordChangeLocation.MAIN_EDITOR);
+        record.setChangeLocation(aLocation);
         record.setAnnotationFeature(aFeature);
 
         create(record);

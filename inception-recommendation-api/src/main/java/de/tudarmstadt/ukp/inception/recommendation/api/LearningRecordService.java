@@ -27,6 +27,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
 
 
@@ -61,9 +62,10 @@ public interface LearningRecordService {
 
     void logLearningRecord(SourceDocument aDocument, String aUsername,
             AnnotationSuggestion aPrediction, AnnotationLayer aLayer, AnnotationFeature aFeature,
-            LearningRecordUserAction aUserAction);
+            LearningRecordUserAction aUserAction, LearningRecordChangeLocation aLocation);
 
     void logLearningRecord(SourceDocument aDocument, String aUsername,
-            AnnotationSuggestion aPrediction, String aAlternativeLabel, AnnotationLayer aLayer,
-            AnnotationFeature aFeature, LearningRecordUserAction aUserAction);
+            AnnotationSuggestion aSuggestion, String aAlternativeLabel, AnnotationLayer aLayer,
+            AnnotationFeature aFeature, LearningRecordUserAction aUserAction,
+            LearningRecordChangeLocation aLocation);
 }
