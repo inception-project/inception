@@ -105,7 +105,7 @@ include::{include-dir}search-core.adoc[leveloffset=+1]
 
 include::{include-dir}search-mtas.adoc[leveloffset=+2]
 
-include::{include-dir}annotation_recommendation.adoc[leveloffset=+1]
+include::{include-dir}annotation_recommendation.adoc[leveloffset=+2]
 
 include::{include-dir}annotation_activeLearning.adoc[leveloffset=+2]
 
@@ -143,7 +143,7 @@ include::{include-dir}projects_layers.adoc[leveloffset=+1]
 
 include::{include-dir}projects_knowledge-base.adoc[leveloffset=+1]
 
-include::{include-dir}projects_recommendation.adoc[leveloffset=+1]
+include::{include-dir}projects_recommendation.adoc[leveloffset=+2]
 
 include::{include-dir}projects_recommendation_string.adoc[leveloffset=+2]
 
