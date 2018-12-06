@@ -372,8 +372,8 @@ public class AutomationUtil
             String depCoveredText = dependentFs.getCoveredText();
             String govCoveredText = governorFs.getCoveredText();
 
-            adapter.delete(aBModel, jCas, aFeature, beginOffset, endOffset, depCoveredText,
-                    govCoveredText, aValue);
+            adapter.delete(aBModel.getDocument(), aBModel.getUser().getUsername(), jCas, aFeature,
+                    beginOffset, endOffset, depCoveredText, govCoveredText, aValue);
             aCorrectionDocumentService.writeCorrectionCas(jCas, d);
         }
     }

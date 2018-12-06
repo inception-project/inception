@@ -43,10 +43,10 @@ import org.springframework.context.ApplicationEventPublisher;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.ArcCrossedMultipleSentenceException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
 /**
@@ -232,7 +232,7 @@ public class ArcAdapter
     }
 
     @Override
-    public void delete(AnnotatorState aState, JCas aJCas, VID aVid)
+    public void delete(SourceDocument aDocument, String aUsername, JCas aJCas, VID aVid)
     {
         FeatureStructure fs = selectByAddr(aJCas, FeatureStructure.class, aVid.getId());
         aJCas.removeFsFromIndexes(fs);
@@ -276,8 +276,9 @@ public class ArcAdapter
         return new ArrayList<>();
     }
 
-    public void delete(AnnotatorState aState, JCas aJCas, AnnotationFeature aFeature, int aBegin,
-            int aEnd, String aDepCoveredText, String aGovCoveredText, Object aValue)
+    public void delete(SourceDocument aDocument, String aUsername, JCas aJCas,
+            AnnotationFeature aFeature, int aBegin, int aEnd, String aDepCoveredText,
+            String aGovCoveredText, Object aValue)
     {
         Feature dependentFeature = getAnnotationType(aJCas.getCas())
                 .getFeatureByBaseName(getTargetFeatureName());
@@ -307,7 +308,7 @@ public class ArcAdapter
             if (aDepCoveredText.equals(dependentFs.getCoveredText())
                     && aGovCoveredText.equals(governorFs.getCoveredText())) {
                 if (ObjectUtils.equals(getFeatureValue(aFeature, fs), aValue)) {
-                    delete(aState, aJCas, new VID(getAddr(fs)));
+                    delete(aDocument, aUsername, aJCas, new VID(getAddr(fs)));
                 }
             }
         }
@@ -376,9 +377,9 @@ public class ArcAdapter
     }
 
     @Override
-    public void delete(AnnotatorState aState, JCas aJCas, AnnotationFeature feature, int aBegin,
-            int aEnd, Object aValue)
+    public void delete(SourceDocument aDocument, String aUsername, JCas aJCas,
+            AnnotationFeature aFeature, int aBegin, int aEnd, Object aValue)
     {
-        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException();
     }
 }

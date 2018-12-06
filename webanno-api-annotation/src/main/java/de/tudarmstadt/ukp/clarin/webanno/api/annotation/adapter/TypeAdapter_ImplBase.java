@@ -38,6 +38,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRe
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
 public abstract class TypeAdapter_ImplBase
     implements TypeAdapter
@@ -90,8 +91,17 @@ public abstract class TypeAdapter_ImplBase
         return deletable;
     }
 
+    @Deprecated
     @Override
-    public void setFeatureValue(AnnotatorState aState, JCas aJcas,
+    public void setFeatureValue(AnnotatorState aState, JCas aJCas,
+            int aAddress, AnnotationFeature aFeature, Object aValue)
+    {
+        setFeatureValue(aState.getDocument(), aState.getUser().getUsername(), aJCas, aAddress,
+                aFeature, aValue);
+    }
+    
+    @Override
+    public void setFeatureValue(SourceDocument aDocument, String aUsername, JCas aJcas,
             int aAddress, AnnotationFeature aFeature, Object aValue)
     {
         FeatureStructure fs = selectByAddr(aJcas, aAddress);
@@ -104,8 +114,8 @@ public abstract class TypeAdapter_ImplBase
         Object newValue = getValue(fs, aFeature);
         
         if (!Objects.equals(oldValue, newValue)) {
-            publishEvent(new FeatureValueUpdatedEvent(this, aState.getDocument(),
-                    aState.getUser().getUsername(), fs, aFeature, newValue, oldValue));
+            publishEvent(new FeatureValueUpdatedEvent(this, aDocument, aUsername, fs, aFeature,
+                    newValue, oldValue));
         }
     }
     
