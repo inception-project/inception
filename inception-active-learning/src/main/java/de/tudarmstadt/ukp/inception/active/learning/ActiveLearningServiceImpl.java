@@ -29,12 +29,16 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.active.learning.strategy.ActiveLearningStrategy;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
@@ -46,21 +50,25 @@ public class ActiveLearningServiceImpl
 {
     private final DocumentService documentService;
     private final RecommendationService recommendationService;
+    private final UserDao userService;
+    private final AnnotationSchemaService schemaService;
 
     @Autowired
     public ActiveLearningServiceImpl(DocumentService aDocumentService,
-            RecommendationService aRecommendationService)
+            RecommendationService aRecommendationService, UserDao aUserDao,
+            AnnotationSchemaService aSchemaService)
     {
         documentService = aDocumentService;
         recommendationService = aRecommendationService;
+        userService = aUserDao;
+        schemaService = aSchemaService;
     }
 
     @Override
     public List<SuggestionGroup> getRecommendationFromRecommendationModel(
-            AnnotatorState aState, AnnotationLayer aLayer)
+            Project aProject, User aUser, AnnotationLayer aLayer)
     {
-        Predictions model = recommendationService.getPredictions(aState.getUser(),
-                aState.getProject());
+        Predictions model = recommendationService.getPredictions(aUser, aProject);
 
         if (model == null) {
             return Collections.emptyList();
@@ -72,6 +80,27 @@ public class ActiveLearningServiceImpl
         return recommendationsMap.values().stream()
             .flatMap(docMap -> docMap.stream())
             .collect(toList());
+    }
+    
+    @Override
+    public boolean isSuggestionVisible(LearningRecord aRecord)
+    {
+        User user = userService.get(aRecord.getUser());
+        List<SuggestionGroup> suggestions = getRecommendationFromRecommendationModel(
+                aRecord.getSourceDocument().getProject(), user, aRecord.getLayer());
+        for (SuggestionGroup listOfAO : suggestions) {
+            if (listOfAO.stream().anyMatch(suggestion -> 
+                    suggestion.getDocumentName().equals(aRecord.getSourceDocument().getName()) && 
+                    suggestion.getFeature().equals(aRecord.getAnnotationFeature().getName()) && 
+                    suggestion.getLabel().equals(aRecord.getAnnotation()) && 
+                    suggestion.getBegin() == aRecord.getOffsetCharacterBegin() && 
+                    suggestion.getEnd() == aRecord.getOffsetCharacterEnd() &&
+                    suggestion.isVisible())
+            ) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public static class ActiveLearningUserState implements Serializable

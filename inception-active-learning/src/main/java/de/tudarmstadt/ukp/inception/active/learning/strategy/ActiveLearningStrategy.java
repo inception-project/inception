@@ -23,7 +23,6 @@ import java.util.Optional;
 
 import de.tudarmstadt.ukp.inception.active.learning.ActiveLearningService;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup.Delta;
 
@@ -36,9 +35,6 @@ public interface ActiveLearningStrategy
             LearningRecordService aRecordService, Date learnSkippedRecommendationTime,
             List<SuggestionGroup> aListOfRecommendationsForEachToken);
 
-    boolean hasRecommendationWhichIsSkipped(LearningRecordService aRecordService,
+    boolean hasSkippedSuggestions(LearningRecordService aRecordService,
             ActiveLearningService aActiveLearningService);
-
-    boolean checkRecommendationExist(ActiveLearningService aActiveLearningService,
-            LearningRecord aRecord);
 }

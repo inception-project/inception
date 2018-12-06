@@ -288,9 +288,9 @@ public class ActiveLearningSidebar
         alState.setSessionActive(true);
         alState.setLearnSkippedRecommendationTime(null);
 
-        alState.setListOfRecommendationsForEachToken(
-                activeLearningService.getRecommendationFromRecommendationModel(annotatorState,
-                        alStateModel.getObject().getLayer()));
+        alState.setListOfRecommendationsForEachToken(activeLearningService
+                .getRecommendationFromRecommendationModel(annotatorState.getProject(),
+                        annotatorState.getUser(), alStateModel.getObject().getLayer()));
 
         ActiveLearningStrategy alStrategy = new UncertaintySamplingStrategy(annotatorState,
                 alState.getLayer());
@@ -366,7 +366,7 @@ public class ActiveLearningSidebar
             alState.setHasUnseenRecommendation(false);
             boolean hasSkippedRecommendation = alStateModel.getObject()
                     .getStrategy()
-                    .hasRecommendationWhichIsSkipped(learningRecordService, activeLearningService);
+                    .hasSkippedSuggestions(learningRecordService, activeLearningService);
             alState.setHasSkippedRecommendation(hasSkippedRecommendation);
         }
         else {
@@ -807,8 +807,7 @@ public class ActiveLearningSidebar
             highlightTextAndDisplayMessage(aTarget, record);
         }
         // if the suggestion still exists, highlight that suggestion.
-        else if (alStateModel.getObject().getStrategy()
-                .checkRecommendationExist(activeLearningService, record)) {
+        else if (activeLearningService.isSuggestionVisible(record)) {
             highlightRecommendation(aTarget, record.getOffsetCharacterBegin(),
                     record.getOffsetCharacterEnd(), record.getTokenText(), record.getAnnotation());
         }
@@ -1076,7 +1075,7 @@ public class ActiveLearningSidebar
                 alState.setHasUnseenRecommendation(false);
                 alState.setHasUnseenRecommendation(
                         alState.getStrategy()
-                        .hasRecommendationWhichIsSkipped(learningRecordService,
+                        .hasSkippedSuggestions(learningRecordService,
                             activeLearningService));
             }
             // If there are no skipped recommendations either, stop
@@ -1090,12 +1089,13 @@ public class ActiveLearningSidebar
     @OnEvent
     public void onPredictionsSwitched(AjaxPredictionsSwitchedEvent aEvent)
     {
+        AnnotatorState state = getModelObject();
         ActiveLearningUserState alState = alStateModel.getObject();
 
         if (alState.isSessionActive()) {
             alState.setListOfRecommendationsForEachToken(
-                    activeLearningService.getRecommendationFromRecommendationModel(getModelObject(),
-                            alState.getLayer()));
+                    activeLearningService.getRecommendationFromRecommendationModel(
+                            state.getProject(), state.getUser(), alState.getLayer()));
 
             Optional<Delta> recommendationDifference = alState.getStrategy()
                     .generateRecommendationWithLowestDifference(learningRecordService,

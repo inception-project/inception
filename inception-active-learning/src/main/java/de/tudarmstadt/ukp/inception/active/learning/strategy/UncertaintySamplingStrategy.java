@@ -104,23 +104,15 @@ public class UncertaintySamplingStrategy
     }
 
     @Override
-    public boolean hasRecommendationWhichIsSkipped(LearningRecordService aRecordService,
+    public boolean hasSkippedSuggestions(LearningRecordService aRecordService,
             ActiveLearningService aActiveLearningService)
     {
         listOfRecommendationsForEachToken = aActiveLearningService
-                .getRecommendationFromRecommendationModel(annotatorState, selectedLayer);
+                .getRecommendationFromRecommendationModel(annotatorState.getProject(),
+                        annotatorState.getUser(), selectedLayer);
         hideRejectedOrSkippedAnnotations(aRecordService, false, null,
                 listOfRecommendationsForEachToken);
         return !listOfRecommendationsForEachToken.isEmpty();
-    }
-
-    @Override
-    public boolean checkRecommendationExist(ActiveLearningService aActiveLearningService,
-        LearningRecord aRecord)
-    {
-        listOfRecommendationsForEachToken = aActiveLearningService
-            .getRecommendationFromRecommendationModel(annotatorState, selectedLayer);
-        return containsRecommendation(listOfRecommendationsForEachToken, aRecord);
     }
 
     private void hideRejectedOrSkippedAnnotations(LearningRecordService aRecordService,
@@ -226,25 +218,5 @@ public class UncertaintySamplingStrategy
             .sorted(Comparator.comparingDouble(Delta::getDelta))
             // ... and return the smallest delta (if there is one)
             .findFirst();
-    }
-
-    private static boolean containsRecommendation(
-        List<SuggestionGroup> aListOfRecommendationsForEachToken, LearningRecord record)
-    {
-        for (SuggestionGroup listOfAO : aListOfRecommendationsForEachToken) {
-            if (listOfAO.stream().anyMatch(ao -> compareRecordToRecommendation(ao, record))) {
-                return true;
-            }
-        }
-        return false;
-    }
-    
-    private static boolean compareRecordToRecommendation(AnnotationSuggestion aRecommendation,
-        LearningRecord aRecord)
-    {
-        return aRecommendation.getLabel().equals(aRecord.getAnnotation()) && 
-                aRecommendation.getDocumentName().equals(aRecord.getSourceDocument().getName()) && 
-                aRecommendation.getBegin() == aRecord.getOffsetCharacterBegin() && 
-                aRecommendation.getEnd() == aRecord.getOffsetCharacterEnd();
     }
 }
