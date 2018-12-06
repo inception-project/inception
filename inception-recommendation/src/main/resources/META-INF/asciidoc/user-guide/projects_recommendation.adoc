@@ -1,20 +1,33 @@
 [[sect_projects_recommendation]]
-== Recommenders
-Recommenders provide annotation support by predicting potential labels.
-These can be either accepted or rejected by the user.
-The recommenders learn from this interaction to further improve the quality of predictions.
+= Recommenders
 
-After clicking on *Recommenders*, you are displayed a new pane in which you can add new recommenders
-by clicking on the button *Create*. You have to select the layer, feature and the classification tool.
-The recommenders are trained every time you create, update or delete an annotation;
-and evaluated every second time. During recommender evaluation the f-score of each recommender is calcultated,
-and recommenders with a lower f-score than their threshold will not be selected for the next training step.
-By making a tick on the checkbox next to *Always active* or leaving the threshold at 0,
-you can choose to skip f-score evaluation to ensure that the recommender runs at all times.
+Recommenders provide annotation support by predicting potential labels. These can be either accepted
+or rejected by the user. A recommender learns from this interaction to further improve the quality
+of its predictions.
+
+Recommenders are trained every time an annotation is created, updated or deleted. In order to determine
+whether the annotations are good enough, recommenders are evaluated on the annotation data.
+
+Recommenders can be configured in the *Project Settings* under the *Recommenders* tab. To create a new
+recommender, click *Create*. Then, the layer, feature and the classifier type has to be selected.
+
+Recommenders can be enabled and disabled. This behaviour is configured by the *Enabled* checkbox.
+Recommenders that are disabled are not used for training and prediction and are not evaluated.
+
+The *Activation strategy* describes when a recommender should be used for prediction. Right now,
+there are two options: either set a threshold on the evaluation score (if the evaluation score is
+lower than the threshold, the recommender is not used for predicting until annotations have changed)
+or always enable it.
+
+Some recommenders are capable of generating multiple alternative suggestions per token or span. The maximum
+number of suggestions can be configured by the *Max. recommendations* field.
+
+Sometimes it is desirable to not train on all documents, but only on e.g. finished documents. In order
+to control documents in which state should be used for training, the respective ones can be selected
+from the *States used for training*.
+
+To save a recommender, click *Save*. To abort, click *Cancel*. To edit an existing recommender, it
+can be selected from the left pane, edited and then saved. Recommenders can be deleted by clicking on
+*Delete*. This also removes all predictions by this recommender.
 
 image::recommendation2.png[align="center"]
-
-Please do not forget to save after configuring a recommender. Close the pane by clicking on *Cancel*.
-If you want to edit a recommender, you can do so by clicking on the recommender and save after editing.
-
-To remove a recommender, click on the recommender and then on *Delete*. This will also remove all predictions by this recommender.

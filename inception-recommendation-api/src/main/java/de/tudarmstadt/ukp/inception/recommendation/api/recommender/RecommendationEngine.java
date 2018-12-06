@@ -27,11 +27,20 @@ import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
 public interface RecommendationEngine {
     /**
      * Given training data in {@code aCasses}, train a model. In order to save data between
+     * runs, the {@code aContext} can be used.
      * This method must not mutate {@code aCasses} in any way.
      * @param aContext The context of the recommender
      * @param aCasses The training data
      */
     void train(RecommenderContext aContext, List<CAS> aCasses) throws RecommendationException;
+
+    /**
+     * Given text in {@code aCas}, predict target annotations. These should be written into
+     * {@code aCas}. In order to restore data from e.g. previous training, the {@code aContext}
+     * can be used.
+     * @param aContext The context of the recommender
+     * @param aCas The training data
+     */
     void predict(RecommenderContext aContext, CAS aCas) throws RecommendationException;
 
     /**
