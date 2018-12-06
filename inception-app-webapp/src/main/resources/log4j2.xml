@@ -43,6 +43,8 @@
     <Logger name="org.apache.uima" level="ERROR"/>
     <Logger name="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer" level="ERROR"/>
     <Logger name="org.springframework.beans.factory.config.PropertiesFactoryBean" level="ERROR"/>
+    <!-- Avoid warning on cookies with an invalid expiration date - cf. issue #739 -->
+    <Logger name="org.apache.http.client.protocol.ResponseProcessCookies" level="ERROR"/>
     <Root level="warn">
       <AppenderRef ref="ConsoleAppender" />
       <AppenderRef ref="ProjectAppender" />
