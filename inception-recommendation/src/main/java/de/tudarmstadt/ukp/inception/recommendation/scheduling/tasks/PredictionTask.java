@@ -84,7 +84,6 @@ public class PredictionTask
     private @Autowired AnnotationSchemaService annoService;
     private @Autowired RecommendationService recommendationService;
     private @Autowired DocumentService documentService;
-    private @Autowired LearningRecordService learningRecordService;
     
     public PredictionTask(User aUser, Project aProject)
     {
@@ -297,8 +296,8 @@ public class PredictionTask
                 .collect(toList());
         
         // Get all the skipped/rejected entries for the current layer
-        List<LearningRecord> recordedAnnotations = aLearningRecordService
-                .getAllRecordsByDocumentAndUserAndLayer(aDoc.getDocument(), aUser, aLayer);
+        List<LearningRecord> recordedAnnotations = aLearningRecordService.listRecords(aUser,
+                aLayer);
         
         for (AnnotationFeature feature : aAnnotationService.listAnnotationFeature(aLayer)) {
             Feature feat = type.getFeatureByBaseName(feature.getName());

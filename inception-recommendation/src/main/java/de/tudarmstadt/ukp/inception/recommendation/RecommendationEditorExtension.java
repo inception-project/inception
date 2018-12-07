@@ -173,7 +173,7 @@ public class RecommendationEditorExtension
         aActionHandler.actionCreateOrUpdate(aTarget, aJCas);
 
         // Log the action to the learning record
-        learningRecordService.logLearningRecord(document, aState.getUser().getUsername(),
+        learningRecordService.logRecord(document, aState.getUser().getUsername(),
                 suggestion, layer, feature, ACCEPTED, MAIN_EDITOR);
         
         // Send an application event that the suggestion has been accepted
@@ -223,7 +223,7 @@ public class RecommendationEditorExtension
         suggestion.hide("user rejected");
 
         // Log the action to the learning record
-        learningRecordService.logLearningRecord(document, aState.getUser().getUsername(),
+        learningRecordService.logRecord(document, aState.getUser().getUsername(),
                 suggestion, layer, feature, REJECTED, MAIN_EDITOR);
 
         // Send an application event that the suggestion has been rejected

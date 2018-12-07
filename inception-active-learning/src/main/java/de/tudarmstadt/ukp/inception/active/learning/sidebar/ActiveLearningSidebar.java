@@ -98,7 +98,6 @@ import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningRecommen
 import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningSessionCompletedEvent;
 import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningSessionStartedEvent;
 import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningSuggestionOfferedEvent;
-import de.tudarmstadt.ukp.inception.active.learning.strategy.ActiveLearningStrategy;
 import de.tudarmstadt.ukp.inception.active.learning.strategy.UncertaintySamplingStrategy;
 import de.tudarmstadt.ukp.inception.recommendation.RecommendationEditorExtension;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
@@ -189,9 +188,10 @@ public class ActiveLearningSidebar
 
         // Set up the AL state in the page if it is not already there
         if (aAnnotationPage.getMetaData(CURRENT_AL_USER_STATE) == null) {
-            ActiveLearningServiceImpl.ActiveLearningUserState userState = 
+            ActiveLearningServiceImpl.ActiveLearningUserState alState = 
                     new ActiveLearningServiceImpl.ActiveLearningUserState();
-            aAnnotationPage.setMetaData(CURRENT_AL_USER_STATE, userState);
+            alState.setStrategy(new UncertaintySamplingStrategy());
+            aAnnotationPage.setMetaData(CURRENT_AL_USER_STATE, alState);
         }
 
         mainContainer = new WebMarkupContainer(CID_MAIN_CONTAINER);
@@ -270,51 +270,31 @@ public class ActiveLearningSidebar
     private void actionStartStopSession(AjaxRequestTarget target, Form<?> form)
     {
         ActiveLearningUserState alState = alStateModel.getObject();
+        AnnotatorState annotatorState = getModelObject();
+
+        target.add(mainContainer);
 
         if (!alState.isSessionActive()) {
-            actionStartSession(target, form);
+            // Start new session
+            alState.setSessionActive(true);
+
+            alState.setSuggestions(activeLearningService.getSuggestions(annotatorState.getUser(),
+                    alStateModel.getObject().getLayer()));
+
+            moveToNextRecommendation(target);
+
+            applicationEventPublisherHolder.get()
+                    .publishEvent(new ActiveLearningSessionStartedEvent(this,
+                            annotatorState.getProject(), annotatorState.getUser().getUsername()));
         }
         else {
-            actionStopSession(target, form);
+            // Stop current session
+            alState.setSessionActive(false);
+
+            applicationEventPublisherHolder.get()
+                    .publishEvent(new ActiveLearningSessionCompletedEvent(this,
+                            annotatorState.getProject(), annotatorState.getUser().getUsername()));
         }
-    }
-
-    private void actionStartSession(AjaxRequestTarget target, Form<?> form)
-    {
-        // Start new session
-        target.add(mainContainer);
-
-        ActiveLearningUserState alState = alStateModel.getObject();
-        AnnotatorState annotatorState = getModelObject();
-
-        alState.setSessionActive(true);
-
-        alState.setSuggestions(
-                activeLearningService.getSuggestions(
-                        annotatorState.getUser(), alStateModel.getObject().getLayer()));
-
-        ActiveLearningStrategy alStrategy = new UncertaintySamplingStrategy(annotatorState,
-                alState.getLayer());
-        alState.setStrategy(alStrategy);
-
-        moveToNextRecommendation(target);
-
-        applicationEventPublisherHolder.get().publishEvent(new ActiveLearningSessionStartedEvent(
-                this, annotatorState.getProject(), annotatorState.getUser().getUsername()));
-    }
-
-    private void actionStopSession(AjaxRequestTarget target, Form<?> form)
-    {
-        // Stop current session
-        target.add(mainContainer);
-
-        ActiveLearningUserState alState = alStateModel.getObject();
-        AnnotatorState annotatorState = getModelObject();
-
-        alState.setSessionActive(false);
-
-        applicationEventPublisherHolder.get().publishEvent(new ActiveLearningSessionCompletedEvent(
-                this, annotatorState.getProject(), annotatorState.getUser().getUsername()));
     }
 
     private void highlightRecommendation(IPartialPageRequestHandler aTarget, AnnotationSuggestion
@@ -532,7 +512,7 @@ public class ActiveLearningSidebar
                 aSuggestion.getDocumentName());
 
         // Log the action to the learning record
-        learningRecordService.logLearningRecord(sourceDoc, state.getUser().getUsername(),
+        learningRecordService.logRecord(sourceDoc, state.getUser().getUsername(),
                 aSuggestion, aAnnotationValue, alState.getLayer(), feat, aUserAction,
                 LearningRecordChangeLocation.AL_SIDEBAR);
 
@@ -645,7 +625,8 @@ public class ActiveLearningSidebar
 
         // Fetch the next suggestion to present to the user (if there is any)
         Optional<Delta> recommendationDifference = alState.getStrategy().generateNextSuggestion(
-                activeLearningService, learningRecordService, alState.getSuggestions());
+                activeLearningService, learningRecordService, state.getUser(), alState.getLayer(),
+                alState.getSuggestions());
         alState.setCurrentDifference(recommendationDifference);
 
         // If there is no new suggestion, nothing left to do here
@@ -807,8 +788,7 @@ public class ActiveLearningSidebar
     private List<LearningRecord> listLearningRecords()
     {
         AnnotatorState annotatorState = ActiveLearningSidebar.this.getModelObject();
-        return learningRecordService.getRecordsByDocumentAndUserAndLayer(
-                annotatorState.getDocument(), annotatorState.getUser().getUsername(),
+        return learningRecordService.listRecords(annotatorState.getUser().getUsername(),
                 alStateModel.getObject().getLayer(), 50);
     }
 
@@ -816,9 +796,14 @@ public class ActiveLearningSidebar
         throws IOException
     {
         aTarget.add(mainContainer);
+        
         annotationPage.actionRefreshDocument(aTarget);
         learningRecordService.delete(aRecord);
+        
+        // Force the learning records model to be refreshed during rendering, showing the latest
+        // state from the DB
         learningRecords.detach();
+        
         if (aRecord.getUserAction().equals(LearningRecordType.ACCEPTED)) {
             // IMPORTANT: we must jump to the document which contains the annotation that is to
             // be deleted because deleteAnnotationByHistory will delete the annotation via the
@@ -1023,6 +1008,8 @@ public class ActiveLearningSidebar
 
         // If active learning is not active, nothing to do here
         if (alState.isSessionActive()) {
+            // Re-render the AL sidebar in case the session auto-terminated
+            aEvent.getTarget().add(mainContainer);
             return;
         }
 
@@ -1060,6 +1047,11 @@ public class ActiveLearningSidebar
             else {
                 moveToNextRecommendation(aEvent.getTarget());
             }
+        }
+        else {
+            // Still need to re-render the AL sidebar so we can show stuff to the user like asking
+            // whether to review skipped items or just informing that there is nothing more to do.
+            aEvent.getTarget().add(mainContainer);
         }
     }
 }

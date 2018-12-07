@@ -26,8 +26,8 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.active.learning.ActiveLearningService;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
@@ -38,21 +38,10 @@ public class UncertaintySamplingStrategy
     implements Serializable, ActiveLearningStrategy
 {
     private static final Logger LOG = LoggerFactory.getLogger(UncertaintySamplingStrategy.class);
-    
-    private static final long serialVersionUID = -2308436775710912029L;
-
-    private AnnotatorState annotatorState;
-    private AnnotationLayer selectedLayer;
-
-    public UncertaintySamplingStrategy(AnnotatorState aState, AnnotationLayer aLayer)
-    {
-        annotatorState = aState;
-        selectedLayer = aLayer;
-    }
 
     @Override
-    public Optional<Delta> generateNextSuggestion(
-            ActiveLearningService aALService, LearningRecordService aRecordService,
+    public Optional<Delta> generateNextSuggestion(ActiveLearningService aALService,
+            LearningRecordService aRecordService, User aUser, AnnotationLayer aLayer,
             List<SuggestionGroup> aListOfRecommendationsForEachToken)
     {
         long startTimer = System.currentTimeMillis();
@@ -69,7 +58,8 @@ public class UncertaintySamplingStrategy
                 (removeDuplicateRecommendation - getRecommendationsFromRecommendationService));
 
         // hide rejected recommendations
-        hideRejectedOrSkippedAnnotations(aRecordService, true, suggestions, aALService);
+        hideRejectedOrSkippedAnnotations(aRecordService, aUser, aLayer, true, suggestions,
+                aALService);
         long removeRejectedSkippedRecommendation = System.currentTimeMillis();
         LOG.debug("Removing rejected or skipped ones costs {} ms.",
                 (removeRejectedSkippedRecommendation - removeDuplicateRecommendation));
@@ -77,13 +67,12 @@ public class UncertaintySamplingStrategy
         return calculateDifferencesAndReturnLowestVisible(suggestions);
     }
 
-    private void hideRejectedOrSkippedAnnotations(LearningRecordService aRecordService,
-            boolean aFilterSkippedRecommendation, List<SuggestionGroup> aSuggestionGroups,
-            ActiveLearningService aActiveLearningService)
+    private void hideRejectedOrSkippedAnnotations(LearningRecordService aRecordService, User aUser,
+            AnnotationLayer aLayer, boolean aFilterSkippedRecommendation,
+            List<SuggestionGroup> aSuggestionGroups, ActiveLearningService aActiveLearningService)
     {
-        aActiveLearningService.hideRejectedOrSkippedAnnotations(annotatorState.getDocument(),
-                annotatorState.getUser(), selectedLayer, aFilterSkippedRecommendation,
-                aSuggestionGroups);
+        aActiveLearningService.hideRejectedOrSkippedAnnotations(aUser, aLayer,
+                aFilterSkippedRecommendation, aSuggestionGroups);
     }
 
     private static SuggestionGroup removeDuplicateRecommendations(

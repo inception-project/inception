@@ -20,6 +20,8 @@ package de.tudarmstadt.ukp.inception.active.learning.strategy;
 import java.util.List;
 import java.util.Optional;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.active.learning.ActiveLearningService;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
@@ -27,7 +29,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup.Del
 
 public interface ActiveLearningStrategy
 {
-    Optional<Delta> generateNextSuggestion(ActiveLearningService aALService,
-            LearningRecordService aRecordService,
+    public Optional<Delta> generateNextSuggestion(ActiveLearningService aALService,
+            LearningRecordService aRecordService, User aUser, AnnotationLayer aLayer,
             List<SuggestionGroup> aListOfRecommendationsForEachToken);
 }

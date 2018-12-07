@@ -45,17 +45,17 @@ public class LearningRecordServiceImpl
 
     @Transactional
     @Override
-    public void logLearningRecord(SourceDocument aDocument, String aUsername,
+    public void logRecord(SourceDocument aDocument, String aUsername,
             AnnotationSuggestion aSuggestion, AnnotationLayer aLayer, AnnotationFeature aFeature,
             LearningRecordType aUserAction, LearningRecordChangeLocation aLocation)
     {
-        logLearningRecord(aDocument, aUsername, aSuggestion, aSuggestion.getLabel(), aLayer,
+        logRecord(aDocument, aUsername, aSuggestion, aSuggestion.getLabel(), aLayer,
                 aFeature, aUserAction, aLocation);
     }
     
     @Transactional
     @Override
-    public void logLearningRecord(SourceDocument aDocument, String aUsername,
+    public void logRecord(SourceDocument aDocument, String aUsername,
             AnnotationSuggestion aSuggestion, String aAlternativeLabel, AnnotationLayer aLayer,
             AnnotationFeature aFeature, LearningRecordType aUserAction, 
             LearningRecordChangeLocation aLocation)
@@ -79,41 +79,17 @@ public class LearningRecordServiceImpl
 
     @Transactional
     @Override
-    public List<LearningRecord> getRecordByDocument(SourceDocument sourceDocument) {
-        String sql = "FROM LearningRecord l where l.sourceDocument = :sourceDocument";
-        List<LearningRecord> learningRecords = entityManager.createQuery(sql, LearningRecord.class)
-                .setParameter("sourceDocument", sourceDocument).getResultList();
-        return learningRecords;
-    }
-
-    @Transactional
-    @Override
-    public List<LearningRecord> getRecordByDocumentAndUser(SourceDocument sourceDocument, User
-            user) {
-        String sql = "FROM LearningRecord l where l.user = :user and l" +
-            ".sourceDocument = :sourceDocument";
-        List<LearningRecord> learningRecords = entityManager.createQuery(sql, LearningRecord.class)
-                .setParameter("user", user)
-                .setParameter("sourceDocument",sourceDocument)
-                .getResultList();
-        return learningRecords;
-    }
-
-    @Transactional
-    @Override
-    public List<LearningRecord> getRecordsByDocumentAndUserAndLayer(
-            SourceDocument aDocument, String aUsername, AnnotationLayer aLayer, int aLimit)
+    public List<LearningRecord> listRecords(
+            String aUsername, AnnotationLayer aLayer, int aLimit)
     {
         String sql = String.join("\n",
                 "FROM LearningRecord l WHERE",
                 "l.user = :user AND",
-                "l.sourceDocument.project = :project AND",
                 "l.layer = :layer AND",
                 "l.userAction != :action",
                 "ORDER BY l.id desc");
         TypedQuery<LearningRecord> query = entityManager.createQuery(sql, LearningRecord.class)
                 .setParameter("user", aUsername)
-                .setParameter("project", aDocument.getProject())
                 .setParameter("layer", aLayer)
                 .setParameter("action", LearningRecordType.SHOWN); // SHOWN records NOT returned
         if (aLimit > 0) {
@@ -121,13 +97,13 @@ public class LearningRecordServiceImpl
         }
         return query.getResultList();
     }
-
+    
     @Transactional
     @Override
-    public List<LearningRecord> getAllRecordsByDocumentAndUserAndLayer(
-            SourceDocument aDocument, String aUsername, AnnotationLayer aLayer)
+    public List<LearningRecord> listRecords(
+            String aUsername, AnnotationLayer aLayer)
     {
-        return getRecordsByDocumentAndUserAndLayer(aDocument, aUsername, aLayer, 0);
+        return listRecords(aUsername, aLayer, 0);
     }
 
     @Transactional
@@ -142,7 +118,7 @@ public class LearningRecordServiceImpl
 
     @Transactional
     @Override
-    public void deleteRecordByDocumentAndUser(SourceDocument document, String user) {
+    public void deleteRecords(SourceDocument document, String user) {
         String sql = "DELETE FROM LearningRecord l where l.sourceDocument = :document and l.user " +
             "= :user";
         entityManager.createQuery(sql)

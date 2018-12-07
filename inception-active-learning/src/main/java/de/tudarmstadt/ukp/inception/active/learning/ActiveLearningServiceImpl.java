@@ -31,7 +31,6 @@ import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.active.learning.strategy.ActiveLearningStrategy;
@@ -111,12 +110,12 @@ public class ActiveLearningServiceImpl
     }
     
     @Override
-    public void hideRejectedOrSkippedAnnotations(SourceDocument aDocument, User aUser,
+    public void hideRejectedOrSkippedAnnotations(User aUser,
             AnnotationLayer aLayer, boolean filterSkippedRecommendation,
             List<SuggestionGroup> aSuggestionGroups)
     {
         List<LearningRecord> records = learningHistoryService
-                .getAllRecordsByDocumentAndUserAndLayer(aDocument, aUser.getUsername(),
+                .listRecords(aUser.getUsername(),
                         aLayer);
 
         for (SuggestionGroup group : aSuggestionGroups) {
