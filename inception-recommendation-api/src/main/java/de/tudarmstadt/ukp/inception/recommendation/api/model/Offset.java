@@ -143,20 +143,18 @@ public class Offset
         if (o == null) {
             return 1;
         }
-        if (this.equals(o)) {
+        
+        if (this == o) {
             return 0;
         }
-        if (this.getBeginCharacter() < o.getBeginCharacter()) {
-            return -1;
+        
+        if (begin == o.begin) {
+            // Sort by end decreasing
+            return o.end - end;
         }
-        else if (this.getBeginCharacter() == o.getBeginCharacter()
-            && this.getEndCharacter() < o.getEndCharacter()) {
-            return -1;
+        else {
+            // Sort by begin increasing
+            return begin - o.begin;
         }
-        else if (this.getBeginCharacter() > o.getBeginCharacter()) {
-            return 1;
-        }
-
-        return 0;
     }
 }

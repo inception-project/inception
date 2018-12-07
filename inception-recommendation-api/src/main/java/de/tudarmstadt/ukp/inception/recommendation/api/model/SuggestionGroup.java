@@ -358,7 +358,7 @@ public class SuggestionGroup
         public BinaryOperator<SuggestionGroup> combiner()
         {
             return (group1, group2) -> {
-                group2.forEach(ao -> group1.add(ao));
+                group2.forEach(suggestion -> group1.add(suggestion));
                 return group1;
             };
         }
