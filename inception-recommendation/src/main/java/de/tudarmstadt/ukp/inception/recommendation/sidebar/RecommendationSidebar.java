@@ -63,195 +63,212 @@ import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
 import de.tudarmstadt.ukp.inception.recommendation.log.RecommenderEvaluationResultEventAdapter.Details;
 
-public class RecommendationSidebar extends AnnotationSidebar_ImplBase {
-	private static final long serialVersionUID = 4306746527837380863L;
+public class RecommendationSidebar
+    extends AnnotationSidebar_ImplBase
+{
+    private static final long serialVersionUID = 4306746527837380863L;
 
-	private Logger log = LoggerFactory.getLogger(getClass());
-	private WebComponent chartContainer;
+    private Logger log = LoggerFactory.getLogger(getClass());
+    private WebComponent chartContainer;
 
-	private @SpringBean RecommendationService recommendationService;
-	private @SpringBean EventRepository eventRepo;
+    private @SpringBean RecommendationService recommendationService;
+    private @SpringBean EventRepository eventRepo;
 
-	IModel<AnnotatorState> aModel;
+    IModel<AnnotatorState> aModel;
 
-	int maxPointsToPlot = 50;
+    int maxPointsToPlot = 50;
 
-	public RecommendationSidebar(String aId, IModel<AnnotatorState> aModel, AnnotationActionHandler aActionHandler,
-			JCasProvider aJCasProvider, AnnotationPage aAnnotationPage) {
-		super(aId, aModel, aActionHandler, aJCasProvider, aAnnotationPage);
-		this.aModel = aModel;
-		IModel<Preferences> model = LambdaModelAdapter.of(
-				() -> recommendationService.getPreferences(aModel.getObject().getUser(),
-						aModel.getObject().getProject()),
-				(v) -> recommendationService.setPreferences(aModel.getObject().getUser(),
-						aModel.getObject().getProject(), v));
+    public RecommendationSidebar(String aId, IModel<AnnotatorState> aModel,
+            AnnotationActionHandler aActionHandler, JCasProvider aJCasProvider,
+            AnnotationPage aAnnotationPage)
+    {
+        super(aId, aModel, aActionHandler, aJCasProvider, aAnnotationPage);
+        this.aModel = aModel;
+        IModel<Preferences> model = LambdaModelAdapter.of(
+            () -> recommendationService.getPreferences(aModel.getObject().getUser(),
+                    aModel.getObject().getProject()),
+            (v) -> recommendationService.setPreferences(aModel.getObject().getUser(),
+                    aModel.getObject().getProject(), v));
 
-		Form<Preferences> form = new Form<>("form", CompoundPropertyModel.of(model));
+        Form<Preferences> form = new Form<>("form", CompoundPropertyModel.of(model));
 
-		form.add(new NumberTextField<Integer>("maxPredictions", Integer.class).setMinimum(1).setMaximum(10).setStep(1));
+        form.add(new NumberTextField<Integer>("maxPredictions", Integer.class).setMinimum(1)
+                .setMaximum(10).setStep(1));
 
-		form.add(new CheckBox("showAllPredictions"));
+        form.add(new CheckBox("showAllPredictions"));
 
-		form.add(new LambdaAjaxButton<>("save", (_target, _form) -> aAnnotationPage.actionRefreshDocument(_target)));
+        form.add(new LambdaAjaxButton<>("save",
+            (_target, _form) -> aAnnotationPage.actionRefreshDocument(_target)));
 
-		add(form);
+        add(form);
 
-		chartContainer = new Label("chart-container");
-		chartContainer.setOutputMarkupId(true);
-		add(chartContainer);
-	}
+        chartContainer = new Label("chart-container");
+        chartContainer.setOutputMarkupId(true);
+        add(chartContainer);
+    }
 
-	@Override
-	public void renderHead(IHeaderResponse aResponse) {
-		super.renderHead(aResponse);
+    @Override
+    public void renderHead(IHeaderResponse aResponse)
+    {
+        super.renderHead(aResponse);
 
-		// import Js
-		aResponse.render(JavaScriptHeaderItem.forReference(new WebjarsJavaScriptResourceReference("c3/current/c3.js")));
-		aResponse.render(
-				JavaScriptHeaderItem.forReference(new WebjarsJavaScriptResourceReference("d3js/current/d3.js")));
+        // import Js
+        aResponse.render(JavaScriptHeaderItem
+                .forReference(new WebjarsJavaScriptResourceReference("c3/current/c3.js")));
+        aResponse.render(JavaScriptHeaderItem
+                .forReference(new WebjarsJavaScriptResourceReference("d3js/current/d3.js")));
 
-		// import Css
-		aResponse.render(CssHeaderItem.forReference(new WebjarsCssResourceReference("c3/current/c3.css")));
-	}
+        // import Css
+        aResponse.render(
+                CssHeaderItem.forReference(new WebjarsCssResourceReference("c3/current/c3.css")));
+    }
 
-	@OnEvent
-	public void onRenderAnnotations(RenderAnnotationsEvent aEvent) {
-		try {
-			log.info("rendered annotation event");
+    @OnEvent
+    public void onRenderAnnotations(RenderAnnotationsEvent aEvent)
+    {
+        try {
+            log.info("rendered annotation event");
 
-			StringBuilder chartType = new StringBuilder();
-			
-			HashMap<String, List<Double>> recommenderScoreMap = getLatestScores(aEvent);
+            StringBuilder chartType = new StringBuilder();
 
-			// iterate over the recommender score map to create data arrays to feed to the
-			// c3 graph
-			StringBuilder dataColumns = new StringBuilder();
-			Iterator<Entry<String, List<Double>>> it = recommenderScoreMap.entrySet().iterator();
-			while (it.hasNext()) {
-				Entry<String, List<Double>> pair = it.next();
+            HashMap<String, List<Double>> recommenderScoreMap = getLatestScores(aEvent);
 
-				String jsonString = toJsonString(pair);
-				jsonString = jsonString.replaceAll("\".*?\"", "");
-				jsonString = jsonString.replaceAll("'.*?'", "");
-				jsonString = jsonString.replaceAll("`.*?`", "");
+            // iterate over the recommender score map to create data arrays to feed to the
+            // c3 graph
+            StringBuilder dataColumns = new StringBuilder();
+            Iterator<Entry<String, List<Double>>> it = recommenderScoreMap.entrySet().iterator();
+            while (it.hasNext()) {
+                Entry<String, List<Double>> pair = it.next();
 
-				String data = substring(jsonString, 3, -2);
+                String jsonString = toJsonString(pair);
+                jsonString = jsonString.replaceAll("\".*?\"", "");
+                jsonString = jsonString.replaceAll("'.*?'", "");
+                jsonString = jsonString.replaceAll("`.*?`", "");
 
-				// append recommender name
-				dataColumns.append("['");
-				String[] recommenderClass = pair.getKey().toString().split("\\.");
-				String recommenderName = recommenderClass[recommenderClass.length - 1];
-				
-				//define chart type for the recommender
-				chartType.append(recommenderName);
-				chartType.append(": 'step', ");
-				
-				dataColumns.append(recommenderName);
+                String data = substring(jsonString, 3, -2);
 
-				// append data columns
-				dataColumns.append("', ");
-				dataColumns.append(data);
-				dataColumns.append("]");
-				dataColumns.append(",");
+                // append recommender name
+                dataColumns.append("['");
+                String[] recommenderClass = pair.getKey().toString().split("\\.");
+                String recommenderName = recommenderClass[recommenderClass.length - 1];
 
-				// avoids a ConcurrentModificationException
-				it.remove();
-			}
+                // define chart type for the recommender
+                chartType.append(recommenderName);
+                chartType.append(": 'step', ");
 
-			String javascript = createJSScript(dataColumns.toString(), chartType.toString());
-			log.info(javascript);
+                dataColumns.append(recommenderName);
 
-			aEvent.getRequestHandler().prependJavaScript(javascript);
-		} catch (IOException e) {
-			log.error("Unable to render chart", e);
-			error("Unable to render chart: " + e.getMessage());
-			aEvent.getRequestHandler().addChildren(getPage(), IFeedback.class);
-		}
-	}
+                // append data columns
+                dataColumns.append("', ");
+                dataColumns.append(data);
+                dataColumns.append("]");
+                dataColumns.append(",");
 
-	/**
-	 * Creates the js script to render graph with the help of given data points. Sample value of dataColumns:
-	 * ['recommender1', 1.0, 2.0, 3.0 ], ['recommender2', 2.0, 3.0, 4.0]. Also creates an xaxix of a sequence
-	 * from 0 to maximumNumberOfPoints (50)
-	 * 
-	 * @param dataColumns
-	 * @param chartType 
-	 * @return
-	 * @throws IOException
-	 */
-	private String createJSScript(String dataColumns, String chartType) throws IOException {
-		int[] intArray = IntStream.range(0, maxPointsToPlot).map(i -> i).toArray();
+                // avoids a ConcurrentModificationException
+                it.remove();
+            }
 
-		String xaxisValues = "[ 'x' ," + substring(Arrays.toString(intArray), 1, -1) + "]";
-		String data = toJsonString(dataColumns).substring(1, dataColumns.toString().length());
+            String javascript = createJSScript(dataColumns.toString(), chartType.toString());
+            log.info(javascript);
 
-		
-		// bind data to chart container
-		String javascript = "var chart=c3.generate({bindto:'#" + chartContainer.getMarkupId()
-				+ "',data:{ x:'x', columns:[" + xaxisValues + " ," + data + "],types:{"+chartType +"}}});;";
-		return javascript;
-	}
+            aEvent.getRequestHandler().prependJavaScript(javascript);
+        }
+        catch (IOException e) {
+            log.error("Unable to render chart", e);
+            error("Unable to render chart: " + e.getMessage());
+            aEvent.getRequestHandler().addChildren(getPage(), IFeedback.class);
+        }
+    }
 
-	/**
-	 * Fetches a number of latest evaluation scores from the database and save it in
-	 * the map corresponding to each recommender for which the scores have been
-	 * logged in the database
-	 */
-	private HashMap<String, List<Double>> getLatestScores(RenderAnnotationsEvent aEvent) {
-		// we want to plot RecommenderEvaluationResultEvent for the learning curve. The
-		// value of the event
-		String eventType = "RecommenderEvaluationResultEvent";
+    /**
+     * Creates the js script to render graph with the help of given data points. Sample value of
+     * dataColumns: ['recommender1', 1.0, 2.0, 3.0 ], ['recommender2', 2.0, 3.0, 4.0]. Also creates
+     * an xaxix of a sequence from 0 to maximumNumberOfPoints (50)
+     * 
+     * @param dataColumns
+     * @param chartType
+     * @return
+     * @throws IOException
+     */
+    private String createJSScript(String dataColumns, String chartType) throws IOException
+    {
+        int[] intArray = IntStream.range(0, maxPointsToPlot).map(i -> i).toArray();
 
-		List<LoggedEvent> loggedEvents = eventRepo.listLoggedEvents(aModel.getObject().getProject(),
-				aModel.getObject().getUser().getUsername(), eventType, maxPointsToPlot);
+        String xaxisValues = "[ 'x' ," + substring(Arrays.toString(intArray), 1, -1) + "]";
+        String data = toJsonString(dataColumns).substring(1, dataColumns.toString().length());
 
-		//we want to show the latest record on the right side of the graph
-		Collections.reverse(loggedEvents);
+        // bind data to chart container
+        String javascript = "var chart=c3.generate({bindto:'#" + chartContainer.getMarkupId()
+                + "',data:{ x:'x', columns:[" + xaxisValues + " ," + data + "],types:{" + chartType
+                + "}}});;";
+        return javascript;
+    }
 
-		HashMap<String, List<Double>> recommenderScoreMap = new HashMap<>();
+    /**
+     * Fetches a number of latest evaluation scores from the database and save it in the map
+     * corresponding to each recommender for which the scores have been logged in the database
+     */
+    private HashMap<String, List<Double>> getLatestScores(RenderAnnotationsEvent aEvent)
+    {
+        // we want to plot RecommenderEvaluationResultEvent for the learning curve. The
+        // value of the event
+        String eventType = "RecommenderEvaluationResultEvent";
 
-		// iterate over the logged events to extract the scores and map
-		// it against its corresponding recommender.
-		for (LoggedEvent loggedEvent : loggedEvents) {
-			String detailJson = loggedEvent.getDetails();
-			try {
-				Details detail = fromJsonString(Details.class, detailJson);
-				List<Double> list = recommenderScoreMap.get(detail.tool);
-				if (list==null) {
-					list = new ArrayList<Double>();
+        List<LoggedEvent> loggedEvents = eventRepo.listLoggedEvents(aModel.getObject().getProject(),
+                aModel.getObject().getUser().getUsername(), eventType, maxPointsToPlot);
 
-					addScoreToMap(recommenderScoreMap, detail.score, detail.tool, list);
-					continue;
-				}
+        // we want to show the latest record on the right side of the graph
+        Collections.reverse(loggedEvents);
 
-				addScoreToMap(recommenderScoreMap, detail.score, detail.tool, list);
-			
-			} catch (IOException e) {
-				log.error("Invalid logged Event detail. Skipping record with logged event id: " + loggedEvent.getId(),
-						e);
+        HashMap<String, List<Double>> recommenderScoreMap = new HashMap<>();
 
-				error("Invalid logged Event detail. Skipping record with logged event id: " + loggedEvent.getId());
+        // iterate over the logged events to extract the scores and map
+        // it against its corresponding recommender.
+        for (LoggedEvent loggedEvent : loggedEvents) {
+            String detailJson = loggedEvent.getDetails();
+            try {
+                Details detail = fromJsonString(Details.class, detailJson);
+                List<Double> list = recommenderScoreMap.get(detail.tool);
+                if (list == null) {
+                    list = new ArrayList<Double>();
 
-				aEvent.getRequestHandler().addChildren(getPage(), IFeedback.class);
-			}
-		}
-		return recommenderScoreMap;
-	}
+                    addScoreToMap(recommenderScoreMap, detail.score, detail.tool, list);
+                    continue;
+                }
 
-	/**
-	 * adds the score to the given map, if the value of the score is valid/finite
-	 * @param recommenderScoreMap
-	 * @param score
-	 * @param tool
-	 * @param list
-	 */
-	private void addScoreToMap(HashMap<String, List<Double>> recommenderScoreMap, Double score, String tool, List<Double> list) {
-		//sometimes score values NaN. Can result into error while rendering the graph on UI
-		if (!Double.isFinite(score)) {
-			return;
-		}
+                addScoreToMap(recommenderScoreMap, detail.score, detail.tool, list);
 
-		list.add(score);
-		recommenderScoreMap.put(tool, list);
-	}
+            }
+            catch (IOException e) {
+                log.error("Invalid logged Event detail. Skipping record with logged event id: "
+                        + loggedEvent.getId(), e);
+
+                error("Invalid logged Event detail. Skipping record with logged event id: "
+                        + loggedEvent.getId());
+
+                aEvent.getRequestHandler().addChildren(getPage(), IFeedback.class);
+            }
+        }
+        return recommenderScoreMap;
+    }
+
+    /**
+     * adds the score to the given map, if the value of the score is valid/finite
+     * 
+     * @param recommenderScoreMap
+     * @param score
+     * @param tool
+     * @param list
+     */
+    private void addScoreToMap(HashMap<String, List<Double>> recommenderScoreMap, Double score,
+            String tool, List<Double> list)
+    {
+        // sometimes score values NaN. Can result into error while rendering the graph on UI
+        if (!Double.isFinite(score)) {
+            return;
+        }
+
+        list.add(score);
+        recommenderScoreMap.put(tool, list);
+    }
 }
