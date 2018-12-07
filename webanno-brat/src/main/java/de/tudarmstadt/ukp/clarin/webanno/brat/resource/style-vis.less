@@ -281,10 +281,22 @@
   
   rect.shadow_EditHighlight {
     fill: orange;
+    -webkit-animation-name: flash;
+    animation-name: flash;
+    -webkit-animation-duration: 1s;
+    animation-duration: 1s;
+    -webkit-animation-fill-mode: both;
+    animation-fill-mode: both;
   }
   
   .shadow_EditHighlight_arc {
     stroke: orange;
+    -webkit-animation-name: flash;
+    animation-name: flash;
+    -webkit-animation-duration: 1s;
+    animation-duration: 1s;
+    -webkit-animation-fill-mode: both;
+    animation-fill-mode: both;
   }
   
   .arcs {
@@ -550,6 +562,15 @@
   .highlight {
     .matchfocus {
       fill: orange;
+      -webkit-animation-name: flash;
+      animation-name: flash;
+      -webkit-animation-duration: 1s;
+      animation-duration: 1s;
+      -webkit-animation-fill-mode: both;
+      animation-fill-mode: both;
+    }
+    .focus {
+      fill: #3ab7ee;
       -webkit-animation-name: flash;
       animation-name: flash;
       -webkit-animation-duration: 1s;
