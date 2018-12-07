@@ -560,8 +560,8 @@ public class ActiveLearningSidebar
         record.setSourceDocument(sourceDoc);
         record.setTokenText(currentRecommendation.getCoveredText());
         record.setUserAction(userAction);
-        record.setOffsetTokenBegin(currentRecommendation.getOffset().getBeginToken());
-        record.setOffsetTokenEnd(currentRecommendation.getOffset().getEndToken());
+        record.setOffsetTokenBegin(-1);
+        record.setOffsetTokenEnd(-1);
         record.setOffsetCharacterBegin(currentRecommendation.getOffset().getBeginCharacter());
         record.setOffsetCharacterEnd(currentRecommendation.getOffset().getEndCharacter());
         record.setAnnotation(annotationValue);
@@ -931,8 +931,8 @@ public class ActiveLearningSidebar
         record.setSourceDocument(eventState.getDocument());
         record.setTokenText(acceptedRecommendation.getCoveredText());
         record.setUserAction(LearningRecordUserAction.ACCEPTED);
-        record.setOffsetTokenBegin(acceptedRecommendation.getOffset().getBeginToken());
-        record.setOffsetTokenEnd(acceptedRecommendation.getOffset().getEndToken());
+        record.setOffsetTokenBegin(-1);
+        record.setOffsetTokenEnd(-1);
         record.setOffsetCharacterBegin(acceptedRecommendation.getOffset().getBeginCharacter());
         record.setOffsetCharacterEnd(acceptedRecommendation.getOffset().getEndCharacter());
         record.setAnnotation(acceptedRecommendation.getLabel());

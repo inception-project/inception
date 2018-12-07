@@ -126,7 +126,31 @@ server in order for changes to Java class files to take effect. However, as a be
 HTML, CSS or JavaScript files take effect immediately and you just have to refresh the browser to
 see the changes.
 
-=== Checkstyle
+=== Checkstyle and Formatting
+
+We use a style for formatting the source code in {product-name}. Our approach consists of two steps:
+
+* DKPro code formatting profile - the profile configures your IDE to auto-format the code according to
+  our guidelines as you go.
+* Checkstyle - this tool is used to check if the source code is actually formatted according to our
+  guidelines. It is run as part of a Maven build and the build fails if the code is not formatted
+  properly.
+
+Here is a brief summary of the formatting rules:
+* no tabs, only spaces
+* indenting using 4 spaces in Java files and 2 spaces in XML files
+* maximum 100 characters per line (with a few exceptions)
+* curly braces on the next line for class/method declarations, same line for logic blocks (if/for/...)
+* parameter names start with `a` (e.g. `void foo(String aValue)`)
+
+First, obtain the DKPro code formatting profile from the link:https://dkpro.github.io/contributing/[DKPro website] (Section "Code style"). In Eclipse, go to **Preferences -> Java -> Code Style -> Formatter** to import the file. Apparently, the files can also be used with IntelliJ via the [Eclipse Code Formatter](https://plugins.jetbrains.com/plugin/6546-eclipse-code-formatter) plugin.
+
+NOTE: The parameter prefix `a` needs to be configured manually. In Eclipse go to 
+       *Preferences -> Java -> Code Style* set the *prefix list* column in the *parameters* row to `a`.
+
+Second, install the Checkstyle plugin for Eclipse as well as the Maven Checkstyle plugin for Eclipse.
+These plugins make Eclipse automatically pick up the checkstyle configuration from the Maven project
+and highlight formatting problems directly in the source code editor.
 
 * Install *Checkstyle Eclipse plugin* from here: `http://eclipse-cs.sourceforge.net`
 * Install the *Checkstyle configuration plugin for M2Eclipse* from here: `http://m2e-code-quality.github.com/m2e-code-quality/site/latest/`
