@@ -247,7 +247,7 @@ public class BratAnnotationEditor
 
                 // Serialize updated document to JSON
                 if (result == null) {
-                    LOG.warn("AJAX-RPC: Action [{}] produced no result!", action);
+                    LOG.debug("AJAX-RPC: Action [{}] produced no result!", action);
                 }
                 else {
                     String json;

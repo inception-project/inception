@@ -504,8 +504,9 @@ public class AnnotationPage
             WicketUtil.refreshPage(aTarget, getPage());
         }
         catch (Exception e) {
-            LOG.info("Error reading CAS " + e.getMessage());
+            LOG.info("Error reading CAS: {}", e.getMessage());
             error("Error reading CAS " + e.getMessage());
+            aTarget.addChildren(getPage(), IFeedback.class);
         }
     }
     
