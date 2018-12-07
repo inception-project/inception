@@ -88,7 +88,7 @@ public class StringMatchingRecommender
         aContext.put(KEY_MODEL, dict);
         aContext.markAsReadyForPrediction();
         
-        log.info("Learned dictionary model with {} entries", dict.size());
+        log.debug("Learned dictionary model with {} entries", dict.size());
     }
 
     @Override
