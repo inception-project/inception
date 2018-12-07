@@ -60,6 +60,30 @@ public class LearningRecordServiceImpl
             AnnotationFeature aFeature, LearningRecordType aUserAction, 
             LearningRecordChangeLocation aLocation)
     {
+        // It doesn't make any sense at all to have duplicate entries in the learning history,
+        // so when adding a new entry, we dump any existing entries which basically are the
+        // same as the one added. Mind that the actual action performed by the user does not 
+        // matter since there should basically be only one action in the log for any suggestion,
+        // irrespective of what that action is.
+        String query = String.join("\n",
+                "DELETE FROM LearningRecord WHERE",
+                "user = :user AND",
+                "sourceDocument = :sourceDocument AND",
+                "offsetCharacterBegin = :offsetCharacterBegin AND",
+                "offsetCharacterEnd = :offsetCharacterEnd AND",
+                "layer = :layer AND",
+                "annotationFeature = :annotationFeature AND",
+                "annotation = :annotation");
+        entityManager.createQuery(query)
+                .setParameter("user", aUsername)
+                .setParameter("sourceDocument", aDocument)
+                .setParameter("offsetCharacterBegin", aSuggestion.getBegin())
+                .setParameter("offsetCharacterEnd", aSuggestion.getEnd())
+                .setParameter("layer", aLayer)
+                .setParameter("annotationFeature", aFeature)
+                .setParameter("annotation", aAlternativeLabel)
+                .executeUpdate();
+        
         LearningRecord record = new LearningRecord();
         record.setUser(aUsername);
         record.setSourceDocument(aDocument);
@@ -165,7 +189,7 @@ public class LearningRecordServiceImpl
                 "SELECT COUNT(*) FROM LearningRecord WHERE",
                 "user = :user AND",
                 "layer = :layer AND",
-                "userAction != :action");
+                "userAction = :action");
         long count = entityManager.createQuery(sql, Long.class)
                 .setParameter("user", aUser.getUsername())
                 .setParameter("layer", aLayer)

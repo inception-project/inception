@@ -60,6 +60,10 @@ public class SuggestionGroup
     
     private final List<AnnotationSuggestion> suggestions;
     private boolean sorted = true;
+    private Offset offset;
+    private String feature;
+    private long layerId;
+    private String documentName;
 
     public SuggestionGroup()
     {
@@ -69,27 +73,33 @@ public class SuggestionGroup
     public SuggestionGroup(AnnotationSuggestion... aItems)
     {
         suggestions = new ArrayList<>(asList(aItems));
-        sorted = suggestions.size() < 1;
+        sorted = suggestions.size() < 2;
+        if (!suggestions.isEmpty()) {
+            offset = suggestions.get(0).getOffset();
+            feature = get(0).getFeature();
+            layerId = get(0).getLayerId();
+            documentName = get(0).getDocumentName();
+        }
     }
 
     public String getFeature()
     {
-        return get(0).getFeature();
+        return feature;
     }
 
     public long getLayerId()
     {
-        return get(0).getLayerId();
+        return layerId;
     }
 
     public String getDocumentName()
     {
-        return get(0).getDocumentName();
+        return documentName;
     }
     
     public Offset getOffset()
     {
-        return get(0).getOffset();
+        return offset;
     }
     
     public AnnotationSuggestion get(int aIndex)
@@ -219,18 +229,20 @@ public class SuggestionGroup
     @Override
     public boolean add(AnnotationSuggestion aSuggestion)
     {
+        boolean empty = isEmpty();
+        
         // When we add the second element to the group, then it is probably no longer sorted
-        if (!isEmpty()) {
+        if (!empty) {
             sorted = false;
         }
         
         // All suggestions in a group must come from the same document (because they must be
         // on the same position) and layer/feature
-        if (!isEmpty()) {
+        if (!empty) {
             AnnotationSuggestion representative = get(0);
             Validate.isTrue(
-                    representative.getBegin() == aSuggestion.getBegin()
-                            && representative.getEnd() == aSuggestion.getEnd(),
+                    representative.getBegin() == aSuggestion.getBegin() && 
+                    representative.getEnd() == aSuggestion.getEnd(),
                     "All suggestions in a group must be at the same position: expected [%d-%d] but got [%d-%d]",
                     representative.getBegin(), representative.getEnd(), aSuggestion.getBegin(),
                     aSuggestion.getEnd());
@@ -243,6 +255,14 @@ public class SuggestionGroup
             Validate.isTrue(representative.getFeature().equals(aSuggestion.getFeature()),
                     "All suggestions in a group must be for the same feature: expected [%s] but got [%s]",
                     representative.getFeature(), aSuggestion.getFeature());
+        }
+        
+        // Cache information that must be consistent in the group when the first item is added
+        if (empty) {
+            offset = aSuggestion.getOffset();
+            feature = aSuggestion.getFeature();
+            layerId = aSuggestion.getLayerId();
+            documentName = aSuggestion.getDocumentName();
         }
         
         return suggestions.add(aSuggestion);

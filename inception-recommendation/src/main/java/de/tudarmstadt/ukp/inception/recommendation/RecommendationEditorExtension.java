@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation;
 
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_TRANSIENT_ACCEPTED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_TRANSIENT_REJECTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation.MAIN_EDITOR;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.ACCEPTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.REJECTED;
@@ -78,7 +80,7 @@ public class RecommendationEditorExtension
     extends AnnotationEditorExtensionImplBase
     implements AnnotationEditorExtension
 {
-    public static final String BEAN_NAME = "recommendationEditorExtension";
+    public static final String BEAN_NAME = AnnotationSuggestion.EXTENSION_ID;
     
     private final Logger log = LoggerFactory.getLogger(getClass());
     
@@ -164,7 +166,7 @@ public class RecommendationEditorExtension
 
         // Hide the suggestion. This is faster than having to recalculate the visibility status for
         // the entire document or even for the part visible on screen.
-        suggestion.hide("user accepted");
+        suggestion.hide(FLAG_TRANSIENT_ACCEPTED);
 
         // Set selection to the accepted annotation and select it and load it into the detail editor
         // panel
@@ -220,7 +222,7 @@ public class RecommendationEditorExtension
 
         // Hide the suggestion. This is faster than having to recalculate the visibility status for
         // the entire document or even for the part visible on screen.
-        suggestion.hide("user rejected");
+        suggestion.hide(FLAG_TRANSIENT_REJECTED);
 
         // Log the action to the learning record
         learningRecordService.logRecord(document, aState.getUser().getUsername(),

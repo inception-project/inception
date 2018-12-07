@@ -58,6 +58,11 @@ public interface LearningRecordService
             AnnotationSuggestion aPrediction, AnnotationLayer aLayer, AnnotationFeature aFeature,
             LearningRecordType aUserAction, LearningRecordChangeLocation aLocation);
 
+    /**
+     * Updates the learning log with an entry for the given suggestion. Any entries which are 
+     * duplicates of the new action are removed as part of this action. Note that the actual
+     * action the user performed is not taken into account to determine duplicateness.
+     */
     void logRecord(SourceDocument aDocument, String aUsername,
             AnnotationSuggestion aSuggestion, String aAlternativeLabel, AnnotationLayer aLayer,
             AnnotationFeature aFeature, LearningRecordType aUserAction,

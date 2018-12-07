@@ -17,7 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.active.learning;
 
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_REJECTED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_SKIPPED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.REJECTED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.SKIPPED;
 import static java.util.stream.Collectors.toList;
 
 import java.io.Serializable;
@@ -38,7 +41,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
@@ -119,45 +121,32 @@ public class ActiveLearningServiceImpl
                         aLayer);
 
         for (SuggestionGroup group : aSuggestionGroups) {
-            for (AnnotationSuggestion suggestion : group) {
-                // If a suggestion is already invisible, we don't need to check if it needs hiding
-                if (suggestion.isVisible() && doesContainRejectedOrSkippedRecord(records,
-                        suggestion, filterSkippedRecommendation)) {
-                    suggestion.hide("doesContainRejectedOrSkippedRecord");
+            for (AnnotationSuggestion s : group) {
+                // If a suggestion is already invisible, we don't need to check if it needs hiding.
+                // Mind that this code does not unhide the suggestion immediately if a user
+                // deletes a skip learning record - it will only get unhidden after the next
+                // prediction run (unless the learning-record-deletion code does an explicit
+                // unhiding).
+                if (s.isVisible()) {
+                    records.stream()
+                            .filter(r -> r.getSourceDocument().getName().equals(s.getDocumentName())
+                                    && r.getOffsetCharacterBegin() == s.getBegin()
+                                    && r.getOffsetCharacterEnd() == s.getEnd()
+                                    && r.getAnnotation().equals(s.getLabel()))
+                            .forEach(record -> {
+                                if (REJECTED.equals(record.getUserAction())) {
+                                    s.hide(FLAG_REJECTED);
+                                }
+                                else if (filterSkippedRecommendation
+                                        && SKIPPED.equals(record.getUserAction())) {
+                                    s.hide(FLAG_SKIPPED);
+                                }
+                            });
                 }
             }
         }
     }
     
-    private static boolean doesContainRejectedOrSkippedRecord(List<LearningRecord> records,
-            AnnotationSuggestion aRecommendation, boolean filterSkippedRecommendation)
-    {
-        for (LearningRecord record : records) {
-            if ((record.getUserAction().equals(REJECTED)
-                    || filterSkippedRecord(record, filterSkippedRecommendation))
-                    && hasSameTokenAndSuggestion(aRecommendation, record)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private static boolean filterSkippedRecord(LearningRecord record,
-            boolean filterSkippedRecommendation)
-    {
-        return record.getUserAction().equals(LearningRecordType.SKIPPED)
-                && filterSkippedRecommendation;
-    }
-
-    private static boolean hasSameTokenAndSuggestion(AnnotationSuggestion aRecommendation,
-            LearningRecord aRecord)
-    {
-        return aRecord.getSourceDocument().getName().equals(aRecommendation.getDocumentName())
-                && aRecord.getOffsetCharacterBegin() == aRecommendation.getBegin()
-                && aRecord.getOffsetCharacterEnd() == aRecommendation.getEnd()
-                && aRecord.getAnnotation().equals(aRecommendation.getLabel());
-    }
-
     public static class ActiveLearningUserState implements Serializable
     {
         private static final long serialVersionUID = -167705997822964808L;

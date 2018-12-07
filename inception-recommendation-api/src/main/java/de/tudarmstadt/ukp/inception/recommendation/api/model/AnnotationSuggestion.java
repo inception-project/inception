@@ -22,11 +22,47 @@ import java.util.Objects;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+
 public class AnnotationSuggestion
     implements Serializable, Comparable<AnnotationSuggestion>
 {
+    public static final String EXTENSION_ID = "recommendationEditorExtension";
+    
     private static final long serialVersionUID = -1904645143661843249L;
 
+    /**
+     * Suggestion is overlapping with an existing annotation
+     */
+    public static final int FLAG_OVERLAP = 1 << 0;
+    /**
+     * Suggestion has been skipped (from learning history)
+     */
+    public static final int FLAG_SKIPPED = 1 << 1;
+    /**
+     * Suggestion has been rejected (from learning history)
+     */
+    public static final int FLAG_REJECTED = 1 << 2;
+    /**
+     * Suggestion has no label
+     */
+    public static final int FLAG_NO_LABEL = 1 << 3;
+    /**
+     * User has accepted the suggestion and prediction has not re-run yet (which would reinitialize
+     * the visbility state)
+     */
+    public static final int FLAG_TRANSIENT_ACCEPTED = 1 << 4;
+    /**
+     * User has rejected the suggestion and prediction has not re-run yet (which would reinitialize
+     * the visbility state)
+     */
+    public static final int FLAG_TRANSIENT_REJECTED = 1 << 5;
+    /**
+     * User has corrected the suggestion and prediction has not re-run yet (which would reinitialize
+     * the visbility state)
+     */
+    public static final int FLAG_TRANSIENT_CORRECTED = 1 << 6;
+    
     private final int id;
 
     private final long recommenderId;
@@ -45,9 +81,7 @@ public class AnnotationSuggestion
     private final String uiLabel;
     private final double confidence;
 
-    private boolean visible = true;
-
-    private String reasonForHiding;
+    private int hidingFlags = 0;
 
     public AnnotationSuggestion(int aId, long aRecommenderId, String aRecommenderName,
             long aLayerId, String aFeature, String aDocumentName, String aDocumentUri, int aBegin,
@@ -162,28 +196,49 @@ public class AnnotationSuggestion
         return new Offset(begin, end);
     }
 
-    public void hide(String aReason)
+    public void hide(int aFlags)
     {
-        reasonForHiding = aReason;
-        visible = false;
+        hidingFlags |= aFlags;
+    }
+    
+    public void show(int aFlags)
+    {
+        hidingFlags &= ~aFlags;
     }
     
     public String getReasonForHiding()
     {
-        return reasonForHiding;
+        StringBuilder sb = new StringBuilder();
+        if ((hidingFlags & FLAG_OVERLAP) != 0) {
+            sb.append("overlapping ");
+        }
+        if ((hidingFlags & FLAG_REJECTED) != 0) {
+            sb.append("rejected ");
+        }
+        if ((hidingFlags & FLAG_SKIPPED) != 0) {
+            sb.append("skipped ");
+        }
+        if ((hidingFlags & FLAG_NO_LABEL) != 0) {
+            sb.append("no-label ");
+        }
+        if ((hidingFlags & FLAG_TRANSIENT_ACCEPTED) != 0) {
+            sb.append("transient-accepted ");
+        }
+        if ((hidingFlags & FLAG_TRANSIENT_REJECTED) != 0) {
+            sb.append("transient-rejected ");
+        }
+        return sb.toString();
     }
     
-    public void setVisible(boolean aVisible)
-    {
-        visible = aVisible;
-    }
-
     public boolean isVisible()
     {
-        return visible;
+        return hidingFlags == 0;
     }
 
-    
+    public VID getVID()
+    {
+        return new VID(EXTENSION_ID, layerId, (int) recommenderId, id, VID.NONE, VID.NONE);
+    }
 
     @Override
     public int hashCode()
@@ -252,6 +307,6 @@ public class AnnotationSuggestion
                 .append("documentUri", documentUri).append("begin", begin).append("end", end)
                 .append("coveredText", coveredText).append("label", label)
                 .append("uiLabel", uiLabel).append("confidence", confidence)
-                .append("visible", visible).append("reasonForHiding", reasonForHiding).toString();
+                .append("reasonForHiding", getReasonForHiding()).toString();
     }
 }

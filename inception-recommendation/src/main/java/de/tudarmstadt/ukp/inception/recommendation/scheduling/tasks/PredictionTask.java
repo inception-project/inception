@@ -17,8 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.scheduling.tasks;
 
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.REJECTED;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.SKIPPED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_NO_LABEL;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_OVERLAP;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_REJECTED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_SKIPPED;
 import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.toList;
 import static org.apache.uima.fit.util.CasUtil.getAnnotationType;
@@ -332,7 +334,7 @@ public class PredictionTask
                 if (oi.getA().overlaps(oi.getB())) {
                     // Fetch the current suggestion
                     SuggestionGroup group = suggestions.get(oi.getA());
-                    group.forEach(suggestion -> suggestion.hide("overlaps with annotation"));
+                    group.forEach(suggestion -> suggestion.hide(FLAG_OVERLAP));
                     // Do not want to process the group again since it is already hidden
                     oi.ignoraA();
                 }
@@ -354,7 +356,7 @@ public class PredictionTask
     {
         // If there is no label, then hide it
         if (aSuggestion.getLabel() == null) {
-            aSuggestion.hide("no label");
+            aSuggestion.hide(FLAG_NO_LABEL);
             return;
         }
 
@@ -362,10 +364,19 @@ public class PredictionTask
         for (LearningRecord record : aRecordedRecommendations) {
             if (record.getOffsetCharacterBegin() == aSuggestion.getBegin()
                     && record.getOffsetCharacterEnd() == aSuggestion.getEnd()
-                    && record.getAnnotation().equals(aSuggestion.getLabel())
-                    && (REJECTED.equals(record.getUserAction()) || 
-                        SKIPPED.equals(record.getUserAction()))) {
-                aSuggestion.hide("rejected or skipped");
+                    && record.getAnnotation().equals(aSuggestion.getLabel()))
+            {
+                switch (record.getUserAction()) {
+                case REJECTED:
+                    aSuggestion.hide(FLAG_REJECTED);
+                    break;
+                case SKIPPED:
+                    aSuggestion.hide(FLAG_SKIPPED);
+                    break;
+                default:
+                    // Nothing to do for the other cases. ACCEPTED annotation are filtered out 
+                    // because the overlap with a created annotation and the same for CORRECTED
+                }
                 return;
             }
         }

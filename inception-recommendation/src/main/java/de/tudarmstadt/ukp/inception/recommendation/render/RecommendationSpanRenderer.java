@@ -44,7 +44,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
-import de.tudarmstadt.ukp.inception.recommendation.RecommendationEditorExtension;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
@@ -188,9 +187,7 @@ public class RecommendationSpanRenderer
                     continue;
                 }
 
-                VID vid = new VID(RecommendationEditorExtension.BEAN_NAME, layer.getId(),
-                        (int) canonicalRecommendation.getRecommenderId(),
-                        canonicalRecommendation.getId(), VID.NONE, VID.NONE);
+                VID vid = canonicalRecommendation.getVID();
                 
                 boolean first = true;
                 Map<Long, AnnotationSuggestion> confidencePerClassifier = labelMap.get(label);
