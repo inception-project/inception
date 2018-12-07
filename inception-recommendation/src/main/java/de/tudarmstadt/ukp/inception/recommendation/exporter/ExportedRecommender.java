@@ -56,8 +56,8 @@ public class ExportedRecommender
     @JsonProperty("maxRecommendations")
     private int maxRecommendations;
 
-    @JsonProperty("statesForTraining")
-    private Set<AnnotationDocumentState> statesForTraining;
+    @JsonProperty("statesIgnoredForTraining")
+    private Set<AnnotationDocumentState> statesIgnoredForTraining;
 
     @JsonProperty("traits")
     private String traits;
@@ -154,12 +154,12 @@ public class ExportedRecommender
 
     public Set<AnnotationDocumentState> getStatesIgnoredForTraining()
     {
-        return statesForTraining;
+        return statesIgnoredForTraining;
     }
 
-    public void setStatesForTraining(Set<AnnotationDocumentState> aStatesForTraining)
+    public void setStatesForTraining(Set<AnnotationDocumentState> aStatesIgnoredForTraining)
     {
-        statesForTraining = aStatesForTraining;
+        statesIgnoredForTraining = aStatesIgnoredForTraining;
     }
 
     public String getTraits()
