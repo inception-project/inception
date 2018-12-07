@@ -579,11 +579,6 @@ public abstract class AnnotationDetailEditorPanel
     {
         AnnotatorState state = getModelObject();
         
-        LOG.trace("actionAnnotate() selectedLayer: {}",
-                state.getSelectedAnnotationLayer().getUiName());
-        LOG.trace("actionAnnotate() defaultLayer: {}",
-                state.getDefaultAnnotationLayer().getUiName());
-
         if (state.getSelectedAnnotationLayer() == null) {
             error("No layer is selected. First select a layer.");
             aTarget.addChildren(getPage(), IFeedback.class);
@@ -595,6 +590,11 @@ public abstract class AnnotationDetailEditorPanel
             aTarget.addChildren(getPage(), IFeedback.class);
             return;
         }
+        
+        LOG.trace("actionAnnotate() selectedLayer: {}",
+                state.getSelectedAnnotationLayer().getUiName());
+        LOG.trace("actionAnnotate() defaultLayer: {}",
+                state.getDefaultAnnotationLayer().getUiName());
 
         // Verify if input is valid according to tagset
         LOG.trace("actionAnnotate() verifying feature values in editors");
