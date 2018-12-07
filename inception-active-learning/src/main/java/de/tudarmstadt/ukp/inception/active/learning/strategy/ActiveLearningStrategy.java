@@ -27,10 +27,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup.Del
 
 public interface ActiveLearningStrategy
 {
-    Optional<Delta> updateRecommendations(ActiveLearningService aALService,
-            LearningRecordService aRecordService);
-
-    Optional<Delta> generateRecommendationWithLowestDifference(ActiveLearningService aALService,
+    Optional<Delta> generateNextSuggestion(ActiveLearningService aALService,
             LearningRecordService aRecordService,
             List<SuggestionGroup> aListOfRecommendationsForEachToken);
 }

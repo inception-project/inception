@@ -32,8 +32,7 @@ public interface ActiveLearningService
      * Get all suggestions for the given layer and user as a flat list (i.e. not grouped by
      * documents, but grouped by alternatives).
      */
-    List<SuggestionGroup> getRecommendationFromRecommendationModel(User aUser,
-            AnnotationLayer aLayer);
+    List<SuggestionGroup> getSuggestions(User aUser, AnnotationLayer aLayer);
 
     /**
      * Check if the suggestions from which the given record was created (or an equivalent one)

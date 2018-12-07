@@ -25,4 +25,9 @@ public class AjaxPredictionsSwitchedEvent {
     public AjaxPredictionsSwitchedEvent(AjaxRequestTarget aTarget) {
         this.target = aTarget;
     }
+    
+    public AjaxRequestTarget getTarget()
+    {
+        return target;
+    }
 }

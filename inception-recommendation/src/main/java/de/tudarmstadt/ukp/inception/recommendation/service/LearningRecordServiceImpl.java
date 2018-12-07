@@ -206,7 +206,7 @@ public class LearningRecordServiceImpl
                 "DELETE FROM LearningRecord WHERE",
                 "user = :user AND",
                 "layer = :layer AND",
-                "userAction != :action");
+                "userAction = :action");
         entityManager.createQuery(sql)
                 .setParameter("user", aUser.getUsername())
                 .setParameter("layer", aLayer)

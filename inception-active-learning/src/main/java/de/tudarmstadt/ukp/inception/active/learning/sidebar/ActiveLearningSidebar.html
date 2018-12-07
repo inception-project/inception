@@ -65,7 +65,11 @@
                 <div class="form-control"
                   style="overflow-y: auto; width: unset; word-wrap: break-word; height: 5em; position: absolute; top: 0; left: 10px; right: 10px;"
                   readonly>
-                  <a wicket:id="recommendationCoveredTextLink"></a>
+                  <a wicket:id="recommendationCoveredTextLink">
+                    <wicket:container wicket:id="leftContext"/>
+                    <kbd><wicket:container wicket:id="text"/></kbd>
+                    <wicket:container wicket:id="rightContext"/>
+                  </a>
                 </div>
               </div>
             </div>

@@ -217,11 +217,15 @@ public class RecommendationSpanRenderer
                     vdoc.add(new VComment(vid, VCommentType.INFO, ao.getRecommenderName()));
                     if (ao.getConfidence() != -1) {
                         vdoc.add(new VComment(vid, VCommentType.INFO,
-                            String.format("Confidence: %.2f", ao.getConfidence())));
+                                String.format("Confidence: %.2f", ao.getConfidence())));
                     }
                     if (ao.getUiLabel() != null && !ao.getUiLabel().isEmpty()) {
                         vdoc.add(new VComment(vid, VCommentType.INFO,
-                            "Description: " + ao.getUiLabel()));
+                                "Description: " + ao.getUiLabel()));
+                    }
+                    if (pref.isShowAllPredictions() && !ao.isVisible()) {
+                        vdoc.add(new VComment(vid, VCommentType.INFO,
+                                "Hidden: " + ao.getReasonForHiding()));
                     }
                 }
             }

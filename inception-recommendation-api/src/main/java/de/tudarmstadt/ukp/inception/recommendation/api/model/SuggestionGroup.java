@@ -173,7 +173,12 @@ public class SuggestionGroup
         }
         else if (size() == 1) {
             AnnotationSuggestion top = get(0);
-            return singletonMap(top.getRecommenderId(), new Delta(top));
+            if (top.isVisible()) {
+                return singletonMap(top.getRecommenderId(), new Delta(top));
+            }
+            else {
+                return emptyMap();
+            }
         }
         else {
             // Group the suggestions by recommender because the confidence scores cannot be compared

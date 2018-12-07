@@ -164,7 +164,7 @@ public class RecommendationEditorExtension
 
         // Hide the suggestion. This is faster than having to recalculate the visibility status for
         // the entire document or even for the part visible on screen.
-        suggestion.setVisible(false);
+        suggestion.hide("user accepted");
 
         // Set selection to the accepted annotation and select it and load it into the detail editor
         // panel
@@ -213,23 +213,23 @@ public class RecommendationEditorExtension
             return;
         }
 
-        AnnotationSuggestion prediction = oPrediction.get();
+        AnnotationSuggestion suggestion = oPrediction.get();
         Recommender recommender = recommendationService.getRecommender(aVID.getId());
         AnnotationLayer layer = annotationService.getLayer(aVID.getLayerId());
         AnnotationFeature feature = annotationService.getFeature(recommender.getFeature(), layer);
 
         // Hide the suggestion. This is faster than having to recalculate the visibility status for
         // the entire document or even for the part visible on screen.
-        prediction.setVisible(false);
+        suggestion.hide("user rejected");
 
         // Log the action to the learning record
         learningRecordService.logLearningRecord(document, aState.getUser().getUsername(),
-                prediction, layer, feature, REJECTED, MAIN_EDITOR);
+                suggestion, layer, feature, REJECTED, MAIN_EDITOR);
 
         // Send an application event that the suggestion has been rejected
         applicationEventPublisher.publishEvent(
                 new RecommendationRejectedEvent(this, document, aState.getUser().getUsername(),
-                        aBegin, aEnd, prediction.getCoveredText(), feature, prediction.getLabel()));
+                        aBegin, aEnd, suggestion.getCoveredText(), feature, suggestion.getLabel()));
 
         // Send a UI event that the suggestion has been rejected
         aTarget.getPage().send(aTarget.getPage(), Broadcast.BREADTH,

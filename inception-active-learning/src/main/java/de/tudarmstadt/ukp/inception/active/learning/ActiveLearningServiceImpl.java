@@ -66,7 +66,7 @@ public class ActiveLearningServiceImpl
     }
 
     @Override
-    public List<SuggestionGroup> getRecommendationFromRecommendationModel(User aUser,
+    public List<SuggestionGroup> getSuggestions(User aUser,
             AnnotationLayer aLayer)
     {
         Predictions model = recommendationService.getPredictions(aUser, aLayer.getProject());
@@ -87,7 +87,7 @@ public class ActiveLearningServiceImpl
     public boolean isSuggestionVisible(LearningRecord aRecord)
     {
         User user = userService.get(aRecord.getUser());
-        List<SuggestionGroup> suggestions = getRecommendationFromRecommendationModel(user,
+        List<SuggestionGroup> suggestions = getSuggestions(user,
                 aRecord.getLayer());
         for (SuggestionGroup listOfAO : suggestions) {
             if (listOfAO.stream().anyMatch(suggestion -> 
@@ -124,7 +124,7 @@ public class ActiveLearningServiceImpl
                 // If a suggestion is already invisible, we don't need to check if it needs hiding
                 if (suggestion.isVisible() && doesContainRejectedOrSkippedRecord(records,
                         suggestion, filterSkippedRecommendation)) {
-                    suggestion.setVisible(false);
+                    suggestion.hide("doesContainRejectedOrSkippedRecord");
                 }
             }
         }
@@ -165,10 +165,13 @@ public class ActiveLearningServiceImpl
         
         private boolean sessionActive = false;
         private boolean doExistRecommenders = true;
-        private Delta currentDifference;
         private AnnotationLayer layer;
         private ActiveLearningStrategy strategy;
-        private List<SuggestionGroup> listOfRecommendationsForEachToken;
+        private List<SuggestionGroup> suggestions;
+
+        private Delta currentDifference;
+        private String leftContext;
+        private String rightContext;
 
         public boolean isSessionActive()
         {
@@ -190,7 +193,7 @@ public class ActiveLearningServiceImpl
             this.doExistRecommenders = doExistRecommenders;
         }
 
-        public Optional<AnnotationSuggestion> getCurrentRecommendation()
+        public Optional<AnnotationSuggestion> getSuggestion()
         {
             return currentDifference != null ? Optional.of(currentDifference.getFirst())
                     : Optional.empty();
@@ -226,15 +229,34 @@ public class ActiveLearningServiceImpl
             strategy = aStrategy;
         }
 
-        public void setListOfRecommendationsForEachToken(List<SuggestionGroup>
-            aListOfRecommendationsForEachToken)
+        public void setSuggestions(List<SuggestionGroup> aSuggestions)
         {
-            this.listOfRecommendationsForEachToken = aListOfRecommendationsForEachToken;
+            suggestions = aSuggestions;
         }
 
-        public List<SuggestionGroup> getListOfRecommendationsForEachToken()
+        public List<SuggestionGroup> getSuggestions()
         {
-            return listOfRecommendationsForEachToken;
+            return suggestions;
+        }
+
+        public String getLeftContext()
+        {
+            return leftContext;
+        }
+
+        public void setLeftContext(String aLeftContext)
+        {
+            leftContext = aLeftContext;
+        }
+
+        public String getRightContext()
+        {
+            return rightContext;
+        }
+
+        public void setRightContext(String aRightContext)
+        {
+            rightContext = aRightContext;
         }
     }
 

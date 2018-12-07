@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.recommendation.scheduling.tasks;
 
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.REJECTED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.SKIPPED;
 import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.toList;
 import static org.apache.uima.fit.util.CasUtil.getAnnotationType;
@@ -332,7 +333,7 @@ public class PredictionTask
                 if (oi.getA().overlaps(oi.getB())) {
                     // Fetch the current suggestion
                     SuggestionGroup group = suggestions.get(oi.getA());
-                    group.forEach(suggestion -> suggestion.setVisible(false));
+                    group.forEach(suggestion -> suggestion.hide("overlaps with annotation"));
                     // Do not want to process the group again since it is already hidden
                     oi.ignoraA();
                 }
@@ -354,7 +355,7 @@ public class PredictionTask
     {
         // If there is no label, then hide it
         if (aSuggestion.getLabel() == null) {
-            aSuggestion.setVisible(false);
+            aSuggestion.hide("no label");
             return;
         }
 
@@ -363,8 +364,9 @@ public class PredictionTask
             if (record.getOffsetCharacterBegin() == aSuggestion.getBegin()
                     && record.getOffsetCharacterEnd() == aSuggestion.getEnd()
                     && record.getAnnotation().equals(aSuggestion.getLabel())
-                    && REJECTED.equals(record.getUserAction())) {
-                aSuggestion.setVisible(false);
+                    && (REJECTED.equals(record.getUserAction()) || 
+                        SKIPPED.equals(record.getUserAction()))) {
+                aSuggestion.hide("rejected or skipped");
                 return;
             }
         }

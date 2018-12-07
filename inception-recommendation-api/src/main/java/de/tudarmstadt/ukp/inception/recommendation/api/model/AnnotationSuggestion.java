@@ -25,7 +25,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 public class AnnotationSuggestion
     implements Serializable, Comparable<AnnotationSuggestion>
 {
-    private static final long serialVersionUID = -1145787227041121442L;
+    private static final long serialVersionUID = -1904645143661843249L;
 
     private final int id;
 
@@ -46,6 +46,8 @@ public class AnnotationSuggestion
     private final double confidence;
 
     private boolean visible = true;
+
+    private String reasonForHiding;
 
     public AnnotationSuggestion(int aId, long aRecommenderId, String aRecommenderName,
             long aLayerId, String aFeature, String aDocumentName, String aDocumentUri, int aBegin,
@@ -160,6 +162,17 @@ public class AnnotationSuggestion
         return new Offset(begin, end);
     }
 
+    public void hide(String aReason)
+    {
+        reasonForHiding = aReason;
+        visible = false;
+    }
+    
+    public String getReasonForHiding()
+    {
+        return reasonForHiding;
+    }
+    
     public void setVisible(boolean aVisible)
     {
         visible = aVisible;
@@ -170,16 +183,7 @@ public class AnnotationSuggestion
         return visible;
     }
 
-    @Override
-    public String toString()
-    {
-        return new ToStringBuilder(this).append("id", id).append("label", label)
-                .append("uiLabel", uiLabel).append("feature", feature)
-                .append("recommenderName", recommenderName).append("confidence", confidence)
-                .append("recommenderId", recommenderId).append("begin", begin).append("end", end)
-                .append("coveredText", coveredText).append("documentName", documentName)
-                .append("documentUri", documentUri).append("visible", visible).toString();
-    }
+    
 
     @Override
     public int hashCode()
@@ -237,5 +241,17 @@ public class AnnotationSuggestion
         }
 
         return 0;
+    }
+
+    @Override
+    public String toString()
+    {
+        return new ToStringBuilder(this).append("id", id).append("recommenderId", recommenderId)
+                .append("recommenderName", recommenderName).append("layerId", layerId)
+                .append("feature", feature).append("documentName", documentName)
+                .append("documentUri", documentUri).append("begin", begin).append("end", end)
+                .append("coveredText", coveredText).append("label", label)
+                .append("uiLabel", uiLabel).append("confidence", confidence)
+                .append("visible", visible).append("reasonForHiding", reasonForHiding).toString();
     }
 }

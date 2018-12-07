@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.active.learning.strategy;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -38,12 +37,12 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup.Del
 public class UncertaintySamplingStrategy
     implements Serializable, ActiveLearningStrategy
 {
+    private static final Logger LOG = LoggerFactory.getLogger(UncertaintySamplingStrategy.class);
+    
     private static final long serialVersionUID = -2308436775710912029L;
 
-    private List<SuggestionGroup> listOfRecommendationsForEachToken;
     private AnnotatorState annotatorState;
     private AnnotationLayer selectedLayer;
-    private static final Logger LOG = LoggerFactory.getLogger(UncertaintySamplingStrategy.class);
 
     public UncertaintySamplingStrategy(AnnotatorState aState, AnnotationLayer aLayer)
     {
@@ -52,49 +51,30 @@ public class UncertaintySamplingStrategy
     }
 
     @Override
-    public Optional<Delta> updateRecommendations(ActiveLearningService aALService,
-            LearningRecordService aRecordService)
-    {
-        // remove invisible recommendations
-        List<SuggestionGroup> filteredRecommendations = new ArrayList<>(
-                listOfRecommendationsForEachToken);
-
-        // remove rejected recommendations
-        hideRejectedOrSkippedAnnotations(aRecordService, true,
-                filteredRecommendations, aALService);
-
-        return calculateDifferencesAndReturnLowestVisible(filteredRecommendations);
-    }
-
-    @Override
-    public Optional<Delta> generateRecommendationWithLowestDifference(
+    public Optional<Delta> generateNextSuggestion(
             ActiveLearningService aALService, LearningRecordService aRecordService,
             List<SuggestionGroup> aListOfRecommendationsForEachToken)
     {
         long startTimer = System.currentTimeMillis();
-        listOfRecommendationsForEachToken = aListOfRecommendationsForEachToken;
+        List<SuggestionGroup> suggestions = aListOfRecommendationsForEachToken;
         long getRecommendationsFromRecommendationService = System.currentTimeMillis();
         LOG.debug("Getting recommendations from recommender system costs {} ms.",
                 (getRecommendationsFromRecommendationService - startTimer));
 
         // remove duplicate recommendations
-        listOfRecommendationsForEachToken = listOfRecommendationsForEachToken.stream()
+        suggestions = suggestions.stream()
                 .map(it -> removeDuplicateRecommendations(it)).collect(Collectors.toList());
         long removeDuplicateRecommendation = System.currentTimeMillis();
         LOG.debug("Removing duplicate recommendations costs {} ms.",
                 (removeDuplicateRecommendation - getRecommendationsFromRecommendationService));
 
-        // remove invisible recommendations
-        List<SuggestionGroup> filteredRecommendations = new ArrayList<>(
-                listOfRecommendationsForEachToken);
-
-        // remove rejected recommendations
-        hideRejectedOrSkippedAnnotations(aRecordService, true, filteredRecommendations, aALService);
+        // hide rejected recommendations
+        hideRejectedOrSkippedAnnotations(aRecordService, true, suggestions, aALService);
         long removeRejectedSkippedRecommendation = System.currentTimeMillis();
         LOG.debug("Removing rejected or skipped ones costs {} ms.",
                 (removeRejectedSkippedRecommendation - removeDuplicateRecommendation));
 
-        return calculateDifferencesAndReturnLowestVisible(filteredRecommendations);
+        return calculateDifferencesAndReturnLowestVisible(suggestions);
     }
 
     private void hideRejectedOrSkippedAnnotations(LearningRecordService aRecordService,
