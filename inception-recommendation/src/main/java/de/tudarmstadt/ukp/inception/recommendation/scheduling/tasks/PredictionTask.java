@@ -28,13 +28,13 @@ import static org.apache.uima.fit.util.CasUtil.select;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
 import javax.persistence.NoResultException;
 
-import org.apache.commons.lang3.Validate;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
@@ -50,7 +50,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -65,7 +64,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
@@ -86,6 +84,7 @@ public class PredictionTask
     private @Autowired AnnotationSchemaService annoService;
     private @Autowired RecommendationService recommendationService;
     private @Autowired DocumentService documentService;
+    private @Autowired LearningRecordService learningRecordService;
     
     public PredictionTask(User aUser, Project aProject)
     {
@@ -193,11 +192,17 @@ public class PredictionTask
                     Optional<Feature> scoreFeature = scoreFeatureName
                             .map(predictionType::getFeatureByBaseName);
 
-                    List<AnnotationSuggestion> predictions = extractAnnotations(user,
+                    // Extract the suggestions from the data which the recommender has written into
+                    // the CAS
+                    List<AnnotationSuggestion> predictions = extractSuggestions(user,
                             jCas.get().getCas(), predictionType, labelFeature, scoreFeature,
                             document, recommender);
                     
-                    // FIXME: Visibility state calculation code needs to be inserted here again...
+                    // Calculate the visbility of the suggestions
+                    Collection<SuggestionGroup> groups = SuggestionGroup.group(predictions);
+                    calculateVisibility(learningRecordService, annoService, jCas.get(),
+                            getUser().getUsername(), layer, groups, 0,
+                            jCas.get().getDocumentText().length());
                     
                     model.putPredictions(layer.getId(), predictions);
 
@@ -212,7 +217,7 @@ public class PredictionTask
         recommendationService.putIncomingPredictions(getUser(), project, model);
     }
 
-    private List<AnnotationSuggestion> extractAnnotations(User aUser, CAS aCas, Type predictionType,
+    private List<AnnotationSuggestion> extractSuggestions(User aUser, CAS aCas, Type predictionType,
             Feature predictedFeature, Optional<Feature> aScoreFeature, SourceDocument aDocument,
             Recommender aRecommender)
     {
@@ -273,13 +278,9 @@ public class PredictionTask
      */
     public static void calculateVisibility(LearningRecordService aLearningRecordService,
             AnnotationSchemaService aAnnotationService, JCas aJcas, String aUser,
-            AnnotationDocument aDoc, AnnotationLayer aLayer,
-            SuggestionDocumentGroup aRecommendations, int aWindowBegin, int aWindowEnd)
+            AnnotationLayer aLayer, Collection<SuggestionGroup> aRecommendations, int aWindowBegin,
+            int aWindowEnd)
     {
-        Validate.isTrue(aRecommendations.getDocumentName().equals(aDoc.getDocument().getName()),
-                "Recommendations are for document [%s] but visibility calculation requested for [%s]",
-                aRecommendations.getDocumentName(), aDoc.getDocument().getName());
-
         // Collect all annotations of the given layer within the view window
         Type type = CasUtil.getType(aJcas.getCas(), aLayer.getName());
         List<AnnotationFS> annotationsInWindow = select(aJcas.getCas(), type).stream()

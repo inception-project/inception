@@ -17,17 +17,45 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.event;
 
-import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.uima.jcas.JCas;
+import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 
-public class AjaxPredictionsSwitchedEvent {
-    protected AjaxRequestTarget target;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 
-    public AjaxPredictionsSwitchedEvent(AjaxRequestTarget aTarget) {
-        this.target = aTarget;
-    }
-    
-    public AjaxRequestTarget getTarget()
+public class AjaxPredictionsSwitchedEvent
+{
+    private final IPartialPageRequestHandler requestHandler;
+    private final JCas jcas;
+    private final AnnotatorState state;
+    private final VDocument vdoc;
+
+    public AjaxPredictionsSwitchedEvent(IPartialPageRequestHandler aTarget, JCas aJCas,
+            AnnotatorState aState, VDocument aVDoc)
     {
-        return target;
+        requestHandler = aTarget;
+        jcas = aJCas;
+        state = aState;
+        vdoc = aVDoc;
+    }
+
+    public IPartialPageRequestHandler getTarget()
+    {
+        return requestHandler;
+    }
+
+    public JCas getJCas()
+    {
+        return jcas;
+    }
+
+    public AnnotatorState getState()
+    {
+        return state;
+    }
+
+    public VDocument getVDocument()
+    {
+        return vdoc;
     }
 }

@@ -40,7 +40,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocumen
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VRange;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
@@ -101,34 +100,30 @@ public class RecommendationSpanRenderer
         }
         
         // TODO #176 use the document Id once it it available in the CAS
-        SuggestionDocumentGroup recommendations = model.getPredictions(
+        SuggestionDocumentGroup groups = model.getPredictions(
                 DocumentMetaData.get(aJcas).getDocumentTitle(), layer, windowBegin, windowEnd,
                 aJcas, false);
         
         // No recommendations to render for this layer
-        if (recommendations.isEmpty()) {
+        if (groups.isEmpty()) {
             return;
         }
         
         String color = aColoringStrategy.getColor(null, null);
         String bratTypeName = TypeUtil.getUiTypeName(typeAdapter);
 
-        AnnotationDocument annoDoc = aDocumentService.getAnnotationDocument(aState.getDocument(),
-                aState.getUser());
-
         PredictionTask.calculateVisibility(learningRecordService, aAnnotationService, aJcas,
-                aState.getUser().getUsername(), annoDoc, layer, recommendations, windowBegin,
-                windowEnd);
+                aState.getUser().getUsername(), layer, groups, windowBegin, windowEnd);
 
         Preferences pref = recommendationService.getPreferences(aState.getUser(),
                 layer.getProject());
 
-        for (SuggestionGroup candidates : recommendations) {
+        for (SuggestionGroup suggestion : groups) {
             Map<String, Map<Long, AnnotationSuggestion>> labelMap = new HashMap<>();
  
             // For recommendations with the same label by the same classifier,
             // show only the confidence of the highest one
-            for (AnnotationSuggestion ao: candidates) {
+            for (AnnotationSuggestion ao: suggestion) {
 
                 // Skip rendering AnnotationObjects that should not be rendered
                 if (!pref.isShowAllPredictions() && !ao.isVisible()) {
@@ -179,7 +174,7 @@ public class RecommendationSpanRenderer
                 }
 
                 // Create VID using the recommendation with the lowest recommendationId
-                AnnotationSuggestion canonicalRecommendation = candidates.stream()
+                AnnotationSuggestion canonicalRecommendation = suggestion.stream()
                         .filter(p -> p.getLabel().equals(label))
                         .max(Comparator.comparingInt(AnnotationSuggestion::getId)).orElse(null);
 

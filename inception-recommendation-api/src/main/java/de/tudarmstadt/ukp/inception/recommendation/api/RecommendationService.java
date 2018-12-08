@@ -77,7 +77,7 @@ public interface RecommendationService
     
     void putIncomingPredictions(User aUser, Project aProject, Predictions aPredictions);
     
-    void switchPredictions(User aUser, Project aProject);
+    boolean switchPredictions(User aUser, Project aProject);
 
     /**
      * Returns the {@code RecommenderContext} for the given recommender if it exists, else it

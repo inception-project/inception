@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.api.model;
 
-import static java.util.stream.Collectors.groupingBy;
-
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Comparator;
@@ -26,8 +24,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.SortedMap;
-import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -147,15 +143,9 @@ public class Predictions
             AnnotationLayer aLayer, int aWindowBegin, int aWindowEnd, JCas aJcas,
             boolean aFilterExisting)
     {
-        List<AnnotationSuggestion> p = getFlattenedPredictions(aDocumentName, aLayer, aWindowBegin,
-                aWindowEnd, aJcas, aFilterExisting);
-        
-        SortedMap<Offset, SuggestionGroup> grouped = p.stream().collect(groupingBy(
-                AnnotationSuggestion::getOffset, TreeMap::new, SuggestionGroup.collector()));
-        
-        SuggestionDocumentGroup docGroup = new SuggestionDocumentGroup();
-        grouped.values().stream().forEachOrdered(docGroup::add);
-        return docGroup;
+        List<AnnotationSuggestion> suggestions = getFlattenedPredictions(aDocumentName, aLayer,
+                aWindowBegin, aWindowEnd, aJcas, aFilterExisting);
+        return new SuggestionDocumentGroup(suggestions);
     }
 
     /**
@@ -164,7 +154,7 @@ public class Predictions
      * Get the predictions of a document for a given window in a flattened list
      * @param aJcas 
      */
-    public List<AnnotationSuggestion> getFlattenedPredictions(String aDocumentName,
+    private List<AnnotationSuggestion> getFlattenedPredictions(String aDocumentName,
         AnnotationLayer aLayer, int aWindowBegin, int aWindowEnd, JCas aJcas,
         boolean aFilterExisting)
     {

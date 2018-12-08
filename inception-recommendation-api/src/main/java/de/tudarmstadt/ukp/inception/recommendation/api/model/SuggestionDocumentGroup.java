@@ -21,6 +21,7 @@ import static org.apache.commons.collections4.IteratorUtils.unmodifiableIterator
 
 import java.util.AbstractCollection;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
@@ -33,22 +34,34 @@ import org.apache.commons.lang3.Validate;
 public class SuggestionDocumentGroup
     extends AbstractCollection<SuggestionGroup>
 {
-    private List<SuggestionGroup> groups;
+    private Collection<SuggestionGroup> groups;
+    private String documentName;
     
     public SuggestionDocumentGroup()
     {
         groups = new ArrayList<>();
     }
     
+    public SuggestionDocumentGroup(List<AnnotationSuggestion> aSuggestions)
+    {
+        this();
+        SuggestionGroup.group(aSuggestions).stream().forEachOrdered(this::add);
+    }
+    
     @Override
     public boolean add(SuggestionGroup aGroup)
     {
-        if (!groups.isEmpty()) {
-            SuggestionGroup representative = groups.get(0);
-            
-            Validate.isTrue(representative.getDocumentName().equals(aGroup.getDocumentName()),
+        boolean empty = isEmpty();
+        
+        if (!empty) {
+            Validate.isTrue(documentName.equals(aGroup.getDocumentName()),
                     "All suggestions in a group must come from the same document: expected [%s] but got [%s]",
-                    representative.getDocumentName(), aGroup.getDocumentName());
+                    documentName, aGroup.getDocumentName());
+        }
+        
+        // Cache information that must be consistent in the group when the first item is added
+        if (empty) {
+            documentName = aGroup.getDocumentName();
         }
         
         return groups.add(aGroup);
@@ -68,6 +81,12 @@ public class SuggestionDocumentGroup
     
     public String getDocumentName()
     {
-        return groups.get(0).getDocumentName();
+        return documentName;
+    }
+    
+    @Override
+    public boolean isEmpty()
+    {
+        return groups.isEmpty();
     }
 }

@@ -31,6 +31,7 @@ import static org.apache.commons.collections4.IteratorUtils.unmodifiableIterator
 import java.io.Serializable;
 import java.util.AbstractCollection;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -39,6 +40,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
 import java.util.function.BiConsumer;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
@@ -291,6 +294,14 @@ public class SuggestionGroup
     public static SuggestionGroupCollector collector()
     {
         return new SuggestionGroupCollector();
+    }
+    
+    public static Collection<SuggestionGroup> group(Collection<AnnotationSuggestion> aSuggestions)
+    {
+        SortedMap<Offset, SuggestionGroup> grouped = aSuggestions.stream()
+                .collect(groupingBy(AnnotationSuggestion::getOffset, TreeMap::new, 
+                        SuggestionGroup.collector()));
+        return grouped.values();
     }
 
     public static class Delta

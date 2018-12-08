@@ -292,11 +292,11 @@ public class RecommendationServiceImpl
     }
     
     @Override
-    public void switchPredictions(User aUser, Project aProject)
+    public boolean switchPredictions(User aUser, Project aProject)
     {
         RecommendationState state = getState(aUser.getUsername(), aProject);
         synchronized (state) {
-            state.switchPredictions();
+            return state.switchPredictions();
         }
     }
 
@@ -433,11 +433,15 @@ public class RecommendationServiceImpl
             return incomingPredictions;
         }
 
-        public void switchPredictions()
+        public boolean switchPredictions()
         {
             if (incomingPredictions != null) {
                 activePredictions = incomingPredictions;
                 incomingPredictions = null;
+                return true;
+            }
+            else {
+                return false;
             }
         }
         

@@ -239,22 +239,26 @@ public class RecommendationEditorExtension
     }
     
     @Override
-    public void render(JCas jCas, AnnotatorState aState, VDocument aVDoc)
+    public void render(JCas aJCas, AnnotatorState aState, VDocument aVDoc)
     {
         // We activate new suggestions during rendering. For one, we don't have a push mechanism
         // at the moment. For another, even if we had it, it would be quite annoying to the user
         // if the UI kept updating itself without any the user expecting an update. The user does
         // expect an update when she makes some interaction, so we piggy-back on this expectation.
-        recommendationService.switchPredictions(aState.getUser(), aState.getProject());
-        
-        // Add the suggestions to the visual document
-        RecommendationRenderer.render(aVDoc, aState, jCas, annotationService, recommendationService,
-                learningRecordService, fsRegistry, documentService);
-                
+        boolean switched = recommendationService.switchPredictions(aState.getUser(),
+                aState.getProject());
+
         // Notify other UI components on the page about the prediction switch such that they can
         // also update their state to remain in sync with the new predictions
-        RequestCycle.get().find(AjaxRequestTarget.class)
-                .ifPresent(_target -> _target.getPage().send(_target.getPage(), Broadcast.BREADTH,
-                        new AjaxPredictionsSwitchedEvent(_target)));
+        if (switched) {
+            RequestCycle.get().find(AjaxRequestTarget.class)
+                    .ifPresent(_target -> _target.getPage().send(_target.getPage(),
+                            Broadcast.BREADTH,
+                            new AjaxPredictionsSwitchedEvent(_target, aJCas, aState, aVDoc)));
+        }
+
+        // Add the suggestions to the visual document
+        RecommendationRenderer.render(aVDoc, aState, aJCas, annotationService,
+                recommendationService, learningRecordService, fsRegistry, documentService);
     }
 }

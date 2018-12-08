@@ -105,16 +105,20 @@
           </div>
           <div class="scrolling panel-body">
             <table class="table table-condensed col-sm-12">
-              <tr wicket:id="historyListview">
-                <td style="width: 100%;"><a wicket:id="jumpToAnnotation"></a></td>
-                <td><span wicket:id="recommendedAnnotation"></span></td>
-                <td><span wicket:id="userAction"></span></td>
-                <td>
-                  <button wicket:id="removeRecord" class="btn-xs btn-danger">
-                    <i class="fa fa-trash" aria-hidden="true"></i>
-                  </button>
-                </td>
-              </tr>
+              <wicket:container wicket:id="historyListview">
+                <tr style="font-size: 90%;">
+                  <td style="width: 100%;" colspan="2"><a wicket:id="jumpToAnnotation"></a></td>
+                  <td style="border:none;" rowspan="2">
+                    <button wicket:id="removeRecord" class="btn-xs btn-danger">
+                      <i class="fa fa-trash" aria-hidden="true"></i>
+                    </button>
+                  </td>
+                </tr>
+                <tr style="font-size: 70%;">
+                  <td style="border:none;"><span wicket:id="recommendedAnnotation"></span></td>
+                  <td style="border:none;"><span wicket:id="userAction"></span></td>
+                </tr>
+              </wicket:container>
             </table>
           </div>
         </form>

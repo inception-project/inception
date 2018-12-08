@@ -307,6 +307,7 @@ public class AnnotationSuggestion
                 .append("documentUri", documentUri).append("begin", begin).append("end", end)
                 .append("coveredText", coveredText).append("label", label)
                 .append("uiLabel", uiLabel).append("confidence", confidence)
+                .append("visible", isVisible())
                 .append("reasonForHiding", getReasonForHiding()).toString();
     }
 }
