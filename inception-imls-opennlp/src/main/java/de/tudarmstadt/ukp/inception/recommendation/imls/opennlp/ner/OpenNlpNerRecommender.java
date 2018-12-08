@@ -227,13 +227,21 @@ public class OpenNlpNerRecommender
         List<AnnotationFS> annotations = selectCovered(annotationType, aSentence);
         int numberOfAnnotations = annotations.size();
         List<Span> result = new ArrayList<>();
+        int maxSeen = 0;
         for (int i = 0; i < numberOfAnnotations; i++) {
             AnnotationFS annotation = annotations.get(i);
             int begin = idxToken.get(idxTokenOffset.get(annotation.getBegin()));
             int end = idxToken.get(idxTokenOffset.get(annotation.getEnd()));
             String label = annotation.getFeatureValueAsString(feature);
+            
+            if (begin < maxSeen) {
+                LOG.warn("Skipping overlapping annotation: [{}-{}, {}]", begin, end + 1, label);
+                continue;
+            }
+            
             if (isNotBlank(label)) {
                 result.add(new Span(begin, end + 1, label));
+                maxSeen = end + 1;
             }
         }
         return result.toArray(new Span[result.size()]);
