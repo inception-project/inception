@@ -235,7 +235,7 @@ public class OpenNlpNerRecommender
             String label = annotation.getFeatureValueAsString(feature);
             
             if (begin < maxSeen) {
-                LOG.warn("Skipping overlapping annotation: [{}-{}, {}]", begin, end + 1, label);
+                LOG.debug("Skipping overlapping annotation: [{}-{}, {}]", begin, end + 1, label);
                 continue;
             }
             
