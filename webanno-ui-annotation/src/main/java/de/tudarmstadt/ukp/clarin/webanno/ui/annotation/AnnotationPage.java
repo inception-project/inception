@@ -629,8 +629,17 @@ public class AnnotationPage
     @Override
     public void actionRefreshDocument(AjaxRequestTarget aTarget)
     {
-        annotationEditor.requestRender(aTarget);
         gotoPageTextField.setModelObject(getModelObject().getFirstVisibleUnitIndex());
+        
+        try {
+            annotationEditor.requestRender(aTarget);
+        }
+        catch (Exception e) {
+            LOG.warn("Editor refresh requested at illegal time, forcing page refresh",
+                    new RuntimeException());
+            throw new RestartResponseException(getPage());
+        }
+        
         aTarget.add(gotoPageTextField);
         aTarget.add(getOrCreatePositionInfoLabel());
         aTarget.addChildren(getPage(), IFeedback.class);
