@@ -121,8 +121,8 @@ public class AutomationUtil
                             sentence.getBegin() + i + selectedText.length()).size() > 0) {
                         int addr = adapter.add(aState, jCas, sentence.getBegin() + i,
                                 sentence.getBegin() + i + selectedText.length() - 1);
-                        adapter.setFeatureValue(aState, jCas, addr,
-                                aFeature, aValue);
+                        adapter.setFeatureValue(aState.getDocument(),
+                                aState.getUser().getUsername(), jCas, addr, aFeature, aValue);
                     }
                 }
             }
@@ -200,7 +200,8 @@ public class AutomationUtil
             if (dCoveredText.equals(fs.getCoveredText())) {
                 if (g != null && isSamAnno(attachSpanType, fs, aDepFS)) {
                     AnnotationFS arc = adapter.add(g, fs, jCas, aStart, aEnd);
-                    adapter.setFeatureValue(aState, jCas, getAddr(arc), aFeature, aValue);
+                    adapter.setFeatureValue(aState.getDocument(), aState.getUser().getUsername(),
+                            jCas, getAddr(arc), aFeature, aValue);
                     g = null;
                     d = null;
                     continue;// so we don't go to the other if
@@ -214,7 +215,8 @@ public class AutomationUtil
             if (gCoveredText.equals(fs.getCoveredText())  ) {
                 if (d != null && isSamAnno(attachSpanType, fs, aGovFS)) {
                     AnnotationFS arc = adapter.add(fs, d, jCas, aStart, aEnd);
-                    adapter.setFeatureValue(aState, jCas, getAddr(arc), aFeature, aValue);
+                    adapter.setFeatureValue(aState.getDocument(), aState.getUser().getUsername(),
+                            jCas, getAddr(arc), aFeature, aValue);
                     g = null;
                     d = null;
                 }

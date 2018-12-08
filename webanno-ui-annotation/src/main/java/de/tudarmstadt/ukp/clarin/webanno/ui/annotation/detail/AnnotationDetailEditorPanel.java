@@ -864,8 +864,8 @@ public abstract class AnnotationDetailEditorPanel
             state.getSelection().setAnnotation(new VID(getAddr(arc)));
             
             for (FeatureState featureState : featureStates) {
-                adapter.setFeatureValue(state, jCas, getAddr(arc), featureState.feature,
-                        featureState.value);
+                adapter.setFeatureValue(state.getDocument(), state.getUser().getUsername(), jCas,
+                        getAddr(arc), featureState.feature, featureState.value);
             }
         }
         else {
@@ -1157,10 +1157,11 @@ public abstract class AnnotationDetailEditorPanel
                 }
             }
             
-            LOG.trace("writeFeatureEditorModelsToCas() "
-                + featureState.feature.getUiName() + " = " + featureState.value);
-            aAdapter.setFeatureValue(state, aJCas, state.getSelection().getAnnotation().getId(),
-                    featureState.feature, featureState.value);
+            LOG.trace("writeFeatureEditorModelsToCas() " + featureState.feature.getUiName() + " = "
+                    + featureState.value);
+            aAdapter.setFeatureValue(state.getDocument(), state.getUser().getUsername(), aJCas,
+                    state.getSelection().getAnnotation().getId(), featureState.feature,
+                    featureState.value);
         }
 
         // Generate info message

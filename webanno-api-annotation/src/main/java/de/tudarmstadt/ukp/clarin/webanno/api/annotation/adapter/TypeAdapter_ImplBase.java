@@ -35,7 +35,6 @@ import org.springframework.context.ApplicationEventPublisher;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.FeatureValueUpdatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -89,15 +88,6 @@ public abstract class TypeAdapter_ImplBase
     public boolean isDeletable()
     {
         return deletable;
-    }
-
-    @Deprecated
-    @Override
-    public void setFeatureValue(AnnotatorState aState, JCas aJCas,
-            int aAddress, AnnotationFeature aFeature, Object aValue)
-    {
-        setFeatureValue(aState.getDocument(), aState.getUser().getUsername(), aJCas, aAddress,
-                aFeature, aValue);
     }
     
     @Override

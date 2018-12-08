@@ -531,7 +531,8 @@ public class MergeCas
                 continue;
             }
             Object value = adapter.getFeatureValue(feature, aOldFs);
-            adapter.setFeatureValue(aState, aJCas, id, feature, value);
+            adapter.setFeatureValue(aState.getDocument(), aState.getUser().getUsername(), aJCas, id,
+                    feature, value);
         }
     }
 

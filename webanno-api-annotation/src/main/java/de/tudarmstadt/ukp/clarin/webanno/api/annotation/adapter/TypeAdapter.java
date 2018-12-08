@@ -156,8 +156,13 @@ public interface TypeAdapter
      *             {@link #delete(SourceDocument, String, JCas, VID)} instead.
      */
     @Deprecated
-    void setFeatureValue(AnnotatorState aState, JCas aJcas, int aAddress,
-            AnnotationFeature aFeature, Object aValue);
+    default void setFeatureValue(AnnotatorState aState, JCas aJCas, int aAddress,
+            AnnotationFeature aFeature, Object aValue)
+    {
+        setFeatureValue(aState.getDocument(), aState.getUser().getUsername(), aJCas, aAddress,
+                aFeature, aValue);
+    }
+
 
     /**
      * Get the value of the given feature.
