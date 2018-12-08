@@ -210,10 +210,11 @@ public class SearchAnnotationSidebar
                         // If the offset doesn't exist, use the token position Mimir indexes.
                         lambdaAjaxLink = new LambdaAjaxLink("showSelectedDocument", t -> {
                             selectedResult = aItem.getModelObject();
-                            actionShowSelectedDocumentByTokenPosition(t,
+                            getAnnotationPage().actionShowSelectedDocumentByTokenPosition(t,
                                     documentService.getSourceDocument(currentProject,
                                             aItem.getModel().getObject().getDocumentTitle()),
                                     aItem.getModel().getObject().getTokenStart());
+                            ;
                         });
 
                     }
