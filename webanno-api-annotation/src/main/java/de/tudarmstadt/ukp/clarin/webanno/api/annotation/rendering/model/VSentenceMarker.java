@@ -18,13 +18,19 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model;
 
 public class VSentenceMarker
-    implements VMarker
+    extends VMarker
 {
     private String type;
     private int index;
-    
+
     public VSentenceMarker(String aType, int aIndex)
     {
+        this(null, aType, aIndex);
+    }
+
+    public VSentenceMarker(Object aSource, String aType, int aIndex)
+    {
+        super(aSource);
         type = aType;
         index = aIndex;
     }
