@@ -20,15 +20,18 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.annotation;
 import static org.apache.uima.fit.util.CasUtil.select;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.form.NumberTextField;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.StringResourceModel;
@@ -49,6 +52,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.ActionBarLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 public abstract class AnnotationPageBase
     extends ApplicationPageBase
@@ -60,6 +64,7 @@ public abstract class AnnotationPageBase
     
     private ChallengeResponseDialog resetDocumentDialog;
     private ActionBarLink resetDocumentLink;
+    private NumberTextField<Integer> gotoPageTextField;
     private Label numberOfPages;
     
     protected AnnotationPageBase()
@@ -220,6 +225,59 @@ public abstract class AnnotationPageBase
             actionLoadDocument(aTarget);
         }
     }
+    
+    /**
+     * Show the next document if it exists, starting in a certain token position
+     */
+    @Deprecated
+    public void actionShowSelectedDocumentByTokenPosition(AjaxRequestTarget aTarget,
+            SourceDocument aDocument, int aTokenNumber)
+        throws IOException
+    {
+        actionShowSelectedDocument(aTarget, aDocument);
+
+        AnnotatorState state = getModelObject();
+
+        JCas jCas = getEditorCas();
+
+        Collection<Token> tokenCollection = JCasUtil.select(jCas, Token.class);
+        Token[] tokens = tokenCollection.toArray(new Token[tokenCollection.size()]);
+
+        int sentenceNumber = WebAnnoCasUtil.getSentenceNumber(jCas,
+                tokens[aTokenNumber].getBegin());
+        Sentence sentence = WebAnnoCasUtil.getSentence(jCas, tokens[aTokenNumber].getBegin());
+
+        getGotoPageTextField().setModelObject(sentenceNumber);
+
+        state.setFirstVisibleUnit(sentence);
+        state.setFocusUnitIndex(sentenceNumber);
+
+        actionRefreshDocument(aTarget);
+    }
+
+    /**
+     * Show the next document if it exists, starting in a certain begin offset
+     */
+    public void actionShowSelectedDocument(AjaxRequestTarget aTarget, SourceDocument aDocument,
+            int aBeginOffset)
+        throws IOException
+    {
+        actionShowSelectedDocument(aTarget, aDocument);
+
+        AnnotatorState state = getModelObject();
+
+        JCas jCas = getEditorCas();
+
+        int sentenceNumber = WebAnnoCasUtil.getSentenceNumber(jCas, aBeginOffset);
+        Sentence sentence = WebAnnoCasUtil.getSentence(jCas, aBeginOffset);
+
+        getGotoPageTextField().setModelObject(sentenceNumber);
+
+        state.setFirstVisibleUnit(sentence);
+        state.setFocusUnitIndex(sentenceNumber);
+
+        actionRefreshDocument(aTarget);
+    }
 
     protected void handleException(AjaxRequestTarget aTarget, Exception aException)
     {
@@ -230,6 +288,8 @@ public abstract class AnnotationPageBase
         }
     }
 
+    protected abstract NumberTextField<Integer> getGotoPageTextField();
+    
     protected abstract List<SourceDocument> getListOfDocs();
 
     protected abstract JCas getEditorCas()

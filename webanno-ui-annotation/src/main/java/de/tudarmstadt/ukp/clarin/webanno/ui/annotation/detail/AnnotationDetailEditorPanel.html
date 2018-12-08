@@ -111,11 +111,11 @@
                     <span class="form-control" readonly><wicket:container wicket:id="selectedAnnotationLayer"/></span>
                   </div>
                 </div>
-                <div class="form-group" wicket:enclosure="selectedText">
+                <div class="form-group">
                   <label class="col-sm-3 control-label">Text</label>
                   <div class="col-sm-9" style="position: relative; height: 5em;">
                     <div class="form-control" style="overflow-y: auto; width: unset; word-wrap: break-word; height: 5em; position: absolute; top: 0; left: 15px; right: 15px;" readonly>
-                      <wicket:container wicket:id="selectedText"/>
+                      <a wicket:id="jumpToAnnotation"><wicket:container wicket:id="selectedText"/></a>
                     </div>
                   </div>
                 </div>

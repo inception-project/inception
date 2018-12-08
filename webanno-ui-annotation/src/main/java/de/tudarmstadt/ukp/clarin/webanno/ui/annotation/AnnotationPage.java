@@ -32,10 +32,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+
 import javax.persistence.NoResultException;
 
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.AttributeModifier;
+import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.Session;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
@@ -306,14 +308,10 @@ public class AnnotationPage
         });
     }
 
+    @Override
     public NumberTextField<Integer> getGotoPageTextField()
     {
         return gotoPageTextField;
-    }
-
-    public void setGotoPageTextField(NumberTextField<Integer> aGotoPageTextField)
-    {
-        gotoPageTextField = aGotoPageTextField;
     }
 
     private DocumentNamePanel createDocumentInfoLabel()
@@ -323,7 +321,7 @@ public class AnnotationPage
 
     private AnnotationDetailEditorPanel createDetailEditor()
     {
-        return new AnnotationDetailEditorPanel("annotationDetailEditorPanel", getModel())
+        return new AnnotationDetailEditorPanel("annotationDetailEditorPanel", this, getModel())
         {
             private static final long serialVersionUID = 2857345299480098279L;
 

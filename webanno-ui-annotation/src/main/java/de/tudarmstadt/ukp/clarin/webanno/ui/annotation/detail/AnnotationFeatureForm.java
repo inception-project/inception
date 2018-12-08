@@ -339,12 +339,20 @@ public class AnnotationFeatureForm
             new PropertyModel<>(this, "annotationLayers"));
     }
 
-    private Label createSelectedTextLabel()
+    private LambdaAjaxLink createSelectedTextLabel()
     {
-        Label selectedTextLabel = new Label("selectedText", PropertyModel.of(getModelObject(),
-                "selection.text"));
-        selectedTextLabel.setOutputMarkupId(true);
-        return selectedTextLabel;
+        LambdaAjaxLink link = new LambdaAjaxLink("jumpToAnnotation",
+                this::actionJumpToAnnotation);
+        link.add(new Label("selectedText", PropertyModel.of(getModelObject(),
+                "selection.text")).setOutputMarkupId(true));
+        link.setOutputMarkupId(true);
+        return link;
+    }
+    
+    private void actionJumpToAnnotation(AjaxRequestTarget aTarget) throws IOException
+    {
+        editorPanel.getEditorPage().actionShowSelectedDocument(aTarget,
+                getModelObject().getDocument(), getModelObject().getSelection().getBegin());
     }
 
     private LambdaAjaxLink createClearButton()

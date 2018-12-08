@@ -191,7 +191,7 @@ public class CurationPage
         curationContainer = new CurationContainer();
         curationContainer.setBratAnnotatorModel(getModelObject());
 
-        curationPanel = new CurationPanel("curationPanel", new Model<>(
+        curationPanel = new CurationPanel("curationPanel", this, new Model<>(
                 curationContainer))
         {
             private static final long serialVersionUID = 2175915644696513166L;
@@ -238,7 +238,7 @@ public class CurationPage
                         upgradeCasAndSave(state.getDocument(), username);
 
                         actionLoadDocument(aTarget);
-                        curationPanel.editor.loadFeatureEditorModels(aTarget);
+                        curationPanel.getEditor().loadFeatureEditorModels(aTarget);
                     }
                     catch (Exception e) {
                         LOG.error("Unable to load data", e);
@@ -414,6 +414,12 @@ public class CurationPage
     }
 
     @Override
+    public NumberTextField<Integer> getGotoPageTextField()
+    {
+        return gotoPageTextField;
+    }
+
+    @Override
     public void setModel(IModel<AnnotatorState> aModel)
     {
         setDefaultModel(aModel);
@@ -574,7 +580,7 @@ public class CurationPage
             
             aCallbackTarget.add(finishDocumentIcon);
             aCallbackTarget.add(finishDocumentLink);
-            aCallbackTarget.add(curationPanel.editor);
+            aCallbackTarget.add(curationPanel.getEditor());
             aCallbackTarget.add(remergeDocumentLink);
         });
         finishDocumentDialog.show(aTarget);
@@ -697,7 +703,7 @@ public class CurationPage
                     userRepository);
             curationContainer = builder.buildCurationContainer(state);
             curationContainer.setBratAnnotatorModel(state);
-            curationPanel.editor.reset(aTarget);
+            curationPanel.getEditor().reset(aTarget);
             updatePanel(curationContainer, aTarget);
             updateSentenceNumber(mergeJCas, state.getFirstVisibleUnitAddress());
             curationPanel.init(aTarget, curationContainer);

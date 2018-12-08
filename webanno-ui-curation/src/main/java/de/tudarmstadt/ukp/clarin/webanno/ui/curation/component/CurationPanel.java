@@ -66,6 +66,7 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentServic
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationSelection;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.CurationContainer;
@@ -95,8 +96,9 @@ public class CurationPanel
     private final WebMarkupContainer sentencesListView;
     private final WebMarkupContainer crossSentAnnoView;
 
+    private AnnotationPageBase annotationPageBase;
     private AnnotationEditorBase annotationEditor;
-    public AnnotationDetailEditorPanel editor;
+    private AnnotationDetailEditorPanel editor;
     private AnnotatorState state;
 
     private ListView<String> crossSentAnnoList;
@@ -114,9 +116,11 @@ public class CurationPanel
     private Map<String, Map<Integer, AnnotationSelection>> annotationSelectionByUsernameAndAddress =
             new HashMap<>();
 
-    public CurationPanel(String id, final IModel<CurationContainer> cCModel)
+    public CurationPanel(String id, AnnotationPageBase aPage, IModel<CurationContainer> cCModel)
     {
         super(id, cCModel);
+        
+        annotationPageBase = aPage;
         
         setOutputMarkupId(true);
         
@@ -171,7 +175,7 @@ public class CurationPanel
         suggestionViewPanel.add(LambdaBehavior.visibleWhen(() -> state.getDocument() != null));
         add(suggestionViewPanel);
     
-        editor = new AnnotationDetailEditorPanel("annotationDetailEditorPanel",
+        editor = new AnnotationDetailEditorPanel("annotationDetailEditorPanel", annotationPageBase,
                 PropertyModel.of(CurationPanel.this, "state"))
         {
             private static final long serialVersionUID = 2857345299480098279L;
@@ -518,5 +522,10 @@ public class CurationPanel
             tag.put("ondblclick", "Wicket.Ajax.get({'u':'" + click.getCallbackUrl() + "'})");
             tag.put("onclick", "Wicket.Ajax.get({'u':'" + click.getCallbackUrl() + "'})");
         }
+    }
+    
+    public AnnotationDetailEditorPanel getEditor()
+    {
+        return editor;
     }
 }
