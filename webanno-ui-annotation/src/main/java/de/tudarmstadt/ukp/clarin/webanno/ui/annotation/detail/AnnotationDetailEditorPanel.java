@@ -243,7 +243,8 @@ public abstract class AnnotationDetailEditorPanel
                 }
             }
         }
-        int annoId = aAdapter.add(state, aJCas, selection.getBegin(), selection.getEnd());
+        int annoId = aAdapter.add(state.getDocument(), state.getUser().getUsername(), aJCas,
+                selection.getBegin(), selection.getEnd());
         AnnotationFS annoFs = WebAnnoCasUtil.selectByAddr(aJCas, annoId);
         selection.selectSpan(new VID(annoId), aJCas, annoFs.getBegin(), annoFs.getEnd());
     }
@@ -321,7 +322,8 @@ public abstract class AnnotationDetailEditorPanel
                 SpanAdapter adapter = (SpanAdapter) annotationService.getAdapter(annotationService
                         .getLayer(state.getArmedFeature().getType(), state.getProject()));
 
-                id = adapter.add(state, aJCas, aBegin, aEnd);
+                id = adapter.add(state.getDocument(), state.getUser().getUsername(), aJCas, aBegin,
+                        aEnd);
             }
             else {
                 throw new AnnotationException(

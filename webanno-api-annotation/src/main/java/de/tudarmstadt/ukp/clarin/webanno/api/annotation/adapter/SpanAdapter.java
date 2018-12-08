@@ -59,9 +59,6 @@ public class SpanAdapter
     extends TypeAdapter_ImplBase
     implements AutomationTypeAdapter
 {
-    // value NILL for a token when the training file do not have annotations provided
-    private final static String NILL = "__nill__";
-
     public SpanAdapter(FeatureSupportRegistry aFeatureSupportRegistry,
             ApplicationEventPublisher aEventPublisher, AnnotationLayer aLayer,
             Collection<AnnotationFeature> aFeatures)

@@ -28,6 +28,9 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
 public interface AutomationTypeAdapter
 {
+    // value NILL for a token when the training file do not have annotations provided
+    final static String NILL = "__nill__";
+    
     List<String> getAnnotation(Sentence aSentence, AnnotationFeature feature);
 
     /**

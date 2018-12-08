@@ -119,7 +119,8 @@ public class AutomationUtil
                         i)) != -1; i = i + selectedText.length()) {
                     if (selectCovered(jCas, Token.class, sentence.getBegin() + i,
                             sentence.getBegin() + i + selectedText.length()).size() > 0) {
-                        int addr = adapter.add(aState, jCas, sentence.getBegin() + i,
+                        int addr = adapter.add(aState.getDocument(), aState.getUser().getUsername(),
+                                jCas, sentence.getBegin() + i,
                                 sentence.getBegin() + i + selectedText.length() - 1);
                         adapter.setFeatureValue(aState.getDocument(),
                                 aState.getUser().getUsername(), jCas, addr, aFeature, aValue);
