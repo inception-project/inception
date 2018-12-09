@@ -39,7 +39,7 @@ public enum LearningRecordType
      * Suggestion offered to the user by an AL strategy.
      * 
      * @deprecated Records of this type are no longer generated. Look for
-     *             {@link ActiveLearningSuggestionOfferedEvent} in the action log instead.
+     *             {@code ActiveLearningSuggestionOfferedEvent} in the action log instead.
      */
     SHOWN("shown"),
     /**
