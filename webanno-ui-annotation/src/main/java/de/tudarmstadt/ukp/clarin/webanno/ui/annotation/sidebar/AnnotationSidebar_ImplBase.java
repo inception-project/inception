@@ -99,9 +99,9 @@ public abstract class AnnotationSidebar_ImplBase
      * Show the next document if it exists, starting in a certain begin offset
      */
     protected void actionShowSelectedDocument(AjaxRequestTarget aTarget, SourceDocument aDocument,
-            int aBeginOffset)
+            int aBegin, int aEnd)
         throws IOException
     {
-        getAnnotationPage().actionShowSelectedDocument(aTarget, aDocument, aBeginOffset);
+        getAnnotationPage().actionShowSelectedDocument(aTarget, aDocument, aBegin, aEnd);
     }
 }

@@ -217,12 +217,18 @@ public abstract class AnnotationPageBase
 
     /**
      * Show the specified document.
+     * 
+     * @return whether the document had to be switched or not.
      */
-    public void actionShowSelectedDocument(AjaxRequestTarget aTarget, SourceDocument aDocument)
+    public boolean actionShowSelectedDocument(AjaxRequestTarget aTarget, SourceDocument aDocument)
     {
         if (!Objects.equals(aDocument.getId(), getModelObject().getDocument().getId())) {
             getModelObject().setDocument(aDocument, getListOfDocs());
             actionLoadDocument(aTarget);
+            return true;
+        }
+        else {
+            return false;
         }
     }
     
@@ -259,23 +265,27 @@ public abstract class AnnotationPageBase
      * Show the next document if it exists, starting in a certain begin offset
      */
     public void actionShowSelectedDocument(AjaxRequestTarget aTarget, SourceDocument aDocument,
-            int aBeginOffset)
+            int aBegin, int aEnd)
         throws IOException
     {
-        actionShowSelectedDocument(aTarget, aDocument);
+        boolean switched = actionShowSelectedDocument(aTarget, aDocument);
 
         AnnotatorState state = getModelObject();
 
-        JCas jCas = getEditorCas();
+        // If the document was not switched and the requested offset is already visible on screen,
+        // then there is no need to change the screen contents
+        if (switched || !(state.getWindowBeginOffset() <= aBegin
+                && aEnd <= state.getWindowEndOffset())) {
+            JCas jCas = getEditorCas();
+            int sentenceNumber = WebAnnoCasUtil.getSentenceNumber(jCas, aBegin);
+            Sentence sentence = WebAnnoCasUtil.getSentence(jCas, aBegin);
 
-        int sentenceNumber = WebAnnoCasUtil.getSentenceNumber(jCas, aBeginOffset);
-        Sentence sentence = WebAnnoCasUtil.getSentence(jCas, aBeginOffset);
+            getGotoPageTextField().setModelObject(sentenceNumber);
 
-        getGotoPageTextField().setModelObject(sentenceNumber);
-
-        state.setFirstVisibleUnit(sentence);
-        state.setFocusUnitIndex(sentenceNumber);
-
+            state.setFirstVisibleUnit(sentence);
+            state.setFocusUnitIndex(sentenceNumber);
+        }
+        
         actionRefreshDocument(aTarget);
     }
 
