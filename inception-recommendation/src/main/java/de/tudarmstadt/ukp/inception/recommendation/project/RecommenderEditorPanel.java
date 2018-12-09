@@ -19,11 +19,14 @@ package de.tudarmstadt.ukp.inception.recommendation.project;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.MAX_RECOMMENDATIONS_CAP;
+import static java.util.Arrays.asList;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
@@ -34,9 +37,12 @@ import org.apache.wicket.ajax.markup.html.form.AjaxButton;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.form.AbstractChoice;
 import org.apache.wicket.markup.html.form.CheckBox;
+import org.apache.wicket.markup.html.form.CheckBoxMultipleChoice;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
+import org.apache.wicket.markup.html.form.EnumChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.NumberTextField;
 import org.apache.wicket.markup.html.panel.EmptyPanel;
@@ -47,6 +53,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -82,7 +89,8 @@ public class RecommenderEditorPanel
     private static final String MID_ALWAYS_SELECTED = "alwaysSelected";
     private static final String MID_TOOL = "tool";
     private static final String MID_ACTIVATION_CONTAINER = "activationContainer";
-    
+    private static final String MID_DOCUMENT_STATES = "statesForTraining";
+
     private @SpringBean RecommendationService recommendationService;
     private @SpringBean AnnotationSchemaService annotationSchemaService;
     private @SpringBean RecommenderFactoryRegistry recommenderRegistry;
@@ -95,21 +103,22 @@ public class RecommenderEditorPanel
 
     private IModel<Project> projectModel;
     private IModel<Recommender> recommenderModel;
-    
+    private IModel<Set<AnnotationDocumentState>> statesForTraining;
+
     public RecommenderEditorPanel(String aId, IModel<Project> aProject,
             IModel<Recommender> aRecommender)
     {
         super(aId, aRecommender);
-        
+
         setOutputMarkupId(true);
         setOutputMarkupPlaceholderTag(true);
-        
+
         projectModel = aProject;
         recommenderModel = aRecommender;
 
         Form<Recommender> form = new Form<>(MID_FORM, CompoundPropertyModel.of(aRecommender));
         add(form);
-        
+
         form.add(new Label(MID_NAME));
         form.add(new CheckBox(MID_ENABLED));
         form.add(new DropDownChoice<>("layer")
@@ -118,7 +127,7 @@ public class RecommenderEditorPanel
                 .setRequired(true)
                 // The available features and tools tools depend on the layer, so reload them
                 // when the layer is changed
-                .add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> { 
+                .add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> {
                     if (listFeatures().size() == 1) {
                         recommenderModel.getObject().setFeature(listFeatures().get(0));
                     } else {
@@ -126,7 +135,7 @@ public class RecommenderEditorPanel
                     }
                     recommenderModel.getObject().setTool(null);
                     t.add(form.get(MID_TOOL));
-                    t.add(form.get(MID_FEATURE)); 
+                    t.add(form.get(MID_FEATURE));
                     t.add(traitsContainer);
                 })));
         form.add(new DropDownChoice<>(MID_FEATURE)
@@ -140,13 +149,13 @@ public class RecommenderEditorPanel
                     t.add(form.get(MID_TOOL));
                     t.add(traitsContainer);
                 })));
-        
+
         IModel<Pair<String, String>> toolModel = LambdaModelAdapter.of(() -> {
             String name = recommenderModel.getObject().getTool();
             RecommendationEngineFactory factory = recommenderRegistry.getFactory(name);
             return factory != null ? Pair.of(factory.getId(), factory.getName()) : null;
         }, (v) -> recommenderModel.getObject().setTool(v.getKey()));
-        
+
         toolChoice = new DropDownChoice<Pair<String, String>>(MID_TOOL, toolModel, this::listTools)
         {
             private static final long serialVersionUID = -1869081847783375166L;
@@ -164,30 +173,30 @@ public class RecommenderEditorPanel
                 else {
                     newTraits = new EmptyPanel(MID_TRAITS);
                 }
-                
+
                 traitsContainer.addOrReplace(newTraits);
             }
         };
         // TODO: For a deprecated recommender, show itself in the tool dropdown but unselectable
-        toolChoice.setChoiceRenderer(new ChoiceRenderer<Pair<String, String>>("value"));
+        toolChoice.setChoiceRenderer(new ChoiceRenderer<>("value"));
         toolChoice.setRequired(true);
         toolChoice.setOutputMarkupId(true);
-        toolChoice.add(new LambdaAjaxFormComponentUpdatingBehavior("change",_target -> 
-                _target.add(traitsContainer, activationContainer, 
+        toolChoice.add(new LambdaAjaxFormComponentUpdatingBehavior("change",_target ->
+                _target.add(traitsContainer, activationContainer,
                         form.get(MID_MAX_RECOMMENDATIONS))));
         form.add(toolChoice);
-        
+
         form.add(activationContainer = new WebMarkupContainer(MID_ACTIVATION_CONTAINER));
         activationContainer.setOutputMarkupPlaceholderTag(true);
-        activationContainer.add(visibleWhen(() -> toolChoice.getModel().map(_tool -> 
+        activationContainer.add(visibleWhen(() -> toolChoice.getModel().map(_tool ->
                 recommenderRegistry.getFactory(_tool.getKey()).isEvaluable())
                 .orElse(false).getObject()));
 
         activationContainer.add(new CheckBox(MID_ALWAYS_SELECTED)
                 .setOutputMarkupPlaceholderTag(true)
-                .add(new LambdaAjaxFormSubmittingBehavior("change", t -> {
-                    t.add(activationContainer.get(MID_THRESHOLD));
-                })));
+                .add(new LambdaAjaxFormSubmittingBehavior("change", t ->
+                    t.add(activationContainer.get(MID_THRESHOLD))
+                )));
 
         activationContainer.add(new NumberTextField<>(MID_THRESHOLD, Float.class)
                 .setMinimum(0.0f)
@@ -196,7 +205,7 @@ public class RecommenderEditorPanel
                 .setOutputMarkupPlaceholderTag(true)
                 .add(visibleWhen(() -> !recommenderModel.map(Recommender::isAlwaysSelected)
                         .orElse(false).getObject())));
-        
+
         form.add(new NumberTextField<>(MID_MAX_RECOMMENDATIONS, Integer.class)
                 .setMinimum(1)
                 .setMaximum(MAX_RECOMMENDATIONS_CAP)
@@ -206,7 +215,7 @@ public class RecommenderEditorPanel
                                 .map(_tool -> recommenderRegistry.getFactory(_tool.getKey())
                                         .isMultipleRecommendationProvider())
                                 .orElse(false).getObject())));
-        
+
         // Cannot use LambdaAjaxButton because it does not support onAfterSubmit.
         form.add(new AjaxButton(MID_SAVE)
         {
@@ -216,30 +225,75 @@ public class RecommenderEditorPanel
             protected void onError(AjaxRequestTarget aTarget)
             {
                 aTarget.addChildren(getPage(), IFeedback.class);
-            };
+            }
 
             @Override
             protected void onAfterSubmit(AjaxRequestTarget target)
             {
                 actionSave(target);
-            };
+            }
         });
-        
+
+
+        // We need to invert the states in documentStates, as the recommender stores the
+        // ones to ignore, not the ones to consider
+        statesForTraining = new IModel<Set<AnnotationDocumentState>>() {
+            @Override
+            public void setObject(Set<AnnotationDocumentState> states) {
+                // The model can be null after save and delete
+                if (recommenderModel.getObject() != null) {
+                    recommenderModel.getObject().setStatesIgnoredForTraining(invert(states));
+                }
+            }
+
+            @Override
+            public Set<AnnotationDocumentState> getObject() {
+                Set<AnnotationDocumentState> ignoredStates = recommenderModel.getObject()
+                        .getStatesIgnoredForTraining();
+
+                return invert(ignoredStates);
+            }
+
+            private Set<AnnotationDocumentState> invert(Set<AnnotationDocumentState> states) {
+                Set<AnnotationDocumentState> result = getAllPossibleDocumentStates();
+
+                if (states == null) {
+                    return result;
+                }
+
+                result.removeAll(states);
+                return result;
+            }
+        };
+
+        CheckBoxMultipleChoice<AnnotationDocumentState> documentStates =
+                new CheckBoxMultipleChoice<>(
+                        MID_DOCUMENT_STATES,
+                        statesForTraining,
+                        asList(AnnotationDocumentState.values())
+                );
+        documentStates.setPrefix("<div class=\"checkbox\">");
+        documentStates.setSuffix("</div>");
+        documentStates.setLabelPosition(AbstractChoice.LabelPosition.WRAP_AFTER);
+        documentStates.setChoices(asList(AnnotationDocumentState.values()));
+        documentStates.setChoiceRenderer(new EnumChoiceRenderer<>(documentStates));
+        form.add(documentStates);
+
         form.add(new LambdaAjaxLink(MID_DELETE, this::actionDelete)
                 .onConfigure(_this -> _this.setVisible(form.getModelObject().getId() != null)));
         form.add(new LambdaAjaxLink(MID_CANCEL, this::actionCancel)
                 .onConfigure(_this -> _this.setVisible(form.getModelObject().getId() == null)));
-        
+
         form.add(traitsContainer = new WebMarkupContainer(MID_TRAITS_CONTAINER));
         traitsContainer.setOutputMarkupPlaceholderTag(true);
         traitsContainer.add(new EmptyPanel(MID_TRAITS));
     }
-    
+
     @Override
     protected void onConfigure()
     {
         super.onConfigure();
-        
+
         setVisible(recommenderModel != null && recommenderModel.getObject() != null);
     }
 
@@ -255,7 +309,7 @@ public class RecommenderEditorPanel
     private List<AnnotationLayer> listLayers()
     {
         List<AnnotationLayer> layers = new ArrayList<>();
-        
+
         for (AnnotationLayer layer : annotationSchemaService
                 .listAnnotationLayer(projectModel.getObject())) {
             if (WebAnnoConst.SPAN_TYPE.equals(layer.getType())
@@ -263,7 +317,7 @@ public class RecommenderEditorPanel
                 layers.add(layer);
             }
         }
-        
+
         return layers;
     }
 
@@ -271,21 +325,21 @@ public class RecommenderEditorPanel
     {
         if (recommenderModel != null && recommenderModel.getObject().getLayer() != null) {
             List<String> features = new ArrayList<>();
-            
+
             annotationSchemaService
                 .listAnnotationFeature(recommenderModel.getObject().getLayer())
                 .forEach(annotationFeature -> {
-                    if (annotationFeature.getType() instanceof String) {
+                    if (annotationFeature.getType() != null) {
                         features.add(annotationFeature.getName());
                     }
-                });   
+                });
             return features;
-            
+
         } else {
             return Collections.emptyList();
         }
     }
-    
+
     private List<Pair<String, String>> listTools()
     {
         if (recommenderModel != null && recommenderModel.getObject().getLayer() != null
@@ -311,15 +365,17 @@ public class RecommenderEditorPanel
                 StringUtils.substringAfterLast(recommender.getTool(), "."),
                 recommender.getThreshold()));
         recommender.setProject(recommender.getLayer().getProject());
+
         recommendationService.createOrUpdateRecommender(recommender);
-        
-        // causes deselection after saving
+
+        // Reset selection after saving
         recommenderModel.setObject(null);
+        statesForTraining.setObject(getAllPossibleDocumentStates());
 
         // Reload whole page because master panel also needs to be reloaded.
         aTarget.add(getPage());
     }
-    
+
     private void actionDelete(AjaxRequestTarget aTarget) {
         recommendationService.deleteRecommender(recommenderModel.getObject());
         appEventPublisherHolder.get().publishEvent(
@@ -333,5 +389,10 @@ public class RecommenderEditorPanel
         
         // Reload whole page because master panel also needs to be reloaded.
         aTarget.add(getPage());
+    }
+    
+    private static Set<AnnotationDocumentState> getAllPossibleDocumentStates()
+    {
+        return new HashSet<>(asList(AnnotationDocumentState.values()));
     }
 }
