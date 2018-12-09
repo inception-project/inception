@@ -246,7 +246,7 @@ public class SpanAdapter
             }
         }
         
-        publishEvent(new SpanDeletedEvent(this, aDocument, aUsername, fs));
+        publishEvent(new SpanDeletedEvent(this, aDocument, aUsername, getLayer(), fs));
     }
 
     @Override
