@@ -43,16 +43,12 @@ public class AnnotationSuggestionTest
             for (AnnotationSuggestion y : all) {
                 if (x == y) {
                     assertThat(x).isEqualTo(y);
-                    assertThat(x).isEqualByComparingTo(y);
                     assertThat(y).isEqualTo(x);
-                    assertThat(y).isEqualByComparingTo(x);
                     assertThat(x.hashCode()).isEqualTo(y.hashCode());
                 }
                 else {
                     assertThat(x).isNotEqualTo(y);
-                    assertThat(x).isNotEqualByComparingTo(y);
                     assertThat(y).isNotEqualTo(x);
-                    assertThat(y).isNotEqualByComparingTo(x);
                     assertThat(x.hashCode()).isNotEqualTo(y.hashCode());
                 }
             }

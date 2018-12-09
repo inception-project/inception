@@ -25,7 +25,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 
 public class AnnotationSuggestion
-    implements Serializable, Comparable<AnnotationSuggestion>
+    implements Serializable
 {
     public static final String EXTENSION_ID = "recommendationEditorExtension";
     
@@ -262,40 +262,6 @@ public class AnnotationSuggestion
         AnnotationSuggestion that = (AnnotationSuggestion) o;
         return id == that.id && recommenderId == that.recommenderId
                 && documentName.equals(that.documentName);
-    }
-
-    @Override
-    public int compareTo(AnnotationSuggestion aAo)
-    {
-        if (aAo == null) {
-            return 1;
-        }
-        if (this.equals(aAo)) {
-            return 0;
-        }
-        if (this.getOffset().compareTo(aAo.getOffset()) != 0) {
-            return this.getOffset().compareTo(aAo.getOffset());
-        }
-        if (this.getId() < aAo.getId()) {
-            return -1;
-        }
-        if (this.getId() > aAo.getId()) {
-            return 1;
-        }
-        if (this.getRecommenderId() < aAo.getId()) {
-            return -1;
-        }
-        if (this.getRecommenderId() > aAo.getId()) {
-            return 1;
-        }
-        if (this.getDocumentName().hashCode() < aAo.getDocumentName().hashCode()) {
-            return -1;
-        }
-        if (this.getDocumentName().hashCode() > aAo.getDocumentName().hashCode()) {
-            return 1;
-        }
-
-        return 0;
     }
 
     @Override
