@@ -69,7 +69,7 @@ public class CasMetadataUtils
                         "Detected concurrent modification to file on disk (expected timestamp: "
                                 + cmd.getLastChangedOnDisk() + "; actual timestamp "
                                 + aCasFile.lastModified() + ") - "
-                                + "please try reloading brefore saving again.");
+                                + "please try reloading before saving again.");
             }
         }
         else {

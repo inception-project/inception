@@ -518,7 +518,8 @@ public class MergeCas
         SpanAdapter adapter = (SpanAdapter) aAnnotationService.getAdapter(aAnnotationLayer);
 
         // Create the annotation - this also takes care of attaching to an annotation if necessary
-        int id = adapter.add(aState, aJCas, aOldFs.getBegin(), aOldFs.getEnd());
+        int id = adapter.add(aState.getDocument(), aState.getUser().getUsername(), aJCas,
+                aOldFs.getBegin(), aOldFs.getEnd());
 
         List<AnnotationFeature> features = aAnnotationService
                 .listAnnotationFeature(adapter.getLayer());
@@ -531,7 +532,8 @@ public class MergeCas
                 continue;
             }
             Object value = adapter.getFeatureValue(feature, aOldFs);
-            adapter.setFeatureValue(aState, aJCas, id, feature, value);
+            adapter.setFeatureValue(aState.getDocument(), aState.getUser().getUsername(), aJCas, id,
+                    feature, value);
         }
     }
 

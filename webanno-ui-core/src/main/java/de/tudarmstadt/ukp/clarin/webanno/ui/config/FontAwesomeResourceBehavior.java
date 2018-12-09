@@ -22,7 +22,7 @@ import org.apache.wicket.behavior.Behavior;
 import org.apache.wicket.markup.head.CssHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
 
-import de.tudarmstadt.ukp.clarin.webanno.fontawesome.FontAwesomeCssReference;
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesomeCssReference;
 
 public class FontAwesomeResourceBehavior
     extends Behavior
@@ -40,6 +40,6 @@ public class FontAwesomeResourceBehavior
     @Override
     public void renderHead(Component aComponent, IHeaderResponse aResponse)
     {
-        aResponse.render(CssHeaderItem.forReference(FontAwesomeCssReference.get()));
+        aResponse.render(CssHeaderItem.forReference(FontAwesomeCssReference.instance()));
     }
 }

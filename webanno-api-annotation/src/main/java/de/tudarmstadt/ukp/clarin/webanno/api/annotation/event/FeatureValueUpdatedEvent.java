@@ -24,8 +24,11 @@ import org.springframework.context.ApplicationEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.event.HybridApplicationUIEvent;
 
-public class FeatureValueUpdatedEvent extends ApplicationEvent
+public class FeatureValueUpdatedEvent
+    extends ApplicationEvent
+    implements HybridApplicationUIEvent
 {
     private static final long serialVersionUID = -6246331778850797138L;
     

@@ -20,17 +20,23 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 
 public class VAnnotationMarker
-    implements VMarker
+    extends VMarker
 {
     private final VID[] vid;
     private String type;
     
     public VAnnotationMarker(String aType, VID aVid)
     {
+        this(null, aType, aVid);
+    }
+
+    public VAnnotationMarker(Object aSource, String aType, VID aVid)
+    {
+        super(aSource);
         vid = new VID[] { aVid };
         type = aType;
     }
-    
+
     public VID getVid()
     {
         return vid[0];

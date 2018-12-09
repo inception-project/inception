@@ -306,11 +306,6 @@
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-        <artifactId>webanno-fontawesome</artifactId>
-        <version>3.5.0-SNAPSHOT</version>
-      </dependency>
-      <dependency>
-        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-support-standalone</artifactId>
         <version>3.5.0-SNAPSHOT</version>
       </dependency>
@@ -479,6 +474,11 @@
         <groupId>com.giffing.wicket.spring.boot.starter</groupId>
         <artifactId>wicket-spring-boot-starter</artifactId>
         <version>${wicket-spring-boot.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.webjars</groupId>
+        <artifactId>font-awesome</artifactId>
+        <version>4.7.0</version>
       </dependency>
       <dependency>
         <groupId>com.github.sommeri</groupId>
@@ -899,7 +899,6 @@
     <module>webanno-diag</module>
     <module>webanno-remote</module>
     <module>webanno-security</module>
-    <module>webanno-fontawesome</module>
     <module>webanno-curation</module>
     <module>webanno-constraints</module>
     <module>webanno-export</module>

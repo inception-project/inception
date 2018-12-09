@@ -50,7 +50,6 @@ import org.apache.uima.jcas.JCas;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormValidatingBehavior;
-import org.apache.wicket.event.Broadcast;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
@@ -89,7 +88,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.event.AjaxAfterAnnotationUpdateEvent;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase;
 
 /**
  * Annotation Detail Editor Panel.
@@ -107,11 +106,14 @@ public abstract class AnnotationDetailEditorPanel
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean AnnotationEditorExtensionRegistry extensionRegistry;
     
+    private AnnotationPageBase page;
     private AnnotationFeatureForm annotationFeatureForm;
 
-    public AnnotationDetailEditorPanel(String id, IModel<AnnotatorState> aModel)
+    public AnnotationDetailEditorPanel(String id, AnnotationPageBase aPage,
+            IModel<AnnotatorState> aModel)
     {
         super(id, aModel);
+        page = aPage;
         setOutputMarkupId(true);
         setOutputMarkupPlaceholderTag(true);
         setMarkupId("annotationDetailEditorPanel");
@@ -243,7 +245,8 @@ public abstract class AnnotationDetailEditorPanel
                 }
             }
         }
-        int annoId = aAdapter.add(state, aJCas, selection.getBegin(), selection.getEnd());
+        int annoId = aAdapter.add(state.getDocument(), state.getUser().getUsername(), aJCas,
+                selection.getBegin(), selection.getEnd());
         AnnotationFS annoFs = WebAnnoCasUtil.selectByAddr(aJCas, annoId);
         selection.selectSpan(new VID(annoId), aJCas, annoFs.getBegin(), annoFs.getEnd());
     }
@@ -321,7 +324,8 @@ public abstract class AnnotationDetailEditorPanel
                 SpanAdapter adapter = (SpanAdapter) annotationService.getAdapter(annotationService
                         .getLayer(state.getArmedFeature().getType(), state.getProject()));
 
-                id = adapter.add(state, aJCas, aBegin, aEnd);
+                id = adapter.add(state.getDocument(), state.getUser().getUsername(), aJCas, aBegin,
+                        aEnd);
             }
             else {
                 throw new AnnotationException(
@@ -634,9 +638,6 @@ public abstract class AnnotationDetailEditorPanel
         // feature editors
         writeFeatureEditorModelsToCas(adapter, aJCas);
 
-        // Notify other UI elements (e.g. sidebars) about the update so that they can react to it
-        send(getPage(), Broadcast.BREADTH, new AjaxAfterAnnotationUpdateEvent(aTarget, state));
-
         // Update progress information
         LOG.trace("actionAnnotate() updating progress information");
         int sentenceNumber = getSentenceNumber(aJCas, state.getSelection().getBegin());
@@ -864,8 +865,8 @@ public abstract class AnnotationDetailEditorPanel
             state.getSelection().setAnnotation(new VID(getAddr(arc)));
             
             for (FeatureState featureState : featureStates) {
-                adapter.setFeatureValue(state, jCas, getAddr(arc), featureState.feature,
-                        featureState.value);
+                adapter.setFeatureValue(state.getDocument(), state.getUser().getUsername(), jCas,
+                        getAddr(arc), featureState.feature, featureState.value);
             }
         }
         else {
@@ -1157,10 +1158,11 @@ public abstract class AnnotationDetailEditorPanel
                 }
             }
             
-            LOG.trace("writeFeatureEditorModelsToCas() "
-                + featureState.feature.getUiName() + " = " + featureState.value);
-            aAdapter.setFeatureValue(state, aJCas, state.getSelection().getAnnotation().getId(),
-                    featureState.feature, featureState.value);
+            LOG.trace("writeFeatureEditorModelsToCas() " + featureState.feature.getUiName() + " = "
+                    + featureState.value);
+            aAdapter.setFeatureValue(state.getDocument(), state.getUser().getUsername(), aJCas,
+                    state.getSelection().getAnnotation().getId(), featureState.feature,
+                    featureState.value);
         }
 
         // Generate info message
@@ -1492,8 +1494,9 @@ public abstract class AnnotationDetailEditorPanel
         return LOG;
     }
 
-    AnnotationSchemaService getAnnotationService() {
-        return annotationService;
+    public AnnotationPageBase getEditorPage()
+    {
+        return page;
     }
     
     public static class AttachStatus {

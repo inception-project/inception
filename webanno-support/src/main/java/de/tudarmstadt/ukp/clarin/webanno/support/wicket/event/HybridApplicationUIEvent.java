@@ -1,6 +1,6 @@
 /*
  * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab
+ * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,31 +14,22 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */
-package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.event;
+ */ 
+package de.tudarmstadt.ukp.clarin.webanno.support.wicket.event;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.request.cycle.RequestCycle;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-
-public class AjaxAfterAnnotationUpdateEvent
+/**
+ * Events which need to be sent to the UI as well as to the application.
+ */
+public interface HybridApplicationUIEvent
 {
-    protected AjaxRequestTarget target;
-    private AnnotatorState annotatorState;
-
-    public AjaxAfterAnnotationUpdateEvent(AjaxRequestTarget aTarget, AnnotatorState aState)
-    {
-        target = aTarget;
-        annotatorState = aState;
-    }
-
-    public AjaxRequestTarget getTarget()
-    {
-        return target;
-    }
-
-    public AnnotatorState getAnnotatorState()
-    {
-        return annotatorState;
+    /**
+     * Returns the request target which can be used to update the UI (if the event was triggered
+     * in the context of a UI action).
+     */
+    default AjaxRequestTarget getRequestTarget() {
+        return RequestCycle.get().find(AjaxRequestTarget.class).get();
     }
 }
