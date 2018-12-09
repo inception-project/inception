@@ -27,6 +27,7 @@ import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningReco
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.CORRECTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.REJECTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.SKIPPED;
+import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.uima.fit.util.CasUtil.selectAt;
 
@@ -196,16 +197,19 @@ public class ActiveLearningSidebar
         // that way we persists even if we switch to another sidebar tab
         alStateModel = new CompoundPropertyModel<>(LambdaModelAdapter.of(
             () -> aAnnotationPage.getMetaData(CURRENT_AL_USER_STATE),
-            state -> aAnnotationPage.setMetaData(CURRENT_AL_USER_STATE, state)));
+            alState -> aAnnotationPage.setMetaData(CURRENT_AL_USER_STATE, alState)));
 
-        // Set up the AL state in the page if it is not already there
-        if (aAnnotationPage.getMetaData(CURRENT_AL_USER_STATE) == null) {
-            ActiveLearningServiceImpl.ActiveLearningUserState alState = 
-                    new ActiveLearningServiceImpl.ActiveLearningUserState();
+        // Set up the AL state in the page if it is not already there or if for some reason the
+        // suggestions have completely disappeared (e.g. after a system restart)
+        AnnotatorState state = getModelObject();
+        Predictions model = recommendationService.getPredictions(state.getUser(),
+                state.getProject());
+        if (aAnnotationPage.getMetaData(CURRENT_AL_USER_STATE) == null || model == null) {
+            ActiveLearningUserState alState = new ActiveLearningUserState();
             alState.setStrategy(new UncertaintySamplingStrategy());
-            aAnnotationPage.setMetaData(CURRENT_AL_USER_STATE, alState);
+            alStateModel.setObject(alState);;
         }
-
+        
         mainContainer = new WebMarkupContainer(CID_MAIN_CONTAINER);
         mainContainer.setOutputMarkupId(true);
         mainContainer.add(createNoRecommendersMessage());
@@ -311,8 +315,8 @@ public class ActiveLearningSidebar
 
     private void setHighlight(AnnotationSuggestion aSuggestion)
     {
-        if (protectHighlight = true) {
-            LOG.trace("Active learning sidebar not clearing protected highlights");
+        if (protectHighlight) {
+            LOG.trace("Active learning sidebar not updating protected highlights");
             protectHighlight = false;
             return;
         }
@@ -345,11 +349,12 @@ public class ActiveLearningSidebar
         highlightSpan = new Offset(aAnnotation.getBegin(),
                 aAnnotation.getEnd());
         highlightDocumentName = aDocument.getName();
+        protectHighlight = false;
     }
     
     private void clearHighlight()
     {
-        if (protectHighlight = true) {
+        if (protectHighlight) {
             LOG.trace("Active learning sidebar not clearing protected highlights");
             protectHighlight = false;
             return;
@@ -476,12 +481,14 @@ public class ActiveLearningSidebar
         
         AnnotationSuggestion suggestion = alState.getSuggestion().get();
 
-        LOG.debug("Active suggestion: {}", suggestion);
-        Optional<AnnotationSuggestion> updatedSuggestion = getMatchingSuggestion(
-                activeLearningService.getSuggestions(getModelObject().getUser(),
-                        alState.getLayer()),
-                suggestion).stream().findFirst();
-        updatedSuggestion.ifPresent(s -> LOG.debug("Update suggestion: {}", s));
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Active suggestion: {}", suggestion);
+            Optional<AnnotationSuggestion> updatedSuggestion = getMatchingSuggestion(
+                    activeLearningService.getSuggestions(getModelObject().getUser(),
+                            alState.getLayer()),
+                    suggestion).stream().findFirst();
+            updatedSuggestion.ifPresent(s -> LOG.debug("Update suggestion: {}", s));
+        }
 
         actionShowSelectedDocument(aTarget,
                 documentService.getSourceDocument(this.getModelObject().getProject(),
@@ -951,7 +958,7 @@ public class ActiveLearningSidebar
         // state from the DB
         learningRecords.detach();
 
-        if (aRecord.getUserAction().equals(ACCEPTED)) {
+        if (asList(ACCEPTED, CORRECTED).contains(aRecord.getUserAction())) {
             // IMPORTANT: we must jump to the document which contains the annotation that is to
             // be deleted because deleteAnnotationByHistory will delete the annotation via the
             // methods provided by the AnnotationActionHandler and these operate ONLY on the
