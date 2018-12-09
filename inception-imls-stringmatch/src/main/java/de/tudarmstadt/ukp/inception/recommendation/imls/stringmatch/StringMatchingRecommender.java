@@ -87,6 +87,8 @@ public class StringMatchingRecommender
         
         aContext.put(KEY_MODEL, dict);
         aContext.markAsReadyForPrediction();
+        
+        log.debug("Learned dictionary model with {} entries", dict.size());
     }
 
     @Override
@@ -225,7 +227,14 @@ public class StringMatchingRecommender
         // Add actual data to the study
         addDataToStudy(actualData, study, 1);
 
-        return new KrippendorffAlphaUnitizingAgreement(study).calculateAgreement();
+        double score = new KrippendorffAlphaUnitizingAgreement(study).calculateAgreement();
+        
+        // KrippendorffAlphaUnitizingAgreement can return a negative score on systematic
+        // disagreement, but the score threshold is expected to take 0 as the lowest value...
+        // ... so to avoid confusing the user completely by returning a negative number and
+        // not having the recommender activate even if the threshold is set to 0, we just cap
+        // the score here at 0.
+        return Math.max(0, score);
     }
     
     private void addDataToStudy(Collection<Sample> aData, UnitizingAnnotationStudy aStudy,
