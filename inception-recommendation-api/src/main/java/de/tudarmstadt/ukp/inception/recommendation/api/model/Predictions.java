@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.api.model;
 
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -27,10 +26,6 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-import org.apache.uima.cas.Type;
-import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.fit.util.CasUtil;
-import org.apache.uima.jcas.JCas;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -86,53 +81,21 @@ public class Predictions
      * which already have an annotation and don't need further recommendation.
      */
     public Map<String, SuggestionDocumentGroup> getPredictionsForWholeProject(
-            AnnotationLayer aLayer, DocumentService aDocumentService, boolean aFilterExisting)
+            AnnotationLayer aLayer, DocumentService aDocumentService)
     {
         Map<String, SuggestionDocumentGroup> result = new HashMap<>();
 
         List<AnnotationDocument> docs = aDocumentService.listAnnotationDocuments(project, user);
 
         for (AnnotationDocument doc : docs) {
-            try {
-                JCas jcas = aDocumentService.readAnnotationCas(doc);
-                // TODO #176 use the document Id once it it available in the CAS
-                SuggestionDocumentGroup p = getPredictions(doc.getName(), aLayer, 0,
-                        jcas.getDocumentText().length() - 1, jcas, aFilterExisting);
-                result.put(doc.getName(), p);
-            }
-            catch (IOException e) {
-                logger.info("Cannot read JCas: ", e);
-            }
+            // TODO #176 use the document Id once it it available in the CAS
+            SuggestionDocumentGroup p = getPredictions(doc.getName(), aLayer, -1, -1);
+            result.put(doc.getName(), p);
         }
 
         return result;
     }
     
-//    public Map<String, List<PredictionGroup>> getPredictions(
-//            AnnotationLayer aLayer, DocumentService aDocumentService, boolean aFilterExisting)
-//    {
-//        
-//        
-//        Map<String, List<PredictionGroup>> result = new HashMap<>();
-//
-//        List<AnnotationDocument> docs = aDocumentService.listAnnotationDocuments(project, user);
-//
-//        for (AnnotationDocument doc : docs) {
-//            try {
-//                JCas jcas = aDocumentService.readAnnotationCas(doc);
-//                // TODO #176 use the document Id once it it available in the CAS
-//                List<PredictionGroup> p = getPredictions(doc.getName(), aLayer, 0,
-//                        jcas.getDocumentText().length() - 1, jcas, aFilterExisting);
-//                result.put(doc.getName(), p);
-//            }
-//            catch (IOException e) {
-//                logger.info("Cannot read JCas: ", e);
-//            }
-//        }
-//
-//        return result;
-//    }
-
     /**
      * TODO #176 use the document Id once it it available in the CAS
      *         
@@ -140,51 +103,33 @@ public class Predictions
      * list is a list of predictions for a token
      */
     public SuggestionDocumentGroup getPredictions(String aDocumentName,
-            AnnotationLayer aLayer, int aWindowBegin, int aWindowEnd, JCas aJcas,
-            boolean aFilterExisting)
+            AnnotationLayer aLayer, int aWindowBegin, int aWindowEnd)
     {
-        List<AnnotationSuggestion> suggestions = getFlattenedPredictions(aDocumentName, aLayer,
-                aWindowBegin, aWindowEnd, aJcas, aFilterExisting);
-        return new SuggestionDocumentGroup(suggestions);
+        return new SuggestionDocumentGroup(getFlattenedPredictions(aDocumentName, aLayer,
+                aWindowBegin, aWindowEnd));
     }
 
     /**
      *  TODO #176 use the document Id once it it available in the CAS
      *         
-     * Get the predictions of a document for a given window in a flattened list
-     * @param aJcas 
+     * Get the predictions of a document for a given window in a flattened list.
+     * If the parameters {@code aWindowBegin} and {@code aWindowEnd} are {@code -1},
+     * then they are ignored respectively. This is useful when all suggestions should be fetched.
      */
     private List<AnnotationSuggestion> getFlattenedPredictions(String aDocumentName,
-        AnnotationLayer aLayer, int aWindowBegin, int aWindowEnd, JCas aJcas,
-        boolean aFilterExisting)
+        AnnotationLayer aLayer, int aWindowBegin, int aWindowEnd)
     {
         List<Map.Entry<ExtendedId, AnnotationSuggestion>> p = predictions.entrySet().stream()
             .filter(f -> f.getKey().getDocumentName().equals(aDocumentName))
             .filter(f -> f.getKey().getLayerId() == aLayer.getId())
-            .filter(f -> f.getKey().getBegin() >= aWindowBegin)
-            .filter(f -> f.getKey().getEnd() <= aWindowEnd)
+            .filter(f -> aWindowBegin == -1 || (f.getKey().getBegin() >= aWindowBegin))
+            .filter(f -> aWindowEnd == -1 || (f.getKey().getEnd() <= aWindowEnd))
             .sorted(Comparator.comparingInt(e2 -> e2.getValue().getBegin()))
             .collect(Collectors.toList());
 
-        if (aFilterExisting) {
-            Type type = CasUtil.getType(aJcas.getCas(), aLayer.getName());
-            List<AnnotationFS> existingAnnotations = CasUtil.selectCovered(aJcas.getCas(),
-                type, aWindowBegin, aWindowEnd);
-            List<Integer> existingOffsets = existingAnnotations.stream()
-                .map(AnnotationFS::getBegin)
-                .collect(Collectors.toList());
-
-            return p.stream()
-                .filter(f -> !existingOffsets.contains(f.getKey().getOffset().getBeginCharacter()))
-                .map(Map.Entry::getValue)
-                .collect(Collectors.toList());
-
-        }
-        else {
-            return p.stream()
-                .map(Map.Entry::getValue)
-                .collect(Collectors.toList());
-        }
+        return p.stream()
+            .map(Map.Entry::getValue)
+            .collect(Collectors.toList());
     }
 
     /**

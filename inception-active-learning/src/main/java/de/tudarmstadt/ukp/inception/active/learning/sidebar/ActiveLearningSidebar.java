@@ -64,11 +64,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
 
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.JCasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.FeatureValueUpdatedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.SpanDeletedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
@@ -83,7 +85,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VMarker;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VTextMarker;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentResetEvent;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -92,6 +93,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxSubmitLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaChoiceRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
@@ -120,6 +122,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup.Del
 import de.tudarmstadt.ukp.inception.recommendation.event.AjaxPredictionsSwitchedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.AjaxRecommendationAcceptedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.AjaxRecommendationRejectedEvent;
+import de.tudarmstadt.ukp.inception.recommendation.scheduling.tasks.PredictionTask;
 
 public class ActiveLearningSidebar
     extends AnnotationSidebar_ImplBase
@@ -146,7 +149,8 @@ public class ActiveLearningSidebar
     private static final String CID_ONLY_SKIPPED_RECOMMENDATION_LABEL = "onlySkippedRecommendationLabel";
     private static final String CID_LEARN_FROM_SKIPPED_RECOMMENDATION_FORM = "learnFromSkippedRecommendationForm";
     private static final String CID_NO_RECOMMENDATION_LABEL = "noRecommendationLabel";
-    private static final String CID_LAYER_SELECTION_BUTTON = "layerSelectionButton";
+    private static final String CID_START_SESSION_BUTTON = "startSession";
+    private static final String CID_STOP_SESSION_BUTTON = "stopSession";
     private static final String CID_SELECT_LAYER = "selectLayer";
     private static final String CID_SESSION_CONTROL_FORM = "sessionControlForm";
     private static final String CID_REMOVE_RECORD = "removeRecord";
@@ -178,6 +182,7 @@ public class ActiveLearningSidebar
     private String highlightDocumentName;
     private VID highlightVID;
     private Offset highlightSpan;
+    private boolean protectHighlight;
     
     public ActiveLearningSidebar(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, JCasProvider aJCasProvider,
@@ -212,6 +217,7 @@ public class ActiveLearningSidebar
         add(mainContainer);
         
         confirmationDialog = new ConfirmationDialog(CID_CONFIRMATION_DIALOG);
+        confirmationDialog.setAutoSize(true);
         add(confirmationDialog);
     }
 
@@ -248,7 +254,7 @@ public class ActiveLearningSidebar
     {
         Form<Void> form = new Form<>(CID_SESSION_CONTROL_FORM);
 
-        DropDownChoice<AnnotationLayer> layersDropdown = new DropDownChoice<>(CID_SELECT_LAYER);
+        DropDownChoice<AnnotationLayer> layersDropdown = new BootstrapSelect<>(CID_SELECT_LAYER);
         layersDropdown.setModel(alStateModel.bind("layer"));
         layersDropdown.setChoices(LoadableDetachableModel.of(this::listLayersWithRecommenders));
         layersDropdown.setChoiceRenderer(new LambdaChoiceRenderer<>(AnnotationLayer::getUiName));
@@ -258,11 +264,10 @@ public class ActiveLearningSidebar
         layersDropdown.setRequired(true);
         form.add(layersDropdown);
         
-        LambdaAjaxButton<Void> startStopButton = new LambdaAjaxButton<>(
-                CID_LAYER_SELECTION_BUTTON, this::actionStartStopSession);
-        startStopButton.setModel(LoadableDetachableModel
-            .of(() -> alStateModel.getObject().isSessionActive() ? "Terminate" : "Start"));
-        form.add(startStopButton);
+        form.add(new LambdaAjaxSubmitLink(CID_START_SESSION_BUTTON, this::actionStartSession)
+                .add(visibleWhen(() -> !alStateModel.getObject().isSessionActive())));
+        form.add(new LambdaAjaxLink(CID_STOP_SESSION_BUTTON, this::actionStopSession)
+            .add(visibleWhen(() -> alStateModel.getObject().isSessionActive())));
         form.add(visibleWhen(() -> alStateModel.getObject().isDoExistRecommenders()));
 
         return form;
@@ -274,37 +279,45 @@ public class ActiveLearningSidebar
                 .listLayersWithEnabledRecommenders(getModelObject().getProject());
     }
     
-    private void actionStartStopSession(AjaxRequestTarget target, Form<?> form)
+    private void actionStartSession(AjaxRequestTarget target, Form<?> form)
     {
         ActiveLearningUserState alState = alStateModel.getObject();
-        AnnotatorState annotatorState = getModelObject();
+        AnnotatorState state = getModelObject();
+        
+        // Start new session
+        alState.setSessionActive(true);
+
+        refreshSuggestions();
+
+        moveToNextRecommendation(target, false);
+
+        applicationEventPublisherHolder.get().publishEvent(new ActiveLearningSessionStartedEvent(
+                this, state.getProject(), state.getUser().getUsername()));
+    }
+    
+    private void actionStopSession(AjaxRequestTarget target)
+    {
+        ActiveLearningUserState alState = alStateModel.getObject();
+        AnnotatorState state = getModelObject();
 
         target.add(mainContainer);
 
-        if (!alState.isSessionActive()) {
-            // Start new session
-            alState.setSessionActive(true);
+        // Stop current session
+        alState.setSessionActive(false);
 
-            refreshSuggestions();
-
-            moveToNextRecommendation(target, false);
-
-            applicationEventPublisherHolder.get()
-                    .publishEvent(new ActiveLearningSessionStartedEvent(this,
-                            annotatorState.getProject(), annotatorState.getUser().getUsername()));
-        }
-        else {
-            // Stop current session
-            alState.setSessionActive(false);
-
-            applicationEventPublisherHolder.get()
-                    .publishEvent(new ActiveLearningSessionCompletedEvent(this,
-                            annotatorState.getProject(), annotatorState.getUser().getUsername()));
-        }
+        applicationEventPublisherHolder.get().publishEvent(new ActiveLearningSessionCompletedEvent(
+                this, state.getProject(), state.getUser().getUsername()));
     }
 
     private void setHighlight(AnnotationSuggestion aSuggestion)
     {
+        if (protectHighlight = true) {
+            LOG.trace("Active learning sidebar not clearing protected highlights");
+            protectHighlight = false;
+            return;
+        }
+        
+        LOG.trace("Active learning sidebar set highlight suggestion: {}", aSuggestion);
         highlightVID = aSuggestion.getVID();
         highlightSpan = new Offset(aSuggestion.getBegin(), aSuggestion.getEnd());
         highlightDocumentName = aSuggestion.getDocumentName();
@@ -312,14 +325,22 @@ public class ActiveLearningSidebar
     
     private void setHighlight(LearningRecord aRecord)
     {
+        LOG.trace("Active learning sidebar set highlight history record: {}", aRecord);
         highlightVID = null;
         highlightSpan = new Offset(aRecord.getOffsetCharacterBegin(),
                 aRecord.getOffsetCharacterEnd());
         highlightDocumentName = aRecord.getSourceDocument().getName();
+        // This is a bit of hack. Consider the following case:
+        // - use removes an ACCEPT history item
+        // - user clicks then on another history item
+        // - ... but during the subsequent rendering the "moveToNextSuggestion" method sets or
+        //   clears the highlight.
+        protectHighlight = true;
     }
     
     private void setHighlight(SourceDocument aDocument, AnnotationFS aAnnotation)
     {
+        LOG.trace("Active learning sidebar set highlight annotation: {}", aAnnotation);
         highlightVID = new VID(WebAnnoCasUtil.getAddr(aAnnotation));
         highlightSpan = new Offset(aAnnotation.getBegin(),
                 aAnnotation.getEnd());
@@ -328,6 +349,13 @@ public class ActiveLearningSidebar
     
     private void clearHighlight()
     {
+        if (protectHighlight = true) {
+            LOG.trace("Active learning sidebar not clearing protected highlights");
+            protectHighlight = false;
+            return;
+        }
+        
+        LOG.trace("Active learning sidebar cleared highlights");
         highlightDocumentName = null;
         highlightSpan = null;
         highlightVID = null;
@@ -454,11 +482,11 @@ public class ActiveLearningSidebar
                         alState.getLayer()),
                 suggestion).stream().findFirst();
         updatedSuggestion.ifPresent(s -> LOG.debug("Update suggestion: {}", s));
-        
+
         actionShowSelectedDocument(aTarget,
                 documentService.getSourceDocument(this.getModelObject().getProject(),
                         suggestion.getDocumentName()),
-                suggestion.getBegin());
+                suggestion.getBegin(), suggestion.getEnd());
 
         setHighlight(suggestion);
     }
@@ -678,9 +706,18 @@ public class ActiveLearningSidebar
         alState.setCurrentDifference(recommendationDifference);
         
         // If the active suggestion has changed, inform the user
-        if (prevSuggestion.isPresent() && (!alState.getSuggestion().isPresent()
-                || !alState.getSuggestion().get().equals(prevSuggestion.get()))) {
+        if (prevSuggestion.isPresent() && (alState.getSuggestion().isPresent()
+                && !alState.getSuggestion().get().equals(prevSuggestion.get()))) {
             String message = "Active learning has moved to next best suggestion.";
+            // Avoid logging the message multiple times in case the move to the next suggestion has
+            // been requested multiple times in a single request
+            if (getFeedbackMessages().messages(msg -> msg.getMessage().equals(message)).isEmpty()) {
+                info(message);
+                aTarget.addChildren(getPage(), IFeedback.class);
+            }
+        }
+        else if (prevSuggestion.isPresent() && !alState.getSuggestion().isPresent()) {
+            String message = "There are no more recommendations right now.";
             // Avoid logging the message multiple times in case the move to the next suggestion has
             // been requested multiple times in a single request
             if (getFeedbackMessages().messages(msg -> msg.getMessage().equals(message)).isEmpty()) {
@@ -713,15 +750,10 @@ public class ActiveLearningSidebar
                 // Open the corresponding document in the main editor and jump to the respective
                 // location
                 actionShowSelectedDocument((AjaxRequestTarget) aTarget, sourceDocument,
-                        suggestion.getBegin());
-                setHighlight(suggestion);
+                        suggestion.getBegin(), suggestion.getEnd());
             }
-            else {
-                clearHighlight();
-            }
+            setHighlight(suggestion);
             
-            // Sidebar
-            aTarget.add(mainContainer);
             if (!aStay) {
                 //Main editor
                 annotationPage.actionRefreshDocument((AjaxRequestTarget) aTarget);
@@ -829,9 +861,11 @@ public class ActiveLearningSidebar
         throws IOException
     {
         actionShowSelectedDocument(aTarget, aRecord.getSourceDocument(),
-                aRecord.getOffsetCharacterBegin());
+                aRecord.getOffsetCharacterBegin(), aRecord.getOffsetCharacterEnd());
         
-        JCas jCas = this.getJCasProvider().get();
+        // Since we have switched documents above (if it was necessary), the editor CAS should
+        // now point to the correct one
+        JCas jCas = getJCasProvider().get();
 
         // ... if a matching annotation exists, highlight the annotaiton
         Optional<AnnotationFS> annotation = getMatchingAnnotation(jCas.getCas(), aRecord);
@@ -842,7 +876,7 @@ public class ActiveLearningSidebar
         else {
             setHighlight(aRecord);
             
-            error("No annotation could be highlighted.");
+            info("No annotation could be highlighted.");
             aTarget.addChildren(getPage(), IFeedback.class);
         }
     }
@@ -916,19 +950,17 @@ public class ActiveLearningSidebar
         // Force the learning records model to be refreshed during rendering, showing the latest
         // state from the DB
         learningRecords.detach();
-        
+
         if (aRecord.getUserAction().equals(ACCEPTED)) {
             // IMPORTANT: we must jump to the document which contains the annotation that is to
             // be deleted because deleteAnnotationByHistory will delete the annotation via the
             // methods provided by the AnnotationActionHandler and these operate ONLY on the
             // currently visible/selected document.
-            actionShowSelectedDocument(aTarget, aRecord.getSourceDocument(),
-                aRecord.getOffsetCharacterBegin());
-            AnnotationDocument annoDoc = documentService
-                .createOrGetAnnotationDocument(aRecord.getSourceDocument(),
-                    userDao.get(aRecord.getUser()));
-            JCas jCas = documentService.readAnnotationCas(annoDoc);
+            JCas jCas = documentService.readAnnotationCas(aRecord.getSourceDocument(),
+                    aRecord.getUser());
             if (getMatchingAnnotation(jCas.getCas(), aRecord).isPresent()) {
+                actionShowSelectedDocument(aTarget, aRecord.getSourceDocument(),
+                        aRecord.getOffsetCharacterBegin(), aRecord.getOffsetCharacterEnd());
                 confirmationDialog.setTitleModel(new StringResourceModel(
                         "alSidebar.history.delete.confirmation.title", this));
                 confirmationDialog.setContentModel(new StringResourceModel(
@@ -950,12 +982,22 @@ public class ActiveLearningSidebar
     private void deleteAnnotationByHistory(AjaxRequestTarget aTarget, LearningRecord aRecord)
         throws IOException, AnnotationException
     {
+        AnnotatorState state = getModelObject();
+        
         JCas jCas = this.getJCasProvider().get();
-        this.getModelObject().getSelection().selectSpan(highlightVID, jCas,
-                aRecord.getOffsetCharacterBegin(), aRecord.getOffsetCharacterEnd());
-        getActionHandler().actionDelete(aTarget);
+        Optional<AnnotationFS> anno = getMatchingAnnotation(jCas.getCas(), aRecord);
+        if (anno.isPresent()) {
+            state.getSelection().selectSpan(new VID(anno.get()), jCas,
+                    aRecord.getOffsetCharacterBegin(), aRecord.getOffsetCharacterEnd());
+            getActionHandler().actionDelete(aTarget);
+        }
     }
 
+    /**
+     * Listens to the user setting a feature on an annotation in the main annotation editor. Mind
+     * that we do not need to listen to the creation of annotations since they have no effect on 
+     * the active learning sidebar as long as they have no features set.
+     */
     @OnEvent
     public void onFeatureValueUpdated(FeatureValueUpdatedEvent aEvent)
     {
@@ -972,12 +1014,58 @@ public class ActiveLearningSidebar
                 aEvent.getFeature().getLayer().equals(alState.getLayer()) &&
                 aEvent.getFeature().getName().equals(alState.getSuggestion().get().getFeature())))
         ) {
-            // Make sure we know about the current suggestions and their visibility state
-            refreshSuggestions();
+            reactToAnnotationsBeingCreatedOrDeleted(aEvent.getRequestTarget(),
+                    aEvent.getFeature().getLayer());
+        }
+    }
+    
+    /**
+     * Listens to the user deleting an annotation in the main annotation editor.
+     */
+    @OnEvent
+    public void onAnnotationDeleted(SpanDeletedEvent aEvent)
+    {
+        AnnotatorState state = getModelObject();
+        ActiveLearningUserState alState = alStateModel.getObject();
 
+        // If the user creates a new annotation at the site of the suggestion that is currently
+        // offered to the user, then the AL should move on to the next available suggestion
+        if (
+                alState.isSessionActive() &&
+                (!alState.getSuggestion().isPresent() || (
+                aEvent.getUser().equals(state.getUser().getUsername()) &&
+                aEvent.getDocument().equals(state.getDocument()) &&
+                aEvent.getLayer().equals(alState.getLayer())))
+        ) {
+            reactToAnnotationsBeingCreatedOrDeleted(aEvent.getRequestTarget(), aEvent.getLayer());
+        }
+    }
+    
+    private void reactToAnnotationsBeingCreatedOrDeleted(IPartialPageRequestHandler aTarget,
+            AnnotationLayer aLayer)
+    {
+        try {
+            AnnotatorState state = getModelObject();
+            ActiveLearningUserState alState = alStateModel.getObject();
+            
+//            // Make sure we know about the current suggestions and their visibility state
+//            refreshSuggestions();
+    
+            // Update visibility in case the annotation where the feature was set overlaps with 
+            // any suggestions that need to be hidden now.
+            PredictionTask.calculateVisibility(learningRecordService, annotationService,
+                    getAnnotationPage().getEditorCas(), state.getUser().getUsername(), aLayer,
+                    alState.getSuggestions(), state.getWindowBeginOffset(),
+                    state.getWindowEndOffset());
+    
             // Update the suggestion in the AL sidebar, but do not jump or touch the right
             // sidebar such that the user can happily continue to edit the annotation
-            moveToNextRecommendation(aEvent.getRequestTarget(), true);
+            moveToNextRecommendation(aTarget, true);
+        }
+        catch (IOException e) {
+            LOG.info("Error reading CAS: {}", e.getMessage());
+            error("Error reading CAS " + e.getMessage());
+            aTarget.addChildren(getPage(), IFeedback.class);
         }
     }
 
@@ -1029,17 +1117,20 @@ public class ActiveLearningSidebar
         }
     }
 
+    /**
+     * Listens to the user accepting a recommendation in the main annotation editor.
+     */
     @OnEvent
     public void onRecommendationAcceptEvent(AjaxRecommendationAcceptedEvent aEvent)
     {
-        AnnotatorState annotatorState = ActiveLearningSidebar.this.getModelObject();
-        Predictions model = recommendationService.getPredictions(annotatorState.getUser(),
-                annotatorState.getProject());
+        AnnotatorState state = getModelObject();
+        Predictions model = recommendationService.getPredictions(state.getUser(),
+                state.getProject());
         AnnotatorState eventState = aEvent.getAnnotatorState();
-        SourceDocument document = annotatorState.getDocument();
+        SourceDocument document = state.getDocument();
         VID vid = aEvent.getVid();
+        
         Optional<AnnotationSuggestion> oRecommendation = model.getPredictionByVID(document, vid);
-
         if (!oRecommendation.isPresent()) {
             LOG.error("Could not find prediction in [{}] with id [{}]", document, vid);
             error("Could not find prediction");
@@ -1047,36 +1138,33 @@ public class ActiveLearningSidebar
             return;
         }
 
-        AnnotationSuggestion acceptedRecommendation = oRecommendation.get();
+        AnnotationSuggestion acceptedSuggestion = oRecommendation.get();
         
-        model = recommendationService.getPredictions(annotatorState.getUser(),
-                annotatorState.getProject());
         applicationEventPublisherHolder.get().publishEvent(
             new ActiveLearningRecommendationEvent(this, eventState.getDocument(),
-                acceptedRecommendation, annotatorState.getUser().getUsername(),
-                eventState.getSelectedAnnotationLayer(), acceptedRecommendation.getFeature(),
+                acceptedSuggestion, state.getUser().getUsername(),
+                eventState.getSelectedAnnotationLayer(), acceptedSuggestion.getFeature(),
                 ACCEPTED, model.getPredictionsByTokenAndFeature(
-                acceptedRecommendation.getDocumentName(),
+                acceptedSuggestion.getDocumentName(),
                 eventState.getSelectedAnnotationLayer(),
-                acceptedRecommendation.getBegin(),
-                acceptedRecommendation.getEnd(),
-                acceptedRecommendation.getFeature())));
+                acceptedSuggestion.getBegin(),
+                acceptedSuggestion.getEnd(),
+                acceptedSuggestion.getFeature())));
 
-        Optional<AnnotationSuggestion> currentRecommendation = alStateModel.getObject()
-            .getSuggestion();
+        // If the annotation that the user accepted is the one that is currently displayed in
+        // the annotation sidebar, then we have to go and pick a new one
+        ActiveLearningUserState alState = alStateModel.getObject();
         if (
-                alStateModel.getObject().isSessionActive() && 
-                currentRecommendation.isPresent() && 
-                eventState.getUser().equals(annotatorState.getUser()) && 
-                eventState.getProject().equals(annotatorState.getProject())
+                alState.isSessionActive() && 
+                alState.getSuggestion().isPresent() && 
+                eventState.getUser().equals(state.getUser()) && 
+                eventState.getProject().equals(state.getProject())
         ) {
+            AnnotationSuggestion suggestion = alState.getSuggestion().get();
             if (
-                    acceptedRecommendation.getOffset().equals(
-                            currentRecommendation.get().getOffset()) && 
-                    annotationService.getLayer(vid.getLayerId()).equals(
-                            alStateModel.getObject().getLayer()) && 
-                    acceptedRecommendation.getFeature().equals(
-                            currentRecommendation.get().getFeature())
+                    acceptedSuggestion.getOffset().equals(suggestion.getOffset()) && 
+                    vid.getLayerId() == suggestion.getLayerId() && 
+                    acceptedSuggestion.getFeature().equals(suggestion.getFeature())
             ) {
                 moveToNextRecommendation(aEvent.getTarget(), false);
             }

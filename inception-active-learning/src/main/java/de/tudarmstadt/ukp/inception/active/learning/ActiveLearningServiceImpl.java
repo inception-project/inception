@@ -77,7 +77,7 @@ public class ActiveLearningServiceImpl
         }
 
         Map<String, SuggestionDocumentGroup> recommendationsMap = model
-                .getPredictionsForWholeProject(aLayer, documentService, true);
+                .getPredictionsForWholeProject(aLayer, documentService);
 
         return recommendationsMap.values().stream()
                 .flatMap(docMap -> docMap.stream())

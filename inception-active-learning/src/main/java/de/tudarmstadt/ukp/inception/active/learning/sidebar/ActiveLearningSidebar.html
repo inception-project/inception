@@ -32,15 +32,18 @@
           </div>
           <div class="panel-body">
             <div class="form-group form-horizontal">
-              <label class="col-sm-3 control-label"><wicket:message key="layer"/></label>
-              <div class="col-sm-9">
-                <select class="form-control" wicket:id="selectLayer"></select>
+              <div class="input-group">
+                <select class="form-control flex-content" wicket:id="selectLayer"></select>
+                <span class="input-group-btn">
+                  <a wicket:id="startSession" class="btn btn-default">
+                    <i class="fa fa-play" aria-hidden="true"></i>
+                  </a>
+                  <a wicket:id="stopSession" class="btn btn-default">
+                    <i class="fa fa-stop" aria-hidden="true"></i>
+                  </a>
+                </span>
               </div>
             </div>
-          </div>
-          <div class="panel-footer text-right">
-            <input wicket:id="layerSelectionButton" type="submit" class="btn btn-primary"
-              value="Start"/>
           </div>
         </form>
 
@@ -107,16 +110,18 @@
             <table class="table table-condensed col-sm-12">
               <wicket:container wicket:id="historyListview">
                 <tr style="font-size: 90%;">
-                  <td style="width: 100%;" colspan="2"><a wicket:id="jumpToAnnotation"></a></td>
-                  <td style="border:none;" rowspan="2">
-                    <button wicket:id="removeRecord" class="btn-xs btn-danger">
+                  <td style="width: 100%; padding-bottom: 0px;">
+                    <a wicket:id="removeRecord" class="btn-xs btn-danger pull-right" style="white-space:nowrap;">
                       <i class="fa fa-trash" aria-hidden="true"></i>
-                    </button>
+                    </a>
+                    <a wicket:id="jumpToAnnotation"></a>
                   </td>
                 </tr>
-                <tr style="font-size: 70%;">
-                  <td style="border:none;"><span wicket:id="recommendedAnnotation"></span></td>
-                  <td style="border:none;"><span wicket:id="userAction"></span></td>
+                <tr style="font-size: 70%; padding: 0px;">
+                  <td style="border:none;">
+                    <span wicket:id="userAction" class="pull-right"></span>
+                    <span wicket:id="recommendedAnnotation"></span>
+                  </td>
                 </tr>
               </wicket:container>
             </table>

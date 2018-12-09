@@ -101,8 +101,7 @@ public class RecommendationSpanRenderer
         
         // TODO #176 use the document Id once it it available in the CAS
         SuggestionDocumentGroup groups = model.getPredictions(
-                DocumentMetaData.get(aJcas).getDocumentTitle(), layer, windowBegin, windowEnd,
-                aJcas, false);
+                DocumentMetaData.get(aJcas).getDocumentTitle(), layer, windowBegin, windowEnd);
         
         // No recommendations to render for this layer
         if (groups.isEmpty()) {
