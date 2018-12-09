@@ -20,9 +20,12 @@
 <body>
   <wicket:panel>
     <form wicket:id="form">
-      <input wicket:id="subClassName" type="text" class="form-control" />
-      <button wicket:id="createSubclass" type="button" class="btn btn-success pull-left"><wicket:container wicket:id="createLabel"></wicket:container></button>
-      <button wicket:id="cancel" type="button" class="btn btn-secondary pull-right"><wicket:container wicket:id="cancelLabel"></wicket:container></button>  
+      <div class="input-group input-group-lg">
+        <input wicket:id="name" type="text" class="flex-content form-control" />
+        <div class="input-group-btn">
+          <button wicket:id="createSubclass" type="button" class="btn btn-success pull-left"><wicket:container wicket:id="createLabel"></wicket:container></button>
+        </div>
+      </div>
     </form>
   </wicket:panel>
 </body>
