@@ -352,7 +352,8 @@ public class AnnotationFeatureForm
     private void actionJumpToAnnotation(AjaxRequestTarget aTarget) throws IOException
     {
         editorPanel.getEditorPage().actionShowSelectedDocument(aTarget,
-                getModelObject().getDocument(), getModelObject().getSelection().getBegin());
+                getModelObject().getDocument(), getModelObject().getSelection().getBegin(),
+                getModelObject().getSelection().getEnd());
     }
 
     private LambdaAjaxLink createClearButton()
