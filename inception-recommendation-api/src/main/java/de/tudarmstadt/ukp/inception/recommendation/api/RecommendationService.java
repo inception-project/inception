@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.recommendation.api;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.uima.jcas.JCas;
 
@@ -50,6 +51,10 @@ public interface RecommendationService
     
     Recommender getRecommender(long aId);
 
+    Optional<Recommender> getRecommender(Project aProject, String aName);
+
+    boolean existsRecommender(Project aProject, String aName);
+    
     List<Recommender> listRecommenders(Project aProject);
 
     List<Recommender> listRecommenders(AnnotationLayer aLayer);

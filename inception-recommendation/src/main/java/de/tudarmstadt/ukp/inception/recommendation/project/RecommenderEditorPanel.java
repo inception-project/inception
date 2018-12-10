@@ -26,17 +26,17 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.form.AjaxButton;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
-import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.AbstractChoice;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.CheckBoxMultipleChoice;
@@ -45,11 +45,16 @@ import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.EnumChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.NumberTextField;
+import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.apache.wicket.validation.IValidatable;
+import org.apache.wicket.validation.IValidator;
+import org.apache.wicket.validation.ValidationError;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
@@ -61,6 +66,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormSubmittingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -85,7 +91,9 @@ public class RecommenderEditorPanel
     private static final String MID_FORM = "form";
     private static final String MID_NAME = "name";
     private static final String MID_FEATURE = "feature";
+    private static final String MID_LAYER = "layer";
     private static final String MID_ENABLED = "enabled";
+    private static final String MID_AUTO_GENERATED_NAME = "autoGenerateName";
     private static final String MID_ALWAYS_SELECTED = "alwaysSelected";
     private static final String MID_TOOL = "tool";
     private static final String MID_ACTIVATION_CONTAINER = "activationContainer";
@@ -97,14 +105,20 @@ public class RecommenderEditorPanel
     private @SpringBean ApplicationEventPublisherHolder appEventPublisherHolder;
     private @SpringBean UserDao userDao;
 
+    private TextField<String> nameField;
     private WebMarkupContainer traitsContainer;
     private WebMarkupContainer activationContainer;
     private DropDownChoice<Pair<String, String>> toolChoice;
 
+    private DropDownChoice<String> featureChoice;
+    private DropDownChoice<AnnotationLayer> layerChoice;
+    private CheckBox autoGenerateNameCheckBox;
+
     private IModel<Project> projectModel;
     private IModel<Recommender> recommenderModel;
+    private boolean autoGenerateName;
     private IModel<Set<AnnotationDocumentState>> statesForTraining;
-
+    
     public RecommenderEditorPanel(String aId, IModel<Project> aProject,
             IModel<Recommender> aRecommender)
     {
@@ -119,43 +133,60 @@ public class RecommenderEditorPanel
         Form<Recommender> form = new Form<>(MID_FORM, CompoundPropertyModel.of(aRecommender));
         add(form);
 
-        form.add(new Label(MID_NAME));
+        
+        nameField = new TextField<>(MID_NAME, String.class);
+        nameField.add(new RecommenderExistsValidator(recommenderModel));
+        nameField.setRequired(true);
+        form.add(nameField);
+        
+        autoGenerateNameCheckBox = new CheckBox(MID_AUTO_GENERATED_NAME,
+                PropertyModel.of(this, "autoGenerateName"));
+        autoGenerateNameCheckBox.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> {
+            autoUpdateName(t, nameField, recommenderModel.getObject());
+            t.add(autoGenerateNameCheckBox);
+        }));
+        form.add(autoGenerateNameCheckBox);
+        
         form.add(new CheckBox(MID_ENABLED));
-        form.add(new DropDownChoice<>("layer")
-                .setChoices(this::listLayers)
-                .setChoiceRenderer(new ChoiceRenderer<>("uiName"))
-                .setRequired(true)
-                // The available features and tools tools depend on the layer, so reload them
-                // when the layer is changed
-                .add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> {
-                    if (listFeatures().size() == 1) {
-                        recommenderModel.getObject().setFeature(listFeatures().get(0));
-                    } else {
-                        recommenderModel.getObject().setFeature(null);
-                    }
-                    recommenderModel.getObject().setTool(null);
-                    t.add(form.get(MID_TOOL));
-                    t.add(form.get(MID_FEATURE));
-                    t.add(traitsContainer);
-                })));
-        form.add(new DropDownChoice<>(MID_FEATURE)
-                .setChoices(this::listFeatures)
-                .setRequired(true)
-                .setOutputMarkupId(true)
-                // The available tools depend on the feature, so reload the tools when the layer
-                // is changed
-                .add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> {
-                    recommenderModel.getObject().setTool(null);
-                    t.add(form.get(MID_TOOL));
-                    t.add(traitsContainer);
-                })));
-
-        IModel<Pair<String, String>> toolModel = LambdaModelAdapter.of(() -> {
-            String name = recommenderModel.getObject().getTool();
-            RecommendationEngineFactory factory = recommenderRegistry.getFactory(name);
-            return factory != null ? Pair.of(factory.getId(), factory.getName()) : null;
-        }, (v) -> recommenderModel.getObject().setTool(v.getKey()));
-
+        
+        layerChoice = new DropDownChoice<>(MID_LAYER,this::listLayers);
+        layerChoice.setChoiceRenderer(new ChoiceRenderer<>("uiName"));
+        layerChoice.setRequired(true);
+        // The features and tools depend on the layer, so reload them when the layer is changed
+        layerChoice.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> { 
+            toolChoice.setModelObject(null);
+            featureChoice.setModelObject(null);
+            autoUpdateName(t, nameField, recommenderModel.getObject());
+            t.add(form.get(MID_TOOL), form.get(MID_FEATURE), form.get(MID_MAX_RECOMMENDATIONS),
+                    activationContainer, traitsContainer);
+        }));
+        form.add(layerChoice);
+        
+        featureChoice = new DropDownChoice<>(MID_FEATURE, this::listFeatures);
+        featureChoice.setRequired(true);
+        featureChoice.setOutputMarkupId(true);
+        featureChoice.add(LambdaBehavior.onConfigure(_this -> {
+            if (featureChoice.getChoicesModel().getObject().size() == 1) {
+                featureChoice.setModelObject(featureChoice.getChoicesModel().getObject().get(0));
+            }
+        }));
+        // The tools depend on the feature, so reload the tools when the feature is changed
+        featureChoice.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> {
+            toolChoice.setModelObject(null);
+            autoUpdateName(t, nameField, recommenderModel.getObject());
+            t.add(form.get(MID_TOOL), form.get(MID_MAX_RECOMMENDATIONS), activationContainer,
+                    traitsContainer);
+        }));
+        form.add(featureChoice);
+        
+        IModel<Pair<String, String>> toolModel = LambdaModelAdapter.of(
+            () -> {
+                String name = recommenderModel.getObject().getTool();
+                RecommendationEngineFactory factory = recommenderRegistry.getFactory(name);
+                return factory != null ? Pair.of(factory.getId(), factory.getName()) : null;
+            }, 
+            (v) -> recommenderModel.getObject().setTool(v != null ? v.getKey() : null));
+        
         toolChoice = new DropDownChoice<Pair<String, String>>(MID_TOOL, toolModel, this::listTools)
         {
             private static final long serialVersionUID = -1869081847783375166L;
@@ -181,9 +212,10 @@ public class RecommenderEditorPanel
         toolChoice.setChoiceRenderer(new ChoiceRenderer<>("value"));
         toolChoice.setRequired(true);
         toolChoice.setOutputMarkupId(true);
-        toolChoice.add(new LambdaAjaxFormComponentUpdatingBehavior("change",_target ->
-                _target.add(traitsContainer, activationContainer,
-                        form.get(MID_MAX_RECOMMENDATIONS))));
+        toolChoice.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> {
+            autoUpdateName(t, nameField, recommenderModel.getObject());
+            t.add(form.get(MID_MAX_RECOMMENDATIONS), activationContainer, traitsContainer); 
+        }));
         form.add(toolChoice);
 
         form.add(activationContainer = new WebMarkupContainer(MID_ACTIVATION_CONTAINER));
@@ -289,6 +321,34 @@ public class RecommenderEditorPanel
         traitsContainer.add(new EmptyPanel(MID_TRAITS));
     }
 
+    private void autoUpdateName(AjaxRequestTarget aTarget, TextField<String> aField,
+            Recommender aRecommender)
+    {
+        aTarget.add(aField);
+        
+        if (!autoGenerateName || aRecommender == null) {
+            return;
+        }
+        
+        aField.setModelObject(generateName(aRecommender));
+    }
+    
+    private String generateName(Recommender aRecommender)
+    {
+        if (aRecommender.getFeature() == null || aRecommender.getLayer() == null
+                || aRecommender.getTool() == null) {
+            return null;
+        }
+        else {
+            RecommendationEngineFactory factory = recommenderRegistry
+                    .getFactory(aRecommender.getTool());
+            return String.format(Locale.US, "[%s@%s] %s",
+                    aRecommender.getLayer().getUiName(),
+                    aRecommender.getFeature(), 
+                    factory.getName());
+        }
+    }
+    
     @Override
     protected void onConfigure()
     {
@@ -304,6 +364,19 @@ public class RecommenderEditorPanel
 
         // Since toolChoice uses a lambda model, it needs to be notified explicitly.
         toolChoice.modelChanged();
+        
+        // For new recommenders, default to auto-generation of name, for existing recommenders,
+        // do not auto-generate name unless asked to
+        Recommender recommender = recommenderModel.getObject();
+        if (
+                recommender.getId() == null || 
+                Objects.equals(recommender.getName(), generateName(recommender))
+        ) {
+            autoGenerateNameCheckBox.setModelObject(true);
+        }
+        else {
+            autoGenerateNameCheckBox.setModelObject(false);
+        }
     }
 
     private List<AnnotationLayer> listLayers()
@@ -358,12 +431,9 @@ public class RecommenderEditorPanel
         }
     }
 
-    private void actionSave(AjaxRequestTarget aTarget) {
+    private void actionSave(AjaxRequestTarget aTarget)
+    {
         Recommender recommender = recommenderModel.getObject();
-        recommender.setName(String.format(Locale.US, "[%s@%s] %s (%.2f)",
-                recommender.getFeature(), recommender.getLayer().getUiName(),
-                StringUtils.substringAfterLast(recommender.getTool(), "."),
-                recommender.getThreshold()));
         recommender.setProject(recommender.getLayer().getProject());
 
         recommendationService.createOrUpdateRecommender(recommender);
@@ -394,5 +464,37 @@ public class RecommenderEditorPanel
     private static Set<AnnotationDocumentState> getAllPossibleDocumentStates()
     {
         return new HashSet<>(asList(AnnotationDocumentState.values()));
+    }
+
+    private class RecommenderExistsValidator
+        implements IValidator<String>
+    {
+        private static final long serialVersionUID = 8604561828541964271L;
+
+        private IModel<Recommender> recommenderModel;
+        
+        public RecommenderExistsValidator(IModel<Recommender> aModel)
+        {
+            recommenderModel = aModel;
+        }
+        
+        @Override
+        public void validate(IValidatable<String> aValidatable)
+        {
+            String newName = aValidatable.getValue();
+            Recommender currentRecommender = recommenderModel.getObject();
+            Optional<Recommender> recommenderWithNewName = recommendationService
+                    .getRecommender(currentRecommender.getProject(), newName);
+            // Either there should be no recommender with the new name already existing or it should
+            // be the recommender we are currently editing (i.e. the name has not changed)
+            if (
+                    recommenderWithNewName.isPresent() &&
+                    !Objects.equals(recommenderWithNewName.get().getId(),
+                            currentRecommender.getId())
+            ) {
+                aValidatable.error(new ValidationError(
+                        "Another recommender with the same name exists. Please try a different name"));
+            }
+        }
     }
 }
