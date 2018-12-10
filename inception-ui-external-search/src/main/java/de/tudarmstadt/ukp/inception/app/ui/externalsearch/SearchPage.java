@@ -55,13 +55,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wicketstuff.annotation.mount.MountPath;
 
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
@@ -77,25 +77,24 @@ public class SearchPage extends ApplicationPageBase
 
     private static final Logger LOG = LoggerFactory.getLogger(SearchPage.class);
 
+    private static final String PLAIN_TEXT = "text";
+
     private @SpringBean DocumentService documentService;
     private @SpringBean ProjectService projectService;
     private @SpringBean ExternalSearchService externalSearchService;
     private @SpringBean UserDao userRepository;
     private @SpringBean ImportExportService importExportService;
 
-    final WebMarkupContainer mainContainer = new WebMarkupContainer("mainContainer");
-
-    final String PLAIN_TEXT = "text";
+    private final WebMarkupContainer mainContainer = new WebMarkupContainer("mainContainer");
 
     private ListView<ExternalSearchResult> resultList;
-    private ArrayList<ExternalSearchResult> results = new ArrayList<ExternalSearchResult>();
+    private List<ExternalSearchResult> results = new ArrayList<ExternalSearchResult>();
 
-    Model<String> targetQuery = Model.of("");
+    private Model<String> targetQuery = Model.of("");
 
-    private IModel<ArrayList<DocumentRepository>> repositoriesModel;
+    private IModel<List<DocumentRepository>> repositoriesModel;
 
     private DocumentRepository currentRepository;
-    private User currentUser;
     private Project project;
 
     ExternalResultDataProvider dataProvider;
@@ -107,11 +106,7 @@ public class SearchPage extends ApplicationPageBase
             abort();
         }
 
-        currentUser = userRepository.getCurrentUser();
-
-        ArrayList<DocumentRepository> repositories;
-
-        repositories = (ArrayList<DocumentRepository>) externalSearchService
+        List<DocumentRepository> repositories = externalSearchService
                 .listDocumentRepositories(project);
 
         if (repositories.size() > 0) {
@@ -121,23 +116,8 @@ public class SearchPage extends ApplicationPageBase
             currentRepository = null;
         }
 
-        repositoriesModel = new LoadableDetachableModel<ArrayList<DocumentRepository>>()
-        {
-            /**
-             *
-             */
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            protected ArrayList<DocumentRepository> load()
-            {
-                ArrayList<DocumentRepository> documentRepositories;
-                // Load user's projects
-                documentRepositories = (ArrayList<DocumentRepository>) externalSearchService
-                        .listDocumentRepositories(project);
-                return documentRepositories;
-            }
-        };
+        repositoriesModel = LoadableDetachableModel.of(() -> externalSearchService
+                        .listDocumentRepositories(project));
 
         add(mainContainer);
 
@@ -146,7 +126,6 @@ public class SearchPage extends ApplicationPageBase
         mainContainer.add(projectSelectionForm);
 
         SearchForm searchForm = new SearchForm("searchForm");
-
 
         mainContainer.add(searchForm);
 
@@ -167,7 +146,7 @@ public class SearchPage extends ApplicationPageBase
         });
 
         dataProvider = new ExternalResultDataProvider(
-                externalSearchService, currentUser, currentRepository, "merck");
+                externalSearchService, userRepository.getCurrentUser(), currentRepository, "merck");
 
         DataTable<ExternalSearchResult, String> resultTable = new DefaultDataTable<>("resultsTable",
                 columns, dataProvider, 8);
@@ -238,8 +217,8 @@ public class SearchPage extends ApplicationPageBase
         results.clear();
 
         try {
-            for (ExternalSearchResult result : externalSearchService.query(currentUser,
-                    currentRepository, aQuery)) {
+            for (ExternalSearchResult result : externalSearchService
+                    .query(userRepository.getCurrentUser(), currentRepository, aQuery)) {
                 results.add(result);
             }
         }
@@ -258,7 +237,7 @@ public class SearchPage extends ApplicationPageBase
             super(aId);
 
             DropDownChoice<DocumentRepository> repositoryCombo =
-                    new DropDownChoice<DocumentRepository>(
+                    new BootstrapSelect<DocumentRepository>(
                     "repositoryCombo",
                     new PropertyModel<DocumentRepository>(SearchPage.this, "currentRepository"),
                     repositoriesModel)
@@ -340,8 +319,10 @@ public class SearchPage extends ApplicationPageBase
             {
                 @Override
                 public void onClick(AjaxRequestTarget target) {
-                    String text = externalSearchService.getDocumentById(currentUser,
-                        currentRepository, documentTitle).getText();
+                    String text = externalSearchService
+                            .getDocumentById(userRepository.getCurrentUser(), currentRepository,
+                                    documentTitle)
+                            .getText();
 
                     if (documentService.existsSourceDocument(project, documentTitle)) {
                         error("Document " + documentTitle + " already uploaded ! Delete "
