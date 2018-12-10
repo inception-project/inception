@@ -24,26 +24,31 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.form.AjaxButton;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
-import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.NumberTextField;
+import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.apache.wicket.validation.IValidatable;
+import org.apache.wicket.validation.IValidator;
+import org.apache.wicket.validation.ValidationError;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
@@ -79,7 +84,9 @@ public class RecommenderEditorPanel
     private static final String MID_FORM = "form";
     private static final String MID_NAME = "name";
     private static final String MID_FEATURE = "feature";
+    private static final String MID_LAYER = "layer";
     private static final String MID_ENABLED = "enabled";
+    private static final String MID_AUTO_GENERATED_NAME = "autoGenerateName";
     private static final String MID_ALWAYS_SELECTED = "alwaysSelected";
     private static final String MID_TOOL = "tool";
     private static final String MID_ACTIVATION_CONTAINER = "activationContainer";
@@ -90,14 +97,17 @@ public class RecommenderEditorPanel
     private @SpringBean ApplicationEventPublisherHolder appEventPublisherHolder;
     private @SpringBean UserDao userDao;
 
+    private TextField<String> nameField;
     private WebMarkupContainer traitsContainer;
     private WebMarkupContainer activationContainer;
     private DropDownChoice<Pair<String, String>> toolChoice;
     private DropDownChoice<String> featureChoice;
     private DropDownChoice<AnnotationLayer> layerChoice;
+    private CheckBox autoGenerateNameCheckBox;
 
     private IModel<Project> projectModel;
     private IModel<Recommender> recommenderModel;
+    private boolean autoGenerateName;
     
     public RecommenderEditorPanel(String aId, IModel<Project> aProject,
             IModel<Recommender> aRecommender)
@@ -113,16 +123,29 @@ public class RecommenderEditorPanel
         Form<Recommender> form = new Form<>(MID_FORM, CompoundPropertyModel.of(aRecommender));
         add(form);
         
-        form.add(new Label(MID_NAME));
+        nameField = new TextField<>(MID_NAME, String.class);
+        nameField.add(new RecommenderExistsValidator(recommenderModel));
+        nameField.setRequired(true);
+        form.add(nameField);
+        
+        autoGenerateNameCheckBox = new CheckBox(MID_AUTO_GENERATED_NAME,
+                PropertyModel.of(this, "autoGenerateName"));
+        autoGenerateNameCheckBox.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> {
+            autoUpdateName(t, nameField, recommenderModel.getObject());
+            t.add(autoGenerateNameCheckBox);
+        }));
+        form.add(autoGenerateNameCheckBox);
+        
         form.add(new CheckBox(MID_ENABLED));
         
-        layerChoice = new DropDownChoice<>("layer",this::listLayers);
+        layerChoice = new DropDownChoice<>(MID_LAYER,this::listLayers);
         layerChoice.setChoiceRenderer(new ChoiceRenderer<>("uiName"));
         layerChoice.setRequired(true);
         // The features and tools depend on the layer, so reload them when the layer is changed
         layerChoice.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> { 
             toolChoice.setModelObject(null);
             featureChoice.setModelObject(null);
+            autoUpdateName(t, nameField, recommenderModel.getObject());
             t.add(form.get(MID_TOOL), form.get(MID_FEATURE), form.get(MID_MAX_RECOMMENDATIONS),
                     activationContainer, traitsContainer);
         }));
@@ -139,6 +162,7 @@ public class RecommenderEditorPanel
         // The tools depend on the feature, so reload the tools when the feature is changed
         featureChoice.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> {
             toolChoice.setModelObject(null);
+            autoUpdateName(t, nameField, recommenderModel.getObject());
             t.add(form.get(MID_TOOL), form.get(MID_MAX_RECOMMENDATIONS), activationContainer,
                     traitsContainer);
         }));
@@ -177,8 +201,10 @@ public class RecommenderEditorPanel
         toolChoice.setChoiceRenderer(new ChoiceRenderer<Pair<String, String>>("value"));
         toolChoice.setRequired(true);
         toolChoice.setOutputMarkupId(true);
-        toolChoice.add(new LambdaAjaxFormComponentUpdatingBehavior("change", _target -> _target
-                .add(form.get(MID_MAX_RECOMMENDATIONS), activationContainer, traitsContainer)));
+        toolChoice.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> {
+            autoUpdateName(t, nameField, recommenderModel.getObject());
+            t.add(form.get(MID_MAX_RECOMMENDATIONS), activationContainer, traitsContainer); 
+        }));
         form.add(toolChoice);
         
         form.add(activationContainer = new WebMarkupContainer(MID_ACTIVATION_CONTAINER));
@@ -239,6 +265,34 @@ public class RecommenderEditorPanel
         traitsContainer.add(new EmptyPanel(MID_TRAITS));
     }
     
+    private void autoUpdateName(AjaxRequestTarget aTarget, TextField<String> aField,
+            Recommender aRecommender)
+    {
+        aTarget.add(aField);
+        
+        if (!autoGenerateName || aRecommender == null) {
+            return;
+        }
+        
+        aField.setModelObject(generateName(aRecommender));
+    }
+    
+    private String generateName(Recommender aRecommender)
+    {
+        if (aRecommender.getFeature() == null || aRecommender.getLayer() == null
+                || aRecommender.getTool() == null) {
+            return null;
+        }
+        else {
+            RecommendationEngineFactory factory = recommenderRegistry
+                    .getFactory(aRecommender.getTool());
+            return String.format(Locale.US, "[%s@%s] %s",
+                    aRecommender.getLayer().getUiName(),
+                    aRecommender.getFeature(), 
+                    factory.getName());
+        }
+    }
+    
     @Override
     protected void onConfigure()
     {
@@ -254,6 +308,19 @@ public class RecommenderEditorPanel
 
         // Since toolChoice uses a lambda model, it needs to be notified explicitly.
         toolChoice.modelChanged();
+        
+        // For new recommenders, default to auto-generation of name, for existing recommenders,
+        // do not auto-generate name unless asked to
+        Recommender recommender = recommenderModel.getObject();
+        if (
+                recommender.getId() == null || 
+                Objects.equals(recommender.getName(), generateName(recommender))
+        ) {
+            autoGenerateNameCheckBox.setModelObject(true);
+        }
+        else {
+            autoGenerateNameCheckBox.setModelObject(false);
+        }
     }
 
     private List<AnnotationLayer> listLayers()
@@ -308,15 +375,12 @@ public class RecommenderEditorPanel
         }
     }
 
-    private void actionSave(AjaxRequestTarget aTarget) {
+    private void actionSave(AjaxRequestTarget aTarget)
+    {
         Recommender recommender = recommenderModel.getObject();
-        recommender.setName(String.format(Locale.US, "[%s@%s] %s (%.2f)",
-                recommender.getFeature(), recommender.getLayer().getUiName(),
-                StringUtils.substringAfterLast(recommender.getTool(), "."),
-                recommender.getThreshold()));
         recommender.setProject(recommender.getLayer().getProject());
         recommendationService.createOrUpdateRecommender(recommender);
-        
+
         // causes deselection after saving
         recommenderModel.setObject(null);
 
@@ -337,5 +401,37 @@ public class RecommenderEditorPanel
         
         // Reload whole page because master panel also needs to be reloaded.
         aTarget.add(getPage());
+    }
+    
+    private class RecommenderExistsValidator
+        implements IValidator<String>
+    {
+        private static final long serialVersionUID = 8604561828541964271L;
+
+        private IModel<Recommender> recommenderModel;
+        
+        public RecommenderExistsValidator(IModel<Recommender> aModel)
+        {
+            recommenderModel = aModel;
+        }
+        
+        @Override
+        public void validate(IValidatable<String> aValidatable)
+        {
+            String newName = aValidatable.getValue();
+            Recommender currentRecommender = recommenderModel.getObject();
+            Optional<Recommender> recommenderWithNewName = recommendationService
+                    .getRecommender(currentRecommender.getProject(), newName);
+            // Either there should be no recommender with the new name already existing or it should
+            // be the recommender we are currently editing (i.e. the name has not changed)
+            if (
+                    recommenderWithNewName.isPresent() &&
+                    !Objects.equals(recommenderWithNewName.get().getId(),
+                            currentRecommender.getId())
+            ) {
+                aValidatable.error(new ValidationError(
+                        "Another recommender with the same name exists. Please try a different name"));
+            }
+        }
     }
 }

@@ -1,5 +1,6 @@
 [[sect_projects_recommendation]]
 == Recommenders
+
 Recommenders provide annotation support by predicting potential labels.
 These can be either accepted or rejected by the user.
 The recommenders learn from this interaction to further improve the quality of predictions.
@@ -7,10 +8,13 @@ The recommenders learn from this interaction to further improve the quality of p
 After clicking on *Recommenders*, you are displayed a new pane in which you can add new recommenders
 by clicking on the button *Create*. You have to select the layer, feature and the classification tool.
 The recommenders are trained every time you create, update or delete an annotation;
-and evaluated every second time. During recommender evaluation the f-score of each recommender is calcultated,
-and recommenders with a lower f-score than their threshold will not be selected for the next training step.
-By making a tick on the checkbox next to *Always active* or leaving the threshold at 0,
-you can choose to skip f-score evaluation to ensure that the recommender runs at all times.
+and evaluated every second time. During recommender evaluation a score for each recommender is calcultated and if this score does not meet the configured threshold, the recommender will not be used.
+
+By default, the name of new recommenders are auto-generated based on the choice of layer, feature and tool. However, you can deactivate this behavior by unchecking the *auto-generate* option next to the name field.
+
+By enabling *Always active* you can choose to skip  evaluation to ensure that the recommender runs
+at all times. If this option is disabled and the score threshold is set to 0, the recommender will
+also be always executed, but internally it is still evaluated.
 
 image::recommendation2.png[align="center"]
 
