@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<!DOCTYPE html>
 <!--
  - Copyright 2018
  - Ubiquitous Knowledge Processing (UKP) Lab
@@ -17,55 +16,57 @@
  - See the License for the specific language governing permissions and
  - limitations under the License.
 -->
-<html xmlns:wicket>
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-<title>BannerPanel</title>
-</head>
+<html xmlns:wicket="http://wicket.apache.org">
 <body>
-	<wicket:panel>
-		<table id="bd"
-			class="table table-striped table-condensed">
-			<tr style="display: table-row;">
-        <td><span wicket:id="rowNum" class="badge"></span></td>
-				<td>
-					<table style="border: none;">
-						<tr>
-							<td><b>Text ID:</b>&nbsp;&nbsp;</td>
-                            <td style="display: table-cell; text-align: left;">
-                                <a href="#" wicket:id="documentDetails" class="btn-link h4"><span wicket:id="textId"></span></a>
-                            </td>
-						</tr>
-						<tr>
-							<td><b>URI:</b>&nbsp;&nbsp;</td>
-							<td wicket:id="uri" style="display: table-cell; text-align: left;" class="h5" ></td>
-						</tr>
-                        <tr>
-                            <td><b>Highlight:</b>&nbsp;&nbsp;</td>
-                            <td style="display: table-cell; text-align: left;" >
-                                <span wicket:id="highlight"></span>
-                            </td>
-                        </tr>
-						<tr>
-							<td><b>Score:</b>&nbsp;&nbsp;</td>
-							<td style="display: table-cell; text-align: left;" >
-								<span wicket:id="score"></span>
-							</td>
-						</tr>
-                        <tr>
-                            <td><b>Import Status:</b>&nbsp;&nbsp;</td>
-                            <td style="display: table-cell; text-align: left;"><span
-                                wicket:id="importStatus" class="label label-info"></span></td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <div wicket:id="importDocument"></div>
-                            </td>
-                        </tr>
-					</table>
-				</td>
-			</tr>
-		</table>
-	</wicket:panel>
+  <wicket:panel>
+    <table id="bd" class="table table-striped table-condensed">
+      <tr style="display: table-row;">
+        <td>
+          <span wicket:id="rowNum" class="badge"></span>
+        </td>
+        <td>
+          <table style="border: none;">
+            <tr>
+              <td><b>Text ID:</b>&nbsp;&nbsp;</td>
+              <td style="display: table-cell; text-align: left;">
+                <a href="#" wicket:id="documentDetails" class="btn-link h4">
+                  <span wicket:id="textId"></span>
+                </a>
+              </td>
+            </tr>
+            <tr>
+              <td><b>URI:</b>&nbsp;&nbsp;</td>
+              <td wicket:id="uri" style="display: table-cell; text-align: left;" class="h5" ></td>
+            </tr>
+            <tr>
+              <td><b>Highlight:</b>&nbsp;&nbsp;</td>
+              <td style="display: table-cell; text-align: left;" >
+                  <span wicket:id="highlight"></span>
+              </td>
+            </tr>
+            <tr>
+              <td><b>Score:</b>&nbsp;&nbsp;</td>
+              <td style="display: table-cell; text-align: left;" >
+                <span wicket:id="score"></span>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <b>Import Status:</b>&nbsp;&nbsp;
+              </td>
+              <td style="display: table-cell; text-align: left;">
+                <span wicket:id="importStatus" class="label label-info"></span>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <div wicket:id="importDocument"></div>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </wicket:panel>
 </body>
 </html>
