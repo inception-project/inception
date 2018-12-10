@@ -157,7 +157,7 @@ public class ExportedRecommender
         return statesIgnoredForTraining;
     }
 
-    public void setStatesForTraining(Set<AnnotationDocumentState> aStatesIgnoredForTraining)
+    public void setStatesIgnoredForTraining(Set<AnnotationDocumentState> aStatesIgnoredForTraining)
     {
         statesIgnoredForTraining = aStatesIgnoredForTraining;
     }
