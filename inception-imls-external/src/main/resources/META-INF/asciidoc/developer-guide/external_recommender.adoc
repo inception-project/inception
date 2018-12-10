@@ -11,12 +11,17 @@ from the inception-imls-external module. The output file then is
 When making changes to the API, just copy the stuff from there over to this document starting from [[_external_recommender_api_paths]]
 ////
 
+= External recommender
 
 [[_external_recommender_api_overview]]
 == Overview
-This section describes the External Recommender API for INCEpTION. An external recommender is a classifier whose functionality is exposed via a HTTP web service. It can predict annotations for given documents and optionally be trained on new data. This document describes the endpoints a web service needs to expose so it can be used with INCEpTION.
-The documents that are exchanged are in form of a UIMA CAS. For sending, they have to be serialized to CAS XMI. For receiving, it has to be deserialized back. There are two main libraries available that manage CAS handling, one is the UIMA Java SDK, the other one dkpro-cassis (Python).
-
+This section describes the External Recommender API for INCEpTION. An external recommender is a
+classifier whose functionality is exposed via a HTTP web service. It can predict annotations for
+given documents and optionally be trained on new data. This document describes the endpoints a web
+service needs to expose so it can be used with INCEpTION. The documents that are exchanged are in
+form of a UIMA CAS. For sending, they have to be serialized to CAS XMI. For receiving, it has to be
+deserialized back. There are two main libraries available that manage CAS handling, one is the UIMA
+Java SDK, the other one dkpro-cassis (Python).
 
 === Version information
 [%hardbreaks]

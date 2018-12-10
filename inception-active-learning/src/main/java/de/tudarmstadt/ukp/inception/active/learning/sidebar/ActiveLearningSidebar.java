@@ -303,7 +303,8 @@ public class ActiveLearningSidebar
                 actionShowSelectedDocument(aTarget, documentService
                         .getSourceDocument(this.getModelObject().getProject(),
                             currentRecommendation.getDocumentName()),
-                    currentRecommendation.getOffset().getBeginCharacter());
+                    currentRecommendation.getOffset().getBeginCharacter(),
+                    currentRecommendation.getOffset().getEndCharacter());
             }
             catch (IOException e) {
                 LOG.error("Unable to switch to document : {} ", e.getMessage(), e);
@@ -466,7 +467,8 @@ public class ActiveLearningSidebar
         actionShowSelectedDocument(aTarget, documentService
                 .getSourceDocument(this.getModelObject().getProject(),
                     userStateModel.getObject().getCurrentRecommendation().getDocumentName()),
-            userStateModel.getObject().getCurrentRecommendation().getOffset().getBeginCharacter());
+            userStateModel.getObject().getCurrentRecommendation().getOffset().getBeginCharacter(),
+            userStateModel.getObject().getCurrentRecommendation().getOffset().getEndCharacter());
         highlightCurrentRecommendation(aTarget);
     }
 
@@ -560,8 +562,8 @@ public class ActiveLearningSidebar
         record.setSourceDocument(sourceDoc);
         record.setTokenText(currentRecommendation.getCoveredText());
         record.setUserAction(userAction);
-        record.setOffsetTokenBegin(currentRecommendation.getOffset().getBeginToken());
-        record.setOffsetTokenEnd(currentRecommendation.getOffset().getEndToken());
+        record.setOffsetTokenBegin(-1);
+        record.setOffsetTokenEnd(-1);
         record.setOffsetCharacterBegin(currentRecommendation.getOffset().getBeginCharacter());
         record.setOffsetCharacterEnd(currentRecommendation.getOffset().getEndCharacter());
         record.setAnnotation(annotationValue);
@@ -735,7 +737,7 @@ public class ActiveLearningSidebar
         throws IOException
     {
         actionShowSelectedDocument(aTarget, record.getSourceDocument(),
-            record.getOffsetCharacterBegin());
+            record.getOffsetCharacterBegin(), record.getOffsetCharacterEnd());
         JCas jCas = this.getJCasProvider().get();
 
         if (record.getUserAction().equals(LearningRecordUserAction.REJECTED)) {
@@ -807,7 +809,7 @@ public class ActiveLearningSidebar
             // methods provided by the AnnotationActionHandler and these operate ONLY on the
             // currently visible/selected document.
             actionShowSelectedDocument(aTarget, aRecord.getSourceDocument(),
-                aRecord.getOffsetCharacterBegin());
+                aRecord.getOffsetCharacterBegin(), aRecord.getOffsetCharacterEnd());
             AnnotationDocument annoDoc = documentService
                 .createOrGetAnnotationDocument(aRecord.getSourceDocument(),
                     userDao.get(aRecord.getUser()));
@@ -931,8 +933,8 @@ public class ActiveLearningSidebar
         record.setSourceDocument(eventState.getDocument());
         record.setTokenText(acceptedRecommendation.getCoveredText());
         record.setUserAction(LearningRecordUserAction.ACCEPTED);
-        record.setOffsetTokenBegin(acceptedRecommendation.getOffset().getBeginToken());
-        record.setOffsetTokenEnd(acceptedRecommendation.getOffset().getEndToken());
+        record.setOffsetTokenBegin(-1);
+        record.setOffsetTokenEnd(-1);
         record.setOffsetCharacterBegin(acceptedRecommendation.getOffset().getBeginCharacter());
         record.setOffsetCharacterEnd(acceptedRecommendation.getOffset().getEndCharacter());
         record.setAnnotation(acceptedRecommendation.getLabel());
