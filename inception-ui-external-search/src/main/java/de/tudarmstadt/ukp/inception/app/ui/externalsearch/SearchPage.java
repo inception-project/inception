@@ -285,7 +285,7 @@ public class SearchPage extends ApplicationPageBase
 
             add(new Label("uri", uri));
             add(new Label("score", score));
-            add(new Label("highlight", highlight).setEscapeModelStrings(false));
+            add(new Label("highlight", highlight));
             if (documentService.existsSourceDocument(project, documentTitle)) {
                 add(new Label("importStatus", " imported "));
             }
