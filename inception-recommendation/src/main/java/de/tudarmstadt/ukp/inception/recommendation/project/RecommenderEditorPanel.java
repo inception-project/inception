@@ -135,7 +135,7 @@ public class RecommenderEditorPanel
 
         
         nameField = new TextField<>(MID_NAME, String.class);
-        nameField.add(new RecommenderExistsValidator(recommenderModel));
+        nameField.add(new RecommenderExistsValidator(projectModel, recommenderModel));
         nameField.setRequired(true);
         form.add(nameField);
         
@@ -471,20 +471,23 @@ public class RecommenderEditorPanel
     {
         private static final long serialVersionUID = 8604561828541964271L;
 
-        private IModel<Recommender> recommenderModel;
+        private IModel<Recommender> recommender;
+        private IModel<Project> project;
         
-        public RecommenderExistsValidator(IModel<Recommender> aModel)
+        public RecommenderExistsValidator(IModel<Project> aProject,
+                IModel<Recommender> aRecommender)
         {
-            recommenderModel = aModel;
+            recommender = aRecommender;
+            project = aProject;
         }
         
         @Override
         public void validate(IValidatable<String> aValidatable)
         {
             String newName = aValidatable.getValue();
-            Recommender currentRecommender = recommenderModel.getObject();
+            Recommender currentRecommender = recommender.getObject();
             Optional<Recommender> recommenderWithNewName = recommendationService
-                    .getRecommender(currentRecommender.getProject(), newName);
+                    .getRecommender(project.getObject(), newName);
             // Either there should be no recommender with the new name already existing or it should
             // be the recommender we are currently editing (i.e. the name has not changed)
             if (
