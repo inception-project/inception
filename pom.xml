@@ -20,7 +20,7 @@
   <parent>
     <groupId>org.dkpro</groupId>
     <artifactId>dkpro-parent-pom</artifactId>
-    <version>18</version>
+    <version>20</version>
   </parent>
   <groupId>de.tudarmstadt.ukp.inception.app</groupId>
   <artifactId>inception-app</artifactId>
@@ -518,6 +518,14 @@
         <groupId>nl.knaw.meertens.mtas</groupId>
         <artifactId>mtas</artifactId>
         <version>${mtas.version}</version>
+        <exclusions>
+          <!-- We do not use MTAS with Solr -->
+          <!-- Solr depends on jdk.tools via Hadoop which is not available on recent JDKs-->
+          <exclusion>
+            <groupId>org.apache.solr</groupId>
+            <artifactId>solr-core</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
     
       <dependency>
@@ -631,7 +639,7 @@
       <dependency>
         <groupId>com.h2database</groupId>
         <artifactId>h2</artifactId>
-        <version>1.3.160</version>
+        <version>1.4.197</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>

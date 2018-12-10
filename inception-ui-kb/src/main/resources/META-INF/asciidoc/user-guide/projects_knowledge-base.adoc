@@ -1,4 +1,4 @@
-== Knowledge Bases
+= Knowledge Bases
 
 In the *Projects Settings*, switch to the *Knowledge Bases* tab, then click *New…* on the bottom
  and a dialogue box shows as in the figure below.
@@ -17,7 +17,7 @@ For remote KBs, INCEpTION provides the user with some pre-configured knowledge b
 [.thumb]
 image::kb2.png[align="center"]
 
-=== Schema mapping
+== Schema mapping
 
 Different types of knowledge base schemata are supported via a configurable mapping mechanism. The user can choose one of the pre-configured mapping or provide her own custom defined mapping as shown in the screenshot below. 
 
@@ -26,7 +26,7 @@ In the advanced settings, the user can leverage this feature of KB settings when
 [.thumb]
 image::kb3.png[align="center"]
 
-=== Full text search
+== Full text search
 
 Full text search in knowledge bases enables searching for entities by their textual context, e.g. their label. This is a prerequisite for some advanced features such as re-ranking linking candidates during entity linking. Two full text search modes are supported:
 

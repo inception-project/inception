@@ -60,17 +60,20 @@ public class RecommenderExporter implements ProjectExporter {
     }
 
     @Override
-    public List<Class<? extends ProjectExporter>> getImportDependencies() {
+    public List<Class<? extends ProjectExporter>> getImportDependencies()
+    {
         return asList(LayerExporter.class);
     }
 
     @Override
-    public List<Class<? extends ProjectExporter>> getExportDependencies() {
+    public List<Class<? extends ProjectExporter>> getExportDependencies()
+    {
         return asList(LayerExporter.class);
     }
 
     @Override
-    public void exportData(ProjectExportRequest aRequest, ExportedProject aExProject, File aFile) {
+    public void exportData(ProjectExportRequest aRequest, ExportedProject aExProject, File aFile)
+    {
         Project project = aRequest.getProject();
 
         List<ExportedRecommender> exportedRecommenders = new ArrayList<>();
@@ -85,6 +88,8 @@ public class RecommenderExporter implements ProjectExporter {
             exportedRecommender.setTool(recommender.getTool());
             exportedRecommender.setSkipEvaluation(recommender.isSkipEvaluation());
             exportedRecommender.setMaxRecommendations(recommender.getMaxRecommendations());
+            exportedRecommender.setStatesIgnoredForTraining(
+                    recommender.getStatesIgnoredForTraining());
             exportedRecommender.setTraits(recommender.getTraits());
             exportedRecommenders.add(exportedRecommender);
         }
@@ -110,6 +115,8 @@ public class RecommenderExporter implements ProjectExporter {
             recommender.setTool(exportedRecommender.getTool());
             recommender.setSkipEvaluation(exportedRecommender.isSkipEvaluation());
             recommender.setMaxRecommendations(exportedRecommender.getMaxRecommendations());
+            recommender.setStatesIgnoredForTraining(
+                    exportedRecommender.getStatesIgnoredForTraining());
             recommender.setTraits(exportedRecommender.getTraits());
 
             // The value for max recommendations must be between 1 and 100
@@ -123,7 +130,7 @@ public class RecommenderExporter implements ProjectExporter {
                 // than our instance, we just reset it to our max cap.
                 recommender.setMaxRecommendations(MAX_RECOMMENDATIONS_CAP);
             }
-            
+
             String layerName = exportedRecommender.getLayerName();
             AnnotationLayer layer = annotationService.getLayer(layerName, aProject);
             recommender.setLayer(layer);
