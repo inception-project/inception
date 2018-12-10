@@ -336,7 +336,7 @@ public class SearchPage extends ApplicationPageBase
 
             String documentTitle = result.getDocumentTitle();
 
-            AjaxLink link = new AjaxLink("importLink")
+            AjaxLink<Void> link = new AjaxLink<Void>("importLink")
             {
                 @Override
                 public void onClick(AjaxRequestTarget target) {
