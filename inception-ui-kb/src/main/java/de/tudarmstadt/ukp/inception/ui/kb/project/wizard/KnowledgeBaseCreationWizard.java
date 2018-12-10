@@ -396,16 +396,18 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
 
                     String accessUrl = selectedKnowledgeBaseProfile.getAccess().getAccessUrl();
 
+                    FileUploadDownloadHelper fileUploadDownloadHelper =
+                        new FileUploadDownloadHelper(getApplication());
+
                     if (!accessUrl.startsWith(CLASSPATH_PREFIX)) {
-                        FileUploadDownloadHelper fileUploadDownloadHelper =
-                            new FileUploadDownloadHelper(getApplication());
                         File tmpFile = fileUploadDownloadHelper
                             .writeFileDownloadToTemporaryFile(accessUrl, model);
                         model.getObject().getFiles().add(tmpFile);
                     }
                     else {
                         // import from classpath
-                        File kbFile = kbService.readKbFileFromClassPathResource(accessUrl);
+                        File kbFile = fileUploadDownloadHelper
+                            .writeClasspathResourceToTemporaryFile(accessUrl, model);
                         model.getObject().getFiles().add(kbFile);
                     }
 

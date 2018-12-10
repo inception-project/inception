@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.kb;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -540,14 +539,6 @@ public interface KnowledgeBaseService
      * the pre-defined ones
      */
     SchemaProfile checkSchemaProfile(KnowledgeBase aKb);
-
-    /**
-     * Reads a knowledge base file from the classpath and returns the file handle
-     * @param aLocation location of the knowledge base resource
-     * @return the file handle of the knowledge base resource
-     * @throws IOException
-     */
-    File readKbFileFromClassPathResource(String aLocation) throws IOException;
 
     /**
      * Checks whether a property is a base property
