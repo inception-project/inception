@@ -19,51 +19,38 @@
 <html xmlns:wicket="http://wicket.apache.org">
 <body>
   <wicket:panel>
-    <table id="bd" class="table table-striped table-condensed">
-      <tr style="display: table-row;">
-        <td>
-          <span wicket:id="rowNum" class="badge"></span>
-        </td>
-        <td>
-          <table style="border: none;">
+    <table id="bd">
+      <tr>
+        <td style="width: 100%;">
+          <table>
             <tr>
-              <td><b>Text ID:</b>&nbsp;&nbsp;</td>
-              <td style="display: table-cell; text-align: left;">
+              <td><b>Text ID:</b></td>
+              <td>
                 <a href="#" wicket:id="documentDetails" class="btn-link h4">
-                  <span wicket:id="textId"></span>
+                  <span wicket:id="textId"/>
                 </a>
               </td>
             </tr>
             <tr>
-              <td><b>URI:</b>&nbsp;&nbsp;</td>
-              <td wicket:id="uri" style="display: table-cell; text-align: left;" class="h5" ></td>
+              <td><b>URI:</b></td>
+              <td><span wicket:id="uri"/></td>
             </tr>
             <tr>
-              <td><b>Highlight:</b>&nbsp;&nbsp;</td>
-              <td style="display: table-cell; text-align: left;" >
-                  <span wicket:id="highlight"></span>
-              </td>
-            </tr>
-            <tr>
-              <td><b>Score:</b>&nbsp;&nbsp;</td>
-              <td style="display: table-cell; text-align: left;" >
-                <span wicket:id="score"></span>
-              </td>
-            </tr>
-            <tr>
+              <td><b>Score:</b></td>
               <td>
-                <b>Import Status:</b>&nbsp;&nbsp;
-              </td>
-              <td style="display: table-cell; text-align: left;">
-                <span wicket:id="importStatus" class="label label-info"></span>
+                <span wicket:id="score"/>
               </td>
             </tr>
             <tr>
-              <td>
-                <div wicket:id="importDocument"></div>
+              <td colspan="3">
+                <span wicket:id="highlight"/>
               </td>
             </tr>
           </table>
+        </td>
+        <td>
+          <div wicket:id="importStatus" class="label label-info"/>
+          <div wicket:id="importDocument"></div>
         </td>
       </tr>
     </table>

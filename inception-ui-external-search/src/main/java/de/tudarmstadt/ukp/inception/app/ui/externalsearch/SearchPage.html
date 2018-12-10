@@ -35,10 +35,18 @@
 </head>
 <body>
   <wicket:extend>
-    <div wicket:id="mainContainer" class="flex-content flex-v-container flex-gutter">
+    <div class="flex-content flex-v-container flex-gutter">
       <div class="flex-h-container flex-gutter">
-        <form class="flex-content" wicket:id="searchForm">
-          <div class="input-group mb-3">
+        <form wicket:id="repositorySelectionForm" style="flex: 0;">
+          <span class="input-group">
+            <span class="input-group-addon">
+              <i class="fa fa-database"></i>
+            </span>
+            <select wicket:id="repositoryCombo" class="form-control" ></select>
+          </span>
+        </form>
+        <form wicket:id="searchForm" class="flex-content">
+          <div class="input-group">
             <span class="input-group-addon">
               <i class="fa fa-search"></i>
             </span>
@@ -48,16 +56,8 @@
             </div>
           </div>
         </form>
-        <form wicket:id="repositorySelectionForm" style="flex: 0;">
-          <div class="input-group">
-            <span class="input-group-addon">
-              <i class="fa fa-database"></i>
-            </span>
-            <select wicket:id="repositoryCombo" class="form-control" ></select>
-          </div>
-        </form>
       </div>
-      <div class="scrolling flex-content flex-h-container">
+      <div wicket:id="dataTableContainer" class="scrolling flex-content flex-h-container">
         <table wicket:id="resultsTable" class="table" cellspacing="0" >
           [Results table]
         </table>

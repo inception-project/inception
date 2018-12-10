@@ -40,9 +40,7 @@ import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
-import org.apache.wicket.markup.html.form.SubmitLink;
 import org.apache.wicket.markup.html.form.TextField;
-import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.model.IModel;
@@ -64,6 +62,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxSubmitLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchService;
@@ -85,12 +84,11 @@ public class SearchPage extends ApplicationPageBase
     private @SpringBean UserDao userRepository;
     private @SpringBean ImportExportService importExportService;
 
-    private final WebMarkupContainer mainContainer = new WebMarkupContainer("mainContainer");
+    private WebMarkupContainer dataTableContainer;
 
-    private ListView<ExternalSearchResult> resultList;
     private List<ExternalSearchResult> results = new ArrayList<ExternalSearchResult>();
 
-    private Model<String> targetQuery = Model.of("");
+    private IModel<String> targetQuery = Model.of("");
 
     private IModel<List<DocumentRepository>> repositoriesModel;
 
@@ -119,19 +117,17 @@ public class SearchPage extends ApplicationPageBase
         repositoriesModel = LoadableDetachableModel.of(() -> externalSearchService
                         .listDocumentRepositories(project));
 
-        add(mainContainer);
 
         DocumentRepositorySelectionForm projectSelectionForm = new DocumentRepositorySelectionForm(
                 "repositorySelectionForm");
-        mainContainer.add(projectSelectionForm);
+        add(projectSelectionForm);
 
         SearchForm searchForm = new SearchForm("searchForm");
-
-        mainContainer.add(searchForm);
+        add(searchForm);
 
         List<IColumn<ExternalSearchResult, String>> columns = new ArrayList<>();
 
-        columns.add(new AbstractColumn<ExternalSearchResult, String>(new Model<>("Result"))
+        columns.add(new AbstractColumn<ExternalSearchResult, String>(new Model<>("Results"))
         {
             @Override
             public void populateItem(Item<ICellPopulator<ExternalSearchResult>> cellItem,
@@ -148,13 +144,14 @@ public class SearchPage extends ApplicationPageBase
         dataProvider = new ExternalResultDataProvider(
                 externalSearchService, userRepository.getCurrentUser(), currentRepository, "merck");
 
+        dataTableContainer = new WebMarkupContainer("dataTableContainer");
+        dataTableContainer.setOutputMarkupId(true);
+        add(dataTableContainer);
+
         DataTable<ExternalSearchResult, String> resultTable = new DefaultDataTable<>("resultsTable",
                 columns, dataProvider, 8);
 
-        mainContainer.add(resultTable);
-
-        mainContainer.setOutputMarkupId(true);
-
+        dataTableContainer.add(resultTable);
     }
 
     private void importDocument(String aFileName, String aText)
@@ -179,36 +176,31 @@ public class SearchPage extends ApplicationPageBase
     }
 
     private class SearchForm
-        extends Form
+        extends Form<Void>
     {
         private static final long serialVersionUID = 2186231514180399862L;
-        private TextField<String> queryField;
 
         public SearchForm(String id)
         {
             super(id);
+            add(new TextField<>("queryInput", targetQuery, String.class));
+            LambdaAjaxSubmitLink searchLink = new LambdaAjaxSubmitLink("submitSearch",
+                    this::actionSearch);
+            add(searchLink);
+            setDefaultButton(searchLink);
+        }
+        
+        private void actionSearch(AjaxRequestTarget aTarget, Form aForm)
+        {
+            if (targetQuery.getObject() == null) {
+                targetQuery.setObject("*.*");
+            }
 
-            queryField = new TextField<String>("queryInput", targetQuery);
+            searchDocuments(targetQuery.getObject());
 
-            SubmitLink submitSearch = new SubmitLink("submitSearch")
-            {
-                private static final long serialVersionUID = -8353553433583302935L;
-
-                @Override
-                public void onSubmit()
-                {
-                    if (targetQuery.getObject() == null) {
-                        targetQuery.setObject(new String("*.*"));
-                    }
-
-                    searchDocuments(targetQuery.getObject());
-
-                    dataProvider.searchDocuments(targetQuery.getObject());
-                }
-            };
-
-            add(queryField);
-            add(submitSearch);
+            dataProvider.searchDocuments(targetQuery.getObject());
+            
+            aTarget.add(dataTableContainer);
         }
     }
 
@@ -281,7 +273,6 @@ public class SearchPage extends ApplicationPageBase
             String uri = result.getUri();
             String score = result.getScore().toString();
             String highlight = result.getHighlights().get(0);
-            add(new Label("rowNum", rowNumber));
 
             LambdaAjaxLink link = new LambdaAjaxLink("documentDetails", _target -> {
                 PageParameters pageParameters = new PageParameters()
