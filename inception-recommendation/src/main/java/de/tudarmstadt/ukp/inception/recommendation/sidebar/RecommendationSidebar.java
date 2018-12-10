@@ -26,9 +26,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map.Entry;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.apache.wicket.feedback.IFeedback;
@@ -67,6 +66,8 @@ public class RecommendationSidebar
     extends AnnotationSidebar_ImplBase
 {
     private static final long serialVersionUID = 4306746527837380863L;
+    
+    private static final String CHART_CONTAINER = "chart-container";
 
     private Logger log = LoggerFactory.getLogger(getClass());
     private WebComponent chartContainer;
@@ -74,23 +75,23 @@ public class RecommendationSidebar
     private @SpringBean RecommendationService recommendationService;
     private @SpringBean EventRepository eventRepo;
 
-    IModel<AnnotatorState> aModel;
+    IModel<AnnotatorState> model;
 
     int maxPointsToPlot = 50;
-
+    
     public RecommendationSidebar(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, JCasProvider aJCasProvider,
             AnnotationPage aAnnotationPage)
     {
         super(aId, aModel, aActionHandler, aJCasProvider, aAnnotationPage);
-        this.aModel = aModel;
-        IModel<Preferences> model = LambdaModelAdapter.of(
+        this.model = aModel;
+        IModel<Preferences> modelPreferences = LambdaModelAdapter.of(
             () -> recommendationService.getPreferences(aModel.getObject().getUser(),
                     aModel.getObject().getProject()),
             (v) -> recommendationService.setPreferences(aModel.getObject().getUser(),
                     aModel.getObject().getProject(), v));
 
-        Form<Preferences> form = new Form<>("form", CompoundPropertyModel.of(model));
+        Form<Preferences> form = new Form<>("form", CompoundPropertyModel.of(modelPreferences));
 
         form.add(new NumberTextField<Integer>("maxPredictions", Integer.class).setMinimum(1)
                 .setMaximum(10).setStep(1));
@@ -102,7 +103,7 @@ public class RecommendationSidebar
 
         add(form);
 
-        chartContainer = new Label("chart-container");
+        chartContainer = new Label(CHART_CONTAINER);
         chartContainer.setOutputMarkupId(true);
         add(chartContainer);
     }
@@ -126,58 +127,55 @@ public class RecommendationSidebar
     @OnEvent
     public void onRenderAnnotations(RenderAnnotationsEvent aEvent)
     {
+        log.info("rendered annotation event");
+
+        StringBuilder chartType = new StringBuilder();
+
+        HashMap<String, List<Double>> recommenderScoreMap = getLatestScores(aEvent);
+
+        // iterate over the recommender score map to create data arrays to feed to the
+        // c3 graph
+        StringBuilder dataColumns = new StringBuilder();
+
+        recommenderScoreMap.forEach((key, value) -> {
+
+            String data = ((ArrayList<Double>) value).stream().map(Object::toString)
+                    .collect(Collectors.joining(", "));
+
+            // append recommender name
+            dataColumns.append("['");
+            String[] recommenderClass = key.toString().split("\\.");
+            String recommenderName = recommenderClass[recommenderClass.length - 1];
+
+            // define chart type for the recommender
+            chartType.append(recommenderName);
+            chartType.append(": 'step', ");
+
+            dataColumns.append(recommenderName);
+
+            // append data columns
+            dataColumns.append("', ");
+            dataColumns.append(data);
+            dataColumns.append("]");
+            dataColumns.append(",");
+        });
+
+       
         try {
-            log.info("rendered annotation event");
-
-            StringBuilder chartType = new StringBuilder();
-
-            HashMap<String, List<Double>> recommenderScoreMap = getLatestScores(aEvent);
-
-            // iterate over the recommender score map to create data arrays to feed to the
-            // c3 graph
-            StringBuilder dataColumns = new StringBuilder();
-            Iterator<Entry<String, List<Double>>> it = recommenderScoreMap.entrySet().iterator();
-            while (it.hasNext()) {
-                Entry<String, List<Double>> pair = it.next();
-
-                String jsonString = toJsonString(pair);
-                jsonString = jsonString.replaceAll("\".*?\"", "");
-                jsonString = jsonString.replaceAll("'.*?'", "");
-                jsonString = jsonString.replaceAll("`.*?`", "");
-
-                String data = substring(jsonString, 3, -2);
-
-                // append recommender name
-                dataColumns.append("['");
-                String[] recommenderClass = pair.getKey().toString().split("\\.");
-                String recommenderName = recommenderClass[recommenderClass.length - 1];
-
-                // define chart type for the recommender
-                chartType.append(recommenderName);
-                chartType.append(": 'step', ");
-
-                dataColumns.append(recommenderName);
-
-                // append data columns
-                dataColumns.append("', ");
-                dataColumns.append(data);
-                dataColumns.append("]");
-                dataColumns.append(",");
-
-                // avoids a ConcurrentModificationException
-                it.remove();
-            }
-
             String javascript = createJSScript(dataColumns.toString(), chartType.toString());
-            log.info(javascript);
+            log.debug("Rendering Recommender Evaluation Chart: " + javascript);
 
             aEvent.getRequestHandler().prependJavaScript(javascript);
+
         }
         catch (IOException e) {
             log.error("Unable to render chart", e);
             error("Unable to render chart: " + e.getMessage());
             aEvent.getRequestHandler().addChildren(getPage(), IFeedback.class);
         }
+        
+        
+
     }
 
     /**
@@ -185,21 +183,21 @@ public class RecommendationSidebar
      * dataColumns: ['recommender1', 1.0, 2.0, 3.0 ], ['recommender2', 2.0, 3.0, 4.0]. Also creates
      * an xaxix of a sequence from 0 to maximumNumberOfPoints (50)
      * 
-     * @param dataColumns
-     * @param chartType
+     * @param aDataColumns
+     * @param aChartType
      * @return
      * @throws IOException
      */
-    private String createJSScript(String dataColumns, String chartType) throws IOException
+    private String createJSScript(String aDataColumns, String aChartType) throws IOException
     {
         int[] intArray = IntStream.range(0, maxPointsToPlot).map(i -> i).toArray();
 
         String xaxisValues = "[ 'x' ," + substring(Arrays.toString(intArray), 1, -1) + "]";
-        String data = toJsonString(dataColumns).substring(1, dataColumns.toString().length());
+        String data = toJsonString(aDataColumns).substring(1, aDataColumns.toString().length());
 
         // bind data to chart container
         String javascript = "var chart=c3.generate({bindto:'#" + chartContainer.getMarkupId()
-                + "',data:{ x:'x', columns:[" + xaxisValues + " ," + data + "],types:{" + chartType
+                + "',data:{ x:'x', columns:[" + xaxisValues + " ," + data + "],types:{" + aChartType
                 + "}}});;";
         return javascript;
     }
@@ -214,8 +212,8 @@ public class RecommendationSidebar
         // value of the event
         String eventType = "RecommenderEvaluationResultEvent";
 
-        List<LoggedEvent> loggedEvents = eventRepo.listLoggedEvents(aModel.getObject().getProject(),
-                aModel.getObject().getUser().getUsername(), eventType, maxPointsToPlot);
+        List<LoggedEvent> loggedEvents = eventRepo.listLoggedEvents(model.getObject().getProject(),
+                model.getObject().getUser().getUsername(), eventType, maxPointsToPlot);
 
         // we want to show the latest record on the right side of the graph
         Collections.reverse(loggedEvents);
@@ -255,20 +253,20 @@ public class RecommendationSidebar
     /**
      * adds the score to the given map, if the value of the score is valid/finite
      * 
-     * @param recommenderScoreMap
-     * @param score
+     * @param aRecommenderScoreMap
+     * @param aScore
      * @param tool
      * @param list
      */
-    private void addScoreToMap(HashMap<String, List<Double>> recommenderScoreMap, Double score,
+    private void addScoreToMap(HashMap<String, List<Double>> aRecommenderScoreMap, Double aScore,
             String tool, List<Double> list)
     {
         // sometimes score values NaN. Can result into error while rendering the graph on UI
-        if (!Double.isFinite(score)) {
+        if (!Double.isFinite(aScore)) {
             return;
         }
 
-        list.add(score);
-        recommenderScoreMap.put(tool, list);
+        list.add(aScore);
+        aRecommenderScoreMap.put(tool, list);
     }
 }
