@@ -119,7 +119,7 @@ public class ProcessTest
         }
         
         // Assertions checking that proper data has been extracted
-        assertThat(scores).hasSize(1);
+        assertThat(scores).hasSize(2);
         assertThat(scores).extracting(Pair::getValue).allMatch(score -> score > 0);
     }
     
