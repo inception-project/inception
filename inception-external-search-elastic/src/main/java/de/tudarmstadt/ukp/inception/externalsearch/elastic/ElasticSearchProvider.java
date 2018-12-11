@@ -127,7 +127,7 @@ public class ElasticSearchProvider
             }
             if (hit.getHighlight() != null) {
                 // There are highlights, set them in the result
-                ArrayList<String> highlights = new ArrayList<String>();
+                List<String> highlights = new ArrayList<>();
                 highlights.add(hit.getHighlight().getDoctext().get(0));
                 result.setHighlights(highlights);
             }
@@ -137,6 +137,7 @@ public class ElasticSearchProvider
         return results;
     }
 
+    @Override
     public ExternalSearchResult getDocumentById(Object aProperties, String aId)
     {
         ElasticSearchProviderTraits properties = (ElasticSearchProviderTraits) aProperties; 
