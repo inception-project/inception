@@ -88,7 +88,8 @@ public class RecommenderExporter implements ProjectExporter {
             exportedRecommender.setTool(recommender.getTool());
             exportedRecommender.setSkipEvaluation(recommender.isSkipEvaluation());
             exportedRecommender.setMaxRecommendations(recommender.getMaxRecommendations());
-            exportedRecommender.setStatesForTraining(recommender.getStatesIgnoredForTraining());
+            exportedRecommender.setStatesIgnoredForTraining(
+                    recommender.getStatesIgnoredForTraining());
             exportedRecommender.setTraits(recommender.getTraits());
             exportedRecommenders.add(exportedRecommender);
         }
