@@ -21,7 +21,6 @@ import java.util.ArrayList;
 
 import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.Session;
-import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -37,14 +36,13 @@ import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
 import de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData;
 
 @MountPath("/documentDetails.html")
-public class DocumentDetailsPage extends ApplicationPageBase
+public class DocumentDetailsPage
+    extends ApplicationPageBase
 {
     public static final String DOCUMENT_TITLE = "title";
 
     private @SpringBean ExternalSearchService externalSearchService;
     private @SpringBean UserDao userRepository;
-
-    private final WebMarkupContainer mainContainer = new WebMarkupContainer("mainContainer");
 
     private DocumentRepository currentRepository;
     private User currentUser;
@@ -62,7 +60,7 @@ public class DocumentDetailsPage extends ApplicationPageBase
         ArrayList<DocumentRepository> repositories;
 
         repositories = (ArrayList<DocumentRepository>) externalSearchService
-            .listDocumentRepositories(project);
+                .listDocumentRepositories(project);
 
         if (repositories.size() > 0) {
             currentRepository = repositories.get(0);
@@ -71,32 +69,24 @@ public class DocumentDetailsPage extends ApplicationPageBase
             currentRepository = null;
         }
 
-        renderDocument(aParameters);
-
-        add(mainContainer);
-    }
-
-    protected void renderDocument(PageParameters aParameters)
-    {
         StringValue documentTitleStringValue = aParameters.get(DOCUMENT_TITLE);
 
         if (documentTitleStringValue == null) {
             abort();
         }
-        else {
-            String documentTitle = documentTitleStringValue.toString();
-            mainContainer.add(new Label("title", documentTitle));
 
-            String documentText = externalSearchService.getDocumentById(currentUser,
-                currentRepository, documentTitle).getText();
-            Label textElement = new Label("text", documentText);
-            textElement.setOutputMarkupId(true);
-            textElement.setEscapeModelStrings(false);
-            mainContainer.add(textElement);
-        }
+        String documentTitle = documentTitleStringValue.toString();
+        add(new Label("title", documentTitle));
+
+        String documentText = externalSearchService
+                .getDocumentById(currentUser, currentRepository, documentTitle).getText();
+        Label textElement = new Label("text", documentText);
+        textElement.setOutputMarkupId(true);
+        add(textElement);
     }
 
-    private void abort() {
+    private void abort()
+    {
         throw new RestartResponseException(getApplication().getHomePage());
     }
 }

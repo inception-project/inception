@@ -40,9 +40,7 @@ import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
-import org.apache.wicket.markup.html.form.SubmitLink;
 import org.apache.wicket.markup.html.form.TextField;
-import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.model.IModel;
@@ -55,15 +53,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wicketstuff.annotation.mount.MountPath;
 
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxSubmitLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchService;
@@ -77,25 +76,23 @@ public class SearchPage extends ApplicationPageBase
 
     private static final Logger LOG = LoggerFactory.getLogger(SearchPage.class);
 
+    private static final String PLAIN_TEXT = "text";
+
     private @SpringBean DocumentService documentService;
     private @SpringBean ProjectService projectService;
     private @SpringBean ExternalSearchService externalSearchService;
     private @SpringBean UserDao userRepository;
     private @SpringBean ImportExportService importExportService;
 
-    final WebMarkupContainer mainContainer = new WebMarkupContainer("mainContainer");
+    private WebMarkupContainer dataTableContainer;
 
-    final String PLAIN_TEXT = "text";
+    private List<ExternalSearchResult> results = new ArrayList<ExternalSearchResult>();
 
-    private ListView<ExternalSearchResult> resultList;
-    private ArrayList<ExternalSearchResult> results = new ArrayList<ExternalSearchResult>();
+    private IModel<String> targetQuery = Model.of("");
 
-    Model<String> targetQuery = Model.of("");
-
-    private IModel<ArrayList<DocumentRepository>> repositoriesModel;
+    private IModel<List<DocumentRepository>> repositoriesModel;
 
     private DocumentRepository currentRepository;
-    private User currentUser;
     private Project project;
 
     ExternalResultDataProvider dataProvider;
@@ -107,11 +104,7 @@ public class SearchPage extends ApplicationPageBase
             abort();
         }
 
-        currentUser = userRepository.getCurrentUser();
-
-        ArrayList<DocumentRepository> repositories;
-
-        repositories = (ArrayList<DocumentRepository>) externalSearchService
+        List<DocumentRepository> repositories = externalSearchService
                 .listDocumentRepositories(project);
 
         if (repositories.size() > 0) {
@@ -121,38 +114,20 @@ public class SearchPage extends ApplicationPageBase
             currentRepository = null;
         }
 
-        repositoriesModel = new LoadableDetachableModel<ArrayList<DocumentRepository>>()
-        {
-            /**
-             *
-             */
-            private static final long serialVersionUID = 1L;
+        repositoriesModel = LoadableDetachableModel.of(() -> externalSearchService
+                        .listDocumentRepositories(project));
 
-            @Override
-            protected ArrayList<DocumentRepository> load()
-            {
-                ArrayList<DocumentRepository> documentRepositories;
-                // Load user's projects
-                documentRepositories = (ArrayList<DocumentRepository>) externalSearchService
-                        .listDocumentRepositories(project);
-                return documentRepositories;
-            }
-        };
-
-        add(mainContainer);
 
         DocumentRepositorySelectionForm projectSelectionForm = new DocumentRepositorySelectionForm(
                 "repositorySelectionForm");
-        mainContainer.add(projectSelectionForm);
+        add(projectSelectionForm);
 
         SearchForm searchForm = new SearchForm("searchForm");
-
-
-        mainContainer.add(searchForm);
+        add(searchForm);
 
         List<IColumn<ExternalSearchResult, String>> columns = new ArrayList<>();
 
-        columns.add(new AbstractColumn<ExternalSearchResult, String>(new Model<>("Result"))
+        columns.add(new AbstractColumn<ExternalSearchResult, String>(new Model<>("Results"))
         {
             @Override
             public void populateItem(Item<ICellPopulator<ExternalSearchResult>> cellItem,
@@ -167,15 +142,16 @@ public class SearchPage extends ApplicationPageBase
         });
 
         dataProvider = new ExternalResultDataProvider(
-                externalSearchService, currentUser, currentRepository, "merck");
+                externalSearchService, userRepository.getCurrentUser(), currentRepository, "merck");
+
+        dataTableContainer = new WebMarkupContainer("dataTableContainer");
+        dataTableContainer.setOutputMarkupId(true);
+        add(dataTableContainer);
 
         DataTable<ExternalSearchResult, String> resultTable = new DefaultDataTable<>("resultsTable",
                 columns, dataProvider, 8);
 
-        mainContainer.add(resultTable);
-
-        mainContainer.setOutputMarkupId(true);
-
+        dataTableContainer.add(resultTable);
     }
 
     private void importDocument(String aFileName, String aText)
@@ -200,36 +176,31 @@ public class SearchPage extends ApplicationPageBase
     }
 
     private class SearchForm
-        extends Form
+        extends Form<Void>
     {
         private static final long serialVersionUID = 2186231514180399862L;
-        private TextField<String> queryField;
 
         public SearchForm(String id)
         {
             super(id);
+            add(new TextField<>("queryInput", targetQuery, String.class));
+            LambdaAjaxSubmitLink searchLink = new LambdaAjaxSubmitLink("submitSearch",
+                    this::actionSearch);
+            add(searchLink);
+            setDefaultButton(searchLink);
+        }
+        
+        private void actionSearch(AjaxRequestTarget aTarget, Form aForm)
+        {
+            if (targetQuery.getObject() == null) {
+                targetQuery.setObject("*.*");
+            }
 
-            queryField = new TextField<String>("queryInput", targetQuery);
+            searchDocuments(targetQuery.getObject());
 
-            SubmitLink submitSearch = new SubmitLink("submitSearch")
-            {
-                private static final long serialVersionUID = -8353553433583302935L;
-
-                @Override
-                public void onSubmit()
-                {
-                    if (targetQuery.getObject() == null) {
-                        targetQuery.setObject(new String("*.*"));
-                    }
-
-                    searchDocuments(targetQuery.getObject());
-
-                    dataProvider.searchDocuments(targetQuery.getObject());
-                }
-            };
-
-            add(queryField);
-            add(submitSearch);
+            dataProvider.searchDocuments(targetQuery.getObject());
+            
+            aTarget.add(dataTableContainer);
         }
     }
 
@@ -238,8 +209,8 @@ public class SearchPage extends ApplicationPageBase
         results.clear();
 
         try {
-            for (ExternalSearchResult result : externalSearchService.query(currentUser,
-                    currentRepository, aQuery)) {
+            for (ExternalSearchResult result : externalSearchService
+                    .query(userRepository.getCurrentUser(), currentRepository, aQuery)) {
                 results.add(result);
             }
         }
@@ -258,7 +229,7 @@ public class SearchPage extends ApplicationPageBase
             super(aId);
 
             DropDownChoice<DocumentRepository> repositoryCombo =
-                    new DropDownChoice<DocumentRepository>(
+                    new BootstrapSelect<DocumentRepository>(
                     "repositoryCombo",
                     new PropertyModel<DocumentRepository>(SearchPage.this, "currentRepository"),
                     repositoriesModel)
@@ -302,7 +273,6 @@ public class SearchPage extends ApplicationPageBase
             String uri = result.getUri();
             String score = result.getScore().toString();
             String highlight = result.getHighlights().get(0);
-            add(new Label("rowNum", rowNumber));
 
             LambdaAjaxLink link = new LambdaAjaxLink("documentDetails", _target -> {
                 PageParameters pageParameters = new PageParameters()
@@ -315,7 +285,7 @@ public class SearchPage extends ApplicationPageBase
 
             add(new Label("uri", uri));
             add(new Label("score", score));
-            add(new Label("highlight", highlight).setEscapeModelStrings(false));
+            add(new Label("highlight", highlight));
             if (documentService.existsSourceDocument(project, documentTitle)) {
                 add(new Label("importStatus", " imported "));
             }
@@ -336,12 +306,14 @@ public class SearchPage extends ApplicationPageBase
 
             String documentTitle = result.getDocumentTitle();
 
-            AjaxLink link = new AjaxLink("importLink")
+            AjaxLink<Void> link = new AjaxLink<Void>("importLink")
             {
                 @Override
                 public void onClick(AjaxRequestTarget target) {
-                    String text = externalSearchService.getDocumentById(currentUser,
-                        currentRepository, documentTitle).getText();
+                    String text = externalSearchService
+                            .getDocumentById(userRepository.getCurrentUser(), currentRepository,
+                                    documentTitle)
+                            .getText();
 
                     if (documentService.existsSourceDocument(project, documentTitle)) {
                         error("Document " + documentTitle + " already uploaded ! Delete "
