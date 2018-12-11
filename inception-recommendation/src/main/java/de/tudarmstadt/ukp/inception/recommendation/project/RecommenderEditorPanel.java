@@ -131,8 +131,8 @@ public class RecommenderEditorPanel
         autoGenerateNameCheckBox = new CheckBox(MID_AUTO_GENERATED_NAME,
                 PropertyModel.of(this, "autoGenerateName"));
         autoGenerateNameCheckBox.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> {
-            autoUpdateName(t, nameField, recommenderModel.getObject());
-            t.add(autoGenerateNameCheckBox);
+            autoUpdateName(nameField, recommenderModel.getObject());
+            t.add(nameField, autoGenerateNameCheckBox);
         }));
         form.add(autoGenerateNameCheckBox);
         
@@ -145,9 +145,9 @@ public class RecommenderEditorPanel
         layerChoice.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> { 
             toolChoice.setModelObject(null);
             featureChoice.setModelObject(null);
-            autoUpdateName(t, nameField, recommenderModel.getObject());
-            t.add(form.get(MID_TOOL), form.get(MID_FEATURE), form.get(MID_MAX_RECOMMENDATIONS),
-                    activationContainer, traitsContainer);
+            autoUpdateName(nameField, recommenderModel.getObject());
+            t.add(nameField, form.get(MID_TOOL), form.get(MID_FEATURE),
+                    form.get(MID_MAX_RECOMMENDATIONS), activationContainer, traitsContainer);
         }));
         form.add(layerChoice);
         
@@ -162,9 +162,9 @@ public class RecommenderEditorPanel
         // The tools depend on the feature, so reload the tools when the feature is changed
         featureChoice.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> {
             toolChoice.setModelObject(null);
-            autoUpdateName(t, nameField, recommenderModel.getObject());
-            t.add(form.get(MID_TOOL), form.get(MID_MAX_RECOMMENDATIONS), activationContainer,
-                    traitsContainer);
+            autoUpdateName(nameField, recommenderModel.getObject());
+            t.add(nameField, form.get(MID_TOOL), form.get(MID_MAX_RECOMMENDATIONS),
+                    activationContainer, traitsContainer);
         }));
         form.add(featureChoice);
         
@@ -202,8 +202,9 @@ public class RecommenderEditorPanel
         toolChoice.setRequired(true);
         toolChoice.setOutputMarkupId(true);
         toolChoice.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> {
-            autoUpdateName(t, nameField, recommenderModel.getObject());
-            t.add(form.get(MID_MAX_RECOMMENDATIONS), activationContainer, traitsContainer); 
+            autoUpdateName(nameField, recommenderModel.getObject());
+            t.add(nameField, form.get(MID_MAX_RECOMMENDATIONS), activationContainer,
+                    traitsContainer);
         }));
         form.add(toolChoice);
         
@@ -264,12 +265,9 @@ public class RecommenderEditorPanel
         traitsContainer.setOutputMarkupPlaceholderTag(true);
         traitsContainer.add(new EmptyPanel(MID_TRAITS));
     }
-    
-    private void autoUpdateName(AjaxRequestTarget aTarget, TextField<String> aField,
-            Recommender aRecommender)
+
+    private void autoUpdateName(TextField<String> aField, Recommender aRecommender)
     {
-        aTarget.add(aField);
-        
         if (!autoGenerateName || aRecommender == null) {
             return;
         }
@@ -317,6 +315,7 @@ public class RecommenderEditorPanel
                 Objects.equals(recommender.getName(), generateName(recommender))
         ) {
             autoGenerateNameCheckBox.setModelObject(true);
+            autoUpdateName(nameField, recommenderModel.getObject());
         }
         else {
             autoGenerateNameCheckBox.setModelObject(false);
