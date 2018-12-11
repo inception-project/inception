@@ -234,7 +234,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
             .hasFieldOrPropertyWithValue("labelIri", RDFS.LITERAL)
             .hasFieldOrPropertyWithValue("propertyTypeIri", OWL.OBJECTPROPERTY)
             .hasFieldOrPropertyWithValue("basePrefix", "MyBasePrefix")
-            .hasFieldOrPropertyWithValue("explicitlyDefinedRootConcepts", Arrays.asList(rootConcept1, rootConcept2));
+            .hasFieldOrPropertyWithValue("rootConcepts", Arrays.asList(rootConcept1, rootConcept2));
 
     }
 
