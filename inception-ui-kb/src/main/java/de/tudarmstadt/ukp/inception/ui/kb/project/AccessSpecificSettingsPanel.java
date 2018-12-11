@@ -24,7 +24,6 @@ import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
-import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.model.StringResourceModel;
@@ -38,9 +37,7 @@ import org.slf4j.LoggerFactory;
 
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.fileinput.BootstrapFileInputField;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.fileinput.FileInputConfig;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxDownloadLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.TempFileResource;
@@ -54,7 +51,6 @@ public class AccessSpecificSettingsPanel extends Panel
 {
     private static final Logger log = LoggerFactory.getLogger(AccessSpecificSettingsPanel.class);
 
-    private final IModel<Project> projectModel;
     private final CompoundPropertyModel<KnowledgeBaseWrapper> kbModel;
 
     // Remote
@@ -90,14 +86,13 @@ public class AccessSpecificSettingsPanel extends Panel
     private @SpringBean KnowledgeBaseService kbService;
     private @SpringBean KnowledgeBaseProperties kbproperties;
 
-    public AccessSpecificSettingsPanel(String id, IModel<Project> aProjectModel,
+    public AccessSpecificSettingsPanel(String id,
         CompoundPropertyModel<KnowledgeBaseWrapper> aModel,
         Map<String, KnowledgeBaseProfile> aKnowledgeBaseProfiles)
     {
         super(id);
         setOutputMarkupId(true);
 
-        projectModel = aProjectModel;
         kbModel = aModel;
         knowledgeBaseProfiles = aKnowledgeBaseProfiles;
         downloadedProfiles = new HashMap<>();
@@ -172,16 +167,7 @@ public class AccessSpecificSettingsPanel extends Panel
 
         // add link for clearing the knowledge base contents, enabled only, if there is
         // something to clear
-        AjaxLink<Void> clearLink = new LambdaAjaxLink("clear", this::actionClear)
-        {
-
-            private static final long serialVersionUID = -6272361381689154558L;
-
-            @Override public boolean isEnabled()
-            {
-                return kbService.isEmpty(kbModel.getObject().getKb());
-            }
-        };
+        AjaxLink<Void> clearLink = clearLink("clear");
         wmc.add(clearLink);
 
         wmc.add(fileExtensionsExportList("exportButtons"));
@@ -226,6 +212,20 @@ public class AccessSpecificSettingsPanel extends Panel
         return importProjectForm;
     }
 
+    private  AjaxLink<Void> clearLink(String aId) {
+        AjaxLink<Void> clearLink = new LambdaAjaxLink(aId, this::actionClear)
+        {
+
+            private static final long serialVersionUID = -6272361381689154558L;
+
+            @Override public boolean isEnabled()
+            {
+                return !kbService.isEmpty(kbModel.getObject().getKb());
+            }
+        };
+        return clearLink;
+    }
+
     private ListView<String> fileExtensionsExportList(String aId) {
         ListView<String> fileExListView = new ListView<String>(aId,
             EXPORT_FORMAT_FILE_EXTENSIONS)
@@ -268,7 +268,7 @@ public class AccessSpecificSettingsPanel extends Panel
                 // Can not import the same KB more than once
                 boolean isImported = downloadedProfiles
                     .containsKey(item.getModelObject().getName());
-                link.add(LambdaBehavior.onConfigure(_this -> setEnabled(!isImported)));
+                link.setEnabled(!isImported);
 
                 String itemLabel = item.getModelObject().getName();
                 // Adjust label to indicate whether the KB has already been downloaded

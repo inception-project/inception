@@ -252,23 +252,19 @@ public class KnowledgeBaseDetailsPanel
             add(generalSettings);
             generalSettings.get("name").setVisible(false);
 
-            Component accessSettings = new AccessSettingsPanel("accessSettings",
-                Model.of(kbModel.getObject().getProject()), kbwModel);
+            Component accessSettings = new AccessSettingsPanel("accessSettings", kbwModel);
             add(accessSettings);
             accessSettings.get("type").setEnabled(false);
             accessSettings.get("writeprotection")
                 .setEnabled(kbwModel.getObject().getKb().getType() == RepositoryType.LOCAL);
 
-
             Component accessSpecificSettings = new AccessSpecificSettingsPanel(
-                "accessSpecificSettings", Model.of(kbModel.getObject().getProject()), kbwModel,
-                Collections.emptyMap());
+                "accessSpecificSettings", kbwModel, Collections.emptyMap());
             add(accessSpecificSettings);
             accessSpecificSettings.get("remoteSpecificSettings:suggestions").setVisible(false);
             accessSpecificSettings.get("localSpecificSettings:listViewContainer").setVisible(false);
 
-            Component querySettings = new QuerySettingsPanel("querySettings",
-                Model.of(kbModel.getObject().getProject()), kbwModel);
+            Component querySettings = new QuerySettingsPanel("querySettings", kbwModel);
             add(querySettings);
 
             Component schemaMapping = new KnowledgeBaseIriPanel("schemaMapping", kbwModel);

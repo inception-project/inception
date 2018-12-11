@@ -13,7 +13,6 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.eclipse.rdf4j.model.IRI;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
@@ -28,8 +27,7 @@ public class QuerySettingsPanel extends Panel {
     private @SpringBean KnowledgeBaseService kbService;
     private @SpringBean KnowledgeBaseProperties kbProperties;
 
-    public QuerySettingsPanel(String id, IModel<Project> aProjectModel,
-                              CompoundPropertyModel<KnowledgeBaseWrapper> aModel)
+    public QuerySettingsPanel(String id, CompoundPropertyModel<KnowledgeBaseWrapper> aModel)
     {
         super(id);
         setOutputMarkupId(true);

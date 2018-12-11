@@ -74,7 +74,7 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
     private static final long serialVersionUID = -3459525951269555510L;
 
     private @SpringBean KnowledgeBaseService kbService;
-    private @SpringBean KnowledgeBaseProperties kbproperties;
+    private @SpringBean KnowledgeBaseProperties kbProperties;
 
     private final IModel<Project> projectModel;
     private final DynamicWizardModel wizardModel;
@@ -128,11 +128,15 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
             add(generalSettings);
             generalSettings.get("enabled").setVisible(false);
 
-            Component accessSettings = new AccessSettingsPanel("accessSettings", projectModel,
-                aKbModel);
+            Component accessSettings = new AccessSettingsPanel("accessSettings", aKbModel);
             add(accessSettings);
             accessSettings.get("writeprotection").setVisible(false);
 
+        }
+        @Override
+        public void applyState()
+        {
+            kbModel.getObject().getKb().setMaxResults(kbProperties.getDefaultMaxResults());
         }
 
         @Override
@@ -164,7 +168,7 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
             kbModel.getObject().setFiles(new ArrayList<>());
 
             Component accessSpecificSettings = new AccessSpecificSettingsPanel(
-                "accessSpecificSettings", projectModel, kbModel, knowledgeBaseProfiles);
+                "accessSpecificSettings", kbModel, knowledgeBaseProfiles);
             add(accessSpecificSettings);
             accessSpecificSettings.get("localSpecificSettings:exportButtons").setVisible(false);
             accessSpecificSettings.get("localSpecificSettings:clear").setVisible(false);

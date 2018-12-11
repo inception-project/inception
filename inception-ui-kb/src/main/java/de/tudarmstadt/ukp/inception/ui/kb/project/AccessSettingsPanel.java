@@ -8,32 +8,22 @@ import org.apache.wicket.markup.html.form.RadioGroup;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.button.Buttons;
 import de.agilecoders.wicket.core.markup.html.bootstrap.form.radio.BootstrapRadioGroup;
 import de.agilecoders.wicket.core.markup.html.bootstrap.form.radio.EnumRadioChoiceRenderer;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
-import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
 
 public class AccessSettingsPanel
     extends Panel
 {
-    private final IModel<Project> projectModel;
     private final CompoundPropertyModel<KnowledgeBaseWrapper> kbModel;
 
-    private @SpringBean KnowledgeBaseService kbService;
-    private @SpringBean KnowledgeBaseProperties kbproperties;
-
-    public AccessSettingsPanel(String id, IModel<Project> aProjectModel,
-        CompoundPropertyModel<KnowledgeBaseWrapper> aModel)
+    public AccessSettingsPanel(String id, CompoundPropertyModel<KnowledgeBaseWrapper> aModel)
     {
         super(id);
         setOutputMarkupId(true);
 
-        projectModel = aProjectModel;
         kbModel = aModel;
 
         add(repositoryTypeRadioButtons("type", "kb.type"));
