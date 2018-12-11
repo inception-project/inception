@@ -69,6 +69,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ModelChangedVisitor;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderFactoryRegistry;
@@ -157,7 +158,9 @@ public class RecommenderEditorPanel
             toolChoice.setModelObject(null);
             featureChoice.setModelObject(null);
             autoUpdateName(nameField, recommenderModel.getObject());
-            t.add(nameField, form.get(MID_TOOL), form.get(MID_FEATURE),
+            // Need to add the autoGenerateNameCheckBox here otherwise it looses its form-updating
+            // behavior - no idea why
+            t.add(nameField, autoGenerateNameCheckBox, form.get(MID_TOOL), form.get(MID_FEATURE),
                     form.get(MID_MAX_RECOMMENDATIONS), activationContainer, traitsContainer);
         }));
         form.add(layerChoice);
@@ -174,8 +177,10 @@ public class RecommenderEditorPanel
         featureChoice.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> {
             toolChoice.setModelObject(null);
             autoUpdateName(nameField, recommenderModel.getObject());
-            t.add(nameField, form.get(MID_TOOL), form.get(MID_MAX_RECOMMENDATIONS),
-                    activationContainer, traitsContainer);
+            // Need to add the autoGenerateNameCheckBox here otherwise it looses its form-updating
+            // behavior - no idea why
+            t.add(nameField, autoGenerateNameCheckBox, form.get(MID_TOOL),
+                    form.get(MID_MAX_RECOMMENDATIONS), activationContainer, traitsContainer);
         }));
         form.add(featureChoice);
         
@@ -214,8 +219,10 @@ public class RecommenderEditorPanel
         toolChoice.setOutputMarkupId(true);
         toolChoice.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> {
             autoUpdateName(nameField, recommenderModel.getObject());
-            t.add(nameField, form.get(MID_MAX_RECOMMENDATIONS), activationContainer,
-                    traitsContainer);
+            // Need to add the autoGenerateNameCheckBox here otherwise it looses its form-updating
+            // behavior - no idea why
+            t.add(nameField, autoGenerateNameCheckBox, form.get(MID_MAX_RECOMMENDATIONS),
+                    activationContainer, traitsContainer);
         }));
         form.add(toolChoice);
 
@@ -359,6 +366,10 @@ public class RecommenderEditorPanel
     protected void onModelChanged()
     {
         super.onModelChanged();
+
+        // When field become invalid, Wicket stops re-rendering them. Thus we tell all of them that
+        // their model has changes such that they clear their validation status.
+        visitChildren(new ModelChangedVisitor(recommenderModel));
 
         // Since toolChoice uses a lambda model, it needs to be notified explicitly.
         toolChoice.modelChanged();
