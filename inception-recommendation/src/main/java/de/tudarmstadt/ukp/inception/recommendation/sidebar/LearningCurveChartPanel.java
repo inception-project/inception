@@ -55,7 +55,7 @@ public class LearningCurveChartPanel
     extends Panel
 {
     private static final long serialVersionUID = 4306746527837380863L;
-    
+
     private static final String CHART_CONTAINER = "chart-container";
 
     private Logger log = LoggerFactory.getLogger(getClass());
@@ -66,12 +66,12 @@ public class LearningCurveChartPanel
     IModel<AnnotatorState> model;
 
     int maxPointsToPlot = 50;
-    
-    public LearningCurveChartPanel(String aId, IModel<AnnotatorState>  aModel)
+
+    public LearningCurveChartPanel(String aId, IModel<AnnotatorState> aModel)
     {
         super(aId);
         this.model = aModel;
-         
+
         chartContainer = new Label(CHART_CONTAINER);
         chartContainer.setOutputMarkupId(true);
         add(chartContainer);
@@ -98,25 +98,37 @@ public class LearningCurveChartPanel
     {
         log.info("rendered annotation event");
 
-        StringBuilder chartType = new StringBuilder();
-
         HashMap<String, List<Double>> recommenderScoreMap = getLatestScores(aEvent);
-        
-        if (recommenderScoreMap == null)
-        {
+
+        if (recommenderScoreMap == null || recommenderScoreMap.isEmpty()) {
+            log.error("No evaluation data for the learning curve. Project: {}",
+                    model.getObject().getProject());
+
+            error("Cannot plot the learning curve. Please make some annotations");
+            aEvent.getRequestHandler().addChildren(getPage(), IFeedback.class);
+
             return;
         }
 
         // iterate over the recommender score map to create data arrays to feed to the
         // c3 graph
         StringBuilder dataColumns = new StringBuilder();
+        StringBuilder chartType = new StringBuilder();
 
         recommenderScoreMap.forEach((key, value) -> {
 
-            String data = ((ArrayList<Double>) value).stream().map(Object::toString)
+            ArrayList<Double> listScores = (ArrayList<Double>) value;
+
+            // should not happen ideally
+            if (listScores == null || listScores.size() <= 0) {
+                return;
+            }
+
+            // convert array to a comma separated string
+            String data = listScores.stream().map(Object::toString)
                     .collect(Collectors.joining(", "));
 
-            // append recommender name
+            // append recommender name to the data
             dataColumns.append("['");
             String[] recommenderClass = key.toString().split("\\.");
             String recommenderName = recommenderClass[recommenderClass.length - 1];
@@ -134,22 +146,22 @@ public class LearningCurveChartPanel
             dataColumns.append(",");
         });
 
-       
+        // should not happen ideally
+        if (dataColumns.length() <= 0 || chartType.length() <= 0) {
+            return;
+        }
+
         try {
             String javascript = createJSScript(dataColumns.toString(), chartType.toString());
             log.debug("Rendering Recommender Evaluation Chart: {}", javascript);
 
             aEvent.getRequestHandler().prependJavaScript(javascript);
-
         }
         catch (IOException e) {
             log.error("Unable to render chart", e);
             error("Unable to render chart: " + e.getMessage());
             aEvent.getRequestHandler().addChildren(getPage(), IFeedback.class);
         }
-        
-        
-
     }
 
     /**
@@ -188,14 +200,8 @@ public class LearningCurveChartPanel
 
         List<LoggedEvent> loggedEvents = eventRepo.listLoggedEvents(model.getObject().getProject(),
                 model.getObject().getUser().getUsername(), eventType, maxPointsToPlot);
-        
-        if ( loggedEvents == null || loggedEvents.isEmpty())
-        {
-            log.error("No evaluation data for the learning curve. Project: {}",
-                    model.getObject().getProject());
 
-            error("No Event found");
-            aEvent.getRequestHandler().addChildren(getPage(), IFeedback.class);
+        if (loggedEvents == null || loggedEvents.isEmpty()) {
             return null;
         }
 
@@ -213,17 +219,14 @@ public class LearningCurveChartPanel
                 List<Double> list = recommenderScoreMap.get(detail.tool);
                 if (list == null) {
                     list = new ArrayList<Double>();
-
-                    addScoreToMap(recommenderScoreMap, detail.score, detail.tool, list);
-                    continue;
                 }
 
                 addScoreToMap(recommenderScoreMap, detail.score, detail.tool, list);
 
             }
             catch (IOException e) {
-                log.error("Invalid logged Event detail. Skipping record with logged event id: {}",
-                        loggedEvent.getId(), e);
+                log.error("Invalid logged Event detail. Skipping record with logged event id: "
+                        + loggedEvent.getId(), e);
 
                 error("Invalid logged Event detail. Skipping record with logged event id: "
                         + loggedEvent.getId());
