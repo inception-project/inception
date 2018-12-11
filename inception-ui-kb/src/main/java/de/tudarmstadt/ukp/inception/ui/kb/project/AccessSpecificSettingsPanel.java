@@ -133,9 +133,6 @@ public class AccessSpecificSettingsPanel extends Panel
     }
 
     private void setUpRemoteSpecificSettings(WebMarkupContainer wmc) {
-        // In case the user stepped back from the local mode
-        kbModel.getObject().getKb().setFullTextSearchIri(null);
-
         RequiredTextField<String> urlField = new RequiredTextField<>("url");
         urlField.add(Validators.URL_VALIDATOR);
         wmc.add(urlField);
