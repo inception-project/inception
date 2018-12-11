@@ -4,7 +4,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.wicket.markup.html.form.CheckBox;
-import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.RequiredTextField;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.panel.Panel;
@@ -21,7 +20,6 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
-import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 
 public class GeneralSettingsPanel extends Panel
 {

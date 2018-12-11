@@ -20,45 +20,45 @@
 <html xmlns:wicket="http://wicket.apache.org">
 <body>
 <wicket:panel>
-    <div class="form-group col-xs-12">
-        <div class="form-group row">
-    <h4 class="control-label col-sm-3">
-        <wicket:message key="kb.settings.general" />
-    </h4>
-        </div>
+  <div class="form-group col-xs-12">
+    <div class="form-group row">
+      <h4 class="control-label col-sm-3">
+        <wicket:message key="kb.settings.general"/>
+      </h4>
+    </div>
     <div class="form-group row" wicket:enclosure="name">
-        <label wicket:for="name" class="control-label col-sm-3">
-            <wicket:message key="kb.wizard.steps.type.name" />
-        </label>
-        <div class="col-sm-9">
-        <input wicket:id="name" type="text" class="form-control" />
-        </div>
+      <label wicket:for="name" class="control-label col-sm-3">
+        <wicket:message key="kb.wizard.steps.type.name"/>
+      </label>
+      <div class="col-sm-9">
+        <input wicket:id="name" type="text" class="form-control"/>
+      </div>
     </div>
     <div class="form-group row" wicket:enclosure="language">
-        <label class="control-label col-sm-3" wicket:for="language">
-            <wicket:message key="kb.wizard.steps.type.language" />
-        </label>
-        <div class="col-sm-9">
+      <label class="control-label col-sm-3" wicket:for="language">
+        <wicket:message key="kb.wizard.steps.type.language"/>
+      </label>
+      <div class="col-sm-9">
         <input type="text" wicket:id="language" class="form-control"/>
-        </div>
+      </div>
     </div>
     <div class="form-group row" wicket:enclosure="enabled">
-        <label class="col-sm-3 control-label" wicket:for="enabled">
-            <wicket:message key="kb.details.enabled" />
-        </label>
-        <div class="col-sm-9">
-            <input wicket:id="enabled" type="checkbox" />
-        </div>
+      <label class="col-sm-3 control-label" wicket:for="enabled">
+        <wicket:message key="kb.details.enabled"/>
+      </label>
+      <div class="col-sm-9">
+        <input wicket:id="enabled" type="checkbox"/>
+      </div>
     </div>
     <div class="form-group row" wicket:enclosure="basePrefix">
-        <label class="control-label col-sm-3" wicket:for="basePrefix">
-            <wicket:label key="kb.iri.basePrefix" />
-        </label>
-        <div class="col-sm-9">
-            <input type="text" wicket:id="basePrefix" class="form-control"/>
-        </div>
+      <label class="control-label col-sm-3" wicket:for="basePrefix">
+        <wicket:label key="kb.iri.basePrefix"/>
+      </label>
+      <div class="col-sm-9">
+        <input type="text" wicket:id="basePrefix" class="form-control"/>
+      </div>
     </div>
-    </div>
+  </div>
 </wicket:panel>
 </body>
 </html>

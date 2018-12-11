@@ -19,50 +19,61 @@
 
 <html xmlns:wicket="http://wicket.apache.org">
 <body>
-  <wicket:panel>
-    <form wicket:id="form" class="flex-content panel panel-default panel-flex">
-      <div class="panel-heading">
-        <wicket:container wicket:id="title"></wicket:container>
-      </div>
+<wicket:panel>
+  <form wicket:id="form" class="flex-content panel panel-default panel-flex">
+    <div class="panel-heading">
+      <wicket:container wicket:id="title"></wicket:container>
+    </div>
 
-      <div class="scrolling panel-body form-horizontal">
-        <div class="col-sm-12">
-          <wicket:container wicket:id="content"></wicket:container>
-        </div>
+    <div class="scrolling panel-body form-horizontal">
+      <div class="col-sm-12">
+        <wicket:container wicket:id="content"></wicket:container>
       </div>
+    </div>
 
-      <div class="panel-footer">
-        <div class="pull-left">
-          <a wicket:id="reindex" class="btn btn-danger" href="#" role="button">
-            <!-- <i class="fa fa-trash"></i> --> <wicket:message
-              key="kb.reindex" />
-          </a>
-          <a wicket:id="delete" class="btn btn-danger" href="#" role="button">
-            <!-- <i class="fa fa-trash"></i> --> <wicket:message
-              key="kb.delete" />
-          </a>
-        </div>
-        <div class="pull-right">
-          <input type="submit" wicket:id="save" class="btn btn-primary" wicket:message="value:kb.save" />
-        </div>
+    <div class="panel-footer">
+      <div class="pull-left">
+        <a wicket:id="reindex" class="btn btn-danger" href="#" role="button">
+          <!-- <i class="fa fa-trash"></i> -->
+          <wicket:message
+                  key="kb.reindex"/>
+        </a>
+        <a wicket:id="delete" class="btn btn-danger" href="#" role="button">
+          <!-- <i class="fa fa-trash"></i> -->
+          <wicket:message
+                  key="kb.delete"/>
+        </a>
       </div>
-    </form>
-    <div wicket:id="confirmationDialog"></div>
-  </wicket:panel>
-  
-  <wicket:fragment wicket:id="kbSettingsTitle">
-    <input type="text" wicket:id="name" wicket:message="placeholder:kb.name.placeholder" />
-  </wicket:fragment>
-  
-  <wicket:fragment wicket:id="kbSettingsContent">
-      <div class="form-group col-xs-12">
-        <div wicket:id="generalSettings"></div>
-        <div wicket:id="accessSettings"></div>
-        <div wicket:id="accessSpecificSettings"></div>
-        <div wicket:id="querySettings"></div>
-        <div wicket:id="schemaMapping"></div>
-        <div wicket:id="rootConcepts"></div>
+      <div class="pull-right">
+        <input type="submit" wicket:id="save" class="btn btn-primary"
+               wicket:message="value:kb.save"/>
       </div>
-  </wicket:fragment>
+    </div>
+  </form>
+  <div wicket:id="confirmationDialog"></div>
+</wicket:panel>
+
+<wicket:fragment wicket:id="kbSettingsTitle">
+  <input type="text" wicket:id="name" wicket:message="placeholder:kb.name.placeholder"/>
+</wicket:fragment>
+
+<wicket:fragment wicket:id="kbSettingsContent">
+  <div class="form-group col-xs-12">
+    <div wicket:id="generalSettings"></div>
+    <div class="col-xs-12"><hr></div>
+
+    <div wicket:id="accessSettings"></div>
+    <div wicket:id="accessSpecificSettings"></div>
+    <div class="col-xs-12"><hr></div>
+
+    <div wicket:id="querySettings"></div>
+    <div class="col-xs-12"><hr></div>
+
+    <div wicket:id="schemaMapping"></div>
+    <div class="col-xs-12"><hr></div>
+
+    <div wicket:id="rootConcepts"></div>
+  </div>
+</wicket:fragment>
 </body>
 </html>

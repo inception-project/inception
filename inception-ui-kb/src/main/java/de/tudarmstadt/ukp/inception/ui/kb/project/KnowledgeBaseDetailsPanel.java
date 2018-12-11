@@ -265,6 +265,7 @@ public class KnowledgeBaseDetailsPanel
                 Collections.emptyMap());
             add(accessSpecificSettings);
             accessSpecificSettings.get("remoteSpecificSettings:suggestions").setVisible(false);
+            accessSpecificSettings.get("localSpecificSettings:listViewContainer").setVisible(false);
 
             Component querySettings = new QuerySettingsPanel("querySettings",
                 Model.of(kbModel.getObject().getProject()), kbwModel);

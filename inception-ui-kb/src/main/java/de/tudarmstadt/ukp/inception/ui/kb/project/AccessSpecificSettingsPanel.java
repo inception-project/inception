@@ -184,49 +184,14 @@ public class AccessSpecificSettingsPanel extends Panel
         };
         wmc.add(clearLink);
 
-
         wmc.add(fileExtensionsExportList("exportButtons"));
 
-        List<KnowledgeBaseProfile> downloadableKBs = knowledgeBaseProfiles.values().stream()
+        List<KnowledgeBaseProfile> localKBs = knowledgeBaseProfiles.values().stream()
             .filter(kb -> RepositoryType.LOCAL.equals(kb.getType()))
             .collect(Collectors.toList());
 
         listViewContainer = new WebMarkupContainer("listViewContainer");
-        ListView<KnowledgeBaseProfile> suggestions = new ListView<KnowledgeBaseProfile>(
-            "downloadableKBs", downloadableKBs)
-        {
-            private static final long serialVersionUID = 1L;
-
-            @Override protected void populateItem(ListItem<KnowledgeBaseProfile> item)
-            {
-                LambdaAjaxLink link = new LambdaAjaxLink("suggestionLink", t -> {
-                    selectedKnowledgeBaseProfile = item.getModelObject();
-                });
-                // Can not import the same KB more than once
-                boolean isImported = downloadedProfiles
-                    .containsKey(item.getModelObject().getName());
-                link.add(LambdaBehavior.onConfigure(_this -> setEnabled(!isImported)));
-
-                String itemLabel = item.getModelObject().getName();
-                // Adjust label to indicate whether the KB has already been downloaded
-                if (downloadedProfiles.containsKey(item.getModelObject().getName())) {
-                    // &#10004; is the checkmark symbol
-                    itemLabel = itemLabel + "  &#10004;";
-                }
-                link.add(new Label("suggestionLabel", itemLabel).setEscapeModelStrings(false));
-                // Show schema type on mouseover
-
-                link.add(AttributeModifier.append("title",
-                    new StringResourceModel("kb.wizard.steps.local.schemaOnMouseOver", this)
-                        .setParameters(
-                            kbService.checkSchemaProfile(item.getModelObject()).getLabel(),
-                            getAccessTypeLabel(item.getModelObject()))));
-
-                item.add(link);
-                item.setOutputMarkupId(true);
-            }
-        };
-        suggestions.setOutputMarkupId(true);
+        ListView<KnowledgeBaseProfile> suggestions = localSuggestionsList("localKBs", localKBs);
         listViewContainer.add(suggestions);
         listViewContainer.setOutputMarkupId(true);
 
@@ -252,8 +217,6 @@ public class AccessSpecificSettingsPanel extends Panel
         importProjectForm.add(fileUpload = new BootstrapFileInputField(aFieldId,
             new ListModel<>(), config)
         {
-            private static final long serialVersionUID = -6794141937368512300L;
-
             @Override
             protected void onSubmit(AjaxRequestTarget aTarget)
             {
@@ -286,6 +249,47 @@ public class AccessSpecificSettingsPanel extends Panel
             }
         };
         return fileExListView;
+    }
+
+    private ListView<KnowledgeBaseProfile> localSuggestionsList(String aId,
+        List<KnowledgeBaseProfile> localKBs)
+    {
+        ListView<KnowledgeBaseProfile> suggestions = new ListView<KnowledgeBaseProfile>(
+            aId, localKBs)
+        {
+            private static final long serialVersionUID = 1L;
+
+            @Override protected void populateItem(ListItem<KnowledgeBaseProfile> item)
+            {
+                LambdaAjaxLink link = new LambdaAjaxLink("suggestionLink", t -> {
+                    selectedKnowledgeBaseProfile = item.getModelObject();
+                });
+
+                // Can not import the same KB more than once
+                boolean isImported = downloadedProfiles
+                    .containsKey(item.getModelObject().getName());
+                link.add(LambdaBehavior.onConfigure(_this -> setEnabled(!isImported)));
+
+                String itemLabel = item.getModelObject().getName();
+                // Adjust label to indicate whether the KB has already been downloaded
+                if (isImported) {
+                    // &#10004; is the checkmark symbol
+                    itemLabel = itemLabel + "  &#10004;";
+                }
+                link.add(new Label("suggestionLabel", itemLabel).setEscapeModelStrings(false));
+
+                // Show schema type on mouseover
+                link.add(AttributeModifier.append("title",
+                    new StringResourceModel("kb.wizard.steps.local.schemaOnMouseOver", this)
+                        .setParameters(
+                            kbService.checkSchemaProfile(item.getModelObject()).getLabel(),
+                            getAccessTypeLabel(item.getModelObject()))));
+
+                item.add(link);
+            }
+        };
+        suggestions.setOutputMarkupId(true);
+        return suggestions;
     }
 
     private void actionUpload(AjaxRequestTarget aTarget) {

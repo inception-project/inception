@@ -21,7 +21,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
@@ -45,7 +44,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.SchemaProfile;
-
+import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 
 public class KnowledgeBaseIriPanel
     extends Panel
