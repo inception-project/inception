@@ -49,8 +49,8 @@ public class EventRepositoryImpl
 
     @Override
     @Transactional
-    public List<LoggedEvent> listLoggedEvents(Project aProject, String aUsername, String eventType,
-            int size)
+    public List<LoggedEvent> listLoggedEvents(Project aProject, String aUsername, String aEventType,
+            int aSize)
     {
         String query = String.join("\n",
                 "FROM LoggedEvent WHERE ",
@@ -62,8 +62,8 @@ public class EventRepositoryImpl
         return entityManager.createQuery(query, LoggedEvent.class)
                 .setParameter("user", aUsername)
                 .setParameter("project", aProject.getId())
-                .setParameter("event", eventType)
-                .setMaxResults(size)
+                .setParameter("event", aEventType)
+                .setMaxResults(aSize)
                 .getResultList();
     }
 }

@@ -28,6 +28,6 @@ public interface EventRepository
 
     void create(LoggedEvent aE);
 
-    List<LoggedEvent> listLoggedEvents(Project aProject, String aUsername, String eventType,
-            int size);
+    List<LoggedEvent> listLoggedEvents(Project aProject, String aUsername, String aEventType,
+            int aSize);
 }

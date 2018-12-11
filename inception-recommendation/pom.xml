@@ -187,4 +187,24 @@
 		<version>5.5.0</version>
 	</dependency>
   </dependencies>
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-dependency-plugin</artifactId>
+          <configuration>
+            <usedDependencies>
+              <!--
+                - Maven doesn't detect the the webjar dependencies because there is
+                - no actual code dependency
+              -->
+              <usedDependency>org.webjars:d3js</usedDependency>
+              <usedDependency>org.webjars:c3</usedDependency>
+            </usedDependencies>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
 </project>

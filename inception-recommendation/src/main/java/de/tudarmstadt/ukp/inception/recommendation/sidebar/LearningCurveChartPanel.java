@@ -1,5 +1,5 @@
 /*
- * Copyright 2017
+ * Copyright 2018
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  *
@@ -22,14 +22,15 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.toJsonString;
 import static org.apache.commons.lang3.StringUtils.substring;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.MultiValuedMap;
+import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.head.CssHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
@@ -58,19 +59,18 @@ public class LearningCurveChartPanel
 
     private static final String CHART_CONTAINER = "chart-container";
 
-    private Logger log = LoggerFactory.getLogger(getClass());
-    private WebComponent chartContainer;
+    private static final Logger log = LoggerFactory.getLogger(LearningCurveChartPanel.class);
+    private final WebComponent chartContainer;
 
     private @SpringBean EventRepository eventRepo;
 
-    IModel<AnnotatorState> model;
-
-    int maxPointsToPlot = 50;
+    private final IModel<AnnotatorState> model;
+    private final int maxPointsToPlot = 50;
 
     public LearningCurveChartPanel(String aId, IModel<AnnotatorState> aModel)
     {
         super(aId);
-        this.model = aModel;
+        model = aModel;
 
         chartContainer = new Label(CHART_CONTAINER);
         chartContainer.setOutputMarkupId(true);
@@ -96,11 +96,11 @@ public class LearningCurveChartPanel
     @OnEvent
     public void onRenderAnnotations(RenderAnnotationsEvent aEvent)
     {
-        log.info("rendered annotation event");
+        log.trace("rendered annotation event");
 
-        HashMap<String, List<Double>> recommenderScoreMap = getLatestScores(aEvent);
+        MultiValuedMap<String, Double> recommenderScoreMap = getLatestScores(aEvent);
 
-        if (recommenderScoreMap == null || recommenderScoreMap.isEmpty()) {
+        if (CollectionUtils.isEmpty(recommenderScoreMap.keys())) {
             log.error("No evaluation data for the learning curve. Project: {}",
                     model.getObject().getProject());
 
@@ -110,24 +110,13 @@ public class LearningCurveChartPanel
             return;
         }
 
-        // iterate over the recommender score map to create data arrays to feed to the
-        // c3 graph
+        // iterate over recommenderScoreMap to create data arrays to feed to the c3 graph
         StringBuilder dataColumns = new StringBuilder();
         StringBuilder chartType = new StringBuilder();
-
-        recommenderScoreMap.forEach((key, value) -> {
-
-            ArrayList<Double> listScores = (ArrayList<Double>) value;
-
-            // should not happen ideally
-            if (listScores == null || listScores.size() <= 0) {
-                return;
-            }
-
-            // convert array to a comma separated string
-            String data = listScores.stream().map(Object::toString)
-                    .collect(Collectors.joining(", "));
-
+        
+        for (String key : recommenderScoreMap.keySet()) {
+            String data = recommenderScoreMap.get(key).stream().map(Object::toString).collect(Collectors.joining(", "));
+            
             // append recommender name to the data
             dataColumns.append("['");
             String[] recommenderClass = key.toString().split("\\.");
@@ -136,7 +125,6 @@ public class LearningCurveChartPanel
             // define chart type for the recommender
             chartType.append(recommenderName);
             chartType.append(": 'step', ");
-
             dataColumns.append(recommenderName);
 
             // append data columns
@@ -144,13 +132,8 @@ public class LearningCurveChartPanel
             dataColumns.append(data);
             dataColumns.append("]");
             dataColumns.append(",");
-        });
-
-        // should not happen ideally
-        if (dataColumns.length() <= 0 || chartType.length() <= 0) {
-            return;
         }
-
+ 
         try {
             String javascript = createJSScript(dataColumns.toString(), chartType.toString());
             log.debug("Rendering Recommender Evaluation Chart: {}", javascript);
@@ -165,19 +148,24 @@ public class LearningCurveChartPanel
     }
 
     /**
-     * Creates the js script to render graph with the help of given data points. Sample value of
-     * dataColumns: ['recommender1', 1.0, 2.0, 3.0 ], ['recommender2', 2.0, 3.0, 4.0]. Also creates
-     * an xaxix of a sequence from 0 to maximumNumberOfPoints (50)
+     * Creates the js script to render graph with the help of given data points. Also creates an
+     * xaxix of a sequence from 0 to maximumNumberOfPoints (50). Example value of
+     * aDataColumns: 
+     * <pre>
+     *['recommender1', 1.0, 2.0, 3.0 ], ['recommender2', 2.0, 3.0, 4.0]
+     * </pre>
      * 
-     * @param aDataColumns
-     * @param aChartType
+     * Example value of aChartType
+     * <pre>
+     * recommender1: 'step', recommender2 : 'step'
+     * </pre>
+     * 
      * @return
      * @throws IOException
      */
     private String createJSScript(String aDataColumns, String aChartType) throws IOException
     {
         int[] intArray = IntStream.range(0, maxPointsToPlot).map(i -> i).toArray();
-
         String xaxisValues = "[ 'x' ," + substring(Arrays.toString(intArray), 1, -1) + "]";
         String data = toJsonString(aDataColumns).substring(1, aDataColumns.toString().length());
 
@@ -191,8 +179,10 @@ public class LearningCurveChartPanel
     /**
      * Fetches a number of latest evaluation scores from the database and save it in the map
      * corresponding to each recommender for which the scores have been logged in the database
+     * 
+     * @return
      */
-    private HashMap<String, List<Double>> getLatestScores(RenderAnnotationsEvent aEvent)
+    private MultiValuedMap<String, Double> getLatestScores(RenderAnnotationsEvent aEvent)
     {
         // we want to plot RecommenderEvaluationResultEvent for the learning curve. The
         // value of the event
@@ -201,28 +191,29 @@ public class LearningCurveChartPanel
         List<LoggedEvent> loggedEvents = eventRepo.listLoggedEvents(model.getObject().getProject(),
                 model.getObject().getUser().getUsername(), eventType, maxPointsToPlot);
 
-        if (loggedEvents == null || loggedEvents.isEmpty()) {
-            return null;
+        if (CollectionUtils.isEmpty(loggedEvents)) {
+            return new ArrayListValuedHashMap<String, Double>();
         }
 
         // we want to show the latest record on the right side of the graph
         Collections.reverse(loggedEvents);
 
-        HashMap<String, List<Double>> recommenderScoreMap = new HashMap<>();
+        MultiValuedMap<String, Double> recommenderScoreMap = new ArrayListValuedHashMap
+                <String, Double>();
 
-        // iterate over the logged events to extract the scores and map
-        // it against its corresponding recommender.
+        // iterate over the logged events to extract the scores and map it against its corresponding
+        // recommender.
         for (LoggedEvent loggedEvent : loggedEvents) {
             String detailJson = loggedEvent.getDetails();
             try {
                 Details detail = fromJsonString(Details.class, detailJson);
-                List<Double> list = recommenderScoreMap.get(detail.tool);
-                if (list == null) {
-                    list = new ArrayList<Double>();
+
+                // sometimes score values NaN. Can result into error while rendering the graph on UI
+                if (!Double.isFinite(detail.score)) {
+                    continue;
                 }
 
-                addScoreToMap(recommenderScoreMap, detail.score, detail.tool, list);
-
+                recommenderScoreMap.put(detail.tool, detail.score);
             }
             catch (IOException e) {
                 log.error("Invalid logged Event detail. Skipping record with logged event id: "
@@ -235,25 +226,5 @@ public class LearningCurveChartPanel
             }
         }
         return recommenderScoreMap;
-    }
-
-    /**
-     * adds the score to the given map, if the value of the score is valid/finite
-     * 
-     * @param aRecommenderScoreMap
-     * @param aScore
-     * @param tool
-     * @param list
-     */
-    private void addScoreToMap(HashMap<String, List<Double>> aRecommenderScoreMap, Double aScore,
-            String tool, List<Double> list)
-    {
-        // sometimes score values NaN. Can result into error while rendering the graph on UI
-        if (!Double.isFinite(aScore)) {
-            return;
-        }
-
-        list.add(aScore);
-        aRecommenderScoreMap.put(tool, list);
     }
 }
