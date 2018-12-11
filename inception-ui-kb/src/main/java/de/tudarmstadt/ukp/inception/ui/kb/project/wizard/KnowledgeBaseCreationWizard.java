@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import de.tudarmstadt.ukp.inception.ui.kb.project.*;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -45,11 +46,6 @@ import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 import de.tudarmstadt.ukp.inception.ui.core.bootstrap.BootstrapWizard;
 import de.tudarmstadt.ukp.inception.ui.core.bootstrap.BootstrapWizardButtonBar;
-import de.tudarmstadt.ukp.inception.ui.kb.project.AccessSpecificSettingsPanel;
-import de.tudarmstadt.ukp.inception.ui.kb.project.GeneralSettingsPanel;
-import de.tudarmstadt.ukp.inception.ui.kb.project.KnowledgeBaseIriPanel;
-import de.tudarmstadt.ukp.inception.ui.kb.project.KnowledgeBaseListPanel;
-import de.tudarmstadt.ukp.inception.ui.kb.project.KnowledgeBaseWrapper;
 
 /**
  * Wizard for registering a new knowledge base for a project.
@@ -125,7 +121,11 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
                 aKbModel);
             add(generalSettings);
             generalSettings.get("enabled").setVisible(false);
-            generalSettings.get("writeprotection").setVisible(false);
+
+            Component accessSettings = new AccessSettingsPanel("accessSettings", projectModel,
+                aKbModel);
+            add(accessSettings);
+            accessSettings.get("writeprotection").setVisible(false);
 
         }
 

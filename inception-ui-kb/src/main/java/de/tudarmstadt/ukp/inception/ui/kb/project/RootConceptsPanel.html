@@ -21,10 +21,16 @@
 <body>
   <wicket:panel>
 	<div class="form-group col-xs-12">
+        <div class="form-group row">
+            <h4 class="control-label col-sm-3">
+                <wicket:message key="kb.settings.access" />
+            </h4>
+        </div>
       <div>
-      	<label class="control-label">
+      	<label class="control-label col-sm-3">
           <wicket:message key="kb.settings.rootConcepts" />
       	</label>
+          <div class="col-sm-9">
 	    <div class="list-group">
 	      <div wicket:id="rootConcepts">
             <form wicket:id="conceptForm" class="form-inline" style="width: 100%;">
@@ -33,8 +39,9 @@
             </form>
 	      </div>
 	    </div>
-        <input type="text" wicket:id="newConceptField" class="form-control"/>
-        <button wicket:id="newExplicitConcept" style="margin-top:3px;" type="button" class="btn btn-primary btn-md margin-top:5px;"><wicket:container wicket:id="add"></wicket:container></button>
+              <input type="text" wicket:id="newConceptField" class="form-control"/>
+              <button wicket:id="newExplicitConcept" style="margin-top:3px;" type="button" class="btn btn-primary btn-md margin-top:5px;"><wicket:container wicket:id="add"></wicket:container></button>
+          </div>
       </div>
     </div>
   </wicket:panel>

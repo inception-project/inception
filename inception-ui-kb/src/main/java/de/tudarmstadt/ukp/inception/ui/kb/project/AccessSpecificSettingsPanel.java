@@ -15,6 +15,7 @@ import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.RequiredTextField;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.form.upload.FileUpload;
@@ -27,6 +28,7 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.model.StringResourceModel;
+import org.apache.wicket.model.util.ListModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.resource.IResourceStream;
 import org.eclipse.rdf4j.repository.RepositoryException;
@@ -34,6 +36,8 @@ import org.eclipse.rdf4j.rio.RDFFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.fileinput.BootstrapFileInputField;
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.fileinput.FileInputConfig;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
@@ -58,14 +62,21 @@ public class AccessSpecificSettingsPanel extends Panel
     private static final int MAXIMUM_REMOTE_REPO_SUGGESTIONS = 10;
 
     // Local
-    private FileUploadField fileUploadField;
+    private FileUploadField fileUpload;
     private WebMarkupContainer listViewContainer;
     private KnowledgeBaseProfile selectedKnowledgeBaseProfile;
     private static final String CLASSPATH_PREFIX = "classpath:";
     private final Map<String, KnowledgeBaseProfile> downloadedProfiles;
     private final Map<String, File> uploadedFiles;
 
-
+    /**
+     * Given the default file extension of an RDF format, returns the corresponding
+     * {@link RDFFormat}. This factory method detour is necessary because {@link RDFFormat} should
+     * be used as a model, but is not serializable.
+     *
+     * @param fileExt
+     * @return an {@link RDFFormat}
+     */
     private static final RDFFormat getRdfFormatForFileExt(String fileExt)
     {
         return EXPORT_FORMATS.stream().filter(f -> f.getDefaultFileExtension().equals(fileExt))
@@ -156,10 +167,8 @@ public class AccessSpecificSettingsPanel extends Panel
     }
 
     private void setUpLocalSpecificSettings(WebMarkupContainer wmc) {
-        fileUploadField = new FileUploadField("upload", Model.of());
-        wmc.add(fileUploadField);
 
-        wmc.add(new LambdaAjaxLink("uploadButton", AccessSpecificSettingsPanel.this::actionUpload));
+        wmc.add(uploadForm("uploadForm","uploadField"));
 
         // add link for clearing the knowledge base contents, enabled only, if there is
         // something to clear
@@ -170,7 +179,7 @@ public class AccessSpecificSettingsPanel extends Panel
 
             @Override public boolean isEnabled()
             {
-                return true;//kbService.isEmpty(kbModel.getObject().getKb());
+                return kbService.isEmpty(kbModel.getObject().getKb());
             }
         };
         wmc.add(clearLink);
@@ -193,9 +202,10 @@ public class AccessSpecificSettingsPanel extends Panel
                 LambdaAjaxLink link = new LambdaAjaxLink("suggestionLink", t -> {
                     selectedKnowledgeBaseProfile = item.getModelObject();
                 });
-                // Can not download the same KB more than once
-                link.add(LambdaBehavior.onConfigure(_this -> setEnabled(
-                    !downloadedProfiles.containsKey(item.getModelObject().getName()))));
+                // Can not import the same KB more than once
+                boolean isImported = downloadedProfiles
+                    .containsKey(item.getModelObject().getName());
+                link.add(LambdaBehavior.onConfigure(_this -> setEnabled(!isImported)));
 
                 String itemLabel = item.getModelObject().getName();
                 // Adjust label to indicate whether the KB has already been downloaded
@@ -205,23 +215,52 @@ public class AccessSpecificSettingsPanel extends Panel
                 }
                 link.add(new Label("suggestionLabel", itemLabel).setEscapeModelStrings(false));
                 // Show schema type on mouseover
+
                 link.add(AttributeModifier.append("title",
                     new StringResourceModel("kb.wizard.steps.local.schemaOnMouseOver", this)
                         .setParameters(
                             kbService.checkSchemaProfile(item.getModelObject()).getLabel(),
                             getAccessTypeLabel(item.getModelObject()))));
+
                 item.add(link);
+                item.setOutputMarkupId(true);
             }
         };
         suggestions.setOutputMarkupId(true);
         listViewContainer.add(suggestions);
         listViewContainer.setOutputMarkupId(true);
-        wmc.add(listViewContainer);
 
         LambdaAjaxLink addKbButton = new LambdaAjaxLink("addKbButton",
             this::actionDownloadKbAndSetIRIs);
         addKbButton.add(new Label("addKbLabel", new ResourceModel("kb.wizard.steps.local.addKb")));
-        wmc.add(addKbButton);
+        listViewContainer.add(addKbButton);
+
+        wmc.add(listViewContainer);
+
+    }
+
+    private Form<Void> uploadForm(String aFormId, String aFieldId) {
+        Form<Void> importProjectForm = new Form<>(aFormId);
+
+        FileInputConfig config = new FileInputConfig();
+        config.initialCaption("Import project archives ...");
+        config.showPreview(false);
+        config.showUpload(true);
+        config.removeIcon("<i class=\"fa fa-remove\"></i>");
+        config.uploadIcon("<i class=\"fa fa-upload\"></i>");
+        config.browseIcon("<i class=\"fa fa-folder-open\"></i>");
+        importProjectForm.add(fileUpload = new BootstrapFileInputField(aFieldId,
+            new ListModel<>(), config)
+        {
+            private static final long serialVersionUID = -6794141937368512300L;
+
+            @Override
+            protected void onSubmit(AjaxRequestTarget aTarget)
+            {
+                actionUpload(aTarget);
+            }
+        });
+        return importProjectForm;
     }
 
     private ListView<String> fileExtensionsExportList(String aId) {
@@ -251,7 +290,7 @@ public class AccessSpecificSettingsPanel extends Panel
 
     private void actionUpload(AjaxRequestTarget aTarget) {
         try {
-            for (FileUpload fu : fileUploadField.getFileUploads()) {
+            for (FileUpload fu : fileUpload.getFileUploads()) {
                 File tmp = uploadFile(fu);
                 kbModel.getObject().getFiles().add(tmp);
             }
@@ -260,6 +299,7 @@ public class AccessSpecificSettingsPanel extends Panel
             log.error("Error while uploading files", e);
             error("Could not upload files");
         }
+        aTarget.add(this);
     }
 
     private File uploadFile(FileUpload fu) throws Exception
@@ -321,7 +361,7 @@ public class AccessSpecificSettingsPanel extends Panel
                     selectedKnowledgeBaseProfile.getMapping());
                 downloadedProfiles
                     .put(selectedKnowledgeBaseProfile.getName(), selectedKnowledgeBaseProfile);
-                aTarget.add(listViewContainer);
+                aTarget.add(this);
                 selectedKnowledgeBaseProfile = null;
             }
         }

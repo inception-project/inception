@@ -36,7 +36,7 @@
             <input wicket:id="url" type="text" class="form-control" />
             </div>
         </div>
-        <div class="form-group col-xs-12" wicket:enclosure="suggestions">
+        <div class="form-group row" wicket:enclosure="suggestions">
             <label class="control-label col-sm-3">
                 <wicket:message key="kb.wizard.steps.remote.suggestions" />
             </label>
@@ -54,38 +54,40 @@
 
 
       <wicket:container wicket:id="localSpecificSettings">
-        <div class="form-group col-xs-12">
+
           <!-- Import -->
-          <span wicket:enclosure="upload">
-            <label class="control-label col-sm-3" wicket:for="upload">
+          <div wicket:enclosure="uploadForm">
+            <div class="form-group row">
+              <label class="control-label col-sm-3">
               <wicket:message key="kb.details.local.contents" />
             </label>
             <div class="col-sm-9">
-              <span>
-            <span class="control-label">
-              <wicket:message key="kb.details.local.contents.fileupload" />
-              <i class="fa fa-info-circle" wicket:message="title:kb.local.fileupload.supported.headerlist"></i>
-            </span>
-                <div>
-                  <input wicket:id="upload" type="file" multiple />
+              <div style="flex-basis: 30%; min-width: 20em;">
+                <form wicket:id="uploadForm">
+                  <input type="file" wicket:id="uploadField" multiple="multiple"/>
+                </form>
+              </div>
+            </div>
+            </div>
+                <div class="form-group row">
+                    <label class="control-label col-sm-3" for="supportedList">
+                        <wicket:message key="kb.local.fileupload.supported.header"/>
+                    </label>
+                    <p class="col-sm-9" id="supportedList">
+                        <wicket:message key="kb.local.fileupload.supported.list"/>
+                    </p>
                 </div>
-                <div style="margin-top: 5px;">
-                  <input type="button" wicket:id="uploadButton" class="btn btn-primary"
-                         wicket:message="value:kb.upload"/>
-                </div>
-              </span>
+              </div>
               <wicket:enclosure wicket:id="clear">
                 <div class="form-group row">
-              <span class="col-sm-2 control-label">
+              <label class="col-sm-3 control-label">
                 <wicket:message key="kb.details.local.contents.clear" />
-              </span>
-                  <div class="col-sm-10">
+              </label>
+                  <div class="col-sm-9">
                     <input type="button" wicket:id="clear" class="btn btn-default" wicket:message="value:kb.clear" />
                   </div>
                 </div>
               </wicket:enclosure>
-            </div>
-          </span>
           <!-- Export -->
           <div class="form-group row" wicket:enclosure="exportButtons">
             <label class="control-label col-sm-3">
@@ -99,19 +101,12 @@
               </div>
             </div>
           </div>
-        </div>
-        <div class="form-group row">
-          <label class="control-label col-sm-3" for="supportedList">
-            <wicket:message key="kb.local.fileupload.supported.header"/>
-          </label>
-          <p class="col-sm-9" id="supportedList">
-            <wicket:message key="kb.local.fileupload.supported.list"/>
-          </p>
-        </div>
-        <div class="form-group" wicket:enclosure="listViewContainer">
+
+        <div class="form-group row" wicket:enclosure="listViewContainer">
           <label class="control-label col-sm-3">
             <wicket:message key="kb.wizard.steps.local.predefinedKBs"/>
           </label>
+            <div class="col-sm-9">
           <div wicket:id="listViewContainer">
             <div class="list-group" style="margin-bottom: 2px;">
               <wicket:container wicket:id="downloadableKBs">
@@ -120,10 +115,11 @@
                 </button>
               </wicket:container>
             </div>
+              <button wicket:id="addKbButton" type="button" class="btn btn-outline-secondary">
+                  <wicket:container wicket:id="addKbLabel"></wicket:container>
+              </button>
           </div>
-          <button wicket:id="addKbButton" type="button" class="btn btn-outline-secondary">
-            <wicket:container wicket:id="addKbLabel"></wicket:container>
-          </button>
+            </div>
         </div>
       </wicket:container>
     </div>

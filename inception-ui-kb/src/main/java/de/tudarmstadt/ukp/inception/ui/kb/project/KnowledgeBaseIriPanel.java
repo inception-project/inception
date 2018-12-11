@@ -21,8 +21,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.WebMarkupContainer;
+import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
@@ -61,6 +63,8 @@ public class KnowledgeBaseIriPanel
         selectedSchemaProfile = Model.of(SchemaProfile.RDFSCHEMA);
 
         kbModel = aModel;
+
+        add(selectReificationStrategy("reification", "kb.reification"));
 
         // RadioGroup to select the IriSchemaType
         BootstrapRadioGroup<SchemaProfile> iriSchemaChoice = new BootstrapRadioGroup<SchemaProfile>(
@@ -162,4 +166,15 @@ public class KnowledgeBaseIriPanel
         comboBox.add(new LambdaAjaxFormComponentUpdatingBehavior("change"));
         return comboBox;
     }
+
+    private DropDownChoice<Reification> selectReificationStrategy(String id, String property)
+    {
+        final List<Reification> reificationList = Arrays.asList(Reification.values());
+
+        DropDownChoice<Reification> reificationDropDownChoice = new DropDownChoice<>(id,
+            kbModel.bind(property), reificationList);
+        reificationDropDownChoice.setRequired(true);
+        return reificationDropDownChoice;
+    }
 }
+
