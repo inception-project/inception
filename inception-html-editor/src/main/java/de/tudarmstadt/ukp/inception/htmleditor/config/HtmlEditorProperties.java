@@ -1,6 +1,6 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+ * Copyright 2018
+ * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,26 +15,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.externalsearch.elastic.model;
 
-import java.util.List;
+package de.tudarmstadt.ukp.inception.htmleditor.config;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class ElasticSearchHighlight
+@Component
+@ConfigurationProperties("ui.html")
+public class HtmlEditorProperties
 {
-    @JsonProperty("doc.text")
-    private List<String> doctext;
+    private boolean enabled = false;
 
-    public List<String> getDoctext()
+    public boolean isEnabled()
     {
-        return doctext;
+        return enabled;
     }
 
-    public void setDoctext(List<String> doctext)
+    public void setEnabled(boolean aEnabled)
     {
-        this.doctext = doctext;
+        enabled = aEnabled;
     }
 }

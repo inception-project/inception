@@ -26,18 +26,24 @@
       <div class="panel-body">
         <div class="col-sm-12 form-horizontal">
           <div class="form-group" wicket:enclosure="name">
-            <label class="col-sm-3 control-label">
-              <wicket:message key="name"/>
+            <label class="col-sm-3 control-label" wicket:for="name">
+              <wicket:label key="name"/>
             </label>
             <div class="col-sm-9">
-              <wicket:container wicket:id="name" class="form-control"/>
+              <div class="input-group">
+                <input wicket:id="name" class="form-control" type="text"/>
+                <span class="input-group-addon">
+                  <input wicket:id="autoGenerateName" type="checkbox"/>
+                  <wicket:message key="autoGenerateName"/>
+                </span>
+              </div>
             </div>
           </div>
           <div class="form-group" wicket:enclosure="enabled">
             <div class="col-sm-offset-3 col-sm-9">
               <div class="checkbox">
                 <label wicket:for="enabled">
-                  <input wicket:id="enabled" type="checkbox">
+                  <input wicket:id="enabled" type="checkbox"/>
                   <wicket:label key="enabled"/>
                 </label>
               </div>

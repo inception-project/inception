@@ -15,26 +15,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.app.ui.externalsearch;
 
-import org.apache.wicket.markup.html.basic.Label;
-import org.apache.wicket.markup.html.panel.Panel;
+package de.tudarmstadt.ukp.inception.pdfeditor.config;
 
-public class ModalDocumentWindow
-    extends Panel
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
+
+@Component
+@ConfigurationProperties("ui.pdf")
+public class PdfEditorProperties
 {
-    /**
-     * 
-     */
-    private static final long serialVersionUID = 1L;
+    private boolean enabled = false;
 
-    /**
-     * @param aId
-     */
-    public ModalDocumentWindow(String aId, String aText)
+    public boolean isEnabled()
     {
-        super(aId);
-        add(new Label("text", aText));
+        return enabled;
     }
 
+    public void setEnabled(boolean aEnabled)
+    {
+        enabled = aEnabled;
+    }
 }
