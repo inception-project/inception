@@ -45,7 +45,6 @@ import org.apache.wicket.validation.IValidatable;
 import org.apache.wicket.validation.ValidationError;
 import org.wicketstuff.annotation.mount.MountPath;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
@@ -69,7 +68,6 @@ public class ManageUsersPage
     public static final String PARAM_USER = "user";
 
     private @SpringBean UserDao userRepository;
-    private @SpringBean ProjectService projectRepository;
     private @SpringBean RemoteApiProperties remoteApiProperties;
 
     private class DetailForm
