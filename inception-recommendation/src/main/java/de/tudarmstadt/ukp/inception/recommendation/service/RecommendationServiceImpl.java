@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.recommendation.service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.persistence.EntityManager;
@@ -185,7 +186,43 @@ public class RecommendationServiceImpl
     {
         return entityManager.find(Recommender.class, aId);
     }
+    
+    @Override
+    @Transactional
+    public boolean existsRecommender(Project aProject, String aName)
+    {
+        String query = String.join("\n",
+                "SELECT COUNT(*)",
+                "FROM Recommender ",
+                "WHERE name = :name ",
+                "AND project = :project");
 
+        long count = entityManager
+                .createQuery(query, Long.class)
+                .setParameter("name", aName)
+                .setParameter("project", aProject)
+                .getSingleResult();
+        
+        return count > 0;
+    }
+
+    @Override
+    @Transactional
+    public Optional<Recommender> getRecommender(Project aProject, String aName)
+    {
+        String query = String.join("\n",
+                "FROM Recommender ",
+                "WHERE name = :name ",
+                "AND project = :project");
+
+        return entityManager
+                .createQuery(query, Recommender.class)
+                .setParameter("name", aName)
+                .setParameter("project", aProject)
+                .getResultStream()
+                .findFirst();
+    }
+    
     @Override
     @Transactional
     public List<Recommender> listRecommenders(AnnotationLayer aLayer)
