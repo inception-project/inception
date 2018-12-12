@@ -132,8 +132,8 @@ public class RecommenderEditorPanel
         autoGenerateNameCheckBox = new CheckBox(MID_AUTO_GENERATED_NAME,
                 PropertyModel.of(this, "autoGenerateName"));
         autoGenerateNameCheckBox.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> {
-            autoUpdateName(nameField, recommenderModel.getObject());
-            t.add(nameField, autoGenerateNameCheckBox);
+            autoUpdateName(t, nameField, recommenderModel.getObject());
+            t.add(autoGenerateNameCheckBox);
         }));
         form.add(autoGenerateNameCheckBox);
         
@@ -146,10 +146,10 @@ public class RecommenderEditorPanel
         layerChoice.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> { 
             toolChoice.setModelObject(null);
             featureChoice.setModelObject(null);
-            autoUpdateName(nameField, recommenderModel.getObject());
+            autoUpdateName(t, nameField, recommenderModel.getObject());
             // Need to add the autoGenerateNameCheckBox here otherwise it looses its form-updating
             // behavior - no idea why
-            t.add(nameField, autoGenerateNameCheckBox, form.get(MID_TOOL), form.get(MID_FEATURE),
+            t.add(autoGenerateNameCheckBox, form.get(MID_TOOL), form.get(MID_FEATURE),
                     form.get(MID_MAX_RECOMMENDATIONS), activationContainer, traitsContainer);
         }));
         form.add(layerChoice);
@@ -165,10 +165,10 @@ public class RecommenderEditorPanel
         // The tools depend on the feature, so reload the tools when the feature is changed
         featureChoice.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> {
             toolChoice.setModelObject(null);
-            autoUpdateName(nameField, recommenderModel.getObject());
+            autoUpdateName(t, nameField, recommenderModel.getObject());
             // Need to add the autoGenerateNameCheckBox here otherwise it looses its form-updating
             // behavior - no idea why
-            t.add(nameField, autoGenerateNameCheckBox, form.get(MID_TOOL),
+            t.add(autoGenerateNameCheckBox, form.get(MID_TOOL),
                     form.get(MID_MAX_RECOMMENDATIONS), activationContainer, traitsContainer);
         }));
         form.add(featureChoice);
@@ -207,10 +207,10 @@ public class RecommenderEditorPanel
         toolChoice.setRequired(true);
         toolChoice.setOutputMarkupId(true);
         toolChoice.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> {
-            autoUpdateName(nameField, recommenderModel.getObject());
+            autoUpdateName(t, nameField, recommenderModel.getObject());
             // Need to add the autoGenerateNameCheckBox here otherwise it looses its form-updating
             // behavior - no idea why
-            t.add(nameField, autoGenerateNameCheckBox, form.get(MID_MAX_RECOMMENDATIONS),
+            t.add(autoGenerateNameCheckBox, form.get(MID_MAX_RECOMMENDATIONS),
                     activationContainer, traitsContainer);
         }));
         form.add(toolChoice);
@@ -273,13 +273,18 @@ public class RecommenderEditorPanel
         traitsContainer.add(new EmptyPanel(MID_TRAITS));
     }
 
-    private void autoUpdateName(TextField<String> aField, Recommender aRecommender)
+    private void autoUpdateName(AjaxRequestTarget aTarget, TextField<String> aField,
+            Recommender aRecommender)
     {
         if (!autoGenerateName || aRecommender == null) {
             return;
         }
-        
+
         aField.setModelObject(generateName(aRecommender));
+        
+        if (aTarget != null) {
+            aTarget.add(aField);
+        }
     }
     
     private String generateName(Recommender aRecommender)
@@ -326,7 +331,7 @@ public class RecommenderEditorPanel
                 Objects.equals(recommender.getName(), generateName(recommender))
         ) {
             autoGenerateNameCheckBox.setModelObject(true);
-            autoUpdateName(nameField, recommenderModel.getObject());
+            autoUpdateName(null, nameField, recommenderModel.getObject());
         }
         else {
             autoGenerateNameCheckBox.setModelObject(false);
