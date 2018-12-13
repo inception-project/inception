@@ -15,7 +15,8 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
@@ -55,7 +56,7 @@
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
       <artifactId>webanno-security</artifactId>
     </dependency>
-    
+
     <dependency>
       <groupId>org.apache.uima</groupId>
       <artifactId>uimaj-core</artifactId>
@@ -89,7 +90,7 @@
       <artifactId>spring-boot-autoconfigure</artifactId>
     </dependency>
 
-      <dependency>
+    <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
     </dependency>
@@ -129,12 +130,8 @@
     </dependency>
 
     <dependency>
-    	<groupId>de.tudarmstadt.ukp.inception.app</groupId>
-    	<artifactId>inception-external-search-core</artifactId>
-    </dependency>
-    <dependency>
-    	<groupId>de.tudarmstadt.ukp.inception.app</groupId>
-    	<artifactId>inception-ui-core</artifactId>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-external-search-core</artifactId>
     </dependency>
   </dependencies>
 </project>

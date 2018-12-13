@@ -22,6 +22,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
 import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
@@ -32,8 +33,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.inception.recommendation.adapter.RecommendationSpanRenderer;
-import de.tudarmstadt.ukp.inception.recommendation.adapter.RecommendationTypeRenderer;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 
@@ -53,7 +52,8 @@ public class RecommendationRenderer
      */
     public static void render(VDocument aVdoc, AnnotatorState aState, JCas aJCas,
             AnnotationSchemaService aAnnotationService, RecommendationService aRecService,
-            LearningRecordService aLearningRecordService, FeatureSupportRegistry aFsRegistry)
+            LearningRecordService aLearningRecordService, FeatureSupportRegistry aFsRegistry,
+            DocumentService aDocumentService)
     {
         if (aJCas == null) {
             return;
@@ -75,7 +75,7 @@ public class RecommendationRenderer
             RecommendationTypeRenderer renderer = getRenderer(adapter);
             if (renderer != null) {
                 renderer.render(aJCas, aVdoc, aState, coloringStrategy, layer, aRecService,
-                    aLearningRecordService, aAnnotationService, aFsRegistry);
+                    aLearningRecordService, aAnnotationService, aFsRegistry, aDocumentService);
             }
         }
     }
