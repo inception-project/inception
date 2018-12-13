@@ -19,18 +19,23 @@ package de.tudarmstadt.ukp.inception.recommendation.api.model;
 
 import java.io.Serializable;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+
 public class ExtendedId
     implements Serializable
 {
     private static final long serialVersionUID = -5214683455382881005L;
     
-    private String userName;
-    private long projectId;
-    private String documentName;
-    private long layerId;
-    private Offset offset;
-    private int annotationId;
-    private int sentenceId;
+    private final String userName;
+    private final long projectId;
+    private final String documentName;
+    private final long layerId;
+    private final int begin;
+    private final int end;
+    private final int annotationId;
+    private final int sentenceId;
+    
     private long recommenderId;
 
     public ExtendedId(String userName, long projectId, String documentName, long layerId,
@@ -41,10 +46,11 @@ public class ExtendedId
         this.projectId = projectId;
         this.documentName = documentName;
         this.layerId = layerId;
-        this.offset = offset;
         this.annotationId = annotationId;
         this.sentenceId = sentenceId;
         this.recommenderId = recommenderId;
+        this.begin = offset.getBeginCharacter();
+        this.end = offset.getEndCharacter();
     }
 
     public String getDocumentName()
@@ -67,11 +73,22 @@ public class ExtendedId
         return projectId;
     }
 
+    @Deprecated
     public Offset getOffset()
     {
-        return offset;
+        return new Offset(begin, end);
     }
 
+    public int getBegin()
+    {
+        return begin;
+    }
+    
+    public int getEnd()
+    {
+        return end;
+    }
+    
     public int getAnnotationId()
     {
         return annotationId;
@@ -87,79 +104,31 @@ public class ExtendedId
         return recommenderId;
     }
 
-    public void setRecommenderId(long recommenderId)
+    public void setRecommenderId(long aRecommenderId)
     {
-        this.recommenderId = recommenderId;
+        recommenderId = aRecommenderId;
+    }
+
+    @Override
+    public boolean equals(final Object other)
+    {
+        if (!(other instanceof ExtendedId)) {
+            return false;
+        }
+        ExtendedId castOther = (ExtendedId) other;
+        return new EqualsBuilder().append(userName, castOther.userName)
+                .append(projectId, castOther.projectId).append(documentName, castOther.documentName)
+                .append(layerId, castOther.layerId).append(begin, castOther.begin)
+                .append(end, castOther.end).append(annotationId, castOther.annotationId)
+                .append(sentenceId, castOther.sentenceId)
+                .append(recommenderId, castOther.recommenderId).isEquals();
     }
 
     @Override
     public int hashCode()
     {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + annotationId;
-        result = prime * result + ((documentName == null) ? 0 : documentName.hashCode());
-        result = prime * result + (int) (layerId ^ (layerId >>> 32));
-        result = prime * result + ((offset == null) ? 0 : offset.hashCode());
-        result = prime * result + (int) (projectId ^ (projectId >>> 32));
-        result = prime * result + (int) (recommenderId ^ (recommenderId >>> 32));
-        result = prime * result + sentenceId;
-        result = prime * result + ((userName == null) ? 0 : userName.hashCode());
-        return result;
-    }
-
-    @Override
-    public boolean equals(Object obj)
-    {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        ExtendedId other = (ExtendedId) obj;
-        if (annotationId != other.annotationId) {
-            return false;
-        }
-        if (documentName == null) {
-            if (other.documentName != null) {
-                return false;
-            }
-        }
-        else if (!documentName.equals(other.documentName)) {
-            return false;
-        }
-        if (layerId != other.layerId) {
-            return false;
-        }
-        if (offset == null) {
-            if (other.offset != null) {
-                return false;
-            }
-        }
-        else if (!offset.equals(other.offset)) {
-            return false;
-        }
-        if (projectId != other.projectId) {
-            return false;
-        }
-        if (recommenderId != other.recommenderId) {
-            return false;
-        }
-        if (sentenceId != other.sentenceId) {
-            return false;
-        }
-        if (userName == null) {
-            if (other.userName != null) {
-                return false;
-            }
-        }
-        else if (!userName.equals(other.userName)) {
-            return false;
-        }
-        return true;
+        return new HashCodeBuilder().append(userName).append(projectId).append(documentName)
+                .append(layerId).append(begin).append(end).append(annotationId).append(sentenceId)
+                .append(recommenderId).toHashCode();
     }
 }
