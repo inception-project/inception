@@ -68,9 +68,11 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxSubmitLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchService;
+import de.tudarmstadt.ukp.inception.externalsearch.event.ExternalSearchQueryEvent;
 import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
 import de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData;
 
@@ -88,6 +90,7 @@ public class SearchPage extends ApplicationPageBase
     private @SpringBean ExternalSearchService externalSearchService;
     private @SpringBean UserDao userRepository;
     private @SpringBean ImportExportService importExportService;
+    private @SpringBean ApplicationEventPublisherHolder applicationEventPublisher;
 
     private WebMarkupContainer dataTableContainer;
 
@@ -231,6 +234,8 @@ public class SearchPage extends ApplicationPageBase
     private void searchDocuments(String aQuery)
     {
         results.clear();
+        applicationEventPublisher.get().publishEvent(new ExternalSearchQueryEvent(this, 
+        		currentRepository.getProject(), currentUser.getUsername(), aQuery));
 
         try {
             for (ExternalSearchResult result : externalSearchService

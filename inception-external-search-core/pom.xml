@@ -26,6 +26,10 @@
   <artifactId>inception-external-search-core</artifactId>
   <name>INCEpTION - External Search - Core</name>
   <dependencies>
+  	<dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-log</artifactId>
+    </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
       <artifactId>webanno-api</artifactId>
