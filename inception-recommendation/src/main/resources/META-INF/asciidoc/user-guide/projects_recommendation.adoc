@@ -1,15 +1,19 @@
 [[sect_projects_recommendation]]
 = Recommenders
 
-Recommenders provide annotation support by predicting potential labels. These can be either accepted
-or rejected by the user. A recommender learns from this interaction to further improve the quality
-of its predictions.
+Recommenders provide annotation support by predicting potential labels. 
+These can be either accepted or rejected by the user. 
+A recommender learns from this interaction to further improve the quality of its predictions.
 
-Recommenders are trained every time an annotation is created, updated or deleted. In order to determine
+Recommenders are trained every time an annotation is created, updated or deleted. In order to determine 
 whether the annotations are good enough, recommenders are evaluated on the annotation data.
+During recommender evaluation a score for each recommender is calcultated and if this score does not
+meet the configured threshold, the recommender will not be used.
 
 Recommenders can be configured in the *Project Settings* under the *Recommenders* tab. To create a new
 recommender, click *Create*. Then, the layer, feature and the classifier type has to be selected.
+
+By default, the name of new recommenders are auto-generated based on the choice of layer, feature and tool. However, you can deactivate this behavior by unchecking the *auto-generate* option next to the name field.
 
 Recommenders can be enabled and disabled. This behaviour is configured by the *Enabled* checkbox.
 Recommenders that are disabled are not used for training and prediction and are not evaluated.
@@ -17,7 +21,9 @@ Recommenders that are disabled are not used for training and prediction and are 
 The *Activation strategy* describes when a recommender should be used for prediction. Right now,
 there are two options: either set a threshold on the evaluation score (if the evaluation score is
 lower than the threshold, the recommender is not used for predicting until annotations have changed)
-or always enable it.
+or always enable it. 
+If the option *Always active* is disabled and the score threshold is set to 0, 
+the recommender will also be always executed, but internally it is still evaluated.
 
 Some recommenders are capable of generating multiple alternative suggestions per token or span. The maximum
 number of suggestions can be configured by the *Max. recommendations* field.
