@@ -10,38 +10,33 @@ import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.externalsearch.event.ExternalSearchQueryEvent;
 import de.tudarmstadt.ukp.inception.log.adapter.EventLoggingAdapter;
 
-@Component
-public class ExternalSearchQueryEventAdapter
-    implements EventLoggingAdapter<ExternalSearchQueryEvent> {
+@Component public class ExternalSearchQueryEventAdapter
+        implements EventLoggingAdapter<ExternalSearchQueryEvent>
+{
 
-	private final Logger log = LoggerFactory.getLogger(getClass());
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
-    @Override
-    public boolean accepts(Object aEvent)
+    @Override public boolean accepts(Object aEvent)
     {
         return aEvent instanceof ExternalSearchQueryEvent;
     }
 
-    @Override
-    public long getProject(ExternalSearchQueryEvent aEvent)
+    @Override public long getProject(ExternalSearchQueryEvent aEvent)
     {
         return aEvent.getProject().getId();
     }
 
-    @Override
-    public String getAnnotator(ExternalSearchQueryEvent aEvent)
+    @Override public String getAnnotator(ExternalSearchQueryEvent aEvent)
     {
         return aEvent.getUser();
     }
 
-    @Override
-    public String getUser(ExternalSearchQueryEvent aEvent)
+    @Override public String getUser(ExternalSearchQueryEvent aEvent)
     {
         return aEvent.getUser();
     }
 
-    @Override
-    public String getDetails(ExternalSearchQueryEvent aEvent)
+    @Override public String getDetails(ExternalSearchQueryEvent aEvent)
     {
         try {
             Details details = new Details();
