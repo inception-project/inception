@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.app.ui.externalsearch;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -29,7 +31,6 @@ import org.apache.uima.UIMAException;
 import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.Session;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.extensions.markup.html.repeater.data.grid.ICellPopulator;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.AbstractColumn;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.DataTable;
@@ -49,6 +50,10 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.safety.Cleaner;
+import org.jsoup.safety.Whitelist;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wicketstuff.annotation.mount.MountPath;
@@ -154,6 +159,25 @@ public class SearchPage extends ApplicationPageBase
         dataTableContainer.add(resultTable);
     }
 
+    private void actionImportDocument(AjaxRequestTarget aTarget, ExternalSearchResult aResult)
+    {
+        String documentTitle = aResult.getDocumentTitle();
+        
+        String text = externalSearchService
+                .getDocumentById(userRepository.getCurrentUser(), currentRepository,
+                        documentTitle)
+                .getText();
+
+        if (documentService.existsSourceDocument(project, documentTitle)) {
+            error("Document [" + documentTitle + "] already uploaded! Delete "
+                + "the document if you want to upload again");
+        }
+        else {
+            importDocument(documentTitle, text);
+            aTarget.add(dataTableContainer);
+        }
+    }
+    
     private void importDocument(String aFileName, String aText)
     {
         InputStream stream = new ByteArrayInputStream(aText.getBytes(StandardCharsets.UTF_8));
@@ -255,7 +279,7 @@ public class SearchPage extends ApplicationPageBase
 
         private static final long serialVersionUID = -1L;
     }
-
+    
     private void abort() {
         throw new RestartResponseException(getApplication().getHomePage());
     }
@@ -263,77 +287,41 @@ public class SearchPage extends ApplicationPageBase
     public class ResultRowView
         extends Panel
     {
+        private static final long serialVersionUID = -6708211343231617251L;
 
         public ResultRowView(String id, long rowNumber, IModel<ExternalSearchResult> model)
         {
             super(id, model);
 
             ExternalSearchResult result = (ExternalSearchResult) getDefaultModelObject();
+            
             String documentTitle = result.getDocumentTitle();
-            String uri = result.getUri();
-            String score = result.getScore().toString();
-            String highlight = result.getHighlights().get(0);
-
-            LambdaAjaxLink link = new LambdaAjaxLink("documentDetails", _target -> {
+            
+            Whitelist wl = new Whitelist();
+            wl.addTags("em");
+            Document dirty = Jsoup.parseBodyFragment(result.getHighlights().get(0), "");
+            Cleaner cleaner = new Cleaner(wl);
+            Document clean = cleaner.clean(dirty);
+            clean.select("em").tagName("mark");
+            String highlight = clean.body().html();
+            
+            LambdaAjaxLink link = new LambdaAjaxLink("titleLink", _target -> {
                 PageParameters pageParameters = new PageParameters()
                     .add(DocumentDetailsPage.DOCUMENT_TITLE, documentTitle);
                 setResponsePage(DocumentDetailsPage.class, pageParameters);
 
             });
-            link.add(new Label("textId", documentTitle));
+            link.add(new Label("title", result.getUri()));
             add(link);
 
-            add(new Label("uri", uri));
-            add(new Label("score", score));
-            add(new Label("highlight", highlight));
-            if (documentService.existsSourceDocument(project, documentTitle)) {
-                add(new Label("importStatus", " imported "));
-            }
-            else {
-                add(new Label("importStatus", " not imported "));
-            }
-            add(new ImportPanel("importDocument", model));
-        }
-    }
-
-    class ImportPanel extends Panel
-    {
-        public ImportPanel(String id, IModel<ExternalSearchResult> model)
-        {
-            super(id, model);
-
-            ExternalSearchResult result = (ExternalSearchResult) getDefaultModelObject();
-
-            String documentTitle = result.getDocumentTitle();
-
-            AjaxLink<Void> link = new AjaxLink<Void>("importLink")
-            {
-                @Override
-                public void onClick(AjaxRequestTarget target) {
-                    String text = externalSearchService
-                            .getDocumentById(userRepository.getCurrentUser(), currentRepository,
-                                    documentTitle)
-                            .getText();
-
-                    if (documentService.existsSourceDocument(project, documentTitle)) {
-                        error("Document " + documentTitle + " already uploaded ! Delete "
-                            + "the document if you want to upload again");
-                    }
-                    else {
-                        importDocument(documentTitle, text);
-                        setResponsePage(getPage());
-                    }
-                }
-
-                @Override
-                protected void onConfigure ()
-                {
-                    super.onConfigure();
-                    setVisible(!documentService.existsSourceDocument(project, documentTitle));
-                }
-            };
-
-            add(link);
+            add(new Label("score", result.getScore()));
+            add(new Label("highlight", highlight).setEscapeModelStrings(false));
+            add(new Label("importStatus", () -> 
+                    documentService.existsSourceDocument(project, documentTitle) ? "imported"
+                            : "not imported"));
+            add(new LambdaAjaxLink("importLink", _target -> actionImportDocument(_target, result))
+                    .add(visibleWhen(() -> 
+                        !documentService.existsSourceDocument(project, documentTitle))));
         }
     }
 }

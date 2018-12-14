@@ -202,9 +202,8 @@ public class SearchAnnotationSidebar
                             selectedResult = aItem.getModelObject();
                             actionShowSelectedDocument(t,
                                     documentService.getSourceDocument(currentProject,
-                                            aItem.getModel().getObject().getDocumentTitle()),
-                                    aItem.getModel().getObject().getOffsetStart(),
-                                    aItem.getModel().getObject().getOffsetEnd());
+                                            selectedResult.getDocumentTitle()),
+                                    selectedResult.getOffsetStart(), selectedResult.getOffsetEnd());
                         });
                     }
                     else {
@@ -215,6 +214,7 @@ public class SearchAnnotationSidebar
                                     documentService.getSourceDocument(currentProject,
                                             aItem.getModel().getObject().getDocumentTitle()),
                                     aItem.getModel().getObject().getTokenStart());
+                            ;
                         });
 
                     }

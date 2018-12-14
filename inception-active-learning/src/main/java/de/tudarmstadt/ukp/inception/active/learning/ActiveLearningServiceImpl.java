@@ -17,26 +17,34 @@
  */
 package de.tudarmstadt.ukp.inception.active.learning;
 
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_REJECTED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_SKIPPED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.REJECTED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.SKIPPED;
+import static java.util.stream.Collectors.toList;
+
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Date;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Optional;
 
-import org.apache.uima.jcas.JCas;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.inception.active.learning.sidebar.ActiveLearningRecommender;
-import de.tudarmstadt.ukp.inception.active.learning.sidebar.RecommendationDifference;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.active.learning.strategy.ActiveLearningStrategy;
+import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup.Delta;
 
 @Component
 public class ActiveLearningServiceImpl
@@ -44,85 +52,114 @@ public class ActiveLearningServiceImpl
 {
     private final DocumentService documentService;
     private final RecommendationService recommendationService;
-
-    private Map<ActiveLearningUserStateKey, ActiveLearningUserState> states = new
-        ConcurrentHashMap<>();
+    private final UserDao userService;
+    private final LearningRecordService learningHistoryService;
 
     @Autowired
     public ActiveLearningServiceImpl(DocumentService aDocumentService,
-            RecommendationService aRecommendationService)
+            RecommendationService aRecommendationService, UserDao aUserDao,
+            LearningRecordService aLearningHistoryService)
     {
         documentService = aDocumentService;
         recommendationService = aRecommendationService;
+        userService = aUserDao;
+        learningHistoryService = aLearningHistoryService;
     }
 
     @Override
-    public List<List<AnnotationObject>> getRecommendationFromRecommendationModel(
-            AnnotatorState aState, AnnotationLayer aLayer)
-    {
-        Predictions model = recommendationService.getPredictions(aState.getUser(),
-                aState.getProject());
-
-        if (model == null) {
-            return new ArrayList<>();
-        }
-
-        // getRecommendationsForThisDocument(model);
-        return getRecommendationsForWholeProject(model, aLayer);
-    }
-
-//    private List<List<AnnotationObject>> getRecommendationsForThisDocument(AnnotatorState aState,
-//            Predictions model, JCas aJcas, AnnotationLayer aLayer)
-//    {
-//        int windowBegin = 0;
-//        int windowEnd = aJcas.getDocumentText().length() - 1;
-//        // TODO #176 use the document Id once it it available in the CAS
-//        return model.getPredictions(aState.getDocument().getName(), aLayer, windowBegin,
-//                windowEnd, aJcas);
-//    }
-
-    @Override
-    public List<List<AnnotationObject>> getRecommendationsForWholeProject(Predictions model,
+    public List<SuggestionGroup> getSuggestions(User aUser,
             AnnotationLayer aLayer)
     {
-        List<List<AnnotationObject>> result = new ArrayList<>();
+        Predictions model = recommendationService.getPredictions(aUser, aLayer.getProject());
 
-        Map<String, List<List<AnnotationObject>>> recommendationsMap = model
-            .getPredictionsForWholeProject(aLayer, documentService, true);
-
-        Set<String> documentNameSet = recommendationsMap.keySet();
-
-        for (String documentName : documentNameSet) {
-            result.addAll(recommendationsMap.get(documentName));
+        if (model == null) {
+            return Collections.emptyList();
         }
 
-        return result;
+        Map<String, SuggestionDocumentGroup> recommendationsMap = model
+                .getPredictionsForWholeProject(aLayer, documentService);
+
+        return recommendationsMap.values().stream()
+                .flatMap(docMap -> docMap.stream())
+                .collect(toList());
     }
     
-    public List<AnnotationObject> getFlattenedRecommendationsFromRecommendationModel(JCas aJcas,
-            AnnotatorState aState, AnnotationLayer aSelectedLayer)
+    @Override
+    public boolean isSuggestionVisible(LearningRecord aRecord)
     {
-        int windowBegin = 0;
-        int windowEnd = aJcas.getDocumentText().length() - 1;
-        Predictions model = recommendationService.getPredictions(aState.getUser(),
-                aState.getProject());
-        // TODO #176 use the document Id once it it available in the CAS
-        return model.getFlattenedPredictions(aState.getDocument().getName(), aSelectedLayer,
-            windowBegin, windowEnd, aJcas, true);
+        User user = userService.get(aRecord.getUser());
+        List<SuggestionGroup> suggestions = getSuggestions(user,
+                aRecord.getLayer());
+        for (SuggestionGroup listOfAO : suggestions) {
+            if (listOfAO.stream().anyMatch(suggestion -> 
+                    suggestion.getDocumentName().equals(aRecord.getSourceDocument().getName()) && 
+                    suggestion.getFeature().equals(aRecord.getAnnotationFeature().getName()) && 
+                    suggestion.getLabel().equals(aRecord.getAnnotation()) && 
+                    suggestion.getBegin() == aRecord.getOffsetCharacterBegin() && 
+                    suggestion.getEnd() == aRecord.getOffsetCharacterEnd() &&
+                    suggestion.isVisible())
+            ) {
+                return true;
+            }
+        }
+        return false;
     }
+    
+    @Override
+    public boolean hasSkippedSuggestions(User aUser, AnnotationLayer aLayer)
+    {
+        return learningHistoryService.hasSkippedSuggestions(aUser, aLayer);
+    }
+    
+    @Override
+    public void hideRejectedOrSkippedAnnotations(User aUser,
+            AnnotationLayer aLayer, boolean filterSkippedRecommendation,
+            List<SuggestionGroup> aSuggestionGroups)
+    {
+        List<LearningRecord> records = learningHistoryService
+                .listRecords(aUser.getUsername(),
+                        aLayer);
 
+        for (SuggestionGroup group : aSuggestionGroups) {
+            for (AnnotationSuggestion s : group) {
+                // If a suggestion is already invisible, we don't need to check if it needs hiding.
+                // Mind that this code does not unhide the suggestion immediately if a user
+                // deletes a skip learning record - it will only get unhidden after the next
+                // prediction run (unless the learning-record-deletion code does an explicit
+                // unhiding).
+                if (s.isVisible()) {
+                    records.stream()
+                            .filter(r -> r.getSourceDocument().getName().equals(s.getDocumentName())
+                                    && r.getOffsetCharacterBegin() == s.getBegin()
+                                    && r.getOffsetCharacterEnd() == s.getEnd()
+                                    && r.getAnnotation().equals(s.getLabel()))
+                            .forEach(record -> {
+                                if (REJECTED.equals(record.getUserAction())) {
+                                    s.hide(FLAG_REJECTED);
+                                }
+                                else if (filterSkippedRecommendation
+                                        && SKIPPED.equals(record.getUserAction())) {
+                                    s.hide(FLAG_SKIPPED);
+                                }
+                            });
+                }
+            }
+        }
+    }
+    
     public static class ActiveLearningUserState implements Serializable
     {
         private static final long serialVersionUID = -167705997822964808L;
+        
         private boolean sessionActive = false;
-        private boolean hasUnseenRecommendation = false;
-        private boolean hasSkippedRecommendation = false;
         private boolean doExistRecommenders = true;
-        private AnnotationObject currentRecommendation;
-        private RecommendationDifference currentDifference;
-        private AnnotationLayer selectedLayer;
-        private ActiveLearningRecommender activeLearningRecommender;
-        private Date learnSkippedRecommendationTime;
+        private AnnotationLayer layer;
+        private ActiveLearningStrategy strategy;
+        private List<SuggestionGroup> suggestions;
+
+        private Delta currentDifference;
+        private String leftContext;
+        private String rightContext;
 
         public boolean isSessionActive()
         {
@@ -132,26 +169,6 @@ public class ActiveLearningServiceImpl
         public void setSessionActive(boolean sessionActive)
         {
             this.sessionActive = sessionActive;
-        }
-
-        public boolean isHasUnseenRecommendation()
-        {
-            return hasUnseenRecommendation;
-        }
-
-        public void setHasUnseenRecommendation(boolean hasUnseenRecommendation)
-        {
-            this.hasUnseenRecommendation = hasUnseenRecommendation;
-        }
-
-        public boolean isHasSkippedRecommendation()
-        {
-            return hasSkippedRecommendation;
-        }
-
-        public void setHasSkippedRecommendation(boolean hasSkippedRecommendation)
-        {
-            this.hasSkippedRecommendation = hasSkippedRecommendation;
         }
 
         public boolean isDoExistRecommenders()
@@ -164,55 +181,70 @@ public class ActiveLearningServiceImpl
             this.doExistRecommenders = doExistRecommenders;
         }
 
-        public AnnotationObject getCurrentRecommendation()
+        public Optional<AnnotationSuggestion> getSuggestion()
         {
-            return currentRecommendation;
+            return currentDifference != null ? Optional.of(currentDifference.getFirst())
+                    : Optional.empty();
         }
 
-        public void setCurrentRecommendation(AnnotationObject currentRecommendation)
+        public Optional<Delta> getCurrentDifference()
         {
-            this.currentRecommendation = currentRecommendation;
+            return Optional.ofNullable(currentDifference);
         }
 
-        public RecommendationDifference getCurrentDifference()
+        public void setCurrentDifference(Optional<Delta> currentDifference)
         {
-            return currentDifference;
+            this.currentDifference = currentDifference.orElse(null);
         }
 
-        public void setCurrentDifference(RecommendationDifference currentDifference)
+        public AnnotationLayer getLayer()
         {
-            this.currentDifference = currentDifference;
+            return layer;
         }
 
-        public AnnotationLayer getSelectedLayer()
+        public void setLayer(AnnotationLayer selectedLayer)
         {
-            return selectedLayer;
+            this.layer = selectedLayer;
         }
 
-        public void setSelectedLayer(AnnotationLayer selectedLayer)
+        public ActiveLearningStrategy getStrategy()
         {
-            this.selectedLayer = selectedLayer;
+            return strategy;
         }
 
-        public ActiveLearningRecommender getActiveLearningRecommender()
+        public void setStrategy(ActiveLearningStrategy aStrategy)
         {
-            return activeLearningRecommender;
+            strategy = aStrategy;
         }
 
-        public void setActiveLearningRecommender(
-            ActiveLearningRecommender activeLearningRecommender)
+        public void setSuggestions(List<SuggestionGroup> aSuggestions)
         {
-            this.activeLearningRecommender = activeLearningRecommender;
+            suggestions = aSuggestions;
         }
 
-        public Date getLearnSkippedRecommendationTime()
+        public List<SuggestionGroup> getSuggestions()
         {
-            return learnSkippedRecommendationTime;
+            return suggestions;
         }
 
-        public void setLearnSkippedRecommendationTime(Date learnSkippedRecommendationTime)
+        public String getLeftContext()
         {
-            this.learnSkippedRecommendationTime = learnSkippedRecommendationTime;
+            return leftContext;
+        }
+
+        public void setLeftContext(String aLeftContext)
+        {
+            leftContext = aLeftContext;
+        }
+
+        public String getRightContext()
+        {
+            return rightContext;
+        }
+
+        public void setRightContext(String aRightContext)
+        {
+            rightContext = aRightContext;
         }
     }
 
@@ -231,15 +263,18 @@ public class ActiveLearningServiceImpl
         @Override
         public boolean equals(Object o)
         {
-            if (this == o)
+            if (this == o) {
                 return true;
-            if (o == null || getClass() != o.getClass())
+            }
+            if (o == null || getClass() != o.getClass()) {
                 return false;
+            }
 
             ActiveLearningUserStateKey that = (ActiveLearningUserStateKey) o;
 
-            if (projectId != that.projectId)
+            if (projectId != that.projectId) {
                 return false;
+            }
             return userName.equals(that.userName);
         }
 

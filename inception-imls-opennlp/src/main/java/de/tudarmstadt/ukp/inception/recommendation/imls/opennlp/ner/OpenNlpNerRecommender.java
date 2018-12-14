@@ -174,7 +174,9 @@ public class OpenNlpNerRecommender
         try (NameSampleStream stream = new NameSampleStream(testSet)) {
             TokenNameFinderEvaluator evaluator = new TokenNameFinderEvaluator(nameFinder);
             evaluator.evaluate(stream);
-            return evaluator.getFMeasure().getFMeasure();
+            // getFMeasure returns -1 if the evaluation cannot be performed, but we want any 
+            // recommender to get activated when the threshold is set to 0, so we cap at 0.
+            return Math.max(0, evaluator.getFMeasure().getFMeasure());
         } catch (IOException e) {
             LOG.error("Exception during evaluating the OpenNLP Named Entity Recognizer model.", e);
             throw new RecommendationException("Error while evaluating OpenNlp NER", e);

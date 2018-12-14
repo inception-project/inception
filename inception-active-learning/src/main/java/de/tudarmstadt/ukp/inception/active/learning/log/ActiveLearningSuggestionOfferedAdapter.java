@@ -27,14 +27,15 @@ import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningRecommendationEvent;
+import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningSuggestionOfferedEvent;
 import de.tudarmstadt.ukp.inception.log.adapter.EventLoggingAdapter;
 import de.tudarmstadt.ukp.inception.log.model.AnnotationDetails;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType;
 
 
 @Component
-public class ActiveLearningRecommendationEventAdapter
-    implements EventLoggingAdapter<ActiveLearningRecommendationEvent>
+public class ActiveLearningSuggestionOfferedAdapter
+    implements EventLoggingAdapter<ActiveLearningSuggestionOfferedEvent>
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -45,29 +46,28 @@ public class ActiveLearningRecommendationEventAdapter
     }
 
     @Override
-    public long getDocument(ActiveLearningRecommendationEvent aEvent)
+    public long getDocument(ActiveLearningSuggestionOfferedEvent aEvent)
     {
         return aEvent.getDocument().getId();
     }
 
     @Override
-    public long getProject(ActiveLearningRecommendationEvent aEvent)
+    public long getProject(ActiveLearningSuggestionOfferedEvent aEvent)
     {
         return aEvent.getDocument().getProject().getId();
     }
 
     @Override
-    public String getDetails(ActiveLearningRecommendationEvent aEvent)
+    public String getDetails(ActiveLearningSuggestionOfferedEvent aEvent)
     {
         try {
-            ActiveLearningRecommendationDetails details = new ActiveLearningRecommendationDetails();
+            Details details = new Details();
             details.ann = new AnnotationDetails();
             details.ann.setBegin(aEvent.getCurrentRecommendation().getBegin());
             details.ann.setEnd(aEvent.getCurrentRecommendation().getEnd());
             details.ann.setText(aEvent.getCurrentRecommendation().getCoveredText());
             details.ann.setType(aEvent.getLayer().getName());
             details.annotationFeature = aEvent.getAnnotationFeature();
-            details.userAction = aEvent.getAction();
             details.currentLabel = aEvent.getCurrentRecommendation().getLabel();
             details.confidence = aEvent.getCurrentRecommendation().getConfidence();
             details.recommenderId = aEvent.getCurrentRecommendation().getRecommenderId();
@@ -83,7 +83,7 @@ public class ActiveLearningRecommendationEventAdapter
         }
     }
 
-    public static class ActiveLearningRecommendationDetails
+    public static class Details
     {
         public AnnotationDetails ann;
         public String annotationFeature;

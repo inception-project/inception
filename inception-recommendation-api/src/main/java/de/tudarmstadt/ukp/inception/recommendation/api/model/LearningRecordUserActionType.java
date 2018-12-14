@@ -20,11 +20,11 @@ package de.tudarmstadt.ukp.inception.recommendation.api.model;
 import de.tudarmstadt.ukp.clarin.webanno.support.PersistentEnumUserType;
 
 public class LearningRecordUserActionType
-    extends PersistentEnumUserType<LearningRecordUserAction>
+    extends PersistentEnumUserType<LearningRecordType>
 {
     @Override
-    public Class<LearningRecordUserAction> returnedClass()
+    public Class<LearningRecordType> returnedClass()
     {
-        return LearningRecordUserAction.class;
+        return LearningRecordType.class;
     }
 }
