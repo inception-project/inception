@@ -210,13 +210,15 @@ public class AccessSpecificSettingsPanel extends Panel
         FileInputConfig config = new FileInputConfig();
         config.initialCaption("Import project archives ...");
         config.showPreview(false);
-        config.showUpload(true);
+        config.showUpload(false);
         config.removeIcon("<i class=\"fa fa-remove\"></i>");
-        config.uploadIcon("<i class=\"fa fa-upload\"></i>");
+//        config.uploadIcon("<i class=\"fa fa-upload\"></i>");
         config.browseIcon("<i class=\"fa fa-folder-open\"></i>");
         importProjectForm.add(fileUpload = new BootstrapFileInputField(aFieldId,
             new ListModel<>(), config)
         {
+            private static final long serialVersionUID = 4057215581487440768L;
+
             @Override
             protected void onSubmit(AjaxRequestTarget aTarget)
             {

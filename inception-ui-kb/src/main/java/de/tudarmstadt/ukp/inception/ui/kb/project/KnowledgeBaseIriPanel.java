@@ -38,6 +38,7 @@ import de.agilecoders.wicket.core.markup.html.bootstrap.button.Buttons;
 import de.agilecoders.wicket.core.markup.html.bootstrap.form.radio.BootstrapRadioGroup;
 import de.agilecoders.wicket.core.markup.html.bootstrap.form.radio.BootstrapRadioGroup.ISelectionChangeHandler;
 import de.agilecoders.wicket.core.markup.html.bootstrap.form.radio.EnumRadioChoiceRenderer;
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
@@ -170,7 +171,7 @@ public class KnowledgeBaseIriPanel
     {
         final List<Reification> reificationList = Arrays.asList(Reification.values());
 
-        DropDownChoice<Reification> reificationDropDownChoice = new DropDownChoice<>(id,
+        DropDownChoice<Reification> reificationDropDownChoice = new BootstrapSelect<>(id,
             kbModel.bind(property), reificationList);
         reificationDropDownChoice.setRequired(true);
         return reificationDropDownChoice;
