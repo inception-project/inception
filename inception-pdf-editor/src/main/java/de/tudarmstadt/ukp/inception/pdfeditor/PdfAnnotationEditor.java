@@ -17,7 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.pdfeditor;
 
+import java.io.IOException;
+
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.uima.jcas.JCas;
+
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.model.IModel;
@@ -30,6 +34,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.JCasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.PdfAnnoPanel;
 
 public class PdfAnnotationEditor
@@ -39,13 +44,13 @@ public class PdfAnnotationEditor
     private static final Logger LOG = LoggerFactory.getLogger(PdfAnnotationEditor.class);
 
     private @SpringBean DocumentService documentService;
-    
+
     public PdfAnnotationEditor(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, JCasProvider aJCasProvider)
     {
         super(aId, aModel, aActionHandler, aJCasProvider);
-        
-        add(new PdfAnnoPanel("vis", aModel));
+
+        add(new PdfAnnoPanel("vis", aModel, this));
     }
 
     @Override
@@ -73,5 +78,21 @@ public class PdfAnnotationEditor
         LOG.error(aMessage, aCause);
         error(aMessage + ExceptionUtils.getRootCauseMessage(aCause));
         return;
+    }
+
+    /**
+     * Renders the annotation file for PdfAnno
+     * @param pdftxt Output string of PDFExtract
+     * @return Annotation file
+     */
+    public String renderAnnoFile(String pdftxt) throws IOException {
+        JCas jCas = getJCasProvider().get();
+        if (getModelObject().getProject() != null) {
+            VDocument vdoc = render(jCas);
+        }
+        String header = "pdfanno = \"0.5.0\"\n" +
+                        "pdfextract = \"0.3.2\"\n" +
+                        "\n";
+        return header;
     }
 }

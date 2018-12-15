@@ -144,7 +144,8 @@ async function displayViewer () {
 
       // Load and display annotations, if annoURL is set.
       if (annoURL) {
-
+// BEGIN PDFANNO EXTENSION - #627 - Retrieval of existing annotations in PDF editor frontend
+/*
         let anno = await window.annoPage.loadAnnoFileFromServer(annoURL)
 
         window.annoPage.importAnnotation({
@@ -159,6 +160,14 @@ async function displayViewer () {
             window.annoPage.scrollToAnnotation(moveTo)
           }, 500)
         }
+*/
+        parent.Wicket.Ajax.ajax({
+          "m" : "GET",
+          "u" : annoURL,
+          "sh" : [],
+          "fh": []
+        });
+// END PDFANNO EXTENSION
       }
       window.removeEventListener('pagerendered', listenPageRendered)
     }
