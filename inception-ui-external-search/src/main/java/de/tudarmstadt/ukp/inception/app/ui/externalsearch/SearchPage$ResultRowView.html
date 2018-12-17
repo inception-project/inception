@@ -19,41 +19,23 @@
 <html xmlns:wicket="http://wicket.apache.org">
 <body>
   <wicket:panel>
-    <table id="bd">
-      <tr>
-        <td style="width: 100%;">
-          <table>
-            <tr>
-              <td><b>Text ID:</b></td>
-              <td>
-                <a href="#" wicket:id="documentDetails" class="btn-link h4">
-                  <span wicket:id="textId"/>
-                </a>
-              </td>
-            </tr>
-            <tr>
-              <td><b>URI:</b></td>
-              <td><span wicket:id="uri"/></td>
-            </tr>
-            <tr>
-              <td><b>Score:</b></td>
-              <td>
-                <span wicket:id="score"/>
-              </td>
-            </tr>
-            <tr>
-              <td colspan="3">
-                <span wicket:id="highlight"/>
-              </td>
-            </tr>
-          </table>
-        </td>
-        <td>
-          <div wicket:id="importStatus" class="label label-info"/>
-          <div wicket:id="importDocument"></div>
-        </td>
-      </tr>
-    </table>
+    <div class="flex-h-container">
+      <div class="flex-content">
+        <h4>
+          <a wicket:id="titleLink"><wicket:container wicket:id="title"/></a>
+        </h4>
+        <div>
+          <wicket:container wicket:id="highlight"/>
+        </div>
+      </div>
+      <div class="flex-v-container">
+        <button wicket:id="importLink" class="btn btn-default"><i class="fa fa-plus" aria-hidden="true"></i> Import</button>
+        <div wicket:id="importStatus" class="label label-info"/>
+        <div class="text-center">
+          <wicket:container wicket:id="score"/>
+        </div>
+      </div>
+    </div>
   </wicket:panel>
 </body>
 </html>

@@ -19,37 +19,64 @@ package de.tudarmstadt.ukp.inception.recommendation.api;
 
 import java.util.List;
 
-import org.springframework.security.access.prepost.PreAuthorize;
-
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType;
 
-
-public interface LearningRecordService {
+public interface LearningRecordService
+{
     String SERVICE_NAME = "LearningRecordService";
 
-    List<LearningRecord> getRecordByDocument(SourceDocument sourceDocument);
+    List<LearningRecord> listRecords(String user, AnnotationLayer layer);
 
-    List<LearningRecord> getRecordByDocumentAndUser(SourceDocument sourceDocument, User user);
+    /**
+     * Fetches the learning records for the given document, user and layer. An optional limit can be
+     * used, e.g. for loading only a reduced part of the history in the active learning sidebar.
+     * Learning records with the action {@link LearningRecordType#SHOWN} are <b>not</b> returned by
+     * this method.
+     */
+    List<LearningRecord> listRecords(String user, AnnotationLayer layer, int aLimit);
 
-    public List<LearningRecord> getAllRecordsByDocumentAndUserAndLayer(
-        SourceDocument sourceDocument, String user, AnnotationLayer layer);
-
-    public void deleteRecordByDocumentAndUser(SourceDocument document, String user);
+    void deleteRecords(SourceDocument document, String user);
 
     LearningRecord getRecordById(long recordId);
 
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
     void create(LearningRecord learningRecord);
 
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
     void update(LearningRecord learningRecord);
 
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
     void delete(LearningRecord learningRecord);
 
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
     void deleteById(long id);
+
+    void logRecord(SourceDocument aDocument, String aUsername,
+            AnnotationSuggestion aPrediction, AnnotationLayer aLayer, AnnotationFeature aFeature,
+            LearningRecordType aUserAction, LearningRecordChangeLocation aLocation);
+
+    /**
+     * Updates the learning log with an entry for the given suggestion. Any entries which are 
+     * duplicates of the new action are removed as part of this action. Note that the actual
+     * action the user performed is not taken into account to determine duplicateness.
+     */
+    void logRecord(SourceDocument aDocument, String aUsername,
+            AnnotationSuggestion aSuggestion, String aAlternativeLabel, AnnotationLayer aLayer,
+            AnnotationFeature aFeature, LearningRecordType aUserAction,
+            LearningRecordChangeLocation aLocation);
+
+    /**
+     * Checks if the are any records of type {@link LearningRecordType#SKIPPED} in the history of
+     * the given layer for the given user.
+     */
+    boolean hasSkippedSuggestions(User aUser, AnnotationLayer aLayer);
+
+    /**
+     * Removes all records of type {@link LearningRecordType#SKIPPED} in the history of the given
+     * layer for the given user.
+     */
+    void deleteSkippedSuggestions(User aUser, AnnotationLayer aLayer);
 }

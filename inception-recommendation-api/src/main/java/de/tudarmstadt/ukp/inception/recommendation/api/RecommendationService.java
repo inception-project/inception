@@ -18,15 +18,17 @@
 package de.tudarmstadt.ukp.inception.recommendation.api;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.uima.jcas.JCas;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User; 
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
@@ -34,7 +36,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 
 /**
- * The main contact point of the Recommendation module. This interface can be injected in the Wicket
+ * The main contact point of the Recommendation module. This interface can be injected in the wicket
  * pages. It is used to pull the latest recommendations for an annotation layer and render them.
  */
 public interface RecommendationService
@@ -50,6 +52,10 @@ public interface RecommendationService
     
     Recommender getRecommender(long aId);
 
+    Optional<Recommender> getRecommender(Project aProject, String aName);
+
+    boolean existsRecommender(Project aProject, String aName);
+    
     List<Recommender> listRecommenders(Project aProject);
 
     List<Recommender> listRecommenders(AnnotationLayer aLayer);
@@ -78,10 +84,7 @@ public interface RecommendationService
     
     void putIncomingPredictions(User aUser, Project aProject, Predictions aPredictions);
     
-    void switchPredictions(User aUser, Project aProject);
-
-    void setFeatureValue(AnnotationFeature aFeature, Object aPredictedValue,
-        SpanAdapter aAdapter, AnnotatorState aState, JCas aJcas, int address);
+    boolean switchPredictions(User aUser, Project aProject);
 
     /**
      * Returns the {@code RecommenderContext} for the given recommender if it exists, else it
@@ -94,4 +97,15 @@ public interface RecommendationService
      * @return The context of the given recommender if there is one, or an empty one
      */
     RecommenderContext getContext(User aUser, Recommender aRecommender);
+
+    /**
+     * Uses the given annotation suggestion to create a new annotation or to update a feature in an
+     * existing annotation.
+     * 
+     * @return the CAS address of the created/updated annotation.
+     */
+    public int upsertFeature(AnnotationSchemaService annotationService, SourceDocument aDocument,
+            String aUsername, JCas aJCas, AnnotationLayer layer, AnnotationFeature aFeature,
+            String aValue, int aBegin, int aEnd)
+        throws AnnotationException;
 }

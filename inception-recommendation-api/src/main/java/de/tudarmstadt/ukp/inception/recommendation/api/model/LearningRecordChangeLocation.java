@@ -19,10 +19,22 @@ package de.tudarmstadt.ukp.inception.recommendation.api.model;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.PersistentEnum;
 
-public enum LearningRecordChangeLocation implements PersistentEnum {
+public enum LearningRecordChangeLocation
+    implements
+    PersistentEnum
+{
 
+    /**
+     * Triggered through the active learning sidebar.
+     */
     AL_SIDEBAR("AL_SIDEBAR"),
+    /**
+     * Triggered through the main annotation editor.
+     */
     MAIN_EDITOR("MAIN_EDITOR"),
+    /**
+     * Triggered through the annotation detail editor panel.
+     */
     DETAIL_EDITOR("DETAIL_EDITOR");
 
     private final String id;
@@ -32,11 +44,20 @@ public enum LearningRecordChangeLocation implements PersistentEnum {
         id = aId;
     }
 
-    public String getName() { return getId(); }
+    public String getName()
+    {
+        return getId();
+    }
 
     @Override
-    public String getId() { return id; }
+    public String getId()
+    {
+        return id;
+    }
 
     @Override
-    public String toString() { return getId(); }
+    public String toString()
+    {
+        return getId();
+    }
 }
