@@ -26,6 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
@@ -38,6 +39,15 @@ public class EventRepositoryImpl
 
     @PersistenceContext
     private EntityManager entityManager;
+
+    public EventRepositoryImpl()
+    {
+    }
+
+    public EventRepositoryImpl(EntityManager aEntityManager)
+    {
+        entityManager = aEntityManager;
+    }
 
     @Override
     @Transactional
