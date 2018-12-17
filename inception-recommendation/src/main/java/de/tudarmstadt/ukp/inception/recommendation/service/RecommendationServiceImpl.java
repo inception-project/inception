@@ -62,7 +62,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderFactoryRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
@@ -232,7 +231,7 @@ public class RecommendationServiceImpl
     
     @Override
     @Transactional
-    public List<Recommender> getRecommenderIfActive(Project aProject, String aLayer, String aTool)
+    public List<Recommender> getEnabledRecommenders(Project aProject, String aLayer, String aTool)
     {
         //TODO: add layer condition
         String query = String.join("\n",
