@@ -36,14 +36,17 @@ import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
 
-public class QuerySettingsPanel extends Panel {
+public class QuerySettingsPanel
+    extends Panel
+{
+    private static final long serialVersionUID = -1594852739133649866L;
+    
+    private @SpringBean KnowledgeBaseService kbService;
+    private @SpringBean KnowledgeBaseProperties kbProperties;
 
     private final TextField<Integer> queryLimitField;
     private final CheckBox maxQueryLimitCheckBox;
     private final CompoundPropertyModel<KnowledgeBaseWrapper> kbModel;
-
-    private @SpringBean KnowledgeBaseService kbService;
-    private @SpringBean KnowledgeBaseProperties kbProperties;
 
     public QuerySettingsPanel(String id, CompoundPropertyModel<KnowledgeBaseWrapper> aModel)
     {

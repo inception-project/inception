@@ -53,14 +53,14 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 public class KnowledgeBaseDetailsPanel
     extends Panel
 {
-    private @SpringBean ApplicationEventPublisherHolder applicationEventPublisherHolder;
-
     private static final long serialVersionUID = -3550082954966752196L;
+    
     private static final Logger log = LoggerFactory.getLogger(KnowledgeBaseDetailsPanel.class);
 
     private static final String TITLE_MARKUP_ID = "title";
     private static final String CONTENT_MARKUP_ID = "content";
 
+    private @SpringBean ApplicationEventPublisherHolder applicationEventPublisherHolder;
     private @SpringBean KnowledgeBaseService kbService;
     private @SpringBean KnowledgeBaseProperties kbProperties;
 

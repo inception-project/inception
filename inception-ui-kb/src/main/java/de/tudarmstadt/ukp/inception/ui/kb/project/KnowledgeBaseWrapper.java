@@ -39,8 +39,9 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
  * URL needs to be captured in a form. Since {@code KnowledgeBase} should have neither of those
  * attributes, this wrapper exists.
  */
-public class KnowledgeBaseWrapper implements Serializable {
-
+public class KnowledgeBaseWrapper
+    implements Serializable
+{
     private static final long serialVersionUID = 4639345743242356537L;
 
     private KnowledgeBase kb;

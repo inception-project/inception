@@ -31,6 +31,8 @@ import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 public class AccessSettingsPanel
     extends Panel
 {
+    private static final long serialVersionUID = 1909643205422526142L;
+    
     private final CompoundPropertyModel<KnowledgeBaseWrapper> kbModel;
 
     public AccessSettingsPanel(String id, CompoundPropertyModel<KnowledgeBaseWrapper> aModel)

@@ -64,8 +64,11 @@ import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
 import de.tudarmstadt.ukp.inception.kb.io.FileUploadDownloadHelper;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 
-public class AccessSpecificSettingsPanel extends Panel
+public class AccessSpecificSettingsPanel
+    extends Panel
 {
+    private static final long serialVersionUID = -7834443872889805698L;
+
     private static final Logger log = LoggerFactory.getLogger(AccessSpecificSettingsPanel.class);
 
     private final CompoundPropertyModel<KnowledgeBaseWrapper> kbModel;

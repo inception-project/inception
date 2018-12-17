@@ -46,11 +46,12 @@ import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 public class KnowledgeBaseIriPanel
     extends Panel
 {
-
     private static final long serialVersionUID = -7189344732710228206L;
+
+    private @SpringBean KnowledgeBaseService kbService;
+
     private final IModel<SchemaProfile> selectedSchemaProfile;
     private final CompoundPropertyModel<KnowledgeBaseWrapper> kbModel;
-    private @SpringBean KnowledgeBaseService kbService;
 
     public KnowledgeBaseIriPanel(String id, CompoundPropertyModel<KnowledgeBaseWrapper> aModel)
     {

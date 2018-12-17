@@ -38,8 +38,11 @@ import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
 
-public class GeneralSettingsPanel extends Panel
+public class GeneralSettingsPanel
+    extends Panel
 {
+    private static final long serialVersionUID = 8824114174867195670L;
+
     private final IModel<Project> projectModel;
     private final CompoundPropertyModel<KnowledgeBaseWrapper> kbModel;
     private final List<String> languages = Arrays.asList("en", "de");
