@@ -21,9 +21,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
+import org.apache.wicket.markup.html.form.EnumChoiceRenderer;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
@@ -34,10 +34,6 @@ import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 
 import com.googlecode.wicket.kendo.ui.form.combobox.ComboBox;
 
-import de.agilecoders.wicket.core.markup.html.bootstrap.button.Buttons;
-import de.agilecoders.wicket.core.markup.html.bootstrap.form.radio.BootstrapRadioGroup;
-import de.agilecoders.wicket.core.markup.html.bootstrap.form.radio.BootstrapRadioGroup.ISelectionChangeHandler;
-import de.agilecoders.wicket.core.markup.html.bootstrap.form.radio.EnumRadioChoiceRenderer;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
@@ -66,33 +62,13 @@ public class KnowledgeBaseIriPanel
 
         add(selectReificationStrategy("reification", "kb.reification"));
 
-        // RadioGroup to select the IriSchemaType
-        BootstrapRadioGroup<SchemaProfile> iriSchemaChoice = new BootstrapRadioGroup<SchemaProfile>(
-                "iriSchema", selectedSchemaProfile, Arrays.asList(SchemaProfile.values()),
-                new EnumRadioChoiceRenderer<>(Buttons.Type.Default, this))
-        {
-            private static final long serialVersionUID = 3863260896285332033L;
-
-            @Override
-            protected void onInitialize()
-            {
-                super.onInitialize();
-                // Initialize according to current model values
-                SchemaProfile modelProfile = kbService
-                    .checkSchemaProfile(kbModel.getObject().getKb());
-
-                setModelObject(modelProfile);
-            }
-        };
-        iriSchemaChoice.setOutputMarkupId(true);
-
         // The Kendo comboboxes do not redraw properly when added directly to an
         // AjaxRequestTarget (for each combobox, a text field and a dropdown will be shown).
         // Instead, wrap all of them in a WMC and redraw that.
         WebMarkupContainer comboBoxWrapper = new WebMarkupContainer("comboBoxWrapper");
         comboBoxWrapper.setOutputMarkupId(true);
         add(comboBoxWrapper);
-
+        
         // Add comboboxes for classIri, subclassIri, typeIri and descriptionIri
         ComboBox<String> classField = buildComboBox("classIri", kbModel.bind("kb.classIri"),
                 IriConstants.CLASS_IRIS);
@@ -112,32 +88,45 @@ public class KnowledgeBaseIriPanel
                 kbModel.bind("kb.propertyDescriptionIri"), IriConstants.PROPERTY_DESCRIPTION_IRIS);
         comboBoxWrapper.add(classField, subclassField, typeField, descriptionField, labelField,
                 propertyTypeField, propertyLabelField, propertyDescriptionField);
-       
-        // OnChange update the model with corresponding iris
-        iriSchemaChoice.setChangeHandler(new ISelectionChangeHandler<SchemaProfile>()
+        
+        // RadioGroup to select the IriSchemaType
+        DropDownChoice<SchemaProfile> iriSchemaChoice = new BootstrapSelect<SchemaProfile>(
+                "iriSchema", selectedSchemaProfile, Arrays.asList(SchemaProfile.values()),
+                new EnumChoiceRenderer<>(this))
         {
-            private static final long serialVersionUID = 1653808650286121732L;
+            private static final long serialVersionUID = 3863260896285332033L;
 
             @Override
-            public void onSelectionChanged(AjaxRequestTarget target, SchemaProfile aProfile)
+            protected void onInitialize()
             {
-                // If the user switches to the custom profile, we retain the values from the
-                // previously selected profile and just make the IRI mapping ediable. If the user
-                // switches to a pre-defined profile, we reset the values.
-                if (SchemaProfile.CUSTOMSCHEMA != aProfile) {
-                    classField.setModelObject(aProfile.getClassIri().stringValue());
-                    subclassField.setModelObject(aProfile.getSubclassIri().stringValue());
-                    typeField.setModelObject(aProfile.getTypeIri().stringValue());
-                    descriptionField.setModelObject(aProfile.getDescriptionIri().stringValue());
-                    labelField.setModelObject(aProfile.getLabelIri().stringValue());
-                    propertyTypeField.setModelObject(aProfile.getPropertyTypeIri().stringValue());
-                    propertyLabelField.setModelObject(aProfile.getPropertyLabelIri().stringValue());
-                    propertyDescriptionField
-                        .setModelObject(aProfile.getPropertyDescriptionIri().stringValue());
-                }
-                target.add(comboBoxWrapper, iriSchemaChoice);
+                super.onInitialize();
+                // Initialize according to current model values
+                SchemaProfile modelProfile = kbService
+                    .checkSchemaProfile(kbModel.getObject().getKb());
+
+                setModelObject(modelProfile);
             }
-        });
+        };
+        iriSchemaChoice.setOutputMarkupId(true);
+        // OnChange update the model with corresponding iris
+        iriSchemaChoice.add(new LambdaAjaxFormComponentUpdatingBehavior("change", _target -> {
+            SchemaProfile profile = iriSchemaChoice.getModelObject();
+            // If the user switches to the custom profile, we retain the values from the
+            // previously selected profile and just make the IRI mapping ediable. If the user
+            // switches to a pre-defined profile, we reset the values.
+            if (SchemaProfile.CUSTOMSCHEMA != profile) {
+                classField.setModelObject(profile.getClassIri().stringValue());
+                subclassField.setModelObject(profile.getSubclassIri().stringValue());
+                typeField.setModelObject(profile.getTypeIri().stringValue());
+                descriptionField.setModelObject(profile.getDescriptionIri().stringValue());
+                labelField.setModelObject(profile.getLabelIri().stringValue());
+                propertyTypeField.setModelObject(profile.getPropertyTypeIri().stringValue());
+                propertyLabelField.setModelObject(profile.getPropertyLabelIri().stringValue());
+                propertyDescriptionField
+                    .setModelObject(profile.getPropertyDescriptionIri().stringValue());
+            }
+            _target.add(comboBoxWrapper, iriSchemaChoice);
+        }));
         comboBoxWrapper.add(iriSchemaChoice);
     }
 

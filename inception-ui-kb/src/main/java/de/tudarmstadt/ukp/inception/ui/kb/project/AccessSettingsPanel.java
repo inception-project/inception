@@ -17,18 +17,15 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.project;
 
-import java.util.Arrays;
+import static java.util.Arrays.asList;
 
-import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.markup.html.form.CheckBox;
-import org.apache.wicket.markup.html.form.RadioGroup;
+import org.apache.wicket.markup.html.form.DropDownChoice;
+import org.apache.wicket.markup.html.form.EnumChoiceRenderer;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
-import org.apache.wicket.model.IModel;
 
-import de.agilecoders.wicket.core.markup.html.bootstrap.button.Buttons;
-import de.agilecoders.wicket.core.markup.html.bootstrap.form.radio.BootstrapRadioGroup;
-import de.agilecoders.wicket.core.markup.html.bootstrap.form.radio.EnumRadioChoiceRenderer;
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 
 public class AccessSettingsPanel
@@ -47,25 +44,10 @@ public class AccessSettingsPanel
         add(createCheckbox("writeprotection", "kb.readOnly"));
     }
 
-    private BootstrapRadioGroup<RepositoryType> repositoryTypeRadioButtons(String id,
+    private DropDownChoice<RepositoryType> repositoryTypeRadioButtons(String id,
         String property) {
-        // subclassing is necessary for setting this form input as required
-        return new BootstrapRadioGroup<RepositoryType>(id, kbModel.bind(property),
-            Arrays.asList(RepositoryType.values()),
-            new EnumRadioChoiceRenderer<>(Buttons.Type.Default, this)) {
-
-            private static final long serialVersionUID = -3015289695381851498L;
-
-            @Override
-            protected RadioGroup<RepositoryType> newRadioGroup(String aId,
-                IModel<RepositoryType> aModel)
-            {
-                RadioGroup<RepositoryType> group = super.newRadioGroup(aId, aModel);
-                group.setRequired(true);
-                group.add(new AttributeAppender("class", " btn-group-justified"));
-                return group;
-            }
-        };
+        return new BootstrapSelect<>(id, kbModel.bind(property),
+                asList(RepositoryType.values()), new EnumChoiceRenderer<>(this));
     }
 
     private CheckBox createCheckbox(String aId, String aProperty) {
