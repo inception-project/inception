@@ -55,6 +55,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderFactoryRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
@@ -184,6 +185,24 @@ public class RecommendationServiceImpl
     public Recommender getRecommender(long aId)
     {
         return entityManager.find(Recommender.class, aId);
+    }
+
+    @Override
+    @Transactional
+    public List<Recommender> getRecommenderIfActive(Project aProject, String aLayer, String aTool)
+    {
+        //TODO: add layer condition
+        String query = String.join("\n",
+                "FROM Recommender WHERE ",
+                "project = :project AND ",
+                "tool = :tool AND",
+                "enabled = :enabled" );
+
+        return entityManager.createQuery(query, Recommender.class)
+                .setParameter("project", aProject)
+                .setParameter("tool", aTool)
+                .setParameter("enabled", true)
+                .getResultList();
     }
 
     @Override

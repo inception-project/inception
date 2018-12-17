@@ -22,6 +22,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.toJsonString;
 import static org.apache.commons.lang3.StringUtils.substring;
 
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -50,6 +51,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAnnotationsEvent;
 import de.tudarmstadt.ukp.inception.log.EventRepository;
 import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
+import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.log.RecommenderEvaluationResultEventAdapter.Details;
 
 public class LearningCurveChartPanel
@@ -63,6 +66,7 @@ public class LearningCurveChartPanel
     private final WebComponent chartContainer;
 
     private @SpringBean EventRepository eventRepo;
+    private @SpringBean RecommendationService recommendationService;
 
     private final IModel<AnnotatorState> model;
     private final int maxPointsToPlot = 50;
@@ -208,12 +212,20 @@ public class LearningCurveChartPanel
             try {
                 Details detail = fromJsonString(Details.class, detailJson);
 
+                //do not include the scores from disabled recommenders
+                List<Recommender> recommenderIfActive = recommendationService.getRecommenderIfActive(model.getObject().getProject(), detail.layer, detail.tool);
+                if(recommenderIfActive.size()<=0)
+                {
+                    continue;
+                }
+
                 // sometimes score values NaN. Can result into error while rendering the graph on UI
                 if (!Double.isFinite(detail.score)) {
                     continue;
                 }
 
-                recommenderScoreMap.put(detail.tool, detail.score);
+                recommenderScoreMap.put(detail.tool,
+                        Double.valueOf(new DecimalFormat("#.0000").format(detail.score)));
             }
             catch (IOException e) {
                 log.error("Invalid logged Event detail. Skipping record with logged event id: "

@@ -54,6 +54,8 @@ public interface RecommendationService
 
     List<Recommender> listRecommenders(AnnotationLayer aLayer);
     
+    List<Recommender> getRecommenderIfActive(Project aProject, String aLayer, String aTool);
+
     /**
      * Returns all annotation layers in the given project which have any enabled recommenders.
      */
