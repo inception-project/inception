@@ -17,22 +17,15 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.api.model;
 
-import java.io.IOException;
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-import org.apache.uima.cas.Type;
-import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.fit.util.CasUtil;
-import org.apache.uima.jcas.JCas;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,24 +49,25 @@ public class Predictions
 {
     private static final long serialVersionUID = -1598768729246662885L;
     
-    private Map<ExtendedId, AnnotationObject> predictions = new ConcurrentHashMap<>();
+    private Map<ExtendedId, AnnotationSuggestion> predictions = new ConcurrentHashMap<>();
     
     private final Project project;
     private final User user;
     
     private Logger logger = LoggerFactory.getLogger(getClass());
     
-    public Predictions(Project aProject, User aUser, Map<ExtendedId, AnnotationObject> aPredictions)
+    public Predictions(Project aProject, User aUser,
+            Map<ExtendedId, AnnotationSuggestion> aPredictions)
     {
         if (aProject == null) {
             throw new IllegalArgumentException("The Project is necessary! It cannot be null.");
         }
-        
+
         project = aProject;
         user = aUser;
-        
+
         if (aPredictions != null) {
-            predictions = new ConcurrentHashMap<ExtendedId, AnnotationObject> (aPredictions);
+            predictions = new ConcurrentHashMap<ExtendedId, AnnotationSuggestion>(aPredictions);
         }
     }
     
@@ -82,128 +76,70 @@ public class Predictions
     }
 
     /**
-     * 
-     * Get the predictions of a given window for each document, 
-     * where the outer list is a list of tokens 
-     * and the inner list is a list of predictions for a token.
-     * The method filters all tokens which already have an annotation
-     * and don't need further recommendation.
-     * 
+     * Get the predictions of a given window for each document, where the outer list is a list of
+     * tokens and the inner list is a list of predictions for a token. The method filters all tokens
+     * which already have an annotation and don't need further recommendation.
      */
-    public Map<String, List<List<AnnotationObject>>> getPredictionsForWholeProject(
-        AnnotationLayer aLayer, DocumentService aDocumentService, boolean aFilterExisting)
+    public Map<String, SuggestionDocumentGroup> getPredictionsForWholeProject(
+            AnnotationLayer aLayer, DocumentService aDocumentService)
     {
-        Map<String, List<List<AnnotationObject>>> predictions = new HashMap<>();
+        Map<String, SuggestionDocumentGroup> result = new HashMap<>();
 
-        List<AnnotationDocument> docs = aDocumentService
-                .listAnnotationDocuments(project, user);
-        
-        for (AnnotationDocument doc: docs) {
-            JCas jcas;
-            try {
-                jcas = aDocumentService.readAnnotationCas(doc);
-                // TODO #176 use the document Id once it it available in the CAS
-                List<List<AnnotationObject>> p = getPredictions(doc.getName(), aLayer, 0,
-                        jcas.getDocumentText().length() - 1, jcas, aFilterExisting);
-                predictions.put(doc.getName(), p);
-            } catch (IOException e) {
-                logger.info("Cannot read JCas: ", e);
-            }
+        List<AnnotationDocument> docs = aDocumentService.listAnnotationDocuments(project, user);
+
+        for (AnnotationDocument doc : docs) {
+            // TODO #176 use the document Id once it it available in the CAS
+            SuggestionDocumentGroup p = getPredictions(doc.getName(), aLayer, -1, -1);
+            result.put(doc.getName(), p);
         }
 
-        return predictions;
+        return result;
     }
-
+    
     /**
      * TODO #176 use the document Id once it it available in the CAS
      *         
      * Get the predictions of a given window, where the outer list is a list of tokens and the inner
      * list is a list of predictions for a token
      */
-    public List<List<AnnotationObject>> getPredictions(String aDocumentName, AnnotationLayer aLayer,
-        int aWindowBegin, int aWindowEnd, JCas aJcas, boolean aFilterExisting)
+    public SuggestionDocumentGroup getPredictions(String aDocumentName,
+            AnnotationLayer aLayer, int aWindowBegin, int aWindowEnd)
     {
-        List<AnnotationObject> p = getFlattenedPredictions(aDocumentName, aLayer, aWindowBegin,
-            aWindowEnd, aJcas, aFilterExisting);
-        Iterator<AnnotationObject> it = p.iterator();
-        
-        List<List<AnnotationObject>> result = new ArrayList<>();
-        if (!it.hasNext()) {
-            // No predictions
-            return result;
-        }
-
-        List<AnnotationObject> predictionsForCurrentToken = new ArrayList<>();
-        AnnotationObject prev = null;
-        
-        while (it.hasNext()) {
-            AnnotationObject current = it.next();
-            if (prev == null || current.getOffset().equals(prev.getOffset())) {
-                // Append to predictions for current token
-                predictionsForCurrentToken.add(current);
-            } else {
-                // Close current token and move on to the next one
-                result.add(predictionsForCurrentToken);
-                predictionsForCurrentToken = new ArrayList<>();
-                predictionsForCurrentToken.add(current);
-            }
-            prev = current;
-        }
-        
-        // Close final token
-        result.add(predictionsForCurrentToken);
-
-        return result;
+        return new SuggestionDocumentGroup(getFlattenedPredictions(aDocumentName, aLayer,
+                aWindowBegin, aWindowEnd));
     }
 
     /**
-     * 
      *  TODO #176 use the document Id once it it available in the CAS
      *         
-     * Get the predictions of a document for a given window in a flattened list
-     * @param aJcas 
+     * Get the predictions of a document for a given window in a flattened list.
+     * If the parameters {@code aWindowBegin} and {@code aWindowEnd} are {@code -1},
+     * then they are ignored respectively. This is useful when all suggestions should be fetched.
      */
-    public List<AnnotationObject> getFlattenedPredictions(String aDocumentName,
-        AnnotationLayer aLayer, int aWindowBegin, int aWindowEnd, JCas aJcas,
-        boolean aFilterExisting)
+    private List<AnnotationSuggestion> getFlattenedPredictions(String aDocumentName,
+        AnnotationLayer aLayer, int aWindowBegin, int aWindowEnd)
     {
-        List<Map.Entry<ExtendedId, AnnotationObject>> p = predictions.entrySet().stream()
+        List<Map.Entry<ExtendedId, AnnotationSuggestion>> p = predictions.entrySet().stream()
             .filter(f -> f.getKey().getDocumentName().equals(aDocumentName))
             .filter(f -> f.getKey().getLayerId() == aLayer.getId())
-            .filter(f -> f.getKey().getOffset().getBeginCharacter() >= aWindowBegin)
-            .filter(f -> f.getKey().getOffset().getEndCharacter() <= aWindowEnd)
-            .sorted(Comparator.comparingInt(e2 -> e2.getValue().getOffset().getBeginCharacter()))
+            .filter(f -> aWindowBegin == -1 || (f.getKey().getBegin() >= aWindowBegin))
+            .filter(f -> aWindowEnd == -1 || (f.getKey().getEnd() <= aWindowEnd))
+            .sorted(Comparator.comparingInt(e2 -> e2.getValue().getBegin()))
             .collect(Collectors.toList());
 
-        if (aFilterExisting) {
-            Type type = CasUtil.getType(aJcas.getCas(), aLayer.getName());
-            List<AnnotationFS> existingAnnotations = CasUtil.selectCovered(aJcas.getCas(),
-                type, aWindowBegin, aWindowEnd);
-            List<Integer> existingOffsets = existingAnnotations.stream()
-                .map(AnnotationFS::getBegin)
-                .collect(Collectors.toList());
-
-            return p.stream()
-                .filter(f -> !existingOffsets.contains(f.getKey().getOffset().getBeginCharacter()))
-                .map(Map.Entry::getValue)
-                .collect(Collectors.toList());
-
-        }
-        else {
-            return p.stream()
-                .map(Map.Entry::getValue)
-                .collect(Collectors.toList());
-        }
+        return p.stream()
+            .map(Map.Entry::getValue)
+            .collect(Collectors.toList());
     }
 
     /**
      * Returns the first prediction that matches recommendationId and recommenderId
      * in the given document.
      */
-    public Optional<AnnotationObject> getPredictionByVID(SourceDocument document, VID aVID)
+    public Optional<AnnotationSuggestion> getPredictionByVID(SourceDocument aDocument, VID aVID)
     {
         return predictions.values().stream()
-                .filter(f -> f.getDocumentName().equals(document.getName()))
+                .filter(f -> f.getDocumentName().equals(aDocument.getName()))
                 .filter(f -> f.getId() == aVID.getSubId())
                 .filter(f -> f.getRecommenderId() == aVID.getId())
                 .findFirst();
@@ -212,13 +148,14 @@ public class Predictions
     /**
      * Returns the prediction used to generate the VID
      */
-    public Optional<AnnotationObject> getPrediction(int aBegin, int aEnd, String aLabel)
+    public Optional<AnnotationSuggestion> getPrediction(SourceDocument aDocument, int aBegin,
+            int aEnd, String aLabel)
     {
         return predictions.values().stream()
-                .filter(f -> f.getOffset().getBeginCharacter() == aBegin
-                        && f.getOffset().getEndCharacter() == aEnd)
+                .filter(f -> f.getDocumentName().equals(aDocument.getName()))
+                .filter(f -> f.getBegin() == aBegin && f.getEnd() == aEnd)
                 .filter(f -> f.getLabel().equals(aLabel))
-                .max(Comparator.comparingInt(AnnotationObject::getId));
+                .max(Comparator.comparingInt(AnnotationSuggestion::getId));
     }
     
     /**
@@ -226,7 +163,7 @@ public class Predictions
      * @param aLayerId
      * @param aPredictions - list of sentences containing recommendations
      */
-    public void putPredictions(long aLayerId, List<AnnotationObject> aPredictions)
+    public void putPredictions(long aLayerId, List<AnnotationSuggestion> aPredictions)
     {
         aPredictions.forEach(prediction -> {
             if (prediction.getLabel() != null) {
@@ -246,7 +183,7 @@ public class Predictions
         return !predictions.isEmpty();
     }
 
-    public Map<ExtendedId, AnnotationObject> getPredictions()
+    public Map<ExtendedId, AnnotationSuggestion> getPredictions()
     {
         return predictions;
     }
@@ -274,7 +211,7 @@ public class Predictions
      * @param aFeature the given annotation feature name
      * @return
      */
-    public List<AnnotationObject> getPredictionsByTokenAndFeature(String aDocumentName,
+    public List<AnnotationSuggestion> getPredictionsByTokenAndFeature(String aDocumentName,
         AnnotationLayer aLayer, int aBegin, int aEnd, String aFeature)
     {
         return predictions.entrySet().stream()
