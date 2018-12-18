@@ -152,20 +152,17 @@ public class LearningCurveChartPanel
     }
 
     /**
-     * Creates the js script to render graph with the help of given data points. Also creates an
-     * xaxix of a sequence from 0 to maximumNumberOfPoints (50). Example value of
+     * Creates the JS script to render graph with the help of given data points. Also creates an
+     * x-axis of a sequence from 0 to maximumNumberOfPoints (50). Example value of
      * aDataColumns: 
      * <pre>
-     *['recommender1', 1.0, 2.0, 3.0 ], ['recommender2', 2.0, 3.0, 4.0]
+     * ['recommender1', 1.0, 2.0, 3.0 ], ['recommender2', 2.0, 3.0, 4.0]
      * </pre>
      * 
      * Example value of aChartType
      * <pre>
      * recommender1: 'step', recommender2 : 'step'
      * </pre>
-     * 
-     * @return
-     * @throws IOException
      */
     private String createJSScript(String aDataColumns, String aChartType) throws IOException
     {
@@ -202,8 +199,7 @@ public class LearningCurveChartPanel
         // we want to show the latest record on the right side of the graph
         Collections.reverse(loggedEvents);
 
-        MultiValuedMap<String, Double> recommenderScoreMap = new ArrayListValuedHashMap
-                <String, Double>();
+        MultiValuedMap<String, Double> recommenderScoreMap = new ArrayListValuedHashMap<>();
 
         // iterate over the logged events to extract the scores and map it against its corresponding
         // recommender.
