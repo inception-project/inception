@@ -19,225 +19,59 @@
 
 <html xmlns:wicket="http://wicket.apache.org">
 <body>
-  <wicket:panel>
-    <form wicket:id="form" class="flex-content panel panel-default panel-flex">
-      <div class="panel-heading">
-        <wicket:container wicket:id="title"></wicket:container>
-      </div>
+<wicket:panel>
+  <form wicket:id="form" class="flex-content panel panel-default panel-flex">
+    <div class="panel-heading">
+      <wicket:container wicket:id="title"></wicket:container>
+    </div>
 
-      <div class="scrolling panel-body form-horizontal">
-        <div class="col-sm-12">
-          <div class="form-group">
-            <label class="col-sm-2 control-label">
-              <wicket:message key="kb.type" />
-            </label>
-            <div wicket:id="type" class="col-sm-10"></div>
-          </div>
-          
-          <div class="form-group">
-            <label class="col-sm-2 control-label">
-              <wicket:message key="kb.reification" />
-            </label>
-            <div class="col-sm-2">
-              <span class="form-control" wicket:id="reification" disabled="disabled"></span>
-            </div>
-          </div>
-  
-          <hr />
-          <wicket:container wicket:id="content"></wicket:container>
-        </div>
+    <div class="scrolling panel-body form-horizontal">
+      <div class="col-sm-12">
+        <wicket:container wicket:id="content"></wicket:container>
       </div>
+    </div>
 
-      <div class="panel-footer">
-        <div class="pull-left">
-          <a wicket:id="reindex" class="btn btn-danger" href="#" role="button">
-            <!-- <i class="fa fa-trash"></i> --> <wicket:message
-              key="kb.reindex" />
-          </a>
-          <a wicket:id="delete" class="btn btn-danger" href="#" role="button">
-            <!-- <i class="fa fa-trash"></i> --> <wicket:message
-              key="kb.delete" />
-          </a>
-        </div>
-        <div class="pull-right">
-          <a wicket:id="edit" class="btn btn-default" href="#" role="button">
-            <!-- <i class="fa fa-pencil"></i> --> <wicket:message
-              key="kb.edit" />
-          </a>
-          <input type="submit" wicket:id="save" class="btn btn-primary" wicket:message="value:kb.save" />
-          <input type="button" wicket:id="cancel" class="btn btn-default" wicket:message="value:kb.cancel" />
-        </div>
+    <div class="panel-footer">
+      <div class="pull-left">
+        <a wicket:id="reindex" class="btn btn-danger" href="#" role="button">
+          <!-- <i class="fa fa-trash"></i> -->
+          <wicket:message key="kb.reindex"/>
+        </a>
+        <a wicket:id="delete" class="btn btn-danger" href="#" role="button">
+          <!-- <i class="fa fa-trash"></i> -->
+          <wicket:message key="kb.delete"/>
+        </a>
       </div>
-    </form>
-    <div wicket:id="confirmationDialog"></div>
-  </wicket:panel>
-  
-  <wicket:fragment wicket:id="viewModeTitle">
-    <h3 wicket:id="name" class="panel-title"></h3>
-  </wicket:fragment>
+      <div class="pull-right">
+        <input type="submit" wicket:id="save" class="btn btn-primary"
+               wicket:message="value:kb.save"/>
+      </div>
+    </div>
+  </form>
+  <div wicket:id="confirmationDialog"></div>
+</wicket:panel>
 
-  <wicket:fragment wicket:id="viewModeContent">
-    <wicket:container wicket:id="local">
-      <!-- Export -->
-      <div class="form-group row">
-        <label class="col-sm-3 control-label">
-          <wicket:message key="kb.details.local.contents.export" />
-        </label>
-        <div class="col-sm-9">
-          <div class="flex-h-container flex-gutter flex-only-internal-gutter">
-            <div wicket:id="exportButtons">
-              <button wicket:id="link" type="button" class="btn btn-default"><i class="fa fa-download" aria-hidden="true"></i> <wicket:container wicket:id="label"></wicket:container></button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </wicket:container>
-    <wicket:container wicket:id="remote">
-      <div class="form-group row">
-        <label wicket:for="url" class="col-sm-3 control-label">
-          <wicket:message key="kb.remote.url" />
-        </label>
-        <div class="col-sm-9">
-          <input wicket:id="url" type="text" class="form-control" />
-        </div>
-      </div>
-    </wicket:container>
-    <wicket:container wicket:id="common-content">
-      <div class="form-group row">
-        <label class="col-sm-3 control-label">
-          <wicket:message key="kb.details.contents.permissions" />
-        </label>
-        <div class="col-sm-9">
-          <div wicket:id="writeprotection" class="col-sm-offset-2"></div>
-        </div>
-      </div>
-      <div class="form-group row">
-        <label class="col-sm-3 control-label">
-          <wicket:message key="kb.details.enabled" />
-        </label>
-        <div class="col-sm-9">
-          <input wicket:id="enabled" type="checkbox" />
-        </div>
-      </div>
-      <div class="form-group row">
-        <div>
-          <label class="col-sm-3 control-label">
-            <wicket:message key="kb.language" />
-          </label>
-          <div class="col-sm-9">
-            <input wicket:id="language" type="text" class="form-control"/>
-          </div>
-        </div>
-      </div>
-      <div class="form-group row">
-        <label class="col-sm-3 control-label">
-          <wicket:message key="kb.queryLimit" />
-        </label>
-        <div class="col-sm-9">
-          <input class="form-control" type="number" wicket:id="maxResults"/>
-        </div>
-      </div>
-      <span wicket:id="iriPanel"></span>
-    </wicket:container>
-  </wicket:fragment>
-  
-  <wicket:fragment wicket:id="editModeTitle">
-    <input type="text" wicket:id="name" wicket:message="placeholder:kb.name.placeholder" />
-  </wicket:fragment>
-  
-  <wicket:fragment wicket:id="editModeContent">
-    <wicket:container wicket:id="remote">
-      <div class="form-group row">
-        <label wicket:for="url" class="col-sm-3 control-label">
-          <wicket:message key="kb.remote.url" />
-        </label>
-        <div class="col-sm-9">
-          <input wicket:id="url" type="text" class="form-control" />
-        </div>
-      </div>
-      <div class="form-group row">
-        <label class="col-sm-3 control-label">
-          <wicket:message key="kb.details.contents.permissions" />
-        </label>
-        <div class="col-sm-9">
-          <div wicket:id="writeprotection" class="col-sm-offset-2"></div>
-        </div>
-      </div>
-    </wicket:container>
-    
-    <wicket:container wicket:id="local">
-      <!-- Contents -->
-      <div class="form-group row">
-        <label class="col-sm-3 control-label">
-          <wicket:message key="kb.details.local.contents" />
-        </label>
-        <div class="col-sm-9">
-          <div class="form-group row">
-            <span class="col-sm-2 control-label">
-              <wicket:message key="kb.details.local.contents.fileupload" />
-              <i class="fa fa-info-circle" wicket:message="title:kb.local.fileupload.supported.headerlist"></i>
-            </span>
-            <div class="col-sm-10">
-              <input wicket:id="upload" type="file" multiple />
-            </div>
-          </div>
-          <wicket:enclosure wicket:id="clear">
-            <div class="form-group row">
-              <span class="col-sm-2 control-label">
-                <wicket:message key="kb.details.local.contents.clear" />
-              </span>
-              <div class="col-sm-10">
-                <input type="button" wicket:id="clear" class="btn btn-default" wicket:message="value:kb.clear" />
-              </div>
-            </div>   
-          </wicket:enclosure>    
-        </div>
-      </div>
+<wicket:fragment wicket:id="kbSettingsTitle">
+  <input type="text" wicket:id="name" wicket:message="placeholder:kb.name.placeholder"/>
+</wicket:fragment>
 
-      <!-- Permissions -->
-      <div class="form-group row">
-        <label class="col-sm-3 control-label">
-          <wicket:message key="kb.details.contents.permissions" />
-        </label>
-        <div class="col-sm-9">
-          <div wicket:id="writeprotection"></div>
-        </div>
-      </div>
-    </wicket:container>
-    
-    <wicket:container wicket:id="common-content">
-      <div class="form-group row">
-        <label class="col-sm-3 control-label">
-          <wicket:message key="kb.details.enabled" />
-        </label>
-        <div class="col-sm-9">
-          <input wicket:id="enabled" type="checkbox" />
-        </div>
-      </div>
-      <div class="form-group row">
-        <label class="col-sm-3 control-label">
-          <wicket:message key="kb.language" />
-        </label>
-        <div class="col-sm-9">
-          <input wicket:id="language" type="text" class="form-control"/>
-        </div>
-      </div>
-      <div class="form-group row">
-        <label class="control-label col-sm-3">
-          <wicket:message key="kb.queryLimit" />
-        </label>
-        <div class="form-inline col-sm-9">
-          <input type="number" wicket:id="maxResults" class="form-control"/>
-          <div class="checkbox" style="margin-left: 15px;">
-            <label wicket:for="maxQueryLimit">
-            <input type="checkbox" wicket:id="maxQueryLimit"/>
-              <i><wicket:label key="kb.details.contents.maxQueryLimit"/></i>
-            </label>
-          </div>
-        </div>
-      </div>
-      <span wicket:id="iriPanel"></span>
-    </wicket:container>
-  </wicket:fragment>
+<wicket:fragment wicket:id="kbSettingsContent">
+  <div class="form-group col-xs-12">
+    <div wicket:id="generalSettings"></div>
+    <div class="col-xs-12"><hr></div>
+
+    <div wicket:id="accessSettings"></div>
+    <div wicket:id="accessSpecificSettings"></div>
+    <div class="col-xs-12"><hr></div>
+
+    <div wicket:id="querySettings"></div>
+    <div class="col-xs-12"><hr></div>
+
+    <div wicket:id="schemaMapping"></div>
+    <div class="col-xs-12"><hr></div>
+
+    <div wicket:id="rootConcepts"></div>
+  </div>
+</wicket:fragment>
 </body>
 </html>
