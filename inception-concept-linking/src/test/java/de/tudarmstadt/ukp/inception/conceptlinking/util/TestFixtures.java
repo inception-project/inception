@@ -63,7 +63,7 @@ public class TestFixtures
         kb.setPropertyLabelIri(RDFS.LABEL);
         kb.setPropertyDescriptionIri(RDFS.COMMENT);
         kb.setSubPropertyIri(RDFS.SUBPROPERTYOF);
-        kb.setExplicitlyDefinedRootConcepts(new ArrayList<>());
+        kb.setRootConcepts(new ArrayList<>());
         kb.setReification(reification);
         return kb;
     }

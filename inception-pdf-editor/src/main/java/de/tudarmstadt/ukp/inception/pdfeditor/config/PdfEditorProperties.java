@@ -1,5 +1,5 @@
 /*
- * Copyright 2017
+ * Copyright 2018
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  *
@@ -15,9 +15,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.ui.kb.project;
 
-public enum KnowledgeBaseIriPanelMode
+package de.tudarmstadt.ukp.inception.pdfeditor.config;
+
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
+
+@Component
+@ConfigurationProperties("ui.pdf")
+public class PdfEditorProperties
 {
-    WIZARD, PROJECTSETTINGS
+    private boolean enabled = false;
+
+    public boolean isEnabled()
+    {
+        return enabled;
+    }
+
+    public void setEnabled(boolean aEnabled)
+    {
+        enabled = aEnabled;
+    }
 }

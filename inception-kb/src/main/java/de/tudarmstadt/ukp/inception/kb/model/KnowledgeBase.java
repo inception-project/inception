@@ -179,7 +179,7 @@ public class KnowledgeBase
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "knowledgebase_root_classes")
     @Column(name = "name")
-    private List<IRI> explicitlyDefinedRootConcepts = new ArrayList<>();
+    private List<IRI> rootConcepts = new ArrayList<>();
 
     /**
      * The default language for labels and descriptions of KB elements
@@ -395,14 +395,14 @@ public class KnowledgeBase
         basePrefix = aBasePrefix;
     }
     
-    public List<IRI> getExplicitlyDefinedRootConcepts()
+    public List<IRI> getRootConcepts()
     {
-        return explicitlyDefinedRootConcepts;
+        return rootConcepts;
     }
 
-    public void setExplicitlyDefinedRootConcepts(List<IRI> aExplicitlyDefinedRootConcepts)
+    public void setRootConcepts(List<IRI> aExplicitlyDefinedRootConcepts)
     {
-        explicitlyDefinedRootConcepts = aExplicitlyDefinedRootConcepts;
+        rootConcepts = aExplicitlyDefinedRootConcepts;
     }
 
     public int getMaxResults()
@@ -431,12 +431,12 @@ public class KnowledgeBase
     public void applyRootConcepts(KnowledgeBaseProfile aProfile)
     {
         if (aProfile.getRootConcepts() == null) {
-            setExplicitlyDefinedRootConcepts(new ArrayList<>());
+            setRootConcepts(new ArrayList<>());
         }
         else {
             ValueFactory vf = SimpleValueFactory.getInstance();
             for (String rootConcept : aProfile.getRootConcepts()) {
-                explicitlyDefinedRootConcepts.add(vf.createIRI(rootConcept));
+                rootConcepts.add(vf.createIRI(rootConcept));
             }
         }
     }

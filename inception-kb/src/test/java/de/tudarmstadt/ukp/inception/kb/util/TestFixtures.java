@@ -80,7 +80,7 @@ public class TestFixtures
         // querying for properties with the class label.
         kb.setPropertyLabelIri(SKOS.PREF_LABEL);
         kb.setPropertyDescriptionIri(SKOS.DEFINITION);
-        kb.setExplicitlyDefinedRootConcepts(new ArrayList<>());
+        kb.setRootConcepts(new ArrayList<>());
         kb.setReification(reification);
         kb.setMaxResults(1000);
         return kb;

@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.htmleditor;
 
 import org.apache.wicket.model.IModel;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.JCasProvider;
@@ -27,6 +28,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionH
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 
 @Component("htmlEditor")
+@ConditionalOnProperty(prefix = "ui.html", name = "enabled", havingValue = "true", 
+        matchIfMissing = false)
 public class HtmlAnnotationEditorFactory
     extends AnnotationEditorFactoryImplBase
 {

@@ -20,26 +20,7 @@
 <html xmlns:wicket="http://wicket.apache.org">
 <body>
   <wicket:panel>
-    <div class="form-group col-xs-12">
-      <label wicket:for="url" class="control-label">
-        <wicket:message key="kb.remote.url" />
-      </label>
-      <input wicket:id="url" type="text" class="form-control" />
-    </div>
-    <div class="form-group col-xs-12">
-      <label class="control-label">
-        <wicket:message key="kb.wizard.steps.remote.suggestions" />
-      </label>
-      <div class="scrolling" style="height:150px">
-        <div class="list-group">
-          <wicket:container wicket:id="suggestions">
-            <button wicket:id="suggestionLink" type="button" class="list-group-item">
-              <wicket:container wicket:id="suggestionLabel" />
-            </button>
-          </wicket:container>
-        </div>
-      </div>
-    </div>
+      <span wicket:id="accessSpecificSettings"></span>
   </wicket:panel>
 </body>
 </html>

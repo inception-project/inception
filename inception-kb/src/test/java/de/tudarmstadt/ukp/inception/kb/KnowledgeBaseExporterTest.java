@@ -226,7 +226,7 @@ public class KnowledgeBaseExporterTest
         kb.setSubPropertyIri(RDFS.SUBPROPERTYOF);
         kb.setMaxResults(1000);
         ValueFactory vf = SimpleValueFactory.getInstance();
-        kb.setExplicitlyDefinedRootConcepts(Arrays
+        kb.setRootConcepts(Arrays
             .asList(vf.createIRI("http://www.ics.forth.gr/isl/CRMinf/I1_Argumentation"),
                 vf.createIRI("http://www.ics.forth.gr/isl/CRMinf/I1_Argumentation")));
         kb.setDefaultLanguage("en");
