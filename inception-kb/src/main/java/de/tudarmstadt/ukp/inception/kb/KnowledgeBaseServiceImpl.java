@@ -908,8 +908,8 @@ public class KnowledgeBaseServiceImpl
     {
         List<KBHandle> resultList = new ArrayList<>();
 
-        if (!aKB.getExplicitlyDefinedRootConcepts().isEmpty()) {
-            for (IRI conceptIRI : aKB.getExplicitlyDefinedRootConcepts()) {
+        if (!aKB.getRootConcepts().isEmpty()) {
+            for (IRI conceptIRI : aKB.getRootConcepts()) {
                 KBConcept concept = readConcept(aKB, conceptIRI.stringValue(),aAll).get();
                 KBHandle conceptHandle = new KBHandle(concept.getIdentifier(), concept.getName(),
                         concept.getDescription());

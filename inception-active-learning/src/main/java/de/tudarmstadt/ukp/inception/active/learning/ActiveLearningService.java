@@ -19,21 +19,33 @@ package de.tudarmstadt.ukp.inception.active.learning;
 
 import java.util.List;
 
-import org.apache.uima.jcas.JCas;
-
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 
 public interface ActiveLearningService
 {
-    List<List<AnnotationObject>> getRecommendationsForWholeProject(Predictions model,
-            AnnotationLayer aLayer);
-    
-    List<List<AnnotationObject>> getRecommendationFromRecommendationModel(AnnotatorState aState,
-            AnnotationLayer aLayer);
+    /**
+     * Get all suggestions for the given layer and user as a flat list (i.e. not grouped by
+     * documents, but grouped by alternatives).
+     */
+    List<SuggestionGroup> getSuggestions(User aUser, AnnotationLayer aLayer);
 
-    List<AnnotationObject> getFlattenedRecommendationsFromRecommendationModel(JCas aJcas,
-            AnnotatorState aState, AnnotationLayer aSelectedLayer);
+    /**
+     * Check if the suggestions from which the given record was created (or an equivalent one)
+     * is visible to the user. This is useful to check if the suggestion can be highlighted when
+     * clicking on a history record.
+     */
+    boolean isSuggestionVisible(LearningRecord aRecord);
+
+    /**
+     * Checks if the are any records of type {@link LearningRecordType#SKIPPED} in the history of
+     * the given layer for the given user.
+     */
+    boolean hasSkippedSuggestions(User aUser, AnnotationLayer aLayer);
+
+    void hideRejectedOrSkippedAnnotations(User aUser, AnnotationLayer aLayer,
+            boolean aFilterSkippedRecommendation, List<SuggestionGroup> aSuggestionGroups);
 }

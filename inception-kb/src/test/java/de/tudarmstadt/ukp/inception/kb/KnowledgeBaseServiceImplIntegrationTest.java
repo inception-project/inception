@@ -217,7 +217,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         List<IRI> concepts = new ArrayList<IRI>();
         concepts.add(rootConcept1);
         concepts.add(rootConcept2);
-        kb.setExplicitlyDefinedRootConcepts(concepts);
+        kb.setRootConcepts(concepts);
         sut.updateKnowledgeBase(kb, sut.getNativeConfig());
 
         KnowledgeBase savedKb = testEntityManager.find(KnowledgeBase.class, kb.getRepositoryId());
@@ -234,7 +234,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
             .hasFieldOrPropertyWithValue("labelIri", RDFS.LITERAL)
             .hasFieldOrPropertyWithValue("propertyTypeIri", OWL.OBJECTPROPERTY)
             .hasFieldOrPropertyWithValue("basePrefix", "MyBasePrefix")
-            .hasFieldOrPropertyWithValue("explicitlyDefinedRootConcepts", Arrays.asList(rootConcept1, rootConcept2));
+            .hasFieldOrPropertyWithValue("rootConcepts", Arrays.asList(rootConcept1, rootConcept2));
 
     }
 
@@ -1263,7 +1263,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         concepts.add(rootConcept1);
         concepts.add(rootConcept2);
         kb.setDefaultLanguage("en");
-        kb.setExplicitlyDefinedRootConcepts(concepts);
+        kb.setRootConcepts(concepts);
         sut.updateKnowledgeBase(kb);
 
         importKnowledgeBase("data/wildlife_ontology.ttl");
