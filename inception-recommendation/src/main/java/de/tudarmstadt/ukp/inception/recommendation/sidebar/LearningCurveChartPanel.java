@@ -213,9 +213,10 @@ public class LearningCurveChartPanel
                 Details detail = fromJsonString(Details.class, detailJson);
 
                 //do not include the scores from disabled recommenders
-                List<Recommender> recommenderIfActive = recommendationService.getEnabledRecommenders(model.getObject().getProject(), detail.layer, detail.tool);
-                if(recommenderIfActive.isEmpty())
-                {
+                List<Recommender> recommenderIfActive = recommendationService
+                        .getEnabledRecommenders(model.getObject().getProject(), detail.layer,
+                                detail.tool);
+                if (recommenderIfActive.isEmpty()) {
                     continue;
                 }
 
