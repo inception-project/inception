@@ -1,0 +1,364 @@
+#
+# There is insufficient memory for the Java Runtime Environment to continue.
+# Native memory allocation (mmap) failed to map 6442450944 bytes for committing reserved memory.
+# Possible reasons:
+#   The system is out of physical RAM or swap space
+#   The process is running with CompressedOops enabled, and the Java Heap may be blocking the growth of the native heap
+# Possible solutions:
+#   Reduce memory load on the system
+#   Increase physical memory or swap space
+#   Check if swap backing store is full
+#   Decrease Java heap size (-Xmx/-Xms)
+#   Decrease number of Java threads
+#   Decrease Java thread stack sizes (-Xss)
+#   Set larger code cache with -XX:ReservedCodeCacheSize=
+# This output file may be truncated or incomplete.
+#
+#  Out of Memory Error (os_linux.cpp:2709), pid=7692, tid=7693
+#
+# JRE version:  (11.0.1+13) (build )
+# Java VM: Java HotSpot(TM) 64-Bit Server VM (11.0.1+13-LTS, mixed mode, aot, sharing, tiered, compressed oops, g1 gc, linux-amd64)
+# Core dump will be written. Default location: Core dumps may be processed with "/usr/share/apport/apport %p %s %c %d %P" (or dumping to /home/marcel/GithubInc/inception/inception-kb/core.7692)
+#
+
+---------------  S U M M A R Y ------------
+
+Command Line: -Xmx6g -Xms6g /home/marcel/GithubInc/inception/inception-kb/target/surefire/surefirebooter12304749649580437775.jar /home/marcel/GithubInc/inception/inception-kb/target/surefire 2018-12-18T17-44-21_397-jvmRun1 surefire10894618676194389987tmp surefire_059746921645431587tmp
+
+Host: Intel(R) Core(TM) i5-5200U CPU @ 2.20GHz, 4 cores, 7G, Linux Mint 18.3 Sylvia
+Time: Tue Dec 18 17:44:38 2018 CET elapsed time: 0 seconds (0d 0h 0m 0s)
+
+---------------  T H R E A D  ---------------
+
+Current thread (0x00007fe2d8011800):  JavaThread "Unknown thread" [_thread_in_vm, id=7693, stack(0x00007fe2df52d000,0x00007fe2df62e000)]
+
+Stack: [0x00007fe2df52d000,0x00007fe2df62e000],  sp=0x00007fe2df62c280,  free space=1020k
+Native frames: (J=compiled Java code, A=aot compiled Java code, j=interpreted, Vv=VM code, C=native code)
+V  [libjvm.so+0xe591d7]  VMError::report_and_die(int, char const*, char const*, __va_list_tag*, Thread*, unsigned char*, void*, void*, char const*, int, unsigned long)+0x2c7
+V  [libjvm.so+0xe59e3b]  VMError::report_and_die(Thread*, char const*, int, unsigned long, VMErrorType, char const*, __va_list_tag*)+0x2b
+V  [libjvm.so+0x6caf85]  report_vm_out_of_memory(char const*, int, unsigned long, VMErrorType, char const*, ...)+0xd5
+V  [libjvm.so+0xc34c88]  os::pd_commit_memory_or_exit(char*, unsigned long, unsigned long, bool, char const*)+0x108
+V  [libjvm.so+0xc2c6bd]  os::commit_memory_or_exit(char*, unsigned long, unsigned long, bool, char const*)+0x1d
+V  [libjvm.so+0x7dff6f]  G1PageBasedVirtualSpace::commit_preferred_pages(unsigned long, unsigned long)+0x5f
+V  [libjvm.so+0x7e01de]  G1PageBasedVirtualSpace::commit(unsigned long, unsigned long)+0x5e
+V  [libjvm.so+0x7ebfb0]  G1RegionsLargerThanCommitSizeMapper::commit_regions(unsigned int, unsigned long, WorkGang*)+0x40
+V  [libjvm.so+0x867609]  HeapRegionManager::commit_regions(unsigned int, unsigned long, WorkGang*)+0x89
+V  [libjvm.so+0x86825f]  HeapRegionManager::make_regions_available(unsigned int, unsigned int, WorkGang*)+0x3f
+V  [libjvm.so+0x8686e9]  HeapRegionManager::expand_at(unsigned int, unsigned int, WorkGang*) [clone .part.44]+0x119
+V  [libjvm.so+0x7a4d8f]  G1CollectedHeap::expand(unsigned long, WorkGang*, double*)+0xdf
+V  [libjvm.so+0x7a549d]  G1CollectedHeap::initialize()+0x68d
+V  [libjvm.so+0xe140c2]  Universe::initialize_heap()+0x32
+V  [libjvm.so+0xe14376]  universe_init()+0x46
+V  [libjvm.so+0x8808e7]  init_globals()+0x57
+V  [libjvm.so+0xdf35c7]  Threads::create_vm(JavaVMInitArgs*, bool*)+0x327
+V  [libjvm.so+0x93c462]  JNI_CreateJavaVM+0x52
+C  [libjli.so+0x49d6]  JavaMain+0x86
+
+
+---------------  P R O C E S S  ---------------
+
+Threads class SMR info:
+_java_thread_list=0x00000000022d0560, length=0, elements={
+}
+
+Java Threads: ( => current thread )
+
+Other Threads:
+  0x00007fe2d8039000 GCTaskThread "GC Thread#0" [stack: 0x00007fe2c0635000,0x00007fe2c0735000] [id=7695]
+  0x00007fe2d8097000 ConcurrentGCThread "G1 Main Marker" [stack: 0x00007fe2c0130000,0x00007fe2c0230000] [id=7697]
+  0x00007fe2d8098800 ConcurrentGCThread "G1 Conc#0" [stack: 0x00007fe2c002f000,0x00007fe2c012f000] [id=7698]
+
+[error occurred during error reporting (printing all threads), id 0xb, SIGSEGV (0xb) at pc=0x00007fe2ddaf7430]
+
+VM state:not at safepoint (not fully initialized)
+
+VM Mutex/Monitor currently owned by a thread:  ([mutex/lock_event])
+[0x00007fe2d800e190] Heap_lock - owner thread: 0x00007fe2d8011800
+
+Heap address: 0x0000000680000000, size: 6144 MB, Compressed Oops mode: Non-zero based: 0x0000000680000000
+Narrow klass base: 0x0000000000000000, Narrow klass shift: 0
+
+GC Heap History (0 events):
+No events
+
+Deoptimization events (0 events):
+No events
+
+Classes redefined (0 events):
+No events
+
+Internal exceptions (0 events):
+No events
+
+Events (0 events):
+No events
+
+
+Dynamic libraries:
+00400000-00401000 r-xp 00000000 08:06 7479275                            /home/marcel/Downloads/jdk-11.0.1/bin/java
+00600000-00601000 r--p 00000000 08:06 7479275                            /home/marcel/Downloads/jdk-11.0.1/bin/java
+00601000-00602000 rw-p 00001000 08:06 7479275                            /home/marcel/Downloads/jdk-11.0.1/bin/java
+022cd000-022ee000 rw-p 00000000 00:00 0                                  [heap]
+7fe2a0000000-7fe2a0021000 rw-p 00000000 00:00 0 
+7fe2a0021000-7fe2a4000000 ---p 00000000 00:00 0 
+7fe2a6000000-7fe2a8000000 rw-p 00000000 00:00 0 
+7fe2a8000000-7fe2a8021000 rw-p 00000000 00:00 0 
+7fe2a8021000-7fe2ac000000 ---p 00000000 00:00 0 
+7fe2ad452000-7fe2adc00000 rw-p 00000000 00:00 0 
+7fe2adc00000-7fe2bc000000 ---p 00000000 00:00 0 
+7fe2bc000000-7fe2bc021000 rw-p 00000000 00:00 0 
+7fe2bc021000-7fe2c0000000 ---p 00000000 00:00 0 
+7fe2c002e000-7fe2c002f000 ---p 00000000 00:00 0 
+7fe2c002f000-7fe2c012f000 rw-p 00000000 00:00 0 
+7fe2c012f000-7fe2c0130000 ---p 00000000 00:00 0 
+7fe2c0130000-7fe2c0634000 rw-p 00000000 00:00 0 
+7fe2c0634000-7fe2c0635000 ---p 00000000 00:00 0 
+7fe2c0635000-7fe2c073a000 rw-p 00000000 00:00 0 
+7fe2c073a000-7fe2c0820000 ---p 00000000 00:00 0 
+7fe2c0820000-7fe2c0a90000 rwxp 00000000 00:00 0 
+7fe2c0a90000-7fe2c0db0000 ---p 00000000 00:00 0 
+7fe2c0db0000-7fe2c1020000 rwxp 00000000 00:00 0 
+7fe2c1020000-7fe2c82e8000 ---p 00000000 00:00 0 
+7fe2c82e8000-7fe2c8558000 rwxp 00000000 00:00 0 
+7fe2c8558000-7fe2cf820000 ---p 00000000 00:00 0 
+7fe2cf820000-7fe2d7bdb000 r--s 00000000 08:06 7480454                    /home/marcel/Downloads/jdk-11.0.1/lib/modules
+7fe2d7bdb000-7fe2d7bf6000 r-xp 00000000 08:06 7480421                    /home/marcel/Downloads/jdk-11.0.1/lib/libjimage.so
+7fe2d7bf6000-7fe2d7df5000 ---p 0001b000 08:06 7480421                    /home/marcel/Downloads/jdk-11.0.1/lib/libjimage.so
+7fe2d7df5000-7fe2d7df7000 r--p 0001a000 08:06 7480421                    /home/marcel/Downloads/jdk-11.0.1/lib/libjimage.so
+7fe2d7df7000-7fe2d7df8000 rw-p 0001c000 08:06 7480421                    /home/marcel/Downloads/jdk-11.0.1/lib/libjimage.so
+7fe2d7df8000-7fe2d7dff000 r-xp 00000000 08:06 7480453                    /home/marcel/Downloads/jdk-11.0.1/lib/libzip.so
+7fe2d7dff000-7fe2d7ffe000 ---p 00007000 08:06 7480453                    /home/marcel/Downloads/jdk-11.0.1/lib/libzip.so
+7fe2d7ffe000-7fe2d7fff000 r--p 00006000 08:06 7480453                    /home/marcel/Downloads/jdk-11.0.1/lib/libzip.so
+7fe2d7fff000-7fe2d8000000 rw-p 00007000 08:06 7480453                    /home/marcel/Downloads/jdk-11.0.1/lib/libzip.so
+7fe2d8000000-7fe2d80b6000 rw-p 00000000 00:00 0 
+7fe2d80b6000-7fe2dc000000 ---p 00000000 00:00 0 
+7fe2dc0c4000-7fe2dc0c9000 rw-p 00000000 00:00 0 
+7fe2dc0c9000-7fe2dc1af000 ---p 00000000 00:00 0 
+7fe2dc1af000-7fe2dc1ba000 r-xp 00000000 08:06 9442979                    /lib/x86_64-linux-gnu/libnss_files-2.23.so
+7fe2dc1ba000-7fe2dc3b9000 ---p 0000b000 08:06 9442979                    /lib/x86_64-linux-gnu/libnss_files-2.23.so
+7fe2dc3b9000-7fe2dc3ba000 r--p 0000a000 08:06 9442979                    /lib/x86_64-linux-gnu/libnss_files-2.23.so
+7fe2dc3ba000-7fe2dc3bb000 rw-p 0000b000 08:06 9442979                    /lib/x86_64-linux-gnu/libnss_files-2.23.so
+7fe2dc3bb000-7fe2dc3c1000 rw-p 00000000 00:00 0 
+7fe2dc3c1000-7fe2dc3cc000 r-xp 00000000 08:06 9442988                    /lib/x86_64-linux-gnu/libnss_nis-2.23.so
+7fe2dc3cc000-7fe2dc5cb000 ---p 0000b000 08:06 9442988                    /lib/x86_64-linux-gnu/libnss_nis-2.23.so
+7fe2dc5cb000-7fe2dc5cc000 r--p 0000a000 08:06 9442988                    /lib/x86_64-linux-gnu/libnss_nis-2.23.so
+7fe2dc5cc000-7fe2dc5cd000 rw-p 0000b000 08:06 9442988                    /lib/x86_64-linux-gnu/libnss_nis-2.23.so
+7fe2dc5cd000-7fe2dc5e3000 r-xp 00000000 08:06 9442831                    /lib/x86_64-linux-gnu/libnsl-2.23.so
+7fe2dc5e3000-7fe2dc7e2000 ---p 00016000 08:06 9442831                    /lib/x86_64-linux-gnu/libnsl-2.23.so
+7fe2dc7e2000-7fe2dc7e3000 r--p 00015000 08:06 9442831                    /lib/x86_64-linux-gnu/libnsl-2.23.so
+7fe2dc7e3000-7fe2dc7e4000 rw-p 00016000 08:06 9442831                    /lib/x86_64-linux-gnu/libnsl-2.23.so
+7fe2dc7e4000-7fe2dc7e6000 rw-p 00000000 00:00 0 
+7fe2dc7e6000-7fe2dc7ee000 r-xp 00000000 08:06 9442974                    /lib/x86_64-linux-gnu/libnss_compat-2.23.so
+7fe2dc7ee000-7fe2dc9ed000 ---p 00008000 08:06 9442974                    /lib/x86_64-linux-gnu/libnss_compat-2.23.so
+7fe2dc9ed000-7fe2dc9ee000 r--p 00007000 08:06 9442974                    /lib/x86_64-linux-gnu/libnss_compat-2.23.so
+7fe2dc9ee000-7fe2dc9ef000 rw-p 00008000 08:06 9442974                    /lib/x86_64-linux-gnu/libnss_compat-2.23.so
+7fe2dc9ef000-7fe2dca1a000 r-xp 00000000 08:06 7480416                    /home/marcel/Downloads/jdk-11.0.1/lib/libjava.so
+7fe2dca1a000-7fe2dcc19000 ---p 0002b000 08:06 7480416                    /home/marcel/Downloads/jdk-11.0.1/lib/libjava.so
+7fe2dcc19000-7fe2dcc1a000 r--p 0002a000 08:06 7480416                    /home/marcel/Downloads/jdk-11.0.1/lib/libjava.so
+7fe2dcc1a000-7fe2dcc1c000 rw-p 0002b000 08:06 7480416                    /home/marcel/Downloads/jdk-11.0.1/lib/libjava.so
+7fe2dcc1c000-7fe2dcc29000 r-xp 00000000 08:06 7480452                    /home/marcel/Downloads/jdk-11.0.1/lib/libverify.so
+7fe2dcc29000-7fe2dce28000 ---p 0000d000 08:06 7480452                    /home/marcel/Downloads/jdk-11.0.1/lib/libverify.so
+7fe2dce28000-7fe2dce2a000 r--p 0000c000 08:06 7480452                    /home/marcel/Downloads/jdk-11.0.1/lib/libverify.so
+7fe2dce2a000-7fe2dce2b000 rw-p 0000e000 08:06 7480452                    /home/marcel/Downloads/jdk-11.0.1/lib/libverify.so
+7fe2dce2b000-7fe2dce32000 r-xp 00000000 08:06 9442990                    /lib/x86_64-linux-gnu/librt-2.23.so
+7fe2dce32000-7fe2dd031000 ---p 00007000 08:06 9442990                    /lib/x86_64-linux-gnu/librt-2.23.so
+7fe2dd031000-7fe2dd032000 r--p 00006000 08:06 9442990                    /lib/x86_64-linux-gnu/librt-2.23.so
+7fe2dd032000-7fe2dd033000 rw-p 00007000 08:06 9442990                    /lib/x86_64-linux-gnu/librt-2.23.so
+7fe2dd033000-7fe2dd13b000 r-xp 00000000 08:06 9442818                    /lib/x86_64-linux-gnu/libm-2.23.so
+7fe2dd13b000-7fe2dd33a000 ---p 00108000 08:06 9442818                    /lib/x86_64-linux-gnu/libm-2.23.so
+7fe2dd33a000-7fe2dd33b000 r--p 00107000 08:06 9442818                    /lib/x86_64-linux-gnu/libm-2.23.so
+7fe2dd33b000-7fe2dd33c000 rw-p 00108000 08:06 9442818                    /lib/x86_64-linux-gnu/libm-2.23.so
+7fe2dd33c000-7fe2de4c4000 r-xp 00000000 08:06 7480476                    /home/marcel/Downloads/jdk-11.0.1/lib/server/libjvm.so
+7fe2de4c4000-7fe2de6c4000 ---p 01188000 08:06 7480476                    /home/marcel/Downloads/jdk-11.0.1/lib/server/libjvm.so
+7fe2de6c4000-7fe2de78e000 r--p 01188000 08:06 7480476                    /home/marcel/Downloads/jdk-11.0.1/lib/server/libjvm.so
+7fe2de78e000-7fe2de7c8000 rw-p 01252000 08:06 7480476                    /home/marcel/Downloads/jdk-11.0.1/lib/server/libjvm.so
+7fe2de7c8000-7fe2de81e000 rw-p 00000000 00:00 0 
+7fe2de81e000-7fe2de9de000 r-xp 00000000 08:06 9442837                    /lib/x86_64-linux-gnu/libc-2.23.so
+7fe2de9de000-7fe2debde000 ---p 001c0000 08:06 9442837                    /lib/x86_64-linux-gnu/libc-2.23.so
+7fe2debde000-7fe2debe2000 r--p 001c0000 08:06 9442837                    /lib/x86_64-linux-gnu/libc-2.23.so
+7fe2debe2000-7fe2debe4000 rw-p 001c4000 08:06 9442837                    /lib/x86_64-linux-gnu/libc-2.23.so
+7fe2debe4000-7fe2debe8000 rw-p 00000000 00:00 0 
+7fe2debe8000-7fe2debeb000 r-xp 00000000 08:06 9442956                    /lib/x86_64-linux-gnu/libdl-2.23.so
+7fe2debeb000-7fe2dedea000 ---p 00003000 08:06 9442956                    /lib/x86_64-linux-gnu/libdl-2.23.so
+7fe2dedea000-7fe2dedeb000 r--p 00002000 08:06 9442956                    /lib/x86_64-linux-gnu/libdl-2.23.so
+7fe2dedeb000-7fe2dedec000 rw-p 00003000 08:06 9442956                    /lib/x86_64-linux-gnu/libdl-2.23.so
+7fe2dedec000-7fe2dedfb000 r-xp 00000000 08:06 7480401                    /home/marcel/Downloads/jdk-11.0.1/lib/jli/libjli.so
+7fe2dedfb000-7fe2deffb000 ---p 0000f000 08:06 7480401                    /home/marcel/Downloads/jdk-11.0.1/lib/jli/libjli.so
+7fe2deffb000-7fe2deffc000 r--p 0000f000 08:06 7480401                    /home/marcel/Downloads/jdk-11.0.1/lib/jli/libjli.so
+7fe2deffc000-7fe2deffd000 rw-p 00010000 08:06 7480401                    /home/marcel/Downloads/jdk-11.0.1/lib/jli/libjli.so
+7fe2deffd000-7fe2df015000 r-xp 00000000 08:06 9442834                    /lib/x86_64-linux-gnu/libpthread-2.23.so
+7fe2df015000-7fe2df214000 ---p 00018000 08:06 9442834                    /lib/x86_64-linux-gnu/libpthread-2.23.so
+7fe2df214000-7fe2df215000 r--p 00017000 08:06 9442834                    /lib/x86_64-linux-gnu/libpthread-2.23.so
+7fe2df215000-7fe2df216000 rw-p 00018000 08:06 9442834                    /lib/x86_64-linux-gnu/libpthread-2.23.so
+7fe2df216000-7fe2df21a000 rw-p 00000000 00:00 0 
+7fe2df21a000-7fe2df233000 r-xp 00000000 08:06 9441927                    /lib/x86_64-linux-gnu/libz.so.1.2.8
+7fe2df233000-7fe2df432000 ---p 00019000 08:06 9441927                    /lib/x86_64-linux-gnu/libz.so.1.2.8
+7fe2df432000-7fe2df433000 r--p 00018000 08:06 9441927                    /lib/x86_64-linux-gnu/libz.so.1.2.8
+7fe2df433000-7fe2df434000 rw-p 00019000 08:06 9441927                    /lib/x86_64-linux-gnu/libz.so.1.2.8
+7fe2df434000-7fe2df45a000 r-xp 00000000 08:06 9442832                    /lib/x86_64-linux-gnu/ld-2.23.so
+7fe2df4c6000-7fe2df52d000 rw-p 00000000 00:00 0 
+7fe2df52d000-7fe2df531000 ---p 00000000 00:00 0 
+7fe2df531000-7fe2df633000 rw-p 00000000 00:00 0 
+7fe2df643000-7fe2df648000 rw-p 00000000 00:00 0 
+7fe2df648000-7fe2df64f000 ---p 00000000 00:00 0 
+7fe2df64f000-7fe2df657000 rw-s 00000000 08:06 5383398                    /tmp/hsperfdata_marcel/7692
+7fe2df657000-7fe2df658000 ---p 00000000 00:00 0 
+7fe2df658000-7fe2df659000 r--p 00000000 00:00 0 
+7fe2df659000-7fe2df65a000 r--p 00025000 08:06 9442832                    /lib/x86_64-linux-gnu/ld-2.23.so
+7fe2df65a000-7fe2df65b000 rw-p 00026000 08:06 9442832                    /lib/x86_64-linux-gnu/ld-2.23.so
+7fe2df65b000-7fe2df65c000 rw-p 00000000 00:00 0 
+7fff932e5000-7fff93306000 rw-p 00000000 00:00 0                          [stack]
+7fff93375000-7fff93377000 r--p 00000000 00:00 0                          [vvar]
+7fff93377000-7fff93379000 r-xp 00000000 00:00 0                          [vdso]
+ffffffffff600000-ffffffffff601000 r-xp 00000000 00:00 0                  [vsyscall]
+
+
+VM Arguments:
+jvm_args: -Xmx6g -Xms6g 
+java_command: /home/marcel/GithubInc/inception/inception-kb/target/surefire/surefirebooter12304749649580437775.jar /home/marcel/GithubInc/inception/inception-kb/target/surefire 2018-12-18T17-44-21_397-jvmRun1 surefire10894618676194389987tmp surefire_059746921645431587tmp
+java_class_path (initial): /home/marcel/GithubInc/inception/inception-kb/target/surefire/surefirebooter12304749649580437775.jar
+Launcher Type: SUN_STANDARD
+
+[Global flags]
+     intx CICompilerCount                          = 3                                         {product} {ergonomic}
+     uint ConcGCThreads                            = 1                                         {product} {ergonomic}
+     uint G1ConcRefinementThreads                  = 4                                         {product} {ergonomic}
+   size_t G1HeapRegionSize                         = 2097152                                   {product} {ergonomic}
+    uintx GCDrainStackTargetSize                   = 64                                        {product} {ergonomic}
+   size_t InitialHeapSize                          = 6442450944                                {product} {command line}
+   size_t MarkStackSize                            = 4194304                                   {product} {ergonomic}
+   size_t MaxHeapSize                              = 6442450944                                {product} {command line}
+   size_t MinHeapDeltaBytes                        = 2097152                                   {product} {ergonomic}
+    uintx NonNMethodCodeHeapSize                   = 5830092                                {pd product} {ergonomic}
+    uintx NonProfiledCodeHeapSize                  = 122914074                              {pd product} {ergonomic}
+    uintx ProfiledCodeHeapSize                     = 122914074                              {pd product} {ergonomic}
+    uintx ReservedCodeCacheSize                    = 251658240                              {pd product} {ergonomic}
+     bool SegmentedCodeCache                       = true                                      {product} {ergonomic}
+     bool UseCompressedClassPointers               = true                                 {lp64_product} {ergonomic}
+     bool UseCompressedOops                        = true                                 {lp64_product} {ergonomic}
+     bool UseG1GC                                  = true                                      {product} {ergonomic}
+
+Logging:
+Log output configuration:
+ #0: stdout all=warning uptime,level,tags
+ #1: stderr all=off uptime,level,tags
+
+Environment Variables:
+JAVA_HOME=/home/marcel/Downloads/jdk-11.0.1
+PATH=/home/marcel/bin:/home/marcel/.local/bin:/home/marcel/bin:/home/marcel/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
+SHELL=/bin/bash
+DISPLAY=:0
+
+Signal Handlers:
+SIGSEGV: [libjvm.so+0xe5ac10], sa_mask[0]=11111111011111111101111111111110, sa_flags=SA_RESTART|SA_SIGINFO
+SIGBUS: [libjvm.so+0xe5ac10], sa_mask[0]=11111111011111111101111111111110, sa_flags=SA_RESTART|SA_SIGINFO
+SIGFPE: [libjvm.so+0xe5ac10], sa_mask[0]=11111111011111111101111111111110, sa_flags=SA_RESTART|SA_SIGINFO
+SIGPIPE: [libjvm.so+0xc30d00], sa_mask[0]=11111111011111111101111111111110, sa_flags=SA_RESTART|SA_SIGINFO
+SIGXFSZ: [libjvm.so+0xc30d00], sa_mask[0]=11111111011111111101111111111110, sa_flags=SA_RESTART|SA_SIGINFO
+SIGILL: [libjvm.so+0xe5ac10], sa_mask[0]=11111111011111111101111111111110, sa_flags=SA_RESTART|SA_SIGINFO
+SIGUSR2: [libjvm.so+0xc30ba0], sa_mask[0]=00100000000000000000000000000000, sa_flags=SA_RESTART|SA_SIGINFO
+SIGHUP: SIG_DFL, sa_mask[0]=00000000000000000000000000000000, sa_flags=none
+SIGINT: SIG_DFL, sa_mask[0]=00000000000000000000000000000000, sa_flags=none
+SIGTERM: SIG_DFL, sa_mask[0]=00000000000000000000000000000000, sa_flags=none
+SIGQUIT: SIG_DFL, sa_mask[0]=00000000000000000000000000000000, sa_flags=none
+
+
+---------------  S Y S T E M  ---------------
+
+OS:DISTRIB_ID=LinuxMint
+DISTRIB_RELEASE=18.3
+DISTRIB_CODENAME=sylvia
+DISTRIB_DESCRIPTION="Linux Mint 18.3 Sylvia"
+uname:Linux 4.10.0-38-generic #42~16.04.1-Ubuntu SMP Tue Oct 10 16:32:20 UTC 2017 x86_64
+libc:glibc 2.23 NPTL 2.23 
+rlimit: STACK 8192k, CORE 0k, NPROC 30686, NOFILE 1048576, AS infinity, DATA infinity, FSIZE infinity
+load average:1.48 1.05 1.29
+
+/proc/meminfo:
+MemTotal:        7902960 kB
+MemFree:          626436 kB
+MemAvailable:    1776520 kB
+Buffers:          282080 kB
+Cached:          1453508 kB
+SwapCached:         2208 kB
+Active:          5520372 kB
+Inactive:        1419360 kB
+Active(anon):    4766920 kB
+Inactive(anon):   855632 kB
+Active(file):     753452 kB
+Inactive(file):   563728 kB
+Unevictable:           0 kB
+Mlocked:               0 kB
+SwapTotal:       3920892 kB
+SwapFree:        3865876 kB
+Dirty:              5888 kB
+Writeback:            12 kB
+AnonPages:       5085960 kB
+Mapped:           656656 kB
+Shmem:            418348 kB
+Slab:             206260 kB
+SReclaimable:     108500 kB
+SUnreclaim:        97760 kB
+KernelStack:       14772 kB
+PageTables:        47836 kB
+NFS_Unstable:          0 kB
+Bounce:                0 kB
+WritebackTmp:          0 kB
+CommitLimit:     7872372 kB
+Committed_AS:    9920928 kB
+VmallocTotal:   34359738367 kB
+VmallocUsed:           0 kB
+VmallocChunk:          0 kB
+HardwareCorrupted:     0 kB
+AnonHugePages:   1658880 kB
+ShmemHugePages:        0 kB
+ShmemPmdMapped:        0 kB
+CmaTotal:              0 kB
+CmaFree:               0 kB
+HugePages_Total:       0
+HugePages_Free:        0
+HugePages_Rsvd:        0
+HugePages_Surp:        0
+Hugepagesize:       2048 kB
+DirectMap4k:      305740 kB
+DirectMap2M:     7811072 kB
+DirectMap1G:           0 kB
+
+
+/proc/sys/kernel/threads-max (system-wide limit on the number of threads):
+61373
+
+
+/proc/sys/vm/max_map_count (maximum number of memory map areas a process may have):
+65530
+
+
+/proc/sys/kernel/pid_max (system-wide limit on number of process identifiers):
+32768
+
+
+container (cgroup) information:
+container_type: cgroupv1
+cpu_cpuset_cpus: 0-3
+cpu_memory_nodes: 0
+active_processor_count: 4
+cpu_quota: -1
+cpu_period: 100000
+cpu_shares: -1
+memory_limit_in_bytes: -1
+memory_and_swap_limit_in_bytes: -2
+memory_soft_limit_in_bytes: -1
+memory_usage_in_bytes: 6228279296
+memory_max_usage_in_bytes: 6771113984
+
+
+CPU:total 4 (initial active 4) (2 cores per cpu, 2 threads per core) family 6 model 61 stepping 4, cmov, cx8, fxsr, mmx, sse, sse2, sse3, ssse3, sse4.1, sse4.2, popcnt, avx, avx2, aes, clmul, erms, 3dnowpref, lzcnt, ht, tsc, tscinvbit, bmi1, bmi2, adx, fma
+CPU Model and flags from /proc/cpuinfo:
+model name	: Intel(R) Core(TM) i5-5200U CPU @ 2.20GHz
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc aperfmperf pni pclmulqdq dtes64 monitor ds_cpl vmx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch epb intel_pt tpr_shadow vnmi flexpriority ept vpid fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap xsaveopt dtherm ida arat pln pts
+
+Memory: 4k page, physical 7902960k(626436k free), swap 3920892k(3865876k free)
+
+vm_info: Java HotSpot(TM) 64-Bit Server VM (11.0.1+13-LTS) for linux-amd64 JRE (11.0.1+13-LTS), built on Oct  6 2018 05:13:05 by "mach5one" with gcc 7.3.0
+
+END.

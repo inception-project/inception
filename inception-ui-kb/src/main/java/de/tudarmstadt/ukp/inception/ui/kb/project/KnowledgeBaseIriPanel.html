@@ -19,114 +19,115 @@
 
 <html xmlns:wicket="http://wicket.apache.org">
 <body>
-  <wicket:panel>
-    <div class="form-horizontal">
-      <div class="form-group col-xs-12" wicket:enclosure="basePrefix">
-        <label class="control-label col-sm-3" wicket:for="basePrefix">
-          <wicket:label key="kb.iri.basePrefix" />
-        </label>
-        <div class="col-sm-9">
-          <input type="text" wicket:id="basePrefix" class="form-control"/>
-        </div>
-      </div>
-      <div class="form-group col-xs-12" wicket:enclosure="fullTextSearchIri">
-          <label class="control-label col-sm-3" wicket:for="fullTextSearchIri">
-          <wicket:label key="kb.iri.fullTextSearchIri" />
-        </label>
-        <div class="col-sm-9">
-          <select wicket:id="fullTextSearchIri" class="form-control"/>
-        </div>
+<wicket:panel>
+  <div class="form-group col-xs-12">
+    <div class="form-group row">
+      <h4 class="col-sm-12">
+        <wicket:message key="kb.settings.schemaMapping"/>
+      </h4>
+      <div class="col-sm-3"></div>
+    </div>
+    <div class="form-group row" wicket:enclosure="reification">
+      <label class="control-label col-sm-3" wicket:for="reification">
+        <wicket:message key="kb.reification"/>
+      </label>
+      <div class="col-sm-9">
+        <select wicket:id="reification" class=""></select>
       </div>
     </div>
-    
-    <div wicket:id="comboBoxWrapper" class="form-horizontal">
-      <div class="form-group col-xs-12" wicket:enclosure="iriSchema">
+    <div wicket:id="comboBoxWrapper">
+      <div class="form-group row" wicket:enclosure="iriSchema">
         <label class="control-label col-sm-3">
-          <wicket:message key="kb.iri.iriSchema" />
+          <wicket:message key="kb.iri.iriSchema"/>
         </label>
         <div class="col-sm-9">
-          <div wicket:id="iriSchema"></div>
+          <select wicket:id="iriSchema" class=""></select>
         </div>
       </div>
-      
-      <div class="form-group col-xs-12">
+
+      <div class="form-group row">
+        <h5 class="col-sm-9 col-md-offset-3">
+          <wicket:message key="kb.settings.schemaMapping.classMapping"/>
+        </h5>
+      </div>
+      <div class="form-group row">
         <label class="control-label col-sm-3">
-          <wicket:message key="kb.iri.classIri" />
+          <wicket:message key="kb.iri.classIri"/>
         </label>
         <div class="col-sm-9">
           <input type="text" wicket:id="classIri" class="form-control"/>
         </div>
       </div>
-  
-      <div class="form-group col-xs-12">
+
+      <div class="form-group row">
         <label class="control-label col-sm-3">
-          <wicket:message key="kb.iri.subclassIri" />
+          <wicket:message key="kb.iri.subclassIri"/>
         </label>
         <div class="col-sm-9">
           <input type="text" wicket:id="subclassIri" class="form-control"/>
         </div>
       </div>
-  
-      <div class="form-group col-xs-12">
+
+      <div class="form-group row">
         <label class="control-label col-sm-3">
-          <wicket:message key="kb.iri.typeIri" />
+          <wicket:message key="kb.iri.typeIri"/>
         </label>
         <div class="col-sm-9">
           <input type="text" wicket:id="typeIri" class="form-control"/>
         </div>
       </div>
-      
-      <div class="form-group col-xs-12">
+
+      <div class="form-group row">
         <label class="control-label col-sm-3">
-          <wicket:message key="kb.iri.descriptionIri" />
+          <wicket:message key="kb.iri.descriptionIri"/>
         </label>
         <div class="col-sm-9">
           <input type="text" wicket:id="descriptionIri" class="form-control"/>
         </div>
       </div>
-      
-      <div class="form-group col-xs-12">
+
+      <div class="form-group row">
         <label class="control-label col-sm-3">
-          <wicket:message key="kb.iri.labelIri" />
+          <wicket:message key="kb.iri.labelIri"/>
         </label>
         <div class="col-sm-9">
           <input type="text" wicket:id="labelIri" class="form-control"/>
         </div>
       </div>
-      
-      <div class="form-group col-xs-12">
+
+      <div class="form-group row">
+        <h5 class="col-sm-9 col-md-offset-3">
+          <wicket:message key="kb.settings.schemaMapping.propertyMapping"/>
+        </h5>
+      </div>
+      <div class="form-group row">
         <label class="control-label col-sm-3">
-          <wicket:message key="kb.iri.propertyTypeIri" />
+          <wicket:message key="kb.iri.propertyTypeIri"/>
         </label>
         <div class="col-sm-9">
           <input type="text" wicket:id="propertyTypeIri" class="form-control"/>
         </div>
       </div>
 
-      <div class="form-group col-xs-12">
+      <div class="form-group row">
         <label class="control-label col-sm-3">
-          <wicket:message key="kb.iri.propertyLabelIri" />
+          <wicket:message key="kb.iri.propertyLabelIri"/>
         </label>
-        <div class="col-sm-9"> 
+        <div class="col-sm-9">
           <input type="text" wicket:id="propertyLabelIri" class="form-control"/>
         </div>
       </div>
 
-      <div class="form-group col-xs-12">
+      <div class="form-group row">
         <label class="control-label col-sm-3">
-          <wicket:message key="kb.iri.propertyDescriptionIri" />
+          <wicket:message key="kb.iri.propertyDescriptionIri"/>
         </label>
-        <div class="col-sm-9"> 
+        <div class="col-sm-9">
           <input type="text" wicket:id="propertyDescriptionIri" class="form-control"/>
         </div>
       </div>
     </div>
-    <button wicket:id="toggleAdvancedSettings" type="button" class="btn btn-primary btn-sm"><wicket:container wicket:id="toggleAdvSettingsLabel"></wicket:container></button>
-    <div>
-      <div class="col-sm-10">
-        <span wicket:id="advancedSettings"></span>
-      </div> 
-    </div>
-  </wicket:panel>
+  </div>
+</wicket:panel>
 </body>
 </html>
