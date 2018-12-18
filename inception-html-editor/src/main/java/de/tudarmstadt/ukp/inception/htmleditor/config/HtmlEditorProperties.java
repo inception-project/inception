@@ -15,16 +15,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.api.model;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.PersistentEnumUserType;
+package de.tudarmstadt.ukp.inception.htmleditor.config;
 
-public class LearningRecordUserActionType
-    extends PersistentEnumUserType<LearningRecordType>
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
+
+@Component
+@ConfigurationProperties("ui.html")
+public class HtmlEditorProperties
 {
-    @Override
-    public Class<LearningRecordType> returnedClass()
+    private boolean enabled = false;
+
+    public boolean isEnabled()
     {
-        return LearningRecordType.class;
+        return enabled;
+    }
+
+    public void setEnabled(boolean aEnabled)
+    {
+        enabled = aEnabled;
     }
 }

@@ -162,7 +162,7 @@ public class MtasDocumentIndex
         }
        
         resourceDir = new File(aDir);
-        log.info("New Mtas/Lucene index instance created...");
+        log.debug("New Mtas/Lucene index instance created...");
     }
 
     @Override
@@ -670,7 +670,7 @@ public class MtasDocumentIndex
                     indexWriter.close();
                 }
 
-                log.info("Index for project [{}]({}) has been closed", project.getName(),
+                log.debug("Index for project [{}]({}) has been closed", project.getName(),
                         project.getId());
             }
             catch (IOException e) {
@@ -721,20 +721,20 @@ public class MtasDocumentIndex
         if (!isOpen) {
             // Only open if it is not already open
             try {
-                log.info("indexWriter was not open. Opening it for project [{}]({})",
+                log.debug("indexWriter was not open. Opening it for project [{}]({})",
                         project.getName(), project.getId());
 
                 indexWriter = openLuceneIndex(getIndexDir());
                 indexWriter.commit();
 
-                log.info("indexWriter has been opened for project [{}]({})", project.getName(),
+                log.debug("indexWriter has been opened for project [{}]({})", project.getName(),
                         project.getId());
             }
             catch (Exception e) {
                 log.error("Unable to open indexWriter", e);
             }
         } else {
-            log.info("indexWriter is already open for project [{}]({})", project.getName(),
+            log.debug("indexWriter is already open for project [{}]({})", project.getName(),
                     project.getId());
         }
     }
@@ -749,12 +749,12 @@ public class MtasDocumentIndex
 
         try {
             // Create the directory for the new index
-            log.info("Creating index directory for project [{}]({})", project.getName(),
+            log.debug("Creating index directory for project [{}]({})", project.getName(),
                     project.getId());
             FileUtils.forceMkdir(indexDir);
 
             // Open the index
-            log.info("Opening index directory for project [{}]({})", project.getName(),
+            log.debug("Opening index directory for project [{}]({})", project.getName(),
                     project.getId());
             openPhysicalIndex();
             
