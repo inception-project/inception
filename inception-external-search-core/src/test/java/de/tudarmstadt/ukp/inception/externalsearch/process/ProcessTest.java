@@ -35,6 +35,7 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -135,12 +136,10 @@ public class ProcessTest
         {
             Type tUnit = aJCas.getTypeSystem().getType(TYPE_NAME_UNIT);
             for (Sentence sentence : JCasUtil.select(aJCas, Sentence.class)) {
-                for (Token token : JCasUtil.selectCovered(Token.class, sentence)) {
-                    if (token.getCoveredText().equals(queryWord)) {
-                        AnnotationFS unit = aJCas.getCas().createAnnotation(tUnit,
-                                token.getBegin(), token.getEnd());
-                        aJCas.getCas().addFsToIndexes(unit);
-                    }
+                if (sentence.getCoveredText().contains(queryWord)) {
+                    AnnotationFS unit = aJCas.getCas().createAnnotation(tUnit,
+                                sentence.getBegin(), sentence.getEnd());
+                    aJCas.getCas().addFsToIndexes(unit);
                 }
             }
         }
@@ -167,8 +166,7 @@ public class ProcessTest
 
         private double getScore(String aQueryWord, List<String> aTokens)
         {
-            // Return some score
-            return 1;
+            return Collections.frequency(aTokens, aQueryWord);
         }
     }
     
