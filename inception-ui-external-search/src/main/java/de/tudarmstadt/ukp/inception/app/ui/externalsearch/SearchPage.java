@@ -234,9 +234,9 @@ public class SearchPage extends ApplicationPageBase
     private void searchDocuments(String aQuery)
     {
         results.clear();
-        applicationEventPublisher.get().publishEvent(new ExternalSearchQueryEvent(this, 
-        		currentRepository.getProject(), userRepository.getCurrentUser().getUsername(),
-                aQuery));
+        applicationEventPublisher.get()
+                .publishEvent(new ExternalSearchQueryEvent(this, currentRepository.getProject(),
+                        userRepository.getCurrentUser().getUsername(), aQuery));
 
         try {
             for (ExternalSearchResult result : externalSearchService
