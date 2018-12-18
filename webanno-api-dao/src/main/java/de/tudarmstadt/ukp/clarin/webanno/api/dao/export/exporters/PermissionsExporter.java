@@ -97,11 +97,13 @@ public class PermissionsExporter
             }
         }
         
-        // Add the importing user as project manager if requested
+        // Give all permissions to the importing user if requested
         if (aRequest.getManager().isPresent()
                 && !projectService.isManager(aProject, aRequest.getManager().get())) {
             ProjectPermission permission = new ProjectPermission();
             permission.setLevel(PermissionLevel.MANAGER);
+            permission.setLevel(PermissionLevel.CURATOR);
+            permission.setLevel(PermissionLevel.ANNOTATOR);
             permission.setProject(aProject);
             permission.setUser(aRequest.getManager().get().getUsername());
             projectService.createProjectPermission(permission);
