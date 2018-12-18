@@ -32,7 +32,7 @@ public class AccessSettingsPanel
     extends Panel
 {
     private static final long serialVersionUID = 1909643205422526142L;
-    
+
     private final CompoundPropertyModel<KnowledgeBaseWrapper> kbModel;
 
     public AccessSettingsPanel(String id, CompoundPropertyModel<KnowledgeBaseWrapper> aModel)
@@ -42,17 +42,21 @@ public class AccessSettingsPanel
 
         kbModel = aModel;
 
-        add(repositoryTypeRadioButtons("type", "kb.type"));
+        add(createTypeSelection("type", "kb.type"));
         add(createCheckbox("writeprotection", "kb.readOnly"));
     }
 
-    private DropDownChoice<RepositoryType> repositoryTypeRadioButtons(String id,
-        String property) {
-        return new BootstrapSelect<>(id, kbModel.bind(property),
-                asList(RepositoryType.values()), new EnumChoiceRenderer<>(this));
+    private DropDownChoice<RepositoryType> createTypeSelection(String id, String property)
+    {
+        DropDownChoice<RepositoryType> typeChoice = new BootstrapSelect<>(id,
+                kbModel.bind(property), asList(RepositoryType.values()),
+                new EnumChoiceRenderer<>(this));
+        typeChoice.setRequired(true);
+        return typeChoice;
     }
 
-    private CheckBox createCheckbox(String aId, String aProperty) {
+    private CheckBox createCheckbox(String aId, String aProperty)
+    {
         return new CheckBox(aId, kbModel.bind(aProperty));
     }
 }

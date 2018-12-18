@@ -17,8 +17,12 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.project;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.util.Collections;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.form.AjaxButton;
@@ -36,7 +40,6 @@ import org.eclipse.rdf4j.repository.RepositoryException;
 import org.eclipse.rdf4j.repository.config.RepositoryConfigException;
 import org.eclipse.rdf4j.repository.config.RepositoryImplConfig;
 import org.eclipse.rdf4j.repository.sparql.config.SPARQLRepositoryConfig;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -145,6 +148,9 @@ public class KnowledgeBaseDetailsPanel
     {
         // propagate the changes to the original knowledge base model
         kbModel.setObject(kbwModel.getObject().getKb());
+        
+        // Forget any in-transit uploaded files
+        kbwModel.getObject().clearFiles();
     }
 
     private void actionSave(AjaxRequestTarget aTarget, Form<KnowledgeBaseWrapper> aForm)
@@ -165,7 +171,20 @@ public class KnowledgeBaseDetailsPanel
             else {
                 cfg = kbService.getKnowledgeBaseConfig(kbw.getKb());
             }
-            KnowledgeBaseWrapper.updateKb(kbw, cfg, kbService);
+            KnowledgeBase kb = kbw.getKb();
+            kbService.updateKnowledgeBase(kb, cfg);
+            if (kb.getType() == RepositoryType.LOCAL) {
+                kbService.defineBaseProperties(kb);
+                for (Pair<String, File> f : kbw.getFiles()) {
+                    try (InputStream is = new FileInputStream(f.getValue())) {
+                        kbService.importData(kb, f.getValue().getName(), is);
+                        success("Imported: " + f.getKey());
+                    }
+                    catch (Exception e) {
+                        error("Failed to import: " + f.getKey());
+                    }
+                }
+            }
             modelChanged();
             aTarget.add(this);
         }

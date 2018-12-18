@@ -17,11 +17,14 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.project.wizard;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -32,16 +35,19 @@ import org.apache.wicket.extensions.wizard.WizardButton;
 import org.apache.wicket.extensions.wizard.dynamic.DynamicWizardModel;
 import org.apache.wicket.extensions.wizard.dynamic.DynamicWizardStep;
 import org.apache.wicket.extensions.wizard.dynamic.IDynamicWizardStep;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.eclipse.rdf4j.repository.config.RepositoryImplConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
+import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 import de.tudarmstadt.ukp.inception.ui.core.bootstrap.BootstrapWizard;
 import de.tudarmstadt.ukp.inception.ui.core.bootstrap.BootstrapWizardButtonBar;
@@ -158,6 +164,7 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
 
         private static final long serialVersionUID = 8212277960059805657L;
 
+        private final AccessSpecificSettingsPanel panel;
         private CompoundPropertyModel<KnowledgeBaseWrapper> kbModel;
 
         public AccessSpecificSettingsStep(IDynamicWizardStep previousStep,
@@ -165,19 +172,23 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
         {
             super(previousStep, "", "", aKbModel);
             kbModel = aKbModel;
-            kbModel.getObject().setFiles(new ArrayList<>());
+            kbModel.getObject().clearFiles();
 
-            Component accessSpecificSettings = new AccessSpecificSettingsPanel(
+            panel = new AccessSpecificSettingsPanel(
                 "accessSpecificSettings", kbModel, knowledgeBaseProfiles);
-            add(accessSpecificSettings);
-            accessSpecificSettings.get("localSpecificSettings:exportButtons").setVisible(false);
-            accessSpecificSettings.get("localSpecificSettings:clear").setVisible(false);
+            add(panel);
+            panel.get("localSpecificSettings:exportButtons").setVisible(false);
+            panel.get("localSpecificSettings:clear").setVisible(false);
         }
         
         @Override
         public void applyState()
         {
-
+            // We need to handle this manually here because the onSubmit method of the upload
+            // form is only called *after* the upload component has already been detached and
+            // as a consequence all uploaded files have been cleared
+            panel.handleUploadedFiles();
+            
             switch (kbModel.getObject().getKb().getType()) {
             case LOCAL:
                 // local knowledge bases are editable by default
@@ -237,11 +248,37 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
             wrapper.getKb().setProject(projectModel.getObject());
 
             try {
-                KnowledgeBaseWrapper.registerKb(wrapper, kbService);
+                KnowledgeBase kb = wrapper.getKb();
+                
+                // set up the repository config, then register the knowledge base
+                RepositoryImplConfig cfg;
+                switch (kb.getType()) {
+                case LOCAL:
+                    cfg = kbService.getNativeConfig();
+                    kbService.registerKnowledgeBase(kb, cfg);
+                    success("Created knowledge base: " + kb.getName());
+                    kbService.defineBaseProperties(kb);
+                    for (Pair<String, File> f : wrapper.getFiles()) {
+                        try (InputStream is = new FileInputStream(f.getValue())) {
+                            kbService.importData(kb, f.getValue().getName(), is);
+                            success("Imported: " + f.getKey());
+                        }
+                        catch (Exception e) {
+                            error("Failed to import: " + f.getKey());
+                        }
+                    }
+                    break;
+                case REMOTE:
+                    cfg = kbService.getRemoteConfig(wrapper.getUrl());
+                    kbService.registerKnowledgeBase(kb, cfg);
+                    success("Created knowledge base: " + kb.getName());
+                    break;
+                default:
+                    throw new IllegalStateException();
+                }
             }
             catch (Exception e) {
-                error(e.getMessage());
-
+                error("Failed to create knowledge base: " + e.getMessage());
             }
         }
 
@@ -291,6 +328,7 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
                                     .find(AjaxRequestTarget.class)
                                     .get();
                             target.add(findParent(KnowledgeBaseListPanel.class));
+                            target.addChildren(getPage(), IFeedback.class);
                             findParent(KnowledgeBaseCreationDialog.class).close(target);
                         }
                     }

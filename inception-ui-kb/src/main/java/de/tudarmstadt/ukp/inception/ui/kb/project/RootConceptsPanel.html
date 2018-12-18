@@ -22,7 +22,7 @@
 <wicket:panel>
   <div class="form-group col-xs-12">
     <div class="form-group row">
-      <h4 class="control-label col-sm-3">
+      <h4 class="col-sm-12">
         <wicket:message key="kb.settings.rootConcepts"/>
       </h4>
     </div>
@@ -32,18 +32,29 @@
       </label>
       <div class="col-sm-9">
         <div class="list-group">
-          <div wicket:id="rootConcepts">
-            <form wicket:id="conceptForm" class="form-inline" style="width: 100%;">
-              <input type="text" wicket:id="textField" class="form-control" style="width: 87%;"/>
-              <button wicket:id="removeConcept" class="fa fa-trash col-auto"></button>
+          <div class="list-group-item">
+            <div class="input-group">
+              <input type="text" wicket:id="newConceptField" class="form-control"/>
+              <span class="input-group-btn">
+                <a wicket:id="newExplicitConcept" class="btn btn-primary">
+                  <i class="fa fa-plus" aria-hidden="true"></i>
+                </a>
+              </span>
+            </div>
+          </div>
+          <div wicket:id="rootConcepts" class="list-group-item">
+            <form wicket:id="conceptForm">
+              <div class="input-group">
+                <input type="text" wicket:id="textField" class="form-control"/>
+                <span class="input-group-btn">
+                  <a wicket:id="removeConcept" class="btn btn-danger">
+                    <i class="fa fa-trash" aria-hidden="true"></i>
+                  </a>
+                </span>
+              </div>
             </form>
           </div>
         </div>
-        <input type="text" wicket:id="newConceptField" class="form-control"/>
-        <button wicket:id="newExplicitConcept" style="margin-top:3px;" type="button"
-                class="btn btn-primary btn-md margin-top:5px;">
-          <wicket:container wicket:id="add"></wicket:container>
-        </button>
       </div>
     </div>
   </div>

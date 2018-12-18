@@ -24,9 +24,12 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.wicket.AttributeModifier;
+import org.apache.wicket.ClassAttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.feedback.IFeedback;
@@ -41,6 +44,7 @@ import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
+import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.model.StringResourceModel;
@@ -117,7 +121,7 @@ public class AccessSpecificSettingsPanel
         knowledgeBaseProfiles = aKnowledgeBaseProfiles;
         downloadedProfiles = new HashMap<>();
         uploadedFiles = new HashMap<>();
-        kbModel.getObject().setFiles(new ArrayList<>());
+        kbModel.getObject().clearFiles();
 
         boolean isHandlingLocalRepository =
             kbModel.getObject().getKb().getType() == RepositoryType.LOCAL;
@@ -178,9 +182,9 @@ public class AccessSpecificSettingsPanel
         };
     }
 
-    private void setUpLocalSpecificSettings(WebMarkupContainer wmc) {
-
-        wmc.add(uploadForm("uploadForm","uploadField"));
+    private void setUpLocalSpecificSettings(WebMarkupContainer wmc)
+    {
+        wmc.add(uploadForm("uploadForm", "uploadField"));
 
         // add link for clearing the knowledge base contents, enabled only, if there is
         // something to clear
@@ -196,7 +200,7 @@ public class AccessSpecificSettingsPanel
         listViewContainer = new WebMarkupContainer("listViewContainer");
         ListView<KnowledgeBaseProfile> suggestions = localSuggestionsList("localKBs", localKBs);
         listViewContainer.add(suggestions);
-        listViewContainer.setOutputMarkupId(true);
+        listViewContainer.setOutputMarkupPlaceholderTag(true);
 
         LambdaAjaxLink addKbButton = new LambdaAjaxLink("addKbButton",
             this::actionDownloadKbAndSetIRIs);
@@ -204,11 +208,19 @@ public class AccessSpecificSettingsPanel
         listViewContainer.add(addKbButton);
 
         wmc.add(listViewContainer);
-
     }
 
     private Form<Void> uploadForm(String aFormId, String aFieldId) {
-        Form<Void> importProjectForm = new Form<>(aFormId);
+        Form<Void> importProjectForm = new Form<Void>(aFormId) {
+            private static final long serialVersionUID = -8284858297362896476L;
+            
+            @Override
+            protected void onSubmit()
+            {
+                super.onSubmit();
+                handleUploadedFiles();
+            }
+        };
 
         FileInputConfig config = new FileInputConfig();
         config.initialCaption("Import project archives ...");
@@ -218,17 +230,22 @@ public class AccessSpecificSettingsPanel
 //        config.uploadIcon("<i class=\"fa fa-upload\"></i>");
         config.browseIcon("<i class=\"fa fa-folder-open\"></i>");
         importProjectForm.add(fileUpload = new BootstrapFileInputField(aFieldId,
-            new ListModel<>(), config)
-        {
-            private static final long serialVersionUID = 4057215581487440768L;
-
-            @Override
-            protected void onSubmit(AjaxRequestTarget aTarget)
-            {
-                actionUpload(aTarget);
-            }
-        });
+            new ListModel<>(), config));
         return importProjectForm;
+    }
+    
+    public void handleUploadedFiles()
+    {
+        try {
+            for (FileUpload fu : fileUpload.getFileUploads()) {
+                File tmp = uploadFile(fu);
+                kbModel.getObject().putFile(fu.getClientFileName(), tmp);
+            }
+        }
+        catch (Exception e) {
+            log.error("Error while uploading files", e);
+            error("Could not upload files");
+        }
     }
 
     private  AjaxLink<Void> clearLink(String aId) {
@@ -280,9 +297,8 @@ public class AccessSpecificSettingsPanel
 
             @Override protected void populateItem(ListItem<KnowledgeBaseProfile> item)
             {
-                LambdaAjaxLink link = new LambdaAjaxLink("suggestionLink", t -> {
-                    selectedKnowledgeBaseProfile = item.getModelObject();
-                });
+                LambdaAjaxLink link = new LambdaAjaxLink("suggestionLink", _target ->
+                        actionSelectPredefinedKB(_target, item.getModel()));
 
                 // Can not import the same KB more than once
                 boolean isImported = downloadedProfiles
@@ -292,10 +308,26 @@ public class AccessSpecificSettingsPanel
                 String itemLabel = item.getModelObject().getName();
                 // Adjust label to indicate whether the KB has already been downloaded
                 if (isImported) {
-                    // &#10004; is the checkmark symbol
-                    itemLabel = itemLabel + "  &#10004;";
+                    // \u2714 is the checkmark symbol
+                    itemLabel = itemLabel + "  \u2714";
                 }
-                link.add(new Label("suggestionLabel", itemLabel).setEscapeModelStrings(false));
+                link.add(new Label("suggestionLabel", itemLabel));
+                
+                link.add(new ClassAttributeModifier() {
+                    private static final long serialVersionUID = -3985182168502826951L;
+
+                    @Override
+                    protected Set<String> update(Set<String> aOldClasses)
+                    {
+                        if (Objects.equals(selectedKnowledgeBaseProfile, item.getModelObject())) {
+                            aOldClasses.add("active");
+                        }
+                        else {
+                            aOldClasses.remove("active");
+                        }
+                        return aOldClasses;
+                    }
+                });
 
                 // Show schema type on mouseover
                 link.add(AttributeModifier.append("title",
@@ -310,19 +342,17 @@ public class AccessSpecificSettingsPanel
         suggestions.setOutputMarkupId(true);
         return suggestions;
     }
-
-    private void actionUpload(AjaxRequestTarget aTarget) {
-        try {
-            for (FileUpload fu : fileUpload.getFileUploads()) {
-                File tmp = uploadFile(fu);
-                kbModel.getObject().getFiles().add(tmp);
-            }
+    
+    private void actionSelectPredefinedKB(AjaxRequestTarget aTarget,
+            IModel<KnowledgeBaseProfile> aModel)
+    {
+        if (Objects.equals(selectedKnowledgeBaseProfile, aModel.getObject())) {
+            selectedKnowledgeBaseProfile = null;
         }
-        catch (Exception e) {
-            log.error("Error while uploading files", e);
-            error("Could not upload files");
+        else {
+            selectedKnowledgeBaseProfile = aModel.getObject();
         }
-        aTarget.add(this);
+        aTarget.add(listViewContainer);
     }
 
     private File uploadFile(FileUpload fu) throws Exception
@@ -344,12 +374,13 @@ public class AccessSpecificSettingsPanel
     {
         try {
             kbService.clear(kbModel.getObject().getKb());
-            info(new StringResourceModel("kb.details.local.contents.clear.feedback",
-                kbModel.bind("kb")));
+            info(getString("kb.details.local.contents.clear.feedback", kbModel.bind("kb")));
             aTarget.add(this);
+            aTarget.addChildren(getPage(), IFeedback.class);
         }
         catch (RepositoryException e) {
-            error(e);
+            error("Error clearing KB: " + e.getMessage());
+            log.error("Error clearing KB", e);
             aTarget.addChildren(getPage(), IFeedback.class);
         }
     }
@@ -372,12 +403,12 @@ public class AccessSpecificSettingsPanel
                         new FileUploadDownloadHelper(getApplication());
                     File tmpFile = fileUploadDownloadHelper
                         .writeFileDownloadToTemporaryFile(accessUrl, kbModel);
-                    kbModel.getObject().getFiles().add(tmpFile);
+                    kbModel.getObject().putFile(selectedKnowledgeBaseProfile.getName(), tmpFile);
                 }
                 else {
                     // import from classpath
                     File kbFile = kbService.readKbFileFromClassPathResource(accessUrl);
-                    kbModel.getObject().getFiles().add(kbFile);
+                    kbModel.getObject().putFile(selectedKnowledgeBaseProfile.getName(), kbFile);
                 }
 
                 kbModel.getObject().getKb().applyMapping(

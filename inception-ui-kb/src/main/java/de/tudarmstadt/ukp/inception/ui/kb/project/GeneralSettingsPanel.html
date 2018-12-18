@@ -22,7 +22,7 @@
 <wicket:panel>
   <div class="form-group col-xs-12">
     <div class="form-group row">
-      <h4 class="control-label col-sm-3">
+      <h4 class="col-sm-12">
         <wicket:message key="kb.settings.general"/>
       </h4>
     </div>
@@ -43,11 +43,13 @@
       </div>
     </div>
     <div class="form-group row" wicket:enclosure="enabled">
-      <label class="col-sm-3 control-label" wicket:for="enabled">
-        <wicket:message key="kb.details.enabled"/>
-      </label>
-      <div class="col-sm-9">
-        <input wicket:id="enabled" type="checkbox"/>
+      <div class="col-sm-offset-3 col-sm-9">
+        <div class="checkbox">
+          <label wicket:for="enabled">
+            <input wicket:id="enabled" type="checkbox">
+            <wicket:label key="kb.details.enabled"/>
+          </label>
+        </div>
       </div>
     </div>
     <div class="form-group row" wicket:enclosure="basePrefix">

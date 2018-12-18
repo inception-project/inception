@@ -21,7 +21,6 @@ import java.util.List;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
-import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.list.ListItem;
@@ -30,7 +29,6 @@ import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.ValueFactory;
@@ -91,7 +89,6 @@ public class RootConceptsPanel
         LambdaAjaxLink specifyConcept = new LambdaAjaxLink("newExplicitConcept",
             RootConceptsPanel.this::actionNewRootConcept);
         add(specifyConcept);
-        specifyConcept.add(new Label("add", new ResourceModel("specifyRootConcept")));
     }
 
     private TextField<String> buildTextField(String id, IModel<IRI> model) {
@@ -116,7 +113,8 @@ public class RootConceptsPanel
             newConceptIRIString.setObject(null);
         }
         else {
-            error("Concept does not exist or has already been specified");
+            error("Concept [" + newConceptIRIString.getObject()
+                    + "] does not exist or has already been specified");
             aTarget.addChildren(getPage(), IFeedback.class);
         }
         aTarget.add(this);
