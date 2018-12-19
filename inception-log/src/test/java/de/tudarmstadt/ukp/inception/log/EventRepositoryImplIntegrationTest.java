@@ -176,8 +176,9 @@ public class EventRepositoryImplIntegrationTest  {
         
         
         for (int i = 1; i < loggedEvents.size(); i++) {
-            Date created = loggedEvents.get(i).getCreated();
-            assertThat(loggedEvents.get(i - 1).getCreated()).isAfterOrEqualsTo(created);
+            assertThat(loggedEvents.get(i - 1).getCreated())
+                    .as("Check that the list of logged events is ordered by created time in descending order")
+                    .isAfterOrEqualsTo(loggedEvents.get(i).getCreated());
         }
     }
     
