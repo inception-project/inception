@@ -108,4 +108,6 @@ public interface RecommendationService
             String aUsername, JCas aJCas, AnnotationLayer layer, AnnotationFeature aFeature,
             String aValue, int aBegin, int aEnd)
         throws AnnotationException;
+    
+    Boolean showLearningCurveDiagram();
 }

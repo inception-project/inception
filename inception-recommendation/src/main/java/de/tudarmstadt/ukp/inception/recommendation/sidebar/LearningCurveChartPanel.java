@@ -22,7 +22,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.toJsonString;
 import static org.apache.commons.lang3.StringUtils.substring;
 
 import java.io.IOException;
-import java.text.DecimalFormat;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -173,7 +172,7 @@ public class LearningCurveChartPanel
         // bind data to chart container
         String javascript = "var chart=c3.generate({bindto:'#" + chartContainer.getMarkupId()
                 + "',data:{ x:'x', columns:[" + xaxisValues + " ," + data + "],types:{" + aChartType
-                + "}}});;";
+                + "}},axis: { y : { tick : { format: function(d){return Math.round(d * 10000) / 10000}}}}});;";
         return javascript;
     }
 
@@ -221,8 +220,7 @@ public class LearningCurveChartPanel
                     continue;
                 }
 
-                recommenderScoreMap.put(detail.tool,
-                        Double.valueOf(new DecimalFormat("#.0000").format(detail.score)));
+                recommenderScoreMap.put(detail.tool, detail.score);
             }
             catch (IOException e) {
                 log.error("Invalid logged Event detail. Skipping record with logged event id: "

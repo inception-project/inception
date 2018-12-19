@@ -15,13 +15,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package de.tudarmstadt.ukp.inception.log;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.BeforeClass;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -39,11 +44,11 @@ import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
 @SpringBootTest(classes = SpringConfig.class)
 @Transactional
 @DataJpaTest
-public class EventRepositoryImplTest
-{
+public class EventRepositoryImplTest  {
     private static final String PROJECT_NAME = "Test project";
     private static final String USERNAME = "Test user";
     private static final String DETAIL_JSON = "{}";
+    private static final String EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT = "RecommenderEvaluationResultEvent";
 
     @Autowired
     private TestEntityManager testEntityManager;
@@ -53,19 +58,12 @@ public class EventRepositoryImplTest
     private User user;
     private LoggedEvent le;
 
-    @BeforeClass
-    public static void setUpOnce()
-    {
-        System.setProperty("org.eclipse.rdf4j.repository.debug", "true");
-    }
-
     @Before
     public void setUp() throws Exception
     {
         sut = new EventRepositoryImpl(testEntityManager.getEntityManager());
         project = createProject(PROJECT_NAME);
         user = createUser(USERNAME);
-        le = buildLoggedEvent(project, USERNAME);
     }
 
     @After
@@ -73,7 +71,116 @@ public class EventRepositoryImplTest
     {
         testEntityManager.clear();
     }
+    
+    @Test
+    public void thatApplicationContextStarts() {
+    }
+    
+    @Test
+    public void getLoggedEvents_WithOneStoredLoggedEvent_ShouldReturnStoredLoggedEvent()
+    {
+        le = buildRecommenderEvaluationLoggedEvent(project, USERNAME);
 
+        sut.create(le);
+        List<LoggedEvent> loggedEvents = sut.listLoggedEvents(project, user.getUsername(),
+                EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, 5);
+
+        assertThat(loggedEvents).as("Check that only the previously created logged event is found")
+                .hasSize(1).contains(le);
+    }
+
+    @Test
+    public void getLoggedEvents_WithoutLoggedEvent_ShouldReturnEmptyList()
+    {
+        List<LoggedEvent> loggedEvents = sut.listLoggedEvents(project, user.getUsername(),
+                EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, 5);
+
+        assertThat(loggedEvents).as("Check that no logged event is found").isEmpty();
+    }
+
+    @Test
+    public void getLoggedEvents_WithLoggedEventOfOtherUser_ShouldReturnEmptyList()
+    {
+        le = buildRecommenderEvaluationLoggedEvent(project, "OtherUser");
+
+        sut.create(le);
+
+        List<LoggedEvent> loggedEvents = sut.listLoggedEvents(project, user.getUsername(),
+                EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, 5);
+
+        assertThat(loggedEvents).as("Check that no logged event is found").isEmpty();
+    }
+    
+    @Test
+    public void getLoggedEvents_WithLoggedEventOfOtherProject_ShouldReturnEmptyList()
+    {
+        Project otherProject = createProject("otherProject");
+        le = buildRecommenderEvaluationLoggedEvent(otherProject, user.getUsername());
+
+        sut.create(le);
+        
+        List<LoggedEvent> loggedEvents = sut.listLoggedEvents(project, user.getUsername(),
+                EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, 5);
+
+        assertThat(loggedEvents).as("Check that no logged event is found").isEmpty();
+    }
+    
+    @Test
+    public void getLoggedEvents_WithLoggedEventOfOtherType_ShouldReturnEmptyList()
+    {
+        project = createProject("otherProject");
+        le = buildLoggedEvent(project, user.getUsername());
+        le.setEvent("OTHER_TYPE");
+
+        sut.create(le);
+        
+        List<LoggedEvent> loggedEvents = sut.listLoggedEvents(project, user.getUsername(),
+                EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, 5);
+
+        assertThat(loggedEvents).as("Check that no logged event is found").isEmpty();
+    }
+    
+    @Test
+    public void getLoggedEvents_WithLoggedEventsMoreThanGivenSize_ShouldReturnListOfGivenSize()
+    {
+        for (int i = 0; i < 6; i++) {
+            le = buildRecommenderEvaluationLoggedEvent(project, user.getUsername());
+            Date d = new Date();
+            d.setHours(i);
+            le.setCreated(d);
+            sut.create(le);
+        }
+        
+        List<LoggedEvent> loggedEvents = sut.listLoggedEvents(project, user.getUsername(),
+                EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, 5);
+
+        assertThat(loggedEvents).as("Check that the number of logged events is 5").hasSize(5);
+    }
+    
+    @Test
+    public void getLoggedEvents_WithLoggedEventsCreatedAtDifferentTimes_ShouldReturnSortedList()
+    {
+        for (int i = 0; i < 5; i++) {
+            le = buildRecommenderEvaluationLoggedEvent(project, user.getUsername());
+           
+            Calendar cal = Calendar.getInstance();
+            cal.set(Calendar.HOUR_OF_DAY, i);
+            Date date = cal.getTime();
+
+            le.setCreated(date);
+            sut.create(le);
+        }
+        
+        List<LoggedEvent> loggedEvents = sut.listLoggedEvents(project, user.getUsername(),
+                EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, 5);
+        
+        
+        for (int i = 1; i < loggedEvents.size(); i++) {
+            Date created = loggedEvents.get(i).getCreated();
+            assertThat(loggedEvents.get(i - 1).getCreated()).isAfterOrEqualsTo(created);
+        }
+    }
+    
     // Helper
     private Project createProject(String aName)
     {
@@ -83,15 +190,22 @@ public class EventRepositoryImplTest
         return testEntityManager.persist(project);
     }
 
+    private LoggedEvent buildRecommenderEvaluationLoggedEvent(Project aProject, String aUsername)
+    {
+        LoggedEvent le = buildLoggedEvent(aProject, aUsername);
+
+        le.setEvent(EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT); 
+
+        return le;
+    }
+
     private LoggedEvent buildLoggedEvent(Project aProject, String aUsername)
     {
         LoggedEvent le = new LoggedEvent();
         le.setUser(aUsername);
         le.setProject(aProject.getId());
-        le.setEvent("RecommenderEvaluationResultEvent");
-        le.setCreated(new Date());
         le.setDetails(DETAIL_JSON);
-
+        le.setCreated(new Date());
         return le;
     }
 
@@ -99,8 +213,6 @@ public class EventRepositoryImplTest
     {
         User user = new User();
         user.setUsername(aUsername);
-        user.setCreated(new Date());
-        user.setEnabled(true);
         return testEntityManager.persist(user);
     }
 }

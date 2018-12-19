@@ -30,7 +30,8 @@ import org.springframework.context.annotation.ComponentScan;
         })
 @EntityScan(
         basePackages = {
-            "de.tudarmstadt.ukp.inception.kb.model",
+            "de.tudarmstadt.ukp.inception.log.model",
+            "de.tudarmstadt.ukp.clarin.webanno.security.model",
             "de.tudarmstadt.ukp.clarin.webanno.model"
 })
 @EnableAutoConfiguration
