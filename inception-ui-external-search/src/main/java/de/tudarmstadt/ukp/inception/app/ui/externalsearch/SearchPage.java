@@ -320,8 +320,8 @@ public class SearchPage extends ApplicationPageBase
             });
             
             String title = defaultIfBlank(result.getDocumentTitle(),
-                            defaultIfBlank(result.getUri(), 
-                            defaultIfBlank(result.getDocumentId(), "<no title>")));
+                            defaultIfBlank(result.getDocumentId(), 
+                            defaultIfBlank(result.getUri(), "<no title>")));
             
             link.add(new Label("title", title));
             add(link);
