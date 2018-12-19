@@ -44,7 +44,7 @@ import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
 @SpringBootTest(classes = SpringConfig.class)
 @Transactional
 @DataJpaTest
-public class EventRepositoryImplTest  {
+public class EventRepositoryImplIntegrationTest  {
     private static final String PROJECT_NAME = "Test project";
     private static final String USERNAME = "Test user";
     private static final String DETAIL_JSON = "{}";
