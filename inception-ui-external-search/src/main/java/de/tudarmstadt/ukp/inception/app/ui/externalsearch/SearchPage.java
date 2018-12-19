@@ -27,6 +27,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
 import org.apache.wicket.RestartResponseException;
@@ -334,6 +336,15 @@ public class SearchPage extends ApplicationPageBase
             add(new LambdaAjaxLink("importLink", _target -> actionImportDocument(_target, result))
                     .add(visibleWhen(() -> 
                         !documentService.existsSourceDocument(project, documentTitle))));
+            add(new LambdaAjaxLink("openLink", _target -> {
+                PageParameters pageParameters = new PageParameters()
+                    .add(WebAnnoConst.PAGE_PARAM_PROJECT_ID, project.getId())
+                    .add(WebAnnoConst.PAGE_PARAM_DOCUMENT_ID,
+                        documentService.getSourceDocument(project, documentTitle).getId())
+                    .add(WebAnnoConst.PAGE_PARAM_FOCUS, 1);
+                setResponsePage(AnnotationPage.class, pageParameters);
+            }).add(
+                visibleWhen(() -> documentService.existsSourceDocument(project, documentTitle))));
         }
     }
 }
