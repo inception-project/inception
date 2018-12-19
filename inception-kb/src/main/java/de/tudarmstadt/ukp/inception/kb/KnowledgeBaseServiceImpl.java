@@ -36,7 +36,6 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -111,7 +110,6 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.reification.NoReification;
 import de.tudarmstadt.ukp.inception.kb.reification.ReificationStrategy;
 import de.tudarmstadt.ukp.inception.kb.reification.WikiDataReification;
-import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseMapping;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 
 
@@ -119,8 +117,6 @@ import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 public class KnowledgeBaseServiceImpl
     implements KnowledgeBaseService, DisposableBean
 {
-    private static final String KNOWLEDGEBASE_PROFILES_YAML = "knowledgebase-profiles.yaml";
-
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private @PersistenceContext EntityManager entityManager;
@@ -567,8 +563,8 @@ public class KnowledgeBaseServiceImpl
         return read(kb, (conn) -> {
             ValueFactory vf = conn.getValueFactory();
             try (RepositoryResult<Statement> stmts = RdfUtils.getPropertyStatementsSparql(conn,
-                    vf.createIRI(aIdentifier), kb.getTypeIri(), kb.getPropertyTypeIri(), 1000, true,
-                    null)) {
+                    vf.createIRI(aIdentifier), kb.getTypeIri(), kb.getPropertyTypeIri(), true,
+                    null, kb)) {
                 if (stmts.hasNext()) {
                     Statement propStmt = stmts.next();
                     KBProperty kbProp = KBProperty.read(conn, propStmt, kb);
@@ -649,8 +645,7 @@ public class KnowledgeBaseServiceImpl
             // Try to figure out the type of the instance - we ignore the inferred types here
             // and only make use of the explicitly asserted types
             RepositoryResult<Statement> conceptStmts = RdfUtils
-                .getStatementsSparql(conn, vf.createIRI(aIdentifier), kb.getTypeIri(), null,
-                    kb.getMaxResults(), false, null);
+                .getStatementsSparql(conn, vf.createIRI(aIdentifier), kb.getTypeIri(), null, false, null, kb);
 
             String conceptIdentifier = null;
             while (conceptStmts.hasNext() && conceptIdentifier == null) {
@@ -668,9 +663,9 @@ public class KnowledgeBaseServiceImpl
             }
 
             // Read the instance
-            try (RepositoryResult<Statement> instanceStmts = RdfUtils.getStatements(conn,
-                    vf.createIRI(aIdentifier), kb.getTypeIri(), vf.createIRI(conceptIdentifier),
-                    true, kb.getMaxResults())) {
+            try (RepositoryResult<Statement> instanceStmts = RdfUtils
+                .getStatementsSparql(conn, vf.createIRI(aIdentifier), kb.getTypeIri(),
+                    vf.createIRI(conceptIdentifier),true, null, kb)) {
                 if (instanceStmts.hasNext()) {
                     Statement kbStmt = instanceStmts.next();
                     KBInstance kbInst = KBInstance.read(conn, kbStmt, kb);
@@ -1326,7 +1321,7 @@ public class KnowledgeBaseServiceImpl
         throws IOException
     {
         try (Reader r = new InputStreamReader(
-                getClass().getResourceAsStream(KNOWLEDGEBASE_PROFILES_YAML),
+                getClass().getResourceAsStream(""),
                 StandardCharsets.UTF_8)) {
             ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
             return mapper.readValue(r, 
@@ -1356,9 +1351,9 @@ public class KnowledgeBaseServiceImpl
     {
         try (RepositoryConnection conn = getConnection(aKb)) {
             ValueFactory vf = conn.getValueFactory();
-            RepositoryResult<Statement> stmts = RdfUtils.getStatements(conn,
-                    vf.createIRI(aIdentifier), aKb.getTypeIri(), aKb.getClassIri(), true,
-                aKb.getMaxResults());
+            RepositoryResult<Statement> stmts = RdfUtils
+                .getStatementsSparql(conn, vf.createIRI(aIdentifier), aKb.getTypeIri(),
+                    aKb.getClassIri(), true, null, aKb);
             if (stmts.hasNext()) {
                 KBConcept kbConcept = KBConcept.read(conn, vf.createIRI(aIdentifier), aKb);
                 if (kbConcept != null) {
@@ -1377,59 +1372,6 @@ public class KnowledgeBaseServiceImpl
             return Optional.empty();
         }
         return Optional.empty();
-    }
-
-    @Override
-    public SchemaProfile checkSchemaProfile(KnowledgeBaseProfile aProfile)
-    {
-        SchemaProfile[] profiles = SchemaProfile.values();
-        KnowledgeBaseMapping mapping = aProfile.getMapping();
-        for (int i = 0; i < profiles.length; i++) {
-            // Check if kb profile corresponds to a known schema profile
-            if (equalsSchemaProfile(profiles[i], mapping.getClassIri(), mapping.getSubclassIri(),
-                    mapping.getTypeIri(), mapping.getDescriptionIri(), mapping.getLabelIri(),
-                    mapping.getPropertyTypeIri(), mapping.getPropertyLabelIri(),
-                    mapping.getPropertyDescriptionIri())) {
-                return profiles[i];
-            }
-        }
-        // If the iris don't represent a known schema profile , return CUSTOM
-        return SchemaProfile.CUSTOMSCHEMA;
-    }
-
-    @Override
-    public SchemaProfile checkSchemaProfile(KnowledgeBase aKb)
-    {
-        SchemaProfile[] profiles = SchemaProfile.values();
-        for (int i = 0; i < profiles.length; i++) {
-            // Check if kb has a known schema profile
-            if (equalsSchemaProfile(profiles[i], aKb.getClassIri(), aKb.getSubclassIri(),
-                    aKb.getTypeIri(), aKb.getDescriptionIri(), aKb.getLabelIri(),
-                    aKb.getPropertyTypeIri(), aKb.getPropertyLabelIri(),
-                    aKb.getPropertyDescriptionIri())) {
-                return profiles[i];
-            }
-        }
-        // If the iris don't represent a known schema profile , return CUSTOM
-        return SchemaProfile.CUSTOMSCHEMA;
-    }
-
-    /**
-     * Compares a schema profile to given IRIs. Returns true if the IRIs are the same as in the
-     * profile
-     */
-    private boolean equalsSchemaProfile(SchemaProfile profile, IRI classIri, IRI subclassIri,
-        IRI typeIri, IRI descriptionIri, IRI labelIri, IRI propertyTypeIri, IRI propertyLabelIri,
-        IRI propertyDescriptionIri)
-    {
-        return Objects.equals(profile.getClassIri(), classIri) && 
-                Objects.equals(profile.getSubclassIri(), subclassIri) && 
-                Objects.equals(profile.getTypeIri(), typeIri) && 
-                Objects.equals(profile.getDescriptionIri(), descriptionIri) && 
-                Objects.equals(profile.getLabelIri(), labelIri) &&
-                Objects.equals(profile.getPropertyTypeIri(), propertyTypeIri) &&
-                Objects.equals(profile.getPropertyLabelIri(), propertyLabelIri) &&
-                Objects.equals(profile.getPropertyDescriptionIri(), propertyDescriptionIri);
     }
 
     @Override

@@ -525,23 +525,6 @@ public interface KnowledgeBaseService
     List<KBHandle> listAllConcepts(KnowledgeBase kb, boolean aAll) throws QueryEvaluationException;
 
     /**
-     * Check if the given profile equals one of the schema profiles defined in {@link SchemaProfile}
-     * @param aProfile
-     * @return the corresponding schema profile (CUSTOM if the given profile does not equal any of
-     * the pre-defined ones
-     */
-    SchemaProfile checkSchemaProfile(KnowledgeBaseProfile aProfile);
-
-    /**
-     * Check if the IRIs of the given {@link KnowledgeBase} object are equal to the IRIs of one of
-     * the schema profiles defined in {@link SchemaProfile}
-     * @param aKb
-     * @return the corresponding schema profile (CUSTOM if the given profile does not equal any of
-     * the pre-defined ones
-     */
-    SchemaProfile checkSchemaProfile(KnowledgeBase aKb);
-
-    /**
      * Reads a knowledge base file from the classpath and returns the file handle
      * @param aLocation location of the knowledge base resource
      * @return the file handle of the knowledge base resource

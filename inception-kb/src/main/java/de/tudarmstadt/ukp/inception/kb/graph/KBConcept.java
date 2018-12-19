@@ -232,7 +232,7 @@ public class KBConcept
         kbConcept.setIdentifier(aSubject.stringValue());
         kbConcept.setKB(kb);
 
-        readFirst(aConn, aSubject, kb.getLabelIri(), null, kb.getDefaultLanguage())
+        readFirst(aConn, aSubject, kb.getLabelIri(), null, kb.getDefaultLanguage(), kb)
             .ifPresent((stmt) -> {
                 kbConcept.setName(stmt.getObject().stringValue());
                 kbConcept.originalStatements.add(stmt);
@@ -243,7 +243,7 @@ public class KBConcept
                 }
             });
 
-        readFirst(aConn, aSubject, kb.getDescriptionIri(), null, kb.getDefaultLanguage())
+        readFirst(aConn, aSubject, kb.getDescriptionIri(), null, kb.getDefaultLanguage(), kb)
             .ifPresent((stmt) -> {
                 kbConcept.setDescription(stmt.getObject().stringValue());
                 kbConcept.originalStatements.add(stmt);

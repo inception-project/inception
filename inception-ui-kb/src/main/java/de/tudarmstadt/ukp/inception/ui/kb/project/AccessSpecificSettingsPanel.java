@@ -28,6 +28,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import de.tudarmstadt.ukp.inception.kb.SchemaProfile;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ClassAttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -333,7 +334,7 @@ public class AccessSpecificSettingsPanel
                 link.add(AttributeModifier.append("title",
                     new StringResourceModel("kb.wizard.steps.local.schemaOnMouseOver", this)
                         .setParameters(
-                            kbService.checkSchemaProfile(item.getModelObject()).getLabel(),
+                            SchemaProfile.checkSchemaProfile(item.getModelObject()).getLabel(),
                             getAccessTypeLabel(item.getModelObject()))));
 
                 item.add(link);
