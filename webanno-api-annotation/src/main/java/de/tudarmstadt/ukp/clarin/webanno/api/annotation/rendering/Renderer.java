@@ -52,8 +52,10 @@ public interface Renderer
      *            the features.
      * @param aBuffer
      *            The rendering buffer.
-     * @param aState
-     *            Annotation editor state.
+     * @param windowBeginOffset
+     *            The start position of the window offset.
+     * @param windowEndOffset
+     *            The end position of the window offset.
      */
     void render(JCas aJcas, List<AnnotationFeature> aFeatures, VDocument aBuffer,
             int windowBeginOffset, int windowEndOffset);
