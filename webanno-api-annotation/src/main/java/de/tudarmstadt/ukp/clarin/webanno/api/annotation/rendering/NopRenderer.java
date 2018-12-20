@@ -23,7 +23,6 @@ import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 
@@ -37,7 +36,7 @@ public class NopRenderer
     
     @Override
     public void render(JCas aJcas, List<AnnotationFeature> aFeatures,
-            VDocument aResponse, AnnotatorState aBratAnnotatorModel)
+            VDocument aResponse, int windowBeginOffset, int windowEndOffset)
     {
         // Nothing to do
     }

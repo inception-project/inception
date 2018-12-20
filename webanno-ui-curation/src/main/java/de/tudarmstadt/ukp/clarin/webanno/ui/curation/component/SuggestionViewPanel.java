@@ -388,7 +388,8 @@ public class SuggestionViewPanel
         }
         
         VDocument vdoc = new VDocument();
-        preRenderer.render(vdoc, aBratAnnotatorModel, aJcas, layersToRender);
+        preRenderer.render(vdoc, aBratAnnotatorModel.getWindowBeginOffset(),
+                aBratAnnotatorModel.getWindowEndOffset(), aJcas, layersToRender);
         
         GetDocumentResponse response = new GetDocumentResponse();
         BratRenderer.render(response, aBratAnnotatorModel, vdoc, aJcas, annotationService,

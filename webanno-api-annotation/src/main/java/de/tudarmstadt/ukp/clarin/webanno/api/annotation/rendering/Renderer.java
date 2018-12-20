@@ -31,7 +31,6 @@ import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VComment;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VCommentType;
@@ -57,7 +56,7 @@ public interface Renderer
      *            Annotation editor state.
      */
     void render(JCas aJcas, List<AnnotationFeature> aFeatures, VDocument aBuffer,
-            AnnotatorState aState);
+            int windowBeginOffset, int windowEndOffset);
     
     FeatureSupportRegistry getFeatureSupportRegistry();
 
