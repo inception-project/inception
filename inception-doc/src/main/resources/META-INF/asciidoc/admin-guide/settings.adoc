@@ -138,6 +138,11 @@
 | Whether regular users can access their own profile to change their password and other profile information. This setting has no effect if the application is running in pre-authentication mode.
 | false
 | true
+
+| show.learning.curve.diagram
+| Show learning curve diagram on the recommendation sidebar.
+| false
+| true
 |===
 
 === Configure database via environment variables
