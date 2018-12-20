@@ -23,6 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.log.adapter.EventLoggingAdapter;
 import de.tudarmstadt.ukp.inception.search.event.SearchQueryEvent;
@@ -50,13 +51,7 @@ public class SearchQueryEventAdapter
     {
         return aEvent.getUser();
     }
-
-    @Override
-    public String getUser(SearchQueryEvent aEvent)
-    {
-        return aEvent.getUser();
-    }
-
+    
     @Override
     public String getDetails(SearchQueryEvent aEvent)
     {
@@ -64,6 +59,7 @@ public class SearchQueryEventAdapter
             Details details = new Details();
 
             details.query = aEvent.getQuery();
+            details.documentId = aEvent.getSourceDocument().map(SourceDocument::getId).orElse(null);
 
             return JSONUtil.toJsonString(details);
         }
@@ -76,5 +72,6 @@ public class SearchQueryEventAdapter
     public static class Details
     {
         public String query;
+        public Long documentId;
     }
 }
