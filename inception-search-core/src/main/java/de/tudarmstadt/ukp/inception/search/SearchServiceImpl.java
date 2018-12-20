@@ -210,7 +210,7 @@ public class SearchServiceImpl
             return false;
         } else {
             // Physical index already exists
-            log.trace("Physical index already created.");
+            log.trace("Physical index already created: {}", aIndex.getPhysicalIndex());
 
             if (!aIndex.getPhysicalIndex().isOpen()) {
                 // Physical index is not open. Open it.
@@ -229,7 +229,8 @@ public class SearchServiceImpl
         // Retrieve index entry for the project
         Index index = getIndexFromMemory(aSourceDocument.getProject());
 
-        if (canAddDocumentToIndex(index)) {
+        if (!canAddDocumentToIndex(index)) {
+            log.trace("Cannot add documents to the index at this time. Skipping.");
             return;
         }
             
@@ -315,6 +316,15 @@ public class SearchServiceImpl
     public List<SearchResult> query(User aUser, Project aProject, String aQuery)
         throws IOException, ExecutionException
     {
+        return query(aUser, aProject, aQuery, null);
+    }
+
+    @Override
+    @Transactional
+    public List<SearchResult> query(User aUser, Project aProject, String aQuery,
+            SourceDocument aDocument)
+        throws IOException, ExecutionException
+    {
         log.debug("Starting query for user [{}] in project [{}]({})", aUser.getUsername(),
                 aProject.getName(), aProject.getId());
 
@@ -323,8 +333,10 @@ public class SearchServiceImpl
         Index index = getIndexFromMemory(aProject);
 
         if (index.getInvalid()) {
-            // Index is invalid, schedule a new index rebuild
-            indexScheduler.enqueueReindexTask(aProject);
+            if (!indexScheduler.isIndexInProgress(aProject)) {
+                // Index is invalid, schedule a new index rebuild
+                indexScheduler.enqueueReindexTask(aProject);
+            }
 
             // Throw execution exception so that the user knows the query was not run
             throw (new ExecutionException("Query not executed because index is in invalid state. Try again later."));
@@ -355,7 +367,8 @@ public class SearchServiceImpl
 
                 log.debug("Running query: [{}]", aQuery);
 
-                results = index.getPhysicalIndex().executeQuery(aUser, aQuery, null, (String) null);
+                results = index.getPhysicalIndex().executeQuery(
+                        new SearchQueryRequest(aProject, aUser.getUsername(), aQuery, aDocument));
             }
 
         }
@@ -470,5 +483,11 @@ public class SearchServiceImpl
         else {
             return false;
         }
+    }
+    
+    @Override
+    public boolean isIndexInProgress(Project aProject)
+    {
+        return indexScheduler.isIndexInProgress(aProject);
     }
 }
