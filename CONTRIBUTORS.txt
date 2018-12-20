@@ -13,8 +13,10 @@
 # Please keep the list sorted.
 
 Beto Boullosa
+Jennifer Chen [shinyichen]
 Michael Bugert
 Peter Jiang
 Richard Eckart de Castilho <richard.eckart@gmail.com> [reckart]
+Ryan Gabbard [rgabbard]
 Torsten Dietl
 Wei Ding

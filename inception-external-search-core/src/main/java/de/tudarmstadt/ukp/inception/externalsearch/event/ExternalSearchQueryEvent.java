@@ -15,58 +15,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.search.event;
-
-import java.util.Optional;
+package de.tudarmstadt.ukp.inception.externalsearch.event;
 
 import org.springframework.context.ApplicationEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
-public class SearchQueryEvent
+public class ExternalSearchQueryEvent
     extends ApplicationEvent
 {
-    private static final long serialVersionUID = 5672246678417774137L;
-    
+
+    private static final long serialVersionUID = 2911869258080097719L;
+
     private final Project project;
     private final String user;
     private final String query;
-    private final SourceDocument sourceDocument;
 
-    public SearchQueryEvent(Object aSource, Project aProject, String aUser, String aQuery)
-    {
-        this(aSource, aProject, aUser, aQuery, null);
-    }
-
-    /**
-     * @param aSource
-     *            event source
-     * @param aProject
-     *            related project
-     * @param aUser
-     *            user executing the query
-     * @param aQuery
-     *            the query
-     * @param aSourceDocument
-     *            to which to limit the query
-     */
-    public SearchQueryEvent(Object aSource, Project aProject, String aUser, String aQuery,
-            SourceDocument aSourceDocument)
+    public ExternalSearchQueryEvent(Object aSource, Project aProject, String aUser, String aQuery)
     {
         super(aSource);
 
         project = aProject;
         user = aUser;
         query = aQuery;
-        sourceDocument = aSourceDocument;
     }
 
     public String getUser()
     {
         return user;
     }
-    
+
     public Project getProject()
     {
         return project;
@@ -76,20 +54,12 @@ public class SearchQueryEvent
     {
         return query;
     }
-    
-    /**
-     * Query is limited to the given document.
-     */
-    public Optional<SourceDocument> getSourceDocument()
-    {
-        return Optional.ofNullable(sourceDocument);
-    }
 
     @Override
     public String toString()
     {
         StringBuilder builder = new StringBuilder();
-        builder.append("RecommenderEvaluationResultEvent [project=");
+        builder.append("ExternalSearchQueryEvent [project=");
         builder.append(project);
         builder.append(", user=");
         builder.append(user);
