@@ -19,6 +19,8 @@ package de.tudarmstadt.ukp.inception.search;
 
 import java.io.Serializable;
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
+
 public class SearchResult
     implements Serializable
 {
@@ -141,19 +143,34 @@ public class SearchResult
     @Override
     public boolean equals(Object obj)
     {
-        if (this == obj)
+        if (this == obj) {
             return true;
-        if (obj == null)
+        }
+        if (obj == null) {
             return false;
-        if (getClass() != obj.getClass())
+        }
+        if (getClass() != obj.getClass()) {
             return false;
+        }
         SearchResult other = (SearchResult) obj;
-        if (documentId != other.documentId)
+        if (documentId != other.documentId) {
             return false;
-        if (offsetEnd != other.offsetEnd)
+        }
+        if (offsetEnd != other.offsetEnd) {
             return false;
-        if (offsetStart != other.offsetStart)
+        }
+        if (offsetStart != other.offsetStart) {
             return false;
+        }
         return true;
     }
+
+    @Override
+    public String toString()
+    {
+        return new ToStringBuilder(this).append("documentId", documentId)
+                .append("documentTitle", documentTitle).append("offsetStart", offsetStart)
+                .append("offsetEnd", offsetEnd).append("text", text)
+                .append("leftContext", leftContext).append("rightContext", rightContext).toString();
+    }    
 }

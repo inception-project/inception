@@ -26,7 +26,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -1520,14 +1519,6 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
                 assertThat(key).isNotNull();
             });
 
-    }
-
-    @Test public void readKBResourceFromClassPath_ShouldReturnFileHandleToKBResource()
-        throws IOException
-    {
-        String resourceLocation = "classpath:data/more_pets.ttl";
-        File file = sut.readKbFileFromClassPathResource(resourceLocation);
-        assertTrue(file.exists());
     }
 
     @Test public void checkKBProfileAndKBObject_ShouldReturnMatchingSchemaProfile()
