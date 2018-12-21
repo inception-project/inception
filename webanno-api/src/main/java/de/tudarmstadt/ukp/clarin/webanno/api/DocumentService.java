@@ -255,6 +255,18 @@ public interface DocumentService
     boolean existsAnnotationDocument(SourceDocument document, User user);
 
     /**
+     * A Method that checks if there is already an annotation document created for the source
+     * document
+     *
+     * @param document
+     *            the source document.
+     * @param aUsername
+     *            the user.
+     * @return if an annotation document metadata exists for the user.
+     */
+    boolean existsAnnotationDocument(SourceDocument document, String aUsername);
+
+    /**
      * check if the JCAS for the {@link User} and {@link SourceDocument} in this {@link Project}
      * exists It is important as {@link AnnotationDocument} entry can be populated as
      * {@link AnnotationDocumentState#NEW} from the MonitoringPage before the user actually open the

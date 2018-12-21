@@ -21,12 +21,11 @@ import java.util.List;
 
 import org.apache.uima.jcas.JCas;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
 public interface PreRenderer
 {
-    void render(VDocument aResponse, AnnotatorState aState, JCas aJCas,
+    void render(VDocument aResponse, int windowBeginOffset, int windowEndOffset, JCas aJCas,
             List<AnnotationLayer> aLayers);
 }
