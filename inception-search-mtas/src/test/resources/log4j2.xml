@@ -2,13 +2,14 @@
 <Configuration status="WARN">
   <Appenders>
     <Console name="ConsoleAppender" target="SYSTEM_OUT">
-      <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} %level{length=5} %logger{1} - %msg%n" />
+      <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} %tid %level{length=5} %logger{1} - %msg%n" />
     </Console>
   </Appenders>
 
   <Loggers>
     <Logger name="mtas" level="INFO"/>
-    <Logger name="de.tudarmstadt.ukp.inception.search" level="DEBUG"/>
+    <Logger name="de.tudarmstadt.ukp.inception.search" level="INFO"/>
+    <Logger name="de.tudarmstadt.ukp.clarin.webanno.api.dao.DocumentServiceImpl" level="INFO"/>
     <Root level="WARN">
       <AppenderRef ref="ConsoleAppender" />
     </Root>
