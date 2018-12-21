@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.app.ui.externalsearch;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -317,7 +318,12 @@ public class SearchPage extends ApplicationPageBase
                 setResponsePage(DocumentDetailsPage.class, pageParameters);
 
             });
-            link.add(new Label("title", result.getUri()));
+            
+            String title = defaultIfBlank(result.getDocumentTitle(),
+                            defaultIfBlank(result.getDocumentId(), 
+                            defaultIfBlank(result.getUri(), "<no title>")));
+            
+            link.add(new Label("title", title));
             add(link);
 
             add(new Label("score", result.getScore()));
