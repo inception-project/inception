@@ -41,6 +41,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.pdfeditor.PdfAnnotationEditor;
+import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.AnnoFile;
 import paperai.pdfextract.PDFExtractor;
 
 public class PdfAnnoPanel
@@ -121,18 +122,14 @@ public class PdfAnnoPanel
                 try
                 {
                     String pdftext = PDFExtractor.processFileToString(pdfFile, false);
-                    String annoFile = pdfAnnotationEditor.renderAnnoFile(pdftext);
-
+                    AnnoFile annoFile = pdfAnnotationEditor.renderAnnoFile(pdftext);
                     String script = "setTimeout(function() { " +
                         "var annoFile = `\n" +
                         annoFile +
                         "`;\n" +
                         "pdfanno.contentWindow.annoPage.importAnnotation({" +
                         "'primary': true," +
-                        "'colorMap': {" +
-                        "'default': '#AAA'," +
-                        "'relation':{'relation1':'#3f51b5'}," +
-                        "'span':{'span1':'#FFEB3B'}}," +
+                        "'colorMap': " + annoFile.getColorMap().toString() + "," +
                         "'annotations':[annoFile]}, true);" +
                         "}, 10);";
 

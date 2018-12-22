@@ -29,6 +29,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.JCasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
@@ -36,6 +37,9 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionH
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.PdfAnnoPanel;
+import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.PdfAnnoRenderer;
+import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.AnnoFile;
+import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfExtractFile;
 
 public class PdfAnnotationEditor
     extends AnnotationEditorBase
@@ -44,6 +48,7 @@ public class PdfAnnotationEditor
     private static final Logger LOG = LoggerFactory.getLogger(PdfAnnotationEditor.class);
 
     private @SpringBean DocumentService documentService;
+    private @SpringBean AnnotationSchemaService annotationService;
 
     public PdfAnnotationEditor(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, JCasProvider aJCasProvider)
@@ -85,14 +90,18 @@ public class PdfAnnotationEditor
      * @param pdftxt Output string of PDFExtract
      * @return Annotation file
      */
-    public String renderAnnoFile(String pdftxt) throws IOException {
+    public AnnoFile renderAnnoFile(String pdftxt) throws IOException
+    {
         JCas jCas = getJCasProvider().get();
-        if (getModelObject().getProject() != null) {
-            VDocument vdoc = render(jCas);
+        if (getModelObject().getProject() != null)
+        {
+            PdfExtractFile pdfExtractFile = new PdfExtractFile(pdftxt);
+            VDocument vdoc = render(jCas, 0, Integer.MAX_VALUE);
+            AnnoFile annoFile = PdfAnnoRenderer.render(getModelObject(),
+                vdoc, jCas, annotationService, pdfExtractFile);
+            return annoFile;
         }
-        String header = "pdfanno = \"0.5.0\"\n" +
-                        "pdfextract = \"0.3.2\"\n" +
-                        "\n";
-        return header;
+
+        throw new IOException("");
     }
 }
