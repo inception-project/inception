@@ -165,7 +165,9 @@ async function displayViewer () {
           "m" : "GET",
           "u" : annoURL,
           "sh" : [],
-          "fh": []
+          "fh": [function() {
+              console.log('Something went wrong on requesting annotations from inception backend.')
+          }]
         });
 // END PDFANNO EXTENSION
       }
