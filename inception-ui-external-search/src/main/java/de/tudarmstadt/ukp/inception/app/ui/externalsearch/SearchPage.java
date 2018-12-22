@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.app.ui.externalsearch;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -68,9 +69,11 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxSubmitLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchService;
+import de.tudarmstadt.ukp.inception.externalsearch.event.ExternalSearchQueryEvent;
 import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
 import de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData;
 
@@ -88,6 +91,7 @@ public class SearchPage extends ApplicationPageBase
     private @SpringBean ExternalSearchService externalSearchService;
     private @SpringBean UserDao userRepository;
     private @SpringBean ImportExportService importExportService;
+    private @SpringBean ApplicationEventPublisherHolder applicationEventPublisher;
 
     private WebMarkupContainer dataTableContainer;
 
@@ -231,6 +235,9 @@ public class SearchPage extends ApplicationPageBase
     private void searchDocuments(String aQuery)
     {
         results.clear();
+        applicationEventPublisher.get()
+                .publishEvent(new ExternalSearchQueryEvent(this, currentRepository.getProject(),
+                        userRepository.getCurrentUser().getUsername(), aQuery));
 
         try {
             for (ExternalSearchResult result : externalSearchService
@@ -311,7 +318,12 @@ public class SearchPage extends ApplicationPageBase
                 setResponsePage(DocumentDetailsPage.class, pageParameters);
 
             });
-            link.add(new Label("title", result.getUri()));
+            
+            String title = defaultIfBlank(result.getDocumentTitle(),
+                            defaultIfBlank(result.getDocumentId(), 
+                            defaultIfBlank(result.getUri(), "<no title>")));
+            
+            link.add(new Label("title", title));
             add(link);
 
             add(new Label("score", result.getScore()));

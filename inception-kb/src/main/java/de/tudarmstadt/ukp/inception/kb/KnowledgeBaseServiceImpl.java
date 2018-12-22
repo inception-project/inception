@@ -87,7 +87,6 @@ import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
-import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -908,8 +907,8 @@ public class KnowledgeBaseServiceImpl
     {
         List<KBHandle> resultList = new ArrayList<>();
 
-        if (!aKB.getExplicitlyDefinedRootConcepts().isEmpty()) {
-            for (IRI conceptIRI : aKB.getExplicitlyDefinedRootConcepts()) {
+        if (!aKB.getRootConcepts().isEmpty()) {
+            for (IRI conceptIRI : aKB.getRootConcepts()) {
                 KBConcept concept = readConcept(aKB, conceptIRI.stringValue(),aAll).get();
                 KBHandle conceptHandle = new KBHandle(concept.getIdentifier(), concept.getName(),
                         concept.getDescription());
@@ -1430,14 +1429,6 @@ public class KnowledgeBaseServiceImpl
                 Objects.equals(profile.getPropertyTypeIri(), propertyTypeIri) &&
                 Objects.equals(profile.getPropertyLabelIri(), propertyLabelIri) &&
                 Objects.equals(profile.getPropertyDescriptionIri(), propertyDescriptionIri);
-    }
-
-    @Override
-    public File readKbFileFromClassPathResource(String aLocation) throws IOException
-    {
-        PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
-        File kbFile = resolver.getResource(aLocation).getFile();
-        return kbFile;
     }
 
     @Override

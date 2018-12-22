@@ -22,6 +22,7 @@ import java.util.Optional;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
+import org.apache.commons.lang3.Validate;
 import org.apache.uima.jcas.JCas;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,22 +51,24 @@ public class IndexScheduler
 
     private @Autowired ApplicationContext applicationContext;
 
-    private Thread consumer;
+    private TaskConsumer consumer;
+    private Thread consumerThread;
     private BlockingQueue<Task> queue = new ArrayBlockingQueue<Task>(100);
 
     @Override
     public void afterPropertiesSet()
     {
-        consumer = new Thread(new TaskConsumer(applicationContext, queue), "Index task consumer");
-        consumer.setPriority(Thread.MIN_PRIORITY);
-        consumer.start();
+        consumer = new TaskConsumer(applicationContext, queue);
+        consumerThread = new Thread(consumer, "Index task consumer");
+        consumerThread.setPriority(Thread.MIN_PRIORITY);
+        consumerThread.start();
         log.info("Started Search Indexing Thread");
     }
 
     @Override
     public void destroy()
     {
-        consumer.interrupt();
+        consumerThread.interrupt();
     }
 
     public void enqueueReindexTask(Project aProject)
@@ -153,6 +156,14 @@ public class IndexScheduler
         }
     }
 
+    public boolean isIndexInProgress(Project aProject)
+    {
+        Validate.notNull(aProject, "Project cannot be null");
+        
+        return queue.stream().anyMatch(task -> aProject.equals(task.getProject())) ||
+                consumer.getActiveTask().map(t -> aProject.equals(t.getProject())).orElse(false);
+    }
+    
     private Optional<Task> findAlreadyScheduled(Task aTask)
     {
         return queue.stream().filter(aTask::matches).findAny();

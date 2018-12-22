@@ -1,20 +1,25 @@
 [[sect_search-core]]
-
 == Search
 
-The INCEpTION search module allows to search for words, passages and annotations made in the 
-documents of a given project. For doing a search, the user must access the search sidebar located 
-in the left of the screen, write a query and press the *Search* button. The results will be shown 
-below the query, grouped by the document where they come from. Every result is shown in KWIC 
-(keyword in context) style, i.e., surrounded by a left and right context to facilitate its 
-identification.
+The search module allows to search for words, passages and annotations made in the 
+documents of a given project. Currently, the default search is provided by *Mtas*
+(Multi Tier Annotation Search), a Lucene/Solr based search and indexing mechanism developed by
+Meertens Institut (https://meertensinstituut.github.io/mtas).
 
-Clicking on a result will make the central main editor automatically jump to the position of that
-result inside the original document. Only documents contained in the current project will be
-retrieved by a given search.
-
-INCEpTION allows the configuration of different search providers. Currently, the default search 
-is provided by *Mtas* (Multi Tier Annotation Search), a Lucene/Solr based search and indexing 
-mechanism developed by Meertens Institut (https://meertensinstituut.github.io/mtas).
+To perform a search, access the search sidebar located at the left of the screen, write a query and
+press the *Search* button. The results are shown below the query in a KWIC (keyword in context)
+style grouped by document. Clicking on a result will open the match in the main annotation editor.
 
 image::search-core-search.png[Search sidebar]
+
+The search only considers documents in the current project and only matches annotations made by
+the current user.
+
+Clicking on the search settings button (cog wheel) shows additional options:
+
+* **Current document only** limits the search to the document shown in the main annotation editor.
+  When switching to another document, the result list does not change automatically - the search
+  button needs to be pressed again in order to show results from the new document.
+* **Rebuild index** may help fixing search issues (e.g. no or only partial results), in particular
+  after upgrading to a new version of {product-name}. Note that this process may take quite some
+  time depending on the number of documents in the project.

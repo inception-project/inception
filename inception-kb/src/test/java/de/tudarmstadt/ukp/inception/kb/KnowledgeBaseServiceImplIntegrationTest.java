@@ -26,7 +26,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -217,7 +216,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         List<IRI> concepts = new ArrayList<IRI>();
         concepts.add(rootConcept1);
         concepts.add(rootConcept2);
-        kb.setExplicitlyDefinedRootConcepts(concepts);
+        kb.setRootConcepts(concepts);
         sut.updateKnowledgeBase(kb, sut.getNativeConfig());
 
         KnowledgeBase savedKb = testEntityManager.find(KnowledgeBase.class, kb.getRepositoryId());
@@ -234,7 +233,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
             .hasFieldOrPropertyWithValue("labelIri", RDFS.LITERAL)
             .hasFieldOrPropertyWithValue("propertyTypeIri", OWL.OBJECTPROPERTY)
             .hasFieldOrPropertyWithValue("basePrefix", "MyBasePrefix")
-            .hasFieldOrPropertyWithValue("explicitlyDefinedRootConcepts", Arrays.asList(rootConcept1, rootConcept2));
+            .hasFieldOrPropertyWithValue("rootConcepts", Arrays.asList(rootConcept1, rootConcept2));
 
     }
 
@@ -1263,7 +1262,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         concepts.add(rootConcept1);
         concepts.add(rootConcept2);
         kb.setDefaultLanguage("en");
-        kb.setExplicitlyDefinedRootConcepts(concepts);
+        kb.setRootConcepts(concepts);
         sut.updateKnowledgeBase(kb);
 
         importKnowledgeBase("data/wildlife_ontology.ttl");
@@ -1520,14 +1519,6 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
                 assertThat(key).isNotNull();
             });
 
-    }
-
-    @Test public void readKBResourceFromClassPath_ShouldReturnFileHandleToKBResource()
-        throws IOException
-    {
-        String resourceLocation = "classpath:data/more_pets.ttl";
-        File file = sut.readKbFileFromClassPathResource(resourceLocation);
-        assertTrue(file.exists());
     }
 
     @Test public void checkKBProfileAndKBObject_ShouldReturnMatchingSchemaProfile()

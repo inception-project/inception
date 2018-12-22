@@ -20,46 +20,8 @@
 <html xmlns:wicket="http://wicket.apache.org" xmlns:margin-left="http://www.w3.org/1999/xhtml">
 <body>
   <wicket:panel>
-    <div class="form-group col-xs-12">
-      <label wicket:for="name" class="control-label">
-        <wicket:message key="kb.wizard.steps.type.name" />
-      </label>
-      <input wicket:id="name" type="text" class="form-control" />
-    </div>
-    <div class="form-group col-xs-12">
-      <label class="control-label">
-        <wicket:message key="kb.wizard.steps.type.language" />
-      </label>
-      <input type="text" wicket:id="language" class="form-control"/>
-    </div>
-    <div class="form-group col-xs-12">
-      <label class="control-label">
-        <wicket:message key="kb.queryLimit" />
-      </label>
-      <div class="form-inline">
-        <input type="number" wicket:id="maxResults" class="form-control"/>
-          <div class="checkbox" style="margin-left: 15px;">
-            <label wicket:for="maxQueryLimit">
-              <input type="checkbox" wicket:id="maxQueryLimit"/>
-              <i><wicket:label key="kb.details.contents.maxQueryLimit"/></i>
-            </label>
-          </div>
-      </div>
-    </div>
-    <div class="form-group col-xs-12">
-      <label class="control-label">
-        <wicket:message key="kb.wizard.steps.type.type" />
-      </label>
-      <div wicket:id="type"></div>
-    </div>
-    <div class="form-group col-xs-12">
-      <label class="control-label">
-        <wicket:message key="kb.reification" />
-      </label>
-      <div>
-        <select wicket:id="reification"></select>
-      </div>
-    </div>
+      <span wicket:id="generalSettings"></span>
+      <span wicket:id="accessSettings"></span>
   </wicket:panel>
 </body>
 </html>

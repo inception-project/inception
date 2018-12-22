@@ -25,8 +25,8 @@ import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.search.ExecutionException;
+import de.tudarmstadt.ukp.inception.search.SearchQueryRequest;
 import de.tudarmstadt.ukp.inception.search.SearchResult;
 
 public interface PhysicalIndex
@@ -45,9 +45,8 @@ public interface PhysicalIndex
 
     boolean isOpen();
 
-    public List<SearchResult> executeQuery(User aUser, String aQuery, String aSortOrder,
-            String... sResultField)
-        throws IOException, ExecutionException;
+    List<SearchResult> executeQuery(SearchQueryRequest aRequest)
+            throws IOException, ExecutionException;
 
     public void indexDocument(SourceDocument aDocument, JCas aJCas) throws IOException;
 

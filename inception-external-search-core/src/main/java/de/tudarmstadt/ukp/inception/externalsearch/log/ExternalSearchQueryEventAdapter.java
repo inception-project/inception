@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.search.log;
+package de.tudarmstadt.ukp.inception.externalsearch.log;
 
 import java.io.IOException;
 
@@ -23,43 +23,48 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
+import de.tudarmstadt.ukp.inception.externalsearch.event.ExternalSearchQueryEvent;
 import de.tudarmstadt.ukp.inception.log.adapter.EventLoggingAdapter;
-import de.tudarmstadt.ukp.inception.search.event.SearchQueryEvent;
 
 @Component
-public class SearchQueryEventAdapter
-    implements EventLoggingAdapter<SearchQueryEvent>
+public class ExternalSearchQueryEventAdapter
+    implements EventLoggingAdapter<ExternalSearchQueryEvent>
 {
+
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     @Override
     public boolean accepts(Object aEvent)
     {
-        return aEvent instanceof SearchQueryEvent;
+        return aEvent instanceof ExternalSearchQueryEvent;
     }
 
     @Override
-    public long getProject(SearchQueryEvent aEvent)
+    public long getProject(ExternalSearchQueryEvent aEvent)
     {
         return aEvent.getProject().getId();
     }
 
     @Override
-    public String getAnnotator(SearchQueryEvent aEvent)
+    public String getAnnotator(ExternalSearchQueryEvent aEvent)
     {
         return aEvent.getUser();
     }
-    
+
     @Override
-    public String getDetails(SearchQueryEvent aEvent)
+    public String getUser(ExternalSearchQueryEvent aEvent)
+    {
+        return aEvent.getUser();
+    }
+
+    @Override
+    public String getDetails(ExternalSearchQueryEvent aEvent)
     {
         try {
             Details details = new Details();
 
             details.query = aEvent.getQuery();
-            details.documentId = aEvent.getSourceDocument().map(SourceDocument::getId).orElse(null);
 
             return JSONUtil.toJsonString(details);
         }
@@ -72,6 +77,5 @@ public class SearchQueryEventAdapter
     public static class Details
     {
         public String query;
-        public Long documentId;
     }
 }
