@@ -21,15 +21,11 @@
   <wicket:panel>
     <form wicket:id="form" class="flex-content panel-default">
       <div class="panel-heading flex-h-container flex-centered flex-gutter flex-only-internal-gutter">
-        <label wicket:for="documents" class="text-nowrap">
-          <wicket:label key="filesToImport"/>
-        </label>
+        <label wicket:for="documents" class="text-nowrap"><wicket:label key="filesToImport"/></label>
         <input wicket:id="documents" type="file" multiple class="flex-content"></input>
         
-        <label wicket:for="format" class="text-nowrap">
-          <wicket:label key="format"/>
-        </label>
-        <select wicket:id="format" class="form-component flex-content"></select>
+        <label wicket:for="format" class="text-nowrap"><wicket:label key="format"/></label>
+        <select wicket:id="format" class="form-component flex-content input-group-btn" data-size="10"></select>
         
         <input wicket:id="import" type="submit" class="btn btn-primary" wicket:message="value:import"></input>
       </div>

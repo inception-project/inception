@@ -116,6 +116,10 @@
       <artifactId>wicket-kendo-ui</artifactId>
     </dependency>
     <dependency>
+      <groupId>de.agilecoders.wicket</groupId>
+      <artifactId>wicket-bootstrap-extensions</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.wicketstuff</groupId>
       <artifactId>wicketstuff-select2</artifactId>
     </dependency>

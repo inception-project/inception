@@ -44,6 +44,7 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
@@ -100,10 +101,9 @@ public class ProjectTrainingDocumentsPanel
         }
         add(fileUpload = new FileUploadField("content", new Model()));
 
-        add(readableFormatsChoice = new DropDownChoice<String>("readableFormats", new Model(
+        add(readableFormatsChoice = new BootstrapSelect<String>("readableFormats", new Model(
                 selectedFormat), readableFormats)
         {
-
             private static final long serialVersionUID = 2476274669926250023L;
 
             @Override

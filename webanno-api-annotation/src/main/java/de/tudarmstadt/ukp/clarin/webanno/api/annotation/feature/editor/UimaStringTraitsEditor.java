@@ -25,6 +25,7 @@ import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -42,7 +43,7 @@ public class UimaStringTraitsEditor
     {
         super(aId);
         
-        DropDownChoice<TagSet> tagset = new DropDownChoice<TagSet>("tagset");
+        DropDownChoice<TagSet> tagset = new BootstrapSelect<>("tagset");
         tagset.setOutputMarkupPlaceholderTag(true);
         tagset.setOutputMarkupId(true);
         tagset.setChoiceRenderer(new ChoiceRenderer<>("name"));

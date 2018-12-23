@@ -48,6 +48,7 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CorrectionDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
@@ -481,7 +482,7 @@ public class ProjectMiraTemplatePanel
         {
             super(id, new CompoundPropertyModel<>(new SelectionModel()));
 
-            add(otherFeatures = new DropDownChoice<AnnotationFeature>("features")
+            add(otherFeatures = new BootstrapSelect<AnnotationFeature>("features")
             {
                 private static final long serialVersionUID = -1923453084703805794L;
 
