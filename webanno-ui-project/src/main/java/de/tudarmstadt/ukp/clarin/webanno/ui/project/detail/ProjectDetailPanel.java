@@ -48,6 +48,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
@@ -97,7 +98,7 @@ public class ProjectDetailPanel
 
         form.add(new TextArea<String>("description").setOutputMarkupId(true));
         
-        DropDownChoice<ScriptDirection> scriptDirection = new DropDownChoice<>("scriptDirection");
+        DropDownChoice<ScriptDirection> scriptDirection = new BootstrapSelect<>("scriptDirection");
         scriptDirection.setChoiceRenderer(new EnumChoiceRenderer<>(this));
         scriptDirection.setChoices(Arrays.asList(ScriptDirection.values()));
         form.add(scriptDirection);
@@ -114,7 +115,7 @@ public class ProjectDetailPanel
         List<String> types = projectService.listProjectTypes().stream().map(t -> t.id())
                 .collect(Collectors.toList());
 
-        DropDownChoice<String> projTypes = new DropDownChoice<>("mode", types);
+        DropDownChoice<String> projTypes = new BootstrapSelect<>("mode", types);
         projTypes.setRequired(true);
         projTypes.add(LambdaBehavior.onConfigure(_this -> {
             // If there is only a single project type and the project mode has not been set yet,

@@ -32,7 +32,6 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.form.CheckBox;
-import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.upload.FileUpload;
 import org.apache.wicket.markup.html.form.upload.FileUploadField;
@@ -45,6 +44,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.JsonImportUtil;
 import de.tudarmstadt.ukp.clarin.webanno.export.ImportUtil;
@@ -84,7 +84,7 @@ public class TagSetImportPanel
         selectedTagSet = aTagSet;
         
         Form<Preferences> form = new Form<>("form", CompoundPropertyModel.of(preferences));
-        form.add(new DropDownChoice<>("format", LambdaModel.of(this::supportedFormats))
+        form.add(new BootstrapSelect<>("format", LambdaModel.of(this::supportedFormats))
                 .setRequired(true));
         form.add(new CheckBox("overwrite"));
         form.add(fileUpload = new FileUploadField("content", new ListModel<>()));

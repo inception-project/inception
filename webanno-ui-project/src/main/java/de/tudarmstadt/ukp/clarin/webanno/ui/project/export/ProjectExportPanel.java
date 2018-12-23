@@ -54,6 +54,7 @@ import org.wicketstuff.progressbar.ProgressBar;
 import org.wicketstuff.progressbar.Progression;
 import org.wicketstuff.progressbar.ProgressionModel;
 
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
@@ -122,7 +123,7 @@ public class ProjectExportPanel
             super(id, new CompoundPropertyModel<>(
                     new ProjectExportRequest(ProjectExportRequest.FORMAT_AUTO, true)));
             
-            DropDownChoice<String> format = new DropDownChoice<>("format",
+            DropDownChoice<String> format = new BootstrapSelect<>("format",
                     LoadableDetachableModel.of(() -> {
                         List<String> formats = importExportService.getWritableFormats().stream()
                                 .map(FormatSupport::getName)

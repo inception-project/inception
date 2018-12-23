@@ -67,6 +67,7 @@ import org.wicketstuff.annotation.mount.MountPath;
 import de.agilecoders.wicket.core.markup.html.bootstrap.components.PopoverBehavior;
 import de.agilecoders.wicket.core.markup.html.bootstrap.components.PopoverConfig;
 import de.agilecoders.wicket.core.markup.html.bootstrap.components.TooltipConfig.Placement;
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
@@ -290,12 +291,12 @@ public class AgreementPage
                     new StringResourceModel("legend.content", legend), config));
             agreementResults.add(legend);
             
-            add(measureDropDown = new DropDownChoice<>("measure",
+            add(measureDropDown = new BootstrapSelect<>("measure",
                     asList(ConcreteAgreementMeasure.values()),
                     new EnumChoiceRenderer<>(AgreementPage.this)));
             addUpdateAgreementTableBehavior(measureDropDown);
 
-            add(linkCompareBehaviorDropDown = new DropDownChoice<LinkCompareBehavior>(
+            add(linkCompareBehaviorDropDown = new BootstrapSelect<LinkCompareBehavior>(
                     "linkCompareBehavior", asList(LinkCompareBehavior.values()),
                     new EnumChoiceRenderer<>(AgreementPage.this))
             {
@@ -319,7 +320,7 @@ public class AgreementPage
             linkCompareBehaviorDropDown.setOutputMarkupPlaceholderTag(true);
             addUpdateAgreementTableBehavior(linkCompareBehaviorDropDown);
 
-            agreementResults.add(new DropDownChoice<AgreementReportExportFormat>("exportFormat",
+            agreementResults.add(new BootstrapSelect<AgreementReportExportFormat>("exportFormat",
                     asList(AgreementReportExportFormat.values()),
                     new EnumChoiceRenderer<>(AgreementPage.this))
                             .add(new LambdaAjaxFormComponentUpdatingBehavior("change")));

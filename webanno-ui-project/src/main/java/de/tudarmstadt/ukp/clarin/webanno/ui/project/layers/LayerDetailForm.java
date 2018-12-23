@@ -54,6 +54,7 @@ import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.resource.IResourceStream;
 
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
@@ -133,7 +134,7 @@ public class LayerDetailForm
         });
 
         add(new CheckBox("enabled"));
-        add(layerTypes = new DropDownChoice<>("type"));
+        add(layerTypes = new BootstrapSelect<>("type"));
         layerTypes.setChoices(layerSupportRegistry::getAllTypes);
         layerTypes.add(LambdaBehavior
                 .enabledWhen(() -> isNull(LayerDetailForm.this.getModelObject().getId())));
@@ -159,7 +160,7 @@ public class LayerDetailForm
             }
         });
 
-        attachTypes = new DropDownChoice<AnnotationLayer>("attachType")
+        attachTypes = new BootstrapSelect<AnnotationLayer>("attachType")
         {
             private static final long serialVersionUID = -6705445053442011120L;
 
@@ -227,7 +228,7 @@ public class LayerDetailForm
         // Behaviors of layers
         add(new CheckBox("readonly"));
 
-        add(anchoringMode = new DropDownChoice<AnchoringMode>("anchoringMode"));
+        add(anchoringMode = new BootstrapSelect<AnchoringMode>("anchoringMode"));
         anchoringMode.setOutputMarkupPlaceholderTag(true);
         anchoringMode.setChoiceRenderer(new EnumChoiceRenderer<>(this));
         anchoringMode.setChoices(Arrays.asList(AnchoringMode.values()));
@@ -311,7 +312,7 @@ public class LayerDetailForm
                         "alert($PARAM.PID + ' ' + $PARAM.PNAME + ' ' + $PARAM.DOCID + ' ' + "
                                 + "$PARAM.DOCNAME + ' ' + $PARAM.fieldname);")));
 
-        add(new DropDownChoice<LayerExportMode>("exportMode",
+        add(new BootstrapSelect<LayerExportMode>("exportMode",
                 new PropertyModel<LayerExportMode>(this, "exportMode"),
                 asList(LayerExportMode.values()), new EnumChoiceRenderer<>(this))
                         .add(new LambdaAjaxFormComponentUpdatingBehavior("change")));

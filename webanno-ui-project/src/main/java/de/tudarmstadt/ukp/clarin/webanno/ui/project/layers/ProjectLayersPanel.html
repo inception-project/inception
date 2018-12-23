@@ -233,11 +233,9 @@
             </div>
           </div>  
           <div class="panel-footer flex-h-container">
-            <div>
-              <label wicket:for="exportMode" class="text-nowrap">
-                <wicket:label key="format"/>
-              </label>
-              <select wicket:id="exportMode" class="form-component flex-content"></select>
+            <div class="flex-h-container flex-gutter flex-centered flex-only-internal-gutter">
+              <label wicket:for="exportMode" class="text-nowrap"><wicket:label key="format"/></label>
+              <select wicket:id="exportMode" class="flex-content input-group-btn form-component"></select>
               <input wicket:id="export" type="button" class="btn btn-default" wicket:message="value:export"/> 
             </div>
             <div class="flex-content text-right">
