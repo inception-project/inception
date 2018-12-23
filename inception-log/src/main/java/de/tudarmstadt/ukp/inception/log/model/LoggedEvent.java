@@ -73,6 +73,19 @@ public class LoggedEvent
     @Column(length = 64000, nullable = true)
     private String details;
 
+    public LoggedEvent()
+    {
+        // Needed by JPA
+    }
+
+    /**
+     * For testing only.
+     */
+    public LoggedEvent(long aId)
+    {
+        id = aId;
+    }
+
     public Date getCreated()
     {
         return created;
