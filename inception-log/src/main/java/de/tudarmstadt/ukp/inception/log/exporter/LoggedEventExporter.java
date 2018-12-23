@@ -32,8 +32,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-import javax.transaction.Transactional;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -79,7 +77,6 @@ public class LoggedEventExporter implements ProjectExporter
     }
     
     @Override
-    @Transactional
     public void exportData(ProjectExportRequest aRequest, ExportedProject aExProject, File aFile)
         throws Exception
     {
