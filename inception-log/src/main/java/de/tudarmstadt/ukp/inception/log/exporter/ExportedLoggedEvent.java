@@ -20,6 +20,8 @@ package de.tudarmstadt.ukp.inception.log.exporter;
 import java.util.Date;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonRawValue;
@@ -27,6 +29,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 @JsonPropertyOrder(alphabetic = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
+@JsonInclude(Include.NON_NULL)
 public class ExportedLoggedEvent
 {
     @JsonProperty("id")
@@ -41,7 +44,7 @@ public class ExportedLoggedEvent
     @JsonProperty("user")
     private String user;
 
-    @JsonProperty("documentName")
+    @JsonProperty("document_name")
     private String documentName;
 
     @JsonProperty("annotator")
