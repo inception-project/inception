@@ -162,8 +162,17 @@ public class DocumentServiceImpl
     @Transactional
     public boolean existsAnnotationDocument(SourceDocument aDocument, User aUser)
     {
-        Validate.notNull(aDocument, "Source document must be specified");
         Validate.notNull(aUser, "User must be specified");
+        
+        return existsAnnotationDocument(aDocument, aUser.getUsername());
+    }
+    
+    @Override
+    @Transactional
+    public boolean existsAnnotationDocument(SourceDocument aDocument, String aUsername)
+    {
+        Validate.notNull(aDocument, "Source document must be specified");
+        Validate.notNull(aUsername, "Username must be specified");
         
         try {
             entityManager
@@ -172,7 +181,7 @@ public class DocumentServiceImpl
                                     + " AND document = :document AND user = :user",
                             AnnotationDocument.class)
                     .setParameter("project", aDocument.getProject())
-                    .setParameter("document", aDocument).setParameter("user", aUser.getUsername())
+                    .setParameter("document", aDocument).setParameter("user", aUsername)
                     .getSingleResult();
             return true;
         }
@@ -538,6 +547,7 @@ public class DocumentServiceImpl
             throw new IOException(e.getMessage(), e);
         }
 
+        log.trace("Sending AfterDocumentCreatedEvent for {}", aDocument);
         applicationEventPublisher
                 .publishEvent(new AfterDocumentCreatedEvent(this, aDocument, jcas));
         

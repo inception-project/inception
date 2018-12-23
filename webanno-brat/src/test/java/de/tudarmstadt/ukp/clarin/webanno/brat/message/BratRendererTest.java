@@ -154,7 +154,8 @@ public class BratRendererTest
         state.setProject(project);
 
         VDocument vdoc = new VDocument();
-        preRenderer.render(vdoc, state, jCas, schemaService.listAnnotationLayer(project));
+        preRenderer.render(vdoc, state.getWindowBeginOffset(), state.getWindowEndOffset(),
+                jCas, schemaService.listAnnotationLayer(project));
 
         GetDocumentResponse response = new GetDocumentResponse();
         BratRenderer.render(response, state, vdoc, jCas, schemaService);

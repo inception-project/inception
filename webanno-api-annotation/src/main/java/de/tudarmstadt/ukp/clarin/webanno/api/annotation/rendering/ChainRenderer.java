@@ -34,7 +34,6 @@ import org.apache.uima.jcas.JCas;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ChainAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
@@ -53,7 +52,7 @@ public class ChainRenderer
 
     @Override
     public void render(JCas aJcas, List<AnnotationFeature> aFeatures, VDocument aResponse,
-            AnnotatorState aState)
+            int windowBeginOffset, int windowEndOffset)
     {
         List<AnnotationFeature> visibleFeatures = aFeatures.stream()
                 .filter(f -> f.isVisible() && f.isEnabled()).collect(Collectors.toList());
@@ -90,14 +89,14 @@ public class ChainRenderer
                 AnnotationFS nextLinkFs = (AnnotationFS) linkFs.getFeatureValue(linkNext);
 
                 // Is link after window? If yes, we can skip the rest of the chain
-                if (linkFs.getBegin() >= aState.getWindowEndOffset()) {
+                if (linkFs.getBegin() >= windowEndOffset) {
                     break; // Go to next chain
                 }
 
                 // Is link before window? We only need links that being within the window and that
                 // end within the window
-                if (!(linkFs.getBegin() >= aState.getWindowBeginOffset())
-                        && (linkFs.getEnd() <= aState.getWindowEndOffset())) {
+                if (!(linkFs.getBegin() >= windowBeginOffset)
+                        && (linkFs.getEnd() <= windowEndOffset)) {
                     // prevLinkFs remains null until we enter the window
                     linkFs = nextLinkFs;
                     continue; // Go to next link
@@ -111,8 +110,8 @@ public class ChainRenderer
                             (spanLabelFeature != null) ? asList(spanLabelFeature) : emptyList());
                     String bratHoverText = TypeUtil.getUiHoverText(typeAdapter, linkFs,
                             (spanLabelFeature != null) ? asList(spanLabelFeature) : emptyList());
-                    VRange offsets = new VRange(linkFs.getBegin() - aState.getWindowBeginOffset(),
-                            linkFs.getEnd() - aState.getWindowBeginOffset());
+                    VRange offsets = new VRange(linkFs.getBegin() - windowBeginOffset,
+                            linkFs.getEnd() - windowBeginOffset);
 
                     aResponse.add(new VSpan(typeAdapter.getLayer(), linkFs, bratTypeName, offsets,
                             colorIndex, singletonMap("label", bratLabelText), 

@@ -25,7 +25,6 @@ import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -45,14 +44,14 @@ public class PreRendererImpl implements PreRenderer
     }
     
     @Override
-    public void render(VDocument aResponse, AnnotatorState aState, JCas aJCas,
+    public void render(VDocument aResponse, int windowBeginOffset, int windowEndOffset, JCas aJCas,
             List<AnnotationLayer> aLayers)
     {
         // Render (custom) layers
         for (AnnotationLayer layer : aLayers) {
             List<AnnotationFeature> features = annotationService.listAnnotationFeature(layer);
             Renderer renderer = layerSupportRegistry.getLayerSupport(layer).getRenderer(layer);
-            renderer.render(aJCas, features, aResponse, aState);
+            renderer.render(aJCas, features, aResponse, windowBeginOffset, windowEndOffset);
         }
     }
 }

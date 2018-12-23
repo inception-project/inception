@@ -45,7 +45,6 @@ import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ArcAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VComment;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VCommentType;
@@ -68,7 +67,7 @@ public class RelationRenderer
     
     @Override
     public void render(final JCas aJcas, List<AnnotationFeature> aFeatures,
-            VDocument aResponse, AnnotatorState aBratAnnotatorModel)
+            VDocument aResponse, int windowBeginOffset, int windowEndOffset)
     {
         List<AnnotationFeature> visibleFeatures = aFeatures.stream()
                 .filter(f -> f.isVisible() && f.isEnabled()).collect(Collectors.toList());
@@ -76,8 +75,8 @@ public class RelationRenderer
         ArcAdapter typeAdapter = getTypeAdapter();
         Type type = getType(aJcas.getCas(), typeAdapter.getAnnotationTypeName());
         
-        int windowBegin = aBratAnnotatorModel.getWindowBeginOffset();
-        int windowEnd = aBratAnnotatorModel.getWindowEndOffset();
+        int windowBegin = windowBeginOffset;
+        int windowEnd = windowEndOffset;
         
         Feature dependentFeature = type.getFeatureByBaseName(typeAdapter.getTargetFeatureName());
         Feature governorFeature = type.getFeatureByBaseName(typeAdapter.getSourceFeatureName());

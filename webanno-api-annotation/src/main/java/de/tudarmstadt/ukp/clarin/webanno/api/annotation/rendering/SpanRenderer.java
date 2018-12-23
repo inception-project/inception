@@ -34,7 +34,6 @@ import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
@@ -60,15 +59,15 @@ public class SpanRenderer
     
     @Override
     public void render(JCas aJcas, List<AnnotationFeature> aFeatures,
-            VDocument aResponse, AnnotatorState aBratAnnotatorModel)
+            VDocument aResponse, int windowBeginOffset, int windowEndOffset)
     {
         List<AnnotationFeature> visibleFeatures = aFeatures.stream()
                 .filter(f -> f.isVisible() && f.isEnabled()).collect(Collectors.toList());
         SpanAdapter typeAdapter = getTypeAdapter();
         Type type = getType(aJcas.getCas(), typeAdapter.getAnnotationTypeName());
         
-        int windowBegin = aBratAnnotatorModel.getWindowBeginOffset();
-        int windowEnd = aBratAnnotatorModel.getWindowEndOffset();
+        int windowBegin = windowBeginOffset;
+        int windowEnd = windowEndOffset;
 
         List<Sentence> visibleSentences = selectCovered(aJcas, Sentence.class, windowBegin,
                 windowEnd);
